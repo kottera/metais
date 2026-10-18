@@ -1,0 +1,1122 @@
+# ADR-008: The command line and its machine output — named commands over a package file or a source directory, one versioned JSON document per run, standard output for the result alone, and help that cannot drift from the code
+
+**Status:** Proposed
+**Date:** 2026-10-18
+**Deciders:** Ed Funnekotter
+**Designs:** PRD-001 R2 (items 1–4) and R17 (items 1–3); the command-line
+surfaces of R5 item 1, R6 item 3, R12 items 4 and 5, and R13 items 1, 5 and 6.
+**Depends on:** ADR-001 (entries, the entry path model, `.compiled/`, digest
+verification, the references index); ADR-002 (the manifest fields `inspect`
+shows, the package name syntax, canonical JSON); ADR-003 (what `--data`,
+`--set` and the inline JSON flag mean, their precedence, data-directory file
+names, schema resolution); ADR-004 (what a template sees of `--now`); ADR-005
+(render staging, overwrite, dry run, the standard-output tar profile);
+ADR-006 (the finding object, severities, codes, exit codes); ADR-007 (`init`,
+`check`, `test`, `pack`, `unpack`, the sample-data generator, a source
+directory's entry set); ADR-009 (resource limits and their names, host
+isolation); ADR-010 (the argument parser, terminal detection, the Markdown
+parser and the JSON encoder chosen).
+
+## Context
+
+### What the PRD requires of the command line
+
+- **R2.1** — every part of a package can be listed, read, outlined and
+  searched without unpacking it: a summary; the entries under a path; a file
+  or a range of its lines; a Markdown file's heading tree; a regular
+  expression search with line numbers and context; the schema of one input or
+  of all of them.
+- **R2.2** — selected entries can be extracted to a directory.
+- **R2.3** — every command can print JSON in a documented, versioned shape.
+- **R2.4** — what a supplier reads first is designed: the summary names the
+  inputs with their titles, the outputs, the guide, and what to read next.
+- **R17.1, R17.2** — one documented path to consume (inspect, read what the
+  summary points to, get the schema, supply the data, validate, render) and
+  one to author (init, edit, check, test, pack).
+- **R17.3** — help text is authoritative for every command and flag, and every
+  refusal names the next step.
+- **R5.1, R12.4, R12.5, R13.6** — the supply flags, the dry run, rendering to
+  standard output as an archive or as one output's bytes, and the sample-data
+  preview each need a name and a syntax.
+- **§3 non-goals** — no public Go API: the command line is v1's contract. No
+  MCP mode: integrations are built on the command line. So the command line,
+  and above all its JSON, is the only interface a program or an AI harness
+  has.
+
+### Who calls it
+
+Three callers, in order of how much the design leans on each:
+
+1. **An AI harness** (§4.1, §4.6, SC1). It cannot see a terminal, pays for
+   every byte it reads, generates command lines rather than typing them, and
+   recovers from a refusal only if the refusal tells it what to run next.
+2. **A program** (§4.3, §4.7, SC3). It needs stable machine output, exit codes
+   it can branch on, and a standard output that carries nothing but the
+   result.
+3. **A person** — an author (§4.8) or an operator reading a report. They need
+   readable output, help, and colour that never gets in the way.
+
+### Facts that constrain the design (verified)
+
+- **POSIX utility syntax guidelines** (XBD 12.2) describe single-character
+  options only: "Each option name should be a single alphanumeric character"
+  (Guideline 3). Long options are outside them. Guideline 9 says "All options
+  should precede operands on the command line"; Guideline 10 makes the first
+  `--` the end of options; Guideline 13 reserves the `-` operand for standard
+  input, or standard output "when it is clear from context that an output file
+  is being specified", "or a file named -".
+- **Go's standard `flag` package** accepts one or two dashes as equivalent,
+  accepts `-flag=x` and (for non-boolean flags) `-flag x`, and stops parsing
+  "just before the first non-flag argument" or after `--`. It therefore cannot
+  accept a flag written after an operand. **`github.com/spf13/pflag`** states
+  that "Unlike the flag package, flags can be interspersed with arguments
+  anywhere on the command line before this terminator." ADR-010 chooses the
+  parser; this ADR states the behaviour it must have.
+- **`NO_COLOR`** (no-color.org): software that adds ANSI colour by default
+  "should check for a `NO_COLOR` environment variable that, when present and
+  not an empty string (regardless of its value), prevents the addition of ANSI
+  color", and "per-instance command-line arguments should override" it.
+- **JSON Lines** (jsonlines.org): UTF-8 without a byte order mark, each line
+  a valid JSON value, the line terminator `\n`.
+- **Go's `encoding/json`** escapes `&`, `<` and `>` inside strings by default
+  ("So that the JSON will be safe to embed inside HTML <script> tags");
+  `Encoder.SetEscapeHTML(false)` turns that off. `Marshal` sorts map keys.
+- **Go's `regexp`** accepts the RE2 syntax except `\C` and "is guaranteed to
+  run in time linear in the size of the input". `regexp/syntax` rejects a
+  counted repetition whose minimum or maximum exceeds 1000, and `(?i)` sets
+  case-insensitive matching.
+- **CommonMark 0.31.2**: an ATX heading is an opening sequence of 1–6 `#`
+  characters, followed by a space, a tab or the end of the line, preceded by
+  at most three spaces of indentation, with an optional closing sequence of
+  `#`s; it is one line. A setext heading is "one or more lines of text, not
+  interrupted by a blank line" followed by an underline of `=` (level 1) or
+  `-` (level 2) indented at most three spaces; when a `---` line could be a
+  setext underline or a thematic break, "the interpretation as a setext
+  heading takes precedence". The content of a fenced code block is literal
+  text, so a `#` line inside a fence is not a heading.
+- **GNU grep** prints matching lines with `:` after the prefix fields and
+  context lines with `-`, and a `--` line between non-adjacent groups when
+  context is requested. Its exit status is "0 if a line is selected, 1 if no
+  lines were selected, and 2 if an error occurred".
+- **Go's `path.Match`**: `*` "matches any sequence of non-/ characters", `?`
+  any single non-`/` character, `[...]` a class, `\` escapes; the grammar has
+  no `**`.
+- **RFC 3339 §5.6** `date-time` is `full-date "T" full-time`, with a
+  `time-offset` of `Z` or a numeric offset, optional fractional seconds, and
+  lowercase `t` and `z` allowed.
+- **`golang.org/x/term`** provides `IsTerminal(fd int) bool`.
+- **The Go runtime reads `GODEBUG`.** Per go.dev/doc/godebug, a setting is
+  derived from the toolchain defaults, `go.mod` and `//go:debug` lines only
+  "when a GODEBUG setting is not listed in the environment variable" — the
+  environment wins. Settings such as `zipinsecurepath` change archive
+  behaviour. This is a host read the command line does not control; it is
+  handed to ADR-009 and ADR-010 below.
+
+## Decision
+
+### D1 — One binary, named commands, one name each
+
+**`metais <command> [operands and flags]`, with a closed set of commands, no
+aliases and no abbreviations.**
+
+1. The commands, in the groups help shows them in:
+
+   | Group | Command | Does |
+   |---|---|---|
+   | Reading a package | `inspect` | the summary a supplier reads first (D6) |
+   | | `ls` | the entries under a path |
+   | | `read` | an entry, or a range of its lines |
+   | | `outline` | a Markdown entry's heading tree |
+   | | `grep` | a regular-expression search with context |
+   | | `schema` | the combined input schema, or one input's |
+   | | `extract` | selected entries, written to a directory |
+   | Supplying and rendering | `validate` | the inputs against the schemas |
+   | | `render` | the outputs, to a directory or standard output |
+   | Authoring | `init` | a minimal source directory |
+   | | `check` | the package, without data |
+   | | `test` | the examples, rendered and compared |
+   | | `sample` | generated sample data, written as a data directory or an example's inputs |
+   | | `pack` | a source directory into a package |
+   | | `unpack` | a package into a source directory |
+   | The tool | `version` | the tool's version and the specification versions it implements |
+   | | `help` | the overview, a command's help, or a topic |
+
+2. **The sample-data preview is `render --sample`**, and saving sample data is
+   the `sample` command. Previewing is rendering, so it shares `render`'s
+   flags, staging, dry run and standard-output modes rather than duplicating
+   them; generating data to keep is a different act with a different
+   destination, so it has its own command. Both share `--optional` and
+   `--seed` and the generator (ADR-007).
+3. **No command has an alias, and no command or flag name may be abbreviated.**
+   A prefix that is unambiguous today becomes ambiguous the day a sibling
+   command or flag is added, and a generated command line that worked would
+   then fail.
+4. `metais` with no command prints the overview help to standard error and
+   exits with the usage code (D13). `metais --help` and `metais -h` print it to
+   standard output and exit 0. `metais --version` is `metais version`.
+
+### D2 — The package operand
+
+**A package operand is a path to a packed package file or to a source
+directory, and every reading, supplying and checking command accepts both.**
+
+1. A path that names a regular file (after following a symbolic link the
+   caller named) is read as a packed package — a zip under ADR-001's profile —
+   whatever its extension. A path that names a directory is read as a source
+   directory. Anything else is refused (`cli.package-not-found` or
+   `cli.package-not-readable`).
+2. **On a packed package, the entries are the zip's entries**, including
+   `.compiled/` (so `read <pkg> .compiled/manifest.json` works). Digests are
+   verified as ADR-001 decides, and a mismatch is a refusal.
+3. **On a source directory, the entries are exactly the files `pack` would
+   write from it** (ADR-007's entry set), with paths relative to the
+   directory, and without `.compiled/`, which only `pack` produces. What an
+   author sees through `ls`, `read` and `grep` is therefore what a consumer of
+   the packed package will see. The views `.compiled/` precomputes are
+   available on a source directory through the commands that use them:
+   `inspect` (the references index) and `schema` (the combined schema),
+   computed by the same code `pack` uses.
+4. **The operand `-` is refused as a package** (`cli.package-from-stdin`): a
+   zip needs random access, and buffering one from standard input would add a
+   second way in, with its own size bound, for no use case the PRD names.
+   The refusal names the next step: write it to a file.
+5. **Entry paths** on the command line and in output are relative, use `/` as
+   the separator on every platform, and match the stored path byte for byte
+   (case-sensitive). A directory may be written with or without a trailing
+   `/`. The root is written as `.` or omitted.
+6. **The package operand is required** on every command except `check`,
+   `test`, `sample` and `pack`, where it defaults to `.` — the author's
+   working tree — and `init`, whose operand is a directory to create (D9).
+7. The operand is opened as given. **The tool never turns a path it was
+   given into an absolute path**, and never prints the working directory
+   (D11 item 5).
+
+### D3 — Argument syntax
+
+**Long flags, interspersed with operands until `--`; one spelling per value;
+a repeated single-valued flag is an error.**
+
+1. **Flags are long**: `--name`. A flag that takes a value accepts
+   `--name value` and `--name=value`. A boolean flag takes no value;
+   `--name=anything` is a usage error, so there is one spelling of each
+   boolean.
+2. **Short aliases form a closed list**: `-h` (`--help`, every command), `-r`
+   (`ls --recursive`), `-C` (`grep --context`), `-i` (`grep --ignore-case`).
+   They are the spellings a harness or a person types from habit in `ls` and
+   `grep`. A short flag with a value accepts `-C 3` and `-C3`. Short flags are
+   not grouped (`-ri` is a usage error); no command has two short booleans to
+   group.
+3. **Flags may appear before, between or after operands**, and the first `--`
+   ends the flags (POSIX Guideline 10): `metais grep pkg.metais -- -x` searches
+   for `-x`. This departs from Guideline 9 deliberately: a harness writes the
+   operands first and appends flags as it decides them, and a command that
+   silently treated a trailing `--lines 1-20` as an operand would be worse
+   than either convention. Before the command name, only the global flags
+   (D4) are accepted.
+4. **A single-valued flag given twice is a usage error** (`cli.repeated-flag`),
+   not "the last one wins": in a generated command line a repetition is a
+   mistake, and last-wins hides it. The repeatable flags are named in their
+   rows below (`--set`, `--limit`, `test --example`).
+5. **`-` as a flag value means a standard stream only where this ADR says so**:
+   `--inputs-json -` (standard input) and `--out -` (standard output, on
+   `render` and `pack`). A file literally named `-` is written `./-`
+   (Guideline 13).
+6. **Numeric values are decimal integers**; anything else is a usage error.
+7. **Nothing but the command line configures a run.** The tool reads no
+   configuration file, no `METAIS_*` variable, and no environment variable
+   other than the two named in D12, which affect only colour. A command line
+   states a run completely, so a render reproduced from a log is the same
+   render.
+
+### D4 — Global flags
+
+**`--json`, `--color`, `--help` and `--limit` mean the same on every command
+that accepts them.**
+
+| Flag | Value | Default | Meaning |
+|---|---|---|---|
+| `--json` | — | off | Print the result as one JSON document (D10). |
+| `--color` | `auto`, `always`, `never` | `auto` | Colour in human output (D12). |
+| `--help`, `-h` | — | — | Print this command's help to standard output and exit 0; nothing else runs. |
+| `--limit` | `<name>=<value>` | ADR-009's defaults | Lower one resource limit. Repeatable. Accepted by every command that opens a package or reads inputs (all but `version`, `help` and `init`). |
+
+1. **`--limit` is one repeatable flag, not a flag per limit**, so ADR-009 can
+   name and add limits without growing every command's flag list. A name
+   ADR-009 does not define, or a value above the default, is a usage error;
+   `metais help limits` lists every name, its unit and its default.
+2. `--json` and `--help` together print the command's help as JSON
+   (`metais.help/1`).
+
+### D5 — The reading commands
+
+**`ls`, `read`, `outline`, `grep`, `schema` and `extract` behave the same on a
+packed package and on a source directory, and none writes anything except
+`extract`.**
+
+Two rules are shared:
+
+- **Text and lines.** An entry is *text* when it is valid UTF-8 and contains
+  no NUL byte; otherwise it is *binary*. A line ends at an LF. The number of
+  lines is the number of LFs, plus one if the entry is non-empty and does not
+  end with an LF; an empty entry has no lines. For matching and display in
+  `grep` and `outline`, a CR immediately before the LF is part of the line
+  ending, not of the line. `read` prints bytes unchanged.
+- **The METAIS glob**, used by `grep` and `extract`. A pattern is matched
+  against the whole entry path, segment by segment, with `/` as the
+  separator. `*` matches any run of characters within one segment; `?`
+  matches one character other than `/`; `[...]` and `[^...]` are character
+  classes with `lo-hi` ranges; `\` makes the next character literal; `**`
+  standing alone as a segment matches zero or more whole segments, and `**`
+  anywhere else is a usage error. There are no braces. Matching is
+  case-sensitive. **`*`, `?`, `[...]` and `**` never match a segment that
+  begins with `.`**; a pattern segment that itself begins with `.` matches
+  one. So `**/*.md` does not reach into `.compiled/`, and `.compiled/**`
+  does. A pattern with no wildcard that names a directory selects every entry
+  beneath it. `metais help globs` carries this text.
+
+#### `ls`
+
+`metais ls <package> [<path>] [--recursive | -r]`
+
+1. With no path, lists the root. A path naming a directory lists its
+   children, or with `--recursive` every entry beneath it. A path naming a
+   file lists that file.
+2. Each entry: `path` (a directory's ends in `/`), `type` (`file` or `dir`),
+   `size` (a file's uncompressed size in bytes) or `files` (the number of files
+   beneath a directory). Directories are implied by entry paths; a zip need
+   not store them.
+3. Order: by path, comparing the UTF-8 bytes.
+4. Human output: one line per entry, `type<TAB>size-or-files<TAB>path`.
+5. Refuses: a path that names nothing (`cli.entry-not-found`; next: `ls` of
+   its nearest existing parent).
+
+#### `read`
+
+`metais read <package> <path> [--lines <range>] [--number]`
+
+1. Prints the entry's bytes exactly as stored.
+2. **`--lines <range>`**, 1-based and inclusive: `N` (one line), `N-M`, or `N-`
+   (to the end). `N` must be at least 1 and `M` at least `N`, or it is a usage
+   error. A range whose start is beyond the last line is refused
+   (`cli.line-out-of-range`; next: `--lines 1-<total>`). An end beyond the last
+   line is clamped, and the result reports the real last line. The printed
+   bytes are the selected lines with their own line endings.
+3. **`--number`** prefixes each printed line with its line number and a TAB.
+   It requires a text entry.
+4. **`--lines` and `--number` on a binary entry are refused**
+   (`cli.not-text`; next: `extract`). **A binary entry is not written to a
+   terminal** (`cli.binary-to-terminal`; next: redirect standard output, or
+   `extract`).
+5. JSON result: `path`, `size`, `binary` (bool); for text, `content` (the
+   string) and `lines` (`{"first", "last", "total"}`, present with or without
+   `--lines`); for binary, `content_base64`.
+6. Refuses: a path naming a directory (`cli.is-a-directory`; next: `ls`).
+
+#### `outline`
+
+`metais outline <package> <path>`
+
+1. Parses a text entry as CommonMark 0.31.2 and lists its ATX and setext
+   headings, levels 1 to 6, in document order. A leading frontmatter block,
+   delimited as ADR-003 delimits it, is skipped (its lines still count). What
+   CommonMark does not make a heading — a `#` line in a code block, an HTML
+   block, or seven `#`s — is not listed.
+2. Each heading: `level`; `text`, the heading's inline content as plain text
+   (text and code-span contents concatenated, markup removed, a setext
+   heading's line breaks as single spaces); `line`, the heading's first line;
+   and `end_line`, the last line of its section — the line before the next
+   heading of the same or a higher level, or the entry's last line. So
+   `read --lines <line>-<end_line>` reads exactly one section, which is the
+   move §4.6 describes.
+3. Human output: one line per heading,
+   `<line>-<end_line><TAB><two spaces per level below 1><#…> <text>`.
+4. An entry with no headings gives an empty list, not a refusal. A binary
+   entry is refused (`cli.not-text`).
+
+#### `grep`
+
+`metais grep <package> <pattern> [<glob>…] [--context <n> | -C <n>] [--ignore-case | -i] [--max-results <n>]`
+
+1. **The pattern is a Go `regexp` pattern** — RE2 syntax, linear time. It is
+   matched against each line separately (without its line ending), so `^`
+   and `$` anchor the line. `--ignore-case` prepends `(?i)`. A pattern that
+   does not compile is a usage error naming the RE2 syntax reference. Pattern
+   length and the other regular-expression bounds are ADR-009's.
+2. **Globs select the entries searched.** With none, every entry is searched
+   except those the dot rule excludes (so `.compiled/` is not searched unless
+   named). Entries are searched in path order, lines in order.
+3. **Binary entries are skipped** and listed in the result's `skipped`.
+4. **`--context <n>`**, from 0 to 100, default 0: lines before and after each
+   matching line.
+5. **`--max-results <n>`**, from 1 to 10000, default 100: the number of
+   matching lines reported. The search still runs to the end and reports
+   `matching_lines`, the total, and `truncated`. A line with several matches
+   counts once.
+6. **A displayed line longer than 1024 bytes is cut** at the last UTF-8
+   boundary within 1024 bytes and marked (`"text_truncated": true`; in human
+   output `[…+<n> bytes]`). `read --lines <n>` gets the whole line.
+7. JSON result: `pattern`, `globs`, `matches` (each `path`, `line`, `text`,
+   `before` and `after` as lists of `{"line", "text"}`), `matching_lines`,
+   `truncated`, `skipped`.
+8. Human output follows GNU grep's form: `path:line:text` for a match,
+   `path-line-text` for context, a `--` line between non-adjacent groups, and
+   adjacent or overlapping groups merged. A truncation notice and the skipped
+   list go to standard error (D11 item 3).
+9. **No match is not a failure: `grep` exits 0 with an empty result.** `grep`
+   here is a query a harness branches on by reading `matching_lines`; GNU
+   grep's exit 1 would make every "not found" look like a broken command.
+
+#### `schema`
+
+`metais schema <package> [<input>]`
+
+1. With no input, prints the combined input schema: `.compiled/`'s on a packed
+   package, computed by ADR-003's combination on a source directory.
+2. With an input, prints that input's schema as it appears in the combined
+   schema — `$ref`s resolved as ADR-003 resolves them. For a collection input
+   it is the array schema, whose `items` each file must satisfy.
+3. Human output is the schema alone, in ADR-002's canonical key order,
+   indented by two spaces, so `metais schema pkg product > product.json`
+   writes a usable schema file. JSON result: `input` (or `null`) and `schema`.
+4. Refuses: an unknown input (`cli.unknown-input`, listing the input names;
+   next: `inspect`).
+
+#### `extract`
+
+`metais extract <package> <glob>… --to <dir> [--overwrite] [--dry-run]`
+
+1. Writes every entry any glob selects to `<dir>/<entry path>`. `<dir>` and its
+   missing parents are created.
+2. **Every glob must select at least one entry**, or the command is refused
+   naming it (`cli.no-match`) and nothing is written: a glob that matches
+   nothing is a typo the caller wants to hear about.
+3. **A non-empty `<dir>` is refused unless `--overwrite`**, with ADR-005's
+   meaning: a file at the same path is replaced, nothing is deleted. Writes
+   are confined to `<dir>` under ADR-009's rules.
+4. `--dry-run` lists the files it would write and writes nothing.
+5. `--to` is required; there is no default directory.
+6. JSON result: `to` (as given), `dry_run`, `files` (each `path`, `size`).
+
+### D6 — `inspect`: what a supplier reads first
+
+**`inspect` prints, in one screen-sized summary, the package's identity, the
+start of its guide, every input with how to supply it, every output, the
+references, the examples, and an ordered list of commands to run next.**
+
+`metais inspect <package> [--guide]`
+
+1. **Identity**: `name`, `version`, `title`, `description`,
+   `specification` (the version it targets), `digest` (the package digest on a
+   packed package; `null` on a source directory), and `source` (`packed` or
+   `directory`).
+2. **Guide**: the manifest's supplier guide (ADR-002). If it has at most 60
+   lines and 6144 bytes it is shown whole. Otherwise the excerpt is its first
+   40 lines, shortened further to end within 4096 bytes, and the summary says
+   how many lines remain and that `metais inspect <package> --guide` prints it
+   whole. JSON: `guide` = `{"text", "excerpt_lines", "total_lines",
+   "truncated"}`.
+3. **Inputs**, in ADR-003's input order, each with: `name`, `title`,
+   `description`, `required`, `collection`, `forms` (the accepted forms in the
+   manifest's order), `files` (the names a data directory may hold it under,
+   derived by ADR-003's rule — `criteria.csv`, `criteria.json`, or
+   `articles/` for a collection), `meaning` (the entry path of its meaning
+   document, or `null`), `schema_entry` (its schema file's entry path) and
+   `examples` (the names of the examples that supply it). Human output shows
+   the first line of the description; JSON carries all of it.
+4. **Outputs**, after ADR-005 expands the mirror shorthand, each with its
+   declaration's fields as ADR-005 names them — at least the path template,
+   the template, `for_each`, `when`, `escape` and the transforms by name. A
+   person sees from this list what a render will produce before supplying
+   anything.
+5. **References**, from the references index (ADR-001): each `path`, `title`
+   and `size`, and the count and total size. Human output lists the first 50
+   and points to `metais ls <package> references/ -r` for the rest; JSON lists
+   them all.
+6. **Assets**: count and total size only; `ls` lists them.
+7. **Examples**: each `name`, the inputs it supplies, and whether it has
+   expected outputs.
+8. **Read next** — the envelope's `next` (D14), in this order, each a full
+   command line with the package operand as the caller gave it:
+   1. `metais inspect <package> --guide`, if the guide was cut;
+   2. `metais read <package> <meaning entry>` for each input that has a
+      meaning document, in input order;
+   3. `metais schema <package> <input>` for each input;
+   4. `metais ls <package> examples/<first example>/ -r`, if there is an
+      example (examples in name order);
+   5. `metais grep <package> <pattern> references/` with the placeholder
+      `<pattern>`, if there are references;
+   6. `metais validate <package> --data <dir>`;
+   7. `metais render <package> --data <dir> --out <dir>`.
+
+   This is R17.1's consuming path, generated from the package.
+9. `--guide` prints only `package` and the whole guide (`guide.truncated` is
+   `false`, the other sections are absent); its human output is the guide's
+   Markdown alone.
+10. Human layout, top to bottom: a title line `<title> — <name> <version>`,
+    the description, a line with the specification version, `packed` or
+    `source directory` and the digest, then the sections **Guide**, **Inputs**,
+    **Outputs**, **References**, **Assets**, **Examples** and **Read next**, in
+    that order, each omitted when empty except Inputs and Outputs. Sizes in
+    human output are bytes below 1024 and otherwise one decimal place of KiB,
+    MiB or GiB; JSON sizes are always bytes.
+
+### D7 — Supplying inputs, and `validate`
+
+**`--data`, `--set` and `--inputs-json` are the supply flags of `validate`
+and `render`, with the meaning and precedence ADR-003 defines.**
+
+| Flag | Value | Repeatable | Meaning (ADR-003's) |
+|---|---|---|---|
+| `--data` | `<dir>` | no | The data directory. |
+| `--set` | `<path>=<value>` | yes | One value, set by path. The flag's value is split at its first `=`. |
+| `--inputs-json` | `<json>` or `-` | no | A JSON object whose members are input names; `-` reads it from standard input. |
+
+1. **The inline JSON flag is `--inputs-json`, not `--json`.** `--json` means
+   "print JSON" on every command (D4); one flag name cannot mean both an
+   output mode and an input on the same command line.
+2. `--inputs-json -` is the only flag that reads standard input. Its size is
+   bounded by ADR-009's input limits.
+3. A command with no supply flag validates nothing supplied: every required
+   input is reported missing, in one pass. That is a result, not a usage error.
+
+`metais validate <package> [supply flags] [--resolved]`
+
+4. Prints every finding (ADR-006), and exits with ADR-006's findings code when
+   any finding is of error severity.
+5. JSON result: `inputs`, each `{"name", "supplied", "from"}` where `from`
+   lists where its value came from — the data-directory file as given, `--set`,
+   `--inputs-json`, `default` — so a supplier sees that its file was picked up.
+6. **`--resolved`** adds `data`: the input data model templates would see
+   (ADR-003) — parsed values after coercion and defaults, absent fields absent —
+   in ADR-002's canonical key order. Human output prints it as indented JSON
+   after the findings. It is how a supplier checks a CSV coercion without
+   rendering.
+
+### D8 — `render`
+
+`metais render <package> --out <dir|-> [supply flags] [--only <path>] [--overwrite] [--dry-run] [--now <date-time>] [--sample [--optional all|none|mixed] [--seed <n>]]`
+
+1. **Validates first**, then renders under ADR-005: staged, all or nothing.
+2. **`--out` is required**, including with `--dry-run`, so a dry run reports
+   exactly what the real run would do, refusal of a non-empty directory
+   included.
+3. **`--out <dir>`** writes the outputs there. A non-empty directory is
+   refused unless `--overwrite` (ADR-005: replace, never delete).
+4. **`--out -`** writes ADR-005's deterministic tar of every output to standard
+   output. **A tar is not written to a terminal** (`cli.archive-to-terminal`;
+   next: redirect, or `--only <path>`). `--overwrite` with `--out -` is a usage
+   error.
+5. **`--only <path>`** selects one output by its rendered path — the path
+   `--dry-run` lists. The whole render still runs and is validated; `--only`
+   chooses what is written, so it can never make a refused render succeed.
+   With `--out -`, the selected output's bytes are written raw, and may go to
+   a terminal; with `--out <dir>`, only that file is written. A path no output
+   has is refused (`cli.unknown-output`, listing the paths; next: `--dry-run`).
+   `--only` is single-valued: standard output is either a tar or one file's
+   bytes, never something whose shape depends on a count.
+6. **`--dry-run`** writes nothing and lists every file the render would write,
+   with `size` and `digest` (`sha256:<hex>`, ADR-005's). With `--out -` it
+   lists what the stream would carry.
+7. **`--now <date-time>`** supplies the render time: an RFC 3339 `date-time`
+   (offset required). Anything else is a usage error. The value goes to
+   ADR-004 as given; without `--now`, there is no time.
+8. **`--sample`** renders from generated sample data (ADR-007) — the author's
+   preview of R13.6. The generated data takes the data directory's place in
+   ADR-003's precedence; `--set` and `--inputs-json` apply over it, so an author
+   can pin one field to see one branch; `--data` with `--sample` is a usage
+   error. The generated data is validated like any input before rendering.
+   **`--optional`** (`all`, `none`, `mixed`; default `all`) and **`--seed`**
+   (an unsigned 64-bit integer; default `0`) are accepted only with
+   `--sample`.
+9. JSON result: `out` (as given), `dry_run`, `only` (or `null`), `files` (each
+   `path`, `size`, `digest`), and `sample` (`{"optional", "seed"}` or `null`).
+   Human output, when `--out` is a directory: one line per file,
+   `<size><TAB><digest><TAB><path>`, headed `would write` on a dry run.
+
+### D9 — The authoring commands
+
+**`init`, `check`, `test`, `sample`, `pack` and `unpack` take the source
+directory as `.` by default where that is unambiguous, ask nothing, and list
+everything they write.**
+
+#### `init`
+
+`metais init [<dir>] [--name <name>] [--dry-run]`
+
+1. Writes ADR-007's minimal scaffold into `<dir>` (default `.`), creating it
+   and its missing parents.
+2. **`--name`** defaults to the last element of `<dir>` as written. When
+   `<dir>` is omitted or its last element is `.` or `..`, `--name` is required
+   (`cli.name-required`; next: `metais init --name <name>`). The tool does not
+   look up the working directory's name: the name comes from the command line.
+   A name ADR-002's syntax rejects is refused with a suggested valid name.
+3. **Refuses if any file it would write already exists**, listing them, and
+   writes nothing. It never overwrites and has no `--overwrite`. Other files in
+   `<dir>` (a `.git/`, a README) are left alone.
+4. Next: `metais check <dir>`, then `metais render <dir> --sample --out <preview dir>`.
+
+#### `check`
+
+`metais check [<package>]`
+
+1. Runs ADR-007's check — on a source directory or a packed package — and
+   prints every finding. Needs no data.
+2. JSON result: `counts`, the number of findings per ADR-006 severity.
+3. Next on success: `metais test <package>`.
+
+#### `test`
+
+`metais test [<package>] [--example <name>]… [--update] [--dry-run]`
+
+1. Runs ADR-007's test over every example, or the ones `--example` names
+   (repeatable; an unknown name is refused, listing the names).
+2. JSON result: `examples`, each `{"name", "status", "differences"}`, with
+   `status` one of `pass`, `fail` and `no-expected`, and `differences` each
+   `{"path", "kind"}` with `kind` one of `missing`, `unexpected` and
+   `differs`, plus, for a text file that differs, the first differing `line`.
+   ADR-007 owns what is compared.
+3. **`--update`** (source directory only) writes each selected example's
+   rendered outputs into its expected outputs, replacing files and deleting
+   none; an expected file the render no longer produces is reported as a
+   finding for the author to remove. `--dry-run` lists what `--update` would
+   write. This is how §4.8's author records "the outputs it should produce".
+4. Next on success: `metais pack <package>`.
+
+#### `sample`
+
+`metais sample [<package>] (--to <dir> | --example <name>) [--optional all|none|mixed] [--seed <n>] [--overwrite] [--dry-run]`
+
+1. Generates sample data (ADR-007), validates it, and writes it as a data
+   directory — one file per input in ADR-007's chosen form, named by ADR-003's
+   rule — so `render --data <dir>` renders it.
+2. **`--example <name>`** (source directory only) writes it as
+   `examples/<name>/inputs/` — R13.6's "saved as an example's inputs".
+   Exactly one of `--to` and `--example` is required.
+3. A non-empty destination is refused unless `--overwrite` (replace, never
+   delete). A field the generator cannot satisfy is ADR-007's finding, and
+   nothing is written.
+4. Defaults as `render --sample`: `--optional all`, `--seed 0`.
+5. JSON result: `optional`, `seed`, `to` or `example`, `files`.
+6. Next: `metais render <package> --data <dir> --out <dir>`, or for an example
+   `metais test <package> --example <name>`.
+
+#### `pack`
+
+`metais pack [<source>] [--out <file|->] [--overwrite] [--dry-run]`
+
+1. Runs ADR-007's pack — check, test, then the deterministic zip. A packed
+   package as the operand is refused (`cli.not-a-source-directory`).
+2. **`--out` defaults to `<name>-<version>.metais`** in the working directory,
+   from the manifest's name and version. The version is in the name so that
+   packing a new version never meets the old file.
+3. An existing file is refused unless `--overwrite`. `--out -` writes the zip
+   to standard output, and is refused when standard output is a terminal.
+4. JSON result: `file` (as given, or `-`), `size`, `digest`.
+
+#### `unpack`
+
+`metais unpack <package> --to <dir> [--overwrite] [--dry-run]`
+
+1. Runs ADR-007's unpack. The operand must be a packed package; a directory is
+   refused. `--to` is required; a non-empty `<dir>` is refused unless
+   `--overwrite`.
+2. JSON result: `to`, `files`. Next: `metais check <dir>`.
+
+### D10 — The JSON document
+
+**With `--json`, a run prints exactly one JSON document, of one envelope
+shape, named and versioned per command.**
+
+1. **The envelope**, members always present and in this order:
+
+   ```json
+   {"format":"metais.validate/1","ok":false,"findings":[…],"result":{…},"next":[{"run":"…","why":"…"}]}
+   ```
+
+   - `format` — `metais.<command>/<major>`; `metais.help/1` and
+     `metais.version/1` for those commands, and `metais.usage/1` for an
+     unknown command.
+   - `ok` — `true` when the command completed and no finding is of error
+     severity.
+   - `findings` — ADR-006 finding objects in ADR-006's order; `[]` when none.
+     Usage errors are findings too.
+   - `result` — the command's result object (the shapes in D5–D9), or `null`
+     when the command was refused before producing one.
+   - `next` — D14's list; `[]` when there is nothing to suggest.
+
+2. **Encoding**: UTF-8 without a byte order mark; compact, with no
+   insignificant whitespace; HTML escaping off (`SetEscapeHTML(false)`); one
+   LF at the end and none inside. A document is therefore also a one-line
+   JSON Lines stream, and a program can read it with any JSON parser or
+   line by line.
+3. **Member order is fixed** by the format's definition, never by map
+   iteration. Data the tool did not invent — a schema, `--resolved` data —
+   is in ADR-002's canonical key order. Lists are ordered as each command
+   states. The same run gives the same bytes.
+4. **Versioning.** Within a major version a format only adds: new members,
+   new enumeration values. A consumer ignores members it does not know and
+   treats an unknown enumeration value as "other". Removing, renaming or
+   retyping a member, or changing its meaning, is a new major version, and
+   happens only in a new major version of the tool. The v1 tool emits `/1`
+   documents only.
+5. **Each format is defined by a JSON Schema (2020-12)** committed at
+   `docs/cli/schemas/metais.<command>.1.json`, with the envelope's shared
+   members in `docs/cli/schemas/metais.envelope.1.json`. Every `--json`
+   document the test suite produces is validated against its schema.
+6. **The exit code is the same with and without `--json`.**
+7. `--json` is recognised wherever it appears before `--`, even on a command
+   line that otherwise fails to parse, so a harness that asked for JSON gets
+   JSON for its usage error too.
+
+### D11 — Standard streams
+
+**Standard output carries the result and nothing else; standard error
+carries everything about the result; standard input is read only when asked.**
+
+1. **Standard output** carries, and only carries:
+   - with `--json`: the one document;
+   - for `render --out -` and `pack --out -`: the bytes, and nothing else;
+   - otherwise: the command's human result.
+2. **With `--json`, standard error is empty** — every refusal, warning and
+   notice is in the document — **except when standard output carries bytes**
+   (`render --out -`, `pack --out -`): then the document goes to standard
+   error, after the bytes are complete.
+3. **In human mode, standard error carries** refusals, usage errors, and
+   notices about the result (a `grep` truncation, skipped binary entries, an
+   `outline` with no headings). The findings of `validate`, `check` and
+   `test`, and `inspect`'s summary, are those commands' results and go to
+   standard output; every other command's warnings go to standard error. The
+   human `Next:` block goes to standard output after `inspect`, `validate`,
+   `check` and `test`, and to standard error after every other command, so
+   that `read` and `schema` output stays exactly the entry or the schema.
+4. **Nothing reaches standard output from a refused render.** ADR-005 stages
+   the whole render before the first byte is written to the stream, so a
+   caller never receives half an archive.
+5. **Paths in any output** are entry paths, output paths relative to `--out`,
+   or paths the caller gave, printed exactly as given. The tool never prints
+   an absolute path it constructed, the working directory, the home
+   directory, the user or the host name.
+6. **Standard input is read only for `--inputs-json -`.** No command prompts,
+   reads the terminal, or waits for input it was not told to read; a pipe on
+   standard input is otherwise ignored.
+7. **Human output is deterministic**: no times, no durations, no progress
+   indicators, nothing sized to the terminal's width. Help is wrapped at 80
+   columns.
+
+### D12 — Colour, the terminal, and the environment the tool reads
+
+**Colour appears only in human output, only on a terminal, never against
+`NO_COLOR`; and the tool's reading of `NO_COLOR` and `TERM` is presentation,
+which never reaches a template.**
+
+1. `--color auto` (the default) colours a stream only when that stream is a
+   terminal, `NO_COLOR` is unset or empty, and `TERM` is set and not `dumb`.
+   Standard output and standard error are decided separately.
+   `--color always` colours regardless — a command-line flag overrides
+   `NO_COLOR`, as no-color.org asks — and `--color never` never colours.
+2. **What may be coloured**: severity labels in findings, the path and line
+   prefixes and the matched text in `grep`, and the difference markers in
+   `test`. Only SGR sequences (`ESC [ … m`) are used.
+3. **What is never coloured, whatever `--color` says**: a JSON document, help
+   text, and every byte of `read`, `schema`, `render --out -` and
+   `pack --out -`.
+4. **The tool decides whether a stream is a terminal** only for colour under
+   `auto` and for the refusals of a tar, a packed package (D8 item 4, D9
+   `pack`) or a binary entry (D5 `read`) written to a terminal.
+5. **The environment variables the tool reads are `NO_COLOR` and `TERM`, and
+   no others.** It never reads `HOME`, `XDG_*`, `TMPDIR` (it does not call
+   `os.TempDir` or `os.UserHomeDir`), `LANG`, `LC_*`, `COLUMNS` or any
+   `METAIS_*` variable.
+6. **This is not host data reaching a template, and the line is exact.**
+   R14.4 forbids anything of the host from reaching what a package can see or
+   produce. `NO_COLOR`, `TERM` and whether a stream is a terminal are read by
+   the tool, about the tool's own display, and:
+   - they never enter the data model a template sees (`inputs`, `item`,
+     `package`), a manifest value, a path, a default, a finding's text, a JSON
+     document, or any byte of an output, a tar or a package;
+   - their only effects are whether SGR bytes are inserted into human-mode
+     text and whether one of the refusals in item 4 applies;
+   - their values are never printed.
+
+   So a package cannot learn them, and the outputs and JSON documents of a run
+   are byte-identical whatever they are.
+7. **One internal package owns these reads** (ADR-010 names it), and it is the
+   only code in the module that calls `os.Getenv`, `os.LookupEnv` or
+   `os.Environ`; ADR-009's isolation proof enforces that.
+
+### D13 — Exit codes as the command line uses them
+
+**The command line maps every outcome to ADR-006's exit codes, the same in
+human and JSON mode.** Assuming ADR-006 defines `0` (success), `1` (the
+subject has error-severity findings, or the operation was refused) and `2`
+(usage error):
+
+| Outcome | Code |
+|---|---|
+| Success, including with warnings; `grep` with no match; `help`; `version` | 0 |
+| Invalid inputs; a failing `check` or `test`; a package refused (unreadable, out of specification, digest mismatch, unsupported specification major) | 1 |
+| An operation refused: entry or input not found, glob without a match, line out of range, non-empty destination, output exists, archive or binary to a terminal | 1 |
+| The command line cannot be interpreted: unknown command or flag, missing operand or required flag, malformed or out-of-range value, conflicting or repeated flags, `metais` with no command | 2 |
+
+Any further code ADR-006 defines (an I/O failure, an interruption, an
+internal error) is used as ADR-006 defines it.
+
+### D14 — Every refusal names the next step
+
+**Every JSON document carries `next`: the commands to run next, each a command
+line and the reason; every refusal has at least one.**
+
+1. Each item is `{"run": "<command line>", "why": "<one sentence>"}`. Human
+   output prints them under `Next:` as `  <run>  — <why>`.
+2. `run` is a complete `metais` command line. Operands and `--data` are echoed
+   exactly as the caller gave them, quoted for a POSIX shell (single quotes)
+   when they hold anything outside `A–Z a–z 0–9 _ . / : @ % + = , -`. A value
+   the tool cannot know is a placeholder in angle brackets (`<dir>`,
+   `<pattern>`). **The values of `--set` and `--inputs-json` are never echoed**
+   — they may hold what the caller would not want in a log — and appear as the
+   placeholder `<your --set and --inputs-json flags>`.
+3. Success documents carry the golden path's next step: `inspect` → D6's
+   list; `schema` → `validate`; `validate` (valid) → `render`; `validate`
+   (invalid) → `validate` again after correcting; `init` → `check`;
+   `check` → `test`; `test` → `pack`; `sample` → `render` or `test`; `unpack` →
+   `check`. The reading commands `ls`, `read`, `outline`, `grep` and `extract`
+   carry `next` only on a refusal.
+4. Each refusal code is declared with its command (D15), with the template of
+   its next step.
+
+### D15 — Help is authoritative because it is the declaration
+
+**Each command is declared once, as data beside its code, and the parser, the
+dispatcher, the help printer and `help --json` all read that declaration.**
+
+1. A command's declaration holds: name, group, synopsis, description,
+   operands, flags (long name, short alias, value placeholder, default,
+   repeatable, description), the JSON format it prints, its refusals (code,
+   cause, next-step template), and examples. A flag cannot be parsed unless it
+   is declared, so it cannot exist without help text.
+2. **`metais help`** (and `metais --help`): the one-line description; the two
+   golden paths as command sequences — consuming: `inspect` → `read` →
+   `schema` → `validate` → `render`; authoring: `init` → edit (previewing with
+   `render --sample`) → `check` → `test` → `pack`; the commands by group (D1), one line each; the
+   global flags; the topics; and the exit codes.
+3. **`metais <command> --help`** and **`metais help <command>`**: usage,
+   description, operands, flags with defaults, what it prints (human and JSON
+   format name), every refusal with its next step, and examples.
+4. **Topics**: `metais help inputs` (supplying inputs and ADR-003's
+   precedence), `globs` (D5), `limits` (ADR-009's names, units and defaults),
+   `json` (the envelope and every format name), `exit-codes` (D13).
+5. **`metais help --json`** prints `metais.help/1`: every command with its
+   full declaration, and the topics, for a harness that wants the whole
+   surface in one read.
+6. Help is printed to standard output and exits 0. A usage error prints the
+   command's usage line and `run 'metais <command> --help'` to standard error.
+   Help is never coloured and never depends on the terminal.
+
+### D16 — How it is proved
+
+1. **Help coverage.** A test enumerates the dispatch table and asserts every
+   command appears in `metais help` and in `help --json`; that every declared
+   flag of every command appears in that command's `--help` and in
+   `help --json`; and that every example command line in help parses against
+   the declarations. Help output has golden files.
+2. **Refusals.** Each declared refusal code has a test that triggers it and
+   asserts a non-empty `next` whose `run` lines, placeholders substituted,
+   parse against the declarations. A test fails if a command emits a refusal
+   code its declaration does not list.
+3. **JSON shapes.** Every `--json` document produced anywhere in the test
+   suite is validated against its committed JSON Schema; a document of a
+   format with no schema fails.
+4. **Packed and source agree.** For a fixture package and its source
+   directory, `ls`, `read`, `outline`, `grep`, `schema` and `inspect` give the
+   same results apart from `source` and `digest`.
+5. **Standard output purity.** `render --out -` stdout equals the tar ADR-005
+   defines, byte for byte, with `--json`, with warnings present, and on a
+   refusal (empty). Pinned red first against a build that prints a notice to
+   standard output.
+6. **Presentation never reaches the result.** A run under a pseudo-terminal
+   with `NO_COLOR` and `TERM` set to sentinel values, and the same run piped
+   with them unset, give byte-identical JSON documents and outputs, and no
+   sentinel appears in any output, finding or message. Pinned red first
+   against a build that colours JSON.
+7. **Argument syntax.** Table tests for interspersed flags, `--`, `=` and
+   space forms, short aliases, refused grouping, refused abbreviation,
+   refused repetition, and `--json` honoured on an unparseable line.
+8. **Semantics.** Table tests for `read --lines` edges (start beyond the end,
+   clamped end, CRLF, no final LF, empty entry), `outline` (ATX, setext,
+   multi-line setext, `---` after a paragraph, `#` in a fence, frontmatter),
+   `grep` (anchors, `-C` merging, binary skip, truncation, long-line cut,
+   dot-segment rule) and the glob grammar.
+
+## Interfaces with sibling ADRs
+
+- **ADR-001** — I rely on: the entry path model (relative, `/`-separated,
+  confined, case-sensitive); `.compiled/` as ordinary entries of a packed
+  package; digest verification whose cost lets `read` of one entry avoid
+  decompressing every entry (per-entry verification when an entry is read,
+  plus the package digest over the digest file) — if ADR-001 requires a full
+  pass at open, every reading command pays it and §4.6's economy suffers; a
+  references index with at least `path`, `title` and `size` per reference; a
+  packed package recognised by content, not extension. I promise: the
+  command line never reads an entry around ADR-001's checks.
+- **ADR-002** — I rely on: the manifest's `name`, `version`, `title`,
+  `description`, specification version and supplier guide (inline text or an
+  entry; `inspect --guide` prints it either way); the name syntax (for
+  `init --name` and `pack`'s default file name); canonical JSON key order (for
+  `schema` and `--resolved`). I promise: `version` prints the specification
+  versions the tool implements as ADR-002 states them.
+- **ADR-003** — I rely on: the meaning and precedence of `--data`, `--set`
+  (path syntax, value typing) and the inline JSON object, **which this ADR
+  names `--inputs-json`, not `--json`**; the data-directory file names per
+  input and form (shown by `inspect`); the input order; whether an input as a
+  whole is required; each input's title, description, forms, meaning document
+  and schema entry; schema combination and per-input resolution; the resolved
+  data model (`--resolved`); the frontmatter delimiter (`outline`). I promise:
+  the supply flags pass values through unaltered, and `--inputs-json -` is the
+  only read of standard input.
+- **ADR-004** — I rely on: a representation for the render time; I hand it the
+  `--now` string after checking it is an RFC 3339 `date-time`, and nothing
+  when `--now` is absent.
+- **ADR-005** — I rely on: staging that completes before the first byte
+  reaches standard output; the tar profile; the overwrite rule (reused by
+  `extract`, `unpack`, `sample`, `test --update`); a dry-run listing with
+  `size` and a `sha256:` digest; output identity by rendered path (for
+  `--only`); mirror expansion (for `inspect`); file modes (reused by
+  `extract`); staging that never uses `os.TempDir`. I own `--only`, which
+  replaces the brief's `--output <name>`.
+- **ADR-006** — I rely on: the finding object, severities, ordering and human
+  wording; exit codes `0`, `1` and `2` as D13 uses them. I propose a `cli.`
+  family of codes for command-line refusals: `cli.unknown-command`,
+  `cli.unknown-flag`, `cli.missing-operand`, `cli.bad-value`,
+  `cli.repeated-flag`, `cli.conflicting-flags`, `cli.package-not-found`,
+  `cli.package-not-readable`, `cli.package-from-stdin`, `cli.entry-not-found`,
+  `cli.is-a-directory`, `cli.not-text`, `cli.line-out-of-range`,
+  `cli.no-match`, `cli.unknown-input`, `cli.unknown-output`,
+  `cli.archive-to-terminal`, `cli.binary-to-terminal`, `cli.name-required`,
+  `cli.not-a-source-directory`, `cli.destination-not-empty`,
+  `cli.output-exists`. The next step lives in the envelope's `next`, not in
+  the finding, so ADR-006 need not add a field for it.
+- **ADR-007** — I rely on: the scaffold; check, test and its comparison; the
+  sample generator (`optional`, `seed`, the form each input is written in);
+  pack and unpack; **a source directory's entry set** (what `pack` includes),
+  which the reading commands use, and which excludes a `*.metais` file at its
+  root, since `pack` writes one there by default. I propose `test --update`
+  and its never-delete rule for ADR-007 to adopt or reject.
+- **ADR-009** — I rely on: limit names, units and defaults, and the rule that
+  a caller may only lower them, behind the single repeatable
+  `--limit <name>=<value>` flag (if ADR-009 prefers a flag per limit, the
+  consistency pass renames); bounds on `--inputs-json -`, on `grep` patterns,
+  and on ADR-003's inputs. I promise: `NO_COLOR` and `TERM` are the only
+  environment variables the tool reads, through one package, and D12's line.
+  I hand over: **the Go runtime reads `GODEBUG`, and an environment setting
+  overrides the binary's own `go.mod` and `//go:debug` settings** (for
+  example `zipinsecurepath`); ADR-009 should state why no such setting can
+  change what the tool accepts or writes, and prove it.
+- **ADR-010** — I rely on: a parser with interspersed flags, `--`, no prefix
+  abbreviation, no short-flag grouping, detection of a repeated single-valued
+  flag, and per-command declarations the help printer reads (the standard
+  `flag` package stops at the first operand; `spf13/pflag` supports
+  interspersing); terminal detection (`golang.org/x/term.IsTerminal` is
+  available); a CommonMark 0.31.2 parser for `outline`; Go `regexp` for
+  `grep`; a JSON encoder with HTML escaping off and declared member order.
+  The tool's version string is ADR-010's.
+- **ADR-011** — I rely on: nothing in the format specification binding a
+  command line (see Proposed rulings). If the conformance runner drives the
+  tool through its command line, `validate --json`, `render --out <dir>` and
+  `render --out -` are stable within `/1` and may be relied on.
+
+## Conformance
+
+The command line is the reference tool's contract, not the format's (Proposed
+ruling 7): a second implementation may expose the format through another
+interface entirely, so **no behaviour this ADR decides is a conformance
+vector**. What the vectors observe — findings (ADR-006), outputs and
+containers (ADR-005) — reaches the command line unchanged, and this ADR adds
+nothing to it.
+
+The behaviours of D5–D14 are proved by the tool's own tests (D16), against
+`docs/cli/` and the help text, which are their specification.
+
+## Alternatives rejected
+
+### `--json` for inline input
+
+The brief's input flag shares its name with the output mode every command
+has. On `validate` and `render` one of the two would have to be spelled
+differently anyway; the output flag is the one on every command, so the input
+flag moves.
+
+### `--output <name>` beside `--out`
+
+Two flags a letter-sequence apart, one taking a directory and one an output's
+name, invite exactly the mistake a harness makes when it pattern-matches flag
+names. `--only` says what it does. Selecting by declaration name was rejected
+too: a `for_each` declaration produces many files, while a rendered path names
+one, and `--dry-run` lists it.
+
+### A separate `preview` command, or `sample` alone
+
+A `preview` command would duplicate `render`'s flags, staging, dry run and
+stream modes. `sample` alone, piped into `render`, would make the golden
+preview two commands and lose the forms (CSV, Markdown collections) a
+data directory carries and a JSON stream does not.
+
+### JSON Lines streams for `grep` and `ls`
+
+Streaming lets a caller start before the search ends, but the results are
+bounded (`--max-results`, ADR-009's entry count), and a stream of records with
+no envelope has nowhere to put findings, truncation or `next`. One document
+per run keeps one rule for every command.
+
+### Pretty-printed JSON
+
+Readable to a person, but a person has the human output, and a harness pays
+for every space. Compact JSON is also a valid JSON Lines record.
+
+### `schema` as the envelope's version key
+
+Collides with JSON Schema's vocabulary, and with the `schema` command whose
+result holds a schema. `format` collides with nothing a document carries.
+
+### Reading a package from standard input
+
+Possible by buffering the stream up to the size limit, but no use case needs
+it, and a file is one redirection away. It can be added within `/1`.
+
+### POSIX short options only, or options before operands only
+
+Short options cannot name this many flags readably, and requiring flags
+before operands breaks the way harnesses compose command lines (D3 item 3).
+
+### Last-wins for repeated flags
+
+Convenient for scripts that append overrides, but it turns a generated
+command line's mistake into a silently different run.
+
+### Configuration by environment variable or file
+
+`METAIS_JSON=1` or a `~/.metais` file would make a command line's meaning
+depend on where it runs — exactly the host dependence R14.4 forbids for
+renders — and would put a host read behind every flag.
+
+### `grep` exiting 1 on no match
+
+Conventional for `grep(1)`, wrong for a query whose caller reads the count:
+it makes "nothing found" indistinguishable, by exit code, from a refused
+search.
+
+### Errors as a second JSON stream on standard error
+
+Two channels to merge for one run. With `--json`, everything is in the one
+document.
+
+## Consequences
+
+- A harness learns the whole surface from `metais help --json`, reads a
+  package one bounded step at a time, and recovers from every refusal by
+  running the command the refusal names.
+- A program branches on `ok` and the exit code, and parses one document per
+  run with any JSON parser.
+- The JSON formats become a compatibility promise: a member, once shipped in
+  `/1`, stays for the life of the v1 tool.
+- Adding a command or a flag is one declaration; its help, its JSON listing
+  and its parse cannot diverge.
+- Interspersed flags and no-abbreviation rule out the standard `flag`
+  package as the parser on its own.
+- A supplier cannot pass a package on standard input; an author's `pack`
+  writes into the working directory by default.
+
+## What this does not decide
+
+- The finding object, codes, severities, wording and exit-code values
+  (ADR-006).
+- Supply semantics, `--set` path syntax and precedence (ADR-003).
+- Limit names, units and defaults (ADR-009).
+- The tar profile, staging, overwrite and file modes (ADR-005).
+- What `check`, `test`, `pack`, `unpack` and the sample generator do, and the
+  scaffold (ADR-007).
+- The parser library, the Markdown parser, terminal detection, and the tool's
+  version string (ADR-010).
+- An MCP mode or any other interface (PRD §3).
+- Localised messages: v1's human output is English.
+
+## Proposed rulings
+
+1. **The sample preview is `render --sample`; saving sample data is
+   `sample --to <dir> | --example <name>`.** Lean: yes — previewing is
+   rendering, saving data is not. Alternative: one `sample` command that also
+   renders.
+2. **The inline JSON input flag is `--inputs-json` (`-` for standard input).**
+   Lean: yes — `--json` is the output mode. Alternative: `--json-input`.
+3. **One raw output is chosen by `--only <rendered path>`**, not
+   `--output <name>`. Lean: yes. Alternative: select by declaration name.
+4. **The envelope is `format`/`ok`/`findings`/`result`/`next`, with
+   `format: "metais.<command>/<major>"`.** Lean: yes. Alternative: a `schema`
+   key, as the brief sketched.
+5. **JSON is compact, one line, HTML escaping off.** Lean: yes. Alternative:
+   indented.
+6. **With `--json`, one document on standard output for every outcome,
+   including usage errors; on standard error only when standard output
+   carries bytes.** Lean: yes. Alternative: errors always on standard error.
+7. **The command line and its JSON formats are the reference tool's
+   contract, not part of the format specification**; their schemas live in
+   `docs/cli/schemas/`. Lean: yes — a second implementation needs the format,
+   not our flags. Alternative: specify the CLI in `spec/`.
+8. **A package cannot be read from standard input in v1.** Lean: yes.
+9. **Flags may follow operands** (departing from POSIX Guideline 9). Lean: yes.
+10. **A repeated single-valued flag is a usage error.** Lean: yes.
+    Alternative: last wins.
+11. **No configuration file or behaviour-changing environment variable; only
+    `NO_COLOR` and `TERM` are read, for colour.** Lean: yes.
+12. **`grep` exits 0 when nothing matches.** Lean: yes. Alternative: grep(1)'s 1.
+13. **Globs and `grep`'s default never enter dot-segments (`.compiled/`)
+    unless named.** Lean: yes.
+14. **Text is valid UTF-8 with no NUL byte.** Lean: yes. Alternative: a
+    byte-sampling heuristic.
+15. **`pack` writes `./<name>-<version>.metais` by default.** Lean: yes.
+    Alternative: `--out` required.
+16. **`init` takes its default name from the directory operand, never from the
+    working directory.** Lean: yes.
+17. **Sample defaults are `--optional all` and `--seed 0`.** Lean: yes.
+18. **A tar, a packed package or a binary entry is never written to a
+    terminal.** Lean: yes.
+19. **Every command that writes files takes `--dry-run`.** Lean: yes.
+20. **`validate --resolved` prints the data model templates would see.**
+    Lean: yes.
+21. **`test --update` writes expected outputs, never deleting.** Lean: yes,
+    if ADR-007 agrees.
+22. **Limits are lowered with one repeatable `--limit <name>=<value>`.**
+    Lean: yes; names are ADR-009's.
+23. **`grep` defaults: `--max-results 100` (max 10000), `-C` at most 100;
+    displayed lines cut at 1024 bytes.** Lean: yes.
+24. **`extract` refuses when any glob matches nothing.** Lean: yes.
+25. **`render --out` is required, even with `--dry-run`.** Lean: yes.
+26. **No command name or flag may be abbreviated, and no command has an
+    alias.** Lean: yes.
+
+## References
+
+- POSIX.1-2024, XBD Chapter 12, Utility Conventions (Guidelines 3, 9, 10,
+  13): https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap12.html
+- Go `flag` package: https://pkg.go.dev/flag
+- `spf13/pflag` README (interspersed flags, `--`):
+  https://github.com/spf13/pflag
+- NO_COLOR: https://no-color.org/
+- JSON Lines: https://jsonlines.org/
+- Go `encoding/json` (`SetEscapeHTML`, map key order):
+  https://pkg.go.dev/encoding/json
+- Go `regexp` (RE2 syntax, linear time): https://pkg.go.dev/regexp
+- Go `regexp/syntax` (flags, repetition limit of 1000):
+  https://pkg.go.dev/regexp/syntax
+- RE2 syntax: https://github.com/google/re2/wiki/Syntax
+- CommonMark Spec 0.31.2 (§4.2 ATX headings, §4.3 setext headings, §4.5
+  fenced code blocks): https://spec.commonmark.org/0.31.2/
+- GNU grep manual (context output, group separator, exit status):
+  https://www.gnu.org/software/grep/manual/grep.html
+- Go `path.Match`: https://pkg.go.dev/path#Match
+- RFC 3339 §5.6: https://www.rfc-editor.org/rfc/rfc3339
+- `golang.org/x/term` (`IsTerminal`): https://pkg.go.dev/golang.org/x/term
+- Go, GODEBUG settings and their precedence: https://go.dev/doc/godebug
+
+## Implementation log
+
+Nothing implemented.

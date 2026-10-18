@@ -1,0 +1,1236 @@
+# ADR-007: Authoring — a scaffold that passes its own tests, a data-free check with a static template↔schema cross-reference, examples compared byte for byte, a deterministic pack, and a seeded sample-data generator
+
+**Status:** Proposed
+**Date:** 2026-10-18
+**Deciders:** Ed Funnekotter
+**Designs:** PRD-001 R13 items 1 to 6; R3 item 5 (examples as part of the
+data specification); R17 item 2 (the authoring golden path)
+**Depends on:** ADR-001 (the layout, the reserved entries, the deterministic
+zip writer, the digest file and its verification, which `pack` and `unpack`
+use); ADR-002 (the manifest's fields, its YAML profile with line numbers, the
+package name rule, the canonical JSON); ADR-003 (input declarations, the
+asserted JSON Schema keywords and formats, input forms and their parsing, the
+data directory layout, default application, the combined schema); ADR-004 (the
+pinned Liquid dialect: expression grammar, tags, filters, variables, partial
+resolution); ADR-005 (outputs, `for_each`, `when`, the mirror shorthand,
+containers, in-memory staging of a render); ADR-006 (the finding model, codes,
+severities, exit codes); ADR-008 (command names and flags, the JSON envelope);
+ADR-009 (resource limits and confinement); ADR-010 (the libraries and the
+package layout); ADR-011 (the conformance vector format).
+
+## Context
+
+### What the PRD requires
+
+R13 gives the author one path: `init`, edit, `check`, `test`, `pack` (R17
+item 2), plus `unpack` and a sample-data preview. The requirements this ADR
+must make buildable:
+
+- **`init`** writes a minimal source directory (R13 item 1).
+- **`check`** needs no data. It verifies the manifest, compiles every schema,
+  parses every template, confines every path, and cross-references templates
+  against schemas: a field a template uses that no schema declares is an
+  error, an input no template uses is a warning, and a Liquid construct split
+  across Office Open XML text runs is a finding (R13 item 2).
+- **Examples are tests**: inputs validated and rendered, outputs compared byte
+  for byte where given (R13 item 3). Examples are also the most concrete
+  statement of what an input expects (R3 item 5).
+- **`pack`** runs check and test, then writes a package whose bytes depend
+  only on the source directory (R13 item 4). **`unpack`** returns an editable
+  source directory (R13 item 5).
+- **The sample preview** renders from generated data that satisfies the
+  schemas, prefers the schema's own `examples`, `default`, `const`, `enum`,
+  fills optional fields all, none or mixed, reports an unsatisfiable field as
+  a finding that suggests an `examples` value, is deterministic for a seed,
+  and can be saved as an example's inputs (R13 item 6). SC4 requires every
+  example package of §4.1 to §4.5 to preview, all-filled and none-filled, to
+  output that validates.
+
+### What the Liquid library exposes (verified 2026-10-18)
+
+The cross-reference is static analysis of variable use, so it needs the
+expression structure of every template, not only the ability to render one.
+`github.com/osteele/liquid` v1.9.2 (released 2026-08-16):
+
+- `Template.GetRoot()` returns the root `render.Node` of the compiled tree.
+  `BlockNode` exports `Body` and `Clauses`; `TagNode`, `BlockNode` and
+  `ObjectNode` embed `parser.Token`, which exports the tag `Name`, its
+  argument text `Args`, the full `Source` and a `SourceLoc` of path and line.
+  There is no column.
+- **Expressions are not exposed as a tree.** `expressions.Parse` returns an
+  `Expression` whose only method is `Evaluate`; the yacc grammar compiles each
+  expression directly into Go closures (`func(Context) values.Value`), and
+  `ObjectNode.expr` is unexported. The package's own doc comment calls it "an
+  internal package".
+- `SeqNode`, `RawNode` and `TrimNode` embed a `sourcelessNode` whose
+  `SourceLocation()` panics.
+
+So the library gives tag structure with line numbers, and nothing about the
+variable paths inside an expression. A cross-reference built on it would
+re-parse every `Args` string with a parser of its own anyway.
+
+### What Liquid's reference implementation does at the points the analysis touches
+
+From the Shopify Liquid source (`lib/liquid/tags/render.rb`,
+`lib/liquid/context.rb`, `lib/liquid/variable_lookup.rb`):
+
+- `render` requires a quoted string as the template name; its syntax is
+  `render 'name' [with|for expr] [as alias]` plus `key: value` parameters. The
+  partial runs in `new_isolated_subcontext`, which keeps the static
+  environments (global objects) and drops the caller's assigned variables.
+  The alias defaults to the last path segment of the template name. `for`
+  binds `forloop` inside the partial.
+- A lookup segment `size`, `first` or `last` that is not in brackets and is
+  not a key of the object calls the method instead; a key that exists wins.
+  `first` and `last` on a string give its first and last character.
+- The root of a variable path may itself be bracketed (`[expr]`), which looks
+  a variable up by a computed name.
+
+### What JSON Schema 2020-12 says at the points the analysis and the generator touch
+
+- `true` behaves like `{}` and `false` like `{"not": {}}`.
+- `pattern` is an ECMA-262 regular expression and is not implicitly
+  anchored.
+- `minLength` and `maxLength` count characters as RFC 8259 defines them
+  (code points).
+- `minContains` defaults to 1 and has effect only with `contains`.
+- `multipleOf` is strictly greater than 0.
+- The formats are, by section 7.3: `date-time`, `date`, `time`,
+  `duration`; `email`, `idn-email`; `hostname`, `idn-hostname`; `ipv4`,
+  `ipv6`; `uri`, `uri-reference`, `iri`, `iri-reference`, `uuid`;
+  `uri-template`; `json-pointer`, `relative-json-pointer`; `regex`.
+
+### How a word processor stores the text a placeholder is typed into
+
+In WordprocessingML a paragraph `w:p` holds runs `w:r`, each a region of text
+with one set of properties (`w:rPr`), and each run holds text `w:t`. When an
+author types `{{ inputs.vendor.name }}` into Word, spelling marks
+(`w:proofErr`), a formatting change, a tracked change (`w:ins`, `w:del`), a
+bookmark or the editing session itself routinely end one run and start
+another inside the placeholder. The XML then reads
+`<w:t>{{ inputs.</w:t></w:r><w:r><w:t>vendor.name }}</w:t>`, and the Liquid
+engine, which reads the raw bytes, sees an expression containing markup.
+SpreadsheetML stores rich text as runs `r` of text `t` inside a shared-string
+item `si` (or an inline string `is`); DrawingML (PowerPoint slides, and text
+in charts and shapes everywhere) uses `a:p`, `a:r`, `a:t`. Office writes
+namespace prefixes freely — Microsoft's own SpreadsheetML example uses `x:`,
+and its PresentationML example declares `xmlns:a` on individual elements —
+so detection must resolve namespaces, not match prefixes.
+
+### Randomness that stays reproducible
+
+The generator must give the same data for the same seed on every platform.
+Go's `math/rand/v2` documents that a fixed seed reproduces output on every
+run, and says nothing about stability of `IntN` and the other derivations
+across Go releases. A generator whose output changes with the toolchain would
+make "seed 7" mean different data in two builds of one tool version.
+
+## Decision
+
+### D1 — `init` writes a scaffold that already checks, tests and packs
+
+1. **`metais init [<dir>] [--name <name>]`.** `<dir>` defaults to the
+   current directory. It asks nothing and reads no environment variable.
+2. **`--name`** is the package name (ADR-002's name rule). Absent, it is the
+   base name of `<dir>` after resolving `.`; when that base name does not
+   satisfy the rule, `init` refuses and names `--name` as the next step.
+3. **The directory must be empty.** It is created, with parents, if it does
+   not exist. An existing directory counts as empty when it holds nothing but
+   entries on the quiet list of D7 item 3 (so `git init` followed by `metais
+   init` works). Anything else is a refusal that lists up to ten of the
+   entries found and says to choose an empty directory; `init` never
+   overwrites and has no `--overwrite`.
+4. **What it writes**, all UTF-8 with LF line endings and a final newline,
+   files mode 0644 and directories 0755 before the umask, in this order:
+
+   ```
+   <dir>/
+     .gitattributes
+     metais.yaml
+     inputs/greeting.schema.json
+     inputs/greeting.md
+     templates/greeting.md
+     examples/basic/example.yaml
+     examples/basic/inputs/greeting.json
+     examples/basic/expected/greeting.md
+   ```
+
+   - **`.gitattributes`**: the single line `* -text`. It stops git from
+     converting line endings in a checkout, which would otherwise change
+     templates (and so outputs) and expected files on Windows and break the
+     byte comparison of D5. `pack` does not pack it (D7 item 3).
+   - **`metais.yaml`**: the specification version `1.0`; the name; version
+     `0.1.0`; a title (the name with `-` and `_` as spaces, each word
+     capitalised); a one-line description placeholder; a supplier guide of
+     two sentences saying what the package produces and pointing to the
+     input's meaning document; one input `greeting` with schema
+     `inputs/greeting.schema.json`, doc `inputs/greeting.md` and forms
+     `json` and `yaml`; one output, template `templates/greeting.md`, path
+     `greeting.md`. Field spellings are ADR-002's, ADR-003's and ADR-005's.
+   - **`inputs/greeting.schema.json`**: `$schema` 2020-12; `title` and
+     `description`; `type: object`; `additionalProperties: false`; required
+     `name` (`type: string`, `minLength: 1`, `maxLength: 80`, `title`,
+     `description`, `examples: ["Ada Lovelace"]`); optional `note`
+     (`type: string`, `maxLength: 400`, `title`, a `description` that says
+     leaving it out prints nothing). The optional field exists so the sample
+     modes of D9 have a branch to show.
+   - **`inputs/greeting.md`**: a short meaning document — what the greeting
+     is for, what a good `note` looks like.
+   - **`templates/greeting.md`**, exactly:
+
+     ```liquid
+     # Hello, {{ inputs.greeting.name }}
+     {%- if inputs.greeting.note %}
+
+     {{ inputs.greeting.note }}
+     {%- endif %}
+     ```
+
+     It demonstrates the idiom for optional data: an absent field is `nil`,
+     the only falsy value besides `false`, so `if` tests presence.
+   - **`examples/basic/example.yaml`**: `title: Basic`, and a `description`
+     saying it is the scaffold's example.
+   - **`examples/basic/inputs/greeting.json`**:
+     `{"name": "Ada Lovelace", "note": "Welcome."}`, two-space indented.
+   - **`examples/basic/expected/greeting.md`**: `# Hello, Ada Lovelace`,
+     a blank line, `Welcome.`, final newline.
+5. **It prints** the files written and the next step: edit `inputs/` and
+   `templates/`, then `metais check`, `metais test`, `metais pack`. With JSON
+   output (ADR-008) it prints the list of paths.
+6. **A failed write** stops `init`, which reports the files already written;
+   it removes nothing.
+7. **The scaffold is pinned by a test**: the tool's suite runs `init`, then
+   `check` (no findings at all), `test` (pass) and `pack`, on every supported
+   platform.
+
+### D2 — `check` runs every step, in a fixed order, and reports every finding
+
+1. **`metais check [<pkg>]`** accepts a source directory (default `.`) or a
+   packed `.metais`. It reads no data other than the package's own content.
+   It exits non-zero when any finding has error severity (ADR-006); warnings
+   do not fail it.
+2. **The steps**, in order. Each runs whatever earlier steps found, except
+   that a step whose input does not exist is skipped, and every skipped step
+   is named in one `check.step_skipped` info finding.
+   1. **Source tree** (source directory only). Every entry is a regular file
+      or a directory: a symbolic link is `source.link` and a device, socket
+      or pipe is `source.special_file`, both errors. Entries outside the
+      layout are classified by D7 item 3. A `.compiled/` directory is
+      `source.compiled_present`, a warning: `pack` ignores and replaces it.
+   2. **Entries.** Every entry name passes ADR-001's name rules and
+      ADR-009's confinement rules; the entries ADR-001 reserves are where it
+      requires them. On a packed package this has already happened on read
+      (ADR-001), and digests were verified.
+   3. **Limits.** The package `pack` would write stays within ADR-009's
+      default read limits — entry count, per-entry and total size, path
+      length — so that no package `pack` writes is one a default reader
+      refuses. A breach is `source.exceeds_limit`, an error naming the limit.
+   4. **Manifest.** It parses under ADR-002's YAML profile, validates against
+      the manifest's JSON Schema (`spec/schemas/`), and passes the semantic
+      rules ADR-002, ADR-003 and ADR-005 state. Every path it names — schema,
+      meaning document, template, asset, output validation schema — exists
+      and is confined.
+   5. **Schemas.** Every input schema and every output validation schema
+      compiles under ADR-003's dialect, and every `$ref` resolves inside the
+      package. Then, statically: each `default` and each `examples` entry
+      validates against the schema object that contains it
+      (`schema.invalid_default`, `schema.invalid_example`, errors — a default
+      is applied before validation, R5 item 3, and an example misleads the
+      supplier who copies it); a `const` that fails the rest of its schema
+      object is `schema.unsatisfiable`, an error; an `enum` member that fails
+      the rest of its schema object is `schema.unusable_enum_member`, a
+      warning; a name in `required` that is not declared at that object
+      (D3 item 4) is `schema.required_not_declared`, a warning, because it is
+      almost always a typo.
+   6. **Templates.** Every file under `templates/` is valid UTF-8
+      (`template.not_utf8`, error) and parses — both with the rendering engine
+      and with the analysis front end of D3 item 1 (`template.parse`, error).
+      Parse-error hints are in item 4. A template containing a CR LF pair is
+      `template.crlf`, a warning: a checkout that converts line endings
+      produces it, and the output's CRLF transform (ADR-005) is the portable
+      way to get CRLF output. Each manifest expression — output `path`
+      templates, `when`, `for_each` — parses (`manifest.expression_parse`,
+      error, at the manifest line).
+   7. **Cross-reference** (D3), over every template and manifest expression
+      that parsed.
+   8. **Office Open XML text runs** (D4).
+   9. **Examples layout** (D5 item 1). Validating and rendering them is
+      `test`'s.
+   10. **Compiled form.** Everything `.compiled/` will hold — the canonical
+       manifest, the combined schema, the references index, the digests — is
+       computed, and a failure to compute any part is a finding here. On a
+       packed package, the stored `.compiled/` must equal what is computed
+       from its entries; a difference is `compiled.mismatch`, an error. This
+       step is why `pack` (D7) never discovers a problem `check` did not
+       report.
+3. **Findings are all reported.** Order and de-duplication are ADR-006's.
+4. **Parse-error hints.** A `template.parse` finding whose construct contains
+   U+2018, U+2019, U+201C or U+201D carries the hint that a word processor
+   replaced straight quotes and that Liquid string literals use `"` or `'`.
+   One in a template detected as Office Open XML (D4 item 1) whose construct
+   contains `&lt;`, `&gt;`, `&amp;`, `&quot;` or `&apos;` outside a string
+   literal carries the hint that the document escaped a character Liquid
+   reads raw, and that the literal character is correct inside the
+   construct. One whose construct contains XML markup defers to the D4
+   finding at the same place.
+
+### D3 — The cross-reference is a static analysis with an exact definition of "declared"
+
+1. **METAIS owns the analysis front end.** A tokenizer and parser for
+   ADR-004's pinned dialect — tags, the expression grammar, filters with
+   their arguments, ranges, literals — produces a syntax tree with file, line
+   and column for every node. It is used only for analysis; rendering uses
+   ADR-010's engine. The two are held together by a test: over every
+   template in the conformance vectors, the example packages and a fuzz
+   corpus, the engine accepts a template exactly when the front end does.
+   The analysis is therefore specified against the dialect, not against any
+   library's internals, and a second implementation reproduces it from the
+   specification.
+2. **The abstract values.** Analysis evaluates each expression to a set of
+   alternatives, each one of:
+   - **`schema(n)`** — a node of an input's schema, identified by input name
+     and JSON Pointer into that input's schema resources;
+   - **`open`** — anything at all is declared below it;
+   - **`unknown`** — the analysis cannot tell; nothing below it is checked
+     and nothing below it is an error;
+   - **`scalar(kind)`** — a string, number, boolean or `nil` (literals,
+     `capture`, filter results of known kind);
+   - **`record(fields)`** — a fixed set of named fields: the `inputs`
+     namespace (one field per input), `package`, `forloop`, `tablerowloop`
+     (their fields as ADR-004 defines them).
+
+   A set holds at most 64 alternatives; a larger one becomes `unknown`.
+3. **Roots.** An expression path starts at an identifier:
+   - `inputs` → the inputs record; `package` → its record;
+   - `item` → in a template rendered for a `for_each` output (directly or
+     through partials), the element value of D3 item 9; elsewhere
+     `xref.unknown_variable`, with the hint that `item` exists only under
+     `for_each`;
+   - `forloop` inside a `for` body or a partial rendered with `render … for`;
+     `tablerowloop` inside `tablerow`;
+   - a local (item 7) or a partial parameter (item 8);
+   - anything else → `xref.unknown_variable`, error, with the nearest known
+     name when one lies within edit distance 2.
+
+   A bracketed root (`[expr]`) is `xref.dynamic_reference` (item 6).
+4. **What "declared" means.** Resolving a property segment `.p` (or `["p"]`
+   with a string literal) against `schema(n)`:
+   1. **The applicable set** A(n) is n plus, recursively, every subschema
+      reached through `$ref`, `$dynamicRef` (resolved to its static target;
+      where the input's schema resources declare more than one
+      `$dynamicAnchor` of that name, to all of them), `allOf`, `anyOf`,
+      `oneOf`, `if`, `then`, `else` and the values of `dependentSchemas`.
+      `not` is excluded: a property named in `not` is one that must not
+      match. Cycles are cut by a visited set.
+   2. **Open schemas.** If any node in A(n) is the boolean schema `true`, or
+      an object schema with no keyword other than annotations (`title`,
+      `description`, `$comment`, `examples`, `default`, `deprecated`,
+      `readOnly`, `writeOnly`, `$id`, `$anchor`, `$schema`, `$defs`), the
+      result is `open`. The author said nothing, so nothing is checkable.
+   3. **Candidates.** For each node m in A(n): `properties[p]` if present;
+      every `patternProperties` schema whose pattern matches p; and, only if
+      m has neither, m's `additionalProperties` when it is present and not
+      `false` — `true` included — or, when m has no `additionalProperties`,
+      its `unevaluatedProperties` on the same terms.
+   4. **Declared** means at least one candidate exists. The result is
+      `schema` of every candidate. **An absent `additionalProperties` declares
+      nothing**: JSON Schema allows any other name, but a template reading
+      one is reading a name the author never wrote, which is the typo this
+      check exists to catch. An author who means "any key" writes
+      `additionalProperties: true` or a schema for the values.
+   5. **Liquid's command names.** With no candidate: `size` on a node whose
+      types (item 5) include array, object or string gives `scalar(number)`;
+      `first` and `last` on an array give the element (as `[0]` and `[-1]`),
+      on a string `scalar(string)`. A declared property of that name wins, as
+      in Liquid's lookup.
+   6. **Otherwise** the segment is an error: `xref.not_an_object` when the
+      node's types exclude object, else `xref.unknown_field`. The finding
+      names the template location, the input, the schema location (file and
+      JSON Pointer) as a related location, the declared names there, and the
+      nearest within edit distance 2.
+
+   Union semantics: a segment is an error only when **every** alternative
+   rejects it, and `open` and `unknown` reject nothing. A field declared only
+   in one `oneOf` branch or only in a `then` is declared; the template is
+   expected to guard it, and the analysis does not follow control flow.
+5. **Types of a node** are the JSON types its `type` allows (all, when
+   absent), intersected through `$ref` and `allOf` and united across
+   `anyOf`/`oneOf` branches; `if`/`then`/`else` do not narrow them.
+6. **Index and dynamic segments.**
+   - `[i]`, an integer literal: `prefixItems[i]` when it exists (i ≥ 0), else
+     `items`. A node of array type with neither keyword gives `open`.
+     `items: false` with i at or beyond the `prefixItems` length, or i at or
+     beyond `maxItems`, is `xref.index_out_of_range`, error. A negative i
+     gives every `prefixItems` schema and `items`. A node whose types exclude
+     array is `xref.not_an_array`, error.
+   - `[expr]`, anything but a literal: on `schema(n)`, every candidate D3
+     item 4 could produce for any name, plus `items` and `prefixItems`; on an
+     open node, `open`. If that leaves nothing — and always on the inputs
+     record, and on a bracketed root — the result is `unknown` and the
+     finding is `xref.dynamic_reference`, a **warning** that the reference
+     cannot be checked. A dynamic reference into the inputs record, or a
+     bracketed root, also marks **every** input used (item 11): the author is
+     selecting inputs by computed name, and calling them unused would be
+     false.
+7. **Locals.** `assign n = e` binds n to the value of e; `capture n` binds
+   `scalar(string)`; `increment n` and `decrement n` bind `scalar(number)`.
+   Liquid's `assign` outlives the block it is in, so locals are
+   template-wide and flow-insensitive: a first pass collects every name bound
+   anywhere in the template, and a local's value is the union of the values
+   of all its bindings, computed to a fixed point (bounded by item 2's cap).
+   Binding `inputs`, `package`, `item`, `forloop` or `tablerowloop` is
+   `xref.reserved_name_bound`, an error, unless ADR-004 already refuses it at
+   parse time.
+8. **Loops and partials.**
+   - `for n in e` binds n, inside the body only, to the element of e:
+     `[expr]` on an array value, `scalar(number)` for a range, and `unknown`
+     over an object or scalar (whose iteration is ADR-004's). `tablerow`
+     likewise.
+   - `render "name"` resolves the literal name to a template by ADR-004's
+     rule; a template that does not exist is `xref.missing_partial`, error.
+     The partial is analysed in a fresh scope holding the globals ADR-004
+     makes visible in a partial, its `key: value` parameters, and the
+     `with`/`for` value under its alias (by default the last path segment of
+     the name), with `forloop` for `for`. Analysis is per call context and
+     memoised on the partial and the abstract values bound; a partial
+     already on the analysis stack with the same bindings is not re-entered.
+   - A name a partial reads that is neither a global, a local of the partial,
+     nor bound by the call is `nil` at render time. It is
+     `xref.partial_parameter_not_passed`, a warning naming the call site,
+     because an optional parameter is a legitimate pattern.
+9. **Manifest expressions.** Each output's `path` template and `when` are
+   analysed in that output's context. `for_each` is analysed in the context
+   without `item`; its value must permit arrays (`xref.for_each_not_array`,
+   error, otherwise), and its element value is `item`'s in the output's
+   template, `path` and `when`. A template used by several outputs is
+   analysed once per distinct context, and each finding says which output's
+   context produced it.
+10. **Filters.** Every filter argument is analysed as an expression. The
+    result of a filter follows its **analysis signature**, which ADR-004's
+    catalog states for each filter as one of: *preserves its input* (`sort`,
+    `sort_natural`, `reverse`, `uniq`, `compact`, `where`, `slice` on
+    arrays; `default` gives the union with its argument; `concat` the union
+    of element values); *gives the element* (`first`, `last`); *projects a
+    property* (`map: "p"` gives an array of p resolved on the element); or
+    *gives a scalar of a stated kind or `unknown`* (everything else). A
+    filter argument the catalog marks as a property name — the string
+    literals of `map`, `where`, `sort`, `sort_natural` and `sum` — is
+    resolved as `.p` on the element and checked like any segment, so
+    `inputs.rows | map: "vaule"` is an error.
+11. **Use.** An input is used when any reference in an **effective template**
+    or manifest expression passes through `inputs.<name>` — whatever follows
+    and whether or not a finding follows it — or uses `inputs` whole, or an
+    `embed` tag names it. Effective templates are those an output renders,
+    directly or through `render` chains (ADR-005 decides which templates the
+    mirror shorthand renders). An input no use reaches is
+    `xref.unused_input`, a warning. A template under `templates/` that no
+    output renders and no `render` names is `xref.unused_template`, a
+    warning; it is still parsed and its references checked, with every
+    partial-parameter name taken as `unknown`, and its references do not
+    count as use.
+12. **METAIS tags.** `embed` names an input by literal (`xref.unknown_input`
+    when it is not one); `asset` names an asset path by literal
+    (`xref.missing_asset` when no such entry exists under `assets/`);
+    `provenance` takes keywords only, which ADR-004 validates.
+13. **The analysis is bounded.** It stops after 10 000 template-context
+    analyses or 1 000 000 resolved segments, reporting
+    `xref.budget_exhausted`, a warning that the remaining references were not
+    checked; ADR-009 may lower both.
+
+A worked resolution: `inputs.metrics.rows[0].value` with `metrics` declared
+as `{type: object, properties: {rows: {$ref: "#/$defs/rows"}}}` and `$defs/rows`
+as `{type: array, items: {type: object, properties: {value: {type:
+number}}}}`. `inputs` is the record; `.metrics` is a field of it, giving
+`schema(metrics#)` and marking `metrics` used; `.rows` is in `properties`,
+giving `schema(metrics#/properties/rows)`; its applicable set adds
+`#/$defs/rows`; `[0]` finds no `prefixItems` and takes `items`; `.value` is in
+its `properties`. Declared. `inputs.metrics.rows[0].vaule` stops at the last
+step with `xref.unknown_field`, declared names `value`, suggestion `value`.
+
+### D4 — A Liquid construct split across Office Open XML text runs is an error, with a hint that names the cause
+
+1. **Which templates are scanned.** A template whose source declares one of
+   the WordprocessingML, SpreadsheetML or DrawingML main namespaces —
+   transitional `http://schemas.openxmlformats.org/wordprocessingml/2006/main`,
+   `…/spreadsheetml/2006/main`, `…/drawingml/2006/main`, or strict
+   `http://purl.oclc.org/ooxml/wordprocessingml/main`,
+   `…/spreadsheetml/main`, `…/drawingml/main` — and every template
+   `render`ed from one, directly or transitively. A partial inherits the
+   prefix bindings declared on the root element of the template that renders
+   it, because a part's fragments (a table row, a list item) usually declare
+   none of their own. The scan does not depend on the manifest, so it runs
+   before a container is wired up.
+2. **Text elements** are elements whose expanded name is, in WordprocessingML,
+   `t`, `delText` or `instrText`; in SpreadsheetML, `t`; in DrawingML, `t`.
+   **Paragraph containers** are WordprocessingML `p`, DrawingML `p`, and
+   SpreadsheetML `si` and `is`.
+3. **The scan.** A lenient XML tokenizer reads the template source,
+   resolving prefixes through every `xmlns` declaration in scope, and treats
+   any Liquid construct inside a start tag as opaque attribute text. It
+   records the byte range of each text element's content. The analysis
+   tokenizer of D3 item 1, which ignores XML, gives the byte range of every
+   Liquid construct (`{{ … }}`, `{% … %}`, delimiters with whitespace control
+   included).
+4. **`ooxml.split_construct`**, an error: a Liquid construct whose range
+   overlaps the content of at least one text element and is not contained in
+   the content of exactly one. A construct lying wholly in markup — a
+   `{% for %}` between `<w:tr>` elements — overlaps no text content and is
+   correct.
+5. **`ooxml.split_delimiter`**, an error: within one paragraph container,
+   the last character of one text element's content and the first character
+   of the next non-empty one form `{{`, `{%`, `}}` or `%}`. This catches an
+   opener broken before the Liquid tokenizer ever sees it, which otherwise
+   renders literal braces with no error at all.
+6. **The finding** gives the template, the line and column of the
+   construct's first character, and as detail the construct's visible text —
+   the content of the text elements it spans, entities decoded, markup
+   removed — and the number of text elements it spans. The hint names the
+   cause from the elements found between the pieces: `w:proofErr` or a
+   DrawingML run property `err="1"` (spelling or grammar marks); `w:ins`,
+   `w:del` or `w:delText` (tracked changes — accept or reject them first);
+   `w:bookmarkStart`, `w:bookmarkEnd`, `w:commentRangeStart` or
+   `w:commentRangeEnd` (a bookmark or comment); `w:fldChar` or `w:instrText`
+   (a field); otherwise a change of run properties (formatting). It then
+   says what to do: delete the placeholder and type it again in one go with
+   no formatting change, spelling mark or tracked change inside it, or edit
+   the XML so the whole construct lies inside one text element.
+7. **Severity is error** because both outcomes are wrong output: either the
+   engine fails to parse markup inside an expression, or the opener never
+   forms and the braces reach the document.
+
+### D5 — Examples are a data directory and an output tree, and `test` compares them byte for byte
+
+1. **Layout.** `examples/<name>/` holds:
+   - **`inputs/`** — required, possibly empty: exactly the layout of a data
+     directory (ADR-003), a file per input named after it or a directory per
+     collection;
+   - **`expected/`** — optional: an output tree, exactly what a render would
+     write to an output directory;
+   - **`example.yaml`** — optional (YAML or JSON, ADR-002's profile):
+     `title` (one line), `description` (Markdown), and `now` (an RFC 3339
+     date-time with an offset), the render time given to this example as if
+     by `--now`.
+
+   `<name>` follows ADR-003's rule for input names. Any other entry in an
+   example directory is `example.layout`, an error from `check`.
+2. **`metais test [<pkg>] [<example>…]`** runs every example, or those
+   named, in byte order of name, on a source directory or a packed package.
+   It first loads the package — manifest, schemas, templates — and if that
+   produces errors it reports them and stops. For each example it then:
+   1. loads `inputs/` through ADR-003's data directory loader, applies
+      defaults and validates, reporting findings located in
+      `examples/<name>/inputs/…`;
+   2. if valid, renders into memory with ADR-005's staging — transforms and
+      output validation included — under ADR-009's limits, with `now` from
+      `example.yaml` and no other host input;
+   3. if `expected/` exists, compares the rendered tree with it (item 3);
+      otherwise reports the example as rendered and not compared.
+   Every example runs even after another fails. `test` exits non-zero when
+   any example fails.
+3. **Comparison.** Directories are ignored; files are compared by path.
+   - A path in `expected/` the render did not write is `test.output_missing`;
+     a path written and absent from `expected/` is `test.output_unexpected`.
+   - **A container output** (ADR-005) is compared by its entries — names in
+     order, compression method, uncompressed content — as R9 item 5 states
+     for conformance, so an `expected/` written by another conforming
+     implementation compares equal. An `expected/` container is read with the
+     package reader's bounds; one that is not a readable zip is
+     `test.expected_unreadable`. Entry differences are
+     `test.entry_missing`, `test.entry_unexpected`, `test.entry_order` (the
+     first index at which the name sequences differ),
+     `test.entry_method`, and `test.output_differs` for content, located as
+     `<output>!<entry>`.
+   - **Every other file** is compared byte for byte; a difference is
+     `test.output_differs`.
+4. **Reporting a difference.** Both sides are text when both are valid
+   UTF-8 and contain no NUL byte; otherwise binary.
+   - **Text**: the location is the expected file at the first differing line
+     (and column); the detail is a unified diff (`---`/`+++`/`@@`, three lines
+     of context) capped at 16 KiB in JSON output and at 40 lines in human
+     output, each marked when truncated.
+   - **Binary**: the first differing byte offset, both sizes, both SHA-256
+     digests.
+   - **Hints**, the first that applies: equal after replacing CR LF with LF
+     on both sides — line endings, naming the side with CRLF, the output's
+     CRLF transform, and git's line-ending conversion; equal apart from one
+     final newline — the final newline; equal apart from a leading UTF-8 BOM
+     — the BOM; equal after removing trailing spaces and tabs from each line
+     — trailing whitespace, and Liquid's whitespace control (`{%-`, `-%}`).
+5. **`--update`** writes the render of each selected example into its
+   `expected/` (creating it), on a source directory only, and only for an
+   example that validated and rendered. It makes `expected/` exactly the
+   rendered tree: files written, and files under `expected/` that the render
+   no longer produces removed. This is the one place an authoring command
+   removes a file, and the directory is one the command fully owns. It
+   prints each file written or removed. Reviewing the result is the
+   author's.
+
+### D6 — `test` on a packed package and on a source directory is the same test
+
+The comparison reads `expected/` in place inside a packed package. A
+consumer can therefore run `metais test` on a package received, and the
+result is the result the author's `pack` saw.
+
+### D7 — `pack` is check, then test, then a deterministic write
+
+1. **`metais pack [<dir>] [--out <path>]`**, `<dir>` defaulting to `.`, a
+   source directory only.
+2. **Order.** It runs `check` (D2). Any error: it reports every finding and
+   refuses, writing nothing, with the next step "fix the errors `metais
+   check` lists". With no error it runs `test` (D5); any failure: refuses
+   likewise. Tests are not run when check has errors, since a package that
+   fails to check gives test failures that are only consequences. Warnings
+   are printed and do not stop `pack`. There is no flag to skip tests: the
+   bytes a consumer receives are the bytes whose examples passed.
+3. **What is packed.** Exactly the entries ADR-001's layout defines —
+   `metais.yaml` and the trees `inputs/`, `templates/`, `references/`,
+   `assets/`, `examples/` and any further top-level entry ADR-001 permits —
+   plus `.compiled/`, computed afresh. Outside them:
+   - **The quiet list** is excluded with no finding: top-level `.git`,
+     `.gitignore`, `.gitattributes`, and any top-level `*.metais` file; and,
+     anywhere, `.DS_Store`, `Thumbs.db`, `desktop.ini` and names beginning
+     `._`.
+   - **Any other top-level entry** is excluded and reported as
+     `source.not_packed`, a warning, so a file put in the wrong place is
+     noticed.
+   - Inside the layout trees everything else is packed, dotfiles included —
+     a repository scaffold needs `assets/.github/` and
+     `templates/.gitignore`.
+4. **Determinism.** The package's bytes depend only on the packed entries'
+   paths and contents: never on modification times, permissions, owner,
+   directory traversal order, file-system case sensitivity, platform,
+   locale, the clock, or the tool's version string (which is not written).
+   Content is packed byte for byte, never normalised. ADR-001's writer
+   supplies the ordering, timestamps and compression; ADR-001 states whether
+   those bytes are also stable across tool builds.
+5. **The output.** `--out` defaults to `./<name>-<version>.metais` in the
+   working directory, from the manifest. An `--out` naming an existing
+   directory writes `<name>-<version>.metais` inside it. `pack` refuses an
+   output path inside one of the layout trees of the directory being packed.
+   It writes a temporary file in the target directory, syncs it, and renames
+   it over the target, so a reader never sees a partial package and an
+   existing package file at that path is replaced; a target that exists and
+   is not a regular file is a refusal. `pack` is a build step, and replacing
+   its own previous product is the normal edit loop.
+6. **It prints** the path, size, package digest (ADR-001), entry count and
+   the warnings; JSON on request.
+
+### D8 — `unpack` writes the authored entries and nothing derived
+
+1. **`metais unpack <pkg> [<dir>]`**, `<dir>` defaulting to `./<name>` from
+   the package's manifest.
+2. It reads the package through ADR-001's reader, so digests are verified
+   and a mismatch is refused before anything is written. It does not run
+   `check`: a package with check errors is exactly the one an author needs
+   to unpack and fix.
+3. **The target must be empty**, with D1 item 3's meaning. When it does not
+   exist, `unpack` writes into a temporary sibling directory and renames it
+   into place, so a failure leaves nothing; an existing empty directory is
+   written in place, and a failure reports the files already written.
+4. **It writes every entry except `.compiled/`.** `.compiled/` is derived;
+   kept, it would be stale after the first edit, and `pack` regenerates it.
+   Files are mode 0644 and directories 0755 before the umask.
+5. **Round trip.** `pack` of an unpacked package gives a package equal entry
+   for entry, `.compiled/` included, to the original; when the original was
+   written by the same build of this tool, byte-identical.
+
+### D9 — The sample-data generator
+
+#### The command
+
+1. **`metais sample [<pkg>]`** (name to be confirmed by ADR-008) generates a
+   value for every input and, by default, prints them as one JSON object
+   keyed by input name — the shape `--json` accepts (ADR-003), so the output
+   can be handed to `validate` or `render`. Options:
+   - `--seed <n>`, an unsigned 64-bit integer, default `0`;
+   - `--optional all|none|mixed`, default `all`;
+   - `--items <n>`, the target count of every array and collection, default
+     `3`;
+   - `--out <dir>` (and render's `--dry-run`, `--overwrite`, standard output
+     modes, ADR-005), which renders the preview;
+   - `--save-as <example>` (item 21);
+   - the ordinary input options — data directory, `--set`, `--json`
+     (ADR-003) — and `--now`.
+2. **Supplied values are fixed.** Whatever the caller supplies, merged by
+   ADR-003's precedence, is taken as given; the generator fills only what is
+   absent, generating missing properties around a supplied object and
+   evaluating conditionals against the merged value. An author previews the
+   final stage of a staged report with `--set incident.stage=final`.
+3. **Normative status.** The generator is the reference tool's, not the
+   specification's. The specification says that a sample mode, if a tool
+   offers one, produces data that validates, and no more. The reference tool
+   promises: the same package, options, supplied inputs and seed give
+   byte-identical data and outputs on every supported platform, for a given
+   tool version. Changes to generated values between tool versions are
+   recorded in the release notes. A saved example is saved data, so nothing
+   an author keeps depends on generator stability.
+
+#### Randomness
+
+4. **The PRNG is SplitMix64**, implemented in METAIS: state `x`; `next`
+   adds `0x9e3779b97f4a7c15` to `x` and returns `z` mixed by
+   `z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9`,
+   `z = (z ^ (z >> 27)) * 0x94d049bb133111eb`, `z ^ (z >> 31)`, all modulo
+   2⁶⁴.
+5. **One stream per decision.** Every decision takes a fresh stream whose
+   initial state is the first 8 bytes, big-endian, of
+   SHA-256(`"metais-sample"` ‖ 0x00 ‖ seed as 8 bytes big-endian ‖ input
+   name ‖ 0x00 ‖ instance JSON Pointer ‖ 0x00 ‖ purpose), where purpose is one
+   of `value`, `include`, `type`, `branch`, `count`, `name` or `attempt:<k>`.
+   A value therefore depends only on where it sits, so editing one field's
+   schema leaves every other generated value unchanged.
+6. **A bounded integer** in [0, n) is drawn by rejection: draw `u`; reject
+   when `u ≥ 2⁶⁴ − (2⁶⁴ mod n)`; return `u mod n`. A range wider than 2⁶⁴
+   concatenates draws. Numbers are computed as exact rationals throughout;
+   no floating point is involved.
+
+#### The effective schema
+
+7. **Conjunction.** At each instance location the generator works on the
+   conjunction C of the schema there and, recursively, its `$ref` and
+   `$dynamicRef` targets and `allOf` members. Across C it intersects `type`
+   sets, `enum` sets and `const`s, takes the tightest numeric and length
+   bounds, multiplies `multipleOf` constraints into one (their least common
+   multiple, as exact rationals), unions `properties` (conjoining
+   per-property schemas), `required` and `patternProperties`, and conjoins
+   `items` and `prefixItems` position by position.
+8. **Disjunction.** For `anyOf` and `oneOf` in C it picks one branch with the
+   `branch` stream and adds it to C. For `oneOf`, the finished value must
+   match exactly one branch; otherwise the next branch in order is tried,
+   each once.
+9. **Conditionals.** For an object, properties are generated (item 15), the
+   `if` of every node in C is evaluated against the value, the selected
+   `then` or `else` is added to C, and properties it newly requires or
+   constrains are generated again. This repeats until the selected branches
+   stop changing, at most four passes. `dependentRequired` and
+   `dependentSchemas` take effect the same way when their trigger property
+   is present. For other types, a value generated from C that fails a
+   selected `then` or `else` is regenerated from C with that branch added.
+10. **`not`.** A value that matches a `not` schema in C is regenerated from
+    an `attempt:<k>` stream, up to 16 attempts.
+11. **Contradiction** — an empty type set, enum set or numeric or length
+    range, conflicting `const`s, `false` required, conditionals that do not
+    settle, attempts exhausted — is `sample.unsatisfiable` (item 22).
+
+#### Where a value comes from
+
+12. **Order of preference**, each candidate kept only if it validates
+    against C: `const`; else an entry of `examples`; else `default`; else an
+    `enum` member; else a generated value. Among several `examples` or
+    `enum` members, the one at index (seed + k) mod count, where k is the
+    item index within the innermost enclosing array (0 outside any), so
+    single values take the author's first example under the default seed
+    and array items cycle through them. `uniqueItems` skips a candidate equal
+    to an earlier item.
+13. **Objects and arrays are not taken whole** from `examples` or `default`:
+    the generator descends into properties and items, whose own sources
+    apply, so the optional-field modes keep working. A whole-value example
+    or default is used only for an object with no declared properties or an
+    array with no declared items.
+
+#### Generated values, by type
+
+14. **Type choice.** From the type set (inferred, when `type` is absent, as
+    object from `properties`/`required`/`additionalProperties`, array from
+    `items`/`prefixItems`/`contains`, string from length, `pattern` or
+    `format`, number from numeric keywords, otherwise string), in the order
+    written. **The optional mode also governs emptiness:** with `null` in the
+    type set, `all` never chooses it, `none` always does, `mixed` decides by
+    the `type` stream.
+15. **Object.** Properties are generated in declaration order: the order of
+    first appearance in the authored schema files, walking C from the node
+    itself through `allOf` members and `$ref` targets in order. A required
+    property is always generated. An optional one is generated under `all`,
+    omitted under `none`, and under `mixed` generated when the `include`
+    stream's first draw is even. An omitted property with a `default` gets it
+    later from ADR-003's default application, exactly as a supplier's
+    omission would. No name beyond the declared properties is generated,
+    except to reach `minProperties`: first omitted optional properties in
+    order, then names generated from a `patternProperties` pattern (item 18)
+    or, when `additionalProperties` is a schema other than `false`,
+    `key1`, `key2`, … skipping taken names; every name must satisfy
+    `propertyNames`. Above `maxProperties`, optional properties are dropped
+    from the end; required ones over it are a contradiction.
+16. **Array.** The length is `--items` clamped to [`minItems`, `maxItems`],
+    where `maxItems` is lowered to the `prefixItems` length when `items` is
+    `false`; with `prefixItems` present the default target is its length.
+    Position i takes `prefixItems[i]`, else `items`. With `contains`, the
+    first `minContains` positions are generated from `items` conjoined with
+    `contains`, and later positions that would push the count past
+    `maxContains` are regenerated. With `uniqueItems`, a duplicate is
+    regenerated from `attempt:<k>` streams, up to 16; when that fails, the
+    array is shortened while it stays at or above `minItems`, and below it
+    the field is unsatisfiable.
+17. **Number and integer.** The bounds come from `minimum`, `maximum`,
+    `exclusiveMinimum` and `exclusiveMaximum`. Unbounded on both sides the
+    range is [1, 100]; bounded on one side it extends 100 from that bound.
+    Integers are drawn uniformly from the integers in range that satisfy
+    `multipleOf`; none is a contradiction. Numbers without `multipleOf` are
+    drawn as n/100 for the integers n in range, refining to n/10⁶ when the
+    range holds no hundredth; numbers with `multipleOf` are drawn from its
+    multiples in range. Values are written as plain decimals, no exponent.
+18. **String.**
+    - **`format`**, any of the 2020-12 formats, generated from fixed,
+      reserved or obviously placeholder sources, never from the host:
+      `date` uniform in 2020-01-01 … 2029-12-31; `date-time` that date with a
+      time and `Z`; `time` `HH:MM:SSZ` (RFC 3339 full-time); `duration` one
+      of `P<d>D`, `PT<h>H`, `P<d>DT<h>H`; `email` and `idn-email`
+      `<word>.<word>@example.com`; `hostname` and `idn-hostname`
+      `<word>.example.com`; `ipv4` in 192.0.2.0/24, 198.51.100.0/24 or
+      203.0.113.0/24; `ipv6` in 2001:db8::/32; `uri` and `iri`
+      `https://example.com/<word>/<word>`; `uri-reference` and
+      `iri-reference` `/<word>/<word>`; `uri-template`
+      `https://example.com/{<word>}`; `uuid` 16 drawn bytes with the version
+      4 and RFC 9562 variant bits set; `json-pointer` `/<word>/<n>`;
+      `relative-json-pointer` `0/<word>`; `regex` `^<word>$`. Words come
+      from the corpus (item 19), lowercased. An unknown format generates a
+      plain string. The value must then meet the length bounds and any
+      `pattern`; otherwise the field is unsatisfiable.
+    - **`pattern`**: the pattern is parsed with Go's `regexp/syntax` (the
+      same tree the validator matches with, per ADR-003 and ADR-010) and
+      walked: literals as written; a character class yields a character from
+      its intersection with, in order of preference, `a`–`z`, `A`–`Z`,
+      `0`–`9`, space, printable ASCII, and otherwise its lowest character;
+      `.` yields from `a`–`z`; alternation picks a branch; a repetition
+      {min,max} repeats min plus a draw of 0 to 2, capped at max; begin and
+      end anchors yield nothing; a word-boundary assertion is unsupported.
+      Because a pattern is unanchored, a result shorter than `minLength` is
+      padded with corpus words after it unless the pattern is end-anchored,
+      else before it unless start-anchored, else regenerated with repetitions
+      raised toward their maximum. Every result is checked with the real
+      matcher and the length bounds; up to 8 attempts, then the field is
+      unsatisfiable.
+    - **Plain text**: corpus words. The target length is 24 characters
+      clamped to [`minLength`, `maxLength`]. Under 40 characters it is words
+      joined by spaces, the first capitalised, no punctuation; from 40, it is
+      sentences of 6 to 12 words, each capitalised and ending in a full stop.
+      It is cut at the last word boundary that fits `maxLength` (mid-word
+      only when one word is too long) and extended by words to reach
+      `minLength`. Lengths are counted in code points.
+    - **Prose fields**: a string that is a whole text-form input, a Markdown
+      document, a collection item's `body`, or a string schema with
+      `contentMediaType` `text/markdown` or `text/plain`, targets 400
+      characters clamped to its bounds, as paragraphs of three to five
+      sentences separated by a blank line. Markdown adds a level-one heading
+      of three title-cased words and a three-item bullet list, when the
+      length bounds leave room.
+19. **The corpus** is the standard "Lorem ipsum dolor sit amet, consectetur
+    adipiscing elit, sed do eiusmod tempor incididunt…" passage, fixed in the
+    binary and printed in the tool's documentation, split into words with
+    punctuation removed. A text starts at a word chosen by its `value`
+    stream and wraps. Placeholder text is meant to be recognised as
+    placeholder, so that the author replaces it.
+20. **Recursion.** A `$ref` target entered for the fourth time on the path
+    from the root stops growing: optional properties are omitted whatever the
+    mode, and arrays take `minItems` items. A path that still recurses at
+    depth 8 makes the field unsatisfiable.
+
+#### Forms, saving and validation
+
+21. **Serialising.** Each input is written in the first form its declaration
+    lists (ADR-003), with the file extension ADR-003 assigns:
+    - JSON: two-space indentation, keys in declaration order, LF, a final
+      newline;
+    - YAML: block style, keys in declaration order, every string
+      double-quoted (so no value is retyped by YAML's implicit typing), LF;
+    - CSV: a header row of the item schema's properties in declaration order,
+      the manifest's delimiter, RFC 4180 quoting where a value contains the
+      delimiter, a quote, CR or LF, CRLF line endings; numbers as plain
+      decimals, booleans `true`/`false`, an absent value as an empty cell;
+    - text: the string, with a final newline added if absent;
+    - Markdown: a string schema gives the document; an object gives YAML
+      frontmatter of every field except `body`, then the `body`;
+    - a collection: a directory named after the input holding one file per
+      item, named `001`, `002`, … zero-padded to at least three digits and to
+      the width of the count, so that file order is item order.
+
+    **`--save-as <example>`** writes these files as
+    `examples/<example>/inputs/` and writes `examples/<example>/example.yaml`
+    with `title` "Sample data" and a `description` recording the command's
+    seed, mode and item count and saying to replace the placeholders and
+    run `metais test --update <example>`. It refuses on a packed package
+    (with the next step `metais unpack`), and refuses when
+    `examples/<example>/` exists at all, so it never removes or merges.
+    It creates no `expected/`.
+22. **The generated data is validated like supplied data**: the files of
+    item 21 are built in memory, loaded through ADR-003's data directory
+    loader, defaults applied, then validated (ADR-006). What is previewed is
+    therefore exactly what `--save-as` saves. Validation findings on
+    generated data are reported with `sample.generated_invalid`, a
+    generator limitation whose hint is the same as below. With any error,
+    nothing is rendered and nothing is saved.
+23. **`sample.unsatisfiable`** is an error naming the input, the instance
+    location, the schema file and JSON Pointer of the subschema, the reason
+    (one of: contradictory type, range, length, enum or const;
+    `multipleOf` with no multiple in range; pattern with an unsupported
+    construct; pattern not met within the length bounds; format against
+    pattern or length; `uniqueItems` exhausted; `not` exhausted;
+    conditionals that do not settle; recursion depth), and the hint: add an
+    `examples` value to this field and the generator will use it, with a
+    skeleton such as `"examples": ["…"]`. Every unsatisfiable field is
+    reported in one run.
+
+## Interfaces with sibling ADRs
+
+**ADR-001 (container and layout).** Relied on: the list of top-level entries
+the layout permits and which are reserved (D7 item 3); a writer whose output
+depends only on entry paths and contents, and a statement of whether it is
+stable across tool builds (D7 item 4); the digest file and its verification
+on read (D8 item 2); the entry-name rule (encoding, normalisation, case
+collisions), which `check` applies to a source directory and which `pack`
+never repairs by renaming; the references index format. Promised: `pack`
+writes only layout entries plus `.compiled/`; `unpack` drops `.compiled/`;
+round trip per D8 item 5.
+
+**ADR-002 (manifest and versioning).** Relied on: the field names the
+scaffold uses — specification version, `name`, `version`, `title`,
+`description`, the supplier guide; the package name rule (for `init --name`
+and the package file name); a YAML parser that reports line numbers for
+manifest expressions and for `example.yaml`; the canonical JSON.
+
+**ADR-003 (data specification).** Relied on: input declarations with schema,
+meaning document, an ordered list of forms, CSV delimiter, collection, and
+whether an input may be optional (the modes then apply to inputs too); the
+asserted keywords and formats; `pattern` matched with Go's `regexp`
+(RE2) semantics over a pattern set that `regexp/syntax` parses; cross-file
+`$ref` confined to the package; the data directory loader and its file
+extensions; CSV reading CRLF and reading an empty cell as absent; the
+effective schema of a Markdown collection item, including `body`; default
+application; `--json`'s shape (an object keyed by input name); input names'
+rule (reused for example names).
+
+**ADR-004 (template environment).** Relied on: the expression grammar and the
+complete tag table, stating for each tag which arguments are expressions and
+which names it binds (D3 item 7, 8); the filter catalog with each filter's
+analysis signature and its property-name arguments (D3 item 10); the fields
+of `package`, `forloop` and `tablerowloop`; that `inputs`, `package` and (in
+a `for_each` output) `item` are globals visible inside a partial; how a
+`render` name resolves to a file; `size`/`first`/`last` behaving as in
+Liquid's lookup; raw input bytes reachable only through `embed`; whether
+binding a reserved name is a parse error. Promised: every template is
+analysed with exactly this dialect and nothing more.
+
+**ADR-005 (outputs and rendering).** Relied on: outputs with template, path
+template, `when`, `for_each`; which templates the mirror shorthand renders
+and how it excludes partials; which outputs are containers, and their entry
+lists; an in-memory render that returns the output tree (path → bytes, with
+container entries readable) and applies transforms and output validation;
+the render options `sample --out` reuses. Promised: `test` and `sample` call
+the same render as `render`.
+
+**ADR-006 (findings).** Relied on: a finding with code, severity
+(error, warning, info), message, hint, a location (file, line, column, JSON
+Pointer), related locations, and a structured detail object (for diffs,
+visible text, declared names); ordering, de-duplication and exit codes.
+Promised: the codes named in this ADR, in the families `source.`,
+`manifest.`, `schema.`, `template.`, `xref.`, `ooxml.`, `example.`,
+`compiled.`, `test.`, `sample.`, `check.`; ADR-006 may respell them under
+its scheme.
+
+**ADR-008 (command line).** Relied on: the names and flags `init [<dir>]
+--name`, `check [<pkg>]`, `test [<pkg>] [<example>…] --update`, `pack [<dir>]
+--out`, `unpack <pkg> [<dir>]`, `sample [<pkg>] --seed --optional --items
+--out --save-as`, the JSON envelope for each, and refusals that name the next
+step. Promised: the behaviour behind each. `inspect` may list examples with
+the `title` and `description` from `example.yaml`.
+
+**ADR-009 (security).** Relied on: the default read limits `check` holds
+`pack` to; confinement of every entry; bounds on regular expressions. The
+analysis budget (D3 item 13), generator attempt counts and recursion depth
+(D9) are bounds ADR-009 may lower. `test` and `sample` render in memory under
+the same limits as `render`; `expected/` containers are read with the
+package reader's bounds.
+
+**ADR-010 (implementation).** Relied on: the rendering engine, against which
+the analysis front end is held (D3 item 1). Promised: no new module
+dependency — the front end, the lenient OOXML scanner (hand-written, since
+`encoding/xml` cannot read a template with Liquid inside its tags),
+SplitMix64 and the generator are METAIS code over the standard library
+(`regexp/syntax`, `crypto/sha256`). Suggested packages:
+`internal/liquid/analysis`, `internal/authoring/check`,
+`internal/authoring/ooxml`, `internal/authoring/examples`,
+`internal/authoring/pack`, `internal/authoring/sample`.
+
+**ADR-011 (conformance).** Relied on: vector kinds for "source directory →
+findings" (check), "package and examples → test result", and "package →
+unpacked tree". Promised: the vector groups below.
+
+## Conformance
+
+Vectors are needed for every rule a second implementation's `check`, `test`,
+`pack` and `unpack` must reproduce:
+
+- **Cross-reference**: each root (`inputs`, `package`, `item` inside and
+  outside `for_each`, loop objects, locals, partial parameters); each step of
+  "declared" — `properties`, `patternProperties`, explicit
+  `additionalProperties: true`, absent `additionalProperties` (error), open
+  schema, `$ref` and a recursive `$ref`, `allOf`, a field in one `oneOf`
+  branch, a field in `then`, a field only in `not` (error); command names
+  with and without a declared property of the same name; `[0]` with
+  `prefixItems`, `items: false`, `maxItems`; dynamic keys on records, maps and
+  `inputs`; `map: "p"` with a wrong `p`; unused input; unused template;
+  unpassed partial parameter; manifest `when`, `path` and `for_each`.
+- **Office Open XML**: a split construct in `w:t`, in SpreadsheetML `t` with
+  a non-`w` prefix, in DrawingML `a:t` with `xmlns:a` declared on the element;
+  a split opener; a construct wholly in markup (no finding); a partial
+  fragment with no namespace declaration; each cause hint.
+- **Schema statics**: invalid `default`, invalid `examples`, unsatisfiable
+  `const`, `required` not declared.
+- **Test**: equal; missing, unexpected, differing file; text and binary
+  difference details; each hint; containers equal by entries with different
+  compressed bytes; entry order and method differences; `now` from
+  `example.yaml`; an example with no `expected/`.
+- **Pack**: refused on a check error, refused on a test failure, packed with
+  warnings; the packed entry set given a source tree with quiet-list and
+  other top-level entries; `.compiled/` content; the same source packed
+  twice and from two platforms giving equal packages.
+- **Unpack**: `.compiled/` absent from the tree; refusal of a non-empty
+  target; the round trip.
+
+The sample generator and `init` are not specified and have no vectors. The
+reference tool's suite pins them instead: every supported platform generates
+identical data for a corpus of schemas and seeds; every 2020-12 keyword and
+format the generator handles has a test that its value validates; each
+`sample.unsatisfiable` reason has a negative test; each example package of
+§4.1 to §4.5 previews under `all` and `none` to output that validates (SC4);
+and D1 item 7's scaffold test.
+
+## Alternatives rejected
+
+### Walking the library's render tree
+
+`Template.GetRoot()` gives the tag structure, but every expression inside it
+is an opaque closure, so the analysis would still need its own expression
+parser for every `Args` string. It would also tie a normative check to one
+library's internal node types, some of which panic when asked for their
+location, and it has no columns. Owning the whole front end costs little more
+and makes the check reproducible from the specification.
+
+### Discovering references by tracing a render
+
+Rendering with sample data and recording every lookup sees only the branches
+that data takes, needs data (which `check` must not), and depends on the
+generator. The static analysis covers every branch.
+
+### "Declared" meaning "allowed"
+
+Under JSON Schema an object without `additionalProperties` allows any name,
+so treating everything allowed as declared would make a misspelt field an
+error only in schemas that close every object. Few do. The rule adopted
+catches the typo and gives the author an explicit way to say "any key".
+
+### Following control flow
+
+Narrowing on `if inputs.x.kind == "a"` to the matching `oneOf` branch would
+make findings more precise and the specification much larger, and every
+second implementation would have to match it exactly. Union semantics are
+simple to state and never report a guarded branch field as an error.
+
+### A normative, cross-implementation generator
+
+Specifying the PRNG, the stream derivation and every per-keyword choice would
+let any implementation reproduce sample data, at the price of a large
+normative chapter and a generator frozen for the major version, since within
+a major the specification only adds. Nobody depends on two tools generating
+the same placeholders; saved examples are data.
+
+### `math/rand/v2` or a faker library
+
+`math/rand/v2` promises reproducibility within a run, not across Go
+releases. Faker libraries bring locale data, their own distributions and
+version drift, and none covers JSON Schema 2020-12. SplitMix64 is a few lines
+with published constants.
+
+### A regex-to-string library
+
+A small dependency, but the generator needs readable character choices, the
+METAIS PRNG and the same parse tree the validator matches with. The standard
+library's `regexp/syntax` already provides the tree.
+
+### Negative examples carrying expected findings
+
+They would let an author test that validation rejects bad data, but examples
+are also what suppliers read as the statement of good data (R3 item 5), and a
+failing example there misleads. Validation behaviour is proved by the
+conformance vectors and by an author's own tests outside the package.
+
+### `pack` refusing to replace an existing package file
+
+Render refuses a non-empty directory to protect data the caller owns. A
+package file at `pack`'s output path is `pack`'s own previous product;
+refusing would put a delete step in every edit loop.
+
+### Keeping `.compiled/` on unpack
+
+It would be stale after the first edit and is never read from a source
+directory.
+
+## Consequences
+
+### Positive
+
+- A newcomer runs `init`, `check`, `test` and `pack` and each succeeds before
+  they have written anything, so every later failure is caused by their own
+  edit.
+- A misspelt field, a removed input still referenced, or a placeholder broken
+  by Word is found without data and before any render.
+- `check` computes everything `pack` writes, so `pack` fails only on I/O.
+- A consumer can run `check` and `test` on a received package and get the
+  author's result.
+- Sample data stays stable under unrelated schema edits, and what is
+  previewed is exactly what is saved.
+
+### Negative
+
+- The analysis front end is a second Liquid parser that must track the
+  engine; the agreement test is the only thing holding them together.
+- Authors with schemas that leave objects open by omission get errors until
+  they write `additionalProperties: true`; the finding says so.
+- Union semantics accept a field that exists on only one branch even where
+  the template reads it unguarded.
+- The CRLF warning and the quiet list are conventions an author has to learn,
+  and `.gitattributes` assumes git.
+- `test --update` removes files under `expected/`.
+
+### Neutral
+
+- Generated values may change between tool versions.
+- ODF documents get no split-run finding in v1.
+
+## What this does not decide
+
+- The finding model, codes' final spelling and exit codes (ADR-006); command
+  and flag names (ADR-008).
+- The dialect's grammar, tag and filter catalogs (ADR-004); this ADR states
+  only what the analysis needs from them.
+- The zip writing rules and the `.compiled/` file formats (ADR-001,
+  ADR-002, ADR-003).
+- Scaffolds beyond the minimal one (a `.docx` starter, a site starter).
+- A split-run finding for OpenDocument (`text:span`) and EPUB; within 1.x it
+  can be added only as a warning, since a new error would stop packages that
+  packed before from packing.
+- Field-level "unused field" warnings.
+- A watch mode or an editor integration.
+
+## Proposed rulings
+
+1. **The analysis uses METAIS's own Liquid front end**, held to the engine by
+   an agreement test. Lean: yes — the library exposes no expression tree, and
+   a normative check must not depend on a library's internals. Alternative:
+   re-parse `Args` from `GetRoot()`.
+2. **"Declared" excludes what an absent `additionalProperties` allows**, and an
+   annotation-only schema is open. Lean: yes — otherwise typos are errors only
+   in fully closed schemas. Alternative: declared means allowed.
+3. **Union semantics across `anyOf`, `oneOf`, `if`/`then`/`else` and
+   `dependentSchemas`; `not` excluded; no control flow.** Lean: yes, simple and
+   never wrong about a guarded field. Alternative: branch narrowing.
+4. **A dynamic reference is a warning and, on `inputs`, marks every input
+   used.** Lean: yes. Alternative: an error, which would forbid a legitimate
+   pattern.
+5. **An unpassed partial parameter is a warning; an unused template is a
+   warning and its references do not count as use.** Lean: yes.
+6. **Split runs are errors, detected by declared namespace with partials
+   inheriting the root's prefixes, Office Open XML only.** Lean: yes.
+   Alternative: warning; or include ODF now.
+7. **An invalid `default` or `examples` entry is an error; `required` naming
+   an undeclared property is a warning; a template with CR LF is a warning.**
+   Lean: yes.
+8. **Examples have an optional `example.yaml` with `title`, `description`,
+   `now`.** Lean: yes — `now` is needed for templates that use time, and the
+   title serves the supplier. Alternative: a manifest `examples` section.
+9. **Examples are positive only in v1.** Lean: yes. Alternative: examples
+   that expect findings.
+10. **`test --update` makes `expected/` exactly the render, removing stale
+    files.** Lean: yes. Alternative: report stale files and remove nothing.
+11. **Containers in `test` are compared by entries, not bytes.** Lean: yes, as
+    conformance does.
+12. **`pack` runs tests only when check is clean, has no skip flag, defaults
+    to `./<name>-<version>.metais`, and replaces an existing file there
+    atomically.** Lean: yes.
+13. **The quiet list, warning on other top-level entries, and packing
+    dotfiles inside layout trees.** Lean: yes.
+14. **`unpack` drops `.compiled/`, defaults to `./<name>`, refuses a
+    non-empty target, does not run check.** Lean: yes.
+15. **`init` defaults `--name` to the directory name, treats quiet-list
+    entries as empty, and writes an example and `.gitattributes`.** Lean:
+    yes. Alternative: `--name` required; no `.gitattributes`.
+16. **The generator is non-normative and deterministic per tool version on
+    every platform, built on SplitMix64 with a SHA-256-derived stream per
+    location and decision.** Lean: yes. Alternative: a specified generator.
+17. **Value preference `const`, `examples`, `default`, `enum`, cycling by item
+    index; objects and arrays not taken whole.** Lean: yes.
+18. **The optional mode also chooses `null` (none) or a non-null type
+    (all).** Lean: yes — both are the "empty" branch a template tests.
+    Alternative: modes affect only optional properties.
+19. **Supplied inputs are fixed points for `sample`.** Lean: yes.
+20. **Saved data uses the first declared form and declaration order;
+    `--save-as` refuses an existing example directory.** Lean: yes.
+21. **The command is `metais sample`, printing JSON by default.** Lean: yes;
+    ADR-008 may rename. Alternative: `render --sample`.
+
+## References
+
+- osteele/liquid v1.9.2, `template.go` (`GetRoot`):
+  https://github.com/osteele/liquid/blob/v1.9.2/template.go
+- osteele/liquid `render/nodes.go` (node types, `sourcelessNode`):
+  https://github.com/osteele/liquid/blob/main/render/nodes.go
+- osteele/liquid `expressions/expressions.go`, `expressions/parser.go`,
+  `expressions/expressions.y` (expressions compiled to closures):
+  https://github.com/osteele/liquid/tree/main/expressions
+- osteele/liquid `parser/token.go` (`Token`, `SourceLoc`):
+  https://github.com/osteele/liquid/blob/main/parser/token.go
+- osteele/liquid CHANGELOG (1.9.0 `render` tag; 1.9.2 release):
+  https://github.com/osteele/liquid/blob/main/CHANGELOG.md
+- Shopify Liquid `render` tag source:
+  https://github.com/Shopify/liquid/blob/main/lib/liquid/tags/render.rb
+- Shopify Liquid `Context#new_isolated_subcontext`:
+  https://github.com/Shopify/liquid/blob/main/lib/liquid/context.rb
+- Shopify Liquid `VariableLookup` (command methods `size`, `first`, `last`):
+  https://github.com/Shopify/liquid/blob/main/lib/liquid/variable_lookup.rb
+- Liquid template tags documentation (`render`, deprecated `include`):
+  https://shopify.github.io/liquid/tags/template/
+- Liquid whitespace control: https://shopify.github.io/liquid/basics/whitespace/
+- JSON Schema 2020-12 Core (boolean schemas, applicators, `$dynamicRef`,
+  unanchored ECMA-262 regular expressions):
+  https://json-schema.org/draft/2020-12/json-schema-core
+- JSON Schema 2020-12 Validation (formats §7.3, `minLength` counting,
+  `minContains`, `multipleOf`):
+  https://json-schema.org/draft/2020-12/json-schema-validation
+- Microsoft, Structure of a WordprocessingML document (`p`, `r`, `t`; the
+  transitional namespace):
+  https://learn.microsoft.com/en-us/office/open-xml/word/structure-of-a-wordprocessingml-document
+- Microsoft, Working with the shared string table (`sst`, `si`, `r`, `t`; the
+  SpreadsheetML namespace; an `x:` prefix):
+  https://learn.microsoft.com/en-us/office/open-xml/spreadsheet/working-with-the-shared-string-table
+- Microsoft, Structure of a PresentationML document (DrawingML `a:p`; the
+  DrawingML namespace declared per element):
+  https://learn.microsoft.com/en-us/office/open-xml/presentation/structure-of-a-presentationml-document
+- The National Archives, PRONOM fmt/1827, DOCX Strict (the strict
+  WordprocessingML namespace): https://www.nationalarchives.gov.uk/pronom/fmt/1827
+- Open XML SDK, `TextCharacterPropertiesType.SpellingError` (DrawingML
+  `a:rPr` attribute `err`):
+  https://learn.microsoft.com/en-us/dotnet/api/documentformat.openxml.drawing.textcharacterpropertiestype.spellingerror
+- ECMA-376 Office Open XML File Formats:
+  https://ecma-international.org/publications-and-standards/standards/ecma-376/
+- Go `math/rand/v2` (no cross-release stability statement):
+  https://pkg.go.dev/math/rand/v2
+- Go `regexp/syntax`: https://pkg.go.dev/regexp/syntax
+- S. Vigna, SplitMix64 reference implementation:
+  https://prng.di.unimi.it/splitmix64.c
+- RFC 2606, reserved top-level DNS names (`example.com`):
+  https://www.rfc-editor.org/rfc/rfc2606
+- RFC 5737, IPv4 address blocks reserved for documentation:
+  https://www.rfc-editor.org/rfc/rfc5737
+- RFC 3849, IPv6 address prefix reserved for documentation:
+  https://www.rfc-editor.org/rfc/rfc3849
+- RFC 3339, date and time on the Internet: https://www.rfc-editor.org/rfc/rfc3339
+- RFC 9562, UUIDs: https://www.rfc-editor.org/rfc/rfc9562
+- RFC 4180, CSV: https://www.rfc-editor.org/rfc/rfc4180
+- RFC 6901, JSON Pointer: https://www.rfc-editor.org/rfc/rfc6901
+- GNU diffutils, unified format:
+  https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html
+- Lorem ipsum (the standard passage): https://en.wikipedia.org/wiki/Lorem_ipsum
+
+## Implementation log
+
+Nothing implemented.
