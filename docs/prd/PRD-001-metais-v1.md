@@ -54,7 +54,10 @@ appearing, but none combines the four properties this product is built on
   what data it needs, what that data means and how it will be used.
 - Every input is validated strictly, and every problem is reported in one
   pass, worded so the supplier can correct it.
-- The same package and inputs give byte-identical outputs on every platform.
+- The same package and inputs give byte-identical outputs on every platform
+  from one build of the tool; across builds and implementations they are
+  identical except for the compressed bytes of zip containers, which are
+  identical entry by entry.
 - A package is safe to render whoever wrote it.
 - An author goes from an empty directory to a tested, packed package on one
   documented path.
@@ -225,13 +228,15 @@ examples and compares them; `metais pack` writes the package.
    harness or a program never parses prose.
 4. **What a supplier reads first is designed**: the summary names the
    inputs with their titles, the outputs, the guide for suppliers, and what
-   to read next.
+   to read next, as command lines that name the package and directories by
+   placeholders rather than the caller's paths.
 
 ## 8. Requirement R3 — the data specification says what is needed and what it means
 
 1. **Each input has a JSON Schema (draft 2020-12).** Types, required and
-   optional fields, formats, enumerations and constraints are all expressed
-   there.
+   optional fields, formats from the closed list the specification asserts
+   (a schema using any other `format` is refused), enumerations and
+   constraints are all expressed there.
 2. **Each input explains its meaning in prose**: the schema's titles and
    descriptions, and optionally a longer Markdown document per input saying
    what the data is for, what good data looks like, and how it is used.
@@ -248,7 +253,7 @@ examples and compares them; `metais pack` writes the package.
 1. **An input may be supplied as JSON, YAML, CSV, plain text or Markdown.**
    The manifest says which forms each input accepts.
 2. **CSV follows RFC 4180**: UTF-8, a required header row, a comma unless the
-   manifest declares another delimiter, and each value converted to the type
+   manifest declares a semicolon, a pipe or a tab, and each value converted to the type
    the schema declares for its column.
 3. **A collection input is a directory of files** that becomes an array, each
    file validated against the item schema. A Markdown file with frontmatter is
@@ -261,8 +266,10 @@ examples and compares them; `metais pack` writes the package.
 
 1. **Inputs come from a data directory, from the command line, or both.** A
    data directory holds one file per input, named after it, or one directory
-   per collection input. On the command line, a single value is set by path
-   (`--set`) and a whole input or several inputs as JSON (`--json`).
+   per collection input. On the command line, a single value is set by an
+   inputs JSON Pointer (`--set` for text the schema coerces, `--set-json` for
+   a JSON value), and a whole input or several inputs as one JSON object
+   (`--inputs-json`).
 2. **The precedence is defined exactly**, and a value given on the command
    line wins over a file.
 3. **A schema's `default` is applied** to an optional field the supplier
@@ -272,7 +279,8 @@ examples and compares them; `metais pack` writes the package.
 
 ## 11. Requirement R6 — validation reports everything, usefully
 
-1. **Validation reports every finding in one pass**, never only the first.
+1. **Validation reports every finding in one pass**, never only the first;
+   at most the `findings` limit are listed, and every finding is counted.
 2. **Each finding says where and why**: the input, the location in it (file,
    line where there is one, and JSON path), the rule broken, and the title
    and description of the field, so the supplier can correct it without
@@ -285,8 +293,10 @@ examples and compares them; `metais pack` writes the package.
 ## 12. Requirement R7 — the template language
 
 1. **Templates are Liquid**, in a dialect the specification pins: Liquid's
-   core tags and filters as the Shopify reference implementation defines
-   them, without the deprecated `include`, plus the METAIS filters and tags
+   core tags and filters as the Shopify reference implementation (5.14.0,
+   `strict2`) defines them, without `include` and `self`, with the
+   deterministic differences the specification names (object output refused,
+   simple case mapping, `date` inputs), plus the METAIS filters and tags
    below. Conditionals (`if`/`elsif`/`else`, `unless`, `case`/`when`), loops
    (`for` with its `else` and modifiers), `assign`, `capture` and whitespace
    control are all available.
@@ -338,7 +348,7 @@ examples and compares them; `metais pack` writes the package.
    conformance report, a CVE record, a security advisory. A render with an
    output that fails is refused with findings, and writes nothing.
 5. **Containers are deterministic.** The tool's own containers are
-   byte-identical across platforms and runs. The conformance vectors compare
+   byte-identical across platforms and runs of one build of the tool. The conformance vectors compare
    a container by its entries — names, order, compression method and
    content — so a conforming implementation is not bound to one compressor.
 
@@ -348,7 +358,8 @@ examples and compares them; `metais pack` writes the package.
    a render reads nothing from its host but the package and the supplied
    inputs (R14 item 4).
 2. **The same package and the same inputs give byte-identical outputs** on
-   every supported platform and in every run.
+   every supported platform and in every run of one build of the tool; across
+   builds, zip containers are identical by entries.
 3. **Text is UTF-8**, line endings are written exactly as the template has
    them unless the output converts them (R9 item 3), iteration over objects is in a defined order, and nothing depends on
    the locale or the time zone.
@@ -360,7 +371,8 @@ examples and compares them; `metais pack` writes the package.
 1. **A template may emit a provenance comment** in the syntax of its output
    (HTML, Markdown, `#`-comment and others the specification lists).
 2. **The author chooses what it records**: any of the package's identity,
-   version and digest, the digest of each input, and the tool's version; and
+   version and digest, the digest of each input, and the tool's version (recorded as `test` when
+   examples are tested); and
    the render time only when the caller supplied one. The list is closed: no
    path, user name, host name or other fact about the rendering machine is
    ever recorded (R14 item 4).
@@ -371,20 +383,25 @@ examples and compares them; `metais pack` writes the package.
    no `..`, no symbolic link out.
 2. **Output paths are portable.** Nothing in the format or the tool precludes
    Windows: a path whose name Windows cannot hold (reserved device names,
-   reserved characters, a trailing dot or space), or two outputs whose paths
-   differ only in letter case, is refused on every platform.
+   reserved characters, a trailing dot or space), a name holding a character
+   outside letters, marks, numbers, punctuation, symbols and the space
+   (Unicode 15.0.0), a `.git` component, or two outputs whose paths differ
+   only in letter case, is refused on every platform.
 3. **The tool refuses to render into a non-empty directory** unless the
-   caller allows replacing existing files. It never deletes a file.
+   caller allows replacing existing files. Rendering never deletes a file.
+   (Updating an example's expected outputs, R13 item 3, may remove stale
+   files inside that example's own `expected/` tree.)
 4. **A dry run lists every file the render would write**, with its size and
    digest, and writes nothing.
 5. **Outputs can be written to standard output**: as a deterministic archive
-   of every output, or, when the caller names exactly one output, as that
-   file's bytes alone.
+   of every output, or, when the caller names exactly one output by its
+   rendered path, as that file's bytes alone.
 
 ## 18. Requirement R13 — authoring
 
 1. **An author starts from a generated minimal package** and works in a
-   source directory, with the manifest in YAML or JSON.
+   source directory, with the manifest, `metais.yaml`, written in YAML or
+   JSON.
 2. **Checking a package needs no data.** It verifies the manifest against the
    specification, compiles every schema, parses every template, confines
    every path, and cross-references the templates against the schemas: a
@@ -395,7 +412,8 @@ examples and compares them; `metais pack` writes the package.
 3. **Examples are tests.** Each example's inputs are validated and rendered,
    and its outputs, where given, are compared byte for byte.
 4. **Packing runs the check and the tests**, then writes a package whose
-   bytes depend only on the source directory.
+   package digest depends only on the source directory, and whose bytes
+   depend only on the source directory and the build of the tool.
 5. **A package can be unpacked** back into an editable source directory.
 6. **An author can preview the outputs with generated sample data** — a
    "lorem ipsum" mode — before any real data or example exists.
@@ -482,7 +500,8 @@ examples and compares them; `metais pack` writes the package.
 
 - JSON Schema draft 2020-12.
 - Liquid, as defined by the Shopify reference implementation.
-- RFC 4180 (CSV), YAML 1.2, CommonMark with YAML frontmatter.
+- RFC 4180 (CSV), YAML 1.2 (a strict profile the specification defines),
+  CommonMark with YAML frontmatter.
 - The zip file format (PKWARE APPNOTE) and the POSIX tar format.
 - RFC 2119 for the specification's normative language.
 - The Go libraries the implementation ADR names, each only if it passes the
@@ -526,7 +545,8 @@ examples and compares them; `metais pack` writes the package.
    data, with every optional field filled and with none, producing output
    that validates.
 5. **SC5** — Every conformance vector passes on every supported target, and
-   rendering the same vectors on two of them gives byte-identical output.
+   rendering the same vectors on two of them with one build of the tool gives
+   byte-identical output.
 6. **SC6** — A corpus of hostile packages (path traversal, links, zip bombs,
    Windows-invalid and case-colliding paths, digest mismatches) is refused
    in full, with nothing written outside the output directory.

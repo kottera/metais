@@ -1,6 +1,6 @@
 # ADR-009: The security model — the package and its inputs are hostile, the host is invisible to them, every resource has a number, and anything out of spec is refused
 
-**Status:** Proposed
+**Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R14 (items 1 to 4); the security halves of R10 item 1, R11

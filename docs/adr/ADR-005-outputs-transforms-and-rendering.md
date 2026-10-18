@@ -1,6 +1,6 @@
 # ADR-005: Outputs, transforms and rendering — declared outputs expand into one sorted file plan that is rendered, transformed and verified in memory before a single commit writes it; zip containers, CRLF and schema validation are the only transforms; every path obeys one portable rule on every platform
 
-**Status:** Proposed
+**Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R8 (items 1–5), R9 (items 1–5), R10 (items 1–4), R12 (items 1–5); the output-count and output-size parts of R14 item 2

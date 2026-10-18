@@ -1,6 +1,6 @@
 # ADR-006: Validation and findings — one finding model for every command, with registered dotted codes whose meaning never changes within a major, locations as JSON Pointer plus line and column, every finding in one deterministic pass, and a fixed exit-code table
 
-**Status:** Proposed
+**Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R6 (items 1 to 4); the finding half of R14 item 3 (a

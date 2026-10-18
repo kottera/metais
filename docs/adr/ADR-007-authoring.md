@@ -1,6 +1,6 @@
 # ADR-007: Authoring — a scaffold that passes its own tests, a data-free check with a static template↔schema cross-reference, examples compared byte for byte, a deterministic pack, and a seeded sample-data generator
 
-**Status:** Proposed
+**Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R13 items 1 to 6; R3 item 5 (examples as part of the

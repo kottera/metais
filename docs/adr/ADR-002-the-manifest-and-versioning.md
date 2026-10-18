@@ -1,6 +1,6 @@
 # ADR-002: The manifest and versioning — one closed manifest in a strict YAML or JSON profile, canonicalized by RFC 8785, naming a `major.minor` specification version that only grows into what earlier minors refuse
 
-**Status:** Proposed
+**Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R1 item 4 (the canonical manifest), R3 item 3 (the

@@ -1,6 +1,6 @@
 # ADR-001: The container and its layout — a canonical zip with every header field fixed, a closed top-level layout, and a content-defined package digest that `.compiled/` carries and every open verifies
 
-**Status:** Proposed
+**Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R1 (items 1 to 5); the container side of R2 item 1

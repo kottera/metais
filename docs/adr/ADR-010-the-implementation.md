@@ -1,6 +1,6 @@
 # ADR-010: The implementation — one Go module of internal packages on the Go 1.26 toolchain, METAIS's own Liquid engine, a short list of verified parsers behind seams, and every headline guarantee proved by a test that also runs against a deliberately broken tool
 
-**Status:** Proposed
+**Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R18 item 1 (one static binary, the supported targets,

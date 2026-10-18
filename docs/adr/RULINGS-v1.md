@@ -3,6 +3,7 @@
 **Date:** 2026-10-18
 **For:** Ed Funnekotter, to ratify
 **Covers:** ADR-001 to ADR-011 after the consistency pass
+**Status:** Ratified 2026-10-18 by Ed Funnekotter: every lean, in Tier 1 and Tier 2, is accepted.
 
 This is the one document to read to ratify the v1 ADRs. Tier 1 needs a
 judgement; Tier 2 is offered as one batch; "Resolved in this pass" records
@@ -577,7 +578,7 @@ more.
 
 ## PRD follow-ups
 
-Proposed wording for Ed to apply to PRD-001; the PRD is not edited here.
+Applied to PRD-001 on 2026-10-18, as worded below.
 
 1. **§2 Goals, third bullet** — "The same package and inputs give
    byte-identical outputs on every platform from one build of the tool; across

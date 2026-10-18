@@ -1,6 +1,6 @@
 # ADR-011: The specification document and conformance — Markdown chapters under `spec/` whose every normative sentence is an `MTS-` statement, one living text per major released by tag, and a black-box suite of vectors that each cite the statements they prove, run in a sentinel sandbox on every target
 
-**Status:** Proposed
+**Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R16 (items 1–3); the document side of R15 (items 1 and

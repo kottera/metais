@@ -1,6 +1,6 @@
 # ADR-008: The command line and its machine output — named commands over a package file or a source directory, one versioned JSON document per run, standard output for the result alone, and help that cannot drift from the code
 
-**Status:** Proposed
+**Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R2 (items 1–4) and R17 (items 1–3); the command-line

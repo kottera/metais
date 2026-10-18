@@ -1,6 +1,6 @@
 # ADR-003: The data specification — named inputs declared in the manifest, JSON Schema 2020-12 with every used format asserted and every reference confined to the package, one parse rule per form, schema-directed coercion, and a data directory overridden by whole-input JSON and then by JSON Pointer path sets
 
-**Status:** Proposed
+**Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R3 (items 1 to 5), R4 (items 1 to 4), R5 (items 1 to 4), and
