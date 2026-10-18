@@ -1,0 +1,34 @@
+{
+  "rules": [
+    {
+      "rule": "standard-library-only",
+      "packages": "github.com/kottera/metais/internal/liquid/...",
+      "reason": "ADR-010 D2 item 2: the Liquid engine imports no other internal package and nothing outside the standard library, so it is testable against Golden Liquid with no METAIS concept in scope"
+    },
+    {
+      "rule": "single-entry-point",
+      "package": "github.com/kottera/metais/internal/browse",
+      "imports": "github.com/kottera/metais/internal/hostfs",
+      "function": "Extract",
+      "reason": "ADR-010 D2 item 2, PRD R2 item 1: browse reaches hostfs only through extract's single entry point, so listing, reading and searching cannot write"
+    },
+    {
+      "rule": "only-importers",
+      "imports": "golang.org/x/term",
+      "importers": ["github.com/kottera/metais/internal/hostenv"],
+      "reason": "ADR-010 D2 item 2, D11 item 8: hostenv is the one judge of whether a stream is a terminal"
+    },
+    {
+      "rule": "only-importers",
+      "imports": "golang.org/x/sys/...",
+      "importers": ["github.com/kottera/metais/internal/hostfs"],
+      "reason": "ADR-010 D2 item 2, D11 item 3: hostfs alone uses x/sys, for the no-replace rename"
+    },
+    {
+      "rule": "only-referrers",
+      "symbols": ["os.Args", "os.Stdin", "os.Stdout", "os.Stderr", "os.Exit"],
+      "packages": ["github.com/kottera/metais/cmd/metais"],
+      "reason": "ADR-010 D2 item 2, ADR-009 D14 item 4: everything else receives the arguments and streams, so the whole tool runs in-process under test"
+    }
+  ]
+}
