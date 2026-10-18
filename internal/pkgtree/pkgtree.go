@@ -53,8 +53,9 @@ import (
 //     "..", and no resolution against a file system. A path that is not an
 //     entry — absent, a directory prefix, malformed, or differing from an
 //     entry only in case or normalisation — is refused with a *PathError
-//     wrapping ErrNotExist before anything is read. This is what confines a
-//     reader: no path, whoever wrote it, names anything outside the tree.
+//     wrapping ErrNotExist before anything is read, beside a zero Info from
+//     Stat and a nil reader from Open. This is what confines a reader: no
+//     path, whoever wrote it, names anything outside the tree.
 //
 // A Tree is not required to be safe for concurrent use: nothing that reads
 // a package starts a goroutine (ADR-010 D2 item 3).
