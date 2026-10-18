@@ -1,0 +1,72 @@
+{
+  "codes": [
+    {
+      "code": "limit.invalid",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the argument is refused: unknown_name (no limit has that name), malformed_value (the value is not a non-negative whole number with a unit the limit allows), or above_default (the value is higher than the limit's default, and a limit is never raised).",
+          "always": true
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "meaning": "The limit's name, present when the argument names a limit.",
+          "always": false
+        },
+        {
+          "name": "default",
+          "type": "number",
+          "meaning": "The limit's default, present when the argument names a limit.",
+          "always": false
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "meaning": "The limit's unit, present when the argument names a limit: bytes, count or ratio.",
+          "always": false
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value asked for, in the limit's unit, present when the reason is above_default and the value is at most 2^53.",
+          "always": false
+        }
+      ],
+      "message": "A --limit argument is refused ({reason}); a limit can only be lowered, to a whole number no higher than its default.",
+      "hint": "Run `metais limits` to see every limit's name, unit and default, and give --limit NAME=VALUE with VALUE at most that default.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "report.truncated",
+      "severity": "info",
+      "class": "content",
+      "subject": "report",
+      "params": [
+        {
+          "name": "listed",
+          "type": "number",
+          "meaning": "How many findings the report lists before this one.",
+          "always": true
+        },
+        {
+          "name": "omitted",
+          "type": "number",
+          "meaning": "How many more findings were found and not listed.",
+          "always": true
+        }
+      ],
+      "message": "The report lists the first {listed} findings; {omitted} more were found and are counted in the summary but not listed.",
+      "hint": "Fix the findings listed and run the command again, or read the summary's totals by code.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    }
+  ]
+}

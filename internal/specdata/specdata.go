@@ -14,4 +14,32 @@
 // package's non-test files hold no file access.
 package specdata
 
+import _ "embed"
+
 //go:generate go test -count=1 -run=^TestGenerate$ -args -specdata.generate
+
+// FindingRegistry is spec/findings/registry.json, the finding-code
+// registry (ADR-006 D3 item 3).
+//
+//go:embed findings/registry.json
+var FindingRegistry []byte
+
+// FindingRegistrySchema is spec/schemas/1.0/finding-registry.schema.json,
+// the schema the registry validates against.
+//
+//go:embed schemas/1.0/finding-registry.schema.json
+var FindingRegistrySchema []byte
+
+// FindingSchema is spec/schemas/1.0/finding.schema.json, the finding
+// object's schema (ADR-006 D10 item 5).
+//
+//go:embed schemas/1.0/finding.schema.json
+var FindingSchema []byte
+
+// files are the embedded copies by their path below spec/, which is the
+// list generate_test.go's specFiles names.
+var files = map[string][]byte{
+	"findings/registry.json":                   FindingRegistry,
+	"schemas/1.0/finding-registry.schema.json": FindingRegistrySchema,
+	"schemas/1.0/finding.schema.json":          FindingSchema,
+}

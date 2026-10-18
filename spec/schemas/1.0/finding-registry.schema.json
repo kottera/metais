@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/schemas/1.0/finding-registry.schema.json",
+  "title": "METAIS finding-code registry",
+  "description": "The registry of finding codes, spec/findings/registry.json: one entry per code, in the byte order of the codes. A code's meaning, severity, class and subject kind never change within a major version; its params may gain members, never lose one or change one's type; a code the tool no longer emits stays, marked retired.",
+  "type": "object",
+  "required": ["codes"],
+  "additionalProperties": false,
+  "properties": {
+    "codes": {
+      "title": "Codes",
+      "description": "Every registered code, in the byte order of the codes.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "$defs": {
+    "version": {
+      "title": "Specification minor",
+      "description": "A specification version, MAJOR.MINOR.",
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "entry": {
+      "title": "Registry entry",
+      "description": "One finding code and everything a finding with it always has.",
+      "type": "object",
+      "required": ["code", "severity", "class", "subject", "params", "message", "hint", "location", "since", "statements"],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "description": "A dotted lowercase name of two to four segments, at most 64 bytes, whose first segment is a family of the closed list.",
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^(usage|internal|report|package|limit|manifest|schema|input|json|yaml|csv|text|markdown|collection|template|output|asset|reference|example)(\\.[a-z][a-z0-9_]*){1,3}$"
+        },
+        "severity": {
+          "title": "Severity",
+          "description": "The severity every finding with this code has.",
+          "enum": ["error", "warning", "info"]
+        },
+        "class": {
+          "title": "Class",
+          "description": "The kind of failure the code reports, which decides the exit status.",
+          "enum": ["usage", "refused", "content", "destination", "internal"]
+        },
+        "subject": {
+          "title": "Subject kind",
+          "description": "The subject kind every finding with this code is reported with.",
+          "enum": ["invocation", "package", "manifest", "schema", "input", "template", "asset", "reference", "output", "example", "report"]
+        },
+        "params": {
+          "title": "Parameters",
+          "description": "The code's parameters, in the order a finding's params object lists them.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/param" }
+        },
+        "message": {
+          "title": "Message template",
+          "description": "The reference wording of the message: plain text with {name} placeholders naming a parameter that is always present or one of the built-ins field, input, output and package; {{ and }} write literal braces.",
+          "type": "string",
+          "minLength": 1
+        },
+        "hint": {
+          "title": "Hint template",
+          "description": "The reference wording of the hint, the next step, in the message template's form.",
+          "type": "string",
+          "minLength": 1
+        },
+        "location": {
+          "title": "Span",
+          "description": "Which character a finding's line and column mark: the value, the member's key, or the parent object that lacks a member; none for a code whose findings never carry a location.",
+          "enum": ["value", "key", "parent", "none"]
+        },
+        "since": {
+          "title": "Since",
+          "description": "The specification minor that added the code.",
+          "$ref": "#/$defs/version"
+        },
+        "retired": {
+          "title": "Retired",
+          "description": "The specification minor from which the tool no longer emits the code. Absent while it is emitted.",
+          "$ref": "#/$defs/version"
+        },
+        "statements": {
+          "title": "Statements",
+          "description": "The identifiers of the normative statements the code reports.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^MTS-[A-Z]{3}-[0-9]{3,}$"
+          }
+        }
+      }
+    },
+    "param": {
+      "title": "Parameter",
+      "description": "One parameter of a code.",
+      "type": "object",
+      "required": ["name", "type", "meaning", "always"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "description": "The parameter's name, lowercase snake_case.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+        },
+        "type": {
+          "title": "Type",
+          "description": "The parameter's JSON type. A number is in canonical JSON number form.",
+          "enum": ["number", "string", "boolean", "array"]
+        },
+        "items": {
+          "title": "Element type",
+          "description": "An array parameter's element type. Absent when its elements may be any number, string or boolean.",
+          "enum": ["number", "string", "boolean"]
+        },
+        "meaning": {
+          "title": "Meaning",
+          "description": "What the parameter's value is.",
+          "type": "string",
+          "minLength": 1
+        },
+        "always": {
+          "title": "Always present",
+          "description": "Whether every finding with the code has the parameter.",
+          "type": "boolean"
+        }
+      },
+      "if": { "properties": { "type": { "const": "array" } } },
+      "else": { "not": { "required": ["items"] } }
+    }
+  }
+}
