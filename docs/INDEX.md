@@ -4,7 +4,7 @@
 
 | PRD | Title | Status |
 |---|---|---|
-| [PRD-001](prd/PRD-001-metais-v1.md) | METAIS v1 — the package format and its reference tool | Draft |
+| [PRD-001](prd/PRD-001-metais-v1.md) | METAIS v1 — the package format and its reference tool | Accepted |
 
 ## Decisions
 

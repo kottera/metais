@@ -1,6 +1,6 @@
 # PRD-001: METAIS v1 — the package format and its reference tool
 
-**Status:** Draft, for review.
+**Status:** Accepted 2026-10-18 by Ed Funnekotter.
 **Date:** 2026-10-18
 **Author:** drafted in the 2026-10-18 design session with Ed Funnekotter
 **Deciders:** Ed Funnekotter
