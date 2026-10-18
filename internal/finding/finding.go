@@ -337,6 +337,9 @@ func New(code Code, subj Subject, loc *Location, p Params, opts ...Option) Findi
 	if (loc == nil) != (e.Span == SpanNone) {
 		panic(fmt.Sprintf("finding: %s registers span %s, and New was given location %v", code, e.Span, loc))
 	}
+	if loc != nil && !validPointer(*loc) {
+		panic(fmt.Sprintf("finding: %s: pointer %q is not a JSON Pointer", code, loc.Pointer))
+	}
 	if err := e.checkParams(p); err != nil {
 		panic(fmt.Sprintf("finding: %s: %v", code, err))
 	}
@@ -357,6 +360,24 @@ func New(code Code, subj Subject, loc *Location, p Params, opts ...Option) Findi
 		panic(fmt.Sprintf("finding: %s hint: %v", code, err))
 	}
 	return f
+}
+
+// validPointer reports whether l's pointer, when it has one, is an RFC
+// 6901 pointer: empty, or each token prefixed by / with ~ only in ~0 and ~1.
+func validPointer(l Location) bool {
+	p := l.Pointer
+	if !l.HasPointer || p == "" {
+		return true
+	}
+	if p[0] != '/' {
+		return false
+	}
+	for i := 0; i < len(p); i++ {
+		if p[i] == '~' && (i+1 == len(p) || (p[i+1] != '0' && p[i+1] != '1')) {
+			return false
+		}
+	}
+	return true
 }
 
 // render expands a message or hint template (ADR-006 D3 item 7): {name}
@@ -459,7 +480,7 @@ func (f *Finding) clean() {
 	alts := make([]Alternative, len(f.alternatives))
 	for i, a := range f.alternatives {
 		a.Title = validUTF8(a.Title)
-		a.Findings = slices.Clone(a.Findings)
+		a.Findings, a.Omitted = branchFindings(a.Findings, a.Omitted)
 		alts[i] = a
 	}
 	f.alternatives = alts
@@ -477,6 +498,26 @@ func (f *Finding) clean() {
 	if len(f.related) == 0 {
 		f.related = nil
 	}
+}
+
+// maxBranchFindings is how many findings one alternative lists (ADR-006
+// D6 item 6).
+const maxBranchFindings = 16
+
+// branchFindings sorts and de-duplicates one alternative's findings within
+// the branch (ADR-006 D8 item 4) and keeps the first maxBranchFindings,
+// adding the rest to omitted.
+func branchFindings(fs []Finding, omitted int) ([]Finding, int) {
+	r := NewReport(maxBranchFindings)
+	for _, f := range fs {
+		r.Add(f)
+	}
+	out := make([]Finding, 0, len(r.listed))
+	for _, it := range r.listed {
+		out = append(out, it.f)
+	}
+	slices.SortFunc(out, Compare)
+	return out, omitted + r.omitted()
 }
 
 func cleanSubject(s Subject) Subject {
