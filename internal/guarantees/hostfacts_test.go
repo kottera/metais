@@ -679,10 +679,10 @@ func dependencyViolations(hits []dependencyHit, list []dependencyAllowance) []st
 //
 // The reasons rest on what METAIS calls: internal/hostenv is the one
 // importer of golang.org/x/term and calls only term.IsTerminal (ADR-010 D2
-// item 2, D11 item 8), which calls unix.IoctlGetTermios on unix and
-// windows.GetConsoleMode on windows; nothing in the module imports
-// golang.org/x/sys itself yet. A change to what the module calls in either
-// re-reads these reasons.
+// item 2, D11 item 8), and only on unix, where it calls
+// unix.IoctlGetTermios; nothing in the module imports golang.org/x/sys
+// itself yet, so neither module is in the windows closure. A change to
+// what the module calls in either re-reads these reasons.
 var dependencyAllowList = []dependencyAllowance{
 	{"golang.org/x/sys/unix", "env_unix.go", "syscall.Clearenv", reasonUnixEnv},
 	{"golang.org/x/sys/unix", "env_unix.go", "syscall.Environ", reasonUnixEnv},
@@ -698,14 +698,6 @@ var dependencyAllowList = []dependencyAllowance{
 	{"golang.org/x/sys/unix", "sysvshm_linux.go", "runtime.GOARCH",
 		"selects the System V shared-memory layout of the target architecture, a constant of the " +
 			"build, inside unix.SysvShmAttach and its kin, which METAIS never calls"},
-	{"golang.org/x/sys/windows", "env_windows.go", "syscall.Clearenv", reasonWindowsEnv},
-	{"golang.org/x/sys/windows", "env_windows.go", "syscall.Environ", reasonWindowsEnv},
-	{"golang.org/x/sys/windows", "env_windows.go", "syscall.Getenv", reasonWindowsEnv},
-	{"golang.org/x/sys/windows", "env_windows.go", "syscall.Setenv", reasonWindowsEnv},
-	{"golang.org/x/sys/windows", "env_windows.go", "syscall.Unsetenv", reasonWindowsEnv},
-	{"golang.org/x/term", "term_windows.go", "os.NewFile",
-		"wraps a duplicated console handle inside readPassword, reached only from term.ReadPassword, " +
-			"which METAIS never calls; term.IsTerminal is GetConsoleMode alone"},
 	{"golang.org/x/term", "terminal.go", "runtime.GOOS",
 		"chooses the line ending inside readPasswordLine, reached only from term.ReadPassword and " +
 			"Terminal.ReadPassword, which METAIS never calls"},
@@ -716,9 +708,6 @@ const (
 	reasonUnixEnv = "the bodies of unix.Clearenv, unix.Environ, unix.Getenv, unix.Setenv and unix.Unsetenv, " +
 		"which METAIS never calls, and term.IsTerminal does not; hostenv.Isolate has emptied the " +
 		"environment before any code could"
-	reasonWindowsEnv = "the bodies of windows.Clearenv, windows.Environ, windows.Getenv, windows.Setenv and " +
-		"windows.Unsetenv, which METAIS never calls, and term.IsTerminal does not; hostenv.Isolate " +
-		"has emptied the environment before any code could"
 	reasonSocketLayout = "selects the target's socket-address and control-message layout, a constant of the " +
 		"build, inside the socket functions, which METAIS never calls: the import rule keeps net out " +
 		"of the binary and nothing in it opens a socket"

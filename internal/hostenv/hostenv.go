@@ -9,8 +9,6 @@ package hostenv
 import (
 	"os"
 	"time"
-
-	"golang.org/x/term"
 )
 
 // Display is what the host may say about how the tool shows its own human
@@ -44,5 +42,5 @@ func IsTerminal(stream any) bool {
 	if !ok {
 		return false
 	}
-	return term.IsTerminal(int(f.Fd()))
+	return isTerminal(f.Fd())
 }
