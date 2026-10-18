@@ -67,10 +67,10 @@ CI; `go test -race ./...` on a developer's machine is the gate.
   formats are the reference tool's contract, not the format's**: a second
   implementation needs the format, not `metais`'s flags. It promises that
   `validate --json`, `render --out <dir>` and `render --out -` are stable
-  within their `/1` formats; that the tool reads only `NO_COLOR` and `TERM`
-  from the environment; and that it never prints an absolute path it
-  constructed, the working directory, the home directory, the user or the
-  host name.
+  within their `/1` formats; that the tool reads only `NO_COLOR` from the
+  environment; and that it never prints a path the caller gave, an absolute
+  path it constructed, the working directory, the home directory, the user
+  or the host name.
 
 ### How existing conformance suites are built (verified 2026-10-18)
 
@@ -163,6 +163,7 @@ generated statement index.**
      CHANGELOG.md
      ERRATA.md
      statements.json              generated index of every statement (D3 item 7)
+     findings/registry.json       the finding-code registry (ADR-006 D3 item 3)
      schemas/                     published JSON Schemas (D7)
      conformance/                 the vector suite (D9–D16)
    ```
@@ -330,9 +331,12 @@ that is assigned once, never reused and never renumbered.**
 8. **Prose cites statements by identifier and link**
    (`[MTS-OUT-012](09-outputs.md#mts-out-012)`); vectors cite them by
    identifier alone.
-9. **Finding codes link to statements.** The code catalog in
-   `12-findings.md` (ADR-006) names, for each code, the statement or
-   statements it reports, so a reader goes from a finding to the rule.
+9. **Finding codes link to statements.** `spec/findings/registry.json`
+   (ADR-006 D3 item 3) is the one source of the code catalog: each entry's
+   `statements` names the statement or statements it reports, and the
+   catalog table in `12-findings.md` is generated from the registry and
+   committed, so a reader goes from a finding to the rule. A tripwire
+   (`TestFindingCatalog`, D14) regenerates it and fails on any difference.
 
 ### D4 — Examples and the worked package
 
@@ -472,9 +476,9 @@ next revision. For a released revision, its vectors are the tie-breaker.**
    `spec/schemas/1.0/manifest.schema.json` with ADR-002's `$id`
    `https://metais.org/schemas/1.0/manifest.schema.json`. Its content is
    ADR-002's.
-2. **Any other schema a format chapter defines** (ADR-001's digest file,
-   ADR-006's finding object, if they publish one) lives beside it under the
-   same minor's directory, named `<subject>.schema.json`.
+2. **Any other schema a format chapter defines** lives beside it under the
+   same minor's directory, named `<subject>.schema.json`: for `1.0`,
+   ADR-006's `finding.schema.json` and `finding-registry.schema.json`.
 3. **The conformance suite's own schemas** are under
    `spec/schemas/conformance/<format-major>/`: `vector.schema.json` (D9),
    `findings.schema.json` (the expected-findings projection, D10),
@@ -517,19 +521,20 @@ against any command line.**
    | Operation | Arguments | Results | Owner |
    |---|---|---|---|
    | `open` | `package` | `ok`, findings | ADR-001, ADR-009 |
-   | `validate` | `package`, `data`, `set`, `inputs_json`, `limits` | `ok`, findings | ADR-003, ADR-006 |
-   | `render` | the supply arguments; one of `out` (a directory) or `stream` (`"archive"` or `{"only": <path>}`); `only`, `overwrite`, `dry_run`, `now`, `sample` (`{"optional", "seed"}`), `limits` | `ok`, findings, the written tree or stream, and with `dry_run` the listing (`path`, `size`, `digest`) | ADR-005 |
+   | `validate` | `package`, `data`, `set`, `set_json`, `inputs_json`, `limits` | `ok`, findings | ADR-003, ADR-006 |
+   | `render` | the supply arguments; one of `out` (a directory) or `stream` (`"archive"` or `{"only": <path>}`); `only`, `overwrite`, `dry_run`, `now`, `sample` (`{"optional", "seed", "items"}`), `limits` | `ok`, findings, the written tree or stream, and with `dry_run` the listing (`path`, `size`, `digest`) | ADR-005 |
    | `check` | `source`, `limits` | `ok`, findings | ADR-007 |
    | `test` | `source`, `examples`, `limits` | `ok`, findings | ADR-007 |
    | `pack` | `source`, `to` (a file path) | `ok`, findings, the written package | ADR-007 |
    | `unpack` | `package`, `to` (a directory) | `ok`, findings, the written tree | ADR-007 |
-   | `sample` | `source`, `to` (a directory) or `example` (a name), `optional`, `seed` | `ok`, findings, the written tree | ADR-007 |
+   | `sample` | `source`, `to` (a directory) or `example` (a name), `optional`, `seed`, `items`, `set`, `set_json`, `inputs_json` | `ok`, findings, the written tree | ADR-007 |
 
    `ok` is true when the operation completed and no finding is of error
-   severity. Argument values are as the owning chapter defines them: `set` is
-   a list of strings in ADR-003's `<path>=<value>` syntax, `inputs_json` names
-   a vector file holding the JSON object, `limits` is an object of ADR-009's
-   limit names to values, `now` is an RFC 3339 date-time.
+   severity. Argument values are as the owning chapter defines them: `set`
+   and `set_json` are lists of strings in ADR-003 D17's `<pointer>=<value>`
+   syntax (a text set and a JSON set), `inputs_json` names a vector file
+   holding the JSON object, `limits` is an object of ADR-009's limit names
+   to values, `now` is an RFC 3339 date-time.
 3. **Reading in place** (listing, reading, outlining and searching entries)
    is a property of the reference tool's command line (ADR-008), not an
    operation: its observable content — the entries of a package — is proved
@@ -613,7 +618,8 @@ each an ordered list of steps.**
    directory's root (a `setup/out/existing.txt` becomes `out/existing.txt`,
    the pre-existing file an overwrite vector needs); `dirs` lists empty
    directories to create; `symlinks` lists `{"path", "target"}` links to
-   create. These hold what git cannot: empty directories and links. Then the
+   create; `fifos` lists named pipes to create (ADR-009 D17's input cases).
+   These hold what git cannot: empty directories, links and FIFOs. Then the
    runner copies the package and every tree or file the steps' arguments name
    to the same relative paths. Steps of one case share the work directory, in
    order; cases never share one.
@@ -629,9 +635,9 @@ each an ordered list of steps.**
    | `limits` | proves a resource limit or its lowering |
    | `regression` | added for a defect found in an implementation |
 
-6. **Requires** (closed): `symlinks` (the setup creates a link) and
-   `case-sensitive-fs` (the setup or a step creates names differing only in
-   case). The runner probes each in the work directory's file system and
+6. **Requires** (closed): `symlinks` (the setup creates a link), `fifos`
+   (the setup creates a named pipe) and `case-sensitive-fs` (the setup or a
+   step creates names differing only in case). The runner probes each in the work directory's file system and
    skips the case with the reason when it is absent; a skip is reported, never
    counted as a pass. Linux meets both, so every vector runs on at least one
    platform of the matrix (D15).
@@ -659,9 +665,11 @@ freedom: container compression, finding wording, and the tool's identity.**
    it means no findings at all.** The actual findings, in ADR-006's order,
    must have the same length; each expected object's members must equal the
    actual finding's members of the same name, recursively. Expected objects
-   may use only ADR-006's stable members — the code, severity and location
-   members, and the field `title` and `description` copied from the package
-   — never the message, whose wording is the implementation's.
+   may use only the members ADR-006 D10 item 5 makes stable — `code`,
+   `severity`, `subject`, `location`, `schema` (`entry`, `pointer`,
+   `keyword`), `field`, `params`, `via`, `alternatives` and `related` —
+   never `message`, `hint` or `schema.keyword_location`, whose wording or
+   form is the implementation's.
 3. **Trees** — `expect.trees` lists `{"path", "equals"}`: the tree at `path`
    in the work directory must hold exactly the regular files of the expected
    tree, byte for byte, and nothing else (no extra file, no link, no empty
@@ -669,28 +677,40 @@ freedom: container compression, finding wording, and the tool's identity.**
    - `containers`: a list of `{"path", "methods"}` — files compared as zips
      **by entries**: names, order and uncompressed content, every header field
      ADR-001 fixes at its fixed value, and the compression method only for the
-     entries `methods` lists (or `"all"`), as ADR-001 D4 item 6 and ADR-005's
-     `store` option require. Compressed bytes and sizes are never compared.
-   - `executable`: paths whose owner-execute bit must be set, if ADR-005 makes
-     the bit observable; every other file's must be clear. Checked only where
-     the file system has POSIX modes.
+     entries `methods` lists, as ADR-001 D4 item 6 and ADR-005 D8 item 7
+     require. A vector lists only entries whose method the specification
+     fixes — those a declaration marks `stored: true`, a profile's
+     `mimetype`, and empty entries — since `auto`'s choice for any other
+     entry belongs to the encoder; `"all"` is accepted only for a package or
+     container in which every entry is one of those. Compressed bytes and
+     sizes are never compared.
+   - `executable`: paths whose owner-execute bit must be set (ADR-005 D2 item
+     6's `executable: true`); every other file's must be clear. Checked only
+     where the file system has POSIX modes.
    - `substitute`: files in which `@@TOOL_NAME@@` and `@@TOOL_VERSION@@` are
      replaced, before comparison, by the tool's name and version as the adapter
-     reports them — for provenance that records the tool's version (ADR-004).
-     No other token exists.
+     reports them — for provenance that records the tool's version (ADR-004
+     D14 item 2, which a `render` records as it is; `test` records `test`,
+     ADR-004 D15). No other token exists: the package digest a `render`
+     records is defined over content (ADR-001 D6), so an expected file holds
+     it literally.
 4. **Nothing else changes.** The runner records the whole sandbox (D11 item
    4) before and after each step; any file created, changed or removed
    outside a declared tree fails the step. **A step with no `trees` writes
    nothing anywhere**, which is how every refusal is checked.
-5. **Stream** — `expect.stream` is `{"equals": <file>}`, compared byte for
-   byte; ADR-005's tar profile fixes every header field, so a tar has no
-   freedom. A single-output stream of a container output adds `"container":
+5. **Stream** — `expect.stream` is `{"equals": <file>}`. An archive stream is
+   compared **by entries**, as ADR-005 D17 item 5 states — order, path,
+   typeflag, mode, uid, gid, uname, gname, mtime, size and content — because
+   ADR-005 leaves the pax extended header's own name and fields to the
+   implementation; the reference tool's archive bytes are proved identical
+   across platforms by D15's records. A single-output stream is compared
+   byte for byte, or, for a container output, adds `"container":
    {"methods": …}` and is compared by entries.
 6. **Dry-run listing** — `expect.listing` names a JSON array of
    `{"path", "size", "digest"}` in ADR-005's order, compared exactly, except
    that for a path the step lists in `containers` only `path` is compared.
 7. **Repeatable results** — where a statement leaves the bytes to the
-   implementation (ADR-007 decides whether sample data is such a case), a step
+   implementation (sample data is such a case, ADR-007 D9 item 3), a step
    sets `"repeatable": true`, its trees name `files` (the paths that must
    exist) instead of `equals`, and the runner runs the case twice in fresh
    sandboxes and requires every observed byte to match between the runs. A
@@ -703,7 +723,7 @@ freedom: container compression, finding wording, and the tool's identity.**
 reference tool's command line by default, or through a documented driver
 protocol for any other implementation.**
 
-1. **Location.** ADR-010 places it; this ADR assumes `internal/conformance`,
+1. **Location.** ADR-010 D14 item 2 places it in `internal/conformance`,
    with `TestConformance` running every vector as subtests named
    `TestConformance/<area>/<slug>/<case>`, each vector in parallel, so
    `go test ./internal/conformance -run 'TestConformance/out/'` selects an
@@ -742,16 +762,19 @@ protocol for any other implementation.**
    | Operation | Command line |
    |---|---|
    | `open` | `inspect <package>` |
-   | `validate` | `validate <package> [--data D] [--set S]… [--inputs-json -] [--limit N=V]…` (the `inputs_json` file on standard input) |
-   | `render` | `render <package> --out <dir>` or `--out -` `[--only P] [--overwrite] [--dry-run] [--now T] [--sample --optional O --seed N]` plus the supply flags; the stream is standard output and the document standard error (ADR-008 D11 item 2) |
+   | `validate` | `validate <package> [--data D] [--set S]… [--set-json S]… [--inputs-json -] [--limit N=V]…` (the `inputs_json` file on standard input) |
+   | `render` | `render <package> --out <dir>` or `--out -` `[--only P] [--overwrite] [--dry-run] [--now T] [--sample --optional O --seed N --items K]` plus the supply flags; the stream is standard output and the document standard error (ADR-008 D11 item 2) |
    | `check`, `test` | `check <source>`, `test <source> [--example E]…` |
    | `pack`, `unpack` | `pack <source> --out <file>`, `unpack <package> --to <dir>` |
-   | `sample` | `sample <source> --to <dir>` or `--example <name>`, with `--optional`, `--seed` |
+   | `sample` | `sample <source> --to <dir>` or `--example <name>`, with `--optional`, `--seed`, `--items` and the supply flags |
    | the tool's identity | `version` (ADR-002 D8's `tool` object) |
 
-   The adapter also checks ADR-008 D13's mapping — exit code 0 exactly when
-   `ok` — and fails the step on exit code 2, which means the adapter's mapping
-   has drifted from the command line. For an `open` step in a `security`
+   The adapter also checks ADR-008 D13's mapping onto ADR-006 D12's table —
+   exit code 0 exactly when `ok`, and otherwise the code the findings'
+   classes give — and fails the step on exit code 3, which means the
+   adapter's command line has drifted from the tool's, and on exit code 2, a
+   crash, each reported as a harness error apart from conformance
+   failures. For an `open` step in a `security`
    vector it runs every package-opening command (D16 item 3).
 6. **The driver protocol (`exec` adapter)** is documented in
    `spec/conformance/README.md` and the two `driver-*` schemas. The runner
@@ -808,7 +831,7 @@ byte-identical results.**
    | `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_CACHE_HOME` | directories under `HOME`, each holding a `metais/` directory with a file of sentinel content |
    | `TZ` | `Pacific/Chatham` (UTC+12:45) |
    | `LANG`, `LC_ALL` | `tr_TR.UTF-8` (Turkish casing of `i`) |
-   | `NO_COLOR`, `TERM` | `MTSSENTINELNOCOLOR`, `MTSSENTINELTERM` |
+   | `NO_COLOR`, `TERM` | `MTSSENTINELNOCOLOR`, `MTSSENTINELTERM` (the tool reads `NO_COLOR` only for colour, which human output alone shows; `TERM` it never reads) |
    | `GODEBUG` | `zipinsecurepath=1,tarinsecurepath=1` |
    | `METAIS_SENTINEL` | `MTSSENTINELENV` |
 
@@ -829,7 +852,9 @@ byte-identical results.**
    lower-casing; the sandbox path carries it too, so an absolute path in a
    finding is caught.
 4. **Environment B (plain)**: `HOME`, `TMPDIR` and `PATH` as plain sandbox
-   directories, `TZ=UTC`, `LC_ALL=C`, nothing else. **Every observed byte of
+   directories, `TZ=UTC`, `LC_ALL=C`, nothing else, run in other processes
+   and started at least two seconds after A, so the process id and the
+   clock differ too (ADR-009 D16 item 1, check 3). **Every observed byte of
    A and B must be equal** — standard output, standard error, trees, stream,
    listing. A difference fails the step and names the variables that differ,
    which catches a time-zone, locale or `GODEBUG` dependence the sentinel
@@ -875,7 +900,8 @@ The tests, in ADR-010's place for them:
 | `TestCoverage` | an active, observable requirement has no vector citing it |
 | `TestVectorsWellFormed` | a `vector.json` fails its schema; `id` differs from its path; the area is not its first statement's; `since` is not its statements' highest; a referenced file is missing or a file is unreferenced; a `package.metais` lacks `byte-level` |
 | `TestCitationsResolve` | a vector cites an unknown or withdrawn identifier; a prose link to a statement does not resolve |
-| `TestFindingCodesCovered` | a code in `12-findings.md`'s catalog appears in no vector's expected findings, or names no statement |
+| `TestFindingCatalog` | the code catalog in `12-findings.md` differs from what `spec/findings/registry.json` generates |
+| `TestFindingCodesCovered` | a registered, unretired code appears in no vector's expected findings, or names no statement |
 | `TestExamplesMatchVectors` | an example block (D4) differs from its vector file, or names a missing vector or file |
 | `TestSuiteTreePortable` | a path under `spec/conformance/` breaks D9 item 8, or `.gitattributes` lacks the `-text` line |
 | `TestNoSentinelInSuite` | any suite file contains `MTSSENTINEL` (case-insensitive) |
@@ -964,15 +990,32 @@ exact findings and to write nothing anywhere.**
 Liquid is proved by running a pinned selection of Shopify's liquid-spec
 against the reference engine.**
 
-1. `spec/conformance/delegated/liquid-spec.json` pins it:
+1. `spec/conformance/delegated/liquid-spec.json` pins it. This ADR pins the
+   liquid-spec commit (the head of 2026-10-18); ADR-004 D1 pins the dialect
+   — gem 5.14.0 under `strict2`, without `include` and `self` — and every
+   other difference is a departure. The `missing_features` are liquid-spec's
+   own feature gates (`lib/liquid/spec/cli/features.rb` at that commit) for
+   what the dialect does not have: inline errors (ADR-004 renders none),
+   lax parsing, Ruby types and drops, random inputs (the run is
+   deterministic), the `self` drop, Shopify's theme tags, objects, filters
+   and error formats, and its resource-limit scoring (ADR-009 counts its
+   own). `shopify_blank` and `shopify_string_access` stay enabled: ADR-004
+   D5 item 2's `blank` and D4 item 7's `first`/`last` on strings are those
+   behaviours, as the gem at 5.14.0 has them. `include` and every other
+   case the dialect refuses are departures:
 
    ```json
    {
      "repository": "https://github.com/Shopify/liquid-spec",
-     "commit": "<the commit ADR-004 pins>",
+     "commit": "84bf25e0edbca5f7e530574788b0f875ab331f50",
      "suites": ["basics", "liquid_ruby", "partials"],
-     "error_mode": "<ADR-004's parse mode>",
-     "missing_features": ["<each liquid-spec feature ADR-004 excludes>"],
+     "error_mode": "strict2",
+     "missing_features": ["inline_errors", "lax_parsing", "ruby_types", "ruby_drops",
+                          "drop_class_output", "template_factory", "binary_data", "drops",
+                          "randomness", "self_environment_shadowing", "strict2_blank_body_errors",
+                          "shopify_tags", "shopify_objects", "shopify_filters",
+                          "shopify_error_handling", "shopify_error_format", "shopify_includes",
+                          "shopify_resource_limits", "range_resource_limits"],
      "departures": [
        {"spec": "<liquid-spec case name>", "statement": "MTS-TPL-…", "why": "include is not part of the dialect"}
      ]
@@ -1019,12 +1062,13 @@ nothing must pass.**
 fixes, with their values, so container comparison (D10 item 3) checks them;
 the package digest being content-defined (so provenance that records it, and
 `pack` vectors, are identical across implementations); "method compared only
-where marked" (its D4 item 6), which D10's `methods` expresses; the
-`.compiled/` file names (`manifest.json`, `schema.json`, `digests.json`,
-`references.json`); its Conformance list, which becomes `con/` vectors. I
-promise: a vector can say "refused with these findings" and "packs to these
-entries, in this order, with these methods and this package digest" — the
-digest is inside `digests.json`, compared as entry content.
+where the specification fixes it" (its D4 item 6), which D10's `methods`
+expresses; the `.compiled/` file names (`digests.json`, `manifest.json`,
+`schema.json`, `references.json`); its Conformance list, which becomes
+`con/` vectors. I promise: a vector can say "refused with these findings"
+and "packs to these entries, in this order, with these methods and this
+package digest" — the digest is inside `digests.json`, compared as entry
+content.
 
 **ADR-002 — the manifest and versioning.** I rely on: `metais` as the
 specification version and its grammar; the minor rules of D7, which D5 and D6
@@ -1038,71 +1082,82 @@ machine-readable form of ADR-002's "table the tool carries"; the
 `conformance/`, so the domain ruling covers them too.
 
 **ADR-003 — the data specification.** I rely on: the supply arguments of
-`validate` and `render` (`data`, `set` in its path syntax, `inputs_json`) as
-format-level notions, not only flags; inputs read only from what the caller
-names, never from the working directory or the home directory (D12's decoys
-test exactly this); finding locations for input files written as the caller
-gave them (relative), never absolutized. I promise: vectors pass those
-arguments through unaltered.
+`validate`, `render` and `sample` (`data`, `set` and `set_json` in ADR-003
+D17's pointer syntax, `inputs_json`) as format-level notions, not only
+flags; inputs read only from what the caller names, never from the working
+directory or the home directory (D12's decoys test exactly this); finding
+locations for input files relative to the data directory, never
+absolutized. I promise: vectors pass those arguments through unaltered.
 
 **ADR-004 — the template environment.** I rely on: the Liquid dialect being
-expressible as liquid-spec's selection (a parse mode and a `missing_features`
-list), with each departure tied to a statement (D17); a pinned liquid-spec
-commit; provenance's tool-version field rendering the tool's version exactly as
-`version` reports it. I promise: chapters 7 and 8 are covered by METAIS
-vectors in full, besides the delegated suite.
+expressible as liquid-spec's selection — `strict2` and a `missing_features`
+list for `include` and `self` — with each other departure tied to a
+statement (D17); provenance's tool field recording the tool's version
+exactly as `version` reports it under `render`, and `test` under `test`
+(ADR-004 D15), so `render` vectors use D10 item 3's tokens and `test`
+vectors need none. I pin the liquid-spec commit (D17 item 1). I promise:
+chapters 7 and 8 are covered by METAIS vectors in full, besides the
+delegated suite.
 
-**ADR-005 — outputs and rendering.** I rely on: a tar profile that fixes every
-header field (so a stream is compared by bytes; if any field is left free, D10
-item 5 must compare by members instead); staging that stays inside the output
-directory and leaves nothing behind (a sibling or `TMPDIR` staging directory
-fails D10 item 4); a dry-run listing in a defined order; which outputs are
-containers and which entries are `store`; whether the execute bit is
-observable; the portable-path rules, which D9 item 8 reuses for the suite tree.
+**ADR-005 — outputs and rendering.** I rely on: a tar profile compared by
+entries (ADR-005 D17 item 5; D10 item 5), with the reference tool's bytes
+proved identical across platforms by D15; staging that leaves nothing
+behind — ADR-005 D14 stages beside the output directory and renames it
+into place, so after a step only the declared tree has changed and D10 item
+4's check holds; a dry-run listing in a defined order, with ADR-005 D16's
+`digest` member; which outputs are containers and which entries are
+`stored`; the execute bit, observable through `executable: true`; the
+portable-path rules, which D9 item 8 reuses for the suite tree.
 
-**ADR-006 — validation and findings.** I rely on: a stable set of finding
-members a vector may compare (code, severity, location members, field title
-and description) distinct from the message; a deterministic finding order; a
-code catalog in `12-findings.md` in which each code names its statement(s)
-(D3 item 9); exit codes as ADR-008 D13 uses them, for the `cli` adapter's
-consistency check only. I promise: no vector compares a message.
+**ADR-006 — validation and findings.** I rely on: the stable finding members
+of ADR-006 D10 item 5, which D10 item 2 compares, distinct from `message`
+and `hint`; a deterministic finding order (ADR-006 D8); the registry in
+`spec/findings/registry.json`, each entry naming its `statements`, from
+which `12-findings.md`'s catalog is generated (D3 item 9); the exit table of
+ADR-006 D12 as ADR-008 D13 maps it, for the `cli` adapter's consistency
+check only. I promise: no vector compares a message or a hint.
 
 **ADR-007 — authoring.** I rely on: the arguments and results of `check`,
-`test`, `pack`, `unpack` and `sample` in D8's table; a ruling on whether the
-sample generator's bytes are normative (then vectors fix them) or the
-implementation's (then they are `repeatable`, D10 item 7, followed by a
-`validate` step). I promise: `B-worked-package.md` follows ADR-007's golden
-path, built from vectors.
+`test`, `pack`, `unpack` and `sample` in D8's table; the ruling that the
+sample generator's bytes are the implementation's (ADR-007 D9 item 3), so
+`sample` steps are `repeatable` (D10 item 7) and followed by a `validate`
+step. I promise: `B-worked-package.md` follows ADR-007's golden path, built
+from vectors.
 
 **ADR-008 — the command line.** I rely on: the command and flag names in D11
-item 5's table (the consistency pass reconciles any renaming); the envelope's
-`ok`, `findings` and `result` members and `render`'s `result.files` for the
+item 5's table, as ADR-008 D7 to D9 spell them; the envelope's `ok`,
+`findings` and `result` members and `render`'s `result.files` for the
 listing; the document on standard error when standard output carries bytes;
-`version`'s `tool` object; that the tool reads only `NO_COLOR` and `TERM`; that
-it never prints a constructed absolute path. I agree with its ruling 7: the
-command line is not part of the format, which is why D8 defines operations and
-D11 maps them; the `cli` adapter is the only place the suite knows `metais`'s
-flags. I note: vectors always pass every operand explicitly, so the `.`
-defaults of `check`, `test`, `sample` and `pack` are never exercised by the
-suite.
+`version`'s `tool` object; that the tool reads only `NO_COLOR`; that it
+never prints a path the caller gave or one it made absolute. I agree with
+its ruling 7: the command line is not part of the format, which is why D8
+defines operations and D11 maps them; the `cli` adapter is the only place
+the suite knows `metais`'s flags. I note: vectors always pass every operand
+explicitly, so the `.` defaults of `check`, `test`, `sample` and `pack` are
+never exercised by the suite.
 
-**ADR-009 — security.** I rely on: the hostile corpus's content and codes; the
-limit names a vector's `limits` uses; the leaking build that pins SC7 red
-(D12 item 6); proofs for what a sentinel cannot plant — the clock, the
-process, the host name, the network; a statement of why `GODEBUG` cannot change
-what the tool accepts (ADR-008's hand-over), which environment A tests with
-`zipinsecurepath=1,tarinsecurepath=1`. I promise: the sentinel run over every
-vector, the nothing-written check, and the per-step bounds of D13.
+**ADR-009 — security.** I rely on: the hostile corpus's content and codes
+(ADR-009 D17), each case committed as bytes with a lowered limit where the
+default would need a large file; the limit names a vector's `limits` uses;
+the canaries that pin SC7 red (ADR-009 D16 item 2, recorded in its
+implementation log); proofs for what a sentinel cannot plant — the clock,
+the process, the host name, the network (ADR-009 D16); the statement of why
+`GODEBUG` cannot change what the tool accepts (ADR-009 D14 item 2), which
+environment A tests with `zipinsecurepath=1,tarinsecurepath=1`. I promise:
+the runner and its sandbox, environments A and B, the nothing-written check
+and the per-step bounds of D13, which ADR-009's `TestHostIsolation`
+extends.
 
-**ADR-010 — the implementation.** I rely on: placing the runner (assumed
-`internal/conformance`), the embedded schema copies with their equality test,
-the liquid-spec JSON-RPC server, the reference driver for `TestDriverProtocol`,
-and the generators of committed hostile packages with their reproduction
-tests; a release procedure that runs D15's matrix and refuses to advertise an
-unreleased revision (D5 item 6); `go test -race ./...` staying within D11 item
-9's budget. I promise: the runner needs only the standard library plus the
-JSON Schema validator ADR-010 already chooses (for `TestSchemasPublished` and
-vector validation).
+**ADR-010 — the implementation.** I rely on: the runner in
+`internal/conformance` (ADR-010 D14 item 2), driving the built binary as a
+black box; the embedded schema copies with their equality test; the
+liquid-spec JSON-RPC server; the reference driver for
+`TestDriverProtocol`; the generators of committed hostile packages with
+their reproduction tests; a release procedure that runs D15's matrix and
+refuses to advertise an unreleased revision (D5 item 6); `go test -race
+./...` staying within D11 item 9's budget. I promise: the runner needs only
+the standard library plus the JSON Schema validator ADR-010 already chooses
+(for `TestSchemasPublished` and vector validation).
 
 ## Conformance
 
@@ -1279,6 +1334,15 @@ project has; when CI exists it runs the same commands.
     under a familiar licence. Alternative: CC BY 4.0 for the text.
 17. **Suite paths are checkout-safe on Windows (portable names, no case
     collisions, at most 160 bytes, no links) and `-text`.** Lean: yes.
+18. **Archive streams and containers are compared by entries, a container's
+    method only where the specification fixes it; the reference tool's own
+    bytes are proved by the cross-platform records** (D10 items 3 and 5).
+    Lean: yes, following ADR-005 D17 item 5 and ADR-001 D4 item 6.
+    Alternative: byte comparison against committed streams, which would bind
+    every implementation to one pax header layout and one encoder.
+19. **liquid-spec is pinned at commit `84bf25e0`, run with `strict2`,
+    excluding `include` and `self`** (D17 item 1). Lean: yes. Alternative:
+    track liquid-spec's head at each release.
 
 ## References
 
@@ -1303,7 +1367,11 @@ project has; when CI exists it runs the same commands.
 - test262, `CONTRIBUTING.md` (frontmatter `esid`, `negative`) —
   https://github.com/tc39/test262/blob/main/CONTRIBUTING.md
 - Shopify liquid-spec (README, `docs/json-rpc-protocol.md`, MIT licence) —
-  https://github.com/Shopify/liquid-spec
+  https://github.com/Shopify/liquid-spec ; feature gates at the pinned
+  commit, `lib/liquid/spec/cli/features.rb` (read 2026-10-18) —
+  https://github.com/Shopify/liquid-spec/blob/84bf25e0edbca5f7e530574788b0f875ab331f50/lib/liquid/spec/cli/features.rb
+- Shopify Liquid v5.14.0 `lib/liquid/variable_lookup.rb` (`first`/`last` on a
+  string) — https://github.com/Shopify/liquid/blob/v5.14.0/lib/liquid/variable_lookup.rb
 - Go txtar — https://pkg.go.dev/golang.org/x/tools/txtar
 - Go `embed` (pattern rules) — https://pkg.go.dev/embed
 - The Go Programming Language Specification, floating-point fusion —

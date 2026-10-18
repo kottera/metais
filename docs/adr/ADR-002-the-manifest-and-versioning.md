@@ -107,18 +107,24 @@ marked)
 
 ### D1 — The manifest file
 
-1. **A source directory holds exactly one manifest, at its root: `metais.yaml`
-   or `metais.json`.** `metais.yaml` is parsed under the YAML profile (D2),
-   `metais.json` under the JSON profile (D3); both produce the same data
-   model. `init` writes `metais.yaml`; that is the golden path, and
-   `metais.json` is the escape hatch for an author whose tooling emits JSON.
-2. **Both present is refused**, naming both. **Neither present is refused**,
-   naming `metais.yaml` and `metais init`.
-3. **No other spelling is read.** A root entry `metais.yml`, or any entry
-   whose name equals `metais.yaml` or `metais.json` ignoring letter case but
-   not exactly, is refused with a finding naming the exact name. The tool
-   compares names byte for byte, so the result does not depend on the
-   file system's case sensitivity.
+1. **A source directory holds exactly one manifest, at its root, and its
+   name is always `metais.yaml`** (ADR-001 D5 item 2). Its content is YAML
+   or JSON: a `metais.yaml` whose first byte other than U+0020, U+0009,
+   U+000A and U+000D is `{` is parsed under the JSON profile (D3), and any
+   other under the YAML profile (D2); both produce the same data model.
+   `init` writes YAML; that is the golden path, and JSON content is the
+   escape hatch for an author whose tooling emits JSON. The rule is decided
+   by one byte, so no file is read under two languages, and JSON content
+   still meets a JSON parser's rules and errors rather than YAML's (YAML is
+   not quite a superset of JSON: §7.4.2 limits an implicit key to 1024
+   characters).
+2. **No manifest is refused**, naming `metais.yaml` and `metais init`.
+3. **No other spelling is read.** A root entry `metais.json` or `metais.yml`,
+   or any entry whose name equals `metais.yaml` ignoring letter case but not
+   exactly, is refused with a finding naming the exact name (and, for
+   `metais.json`, saying that JSON is written in `metais.yaml`). The tool
+   compares names byte for byte, so the result does not depend on the file
+   system's case sensitivity.
 4. **A packed package carries the source manifest verbatim**, byte for byte
    as the author wrote it, beside `.compiled/manifest.json` (D9). Comments
    and formatting therefore survive `unpack`.
@@ -179,7 +185,8 @@ rules itself; it never uses a library's own type resolution.
 
 ### D3 — The JSON profile
 
-`metais.json` is RFC 8259 JSON restricted to I-JSON (RFC 7493):
+A `metais.yaml` read as JSON (D1 item 1) is RFC 8259 JSON restricted to
+I-JSON (RFC 7493):
 
 1. UTF-8, strictly decoded; a byte order mark is refused (as in D2 item 1,
    so the two profiles agree).
@@ -213,7 +220,8 @@ rules itself; it never uses a library's own type resolution.
    | `authors` | no | array of author objects | this ADR |
    | `license` | no | string, an SPDX license expression | this ADR |
    | `homepage` | no | string, an absolute `https` or `http` URI | this ADR |
-   | `inputs` | yes | the data specification | ADR-003 |
+   | `inputs` | yes | the data specification, possibly `[]` | ADR-003 |
+   | `input_constraints` | no | string, the package path of a cross-input schema | ADR-003 D6 |
    | `outputs` | yes | the output declarations | ADR-005 |
 
 3. **Numbers.** A number is converted to the nearest IEEE 754 double
@@ -221,10 +229,14 @@ rules itself; it never uses a library's own type resolution.
    A number whose value is an integer and whose magnitude exceeds
    2⁵³ − 1 is refused, because it cannot survive the conversion exactly
    (RFC 7493 §2.2). `-0` is the number zero.
-4. **Closed everywhere.** Every object this ADR defines (the root and each
-   author) refuses a member it does not define, and ADR-003 and ADR-005 are
-   asked to do the same for theirs (see *Interfaces*). There is no extension
-   prefix (`x-` or any other) in `1.0`. The finding for an unknown member
+4. **Closed everywhere.** Every object of the manifest refuses a member it
+   does not define: the root and each author here, and every object in
+   `inputs` (ADR-003 D1) and `outputs` (ADR-005 D1). There is no extension
+   prefix (`x-` or any other) for a manifest member in `1.0`. This rule
+   governs the manifest's own objects only: a JSON Schema document under
+   `inputs/` (or named by an output's `validate`) is not a manifest object,
+   and ADR-003 D3 item 5 admits author annotations there as keywords
+   beginning `x-`. The finding for an unknown member
    names it, its JSON Pointer and line, and — where a defined member is close
    to it — the member it probably meant (wording per ADR-006).
 5. **`null` is never a value of a member this ADR defines.** An optional
@@ -280,7 +292,8 @@ rules itself; it never uses a library's own type resolution.
    `[a-z0-9]+(-[a-z0-9]+)*`, so it neither begins nor ends with `-` and never
    holds `--`. A segment is at most 63 characters; the whole name 1 to 128.
 2. **The leading segment is not a Windows device name**: `con`, `prn`,
-   `aux`, `nul`, `com1`–`com9`, `lpt1`–`lpt9`. `con.metais` and
+   `aux`, `nul`, `com0`–`com9`, `lpt0`–`lpt9` — the same list ADR-005 D12
+   item 4 refuses in paths, restricted to ASCII as `name` is. `con.metais` and
    `nul.reports.metais` are device names on Windows, and nothing in the format
    precludes Windows (R12 item 2).
 3. **Lower case only, ASCII only**, so a name is a portable file-name stem
@@ -353,10 +366,12 @@ rules itself; it never uses a library's own type resolution.
 5. **What a minor never does**: change what an accepted construct means;
    remove one; change a default; refuse, or render differently, any package
    and input set an earlier minor of the same major accepts; give meaning to
-   a JSON Schema keyword (unknown keywords are annotations in JSON Schema
-   2020-12, so a validator would silently ignore it); or begin asserting a
-   `format` an earlier minor left as an annotation. Anything in this list
-   waits for a new major.
+   a JSON Schema keyword beginning `x-` (`1.0` accepts those as author
+   annotations, ADR-003 D3 item 5); or assert a `format` an earlier minor
+   accepted without asserting. (`1.0` refuses every other unknown keyword
+   and every unasserted `format`, ADR-003 D3 item 5 and D4 item 2, so a
+   minor may add one of those under item 4.) Anything in this list waits
+   for a new major.
 6. **The promise this buys is stronger than R15 item 4's minimum: changing a
    package's `metais` from `1.m` to any later `1.k`, and nothing else,
    changes neither its validity nor any byte it renders, for any input set.**
@@ -470,7 +485,7 @@ rules itself; it never uses a library's own type resolution.
    own.
 7. **Patterns in the schema avoid lookaround**, so any ECMA-262 or RE2-class
    regular-expression engine evaluates them alike; D5 item 2 is expressed as
-   `"not": {"pattern": "^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\\.|$)"}`.
+   `"not": {"pattern": "^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\\.|$)"}`.
 
 ### D11 — The order a manifest is processed in
 
@@ -495,85 +510,103 @@ step, every finding is reported (ADR-006).
 ## Interfaces with sibling ADRs
 
 **ADR-001 (container and layout).** Relies on: the layout reserving
-`metais.yaml` and `metais.json` at the root (exactly one present, D1), and
+`metais.yaml` at the root (ADR-001 D5 item 2, the one manifest name) and
 `.compiled/manifest.json`; the source manifest stored verbatim in a packed
 package (D1 item 4); the digest file covering `.compiled/manifest.json` and
-the source manifest; digest verification running before D9 item 4. Promises:
-the canonical form (D9) for any JSON file ADR-001 writes under `.compiled/`,
-if ADR-001 adopts it; `name` (D5) as a portable file-name stem if `pack`
-derives the package file name from it.
+the source manifest; digest verification running before D9 item 4.
+Promises: the canonical form (D9), which ADR-001 adopts for every JSON file
+under `.compiled/`; `name` (D5) as a portable file-name stem, which `pack`
+uses for its default file name (ADR-007 D7); the refusal of a newer minor
+(D7 item 8), which lets ADR-001 D5 item 4 refuse every name it does not
+know.
 
 **ADR-003 (data specification).** Relies on: `inputs` being the root member
-of D4's table, its value defined as `#/$defs/inputs` in D10's schema, every
-object in it closed (D4 item 4), and nothing in it giving meaning to a JSON
-Schema keyword in a later minor (D7 item 5); the set of asserted `format`s
-fixed per major (D7 item 5). Promises: D2's YAML profile and D4's data model,
-which ADR-003 may adopt for YAML inputs, frontmatter and YAML-written
-schemas so that one YAML reading holds across the package; if ADR-003 needs
-schema-directed coercion for YAML data (as it has for CSV), that is its
-decision, and the manifest does not use it.
+of D4's table (required, possibly empty), its value defined as
+`#/$defs/inputs` in D10's schema, every object in it closed (D4 item 4); the
+root member `input_constraints`, added to D4's table for ADR-003 D6; nothing
+in a later minor giving meaning to a keyword beginning `x-` (D7 item 5); a
+later minor adding a keyword or an asserted `format` only where `1.0`
+refuses it (D7 items 4 and 5). Promises: D2's YAML
+profile and D4's data model, which ADR-003 D10 adopts for YAML inputs,
+frontmatter and YAML-written schemas, so one YAML reading holds across the
+package; ADR-003's schema-directed coercion applies to CSV and text values
+only, and the manifest does not use it. The canonical form materializes no
+default (D9 item 2), so the canonical manifest carries exactly the input
+fields the author wrote; a consumer applies ADR-003 D1's defaults itself.
 
 **ADR-004 (template environment).** Relies on: the `package` variable
 exposing `metais`, `name`, `version`, `title`, `description`, `guide`,
 `authors`, `license` and `homepage` with the values of the canonical manifest
-(an omitted optional member is `nil`), and whatever digest member ADR-004
-defines; provenance's "package id" recording `name` (D5 item 5); **an
-undefined variable, an undefined member of `package`, an unknown filter and
-an unknown tag each refused**, not rendered as nothing — D7 item 4 depends on
-it, because a minor can add a member or a filter only if `1.0` refuses its
-use.
+(an omitted optional member is `nil`), and `digest` (ADR-004 D7 item 3);
+provenance's "package id" recording `name` (D5 item 5); **an undefined
+variable, an undefined member of `package`, an unknown filter and an unknown
+tag each refused**, not rendered as nothing (ADR-004 D1 item 6, D6) — D7
+item 4 depends on it, because a minor can add a member or a filter only if
+`1.0` refuses its use.
 
 **ADR-005 (outputs).** Relies on: `outputs` being the root member of D4's
-table, its value defined as `#/$defs/outputs`, every object in it closed; the
-mirror shorthand expressed inside `outputs`; transforms, transform options
-and escape modes as closed enumerations a minor can extend (D7 item 4).
-Promises: D5 item 2 uses the same device-name list as ADR-005's portable-path
-rule; the consistency pass should check the two lists match.
+table, its value defined as `#/$defs/outputs`, every object in it closed;
+the mirror shorthand expressed inside `outputs`; transforms, transform
+options and escape modes as closed enumerations a minor can extend (D7 item
+4). Promises: D5 item 2 uses ADR-005 D12 item 4's device-name list
+(`com0`–`com9` and `lpt0`–`lpt9` included), restricted to ASCII.
 
 **ADR-006 (findings).** Relies on: a stable code for each refusal in D1, D2,
-D3, D4, D7, D9 and D10 item 6; locations carrying both line/column (from the
-source) and JSON Pointer (into the data model); the unknown-member finding
-able to name a close defined member. Promises: every manifest finding has a
-field title and description from D10 item 4 where a field is involved.
+D3, D4, D7, D9 and D10 item 6, registered in ADR-006's families — the file,
+profile, structure and field rules as `manifest.*` (`manifest.file.*`,
+`manifest.yaml.*`, `manifest.json.*`, and D6's keyword mapping under
+`manifest.` for the schema), the version gate of D7 items 7, 8, 9 and 11 as
+`package.version.*` (class `refused`), and D9 item 4 as
+`package.compiled.mismatch`; locations carrying both line and column (from
+the source) and JSON Pointer (into the data model); the unknown-member
+finding's `suggestion` computed by ADR-006 D9 item 7. Promises: every
+manifest finding has a field title and description from D10 item 4 where a
+field is involved.
 
 **ADR-007 (authoring).** Relies on: `init` writing `metais.yaml` with
 `metais` quoted and set to the tool's highest implemented version, a literal
-block `guide`, and every required member; `check` reporting the lowest needed
-minor and warning when the declared one is higher (D7 item 10); `check`
-reporting a relative link in `guide` whose target is not a package entry;
-`pack` storing the source manifest verbatim and writing D9's canonical form;
-`unpack` restoring the verbatim source manifest.
+block `guide`, and every required member; `check` reporting the lowest
+needed minor and warning when the declared one is higher (D7 item 10);
+`check` warning about a relative link in `guide` whose target is not a
+package entry (ADR-007 D2 step 4); `pack` storing the source manifest
+verbatim and writing D9's canonical form; `unpack` restoring the verbatim
+source manifest.
 
-**ADR-008 (command line).** Relies on: a command or flag reporting D8 item 1's
-content in its envelope; the summary showing `title`, `description`, `guide`
-in full, `name`, `version`, `metais` and whether it is implemented.
+**ADR-008 (command line).** Relies on: `metais version` reporting D8 item
+1's content as its `result` (format `metais.version/1`); the summary showing
+`title`, `description`, `guide`, `name`, `version`, `metais` and whether it
+is implemented (ADR-008 D6).
 
-**ADR-009 (security).** Relies on: a manifest size limit and a nesting-depth
-limit applied before and during parsing (D11 item 2). Promises: D2 item 4
-removes alias expansion, so the YAML-bomb defence for the manifest reduces to
-size and depth.
+**ADR-009 (security).** Relies on: `manifest-size` and `value-depth` applied
+before and during parsing (D11 item 2), and `number-length`. Promises: D2
+item 4 removes alias expansion, so the YAML-bomb defence for the manifest
+reduces to size and depth; D2 item 5 refuses every explicit tag, which is
+stricter than ADR-009 D10 item 1's floor.
 
 **ADR-010 (implementation).** Relies on: a YAML parser that exposes a node
 tree with node kind (including alias), style (plain, quoted, block, explicit
-tag), anchor, value text, line and column, and that reports duplicate keys or
-lets the tool detect them — `go.yaml.in/yaml` qualifies on these properties,
-but its own resolution must not be used (it reads `0777` as octal); a JSON
-parser that detects duplicate names and reports positions; an RFC 8785
-serializer (`github.com/gowebpki/jcs`, or METAIS's own — `encoding/json`'s
-output is not JCS); the tool's own semantic version for D8.
+tag), anchor, value text, line and column, and lets the tool detect
+duplicate keys — `go.yaml.in/yaml/v3` under `internal/yamlx` (ADR-010 D6),
+whose own resolution is never used (it reads `0777` as octal); METAIS's own
+JSON reader with duplicate names and positions (ADR-010 D7); an RFC 8785
+serializer (`github.com/gowebpki/jcs` behind `jsonx.Canonical`); the tool's
+own semantic version for D8 (ADR-010 D12 item 3).
 
 **ADR-011 (specification and conformance).** Relies on: publishing each
 minor's manifest schema at `spec/schemas/<MAJOR>.<MINOR>/manifest.schema.json`
-(or wherever ADR-011 places it, with the `$id` of D10 item 2 unchanged);
-marking every normative addition with the minor that introduced it (D7
-item 3); a vector format that can express "this package, declared at minor
-m, is refused with code X" and the canonical bytes of a manifest.
+with the `$id` of D10 item 2 (ADR-011 D7 item 1); marking every normative
+addition with the minor that introduced it (ADR-011 D3 item 4's `since`); a
+vector format that can express "this package, declared at minor m, is
+refused with code X" and the canonical bytes of a manifest.
 
 ## Conformance
 
 Vectors are needed for each of these observable rules (format per ADR-011):
 
-- **Manifest file**: `metais.yaml` alone; `metais.json` alone; both; neither;
+- **Manifest file**: `metais.yaml` holding YAML; `metais.yaml` holding JSON
+  (first byte `{`, and after leading whitespace); a JSON-content
+  `metais.yaml` with a trailing comma (a JSON-profile finding, not a YAML
+  one); `metais.json` (refused, naming `metais.yaml`); neither;
   `metais.yml`; `Metais.yaml`.
 - **YAML profile**: a byte order mark; invalid UTF-8; a second document;
   `%YAML 1.2`; an anchor; an alias; `!!str`; `!`; a `<<` key; a complex key; an
@@ -638,12 +671,20 @@ they vanish in the canonical form so a reader of `.compiled/manifest.json`
 cannot see them, and `<<` is not YAML 1.2. `for_each` and the mirror shorthand
 (ADR-005) are the format's answers to repetition.
 
-### JSON accepted only as the content of `metais.yaml`
+### A second manifest name, `metais.json`
+
+An author whose tool emits JSON expects a `.json` name. But two names need a
+rule for both present, a second thing for every reader to look for, and a
+golden path that forks on the author's first file. One name with its
+language decided by its first byte keeps one path and still gives JSON
+content a JSON parser and its errors (D1 item 1).
+
+### JSON content parsed as YAML
 
 YAML 1.2 is close to a superset of JSON, but not exactly (the 1024-character
-implicit-key limit), and an author whose tool emits JSON expects a `.json`
-name and a JSON parser's errors. Two names, each with its own profile and one
-data model, is clearer than one name with two languages behind it.
+implicit-key limit, and libraries' handling of tabs and surrogate escapes in
+flow context), so a JSON manifest read by the YAML profile would meet
+refusals that name YAML rules for text that is valid JSON.
 
 ### Accepting `metais.yml`
 
@@ -748,10 +789,13 @@ format.
 
 ## Proposed rulings
 
-1. **`metais.json` is accepted beside `metais.yaml`, exactly one present;
-   `metais.yml` and case variants are refused** (D1). Lean: yes. Why: the
-   PRD's "YAML or JSON" with a JSON parser behind a JSON name; YAML is not
-   quite a JSON superset. Alternative: JSON only as `metais.yaml`'s content.
+1. **One manifest name, `metais.yaml`; content whose first non-whitespace
+   byte is `{` is read under the JSON profile, any other under the YAML
+   profile; `metais.json`, `metais.yml` and case variants are refused** (D1;
+   ADR-001 D5 item 2). Lean: yes. Why: one golden path and never two
+   manifests, while JSON content still meets a JSON parser. Alternative:
+   `metais.json` as a second name, exactly one present; or JSON content
+   read by the YAML profile.
 2. **The YAML profile resolves plain scalars by D2 item 9's table**: JSON's
    literals and number grammar, refusal for the other Core forms, strings
    otherwise. Lean: yes. Why: no silent wrong typing, unquoted prose stays
@@ -762,9 +806,11 @@ format.
    meaning, no alias bomb, nothing the canonical form loses.
 4. **Mapping keys are their scalar text, never type-resolved** (D2 item 7).
    Lean: yes. Why: JSON keys are strings; `on:` stays `"on"`.
-5. **Unknown members are refused everywhere; no `x-` prefix in 1.0** (D4
-   item 4). Lean: yes. Why: typos caught, minors can add safely, no tool-only
-   dialects. Alternative: an `x-` prefix ignored by tools.
+5. **Unknown members are refused in every manifest object; no `x-` prefix for
+   a manifest member in 1.0** (D4 item 4). JSON Schema documents are
+   ADR-003's scope, where `x-` keywords are author annotations (ADR-003 D3
+   item 5). Lean: yes. Why: typos caught, minors can add safely, no
+   tool-only dialects. Alternative: an `x-` prefix ignored by tools.
 6. **`metais` must be a string; a number is refused with the fix** (D7
    item 1). Lean: yes. Why: `1.10` reads as 1.1.
 7. **`name` is dotted lower-case segments, reverse-domain recommended, a

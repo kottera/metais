@@ -190,8 +190,8 @@ and for `pack`.**
 4. **A code's severity is part of its meaning** (D3 item 4). Neither a package
    nor a caller changes the severity of a finding; the JSON and human reports
    always show the registered severity.
-5. **A caller may make warnings fail the command**: with the flag ADR-008
-   names (proposed spelling `--fail-on warning`; default `--fail-on error`),
+5. **A caller may make warnings fail the command**: with ADR-008 D4's
+   `--fail-on warning` (default `--fail-on error`),
    a warning sets exit 1 exactly as an error would. The finding's `severity`
    in the report is unchanged, and a render or a `pack` that would otherwise
    proceed still does not write anything when the flag turns a warning into a
@@ -206,39 +206,44 @@ meaning, severity and failure class never change within a major version.**
 
 1. **Syntax**: `^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){1,3}$`, at most 64 bytes:
    between two and four segments, each starting with a letter and holding
-   only `a`–`z`, `0`–`9` and `_`. Example: `csv.header.missing`,
-   `package.entry.traversal`, `input.required`.
+   only `a`–`z`, `0`–`9` and `_`. Examples: `csv.header_missing`,
+   `package.digest.mismatch`, `input.required`.
 2. **The first segment is the family**, from a closed list the specification
    holds; a family is added only by a new minor version of the specification.
    Each family has an owning ADR, which registers its members:
 
    | Family | Owner | Covers |
    |---|---|---|
-   | `usage` | ADR-006 (members ADR-008 adds) | the command line: unknown command or flag, a missing or extra argument, a bad flag value, conflicting flags |
-   | `internal` | ADR-006 | a defect in the tool itself |
-   | `report` | ADR-006 | the report: `report.truncated` |
-   | `package` | ADR-001, ADR-002, ADR-009 | the container, entries, digests, the specification version |
-   | `limit` | ADR-009 | every resource limit |
-   | `manifest` | ADR-002, ADR-003, ADR-005 | the manifest, its profile, and its validation against the manifest schema |
-   | `schema` | ADR-003, ADR-007 | an input's or an output's schema as a document: does not compile, an unresolved `$ref`, an unsatisfiable field (the sample generator) |
-   | `input` | ADR-006 (keyword codes), ADR-003 (supply) | a supplied value and the input schema it fails; supplying inputs |
+   | `usage` | ADR-006 (members ADR-008 adds) | the command line: unknown command or flag, a missing or extra argument, a bad flag value, conflicting flags, an operand naming no entry, input or output (`usage.entry_not_found`, `usage.unknown_output`, …), a stream the result cannot be written to (`usage.archive_to_terminal`) |
+   | `internal` | ADR-006 | a defect in the tool itself: `internal.error` |
+   | `report` | ADR-006, ADR-007 | the report itself: `report.truncated`, `report.step_skipped` (a `check` step that could not run) |
+   | `package` | ADR-001, ADR-002, ADR-007, ADR-009 | the package as a file and a tree: `package.not_found`, `package.not_readable`; the container (`package.container.*`); entry names (`package.name.*`); the layout and a source directory's tree (`package.layout.*`); `.compiled/` (`package.compiled.*`); digests (`package.digest.*`); the specification version (`package.version.*`) |
+   | `limit` | ADR-009 | every resource limit: `limit.package` (class `refused`, the package's own content breaches it), `limit.exceeded` (class `content`, inputs, work or outputs do), and `limit.invalid` for a malformed or raising `--limit` (class `usage`) |
+   | `manifest` | ADR-002, ADR-003, ADR-005, ADR-007 | the manifest, its file and profiles (`manifest.file.*`, `manifest.yaml.*`, `manifest.json.*`), its fields and semantic rules, and its validation against the manifest schema |
+   | `schema` | ADR-003, ADR-007, ADR-009 | an input's or an output's schema as a document: does not compile, an unknown keyword or format, an unresolved or escaping `$ref`, a pattern outside the profile (`schema.pattern_unsupported`), a static defect `check` finds, a field the sample generator cannot satisfy (`schema.sample_unsatisfiable`) |
+   | `input` | ADR-006 (keyword codes), ADR-003 (supply), ADR-009 (links and special files) | a supplied value and the input schema it fails; supplying inputs |
    | `json`, `yaml`, `csv`, `text`, `markdown`, `collection` | ADR-003 | parsing an input in each form, and a collection directory |
-   | `template` | ADR-004, ADR-007 | template parsing, rendering errors, the cross-reference, the OOXML split run |
-   | `output` | ADR-005, ADR-006 (keyword codes) | output paths, transforms, the destination, output schema validation |
+   | `template` | ADR-004, ADR-007 | template parsing, rendering errors, the cross-reference (`template.xref.*`), the OOXML split run (`template.ooxml.*`), a manifest expression's syntax |
+   | `output` | ADR-005, ADR-006 (keyword codes), ADR-009 (links, reserved names) | output declarations, paths, transforms, the destination (`output.destination.*`), output schema validation |
    | `asset`, `reference` | ADR-001, ADR-005 | assets and references as entries and as outputs |
-   | `example` | ADR-007 | examples and `test`'s comparison |
+   | `example` | ADR-007 | examples, `test`'s comparison and `test --update` |
 
-3. **The registry is part of the specification**, as a machine-readable file
-   (proposed `spec/findings/registry.json`, validated against
-   `spec/schemas/finding-registry.schema.json`; placement is ADR-011's) with
-   a chapter of prose that states the model. Each registry entry has:
+   Every code any ADR names obeys item 1 and belongs to a family of this
+   table.
+
+3. **The registry is part of the specification**, as a machine-readable file,
+   `spec/findings/registry.json`, validated against
+   `spec/schemas/1.0/finding-registry.schema.json` (placement ADR-011 D1 and
+   D7 item 2), from which the code catalog in `12-findings.md` is generated
+   (ADR-011 D3 item 9), with a chapter of prose that states the model. Each registry entry has:
    `code`; `severity`; `class` (item 5); `subject` (the subject kind it is
    always reported with); `params` (an ordered list of `name`, JSON type,
    meaning, and whether always present); `message` and `hint` templates
    (item 7); `location` (which span its line and column mark, D5 item 6);
    `since` (the specification minor that added it, `"1.0"` for v1); and
-   `statement` (the anchor of the normative statement it reports, which is how
-   ADR-011 traces a vector to its rule).
+   `statements` (the identifiers, `MTS-<AREA>-<NNN>` per ADR-011 D3, of the
+   normative statements it reports, which is how ADR-011 traces a vector to
+   its rule).
 4. **Within a major version, a registered code never changes its meaning, its
    severity, its class or its subject kind; it is never renamed, never
    removed and never reused.** Its `params` may gain members, never lose one
@@ -283,15 +288,16 @@ names where the value came from.**
    entry path for `template`, the example's name for `example`, and the entry
    path for `asset` and `reference`. It is absent for `invocation`,
    `package`, `manifest` and `report`.
-3. `subject.title` is the input's or output's declared title (ADR-003 and
-   ADR-005 say where it is declared), present when one is declared.
+3. `subject.title` is the input's declared title (ADR-003 D1), present for
+   kinds `input` and `schema`; outputs declare no title (ADR-005 D1), so an
+   `output` subject has none.
 4. `location.origin` says which source the located value or file came from:
 
    | Origin | `file` is | Notes |
    |---|---|---|
    | `data_dir` | the path relative to the data directory, `/`-separated (`orders.csv`, `articles/intro.md`) | the data directory's own path is never included |
-   | `json` | absent, or the file `--json` named (ADR-008), as the caller wrote it | `argument` is the 1-based ordinal of that `--json` among all `--json` flags |
-   | `set` | absent | `argument` is the 1-based ordinal of that `--set` among all `--set` flags |
+   | `inputs_json` | absent (its text is the argument itself, or standard input) | `argument` is the 1-based ordinal of that `--inputs-json` among all `--inputs-json` flags |
+   | `set` | absent | `argument` is the 1-based ordinal of that path set among all `--set` and `--set-json` flags, in command-line order |
    | `default` | absent | the value came from a schema `default` (R5 item 3); no line or column |
    | `sample` | absent | the value came from the sample generator (ADR-007) |
    | `example` | the package entry, e.g. `examples/basic/inputs/vendor.yaml` | inputs under `test` |
@@ -322,8 +328,8 @@ column of the bytes the value came from, measured in one unit everywhere.**
    code points at an absent value.
 3. **`line` and `column` are 1-based. A column counts Unicode code points**
    from the start of the line, a tab counting as one. Lines end at LF, CRLF or
-   a lone CR, each counting as one line break. A byte order mark at the start
-   of a file, if ADR-003 admits one, is not counted. These are SARIF's
+   a lone CR, each counting as one line break. The byte order mark ADR-003
+   D8 item 1 removes from the start of an input file is not counted. These are SARIF's
    `unicodeCodePoints` columns; they differ from GNU's display-width columns
    deliberately, because display width depends on the terminal and the locale
    and a finding must not (R10 item 3).
@@ -335,8 +341,9 @@ column of the bytes the value came from, measured in one unit everywhere.**
 5. **Where there is no line, there is no line.** Values from `--set`, from a
    `default` and from the sample generator have no `line` or `column`. A
    plain-text input, or a whole Markdown input used as text, is a single
-   value: its findings carry `file` and no `line`. A value from `--json`
-   carries the line and column within that argument's text.
+   value: its findings carry `file` and no `line`. A value from
+   `--inputs-json` carries the line and column within that argument's
+   text.
 6. **Which span a code's line and column mark is registered with the code**
    (D3 item 3), from these:
    - `value` (the default): the first character of the value — the opening
@@ -477,6 +484,19 @@ choice between branches has to be explained.**
    manifest schema's titles and descriptions apply (ADR-002 promises every
    property has both).
 
+10. **What "every finding" means where a validator answers only yes or
+    no.** Three contexts never contribute a finding from inside them: the
+    subschema of `not` (the finding is `input.not` itself, item 4), the `if`
+    subschema (item 7), and the branches of an `anyOf` or `oneOf` left
+    untried or unreported once a branch has matched (a valid `anyOf`, or a
+    `oneOf` that is valid or `one_of.ambiguous`, item 6). A validator may
+    therefore evaluate those for a boolean only, as the library studied does
+    (ADR-010 D5 item 6), and the report is still every finding (R6 item 1,
+    SC8). Everywhere else — `allOf`, `properties` and the other transparent
+    applicators of item 5, the `then` or `else` a condition selects, and
+    every branch of an `anyOf` or `oneOf` with no matching branch — every
+    failure is collected (ADR-003 D3 item 7).
+
 ### D7 — Every finding in one pass
 
 **A failure stops only the work that depends on it; everything independent of
@@ -537,7 +557,7 @@ totals.**
       `example`, `report` — the order in which a reader has to fix things;
    2. `subject.name` (absent first);
    3. `location.origin`, in the order: `package`, `example`, `data_dir`,
-      `json`, `set`, `default`, `sample`, `output`;
+      `inputs_json`, `set`, `default`, `sample`, `output`;
    4. `location.file` (absent first), then `location.argument`;
    5. `location.line`, then `location.column` (a finding with no line sorts
       before one with a line in the same file);
@@ -558,10 +578,10 @@ totals.**
    once. `via` is not part of the key.
 4. Findings inside `alternatives` are de-duplicated and sorted within their
    branch, and never against top-level findings.
-5. **The cap.** A report lists at most `max_findings` findings (default 1000;
-   ADR-009 owns the limit and how a caller lowers it). The tool keeps the
-   first `max_findings` in sort order while it runs (a bounded heap), so
-   memory is bounded by the cap and not by the input.
+5. **The cap.** A report lists at most ADR-009's `findings` limit (default
+   100,000, which a caller lowers with `--limit findings=<n>`). The tool
+   keeps the first that many in sort order while it runs (a bounded heap),
+   so memory is bounded by the cap and not by the input.
 6. **Totals are exact.** Every finding is counted, after de-duplication, in
    the summary, whether listed or not. When findings are omitted, one
    `report.truncated` finding (info, subject `report`, `params`
@@ -630,10 +650,14 @@ next, and neither ever repeats a string value from the inputs.**
    human report every C0 control character (line breaks and tabs included),
    DEL, every C1 control and every bidirectional control (U+202A–U+202E, U+2066–U+2069) in a title,
    description, member name or file name is written as a visible escape
-   (`\u001b`, `‮`), and an invalid UTF-8 byte in a file name as U+FFFD.
-   The JSON report writes the same characters as `\u` escapes. A hostile
-   description cannot move the terminal's cursor or reorder what a reviewer
-   sees.
+   as `\u` followed by four lowercase hex digits (`\u001b`, `\u202e`), and
+   an invalid UTF-8 byte in a file name as U+FFFD. The JSON report writes
+   the same characters as the same `\u` escapes. A hostile description
+   cannot move the terminal's cursor or reorder what a reviewer sees.
+   ADR-009 D15 item 3 applies the same escape to package and input text
+   that other human output echoes (`ls`, `outline`, `grep`), keeping a tab
+   there, since those lines are content rather than a finding's one-line
+   fields.
 
 ### D10 — The JSON encoding
 
@@ -673,8 +697,8 @@ a fixed order, the same bytes for the same findings on every platform.**
    version a finding only gains optional members, and a consumer ignores a
    member it does not know.
 5. **The specification states the finding object normatively**, with its JSON
-   Schema published beside the manifest schema (proposed
-   `spec/schemas/finding.schema.json`; publication is ADR-011's), so a
+   Schema published beside the manifest schema, at
+   `spec/schemas/1.0/finding.schema.json` (ADR-011 D7 item 2), so a
    harness can rely on any conforming tool. Conformance compares `code`,
    `severity`, `subject`, `location`, `schema` (`entry`, `pointer`,
    `keyword`), `field`, `params`, `via`, `alternatives` and `related`, and the
@@ -690,7 +714,7 @@ indented lines for the field, the rule and the hint.**
 
    ```
    wcag_criteria.csv:7:41: error: Remarks must be at least 10 characters long; it has 4. [input.min_length]
-     at /5/remarks in input wcag_criteria (WCAG 2.2 criteria)
+     at /wcag_criteria/5/remarks (input wcag_criteria: WCAG 2.2 criteria)
      field: Remarks — How the product meets, partly meets or fails the criterion, with the evidence.
      rule: minLength at /items/properties/remarks in inputs/wcag_criteria.schema.json
      when: Final report
@@ -699,17 +723,20 @@ indented lines for the field, the rule and the hint.**
 
    The first line is `<where>: <severity>: <message> [<code>]`. `<where>` is
    `file:line:column` (GNU's shape, D5's columns), `file:line`, `file`,
-   `--set #2` or `--json #1`, `input <name>`, `package` or `metais` (usage),
-   in that order of preference. The `at` line appears when there is a pointer
-   (`(the whole input)` for `""`); `field` when there is a title or
+   `--set #2` or `--inputs-json #1`, `input <name>`, `package` or `metais`
+   (usage), in that order of preference. The `at` line appears when there is
+   a pointer; for a finding about an input it prints the inputs pointer —
+   `/`, the input name escaped per RFC 6901, then `location.pointer` — which
+   is exactly the path `--set` and `--set-json` take (ADR-003 D17 item 2),
+   so a supplier pastes it into the fix; `field` when there is a title or
    description, the description cut at its first line break or 160 code points
    with `…`; `rule` when there is a `schema`; `when` (or `option`) for each
    `via` entry; `hint` always.
 2. **Alternatives** are printed under their finding, each branch as
    `option <i+1>: <title>` followed by its findings indented two more spaces.
 3. **The last line is the summary**: `2 errors, 1 warning, 0 info` and, when
-   truncated, `(1000 listed, 4120 more not shown; use --json for the totals by
-   code)`. A command whose product is the report (`validate`, `check`,
+   truncated, `(100000 listed, 4120 more not shown; use --json for the totals
+   by code)`. A command whose product is the report (`validate`, `check`,
    `test`) prints the summary even with no findings.
 4. **Colour** only on the severity word, and only as ADR-008's colour policy
    allows. The human format is the reference tool's, not the specification's:
@@ -736,10 +763,10 @@ classes of its error findings.**
    `reference` exits `4` under a consumer command (`inspect`, `ls`, `read`,
    `outline`, `grep`, `schema`, `extract`, `validate`, `render`), because the
    caller there received a package and cannot fix it; and `1` under an
-   authoring command (`init`, `check`, `test`, `pack`, `unpack`, the sample
-   preview), because the caller there is the author fixing it. Class
-   `refused` exits `4` under every command. ADR-008 assigns each command its
-   role.
+   authoring command (`init`, `check`, `test`, `pack`, `unpack`, `sample`,
+   and `render --sample`), because the caller there is the author fixing
+   it. Class `refused` exits `4` under every command. `version`, `help` and
+   `limits` open no package. ADR-008 D13 states each command's role.
 3. **When several classes occur, the status is the first that applies** in the
    order `2`, `3`, `4`, `1`, `5`: a destination refusal reported beside input
    errors exits `1`, because fixing the destination alone would not help.
@@ -747,10 +774,9 @@ classes of its error findings.**
    errors (the validator's own `jv` uses it) collides with the Go runtime's
    crash status, and a harness must be able to tell "my command line is
    wrong" from "the tool crashed". The tool recovers a panic, reports
-   `internal.error` (`params`: `tool_version`, `phase`; no panic value, no
-   stack trace in the report — a trace goes to standard error only under
-   ADR-008's debug flag), and exits 2; an unrecoverable runtime failure exits
-   2 by itself.
+   `internal.error` (`params`: `tool_version`, `phase`; no panic value and
+   no stack trace, in the report or on any stream, ADR-009 D14 item 5), and
+   exits 2; an unrecoverable runtime failure exits 2 by itself.
 5. **Signals** are not the tool's to number: a process killed by a signal
    exits as the shell reports it (128 + the signal), and a write to a closed
    standard output ends the process with SIGPIPE as Go programs do.
@@ -841,97 +867,113 @@ library-neutral failure tree and by parsers that keep positions.**
 
 ## Interfaces with sibling ADRs
 
-**ADR-001 (container).** Relies on: every container, entry-name, digest and
-`.compiled/` failure reported as a registered `package.*` code of class
-`refused`, with `location.origin: package` and `file` the entry name (absent
-for a whole-archive failure); one central-directory scan that reports every
-unsafe entry and every digest mismatch together (D7 item 1). Promises: the
-model, ordering and exit status 4 for all of them.
+**ADR-001 (container).** Relies on: every container, entry-name, layout,
+digest and `.compiled/` failure reported as one of the `package.*` codes
+ADR-001 lists (`package.container.*`, `package.name.*`, `package.layout.*`,
+`package.compiled.*`, `package.digest.*`), of class `refused` except the
+source-directory warning `package.layout.not_packed`, with
+`location.origin: package` and `file` the entry name (absent for a
+whole-archive failure); one verification pass that reports every unsafe
+entry and every digest mismatch together (D7 item 1; ADR-001 D8 item 2).
+Promises: the model, ordering and exit status 4 for all of them.
 
 **ADR-002 (manifest).** Relies on: canonical JSON numbers (RFC 8785) for
-`params` and the summary; every manifest-schema property carrying `title` and
-`description` (ADR-002 promises this); manifest positions from its YAML and
-JSON profiles through D13 item 2's interface; the manifest schema's published
-entry name for `schema.entry`. Promises (to what ADR-002 asked for): a stable
-code per refusal, which ADR-002 registers in the `manifest` and `package`
-families; locations carrying both line and column and a JSON Pointer; the
-unknown-member finding's `suggestion` computed by D9 item 7; the keyword
-mapping of D6 under the `manifest.` prefix; an unknown specification major as
-class `refused` with `params.implemented` listing the versions. ADR-002 wants
-some findings to quote manifest source text (`metais: 1.0`): manifest text is
-package content and may be quoted (D9 item 6).
+`params` and the summary; every manifest-schema property carrying `title`
+and `description` (ADR-002 D10 item 4); manifest positions from its YAML and
+JSON profiles through D13 item 2's interface; the manifest schema's
+published entry name for `schema.entry`. Promises (to what ADR-002 asked
+for): a stable code per refusal, which ADR-002 registers in the `manifest`
+family and, for the version gate, as `package.version.*`; locations carrying
+both line and column and a JSON Pointer; the unknown-member finding's
+`suggestion` computed by D9 item 7; the keyword mapping of D6 under the
+`manifest.` prefix; an unknown specification major as class `refused` with
+`params.implemented` listing the versions. ADR-002 wants some findings to
+quote manifest source text (`metais: 1.0`): manifest text is package content
+and may be quoted (D9 item 6).
 
 **ADR-003 (data).** Relies on: parsers that return D13 item 2's `Parsed` with
 positions for JSON, YAML, CSV and Markdown frontmatter and bodies; the
 per-value origin after the precedence merge (D4 item 5); the collection item
 order that indexes pointers; CSV data-row indexing from 0 with the header
-excluded; which keywords and formats are asserted (D6 item 4 emits only those);
-the input's title; schemas compiled from their original entries, the combined
-`.compiled/` schema being for consumers (D6 item 8); which CSV record failures
-are recoverable alone (D7 item 4); whether a CSV value that does not coerce is
-left as a string for `input.type` to report or has its own code — either way
-it carries the field's position. ADR-003 registers the `json`, `yaml`, `csv`,
-`text`, `markdown` and `collection` codes and the supply codes in `input`
-(`input.missing`, an unknown input name with a `suggestion`, a `body`
-frontmatter field), each parse code's hint saying the schema was not checked.
-Promises: D6's mapping and D7's partial validation.
+excluded; which keywords and formats are asserted (D6 item 4 emits only
+those); the input's title; schemas compiled from their original entries, the
+combined `.compiled/schema.json` being for consumers (D6 item 8); which CSV
+record failures are recoverable alone (D7 item 4); a CSV value that does not
+coerce left as a string for `input.type` to report, with the field's
+position (ADR-003 D14 item 3); the boolean-only contexts of D6 item 10,
+which ADR-003 D3 item 7 states the same way. ADR-003 registers the `json`,
+`yaml`, `csv`, `text`, `markdown` and `collection` codes and the supply
+codes in `input` (its Interfaces list them), each parse code's hint saying
+the schema was not checked. Promises: D6's mapping, D7's partial validation,
+and the inputs pointer on the human `at` line (D11 item 1).
 
-**ADR-004 (templates).** Relies on: template parse and render errors as
-`template.*` codes with `location.origin: package`, `file` the template entry
-and line and column within it; a render error stopping only its output (D7
-item 1); no template error message carrying a value from the inputs (D9 item
-4) — an engine's error text is mapped to codes, never quoted.
+**ADR-004 (templates).** Relies on: template parse and render errors as the
+`template.*` codes of ADR-004 D16, with `location.origin: package`, `file`
+the template entry and line and column within it; a render error stopping
+only its output (D7 item 1); no template error message carrying a value from
+the inputs (D9 item 4) — an engine's error text is mapped to codes, never
+quoted; a limit's breach as ADR-009's `limit.*` code.
 
 **ADR-005 (outputs).** Relies on: output schema validation reported with D6's
 mapping under `output.`, `subject.kind: output`, `location.origin: output`,
-`file` the output path; output path refusals (traversal, Windows-invalid name,
-case collision with `related`) as class `content` (exit 1, since a templated
-path can come from the data); the non-empty directory and write failures as
-class `destination`; the destination check made before validation where it
-can be (D7 item 5); how an output is identified for `subject.name`. A dry run
-reports findings like a render and writes nothing.
+`file` the output path; output path refusals (traversal, Windows-invalid
+name, case collision with `related`) as class `content` (exit 1, since a
+templated path can come from the data); the non-empty directory, a leftover
+staging name and write failures as class `destination`; the destination
+check made before validation where it can be (D7 item 5); the declaration
+`id` as `subject.name`, with no `subject.title`. A dry run reports findings
+like a render and writes nothing.
 
-**ADR-007 (authoring).** Relies on: `check`, `test`, `pack`, `unpack` and the
-sample preview reporting through this model; `check` following D7 item 3;
-`test`'s byte mismatch as an `example.*` code with `subject.kind: example`,
-`location.file` the expected entry and `line`/`column` of the first differing
-line; the sample generator's unsatisfiable field as a `schema.*` code with a
-hint suggesting an `examples` value; `pack` refusing on errors and not on
-warnings (D2 item 6). The cross-reference's unknown field is an error, its
-unused input a warning (R13 item 2).
+**ADR-007 (authoring).** Relies on: `check`, `test`, `pack`, `unpack`,
+`sample` and `render --sample` reporting through this model; `check`
+following D7 item 3, naming any step it could not run in
+`report.step_skipped`; `test`'s byte mismatch as an `example.*` code with
+`subject.kind: example`, `location.file` the expected entry and
+`line`/`column` of the first differing line; the sample generator's
+unsatisfiable field as `schema.sample_unsatisfiable` with a hint suggesting
+an `examples` value; `pack` refusing on errors and not on warnings (D2 item
+6). The cross-reference's unknown field is an error, its unused input a
+warning (R13 item 2).
 
 **ADR-008 (command line).** Relies on: an envelope carrying `findings`,
 `summary` and the exit status on every command (D10 item 4); the role of each
-command, consumer or authoring (D12 item 2); a `--fail-on error|warning` flag
-(spelling ADR-008's) on every command that reports findings; a debug flag that
-sends a stack trace to standard error; which stream the human report goes to
-(this ADR assumes standard output for `validate`, `check` and `test`, and
-standard error for `render`, whose standard output may carry the outputs); a
-JSON report even for a usage error when the JSON flag was recognised. ADR-008
-registers further `usage.*` codes. Promises: D12's table, which ADR-008's help
-text prints.
+command, consumer or authoring (ADR-008 D13); the `--fail-on error|warning`
+flag on every command that reports findings (ADR-008 D4); no flag that
+prints a stack trace; the human report on standard output for `validate`,
+`check` and `test`, and on standard error for every other command
+(ADR-008 D11 item 3); a JSON report even for a usage error when `--json` was
+recognised (ADR-008 D10 item 7). ADR-008 registers the `usage.*` codes and
+`package.not_found` / `package.not_readable` (class `refused`). Promises:
+D12's table, which ADR-008 D13 maps every outcome onto and its help text
+prints.
 
-**ADR-009 (security).** Relies on: `max_findings` as one of its limits
-(proposed default 1000, lowerable by the caller like every limit); each limit
-breach as a `limit.*` code, class `refused` for package resources and
-`content` for an input's own size; a regular-expression budget whose breach in
-a schema `pattern` or in `grep` is a finding, not a hang; SC7's sentinel test
-covering every finding and message of every vector and hostile package.
-Promises: D5 item 8 and D9 items 4, 8 and 9 as the finding side of host
-isolation.
+**ADR-009 (security).** Relies on: the `findings` limit (default 100,000,
+lowered with `--limit findings=<n>`); each limit breach as ADR-009 D19's
+`limit.package` (class `refused`) when the package's own content breaches
+it, and `limit.exceeded` (class `content`) when inputs, a render's work or
+its outputs do, with `limit.invalid` (class `usage`) for a bad `--limit`; a
+regular-expression budget whose breach in a schema `pattern` or in `grep` is
+a finding, not a hang; SC7's sentinel test covering every finding and
+message of every vector and hostile package; ADR-009 D15 item 3 using D9
+item 9's escape form for other human output. Promises: D5 item 8 and D9
+items 4, 8 and 9 as the finding side of host isolation.
 
 **ADR-010 (implementation).** Relies on: a JSON Schema library whose error
 tree carries, per failure, the instance location, the schema location, the
 keyword and its structured data, and nested causes, and which collects every
-error (the library studied does); an adapter to D13 item 3's tree; parsers
-able to report positions (D13 item 2); the registry drift test. Promises: the
-mapping never depends on library message text.
+error outside D6 item 10's boolean-only contexts (the library studied does,
+ADR-010 D5 item 6); an adapter to D13 item 3's tree; parsers able to report
+positions (D13 item 2); the registry drift test. Promises: the mapping never
+depends on library message text.
 
-**ADR-011 (specification and conformance).** Relies on: a place in `spec/`
-for the findings chapter, `registry.json` and `finding.schema.json`; a vector
-format whose expected result is a findings list compared on D10 item 5's
-members and in order, plus an exit status; a vector per registered code; a
-trace from each registry entry's `statement` to its normative text.
+**ADR-011 (specification and conformance).** Relies on: `12-findings.md` for
+the findings chapter, `spec/findings/registry.json` for the registry, and
+`spec/schemas/1.0/finding.schema.json` and
+`spec/schemas/1.0/finding-registry.schema.json` for their schemas (ADR-011
+D1 and D7 item 2); a vector format whose expected result is a findings list
+compared on D10 item 5's members and in order (ADR-011 D10 item 2); a vector
+per registered code (ADR-011 `TestFindingCodesCovered`); a trace from each
+registry entry's `statements` to its normative text.
 
 ## Conformance
 
@@ -958,18 +1000,18 @@ Each of these is observable and needs vectors (ADR-011 owns their format):
 - **Positions.** Line and column for JSON, YAML, CSV (including a quoted field
   spanning lines) and frontmatter; a line with multi-byte characters and a
   tab before the value (code-point columns); CRLF and lone-CR files; `--set`
-  with no line; `--json` with a line within the argument.
+  with no line; `--inputs-json` with a line within the argument.
 - **Pointer escaping.** A member named `a/b~c` gives `/a~1b~0c`.
 - **Ordering and de-duplication.** Findings presented to the validator in
   scrambled order come out in D8's order; `/9` before `/10`; a keyword reached
   twice through `allOf` is reported once.
-- **The cap.** `max_findings` lowered to 3 on an input with 10 errors: 3
+- **The cap.** `findings` lowered to 3 (`--limit findings=3`) on an input with 10 errors: 3
   listed, `report.truncated` with `omitted: 7`, the summary's exact totals.
 - **No echo.** Every string value in every input of a vector set to a
   sentinel; no message, hint, param or note contains it; a `writeOnly` number
   is not echoed; a `suggestion` names an allowed value only.
 - **Neutralisation.** A schema description holding ESC and U+202E appears as
-  `\u001b` and `‮` in the JSON report.
+  `\u001b` and `\u202e` in the JSON report.
 - **Exit codes.** One vector per row of D12's table, the role rule for a
   manifest defect under `validate` (4) and under `check` (1), and the
   precedence of item 3.
@@ -1080,7 +1122,7 @@ changes the exit status and nothing in the report.
   params and their wording are registered by those ADRs.
 - The JSON envelope, its version member, and the stream each report goes to
   (ADR-008).
-- The value of `max_findings` and of every other limit (ADR-009).
+- The value of the `findings` limit and of every other limit (ADR-009).
 - Which JSON Schema keywords and formats are asserted (ADR-003), and which
   library validates them (ADR-010).
 - The vector file format and runner (ADR-011).
@@ -1130,9 +1172,9 @@ changes the exit status and nothing in the report.
     names.
 13. **Columns in Unicode code points, tabs as one column; no end positions in
     v1.** Lean: yes. Alternative: byte columns; GNU display width; ranges now.
-14. **A finding cap, proposed default 1000, with exact totals and
-    `report.truncated`.** Lean: yes; the number is ADR-009's. Alternative: no
-    cap.
+14. **A finding cap — ADR-009's `findings` limit, default 100,000 — with
+    exact totals and `report.truncated`.** Lean: yes; the number is
+    ADR-009's. Alternative: no cap.
 15. **Messages and hints non-normative; codes, params, locations, fields
     normative.** Lean: yes — wording improves without a minor version.
     Alternative: normative wording.
@@ -1143,6 +1185,13 @@ changes the exit status and nothing in the report.
     rules.
 18. **Control and bidirectional characters neutralised** in both reports.
     Lean: yes. Alternative: raw text.
+19. **No stack trace on any stream, and no debug flag** (D12 item 4). Lean:
+    yes. Why: a trace is host-derived text a sentinel test cannot vouch
+    for, and a defect is reproduced from the command line and the package.
+    Alternative: a trace to standard error behind a flag.
+20. **The human `at` line prints the inputs pointer, the path `--set`
+    takes** (D11 item 1). Lean: yes. Alternative: the pointer within the
+    input plus the input's name.
 
 ## References
 

@@ -290,10 +290,21 @@ everything under `internal/`.**
      SHA-256 with a committed value, so a toolchain whose encoder changes is
      noticed as a change of the tool's output (ADR-001 D4 item 6), not
      discovered in a user's diff.
-4. **Moving to Go 1.27** is one change: the `go` and `toolchain` lines, the
-   canary digest, the Unicode tripwire's expected version (17.0.0), and the
-   specification's Unicode pin if ADR-001/ADR-005 settle on 17.0.0. Nothing
-   else in this ADR depends on the minor. (*Proposed rulings* 1.)
+4. **The specification pins Unicode 15.0.0** (ADR-001 D2, ADR-005 D12), the
+   version Go 1.26's `unicode` and the `golang.org/x/text` tables it selects
+   carry. `x/text` chooses its tables by the compiling toolchain, not by its
+   module version: v0.43.0 ships `tables15.0.0.go` under `//go:build
+   !go1.27` and `tables17.0.0.go` under `//go:build go1.27`, for both
+   `unicode/norm` and `cases`. **Moving to Go 1.27** therefore moves every
+   table to 17.0.0 at once, and a `1.0` package must still be judged by
+   15.0.0's set of assigned characters (ADR-002 D7 item 3). That move is one
+   change, taken only together with either a specification minor that pins
+   17.0.0 or METAIS's own copy of the 15.0.0 "assigned" table for packages
+   declaring an earlier minor (normalization and case folding of assigned
+   characters do not change, by Unicode's stability policy): the `go` and
+   `toolchain` lines, the canary digest, the Unicode tripwire's expected
+   version, and that table. Until then the tripwire holds the toolchain at
+   Go 1.26. (*Proposed rulings* 1.)
 5. **Every Go file starts with the AGENTS.md licence header**; a test in
    `internal/guarantees` checks it.
 
@@ -304,11 +315,12 @@ internal package owned by one ADR; the Liquid engine knows nothing of
 METAIS.**
 
 ```
-cmd/metais/main.go            os.Exit(cli.Main(os.Args[1:], os.Stdin, os.Stdout, os.Stderr))
+cmd/metais/main.go            d := hostenv.Isolate(); os.Exit(cli.Main(os.Args[1:], os.Stdin, os.Stdout, os.Stderr, d))
 internal/
   cli/                        command table, dispatch, help, JSON envelope      ADR-008
   cli/args/                   the argument parser (D10)                         ADR-008
-  hostenv/                    the only reader of the environment and the TTY    ADR-008 D12
+  hostenv/                    Isolate (NO_COLOR, Clearenv, UTC); IsTerminal     ADR-008 D12, ADR-009 D14
+  dates/                      RFC 3339 `--now` parsing, the date filter's maths ADR-004 D11
   version/                    tool version, implemented specification versions ADR-002 D8
   finding/                    finding model, registry, report                   ADR-006 D13
   schemafail/                 library-neutral failure tree                      ADR-006 D13
@@ -330,7 +342,8 @@ internal/
   liquid/value/               the value model                                   ADR-003 D8, ADR-004
   template/                   METAIS variables, filters, tags, partials, escape ADR-004
   render/                     plan, transforms, staging, dry run, stdout        ADR-005
-  fsout/                      os.Root writes, no-replace rename                 ADR-005 D14–D15
+  hostfs/                     every host file access: os.Root reads and writes,  ADR-009 D7–D8,
+                              no-replace rename, staging names                  ADR-005 D14–D15
   tarw/                       the standard-output archive                       ADR-005 D17
   browse/                     ls, read, outline, grep, schema, extract          ADR-008
   author/                     init, check, test, pack, unpack                   ADR-007
@@ -346,19 +359,20 @@ spec/                         the specification                                 
 ```
 
 1. **Package names are these.** ADR-006's `internal/finding` and
-   `internal/schemafail` are adopted as named; ADR-008's "one internal package
-   owns these reads" is `internal/hostenv`.
+   `internal/schemafail` are adopted as named; ADR-008's and ADR-009's single
+   reader of the environment is `internal/hostenv.Isolate`, and ADR-009's
+   single package for host files is `internal/hostfs`.
 2. **Layering is enforced** by `internal/guarantees/layers_test.go`, which
    runs `go list -deps -json ./...` and checks a table committed beside it.
    The rules that carry weight:
    - `internal/liquid/...` imports no other `internal/` package and nothing
      outside the standard library. It is a Liquid engine, testable against
      Golden Liquid with no METAIS concept in scope.
-   - `internal/browse` does not import `internal/fsout` except through
-     `extract`'s single entry point, so listing, reading and searching cannot
-     write (R2 item 1).
-   - Only `internal/hostenv` imports `golang.org/x/term`; only `internal/fsout`
-     imports `golang.org/x/sys`.
+   - `internal/browse` reaches `internal/hostfs`'s write functions only
+     through `extract`'s single entry point, so listing, reading and
+     searching cannot write (R2 item 1).
+   - Only `internal/hostenv` imports `golang.org/x/term`; only
+     `internal/hostfs` imports `golang.org/x/sys`.
    - Only `cmd/metais` refers to `os.Args`, `os.Stdin`, `os.Stdout`,
      `os.Stderr` and `os.Exit`; everything else receives them, so the whole
      tool runs in-process under test (D13).
@@ -445,12 +459,13 @@ engine of the dialect ADR-004 pins.**
      own node type, and a full expression tree: literals (string, integer,
      float, `true`, `false`, `nil`, `blank`, `empty`), ranges `(a..b)`,
      variable paths with `.name`, `[expr]` and the `size`/`first`/`last`
-     properties, comparisons `== != <> < > <= >= contains`, `and`/`or` with
-     Shopify's right-to-left evaluation, and filter chains with positional and
-     keyword arguments. Parse errors are collected per template (every
-     syntax error the parser can recover past, then the first it cannot), each
-     with line and column. Nesting deeper than the limit ADR-009 sets (at most
-     Shopify's 100) is an error.
+     properties, comparisons `== != <> < > <= >= contains`, `and`/`or`
+     grouped from the right with the left operand evaluated first and
+     short-circuited, as ADR-004 D2 states, and filter chains with
+     positional and keyword arguments. A template's parse stops at its first
+     syntax error, which is its one `template.syntax` finding (ADR-004 D16
+     item 4), with line and column. Nesting deeper than ADR-009's
+     `template-nesting` (default 100, Shopify's) is an error.
    - **Tags**: `assign`, `capture`, `case`/`when`/`else`, `comment`, `#`,
      `doc`, `cycle`, `increment`, `decrement`, `echo`, `for`/`else` with
      `limit`, `offset` (including `continue`), `reversed` and ranges, `break`,
@@ -503,7 +518,7 @@ engine of the dialect ADR-004 pins.**
 
    type Partials interface{ Partial(name string) (*Template, *Error) } // render tag; package-confined
    type Env struct {
-       Globals  *value.Object   // inputs, package, item — and nothing else (ADR-004)
+       Globals  *value.Object   // ADR-004 D7's globals, bound where its item 10 says — nothing else
        Partials Partials
        Escape   func(dst []byte, s string) []byte // nil = no escaping
        Meter    *Meter
@@ -601,14 +616,16 @@ formats with METAIS's definitions, and uses the package regex profile.**
    update cannot change a finding's wording, and **it never relies on the
    library's order**: ADR-006's report sorts (the probe showed sibling order
    varies between runs).
-6. **Known gap and its handling.** The library does not collect errors in
-   contexts that need only a yes or no (`not`, `if`, `oneOf` after a match,
-   ADR-006 Context). ADR-003 D3 item 7 asks for no short-circuit in `allOf`,
-   `anyOf`, `oneOf` and `properties`; `allOf` and `properties` collect fully,
-   and a failing `anyOf`/`oneOf` reports every branch's causes. A vector
-   for each composition keyword proves what is reported; if ADR-003 requires
-   more than the library gives, the fallback in D3's table is taken for the
-   keywords concerned.
+6. **Error collection matches what a finding needs.** The library does not
+   collect errors in contexts that need only a yes or no (`not`'s subschema,
+   `if`, and the branches of an `anyOf` or `oneOf` once one has matched).
+   Those are exactly the contexts from which ADR-006 D6 item 10 never
+   reports a finding, and ADR-003 D3 item 7 asks for full collection only
+   elsewhere: `allOf`, `properties` and the other applicators collect
+   fully, and an `anyOf`/`oneOf` with no matching branch reports every
+   branch's causes. A vector for each composition keyword proves what is
+   reported; if one shows a finding ADR-006 requires that the library does
+   not give, D3's fallback is taken for that keyword.
 7. **The JSON-Schema-Test-Suite** (D14 item 4) runs over `internal/schema`'s
    configured compiler for the 2020-12 required tests, minus a committed list
    of the cases METAIS's own rules change (unknown keywords refused, formats
@@ -711,23 +728,27 @@ not used to read inputs.**
    ReDoS defence ADR-009 relies on; a backtracking engine bounded by a
    wall-clock timeout would make a validation's outcome depend on the
    machine's speed.
-2. **`regexprofile.Compile(pattern) (jsonschema.Regexp, error)`** parses with
-   `regexp/syntax`, walks the tree and refuses every construct outside
-   ADR-009's profile (Perl flags, `\A`/`\z`, POSIX classes and any other RE2
-   form ECMA-262 does not share; lookaround and backreferences fail to parse
-   already), then compiles. The same walk is what `sample` uses to generate a
-   matching string (ADR-007). Where an accepted construct means something
-   different in ECMA-262 (`\s`, `\w`, `\b`, `$` with a trailing newline), the
-   profile's text says which meaning holds; that is ADR-009's to write and
-   the vectors' to prove.
+2. **`regexprofile.Compile(pattern) (jsonschema.Regexp, error)`** reads the
+   pattern as ECMA-262 `u`-mode syntax with METAIS's own tokenizer, refuses
+   every construct ADR-009 D10 item 6 refuses (lookaround, backreferences,
+   repeat bounds above 1000, RE2-only syntax such as `(?i)`, `\A`, `\z`,
+   `\Q…\E` and `(?P<…>)`), each named in `schema.pattern_unsupported`,
+   translates the rest to RE2 by ADR-009's table (`\uXXXX` and `\u{…}` to
+   `\x{…}`, `.`, `\s`, `\S`, `[]` and `[^]` to their ECMA-262 classes),
+   then parses the result with `regexp/syntax`, checks `regex-program`, and
+   compiles. The translated tree is what `sample` walks to generate a
+   matching string (ADR-007 D9 item 18). `grep` patterns are RE2 as written
+   (ADR-008 D5) and skip the translation.
 3. **`internal/cli/args`** is METAIS's own parser, because the behaviour
    ADR-008 specifies is not the standard `flag` package's (it stops at the
    first operand) nor `pflag`'s (shorthand grouping, a repeated flag silently
-   wins). It supports long flags only (`--name value`, `--name=value`),
-   interspersed with operands, `--` as the end of options, `-` as an operand,
-   no abbreviation, a refusal on a repeated single-valued flag, repeatable
-   flags declared as such, and one declaration per flag from which both the
-   parser and the help printer read.
+   wins). It supports long flags (`--name value`, `--name=value`), ADR-008
+   D3 item 2's closed list of short aliases (`-h`, `-r`, `-C`, `-i`; `-C 3`
+   and `-C3`) with no grouping, flags interspersed with operands, `--` as
+   the end of options, `-` as an operand, no abbreviation, a refusal on a
+   repeated single-valued flag, repeatable flags declared as such, and one
+   declaration per flag from which both the parser and the help printer
+   read.
 
 ### D11 — Files, time, randomness, text, and the environment
 
@@ -749,57 +770,70 @@ not used to read inputs.**
    bytes are the same and the test compares them). `Modified` is never set,
    so no extended-timestamp field is written; bit 3 is never set, so no data
    descriptor is written.
-3. **Writing outputs** goes only through `internal/fsout`, built on `os.Root`
-   for the output directory, `Root.MkdirAll` and `Root.Rename`, and the
-   no-replace rename ADR-005 D14 names — `renameat2(RENAME_NOREPLACE)` on
-   linux, `renamex_np(RENAME_EXCL)` on darwin, `MoveFileExW` without
-   `MOVEFILE_REPLACE_EXISTING` on windows — from `golang.org/x/sys`, each in a
-   build-tagged file. **No code outside `internal/fsout` creates, renames or
-   removes a file**, and `fsout` removes only entries it created in its own
-   staging area (ADR-005); a tripwire checks both.
+3. **Every host file access** goes only through `internal/hostfs`: reading
+   a package file, a source directory and a data directory under `os.Root`
+   (ADR-009 D7), and writing outputs, built on `os.Root` for the staging or
+   output directory, `Root.MkdirAll` and `Root.Rename`, and the no-replace
+   rename ADR-005 D14 names — `renameat2(RENAME_NOREPLACE)` on linux,
+   `renamex_np(RENAME_EXCL)` on darwin, `MoveFileExW` without
+   `MOVEFILE_REPLACE_EXISTING` on windows — from `golang.org/x/sys`, each in
+   a build-tagged file. It names staging directories and temporary files as
+   ADR-005 D14 fixes them, from a SHA-256 of a name, never from a random
+   source or the process. **No code outside `internal/hostfs` opens,
+   creates, renames or removes a file**, and `hostfs` removes only entries
+   it created for the current render (ADR-005 D14 item 5) and the stale
+   expected files `test --update` replaces (ADR-007 D5 item 5); a tripwire
+   checks both.
 4. **`GODEBUG` cannot change behaviour**: with `archive/zip` reading gone,
    the remaining archive code is `archive/tar` writing (no insecure-path check
    applies to writing) and `zipfmt` writing. A host-variation run (D13) sets
-   `GODEBUG=zipinsecurepath=0,tarinsecurepath=0` and expects identical
-   results.
+   `GODEBUG=zipinsecurepath=0,tarinsecurepath=0`, ADR-011 D12's environment
+   A sets the opposite, and both expect identical results (ADR-009 D14
+   item 2).
 5. **Time**: the tool never calls `time.Now`, never uses `time.Local` and never
    loads a time-zone database. The only instant a render sees is `--now`,
-   parsed with `time.Parse(time.RFC3339, …)` into a fixed offset. Formatting is
-   METAIS's own `strftime` subset (ADR-004), over the value's own offset.
+   parsed in `internal/dates` with `time.Parse(time.RFC3339, …)` into a fixed
+   offset. Formatting is METAIS's own `strftime` subset (ADR-004 D11), over
+   the value's own offset.
 6. **Randomness**: none. `math/rand`, `math/rand/v2` and `crypto/rand` are
-   forbidden outside tests. The sample generator's seeded generator is
-   METAIS code implementing the algorithm ADR-007 specifies, because a second
-   implementation must reproduce its sequence and the standard library does
-   not promise its generators' outputs across releases.
-7. **Text**: `golang.org/x/text/unicode/norm` for the NFC check, simple case
-   folding from `unicode` (`unicode.SimpleFold`) or `x/text/cases` as ADR-001
-   and ADR-005 settle, and `unicode` for general categories — all pinned by
-   the toolchain (D1 item 3). No code depends on the locale; `strings.ToUpper`
-   and friends are Unicode-defined and locale-free in Go, and the
-   host-variation run sets `LC_ALL=tr_TR.UTF-8` to prove it.
-8. **The environment**: `internal/hostenv` is the only caller of
-   `os.Getenv`, `os.LookupEnv` and `os.Environ` in the module, and reads only
-   `NO_COLOR` and `TERM` (ADR-008 D12). It is also the only caller of
+   forbidden outside tests, with no exception. The sample generator's seeded
+   generator is METAIS code implementing the SplitMix64 algorithm ADR-007 D9
+   specifies, because the standard library does not promise its generators'
+   outputs across releases.
+7. **Text**: `golang.org/x/text/unicode/norm` for the NFC check and NFD,
+   `golang.org/x/text/cases` (`Fold`, full case folding) for the canonical
+   caseless match ADR-001 D2 item 4 and ADR-005 D12 item 6 use, and
+   `unicode` for general categories — all Unicode 15.0.0 under Go 1.26 and
+   pinned by the toolchain (D1 items 3 and 4). No code depends on the
+   locale; `strings.ToUpper` and friends are Unicode-defined and locale-free
+   in Go, and the host-variation run sets `LC_ALL=tr_TR.UTF-8` to prove it.
+8. **The environment**: `internal/hostenv.Isolate` is the only caller of
+   `os.Getenv`, `os.LookupEnv`, `os.Environ` and `os.Clearenv` in the module.
+   It reads `NO_COLOR` only (ADR-008 D12), clears the environment and sets
+   `time.Local` to UTC (ADR-009 D14 item 1); `cmd/metais` calls it before
+   anything else. `internal/hostenv` is also the only caller of
    `term.IsTerminal`.
-9. **Forbidden in non-test code**, checked by `internal/guarantees/hostapi_test.go`
-   over the `go/ast` of every non-test file: `os.Getwd`, `os.Hostname`,
-   `os.UserHomeDir`, `os.UserConfigDir`, `os.UserCacheDir`, `os.TempDir`,
-   `os.Getuid`/`Geteuid`/`Getgid`/`Getpid`/`Getppid`, `os.Executable`,
-   `os.ExpandEnv`, `os.Expand`, `os/user`, `time.Now`, `time.Local`,
-   `time.LoadLocation`, `time.Since`, `time.Until`, `runtime.GOOS` (behaviour
-   must not vary by platform; build-tagged files are the one sanctioned
-   variation, and only in `fsout` and `hostenv`), `unsafe`, `reflect` outside
-   `internal/schema`'s adapter, and the `os` calls listed in item 8 outside
-   `hostenv`. An allow-list beside the test names any exception, with its
-   reason; it starts empty.
-10. **Forbidden in the binary's dependency closure**, checked by
-    `internal/guarantees/imports_test.go` over `go list -deps
-    ./cmd/metais`: `net` (the socket package; `net/url` and `net/netip` are
-    pure parsers and allowed — the JSON Schema library and goldmark import
-    them), `net/http` and below, `net/rpc`, `net/smtp`, `crypto/tls`,
-    `os/exec`, `os/signal`, `plugin`, `os/user`, `runtime/cgo`, `syscall/js`.
-    The probe found none of them in the closure of a program importing every
-    admitted module at the versions of D3's table.
+9. **Forbidden in non-test code**: ADR-009 D16 item 3's tripwire,
+   `TestNoHostFacts` in `internal/guarantees/`, over the `go/ast` of every
+   non-test file, with ADR-009 D12's symbol lists plus these: `os.Getwd`,
+   `os.Hostname`, `os.UserHomeDir`, `os.UserConfigDir`, `os.UserCacheDir`,
+   `os.TempDir`, `os.Getuid`/`Geteuid`/`Getgid`/`Getpid`/`Getppid`,
+   `os.Executable`, `os.ExpandEnv`, `os.Expand`, `os/user`, `time.Now`,
+   `time.Local`, `time.LoadLocation`, `time.Since`, `time.Until`,
+   `runtime.GOOS` (behaviour must not vary by platform; build-tagged files
+   are the one sanctioned variation, and only in `hostfs` and `hostenv`),
+   `unsafe`, `reflect` outside `internal/schema`'s adapter, and the `os`
+   calls listed in item 8 outside `hostenv`. The allow-list is ADR-009 D16
+   item 3's, each entry with its reason: `internal/hostenv.Isolate`,
+   `internal/hostfs`, `cmd/metais` and `internal/dates`.
+10. **Forbidden in the binary's dependency closure**, checked by the same
+    tripwire over `go list -deps ./cmd/metais`: `net` (the socket package;
+    `net/url` and `net/netip` are pure parsers and allowed — the JSON Schema
+    library and goldmark import them), `net/http` and below, `net/rpc`,
+    `net/smtp`, `crypto/tls`, `os/exec`, `os/signal`, `plugin`, `os/user`,
+    `log/syslog`, `runtime/cgo`, `syscall/js`. The probe found none of them
+    in the closure of a program importing every admitted module at the
+    versions of D3's table.
 
 ### D12 — Build, release and the tool's version
 
@@ -821,10 +855,13 @@ not used to read inputs.**
      when it is a semantic version and has no `+dirty` suffix (so `go install
      github.com/kottera/metais/cmd/metais@v1.0.0` reports `1.0.0`);
    - otherwise `0.0.0-devel`.
-   The provenance tag records this string (ADR-004). The conformance runner
-   fixes it to the value a vector names through `version.Override`, which
-   only test files may call (a tripwire checks); no flag or environment
-   variable sets it.
+   The provenance tag records this string (ADR-004), and `test` records
+   `test` instead (ADR-004 D15). The conformance runner drives the built
+   binary as a black box and substitutes the version it reports for ADR-011
+   D10 item 3's `@@TOOL_VERSION@@` token, so no vector depends on it.
+   In-process unit tests may fix it through `version.Override`, which only
+   test files may call (a tripwire checks); no flag or environment variable
+   sets it.
 4. **Reproducible**: the release builder builds each target twice, in two
    fresh directories with separate `GOCACHE`s, and refuses to publish unless
    the two binaries' SHA-256 are equal. It also refuses a dirty working tree,
@@ -868,12 +905,15 @@ the detector must fail on, and both run in every `go test`.**
    `fault.Set` and no command, flag or environment variable sets one; a
    tripwire asserts that no non-test file outside `internal/fault` and the
    seams names a fault constant, and that `internal/cli` never assigns the
-   field. The seams are few and named here:
+   field. Host isolation (R14 item 4, SC7) is proved instead by ADR-009
+   D16's subprocess harness and its build-tagged canaries, because a leak
+   through the process environment, the working directory or the clock is
+   only realistic in a separate process, which no injected option reaches.
+   The seams are few and named here:
 
    | Guarantee | Fault (`fault.…`) | Seam |
    |---|---|---|
-   | host isolation (R14 item 4, SC7) | `LeakEnv`: adds an `env` global holding `os.Environ()`; `LeakClock`: binds `now` to the wall clock | `internal/template` globals |
-   | confinement (R12 item 1, SC6) | `SkipConfine`: the output path check returns success | `internal/fsout` |
+   | confinement (R12 item 1, SC6) | `SkipConfine`: the output path check returns success | `internal/hostfs` |
    | digests verified (R1 item 5) | `SkipDigest`: verification returns success | `internal/pkgtree` |
    | read in place (R2 item 1) | `UnpackToTemp`: browse extracts the entry to a temporary file and reads it back | `internal/browse` |
    | determinism (R10 items 2–3) | `MapOrder`: object iteration follows a Go map | `internal/liquid/value` |
@@ -886,14 +926,9 @@ the detector must fail on, and both run in every `go test`.**
    can add a fault. Tests that set the environment or working directory do
    not use `t.Parallel`.
 4. **The detectors** (in `internal/guarantees/`):
-   - **Sentinels** (SC7): the environment gets `METAIS_SENTINEL_<n>` variables
-     and `USER`, `LOGNAME`, `HOSTNAME`, `TZ`, `LANG` with sentinel values;
-     `HOME` and the working directory are temporary directories holding files
-     whose names and contents are sentinels. Every vector and every hostile
-     package is run (validate, render to a directory, render to standard
-     output, dry run, check, inspect, grep), and every output byte, finding,
-     message and stream is scanned for every sentinel. Control: `LeakEnv` and
-     `LeakClock` must each be detected on at least one vector.
+   - **Host isolation** (SC7): ADR-009 D16's `TestHostIsolation` and
+     `TestHostIsolationCanaries`, over the built binary, with its canaries as
+     the controls.
    - **Confinement** (SC6): every render runs in `<tmp>/parent/out`; the tree
      under `<tmp>` is snapshotted (paths, types, sizes, SHA-256) before and
      after, and the only differences allowed are under `out`. Control:
@@ -919,27 +954,28 @@ the detector must fail on, and both run in every `go test`.**
      a main package importing `net`, must flag it.
    - **Host APIs**: the `go/ast` tripwire of D11 item 9. Control: a fixture
      file in `testdata/` calling `os.Getenv` must be flagged.
-5. **One subprocess run**: the sentinel detector also runs the built binary
-   (`go build` into a temporary directory once per test run) over a sample of
-   vectors, so the in-process harness cannot hide a difference between
-   `Main` and `Run`.
+5. **The subprocess runs**: the conformance runner (ADR-011 D11) and the
+   host-isolation harness drive the built binary, so a difference between
+   `Main` and `Run` cannot hide behind the in-process harness.
 
 ### D14 — Test organisation
 
 1. **Unit tests** live beside the code (`*_test.go` in each package), are
    table-driven, use `internal/testenv` for temporary directories and a
    temporary `HOME`, and never read the developer's configuration.
-2. **The conformance runner** is `internal/conformance`: a library that loads
-   ADR-011's vector format and drives `cli.Run`, plus
-   `internal/conformance/vectors_test.go`, which walks the vector root ADR-011
-   names (this ADR assumes `spec/vectors/`) and runs each vector as a subtest
-   named by its path. A vector passes or the test fails; there is no skip
-   list in the runner. The hostile corpus is vectors (ADR-011 places it), so
-   the same runner proves SC6.
-3. **Platform runs** (SC5): the runner can write the SHA-256 of every output
-   it produced to a file (`go test ./internal/conformance -args
-   -digests=<file>`); comparing the files from two targets is ADR-011's
-   procedure.
+2. **The conformance runner** is `internal/conformance`, as ADR-011 D11
+   designs it: a black box that builds `./cmd/metais` once and runs it as a
+   subprocess per step in a sentinel sandbox, never linking the
+   implementation, with `TestConformance` walking
+   `spec/conformance/vectors/` (ADR-011 D9 item 1) and running each vector
+   as a subtest named by its path. A vector passes or the test fails; there
+   is no exclusion list, and the only skips are ADR-011 D9 item 6's
+   `requires` probes, each reported. The hostile corpus is vectors (ADR-011
+   D16), so the same runner proves SC6.
+3. **Platform runs** (SC5): the runner writes ADR-011 D15's cross-platform
+   record (`go test ./internal/conformance -args
+   -conformance.record=<file>`) and compares records with
+   `-conformance.compare`; the procedure is ADR-011's.
 4. **Third-party corpora**, vendored as test data with their licence and a
    `SOURCE` file naming the repository and commit:
    - `internal/liquid/testdata/golden-liquid/` — `golden_liquid.json` from
@@ -980,12 +1016,13 @@ the detector must fail on, and both run in every `go test`.**
 2. **Initial budgets**, on an Apple M-series or comparable 2024 x86-64 core,
    CPU time, each recorded in the implementation log when first measured and
    revised there by evidence: rendering the 10,000-row table ≤ 200 ms;
-   `inspect` of the 10,000-entry package ≤ 100 ms; validating the
-   10,000-item collection ≤ 500 ms. Two budgets are deterministic and are
-   tests, not benchmarks: **`inspect`, `ls` and `schema` read only the end of
-   central directory, the central directory, the manifest and the
-   `.compiled/` entries they need** (a counting `ReaderAt` asserts the bytes
-   read), and **`read --lines a-b` decompresses an entry at most once**.
+   `inspect` of the 10,000-entry package, whole-package verification
+   included, ≤ 500 ms; validating the 10,000-item collection ≤ 500 ms. Two
+   budgets are deterministic and are tests, not benchmarks: **opening a
+   packed package reads every byte of the file once and decodes every entry
+   once** (ADR-001 D8; a counting `ReaderAt` asserts the bytes read), and
+   **`read --lines a-b` decompresses its entry at most once more after
+   verification**.
 3. **The gate** (AGENTS.md's list, extended by this ADR; the AGENTS.md text is
    updated by the work item that creates `go.mod`):
 
@@ -1007,87 +1044,106 @@ the detector must fail on, and both run in every `go test`.**
 
 **ADR-001 — the container and its layout.** Relied on: D1's every-field-fixed
 profile with no data descriptors, no zip64, no extra fields and local headers
-equal to central entries (that is what makes an own reader small); D4's
-`flate.BestCompression`; identity across builds by package digest. Promised:
-the strict reader and the `CreateRaw`-based writer of D11 items 1–2; the
-byte-counting `io.ByteReader` under the decoder; the NFC, simple case-folding
-and category code in `internal/unitext` with the Unicode-version tripwire
-(D1 item 3); the deflate canary. **Conflict to reconcile**: ADR-001 pins
-Unicode 15.0.0, ADR-005 pins 17.0.0. The toolchain follows the pin — Go 1.26
-gives 15.0.0, Go 1.27 gives 17.0.0 — and this ADR chooses Go 1.26 (*Proposed
-rulings* 1).
+equal to central entries (that is what makes an own reader small);
+whole-package verification at every open (ADR-001 D8); D4's
+`flate.BestCompression`; identity across builds by package digest.
+Promised: the strict reader and the `CreateRaw`-based writer of D11 items
+1–2; the byte-counting `io.ByteReader` under the decoder; the NFC, full
+case-folding and category code in `internal/unitext` with the
+Unicode-version tripwire (D1 items 3 and 4); the deflate canary. The
+specification's Unicode version is 15.0.0, which Go 1.26 carries (D1 item
+4).
 
 **ADR-002 — the manifest and versioning.** Relied on: D2's profile (single
-document, no anchors or aliases, METAIS's own scalar resolution), D9's RFC
+document, no anchors, aliases or tags, METAIS's own scalar resolution), the
+choice of profile by a `metais.yaml`'s first byte (ADR-002 D1), D9's RFC
 8785 canonical form, D8's `tool.version`. Promised: `yamlx` over
 `go.yaml.in/yaml/v3` nodes with duplicate-key detection and positions (D6);
-`jsonx` with duplicate names and positions (D7); `gowebpki/jcs` for RFC 8785;
-the version rules of D12 item 3; the manifest schemas embedded through
-`internal/specdata` with the byte-identity test ADR-002 D10 item 5 asks for.
+`jsonx` with duplicate names and positions (D7); `gowebpki/jcs` for RFC
+8785; the version rules of D12 item 3; the manifest schemas embedded
+through `internal/specdata` with the byte-identity test ADR-002 D10 item 5
+asks for.
 
 **ADR-003 — the data specification.** Relied on: `metais:///` retrieval URIs
-and `$id` canonical URIs (D5); the asserted-format list (D4); the regex profile
-reference to ADR-009 (D3 item 6); the CSV rules (D11), frontmatter rule (D13)
-and number rules (D8 item 5). Promised: the closed compiler of D5, METAIS's own
-format validators, unknown-keyword detection before compilation, the own CSV
-reader of D8 with BOM removal and quoted/unquoted distinction, the strict JSON
-reader of D7 with literal number text. Gap reported: the validator's
-short-circuit contexts (D5 item 6); vectors will show what is reported.
+and `$id` canonical URIs (D5); the asserted-format list (D4); the regex
+profile reference to ADR-009 (D3 item 6); the CSV rules (D11), frontmatter
+rule (D13) and number rules (D8 item 5); error collection outside the
+boolean-only contexts (ADR-003 D3 item 7). Promised: the closed compiler of
+D5, METAIS's own format validators, unknown-keyword detection before
+compilation, the own CSV reader of D8 with BOM removal and quoted/unquoted
+distinction, the strict JSON reader of D7 with literal number text.
 
-**ADR-004 — the template environment** (not yet written when this was
-drafted). Assumed: it pins a Shopify Liquid version (this ADR has verified
-v5.14.0's tag and filter lists); it defines object iteration order, number
-rendering, stable sorting, `date` directives and `--now` handling, strict
-variables and strict filters, and the `include` refusal's wording. Promised:
-an engine whose `Core()` is exactly that dialect, METAIS filters and tags
-registered from `internal/template`, an escaper hook per output, and engine
-error codes that `internal/template` maps one-to-one onto ADR-006 codes.
+**ADR-004 — the template environment.** Relied on: the pinned Shopify
+Liquid 5.14.0 dialect under `strict2` (ADR-004 D1), whose tag and filter
+lists this ADR verified; its object iteration order (RFC 8785), number
+rendering, stable sorting, `date` directives over a value's own offset,
+`now` from `--now` only, strict variables and filters, `and`/`or` grouping
+(ADR-004 D2), one syntax finding per template (ADR-004 D16 item 4), and the
+`include` refusal's wording. Promised: an engine whose `Core()` is exactly
+that dialect, METAIS filters and tags registered from `internal/template`,
+an escaper hook per output, engine error codes that `internal/template`
+maps one-to-one onto ADR-004 D16's `template.*` codes, and the walkable AST
+ADR-007 analyses.
 
 **ADR-005 — outputs, transforms and rendering.** Relied on: D3's
-`ParseCondition`/`ParseValue` contract, D14's `os.Root` and no-replace rename,
-D17's tar profile, D19's proofs. Promised: `liquid.ParseValue`,
-`liquid.ParseCondition`, `liquid.Eval` and `liquid.EvalCondition` (D4 item 3)
-in place of `osteele/liquid/expressions`, which is not a dependency;
-`golang.org/x/sys` for `renameat2`, `renamex_np` and `MoveFileExW`; the tar
-golden test proving D17's claim about `archive/tar`; D19's host-variation and
-repetition runs as D13's determinism detector. Not provided: Go 1.27 —
-ADR-005's Unicode 17.0.0 need is the conflict named under ADR-001.
+`ParseCondition`/`ParseValue` contract, D14's `os.Root`, fixed staging
+names and no-replace rename, D17's tar profile, D19's proofs. Promised:
+`liquid.ParseValue`, `liquid.ParseCondition`, `liquid.Eval` and
+`liquid.EvalCondition` (D4 item 3); `golang.org/x/sys` for `renameat2`,
+`renamex_np` and `MoveFileExW`, inside `internal/hostfs`; the tar golden
+test proving D17's claim about `archive/tar`; D19's host-variation and
+repetition runs as D13's determinism detector; Go 1.26, which has
+everything ADR-005 needs (`os.Root` with `Rename` and `MkdirAll`, Unicode
+15.0.0 tables).
 
 **ADR-006 — validation and findings.** Relied on: `internal/finding` and
-`internal/schemafail` as specified in D13. Promised: those package names; an
-adapter from `jsonschema.ValidationError` that never reads message text and
-never relies on order (D5 item 5); positions from every parser in the
-`Positions` shape, columns in code points; panics recovered as internal-class
-findings (D4 item 6).
+`internal/schemafail` as specified in D13; the boolean-only contexts of
+ADR-006 D6 item 10. Promised: those package names; an adapter from
+`jsonschema.ValidationError` that never reads message text and never
+relies on order (D5 item 5); positions from every parser in the
+`Positions` shape, columns in code points; panics recovered as
+internal-class findings (D4 item 6), with no stack trace on any stream.
 
-**ADR-007 — authoring.** Assumed: the cross-reference walks the template AST;
-the sample generator's algorithm and PRNG are specified there. Promised: a
-walkable AST with expression trees, binding constructs marked, and byte spans
-for every token (D4 items 2–3); `regexprofile`'s `regexp/syntax` walk reusable
-for pattern generation; no standard-library PRNG (D11 item 6).
+**ADR-007 — authoring.** Relied on: the cross-reference walking the engine's
+AST (ADR-007 D3 item 1); the sample generator's algorithm and PRNG
+(ADR-007 D9). Promised: a walkable AST with expression trees, binding
+constructs marked, and byte spans, lines and columns for every token (D4
+items 2–3); `regexprofile`'s translated `regexp/syntax` tree, reusable for
+pattern generation (D10 item 2); no standard-library PRNG (D11 item 6); the
+packages `internal/author`, `internal/xref` and `internal/sample`.
 
-**ADR-008 — the command line.** Relied on: D12's environment rule, the
-parser behaviour of its ADR-010 interface. Promised: `internal/cli/args` (D10
-item 3), `internal/hostenv` as the single reader of `NO_COLOR`, `TERM` and the
-terminal state, goldmark v2 for `outline` (CommonMark 0.31.2), Go `regexp` for
-`grep`, `encoding/json` with HTML escaping off and declared member order, the
-version string of D12 item 3.
+**ADR-008 — the command line.** Relied on: D12's environment rule (`NO_COLOR`
+only), the parser behaviour of D3 (long flags, the closed short-alias list,
+no grouping, no abbreviation). Promised: `internal/cli/args` (D10 item 3),
+`internal/hostenv` as the single reader of `NO_COLOR` and of the terminal
+state, goldmark v2 for `outline` and the references index (CommonMark
+0.31.2), Go `regexp` for `grep`, `encoding/json` with HTML escaping off and
+declared member order, the version string of D12 item 3.
 
-**ADR-009 — the security model** (not yet written when this was drafted).
-Assumed: it names every limit with a default, including Liquid steps, output
-bytes, string bytes, range length, render depth (≤ 100) and partial count, and
-parser depths below the libraries' 10,000; it defines the package regex
-profile; it designs the host-isolation proof and the hostile corpus.
-Promised: `internal/limits` mirroring its table; the meter of D4 item 4
-counting rather than timing; D13's detectors with permanent fault controls;
-D11's tripwires; the `GODEBUG` result of D11 item 4.
+**ADR-009 — the security model.** Relied on: every limit with its default,
+including `render-work`, `loop-iterations`, `value-size`, `array-size`,
+`assign-bytes`, `partial-depth` and `template-nesting`, and parser depths
+(`value-depth`) below the libraries' 10,000; the package regex profile and
+its translation table (ADR-009 D10 item 6); the host-isolation harness,
+canaries and tripwire (ADR-009 D16); the hostile corpus. Promised:
+`internal/limits` mirroring its table; the meter of D4 item 4 counting
+rather than timing; `internal/hostenv.Isolate` and `internal/hostfs` as the
+only packages touching the environment and the host filesystem; D13's
+detectors with permanent fault controls for the guarantees proved
+in-process; D11's tripwire lists, merged into ADR-009's `TestNoHostFacts`;
+the `GODEBUG` result of D11 item 4.
 
-**ADR-011 — the specification and conformance** (not yet written when this
-was drafted). Assumed: a vector root (taken here as `spec/vectors/`), a vector
-format the runner can load, the hostile corpus among the vectors, a way for a
-vector to name the tool version a provenance output records. Promised: the
-runner in `go test` with no skip list, the digest dump for platform
-comparison (D14 items 2–3), and spec files kept free of Go code (D2 item 4).
+**ADR-011 — the specification and conformance.** Relied on: the vector root
+`spec/conformance/vectors/` and format (ADR-011 D9), the black-box runner
+(ADR-011 D11), the cross-platform record (ADR-011 D15), the hostile corpus
+among the vectors (ADR-011 D16), and ADR-011 D10 item 3's tokens for the
+tool's name and version in provenance. Promised: the runner in
+`internal/conformance` in `go test`, with no exclusion list; the embedded
+schema copies under `internal/specdata` with their equality test; the
+liquid-spec JSON-RPC server as a test-only program under `internal/`; the
+reference driver for `TestDriverProtocol`; the programs that produce the
+committed hostile packages, with their reproduction tests; and spec files
+kept free of Go code (D2 item 4).
 
 ## Conformance
 
@@ -1173,11 +1229,15 @@ It would copy a compressor's code into the repository, narrow but not remove
 the caveat, and buy nothing the package digest does not already give
 (ADR-001 D4 item 6).
 
-### Fault injection by build tag
+### Fault injection by build tag for the in-process guarantees
 
 A `metaisfault` build tag compiles a different program from the one shipped;
 the negative controls would run only when someone remembers the tag. Options
-injection keeps one program and runs the controls in every `go test`.
+injection keeps one program and runs the controls in every `go test`. The
+one place build tags are used is ADR-009 D16's host-isolation canaries,
+because a leak through the process's environment must be shown in a
+separate process, which an injected option cannot reach; their test builds
+every canary in every `go test`, so they cannot be forgotten either.
 
 ### Faults or test switches reachable from the command line or the environment
 
@@ -1234,13 +1294,15 @@ into, and an environment switch contradicts R14 item 4's spirit.
 
 ## Proposed rulings
 
-1. **Toolchain: `go 1.26.0`, `toolchain go1.26.9`** (D1). Lean: yes, as the
-   brief directs and as ADR-001's Unicode 15.0.0 needs. Why: aligned with the
-   organisation's other Go code, supported until Go 1.28. Alternative: Go
-   1.27 now, which gives ADR-005 its Unicode 17.0.0, `encoding/json/v2`, and a
-   support window to Go 1.29, at the price of a different deflate encoder
-   from the start. **If the consistency pass keeps Unicode 17.0.0 for spec
-   1.0, take the alternative**; nothing else in this ADR changes.
+1. **Toolchain: `go 1.26.0`, `toolchain go1.26.9`, and specification 1.0
+   pins Unicode 15.0.0, the version Go 1.26 and the `x/text` tables it
+   selects carry** (D1; ADR-001 D2, ADR-005 D12). Lean: yes. Why: one
+   Unicode version for every rule, the one the toolchain provides, and Go
+   1.26 is supported until Go 1.28. Alternative: Go 1.27 now, which gives
+   Unicode 17.0.0, `encoding/json/v2`, and a support window to Go 1.29, at
+   the price of a different deflate encoder from the start. Moving later
+   needs a 17.0.0 minor or METAIS's own 15.0.0 "assigned" table (D1 item
+   4).
 2. **METAIS implements its own Liquid engine** (D4). Lean: yes, strongly.
    Why: `osteele/liquid` fails iteration order, `blank`/`empty`, core tags,
    host isolation and AST access, none repairable from outside. Alternative:
@@ -1282,6 +1344,14 @@ into, and an environment switch contradicts R14 item 4's spirit.
 16. **Spec files embedded through `internal/specdata` copies with a drift
     test** (D2 item 4). Lean: yes. Alternative: a Go file in `spec/` making it
     an importable package.
+17. **`internal/hostfs` is the one package for host files and
+    `internal/hostenv.Isolate` the one reader of the environment** (D2, D11;
+    ADR-009 D7, D14). Lean: yes. Alternative: separate read and write
+    packages (`fsout` for writes only).
+18. **The conformance runner is a black box over the built binary** (D14
+    item 2; ADR-011 D11). Lean: yes. Why: only a subprocess's environment,
+    working directory and home can be planted and scanned. Alternative: an
+    in-process runner over `cli.Run`, faster but unable to prove SC7.
 
 ## References
 

@@ -146,8 +146,9 @@ errors by default, a `TemplateStore` interface for partial loading,
 12. Strict mode errors on a property of `nil`, as Shopify's
     `strict_variables` does (`variable_lookup.rb`).
 
-Which engine passes, or how it is made to, is ADR-010's decision; this ADR
-fixes what passing means.
+Because several of these differences live where no caller of the library
+can reach, ADR-010 D4 decides that METAIS implements its own engine; this
+ADR fixes the dialect that engine implements.
 
 ## Decision
 
@@ -195,7 +196,7 @@ fixes what passing means.
 
 | Tag | In | Notes |
 |---|---|---|
-| `if` / `elsif` / `else`, `unless` / `else`, `case` / `when` / `else` | yes | `and` and `or` evaluate left to right, each `and` stopping at a falsy operand and each `or` at a truthy one; no parentheses; `when` takes several values separated by `,` or `or` |
+| `if` / `elsif` / `else`, `unless` / `else`, `case` / `when` / `else` | yes | `and` and `or` group from the right, as Shopify's (`a or b and c` is `a or (b and c)`; `a and b or c` is `a and (b or c)`); the left operand of each is evaluated first, and an `and` stops at a falsy left operand, an `or` at a truthy one; no parentheses; `when` takes several values separated by `,` or `or` |
 | `for` / `else`, `break`, `continue` | yes | `limit:`, `offset:` (including `offset: continue`) and `reversed`; ranges `(a..b)` of integers; `reversed` only immediately after the collection; applied as `offset`, then `limit`, then `reversed`; `forloop` with `index`, `index0`, `rindex`, `rindex0`, `first`, `last`, `length`, `parentloop`, `name` |
 | `cycle` | yes | inside or outside a loop; an optional group name (`{% cycle "g": "a", "b" %}`) keys the position |
 | `tablerow` | yes | `cols:`, `limit:`, `offset:`, `tablerowloop`; markup exactly as in *Context* |
@@ -246,8 +247,8 @@ A tag not in this table is a syntax finding.
      `BigDecimal`, defined exactly;
    - `round` rounds half away from zero and returns an integer when its
      argument is omitted or `0`;
-   - an integer result of magnitude above 2⁵³ − 1 is `template.number-range`;
-     division or modulo by zero is `template.division-by-zero`.
+   - an integer result of magnitude above 2⁵³ − 1 is `template.number_range`;
+     division or modulo by zero is `template.division_by_zero`.
 4. **Text of a value**, used by `{{ }}`, `echo`, `cycle`, string filters and
    the tabular filters:
    - `nil`: the empty string; `true`, `false`: `true`, `false`;
@@ -259,7 +260,7 @@ A tag not in this table is a syntax finding.
      zero is `0.0`, negative zero `-0.0`;
    - string: itself;
    - array: the texts of its elements concatenated, recursively;
-   - **object: refused** (`template.object-output`, naming `json`). Ruby's
+   - **object: refused** (`template.object_output`, naming `json`). Ruby's
      `inspect` format is not reproducible, and writing it was never what the
      author meant.
 5. **Order.** Iterating an object (`for pair in obj`, `first`, `last`,
@@ -296,7 +297,7 @@ A tag not in this table is a syntax finding.
 
 1. **A top-level name** resolves, in order, to a block- or partial-scoped
    binding, a template-scoped binding, a counter, or a global (D7). Anything
-   else is `template.undefined-variable`.
+   else is `template.undefined_variable`.
 2. **The declared properties** of an object in the data are the member names
    in `properties` of the subschema at its location in ADR-003's combined
    schema, and of every subschema reachable from that location through
@@ -304,26 +305,30 @@ A tag not in this table is a syntax finding.
    `dependentSchemas`. An array element's location is `items` (or the
    matching `prefixItems` entry); a collection item's is the item schema; a
    CSV row's is the row schema. `patternProperties` and `additionalProperties`
-   declare no names.
+   declare no names. `check`'s cross-reference (ADR-007 D3 item 4) accepts
+   this set and, besides it, names admitted only by `patternProperties` or
+   an explicit `additionalProperties`; such a name passes `check` and is
+   readable at render only when the data carries it (item 4).
 3. **Before rendering, every declared property absent from an object is
    present with the value `nil`.** This is how R5 item 4's "absent is `nil`"
    reaches templates; an absent object is not created, and its own declared
    properties do not appear.
 4. **Property access** (`a.b`, `a["b"]`, `a[expr]`) on an object yields the
    member's value when present (including a declared `nil`); when absent —
-   neither declared nor supplied — it is `template.undefined-property`.
+   neither declared nor supplied — it is `template.undefined_property`.
    A member the data carries without the schema declaring it (allowed by
    `additionalProperties`) is present and readable.
-5. **A property of `nil` is `template.nil-property`**, as with Shopify's
+5. **A property of `nil` is `template.nil_property`**, as with Shopify's
    `strict_variables`. The finding says to guard with `{% if a %}`;
-   `{% if a and a.b %}` is safe because `and` stops at a falsy operand.
+   `{% if a and a.b %}` is safe because `and` stops at a falsy left
+   operand (D2).
    Applying a filter, including `default`, does not rescue it.
 6. **An array index** that is an integer out of range yields `nil`;
    negative indices count from the end; a non-integer index is
-   `template.undefined-property`. A property other than `size`, `first` and
-   `last` on a string, number or boolean is `template.undefined-property`.
+   `template.undefined_property`. A property other than `size`, `first` and
+   `last` on a string, number or boolean is `template.undefined_property`.
 7. **`package` is closed** (D7 item 3): an unknown member is
-   `template.undefined-property`. Every global object is closed the same way.
+   `template.undefined_property`. Every global object is closed the same way.
 8. **When each is detected.** Syntax, unknown tags, unknown filters,
    reserved names (D7 item 8), and the static arguments of `render`, `embed`,
    `asset` and `provenance` are found when the template is parsed, with no
@@ -343,7 +348,7 @@ A tag not in this table is a syntax finding.
    declares, named by the input's name. Its value is the validated value
    with defaults applied and declared-absent properties `nil` (D6 item 3).
    An optional input not supplied is `nil`. `inputs.<undeclared>` is
-   `template.undefined-property`.
+   `template.undefined_property`.
 3. **`package`** is an object whose members are the canonical manifest's
    `metais`, `name`, `version`, `title`, `description`, `guide`, `authors`,
    `license` and `homepage` (ADR-002 D4; an omitted optional member is
@@ -377,7 +382,7 @@ A tag not in this table is a syntax finding.
    `item`, `fan_out`, `output`, `now`, `sources`) and Liquid's `forloop` and
    `tablerowloop` may not be bound by a template-scoped construct —
    `assign`, `capture`, `increment`, `decrement` — which is
-   `template.reserved-name`. A block- or partial-scoped binding — a `for` or
+   `template.reserved_name`. A block- or partial-scoped binding — a `for` or
    `tablerow` variable, a `render` parameter, a `render … as` alias — may
    use any name, and shadows a global only within its block or partial, so
    `{% render "card" for inputs.articles as item %}` reads as written.
@@ -395,6 +400,20 @@ A tag not in this table is a syntax finding.
    `when`, so the index is the item's position in the collection. A
    `for_each` that filters or reorders loses that correspondence, and the
    specification says so beside `sources`.
+10. **Where each global is bound.** This table is the one statement of the
+    bindings; ADR-005 D3 and D4 decide which expressions exist and point
+    here.
+
+    | Context (ADR-005) | `inputs` `package` `now` `sources` | `item` `fan_out` | `output` |
+    |---|---|---|---|
+    | a declaration's `for_each` expression | yes | no — it computes them | no |
+    | `when` of a declaration without `for_each`, and not inside a `for_each` container | yes | no | no |
+    | `when` of a `for_each` declaration (evaluated per element), or of any declaration inside a `for_each` container | yes | yes | no |
+    | `path` template | yes | as for `when` | no — the path is being computed |
+    | template body, and every partial it renders | yes | in a fan-out only | yes |
+
+    `forloop` and `tablerowloop` exist only inside their blocks, in every
+    context where those tags are allowed.
 
 ### D8 — Partials come from `templates/` by literal path, isolated, with the globals visible
 
@@ -402,10 +421,10 @@ A tag not in this table is a syntax finding.
    `templates/`, with its full file name and extension
    (`{% render "partials/row.md.liquid" %}`). No suffix is added, no
    directory of the caller is consulted, and the name is matched byte for
-   byte. A non-literal name is a syntax finding (`template.partial-name`).
+   byte. A non-literal name is a syntax finding (`template.partial_name`).
 2. **The name is confined**: no leading `/`, no `\`, no `.` or `..` segment,
    no empty segment. A name that does not resolve to an entry under
-   `templates/` is `template.partial-not-found`, found when the calling
+   `templates/` is `template.partial_not_found`, found when the calling
    template is parsed.
 3. **Forms**: `render "p"`, `render "p", k: v, …`, `render "p" with x [as
    n]`, `render "p" for xs [as n]` (binding `forloop` in the partial), as
@@ -417,11 +436,12 @@ A tag not in this table is a syntax finding.
    partial rendered into an `escape: html` output is escaped (D9), and
    `output`, `item` and `fan_out` are the including output's.
 6. **Recursion is allowed and bounded.** The render depth — the number of
-   `render` calls active at once — is limited by ADR-009's
-   `max_render_depth`; exceeding it is `template.render-depth`, naming the
-   chain. Block nesting at parse time is bounded the same way
-   (`template.nesting-depth`, ADR-009's `max_nesting_depth`; Shopify uses
-   100 for both).
+   `render` calls active at once — is limited by ADR-009's `partial-depth`
+   (default 32); exceeding it at render is ADR-009's `limit.exceeded`,
+   naming the limit and the chain. Block nesting at parse time is bounded by
+   ADR-009's `template-nesting` (default 100, Shopify's `MAX_DEPTH`), and
+   exceeding it is `limit.package`, since the package's own text breaches
+   it (ADR-009 D19).
 7. **Partials are read in place** from the package, never from the file
    system of the host.
 
@@ -440,7 +460,7 @@ A tag not in this table is a syntax finding.
    with line breaks.
 3. **`safe`** is a METAIS filter that returns its input unchanged and marks
    it safe. It may appear only as the last filter of an output expression
-   (`template.safe-position` otherwise). In an `escape: none` output it does
+   (`template.safe_position` otherwise). In an `escape: none` output it does
    nothing, so one partial serves both kinds of output.
 4. **Tags write without escaping**: `raw`, `embed`, `asset` and
    `provenance` write their bytes unchanged in every output. Embedding
@@ -453,7 +473,7 @@ A tag not in this table is a syntax finding.
 ### D10 — The METAIS filters
 
 Every METAIS filter refuses an input or argument of the wrong type with
-`template.filter-input` or `template.filter-argument`. Named arguments use
+`template.filter_input` or `template.filter_argument`. Named arguments use
 Liquid's `name: value` form.
 
 1. **`json`** — the value as **RFC 8785** JSON: members in canonical order,
@@ -494,8 +514,8 @@ Liquid's `name: value` form.
    - a field is quoted, with `"` doubled, when it contains the delimiter,
      `"`, CR or LF; otherwise written bare;
    - a cell is the text of its value (D4 item 4); `nil` is an empty field;
-     an array or object cell is `template.filter-input`;
-   - a named column a row lacks is `template.undefined-property` (D6: a
+     an array or object cell is `template.filter_input`;
+   - a named column a row lacks is `template.undefined_property` (D6: a
      declared column is present as `nil`);
    - every record, including the last, ends with U+000A. CR LF comes from
      ADR-005's line-ending conversion, not from the filter.
@@ -523,7 +543,7 @@ Liquid's `name: value` form.
       with one `-`;
    6. remove a leading or trailing `-`.
    `"Café Déjà-vu"` is `cafe-deja-vu`. `nil` is `nil`. An empty result
-   (`"日本語"`) is `template.slug-empty`, saying to supply the slug as data.
+   (`"日本語"`) is `template.slug_empty`, saying to supply the slug as data.
 7. **`safe`** — D9 item 3.
 8. **`escape`** and **`escape_once`** are Shopify's, with D9's mapping.
 9. **Not in `1.0`**: a `sha256` filter, an indentation filter, and any
@@ -536,7 +556,7 @@ Liquid's `name: value` form.
    `2026-10-18T09:30:00.25+02:00`; `T` and `Z` in either case; second `60`
    refused); an integer, as seconds since 1970-01-01T00:00:00Z; `nil`, which
    gives `nil`. Anything else — including `"now"` and `"today"` — is
-   `template.date-input`; for those two words the finding names `now`.
+   `template.date_input`; for those two words the finding names `now`.
 2. **The value is formatted in the offset it carries.** No conversion
    happens, no zone database is consulted, and nothing of the host's time
    zone is used. `now` is always UTC (D7 item 7).
@@ -549,7 +569,7 @@ Liquid's `name: value` form.
    `%a %b %e %H:%M:%S %Y`, `%x` is `%m/%d/%y`, `%X` is `%H:%M:%S`, `%r` is
    `%I:%M:%S %p`. **`%Z` is `UTC` at offset zero and otherwise the `%:z`
    form**, where Ruby writes nothing. Any other directive, or an empty
-   format, is `template.date-format`.
+   format, is `template.date_format`.
 
 ### D12 — `embed` writes one input's bytes as supplied
 
@@ -557,35 +577,36 @@ Liquid's `name: value` form.
    collection, and `{% embed "<input>", index: <expr> %}` for an item of a
    collection input, where `<expr>` evaluates to an integer: the item's
    0-based position in the collection's order (ADR-003). The name is a
-   string literal naming a declared input (`template.embed-unknown-input`
+   string literal naming a declared input (`template.embed_unknown_input`
    at parse otherwise); `index:` is required for a collection and refused
-   otherwise (`template.embed-index`, at parse); an index out of range is
-   `template.embed-index` at render.
+   otherwise (`template.embed_index`, at parse); an index out of range is
+   `template.embed_index` at render.
 2. **The bytes are the `raw` form of ADR-003's input record** (D21 item 2),
    written unchanged except that a leading UTF-8 byte-order mark is not
    written. Line endings are kept. The bytes must be valid UTF-8
-   (`template.invalid-utf8`). An input not supplied writes nothing.
+   (`template.invalid_utf8`). An input not supplied writes nothing.
 3. **A raw form that does not exist** — an input or item touched by
-   `--set` or `--json` — is ADR-003's finding, raised before anything
-   renders for every `embed` whose name and index are known; with a
-   computed index it is raised when the tag is evaluated.
+   `--set`, `--set-json` or `--inputs-json` — is ADR-003's finding
+   (`input.raw_unavailable`), raised before anything renders for every
+   `embed` whose name and index are known; with a computed index it is
+   raised when the tag is evaluated.
 4. **Never escaped** (D9 item 4).
 
 ### D13 — `asset` writes an asset's output path, its text, or its base64
 
 1. **Syntax**: `{% asset "<path>" [,] [as: "<mode>"] %}`, the path a string
    literal relative to `assets/`, confined as in D8 item 2 and naming an
-   existing entry (`template.asset-not-found` at parse), the mode a string
+   existing entry (`template.asset_not_found` at parse), the mode a string
    literal.
 2. **`as: "path"`** (the default) writes the path at which ADR-005 writes
    this asset, relative to the current output's directory, with `/`
    separators (`../assets/site.css`). The asset must be written by this
    render to exactly one path in the same tree as the current output — the
    output directory, or the same zip container — otherwise
-   `template.asset-not-written`, `template.asset-ambiguous` or
-   `template.asset-tree`.
+   `template.asset_not_written`, `template.asset_ambiguous` or
+   `template.asset_tree`.
 3. **`as: "contents"`** writes the asset's bytes unchanged, except a leading
-   byte-order mark; they must be valid UTF-8 (`template.asset-not-text`).
+   byte-order mark; they must be valid UTF-8 (`template.asset_not_text`).
 4. **`as: "base64"`** writes RFC 4648 §4 base64 of the bytes, padded, with
    no line breaks — for a `data:` URI in a single-file HTML output.
 5. **Never escaped** (D9 item 4).
@@ -596,7 +617,7 @@ Liquid's `name: value` form.
    bare words from the closed set `package`, `version`, `package_digest`,
    `inputs`, `tool`, `time`, or `all` for every one of them; at least one is
    required; a word outside the set or repeated is
-   `template.provenance-argument`.
+   `template.provenance_argument`.
 2. **Fields**, always in this order whatever the order of the parts:
    `package=<name>`; `version=<package version>`;
    `package_digest=sha256:<hex>`; `input.<name>=<digest>` for every declared
@@ -640,7 +661,7 @@ Liquid's `name: value` form.
 
    For kind `csv` or `text`, and wherever there is no file being rendered
    (a path template), the tag without `style:` is
-   `template.provenance-style`; for `csv` the finding says the format has no
+   `template.provenance_style`; for `csv` the finding says the format has no
    comments, for `text` it names `style:`. The `percent` and `semicolon`
    styles are reached only through `style:`. A later minor that adds a kind
    adds its row here.
@@ -657,25 +678,34 @@ Liquid's `name: value` form.
    upgrade must not change them.
 2. **`now`** in `test` is the example's render time when ADR-007's example
    layout supplies one, and `nil` otherwise.
-3. **The conformance vectors render the same way**, so a second
-   implementation's expected outputs do not depend on its name or version.
-   Everything else renders exactly as `render` does.
+3. **Everything else renders exactly as `render` does**, and only `test`
+   uses this identity. A `render` — the command, and a conformance vector's
+   `render` operation (ADR-011 D8) — records the real package digest, which
+   is defined over content and so the same in every conforming
+   implementation (ADR-001 D6 item 3), and the tool's real name and version;
+   a vector's expected output writes those two as the tokens ADR-011 D10
+   item 3 substitutes, so it does not depend on the implementation. A
+   vector that proves this decision uses ADR-011's `test` operation.
 
 ### D16 — Every template error is a finding with a template path and a line
 
 1. **Every condition this ADR refuses is a finding of error severity** in
    ADR-006's model; nothing is ever written into an output in its place.
-   The codes are `template.` followed by the names used above:
-   `syntax`, `include`, `unknown-filter`, `reserved-name`, `partial-name`,
-   `partial-not-found`, `nesting-depth`, `safe-position`, `embed-unknown-input`,
-   `asset-not-found`, `provenance-argument`, `tag-context` (found at parse);
-   `embed-index` (at parse for its presence, at render for its range); `undefined-variable`,
-   `undefined-property`, `nil-property`, `object-output`, `comparison`,
-   `filter-input`, `filter-argument`, `number-range`, `division-by-zero`,
-   `invalid-utf8`, `date-input`, `date-format`, `slug-empty`,
-   `asset-not-written`, `asset-ambiguous`, `asset-tree`, `asset-not-text`,
-   `render-depth`, `provenance-style` (found at render, or at parse when the
-   arguments are literals). A limit ADR-009 defines uses ADR-009's code.
+   The codes are in ADR-006's `template` family, `template.` followed by
+   the names used above: `syntax`, `not_utf8`, `include`, `unknown_filter`,
+   `reserved_name`, `partial_name`, `partial_not_found`, `safe_position`,
+   `embed_unknown_input`, `asset_not_found`, `provenance_argument`,
+   `tag_context` (found at parse); `embed_index` (at parse for its
+   presence, at render for its range); `undefined_variable`,
+   `undefined_property`, `nil_property`, `object_output`, `comparison`,
+   `filter_input`, `filter_argument`, `number_range`, `division_by_zero`,
+   `invalid_utf8`, `date_input`, `date_format`, `slug_empty`,
+   `asset_not_written`, `asset_ambiguous`, `asset_tree`, `asset_not_text`,
+   `provenance_style` (found at render, or at parse when the arguments are
+   literals). A limit ADR-009 defines (`partial-depth`, `template-nesting`,
+   `template-size`, `render-work` and the rest) is ADR-009 D19's
+   `limit.package` when the package's own content breaches it and
+   `limit.exceeded` when a render's data or work does, naming the limit.
 2. **Location**: `origin` `package`, the template's entry path
    (`templates/…`), and the 1-based line and column of the `{{` or `{%` that
    opens the failing token, the column counted as ADR-006 counts it (inside
@@ -693,11 +723,10 @@ Liquid's `name: value` form.
    contributes at most its first render error, and if any finding exists
    nothing is written (ADR-005).
 5. **Path templates, `when` and `for_each`** are evaluated by this
-   environment with the same strictness and D7's bindings for their context:
-   `inputs`, `package`, `now` and `sources` always, and `item` and `fan_out`
-   in a `for_each` declaration. ADR-005 D4 item 1's restricted mode applies
+   environment with the same strictness and D7 item 10's bindings for their
+   context. ADR-005 D4 item 1's restricted mode applies
    to a path; `render`, `embed`, `asset` and `provenance` there are
-   `template.tag-context`. A finding in these is located at the
+   `template.tag_context`. A finding in these is located at the
    declaration's manifest JSON Pointer and the position within the
    expression (ADR-005 D3 item 7).
 
@@ -705,8 +734,9 @@ Liquid's `name: value` form.
 
 **ADR-001.** I rely on: templates and partials being entries under
 `templates/` and assets under `assets/`, read in place; the package digest
-(ADR-001 D6 items 2 and 5) as `sha256:<hex>`, equal for a source directory and its
-package. I promise: no template reads any other entry.
+(ADR-001 D6 items 2 and 5) as `sha256:<hex>`, equal for a source directory
+and its package, and equal in every conforming implementation. I promise: no
+template reads any other entry.
 
 **ADR-002.** I rely on: the canonical members `metais`, `name`, `version`,
 `title`, `description`, `guide`, `authors`, `license`, `homepage`, which
@@ -718,74 +748,81 @@ unknown tag are each refused (D1 item 6, D6), and the digest member is
 
 **ADR-003.** I rely on: a data model of I-JSON values (D4's integer rule
 classifies its numbers); defaults applied before rendering; the combined
-schema from which D6 item 2 computes declared properties — **the
-consistency pass should confirm that ADR-003 adopts D6 items 2 and 3 as its
-statement of absence, or states its own and this ADR follows it**; the input
-record of ADR-003 D21 — `value` (bound to `inputs.<name>`), `raw` (read by
-`embed`, per item for a collection, with ADR-003's finding when it is
-missing), `source` (exposed as `sources`), and `digest` (recorded by
-provenance); ADR-003 D8 item 5's integer rule, which D4 item 2 restates;
-input names usable as `inputs.<name>` (or `inputs["<name>"]`); a
-collection's order (ADR-003 D15), which `embed … index:` and `sources` index
-by; the `body` member of a Markdown item. I promise: object iteration in
-canonical (RFC 8785, UTF-16 code unit) order — ADR-003 suggests code-point
-order, and the two differ only between supplementary-plane characters and
-U+E000 to U+FFFF; the consistency pass should pick one for both.
+schema from which D6 item 2 computes declared properties, D6 items 2 to 4
+being the statement of how absence reaches a template, which ADR-003 D20
+item 1 cites; the input record of ADR-003 D21 — `value` (bound to
+`inputs.<name>`), `raw` (read by `embed`, per item for a collection, with
+ADR-003's `input.raw_unavailable` when it is missing), `source` (exposed as
+`sources`), and `digest` (recorded by provenance); ADR-003 D8 item 5's
+integer rule, which D4 item 2 restates; input names usable as
+`inputs.<name>` (or `inputs["<name>"]`); a collection's order (ADR-003 D15),
+which `embed … index:` and `sources` index by; the `body` member of a
+Markdown item. I promise: object iteration in canonical (RFC 8785, UTF-16
+code unit) order (D4 item 5), the one order for object members everywhere;
+ADR-003's other orderings — collection items by the UTF-8 bytes of their
+NFC names — order names, not members, and are unchanged.
 
 **ADR-005.** I rely on: an output's `escape` being `html` or `none`
-(default `none`); each rendered file's kind (D7), from which D14 item 5
-maps a provenance style; the rendered file's path, and for a container entry
-its path inside the container, handed over as `output.path`; one render per
-`for_each` element with the array handed over for `fan_out`; the asset
-placement map (D5 item 6), to resolve `asset … as: "path"`; per-item `when`
-and path evaluation (D3 item 5); the `_` prefix that keeps a partial out of
-a mirror (D6 item 2); a render error stopping only its output, and nothing
-written when any finding exists. I promise ADR-005 D3 item 8's
-`ParseCondition` and `ParseValue` and D4 item 1's restricted path mode, with
-D16's findings, and an `escape` mapping (`&amp;` `&lt;` `&gt;` `&quot;`
-`&#39;`) that is also correct XML escaping. **ADR-005 writes the asset tag's
-path form as `{% asset "<path>" path %}`; this ADR's syntax is
-`{% asset "<path>" %}` (path is the default) or `as: "path"`.** ADR-005
-names `inputs`, `package` and `item` as the scope of `when` and `for_each`;
-this ADR adds `now`, `sources` and `fan_out` (D16 item 5).
+(default `none`); each rendered file's kind (ADR-005 D7), from which D14
+item 5 maps a provenance style; the rendered file's path, and for a
+container entry its path inside the container, handed over as
+`output.path`; one render per `for_each` element with the array handed over
+for `fan_out`; the asset placement map (ADR-005 D5 item 6), to resolve
+`asset … as: "path"`; per-item `when` and path evaluation (ADR-005 D3 item
+5); the `_` prefix that keeps a partial out of a mirror (ADR-005 D6 item 2);
+a render error stopping only its output, and nothing written when any
+finding exists. I promise `liquid.ParseCondition` and `liquid.ParseValue`
+(ADR-010 D4 item 3) for ADR-005 D3 item 8, D4 item 1's restricted path mode,
+with D16's findings, and an `escape` mapping (`&amp;` `&lt;` `&gt;`
+`&quot;` `&#39;`) that is also correct XML escaping. ADR-005 adopts this
+ADR's asset syntax (`{% asset "<path>" %}`, path being the default mode, or
+`as: "path"`) and D7 item 10's table of which globals each of its
+expressions sees.
 
 **ADR-006.** I rely on: findings with a stable code, error severity, a
 location of `origin`, `file`, line and column, and room for related
 locations (D16 item 2's call chain) and for the output and item; the rule
-that no template message carries an input value (D16 item 3). I promise D16's codes; ADR-006 may
-change the prefix's spelling, not the set of conditions.
+that no template message carries an input value (D16 item 3). I promise D16's
+codes in the `template` family, spelled as ADR-006 D3 item 1 requires; a
+limit's breach is ADR-009 D19's `limit.package` or `limit.exceeded`.
 
 **ADR-007.** I rely on: `check` parsing every template under `templates/`
-and reporting D6 item 8's parse-time findings; the cross-reference computing
-declared fields with D6 item 2's rule, so the static check and the render
-agree; `test` rendering under D15; examples optionally carrying a render
-time. I promise: `render`, `embed` and `asset` names are always literals,
-and the bindings are D7's closed set, so every name a template uses is
-statically classifiable except a computed index (`a[expr]`).
+and reporting D6 item 8's parse-time findings; the cross-reference resolving
+names over the engine's own syntax tree (ADR-010 D4), with "declared" as D6
+item 2 states plus the open names D6 item 2's last sentence describes, so
+the static check never rejects a read the render accepts; `test` rendering
+under D15; examples optionally carrying a render time (`example.yaml`'s
+`now`, ADR-007 D5 item 1). I promise: `render`, `embed` and `asset` names
+are always literals, and the bindings are D7's closed set (D7 item 10 says
+where each is bound), so every name a template uses is statically
+classifiable except a computed index (`a[expr]`).
 
 **ADR-008.** I rely on: `--now` arriving as a checked RFC 3339 `date-time`
-or not at all; `metais version` as the tool version provenance records.
+with an offset, or not at all; `metais version` as the tool version
+provenance records.
 
-**ADR-009.** I rely on: limits named `max_render_depth`,
-`max_nesting_depth`, a per-output size limit, a template size limit and a
-bound on evaluation work (loop iterations and filter work), each with its
-default and code; the sentinel proof of D7 item 1. I promise: `date` reads
-no clock and no zone, no filter or tag reads the host, and the binding set is
-D7's for every caller.
+**ADR-009.** I rely on: the limits `partial-depth`, `template-nesting`,
+`template-size`, `output-size`, `value-size`, `array-size`, `assign-bytes`,
+`loop-iterations` and `render-work`, each with its default and ADR-009
+D19's codes (`limit.package`, `limit.exceeded`); the charge table for every filter in D10 and the standard
+catalog (ADR-009 D11 item 2); the sentinel proof of D7 item 1. I promise:
+`date` reads no clock and no zone — `"now"` and `"today"` are refused
+whether or not `--now` is given, and the render time is the `now` global
+(D7 item 7, D11 item 1) — no filter or tag reads the host, and the binding
+set is D7's for every caller.
 
-**ADR-010.** I rely on: an engine that passes every vector derived from this
-ADR; the verified divergences of `osteele/liquid` v1.9.2 in *Context* are
-its inputs. Tags and filters it lacks or gets wrong can be replaced through
-its registration API (`RegisterTag`, `RegisterBlock`, `RegisterFilter`,
-`UnregisterTag`, `NewBasicEngine`); items 1 and 8, and the float text of
-item 9, live in its expression scanner, parser and renderer, which that API
-does not reach. Unicode 15.0.0
-tables for D1 item 4 and D10 item 6 (Go's `unicode` package reports
-15.0.0).
+**ADR-010.** I rely on: METAIS's own engine, `internal/liquid` (ADR-010 D4),
+implementing exactly this dialect — `osteele/liquid` v1.9.2 fails it in the
+ways *Context* lists, several of them in its expression scanner, parser and
+renderer, which no caller can reach; a parser that stops at a template's
+first syntax error (D16 item 4); Unicode 15.0.0 tables for D1 item 4 and D10
+item 6 (Go 1.26's `unicode` and `golang.org/x/text`, ADR-010 D1 item 3).
 
-**ADR-011.** I rely on: vectors that render under D15's identity, and a
-spec chapter carrying the grammar, the tag table, the full standard filter
-catalog and D10–D14 exhaustively.
+**ADR-011.** I rely on: `test` vectors rendering under D15's identity and
+`render` vectors under the real one with ADR-011 D10 item 3's tokens; the
+delegated liquid-spec run configured with `strict2` and this ADR's
+exclusions (ADR-011 D17); a spec chapter carrying the grammar, the tag
+table, the full standard filter catalog and D10–D14 exhaustively.
 
 ## Conformance
 
@@ -829,7 +866,8 @@ Vectors are needed for each observable rule; ADR-011 owns their format.
   `html`; field order; `time` absent without `--now`; D15's identity.
 - **`sources`**: each `origin`; a collection's `name`, `stem` and `form`;
   `nil` for a command-line item; the per-item `when` idiom.
-- **Errors**: D16's location, call chain and one-pass behaviour.
+- **Errors**: D16's location, call chain and one-pass behaviour; `and`/`or`
+  grouping from the right (`true or false and false` is true).
 - **Shopify standard filters and tags**: a vector set per filter and tag,
   derived from the gem's own tests at `v5.14.0` and written in this
   project's words.
@@ -913,8 +951,9 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
 - Templates are strict. A typo, an unguarded optional object or an unknown
   filter is a finding rather than an empty cell, and the authoring
   documentation must teach `{% if a and a.b %}` early.
-- The Go library cannot be used unmodified (*Context*); ADR-010 must fork
-  it, wrap it at its internal seams, or write the engine.
+- The Go library cannot be used (*Context*), and forking it would copy
+  another engine's code, which AGENTS.md forbids; ADR-010 D4 writes
+  METAIS's own engine of this dialect.
 - METAIS diverges from the reference deliberately in a few named places
   (object output, simple case mapping, `date` inputs and `%Z`, `self`), each
   listed in the specification's dialect chapter.
@@ -988,17 +1027,33 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
     files.** Lean: yes.
 28. **An input's provenance digest is ADR-003's (RFC 8785 of the value
     after defaults).** Lean: yes; alternative: of its raw bytes.
-29. **`test` and the vectors render with D15's fixed identity.** Lean: yes.
+29. **`test` renders with D15's fixed identity; `render`, vectors included,
+    records the real package digest and tool, which ADR-011 D10 item 3's
+    tokens absorb.** Lean: yes. Why: an example's expected outputs cannot
+    contain the digest of the package that holds them, while a vector's
+    package digest is the same in every implementation. Alternative: the
+    fixed identity for vectors too, which needs a mode a black-box runner
+    cannot set.
 30. **Each output and item reports its first render error; all are
     attempted.** Lean: yes.
 31. **Template bytes are kept as written; U+0000 refused.** Lean: yes.
 32. **A `sources` global exposes ADR-003's `source` records, indexed by
     position, and `fan_out` counts before `when`.** Lean: yes;
     alternative: no item identity in `1.0`.
+33. **One table says where each global is bound (D7 item 10)**: `now` and
+    `sources` in every manifest expression; `item` and `fan_out` only per
+    element of a fan-out; `output` only in template bodies, never while a
+    path is computed. Lean: yes. Alternative: manifest expressions see only
+    `inputs`, `package` and `item`, which forbids a path named after a
+    collection item's file stem.
 
 ## References
 
 - `liquid` gem 5.14.0 on RubyGems: https://rubygems.org/gems/liquid/versions/5.14.0
+- Shopify/liquid `lib/liquid/condition.rb` and `lib/liquid/tags/if.rb` at
+  `v5.14.0` (`and`/`or` chained so they group from the right, the left
+  operand evaluated first and short-circuited; read 2026-10-18):
+  https://github.com/Shopify/liquid/blob/v5.14.0/lib/liquid/condition.rb
 - Shopify/liquid at `v5.14.0`: https://github.com/Shopify/liquid/tree/v5.14.0 —
   `lib/liquid/tags.rb`, `lib/liquid/standardfilters.rb`,
   `lib/liquid/condition.rb`, `lib/liquid/expression.rb`,

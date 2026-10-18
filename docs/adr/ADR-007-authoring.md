@@ -67,7 +67,11 @@ expression structure of every template, not only the ability to render one.
 
 So the library gives tag structure with line numbers, and nothing about the
 variable paths inside an expression. A cross-reference built on it would
-re-parse every `Args` string with a parser of its own anyway.
+re-parse every `Args` string with a parser of its own anyway. This is one
+of the reasons ADR-010 D4 does not use the library: METAIS's own engine,
+`internal/liquid`, parses into a walkable syntax tree (`internal/liquid/ast`)
+with a full expression tree, the binding constructs marked, and a byte span,
+line and column on every token, and that tree is what this ADR analyses.
 
 ### What Liquid's reference implementation does at the points the analysis touches
 
@@ -129,11 +133,15 @@ make "seed 7" mean different data in two builds of one tool version.
 
 ### D1 — `init` writes a scaffold that already checks, tests and packs
 
-1. **`metais init [<dir>] [--name <name>]`.** `<dir>` defaults to the
-   current directory. It asks nothing and reads no environment variable.
+1. **`metais init [<dir>] [--name <name>]`** (ADR-008 D9). `<dir>` defaults
+   to the current directory. It asks nothing and reads no environment
+   variable.
 2. **`--name`** is the package name (ADR-002's name rule). Absent, it is the
-   base name of `<dir>` after resolving `.`; when that base name does not
-   satisfy the rule, `init` refuses and names `--name` as the next step.
+   last element of `<dir>` as the caller wrote it; when `<dir>` is omitted or
+   its last element is `.` or `..`, `--name` is required, because the tool
+   never looks up the working directory's name (ADR-008 D9, ADR-009 D12).
+   When the name does not satisfy the rule, `init` refuses and names
+   `--name` as the next step.
 3. **The directory must be empty.** It is created, with parents, if it does
    not exist. An existing directory counts as empty when it holds nothing but
    entries on the quiet list of D7 item 3 (so `git init` followed by `metais
@@ -149,7 +157,7 @@ make "seed 7" mean different data in two builds of one tool version.
      metais.yaml
      inputs/greeting.schema.json
      inputs/greeting.md
-     templates/greeting.md
+     templates/greeting.md.liquid
      examples/basic/example.yaml
      examples/basic/inputs/greeting.json
      examples/basic/expected/greeting.md
@@ -163,10 +171,11 @@ make "seed 7" mean different data in two builds of one tool version.
      `0.1.0`; a title (the name with `-` and `_` as spaces, each word
      capitalised); a one-line description placeholder; a supplier guide of
      two sentences saying what the package produces and pointing to the
-     input's meaning document; one input `greeting` with schema
-     `inputs/greeting.schema.json`, doc `inputs/greeting.md` and forms
-     `json` and `yaml`; one output, template `templates/greeting.md`, path
-     `greeting.md`. Field spellings are ADR-002's, ADR-003's and ADR-005's.
+     input's meaning document; one input `greeting` with `title`, schema
+     `inputs/greeting.schema.json`, `meaning` `inputs/greeting.md` and forms
+     `json` and `yaml`; one output, `id: greeting` and `template:
+     greeting.md.liquid`, whose path defaults to `greeting.md` (ADR-005 D4
+     item 4). Field spellings are ADR-002's, ADR-003's and ADR-005's.
    - **`inputs/greeting.schema.json`**: `$schema` 2020-12; `title` and
      `description`; `type: object`; `additionalProperties: false`; required
      `name` (`type: string`, `minLength: 1`, `maxLength: 80`, `title`,
@@ -176,7 +185,7 @@ make "seed 7" mean different data in two builds of one tool version.
      modes of D9 have a branch to show.
    - **`inputs/greeting.md`**: a short meaning document — what the greeting
      is for, what a good `note` looks like.
-   - **`templates/greeting.md`**, exactly:
+   - **`templates/greeting.md.liquid`**, exactly:
 
      ```liquid
      # Hello, {{ inputs.greeting.name }}
@@ -211,12 +220,19 @@ make "seed 7" mean different data in two builds of one tool version.
    do not fail it.
 2. **The steps**, in order. Each runs whatever earlier steps found, except
    that a step whose input does not exist is skipped, and every skipped step
-   is named in one `check.step_skipped` info finding.
+   is named in one `report.step_skipped` info finding.
    1. **Source tree** (source directory only). Every entry is a regular file
-      or a directory: a symbolic link is `source.link` and a device, socket
-      or pipe is `source.special_file`, both errors. Entries outside the
-      layout are classified by D7 item 3. A `.compiled/` directory is
-      `source.compiled_present`, a warning: `pack` ignores and replaces it.
+      or a directory: a symbolic link, device, socket or pipe is
+      `package.layout.non_regular_file`, an empty directory
+      `package.layout.empty_directory`, both errors (ADR-001 D2 item 6, D5
+      item 6). Entries outside the layout are classified by D7 item 3. A
+      `.compiled/` directory is `package.layout.compiled_in_source`, an
+      error, as it is for every command (ADR-001 D5 item 5): a stale copy
+      beside the sources would be read as either. Operating-system litter
+      under a layout tree (`.DS_Store`, `Thumbs.db`, `desktop.ini`, a name
+      beginning `._`) is `package.layout.os_litter`, a warning: the package
+      would carry it (ADR-001 D5 item 6), and an asset directory copy would
+      write it into outputs.
    2. **Entries.** Every entry name passes ADR-001's name rules and
       ADR-009's confinement rules; the entries ADR-001 reserves are where it
       requires them. On a packed package this has already happened on read
@@ -224,12 +240,15 @@ make "seed 7" mean different data in two builds of one tool version.
    3. **Limits.** The package `pack` would write stays within ADR-009's
       default read limits — entry count, per-entry and total size, path
       length — so that no package `pack` writes is one a default reader
-      refuses. A breach is `source.exceeds_limit`, an error naming the limit.
+      refuses. A breach is `limit.package`, an error naming the limit
+      (ADR-009 D19).
    4. **Manifest.** It parses under ADR-002's YAML profile, validates against
       the manifest's JSON Schema (`spec/schemas/`), and passes the semantic
       rules ADR-002, ADR-003 and ADR-005 state. Every path it names — schema,
       meaning document, template, asset, output validation schema — exists
-      and is confined.
+      and is confined. A relative link in `guide` whose target is not a
+      package entry is `manifest.guide_link_missing`, a warning (ADR-002 D4
+      item 9).
    5. **Schemas.** Every input schema and every output validation schema
       compiles under ADR-003's dialect, and every `$ref` resolves inside the
       package. Then, statically: each `default` and each `examples` entry
@@ -243,14 +262,15 @@ make "seed 7" mean different data in two builds of one tool version.
       (D3 item 4) is `schema.required_not_declared`, a warning, because it is
       almost always a typo.
    6. **Templates.** Every file under `templates/` is valid UTF-8
-      (`template.not_utf8`, error) and parses — both with the rendering engine
-      and with the analysis front end of D3 item 1 (`template.parse`, error).
-      Parse-error hints are in item 4. A template containing a CR LF pair is
-      `template.crlf`, a warning: a checkout that converts line endings
-      produces it, and the output's CRLF transform (ADR-005) is the portable
-      way to get CRLF output. Each manifest expression — output `path`
-      templates, `when`, `for_each` — parses (`manifest.expression_parse`,
-      error, at the manifest line).
+      (`template.not_utf8`, error) and parses with the engine's parser, the
+      one parse both rendering and D3 use (`template.syntax`, error; ADR-004
+      D16). Parse-error hints are in item 4. A template containing a CR LF
+      pair is `template.crlf`, a warning: a checkout that converts line
+      endings produces it, and the output's CRLF transform (ADR-005) is the
+      portable way to get CRLF output. Each manifest expression — output
+      `path` templates, `when`, `for_each` — parses (`template.syntax`,
+      error, located at the declaration's manifest pointer and line,
+      ADR-004 D16 item 5).
    7. **Cross-reference** (D3), over every template and manifest expression
       that parsed.
    8. **Office Open XML text runs** (D4).
@@ -260,11 +280,12 @@ make "seed 7" mean different data in two builds of one tool version.
        manifest, the combined schema, the references index, the digests — is
        computed, and a failure to compute any part is a finding here. On a
        packed package, the stored `.compiled/` must equal what is computed
-       from its entries; a difference is `compiled.mismatch`, an error. This
+       from its entries; a difference is `package.compiled.mismatch`, an
+       error (on a packed package ADR-001 D8 has already refused it). This
        step is why `pack` (D7) never discovers a problem `check` did not
        report.
 3. **Findings are all reported.** Order and de-duplication are ADR-006's.
-4. **Parse-error hints.** A `template.parse` finding whose construct contains
+4. **Parse-error hints.** A `template.syntax` finding whose construct contains
    U+2018, U+2019, U+201C or U+201D carries the hint that a word processor
    replaced straight quotes and that Liquid string literals use `"` or `'`.
    One in a template detected as Office Open XML (D4 item 1) whose construct
@@ -276,16 +297,15 @@ make "seed 7" mean different data in two builds of one tool version.
 
 ### D3 — The cross-reference is a static analysis with an exact definition of "declared"
 
-1. **METAIS owns the analysis front end.** A tokenizer and parser for
-   ADR-004's pinned dialect — tags, the expression grammar, filters with
-   their arguments, ranges, literals — produces a syntax tree with file, line
-   and column for every node. It is used only for analysis; rendering uses
-   ADR-010's engine. The two are held together by a test: over every
-   template in the conformance vectors, the example packages and a fuzz
-   corpus, the engine accepts a template exactly when the front end does.
-   The analysis is therefore specified against the dialect, not against any
-   library's internals, and a second implementation reproduces it from the
-   specification.
+1. **The analysis walks the engine's own syntax tree.** ADR-010 D4's engine
+   parses ADR-004's pinned dialect — tags, the expression grammar, filters
+   with their arguments, ranges, literals — into `internal/liquid/ast`, with
+   file, line, column and byte span for every node and every binding
+   construct marked, and `ast.Walk` visits it. The cross-reference uses that
+   tree and no parser of its own, so `check` and the render can never
+   disagree about what a template says. The analysis is specified against
+   the dialect's grammar, not against the engine's internals, and a second
+   implementation reproduces it from the specification.
 2. **The abstract values.** Analysis evaluates each expression to a set of
    alternatives, each one of:
    - **`schema(n)`** — a node of an input's schema, identified by input name
@@ -296,23 +316,26 @@ make "seed 7" mean different data in two builds of one tool version.
    - **`scalar(kind)`** — a string, number, boolean or `nil` (literals,
      `capture`, filter results of known kind);
    - **`record(fields)`** — a fixed set of named fields: the `inputs`
-     namespace (one field per input), `package`, `forloop`, `tablerowloop`
-     (their fields as ADR-004 defines them).
+     namespace (one field per input), `package`, `fan_out`, `output`,
+     `sources` (one field per input), `forloop`, `tablerowloop` (their
+     fields as ADR-004 D7 defines them).
 
    A set holds at most 64 alternatives; a larger one becomes `unknown`.
 3. **Roots.** An expression path starts at an identifier:
-   - `inputs` → the inputs record; `package` → its record;
-   - `item` → in a template rendered for a `for_each` output (directly or
-     through partials), the element value of D3 item 9; elsewhere
-     `xref.unknown_variable`, with the hint that `item` exists only under
-     `for_each`;
+   - `inputs` → the inputs record; `package` → its record; `now` →
+     `scalar(string)` or `nil`; `sources` → its record;
+   - `item` and `fan_out` → in a template rendered for a `for_each` output
+     (directly or through partials), the element value of D3 item 9 and the
+     `fan_out` record; elsewhere `template.xref.unknown_variable`, with the hint that
+     they exist only under `for_each`;
+   - `output` → its record, in a template body only (ADR-004 D7 item 10);
    - `forloop` inside a `for` body or a partial rendered with `render … for`;
      `tablerowloop` inside `tablerow`;
    - a local (item 7) or a partial parameter (item 8);
-   - anything else → `xref.unknown_variable`, error, with the nearest known
+   - anything else → `template.xref.unknown_variable`, error, with the nearest known
      name when one lies within edit distance 2.
 
-   A bracketed root (`[expr]`) is `xref.dynamic_reference` (item 6).
+   A bracketed root (`[expr]`) is `template.xref.dynamic_reference` (item 6).
 4. **What "declared" means.** Resolving a property segment `.p` (or `["p"]`
    with a string literal) against `schema(n)`:
    1. **The applicable set** A(n) is n plus, recursively, every subschema
@@ -343,8 +366,8 @@ make "seed 7" mean different data in two builds of one tool version.
       `first` and `last` on an array give the element (as `[0]` and `[-1]`),
       on a string `scalar(string)`. A declared property of that name wins, as
       in Liquid's lookup.
-   6. **Otherwise** the segment is an error: `xref.not_an_object` when the
-      node's types exclude object, else `xref.unknown_field`. The finding
+   6. **Otherwise** the segment is an error: `template.xref.not_an_object` when the
+      node's types exclude object, else `template.xref.unknown_field`. The finding
       names the template location, the input, the schema location (file and
       JSON Pointer) as a related location, the declared names there, and the
       nearest within edit distance 2.
@@ -360,14 +383,14 @@ make "seed 7" mean different data in two builds of one tool version.
    - `[i]`, an integer literal: `prefixItems[i]` when it exists (i ≥ 0), else
      `items`. A node of array type with neither keyword gives `open`.
      `items: false` with i at or beyond the `prefixItems` length, or i at or
-     beyond `maxItems`, is `xref.index_out_of_range`, error. A negative i
+     beyond `maxItems`, is `template.xref.index_out_of_range`, error. A negative i
      gives every `prefixItems` schema and `items`. A node whose types exclude
-     array is `xref.not_an_array`, error.
+     array is `template.xref.not_an_array`, error.
    - `[expr]`, anything but a literal: on `schema(n)`, every candidate D3
      item 4 could produce for any name, plus `items` and `prefixItems`; on an
      open node, `open`. If that leaves nothing — and always on the inputs
      record, and on a bracketed root — the result is `unknown` and the
-     finding is `xref.dynamic_reference`, a **warning** that the reference
+     finding is `template.xref.dynamic_reference`, a **warning** that the reference
      cannot be checked. A dynamic reference into the inputs record, or a
      bracketed root, also marks **every** input used (item 11): the author is
      selecting inputs by computed name, and calling them unused would be
@@ -378,16 +401,15 @@ make "seed 7" mean different data in two builds of one tool version.
    template-wide and flow-insensitive: a first pass collects every name bound
    anywhere in the template, and a local's value is the union of the values
    of all its bindings, computed to a fixed point (bounded by item 2's cap).
-   Binding `inputs`, `package`, `item`, `forloop` or `tablerowloop` is
-   `xref.reserved_name_bound`, an error, unless ADR-004 already refuses it at
-   parse time.
+   Binding a global or loop object by a template-scoped construct is
+   ADR-004 D7 item 8's `template.reserved_name`, found at parse.
 8. **Loops and partials.**
    - `for n in e` binds n, inside the body only, to the element of e:
      `[expr]` on an array value, `scalar(number)` for a range, and `unknown`
      over an object or scalar (whose iteration is ADR-004's). `tablerow`
      likewise.
    - `render "name"` resolves the literal name to a template by ADR-004's
-     rule; a template that does not exist is `xref.missing_partial`, error.
+     rule; a template that does not exist is `template.xref.missing_partial`, error.
      The partial is analysed in a fresh scope holding the globals ADR-004
      makes visible in a partial, its `key: value` parameters, and the
      `with`/`for` value under its alias (by default the last path segment of
@@ -396,11 +418,11 @@ make "seed 7" mean different data in two builds of one tool version.
      already on the analysis stack with the same bindings is not re-entered.
    - A name a partial reads that is neither a global, a local of the partial,
      nor bound by the call is `nil` at render time. It is
-     `xref.partial_parameter_not_passed`, a warning naming the call site,
+     `template.xref.partial_parameter_not_passed`, a warning naming the call site,
      because an optional parameter is a legitimate pattern.
 9. **Manifest expressions.** Each output's `path` template and `when` are
    analysed in that output's context. `for_each` is analysed in the context
-   without `item`; its value must permit arrays (`xref.for_each_not_array`,
+   without `item`; its value must permit arrays (`template.xref.for_each_not_array`,
    error, otherwise), and its element value is `item`'s in the output's
    template, `path` and `when`. A template used by several outputs is
    analysed once per distinct context, and each finding says which output's
@@ -423,19 +445,21 @@ make "seed 7" mean different data in two builds of one tool version.
     `embed` tag names it. Effective templates are those an output renders,
     directly or through `render` chains (ADR-005 decides which templates the
     mirror shorthand renders). An input no use reaches is
-    `xref.unused_input`, a warning. A template under `templates/` that no
-    output renders and no `render` names is `xref.unused_template`, a
+    `template.xref.unused_input`, a warning. A template under `templates/` that no
+    output renders and no `render` names is `template.xref.unused_template`, a
     warning; it is still parsed and its references checked, with every
     partial-parameter name taken as `unknown`, and its references do not
     count as use.
-12. **METAIS tags.** `embed` names an input by literal (`xref.unknown_input`
+12. **METAIS tags.** `embed` names an input by literal (`template.xref.unknown_input`
     when it is not one); `asset` names an asset path by literal
-    (`xref.missing_asset` when no such entry exists under `assets/`);
+    (`template.xref.missing_asset` when no such entry exists under `assets/`);
     `provenance` takes keywords only, which ADR-004 validates.
 13. **The analysis is bounded.** It stops after 10 000 template-context
     analyses or 1 000 000 resolved segments, reporting
-    `xref.budget_exhausted`, a warning that the remaining references were not
-    checked; ADR-009 may lower both.
+    `template.xref.budget_exhausted`, a warning that the remaining references were not
+    checked. Both bounds are fixed constants of the analysis, not ADR-009
+    limits: reaching them never refuses anything, and the template, nesting
+    and loop limits ADR-009 sets already bound the input they apply to.
 
 A worked resolution: `inputs.metrics.rows[0].value` with `metrics` declared
 as `{type: object, properties: {rows: {$ref: "#/$defs/rows"}}}` and `$defs/rows`
@@ -445,7 +469,7 @@ number}}}}`. `inputs` is the record; `.metrics` is a field of it, giving
 giving `schema(metrics#/properties/rows)`; its applicable set adds
 `#/$defs/rows`; `[0]` finds no `prefixItems` and takes `items`; `.value` is in
 its `properties`. Declared. `inputs.metrics.rows[0].vaule` stops at the last
-step with `xref.unknown_field`, declared names `value`, suggestion `value`.
+step with `template.xref.unknown_field`, declared names `value`, suggestion `value`.
 
 ### D4 — A Liquid construct split across Office Open XML text runs is an error, with a hint that names the cause
 
@@ -471,12 +495,12 @@ step with `xref.unknown_field`, declared names `value`, suggestion `value`.
    tokenizer of D3 item 1, which ignores XML, gives the byte range of every
    Liquid construct (`{{ … }}`, `{% … %}`, delimiters with whitespace control
    included).
-4. **`ooxml.split_construct`**, an error: a Liquid construct whose range
+4. **`template.ooxml.split_construct`**, an error: a Liquid construct whose range
    overlaps the content of at least one text element and is not contained in
    the content of exactly one. A construct lying wholly in markup — a
    `{% for %}` between `<w:tr>` elements — overlaps no text content and is
    correct.
-5. **`ooxml.split_delimiter`**, an error: within one paragraph container,
+5. **`template.ooxml.split_delimiter`**, an error: within one paragraph container,
    the last character of one text element's content and the first character
    of the next non-empty one form `{{`, `{%`, `}}` or `%}`. This catches an
    opener broken before the Liquid tokenizer ever sees it, which otherwise
@@ -501,47 +525,56 @@ step with `xref.unknown_field`, declared names `value`, suggestion `value`.
 ### D5 — Examples are a data directory and an output tree, and `test` compares them byte for byte
 
 1. **Layout.** `examples/<name>/` holds:
-   - **`inputs/`** — required, possibly empty: exactly the layout of a data
-     directory (ADR-003), a file per input named after it or a directory per
-     collection;
+   - **`inputs/`** — exactly the layout of a data directory (ADR-003), a
+     file per input named after it or a directory per collection. It is
+     absent for an example that supplies nothing, since a package holds no
+     empty directory (ADR-001 D2 item 6); for the same reason an example
+     cannot supply an empty collection, which only `--inputs-json` can;
    - **`expected/`** — optional: an output tree, exactly what a render would
      write to an output directory;
-   - **`example.yaml`** — optional (YAML or JSON, ADR-002's profile):
+   - **`example.yaml`** — optional (YAML, or JSON when its first
+     non-whitespace byte is `{`, under ADR-002's profiles as `metais.yaml`
+     is read):
      `title` (one line), `description` (Markdown), and `now` (an RFC 3339
      date-time with an offset), the render time given to this example as if
      by `--now`.
 
    `<name>` follows ADR-003's rule for input names. Any other entry in an
    example directory is `example.layout`, an error from `check`.
-2. **`metais test [<pkg>] [<example>…]`** runs every example, or those
-   named, in byte order of name, on a source directory or a packed package.
+2. **`metais test [<pkg>] [--example <name>]…`** (ADR-008 D9) runs every
+   example, or those named, in byte order of name, on a source directory or
+   a packed package.
    It first loads the package — manifest, schemas, templates — and if that
    produces errors it reports them and stops. For each example it then:
    1. loads `inputs/` through ADR-003's data directory loader, applies
       defaults and validates, reporting findings located in
       `examples/<name>/inputs/…`;
-   2. if valid, renders into memory with ADR-005's staging — transforms and
-      output validation included — under ADR-009's limits, with `now` from
-      `example.yaml` and no other host input;
+   2. if valid, renders into memory through ADR-005 D13's phases 1 to 4 —
+      transforms and output validation included — under ADR-009's limits,
+      with `now` from `example.yaml`, ADR-004 D15's fixed render identity,
+      and no other host input;
    3. if `expected/` exists, compares the rendered tree with it (item 3);
       otherwise reports the example as rendered and not compared.
    Every example runs even after another fails. `test` exits non-zero when
    any example fails.
 3. **Comparison.** Directories are ignored; files are compared by path.
-   - A path in `expected/` the render did not write is `test.output_missing`;
-     a path written and absent from `expected/` is `test.output_unexpected`.
+   - A path in `expected/` the render did not write is `example.output_missing`;
+     a path written and absent from `expected/` is `example.output_unexpected`.
    - **A container output** (ADR-005) is compared by its entries — names in
-     order, compression method, uncompressed content — as R9 item 5 states
-     for conformance, so an `expected/` written by another conforming
-     implementation compares equal. An `expected/` container is read with the
+     order, uncompressed content, and the compression method of every entry
+     whose declaration says `stored: true` (and a profile's `mimetype`) —
+     as R9 item 5 states for conformance; the method of any other entry is
+     the encoder's choice under ADR-001 D4's `auto` and is not compared, so
+     an `expected/` written by another conforming implementation compares
+     equal. An `expected/` container is read with the
      package reader's bounds; one that is not a readable zip is
-     `test.expected_unreadable`. Entry differences are
-     `test.entry_missing`, `test.entry_unexpected`, `test.entry_order` (the
+     `example.expected_unreadable`. Entry differences are
+     `example.entry_missing`, `example.entry_unexpected`, `example.entry_order` (the
      first index at which the name sequences differ),
-     `test.entry_method`, and `test.output_differs` for content, located as
+     `example.entry_method`, and `example.output_differs` for content, located as
      `<output>!<entry>`.
    - **Every other file** is compared byte for byte; a difference is
-     `test.output_differs`.
+     `example.output_differs`.
 4. **Reporting a difference.** Both sides are text when both are valid
    UTF-8 and contain no NUL byte; otherwise binary.
    - **Text**: the location is the expected file at the first differing line
@@ -559,11 +592,14 @@ step with `xref.unknown_field`, declared names `value`, suggestion `value`.
 5. **`--update`** writes the render of each selected example into its
    `expected/` (creating it), on a source directory only, and only for an
    example that validated and rendered. It makes `expected/` exactly the
-   rendered tree: files written, and files under `expected/` that the render
-   no longer produces removed. This is the one place an authoring command
-   removes a file, and the directory is one the command fully owns. It
-   prints each file written or removed. Reviewing the result is the
-   author's.
+   rendered tree: files written, and files under `examples/<name>/expected/`
+   that the render no longer produces removed. This is the one place an
+   authoring command removes a file, and it never removes one outside that
+   directory, which is the author's own tree and which the command fully
+   owns; R12 item 3's "never deletes" governs rendering into a caller's
+   directory and is untouched. It prints each file written or removed
+   (`--dry-run` lists them and writes nothing, ADR-008 D9). Reviewing the
+   result is the author's.
 
 ### D6 — `test` on a packed package and on a source directory is the same test
 
@@ -573,8 +609,8 @@ result is the result the author's `pack` saw.
 
 ### D7 — `pack` is check, then test, then a deterministic write
 
-1. **`metais pack [<dir>] [--out <path>]`**, `<dir>` defaulting to `.`, a
-   source directory only.
+1. **`metais pack [<dir>] [--out <path>|-]`** (ADR-008 D9), `<dir>`
+   defaulting to `.`, a source directory only.
 2. **Order.** It runs `check` (D2). Any error: it reports every finding and
    refuses, writing nothing, with the next step "fix the errors `metais
    check` lists". With no error it runs `test` (D5); any failure: refuses
@@ -585,17 +621,18 @@ result is the result the author's `pack` saw.
 3. **What is packed.** Exactly the entries ADR-001's layout defines —
    `metais.yaml` and the trees `inputs/`, `templates/`, `references/`,
    `assets/`, `examples/` and any further top-level entry ADR-001 permits —
-   plus `.compiled/`, computed afresh. Outside them:
-   - **The quiet list** is excluded with no finding: top-level `.git`,
-     `.gitignore`, `.gitattributes`, and any top-level `*.metais` file; and,
-     anywhere, `.DS_Store`, `Thumbs.db`, `desktop.ini` and names beginning
-     `._`.
+   plus `.compiled/`, computed afresh. Outside them (ADR-001 D5 item 5):
+   - **The quiet list** is excluded with no finding: every top-level name
+     beginning with `.` other than `.compiled` (`.git`, `.gitignore`,
+     `.gitattributes`, `.DS_Store`), and any top-level regular file whose
+     name ends in `.metais`.
    - **Any other top-level entry** is excluded and reported as
-     `source.not_packed`, a warning, so a file put in the wrong place is
-     noticed.
-   - Inside the layout trees everything else is packed, dotfiles included —
-     a repository scaffold needs `assets/.github/` and
-     `templates/.gitignore`.
+     `package.layout.not_packed`, a warning, so a file put in the wrong place
+     is noticed.
+   - Inside the layout trees everything is packed, dotfiles included — a
+     repository scaffold needs `assets/.github/` and `templates/.gitignore` —
+     and so is operating-system litter, which `check` warns about
+     (`package.layout.os_litter`, D2 step 1) so the author removes it.
 4. **Determinism.** The package's bytes depend only on the packed entries'
    paths and contents: never on modification times, permissions, owner,
    directory traversal order, file-system case sensitivity, platform,
@@ -607,26 +644,32 @@ result is the result the author's `pack` saw.
    working directory, from the manifest. An `--out` naming an existing
    directory writes `<name>-<version>.metais` inside it. `pack` refuses an
    output path inside one of the layout trees of the directory being packed.
-   It writes a temporary file in the target directory, syncs it, and renames
-   it over the target, so a reader never sees a partial package and an
-   existing package file at that path is replaced; a target that exists and
-   is not a regular file is a refusal. `pack` is a build step, and replacing
-   its own previous product is the normal edit loop.
-6. **It prints** the path, size, package digest (ADR-001), entry count and
-   the warnings; JSON on request.
+   It writes a temporary file in the target directory, named as ADR-005 D14
+   names its temporary files (`.metais-tmp-<h>`, created exclusively), syncs
+   it, and renames it over the target, so a reader never sees a partial
+   package and an existing package file at that path is replaced; a target
+   that exists and is not a regular file is a refusal. `pack` is a build
+   step, and replacing its own previous product is the normal edit loop, so
+   it has no `--overwrite`. `--out -` writes the package to standard output
+   (ADR-008 D9).
+6. **It prints** the package's file name (never a directory the caller
+   gave, ADR-009 D15), size, package digest (ADR-001), entry count and the
+   warnings; JSON on request.
 
 ### D8 — `unpack` writes the authored entries and nothing derived
 
-1. **`metais unpack <pkg> [<dir>]`**, `<dir>` defaulting to `./<name>` from
-   the package's manifest.
+1. **`metais unpack <pkg> --to <dir>`** (ADR-008 D9); `--to` is required.
 2. It reads the package through ADR-001's reader, so digests are verified
    and a mismatch is refused before anything is written. It does not run
    `check`: a package with check errors is exactly the one an author needs
    to unpack and fix.
-3. **The target must be empty**, with D1 item 3's meaning. When it does not
-   exist, `unpack` writes into a temporary sibling directory and renames it
-   into place, so a failure leaves nothing; an existing empty directory is
-   written in place, and a failure reports the files already written.
+3. **The target must be empty**, with D1 item 3's meaning; there is no
+   `--overwrite`, because files left from an earlier tree would join the
+   unpacked source and be packed with it. When the target does not exist,
+   `unpack` writes into a staging directory beside it, named and created as
+   ADR-005 D14 item 1 does, and renames it into place, so a failure leaves
+   nothing; an existing empty directory is written in place, and a failure
+   reports the files already written.
 4. **It writes every entry except `.compiled/`.** `.compiled/` is derived;
    kept, it would be stale after the first edit, and `pack` regenerates it.
    Files are mode 0644 and directories 0755 before the umask.
@@ -638,24 +681,30 @@ result is the result the author's `pack` saw.
 
 #### The command
 
-1. **`metais sample [<pkg>]`** (name to be confirmed by ADR-008) generates a
-   value for every input and, by default, prints them as one JSON object
-   keyed by input name — the shape `--json` accepts (ADR-003), so the output
-   can be handed to `validate` or `render`. Options:
+1. **Two commands reach the generator, one to look and one to keep**
+   (ADR-008 D8 item 8 and D9):
+   - **`metais render [<pkg>] --sample --out <dir|->`** is the preview: it
+     generates a value for every input, validates it (item 22) and renders
+     it with every option `render` has — `--dry-run`, `--overwrite`,
+     `--only`, standard output and `--now`.
+   - **`metais sample [<pkg>] (--to <dir> | --example <name>)`** keeps the
+     data: it writes it as a data directory (`--to`, which `render --data`
+     then reads) or as an example's inputs (`--example`, item 21).
+
+   Both take the generator's options:
    - `--seed <n>`, an unsigned 64-bit integer, default `0`;
    - `--optional all|none|mixed`, default `all`;
    - `--items <n>`, the target count of every array and collection, default
      `3`;
-   - `--out <dir>` (and render's `--dry-run`, `--overwrite`, standard output
-     modes, ADR-005), which renders the preview;
-   - `--save-as <example>` (item 21);
-   - the ordinary input options — data directory, `--set`, `--json`
-     (ADR-003) — and `--now`.
+   - and the supply flags `--set`, `--set-json` and `--inputs-json`
+     (ADR-008 D7), whose values are fixed points (item 2). `--data` is
+     refused with `--sample`: the generated data takes the data directory's
+     place.
 2. **Supplied values are fixed.** Whatever the caller supplies, merged by
    ADR-003's precedence, is taken as given; the generator fills only what is
    absent, generating missing properties around a supplied object and
    evaluating conditionals against the merged value. An author previews the
-   final stage of a staged report with `--set incident.stage=final`.
+   final stage of a staged report with `--set /incident/stage=final`.
 3. **Normative status.** The generator is the reference tool's, not the
    specification's. The specification says that a sample mode, if a tool
    offers one, produces data that validates, and no more. The reference tool
@@ -710,7 +759,7 @@ result is the result the author's `pack` saw.
     an `attempt:<k>` stream, up to 16 attempts.
 11. **Contradiction** — an empty type set, enum set or numeric or length
     range, conflicting `const`s, `false` required, conditionals that do not
-    settle, attempts exhausted — is `sample.unsatisfiable` (item 22).
+    settle, attempts exhausted — is `schema.sample_unsatisfiable` (item 22).
 
 #### Where a value comes from
 
@@ -770,25 +819,23 @@ result is the result the author's `pack` saw.
     range holds no hundredth; numbers with `multipleOf` are drawn from its
     multiples in range. Values are written as plain decimals, no exponent.
 18. **String.**
-    - **`format`**, any of the 2020-12 formats, generated from fixed,
-      reserved or obviously placeholder sources, never from the host:
-      `date` uniform in 2020-01-01 … 2029-12-31; `date-time` that date with a
-      time and `Z`; `time` `HH:MM:SSZ` (RFC 3339 full-time); `duration` one
-      of `P<d>D`, `PT<h>H`, `P<d>DT<h>H`; `email` and `idn-email`
-      `<word>.<word>@example.com`; `hostname` and `idn-hostname`
-      `<word>.example.com`; `ipv4` in 192.0.2.0/24, 198.51.100.0/24 or
-      203.0.113.0/24; `ipv6` in 2001:db8::/32; `uri` and `iri`
-      `https://example.com/<word>/<word>`; `uri-reference` and
-      `iri-reference` `/<word>/<word>`; `uri-template`
-      `https://example.com/{<word>}`; `uuid` 16 drawn bytes with the version
-      4 and RFC 9562 variant bits set; `json-pointer` `/<word>/<n>`;
-      `relative-json-pointer` `0/<word>`; `regex` `^<word>$`. Words come
-      from the corpus (item 19), lowercased. An unknown format generates a
-      plain string. The value must then meet the length bounds and any
+    - **`format`**, each format ADR-003 D4 asserts (`check` has already
+      refused any other), generated from fixed, reserved or obviously
+      placeholder sources, never from the host: `date` uniform in
+      2020-01-01 … 2029-12-31; `date-time` that date with a time and `Z`;
+      `time` `HH:MM:SSZ` (RFC 3339 full-time); `duration` one of `P<d>D`,
+      `PT<h>H`, `P<d>DT<h>H`; `email` `<word>.<word>@example.com`;
+      `hostname` `<word>.example.com`; `ipv4` in 192.0.2.0/24,
+      198.51.100.0/24 or 203.0.113.0/24; `ipv6` in 2001:db8::/32; `uri`
+      `https://example.com/<word>/<word>`; `uri-reference`
+      `/<word>/<word>`; `uri-template` `https://example.com/{<word>}`;
+      `uuid` 16 drawn bytes with the version 4 and RFC 9562 variant bits
+      set; `json-pointer` `/<word>/<n>`; `relative-json-pointer`
+      `0/<word>`. Words come from the corpus (item 19), lowercased. The value must then meet the length bounds and any
       `pattern`; otherwise the field is unsatisfiable.
-    - **`pattern`**: the pattern is parsed with Go's `regexp/syntax` (the
-      same tree the validator matches with, per ADR-003 and ADR-010) and
-      walked: literals as written; a character class yields a character from
+    - **`pattern`**: the pattern, translated to RE2 by ADR-009 D10 item 6's
+      profile, is parsed with Go's `regexp/syntax` (the same tree the
+      validator matches with, ADR-010 D10 item 2) and walked: literals as written; a character class yields a character from
       its intersection with, in order of preference, `a`–`z`, `A`–`Z`,
       `0`–`9`, space, printable ASCII, and otherwise its lowest character;
       `.` yields from `a`–`z`; alternation picks a branch; a repetition
@@ -842,24 +889,26 @@ result is the result the author's `pack` saw.
       frontmatter of every field except `body`, then the `body`;
     - a collection: a directory named after the input holding one file per
       item, named `001`, `002`, … zero-padded to at least three digits and to
-      the width of the count, so that file order is item order.
+      the width of the count, so that file order is item order, each with
+      its form's extension (`001.json`, `001.md`; ADR-003 D15 item 4).
 
-    **`--save-as <example>`** writes these files as
-    `examples/<example>/inputs/` and writes `examples/<example>/example.yaml`
-    with `title` "Sample data" and a `description` recording the command's
-    seed, mode and item count and saying to replace the placeholders and
-    run `metais test --update <example>`. It refuses on a packed package
-    (with the next step `metais unpack`), and refuses when
-    `examples/<example>/` exists at all, so it never removes or merges.
-    It creates no `expected/`.
+    **`sample --to <dir>`** writes these files as a data directory; a
+    non-empty `<dir>` is refused unless `--overwrite` (ADR-008 D9).
+    **`sample --example <name>`** writes them as `examples/<name>/inputs/`
+    and writes `examples/<name>/example.yaml` with `title` "Sample data" and
+    a `description` recording the command's seed, mode and item count and
+    saying to replace the placeholders and run `metais test --example <name>
+    --update`. It refuses on a packed package (with the next step `metais
+    unpack`), and refuses when `examples/<name>/` exists at all, so it never
+    removes or merges. It creates no `expected/`.
 22. **The generated data is validated like supplied data**: the files of
     item 21 are built in memory, loaded through ADR-003's data directory
     loader, defaults applied, then validated (ADR-006). What is previewed is
-    therefore exactly what `--save-as` saves. Validation findings on
-    generated data are reported with `sample.generated_invalid`, a
+    therefore exactly what `sample` saves. Validation findings on
+    generated data are reported with `schema.sample_invalid`, a
     generator limitation whose hint is the same as below. With any error,
     nothing is rendered and nothing is saved.
-23. **`sample.unsatisfiable`** is an error naming the input, the instance
+23. **`schema.sample_unsatisfiable`** is an error naming the input, the instance
     location, the schema file and JSON Pointer of the subschema, the reason
     (one of: contradictory type, range, length, enum or const;
     `multipleOf` with no multiple in range; pattern with an unsupported
@@ -872,88 +921,104 @@ result is the result the author's `pack` saw.
 
 ## Interfaces with sibling ADRs
 
-**ADR-001 (container and layout).** Relied on: the list of top-level entries
-the layout permits and which are reserved (D7 item 3); a writer whose output
-depends only on entry paths and contents, and a statement of whether it is
-stable across tool builds (D7 item 4); the digest file and its verification
-on read (D8 item 2); the entry-name rule (encoding, normalisation, case
-collisions), which `check` applies to a source directory and which `pack`
-never repairs by renaming; the references index format. Promised: `pack`
-writes only layout entries plus `.compiled/`; `unpack` drops `.compiled/`;
-round trip per D8 item 5.
+**ADR-001 (container and layout).** Relied on: the top-level layout and the
+names a source directory ignores silently or warns about (ADR-001 D5 items 1
+and 5), which D7 item 3 applies; every file under a layout tree being packed
+(ADR-001 D5 item 6); a source `.compiled/` refused and an empty directory
+refused (ADR-001 D5 item 5, D2 item 6); a writer whose output depends only on
+entry paths and contents, byte-identical within one tool build and identical
+by package digest across builds (ADR-001 D4 item 6); the digest file and its
+verification on read (ADR-001 D8); the entry-name rule (encoding,
+normalisation, case collisions), which `check` applies to a source directory
+and which `pack` never repairs by renaming; the references index (ADR-008
+D17). Promised: `pack` writes only layout entries plus `.compiled/`; `unpack`
+drops `.compiled/`; round trip per D8 item 5.
 
 **ADR-002 (manifest and versioning).** Relied on: the field names the
-scaffold uses — specification version, `name`, `version`, `title`,
-`description`, the supplier guide; the package name rule (for `init --name`
-and the package file name); a YAML parser that reports line numbers for
-manifest expressions and for `example.yaml`; the canonical JSON.
+scaffold uses — `metais`, `name`, `version`, `title`, `description`,
+`guide`; the package name rule (for `init --name` and the package file
+name); the one manifest name `metais.yaml` and the profile choice by first
+byte, which `example.yaml` also follows; line numbers for manifest
+expressions and for `example.yaml`; the canonical JSON; the guide-link rule
+that D2 step 4 checks.
 
-**ADR-003 (data specification).** Relied on: input declarations with schema,
-meaning document, an ordered list of forms, CSV delimiter, collection, and
-whether an input may be optional (the modes then apply to inputs too); the
-asserted keywords and formats; `pattern` matched with Go's `regexp`
-(RE2) semantics over a pattern set that `regexp/syntax` parses; cross-file
-`$ref` confined to the package; the data directory loader and its file
-extensions; CSV reading CRLF and reading an empty cell as absent; the
-effective schema of a Markdown collection item, including `body`; default
-application; `--json`'s shape (an object keyed by input name); input names'
-rule (reused for example names).
+**ADR-003 (data specification).** Relied on: input declarations with
+`title`, `schema`, `meaning`, an ordered list of `forms`, `csv.delimiter`,
+`collection`, and `required` (the modes then apply to inputs too); the
+asserted keywords and formats; cross-file `$ref` confined to the package;
+the data directory loader and its file extensions; CSV reading CRLF and
+reading an empty cell as absent; the effective schema of a Markdown
+collection item, including `body`; default application; `--inputs-json`'s
+shape (an object keyed by input name); input names' rule (reused for example
+names).
 
 **ADR-004 (template environment).** Relied on: the expression grammar and the
 complete tag table, stating for each tag which arguments are expressions and
-which names it binds (D3 item 7, 8); the filter catalog with each filter's
+which names it binds (D3 items 7, 8); the filter catalog with each filter's
 analysis signature and its property-name arguments (D3 item 10); the fields
-of `package`, `forloop` and `tablerowloop`; that `inputs`, `package` and (in
-a `for_each` output) `item` are globals visible inside a partial; how a
-`render` name resolves to a file; `size`/`first`/`last` behaving as in
-Liquid's lookup; raw input bytes reachable only through `embed`; whether
-binding a reserved name is a parse error. Promised: every template is
-analysed with exactly this dialect and nothing more.
+of `package`, `fan_out`, `output`, `sources`, `forloop` and `tablerowloop`,
+and D7 item 10's table of where each global is bound; the globals visible
+inside a partial; how a `render` name resolves to a file; `size`/`first`/
+`last` behaving as in Liquid's lookup; raw input bytes reachable only
+through `embed`; reserved names refused at parse (`template.reserved_name`);
+D6 item 2's declared set, of which D3 item 4's is a superset that adds only
+names an open map admits. Promised: every template is analysed with exactly
+this dialect and nothing more.
 
-**ADR-005 (outputs and rendering).** Relied on: outputs with template, path
-template, `when`, `for_each`; which templates the mirror shorthand renders
-and how it excludes partials; which outputs are containers, and their entry
-lists; an in-memory render that returns the output tree (path → bytes, with
+**ADR-005 (outputs and rendering).** Relied on: outputs with `id`,
+`template`, path template, `when`, `for_each`; which templates the mirror
+shorthand renders and how it excludes partials; which outputs are containers,
+their entry lists and their `stored` entries; ADR-005 D13's phases 1 to 4 as
+an in-memory render that returns the output tree (path → bytes, with
 container entries readable) and applies transforms and output validation;
-the render options `sample --out` reuses. Promised: `test` and `sample` call
-the same render as `render`.
+ADR-005 D14's staging names, which `unpack` and `pack` reuse. Promised:
+`test` and `render --sample` call the same render as `render`.
 
 **ADR-006 (findings).** Relied on: a finding with code, severity
-(error, warning, info), message, hint, a location (file, line, column, JSON
-Pointer), related locations, and a structured detail object (for diffs,
-visible text, declared names); ordering, de-duplication and exit codes.
-Promised: the codes named in this ADR, in the families `source.`,
-`manifest.`, `schema.`, `template.`, `xref.`, `ooxml.`, `example.`,
-`compiled.`, `test.`, `sample.`, `check.`; ADR-006 may respell them under
-its scheme.
+(`error`, `warning`, `info`), message, hint, a location (file, line, column,
+JSON Pointer), related locations, and params for diffs, visible text and
+declared names; ordering, de-duplication and exit codes, with `check`,
+`test`, `pack`, `unpack`, `sample` and `render --sample` in the authoring
+role (ADR-006 D12 item 2). Promised: the codes named in this ADR, in
+ADR-006's families — `package.layout.*` and `limit.package` for the source
+tree, `manifest.*`, `schema.*` (including `schema.sample_unsatisfiable` and
+`schema.sample_invalid`), `template.*` (including `template.xref.*` and
+`template.ooxml.*`), `example.*`, and `report.step_skipped`.
 
-**ADR-008 (command line).** Relied on: the names and flags `init [<dir>]
---name`, `check [<pkg>]`, `test [<pkg>] [<example>…] --update`, `pack [<dir>]
---out`, `unpack <pkg> [<dir>]`, `sample [<pkg>] --seed --optional --items
---out --save-as`, the JSON envelope for each, and refusals that name the next
+**ADR-008 (command line).** Relied on: `init [<dir>] [--name] [--dry-run]`,
+`check [<pkg>]`, `test [<pkg>] [--example <name>]… [--update] [--dry-run]`,
+`pack [<dir>] [--out <file>|-] [--dry-run]`, `unpack <pkg> --to <dir>
+[--dry-run]`, `render <pkg> --sample [--optional] [--seed] [--items] --out
+<dir|->` and `sample [<pkg>] (--to <dir> | --example <name>) [--optional]
+[--seed] [--items] [--overwrite] [--dry-run]`, with the supply flags of
+ADR-008 D7; the JSON envelope for each; and refusals that name the next
 step. Promised: the behaviour behind each. `inspect` may list examples with
 the `title` and `description` from `example.yaml`.
 
 **ADR-009 (security).** Relied on: the default read limits `check` holds
-`pack` to; confinement of every entry; bounds on regular expressions. The
-analysis budget (D3 item 13), generator attempt counts and recursion depth
-(D9) are bounds ADR-009 may lower. `test` and `sample` render in memory under
-the same limits as `render`; `expected/` containers are read with the
+`pack` to; confinement of every entry; the regular-expression profile and
+its translation to RE2 (ADR-009 D10 item 6), which the generator walks; the
+rule that no host fact — not the working directory's name — reaches `init`.
+The analysis budget (D3 item 13) and the generator's attempt counts and
+recursion depth (D9) are fixed constants of the reference tool, not ADR-009
+limits. `test`, `sample` and `render --sample` render or validate in memory
+under the same limits as `render`; `expected/` containers are read with the
 package reader's bounds.
 
-**ADR-010 (implementation).** Relied on: the rendering engine, against which
-the analysis front end is held (D3 item 1). Promised: no new module
-dependency — the front end, the lenient OOXML scanner (hand-written, since
+**ADR-010 (implementation).** Relied on: the rendering engine and its
+walkable syntax tree (ADR-010 D4), on which D3 runs; `regexprofile`'s
+translated `regexp/syntax` tree (ADR-010 D10 item 2). Promised: no new
+module dependency — the lenient OOXML scanner (hand-written, since
 `encoding/xml` cannot read a template with Liquid inside its tags),
 SplitMix64 and the generator are METAIS code over the standard library
-(`regexp/syntax`, `crypto/sha256`). Suggested packages:
-`internal/liquid/analysis`, `internal/authoring/check`,
-`internal/authoring/ooxml`, `internal/authoring/examples`,
-`internal/authoring/pack`, `internal/authoring/sample`.
+(`regexp/syntax`, `crypto/sha256`). Packages, in ADR-010 D2's layout:
+`internal/author` (init, check, test, pack, unpack, with the OOXML scanner
+under `internal/author/ooxml`), `internal/xref` and `internal/sample`.
 
-**ADR-011 (conformance).** Relied on: vector kinds for "source directory →
-findings" (check), "package and examples → test result", and "package →
-unpacked tree". Promised: the vector groups below.
+**ADR-011 (conformance).** Relied on: vector operations `check`, `test`,
+`pack`, `unpack` and `sample` (ADR-011 D8), and `repeatable` results for
+`sample` (ADR-011 D10 item 7), since the generator is not normative (D9 item
+3). Promised: the vector groups below.
 
 ## Conformance
 
@@ -991,20 +1056,27 @@ The sample generator and `init` are not specified and have no vectors. The
 reference tool's suite pins them instead: every supported platform generates
 identical data for a corpus of schemas and seeds; every 2020-12 keyword and
 format the generator handles has a test that its value validates; each
-`sample.unsatisfiable` reason has a negative test; each example package of
+`schema.sample_unsatisfiable` reason has a negative test; each example package of
 §4.1 to §4.5 previews under `all` and `none` to output that validates (SC4);
 and D1 item 7's scaffold test.
 
 ## Alternatives rejected
 
-### Walking the library's render tree
+### Walking `osteele/liquid`'s render tree
 
 `Template.GetRoot()` gives the tag structure, but every expression inside it
 is an opaque closure, so the analysis would still need its own expression
 parser for every `Args` string. It would also tie a normative check to one
 library's internal node types, some of which panic when asked for their
-location, and it has no columns. Owning the whole front end costs little more
-and makes the check reproducible from the specification.
+location, and it has no columns. METAIS's own engine (ADR-010 D4) gives the
+whole tree, so no second parser is needed.
+
+### A separate analysis front end beside the engine
+
+A parser of its own would keep the analysis independent of the engine's
+code, but two parsers of one grammar disagree at the edges, and an agreement
+test can only sample where. The engine's tree is the template as the render
+reads it.
 
 ### Discovering references by tracing a render
 
@@ -1082,8 +1154,9 @@ directory.
 
 ### Negative
 
-- The analysis front end is a second Liquid parser that must track the
-  engine; the agreement test is the only thing holding them together.
+- The analysis depends on the engine's syntax tree exposing everything D3
+  needs (expression trees, bindings, spans), which ties ADR-010 D4's AST to
+  this ADR's rules.
 - Authors with schemas that leave objects open by omission get errors until
   they write `additionalProperties: true`; the finding says so.
 - Union semantics accept a field that exists on only one branch even where
@@ -1114,10 +1187,11 @@ directory.
 
 ## Proposed rulings
 
-1. **The analysis uses METAIS's own Liquid front end**, held to the engine by
-   an agreement test. Lean: yes — the library exposes no expression tree, and
-   a normative check must not depend on a library's internals. Alternative:
-   re-parse `Args` from `GetRoot()`.
+1. **The analysis walks the syntax tree of METAIS's own engine (ADR-010
+   D4), with no second parser.** Lean: yes — one parse means `check` and the
+   render cannot disagree, and the tree is specified by the dialect.
+   Alternative: a separate analysis front end held to the engine by an
+   agreement test; or re-parse `Args` from `osteele/liquid`'s `GetRoot()`.
 2. **"Declared" excludes what an absent `additionalProperties` allows**, and an
    annotation-only schema is open. Lean: yes — otherwise typos are errors only
    in fully closed schemas. Alternative: declared means allowed.
@@ -1140,20 +1214,26 @@ directory.
    title serves the supplier. Alternative: a manifest `examples` section.
 9. **Examples are positive only in v1.** Lean: yes. Alternative: examples
    that expect findings.
-10. **`test --update` makes `expected/` exactly the render, removing stale
-    files.** Lean: yes. Alternative: report stale files and remove nothing.
+10. **`test --update` makes `examples/<name>/expected/` exactly the render,
+    removing stale files there and nowhere else.** Lean: yes. Why: the
+    directory is the author's own and wholly the command's; R12 item 3's
+    "never deletes" governs rendering into a caller's directory.
+    Alternative: report stale files and remove nothing.
 11. **Containers in `test` are compared by entries, not bytes.** Lean: yes, as
     conformance does.
 12. **`pack` runs tests only when check is clean, has no skip flag, defaults
     to `./<name>-<version>.metais`, and replaces an existing file there
-    atomically.** Lean: yes.
+    atomically, with no `--overwrite`.** Lean: yes. Alternative: refuse an
+    existing file unless `--overwrite`, as a render's directory is.
 13. **The quiet list, warning on other top-level entries, and packing
     dotfiles inside layout trees.** Lean: yes.
-14. **`unpack` drops `.compiled/`, defaults to `./<name>`, refuses a
-    non-empty target, does not run check.** Lean: yes.
-15. **`init` defaults `--name` to the directory name, treats quiet-list
-    entries as empty, and writes an example and `.gitattributes`.** Lean:
-    yes. Alternative: `--name` required; no `.gitattributes`.
+14. **`unpack` drops `.compiled/`, takes a required `--to`, refuses a
+    non-empty target with no `--overwrite`, does not run check.** Lean: yes.
+    Why: stale files in the target would be packed with the source.
+15. **`init` defaults `--name` to the last element of `<dir>` as written,
+    never to the working directory's name, treats quiet-list entries as
+    empty, and writes an example and `.gitattributes`.** Lean: yes.
+    Alternative: `--name` always required; no `.gitattributes`.
 16. **The generator is non-normative and deterministic per tool version on
     every platform, built on SplitMix64 with a SHA-256-derived stream per
     location and decision.** Lean: yes. Alternative: a specified generator.
@@ -1164,9 +1244,16 @@ directory.
     Alternative: modes affect only optional properties.
 19. **Supplied inputs are fixed points for `sample`.** Lean: yes.
 20. **Saved data uses the first declared form and declaration order;
-    `--save-as` refuses an existing example directory.** Lean: yes.
-21. **The command is `metais sample`, printing JSON by default.** Lean: yes;
-    ADR-008 may rename. Alternative: `render --sample`.
+    `sample --example` refuses an existing example directory.** Lean: yes.
+21. **The preview is `render --sample`; keeping the data is `sample --to
+    <dir>` or `sample --example <name>`** (ADR-008's names). Lean: yes.
+    Why: previewing is rendering and shares its flags; keeping data has a
+    different destination. Alternative: one `sample` command that prints
+    JSON and also renders.
+22. **A source `.compiled/` is refused, and operating-system litter in a
+    layout tree is packed and warned about** (D2 step 1, D7 item 3, following
+    ADR-001 D5). Lean: yes. Alternative: silently exclude litter, which
+    makes the packed package differ from the source tree it was read from.
 
 ## References
 

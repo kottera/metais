@@ -15,8 +15,8 @@ through); ADR-009 (every resource limit and the regular-expression profile)
 PRD-001 asks for a data specification written for whoever supplies the data:
 each input has a JSON Schema (draft 2020-12) and a prose meaning (R3); inputs
 arrive as JSON, YAML, CSV, plain text or Markdown, singly or as a directory of
-files (R4); they are supplied from a data directory, `--set` and `--json` with
-an exact precedence, defaults applied and absence kept distinct from emptiness
+files (R4); they are supplied from a data directory, `--set` and an inline JSON
+object (`--inputs-json`, ADR-008 D7) with an exact precedence, defaults applied and absence kept distinct from emptiness
 (R5). A packed package carries one self-contained schema combining every input
 (R1 item 4). The use cases put concrete pressure on the design:
 
@@ -98,7 +98,8 @@ listed under References:
 
 1. **The manifest field `inputs` is a list**, in the order the author wants a
    supplier to meet them; `inspect` and the combined schema keep that order.
-   It may be empty or absent (a package with no inputs). A list, not an
+   The member is required (ADR-002 D4) and may be empty (`inputs: []`, a
+   package with no inputs). A list, not an
    object keyed by name, because the order is part of the guidance and JSON
    object order is not significant.
 2. **Each entry is an object with these fields, and no others** (an unknown
@@ -135,9 +136,9 @@ listed under References:
    whose type set includes `object`; `text` needs `string`; `markdown` needs
    `object`; `json` and `yaml` take anything. A disagreement is a `check`
    finding (ADR-007 runs it).
-7. **The canonical manifest** that `pack` writes (ADR-002) carries every field
-   of every input explicitly, defaults filled in, so a consumer of
-   `.compiled/manifest.json` needs no table of defaults.
+7. **Defaults of these fields are the specification's, not the canonical
+   manifest's.** `.compiled/manifest.json` carries exactly what the author
+   wrote (ADR-002 D9 item 2); a consumer applies this table's defaults.
 
 ### D2 — Meaning is prose, attached to the slot
 
@@ -193,9 +194,17 @@ listed under References:
    profile ADR-009 fixes for every regular expression a package supplies,
    unanchored as core §6.4 requires. A pattern outside the profile is a
    finding.
-7. **Validation collects every error.** The instance is evaluated to
-   completion — no short-circuit in `allOf`, `anyOf`, `oneOf` or
-   `properties` — so every failing location is reported (R6 item 1);
+7. **Validation collects every error that can be a finding.** Every
+   assertion whose failure ADR-006 D6 reports is evaluated to completion:
+   `allOf`, `properties`, `patternProperties`, `additionalProperties`,
+   `items`, `prefixItems`, `$ref` and the `then`/`else` a condition selects
+   collect every failure, and an `anyOf` or `oneOf` with no matching branch
+   collects every branch's failures (ADR-006 D6 item 6). Three contexts are
+   evaluated only for their yes or no, because none of their inner failures
+   is ever a finding: the subschema of `not` (its finding is `not` itself),
+   the `if` subschema, and the remaining branches of an `anyOf` or `oneOf`
+   once a branch has matched (a second match is `one_of.ambiguous`, with no
+   inner failures). So every failing location is reported (R6 item 1);
    ADR-006 de-duplicates and orders them.
 
 ### D4 — Every `format` a package uses is asserted; a format METAIS does not assert cannot be used
@@ -247,7 +256,9 @@ listed under References:
    reference.
 5. **A reference whose path would climb above the package root**, before
    RFC 3986's dot-segment removal clamps it, is a finding; so is one
-   resolving outside `inputs/`. Path components are percent-decoded as UTF-8
+   resolving outside `inputs/`. (An output validation schema, ADR-005 D11,
+   follows these rules with "`inputs/`" read as the top-level directory
+   that holds the `validate` file.) Path components are percent-decoded as UTF-8
    to find the entry.
 6. **Two resources with one canonical URI** (two `$id`s alike, or an `$id`
    equal to another file's retrieval URI) are a finding.
@@ -282,13 +293,14 @@ listed under References:
 
 ### D7 — The combined schema is one object schema with a property per input
 
-1. **`pack` writes `.compiled/inputs.schema.json`**, a Compound Schema
-   Document (core §9.3.1), in the canonical JSON form (ADR-002):
+1. **`pack` writes `.compiled/schema.json`** (the name ADR-001 D7 reserves),
+   a Compound Schema Document (core §9.3.1), in the canonical JSON form
+   (ADR-002 D9):
 
    ```json
    {
      "$schema": "https://json-schema.org/draft/2020-12/schema",
-     "$id": "metais:///.compiled/inputs.schema.json",
+     "$id": "metais:///.compiled/schema.json",
      "type": "object",
      "properties": {
        "vendor": {
@@ -324,7 +336,7 @@ listed under References:
 5. **Validation evaluates exactly this document** against the inputs object
    (D22). A tool reading a packed package compiles the combined schema from
    `inputs/` and the manifest and refuses the package when it differs from
-   `.compiled/inputs.schema.json`, so a supplier reading the source schemas
+   `.compiled/schema.json`, so a supplier reading the source schemas
    and a validator using the compiled one can never disagree.
 
 ### D8 — Common rules for every input file, and the data model
@@ -372,16 +384,19 @@ listed under References:
 
 ### D10 — YAML
 
-1. **Input YAML is the manifest's YAML profile (ADR-002), unchanged.** This
-   ADR assumes that profile is: YAML 1.2.2 with the core schema; a single
-   document; no anchors, aliases or merge keys; no explicit tags other than the
-   core schema's; mapping keys that are strings; duplicate keys a finding.
-   Should ADR-002 differ, inputs follow ADR-002.
-2. **On top of that profile**, numbers follow D8 item 5 (so `.inf`, `.nan`
-   and an integer beyond 2^53−1, including `0o` and `0x` forms, are
-   findings).
+1. **Input YAML is the manifest's YAML profile (ADR-002 D2), unchanged**,
+   applied after D8 item 1 has removed a leading byte order mark: YAML
+   1.2.2 syntax; a single document; no directives; no anchors, aliases,
+   merge keys or explicit tags of any kind; mapping keys taken as their
+   scalar text; duplicate keys a finding; and plain scalars resolved only by
+   ADR-002 D2 item 9's table — `null`, `true`, `false`, the RFC 8259 number
+   grammar, and everything else a string, with `~`, `Null`, `True`, a
+   leading zero, `0o`, `0x`, `.inf` and `.nan` refused.
+2. **On top of that profile**, numbers follow D8 item 5 (so an integer
+   written without fraction or exponent beyond 2^53−1 is a finding).
 3. **A plain `2026-10-18` is a string** (the core schema has no timestamp);
-   `key:` with nothing after it is null, not absent (D20).
+   `key:` with nothing after it is null, not absent (D20). A plain `yes` or
+   `on` is a string.
 4. An empty file, or one holding only comments, is null.
 
 ### D11 — CSV
@@ -546,25 +561,26 @@ listed under References:
 
 ### D17 — The command line: whole inputs as JSON, single values by JSON Pointer
 
-1. **`--json` supplies one JSON object whose members are input names** and
-   whose values are those inputs' whole values (a collection's is an array).
-   It follows D9's rules. A non-object, or a member naming no declared input,
-   is a finding. It may be given more than once. ADR-008 decides whether its
-   argument is inline text, a file or standard input.
+1. **`--inputs-json` supplies one JSON object whose members are input names**
+   and whose values are those inputs' whole values (a collection's is an
+   array). It follows D9's rules. A non-object, or a member naming no
+   declared input, is a finding. It may be given more than once. Its
+   argument is inline JSON text, or `-` for standard input, at most once
+   (ADR-008 D7).
 2. **A path set addresses one value by an inputs pointer**: a JSON Pointer
    (RFC 6901) whose first token is an input name — `/vendor/name`,
    `/criteria/3/remarks`, `/articles/0/title`. The argument is split at its
    first `=`: the pointer before, the value after. A member name containing
-   `=` is unreachable this way and is supplied with `--json` or a file. A
+   `=` is unreachable this way and is supplied with `--inputs-json` or a file. A
    pointer not beginning with `/`, or whose first token names no declared
    input, is a finding.
 3. **There are two kinds of path set**: a **text set** (`--set
    /vendor/name=Acme Ltd`), whose value is coerced by D14 against the static
    subschema at the pointer, and a **JSON set**, whose value is a JSON text
    (D9) placed as it is — the only way to set null, an array or an object at
-   a path. This ADR recommends the flag `--set-json` for the second, as Helm
-   names the same thing; ADR-008 names both. A text set with an empty value
-   sets the empty string, then coerced.
+   a path — given with `--set-json /criteria/3=null`, as Helm names the same
+   thing (ADR-008 D7). A text set with an empty value sets the empty string,
+   then coerced.
 4. **Applying a path set** to the inputs object assembled so far: each token
    but the last must reach an existing object or array, except that a
    missing object member is created as an empty object; an array index token
@@ -582,22 +598,22 @@ listed under References:
    step applied to the result of the one before:
    1. the data directory: each file or directory gives its input's whole
       value;
-   2. each `--json` object in command-line order: each member **replaces**
+   2. each `--inputs-json` object in command-line order: each member **replaces**
       its input's whole value — never merged;
    3. each path set, text or JSON, in command-line order: it replaces only
       the value at its pointer.
 2. **The order is fixed by kind, not by position between kinds**: every
-   `--json` applies before every path set, wherever they appear on the line;
+   `--inputs-json` applies before every path set, wherever they appear on the line;
    among one kind, the later wins.
 3. **Partial overrides of nested values are path sets.** With `vendor.json`
    holding `{"name": "Acme", "address": {"city": "Lyon", "zip": "69001"}}`,
    `--set /vendor/address/city=Paris` changes the city and keeps the rest;
-   `--json '{"vendor": {"address": {"city": "Paris"}}}'` replaces the whole
+   `--inputs-json '{"vendor": {"address": {"city": "Paris"}}}'` replaces the whole
    vendor and drops `name` and `zip`. Whole replacement is chosen over merging
    because a merge has to give some value the meaning "delete", and in the
    data model null is a value.
 4. **A path set into an input whose file did not parse** is a finding and is
-   not applied. A file that did not parse stays a finding even when `--json`
+   not applied. A file that did not parse stays a finding even when `--inputs-json`
    replaces its input: every supplied file must parse.
 
 ### D19 — Defaults
@@ -638,9 +654,12 @@ listed under References:
 ### D20 — Absence and null
 
 1. **Absent is not supplied, and no default applied**: an input not given,
-   an object member not given, an unquoted empty CSV field. A template sees
-   `nil`; validation sees the member missing (so `required` reports it).
-2. **Null is a supplied value**: JSON `null`, YAML `~` or an empty YAML
+   an object member not given, an unquoted empty CSV field. Validation sees
+   the member missing (so `required` reports it). A template sees an absent
+   input as `nil`, and an absent member as `nil` when the schema declares it
+   (ADR-004 D6 items 2 and 3); reading a member neither declared nor
+   supplied is a template error (ADR-004 D6 item 4).
+2. **Null is a supplied value**: JSON `null`, YAML `null` or an empty YAML
    value, a JSON set of `null`. A template also sees `nil`, but validation
    checks it against its schema, and a default never replaces it. A
    frontmatter line `subtitle:` is null, and fails a `type: string` schema.
@@ -658,7 +677,7 @@ template reaches it.
    `inputs.<name>`.
 2. **`raw`** — the original bytes, exactly as read, BOM and line breaks
    included, or none. An input has raw bytes when its whole value came from
-   one data-directory file and no `--json` member or path set touched it.
+   one data-directory file and no `--inputs-json` member or path set touched it.
    A collection has no raw form of its own; **each item has one** under the
    same rule, applied per item (`--set /articles/0/title=…` removes item 0's
    raw form and no other's). A render whose templates need a raw form that
@@ -669,8 +688,8 @@ template reaches it.
    `stem` (D15 item 5) and its form, or none for an item supplied on the
    command line. Values have no identity in Liquid, so these are reached by
    input name and item index, never through the value.
-4. **`digest`** — SHA-256 over the canonical JSON serialization (ADR-002;
-   this ADR assumes RFC 8785) of `value`, for the input and for each item;
+4. **`digest`** — SHA-256 over the canonical JSON serialization (RFC 8785,
+   ADR-002 D9) of `value`, for the input and for each item;
    none when absent. Computed after defaults, because it identifies the data
    a render used: an omitted field and the same field supplied with its
    default value render alike and digest alike. This is the input digest the
@@ -681,13 +700,13 @@ template reaches it.
 1. **Package**: the manifest, every schema and the combined schema are read
    and compiled; a package finding refuses the package (R14 item 3).
 2. **Supply**: the data directory is scanned and every file parsed; every
-   `--json` and path-set argument parsed. Every supply finding is collected.
+   `--inputs-json` and path-set argument parsed. Every supply finding is collected.
 3. **Assembly**: D18, then D19. An input whose file did not parse is
    **unparsed**: it is left out of the instance and no `required` finding is
    reported for it, since its parse findings already are.
 4. **Validation**: the instance is evaluated against the combined schema.
    When any input is unparsed, the `input_constraints` subschema is not
-   evaluated, and an information finding says so: cross-input rules over an
+   evaluated, and an `info` finding says so: cross-input rules over an
    incomplete instance would report errors that are not there.
 5. **Every finding from steps 2 to 4 is reported together** (R6 item 1);
    ADR-006 orders and de-duplicates them. Render proceeds only when none is
@@ -697,93 +716,113 @@ template reaches it.
 
 **ADR-001 (container and layout).** Relied on: `inputs/` holds the schema
 files and meaning documents; `examples/<example>/inputs/` is a data directory
-in D16's format; `.compiled/inputs.schema.json` is a reserved name inside
-`.compiled/` and covered by the digest file; entry names are UTF-8 (this ADR
-NFC-normalizes collection item names regardless). Promised: D3 item 1's rule
-for what `inputs/` may hold.
+in D16's format; `.compiled/schema.json` is the name ADR-001 D7 reserves for
+the combined schema, covered by the digest file and re-derived at open
+(ADR-001 D8 step 7); entry names are NFC UTF-8 (ADR-001 D2), and this ADR
+NFC-normalizes collection item names, which come from the host, regardless.
+Promised: D3 item 1's rule for what `inputs/` may hold.
 
-**ADR-002 (manifest and versioning).** Relied on: the YAML profile as D10
-item 1 assumes it; a canonical JSON form, assumed RFC 8785, which D7 and D21
-item 4 use; the manifest's JSON Schema includes `inputs` (D1) and
-`input_constraints` (D6) as this ADR defines them; an unknown field is
-refused relative to the package's specification version. Promised: the field
-definitions, with types and defaults, for that schema; D1 item 7's request
-that the canonical manifest write every defaulted input field.
+**ADR-002 (manifest and versioning).** Relied on: the YAML profile of
+ADR-002 D2, which D10 adopts unchanged; RFC 8785 as the canonical JSON form,
+which D7 and D21 item 4 use; the manifest's JSON Schema including `inputs`
+(D1) and the root member `input_constraints` (D6), both in ADR-002 D4's
+table; an unknown field refused relative to the package's specification
+version; the canonical manifest materializing no default (ADR-002 D9 item
+2), so D1's defaults are stated by the specification and applied by every
+reader. Promised: the field definitions, with types and defaults, for that
+schema.
 
-**ADR-004 (template environment).** Relied on: `inputs.<name>` is bound to
-D21 item 1's `value`, absent and null both `nil`; D8 item 5's number rule
-(integer when the fractional part is zero and the magnitude is within
-2^53−1, float otherwise) is how numbers enter Liquid; ADR-004 fixes the order
-an object's members iterate in (this ADR suggests code-point order of names,
-which matches D15's item order) and how floats print; the `embed` tag reads
-D21 item 2's `raw` by input name and, for collections, by item index; some
-syntax exposes D21 item 3's `name` and `stem` by input name and item index;
-the provenance tag records D21 item 4's digest. Promised: the input record of
-D21; the finding for a missing raw form; that every value in the data model
-is one of D8 item 3's kinds.
+**ADR-004 (template environment).** Relied on: `inputs.<name>` bound to D21
+item 1's `value`, absent and null both `nil`, with declared-absent members
+materialized as `nil` and undeclared absent members an error by ADR-004 D6
+items 2 to 4 (D20 item 1 cites them); D8 item 5's number rule (integer when
+the fractional part is zero and the magnitude is within 2^53−1, float
+otherwise), restated by ADR-004 D4 item 2; object members iterated in RFC
+8785's canonical order, by UTF-16 code units (ADR-004 D4 item 5) — collection
+items and every other ordering in this ADR stay in UTF-8 byte order, since
+they order names, not object members; `embed` reading D21 item 2's `raw` by
+input name and, for collections, by item index (ADR-004 D12); D21 item 3's
+`source` exposed as the `sources` global (ADR-004 D7 item 9); the provenance
+tag recording D21 item 4's digest. Promised: the input record of D21; the
+finding for a missing raw form; that every value in the data model is one of
+D8 item 3's kinds.
 
 **ADR-005 (outputs and rendering).** Relied on: `for_each` over a collection
-input exposes the item index, so the item's record is reachable; ADR-005's
-"differ only in letter case" comparison, which D15 item 5 reuses; output
-validation schemas, if they use the same dialect, follow D3 to D5. Promised:
-stems are unique and case-distinct within a collection.
+input exposing the item index (`fan_out.index0`, ADR-004 D7 item 5), so the
+item's record is reachable; ADR-005 D12 item 6's canonical caseless match,
+which D15 item 5 reuses for stems; output validation schemas (ADR-005 D11)
+following D3 to D5 in full, with D5 item 5's directory read as the
+`validate` file's top-level directory. Promised: stems are unique and
+case-distinct within a collection.
 
 **ADR-006 (findings).** Relied on: a finding carries input name, file, line
-and column where there is one, and a JSON Pointer within the input; this ADR
-asks that it also print the inputs pointer (`/vendor/address/city`) so a
-supplier can paste it into `--set`. Severities error, warning and
-information exist. Promised: D8 item 6's source positions; the slot title and
-description for root-level findings (D2 item 1); the rule identifiers below
-as the supply and schema rules ADR-006 assigns stable codes to:
-`input-file-unknown`, `input-file-duplicate`, `input-extension-not-accepted`,
-`input-link-refused`, `collection-subdirectory`, `collection-stem-duplicate`,
-`collection-as-file`, `encoding-invalid`, `json-syntax`, `json-duplicate-name`,
-`number-out-of-range`, `yaml-profile`, `csv-header-missing`,
-`csv-header-duplicate`, `csv-header-empty`, `csv-field-count`,
-`csv-bare-quote`, `csv-unterminated-quote`, `csv-after-quote`,
-`frontmatter-unclosed`, `frontmatter-not-mapping`, `frontmatter-body-field`,
-`set-pointer-invalid`, `set-traversal`, `set-into-unparsed`,
-`json-arg-not-object`, `raw-unavailable`, `constraints-not-evaluated`,
-`schema-keyword-unknown`, `schema-format-unsupported`, `schema-dialect`,
-`schema-ref-unresolved`, `schema-ref-escapes`, `schema-ref-by-path`,
-`schema-id-duplicate`, `compiled-schema-mismatch`, plus every JSON Schema
-keyword failure under the keyword's name.
+and column where there is one, and a JSON Pointer within the input; the
+human rendering's `at` line prints the inputs pointer
+(`/vendor/address/city`), which is a valid `--set` path (ADR-006 D11 item
+1). Severities `error`, `warning` and `info` exist. Promised: D8 item 6's
+source positions; the slot title and description for root-level findings
+(D2 item 1); these codes, registered in ADR-006's families:
+`input.file_unknown`, `input.file_duplicate`, `input.extension_not_accepted`,
+`input.link`, `input.not_regular_file`, `input.encoding_invalid`,
+`input.number_out_of_range`, `input.missing` (a required input not
+supplied), `input.set_pointer_invalid`, `input.set_traversal`,
+`input.set_into_unparsed`, `input.json_arg_not_object`,
+`input.raw_unavailable`, `input.constraints_not_evaluated` (info),
+`collection.subdirectory`, `collection.stem_duplicate`,
+`collection.as_file`, `json.syntax`, `json.trailing_content`,
+`json.duplicate_name`, `json.lone_surrogate`, `yaml.syntax` and one
+`yaml.<rule>` per ADR-002 D2 rule (`yaml.alias`, `yaml.tag`,
+`yaml.multi_document`, `yaml.duplicate_key`, `yaml.scalar_refused`, …),
+`csv.header_missing`, `csv.header_duplicate`, `csv.header_empty`,
+`csv.field_count`, `csv.bare_quote`, `csv.unterminated_quote`,
+`csv.after_quote`, `markdown.frontmatter_unclosed`,
+`markdown.frontmatter_not_mapping`, `markdown.frontmatter_body_field`,
+`schema.keyword_unknown`, `schema.format_unsupported`, `schema.dialect`,
+`schema.ref_unresolved`, `schema.ref_escapes`, `schema.ref_by_path`,
+`schema.id_duplicate`, `package.compiled.mismatch` (D7 item 5), plus every
+JSON Schema keyword failure under ADR-006 D6's `input.<keyword>` codes. Each
+parse code's hint says the input's schema was not checked.
 
 **ADR-007 (authoring).** Promised, for `check` to run: D1 items 2 to 6, D3
 items 1, 2, 5 and 6, D4 item 2, D5, D6 item 3, D11 item 7, D13 item 4, D15
 item 1, D19 items 4 and 5. Relied on: the sample-data generator writes its
-data in D16's format so it can be saved as an example; what it writes
-round-trips through D9 to D13 — in particular a CSV it writes quotes an empty
-string as `""`, holds no null, array or object, and a text file it writes ends
-in one LF.
+data in D16's format so it can be saved as an example, every collection item
+named with the extension of its form (`001.json`); what it writes
+round-trips through D9 to D13 — in particular a CSV it writes quotes an
+empty string as `""`, holds no null, array or object, and a text file it
+writes ends in one LF.
 
-**ADR-008 (command line).** Relied on: flags for the data directory, `--json`
-(repeatable), text path sets as `--set` and JSON path sets (recommended
-`--set-json`), both repeatable and order-preserving; the `schema` command
-prints one input's schema or the combined schema of D7. Promised: D17 and
-D18's semantics, independent of the flags' names.
+**ADR-008 (command line).** Relied on: ADR-008 D7's supply flags — `--data
+<dir>`, `--set <pointer>=<text>` (the text set of D17 item 3, repeatable),
+`--set-json <pointer>=<json>` (the JSON set, repeatable) and `--inputs-json
+<json>|-` (D17 item 1, repeatable, `-` at most once), each kind applied in
+command-line order; the `schema` command printing one input's schema or the
+combined schema of D7. Promised: D17 and D18's semantics.
 
-**ADR-009 (security).** Relied on: limits, with defaults, on each input
-file's size, a data directory's total size and entry count, a collection's
-item count, CSV records and columns, nesting depth, string length, YAML
-parsing work, the number of schema files and the depth of reference
-resolution; the regular-expression profile D3 item 6 uses. Promised: no
-schema reference is fetched (D5); no link in a data directory is followed
-(D16 item 6); nothing of the host — no environment variable, path or clock —
-is a source of any input value or default.
+**ADR-009 (security).** Relied on: `input-size`, `inputs-total`,
+`collection-items`, `csv-rows`, `csv-columns`, `csv-cell`,
+`frontmatter-size`, `value-depth`, `number-length`, `schema-size`,
+`schema-depth`, `ref-depth`, `schema-work` and the `entries` limit, each
+with its default; the regular-expression profile D3 item 6 uses (ADR-009
+D10 item 6); the confinement of D5 under the `metais:///` base URIs (ADR-009
+D9 item 6). Promised: no schema reference is fetched (D5); no link in a data
+directory is followed (D16 item 6); nothing of the host — no environment
+variable, path or clock — is a source of any input value or default.
 
-**ADR-010 (implementation).** Relied on, for the libraries it verifies: a
-JSON Schema 2020-12 validator that accepts a custom URI scheme with no
-network loader, asserts exactly D4's formats with METAIS's definitions,
-reports unknown keywords, and returns every error with instance and keyword
-locations; a JSON parser that reports duplicate names, keeps line and column,
-and exposes each number's literal text; a YAML parser able to enforce
-ADR-002's profile with positions; a CSV reader (or a pre-pass) meeting D11,
-including BOM removal and the quoted/unquoted empty distinction, which Go's
-`encoding/csv` does not expose; Unicode NFC normalization.
+**ADR-010 (implementation).** Relied on, for the libraries it verifies:
+`santhosh-tekuri/jsonschema/v6` configured with a loader serving only
+`metais:///` resources, METAIS's own format validators for D4's list,
+unknown keywords detected before compilation, and every error returned with
+instance and keyword locations (ADR-010 D5); METAIS's own JSON reader with
+duplicate names, line and column and each number's literal text (ADR-010
+D7); `internal/yamlx` enforcing ADR-002's profile with positions (ADR-010
+D6); METAIS's own CSV reader meeting D11, including BOM removal and the
+quoted/unquoted empty distinction (ADR-010 D8); Unicode NFC normalization
+(`golang.org/x/text/unicode/norm`).
 
 **ADR-011 (conformance).** Promised: the observable rules below, each to be
-traced to a normative statement.
+traced to a normative statement in `05-data-specification.md` (`DAT`) or
+`06-supplying-inputs.md` (`SUP`).
 
 ## Conformance
 
@@ -799,7 +838,7 @@ the expected value or findings:
 - References: relative resolution between files; an `$id`-named file reached
   by `$id` and refused by path; climbing above the root; an `https` reference
   with no matching resource; a recursive schema; `$dynamicRef`.
-- The combined schema: byte-exact `.compiled/inputs.schema.json` for a
+- The combined schema: byte-exact `.compiled/schema.json` for a
   package with shared, YAML, `$id`-carrying and constraint schemas; a tampered
   combined schema refused.
 - Cross-input constraints: §4.1's edition-dependent tables and §4.2's
@@ -821,11 +860,11 @@ the expected value or findings:
   items and CSV rows, inside a default object, under `$ref`, under `allOf`
   (not applied), parent not created, null not replaced.
 - The input record: raw available and removed by a path set, per item;
-  `raw-unavailable` refusal; the input digest of a value supplied by file and
-  by `--json` being equal.
+  `input.raw_unavailable` refusal; the input digest of a value supplied by file and
+  by `--inputs-json` being equal.
 - One-pass reporting: parse findings across several files reported together
   with schema findings for the parsed inputs, and the constraints-not-evaluated
-  information finding (SC8).
+  `info` finding (SC8).
 
 ## Alternatives rejected
 
@@ -844,7 +883,7 @@ Reading `true`, `42` or `[1]` as JSON whatever the field is gives a ZIP code
 the surprise that made Helm add `--set-string`. The schema knows the type;
 D14 asks it, and the JSON set covers the cases where text cannot.
 
-### Merging `--json` into the file's value
+### Merging `--inputs-json` into the file's value
 
 A deep merge, or RFC 7386 JSON Merge Patch, must reserve some value for
 "delete this member", and Merge Patch reserves null — which in METAIS is
@@ -908,9 +947,9 @@ them.
 
 ### Supplying a collection as a single file
 
-Equivalent to `--json` with an array, and it gives every collection two data
+Equivalent to `--inputs-json` with an array, and it gives every collection two data
 directory spellings. One spelling per input keeps the data directory
-unambiguous; `--json` remains the whole-array route.
+unambiguous; `--inputs-json` remains the whole-array route.
 
 ## Consequences
 
@@ -922,8 +961,9 @@ unambiguous; `--json` remains the whole-array route.
   digest and the same output.
 - Every validation problem — malformed files, wrong types, missing
   conditionally required fields — is reported in one run with a location the
-  supplier can act on, and a location from a finding is a valid `--set`
-  argument.
+  supplier can act on, and a finding's inputs pointer (its input name and
+  pointer, as ADR-006 D11's `at` line prints them) is a valid `--set`
+  path.
 - Validators cannot disagree on `format`: what is used is asserted, and what
   could disagree is refused.
 
@@ -955,7 +995,7 @@ unambiguous; `--json` remains the whole-array route.
 - Every resource limit and its default (ADR-009), and the regular-expression
   profile's contents (ADR-009).
 - Finding codes, severities, wording and the report shape (ADR-006).
-- Flag names and how `--json` reads a file or standard input (ADR-008).
+- Flag spelling, help text and the command-line envelope (ADR-008 D7).
 - The sample-data generator's algorithm (ADR-007).
 - Output validation schemas' location (ADR-005); they reuse D3 to D5 if
   ADR-005 adopts this dialect.
@@ -1007,9 +1047,10 @@ unambiguous; `--json` remains the whole-array route.
 15. **A data directory entry naming no input is an error; links and special
     files refused.** Lean: yes. Alternative: a warning; follow links.
 16. **`--set` takes an inputs JSON Pointer and a schema-coerced text; a
-    second kind (`--set-json`) takes JSON.** Lean: yes. Alternative: dotted
-    paths; JSON-literal inference.
-17. **Precedence: data directory, then every `--json` (whole-input
+    second kind, `--set-json`, takes JSON; whole inputs come from the
+    repeatable `--inputs-json`** (flag names ADR-008 D7's). Lean: yes.
+    Alternative: dotted paths; JSON-literal inference.
+17. **Precedence: data directory, then every `--inputs-json` (whole-input
     replacement), then every path set, each in command-line order.** Lean:
     yes. Alternative: deep merge; pure command-line order.
 18. **Defaults through `properties`/`items`/`prefixItems`/`$ref` only, never
@@ -1022,8 +1063,14 @@ unambiguous; `--json` remains the whole-array route.
     defaults.** Lean: yes. Alternative: digest of the raw bytes, or of the
     value before defaults.
 21. **When any input fails to parse, cross-input constraints are not
-    evaluated, with an information finding.** Lean: yes. Alternative: evaluate
+    evaluated, with an `info` finding.** Lean: yes. Alternative: evaluate
     and risk false findings.
+22. **"Every error" means every failure that can be a finding** (D3 item 7):
+    `not`'s subschema, `if`, and the untried branches of a satisfied
+    `anyOf`/`oneOf` are evaluated for their yes or no only. Lean: yes. Why:
+    none of their inner failures is ever reported (ADR-006 D6), and it is
+    what the chosen validator does (ADR-010 D5 item 6). Alternative: full
+    evaluation everywhere, which no finding would use.
 
 ## References
 

@@ -7,7 +7,7 @@
 item 2 and R12 items 1 and 2; success criteria SC6 and SC7
 **Depends on:** ADR-001 (the zip profile and the digest file this ADR's
 container checks run against); ADR-002 (the YAML profile and the manifest);
-ADR-003 (input forms, the data directory, `--set` and `--json`, the combined
+ADR-003 (input forms, the data directory, `--set` and `--inputs-json`, the combined
 schema); ADR-004 (the template environment, its variables, its filters and
 tags); ADR-005 (output paths, staging, overwrite, stdout); ADR-006 (finding
 codes, severities, exit codes); ADR-008 (flag spelling); ADR-010 (the
@@ -191,12 +191,12 @@ as the central guarantee: D12 to D15 design it, and D16 proves it.
                                │
      package bytes ──────────▶ ┌─────────────────────────────────┐ ◀──── data directory,
      (hostile author)          │ metais process                  │       named files, stdin
-                               │  isolate() → confined readers → │       (hostile supplier)
+                               │  Isolate() → confined readers → │       (hostile supplier)
                                │  parse → validate → render      │
      host: env, cwd, HOME,  ✕  │  closed binding set             │
      clock, TZ, user, host,    └─────────────────────────────────┘
      pid, other files                          │
-     (read never past isolate())               ▼
+     (read never past Isolate())               ▼
                                  output directory or stdout
                                  (written, confined, all or nothing)
    ```
@@ -270,7 +270,7 @@ it at its defaults.
 |---|---|---|---|
 | `package-size` | 256 MiB | the package file | room for references (standards text) and assets (fonts, images); checked by `stat` before the file is read |
 | `package-uncompressed` | 512 MiB | the sum of every entry's uncompressed size, declared and actual | the cap that defeats overlap bombs regardless of ratio |
-| `entries` | 10,000 | central-directory records, directories included | a static site's assets fit; bounds the directory parse and the per-entry checks |
+| `entries` | 10,000 | central-directory records (a package has no directory entries, ADR-001 D2 item 6) | a static site's assets fit; bounds the directory parse and the per-entry checks |
 | `entry-size` | 64 MiB | one entry, uncompressed | the largest plausible asset or reference |
 | `entry-ratio` | 200 | uncompressed ÷ compressed size, for an entry larger than 1 MiB uncompressed | text compresses 3–20:1 and repetitive XML rarely beyond 100:1; DEFLATE peaks at 1032:1, so 200 refuses padding and bombs while small entries, whose absolute size is harmless, are exempt |
 | `path-length` | 512 bytes | an entry path, an output path, a container entry path | deep scaffolds fit; Windows long-path support is not assumed beyond this |
@@ -292,7 +292,7 @@ it at its defaults.
 
 | Limit | Default | Bounds | Rationale |
 |---|---|---|---|
-| `input-size` | 32 MiB | one input file, one collection item, one `--json` or `--set` value, standard input | parsed values occupy several times their source size |
+| `input-size` | 32 MiB | one input file, one collection item, one `--inputs-json`, `--set` or `--set-json` value, standard input | parsed values occupy several times their source size |
 | `inputs-total` | 128 MiB | all input bytes one command reads | keeps peak memory within D17's ceiling |
 | `csv-rows` | 1,000,000 | data rows in one CSV input | |
 | `csv-columns` | 1,024 | fields per record | |
@@ -311,7 +311,8 @@ it at its defaults.
 | `assign-bytes` | 512 MiB | bytes stored by `assign` and `capture`, summed over one command | Shopify's assign score |
 | `schema-work` | 100,000,000 | subschema evaluations in one command | nested `anyOf`/`oneOf` over non-consuming refs is exponential in depth |
 | `regex-work` | 2³³ units | regular-expression matching in one command (D10) | the deterministic CPU bound for patterns and `grep` |
-| `outputs` | 100,000 | files one render writes, assets and containers included | one per item of a full collection |
+| `outputs` | 100,000 | files one render plans, assets, containers and container entries included (ADR-005 D13) | one per item of a full collection |
+| `container-depth` | 3 | zip containers nested inside one another (ADR-005 D8 item 4) | a submission zip holding a `.docx` is a real case; deeper is not |
 | `output-size` | 256 MiB | one written file, including a container and a copied asset | |
 | `output-total` | 1 GiB | all bytes one render writes, or writes to standard output | |
 | `findings` | 100,000 | findings one command reports | a result bound (D2 item 6) |
@@ -345,8 +346,8 @@ it at its defaults.
    file or environment variable raises a limit.
 3. **`metais limits [--json]` prints every limit** with its default, its unit
    and its class, so a caller or a harness can read the table rather than
-   copy it (ADR-008 may fold the command into another; the output is this
-   table).
+   copy it (ADR-008 D1 lists the command; its JSON format is
+   `metais.limits/1`).
 4. **Lowering is how the conformance vectors test boundaries cheaply.** A
    vector at `--limit entries=3` with three entries passes and with four is
    refused; no vector needs a 10,000-entry package to test the rule.
@@ -359,16 +360,17 @@ whose bounds this procedure has already established (ADR-010), never as the
 check.
 
 1. **File size**: `package-size`.
-2. **One unambiguous end record.** The End Of Central Directory record (or the
-   Zip64 locator and record, if ADR-001 allows Zip64) sits exactly at the end of
-   the file: no archive comment, no trailing bytes. A second EOCD signature in
-   the final 64 KiB is refused, so that no other parser can find a different
-   central directory.
+2. **One unambiguous end record.** The End Of Central Directory record sits
+   exactly at the end of the file: no archive comment, no trailing bytes, and
+   no Zip64 record or locator (ADR-001 D3 refuses Zip64). A second EOCD
+   signature in the final 65,557 bytes (the largest span an end record and
+   its comment can occupy) is refused, so that no other parser can find a
+   different central directory; ADR-001 D8 step 2 applies it.
 3. **The central directory**: the record count is checked against `entries`
    before anything is allocated; the directory's declared size and offset lie
    inside the file and end exactly where the end record begins.
-4. **Each central record**: the entry name obeys D6; the type is a regular file
-   or a directory (D6 item 4); the method is one ADR-001 allows; the
+4. **Each central record**: the entry name obeys D6; the type is a regular
+   file (D6 item 4); the method is one ADR-001 allows; the
    encryption bit is clear; the declared uncompressed size is within
    `entry-size`, the running total within `package-uncompressed`, and the ratio
    within `entry-ratio`.
@@ -385,11 +387,12 @@ check.
    stops at the declared size plus one byte: more is refused, fewer is refused,
    and the CRC must match. Bytes read count towards `package-uncompressed`
    independently of the declared figures.
-8. **No entry's content is used until its digest has been verified** against
-   `.compiled/`'s digest file (ADR-001). An entry is read in full, within
-   `entry-size`, digested, and only then parsed, searched or printed. Commands
-   that read a few entries (`read`, `grep`, `outline`) verify those entries and
-   the digest file, not the whole package.
+8. **No entry's content is used until the whole package has been verified**
+   against `.compiled/`'s digest file (ADR-001 D8): every entry is read in
+   full, within `entry-size`, and digested at open, before any command parses,
+   searches or prints anything, so a command that reads one entry (`read`,
+   `grep`, `outline`) still reports only a package whose digest it has
+   established.
 9. **The compiled forms agree with their sources.** In a packed package the
    tool re-derives the canonical manifest from `metais.yaml` and the combined
    schema from `inputs/`, within their limits, and refuses the package when
@@ -405,20 +408,24 @@ directory. ADR-005's portable-path rules (Windows-invalid names, case-only
 collisions) apply to entry paths too, so that `unpack` and `extract` can write
 any accepted package on any platform.
 
-1. **An entry name** is UTF-8 (ADR-001), uses `/` as its only separator, and
-   contains no NUL, no other C0 control, no DEL and no backslash. It is not
-   absolute (no leading `/`), has no drive or UNC prefix (`C:`, `//server`),
-   has no empty component (`a//b`), and has no `.` or `..` component. Each
-   component is at most 255 bytes; the whole name is within `path-length` and
-   `path-depth`. A directory entry ends in `/` and has size zero; no other name
-   ends in `/`.
-2. **No two entries collide**: no duplicate names, no names equal under
-   ADR-005's case-insensitive comparison, and no entry that is both a file and
-   a prefix of another entry's path (`a` beside `a/b`).
+1. **An entry name** obeys the one portable-path predicate (ADR-001 D2,
+   ADR-005 D12): NFC UTF-8, `/` as its only separator, built only from
+   assigned characters of categories L, M, N, P, S and U+0020 (so no NUL,
+   no other control, no DEL), no backslash or other Windows-reserved
+   character. It is not absolute (no leading `/`), has no drive or UNC prefix
+   (`C:`, `//server`), has no empty component (`a//b`), and has no `.` or
+   `..` component. Each component is at most 255 bytes; the whole name is
+   within `path-length` and `path-depth`. No name ends in `/`: a package has
+   no directory entries (ADR-001 D2 item 6).
+2. **No two entries collide**: no duplicate names, no two names or directory
+   prefixes that are canonical caseless matches (ADR-005 D12 item 6), and no
+   entry that is both a file and a prefix of another entry's path (`a`
+   beside `a/b`).
 3. **Only the layout's roots** (ADR-001) appear as first components.
-4. **An entry is a regular file or a directory.** Whatever the creator
-   platform, external attributes that denote a symbolic link (`0xA000`), a
-   FIFO, a socket, a device or any other type are refused. Permission bits in
+4. **An entry is a regular file.** Whatever the creator platform, external
+   attributes other than ADR-001 D1's fixed regular-file value — a symbolic
+   link (`0xA000`), a directory, a FIFO, a socket, a device or any other
+   type — are refused. Permission bits in
    the external attributes are never applied by `unpack`, `extract` or
    `render`: written files get the modes ADR-005 states, and never setuid,
    setgid or sticky bits.
@@ -447,22 +454,22 @@ and performs every later operation relative to it.
    its `Lstat` mode without being opened, so a FIFO cannot block the tool. After
    opening, the handle's own `Stat` must still be a regular file and the same
    file (`os.SameFile`); the read stops at `input-size` plus one byte.
-4. **The caller's own names are honoured.** The data directory itself, the output
-   directory, and any file the caller names explicitly on the command line (if
-   ADR-003 provides such a form) may be symbolic links; the caller is trusted
-   and named them. They must still resolve to a directory or a regular file.
+4. **The caller's own names are honoured.** The package operand, the data
+   directory itself and the output directory may be symbolic links; the
+   caller is trusted and named them (ADR-003 provides no other file form).
+   They must still resolve to a directory or a regular file.
 5. **Hard links are not detected.** A hard link to a file outside the directory
    cannot be told from an ordinary file without refusing every file with more
    than one link, which breaks common tooling. Hard links cannot cross machines
    in a downloaded archive's data and require the creator to reach the target,
    so the residual is a supplier that already shares the caller's machine and
    can read the target itself.
-6. **Nothing is expanded.** `--set` values, `--json` text, file contents and
+6. **Nothing is expanded.** `--set` and `--set-json` values, `--inputs-json` text, file contents and
    names are data: `$VAR`, `${VAR}`, `%VAR%`, `~` and `@path` are literal
    characters unless ADR-003 defines an explicit syntax for a file reference,
    which never consults the environment.
-7. **Standard input** is read only when the caller names `-` for an input or for
-   `--json`, and within `input-size`.
+7. **Standard input** is read only for `--inputs-json -` (ADR-008 D7), and
+   within `input-size`.
 8. **Source directories** (`check`, `test`, `pack`, the sample preview, and
    `ls`/`read`/`grep`/`outline` on a source directory) follow the same rules:
    the tree is walked under an `os.Root`; a symbolic link or special file
@@ -477,9 +484,13 @@ and performs every later operation relative to it.
 ADR-005 owns staging, overwrite and the portable-path rules. This ADR fixes how
 a write is confined, for `render`, `unpack`, `extract` and `init` alike.
 
-1. **Every write goes through `internal/hostfs`** on an `os.Root` opened on the
-   directory the caller named. No write path is ever built by joining strings
-   onto a host path.
+1. **Every write goes through `internal/hostfs`** on an `os.Root`, and every
+   path a package or an input produced is written through a root on a
+   directory the tool created for this render (ADR-005 D14's staging
+   directory) or on the existing directory the caller named. Only the
+   caller's own path — `--out` and its missing ancestors — is reached
+   through a root on its nearest existing ancestor. No write path is ever
+   built by joining strings onto a host path.
 2. **An output path is checked before anything is staged**: it obeys D6 items 1
    and 2 and ADR-005's portable rules, whether it came from the manifest or was
    produced by a path template from input data. A supplier's
@@ -493,8 +504,11 @@ a write is confined, for `render`, `unpack`, `extract` and `init` alike.
 4. **Existing contents of the output directory are never read.** The tool lists
    names to decide emptiness and collisions; it never opens an existing file
    there, so `--overwrite` cannot leak what it replaces.
-5. **Staging lives inside the output directory** (ADR-005), never under
-   `$TMPDIR`.
+5. **Staging lives beside the output directory, in its parent** (ADR-005
+   D14), never under `$TMPDIR`, with fixed names that read no random source
+   and no process identity; the rename that makes it the output is the only
+   operation on the parent, and nothing staged remains outside the output
+   directory once it succeeds or is refused.
 6. **A `.git` path component is refused** in output paths, container entry paths
    and entry names, compared as Git compares it for CVE-2014-9390: case
    insensitively, ignoring the code points HFS+ ignores, and including the NTFS
@@ -519,16 +533,19 @@ a write is confined, for `render`, `unpack`, `extract` and `init` alike.
 3. **Assets** come from `assets/` only, by the same rules.
 4. **`embed`** names a declared input, not a path; it yields that input's
    supplied bytes.
-5. **`.compiled/` and `examples/` are unreachable from templates.** References
-   are reachable only if ADR-004 grants a tag for them, through the same
-   resolver.
-6. **Schema `$ref`s** resolve against a fixed base: each schema entry
-   `inputs/<file>` has the base URI `metais:/inputs/<file>`, and the scheme is
-   never dereferenced. A reference may resolve only to the same document, to
-   another schema entry under `inputs/`, or to an embedded 2020-12 metaschema by
-   its canonical `https://json-schema.org/draft/2020-12/…` URI. Anything else —
-   `file:`, `http:`, `https:` beyond the metaschemas, a path leaving `inputs/` —
-   is refused at `check` and at read (`schema.ref-outside`). The validator's
+5. **`.compiled/`, `examples/` and `references/` are unreachable from
+   templates**: ADR-004 grants no tag that reads them (`render` reads
+   `templates/`, `asset` reads `assets/`, `embed` reads inputs).
+6. **Schema `$ref`s** resolve against a fixed base: each schema entry has the
+   retrieval URI `metais:///<package path>` (ADR-003 D5 item 1), and the
+   scheme is never dereferenced. A reference may resolve only to the same
+   document, to another schema entry under `inputs/` (for an output
+   validation schema, under the top-level directory that holds it, ADR-005
+   D11), or to an embedded 2020-12 metaschema by its canonical
+   `https://json-schema.org/draft/2020-12/…` URI. Anything else — `file:`,
+   `http:`, `https:` beyond the metaschemas, a path leaving that directory —
+   is refused at `check` and at read (ADR-003's `schema.ref_unresolved` or
+   `schema.ref_escapes`). The validator's
    loader is replaced by one that serves exactly this set (with
    `santhosh-tekuri/jsonschema`, `Compiler.UseLoader`), so the library's default
    `FileLoader` is never installed.
@@ -544,8 +561,9 @@ a write is confined, for `render`, `unpack`, `extract` and `init` alike.
      any value is built. A ratio heuristic such as go-yaml's is not a bound, and
      it differs between libraries, so a package accepted by one implementation
      could be refused by another;
-   - tags outside the YAML 1.2 core schema (ADR-002) are refused, and no tag
-     selects a Go type: documents decode only into generic values;
+   - every explicit tag is refused (ADR-002 D2 item 5, which ADR-003 D10
+     adopts), so no tag selects a Go type: documents decode only into generic
+     values;
    - exactly one document per file;
    - `value-depth` and `number-length` apply.
 2. **JSON**: `value-depth` is checked by a token-level scan before decoding;
@@ -560,8 +578,8 @@ a write is confined, for `render`, `unpack`, `extract` and `init` alike.
 5. **`grep`** uses RE2 syntax as Go's `regexp` defines it (ADR-008 owns the
    command). `pattern-length` and `regex-program` apply, the program size being
    the instruction count of the compiled `regexp/syntax` program.
-6. **Schema patterns** (`pattern`, `patternProperties`, and `format: regex`
-   where ADR-003 asserts it) use the **METAIS pattern profile**: ECMA-262
+6. **Schema patterns** (`pattern` and `patternProperties`; ADR-003 D4 item 2
+   refuses `format: regex`) use the **METAIS pattern profile**: ECMA-262
    patterns in `u` mode, translated to RE2 and matched by Go's `regexp`.
    - *Translated*: literals and escapes; `\uXXXX` and `\u{X…}` to `\x{…}`; `\cX`;
      `\0`; `.` to `[^\n\r\x{2028}\x{2029}]`; `\s` and `\S` to ECMA-262's
@@ -571,8 +589,8 @@ a write is confined, for `render`, `unpack`, `extract` and `init` alike.
      accepts; character classes, quantifiers and their lazy forms; `{n}`,
      `{n,}`, `{n,m}` with bounds up to 1000; groups, non-capturing groups,
      named groups; alternation; `^` and `$`.
-   - *Refused at `check` and at read* (`regex.unsupported`, naming the
-     construct): lookahead and lookbehind, numbered and named backreferences,
+   - *Refused at `check` and at read* (`schema.pattern_unsupported`, naming
+     the construct): lookahead and lookbehind, numbered and named backreferences,
      repeat bounds above 1000, lone surrogates, `\p{…}` forms RE2 cannot
      express, and RE2-only syntax that ECMA-262 does not define (`(?i)`, `\A`,
      `\z`, `\Q…\E`, `(?P<…>)`), which would make a package unportable to a
@@ -610,11 +628,11 @@ a write is confined, for `render`, `unpack`, `extract` and `init` alike.
    The specification carries the charge of every filter in ADR-004's catalog;
    where a filter's true cost exceeds its shallow charge (sorting), the table
    charges it.
-3. **A recursion the engine cannot bound is a defect of the engine.** If the
-   Liquid library ADR-010 chooses cannot enforce these limits through its
-   extension points, the library fails the hostile corpus and ADR-010's
-   fallback applies (METAIS implements its own engine). `osteele/liquid`
-   v1.9.2 has none of these limits built in.
+3. **A recursion the engine cannot bound is a defect of the engine.**
+   `osteele/liquid` v1.9.2 has none of these limits and no seam to add them,
+   which is one reason ADR-010 D4 implements METAIS's own engine, whose
+   meter (ADR-010 D4 item 4) counts every unit of item 2 and refuses at the
+   bound.
 
 ### D12 — Host isolation, exhaustively
 
@@ -632,10 +650,10 @@ static rule of D16 item 3, which fails the build on the named symbols.
 | **User and groups** | provenance; `init`'s scaffold (an "author" field) | the provenance list is closed (ADR-004); `init` writes fixed text plus its arguments (ADR-007); tripwire on `os.Getuid`, `os.Geteuid`, `os.Getgid`, `os.Getegid`, `os.Getgroups` and the `os/user` package |
 | **Host name** | provenance; messages | tripwire on `os.Hostname` |
 | **Process** | provenance; staging names; `os.Executable` in messages | staging names are fixed (ADR-005); tripwire on `os.Getpid`, `os.Getppid`, `os.Executable` |
-| **Clock** | `date` with `"now"` or `"today"`; provenance time; a default seed; file modification times | `"now"` and `"today"` are `--now` when given and a template error otherwise (ADR-004); provenance time only from `--now`; modification times are never read into data and collections are ordered by name; written timestamps are fixed wherever they are content (zip, tar); tripwire on `time.Now`, `time.Since`, `time.Until`, timers and tickers |
-| **Time zone** | formatting in `time.Local`; `time.Parse`; `time.Unix`; named zones from the host database | `time.Local` is set to UTC at startup (D14 item 1); dates are UTC or carry their own offset (ADR-004); named zones, if ADR-004 supports them, come only from tzdata embedded in the binary through `time.LoadLocationFromTZData`; tripwire on `time.Local`, `time.LoadLocation`, `time.Parse`, `time.Unix`, `time.UnixMilli`, `time.UnixMicro` outside the dates package, whose own tests run under several `TZ` values |
+| **Clock** | `date` with `"now"` or `"today"`; provenance time; a default seed; file modification times | `date` refuses `"now"` and `"today"` whether or not `--now` is given, and the render time reaches a template only as the `now` global, from `--now` (ADR-004 D7 item 7, D11 item 1); provenance time only from `--now`; modification times are never read into data and collections are ordered by name; written timestamps are fixed wherever they are content (zip, tar); tripwire on `time.Now`, `time.Since`, `time.Until`, timers and tickers |
+| **Time zone** | formatting in `time.Local`; `time.Parse`; `time.Unix`; named zones from the host database | `time.Local` is set to UTC at startup (D14 item 1); dates are UTC or carry their own offset, and no named zone exists (ADR-004 D11); tripwire on `time.Local`, `time.LoadLocation`, `time.Parse`, `time.Unix`, `time.UnixMilli`, `time.UnixMicro` outside `internal/dates`, whose own tests run under several `TZ` values |
 | **Locale** | number, date, case and collation behaviour | no locale-sensitive API is used; sorting is by code point (ADR-004); `LANG` and `LC_ALL` are cleared with the rest of the environment |
-| **Random numbers** | a default seed; map iteration order; hash seeds | the sample generator's seed is explicit, with a fixed default (ADR-007), never the clock or a random source; iteration order is defined (ADR-004); tripwire on `crypto/rand`, `math/rand`, and the top-level functions of `math/rand/v2` (`rand.New` with an explicit source is allowed in the sample package only) |
+| **Random numbers** | a default seed; map iteration order; hash seeds | the sample generator's seed is explicit, with a fixed default, and its generator is METAIS's own SplitMix64 (ADR-007 D9), never the clock or a random source; staging names are fixed (ADR-005 D14); iteration order is defined (ADR-004); tripwire on `crypto/rand`, `math/rand` and `math/rand/v2`, with no exception |
 | **Network and DNS** | `$ref` or `$schema` fetch; `format` checks; anything else | D9 items 6–7; the import rule of D16 item 3 refuses `net`, `net/http` and the rest in the binary |
 | **Subprocesses and plugins** | running a converter; loading code | the import rule refuses `os/exec` and `plugin` |
 | **Terminal and resources** | terminal width, `isatty`, CPU count, memory | these may change human-format decoration only, never outputs, findings or JSON; parallel work is ordered deterministically (ADR-005); resource exhaustion is a failure, never content |
@@ -644,12 +662,13 @@ static rule of D16 item 3, which fails the build on the named symbols.
 
 ### D13 — The binding set is a closed, constructed value
 
-1. **The template sees exactly** `inputs`, `item` inside a fan-out, `package`
-   (ADR-004 fixes its fields from the manifest), and the loop and assignment
-   variables Liquid creates. `--now` reaches templates only through the `date`
-   filter's `"now"` and the provenance tag. There is no `env`, `host`, `system`,
-   `site`, `page` or `request`; ADR-004's strict-variable rule makes
-   `{{ env.HOME }}` an error at `check` and at render.
+1. **The template sees exactly** ADR-004 D7's globals — `inputs`, `package`
+   (its fields fixed from the manifest), `now`, `sources`, and, where D7 item
+   10 binds them, `item`, `fan_out` and `output` — and the loop and
+   assignment variables Liquid creates. `--now` reaches templates only as
+   `now` and through the provenance tag's `time` field. There is no `env`,
+   `host`, `system`, `site`, `page` or `request`; ADR-004's strict-variable
+   rule makes `{{ env.HOME }}` an error at `check` and at render.
 2. **The set is built by one constructor** (`internal/bindings`) from the
    validated inputs and the manifest, and from nothing else. Its values are
    plain data only: maps with string keys, slices, strings, booleans, `nil` and
@@ -658,15 +677,16 @@ static rule of D16 item 3, which fails the build on the named symbols.
    template can call a Go method.
 3. **A test walks the set built for every vector** by reflection and fails on any
    other type.
-4. **The engine has no filesystem.** It is constructed with the `PackageFS`
-   resolver of D9 as its only template store; its default store is never
-   reachable, and its Jekyll extensions stay off.
+4. **The engine has no filesystem.** METAIS's own engine (ADR-010 D4 item 5)
+   imports no `os` and has no default store: the `PackageFS` resolver of D9
+   is its only source of partials.
 
 ### D14 — Structural enforcement in the binary
 
-1. **`isolate()` runs first in `main`**, before flags are parsed:
-   1. it reads the display settings ADR-008 names — this ADR proposes `NO_COLOR`
-      alone (proposed ruling 11) — into a value;
+1. **`internal/hostenv.Isolate()` runs first in `main`**, before flags are
+   parsed (`cmd/metais` calls it, ADR-010 D2):
+   1. it reads `NO_COLOR`, the one display setting (ADR-008 D12), into a value
+      it returns;
    2. it calls `os.Clearenv()`, so any later `os.Getenv` anywhere in the
       process, including in a dependency, returns `""`;
    3. it sets `time.Local = time.UTC`, so a dependency that formats in local time
@@ -674,9 +694,16 @@ static rule of D16 item 3, which fails the build on the named symbols.
       names.
 
    These are defence in depth. The guarantee is that no code path asks for a
-   host fact (D12, tripwire); `isolate()` makes a missed path return nothing.
+   host fact (D12, tripwire); `Isolate()` makes a missed path return nothing.
 2. **No safety check relies on a `GODEBUG` setting** or any other
-   runtime-environment switch: every check in D5 to D8 is METAIS's own.
+   runtime-environment switch: every check in D5 to D8 is METAIS's own. The
+   Go runtime parses `GODEBUG` before `main`, so clearing the environment
+   does not undo it; it changes nothing the tool accepts or writes because
+   the tool reads no archive through `archive/zip` or `archive/tar` (ADR-010
+   D11 items 1 and 4), and ADR-011 D12's environment A, which sets
+   `GODEBUG=zipinsecurepath=1,tarinsecurepath=1`, and ADR-010 D13's
+   determinism run, which sets the opposite, both require byte-identical
+   results.
 3. **`internal/hostfs` is the only package that touches the host filesystem.** It
    opens caller-named paths as `os.Root`s and offers reads (regular files only,
    D7) and confined writes (D8). Its errors carry paths relative to the root and
@@ -694,19 +721,24 @@ static rule of D16 item 3, which fails the build on the named symbols.
 1. **A path in a finding or message is one of**: a package entry path; a path
    relative to the data directory; a path relative to the output directory; or a
    role — "the package", "the data directory", "the output directory", "the
-   file given to `--json`". The tool never prints an absolute path, a path made
-   absolute, a home-relative path, or a caller-supplied directory argument
-   itself. (Proposed ruling 6.)
+   standard input given to `--inputs-json`". The tool never prints an
+   absolute path, a path made absolute, a home-relative path, or a path the
+   caller supplied — a package operand or a directory argument — itself,
+   in a message, a JSON document or a suggested command line (ADR-008 D11
+   item 5 and D14 item 2 adopt this). (Proposed ruling 6.)
 2. **OS errors are rewritten** into that vocabulary by `internal/hostfs`.
 3. **Echoed text is neutralised in human-format output**: when a finding,
    listing, outline or `grep` line echoes package or input text to a person,
-   C0 and C1 controls (except tab), DEL and the bidirectional formatting
-   characters U+202A–U+202E and U+2066–U+2069 are printed as `\u{XXXX}`, so
+   C0 and C1 controls, DEL and the bidirectional formatting characters
+   U+202A–U+202E and U+2066–U+2069 are printed as `\u` and four lowercase
+   hex digits (`\u001b`, `\u202e`), the form ADR-006 D9 item 9 uses, so
    package text cannot drive a terminal or reorder what a reviewer sees
-   ("Trojan Source"). JSON output carries the exact text, JSON-escaped. `read`,
+   ("Trojan Source"). A finding escapes the tab as well, since its fields
+   are single lines; a listing, outline or `grep` line keeps it, since it is
+   content. JSON output carries the exact text, JSON-escaped. `read`,
    and `render` to standard output, print bytes unchanged, as requested.
-4. **Schema locations in findings** use the `metais:/inputs/…` form of D9
-   item 6, never a host URL.
+4. **Schema locations in findings** use the `metais:///…` form of D9 item 6,
+   or the entry path (ADR-006 D6 item 8), never a host URL.
 
 ### D16 — Proving host isolation
 
@@ -715,32 +747,36 @@ for host facts in everything the tool emits; canary builds that prove the
 harness can see a leak; and a static tripwire that fails the build when code
 that could ask for a host fact appears.
 
-1. **The SC7 harness** (`TestHostIsolation`) runs the real binary, built with
-   release tags, as a subprocess, over every conformance vector, every
-   hostile-corpus case and every command that applies to it (`inspect`, `ls`,
-   `read`, `outline`, `grep`, `schema`, `extract`, `validate`, `render`
-   including `--dry-run` and standard output, `check`, `test`, `pack`, `unpack`,
-   the sample preview), in human and JSON form.
-   - **Sentinels.** Each run plants a distinct sentinel per channel: 24
-     characters from `[a-z0-9]`, with a fixed prefix (`zqx`), so it survives
-     `slug`, HTML and JSON escaping, URL encoding and case changes, and a hit
+1. **The SC7 harness** (`TestHostIsolation`) is ADR-011's conformance runner
+   (ADR-011 D11, D12) with the additions below. The runner already runs the
+   real binary, built with release tags, as a subprocess for every step of
+   every conformance vector and every hostile-corpus case, in its sentinel
+   environment A and its plain environment B; this harness extends that run
+   so it covers every command and every channel:
+   - **Every command.** Besides the runner's operations, each vector's
+     package is also run through `ls --recursive`, `read` of every entry,
+     `outline` of every Markdown entry, `grep` over every entry, `schema`
+     and `extract`, and `render` with `--dry-run` and to standard output, in
+     human and JSON form.
+   - **Sentinels** are ADR-011 D12's: letters only, beginning `MTSSENTINEL`
+     and naming their channel (`MTSSENTINELHOME`, …), so they survive
+     `slug`, HTML, JSON, CSV and URL escaping and case changes, and a hit
      names the channel it came from.
-   - **The environment is replaced, not inherited.** It holds `HOME`, `TMPDIR`,
-     `PWD`, `OLDPWD`, `USER`, `LOGNAME`, `HOSTNAME`, `SHELL`, `LANG`, `LC_ALL`,
-     `PATH`, `NO_COLOR`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `SOURCE_DATE_EPOCH`,
-     `CI`, `GITHUB_TOKEN`, `AWS_SECRET_ACCESS_KEY` and 32 variables named
-     `METAIS_<sentinel>`, each valued with a sentinel (paths with a sentinel
-     component), and a valid `TZ`.
-   - **Decoy trees.** The working directory, `HOME` and `TMPDIR` are directories
-     whose paths contain a sentinel. Each holds, with sentinel content, a decoy
-     of every name the vector's package refers to (`templates/…`, `assets/…`,
-     `<input>.json`, `metais.yaml`) and of the files a careless tool might
-     read (`.config/metais/config.yaml`, `.metais/`, `.ssh/id_ed25519`,
-     `.netrc`, `.gitconfig`).
+   - **More of the environment.** To environment A this harness adds
+     `OLDPWD`, `SHELL`, `SOURCE_DATE_EPOCH`, `CI`, `GITHUB_TOKEN`,
+     `AWS_SECRET_ACCESS_KEY` and 32 variables named `METAIS_<n>`, each valued
+     with a sentinel (paths with a sentinel component). Nothing is inherited.
+   - **Decoy trees.** Beyond ADR-011 D12 item 2's decoys, the working
+     directory, `HOME` and `TMPDIR` each hold, with sentinel content, a decoy
+     of every name the vector's package refers to (`templates/…`,
+     `assets/…`, `<input>.json`, `metais.yaml`) and of the files a careless
+     tool might read (`.config/metais/config.yaml`, `.metais/`,
+     `.ssh/id_ed25519`, `.netrc`, `.gitconfig`).
    - **Two path modes.** Each case runs once with the data and output
-     directories outside the working directory and once with them given as
-     paths relative to it, so a tool that makes a path absolute prints the
-     working directory's sentinel.
+     directories outside the working directory, given by absolute paths
+     under a directory whose name holds a sentinel, and once with them given
+     as paths relative to it, so a tool that prints a caller's path or makes
+     one absolute shows a sentinel.
    - **Streams scanned**: standard output, standard error, every written file,
      every entry of every written container (decompressed), every member of a
      standard-output tar, and the raw bytes and every decompressed entry of a
@@ -748,24 +784,27 @@ that could ask for a host fact appears.
    - **Check 1, sentinels**: no sentinel appears, case-insensitively, in any
      stream.
    - **Check 2, real host facts**: the stream contains none of the test
-     machine's host name and user name (when longer than three characters), the
-     absolute paths of the test's temporary root, the runner's real home
+     machine's host name and user name (when longer than three characters),
+     the absolute paths of the test's temporary root, the runner's real home
      directory and the checkout.
-   - **Check 3, the differential**: every case runs under two environments, A
-     and B, that differ in every sentinel, every decoy path, `TZ` (A `UTC`, B
-     `Pacific/Chatham`, offset +12:45 or +13:45), `LANG`/`LC_ALL` (A `C`, B
-     `tr_TR.UTF-8`, where case mapping of `i` differs) and the process id, and
-     B's batch starts at least two seconds after A's. Every stream and the exit
-     status must be byte-identical between A and B. A leak that is hashed,
-     encoded or compressed beyond the scanner's reach still changes the bytes.
-   - **Check 4, nothing written outside** (SC6): the whole temporary tree,
-     decoys included, is snapshotted (names, types, sizes, SHA-256) before each
-     case and compared after; only the output directory may change, and on a
-     refusal it must not.
+   - **Check 3, the differential**: ADR-011 D12 item 4's comparison of A
+     (sentinels, `TZ=Pacific/Chatham`, `LC_ALL=tr_TR.UTF-8`) with B (plain,
+     `TZ=UTC`, `LC_ALL=C`), with B's batch started at least two seconds
+     after A's and in other processes, so the clock and the process id
+     differ too. Every stream and the exit status must be byte-identical
+     between A and B. A leak that is hashed, encoded or compressed beyond
+     the scanner's reach still changes the bytes.
+   - **Check 4, nothing written outside** (SC6): ADR-011 D10 item 4's
+     snapshot of the whole sandbox, decoys included, before and after each
+     step; only a declared output tree may change, and on a refusal nothing
+     does.
 2. **Canary builds keep the harness honest.** Under build tags
    `metais_canary_<channel>`, files named `canary_<channel>.go` insert one
    realistic leak each, reading the host fact from a snapshot taken before
-   `isolate()` so the defence in depth does not hide it:
+   `Isolate()` so the defence in depth does not hide it. These are build
+   tags, not ADR-010 D13's injected faults, because the harness drives a
+   subprocess, which no injected option can reach; ADR-010 D13's faults
+   cover the guarantees proved in-process:
 
    | Canary | The leak it inserts | Its probe vector (release behaviour) | What turns red |
    |---|---|---|---|
@@ -777,34 +816,38 @@ that could ask for a host fact appears.
    | `path` | findings print the data directory's absolute path | a missing required input | checks 1 and 2 |
    | `pid` | provenance records the process id | a provenance comment | check 3 |
 
-   `TestHostIsolationCanaries` builds each canary binary and requires the
-   harness to report at least one violation on that canary's channel, and builds
-   the release binary and requires none. The harness is written, with the
+   `TestHostIsolationCanaries` builds each canary binary in every `go test`
+   run and requires the harness to report at least one violation on that
+   canary's channel, and builds the release binary and requires none. The harness is written, with the
    canaries, before the code that makes the release build pass: pinned red
    first, and kept red-capable for as long as the tree exists.
-3. **The static tripwire** (`TestNoHostFacts`) runs over the source closure of
-   `cmd/metais` as `go list -deps` reports it with release tags, for GOOS
-   `darwin`, `linux` and `windows`:
+3. **The static tripwire** (`TestNoHostFacts`, in `internal/guarantees`,
+   ADR-010 D11 items 9 and 10) runs over the source closure of `cmd/metais`
+   as `go list -deps` reports it with release tags, for GOOS `darwin`,
+   `linux` and `windows`:
    - **Import rule**: the binary's dependency closure contains none of `os/exec`,
      `plugin`, `net`, `net/http`, `net/rpc`, `net/smtp`, `crypto/tls`, `os/user`,
-     `log/syslog` or `runtime/cgo`. `net/url` and `net/netip` are parsers and do
-     not import `net`; they are allowed.
+     `os/signal`, `log/syslog`, `runtime/cgo` or `syscall/js`. `net/url` and
+     `net/netip` are parsers and do not import `net`; they are allowed.
    - **Symbol rule, module code**: in every non-test file of the module, a
      selector resolving (through that file's imports) to a symbol of D12's
-     tripwire lists, or to an `os` file function, is allowed only in the
-     function the allow-list names: `cmd/metais.isolate` (the display read,
-     `os.Clearenv`, `time.Local`), `internal/hostfs` (file functions and
-     `os.OpenRoot`), `cmd/metais` (`os.Args`, `os.Stdin`, `os.Stdout`,
-     `os.Stderr`, `os.Exit`), the dates package (`time.Unix` and its kin), the
-     sample package (`rand.New`).
+     tripwire lists, ADR-010 D11 item 9's additions (`runtime.GOOS`,
+     `reflect` outside the schema adapter), or to an `os` file function, is
+     allowed only in the function the allow-list names:
+     `internal/hostenv.Isolate` (the `NO_COLOR` read, `os.Clearenv`,
+     `time.Local`), `internal/hostfs` (file functions and `os.OpenRoot`),
+     `cmd/metais` (`os.Args`, `os.Stdin`, `os.Stdout`, `os.Stderr`,
+     `os.Exit`), `internal/dates` (`time.Parse` of `--now` and `time.Unix`
+     and its kin, never with `time.Local`). No package may use a random
+     source.
    - **Directive rule**: no `//go:linkname`, no `import "C"`, no dot import, and
      no `unsafe` outside an allow-listed function.
    - **Dependency scan**: the same symbol lists are searched in every non-standard
      package of the closure. Each hit must match an allow-list entry giving the
-     import path, file, symbol and the reason it cannot reach a template (for
-     `osteele/liquid`'s `values/parsedate.go` and `time.Now`, `time.Local`:
-     "replaced by METAIS's `date` filter; the `clock` and `tz` canaries prove
-     the replacement"). An entry that no longer matches a hit also fails, so the
+     import path, file, symbol and the reason it cannot reach a template, an
+     output or a message (for example, a library's own debug logging path
+     that METAIS never calls). An entry that no longer matches a hit also
+     fails, so the
      list stays exact and a dependency upgrade that adds an `os.Getenv` breaks
      the build.
    - **Canary rule**: only `canary_*.go` files carry a canary tag, and the
@@ -813,10 +856,16 @@ that could ask for a host fact appears.
 
 ### D17 — The hostile corpus
 
-ADR-011 owns its format. Large cases (bombs, limit-scale counts) are produced at
-test time by a deterministic generator from a committed recipe; small ones are
-committed. Every case names its expected finding code and runs under the SC7
-harness. The corpus contains at least these cases:
+ADR-011 owns its form: every case is a vector tagged `security`, with its
+package committed as bytes and the program that produced them kept with a
+test that it reproduces them (ADR-011 D16 item 5). A case that would need a
+large file proves its rule at a lowered limit instead (D4 item 4): an
+`entries`-plus-one case uses `--limit entries=3`, and a pathological pattern
+runs over an input sized to a lowered `input-size`. A FIFO is created by the
+vector's setup (ADR-011 D9 item 4); a device cannot be created without
+privilege, so the device cases are unit tests of `internal/hostfs`. Every
+case names its expected finding code and runs under the SC7 harness. The
+corpus contains at least these cases:
 
 1. **Entry names**: `../x`; `a/../../x`; `/etc/x`; `C:\x`; `C:x`; `\\server\share\x`;
    `a\..\..\x`; a NUL; an empty name; `.` and `..` components; `a//b`; a file
@@ -827,15 +876,16 @@ harness. The corpus contains at least these cases:
    top-level root.
 2. **Entry collisions and types**: duplicate names; `A.txt` beside `a.txt`; `a`
    beside `a/b`; a symbolic-link entry pointing inside and one pointing out; a
-   FIFO, a device and a socket mode; a directory entry with data; setuid and
-   executable bits (accepted, never applied).
+   FIFO, a device and a socket mode; a directory entry, with and without
+   data; setuid and executable bits (refused, since ADR-001 D1 fixes the
+   external attributes; modes are never taken from a package).
 3. **Container structure**: a Fifield overlap bomb in the plain and the quoted
    form; declared sizes over `entry-size` and `package-uncompressed`; a lying
    size (more data, and less data, than declared); a 1032:1 entry over
    `entry-ratio`; a local header disagreeing with its central record in name,
    method, sizes and CRC; a gap between entries; prepended bytes; trailing bytes;
-   an archive comment; two end records; a central directory count mismatch; an
-   inconsistent Zip64 record; the encryption bit; unsupported methods (bzip2,
+   an archive comment; two end records; a central directory count mismatch; a
+   Zip64 end record or extra field; the encryption bit; unsupported methods (bzip2,
    LZMA, zstd, AES); a data descriptor; truncation; a CRC mismatch;
    `entries` + 1 entries.
 4. **Digests and compiled forms**: an entry changed after packing; the digest file
@@ -853,10 +903,11 @@ harness. The corpus contains at least these cases:
    `$schema`; a `$ref` chain over `ref-depth`; a non-consuming `$ref` cycle;
    nested `anyOf` over non-consuming refs that is exponential without
    `schema-work`; nesting over `schema-depth`; a schema whose inlined form
-   exceeds `combined-schema-size`; `^(a+)+$` against 32 MiB of `a`; lookahead,
+   exceeds `combined-schema-size`; `^(a+)+$` against a run of `a` as long as
+   a lowered `input-size` allows; lookahead,
    lookbehind and a backreference (refused); `\s`, `.` and `[^]` divergence
    cases (translated); `x{1001}`; a pattern over `pattern-length` and one over
-   `regex-program`; a `format: regex` input carrying a hostile pattern;
+   `regex-program`; `format: regex` (refused by ADR-003 D4);
    `uniqueItems` over 1,000,000 items; `multipleOf: 1e-308` against `1e308`.
 7. **Templates**: `include`; `render` of `../../etc/passwd`, of `/abs`, of a name
    only the working-directory decoy has, of `.compiled/manifest.json`, of an
@@ -864,8 +915,8 @@ harness. The corpus contains at least these cases:
    partials; 10,000 nested blocks; `(1..1000000000)`; nested loops past
    `loop-iterations`; string doubling past `value-size` and `assign-bytes`;
    `split` past `array-size`; a `contains` over a 64 MiB string in a loop (stopped
-   by `render-work`); output past `output-size`; `"now"` and `"today"` without
-   `--now`; `{{ env }}`, `{{ ENV.HOME }}`, `{{ site }}`, `{{ page }}`; a template
+   by `render-work`); output past `output-size`; `"now"` and `"today"` given
+   to `date`, with and without `--now`; `{{ env }}`, `{{ ENV.HOME }}`, `{{ site }}`, `{{ page }}`; a template
    over `template-size`; invalid UTF-8 and a NUL in a template.
 8. **Outputs**: manifest paths with traversal, absolute and Windows-invalid
    forms; the same produced from input data by a path template; case collisions
@@ -907,110 +958,130 @@ harness. The corpus contains at least these cases:
    case at the default and records its CPU time and peak memory per supported
    target; the ceilings above are the acceptance criterion for the defaults.
 
-### D19 — The finding codes this ADR introduces
+### D19 — The finding codes this ADR's rules report
 
-ADR-006 owns the spelling and the registry; these are the codes and their
-meanings, for the consistency pass to reconcile.
+Spelled in ADR-006's families (ADR-006 D3). Codes another ADR registers are
+named with their owner.
 
-| Code | Meaning |
-|---|---|
-| `limit.exceeded` | a D3 limit was reached (fields of D2 item 5) |
-| `limit.invalid` | `--limit` named an unknown limit, gave a malformed value, or tried to raise one |
-| `container.overlap`, `container.gap`, `container.extra-bytes`, `container.header-mismatch`, `container.size-mismatch`, `container.crc`, `container.method`, `container.encrypted`, `container.structure` | the D5 checks |
-| `entry.path`, `entry.type`, `entry.duplicate`, `entry.collision`, `entry.reserved` | the D6 rules (`entry.reserved` for `.git` and Windows-reserved names) |
-| `compiled.mismatch` | D5 item 9 |
-| `yaml.alias`, `yaml.tag`, `yaml.multi-document`, `json.duplicate-key` | D10 items 1–2 |
-| `regex.unsupported`, `regex.invalid` | D10 item 6 |
-| `schema.ref-outside` | D9 item 6 |
-| `input.link`, `input.not-regular` | D7 items 2–3 |
-| `output.path`, `output.link`, `output.not-regular`, `output.reserved` | D8 items 2, 3 and 6 |
-| `internal.error` | D14 item 5 |
+| Code | Class | Meaning |
+|---|---|---|
+| `limit.package` | `refused` | a D3 limit breached by the package's own content, wherever it is found (opening, `check`, parsing a template); fields of D2 item 5 |
+| `limit.exceeded` | `content` | a D3 limit breached by the inputs, by a render's work or by its outputs; fields of D2 item 5 |
+| `limit.invalid` | `usage` | `--limit` named an unknown limit, gave a malformed value, or tried to raise one |
+| `package.container.*` (ADR-001) | `refused` | the D5 checks: `overlap_or_gap`, `prepended_data`, `trailing_data`, `archive_comment`, `second_end_record`, `zip64`, `header_mismatch`, `size_mismatch`, `crc_mismatch`, `method`, `encrypted`, `field_value` (a link, directory, device or setuid mode) and the rest of ADR-001's list |
+| `package.name.*` (ADR-001) | `refused` | the D6 rules: `shape`, `character`, `not_portable` (Windows-reserved names and `.git`), `duplicate`, `case_collision`, `file_directory_conflict`, `directory_entry` |
+| `package.compiled.mismatch` (ADR-001) | `refused` | D5 item 9 |
+| `yaml.alias`, `yaml.tag`, `yaml.multi_document`, `yaml.duplicate_key`, `json.duplicate_name` (ADR-003; `manifest.yaml.*` and `manifest.json.*` for the manifest, ADR-002) | `content` | D10 items 1–2 |
+| `schema.pattern_unsupported` | `content` | D10 item 6: a construct the pattern profile refuses, named |
+| `schema.ref_unresolved`, `schema.ref_escapes` (ADR-003) | `content` | D9 item 6 |
+| `input.link`, `input.not_regular_file` (ADR-003) | `content` | D7 items 2–3 |
+| `output.path.*` (ADR-005), `output.destination.link`, `output.destination.not_regular_file` | `content`, `destination` | D8 items 2, 3 and 6 |
+| `usage.bad_value` (ADR-008) | `usage` | a `grep` pattern that does not compile, or exceeds `pattern-length` or `regex-program` |
+| `internal.error` (ADR-006) | `internal` | D14 item 5 |
 
 ## Interfaces with sibling ADRs
 
-**ADR-001 — the container.** This ADR relies on a profile with: methods stored
-and deflate only; no encryption; no data descriptors (sizes in the local
-header); no archive comment, no prepended or trailing bytes; entries contiguous
-from offset 0 and in sorted order; names UTF-8 with the language-encoding flag
-set; fixed external attributes (regular file or directory); Zip64 either
-forbidden (no package within `package-size` needs it) or tightly specified; and
-a digest file that gives every entry's SHA-256 and the package's, verified
-before content is used (D5 item 8). It promises ADR-001 the structural check
-order of D5, which ADR-001's verification may reference rather than restate.
+**ADR-001 — the container.** This ADR relies on ADR-001 D1's profile:
+methods stored and deflate only; no encryption; no data descriptors (sizes in
+the local header); no archive comment, no prepended or trailing bytes, and no
+second end-record signature (adopted in ADR-001 D8 step 2); entries
+contiguous from offset 0 and in sorted order; names UTF-8 with the
+language-encoding flag set; fixed external attributes (a regular file,
+mode 0644); no directory entries; no Zip64 (ADR-001 D3); and a digest file
+that gives every entry's SHA-256 and the package's, verified for the whole
+package at every open, before any content is used (ADR-001 D8). It promises
+ADR-001 the structural check order of D5, which ADR-001's verification
+follows.
 
-**ADR-002 — the manifest.** Relies on: YAML with no anchors, aliases or merge
-keys, core-schema tags only, one document; duplicate keys refused in YAML and
-JSON; every manifest string literal, with no interpolation of any kind; and the
-canonical JSON form being re-derivable from `metais.yaml` (D5 item 9). Promises
-`manifest-size`, `value-depth` and `number-length`.
+**ADR-002 — the manifest.** Relies on: YAML with no anchors, aliases, merge
+keys or explicit tags, one document; duplicate keys refused in YAML and JSON;
+every manifest string literal, with no interpolation of any kind; and the
+canonical JSON form being re-derivable from `metais.yaml` (D5 item 9).
+Promises `manifest-size`, `value-depth` and `number-length`.
 
 **ADR-003 — the data specification.** Relies on: a naming rule that maps a
 data-directory entry to a declared input deterministically, so that D7 item 1
-can open only candidates; collections one level deep, or a stated depth;
-`--set` and `--json` values taken literally, and any file-reference syntax
-named explicitly; standard input only when named as `-`; the combined schema's
-base URI `metais:/inputs/<file>` and the `$ref` rule of D9 item 6; `format`
-assertions that are syntactic; `pattern`, `patternProperties` and `format:
-regex` under D10 item 6. Promises the data limits of D3 and the CSV checks of
-D10 item 3.
+can open only candidates; collections one level deep; `--set`, `--set-json`
+and `--inputs-json` values taken literally, with no file-reference syntax;
+standard input only for `--inputs-json -`; retrieval URIs `metais:///<path>`
+and the `$ref` rule of D9 item 6 (ADR-003 D5); `format` assertions that are
+syntactic, with `format: regex` refused (ADR-003 D4 item 2); `pattern` and
+`patternProperties` under D10 item 6. Promises the data limits of D3 and the
+CSV checks of D10 item 3.
 
-**ADR-004 — the template environment.** Relies on: exactly the variables of D13
-item 1; strict variables, so that an unknown name is an error; `render` with a
-quoted name, from `templates/` only; no `include`; `asset`, `embed` and any
-reference tag resolved through D9; `"now"` and `"today"` in `date` meaning
-`--now`, and a template error without it; dates in UTC or their own offset, and
-named zones only from embedded tzdata; no locale; code-point sorting; a defined
-iteration order; the closed provenance list; Jekyll extensions off; and a charge
-for every filter in the `render-work` table (D11 item 2). Promises the template
-and work limits of D3.
+**ADR-004 — the template environment.** Relies on: exactly the globals of
+ADR-004 D7, bound where its item 10 says; strict variables, so that an
+unknown name is an error; `render` with a quoted name, from `templates/`
+only; no `include`; `asset`, `embed` and any reference tag resolved through
+D9; `"now"` and `"today"` refused by `date` whether or not `--now` is given,
+the render time reaching templates only as `now`; dates in UTC or their own
+offset, with no named zones; no locale; code-point sorting of strings; a
+defined iteration order; the closed provenance list; and a charge for every
+filter in the `render-work` table (D11 item 2). Promises the template and
+work limits of D3, under D19's codes.
 
-**ADR-005 — outputs and rendering.** Relies on: portable-path rules applied to
-output paths, container entry paths, and (by this ADR) entry names, including a
-reserved-name rule that ADR-005 extends with `.git` (D8 item 6) or that this
-ADR's `entry.reserved` carries; staging inside the output directory; all or
-nothing; never deleting; never reading existing contents; explicit modes, never
-setuid or setgid; a tar profile with fixed metadata; output paths checked
-before staging, whatever produced them; deterministic ordering of parallel work.
-Promises the confinement procedure of D8 and the output limits of D3.
+**ADR-005 — outputs and rendering.** Relies on: ADR-005 D12's portable-path
+rules applied to output paths, container entry paths and entry names, with
+the `.git` rule of D8 item 6 among its reserved names; staging beside the
+output directory with fixed names, confined by `os.Root` as D8 item 1
+states; all or nothing; never deleting; never reading existing contents
+(D8 item 4, which ADR-005 D15 adopts, so it has no `unchanged` status);
+explicit modes, never setuid or setgid; a tar profile with fixed metadata;
+output paths checked before staging, whatever produced them; a
+single-threaded render (ADR-010 D2 item 3). Promises the confinement
+procedure of D8 and the output limits of D3, `container-depth` among them.
 
-**ADR-006 — findings.** Relies on: a registry that takes the codes of D19; limit
-findings with the fields of D2 item 5; a truncation marker and an omitted count
-for `findings` and `grep-matches`; a distinct exit status for a refused package
-as against invalid inputs, if ADR-006 distinguishes them; and the wording rules
-of D15 (no host path; roles named; neutralised echoes).
+**ADR-006 — findings.** Relies on: a registry that takes the codes of D19,
+with each code's class fixed (`limit.package` refused, `limit.exceeded`
+content, `limit.invalid` usage); limit findings with the fields of D2 item
+5; a truncation marker and an omitted count for `findings` and
+`grep-matches`; exit status 4 for a refused package as against 1 for invalid
+inputs (ADR-006 D12); and the wording rules of D15 (no host path, no
+caller's path; roles named; neutralised echoes in ADR-006 D9 item 9's
+form).
 
 **ADR-007 — authoring.** Relies on: `init` writing fixed content plus its
-arguments, with no user name, date or git configuration; `check` running every
-package limit, the pattern profile and the `$ref` rule; `pack` reading the source
-through `internal/hostfs` under D7 item 8, reading nothing outside the layout's
-roots, and writing no host metadata (timestamps, uid/gid, modes, paths) into the
-zip; `unpack` writing under D8; the sample generator seeded explicitly with a
-fixed default and charging `regex-work` when it generates for a `pattern`.
+arguments, with no user name, date, git configuration or working-directory
+name (ADR-007 D1 item 2); `check` running every package limit, the pattern
+profile and the `$ref` rule; `pack` reading the source through
+`internal/hostfs` under D7 item 8, reading nothing outside the layout's
+roots, and writing no host metadata (timestamps, uid/gid, modes, paths) into
+the zip; `unpack` writing under D8; the sample generator seeded explicitly
+with a fixed default, implemented by METAIS without a library random source,
+and charging `regex-work` when it generates for a `pattern`.
 
-**ADR-008 — the command line.** Relies on: `--limit NAME=VALUE` on every command
-that reads a package or an input; a `limits` command (or an equivalent); `NO_COLOR`
-as the only environment variable the CLI reads; `grep` in RE2 syntax under the
-D3 limits with a truncation flag; `read` printing raw bytes. Promises the
-semantics of D4.
+**ADR-008 — the command line.** Relies on: `--limit NAME=VALUE` on every
+command that reads a package or an input, and the `limits` command (ADR-008
+D1, D4); `NO_COLOR` as the only environment variable the CLI reads, with
+terminal detection by `isatty` and no `TERM` (ADR-008 D12); `grep` in RE2
+syntax under the D3 limits with a truncation flag; `read` printing raw
+bytes; no caller path printed anywhere, `next` included (ADR-008 D11 item
+5, D14 item 2). Promises the semantics of D4.
 
-**ADR-010 — the implementation.** Relies on: Go 1.24 or later (`os.Root`);
-`CGO_ENABLED=0` and `-trimpath`; a Liquid engine that accepts an injected
-template store and enforces D11 (otherwise its own engine); a JSON Schema
-validator with a replaceable loader and regular-expression engine and a way to
-count `schema-work` (otherwise a wrapper or its own); a YAML library with a node
-API that keeps aliases unexpanded — and a maintained one, since
-`gopkg.in/yaml.v3` is archived; a zip reader used only after D5; the test layout
-for `TestHostIsolation`, `TestHostIsolationCanaries` and `TestNoHostFacts`, and a
-helper that reads CPU time and peak memory of a subprocess. No new module
-dependency is needed by this ADR: the tripwire uses `go/parser`, `go/build` and
-`go list`.
+**ADR-010 — the implementation.** Relies on: Go 1.26 (ADR-010 D1), which has
+`os.Root` (since 1.24) and `Root.Rename` (since 1.25); `CGO_ENABLED=0` and
+`-trimpath`; METAIS's own Liquid engine (ADR-010 D4), with no template store
+but D9's resolver and a meter that enforces D11; `santhosh-tekuri/jsonschema/v6`
+with a replaceable loader and regular-expression engine, and a counter for
+`schema-work` in METAIS's wrapper (ADR-010 D5); `go.yaml.in/yaml/v3`'s node
+API under `internal/yamlx`, which keeps aliases unexpanded; its own zip
+reader, so `archive/zip` is used only for writing; `internal/hostfs` as the
+one package that touches the host filesystem and `internal/hostenv.Isolate`
+as the one reader of the environment (ADR-010 D2); `internal/dates` for
+`--now` parsing and the `date` filter's arithmetic; the test layout for
+`TestHostIsolation`, `TestHostIsolationCanaries` and `TestNoHostFacts`
+(`internal/guarantees`), and a helper that reads CPU time and peak memory of
+a subprocess. No new module dependency is needed by this ADR: the tripwire
+uses `go/parser`, `go/build` and `go list`.
 
-**ADR-011 — conformance.** Relies on a vector format that can express: `--limit`
-arguments; filesystem fixtures (symbolic links, FIFOs, devices where the
-platform allows, pre-existing output files and links); generated packages from
-a committed recipe; expected findings by code; per-case CPU and memory
-ceilings; the "nothing written outside" snapshot; and a runner mode that runs
-every vector under the SC7 harness. Promises the corpus list of D17 and its
+**ADR-011 — conformance.** Relies on: the runner (ADR-011 D11) and its
+sentinel and plain environments (ADR-011 D12), which D16 item 1 extends; a
+vector format that can express `--limit` arguments (`limits`); setup
+fixtures — symbolic links, FIFOs (ADR-011 D9 item 4's `fifos`), pre-existing
+output files and links; committed hostile packages with the program that
+produced them (ADR-011 D16 item 5); expected findings by code; per-case CPU
+and memory bounds (ADR-011 D13); and the "nothing written outside"
+snapshot (ADR-011 D10 item 4). Promises the corpus list of D17 and its
 expected codes.
 
 ## Conformance
@@ -1029,7 +1100,7 @@ Vectors are needed for every observable rule here:
    construct.
 6. `$ref` resolution: allowed targets and each refused form.
 7. Template confinement: partial, asset and embed resolution; `include` absent;
-   `"now"` without `--now`; unknown host-like variables.
+   `"now"` refused with and without `--now`; unknown host-like variables.
 8. Output confinement from the manifest and from data; link and FIFO handling
    with and without `--overwrite`; `.git` refusal.
 9. Input confinement: links, special files, candidate selection.
@@ -1194,9 +1265,10 @@ headers agree with it exactly.
 10. **The compiled manifest and combined schema are re-derived and compared on
     every read of a packed package.** Lean: yes. Alternative: trust `.compiled/`
     and let `check` alone compare.
-11. **`isolate()` empties the environment and sets `time.Local` to UTC at
-    startup, after reading `NO_COLOR` as the only display setting.** Lean: yes.
-    Alternative: rely on the static tripwire alone.
+11. **`internal/hostenv.Isolate()` empties the environment and sets
+    `time.Local` to UTC at startup, after reading `NO_COLOR` as the only
+    display setting (ADR-008 D12 adopts it; `TERM` is not read).** Lean: yes.
+    Alternative: rely on the static tripwire alone; or also read `TERM`.
 12. **Canary builds stay in the tree permanently** behind build tags. Lean: yes,
     so the SC7 harness cannot become vacuous. Alternative: pin red only in the
     history of the change that adds the harness.
@@ -1209,11 +1281,26 @@ headers agree with it exactly.
 15. **Human-format output neutralises control and bidirectional characters** in
     echoed text; `read` and standard-output renders stay raw. Lean: yes.
 16. **The container profile is strict** (contiguous entries, no prepended or
-    trailing bytes, no comment, no data descriptors), which ADR-001 must adopt.
-    Lean: yes; it is what makes the parser differential impossible.
+    trailing bytes, no comment, no data descriptors, no second end-record
+    signature in the final 65,557 bytes), which ADR-001 adopts. Lean: yes;
+    it is what makes the parser differential impossible. Cost: a stored
+    nested zip whose own end record lands near the end of a small package
+    is refused, and `pack` reports it rather than write it. Alternative:
+    refuse a second signature only where it parses as a self-consistent end
+    record pointing at a central directory.
 17. **Zip permission bits are never applied.** Lean: yes; modes come from ADR-005.
 18. **`entry-ratio` applies only to entries above 1 MiB.** Lean: yes; small
     entries are bounded by size alone.
+19. **A limit breach is `limit.package` (refused, exit 4) when the package's
+    own content breaches it and `limit.exceeded` (content, exit 1) otherwise**
+    (D19). Lean: yes. Why: the caller who can fix it differs, and a code's
+    class is fixed (ADR-006 D3 item 4). Alternative: one code, which would
+    need a class per occurrence.
+20. **`container-depth`, default 3, joins the output limits** (D3). Lean:
+    yes; ADR-005 D8 item 4 needs it.
+21. **The hostile corpus is committed bytes; a large case proves its rule at a
+    lowered limit** (D17, ADR-011 D16). Lean: yes. Alternative: generate
+    large cases from a recipe at test time.
 
 ## References
 

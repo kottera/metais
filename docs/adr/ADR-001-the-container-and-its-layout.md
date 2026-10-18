@@ -199,48 +199,57 @@ A web search on the same day found no other use of the `.metais` extension.
 
 ### D2 — An entry name is a relative, portable, NFC, UTF-8 file path
 
+Entry names, output paths and container entry paths obey **one
+portable-path predicate, stated normatively by ADR-005 D12**. This decision
+restates it for entry names and adds what only a zip carries (bit 11, no
+directory entries).
+
 1. **Encoding.** The name is valid UTF-8 with no byte order mark, and is in
-   Unicode Normalization Form C. Bit 11 is always set (D1 item 3), so there
-   is no CP437 reading of any name.
+   Unicode Normalization Form C. A name not in NFC is refused, never
+   normalized. Bit 11 is always set (D1 item 3), so there is no CP437
+   reading of any name.
 2. **Shape.** Segments separated by `/`. No leading `/`, no trailing `/`, no
    empty segment, no `.` or `..` segment, no `\`, no `:` (which rules out a
    drive letter and an NTFS alternate stream).
 3. **Characters.** Every code point is U+0020 SPACE or belongs to one of the
-   general categories L, M, N, P or S as Unicode 15.0.0 assigns them. This
-   refuses controls (Cc), format characters such as bidirectional overrides
-   and zero-width joiners (Cf), private use (Co), unassigned code points and
-   noncharacters (Cn), and line, paragraph and non-ASCII space separators
-   (Zl, Zp, Zs other than U+0020). Invisible and direction-changing
-   characters in a name are how a listing lies to the person or the harness
-   reading it, and pinning the Unicode version makes the rule the same in
-   every implementation: Unicode's stability policy keeps a character's
-   decomposition and its caseless matching unchanged once it is assigned, so
-   a name built only from assigned characters means the same under every
-   later version.
+   general categories L, M, N, P or S as Unicode 15.0.0 assigns them, and is
+   none of Windows' reserved characters `<` `>` `"` `|` `?` `*` and nothing
+   in U+FFF0–U+FFFF (ADR-005 D12 item 2). This refuses controls (Cc), format
+   characters such as bidirectional overrides and zero-width joiners (Cf),
+   private use (Co), unassigned code points and noncharacters (Cn), and
+   line, paragraph and non-ASCII space separators (Zl, Zp, Zs other than
+   U+0020). Invisible and direction-changing characters in a name are how a
+   listing lies to the person or the harness reading it, and pinning the
+   Unicode version makes the rule the same in every implementation:
+   Unicode's stability policy keeps a character's decomposition and its
+   caseless matching unchanged once it is assigned, so a name built only
+   from assigned characters means the same under every later version.
 4. **Uniqueness.** Take the set of every name and every directory prefix of
    every name (`a/b/c` contributes `a`, `a/b` and `a/b/c`). No two distinct
-   members of that set are equal under Unicode simple case folding
-   (CaseFolding.txt statuses C and S, Unicode 15.0.0). This refuses
-   byte-equal duplicates, `Readme.md` beside `README.md`, and `Docs/a` beside
-   `docs/b`, which are two directories on a case-sensitive file system and
-   one on a case-insensitive one. A name equal to another name's prefix
-   (`a/b` and `a/b/c`) is refused too: one is a file, the other a
-   directory.
-5. **Portability.** The name satisfies the portable-path predicate ADR-005
-   states for output paths: no Windows reserved device name in any segment,
-   no reserved character, no segment ending in `.` or space. Entry names and
-   output paths obey one predicate, so a package that extracts on one
-   platform extracts on all of them, and `extract` and `unpack` never meet a
-   name they cannot write.
+   members of that set are canonical caseless matches (Unicode D145:
+   `NFD(toCasefold(NFD(x)))` equal, full case folding, CaseFolding.txt
+   statuses C and F, Unicode 15.0.0; ADR-005 D12 item 6). This refuses
+   byte-equal duplicates, `Readme.md` beside `README.md`, `straße.md` beside
+   `STRASSE.md`, and `Docs/a` beside `docs/b`, which are two directories on
+   a case-sensitive file system and one on a case-insensitive one. A name
+   equal to another name's prefix (`a/b` and `a/b/c`) is refused too: one
+   is a file, the other a directory.
+5. **Portability.** No segment is a Windows reserved device name, with or
+   without an extension, or a `.git` component in any of Git's equivalent
+   spellings; no segment ends in `.` or U+0020; no segment exceeds 255 bytes
+   (ADR-005 D12 items 3 to 5, ADR-009 D8 item 6). Entry names and output
+   paths obey one predicate, so a package that extracts on one platform
+   extracts on all of them, and `extract` and `unpack` never meet a name
+   they cannot write.
 6. **No directory entries.** No name ends in `/`, and every entry is a
    regular file (D1 item 4). Directories exist only as prefixes. A source
    directory holding an empty directory is refused by `check` and `pack`
    with a finding naming it, because the packed form cannot carry it and a
    source directory must mean what its package means: an empty collection
    directory in an example would otherwise be absent after packing.
-7. **Length.** The structural ceiling is the field: 65,535 bytes. The limit a
-   reader enforces is ADR-009's path-length limit and ADR-005's per-segment
-   limit, both far below it.
+7. **Length.** The structural ceiling is the field: 65,535 bytes. The limits a
+   reader enforces are ADR-009's `path-length` (512 bytes) and `path-depth`
+   (32 segments) and the 255-byte segment limit of item 5, all far below it.
 
 ### D3 — No zip64; the profile's ceilings sit inside 32-bit fields, and ADR-009's limits sit inside the ceilings
 
@@ -252,7 +261,9 @@ A web search on the same day found no other use of the `.metais` extension.
    well under 4 GiB, and its default maximum entry count under 65,535. Since
    a caller may only lower a limit, no package that passes the limits needs
    zip64, and zip64 is refused outright (D1 item 2). The same holds for the
-   zip container outputs, under ADR-009's output limits.
+   zip container outputs: ADR-009's `output-size` (256 MiB) keeps every
+   container far below the size ceiling, and ADR-005 D8 refuses a container
+   that plans more than 65,534 entries.
 3. **A later major version may admit zip64** if a real package needs it.
    Within major version 1 the ceilings stand.
 
@@ -286,11 +297,13 @@ A web search on the same day found no other use of the `.metais` extension.
    vectors compare packages and containers by entries — names, order,
    method and content — and never by file bytes.
 7. **For a package**, the entries are in D1 item 7's order and every method
-   is `auto`. **For a zip container output**, ADR-005 supplies the full
-   entry order (its "entries first" option decides the head; I assume the
-   rest follow in ascending byte order of name) and which entries are
-   `store` (its "entries stored" option); every other entry is `auto`. Every container therefore also obeys D1's fixed
-   fields: no extra field on any entry, no data descriptor, UTF-8 names.
+   is `auto`. **For a zip container output**, ADR-005 D8 supplies the full
+   entry order (the profile's entries, then the files of `first: true`
+   declarations, then every other file in ascending byte order of its entry
+   path) and which entries are `store` (`stored: true`, and the `mimetype`
+   entry a profile writes); every other entry is `auto`. Every container
+   therefore also obeys D1's fixed fields: no extra field on any entry, no
+   data descriptor, UTF-8 names, an empty entry stored.
    That satisfies EPUB's and ODF's `mimetype` rules — first, stored, no
    extra field — once ADR-005's recipe lists it first and stored.
 
@@ -314,31 +327,34 @@ A web search on the same day found no other use of the `.metais` extension.
    `templates/` — and is `check`'s to verify, not the container's. Every
    path a manifest names lies under one of these directories.
 2. **One manifest name.** The source manifest is always `metais.yaml`. An
-   author who prefers JSON writes JSON in it: JSON is valid YAML 1.2, so
-   ADR-002's parser reads it, and there is never a question of which of two
-   manifest files wins.
+   author who prefers JSON writes JSON in it: a `metais.yaml` whose first
+   byte other than U+0020, U+0009, U+000A and U+000D is `{` is read under
+   ADR-002's JSON profile, and any other under its YAML profile (ADR-002
+   D1). There is never a question of which of two manifest files wins.
 3. **Below the top level, any name D2 admits is allowed**, dot-files
    included: a site's `assets/.well-known/security.txt` and a repository
    scaffold's `templates/.github/workflows/ci.yml` are legitimate. What a
    reserved directory may hold beyond that is its owner's rule.
-4. **In a packed package, a top-level name outside the table is refused**,
-   with a finding naming it. If ADR-002 lets a tool read a package that
-   declares a later minor specification version than the tool implements,
-   a top-level name or a `.compiled/` file that the tool does not know is
-   verified by digest (D6) and otherwise ignored, with a warning, because a
-   later minor may add one; in a package of a version the tool implements,
-   it is refused.
+4. **In a packed package, a top-level name outside the table, or a
+   `.compiled/` file D7 does not define for the declared version, is
+   refused**, with a finding naming it. A package declaring a minor newer
+   than the tool implements never reaches this check: ADR-002 D7 item 8
+   refuses it first.
 5. **In a source directory**, a top-level name beginning with `.` other than
-   `.compiled` is ignored silently: `.git`, `.gitignore`, `.DS_Store`. Any
-   other unknown top-level name is not part of the package: `check` reports
-   a warning naming it, and `pack` leaves it out. A source directory that
+   `.compiled`, and a top-level regular file whose name ends in `.metais`
+   (where `pack` writes by default, ADR-007 D7), are ignored silently:
+   `.git`, `.gitignore`, `.DS_Store`, `report-1.0.0.metais`. Any other
+   unknown top-level name is not part of the package: `check` reports a
+   warning naming it, and `pack` leaves it out. A source directory that
    contains `.compiled/` is refused by every command, naming it, because
    `.compiled/` is written by pack only and a stale copy beside the sources
    would be read as either. A source directory without `metais.yaml` is not
    a package.
 6. **A source directory's files** are named as D2 requires, relative to the
    directory with `/` separators, and every file under a reserved directory
-   is part of the package. A symbolic link, device, socket or other
+   is part of the package, operating-system litter (`.DS_Store`,
+   `Thumbs.db`) included; `check` warns about such litter (ADR-007 D2 step
+   1), and the author removes it. A symbolic link, device, socket or other
    non-regular file anywhere under a reserved directory is refused (ADR-009
    states the confinement rule).
 7. **Identifying the form.** A command given a directory reads it as a source
@@ -397,9 +413,10 @@ A web search on the same day found no other use of the `.metais` extension.
    provenance; ADR-004 and ADR-008). Inside `digests.json` the hex stands
    alone, because `algorithm` already names it.
 6. **Ordering caution for implementers.** The digest list and the zip's entry
-   order sort by UTF-8 bytes. Canonical JSON may order object members
-   differently (RFC 8785 sorts by UTF-16 code units); `entries`' member order
-   is whatever ADR-002's canonical form says, and nothing depends on it.
+   order sort by UTF-8 bytes. `entries`' members, written in ADR-002 D9's
+   canonical form, are sorted by RFC 8785's rule (UTF-16 code units), which
+   differs between characters above U+FFFF and those in U+E000–U+FFFF;
+   nothing depends on the member order.
 
 ### D7 — `.compiled/`: exactly four files, each a proof rather than a claim
 
@@ -410,8 +427,8 @@ A web search on the same day found no other use of the `.metais` extension.
    |---|---|---|
    | `.compiled/digests.json` | D6 | this ADR |
    | `.compiled/manifest.json` | `metais.yaml` as canonical JSON | ADR-002 |
-   | `.compiled/schema.json` | the combined input schema, internal `$ref`s inlined | ADR-003 |
-   | `.compiled/references.json` | the references index | ADR-008 |
+   | `.compiled/schema.json` | the combined input schema, bundled (ADR-003 D7) | ADR-003 |
+   | `.compiled/references.json` | the references index | ADR-008 D17 |
 
    A package missing any of them is refused. A zip with no `.compiled/` is
    not a package; the refusal says so and names `metais pack` as the next
@@ -436,7 +453,10 @@ A web search on the same day found no other use of the `.metais` extension.
    by ADR-009's limits before the bytes it reads are read:
    1. The file's size is within the package-size limit and D3's ceiling.
    2. The end record is the last 22 bytes and satisfies D1 item 2; its entry
-      count is within the entry-count limit.
+      count is within the entry-count limit; and no other end-record
+      signature (`50 4B 05 06`) lies in the file's final 65,557 bytes, so no
+      reader that scans for the end record can find a different one
+      (ADR-009 D5 item 2).
    3. Every central directory header satisfies D1 item 4 and its name
       satisfies D2; the names are in order and pass the uniqueness rule; the
       sum of declared uncompressed sizes is within the total-size limit; each
@@ -498,27 +518,25 @@ A web search on the same day found no other use of the `.metais` extension.
 
 ## Interfaces with sibling ADRs
 
-**ADR-002 — the manifest and versioning.** I rely on it for: a canonical
-JSON serialization defined to the byte (I assume RFC 8785 or an equivalent
-fully specified form), used for `.compiled/manifest.json` and
-`.compiled/digests.json`, so that D8 step 6 can refuse a non-canonical
-digest file and step 7 can compare bytes; the derivation of
-`manifest.json` from `metais.yaml`, deterministic and fixed per declared
-version; a YAML profile that accepts JSON content in `metais.yaml` (D5 item
-2); the specification-version field, read in D8 step 7; and the rule for
-whether a tool reads a later minor version than it implements (D5 item 4
-handles both answers). I promise: one manifest file name, `metais.yaml`, at
-the top level; `.compiled/manifest.json` as its derived companion. ADR-002's
-draft admits `metais.json` as a second name, exactly one of the two present;
-if Ed rules that way (proposed ruling 10), D5's table gains `metais.json` on
-the same terms and nothing else here changes.
+**ADR-002 — the manifest and versioning.** I rely on it for: RFC 8785 as the
+canonical JSON serialization (ADR-002 D9), used for `.compiled/manifest.json`
+and `.compiled/digests.json`, so that D8 step 6 can refuse a non-canonical
+digest file and step 7 can compare bytes; the derivation of `manifest.json`
+from `metais.yaml`, deterministic and fixed per declared version; the rule
+that a `metais.yaml` beginning with `{` is read under its JSON profile and
+any other under its YAML profile (ADR-002 D1, D5 item 2 here); the
+specification-version field, read in D8 step 7; and its refusal of a package
+declaring a minor newer than the tool implements (ADR-002 D7 item 8), which
+lets D5 item 4 refuse every unknown name. I promise: one manifest file name,
+`metais.yaml`, at the top level; `.compiled/manifest.json` as its derived
+companion.
 
 **ADR-003 — the data specification.** I rely on it for a deterministic
 derivation of `.compiled/schema.json` from `inputs/` and the manifest, fixed
-per declared version (D7 item 3), and for the naming of schema and meaning
-files under `inputs/`. I promise: `inputs/` is a reserved directory whose
-contents beyond D2 are ADR-003's rule; `.compiled/schema.json` is the file
-name.
+per declared version (D7 item 3; ADR-003 D7), and for the naming of schema
+and meaning files under `inputs/`. I promise: `inputs/` is a reserved
+directory whose contents beyond D2 are ADR-003's rule; `.compiled/schema.json`
+is the file name.
 
 **ADR-004 — the template environment.** I promise the package digest's
 definition and presentation (`sha256:<hex>`, D6 items 2 and 5) for
@@ -526,79 +544,87 @@ definition and presentation (`sha256:<hex>`, D6 items 2 and 5) for
 and a packed render see the same digest. I rely on partials and templates
 being entries under `templates/`.
 
-**ADR-005 — outputs, transforms and rendering.** I rely on it for the
-portable-path predicate (Windows device names including the superscript
-forms, reserved characters, trailing dot or space, per-segment length), which
-D2 item 5 applies to entry names; I assume it also adopts D2's NFC, character
-and simple-case-folding rules for output paths, so that both are one
-predicate, and the consistency pass should make them one definition. I
+**ADR-005 — outputs, transforms and rendering.** I rely on ADR-005 D12 as
+the one portable-path predicate, which D2 restates for entry names and which
+adopts D2's NFC, character-category and directory-prefix rules for output
+paths, with canonical caseless matching (full case folding) for both. I
 promise the writer of D4: an ordered entry list with per-entry `store` or
 `auto`, D1's fixed fields on every entry, no extra fields, no data
-descriptors, no zip64, byte-identical per build. ADR-005's OOXML, ODF and
-EPUB recipes supply the order and the stored set, and must confirm that each
-format accepts D1's fixed fields (EPUB and ODF are verified above; OOXML,
-ECMA-376 Part 2 Annex C, is ADR-005's to verify). The manifest declares any
+descriptors, no zip64, byte-identical per build. ADR-005 D8 and D9 supply
+the order and the stored set (non-stored entries are `auto`), and ADR-005
+confirms each format accepts D1's fixed fields (EPUB and ODF are verified
+above; OOXML, ECMA-376 Part 2 §7.3.6 and Annex C, permits stored and
+deflated entries without data descriptors). The manifest declares any
 executable mode an output needs, since the container carries none.
 
 **ADR-006 — validation and findings.** I rely on its finding model, its
-refusal exit code and its code spelling. I propose these codes for the
-refusals D1 to D8 define, for ADR-006 to fix the spelling of:
-`container.not_zip`, `container.prepended_data`, `container.trailing_data`,
-`container.archive_comment`, `container.zip64`,
-`container.encrypted`, `container.method`, `container.flags`,
-`container.data_descriptor`, `container.extra_field`, `container.field_value`
-(a fixed field with another value, naming the field),
-`container.header_mismatch` (local versus central, naming the field),
-`container.overlap_or_gap`, `container.entry_order`,
-`container.crc_mismatch`, `container.size_mismatch`,
-`container.deflate_stream`, `name.encoding`, `name.not_nfc`, `name.shape`,
-`name.character`, `name.not_portable`, `name.duplicate`, `name.case_collision`,
-`name.file_directory_conflict`, `name.directory_entry`,
-`layout.unknown_top_level`, `layout.missing_manifest`,
-`layout.compiled_in_source`, `layout.empty_directory`, `layout.non_regular_file`,
-`compiled.missing`, `compiled.unknown_file`, `digest.entries_mismatch`,
-`digest.mismatch`, `digest.package_mismatch`, `digest.not_canonical`,
-`compiled.mismatch`. Each finding's location is the entry name and, for a
-header field, the field's APPNOTE name and offset.
+refusal exit code (4) and its code syntax. The refusals D1 to D8 define are
+registered in ADR-006's `package` family, class `refused`:
+`package.container.not_zip`, `package.container.prepended_data`,
+`package.container.trailing_data`, `package.container.archive_comment`,
+`package.container.second_end_record`, `package.container.zip64`,
+`package.container.encrypted`, `package.container.method`,
+`package.container.flags`, `package.container.data_descriptor`,
+`package.container.extra_field`, `package.container.field_value` (a fixed
+field with another value, naming the field; a link, directory or device mode
+in the external attributes is this finding),
+`package.container.header_mismatch` (local versus central, naming the
+field), `package.container.overlap_or_gap`, `package.container.entry_order`,
+`package.container.crc_mismatch`, `package.container.size_mismatch`,
+`package.container.deflate_stream`, `package.name.encoding`,
+`package.name.not_nfc`, `package.name.shape`, `package.name.character`,
+`package.name.not_portable`, `package.name.duplicate`,
+`package.name.case_collision`, `package.name.file_directory_conflict`,
+`package.name.directory_entry`, `package.layout.unknown_top_level` (a
+packed package), `package.layout.not_packed` (a warning: an unknown
+top-level name in a source directory, D5 item 5),
+`package.layout.missing_manifest`,
+`package.layout.compiled_in_source`, `package.layout.empty_directory`,
+`package.layout.non_regular_file`, `package.compiled.missing`,
+`package.compiled.unknown_file`, `package.compiled.mismatch`,
+`package.digest.entries_mismatch`, `package.digest.mismatch`,
+`package.digest.package_mismatch`, `package.digest.not_canonical`. Each
+finding's location is the entry name and, for a header field, the field's
+APPNOTE name and offset.
 
 **ADR-007 — authoring.** I rely on it for `pack`'s output file name and
 `unpack`'s behaviour, within these rules: pack runs D4 with D5's entry set
 and writes D7's files; unpack writes every entry except `.compiled/` and
-refuses nothing D8 accepted; `check` reports D5 item 5's warnings and D2
-item 6's empty-directory finding. Whether `check` also warns about
-well-known operating-system litter under a reserved directory
-(`.DS_Store`, `Thumbs.db`) is ADR-007's; the container packs every file
-under a reserved directory.
+refuses nothing D8 accepted; `check` reports D5 item 5's warnings, D2 item
+6's empty-directory finding and the refusal of a source `.compiled/`, and
+warns about operating-system litter under a reserved directory, which the
+container packs like every other file (D5 item 6).
 
-**ADR-008 — the command line.** I rely on it for the content and
+**ADR-008 — the command line.** I rely on ADR-008 D17 for the content and
 deterministic derivation of `.compiled/references.json`, fixed per declared
-version; for which commands accept a source directory (I assume all of them
-that take a package, as the rulings say the read commands do); and for the
-form in which `inspect` shows the package digest. I promise: every command
-that opens a packed package has verified it completely first (D8), and
+version; on every command that takes a package accepting a source directory
+(ADR-008 D2); and on `inspect` showing the package digest in D6 item 5's
+form, computed for a source directory too. I promise: every command that
+opens a packed package has verified it completely first (D8), and
 `.compiled/` entries are ordinary entries for `ls` and `read`.
 
-**ADR-009 — the security model.** I rely on it for: a package-file-size
-limit, a total and a per-entry uncompressed-size limit, an entry-count
-limit, a compression-ratio limit and a path-length limit, each with a
-default below D3's ceilings (under 4 GiB, under 65,535 entries), applied at
-the D8 steps named there; the same for its output limits, which bound the
-zip container outputs; the confinement rule for a source directory's
-non-regular files; and the hostile corpus, which should hold at least one
-package for every refusal listed under ADR-006 above. I promise checks that
-do not depend on `GODEBUG` or any other environment variable.
+**ADR-009 — the security model.** I rely on its `package-size`,
+`package-uncompressed`, `entry-size`, `entries`, `entry-ratio`, `path-length`
+and `path-depth` limits, each with a default below D3's ceilings, applied at
+the D8 steps named there; its `output-size` and `outputs` limits, which with
+ADR-005 D8 bound the zip container outputs; the confinement rule for a
+source directory's non-regular files; the second-end-record refusal (ADR-009
+D5 item 2), adopted in D8 step 2; and the hostile corpus, which holds at
+least one package for every refusal listed under ADR-006 above. I promise
+checks that do not depend on `GODEBUG` or any other environment variable.
 
 **ADR-010 — the implementation.** I rely on it for: a raw zip structure
 reader written in METAIS (Go's `archive/zip` reader does not perform D1's
 checks, so at most its constants are reused); the writer built on
 `zip.Writer.CreateRaw` or written directly; `compress/flate` with a
 byte-counting `io.ByteReader` beneath the decoder, so it does not read ahead
-and D1 item 5's "ends exactly at the compressed size" can be checked; an
-NFC check (`golang.org/x/text/unicode/norm`, whose tables are 15.0.0 in the
-versions checked, or an equivalent); simple case folding and the
-general-category check pinned to Unicode 15.0.0, with a test that fails
-when the toolchain's `unicode.Version` moves, so a Go upgrade cannot widen
-the accepted names silently; and the toolchain pin that fixes the deflate
+and D1 item 5's "ends exactly at the compressed size" can be checked; the
+NFC check, full case folding (`golang.org/x/text/unicode/norm` and
+`golang.org/x/text/cases`, whose tables the toolchain selects: 15.0.0 under
+Go 1.26) and the general-category check (`unicode`, 15.0.0 under Go 1.26),
+with a test that fails when the toolchain's `unicode.Version` or
+`norm.Version` moves, so a Go upgrade cannot widen the accepted names
+silently (ADR-010 D1 item 3); and the toolchain pin that fixes the deflate
 encoder for a build (D4 item 6).
 
 **ADR-011 — the specification and conformance.** I rely on its vector format
@@ -622,7 +648,8 @@ Every rule below is observable and needs vectors (ADR-011's format):
   gap between entries; overlapping entries (Fifield's construction);
   central directory out of entry order; a local header whose name, CRC,
   size, method or flags differs from its central header; a data descriptor;
-  a zip64 end record; an entry count above the limit.
+  a zip64 end record; an entry count above the limit; a stored entry near
+  the end of the file holding a second end-record signature.
 - **Data**: a CRC of zero over nonzero content; a CRC mismatch; a stored
   entry whose sizes differ; a deflate stream with trailing bytes; a
   truncated deflate stream; a deflated entry that decodes past its declared
@@ -630,9 +657,10 @@ Every rule below is observable and needs vectors (ADR-011's format):
 - **Names**: each D2 refusal — non-UTF-8, non-NFC (`e` + U+0301), leading
   `/`, `..`, `\`, `:`, an empty segment, U+202E, U+200B, U+E000, an
   unassigned code point, a directory entry, a byte duplicate, a case
-  collision of files and of directory prefixes, U+212A KELVIN SIGN (refused
-  as not NFC), a file-directory conflict, and one ADR-005 portability
-  refusal each.
+  collision of files and of directory prefixes, a full-folding collision
+  (`straße.md` beside `STRASSE.md`), U+212A KELVIN SIGN (refused as not
+  NFC), a file-directory conflict, a `.git` segment, and one ADR-005
+  portability refusal each.
 - **Layout**: an unknown top-level entry; missing `metais.yaml`; each
   missing `.compiled/` file; an extra `.compiled/` file; a source directory
   with `.compiled/`, with an empty directory, with a symbolic link; a
@@ -772,7 +800,9 @@ it (ADR-002).
   the digest is stable across builds.
 - Names with format characters (zero-width joiner sequences, for instance),
   characters assigned after Unicode 15.0.0, and empty directories are not
-  expressible.
+  expressible; nor, in a small package, is a stored nested zip whose own
+  end record lands in the package's final 65,557 bytes (D8 step 2), which
+  `pack` reports rather than writes.
 
 ### Neutral
 
@@ -807,12 +837,14 @@ it (ADR-002).
    finding** (D2 item 6). Lean: yes. Why: the packed form cannot carry it,
    and source and package must mean the same. Alternative: directory entries
    for empty directories only.
-4. **Entry names are NFC, built from assigned Unicode 15.0.0 characters in
-   categories L, M, N, P, S plus U+0020, unique under simple case folding
+4. **Entry names obey ADR-005 D12's portable-path predicate: NFC, built
+   from assigned Unicode 15.0.0 characters in categories L, M, N, P, S plus
+   U+0020, unique under canonical caseless matching (full case folding)
    across files and directory prefixes** (D2). Lean: yes. Why: it refuses
    spoofed listings and cross-platform collisions and gives every
-   implementation the same answer. Alternative: ASCII-only names, which is
-   simpler and refuses non-English file names.
+   implementation the same answer, with one rule for entries and outputs.
+   Alternative: ASCII-only names, which is simpler and refuses non-English
+   file names; or simple case folding, which misses `ß`/`SS`.
 5. **The package digest is the SHA-256 of the `sha256sum`-format list of
    every entry except `digests.json`, sorted by UTF-8 bytes, and a source
    directory has the same digest as its package** (D6). Lean: yes. Why:
@@ -834,9 +866,11 @@ it (ADR-002).
    (D9). Lean: yes. Why: registration needs a public specification to cite,
    and the repository is private. Alternative: register now; or no media
    type in v1.
-10. **One manifest file name, `metais.yaml`, which may hold JSON** (D5 item 2).
-    Lean: yes. Why: never two manifests. Alternative: accept `metais.json`
-    too and refuse both present. This touches ADR-002's YAML profile.
+10. **One manifest file name, `metais.yaml`, which may hold JSON, read under
+    ADR-002's JSON profile when its first non-whitespace byte is `{`** (D5
+    item 2, ADR-002 D1). Lean: yes. Why: never two manifests, and JSON
+    content still meets a JSON parser. Alternative: accept `metais.json` too
+    and refuse both present.
 11. **Byte-identical packing holds per tool build; across builds and
     implementations, identity is the package digest** (D4 item 6). Lean:
     yes. Why: Go's deflate output is outside its compatibility promise and
@@ -867,12 +901,17 @@ it (ADR-002).
 - Go commit 2747d887, "compress/flate: clarify compatibility promise":
   https://github.com/golang/go/commit/2747d887eb
 - Go `compress/flate` levels: https://pkg.go.dev/compress/flate
-- Go `strings.EqualFold` (simple Unicode case folding):
-  https://pkg.go.dev/strings#EqualFold
+- `golang.org/x/text/cases` (`Fold`, full case folding):
+  https://pkg.go.dev/golang.org/x/text/cases
+- Unicode Standard, Chapter 3, §3.13 Default Caseless Matching (D145,
+  canonical caseless match): https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf
 - Go `unicode.Version` (15.0.0 in go1.26.8):
   https://pkg.go.dev/unicode#pkg-constants
-- `golang.org/x/text/unicode/norm` (tables 15.0.0):
-  https://pkg.go.dev/golang.org/x/text/unicode/norm
+- `golang.org/x/text/unicode/norm` v0.43.0: `tables15.0.0.go` carries
+  `//go:build !go1.27` and `tables17.0.0.go` `//go:build go1.27`, so the
+  compiling toolchain, not the module version, selects the tables (read
+  2026-10-18): https://github.com/golang/text/blob/v0.43.0/unicode/norm/tables15.0.0.go
+  and https://pkg.go.dev/golang.org/x/text/unicode/norm
 - Unicode Character Encoding Stability Policies (normalization and case
   folding stability): https://www.unicode.org/policies/stability_policy.html
 - Unicode `CaseFolding.txt`, 15.0.0:

@@ -108,13 +108,16 @@ forms the path; typeflag `x` carries extended records for the next file in
 `"%d %s=%s\n"` form; the `path` record overrides name and prefix and is UTF-8;
 the archive ends with two 512-octet zero blocks.
 
-**Unicode.** D145 (Unicode 18.0 §3.13.5): X is a canonical caseless match for
-Y if and only if `NFD(toCasefold(NFD(X))) = NFD(toCasefold(NFD(Y)))`, with
-full case folding. The Unicode stability policy guarantees normalization and
-case folding stable across versions **only for strings of characters assigned
-in the version used**. Go's `unicode` tables are Unicode 15.0.0 through
-go1.26 and 17.0.0 in go1.27.0; `golang.org/x/text` carries 17.0.0
-normalization and case tables behind a `go1.27` build tag.
+**Unicode.** D145 (Unicode Standard, Chapter 3, §3.13, Default Caseless
+Matching): X is a canonical caseless match for Y if and only if
+`NFD(toCasefold(NFD(X))) = NFD(toCasefold(NFD(Y)))`, with full case folding.
+The Unicode stability policy guarantees normalization and case folding
+stable across versions **only for strings of characters assigned in the
+version used**. Go's `unicode` tables are Unicode 15.0.0 through go1.26 and
+17.0.0 in go1.27.0; `golang.org/x/text` v0.43.0 carries both table sets for
+`unicode/norm` and `cases`, the 15.0.0 files under `//go:build !go1.27` and
+the 17.0.0 files under `//go:build go1.27`, so the compiling toolchain
+selects them: under ADR-010's Go 1.26 every table is 15.0.0.
 
 **Renaming.** Linux `rename(2)` replaces an existing target atomically, and
 replaces an existing *empty directory*; `renameat2` with `RENAME_NOREPLACE`
@@ -135,8 +138,9 @@ sets the data-descriptor flag on a file entry and adds an extended-timestamp
 extra field when `Modified` is set; `CreateRaw` writes a header exactly as
 given. `archive/tar` writes a ustar header when every field fits ustar, and
 otherwise a pax `x` header carrying only the records that do not fit, with
-record keys sorted. `github.com/osteele/liquid/expressions` exposes `Parse`
-and `EvaluateString` for standalone expressions.
+record keys sorted. METAIS's own Liquid engine (ADR-010 D4) exposes
+`ParseValue`, `ParseCondition`, `Eval` and `EvalCondition` for standalone
+expressions.
 
 ## Decision
 
@@ -181,7 +185,7 @@ and `EvaluateString` for standalone expressions.
    outputs:
      - id: report
        template: report.md.liquid            # path defaults to report.md
-     - id: acr-docx
+     - id: acr_docx
        path: "{{ inputs.product.slug }}-acr.docx"
        container:
          profile: ooxml
@@ -193,7 +197,7 @@ and `EvaluateString` for standalone expressions.
              path: word/media/image1.png
              stored: true
              when: inputs.vendor.logo
-     - id: acr-yaml
+     - id: acr_yaml
        template: openacr.yaml.liquid
        path: "{{ inputs.product.slug }}-acr.yaml"
        validate: references/openacr/openacr.schema.json
@@ -213,10 +217,13 @@ and `EvaluateString` for standalone expressions.
 ### D2 — Common fields
 
 1. **`id`** is required on every top-level declaration and optional on a
-   container entry. Syntax `^[a-z][a-z0-9-]{0,63}$`. Top-level ids are
-   unique in the manifest; entry ids are unique within their container.
-   Findings, the dry-run listing (D16) and single-output selection (D18)
-   name declarations by id.
+   container entry. Syntax `^[a-z][a-z0-9_]{0,63}$`, the rule ADR-003 D1
+   item 3 gives input names (without its reserved words, since an id is
+   never a Liquid name), so every identifier a manifest declares has one
+   spelling. Top-level ids are unique in the manifest; entry ids are unique
+   within their container. Findings (`subject.name`, ADR-006 D4) and the
+   dry-run listing (D16) name declarations by id; single-output selection
+   (D18) names a file by its rendered path.
 2. **`path`** is a Liquid template string (D4). For a template output it
    names one file; for an asset directory, a mirror or a container's
    directory-form entry it names a destination directory, `.` meaning the
@@ -249,10 +256,12 @@ and `EvaluateString` for standalone expressions.
    - anything else (string, number, boolean, object): a finding naming the
      declaration and the type found.
 3. **The binding name is `item`**, fixed. A declaration cannot rename it.
-4. **Scope.** Both expressions see `inputs` and `package` (ADR-004's
-   variables). `item` is bound for `when`, `path`, and the template, in
-   every evaluation of a `for_each` declaration, and in every entry of a
-   container that has `for_each`.
+4. **Scope.** Which globals each expression sees is ADR-004 D7 item 10's
+   table: `inputs`, `package`, `now` and `sources` everywhere; `item` and
+   `fan_out` for `when`, `path` and the template in every evaluation of a
+   `for_each` declaration, and in every entry of a container that has
+   `for_each`, but never in the `for_each` expression itself; `output` only
+   in a template body.
 5. **`when` is evaluated per file.** For a `for_each` declaration it is
    evaluated once per element, with `item` bound, so an author filters items
    either in the expression or in `when`. For any other declaration it is
@@ -264,11 +273,11 @@ and `EvaluateString` for standalone expressions.
    strict-variable failure under ADR-004's rules) are findings located at
    the declaration's manifest JSON Pointer (`/outputs/3/for_each`); the
    declaration produces no files and planning continues with the next one.
-8. **What this ADR needs from ADR-004**: `ParseCondition(src) → Condition`,
-   `ParseValue(src) → Value`, each evaluated against a scope of `inputs`,
-   `package` and optionally `item`, returning a value in ADR-003's data
-   model or an error with a position in `src`. `check` parses both at
-   check time.
+8. **What this ADR needs from ADR-004 and ADR-010**: `liquid.ParseCondition`
+   and `liquid.ParseValue`, evaluated by `liquid.EvalCondition` and
+   `liquid.Eval` (ADR-010 D4 item 3) against the scope ADR-004 D7 item 10
+   gives the expression, returning a value in ADR-003's data model or an
+   error with a position in `src`. `check` parses both at check time.
 
 ### D4 — Path templates
 
@@ -310,8 +319,8 @@ and `EvaluateString` for standalone expressions.
 5. **An asset used only through ADR-004's `{% asset %}` tag for its
    contents** need not be declared; declaring it is what puts it in the
    output.
-6. **The asset placement map.** For ADR-004's `{% asset "<path>" path %}`
-   form, this ADR provides, per tree (the output directory or one
+6. **The asset placement map.** For ADR-004 D13's path mode (`{% asset
+   "<path>" %}`, or with `as: "path"`), this ADR provides, per tree (the output directory or one
    container), the map from asset source path to destination path, and the
    rendering file's own destination path. An asset placed zero times or
    more than once in the tree where the template renders makes that tag
@@ -394,8 +403,9 @@ and `EvaluateString` for standalone expressions.
    container, independently of the output directory; collisions are
    detected among its entries only.
 4. **Nesting** is allowed to a depth of three containers (a container inside
-   a container inside a container). Deeper is a finding. ADR-009 may lower
-   it.
+   a container inside a container), ADR-009's `container-depth` limit
+   (default 3, which a caller may lower). Deeper is ADR-009 D19's
+   `limit.package`, since the manifest itself declares the nesting.
 5. **`for_each` on a container** produces one zip per element, with `item`
    visible to every entry (D3 item 4).
 6. **Entry order**, fixed and independent of declaration order except where
@@ -409,14 +419,20 @@ and `EvaluateString` for standalone expressions.
 
    A file appears once, at its earliest position.
 7. **Methods.** `stored: true` writes every file of that declaration with
-   method 0 (stored); every other entry is written with method 8 (deflate).
-   No other method exists.
+   method 0 (stored), as does a profile's `mimetype` entry (D9); every other
+   entry is written with ADR-001 D4's `auto` method: deflated when that is
+   strictly shorter, otherwise stored, and an empty entry always stored. No
+   other method exists. Which method `auto` chose depends on the encoder,
+   so conformance and `test` compare the method only where `stored: true`
+   fixes it (ADR-001 D4 item 6, ADR-011 D10 item 3).
 8. **Writing** follows ADR-001's deterministic zip rules for everything this
    ADR does not state here: timestamps, entry name encoding, extra fields
-   (none), version fields, deflate settings, ZIP64 use, the central
-   directory and its end record. The container's entry order and methods
-   are this ADR's; ADR-001's sorted-entry rule for packages does not apply
-   inside a container.
+   (none), version fields, deflate settings, the central directory and its
+   end record. There is no zip64 (ADR-001 D3): a container that plans more
+   than 65,534 entries is refused, and ADR-009's `output-size` keeps its
+   size far below the 32-bit ceiling. The container's entry order and
+   `stored` set are this ADR's; ADR-001's sorted-entry rule for packages
+   does not apply inside a container.
 9. **Containers hold file entries only**, never directory entries (ODF §4.3
    states directories have no entries; OPC has only parts).
 10. **A container's `path`** names a file in its enclosing tree; nothing
@@ -505,49 +521,61 @@ written exactly as declared.
 
 These rules apply to every rendered path in every tree: each top-level file
 path, relative to the output directory, and each container entry path,
-relative to its container. A path that breaks any of them is refused on
-every platform, before anything is written.
+relative to its container. They are also the rules for a package's entry
+names (ADR-001 D2), so this is the one portable-path predicate of the
+format. A path that breaks any of them is refused on every platform, before
+anything is written.
 
 1. **Form.** The path is valid UTF-8, in Unicode Normalization Form C, made
    of one or more non-empty segments separated by `/`; no leading `/`, no
    trailing `/`, no empty segment, no segment `.` or `..`. A path not in
    NFC is refused, not normalized: a path is exactly what the template
    produced.
-2. **Characters refused in a segment**, the union of the Windows and EPUB
-   lists:
-   - `<` `>` `:` `"` `/` `\` `|` `?` `*`;
-   - U+0000–U+001F, U+007F, U+0080–U+009F;
-   - U+E000–U+F8FF, U+F0000–U+FFFFD, U+100000–U+10FFFD (private use);
-   - every noncharacter (U+FDD0–U+FDEF and the last two code points of
-     every plane) and U+FFF0–U+FFFF (Specials);
-   - the bidirectional formatting characters U+200E, U+200F, U+202A–U+202E
-     and U+2066–U+2069, which make a path display differently from what it
-     is in a listing (Proposed ruling 6);
-   - every code point **unassigned** in the Unicode version the
-     specification pins (17.0.0 for spec 1.0), because normalization and
-     case folding are guaranteed stable only for assigned characters; a
-     later 1.x that pins a later Unicode version only accepts more.
+2. **Characters.** Every code point of a segment is U+0020 or belongs to
+   one of the general categories L, M, N, P or S as **Unicode 15.0.0**, the
+   version specification 1.0 pins, assigns them; and none is one of:
+   - `<` `>` `:` `"` `/` `\` `|` `?` `*` (Windows' reserved characters);
+   - U+FFF0–U+FFFF (Specials, which EPUB refuses; U+FFFC and U+FFFD are
+     category So and would otherwise pass).
+   The category rule refuses everything else the Windows and EPUB lists
+   name — C0 and C1 controls and U+007F (Cc), private use (Co), every
+   noncharacter and every **unassigned** code point (Cn) — and also every
+   format character (Cf: the bidirectional controls U+200E, U+200F,
+   U+202A–U+202E and U+2066–U+2069, zero-width joiners, the soft hyphen)
+   and every separator other than U+0020 (Zl, Zp, other Zs), which make a
+   path display differently from what it is in a listing (Proposed ruling
+   6). Unassigned code points are refused because normalization and case
+   folding are guaranteed stable only for assigned characters; a later 1.x
+   that pins a later Unicode version only accepts more.
 3. **Segment ends.** A segment does not end with U+0020 or `.`.
-4. **Reserved device names.** A segment is refused when the part before its
+4. **Reserved names.** A segment is refused when the part before its
    first `.`, with trailing U+0020 removed, matches ASCII-case-insensitively
    `CON`, `PRN`, `AUX`, `NUL`, or `COM` or `LPT` followed by one of `0`–`9`,
    `¹`, `²`, `³`. This covers `NUL.tar.gz`, `com¹.txt` and `Con .md`. `COM0`
    and `LPT0` are refused beyond the documented list, at no cost; the
-   trailing-space trim is stricter than documented, deliberately.
+   trailing-space trim is stricter than documented, deliberately. A segment
+   that Git treats as `.git` (ADR-009 D8 item 6: `.git` in any letter case,
+   and its NTFS short name `git~1`) is refused too, because writing
+   `.git/hooks/*` or `.git/config` runs code at the next git command.
 5. **Lengths.** Each segment is at most 255 bytes of UTF-8 (the EPUB limit,
    and within ext4's 255 bytes and NTFS's 255 UTF-16 units). The whole path
-   is at most 1024 bytes. ADR-009 owns the configurable limit and may set a
-   lower default; 1024 is the format's maximum. Windows programs that are
-   not long-path aware cannot open a file whose full path exceeds 259
-   characters; the specification's authoring guidance says so, and the
-   tool does not refuse on it.
-6. **Collisions.** Within one tree, two paths collide when, segment by
-   segment, they are canonical caseless matches (Unicode D145: `NFD(
-   toCasefold(NFD(x)))` equal, full case folding, no tailoring). This is
-   EPUB's uniqueness rule; it is stricter than OPC's ASCII-only rule, NTFS's
-   upcase table and APFS's case- and normalization-insensitive comparison,
-   so a package that passes it writes the same set of files on every one of
-   them. Two colliding paths are a finding naming both declarations.
+   is within ADR-009's `path-length` (512 bytes) and `path-depth` (32
+   segments), which are the format's maxima, since no limit can be raised
+   (ADR-009 D4). Windows programs that are not long-path aware cannot open a
+   file whose full path exceeds 259 characters; the specification's
+   authoring guidance says so, and the tool does not refuse on it.
+6. **Collisions.** Within one tree, take the set of every path and every
+   directory prefix of every path (`a/b/c` contributes `a`, `a/b` and
+   `a/b/c`). Two distinct members collide when they are canonical caseless
+   matches (Unicode D145: `NFD(toCasefold(NFD(x)))` equal, full case
+   folding, CaseFolding.txt statuses C and F of Unicode 15.0.0, no
+   tailoring). This is EPUB's uniqueness rule extended to directories
+   (`Docs/a` beside `docs/b` is one directory on a case-insensitive file
+   system and two elsewhere); it is stricter than OPC's ASCII-only rule,
+   NTFS's upcase table and APFS's case- and normalization-insensitive
+   comparison, so a package that passes it writes the same set of files on
+   every one of them. Two colliding paths are a finding naming both
+   declarations.
 7. **File–directory conflicts.** A path whose prefix of segments collides
    with another file's whole path (`docs` and `docs/a.md`) is refused: one
    name cannot be both a file and a directory. This is also OPC §6.2.2's
@@ -598,12 +626,21 @@ commit's first rename leaves the filesystem as it was. Beyond that the
 guarantee depends on whether the output directory exists.
 
 1. **The output directory does not exist — atomic.**
-   1. Create its missing ancestors, recording which were created.
+   1. Create its missing ancestors, recording which were created. They are
+      the caller's own path (`--out`), opened through an `os.Root` on its
+      nearest existing ancestor, and nothing a package or an input
+      produces names any of them.
    2. Create a staging directory beside it,
-      `<parent>/.<basename>.metais-<16 lowercase hex random>`, in the same
-      parent, so the final rename never crosses a filesystem.
+      `<parent>/.metais-staging-<h>`, where `<h>` is the first 16 lowercase
+      hex digits of the SHA-256 of the output directory's base name, in the
+      same parent, so the final rename never crosses a filesystem. It is
+      created exclusively: if it exists — a killed render's leftover, or a
+      concurrent render of the same output — the render is refused
+      naming it. The name is fixed, never random or taken from the process,
+      so no source of randomness or process identity is read (ADR-009 D12).
    3. Write every planned file beneath it, every operation through an
-      `os.Root` on the staging directory.
+      `os.Root` on the staging directory, so every path a package or an
+      input produced is confined to it (ADR-009 D8).
    4. Rename the staging directory to the output directory with a rename
       that refuses an existing target: `renameat2(RENAME_NOREPLACE)` on
       Linux, `renamex_np(RENAME_EXCL)` on macOS, `MoveFileExW` without
@@ -621,11 +658,12 @@ guarantee depends on whether the output directory exists.
    every failure but a crash during commit.**
    1. **Prepare.** For each planned file in path order: create missing
       directories (recorded), then write its bytes to a temporary file in
-      the target's own directory, `.metais-tmp-<16 lowercase hex random>`,
-      opened with exclusive create. A file whose status is `unchanged`
-      (D15 item 5) gets no temporary file. Any failure (disk full, a
-      permission) removes every temporary file and every recorded directory
-      and refuses: nothing changed.
+      the target's own directory, `.metais-tmp-<h>`, where `<h>` is the first
+      16 lowercase hex digits of the SHA-256 of the target's file name,
+      opened with exclusive create (an existing one refuses the render,
+      naming it). Any failure (disk full, a permission) removes every
+      temporary file and every recorded directory and refuses: nothing
+      changed.
    2. **Commit.** For each file in path order, rename its temporary file
       onto its target: a `create` with the no-replace rename of item 1.4,
       a `replace` with a replacing rename (`rename(2)`;
@@ -653,7 +691,8 @@ guarantee depends on whether the output directory exists.
    directory, its temporary files, and directories it created and left
    empty. It never removes anything else, on success or failure. A stale
    staging directory or temporary file from a killed render is left for
-   the caller.
+   the caller; because its name is fixed, the next render into the same
+   output refuses, naming it.
 
 ### D15 — The overwrite policy and the destination checks
 
@@ -677,13 +716,14 @@ guarantee depends on whether the output directory exists.
    - the target is a directory, or a non-regular file (FIFO, socket,
      device): refused;
    - the target is absent: status `create`;
-   - the target is a regular file: status `replace`, or `unchanged` when its
-     size and bytes equal the new file's.
+   - the target is a regular file: status `replace`.
    Every check is made again through the `os.Root` at write time, so a
    symbolic link planted between check and write fails the operation rather
    than escaping.
-5. **`unchanged` files are not touched**, so their timestamps survive and a
-   build tool watching the tree sees no change.
+5. **An existing file's content is never read** (ADR-009 D8 item 4): the
+   checks use names and `Lstat` only, so `--overwrite` and the dry run's
+   status cannot tell anyone what a replaced file held. Every planned file
+   that exists is replaced, even when its bytes would not change.
 6. **Replacing never writes into an existing file**: the rename replaces
    the directory entry. A target with other hard links keeps them, with the
    old bytes; the replaced file gets the new file's mode, and the running
@@ -701,20 +741,21 @@ guarantee depends on whether the output directory exists.
 2. **It lists every top-level file in path order**, one record each:
    - `path`; `output` (the declaration id); `item` (the `for_each` index,
      when there is one); `source` (`template`, `asset` or `container`);
-     `kind` (template files only); `size` in bytes; `sha256` (lowercase hex
-     of the exact bytes a render would write); `executable`;
-   - `status` (`create`, `replace` or `unchanged`), only when `--out` is
-     given;
+     `kind` (template files only); `size` in bytes; `digest` (`sha256:`
+     and the lowercase hex SHA-256 of the exact bytes a render would write,
+     the presentation ADR-001 D6 item 5 fixes); `executable`;
+   - `status` (`create` or `replace`), only when `--out` is a directory;
    - for a container, `entries`: in container order, each with `path`,
      `output` (entry id, when given), `item`, `source`, `kind`, `method`
-     (`stored` or `deflated`), `size` and `sha256` of the uncompressed
-     content. The container's own `size` and `sha256` are those of the zip
+     (`stored` or `deflated`), `size` and `digest` of the uncompressed
+     content. The container's own `size` and `digest` are those of the zip
      the tool writes.
 3. **Findings and exit status are a render's.** A dry run that would be
    refused reports the same findings and exit code (ADR-006, ADR-008).
-4. **Human form**: one line per file, `<sha256>  <size>  <path>`, entries
-   indented beneath their container; the JSON form carries the records of
-   item 2 inside ADR-008's envelope.
+4. **Output forms**: the JSON form carries the records of item 2 as
+   `render`'s `result.files` in ADR-008's envelope (ADR-008 D8 item 9); the
+   human form is ADR-008's, one line per file with entries indented beneath
+   their container.
 
 ### D17 — Standard output: the archive
 
@@ -751,19 +792,20 @@ guarantee depends on whether the output directory exists.
 6. **The archive is built from the plan**, never from files on disk, so no
    host state (umask, ownership, filesystem case behaviour) reaches it.
 
-### D18 — Standard output: one file, raw
+### D18 — One selected output: raw on standard output, or alone in a directory
 
-1. **`--out -` with `--file <name>`** writes the bytes of exactly one
-   top-level file to standard output and nothing else. `<name>` is a
-   top-level path as the dry run lists it, or a declaration id that yields
-   exactly one file. A container's entry is not selectable; its container
-   is.
+1. **`--out -` with `--only <path>`** (ADR-008 D8 item 5) writes the bytes of
+   exactly one top-level file to standard output and nothing else. `<path>`
+   is a top-level path as the dry run lists it; a declaration id is not
+   accepted, since a `for_each` declaration yields many files. A
+   container's entry is not selectable; its container is.
 2. **The whole render runs**: every file is planned, rendered and verified,
-   so a raw render is refused exactly when a full render is, and its bytes
-   are the bytes the full render writes.
-3. **A name that matches no file, or an id that yields several**, is
-   refused with a finding listing the available paths (bounded by ADR-006's
-   listing rules).
+   so a selected render is refused exactly when a full render is, and its
+   bytes are the bytes the full render writes.
+3. **With `--out <dir>`**, emission (D14) writes only the selected file, by
+   the same commit rules.
+4. **A path that matches no file** is refused with a finding listing the
+   available paths (bounded by ADR-006's listing rules).
 
 ### D19 — Determinism, and how it is proved
 
@@ -774,7 +816,7 @@ guarantee depends on whether the output directory exists.
    - bytes: UTF-8 throughout; line endings as written unless D10;
    - archives: ADR-001's zip rules, D8's entry order and methods, D17's
      fixed headers;
-   - text processing: Unicode 17.0.0 normalization and case folding,
+   - text processing: Unicode 15.0.0 normalization and case folding,
      pinned, with unassigned code points refused (D12 item 2), so two
      implementations on different Unicode tables agree on every accepted
      path;
@@ -801,59 +843,68 @@ guarantee depends on whether the output directory exists.
 
 **ADR-001 — the container and its layout.**
 - *Relies on*: `templates/` and `assets/` as reserved top-level
-  directories; ADR-001's entry-path rules for the package itself, which
-  include D12's portable rules (assumed shared: one rule for package
-  entries and output paths).
-- *Relies on* a **deterministic zip writer** usable for containers with: a
-  caller-given entry order; a per-entry method of stored or deflate; no
-  extra field on any entry; a fixed timestamp, assumed 1980-01-01 00:00:00,
-  which D17's tar mtime mirrors; UTF-8 names with the language-encoding flag;
-  `version needed to extract` within EPUB's `10`, `20`, `45`; ZIP64 only when
-  required; and, at least for stored entries, sizes and CRC in the local
-  header with no data descriptor (Go's `CreateHeader` always sets the
-  descriptor flag, so this means `CreateRaw`). D9's `mimetype` rules
-  depend on that last point.
+  directories; ADR-001 D2, which restates D12 for package entry names, so
+  package entries, output paths and container entry paths obey one
+  predicate.
+- *Relies on* ADR-001 D4's **deterministic zip writer** for containers: a
+  caller-given entry order; per entry `store` or `auto`; no extra field on
+  any entry; the fixed timestamp 1980-01-01 00:00:00, which D17's tar mtime
+  mirrors; UTF-8 names with the language-encoding flag; `version needed to
+  extract` 10 or 20, within EPUB's `10`, `20`, `45`; no zip64 (ADR-001 D3);
+  sizes and CRC in the local header with no data descriptor, which D9's
+  `mimetype` rules depend on.
 - *Promises*: containers never need encryption, comments, directory
-  entries or modes.
+  entries, modes or zip64; a container planning more than 65,534 entries is
+  refused (D8 item 8).
 
 **ADR-002 — the manifest and versioning.**
 - *Relies on*: a top-level `outputs` key, its canonical JSON form, and the
   manifest JSON Schema embedding this ADR's `outputs` schema (D1 item 3).
-- *Assumes*: identifier syntax for `id` is consistent across the manifest
-  (D2 item 1 states `^[a-z][a-z0-9-]{0,63}$`; the consistency pass aligns it
-  with input names).
+- *Promises*: `id` follows the input-name rule (D2 item 1), so the manifest
+  has one identifier syntax; D12 item 4's device names are the list ADR-002
+  D5 item 2 uses for package names.
 
 **ADR-003 — the data specification.**
 - *Relies on*: the data model `inputs` and `item` carry; the JSON Schema
   2020-12 validator with its asserted keywords and formats; the YAML
-  profile; `$ref` resolution confined to the package; reused unchanged for
-  D11. Arrays keep order; object iteration order is defined.
+  profile; `$ref` resolution confined to the package, with ADR-003 D5 item
+  5's directory read, for an output schema, as the top-level directory that
+  holds the `validate` file; reused unchanged for D11. Arrays keep order;
+  object members iterate in ADR-004 D4 item 5's order.
 
 **ADR-004 — the template environment.**
-- *Relies on*: `ParseCondition` and `ParseValue` (D3 item 8); a
-  restricted path-rendering mode (D4 item 1); rendering a template with a
-  given scope (`inputs`, `package`, optional `item`), escaping mode and
-  output kind; `html` escaping that emits only `&amp;` `&lt;` `&gt;`
-  `&quot;`/`&#34;` and `&#39;`, so it is also correct XML escaping for
-  OOXML, ODF and EPUB parts.
-- *Promises*: the kind set of D7, from which ADR-004 maps a provenance
-  comment syntax (`json` and `csv` have none; ADR-004 decides what the tag
-  does there); the asset placement map and the rendering file's
-  destination path (D5 item 6); the `_` prefix that excludes a partial from
-  a mirror (D6 item 2), which ADR-004's partial loading need not know.
+- *Relies on*: `liquid.ParseCondition`, `liquid.ParseValue` and their
+  evaluators (D3 item 8; ADR-010 D4 item 3); ADR-004 D7 item 10's table of
+  which globals each expression sees (D3 item 4); a restricted
+  path-rendering mode (D4 item 1); rendering a template with a given scope,
+  escaping mode and output kind; `html` escaping that emits only `&amp;`
+  `&lt;` `&gt;` `&quot;` and `&#39;`, so it is also correct XML escaping for
+  OOXML, ODF and EPUB parts; the asset tag's syntax, `{% asset "<path>" %}`
+  for the path mode (ADR-004 D13).
+- *Promises*: the kind set of D7, from which ADR-004 D14 maps a provenance
+  comment syntax (`json` has its own style; `csv` and `text` need
+  `style:`); the asset placement map and the rendering file's destination
+  path (D5 item 6); the `_` prefix that excludes a partial from a mirror (D6
+  item 2), which ADR-004's partial loading need not know.
 
 **ADR-006 — validation and findings.**
 - *Relies on*: findings located by manifest JSON Pointer (declaration
   errors), by output path plus container entry path (render, transform and
   path errors), and by JSON Pointer and line inside an output (D11).
-- *Asks for codes* (names are ADR-006's) for at least: declaration form and
-  field errors; `when`/`for_each` errors and wrong `for_each` type; path
-  form, NFC, character, segment end, reserved name, length, collision and
-  file–directory conflict; nesting depth; profile requirements; output
-  parse and schema errors; destination refusals (non-empty, link, case
-  variant, directory or special file at target, non-directory at `--out`);
-  commit failure with the committed paths; unknown `--file` name; the
-  empty-mirror and EPUB-space warnings.
+- *Registers*, in ADR-006's `output` family: declaration form and field
+  errors (`output.declaration.*`); `when`/`for_each` errors and a wrong
+  `for_each` type (`output.expression.*`); path form, NFC, character,
+  segment end, reserved name, length, collision and file–directory conflict
+  (`output.path.*`, class `content`); profile requirements
+  (`output.container.*`); output parse and schema errors (`output.parse`,
+  and ADR-006 D6's keyword codes under `output.`); destination refusals —
+  non-empty, link, case variant, directory or special file at target,
+  non-directory at `--out`, an existing staging or temporary name
+  (`output.destination.*`, class `destination`); commit failure with the
+  committed paths (`output.destination.commit_failed`); an unknown `--only`
+  path (`usage.unknown_output`, ADR-008); the empty-mirror and EPUB-space
+  warnings. Container nesting beyond `container-depth` is ADR-009's
+  `limit.package`.
 
 **ADR-007 — authoring.**
 - *Promises*: everything in D1–D12 that is decidable without data is
@@ -866,43 +917,53 @@ guarantee depends on whether the output directory exists.
 - *Suggests*: a warning for an `xml`-kind entry of a profiled container
   without `escape: html`, since an `&` in supplier data otherwise corrupts
   the document.
-- `test` compares an example's expected outputs byte for byte; the tool's
-  containers are byte-identical, so an expected `.docx` produced by this
-  tool compares exactly.
+- `test` compares an example's expected outputs byte for byte, and
+  containers by entries, comparing the method only where `stored: true`
+  fixes it (D8 item 7; ADR-007 D5 item 3).
 
 **ADR-008 — the command line.**
-- *Assumes* flags (final names ADR-008's): `--out <dir>`, `--out -`,
-  `--file <name>`, `--overwrite`, `--dry-run`. `--file` without `--out -` is
-  refused. The dry-run records of D16 and the per-file `status` of D15 go
-  into the JSON envelope; on a successful render to a directory the report
-  lists each written file with `status`.
+- *Relies on* ADR-008's flags: `--out <dir>`, `--out -`, `--only <path>`
+  (D18), `--overwrite`, `--dry-run`. The dry-run records of D16, with each
+  file's `status`, are `render`'s `result.files` in the JSON envelope; on a
+  successful render to a directory the result lists each written file with
+  `status`.
 - Findings go to standard error whenever standard output carries an archive
   or raw bytes.
 
 **ADR-009 — the security model.**
-- *Relies on* limits with defaults: output file count (every planned file,
-  entries included), per-file and total rendered bytes, container nesting
-  depth (format maximum 3), path length (format maximum 1024 bytes).
-- *Promises*: D12's rules, D14's `os.Root` confinement and D15's link
-  refusals, all before any write; members for the hostile corpus (every
-  D12 rule, links planted in an `--overwrite` target, a target swapped for
-  a link between check and write).
+- *Relies on* limits with defaults: `outputs` (every planned file, container
+  entries included), `output-size` and `output-total`, `container-depth`
+  (default 3), `path-length` (512 bytes) and `path-depth` (32); the `.git`
+  rule (ADR-009 D8 item 6), adopted in D12 item 4; the rule that an existing
+  file in the output directory is never read (ADR-009 D8 item 4), adopted
+  in D15.
+- *Promises*: D12's rules, D14's `os.Root` confinement — every path a
+  package or an input produces is written through a root on the staging
+  directory or, for an existing output directory, on the output directory;
+  only the caller's own `--out` path and its ancestors are reached through
+  a root on their nearest existing ancestor — and D15's link refusals, all
+  before any write; staging beside the output directory in its parent and
+  never under `$TMPDIR`, with fixed names; members for the hostile corpus
+  (every D12 rule, links planted in an `--overwrite` target, a target
+  swapped for a link between check and write).
 
 **ADR-010 — the implementation.**
-- *Needs*: Go 1.27 or later (Unicode 17.0.0 in `unicode`; `os.Root` with
-  `Rename` and `MkdirAll` since 1.25); `golang.org/x/text/unicode/norm` and
-  `golang.org/x/text/cases` (fold) on their 17.0.0 tables; `archive/zip`
-  with `CreateRaw`; `archive/tar`; `golang.org/x/sys/unix` for `renameat2`
-  and `renamex_np`; `osteele/liquid/expressions` (or METAIS's own engine)
-  for D3.
+- *Needs*: Go 1.26 (ADR-010 D1): `os.Root` with `Rename` and `MkdirAll`
+  (since 1.25); `unicode` at 15.0.0; `golang.org/x/text/unicode/norm` and
+  `golang.org/x/text/cases` (`Fold`) on the 15.0.0 tables the toolchain
+  selects; `archive/zip` with `CreateRaw`; `archive/tar`;
+  `golang.org/x/sys/unix` for `renameat2` and `renamex_np`, used only in
+  `internal/hostfs`; METAIS's own engine for D3 (ADR-010 D4).
 
 **ADR-011 — the specification and conformance.**
 - *Needs* a vector format able to state: an expected file tree with each
-  file's bytes; a container's expected entries (order, path, method,
-  content) rather than its bytes; an archive's expected entries and header
-  fields (D17 item 5); a dry-run listing; expected findings; and a
-  destination prepared before the render (existing files, links,
-  case-variant names) for D15.
+  file's bytes; a container's expected entries (order, path, content, and
+  method where `stored` fixes it) rather than its bytes; an archive's
+  expected entries and header fields (D17 item 5); a dry-run listing;
+  expected findings; and a destination prepared before the render
+  (existing files, links, case-variant names) for D15. Staging beside the
+  output directory leaves nothing behind once the rename has made it the
+  output, so ADR-011 D10 item 4's nothing-else-changes check holds.
 
 ## Conformance
 
@@ -918,9 +979,10 @@ Vectors are needed for every observable rule here; ADR-011 owns the format.
   colliding with an explicit output.
 - **Kinds**: each table row, case-insensitive extension, file-name rows,
   `kind` override.
-- **Containers**: entry order with and without `first`; `stored`; nesting
-  to depth 3 and refusal at 4; `for_each` container; entries not written
-  standalone.
+- **Containers**: entry order with and without `first`; `stored`; an empty
+  entry stored; nesting to depth 3 and refusal at 4; `for_each` container;
+  entries not written standalone; 65,535 planned entries refused (under a
+  lowered `outputs` limit only where the default would be costly).
 - **Profiles**: each profile's written `mimetype` (exact bytes, method,
   position, no extra field, no data descriptor), required entries missing,
   author `mimetype` refused, `ooxml` non-ASCII refused, EPUB space warning.
@@ -930,15 +992,20 @@ Vectors are needed for every observable rule here; ADR-011 owns the format.
 - **CRLF**: LF, CRLF, lone CR, mixed, embedded raw input.
 - **Validation**: valid, invalid with several errors (all reported), parse
   failure, wrong kind refused at check.
-- **Paths**: every character class, segment end, every reserved name with
-  and without extension and superscript, length boundaries (255/256 and
-  1024/1025 bytes), non-NFC, unassigned code point, collisions by case, by
-  NFC/NFD and by full folding (`ß`/`ss`), file–directory conflict.
-- **Destination**: absent, empty, non-empty refused, `--overwrite` replace /
-  create / unchanged, a link at a segment, a case variant on disk, a
-  directory at a target, nothing deleted.
+- **Paths**: every character category and reserved character, U+FFFD,
+  a zero-width joiner, a bidirectional control, segment end, every
+  reserved name with and without extension and superscript, `.git` and
+  `GIT~1`, length boundaries (255/256 bytes per segment, 512/513 bytes and
+  32/33 segments per path), non-NFC, unassigned code point, collisions by
+  case, by NFC/NFD, by full folding (`ß`/`ss`) and between directory
+  prefixes (`Docs/a`, `docs/b`), file–directory conflict.
+- **Destination**: absent, empty, non-empty refused, `--overwrite` replace
+  and create (an identical existing file is replaced), a link at a segment,
+  a case variant on disk, a directory at a target, a leftover staging
+  directory refused, nothing deleted.
 - **Dry run** listing and exit status; **archive** entries and fields,
-  long and non-ASCII paths; **raw** by path and by id, unknown name.
+  long and non-ASCII paths; **`--only`** to standard output and to a
+  directory, an unknown path.
 - **Determinism**: cross-platform and repetition (D19 item 2).
 
 Atomicity under a killed process (D14) is not a vector: it is a test of the
@@ -1030,13 +1097,16 @@ the render.
 ### Negative
 
 - Rendered text is held in memory until emission, bounded by ADR-009's
-  limits; a package with very large templated outputs needs those limits
-  raised.
+  limits; a package whose templated outputs exceed them cannot render, since
+  no limit can be raised (ADR-009 D4).
 - An `--overwrite` render killed mid-commit can leave a mixed tree; only the
   new-directory path is atomic.
 - Some legal names on a single platform (`aux.c`, `Con.md`, a name ending in
   `.`, a private-use character) are refused everywhere.
-- Unicode 17.0.0 ties the reference tool to Go 1.27 or later.
+- Characters assigned after Unicode 15.0.0 are refused in paths until a
+  later 1.x pins a later version.
+- Every existing file a render writes over is replaced, even when its bytes
+  would not change, so its timestamp moves (D15 item 5).
 
 ### Neutral
 
@@ -1081,17 +1151,20 @@ the render.
    output names, strips `.liquid`, and never renders file names.** Lean:
    yes. Why: lets a partial and a fanned-out template live in a mirrored
    tree. Alternative: partials only outside the mirrored directory.
-6. **Path rules are the union of Windows's and EPUB's, plus bidirectional
-   formatting characters, plus `COM0`/`LPT0`, in NFC only, with Unicode
-   17.0.0 pinned and unassigned code points refused; collisions by D145 with
-   full folding.** Lean: yes. Why: one strict rule that every target
+6. **One portable-path predicate for outputs, container entries and package
+   entries: categories L, M, N, P, S plus U+0020 of Unicode 15.0.0 (which
+   refuses controls, format and bidirectional characters, private use and
+   unassigned code points), minus Windows's reserved characters and
+   U+FFF0–U+FFFF, device names including `COM0`/`LPT0`, `.git`, NFC only;
+   collisions by D145 with full folding over paths and directory
+   prefixes.** Lean: yes. Why: one strict rule that every target
    filesystem and EPUB accept, stable across Unicode versions. Alternative:
    Windows's list only, ASCII case comparison, NFC normalization applied
    silently.
-7. **Lengths: 255 bytes per segment, 1024 bytes per path** as the format's
-   maximum. Lean: yes. Why: EPUB's segment limit; a path bound for ADR-009
-   without Windows's legacy 260. Alternative: 240 characters total for
-   legacy Windows programs.
+7. **Lengths: 255 bytes per segment; the whole path within ADR-009's
+   `path-length` (512 bytes) and `path-depth` (32).** Lean: yes. Why: EPUB's
+   segment limit; one path bound, ADR-009's, without Windows's legacy 260.
+   Alternative: 240 characters total for legacy Windows programs.
 8. **Atomicity: a new output directory is staged beside it and renamed;
    an existing one is prepared then committed per file; no fsync.** Lean:
    yes. Why: atomic where it can be, honest where it cannot, fast.
@@ -1102,18 +1175,22 @@ the render.
    Alternative: defer to a 1.x addition; every file is `0644`.
 10. **Destination: any entry, hidden files included, makes a directory
     non-empty; any link beneath it refuses; a case-variant existing name
-    refuses; byte-identical files are left `unchanged`.** Lean: yes.
-    Alternative: ignore `.DS_Store`-style files; follow links that stay
-    inside the tree; always rewrite identical files.
+    refuses; an existing file is replaced without its content being read.**
+    Lean: yes. Why: reading it to detect "unchanged" would make the status
+    an equality oracle over a file the supplier cannot read (ADR-009 D8 item
+    4). Alternative: ignore `.DS_Store`-style files; follow links that stay
+    inside the tree; leave byte-identical files `unchanged`.
 11. **The standard-output archive is pax with fixed headers (mode
     `0644`/`0755`, uid/gid 0, empty names, mtime 315532800), regular files
     only, path order, compared by entries in conformance.** Lean: yes.
     Alternative: byte-exact archive conformance, which would bind other
     implementations to one pax-header naming scheme.
-12. **One raw output is selected by `--file <path-or-id>` with `--out -`**,
-    after a full render. Lean: yes. Alternative: render only the selected
-    file, which would let a raw render succeed where a full one is
-    refused.
+12. **One output is selected by its rendered path with ADR-008's `--only`**,
+    after a full render: raw on standard output with `--out -`, or alone in
+    a directory with `--out <dir>`. Lean: yes. Alternative: render only the
+    selected file, which would let a selected render succeed where a full
+    one is refused; or select by declaration id, which is ambiguous for a
+    `for_each` declaration.
 13. **Container nesting to depth 3.** Lean: yes. Why: a submission zip
     holding a `.docx` is a real case; deeper is not. Alternative: no
     nesting.
@@ -1123,6 +1200,15 @@ the render.
     1.0, with schemas anywhere in the package (recommended `references/`).
     Lean: yes. Alternative: a dedicated `schemas/` directory (an ADR-001
     layout change).
+16. **Staging and temporary names are fixed (`.metais-staging-<h>`,
+    `.metais-tmp-<h>`, `<h>` from SHA-256 of a name) and created
+    exclusively.** Lean: yes. Why: no random source or process identity is
+    read (ADR-009 D12), and a leftover is reported rather than silently
+    accumulated. Alternative: random suffixes, which need a random source
+    the isolation tripwire forbids.
+17. **`id` uses the input-name rule `^[a-z][a-z0-9_]{0,63}$`.** Lean: yes.
+    Why: one identifier syntax per manifest. Alternative: allow hyphens in
+    ids only.
 
 ## References
 
@@ -1143,9 +1229,9 @@ the render.
 - The Open Group, POSIX.1-2024, *pax* (ustar header, pax extended headers,
   end of archive):
   https://pubs.opengroup.org/onlinepubs/9799919799/utilities/pax.html
-- Unicode Consortium, *The Unicode Standard 18.0*, Chapter 3, §3.13.5
+- Unicode Consortium, *The Unicode Standard 15.0*, Chapter 3, §3.13
   Default Caseless Matching (D144, D145):
-  https://www.unicode.org/versions/Unicode18.0.0/core-spec/chapter-3/
+  https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf
 - Unicode Consortium, *Unicode Character Encoding Stability Policies*
   (normalization and case folding stability):
   https://www.unicode.org/policies/stability_policy.html
@@ -1153,27 +1239,26 @@ the render.
   https://man7.org/linux/man-pages/man2/rename.2.html
 - Apple XNU `rename(2)` (`renamex_np`, `RENAME_EXCL`):
   https://opensource.apple.com/source/xnu/xnu-4570.61.1/bsd/man/man2/rename.2.auto.html
-- Go `os.Root`: https://github.com/golang/go/blob/go1.27.0/src/os/root.go;
+- Go `os.Root`: https://github.com/golang/go/blob/go1.26.9/src/os/root.go;
   Go 1.24 and 1.25 release notes: https://go.dev/doc/go1.24,
   https://go.dev/doc/go1.25
 - Go `os.Rename` on Unix:
-  https://github.com/golang/go/blob/go1.27.0/src/os/file_unix.go
+  https://github.com/golang/go/blob/go1.26.9/src/os/file_unix.go
 - Go darwin `Fsync` (`F_FULLFSYNC`):
-  https://github.com/golang/go/blob/go1.27.0/src/internal/poll/fd_fsync_darwin.go
+  https://github.com/golang/go/blob/go1.26.9/src/internal/poll/fd_fsync_darwin.go
 - Go Windows long paths (`fixLongPath`):
-  https://github.com/golang/go/blob/go1.27.0/src/os/path_windows.go
+  https://github.com/golang/go/blob/go1.26.9/src/os/path_windows.go
 - Go `archive/zip` writer (`CreateHeader`, `CreateRaw`):
-  https://github.com/golang/go/blob/go1.27.0/src/archive/zip/writer.go
+  https://github.com/golang/go/blob/go1.26.9/src/archive/zip/writer.go
 - Go `archive/tar` writer (format selection, pax records):
   https://github.com/golang/go/blob/master/src/archive/tar/writer.go
 - Go `unicode` table versions:
   https://github.com/golang/go/blob/go1.26.0/src/unicode/tables.go,
   https://github.com/golang/go/blob/go1.27.0/src/unicode/tables.go
-- `golang.org/x/text` Unicode 17.0.0 tables (`go1.27` build tag):
-  https://github.com/golang/text/blob/master/unicode/norm/tables17.0.0.go,
-  https://github.com/golang/text/tree/master/cases
-- `osteele/liquid` expressions package (`Parse`, `EvaluateString`):
-  https://github.com/osteele/liquid/tree/main/expressions
+- `golang.org/x/text` v0.43.0 table selection by build tag (`tables15.0.0.go`
+  under `!go1.27`, `tables17.0.0.go` under `go1.27`), read 2026-10-18:
+  https://github.com/golang/text/blob/v0.43.0/unicode/norm/tables15.0.0.go,
+  https://github.com/golang/text/tree/v0.43.0/cases
 
 ## Implementation log
 
