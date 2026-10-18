@@ -59,8 +59,10 @@ say so, and split the prerequisite into its own work item.
 
 ## Development
 
-There is no code yet. Once `go.mod` exists, its `go` line names the
-toolchain, and the gate every change passes before merge is:
+The module is `github.com/kottera/metais`. Its `go.mod` `toolchain` line
+names the exact toolchain every build and test uses, fetched under the
+default `GOTOOLCHAIN=auto` (ADR-010 D1). The gate every change passes before
+merge is (ADR-010 D15 item 3):
 
 ```bash
 go build ./...
@@ -68,10 +70,17 @@ go vet ./...
 go test -race ./...
 go mod tidy -diff    # go.mod and go.sum stay tidy
 gofmt -l .           # prints nothing
+CGO_ENABLED=0 go build -trimpath ./cmd/metais
+for t in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64 windows/arm64; do
+  GOOS=${t%/*} GOARCH=${t#*/} CGO_ENABLED=0 go vet ./... && \
+  GOOS=${t%/*} GOARCH=${t#*/} CGO_ENABLED=0 go build ./...
+done
+go generate ./internal/specdata && git diff --exit-code internal/specdata
 ```
 
-There is no CI yet; this list is the gate. The conformance vectors run as
-part of `go test`.
+There is no CI; this list is the gate. The conformance vectors run as part
+of `go test`. The race detector needs cgo, so `go test -race` runs with it
+enabled; the static build is the separate check of a cgo-free binary.
 
 - **Test-driven.** Every behaviour has a test that fails without it, written
   against the specification's wording. Every refusal has a negative test.
@@ -83,8 +92,8 @@ part of `go test`.
   by widening its assertion.
 - **Bounded work is measured.** A test that holds work to a time measures
   CPU time, not wall time alone.
-- **Isolate tests with `HOME` and temporary directories**, never with the
-  developer's real configuration.
+- **Isolate tests with `HOME` and temporary directories**, through
+  `internal/testenv`, never with the developer's real configuration.
 - **Dependencies are few and justified.** A new module dependency is named
   in the ADR that needs it.
 
