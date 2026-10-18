@@ -6,7 +6,7 @@
 **Deciders:** Ed Funnekotter
 **Feature:** `metais-v1`
 **Design input:** [docs/spec-outline.md](../spec-outline.md)
-**Designed by:** the ADRs listed in [§26](#26-design--adrs)
+**Designed by:** the ADRs listed in [§27](#27-design--adrs)
 
 ## 1. Overview
 
@@ -64,7 +64,9 @@ appearing, but none combines the four properties this product is built on
 ## 3. Non-goals
 
 - **Running code from a package**: hooks, scripts, custom filters, post-render
-  tasks. Anything that must run after rendering is the caller's.
+  tasks, external converters. The only post-processing is the closed set of
+  transforms the specification defines (R9); anything else that must run
+  after rendering is the caller's.
 - **Template languages other than Liquid.**
 - **Prescribing where data comes from.** No structured "source" kinds, no
   question plans, no interactive gathering loop. The package explains what
@@ -76,7 +78,11 @@ appearing, but none combines the four properties this product is built on
 - **Live or client-refreshed output.** Refreshing means rendering again; at
   most a caller shows a rendered output in a frame.
 - **Templated binary output.** Templates produce text; binary files reach the
-  output only as assets.
+  output only as assets, or as the zip containers the tool assembles from
+  rendered text and assets (R9 item 2).
+- **Compression and encoding transforms beyond zip containers** — gzip, tar
+  files, base64 — in v1. Standard output already carries an archive of every
+  output (R12 item 5).
 - **Fetching packages or inputs over the network**, and a package registry or
   discovery service.
 - **A public Go API.** The command line is v1's contract; the Go packages are
@@ -102,8 +108,10 @@ Evaluated) and remarks. Its references hold the text of every criterion.
 An AI harness is asked to produce the ACR for a product. It inspects the
 package, reads the guide, and for each criterion reads that criterion's
 reference and evaluates the product against it. It supplies the tables as
-CSV, writes the remarks, validates, and renders the report. The edition
-decides which tables appear. The same inputs also render a machine-readable
+CSV, writes the remarks, validates, and renders the report as a `.docx`,
+the form in which ITI distributes the template, assembled from templates of
+the document's XML parts (R9 item 2). The edition decides which tables
+appear. The same inputs also render a machine-readable
 copy for buyers that compare reports.
 
 ### 4.2 A regulated incident report, filed in stages
@@ -285,7 +293,7 @@ renders the examples and compares them; `metais pack` writes the package.
    JSON safe to place inside an HTML `<script>` element, a URL-safe slug, and
    date formatting.
 5. **Standard tags**: embed an input's original bytes; include an asset's
-   contents or its output path; and emit provenance (R10).
+   contents or its output path; and emit provenance (R11).
 6. **Escaping is chosen per output.** An output may declare HTML escaping;
    otherwise values render as they are. The escaping filters are always
    available.
@@ -302,20 +310,47 @@ renders the examples and compares them; `metais pack` writes the package.
 5. **A shorthand mirrors the templates tree into the output** for authors who
    need no explicit list.
 
-## 14. Requirement R9 — rendering is pure and deterministic
+## 14. Requirement R9 — output transforms
+
+1. **An output may be transformed after it renders, only by transforms the
+   specification defines.** A package names a transform and its options; it
+   never supplies one, and no transform runs a program. Converters that need
+   one — document formatters, Markdown to PDF, office suites — are the
+   caller's, after the render.
+2. **A zip container output** assembles other outputs and assets, as its
+   entries, into one file. This is how an Office Open XML document (`.docx`,
+   `.xlsx`, `.pptx`), an OpenDocument file or an EPUB is produced from
+   templates of its XML parts. The author chooses which entries come first and
+   which are stored uncompressed, and the specification states the settings
+   each of those formats requires. Entry paths obey the same confinement and
+   portability rules as output paths (R12 items 1 and 2), and the parts of a
+   container are not also written on their own unless the manifest declares
+   them as outputs too.
+3. **Line endings can be converted per output to CRLF**, for formats that
+   require it, such as RFC 4180 CSV and Windows command scripts.
+4. **An output can be validated against a schema the package carries**, for
+   an output that must meet a published format — a machine-readable
+   conformance report, a CVE record, a security advisory. A render with an
+   output that fails is refused with findings, and writes nothing.
+5. **Containers are deterministic.** The tool's own containers are
+   byte-identical across platforms and runs. The conformance vectors compare
+   a container by its entries — names, order, compression method and
+   content — so a conforming implementation is not bound to one compressor.
+
+## 15. Requirement R10 — rendering is pure and deterministic
 
 1. **No command runs code from a package**, no command uses the network, and
    a render reads nothing from its host but the package and the supplied
-   inputs (R13 item 4).
+   inputs (R14 item 4).
 2. **The same package and the same inputs give byte-identical outputs** on
    every supported platform and in every run.
 3. **Text is UTF-8**, line endings are written exactly as the template has
-   them, iteration over objects is in a defined order, and nothing depends on
+   them unless the output converts them (R9 item 3), iteration over objects is in a defined order, and nothing depends on
    the locale or the time zone.
 4. **The current time is available only when the caller supplies it**, so
    that a render is reproducible.
 
-## 15. Requirement R10 — provenance, on request
+## 16. Requirement R11 — provenance, on request
 
 1. **A template may emit a provenance comment** in the syntax of its output
    (HTML, Markdown, `#`-comment and others the specification lists).
@@ -323,9 +358,9 @@ renders the examples and compares them; `metais pack` writes the package.
    version and digest, the digest of each input, and the tool's version; and
    the render time only when the caller supplied one. The list is closed: no
    path, user name, host name or other fact about the rendering machine is
-   ever recorded (R13 item 4).
+   ever recorded (R14 item 4).
 
-## 16. Requirement R11 — rendering is safe, to a directory or a stream
+## 17. Requirement R12 — rendering is safe, to a directory or a stream
 
 1. **Every output path stays inside the output directory**: no absolute path,
    no `..`, no symbolic link out.
@@ -341,7 +376,7 @@ renders the examples and compares them; `metais pack` writes the package.
    of every output, or, when the caller names exactly one output, as that
    file's bytes alone.
 
-## 17. Requirement R12 — authoring
+## 18. Requirement R13 — authoring
 
 1. **An author starts from a generated minimal package** and works in a
    source directory, with the manifest in YAML or JSON.
@@ -349,14 +384,16 @@ renders the examples and compares them; `metais pack` writes the package.
    specification, compiles every schema, parses every template, confines
    every path, and cross-references the templates against the schemas: a
    field a template uses that no schema declares is an error, and an input no
-   template uses is a warning.
+   template uses is a warning. In a template of an Office Open XML part, a
+   Liquid tag or expression split across text runs is a finding, since that
+   is how a placeholder typed into a word processor commonly arrives.
 3. **Examples are tests.** Each example's inputs are validated and rendered,
    and its outputs, where given, are compared byte for byte.
 4. **Packing runs the check and the tests**, then writes a package whose
    bytes depend only on the source directory.
 5. **A package can be unpacked** back into an editable source directory.
 
-## 18. Requirement R13 — a package is untrusted input
+## 19. Requirement R14 — a package is untrusted input
 
 1. **Every entry is confined**: no absolute path, no `..`, no link, before it
    is read.
@@ -371,13 +408,13 @@ renders the examples and compares them; `metais pack` writes the package.
    into an input, a path or a default. The same holds for everything else
    the host knows — files outside the package and the inputs the caller
    named, the working directory, the user, the host name, the process, and
-   the clock (R9 item 4). The only data a template sees is the package's own
+   the clock (R10 item 4). The only data a template sees is the package's own
    content and the inputs the caller supplied, so a package cannot read a
    secret from the machine that renders it, nor write one into its output.
    A caller who wants a value from the environment puts it in an input
    explicitly, where it is validated and visible like any other.
 
-## 19. Requirement R14 — versions
+## 20. Requirement R15 — versions
 
 1. **The specification is versioned** (`1.0` for v1). A package's manifest
    names the specification version it targets.
@@ -389,7 +426,7 @@ renders the examples and compares them; `metais pack` writes the package.
 4. **Within a major version the specification only adds.** A package valid
    under `1.0` stays valid, and renders the same, under every later `1.x`.
 
-## 20. Requirement R15 — the specification is a document with a proof
+## 21. Requirement R16 — the specification is a document with a proof
 
 1. **The specification is Markdown under `spec/`**, normative in RFC 2119
    terms, with the manifest's JSON Schema published beside it.
@@ -399,7 +436,7 @@ renders the examples and compares them; `metais pack` writes the package.
 3. **The reference tool passes every vector**, and the vectors are part of
    its test suite.
 
-## 21. Requirement R16 — the golden paths
+## 22. Requirement R17 — the golden paths
 
 1. **Consuming a package has one documented path**: inspect, read what the
    summary points to, get the schema, supply the data, validate, render.
@@ -408,15 +445,15 @@ renders the examples and compares them; `metais pack` writes the package.
 3. **The tool's help text is authoritative** for every command and flag, and
    every refusal names the next step.
 
-## 22. Requirement R17 — portable and independent
+## 23. Requirement R18 — portable and independent
 
 1. **The tool is one static binary.** darwin and linux on amd64 and arm64 are
    v1's supported targets; nothing in the format or the tool precludes
-   Windows (R11 item 2).
+   Windows (R12 item 2).
 2. **METAIS depends on nothing of tera's.** The format and the tool know
    nothing about it.
 
-## 23. Dependencies
+## 24. Dependencies
 
 - JSON Schema draft 2020-12.
 - Liquid, as defined by the Shopify reference implementation.
@@ -426,7 +463,7 @@ renders the examples and compares them; `metais pack` writes the package.
 - The Go libraries the implementation ADR names, each only if it passes the
   conformance vectors; where none does, METAIS implements its own.
 
-## 24. Risks
+## 25. Risks
 
 - **Liquid implementations disagree at the edges** (truthiness, filters,
   whitespace). Mitigation: the dialect is pinned and every observable rule
@@ -448,7 +485,7 @@ renders the examples and compares them; `metais pack` writes the package.
   OpenACR catalog, EU legislation under its reuse policy) or in this
   project's own words.
 
-## 25. Success criteria
+## 26. Success criteria
 
 1. **SC1** — An AI harness given only the binary, the conformance report
    package of §4.1 and access to a product produces a valid ACR for it,
@@ -477,18 +514,18 @@ renders the examples and compares them; `metais pack` writes the package.
    tool's source, writes a package that the tool checks, tests and packs
    cleanly.
 
-## 26. Design → ADRs
+## 27. Design → ADRs
 
 | Requirements | ADR |
 |---|---|
 | R1 | ADR-001 — the container and its layout |
-| R1, R14 | ADR-002 — the manifest and versioning |
+| R1, R15 | ADR-002 — the manifest and versioning |
 | R3, R4, R5 | ADR-003 — the data specification |
-| R7, R10 | ADR-004 — the template environment |
-| R8, R9, R11 | ADR-005 — outputs and rendering |
+| R7, R11 | ADR-004 — the template environment |
+| R8, R9, R10, R12 | ADR-005 — outputs, transforms and rendering |
 | R6 | ADR-006 — validation and findings |
-| R12 | ADR-007 — authoring |
-| R2, R16 | ADR-008 — the command line and its machine output |
-| R13 | ADR-009 — the security model |
-| R17 | ADR-010 — the implementation |
-| R15 | ADR-011 — the specification document and conformance |
+| R13 | ADR-007 — authoring |
+| R2, R17 | ADR-008 — the command line and its machine output |
+| R14 | ADR-009 — the security model |
+| R18 | ADR-010 — the implementation |
+| R16 | ADR-011 — the specification document and conformance |
