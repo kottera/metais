@@ -1,0 +1,34 @@
+// Copyright 2026 Kottera
+// SPDX-License-Identifier: Apache-2.0
+
+package fault
+
+import "testing"
+
+func TestHas(t *testing.T) {
+	const a, b, c Set = 1 << 0, 1 << 1, 1 << 63
+	tests := []struct {
+		name string
+		set  Set
+		f    Set
+		want bool
+	}{
+		{"zero set holds nothing", 0, a, false},
+		{"zero set holds no high bit", 0, c, false},
+		{"empty query is never held", a | b, 0, false},
+		{"empty query on zero set", 0, 0, false},
+		{"member", a | b, a, true},
+		{"other member", a | b, b, true},
+		{"high bit member", c, c, true},
+		{"non-member", a, b, false},
+		{"all of several", a | b | c, a | c, true},
+		{"not all of several", a, a | b, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.set.Has(tt.f); got != tt.want {
+				t.Errorf("Set(%#x).Has(%#x) = %v, want %v", uint64(tt.set), uint64(tt.f), got, tt.want)
+			}
+		})
+	}
+}
