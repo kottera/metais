@@ -644,9 +644,9 @@ guarantee depends on whether the output directory exists.
    4. Rename the staging directory to the output directory with a rename
       that refuses an existing target: `renameat2(RENAME_NOREPLACE)` on
       Linux, `renamex_np(RENAME_EXCL)` on macOS, `MoveFileExW` without
-      `MOVEFILE_REPLACE_EXISTING` on Windows (ADR-010 Amendment A1,
-      proposed, takes it from `MoveFileW`, which refuses an existing target
-      the same way). Where the filesystem does not
+      `MOVEFILE_REPLACE_EXISTING` on Windows (under ADR-010 Amendment A1,
+      proposed, the Windows call is `MoveFileW`, which refuses an existing
+      target the same way). Where the filesystem does not
       support the flag (`EINVAL`, `ENOTSUP`), check the target with `Lstat`
       and rename, accepting the race window between the two.
    5. If the target appeared meanwhile, or anything before the rename

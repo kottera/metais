@@ -1114,9 +1114,9 @@ names and no-replace rename, D17's tar profile, D19's proofs. Promised:
 `liquid.ParseValue`, `liquid.ParseCondition`, `liquid.Eval` and
 `liquid.EvalCondition` (D4 item 3); `golang.org/x/sys/unix` for
 `renameat2` and `renamex_np`, and the standard library's `syscall.MoveFile`
-(`MoveFileW`) on windows, inside `internal/hostfs` *(A1, proposed)*; the tar golden
-test proving D17's claim about `archive/tar`; D19's host-variation and
-repetition runs as D13's determinism detector; Go 1.26, which has
+(`MoveFileW`) on windows, inside `internal/hostfs` *(A1, proposed)*; the
+tar golden test proving D17's claim about `archive/tar`; D19's
+host-variation and repetition runs as D13's determinism detector; Go 1.26, which has
 everything ADR-005 needs (`os.Root` with `Rename` and `MkdirAll`, Unicode
 15.0.0 tables).
 
@@ -1468,9 +1468,10 @@ D16 item 3.
    allow-listed function; `syscall.MoveFile` needs neither.
 4. **The layering rule is per target.** Only `internal/hostenv` imports
    `golang.org/x/term` and only `internal/hostfs` imports `golang.org/x/sys`,
-   each in files built for darwin and linux only. Any import of
-   `golang.org/x/sys/windows` by the binary is refused by the import rule,
-   which `TestNoHostFacts` runs for every target of the gate.
+   each in files built for darwin and linux only. Any later use of
+   `golang.org/x/sys/windows` in the binary brings `net` into its closure,
+   which the import rule refuses; `TestNoHostFacts` runs it for every
+   target of the gate.
 
 Both modules stay in `go.mod` at D3's versions, since the darwin and linux
 builds need them.
