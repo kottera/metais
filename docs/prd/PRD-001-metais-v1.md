@@ -164,10 +164,14 @@ output it named.
 
 ### 4.8 Authoring a package
 
-An author starts from `metais init`, writes schemas and templates, and adds
-two examples, each with inputs and the outputs they should produce. `metais
-check` finds a template that uses a field no schema declares; `metais test`
-renders the examples and compares them; `metais pack` writes the package.
+An author starts from `metais init` and writes schemas and templates. Before
+any real data exists, they preview the outputs rendered from generated sample
+data — once with every optional field filled and once with none — and see how
+the report reads in each case. They save one set of sample data as the start
+of an example, replace its placeholders with real values, and add a second
+example, each with the outputs it should produce. `metais check` finds a
+template that uses a field no schema declares; `metais test` renders the
+examples and compares them; `metais pack` writes the package.
 
 ## 5. Concepts and terminology
 
@@ -393,6 +397,28 @@ renders the examples and compares them; `metais pack` writes the package.
 4. **Packing runs the check and the tests**, then writes a package whose
    bytes depend only on the source directory.
 5. **A package can be unpacked** back into an editable source directory.
+6. **An author can preview the outputs with generated sample data** — a
+   "lorem ipsum" mode — before any real data or example exists.
+   - **The sample data satisfies the schemas**, and is validated like any
+     supplied input before it renders. A value comes from the schema's own
+     `examples`, `default`, `const` or `enum` where there is one, and is
+     otherwise generated to fit the field's type and constraints: placeholder
+     prose for text, within its length bounds; values of the declared format
+     for dates, times, e-mail addresses, URIs and identifiers; numbers within
+     their range; arrays and collections with an item count within their
+     bounds; CSV rows and Markdown documents for inputs supplied in those
+     forms.
+   - **Optional fields can be all filled, all left out, or mixed**, so the
+     author sees each branch of the templates' conditionals.
+   - **A field the generator cannot satisfy is a finding** — a `pattern` it
+     cannot match, constraints that contradict each other — naming the field
+     and suggesting an `examples` value for it, rather than a value that only
+     looks right.
+   - **It is deterministic.** The same package and the same seed give the
+     same sample data and the same outputs.
+   - **The sample data can be saved as an example's inputs**, so an author
+     starts an example from it and replaces the placeholders with real
+     values.
 
 ## 19. Requirement R14 — a package is untrusted input
 
@@ -496,7 +522,9 @@ renders the examples and compares them; `metais pack` writes the package.
 3. **SC3** — A program renders the widget package of §4.3 from JSON with no
    harness, in a single validate and render.
 4. **SC4** — The packages of §4.1 to §4.5 ship in this repository as
-   examples, and pack with their tests green.
+   examples, and pack with their tests green. Each also previews with sample
+   data, with every optional field filled and with none, producing output
+   that validates.
 5. **SC5** — Every conformance vector passes on every supported target, and
    rendering the same vectors on two of them gives byte-identical output.
 6. **SC6** — A corpus of hostile packages (path traversal, links, zip bombs,
