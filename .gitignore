@@ -1,6 +1,8 @@
 # Build output
 /bin/
 /dist/
+/metais
+/metais.exe
 
 # Go test and profiling artefacts
 *.test
