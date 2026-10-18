@@ -39,8 +39,9 @@ appearing, but none combines the four properties this product is built on
    a harness loads only what it needs.
 3. **Background references and assets inside the package**, for the
    supplier and for the render.
-4. **Pure rendering**: a package cannot run code, so an unfamiliar package
-   is safe to instantiate.
+4. **Pure rendering**: a package cannot run code or read anything of the
+   machine it renders on — not even an environment variable — so an
+   unfamiliar package is safe to instantiate.
 
 ## 2. Goals
 
@@ -276,7 +277,9 @@ renders the examples and compares them; `metais pack` writes the package.
 
 ## 14. Requirement R9 — rendering is pure and deterministic
 
-1. **No command runs code from a package**, and no command uses the network.
+1. **No command runs code from a package**, no command uses the network, and
+   a render reads nothing from its host but the package and the supplied
+   inputs (R13 item 4).
 2. **The same package and the same inputs give byte-identical outputs** on
    every supported platform and in every run.
 3. **Text is UTF-8**, line endings are written exactly as the template has
@@ -291,7 +294,9 @@ renders the examples and compares them; `metais pack` writes the package.
    (HTML, Markdown, `#`-comment and others the specification lists).
 2. **The author chooses what it records**: any of the package's identity,
    version and digest, the digest of each input, and the tool's version; and
-   the render time only when the caller supplied one.
+   the render time only when the caller supplied one. The list is closed: no
+   path, user name, host name or other fact about the rendering machine is
+   ever recorded (R13 item 4).
 
 ## 16. Requirement R11 — rendering is safe, to a directory or a stream
 
@@ -333,6 +338,17 @@ renders the examples and compares them; `metais pack` writes the package.
    output count. The limits have defaults and the caller may lower them.
 3. **A package outside the specification is refused, not approximated**, with
    a finding that names what is wrong.
+4. **Nothing of the host reaches a template.** There is no way to read an
+   environment variable from a template: no variable, filter, tag or
+   manifest field exposes the environment, and the tool never expands one
+   into an input, a path or a default. The same holds for everything else
+   the host knows — files outside the package and the inputs the caller
+   named, the working directory, the user, the host name, the process, and
+   the clock (R9 item 4). The only data a template sees is the package's own
+   content and the inputs the caller supplied, so a package cannot read a
+   secret from the machine that renders it, nor write one into its output.
+   A caller who wants a value from the environment puts it in an input
+   explicitly, where it is validated and visible like any other.
 
 ## 19. Requirement R14 — versions
 
@@ -413,6 +429,11 @@ renders the examples and compares them; `metais pack` writes the package.
 5. **SC5** — A corpus of hostile packages (path traversal, links, zip bombs,
    Windows-invalid and case-colliding paths, digest mismatches) is refused
    in full, with nothing written outside the output directory.
+8. **SC8** — Rendering every conformance vector and every hostile package
+   with sentinel values planted in the environment, the working directory
+   and the home directory never puts a sentinel into any output, finding or
+   message. The test is pinned red first, against a render that does read
+   the environment.
 6. **SC6** — Validating an input set with errors planted throughout reports
    every planted error in one run.
 7. **SC7** — An author working only from the specification, without the
