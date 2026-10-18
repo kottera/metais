@@ -64,6 +64,8 @@ func orderedFindings() []Finding {
 		New(codeInputType, input("alpha"), set(2, "/0"), typ("array")),
 		New(codeInputType, input("alpha"), set(2, "/0"), typ("number")),
 		New(codeInputType, input("beta"), set(1, "/0"), typ("null")),
+		// Last, the subject's title, which only breaks a tie.
+		New(codeInputType, Subject{Kind: SubjectInput, Name: "beta", Title: "BETA2"}, set(1, "/0"), typ("null")),
 		// Severity is not in the key: a warning sorts by its subject.
 		New(codeWarnUnused, tmpl, pkg("templates/a.liquid", 1, 1, ""), nil),
 		New(codeTemplateParse, tmpl, pkg("templates/a.liquid", 2, 1, ""), nil),

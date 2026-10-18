@@ -13,7 +13,10 @@ import (
 
 // Compare orders two findings by ADR-006 D8 item 1's key, member by
 // member, every string by its UTF-8 bytes. An absent member sorts before a
-// present one. Severity is not in the key (D8 item 2).
+// present one. Severity is not in the key (D8 item 2). Two findings that
+// are not duplicates (D8 item 3) can still tie on that key when only their
+// subject's title differs, so the title is compared last, which makes the
+// order total over every finding a report keeps.
 func Compare(a, b Finding) int {
 	if c := comparePrefix(a, b); c != 0 {
 		return c
@@ -24,6 +27,7 @@ func Compare(a, b Finding) int {
 		strings.Compare(sa.Entry, sb.Entry),
 		strings.Compare(sa.Pointer, sb.Pointer),
 		strings.Compare(a.canonicalParams(), b.canonicalParams()),
+		strings.Compare(a.subject.Title, b.subject.Title),
 	)
 }
 
