@@ -6,6 +6,12 @@
 |---|---|---|
 | [PRD-001](prd/PRD-001-metais-v1.md) | METAIS v1 — the package format and its reference tool | Accepted |
 
+## Plans
+
+| Plan | Feature | Status |
+|---|---|---|
+| [PLAN-2026-10-metais-v1](plans/PLAN-2026-10-metais-v1.md) | `metais-v1` | Ratified |
+
 ## Decisions
 
 | ADR | Title | Status |
