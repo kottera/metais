@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -340,6 +341,43 @@ func TestExit(t *testing.T) {
 				t.Errorf("Exit = %d, want %d", got, tt.want)
 			}
 		})
+	}
+}
+
+// TestExitPackageSubjects holds ADR-006 D12 item 2's set of subjects
+// whole: a content error about the package, its manifest, a schema, a
+// template, an asset or a reference exits 4 under a consumer command and 1
+// under an authoring command, and one about any other subject exits 1
+// under both, so a kind dropped from the set, or one added to it, fails.
+func TestExitPackageSubjects(t *testing.T) {
+	pkgContent := map[SubjectKind]bool{
+		SubjectPackage: true, SubjectManifest: true, SubjectSchema: true,
+		SubjectTemplate: true, SubjectAsset: true, SubjectReference: true,
+	}
+	saved := registry
+	t.Cleanup(func() { registry = saved })
+	for k := SubjectInvocation; k <= SubjectReport; k++ {
+		code := Code("test.content." + k.String())
+		all := append(slices.Clone(saved), Entry{Code: code, Severity: SeverityError, Class: ClassContent, Subject: k,
+			Message: "The subject is wrong.", Hint: "Fix it.", Span: SpanNone, Since: "1.0"})
+		slices.SortFunc(all, func(a, b Entry) int { return strings.Compare(string(a.Code), string(b.Code)) })
+		registry = all
+		subj := Subject{Kind: k}
+		if checkSubject(subj) != nil {
+			subj.Name = "n"
+		}
+		r := NewReport(0)
+		r.Add(New(code, subj, nil, nil))
+		consumer, authoring := ExitFindings, ExitFindings
+		if pkgContent[k] {
+			consumer = ExitRefused
+		}
+		if got := r.Exit(RoleConsumer, SeverityError); got != consumer {
+			t.Errorf("a content error whose subject is %s exits %d under a consumer command, want %d", k, got, consumer)
+		}
+		if got := r.Exit(RoleAuthoring, SeverityError); got != authoring {
+			t.Errorf("a content error whose subject is %s exits %d under an authoring command, want %d", k, got, authoring)
+		}
 	}
 }
 
