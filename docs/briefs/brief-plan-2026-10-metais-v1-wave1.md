@@ -236,5 +236,210 @@ act's whole text and what to report back.
 
 ## Closeout
 
-*Not yet written. The wave orchestrator replaces this line with the wave's
-closeout.*
+Written by the wave orchestrator (Work Order
+`01a150fe-fa51-7c77-9964-1d8149f5b5bc`) after the wave drained. It
+reports what landed and what carries forward. **It is not a correctness
+verdict.** I read the children's reports, the merge commits and selected
+files (`go.mod`, `cmd/metais/main.go`, `spec/findings/registry.json`,
+ADR-010's text and implementation log). I mutated nothing. Where a
+guarantee is said to be proved below, the proof is the verification
+round's, attributed to it, not mine.
+
+**Wave range:** `87c9247..2f8eb42` on `main`. Eight children were approved
+and released as one set: one out-of-band act and seven code items, all
+complete. One verification round passed with no blocking finding.
+Non-blocking findings went to three children, one act and one janitorial
+issue, named under question 4. **The wave completed without waiting for
+them, deliberately.** One person was consulted, at the breakdown review.
+
+### 1. Did each item land, and does it match the ask?
+
+| Item | Work Order | PR | Merge | Landed |
+|---|---|---|---|---|
+| W1-A1 credential and build probe | `01a15104-30cd-75c0-8b87-a70de3c65ea2` | — | — | Ended complete by Ed **without the probe being run** (see question 5) |
+| W1-1 module, shell, extended gate | `01a15104-9f35-7a8f-ad6d-8cb4afcdd064` | #8 | `1474387` | `go.mod` is ADR-010 D1 item 1's three lines; `cmd/metais/main.go` is D2's one line (I read both). Also landed: `internal/cli`'s empty shell, `internal/hostenv`, `internal/fault`'s `Set`, `internal/testenv` (built on `testing.TB` methods only), `internal/specdata`'s copier and the licence-header check. AGENTS.md now states the extended gate |
+| W1-2 spec skeleton | `01a15104-ed67-7abe-8459-6a7d071b62f4` | #7 | `eecac12` | `spec/` per ADR-011 D1: the status block, chapter 1's front matter with RFC 8174's text, chapters 02–15 as title, status and summary, the A/B/CHANGELOG/ERRATA files, and `.gitattributes`. It merged before `go.mod` existed, so no gate ran, and the PR says so |
+| W1-3 finding model, registry, limits | `01a15105-4e64-7a19-9f2c-40be16d4241c` | #13 | `2f8eb42` | `internal/finding`, `internal/schemafail`, `internal/limits`; `registry.json`, which registers exactly `limit.invalid` and `report.truncated` (I read it); the two schemas under `spec/schemas/1.0/` and their specdata copies |
+| W1-4 tripwires and notices | `01a15105-b618-7aa2-ab5c-3b7fd3810ea6` | #12 | `fdc218c` | `layers_test.go` over `layers.json`; `TestNoHostFacts` with R2-143's four-entry module allow-list and a 12-entry exact dependency allow-list for `x/sys/unix` and `x/term`; the fault and `version.Override` rules; `notices_test.go` with `THIRD-PARTY-NOTICES.txt` |
+| W1-5 data model | `01a15106-0de2-74ed-bf00-34850a290ed3` | #10 | `ab7eebe` | A sealed six-kind `Value` in `internal/liquid/value`, per the review ruling below. Numbers keep their literal; objects keep unique names in UTF-16 code-unit order; the package is standard library only |
+| W1-6 pkgtree | `01a15106-568d-7255-b024-b43eda6db5f3` | #11 | `97f8cd3` | `pkgtree.Tree{List, Stat, Open}` with its contract in doc comments; `pkgtreetest.New` (the in-memory tree) and `pkgtreetest.Check` (the reusable contract test) |
+| W1-7 version | `01a15106-874b-740b-85ba-3e43a991baa4` | #9 | `4f20abe` | `version.String()` per ADR-010 D12 item 3, `Implements()` = `["1.0"]`, and the test-only `Override` |
+
+**Divergences from the ask:**
+
+- **W1-4 changed W1-1's `internal/hostenv` on windows.** The import rule
+  found that `golang.org/x/sys/windows` imports `net`. W1-4 took the
+  stricter rule, so windows `IsTerminal` now calls
+  `syscall.GetConsoleMode` and `x/term` is linked on unix only. This
+  departs from ADR-010 D3 item 3's table as written. The amendment is
+  owed (W1-F2 below).
+- **W1-3 added a test-only `require` of
+  `santhosh-tekuri/jsonschema/v6` v6.0.3**, with `x/text` v0.43.0
+  indirect. Both are admitted modules (ADR-010 D3 item 3), used to
+  validate the registry against its schema. Neither is linked into
+  the binary.
+- **The empty shell exits 2 on every invocation** (W1-1's choice, within
+  the limits its task set). Status 2 is ADR-006 D12's internal-error
+  status. Wave 2's command table replaces this.
+
+### 2. What children flagged, degraded, declined or discovered
+
+- **Two ADRs disagree on windows dependencies** (W1-4). ADR-009 D16
+  item 3 and ADR-010 D11 item 10 keep `net` out on every target.
+  ADR-010 D3 item 3 and D11 item 3 put `x/term` and `x/sys` on windows,
+  including `MoveFileExW` from `x/sys`. W1-4 recorded this in ADR-010's
+  implementation log, and named `syscall.MoveFile` as the candidate for
+  Wave 2's windows no-replace rename.
+- **The MapOrder seam conflicts with the layering rule** (W1-4). ADR-010
+  D13 item 2 puts the seam in `internal/liquid/value`, which D2 item 2
+  keeps standard library only. Needs a ruling before Wave 4 (W1-F3).
+- **TestNoHostFacts reads more strictly than the ADR lists**:
+  - `time.LoadLocation` is refused everywhere;
+  - the environment setters, `os.StartProcess`, the `syscall` process
+    starters, `io/ioutil`, `filepath.Walk`/`WalkDir`/`Glob` and
+    `runtime.GOARCH` are added to the lists;
+  - the browse rule confines every `hostfs` reference to `Extract`.
+- **`internal/tools/release` will need an allow-list ruling** when it
+  lands in Wave 6 (W1-4).
+- **The finding model's readings** (W1-3, each named in PR #13):
+  - beyond the bounded heap, the report keeps a spill of findings past
+    the cap that tie with the last listed one, so that ADR-006 D8
+    items 3 and 6 stay exact;
+  - the registry's span enum adds `none`;
+  - limit units and classes are named for Wave 2's `limits` command;
+  - ADR-006 D10 item 4 puts `summary` in the envelope, and ADR-008
+    D10's envelope does not list it. Left for Wave 2;
+  - `Report.Add` panics on duplicates positioned at different lines or
+    columns.
+- **The specdata copier cannot make the first copy of a new spec file**
+  (W1-3). The package embeds the copy and does not build without it,
+  so the first copy is made by hand.
+- **W1-6's pkgtree has its own error types.** It avoids `io/fs` and
+  `fmt`, which pull in `os`, `time` and `syscall`, and defines its own
+  sentinel and `PathError`. Lookups do not check that a path is well
+  formed; the portable-path predicate stays Wave 2's.
+- **Not run in the sandbox (plan §5):**
+  - the darwin, linux and windows branches were compiled and vetted
+    for every target, and run only on darwin/arm64;
+  - `IsTerminal`'s terminal-true branch is untested, because there was
+    no pseudo-terminal.
+- **Not every gate ran on the pinned toolchain.** W1-4's gate and the
+  verifier's gate ran on go1.26.2 under the deployment's
+  `GOTOOLCHAIN=local`. W1-5 and W1-6 report go1.26.9 through
+  `GOTOOLCHAIN=auto`. Before merging this closeout I ran AGENTS.md's gate
+  once over `2f8eb42` plus this document, on go1.26.9 darwin/arm64 with
+  cgo for `-race`. It was green.
+
+### 3. What carries to the next wave
+
+- **Wave 2's `internal/hostfs` must not use `golang.org/x/sys/windows`**:
+  `TestNoHostFacts` will refuse it. The windows no-replace rename needs
+  a standard-library call that meets ADR-005 D14. W1-F2 writes the
+  ADR-010 amendment; until Ed ratifies it, the implementation log entry
+  and this paragraph are the record.
+- **Wave 2's Liquid front end builds on `internal/liquid/value`**, which
+  already holds the data model. It extends the package and does not
+  re-create it (ruling (a) below).
+- **Wave 2 settles the open points on findings and the command line**:
+  - the envelope's `summary` member (ADR-006 D10 item 4 against
+    ADR-008 D10);
+  - the drift test, `TestFindingCodesCovered` and the unwired-codes
+    list (`limit.invalid` and `report.truncated` are registered and
+    have no vector);
+  - the empty shell's exit 2.
+- **Adding a spec copy:** a new embedded spec file is listed in
+  `internal/specdata`'s `specFiles` and copied by hand the first time.
+- **Wave 4's determinism item needs the MapOrder ruling** (W1-F3).
+- **What I would do differently:**
+  - **Name meeting-point tests in the items' criteria.** Two meeting
+    points were left to "whichever merges second", and the second
+    merger did neither: W1-2/W1-3's front-page links and W1-6/W1-4's
+    `pkgtreetest` rule. A criterion makes the obligation checkable.
+  - **Don't file an act as `manual-qa-pass` when the plan says
+    "probe from a dispatch".** W1-A1's taker said so: the act would
+    better have been an item a dispatch runs, so its evidence exists.
+
+### 4. What the verification round found, and where every finding went
+
+**Verifier:** `01a15161-1747-7320-a9e4-0d8fc939b83a` (wave-verification).
+Its verdict is **pass**, and nothing blocks. It ran AGENTS.md's gate once
+on the merged tree, green (go1.26.2, see above), and audited all seven
+merge commits as ancestors of `main` against `base_ref`. It placed the one
+unlisted commit, `7eea8b8`, as the plan orchestrator's documentation.
+Every id I sent came back:
+
+- **Mutated** (about 75 mutations, made in module code rather than in the
+  producers' fixtures): W1-1, W1-3, W1-4, W1-5, W1-6 and W1-7. Every guard
+  that carries a criterion went red, including plan §7's acceptance
+  proofs:
+  - the `os.Getenv` and `netleak` controls;
+  - order red against insertion order;
+  - exact totals under a lowered `findings` limit;
+  - the one-byte specdata drift;
+  - the three `limit.invalid` refusals;
+  - the fault-constant and `version.Override` rules.
+- **Inspected only:** W1-2 (documents), by script: the status block, the
+  BCP 14 text, each chapter's opening and statement count, and a
+  capitals-keyword scan of all of `spec/`.
+- **Nothing found:** W1-6 and W1-7.
+
+**Blocking findings:** none, so no fix child was filed.
+
+**Non-blocking findings.** Each row is one finding. Four findings are
+grouped in one child (W1-F1): each is a missing test in a different
+package, one gate run verifies them all, and each is marked severable.
+
+| Finding | From | Where it went |
+|---|---|---|
+| `cmd/metais/main.go`'s shape is not pinned (`os.Args = os.Args[:1]` before `Isolate` stays green) | W1-1 | W1-F1 `01a1516d-186d-7cbd-b0c3-4efd7170c565` |
+| Exit's package-subject set is pinned only for `manifest` and `template` | W1-3 | W1-F1 `01a1516d-186d-7cbd-b0c3-4efd7170c565` |
+| No layer rule keeps non-test code from importing `internal/pkgtree/pkgtreetest` (W1-6/W1-4 meeting point) | W1-4, cross-item | W1-F1 `01a1516d-186d-7cbd-b0c3-4efd7170c565` |
+| `WrittenAsInteger`'s uppercase-`E` branch is untested | W1-5 | W1-F1 `01a1516d-186d-7cbd-b0c3-4efd7170c565` |
+| Windows `IsTerminal` uses `syscall.GetConsoleMode`; ADR-010 D2/D3/D11 still say `x/term`/`x/sys` | W1-4 | W1-F2 `01a1516d-9896-7e8e-8329-608de55fce9a` (proposes the ADR-010 amendment; Ed ratifies it) |
+| The MapOrder seam is in `internal/liquid/value`, which must stay standard library only | W1-4 | W1-F3 `01a1516d-c089-7157-8ab8-6ef30c2b325c` (`design-session`: a ruling for Ed, needed before Wave 4) |
+| `spec/README.md` does not link `spec/findings/` or `spec/schemas/` (W1-2/W1-3 meeting point) | W1-2, cross-item | janitorial issue #14: prose only, informative, read by no gate |
+
+**Not filed, with reasons:**
+
+- **`version.String`'s no-build-info branch** cannot be reached from a
+  test, because `debug.ReadBuildInfo` always succeeds in a module-built
+  test binary. The verifier noted it as not a finding, since the code
+  follows ADR-010 D12 item 3. I agree and filed nothing.
+- **The import rule's scope.** One mutation stayed green because the
+  import rule scans only `./cmd/metais`'s closure, which is what
+  ADR-009 D16 item 3 specifies. Re-tested inside the closure, it went
+  red. This is not a defect.
+- **The "only importer" claims** in W1-4's allow-list reasons were
+  re-checked on the merged tree and still hold. This is a
+  confirmation, not a finding.
+
+**No re-verification.** The W1-F children are not re-verified in this
+wave. If any needs checking, that belongs in a later wave's brief.
+
+### 5. Out-of-band acts
+
+| Act | Type | Work Order | Placement | State |
+|---|---|---|---|---|
+| Confirm the pipeline's credential, the go1.26.9 fetch, the module download and cgo `-race` | `manual-qa-pass` | W1-A1 `01a15104-30cd-75c0-8b87-a70de3c65ea2` | Waited on by every item | Complete. Ed ended it on his own assurance, **with none of the three probe steps run**: no GOOS/GOARCH or `go version` was recorded. The evidence came afterwards, from the items: W1-5 and W1-6 fetched go1.26.9 through `GOTOOLCHAIN=auto` and ran `-race` with cgo; every item pushed and merged a PR |
+| Register `metais.org` (R1-008) | `manual-qa-pass` | W1-A2 `01a1516d-d1ff-7124-a73a-1df0ca782993` | Carried, not waited on; filed at the wave's close as agreed in review | Open. The plan orchestrator waits on it at the train's close |
+| Rule on the MapOrder seam | `design-session` | W1-F3 `01a1516d-c089-7157-8ab8-6ef30c2b325c` | Carried; filed for a verifier finding | Open. Needed before Wave 4 |
+
+### Rulings made during this wave
+
+Given or agreed at the breakdown review:
+
+- **(a) The data model's home is `internal/liquid/value`.** ADR-010 D2's
+  layout lists it as "the value model — ADR-003 D8, ADR-004", and D7
+  item 1 says the readers produce "the same `value` tree". This governs
+  W1-5.
+- **(b) The dependency-scan allow-list.** Entries that ADR-009 D16
+  item 3 and R2-143 themselves prescribe, such as the `x/term` and
+  `x/sys` ones, are the mechanism and not a widening. Any entry neither
+  names is forbidden. This governs W1-4.
+- **(c) No allow-list entries for `internal/testenv` or the specdata
+  copier.** They pass `TestNoHostFacts` without new entries. This
+  governs W1-1.
+- **(d) The finding model and the limits table stay one item.** This
+  governs W1-3.
+
+No child parked with a question during the wave.
