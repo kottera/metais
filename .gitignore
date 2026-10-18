@@ -1,0 +1,13 @@
+# Build output
+/bin/
+/dist/
+
+# Go test and profiling artefacts
+*.test
+*.out
+*.prof
+coverage.*
+
+# Local scratch
+/.local/
+.DS_Store
