@@ -13,6 +13,11 @@
       "reason": "ADR-010 D2 item 2, PRD R2 item 1: browse reaches hostfs only through extract's single entry point, so listing, reading and searching cannot write"
     },
     {
+      "rule": "test-only",
+      "package": "github.com/kottera/metais/internal/pkgtree/pkgtreetest",
+      "reason": "ADR-010 D2 item 2: pkgtreetest is a test-only helper package, an importable package only so that other packages' tests can build a package in memory and hold a Tree to its contract; no release code imports it"
+    },
+    {
       "rule": "only-importers",
       "imports": "golang.org/x/term",
       "importers": ["github.com/kottera/metais/internal/hostenv"],
