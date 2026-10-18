@@ -88,8 +88,9 @@ appearing, but none combines the four properties this product is built on
 - **A public Go API.** The command line is v1's contract; the Go packages are
   internal.
 - **Signing packages.** v1 carries digests, not signatures.
-- **An MCP server mode**, and any integration with tera, which is tera's to
-  build later.
+- **An MCP server mode**, and integration with any particular harness or
+  workflow system. Such integrations are built on the command line, outside
+  this project.
 
 ## 4. Use cases
 
@@ -445,13 +446,11 @@ renders the examples and compares them; `metais pack` writes the package.
 3. **The tool's help text is authoritative** for every command and flag, and
    every refusal names the next step.
 
-## 23. Requirement R18 — portable and independent
+## 23. Requirement R18 — portable
 
 1. **The tool is one static binary.** darwin and linux on amd64 and arm64 are
    v1's supported targets; nothing in the format or the tool precludes
    Windows (R12 item 2).
-2. **METAIS depends on nothing of tera's.** The format and the tool know
-   nothing about it.
 
 ## 24. Dependencies
 
