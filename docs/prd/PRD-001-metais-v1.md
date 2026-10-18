@@ -26,6 +26,11 @@ The format is specified in a document of its own, with conformance vectors,
 so that a second implementation can be written from the specification alone
 and proved against it.
 
+Because a package fully describes what must be supplied and what is
+produced, it is also a way to define a submission: a standards body or a
+regulator can publish the package, and each member or regulated entity
+renders its report from it (§4.1, §4.2).
+
 **Why it is needed.** Template tools exist (Cookiecutter, Copier, Helm,
 Backstage templates, `dotnet new`), and AI-oriented scaffolders are
 appearing, but none combines the four properties this product is built on
@@ -82,51 +87,73 @@ appearing, but none combines the four properties this product is built on
 
 ## 4. Use cases
 
-### 4.1 A Markdown report filled with tabular data
+### 4.1 A conformance report a governing body defines
 
-A team publishes a weekly report package: one template, three inputs (a
-metrics table as CSV, a short list of highlights, and an executive summary
-the supplier writes), and a reference document explaining the metrics. An AI
-harness is asked to produce this week's report. It inspects the package,
-reads the schema and the summary's guidance, reads the metrics reference to
-understand the columns, gathers the numbers, writes the summary, validates,
-and renders `report.md`.
+A body that sets a standard publishes the report its members must submit as a
+package. The worked case is the accessibility conformance report (ACR), which
+vendors produce from ITI's Voluntary Product Accessibility Template (VPAT)
+and buyers require under Section 508 and EN 301 549. The package's inputs
+are the product and vendor, the evaluation methods (prose), the edition being
+reported (WCAG, Revised 508, EN 301 549 or International), and one table per
+standard: a row per criterion, each with a conformance level from a fixed set
+(Supports, Partially Supports, Does Not Support, Not Applicable, Not
+Evaluated) and remarks. Its references hold the text of every criterion.
 
-### 4.2 A small UI widget filled by a program
+An AI harness is asked to produce the ACR for a product. It inspects the
+package, reads the guide, and for each criterion reads that criterion's
+reference and evaluates the product against it. It supplies the tables as
+CSV, writes the remarks, validates, and renders the report. The edition
+decides which tables appear. The same inputs also render a machine-readable
+copy for buyers that compare reports.
+
+### 4.2 A regulated incident report, filed in stages
+
+The EU's Digital Operational Resilience Act requires a financial entity to
+report a major ICT-related incident three times — an initial notification,
+an intermediate report and a final report — on one template whose glossary
+(Implementing Regulation (EU) 2025/302, Annex II) numbers every field, gives
+its type, and says whether it is mandatory at each stage. A package carries
+that template with the glossary as its schemas. The stage is an input, and
+which fields are required follows from it: an initial notification that
+omits a field required only in the final report is valid, and a final report
+that omits it is a finding. Each stage's report updates what the previous
+one said, from the same input set amended.
+
+### 4.3 A small UI widget filled by a program
 
 A status widget package renders one HTML fragment from a JSON object. No AI
 is involved: a scheduled workflow fetches the data, calls `metais validate`
 and `metais render`, and publishes the fragment. A minimal package — one
 manifest, one schema, one template — must cost no more than this.
 
-### 4.3 A multi-file static website
+### 4.4 A multi-file static website
 
 A site package renders one page per article from a directory of Markdown
 files with frontmatter (a collection input), plus an index page and a feed
 that both read the same collection and a shared site configuration. Its
 stylesheet and scripts ship as assets.
 
-### 4.4 A git repository scaffold
+### 4.5 A git repository scaffold
 
 A package renders a complete repository — source files, configuration, a
 README, CI workflow — from a project description. Some files appear only when
 an option is chosen; file and directory names are derived from the inputs.
 
-### 4.5 An agent exploring an unfamiliar package
+### 4.6 An agent exploring an unfamiliar package
 
 A harness is handed a large package it has never seen. It reads the summary,
 then the outline of one reference, then twenty lines of it found by a search,
 and the schema of the one input it is asked to supply — never more of the
 package than the task needs.
 
-### 4.6 Rendering into a pipeline
+### 4.7 Rendering into a pipeline
 
 A caller wants the outputs as a stream rather than a directory — to hand
 them to another program, or to store them as one artifact. It renders to
 standard output and receives a deterministic archive, or the bytes of the one
 output it named.
 
-### 4.7 Authoring a package
+### 4.8 Authoring a package
 
 An author starts from `metais init`, writes schemas and templates, and adds
 two examples, each with inputs and the outputs they should produce. `metais
@@ -414,29 +441,39 @@ renders the examples and compares them; `metais pack` writes the package.
   states the rule with the idiom to use.
 - **Scope creep toward a programming language.** Mitigation: the non-goals;
   computation belongs in the data.
+- **A governing body's template is its copyright.** ITI's VPAT is ITI's, and
+  regulators publish under their own reuse terms. Mitigation: the example
+  packages are checked against each source's terms before they ship, and are
+  written from material that may be reused (W3C's criterion text, GSA's
+  OpenACR catalog, EU legislation under its reuse policy) or in this
+  project's own words.
 
 ## 25. Success criteria
 
-1. **SC1** — An AI harness given only the binary and the report package of
-   §4.1 produces a valid report, reading nothing beyond what the summary and
-   the commands it points to show.
-2. **SC2** — A program renders the widget package of §4.2 from JSON with no
+1. **SC1** — An AI harness given only the binary, the conformance report
+   package of §4.1 and access to a product produces a valid ACR for it,
+   reading nothing of the package beyond what the summary and the commands it
+   points to show.
+2. **SC2** — The incident report package of §4.2 accepts each stage's report
+   with exactly that stage's mandatory fields, and reports every mandatory
+   field a stage omits.
+3. **SC3** — A program renders the widget package of §4.3 from JSON with no
    harness, in a single validate and render.
-3. **SC3** — The site package of §4.3 and the repository package of §4.4 ship
-   in this repository as examples, and pack with their tests green.
-4. **SC4** — Every conformance vector passes on every supported target, and
+4. **SC4** — The packages of §4.1 to §4.5 ship in this repository as
+   examples, and pack with their tests green.
+5. **SC5** — Every conformance vector passes on every supported target, and
    rendering the same vectors on two of them gives byte-identical output.
-5. **SC5** — A corpus of hostile packages (path traversal, links, zip bombs,
+6. **SC6** — A corpus of hostile packages (path traversal, links, zip bombs,
    Windows-invalid and case-colliding paths, digest mismatches) is refused
    in full, with nothing written outside the output directory.
-8. **SC8** — Rendering every conformance vector and every hostile package
+7. **SC7** — Rendering every conformance vector and every hostile package
    with sentinel values planted in the environment, the working directory
    and the home directory never puts a sentinel into any output, finding or
    message. The test is pinned red first, against a render that does read
    the environment.
-6. **SC6** — Validating an input set with errors planted throughout reports
+8. **SC8** — Validating an input set with errors planted throughout reports
    every planted error in one run.
-7. **SC7** — An author working only from the specification, without the
+9. **SC9** — An author working only from the specification, without the
    tool's source, writes a package that the tool checks, tests and packs
    cleanly.
 
