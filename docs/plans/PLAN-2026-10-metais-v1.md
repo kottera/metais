@@ -367,6 +367,20 @@ work that touches no Go file can run beside the module.
   `internal/template`.** ADR-010's layout owns package names, and RULINGS-v1
   "Resolved" item 51 settles the host seams the same way.
 
+**Rulings made during the wave:**
+- **The data model's Go representation lives in `internal/liquid/value`.**
+  ADR-010 D2's layout lists that package as the value model of ADR-003 D8
+  and ADR-004, and D7 item 1 has `jsonx` and `yamlx` produce the same
+  `value` tree. It keeps D2 item 2's rule for `internal/liquid/...`
+  (standard library only), keeps each number's literal text (ADR-010 D5
+  item 4), and holds no conversion to the schema library's form, which is
+  Wave 2's adapter. Wave 1 creates it; Wave 2's Liquid front end builds on
+  it.
+- **Dependency-scan entries that ADR-009 D16 item 3 and R2-143 prescribe**
+  (for `golang.org/x/term` and `golang.org/x/sys`) are the tripwire's
+  mechanism, not a widened refusal. An entry neither of them names is a
+  finding for Ed.
+
 ## 8. Wave 2 — the leaf libraries and the proof harness
 
 **Objective.** Every package that depends only on the seams exists and is
