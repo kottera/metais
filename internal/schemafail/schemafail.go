@@ -97,7 +97,7 @@ func (f Failure) Check() error {
 		switch {
 		case n.Keyword == "":
 			err = fmt.Errorf("schemafail: a failure under %q has no keyword", where())
-		case n.SchemaPointer != "" && n.SchemaPointer[0] != '/':
+		case !validPointer(n.SchemaPointer):
 			err = fmt.Errorf("schemafail: %s: schema pointer %q is not a JSON Pointer", where(), n.SchemaPointer)
 		}
 		for _, k := range slices.Sorted(maps.Keys(n.Data)) {
@@ -108,6 +108,20 @@ func (f Failure) Check() error {
 		return err == nil
 	})
 	return err
+}
+
+// validPointer reports whether p is an RFC 6901 pointer: empty, or each
+// token prefixed by / with ~ only in ~0 and ~1.
+func validPointer(p string) bool {
+	if p != "" && p[0] != '/' {
+		return false
+	}
+	for i := 0; i < len(p); i++ {
+		if p[i] == '~' && (i+1 == len(p) || (p[i+1] != '0' && p[i+1] != '1')) {
+			return false
+		}
+	}
+	return true
 }
 
 func admitted(v any) bool {

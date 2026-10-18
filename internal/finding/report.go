@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"container/heap"
 	"crypto/sha256"
+	"fmt"
 	"slices"
 	"strings"
 )
@@ -15,19 +16,21 @@ import (
 // duplicates, keeps the first maxFindings in D8's order, and counts every
 // finding exactly, listed or not.
 //
-// Memory is bounded by the cap, not by the input. Beside the listed
-// findings the report keeps, per distinct finding, the SHA-256 digest of
-// its duplicate key and the member that decides which duplicate is kept
-// (D8 item 6). It also keeps the findings just past the cap that tie with
-// the last listed one on every member of the key before schema: a later
-// duplicate of a listed finding that sorts after its first copy can let
-// one of them back in, and only one of those can be it. The order of the
-// key makes any other finding past the cap unable to return.
+// It holds the listed findings, at most the cap, in a bounded heap. Beside
+// them it keeps, per distinct finding, the SHA-256 digest of its duplicate
+// key and the members that decide which duplicate is kept (D8 item 6). It
+// also keeps the findings past the cap that tie with the last listed one on
+// every member of the key before schema: a later duplicate of a listed
+// finding that sorts after its first copy lets the first of them back in,
+// and the order of the key leaves no other finding past the cap able to
+// return. Those are the distinct findings one code reports about one value,
+// which the input and schema limits bound, so exact totals and an exact
+// list never cost more than that beside the cap.
 type Report struct {
 	max    int
 	groups map[[sha256.Size]byte]*group
-	listed itemHeap // a max-heap: the last listed finding is at the top
-	spill  []*item  // past the cap, tying with the top on the prefix
+	listed itemHeap // the last listed finding first
+	spill  itemHeap // past the cap, tying with listed's first on the prefix; the first in order first
 	sum    counts
 }
 
@@ -35,13 +38,15 @@ type Report struct {
 type group struct {
 	keywordLocation string            // the kept finding's, which sorts first
 	digest          [sha256.Size]byte // the kept finding's encoding, which breaks a tie
+	line, column    int               // every duplicate's
 	it              *item             // the kept finding while it is held; nil once it cannot be listed
 }
 
 type item struct {
-	f     Finding
-	g     *group
-	index int // in listed; -1 in spill
+	f       Finding
+	g       *group
+	index   int // in listed, or in spill
+	spilled bool
 }
 
 type counts struct {
@@ -61,6 +66,8 @@ func NewReport(maxFindings int) *Report {
 	return &Report{
 		max:    max(maxFindings, 0),
 		groups: make(map[[sha256.Size]byte]*group),
+		listed: itemHeap{last: true},
+		spill:  itemHeap{spilled: true},
 		sum:    counts{byCode: make(map[Code]int)},
 	}
 }
@@ -70,18 +77,26 @@ func NewReport(maxFindings int) *Report {
 // one whose schema.keyword_location sorts first, and of two with the same
 // keyword_location, the one whose JSON encoding has the lower SHA-256
 // digest, so which is kept never depends on the order they came in.
+//
+// Add panics when f was not built by New, or when f is a duplicate at
+// another line or column: a value's position is fixed by its file and
+// pointer, so that is a defect in whatever positioned it.
 func (r *Report) Add(f Finding) {
 	if f.entry == nil {
 		panic("finding: Report.Add of a Finding New did not build")
 	}
 	key := f.duplicateKey()
 	kl := f.keywordLocation()
+	l := f.locationOrZero()
 	g, seen := r.groups[key]
 	if !seen {
-		g = &group{keywordLocation: kl, digest: sha256.Sum256(AppendJSON(nil, f))}
+		g = &group{keywordLocation: kl, digest: sha256.Sum256(AppendJSON(nil, f)), line: l.Line, column: l.Column}
 		r.groups[key] = g
 		r.count(f)
 	} else {
+		if l.Line != g.line || l.Column != g.column {
+			panic(fmt.Sprintf("finding: duplicates of %s at %s are at %d:%d and %d:%d", f.entry.Code, l.Pointer, g.line, g.column, l.Line, l.Column))
+		}
 		if kl > g.keywordLocation {
 			return
 		}
@@ -116,79 +131,78 @@ func (r *Report) count(f Finding) {
 	}
 }
 
-// insert lists it if it sorts before the last listed finding or the list
-// has room, and moves whatever that pushes past the cap to the spill.
+// insert lists it if the list has room or it sorts before the last listed
+// finding, and keeps whatever that pushes past the cap in the spill while
+// it ties with the new last listed finding on the prefix. Every finding in
+// the spill ties with the last listed one, so when that changes to one
+// earlier on the prefix, the whole spill goes: it sorts after every
+// finding that can still be listed.
 func (r *Report) insert(it *item) {
 	heap.Push(&r.listed, it)
-	if len(r.listed) <= r.max {
+	if r.listed.Len() <= r.max {
 		return
 	}
 	out := heap.Pop(&r.listed).(*item)
-	out.index = -1
-	r.spill = append(r.spill, out)
-	r.prune()
-}
-
-// prune drops from the spill every finding that no longer ties with the
-// last listed one on the prefix; it sorts after every finding that can
-// still be listed, and can never return.
-func (r *Report) prune() {
-	keep := r.spill[:0]
-	for _, it := range r.spill {
-		if len(r.listed) > 0 && comparePrefix(it.f, r.listed[0].f) == 0 {
-			keep = append(keep, it)
-		} else {
-			it.g.it = nil
-		}
+	if r.listed.Len() == 0 {
+		drop(out)
+		return
 	}
-	clear(r.spill[len(keep):])
-	r.spill = keep
+	last := r.listed.items[0].f
+	if comparePrefix(out.f, last) == 0 {
+		heap.Push(&r.spill, out)
+	} else {
+		drop(out)
+	}
+	if r.spill.Len() > 0 && comparePrefix(r.spill.items[0].f, last) != 0 {
+		for _, s := range r.spill.items {
+			drop(s)
+		}
+		r.spill.items = nil
+	}
 }
 
-// remove takes it out of the report, refilling the list from the spill
-// when it was listed.
+func drop(it *item) { it.g.it = nil }
+
+// remove takes it out of the report, listing the first of the spill in its
+// place when it was listed.
 func (r *Report) remove(it *item) {
-	it.g.it = nil
-	if it.index < 0 {
-		i := slices.Index(r.spill, it)
-		r.spill = slices.Delete(r.spill, i, i+1)
+	drop(it)
+	if it.spilled {
+		heap.Remove(&r.spill, it.index)
 		return
 	}
 	heap.Remove(&r.listed, it.index)
-	if len(r.spill) == 0 {
-		return
+	if r.spill.Len() > 0 {
+		heap.Push(&r.listed, heap.Pop(&r.spill))
 	}
-	i := 0
-	for j := range r.spill {
-		if Compare(r.spill[j].f, r.spill[i].f) < 0 {
-			i = j
-		}
-	}
-	best := r.spill[i]
-	r.spill = slices.Delete(r.spill, i, i+1)
-	heap.Push(&r.listed, best)
 }
 
 // omitted is how many distinct findings are counted and not listed.
-func (r *Report) omitted() int { return len(r.groups) - len(r.listed) }
+func (r *Report) omitted() int { return len(r.groups) - r.listed.Len() }
 
 // Findings returns the listed findings in D8's order, followed, when any
 // were omitted, by one report.truncated (D8 item 6).
 func (r *Report) Findings() []Finding {
-	out := make([]Finding, 0, len(r.listed)+1)
-	for _, it := range r.listed {
-		out = append(out, it.f)
-	}
-	slices.SortFunc(out, Compare)
+	out := r.sorted()
 	if n := r.omitted(); n > 0 {
 		out = append(out, r.truncated(n))
 	}
 	return out
 }
 
+// sorted is the listed findings in D8's order.
+func (r *Report) sorted() []Finding {
+	out := make([]Finding, 0, r.listed.Len()+1)
+	for _, it := range r.listed.items {
+		out = append(out, it.f)
+	}
+	slices.SortFunc(out, Compare)
+	return out
+}
+
 func (r *Report) truncated(omitted int) Finding {
 	return New(CodeReportTruncated, Subject{Kind: SubjectReport}, nil,
-		Params{"listed": Int(int64(len(r.listed))), "omitted": Int(int64(omitted))})
+		Params{"listed": Int(int64(r.listed.Len())), "omitted": Int(int64(omitted))})
 }
 
 // CodeCount is how many distinct findings of one code a report counted.
@@ -214,7 +228,7 @@ func (r *Report) Summary() Summary {
 		Errors:   r.sum.errors,
 		Warnings: r.sum.warnings,
 		Info:     r.sum.info,
-		Listed:   len(r.listed),
+		Listed:   r.listed.Len(),
 		Omitted:  r.omitted(),
 	}
 	by := make(map[Code]int, len(r.sum.byCode)+1)
@@ -232,24 +246,36 @@ func (r *Report) Summary() Summary {
 	return s
 }
 
-// itemHeap is a max-heap of items by Compare, for container/heap.
-type itemHeap []*item
+// itemHeap is a heap of items by Compare, for container/heap: the last
+// in D8's order first when last is set, otherwise the first. Its items
+// record their index, and spilled says which heap they are in.
+type itemHeap struct {
+	items   []*item
+	last    bool
+	spilled bool
+}
 
-func (h itemHeap) Len() int           { return len(h) }
-func (h itemHeap) Less(i, j int) bool { return Compare(h[i].f, h[j].f) > 0 }
-func (h itemHeap) Swap(i, j int) {
-	h[i], h[j] = h[j], h[i]
-	h[i].index, h[j].index = i, j
+func (h *itemHeap) Len() int { return len(h.items) }
+func (h *itemHeap) Less(i, j int) bool {
+	c := Compare(h.items[i].f, h.items[j].f)
+	if h.last {
+		return c > 0
+	}
+	return c < 0
+}
+func (h *itemHeap) Swap(i, j int) {
+	h.items[i], h.items[j] = h.items[j], h.items[i]
+	h.items[i].index, h.items[j].index = i, j
 }
 func (h *itemHeap) Push(x any) {
 	it := x.(*item)
-	it.index = len(*h)
-	*h = append(*h, it)
+	it.index, it.spilled = len(h.items), h.spilled
+	h.items = append(h.items, it)
 }
 func (h *itemHeap) Pop() any {
-	old := *h
-	it := old[len(old)-1]
-	old[len(old)-1] = nil
-	*h = old[:len(old)-1]
+	n := len(h.items) - 1
+	it := h.items[n]
+	h.items[n] = nil
+	h.items = h.items[:n]
 	return it
 }

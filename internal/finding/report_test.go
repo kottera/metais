@@ -94,8 +94,8 @@ func TestReportMatchesReference(t *testing.T) {
 		if s.Listed != len(want) || s.Omitted != total-len(want) || s.Errors != total {
 			t.Fatalf("trial %d: summary %+v, want listed %d omitted %d errors %d", trial, s, len(want), total-len(want), total)
 		}
-		if len(r.listed) > max {
-			t.Fatalf("trial %d: %d findings held listed over a cap of %d", trial, len(r.listed), max)
+		if r.listed.Len() > max {
+			t.Fatalf("trial %d: %d findings held listed over a cap of %d", trial, r.listed.Len(), max)
 		}
 	}
 }
@@ -252,13 +252,28 @@ func TestReportBounded(t *testing.T) {
 	r := NewReport(10)
 	for i := range 20000 {
 		r.Add(minLength("a", "a.csv", 1+i%997, Pointer(fmt.Sprint(i)), 4))
-		if len(r.listed) > 10 || len(r.spill) > 1 {
-			t.Fatalf("after %d findings: %d listed, %d spilled", i+1, len(r.listed), len(r.spill))
+		if r.listed.Len() > 10 || r.spill.Len() > 1 {
+			t.Fatalf("after %d findings: %d listed, %d spilled", i+1, r.listed.Len(), r.spill.Len())
 		}
 	}
 	if s := r.Summary(); s.Errors != 20000 || s.Listed != 10 || s.Omitted != 19990 {
 		t.Errorf("summary %+v", s)
 	}
+}
+
+// TestReportRefusesMovedDuplicate: duplicates are at one place, since a
+// value's position is fixed by its file and pointer; two that are not
+// show a defect in what positioned them.
+func TestReportRefusesMovedDuplicate(t *testing.T) {
+	withTestCodes(t)
+	r := NewReport(5)
+	r.Add(minLength("a", "a.csv", 2, "/0", 4))
+	defer func() {
+		if recover() == nil {
+			t.Error("a duplicate at another line was accepted")
+		}
+	}()
+	r.Add(minLength("a", "a.csv", 3, "/0", 4))
 }
 
 func TestReportAddRefusesZeroFinding(t *testing.T) {

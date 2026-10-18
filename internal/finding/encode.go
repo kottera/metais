@@ -412,7 +412,7 @@ func cutDescription(d string) string {
 			n++
 		}
 	}
-	if cut {
+	if cut && d != "" {
 		d += "…"
 	}
 	return d

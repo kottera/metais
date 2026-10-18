@@ -49,12 +49,32 @@ func TestNewRefuses(t *testing.T) {
 	mustPanic(t, "a pointer without its slash", "not a JSON Pointer", func() { New(codeInputMinLength, input("a"), &bad, Params{"limit": Int(1), "length": Int(0)}) })
 	bad = bad.WithPointer("/a~2")
 	mustPanic(t, "a bad escape", "not a JSON Pointer", func() { New(codeInputMinLength, input("a"), &bad, Params{"limit": Int(1), "length": Int(0)}) })
-	mustPanic(t, "{input} with no input", "{input}", func() {
+	// ADR-006 D4 items 2 and 3: a name exactly where the kind has one, a
+	// title only for an input or a schema.
+	mustPanic(t, "an input with no name", "needs a name", func() {
 		New(codeInputRequired, Subject{Kind: SubjectInput}, loc, Params{"property": String("x")})
 	})
-	mustPanic(t, "{output} with no output", "{output}", func() {
+	mustPanic(t, "an output with no name", "needs a name", func() {
 		New(codeOutputPath, Subject{Kind: SubjectOutput}, loc, nil)
 	})
+	mustPanic(t, "a named package", "takes no name", func() {
+		New(codePackageName, Subject{Kind: SubjectPackage, Name: "p"}, loc, nil)
+	})
+	mustPanic(t, "a titled template", "takes no title", func() {
+		New(codeTemplateParse, Subject{Kind: SubjectTemplate, Name: "t", Title: "T"}, loc, nil)
+	})
+	// Every pointer a finding carries is an RFC 6901 pointer.
+	for name, opt := range map[string]Option{
+		"related":           WithRelated(Related{Location: Location{Origin: OriginDataDir}.WithPointer("a~2b"), Note: "n"}),
+		"schema pointer":    WithSchema(Schema{Entry: "e", Pointer: "properties/x", Keyword: "k", KeywordLocation: "/k"}),
+		"keyword location":  WithSchema(Schema{Entry: "e", Pointer: "/k", Keyword: "k", KeywordLocation: "k"}),
+		"via":               WithVia(Via{Keyword: "anyOf", SchemaPointer: "anyOf"}),
+		"condition pointer": WithVia(Via{Keyword: "then", SchemaPointer: "/then", Condition: &Condition{SchemaPointer: "~"}}),
+	} {
+		mustPanic(t, name, "not a JSON Pointer", func() {
+			New(codeInputMinLength, input("a"), loc, Params{"limit": Int(1), "length": Int(0)}, opt)
+		})
+	}
 	mustPanic(t, "a number past 2^53", "no exact canonical", func() { Int(1<<53 + 1) })
 	mustPanic(t, "an array of arrays", "holds an array", func() { List(List()) })
 }

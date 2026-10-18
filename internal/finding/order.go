@@ -26,14 +26,15 @@ func Compare(a, b Finding) int {
 		cmpBool(a.schema != nil, b.schema != nil),
 		strings.Compare(sa.Entry, sb.Entry),
 		strings.Compare(sa.Pointer, sb.Pointer),
-		strings.Compare(a.canonicalParams(), b.canonicalParams()),
+		strings.Compare(a.paramsKey, b.paramsKey),
 		strings.Compare(a.subject.Title, b.subject.Title),
 	)
 }
 
 // comparePrefix compares the members of the key before schema: subject,
-// location and code. Two duplicates (D8 item 3) are always equal here
-// (see duplicateKey); they can differ only in the members after it.
+// location and code. Two duplicates (D8 item 3) are always equal here,
+// since the report refuses duplicates at different lines or columns; they
+// can differ only in the members after it.
 func comparePrefix(a, b Finding) int {
 	la, lb := a.locationOrZero(), b.locationOrZero()
 	return cmp.Or(
@@ -46,7 +47,7 @@ func comparePrefix(a, b Finding) int {
 		cmp.Compare(la.Line, lb.Line),
 		cmp.Compare(la.Column, lb.Column),
 		cmpBool(la.HasPointer, lb.HasPointer),
-		comparePointers(la.Pointer, lb.Pointer),
+		comparePointers(a.ptrTokens, b.ptrTokens),
 		strings.Compare(string(a.entry.Code), string(b.entry.Code)),
 	)
 }
@@ -70,8 +71,7 @@ func cmpBool(a, b bool) int {
 // UTF-8 bytes. Whether a token indexes an array or names a member is not
 // known from the pointer alone, so a member named 10 is ordered as an
 // index would be.
-func comparePointers(a, b string) int {
-	ta, tb := pointerTokens(a), pointerTokens(b)
+func comparePointers(ta, tb []string) int {
 	for i := 0; i < len(ta) && i < len(tb); i++ {
 		if c := compareTokens(ta[i], tb[i]); c != 0 {
 			return c
@@ -128,13 +128,17 @@ func (f Finding) keywordLocation() string {
 	return f.schema.KeywordLocation
 }
 
-// canonicalParams is the RFC 8785 canonical form of the finding's params:
+// canonicalParams is f.paramsKey, the RFC 8785 canonical form of its
+// params, which New computes once.
+func (f Finding) canonicalParams() string { return f.paramsKey }
+
+// canonicalForm is the RFC 8785 canonical form of params:
 // members sorted by name, no whitespace, numbers in canonical form and
 // strings escaped as RFC 8785 §3.2.2.2 says. Parameter names are lowercase
 // ASCII, so their byte order is RFC 8785's UTF-16 order.
-func (f Finding) canonicalParams() string {
-	names := make([]string, 0, len(f.params))
-	for n := range f.params {
+func canonicalForm(params Params) string {
+	names := make([]string, 0, len(params))
+	for n := range params {
 		names = append(names, n)
 	}
 	slices.Sort(names)
@@ -145,7 +149,7 @@ func (f Finding) canonicalParams() string {
 		}
 		b = appendCanonicalString(b, n)
 		b = append(b, ':')
-		b = f.params[n].appendJSON(b, appendCanonicalString)
+		b = params[n].appendJSON(b, appendCanonicalString)
 	}
 	return string(append(b, '}'))
 }
@@ -155,7 +159,6 @@ func (f Finding) canonicalParams() string {
 // one, \u00xx for every other control character below U+0020, and every
 // other character as it is.
 func appendCanonicalString(b []byte, s string) []byte {
-	const hex = "0123456789abcdef"
 	b = append(b, '"')
 	for i := 0; i < len(s); i++ {
 		c := s[i]
@@ -174,7 +177,7 @@ func appendCanonicalString(b []byte, s string) []byte {
 			b = append(b, '\\', 't')
 		default:
 			if c < 0x20 {
-				b = append(b, '\\', 'u', '0', '0', hex[c>>4], hex[c&0xf])
+				b = append(b, '\\', 'u', '0', '0', hexDigits[c>>4], hexDigits[c&0xf])
 			} else {
 				b = append(b, c)
 			}
@@ -185,12 +188,8 @@ func appendCanonicalString(b []byte, s string) []byte {
 
 // duplicateKey is the SHA-256 digest of the members that make two
 // findings duplicates (D8 item 3): code, subject, location's origin, file,
-// argument and pointer, and params. Line and column are in it too: the
-// file, the pointer and the code's span fix them, so this merges nothing
-// D8 would keep apart, and it makes every member of the sort key before
-// schema the same across a set of duplicates, which the report's bounded
-// selection relies on. Each member is written with its length, so no two
-// keys share an encoding.
+// argument and pointer, and params. Each member is written with its
+// length, so no two keys share an encoding.
 func (f Finding) duplicateKey() [sha256.Size]byte {
 	h := sha256.New()
 	var n [8]byte
@@ -212,8 +211,6 @@ func (f Finding) duplicateKey() [sha256.Size]byte {
 		num(int(l.Origin))
 		str(l.File)
 		num(l.Argument)
-		num(l.Line)
-		num(l.Column)
 		if l.HasPointer {
 			num(1)
 			str(l.Pointer)
@@ -223,7 +220,7 @@ func (f Finding) duplicateKey() [sha256.Size]byte {
 	} else {
 		num(0)
 	}
-	str(f.canonicalParams())
+	str(f.paramsKey)
 	var d [sha256.Size]byte
 	h.Sum(d[:0])
 	return d

@@ -161,7 +161,7 @@ func TestComparePointers(t *testing.T) {
 	ordered := []string{"", "/0", "/1", "/9", "/10", "/10/0", "/10/a", "/100", "/", "/00", "/01", "/A", "/a", "/a/b", "/a~1", "/a~0", "/b", "/\u00e9"}
 	for i, a := range ordered {
 		for j, b := range ordered {
-			got := comparePointers(a, b)
+			got := comparePointers(pointerTokens(a), pointerTokens(b))
 			want := 0
 			if i < j {
 				want = -1

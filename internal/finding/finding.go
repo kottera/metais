@@ -243,6 +243,9 @@ type Finding struct {
 	via          []Via
 	alternatives []Alternative
 	related      []Related
+
+	ptrTokens []string // the location's pointer, decoded, for Compare
+	paramsKey string   // the canonical form of params, for Compare and the duplicate key
 }
 
 func (f Finding) Code() Code                  { return f.entry.Code }
@@ -337,8 +340,8 @@ func New(code Code, subj Subject, loc *Location, p Params, opts ...Option) Findi
 	if (loc == nil) != (e.Span == SpanNone) {
 		panic(fmt.Sprintf("finding: %s registers span %s, and New was given location %v", code, e.Span, loc))
 	}
-	if loc != nil && !validPointer(*loc) {
-		panic(fmt.Sprintf("finding: %s: pointer %q is not a JSON Pointer", code, loc.Pointer))
+	if err := checkSubject(subj); err != nil {
+		panic(fmt.Sprintf("finding: %s: %v", code, err))
 	}
 	if err := e.checkParams(p); err != nil {
 		panic(fmt.Sprintf("finding: %s: %v", code, err))
@@ -352,6 +355,13 @@ func New(code Code, subj Subject, loc *Location, p Params, opts ...Option) Findi
 		o(&f)
 	}
 	f.clean()
+	if err := f.checkPointers(); err != nil {
+		panic(fmt.Sprintf("finding: %s: %v", code, err))
+	}
+	if f.location != nil && f.location.HasPointer {
+		f.ptrTokens = pointerTokens(f.location.Pointer)
+	}
+	f.paramsKey = canonicalForm(f.params)
 	var err error
 	if f.message, err = f.render(e.Message); err != nil {
 		panic(fmt.Sprintf("finding: %s message: %v", code, err))
@@ -362,11 +372,60 @@ func New(code Code, subj Subject, loc *Location, p Params, opts ...Option) Findi
 	return f
 }
 
-// validPointer reports whether l's pointer, when it has one, is an RFC
-// 6901 pointer: empty, or each token prefixed by / with ~ only in ~0 and ~1.
-func validPointer(l Location) bool {
-	p := l.Pointer
-	if !l.HasPointer || p == "" {
+// checkSubject holds a subject to ADR-006 D4 items 2 and 3: a name exactly
+// for the kinds that have one, and a title only for an input or a schema.
+func checkSubject(s Subject) error {
+	switch s.Kind {
+	case SubjectInvocation, SubjectPackage, SubjectManifest, SubjectReport:
+		if s.Name != "" {
+			return fmt.Errorf("a subject of kind %s takes no name", s.Kind)
+		}
+	default:
+		if s.Name == "" {
+			return fmt.Errorf("a subject of kind %s needs a name", s.Kind)
+		}
+	}
+	if s.Title != "" && s.Kind != SubjectInput && s.Kind != SubjectSchema {
+		return fmt.Errorf("a subject of kind %s takes no title", s.Kind)
+	}
+	return nil
+}
+
+// checkPointers reports the first pointer of f that is not an RFC 6901
+// pointer: its location's and its related locations', and every schema
+// pointer it names.
+func (f Finding) checkPointers() error {
+	var ptrs []string
+	locs := []*Location{f.location}
+	for i := range f.related {
+		locs = append(locs, &f.related[i].Location)
+	}
+	for _, l := range locs {
+		if l != nil && l.HasPointer {
+			ptrs = append(ptrs, l.Pointer)
+		}
+	}
+	if f.schema != nil {
+		ptrs = append(ptrs, f.schema.Pointer, f.schema.KeywordLocation)
+	}
+	for _, v := range f.via {
+		ptrs = append(ptrs, v.SchemaPointer)
+		if v.Condition != nil {
+			ptrs = append(ptrs, v.Condition.SchemaPointer)
+		}
+	}
+	for _, p := range ptrs {
+		if !validPointer(p) {
+			return fmt.Errorf("%q is not a JSON Pointer", p)
+		}
+	}
+	return nil
+}
+
+// validPointer reports whether p is an RFC 6901 pointer: empty, or each
+// token prefixed by / with ~ only in ~0 and ~1.
+func validPointer(p string) bool {
+	if p == "" {
 		return true
 	}
 	if p[0] != '/' {
@@ -512,12 +571,7 @@ func branchFindings(fs []Finding, omitted int) ([]Finding, int) {
 	for _, f := range fs {
 		r.Add(f)
 	}
-	out := make([]Finding, 0, len(r.listed))
-	for _, it := range r.listed {
-		out = append(out, it.f)
-	}
-	slices.SortFunc(out, Compare)
-	return out, omitted + r.omitted()
+	return r.sorted(), omitted + r.omitted()
 }
 
 func cleanSubject(s Subject) Subject {

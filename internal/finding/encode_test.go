@@ -166,6 +166,7 @@ func TestCutDescription(t *testing.T) {
 		{"short", "short"},
 		{"one\ntwo", "one…"},
 		{"one\r\ntwo", "one…"},
+		{"\nafter a break", ""},
 		{long, strings.Repeat("é", 160) + "…"},
 		{strings.Repeat("a", 160), strings.Repeat("a", 160)},
 	}

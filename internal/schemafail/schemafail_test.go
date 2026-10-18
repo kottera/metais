@@ -71,6 +71,7 @@ func TestCheck(t *testing.T) {
 	bad := []func(*Failure){
 		func(f *Failure) { f.Children[0].Children[1].Keyword = "" },
 		func(f *Failure) { f.Children[1].SchemaPointer = "allOf/1" },
+		func(f *Failure) { f.Children[1].SchemaPointer = "/allOf/~2" },
 		func(f *Failure) { f.Children[1].Data["got"] = 1.5 },
 		func(f *Failure) { f.Data = Data{"x": map[string]any{}} },
 		func(f *Failure) { f.Children[0].Children[0].Data["missing"] = []any{"name"} },
