@@ -128,7 +128,7 @@ another harness's type to get past a capacity wait.** Park on
 | Wave | Objective | Depends on | Status |
 |---|---|---|---|
 | 0 | PRD-001, ADR-001 to ADR-011, RULINGS-v1 and this plan, merged to `main` | — | **authored** |
-| 1 | **The seams**: the module on Go 1.26.9; `cmd/metais` and the host seams; the finding model and registry; the limits table; the fault, test-environment, version and spec-data packages; the shared interfaces later waves build against; the guarantee tripwires; the `spec/` skeleton | 0 | not started |
+| 1 | **The seams**: the module on Go 1.26.9; `cmd/metais` and the host seams; the finding model and registry; the limits table; the fault, test-environment, version and spec-data packages; the shared interfaces later waves build against; the guarantee tripwires; the `spec/` skeleton | 0 | **complete** — [verdict](#7-wave-1--the-seams) |
 | 2 | **The leaf libraries and the proof harness**: the command-line core with `version`, `limits` and `help`; the conformance runner and its self-proof; the document tripwires; zip, Unicode and the portable-path predicate; host files; JSON; YAML; CSV and Markdown; the JSON Schema compiler with the pattern profile; failure mapping, bundling and the static walk; the tar writer; dates; the Liquid front end; the manifest library | 1 | not started |
 | 3 | **Opening a package, and the composed libraries**: the package loader and `inspect`, with the container, manifest and version chapters and their vectors; the inputs layer; the Liquid renderer; the standard filter catalog; the sample-value generator; the cross-reference analysis; the OOXML split-run scanner; `init` | 2 | not started |
 | 4 | **Validate, read, the first render, check and unpack**: `validate`; `ls`, `read`, `outline`, `grep`, `schema` and `extract`; `render` of template outputs into a new directory with the template environment; `check`; `unpack`; the Liquid closure | 3 | not started |
@@ -380,6 +380,38 @@ work that touches no Go file can run beside the module.
   (for `golang.org/x/term` and `golang.org/x/sys`) are the tripwire's
   mechanism, not a widened refusal. An entry neither of them names is a
   finding for Ed.
+
+**Verdict (2026-10-18): complete.** The seams landed as §7 asks: the module
+on go1.26.9, the `cmd/metais` shell, `internal/finding` with the registry
+and `internal/limits`, the tripwires, the data model in
+`internal/liquid/value`, `pkgtree.Tree` with its in-memory tree and contract
+test, `internal/version`, and the `spec/` skeleton, in PRs #7 to #13. The
+verification round mutated six of the seven code items, about 75 mutations,
+and every guard that carries an acceptance criterion went red. It passed
+with no blocking finding. Brief and closeout:
+[brief-plan-2026-10-metais-v1-wave1.md](../briefs/brief-plan-2026-10-metais-v1-wave1.md)
+(brief [#5](https://github.com/kottera/metais/pull/5), rulings
+[#6](https://github.com/kottera/metais/pull/6), closeout
+[#15](https://github.com/kottera/metais/pull/15)).
+
+What changes later waves:
+
+- **Windows links neither `golang.org/x/sys` nor `golang.org/x/term`**,
+  because `x/sys/windows` imports `net`, which ADR-009 D16 item 3 refuses.
+  ADR-010 Amendment A1 states this, proposed in
+  [#16](https://github.com/kottera/metais/pull/16) and awaiting Ed's
+  ratification. Until then the stricter rule governs. Wave 2's windows
+  no-replace rename uses the standard library.
+- **The MapOrder seam's home is open** (design session W1-F3), and Wave 4's
+  determinism detector needs it settled.
+- **The credential act was ended without its probe being run.** The
+  evidence came from the items instead: they fetched go1.26.9, ran `-race`
+  with cgo, and pushed and merged their PRs. That evidence comes from
+  darwin/arm64 only.
+- **Not every gate ran on the pinned toolchain.** Some dispatches ran
+  go1.26.2 under `GOTOOLCHAIN=local`.
+- **Carried and still running when the wave closed:** W1-F1 (four test
+  gaps), W1-F3 and the `metais.org` act W1-A2.
 
 ## 8. Wave 2 — the leaf libraries and the proof harness
 
