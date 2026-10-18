@@ -1,0 +1,327 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/schemas/1.0/finding.schema.json",
+  "title": "METAIS finding",
+  "description": "One finding: a problem a command detected, named by a registered code, with where it is and what to do next. A member that is absent has no value; no member is ever null or the empty string where it names something. $defs/summary is the summary object that accompanies a list of findings.",
+  "type": "object",
+  "required": ["code", "severity", "message", "hint", "subject", "params"],
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "title": "Code",
+      "description": "The registered code, a dotted lowercase name whose first segment is its family.",
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^(usage|internal|report|package|limit|manifest|schema|input|json|yaml|csv|text|markdown|collection|template|output|asset|reference|example)(\\.[a-z][a-z0-9_]*){1,3}$"
+    },
+    "severity": {
+      "title": "Severity",
+      "description": "The code's registered severity.",
+      "enum": ["error", "warning", "info"]
+    },
+    "message": {
+      "title": "Message",
+      "description": "One plain-text sentence saying what is wrong. Its wording is not normative.",
+      "type": "string",
+      "minLength": 1
+    },
+    "hint": {
+      "title": "Hint",
+      "description": "The next step, naming a value, an edit or a command. Its wording is not normative.",
+      "type": "string",
+      "minLength": 1
+    },
+    "subject": {
+      "title": "Subject",
+      "description": "What the finding is about.",
+      "type": "object",
+      "required": ["kind"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "title": "Kind",
+          "description": "The kind of thing the finding is about.",
+          "enum": ["invocation", "package", "manifest", "schema", "input", "template", "asset", "reference", "output", "example", "report"]
+        },
+        "name": {
+          "title": "Name",
+          "description": "The input name, the output's id, or the entry path of a template, an asset or a reference, or the example's name.",
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "title": "Title",
+          "description": "The input's declared title.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "location": {
+      "title": "Location",
+      "description": "Where the value or file the finding reports is.",
+      "$ref": "#/$defs/location",
+      "not": { "required": ["note"] }
+    },
+    "schema": {
+      "title": "Schema keyword",
+      "description": "The schema keyword the value broke.",
+      "type": "object",
+      "required": ["entry", "pointer", "keyword", "keyword_location"],
+      "additionalProperties": false,
+      "properties": {
+        "entry": {
+          "title": "Entry",
+          "description": "The package entry the keyword was written in, or the manifest schema's published name.",
+          "type": "string",
+          "minLength": 1
+        },
+        "pointer": {
+          "title": "Pointer",
+          "description": "The keyword's location within the entry, as an RFC 6901 JSON Pointer.",
+          "$ref": "#/$defs/pointer"
+        },
+        "keyword": {
+          "title": "Keyword",
+          "description": "The keyword's name.",
+          "type": "string",
+          "minLength": 1
+        },
+        "keyword_location": {
+          "title": "Keyword location",
+          "description": "The evaluation path from the root schema through every $ref, in JSON Schema's keywordLocation form.",
+          "type": "string"
+        }
+      }
+    },
+    "field": {
+      "title": "Field",
+      "description": "The title and description of the field the finding is about, from its schema.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "title": "Title",
+          "description": "The field's title.",
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "title": "Description",
+          "description": "The field's description.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "params": {
+      "title": "Parameters",
+      "description": "The code's registered parameters, in the registry's order. A number is in canonical JSON number form.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$" },
+      "additionalProperties": {
+        "anyOf": [
+          { "$ref": "#/$defs/scalar" },
+          { "type": "array", "items": { "$ref": "#/$defs/scalar" } }
+        ]
+      }
+    },
+    "via": {
+      "title": "Via",
+      "description": "The conditionals and alternatives that made the rule apply, outermost first.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/via" }
+    },
+    "alternatives": {
+      "title": "Alternatives",
+      "description": "For an anyOf or oneOf none of whose branches matched, each branch and its findings, in branch order.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/alternative" }
+    },
+    "related": {
+      "title": "Related locations",
+      "description": "Other locations the finding concerns.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/location",
+        "required": ["note"]
+      }
+    }
+  },
+  "$defs": {
+    "pointer": {
+      "title": "JSON Pointer",
+      "description": "An RFC 6901 JSON Pointer in its JSON-string form; the root is the empty string.",
+      "type": "string",
+      "pattern": "^(/([^~/]|~[01])*)*$"
+    },
+    "scalar": {
+      "title": "Scalar",
+      "description": "A number, a string or a boolean.",
+      "type": ["number", "string", "boolean"]
+    },
+    "location": {
+      "title": "Location",
+      "description": "A place: the origin of the value, and the file, argument, line, column and pointer where they are known. A related location also carries its note.",
+      "type": "object",
+      "required": ["origin"],
+      "additionalProperties": false,
+      "properties": {
+        "origin": {
+          "title": "Origin",
+          "description": "The source the value or file came from.",
+          "enum": ["package", "example", "data_dir", "inputs_json", "set", "default", "sample", "output"]
+        },
+        "file": {
+          "title": "File",
+          "description": "The file's path relative to the root of its origin, slash-separated.",
+          "type": "string",
+          "minLength": 1
+        },
+        "argument": {
+          "title": "Argument",
+          "description": "The 1-based ordinal of the command-line argument the value came from.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "line": {
+          "title": "Line",
+          "description": "The 1-based line of the first character of the span.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "column": {
+          "title": "Column",
+          "description": "The 1-based column of the first character of the span, in Unicode code points.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "pointer": {
+          "title": "Pointer",
+          "description": "The JSON Pointer into the value the schema validates.",
+          "$ref": "#/$defs/pointer"
+        },
+        "note": {
+          "title": "Note",
+          "description": "For a related location, a short fixed phrase from the registry.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "dependentRequired": { "column": ["line"] }
+    },
+    "via": {
+      "title": "Via entry",
+      "description": "An anyOf or oneOf branch, or the then or else a condition selected.",
+      "type": "object",
+      "required": ["keyword", "schema_pointer"],
+      "additionalProperties": false,
+      "properties": {
+        "keyword": {
+          "title": "Keyword",
+          "description": "The applicator.",
+          "enum": ["anyOf", "oneOf", "then", "else"]
+        },
+        "schema_pointer": {
+          "title": "Schema pointer",
+          "description": "The applicator's location in its schema entry.",
+          "$ref": "#/$defs/pointer"
+        },
+        "branch": {
+          "title": "Branch",
+          "description": "The 0-based index of the branch, for anyOf and oneOf.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "title": {
+          "title": "Title",
+          "description": "The branch's title, when it has one.",
+          "type": "string",
+          "minLength": 1
+        },
+        "condition": {
+          "title": "Condition",
+          "description": "The if subschema, for then and else.",
+          "type": "object",
+          "required": ["schema_pointer"],
+          "additionalProperties": false,
+          "properties": {
+            "schema_pointer": {
+              "title": "Schema pointer",
+              "description": "The if subschema's location in its schema entry.",
+              "$ref": "#/$defs/pointer"
+            },
+            "title": {
+              "title": "Title",
+              "description": "The if subschema's title, when it has one.",
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "if": { "properties": { "keyword": { "enum": ["anyOf", "oneOf"] } } },
+      "then": { "required": ["branch"], "not": { "required": ["condition"] } },
+      "else": { "required": ["condition"], "not": { "anyOf": [{ "required": ["branch"] }, { "required": ["title"] }] } }
+    },
+    "alternative": {
+      "title": "Alternative",
+      "description": "One branch of an anyOf or oneOf: its findings, sorted and de-duplicated within the branch, at most 16, and how many more there were.",
+      "type": "object",
+      "required": ["branch", "findings", "omitted"],
+      "additionalProperties": false,
+      "properties": {
+        "branch": {
+          "title": "Branch",
+          "description": "The 0-based index of the branch.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "title": {
+          "title": "Title",
+          "description": "The branch's title, when it has one.",
+          "type": "string",
+          "minLength": 1
+        },
+        "findings": {
+          "title": "Findings",
+          "description": "The branch's findings.",
+          "type": "array",
+          "maxItems": 16,
+          "items": { "$ref": "#" }
+        },
+        "omitted": {
+          "title": "Omitted",
+          "description": "How many more findings the branch had.",
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "summary": {
+      "title": "Summary",
+      "description": "The exact totals of a report, after de-duplication, whether each finding is listed or not. errors, warnings, info and by_code count report.truncated when the report has one; listed and omitted are its params, and count the other findings.",
+      "type": "object",
+      "required": ["errors", "warnings", "info", "listed", "omitted", "by_code"],
+      "additionalProperties": false,
+      "properties": {
+        "errors": { "title": "Errors", "description": "Findings of severity error.", "type": "integer", "minimum": 0 },
+        "warnings": { "title": "Warnings", "description": "Findings of severity warning.", "type": "integer", "minimum": 0 },
+        "info": { "title": "Info", "description": "Findings of severity info.", "type": "integer", "minimum": 0 },
+        "listed": { "title": "Listed", "description": "Findings listed, report.truncated aside.", "type": "integer", "minimum": 0 },
+        "omitted": { "title": "Omitted", "description": "Findings counted and not listed.", "type": "integer", "minimum": 0 },
+        "by_code": {
+          "title": "By code",
+          "description": "The number of findings of each code, keys in byte order.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/properties/code" },
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}

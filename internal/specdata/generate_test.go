@@ -17,7 +17,11 @@ import (
 // specFiles names the spec files the binary embeds, by their path below
 // spec/, slash-separated. Each is copied to the same path below this
 // package's directory.
-var specFiles = []string{}
+var specFiles = []string{
+	"findings/registry.json",
+	"schemas/1.0/finding-registry.schema.json",
+	"schemas/1.0/finding.schema.json",
+}
 
 // specRoot is spec/, from this package's directory, where go test runs.
 const specRoot = "../../spec"
