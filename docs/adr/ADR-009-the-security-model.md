@@ -1362,4 +1362,14 @@ headers agree with it exactly.
 
 ## Implementation log
 
-Nothing implemented.
+- **2026-10-18, PLAN-2026-10-metais-v1 W1-4.** D16 item 3's static tripwire
+  landed as `TestNoHostFacts` in `internal/guarantees`, with the
+  `os.Getenv` fixture and `testdata/netleak/` as controls run by the test
+  itself, and the module allow-list exactly R2-143's. It reads all six
+  targets of the gate, not only one architecture per GOOS, because the
+  dependency scan's hits differ by architecture. Its first run found `net`
+  in the windows closure: `golang.org/x/sys/windows` imports it, and
+  `golang.org/x/term` brought it in. `internal/hostenv` now asks
+  `GetConsoleMode` through `syscall` on windows, so neither module is
+  linked there; any later use of `golang.org/x/sys/windows` in the binary
+  is refused by the import rule.

@@ -1402,4 +1402,14 @@ into, and an environment switch contradicts R14 item 4's spirit.
 
 ## Implementation log
 
-Nothing implemented.
+- **2026-10-18, PLAN-2026-10-metais-v1 W1-4.** D2 item 2's layering rules
+  landed as `internal/guarantees/layers_test.go` over `layers.json`; D11
+  items 9 and 10 as ADR-009's `TestNoHostFacts`; D13 item 2's fault rule
+  and D12 item 3's version rule beside them; and D12 item 6 as
+  `notices_test.go` over `THIRD-PARTY-NOTICES.txt`. The import rule found
+  that `golang.org/x/sys/windows` imports `net`, so D3's `golang.org/x/term`
+  is linked on unix only: on windows `internal/hostenv.IsTerminal` calls
+  `syscall.GetConsoleMode`, which is what `x/term` calls there. D11 item 3's
+  windows no-replace rename cannot come from `golang.org/x/sys` for the same
+  reason; the standard library's `syscall.MoveFile` (`MoveFileW`, which
+  never replaces an existing file) is in reach.
