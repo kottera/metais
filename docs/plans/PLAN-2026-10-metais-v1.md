@@ -262,7 +262,7 @@ need it a `depends_on` edge to it.
 | SC9 round: an author working only from `spec/`, with no access to the tool's source, writes a package that `check`, `test` and `pack` accept cleanly | Wave 7, after the worked package merges | Ed | the v1.0 release | `B-worked-package.md` is where the author starts (ADR-011 D4 item 4). |
 | `govulncheck ./...` | before the release | Ed | the v1.0 release | ADR-010 D3 item 5. |
 | The v1.0 release: the specification first, then the tool | after the train | Ed | — | Specification: one commit that dates the `1.0` changelog section, sets the front page to `Released`, writes `spec/conformance/released/1.0.sha256` and records the matrix's pass, tagged `spec-1.0` (ADR-011 D5 item 2). Tool: `go run ./internal/tools/release -version 1.0.0` on the tag, built twice and compared (ADR-010 D12), tagged `v1.0.0`. The specification is released no later than the tool that implements it (ADR-011 D5 item 6). Where it is published is outside ADR-010; the repository is private. |
-| Ratify the outcome | after the train | Ed | — | Mark the plan `Done`. Ratify any decision this train made under §7 to §13 that is not yet an ADR text: the code exemptions of Wave 2, the placement of `date`, and any calibration amendment. A decision the train changed is superseded by a new ADR or an amendment. |
+| Ratify the outcome | after the train | Ed | — | Mark the plan `Done`. Ratify any decision this train made under §7 to §13 that is not yet an ADR text: the code exemptions of Wave 2, the placement of `date`, ADR-010 Amendment A1 (`golang.org/x/sys` and `golang.org/x/term` on unix only, W1-F2), and any calibration amendment. A decision the train changed is superseded by a new ADR or an amendment. |
 
 ## 7. Wave 1 — the seams
 

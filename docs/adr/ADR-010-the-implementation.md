@@ -1,6 +1,10 @@
 # ADR-010: The implementation — one Go module of internal packages on the Go 1.26 toolchain, METAIS's own Liquid engine, a short list of verified parsers behind seams, and every headline guarantee proved by a test that also runs against a deliberately broken tool
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
+[Amendment A1](#amendments) (`golang.org/x/sys` and `golang.org/x/term` on
+unix only) is proposed by PLAN-2026-10-metais-v1 Wave 1 and awaits Ed
+Funnekotter's ratification; the passages it changes are marked *(A1,
+proposed)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R18 item 1 (one static binary, the supported targets,
@@ -372,7 +376,10 @@ spec/                         the specification                                 
      through `extract`'s single entry point, so listing, reading and
      searching cannot write (R2 item 1).
    - Only `internal/hostenv` imports `golang.org/x/term`; only
-     `internal/hostfs` imports `golang.org/x/sys`.
+     `internal/hostfs` imports `golang.org/x/sys`. Each does so only in
+     files built for darwin and linux: on windows the binary links neither
+     module, and both packages use the standard library's `syscall` there
+     (D3 item 3). *(A1, proposed)*
    - Only `cmd/metais` refers to `os.Args`, `os.Stdin`, `os.Stdout`,
      `os.Stderr` and `os.Exit`; everything else receives them, so the whole
      tool runs in-process under test (D13).
@@ -412,11 +419,19 @@ the specification defines.**
    | `github.com/yuin/goldmark/v2` | v2.1.6 | MIT | heading outline (D9) | `github.com/yuin/goldmark` v1.8.6 |
    | `github.com/gowebpki/jcs` | v1.0.2 | Apache-2.0 | RFC 8785 serialization (D7) | METAIS's own RFC 8785 writer |
    | `golang.org/x/text` | v0.43.0 | BSD-3-Clause | NFC check, case folding (D11) | none needed; already required by the JSON Schema library |
-   | `golang.org/x/sys` | v0.49.0 | BSD-3-Clause | no-replace rename (D11) | none |
-   | `golang.org/x/term` | v0.47.0 | BSD-3-Clause | `IsTerminal` (ADR-008) | none |
+   | `golang.org/x/sys` | v0.49.0 | BSD-3-Clause | no-replace rename on darwin and linux (D11); not linked on windows | none |
+   | `golang.org/x/term` | v0.47.0 | BSD-3-Clause | `IsTerminal` on darwin and linux (ADR-008); not linked on windows | none |
 
    Every licence here is compatible with Apache-2.0 distribution of a binary,
    given the notices of D12 item 6.
+
+   **`golang.org/x/sys` and `golang.org/x/term` are linked on unix targets
+   only.** `golang.org/x/sys/windows` imports `net`, which D11 item 10 and
+   ADR-009 D16 item 3 keep out of the binary's closure on every target, and
+   `golang.org/x/term` imports `golang.org/x/sys/windows` on windows. On
+   windows `internal/hostenv` asks `syscall.GetConsoleMode` whether a stream
+   is a terminal (D11 item 8), and `internal/hostfs` takes the no-replace
+   rename from `syscall.MoveFile` (D11 item 3). *(A1, proposed)*
 4. **Rejected and not in `go.mod`**: `osteele/liquid`, `Notifuse/liquidgo`
    (D4); `kaptinlin/jsonschema` (Alternatives); `goccy/go-yaml`;
    `dlclark/regexp2`; `spf13/pflag`; `encoding/csv` for reading (D8);
@@ -774,10 +789,13 @@ not used to read inputs.**
    a package file, a source directory and a data directory under `os.Root`
    (ADR-009 D7), and writing outputs, built on `os.Root` for the staging or
    output directory, `Root.MkdirAll` and `Root.Rename`, and the no-replace
-   rename ADR-005 D14 names — `renameat2(RENAME_NOREPLACE)` on linux,
-   `renamex_np(RENAME_EXCL)` on darwin, `MoveFileExW` without
-   `MOVEFILE_REPLACE_EXISTING` on windows — from `golang.org/x/sys`, each in
-   a build-tagged file. It names staging directories and temporary files as
+   rename ADR-005 D14 names — `renameat2(RENAME_NOREPLACE)` on linux and
+   `renamex_np(RENAME_EXCL)` on darwin, from `golang.org/x/sys/unix`, and
+   `MoveFileW` on windows, from the standard library's `syscall.MoveFile` —
+   each in a build-tagged file. `MoveFileW` takes no flags and fails on any
+   existing target, file or directory, which is the refusal ADR-005 D14
+   asks of `MoveFileExW` without `MOVEFILE_REPLACE_EXISTING`. *(A1,
+   proposed)* It names staging directories and temporary files as
    ADR-005 D14 fixes them, from a SHA-256 of a name, never from a random
    source or the process. **No code outside `internal/hostfs` opens,
    creates, renames or removes a file**, and `hostfs` removes only entries
@@ -812,7 +830,9 @@ not used to read inputs.**
    It reads `NO_COLOR` only (ADR-008 D12), clears the environment and sets
    `time.Local` to UTC (ADR-009 D14 item 1); `cmd/metais` calls it before
    anything else. `internal/hostenv` is also the only caller of
-   `term.IsTerminal`.
+   `term.IsTerminal` on darwin and linux and of `syscall.GetConsoleMode` on
+   windows, which is the call `golang.org/x/term` makes there. *(A1,
+   proposed)*
 9. **Forbidden in non-test code**: ADR-009 D16 item 3's tripwire,
    `TestNoHostFacts` in `internal/guarantees/`, over the `go/ast` of every
    non-test file, with ADR-009 D12's symbol lists plus these: `os.Getwd`,
@@ -833,7 +853,10 @@ not used to read inputs.**
     `net/smtp`, `crypto/tls`, `os/exec`, `os/signal`, `plugin`, `os/user`,
     `log/syslog`, `runtime/cgo`, `syscall/js`. The probe found none of them
     in the closure of a program importing every admitted module at the
-    versions of D3's table.
+    versions of D3's table, built for darwin and linux. Built for windows,
+    that closure holds `net`, through `golang.org/x/sys/windows`, which is
+    why D3 item 3 links neither `golang.org/x/sys` nor `golang.org/x/term`
+    there. *(A1, proposed)*
 
 ### D12 — Build, release and the tool's version
 
@@ -1089,10 +1112,11 @@ ADR-007 analyses.
 `ParseCondition`/`ParseValue` contract, D14's `os.Root`, fixed staging
 names and no-replace rename, D17's tar profile, D19's proofs. Promised:
 `liquid.ParseValue`, `liquid.ParseCondition`, `liquid.Eval` and
-`liquid.EvalCondition` (D4 item 3); `golang.org/x/sys` for `renameat2`,
-`renamex_np` and `MoveFileExW`, inside `internal/hostfs`; the tar golden
-test proving D17's claim about `archive/tar`; D19's host-variation and
-repetition runs as D13's determinism detector; Go 1.26, which has
+`liquid.EvalCondition` (D4 item 3); `golang.org/x/sys/unix` for
+`renameat2` and `renamex_np`, and the standard library's `syscall.MoveFile`
+(`MoveFileW`) on windows, inside `internal/hostfs` *(A1, proposed)*; the
+tar golden test proving D17's claim about `archive/tar`; D19's
+host-variation and repetition runs as D13's determinism detector; Go 1.26, which has
 everything ADR-005 needs (`os.Root` with `Rename` and `MkdirAll`, Unicode
 15.0.0 tables).
 
@@ -1399,6 +1423,58 @@ into, and an environment switch contradicts R14 item 4's spirit.
   `norm.Version` under go1.26.8 and go1.27.2; `go list -deps` of a program
   importing every admitted module (`golang.org/x/sys` v0.49.0 and
   `golang.org/x/term` v0.47.0 being the latest tags resolved that day).
+
+## Amendments
+
+### A1 — `golang.org/x/sys` and `golang.org/x/term` are linked on unix targets only
+
+**Status:** Proposed 2026-10-18 by PLAN-2026-10-metais-v1 Wave 1 (W1-F2,
+from W1-4's finding); awaiting ratification by Ed Funnekotter.
+**Amends:** D2 item 2 (the layering bullet), D3 item 3 (the
+`golang.org/x/sys` and `golang.org/x/term` rows and the paragraph after the
+table), D11 item 3 (the windows no-replace rename), D11 item 8 (the caller
+of the terminal check), D11 item 10 (what the probe found), and the
+promise to ADR-005 under *Interfaces with sibling ADRs*. Cross-referenced
+from ADR-005 D14 item 1.4, ADR-008's *Interfaces* (ADR-010) and ADR-009
+D16 item 3.
+
+1. **On windows the binary links neither `golang.org/x/term` nor
+   `golang.org/x/sys`.** `golang.org/x/sys/windows` imports `net`, and
+   `golang.org/x/term` imports `golang.org/x/sys/windows` on windows. ADR-009
+   D16 item 3's import rule and D11 item 10 keep `net` out of the binary's
+   closure on every target, and D15's gate builds windows. Where the
+   accepted text admitted both modules for every target and the security
+   rule refused `net` on every target, the stricter rule wins (RULINGS-v1's
+   convention; PLAN-2026-10-metais-v1 §4). On darwin and linux both modules
+   are used as D3 item 3's table says, at its versions.
+2. **`internal/hostenv`'s windows terminal check is
+   `syscall.GetConsoleMode`**, the standard library's binding of the call
+   `golang.org/x/term` itself makes on windows. Behaviour is unchanged:
+   a stream is a terminal when it is a console.
+3. **The windows no-replace rename is `MoveFileW`, through the standard
+   library's `syscall.MoveFile`.** `MoveFileW` takes no flags; Microsoft's
+   documentation states that its new name "must not already exist", so it
+   fails on an existing file or directory, which is the refusal ADR-005 D14
+   item 1.4 requires. It differs from `MoveFileExW` without flags in one
+   respect: it may move a *file* to another volume by copying it, and a
+   directory never. ADR-005 D14 never renames across volumes, because the
+   staging directory sits beside the output directory in its parent and
+   each temporary file sits in its target's own directory, so the
+   difference is never reached. `MoveFileW` takes paths, as `MoveFileExW`
+   does, so the choice changes nothing about how `internal/hostfs` confines
+   the rename. Calling `MoveFileExW` without `golang.org/x/sys` would need a
+   procedure loaded by name through `syscall.NewLazyDLL` and `unsafe`
+   pointers, which ADR-009 D16 item 3's directive rule allows only in an
+   allow-listed function; `syscall.MoveFile` needs neither.
+4. **The layering rule is per target.** Only `internal/hostenv` imports
+   `golang.org/x/term` and only `internal/hostfs` imports `golang.org/x/sys`,
+   each in files built for darwin and linux only. Any later use of
+   `golang.org/x/sys/windows` in the binary brings `net` into its closure,
+   which the import rule refuses; `TestNoHostFacts` runs it for every
+   target of the gate.
+
+Both modules stay in `go.mod` at D3's versions, since the darwin and linux
+builds need them.
 
 ## Implementation log
 

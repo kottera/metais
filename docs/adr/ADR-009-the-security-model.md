@@ -829,6 +829,9 @@ that could ask for a host fact appears.
      `plugin`, `net`, `net/http`, `net/rpc`, `net/smtp`, `crypto/tls`, `os/user`,
      `os/signal`, `log/syslog`, `runtime/cgo` or `syscall/js`. `net/url` and
      `net/netip` are parsers and do not import `net`; they are allowed.
+     Because `golang.org/x/sys/windows` imports `net`, this rule keeps
+     `golang.org/x/sys` and `golang.org/x/term` out of the windows binary
+     (ADR-010 Amendment A1, proposed).
    - **Symbol rule, module code**: in every non-test file of the module, a
      selector resolving (through that file's imports) to a symbol of D12's
      tripwire lists, ADR-010 D11 item 9's additions (`runtime.GOOS`,

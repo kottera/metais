@@ -1017,9 +1017,10 @@ references from a JSON parser alone.**
   with interspersed flags, `--`, no prefix abbreviation, the closed list of
   short aliases of D3 item 2 with no grouping, detection of a repeated
   single-valued flag, and per-command declarations the help printer reads;
-  terminal detection (`golang.org/x/term.IsTerminal`, in `internal/hostenv`
-  only); goldmark v2 as the CommonMark 0.31.2 parser for `outline` and D17;
-  Go `regexp` for `grep`; a JSON encoder with HTML escaping off and
+  terminal detection (`golang.org/x/term.IsTerminal` on darwin and linux,
+  `syscall.GetConsoleMode` on windows, in `internal/hostenv` only; ADR-010
+  Amendment A1, proposed); goldmark v2 as the CommonMark 0.31.2 parser for
+  `outline` and D17; Go `regexp` for `grep`; a JSON encoder with HTML escaping off and
   declared member order. The tool's version string is ADR-010's.
 - **ADR-011** — I rely on: nothing in the format specification binding a
   command line (see Proposed rulings). The conformance runner's `cli`
