@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -231,4 +233,56 @@ func Override(v string) { if v == "" { Override("0.0.0") } }`, []string{"refers 
 	checkRule(t, cases, func(f *sourceFile) []string {
 		return versionViolations([]*sourceFile{f}, modulePath)
 	})
+}
+
+// TestVersionRuleMeetsVersionPackage is where the version rule meets the
+// real internal/version: the package declares the Override the rule names,
+// so a rename cannot leave the rule looking for a name nothing has, and a
+// call added to the package's own file or to a real caller is flagged.
+func TestVersionRuleMeetsVersionPackage(t *testing.T) {
+	root := moduleRootAbs(t)
+	var versionFile, caller *sourceFile
+	for _, f := range moduleFiles(t, root) {
+		switch relPackage(modulePath, f.pkg) + "/" + f.name {
+		case versionPackage + "/version.go":
+			versionFile = f
+		case "internal/cli/cli.go":
+			caller = f
+		}
+	}
+	if versionFile == nil || caller == nil {
+		t.Fatal("internal/version/version.go or internal/cli/cli.go is not among the module's release files")
+	}
+	declared := false
+	for _, d := range versionFile.file.Decls {
+		if fn, ok := d.(*ast.FuncDecl); ok && fn.Recv == nil && fn.Name.Name == "Override" {
+			declared = true
+		}
+	}
+	if !declared {
+		t.Fatal("internal/version declares no top-level func Override, which the version rule names")
+	}
+
+	src := func(f *sourceFile) []byte {
+		b, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(relPackage(modulePath, f.pkg)), f.name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return b
+	}
+	inPackage, err := parseSource(versionFile.pkg, versionFile.name,
+		append(src(versionFile), "\nfunc init() { Override(nil, \"9.9.9\") }\n"...))
+	if err != nil {
+		t.Fatal(err)
+	}
+	callerSrc := strings.Replace(string(src(caller)), "import (", "import (\n\t\"github.com/kottera/metais/internal/version\"", 1)
+	fromCaller, err := parseSource(caller.pkg, caller.name, []byte(callerSrc+"\nvar _ = version.Override\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range []*sourceFile{inPackage, fromCaller} {
+		if got := versionViolations([]*sourceFile{f}, modulePath); len(got) != 1 {
+			t.Errorf("%s/%s with a call of Override added: flagged %q, want one violation", f.pkg, f.name, got)
+		}
+	}
 }
