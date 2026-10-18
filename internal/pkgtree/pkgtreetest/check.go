@@ -107,18 +107,22 @@ func (c *checker) entry(p string, b []byte) {
 	if !ok {
 		return
 	}
-	defer r1.Close()
+	defer func() {
+		if err := r1.Close(); err != nil {
+			c.fail("Open(" + q(p) + "): Close: " + err.Error())
+		}
+	}()
 	r2, ok := c.open(p)
 	if !ok {
 		return
 	}
 	half := len(b) / 2
-	head := make([]byte, half)
-	if _, err := io.ReadFull(r1, head); err != nil {
+	head, err := readAll(io.LimitReader(r1, int64(half)), half, 4096)
+	if err != nil {
 		c.fail("Open(" + q(p) + "): reading the first " + strconv.Itoa(half) + " bytes: " + err.Error())
 		return
 	}
-	whole, err := readByBytes(r2, len(b))
+	whole, err := readAll(r2, len(b), 1)
 	if err != nil {
 		c.fail("Open(" + q(p) + "): reading a byte at a time: " + err.Error())
 	} else if !bytes.Equal(whole, b) {
@@ -127,7 +131,7 @@ func (c *checker) entry(p string, b []byte) {
 	if err := r2.Close(); err != nil {
 		c.fail("Open(" + q(p) + "): Close: " + err.Error())
 	}
-	tail, err := io.ReadAll(r1)
+	tail, err := readAll(r1, len(b)-half, 4096)
 	if err != nil {
 		c.fail("Open(" + q(p) + "): reading to the end: " + err.Error())
 		return
@@ -153,15 +157,18 @@ func (c *checker) open(p string) (io.ReadCloser, bool) {
 	return r, true
 }
 
-// readByBytes reads r one byte at a time until io.EOF, refusing to read
-// more than one byte past size, so a reader that never ends cannot hang the
-// check.
-func readByBytes(r io.Reader, size int) ([]byte, error) {
+// readAll reads r to io.EOF, chunk bytes at a time, and refuses to read
+// more than one byte past size or to call Read without end, so a reader
+// that never ends cannot hang the check.
+func readAll(r io.Reader, size, chunk int) ([]byte, error) {
 	var got []byte
-	one := make([]byte, 1)
-	for len(got) <= size {
-		n, err := r.Read(one)
-		got = append(got, one[:n]...)
+	buf := make([]byte, chunk)
+	for calls := 0; calls <= size+64; calls++ {
+		n, err := r.Read(buf)
+		got = append(got, buf[:n]...)
+		if len(got) > size {
+			return got, errors.New("yields more than the entry's " + strconv.Itoa(size) + " bytes")
+		}
 		if err == io.EOF {
 			return got, nil
 		}
@@ -169,7 +176,7 @@ func readByBytes(r io.Reader, size int) ([]byte, error) {
 			return got, err
 		}
 	}
-	return got, errors.New("yields more than the entry's " + strconv.Itoa(size) + " bytes")
+	return got, errors.New("does not reach EOF")
 }
 
 // refused checks that p, which is not an entry, is refused by Stat and
