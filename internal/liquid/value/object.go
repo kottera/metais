@@ -25,7 +25,7 @@ type Member struct {
 // consumer iterates them in that order. That is the order ADR-004 D4 item 5
 // requires of every template iteration and every serializer, so the same
 // object read from JSON, from YAML or from CSV is iterated identically, and
-// no consumer ever iterates a Go map (ADR-010 D2 item 3, D4).
+// no iteration depends on a Go map's order (ADR-010 D2 item 3, D4 item 2).
 //
 // The zero Object is the empty object.
 type Object struct {
