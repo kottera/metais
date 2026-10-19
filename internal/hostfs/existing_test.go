@@ -480,3 +480,50 @@ func TestRemoveFile(t *testing.T) {
 		t.Fatalf("after RemoveFile: %q, want %q", after, want)
 	}
 }
+
+// RemoveEmptyDir removes an empty directory beneath its directory, leaves
+// one that holds an entry, and refuses a link or a file at any segment,
+// changing nothing.
+func TestRemoveEmptyDir(t *testing.T) {
+	parent := dir(t)
+	exp := filepath.Join(parent, "expected")
+	files(t, parent, map[string]string{"outside/empty/.keep": "O"})
+	files(t, exp, map[string]string{"full/x": "X", "file": "F"})
+	for _, d := range []string{"a/b", "outside-empty"} {
+		if err := os.MkdirAll(filepath.Join(exp, filepath.FromSlash(d)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	symlink(t, exp, filepath.Join(parent, "outside"), "out")
+	symlink(t, exp, "a", "in")
+	before := tree(t, parent)
+	for _, tt := range []struct {
+		name string
+		want Reason
+	}{
+		{"out/empty", Link},
+		{"in/b", Link},
+		{"in", Link},
+		{"file", NotDirectory},
+		{"file/x", NotDirectory},
+		{"missing", NotFound},
+		{"../outside/empty", BadName},
+		{".", BadName},
+	} {
+		wantReason(t, RemoveEmptyDir(exp, tt.name), tt.want, parent)
+	}
+	if err := RemoveEmptyDir(exp, "full"); err != nil {
+		t.Fatalf("a directory holding an entry: %v, want it left and no error", err)
+	}
+	if after := tree(t, parent); !slices.Equal(after, before) {
+		t.Fatalf("a refused or declined removal changed %q to %q", before, after)
+	}
+	for _, d := range []string{"a/b", "a"} {
+		if err := RemoveEmptyDir(exp, d); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := os.Lstat(filepath.Join(exp, "a")); !os.IsNotExist(err) {
+		t.Fatalf("a/ after its removal: %v", err)
+	}
+}

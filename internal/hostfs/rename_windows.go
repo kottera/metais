@@ -53,6 +53,17 @@ func platformUnlink(_ *os.File, dirPath string, name string) error {
 	return syscall.DeleteFile(p)
 }
 
+// platformRmdir removes name in the directory dirPath with
+// RemoveDirectoryW, which refuses anything but an empty directory. It names
+// the directory by path, as platformUnlink does.
+func platformRmdir(_ *os.File, dirPath string, name string) error {
+	p, err := syscall.UTF16PtrFromString(filepath.Join(dirPath, name))
+	if err != nil {
+		return err
+	}
+	return syscall.RemoveDirectory(p)
+}
+
 // platformRenameReplace answers errHandleUnsupported: windows names files
 // by path, and the caller renames through the root, whose rename replaces
 // an existing file.

@@ -28,6 +28,13 @@ func platformUnlink(*os.File, string, string) error {
 	return errHandleUnsupported
 }
 
+// platformRmdir has no directory-relative call here that refuses a
+// file, so it answers errHandleUnsupported, and the caller removes through
+// the root what it has examined as a directory.
+func platformRmdir(*os.File, string, string) error {
+	return errHandleUnsupported
+}
+
 // platformRenameReplace answers errHandleUnsupported, and the caller
 // renames through the root.
 func platformRenameReplace(*os.File, string, string, *os.File, string, string) error {

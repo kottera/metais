@@ -35,6 +35,13 @@ func platformUnlink(dir *os.File, _ string, name string) error {
 	return unix.Unlinkat(int(dir.Fd()), name, 0)
 }
 
+// platformRmdir removes name, a single name in the open directory dir,
+// with unlinkat and AT_REMOVEDIR, which refuses anything but an empty
+// directory.
+func platformRmdir(dir *os.File, _ string, name string) error {
+	return unix.Unlinkat(int(dir.Fd()), name, unix.AT_REMOVEDIR)
+}
+
 // platformRenameReplace renames from, a single name in the open directory
 // fromDir, over to, a single name in the open directory toDir, with
 // renameat, which replaces the directory entry and never writes into the

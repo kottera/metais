@@ -74,3 +74,12 @@ const RemoveForeign Set = 1 << 6
 // the standard-output purity test must catch a standard output that holds
 // anything but the bytes. Its seam is internal/cli.
 const StdoutNotice Set = 1 << 7
+
+// UpdateBeyondExpected makes test --update reckon the files it removes
+// over the whole example directory rather than its expected/ (ADR-010 D13
+// item 2): the example's inputs and example.yaml, which its render does
+// not produce, are removed with the stale expected files. The update
+// confinement detector must catch a removal outside
+// examples/<name>/expected/, which ADR-007 D5 item 5 and RULINGS R1-006
+// forbid. Its seam is internal/cli.
+const UpdateBeyondExpected Set = 1 << 8
