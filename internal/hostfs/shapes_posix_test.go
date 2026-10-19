@@ -115,8 +115,10 @@ func TestShapesWriteTheirLimitUnderTheOpenFileLimit(t *testing.T) {
 		})
 	}
 	// A failed StageNew of the outputs limit removes all of it under the
-	// same limit. It writes the entries as the commit does, each directory
-	// made once before its first file.
+	// same limit. It writes the entries as render's prepare does, with a
+	// MkdirAll of each file's directory before the file, so all but the
+	// first file of a directory take MkdirAll's path for a directory that
+	// exists, under the limit, as often as render does.
 	t.Run("StageNew abort", func(t *testing.T) {
 		parent := dir(t)
 		names := manyNames(counts["StageNew"])
@@ -125,13 +127,9 @@ func TestShapesWriteTheirLimitUnderTheOpenFileLimit(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		last := ""
 		for _, name := range names {
-			if d := dirOf(name); d != last {
-				if err := o.MkdirAll(d); err != nil {
-					t.Fatal(err)
-				}
-				last = d
+			if err := o.MkdirAll(dirOf(name)); err != nil {
+				t.Fatalf("MkdirAll(%q), after %d files: %v", dirOf(name), len(o.Written()), err)
 			}
 			if err := o.Create(name, false, strings.NewReader("x")); err != nil {
 				t.Fatal(err)
