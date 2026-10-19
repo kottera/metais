@@ -264,6 +264,7 @@ func readRecord(path string, validate func([]byte) error) (*record, error) {
 // tool version or another suite is refused, and one differing in a field
 // fails.
 func TestRecordAndCompare(t *testing.T) {
+	t.Parallel()
 	suite := writeFixture(t, testenv.Dir(t))
 	fake := fakeProgram(t, testenv.Dir(t), "clean")
 	dir := testenv.Dir(t)

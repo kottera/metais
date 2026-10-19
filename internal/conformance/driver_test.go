@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"github.com/kottera/metais/internal/testenv"
@@ -136,6 +137,7 @@ func TestDriverProtocol(t *testing.T) {
 	if testing.Short() {
 		t.Skip("the driver protocol runs the whole suite twice over; skipped under -short (ADR-011 D11 item 7)")
 	}
+	t.Parallel()
 	t.Run("suite", func(t *testing.T) {
 		suite := defaultSuite()
 		driver := refDriver(t, filepath.Join(testenv.Dir(t), "built"), builtTool)
@@ -155,9 +157,16 @@ func TestDriverProtocol(t *testing.T) {
 		}
 		r := newRunner(t, suite, a)
 		r.short = false
-		for _, id := range fixtureIDs {
-			for _, p := range runVector(r, suite, id, testenv.Dir(t)) {
-				t.Errorf("%s: %s", id, p)
+		results := make([][]problem, len(fixtureIDs))
+		var wg sync.WaitGroup
+		for i, id := range fixtureIDs {
+			base := testenv.Dir(t)
+			wg.Go(func() { results[i] = runVector(r, suite, id, base) })
+		}
+		wg.Wait()
+		for i, ps := range results {
+			for _, p := range ps {
+				t.Errorf("%s: %s", fixtureIDs[i], p)
 			}
 		}
 		id, err := r.identity()

@@ -431,6 +431,7 @@ func TestHostileVectorsOpenEverywhere(t *testing.T) {
 // of them; a fake that declares a command the adapter cannot run, and a
 // plan that leaves one out, are each caught.
 func TestHostileVectorsOpenEverywhereControl(t *testing.T) {
+	t.Parallel()
 	suite := writeFixture(t, testenv.Dir(t))
 	clean := &cliAdapter{path: fakeProgram(t, testenv.Dir(t), "clean")}
 	if bad := hostileOpenProblems(suite, clean, testenv.Dir(t)); len(bad) > 0 {

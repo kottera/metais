@@ -133,6 +133,7 @@ func runVector(r *runner, suite, id, base string) []problem {
 // environment B's two seconds, and are reported afterwards, one subtest
 // per run.
 func TestSelfProof(t *testing.T) {
+	t.Parallel()
 	suite := writeFixture(t, testenv.Dir(t))
 	type run struct {
 		name   string
