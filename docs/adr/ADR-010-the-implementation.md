@@ -1489,3 +1489,13 @@ builds need them.
   windows no-replace rename cannot come from `golang.org/x/sys` for the same
   reason; the standard library's `syscall.MoveFile` (`MoveFileW`, which
   never replaces an existing file) is in reach.
+
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-5.** D11 item 3 landed as
+  `internal/hostfs`: the no-replace rename is `unix.Renameat2` with
+  `RENAME_NOREPLACE` on linux and `unix.RenameatxNp` with `RENAME_EXCL` on
+  darwin, both relative to a directory handle opened through the root, and
+  `syscall.MoveFile` on windows, each in a build-tagged file.
+  `TestWindowsLinksNoXModules` holds every package of the module, not only
+  the binary's closure, to Amendment A1's rule that windows links neither
+  `golang.org/x/sys` nor `golang.org/x/term`. `golang.org/x/sys` is now a
+  direct requirement in `go.mod`.
