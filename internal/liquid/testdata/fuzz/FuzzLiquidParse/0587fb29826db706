@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{{ \x2210\x22 | modulo: \x22foo\x22 }}")

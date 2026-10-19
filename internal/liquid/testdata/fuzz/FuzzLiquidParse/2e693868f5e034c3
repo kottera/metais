@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% if false.x == 7 %}TRUE{% else %}FALSE{% endif %}")

@@ -1,0 +1,32 @@
+# Golden Liquid cases excluded from TestGoldenLiquidParse, one per line:
+# <case name><TAB><reason><TAB><note>. The reason is one of ADR-010 D4
+# item 7's closed set; a dialect line names its ADR-004 item.
+identifiers, allowed symbols	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
+identifiers, allowed symbols, parens	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
+identifiers, capture only digits	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
+identifiers, only digits	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
+identifiers, repeated parens	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
+tags, case, unexpected when token	dialect	ADR-004 D1 item 2: strict2 refuses and in a when, as the corpus's own "tags, case, unexpected when token, strict2" shows; this case is strict mode's
+tags, if, else tag expressions are ignored	dialect	ADR-004 D1 item 2: Shopify ignores markup on else, and METAIS refuses what Shopify ignores
+tags, if, extra else blocks are ignored	dialect	ADR-004 D1 item 2: Shopify ignores a branch after else, and METAIS refuses what Shopify ignores
+tags, if, extra elsif blocks are ignored	dialect	ADR-004 D1 item 2: Shopify ignores a branch after else, and METAIS refuses what Shopify ignores
+tags, include, assign persists in outer scope	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, assign to a keyword argument	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, bound array variable	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, bound variable	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, bound variable does not exist	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, bound variable with alias	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, break from include	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, break from nested include	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, counter from outer scope	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, keyword arguments go out of scope	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, name from identifier	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, some keyword arguments	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, some keyword arguments with float literals	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, some keyword arguments with range literal	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, some keyword arguments without leading comma	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, string literal name	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, include, use globals from outer scope	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, unless, else tag expressions are ignored	dialect	ADR-004 D1 item 2: Shopify ignores markup on else, and METAIS refuses what Shopify ignores
+tags, unless, extra else blocks are ignored	dialect	ADR-004 D1 item 2: Shopify ignores a branch after else, and METAIS refuses what Shopify ignores
+tags, unless, extra elsif blocks are ignored	dialect	ADR-004 D1 item 2: Shopify ignores a branch after else, and METAIS refuses what Shopify ignores

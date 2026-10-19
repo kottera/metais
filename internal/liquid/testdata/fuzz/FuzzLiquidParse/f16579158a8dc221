@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{{ \x22Ground control to Major Tom.\x22 | truncate: 25, \x22, and so on\x22 }}")

@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{{ \x22&lt;p&gt;test&lt;/p&gt;\x22 | escape_once }}")

@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% liquid\x0dif product.title\x0d   echo product.title | upcase\x0delse\x0d   echo 'product-1' | upcase \x0dendif\x0d\x0dfor i in (0..5)\x0d   echo i\x0dendfor %}")
