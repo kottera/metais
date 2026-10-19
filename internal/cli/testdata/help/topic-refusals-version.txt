@@ -1,0 +1,9 @@
+metais help refusals version — Every code metais version may refuse with, and
+its next step.
+
+Next: metais version --help
+      Prints the operands and flags metais version takes.
+  usage.bad_value
+  usage.repeated_flag
+  usage.unexpected_operand
+  usage.unknown_flag

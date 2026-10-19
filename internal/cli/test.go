@@ -148,29 +148,29 @@ func testRefusals() []Refusal {
 	}
 	for _, e := range finding.Registry() {
 		family, rest, _ := strings.Cut(string(e.Code), ".")
-		var cause string
+		var what, words string
 		switch {
 		case have[e.Code]:
 			continue
 		case family == "example" && e.Code != "example.layout":
-			cause = "An example fails (" + strings.ReplaceAll(rest, "_", " ") + ")."
+			what, words = "An example fails", strings.ReplaceAll(rest, "_", " ")
 		case family == "input" || family == "json" || family == "yaml" || family == "csv" || family == "text" ||
 			family == "markdown" || family == "collection" || e.Code == finding.CodeLimitExceeded:
-			cause = "An example's inputs are refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ")."
+			what, words = "An example's inputs are refused", strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ")
 		case family == "template" && e.Severity == finding.SeverityError && !strings.HasPrefix(rest, "xref.") && !strings.HasPrefix(rest, "ooxml."):
-			cause = "A template is refused (" + strings.ReplaceAll(rest, "_", " ") + ")."
+			what, words = "A template is refused", strings.ReplaceAll(rest, "_", " ")
 		case strings.HasPrefix(string(e.Code), "limit.exceeded."), strings.HasPrefix(string(e.Code), "output.path."),
 			strings.HasPrefix(string(e.Code), "output.expression."), strings.HasPrefix(string(e.Code), "output.container."):
-			cause = "An example's output is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ")."
+			what, words = "An example's output is refused", strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ")
 		case family == "output" && e.Subject == finding.SubjectOutput:
 			// An output its kind's reader or its schema refuses, and a
 			// validate its rendered path's kind cannot take (ADR-005 D11).
-			cause = "An example's output fails its validation (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ")."
+			what, words = "An example's output fails its validation", strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ")
 		default:
 			continue
 		}
 		have[e.Code] = true
-		out = append(out, Refusal{Code: e.Code, Cause: cause, Next: nextTestAgain})
+		out = append(out, familyRefusal(e.Code, what, words, nextTestAgain))
 	}
 	return out
 }

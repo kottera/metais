@@ -10,10 +10,12 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"unicode/utf8"
 
+	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostenv"
 	"github.com/kottera/metais/internal/version"
 )
@@ -34,7 +36,44 @@ func helpGolden() map[string][]string {
 	for _, tp := range topics {
 		g["topic-"+tp.Name+".txt"] = []string{"help", tp.Name}
 	}
+	for _, c := range table {
+		g["topic-refusals-"+c.Name+".txt"] = []string{"help", "refusals", c.Name}
+	}
 	return g
+}
+
+// goldenForm is out as its golden file holds it: a JSON document indented
+// so that git merges it line by line, any other text as it is.
+func goldenForm(t *testing.T, file, out string) []byte {
+	t.Helper()
+	if filepath.Ext(file) != ".json" {
+		return []byte(out)
+	}
+	var b bytes.Buffer
+	if err := json.Indent(&b, []byte(strings.TrimSuffix(out, "\n")), "", "  "); err != nil {
+		t.Fatalf("%s: %v", file, err)
+	}
+	return append(b.Bytes(), '\n')
+}
+
+// printedForm is what the tool prints for the golden file want holds: a
+// JSON golden compacted onto one line ending in one LF, any other as it
+// is. A JSON golden not in goldenForm's indentation fails, so its form
+// cannot drift either.
+func printedForm(t *testing.T, file string, want []byte) string {
+	t.Helper()
+	if filepath.Ext(file) != ".json" {
+		return string(want)
+	}
+	var b bytes.Buffer
+	if err := json.Compact(&b, want); err != nil {
+		t.Fatalf("%s: %v", file, err)
+	}
+	printed := b.String() + "\n"
+	if !bytes.Equal(goldenForm(t, file, printed), want) {
+		t.Errorf("%s is not indented as -update writes it", file)
+	}
+	return printed
 }
 
 // TestHelpGolden holds every help text, and the help documents, to golden
@@ -48,12 +87,17 @@ func TestHelpGolden(t *testing.T) {
 			t.Errorf("metais %q: status %d, stderr %q", argv, r.status, r.stderr)
 			continue
 		}
+		// What the tool prints is what its golden file gives back, byte for
+		// byte, so the comparison below holds every byte it prints.
+		if back := printedForm(t, file, goldenForm(t, file, r.stdout)); back != r.stdout {
+			t.Errorf("metais %q does not survive its golden file's form:\ngot:\n%s\nwant:\n%s", argv, back, r.stdout)
+		}
 		path := filepath.Join("testdata", "help", file)
 		if *update {
 			if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 				t.Fatal(err)
 			}
-			if err := os.WriteFile(path, []byte(r.stdout), 0o644); err != nil {
+			if err := os.WriteFile(path, goldenForm(t, file, r.stdout), 0o644); err != nil {
 				t.Fatal(err)
 			}
 			continue
@@ -63,8 +107,8 @@ func TestHelpGolden(t *testing.T) {
 			t.Errorf("%s: %v (run go test -run TestHelpGolden -args -update)", file, err)
 			continue
 		}
-		if r.stdout != string(want) {
-			t.Errorf("metais %q differs from %s:\ngot:\n%s\nwant:\n%s", argv, path, r.stdout, want)
+		if printed := printedForm(t, file, want); r.stdout != printed {
+			t.Errorf("metais %q differs from %s:\ngot:\n%s\nwant:\n%s", argv, path, r.stdout, printed)
 		}
 	}
 	if *update {
@@ -127,10 +171,37 @@ func TestHelpCoverage(t *testing.T) {
 				t.Errorf("metais %s --help does not show %s", c.Name, o.Name)
 			}
 		}
+		// Every refusal is in help refusals <command> beneath its next
+		// step; one with a hand-written cause is in --help with its next
+		// step, and one a loop over the registry declares is in exactly
+		// one of --help's family lines (ADR-008 D15 items 3 and 4, as
+		// amended by A1).
+		listed := nextOfCodes(runTool(t, "help", "refusals", c.Name).stdout)
+		generated := 0
 		for _, rf := range c.Refusals {
-			if !strings.Contains(text, string(rf.Code)) || !strings.Contains(text, rf.Next.Run) {
+			if !slices.Contains(listed[rf.Code], rf.Next.Run) {
+				t.Errorf("metais help refusals %s does not list the refusal %s beneath its next step", c.Name, rf.Code)
+			}
+			if rf.gist != "" {
+				generated++
+			} else if !strings.Contains(text, "\n  "+string(rf.Code)+"\n") || !strings.Contains(text, rf.Next.Run) {
 				t.Errorf("metais %s --help does not show the refusal %s and its next step", c.Name, rf.Code)
 			}
+		}
+		inFamilies := 0
+		for _, f := range families(c.Refusals) {
+			inFamilies += len(f.codes)
+			if !strings.Contains(text, "\n  "+f.pattern()+" ("+strconv.Itoa(len(f.codes))+")") {
+				t.Errorf("metais %s --help does not show the family %s", c.Name, f.pattern())
+			}
+			for _, code := range f.codes {
+				if !matchesFamily(f.pattern(), code) {
+					t.Errorf("metais %s: the family %s does not match its code %s", c.Name, f.pattern(), code)
+				}
+			}
+		}
+		if inFamilies != generated {
+			t.Errorf("metais %s --help's families hold %d codes, the declaration %d from the registry", c.Name, inFamilies, generated)
 		}
 		for _, e := range c.Examples {
 			if !strings.Contains(text, "\n  "+e.Run+"\n") {
@@ -183,14 +254,70 @@ func TestHelpCoverage(t *testing.T) {
 	}
 }
 
+// nextOfCodes reads metais help refusals <command>: the next steps each
+// code is listed beneath.
+func nextOfCodes(text string) map[finding.Code][]string {
+	out := map[finding.Code][]string{}
+	run := ""
+	for _, line := range strings.Split(text, "\n") {
+		switch {
+		case strings.HasPrefix(line, "Next: "):
+			run = strings.TrimPrefix(line, "Next: ")
+		case strings.HasPrefix(line, "  ") && !strings.HasPrefix(line, "   ") && run != "":
+			code := finding.Code(strings.TrimPrefix(line, "  "))
+			out[code] = append(out[code], run)
+		}
+	}
+	return out
+}
+
+// matchesFamily reports whether code is one the family pattern p, as
+// family.pattern writes it, names.
+func matchesFamily(p string, code finding.Code) bool {
+	for _, alt := range strings.Split(p, " and ") {
+		if prefix, ok := strings.CutSuffix(alt, ".*"); ok && strings.HasPrefix(string(code), prefix+".") || alt == string(code) {
+			return true
+		}
+	}
+	return false
+}
+
+// TestFamilyPattern holds a family's pattern to its codes' longest common
+// prefix of whole segments.
+func TestFamilyPattern(t *testing.T) {
+	for _, c := range []struct {
+		codes []finding.Code
+		want  string
+	}{
+		{[]finding.Code{"json.syntax"}, "json.syntax"},
+		{[]finding.Code{"json.bom", "json.syntax"}, "json.*"},
+		{[]finding.Code{"output.path.a", "output.path.b"}, "output.path.*"},
+		{[]finding.Code{"output.path.a", "output.pathx.b"}, "output.*"},
+		{[]finding.Code{"limit.exceeded", "limit.exceeded.a"}, "limit.exceeded and limit.exceeded.*"},
+	} {
+		f := family{codes: c.codes}
+		if got := f.pattern(); got != c.want {
+			t.Errorf("pattern of %v = %q, want %q", c.codes, got, c.want)
+		}
+		for _, code := range c.codes {
+			if !matchesFamily(f.pattern(), code) {
+				t.Errorf("%q does not match %s", f.pattern(), code)
+			}
+		}
+	}
+	if matchesFamily("json.*", "jsonx.a") || matchesFamily("json.*", "json") || matchesFamily("json.bom", "json.syntax") {
+		t.Error("matchesFamily matches a code outside its pattern")
+	}
+}
+
 // TestParsesAsLineControl holds the line check to failing what it must.
 func TestParsesAsLineControl(t *testing.T) {
-	for _, l := range []string{"metais", "metais versio", "metais version --jsn", "metais help nope", "metais version extra", "grep x", "metais inspect <nothing>", "metais inspect 'unclosed", "metais nope <package> x", ""} {
+	for _, l := range []string{"metais", "metais versio", "metais version --jsn", "metais help nope", "metais help limits render", "metais help refusals nope", "metais version extra", "grep x", "metais inspect <nothing>", "metais inspect 'unclosed", "metais nope <package> x", ""} {
 		if parsesAsLine(l) == nil {
 			t.Errorf("%q parses", l)
 		}
 	}
-	for _, l := range []string{"metais help", "metais --help", "metais version --json", "metais help exit-codes", "metais limits --help", "metais inspect <package>", "metais inspect '<package>' --guide"} {
+	for _, l := range []string{"metais help", "metais --help", "metais version --json", "metais help exit-codes", "metais help refusals render", "metais limits --help", "metais inspect <package>", "metais inspect '<package>' --guide"} {
 		if err := parsesAsLine(l); err != nil {
 			t.Error(err)
 		}

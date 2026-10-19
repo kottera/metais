@@ -1,0 +1,9 @@
+metais help refusals limits — Every code metais limits may refuse with, and its
+next step.
+
+Next: metais limits --help
+      Prints the operands and flags metais limits takes.
+  usage.bad_value
+  usage.repeated_flag
+  usage.unexpected_operand
+  usage.unknown_flag

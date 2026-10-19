@@ -1,11 +1,13 @@
 metais help — Print the overview, a command's help, or a topic.
 
 Usage:
-  metais help [<command> | <topic>] [--json]
+  metais help [<command> | <topic> [<command>]] [--json]
 
 With no operand, prints the overview: the commands by group, the global flags,
 the topics and the exit codes. With a command's name, prints that command's
-help, as metais <command> --help does. With a topic, prints the topic.
+help, as metais <command> --help does. With a topic, prints the topic; the topic
+refusals takes a command's name after it, and lists every code that command may
+refuse with.
 
 With --json, prints the help as one metais.help/1 document: every command's full
 declaration and every topic for the overview, or the one command or topic asked
@@ -13,7 +15,11 @@ for.
 
 Operands:
   <command> | <topic>
-      A command's name, or one of the topics inputs, globs, json and exit-codes.
+      A command's name, or one of the topics inputs, globs, json, exit-codes and
+      refusals.
+  <command>
+      After the topic refusals, the command whose codes are listed; no other
+      topic takes one.
 
 Flags:
   --json
@@ -45,7 +51,8 @@ Refusals:
       or one-letter aliases written together.
       Next: metais help --help
   usage.unknown_topic
-      The operand names no command and no topic.
+      The operand names no command and no topic, or the operand after refusals
+      names no command.
       Next: metais help
 
 Examples:
@@ -55,5 +62,7 @@ Examples:
       Prints the help of metais limits.
   metais help exit-codes
       Prints what each exit status means.
+  metais help refusals render
+      Lists every code metais render may refuse with, by its next step.
   metais help --json
       Prints every command's declaration and every topic as one document.

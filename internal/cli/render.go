@@ -177,19 +177,19 @@ func renderRefusals(c *Command) {
 		case have[e.Code]:
 			continue
 		case inputFamily(e.Code):
-			r = Refusal{Code: e.Code, Cause: "An input is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", Next: nextRenderInputs}
+			r = familyRefusal(e.Code, "An input is refused", strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": "), nextRenderInputs)
 		case e.Code == sample.CodeUnsatisfiable || e.Code == finding.CodeSampleInvalid:
-			r = Refusal{Code: e.Code, Cause: "With --sample, the generated data cannot be made or does not validate (" + strings.ReplaceAll(rest, "_", " ") + ").", Next: nextSampleSchema}
+			r = familyRefusal(e.Code, "With --sample, the generated data cannot be made or does not validate", strings.ReplaceAll(rest, "_", " "), nextSampleSchema)
 		case family == "template" && e.Severity == finding.SeverityError && !strings.HasPrefix(rest, "xref.") && !strings.HasPrefix(rest, "ooxml."):
-			r = Refusal{Code: e.Code, Cause: "A template is refused (" + strings.ReplaceAll(rest, "_", " ") + ").", Next: nextRenderTemplates}
+			r = familyRefusal(e.Code, "A template is refused", strings.ReplaceAll(rest, "_", " "), nextRenderTemplates)
 		case strings.HasPrefix(string(e.Code), "limit.exceeded."), strings.HasPrefix(string(e.Code), "output.path."),
 			strings.HasPrefix(string(e.Code), "output.expression."), strings.HasPrefix(string(e.Code), "output.container."):
-			r = Refusal{Code: e.Code, Cause: "An output is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", Next: nextRenderTemplates}
+			r = familyRefusal(e.Code, "An output is refused", strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": "), nextRenderTemplates)
 		case family == "output" && e.Subject == finding.SubjectOutput:
 			// An output's text its kind's reader refuses, or its schema
 			// does, and a validate a rendered path's kind cannot take
 			// (ADR-005 D11 items 2 and 4).
-			r = Refusal{Code: e.Code, Cause: "An output fails its validation (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", Next: nextRenderTemplates}
+			r = familyRefusal(e.Code, "An output fails its validation", strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": "), nextRenderTemplates)
 		default:
 			continue
 		}

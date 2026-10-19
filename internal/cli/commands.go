@@ -117,6 +117,21 @@ func runHelp(s *session, p args.Parsed) outcome {
 		return s.overview()
 	}
 	name := p.Operands[0]
+	if len(p.Operands) == 2 {
+		// Only the refusals topic takes a command after it.
+		at := s.line.at[p.OperandArgs[1]]
+		if name != "refusals" {
+			f := finding.New(finding.CodeUsageUnexpectedOperand, invocation, nil,
+				finding.Params{"argument": finding.Int(int64(at + 1)), "command": finding.String("help")})
+			return outcome{findings: []finding.Finding{f}, next: s.nextSteps([]finding.Finding{f})}
+		}
+		c := lookup(s.table, p.Operands[1])
+		if c == nil {
+			f := finding.New(finding.CodeUsageUnknownTopic, invocation, nil, finding.Params{"argument": finding.Int(int64(at + 1))})
+			return outcome{findings: []finding.Finding{f}, next: s.nextSteps([]finding.Finding{f})}
+		}
+		return s.topicHelp(commandRefusalsTopic(c))
+	}
 	if c := lookup(s.table, name); c != nil {
 		return s.commandHelp(c)
 	}

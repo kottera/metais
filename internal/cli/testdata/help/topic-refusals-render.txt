@@ -1,0 +1,375 @@
+metais help refusals render — Every code metais render may refuse with, and its
+next step.
+
+Next: metais inspect <package>
+      Lists the inputs the package takes, the files each is read from, and what
+      each means.
+  collection.as_file
+  collection.directory_name
+  collection.item_name
+  collection.stem_duplicate
+  collection.subdirectory
+  csv.after_quote
+  csv.bare_quote
+  csv.field_count
+  csv.header_duplicate
+  csv.header_empty
+  csv.header_missing
+  csv.unterminated_quote
+  input.additional_item
+  input.additional_property
+  input.any_of
+  input.const
+  input.constraints_failed
+  input.constraints_not_evaluated
+  input.contains
+  input.dependent_required
+  input.encoding_invalid
+  input.enum
+  input.exclusive_maximum
+  input.exclusive_minimum
+  input.extension_not_accepted
+  input.file_duplicate
+  input.file_unknown
+  input.forbidden
+  input.format
+  input.json_arg_invalid
+  input.json_arg_not_object
+  input.json_arg_unknown
+  input.link
+  input.max_contains
+  input.max_items
+  input.max_length
+  input.max_properties
+  input.maximum
+  input.min_contains
+  input.min_items
+  input.min_length
+  input.min_properties
+  input.minimum
+  input.missing
+  input.multiple_of
+  input.noncharacter
+  input.not
+  input.not_readable
+  input.not_regular_file
+  input.number_out_of_range
+  input.one_of
+  input.one_of.ambiguous
+  input.pattern
+  input.property_name
+  input.raw_unavailable
+  input.required
+  input.set_into_unparsed
+  input.set_pointer_invalid
+  input.set_traversal
+  input.type
+  input.unevaluated_item
+  input.unevaluated_property
+  input.unique_items
+  input.validation.partial
+  json.duplicate_name
+  json.lone_surrogate
+  json.noncharacter
+  json.syntax
+  json.trailing_content
+  limit.exceeded
+  markdown.frontmatter_body_field
+  markdown.frontmatter_not_mapping
+  markdown.frontmatter_unclosed
+  yaml.alias
+  yaml.anchor
+  yaml.bom
+  yaml.character
+  yaml.directive
+  yaml.duplicate_key
+  yaml.key_empty
+  yaml.key_not_scalar
+  yaml.merge_key
+  yaml.multi_document
+  yaml.scalar_refused
+  yaml.syntax
+  yaml.tag
+
+Next: metais inspect <package>
+      Shows the package's outputs; a template's defect is the package's, for its
+      author to fix.
+  limit.exceeded.output
+  limit.exceeded.template
+  output.additional_item
+  output.additional_property
+  output.any_of
+  output.const
+  output.container.missing_entry
+  output.container.non_ascii
+  output.container.reserved_entry
+  output.container.space
+  output.container.too_many_entries
+  output.contains
+  output.declaration.empty_mirror
+  output.declaration.empty_name
+  output.declaration.validate_kind
+  output.dependent_required
+  output.enum
+  output.exclusive_maximum
+  output.exclusive_minimum
+  output.expression.for_each_type
+  output.forbidden
+  output.format
+  output.max_contains
+  output.max_items
+  output.max_length
+  output.max_properties
+  output.maximum
+  output.min_contains
+  output.min_items
+  output.min_length
+  output.min_properties
+  output.minimum
+  output.multiple_of
+  output.not
+  output.one_of
+  output.one_of.ambiguous
+  output.parse
+  output.path.case_collision
+  output.path.character
+  output.path.duplicate
+  output.path.encoding
+  output.path.file_directory_conflict
+  output.path.not_nfc
+  output.path.not_portable
+  output.path.shape
+  output.pattern
+  output.property_name
+  output.required
+  output.type
+  output.unevaluated_item
+  output.unevaluated_property
+  output.unique_items
+  template.asset_ambiguous
+  template.asset_not_found
+  template.asset_not_text
+  template.asset_not_written
+  template.asset_tree
+  template.comparison
+  template.date_input
+  template.embed_index
+  template.embed_unknown_input
+  template.filter_input
+  template.invalid_utf8
+  template.nil_property
+  template.not_utf8
+  template.object_output
+  template.partial_name
+  template.partial_not_found
+  template.provenance_argument
+  template.provenance_style
+  template.reserved_name
+  template.slug_empty
+  template.tag_argument
+  template.undefined_property
+  template.undefined_variable
+
+Next: metais limits
+      Lists every limit with its default; a limit can be lowered and never
+      raised.
+  limit.invalid
+  limit.package
+
+Next: metais inspect <package>
+      Opens the package again once it is fixed or replaced; nothing of a refused
+      package is used.
+  manifest.additional_item
+  manifest.additional_property
+  manifest.any_of
+  manifest.const
+  manifest.contains
+  manifest.dependent_required
+  manifest.enum
+  manifest.exclusive_maximum
+  manifest.exclusive_minimum
+  manifest.file.wrong_name
+  manifest.forbidden
+  manifest.format
+  manifest.input.duplicate_name
+  manifest.json.duplicate_name
+  manifest.json.encoding
+  manifest.json.lone_surrogate
+  manifest.json.noncharacter
+  manifest.json.syntax
+  manifest.json.trailing_content
+  manifest.license.expression
+  manifest.max_contains
+  manifest.max_items
+  manifest.max_length
+  manifest.max_properties
+  manifest.maximum
+  manifest.min_contains
+  manifest.min_items
+  manifest.min_length
+  manifest.min_properties
+  manifest.minimum
+  manifest.multiple_of
+  manifest.not
+  manifest.number_out_of_range
+  manifest.one_of
+  manifest.one_of.ambiguous
+  manifest.output.duplicate_id
+  manifest.output.nested_for_each
+  manifest.path_not_found
+  manifest.pattern
+  manifest.property_name
+  manifest.required
+  manifest.type
+  manifest.unevaluated_item
+  manifest.unevaluated_property
+  manifest.unique_items
+  manifest.yaml.alias
+  manifest.yaml.anchor
+  manifest.yaml.bom
+  manifest.yaml.character
+  manifest.yaml.directive
+  manifest.yaml.duplicate_key
+  manifest.yaml.encoding
+  manifest.yaml.key_empty
+  manifest.yaml.key_not_scalar
+  manifest.yaml.merge_key
+  manifest.yaml.multi_document
+  manifest.yaml.root_not_mapping
+  manifest.yaml.scalar_refused
+  manifest.yaml.syntax
+  manifest.yaml.tag
+  package.compiled.mismatch
+  package.compiled.missing
+  package.compiled.unknown_file
+  package.container.archive_comment
+  package.container.crc_mismatch
+  package.container.data_descriptor
+  package.container.deflate_stream
+  package.container.encrypted
+  package.container.entry_order
+  package.container.extra_field
+  package.container.field_value
+  package.container.flags
+  package.container.header_mismatch
+  package.container.method
+  package.container.not_zip
+  package.container.overlap_or_gap
+  package.container.prepended_data
+  package.container.second_end_record
+  package.container.size_mismatch
+  package.container.trailing_data
+  package.container.zip64
+  package.digest.entries_mismatch
+  package.digest.mismatch
+  package.digest.not_canonical
+  package.digest.package_mismatch
+  package.layout.compiled_in_source
+  package.layout.empty_directory
+  package.layout.missing_manifest
+  package.layout.non_regular_file
+  package.layout.unknown_top_level
+  package.name.case_collision
+  package.name.character
+  package.name.directory_entry
+  package.name.duplicate
+  package.name.encoding
+  package.name.file_directory_conflict
+  package.name.not_nfc
+  package.name.not_portable
+  package.name.shape
+  package.not_found
+  package.not_readable
+  package.version.malformed
+  package.version.missing
+  package.version.not_string
+  package.version.unsupported_major
+  package.version.unsupported_minor
+  schema.dialect
+  schema.format_unsupported
+  schema.id_duplicate
+  schema.invalid
+  schema.keyword_unknown
+  schema.pattern_unsupported
+  schema.ref_by_path
+  schema.ref_escapes
+  schema.ref_unresolved
+  schema.syntax
+  template.date_format
+  template.division_by_zero
+  template.filter_argument
+  template.include
+  template.number_range
+  template.safe_position
+  template.syntax
+  template.tag_context
+  template.unknown_filter
+
+Next: metais render <package> --out <dir>
+      Renders into a new directory; or remove, from the existing one, what
+      stands at the path the finding names.
+  output.destination.case_variant
+  output.destination.link
+  output.destination.not_directory
+  output.destination.not_regular_file
+
+Next: metais render <package> --out <dir>
+      Renders into a directory that does not exist yet, which metais creates.
+  output.destination.commit_failed
+  output.destination.nothing_written
+  output.destination.staging_exists
+
+Next: metais render <package> --out <dir> --overwrite
+      Replaces the files the render writes in the directory, and leaves every
+      other file in it alone.
+  output.destination.not_empty
+  usage.flag_excluded
+
+Next: metais schema <package> <name>
+      Prints the schema of the input named in the finding; add an examples value
+      to the field named, and the generator uses it.
+  schema.sample_invalid
+  schema.sample_unsatisfiable
+
+Next: metais render <package> --out - --only <path>
+      Writes one file's bytes, which may go to a terminal; or redirect standard
+      output to a file for the archive.
+  usage.archive_to_terminal
+
+Next: metais render --help
+      Prints the operands and flags metais render takes.
+  usage.bad_value
+  usage.missing_operand
+  usage.package_from_stdin
+  usage.repeated_flag
+  usage.unexpected_operand
+  usage.unknown_flag
+
+Next: metais render <package> --out <dir> --now 2026-01-31T09:00:00Z
+      Gives the render time as an RFC 3339 date-time with an offset.
+  usage.bad_value
+
+Next: metais help inputs
+      Explains how inputs are supplied: the data directory, --inputs-json, --set
+      and --set-json.
+  usage.conflicting_flags
+
+Next: metais render <package> --data <dir> --out <dir>
+      Names a data directory that exists and can be read.
+  usage.data_dir_unreadable
+
+Next: metais render <package> --sample --out <dir>
+      Renders from sample data in place of a data directory; --optional, --seed
+      and --items tune the generator.
+  usage.flag_excluded
+  usage.flag_requires
+
+Next: metais render <package> --out <dir>
+      Names the directory to render into: a new one, or an empty one;
+      --overwrite renders into one that holds entries.
+  usage.missing_flag
+
+Next: metais render <package> --out <dir> --dry-run
+      Lists every file the render writes, by the path --only takes, and writes
+      nothing.
+  usage.unknown_output

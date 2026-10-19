@@ -105,8 +105,7 @@ func packageRefusals(name string) []Refusal {
 			"schema":   "An input schema is refused",
 			"template": "An output's path, when or for_each does not parse",
 		}[family]
-		cause := what + " (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ")."
-		out = append(out, Refusal{Code: e.Code, Cause: cause, Next: nextInspectAgain})
+		out = append(out, familyRefusal(e.Code, what, strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": "), nextInspectAgain))
 	}
 	return out
 }

@@ -639,9 +639,9 @@ func sampleRefusals(c *Command) {
 		switch {
 		case have[e.Code]:
 		case inputFamily(e.Code):
-			c.Refusals = append(c.Refusals, Refusal{Code: e.Code, Cause: "A value given with --set, --set-json or --inputs-json is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", Next: nextSampleInputs})
+			c.Refusals = append(c.Refusals, familyRefusal(e.Code, "A value given with --set, --set-json or --inputs-json is refused", strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": "), nextSampleInputs))
 		case e.Code == sample.CodeUnsatisfiable || e.Code == finding.CodeSampleInvalid:
-			c.Refusals = append(c.Refusals, Refusal{Code: e.Code, Cause: "The generated data cannot be made or does not validate (" + strings.ReplaceAll(rest, "_", " ") + ").", Next: nextSampleSchema})
+			c.Refusals = append(c.Refusals, familyRefusal(e.Code, "The generated data cannot be made or does not validate", strings.ReplaceAll(rest, "_", " "), nextSampleSchema))
 		}
 	}
 }

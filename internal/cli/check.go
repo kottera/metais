@@ -69,7 +69,8 @@ func checkRefusals() []Refusal {
 	}
 	for _, code := range templates.ParseCodes() {
 		if !slices.ContainsFunc(out, func(r Refusal) bool { return r.Code == code }) {
-			out = append(out, Refusal{Code: code, Cause: "A template does not parse (" + strings.ReplaceAll(strings.TrimPrefix(string(code), "template."), "_", " ") + "), an error.", Next: nextCheckAgain})
+			out = append(out, Refusal{Code: code, Cause: "A template does not parse (" + strings.ReplaceAll(strings.TrimPrefix(string(code), "template."), "_", " ") + "), an error.",
+				Next: nextCheckAgain, gist: "A template does not parse, an error."})
 		}
 	}
 	what := map[string]string{
@@ -95,7 +96,13 @@ func checkRefusals() []Refusal {
 			subject = "A container's profile"
 		}
 		cause := subject + " (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + "), a " + e.Severity.String() + "."
-		out = append(out, Refusal{Code: e.Code, Cause: cause, Next: nextCheckAgain})
+		r := Refusal{Code: e.Code, Cause: cause, Next: nextCheckAgain}
+		// A code of a family what names no subject for, which check alone
+		// reports, has no cause to share and is listed on its own.
+		if subject != "" {
+			r.gist = subject + ", a " + e.Severity.String() + "."
+		}
+		out = append(out, r)
 	}
 	return out
 }
