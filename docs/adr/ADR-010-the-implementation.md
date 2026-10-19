@@ -1740,3 +1740,35 @@ R2-156 (RULINGS-v1); R2-156's own frontmatter split stands.
   each comparison: example 96, whose first lines are a frontmatter block,
   and example 39 made a heading, whose LF character reference the expected
   HTML cannot tell from a line ending.
+
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-4.** D4 item 2's standard
+  filter catalog landed in `internal/liquid` as `Core()`: every filter of
+  ADR-004's Context, escape's alias `h` with them, without `date`, which
+  `internal/template` adds through `Extend` (plan §8). `Dialect` gained
+  `FilterNames` and `TagNames`, and `TestCoreIsADR004Catalog` reads both
+  ADRs' lists from their own text. Each filter's `Check` refuses an
+  argument count it never takes, an unknown or repeated keyword (only
+  `default` knows one, `allow_false`), a literal count or offset that is
+  not an integer, a literal `concat` argument, and a literal divisor that
+  coerces to zero (`division_by_zero` at parse, as ADR-004 D16 item 1
+  allows for literal arguments); 73 of `render-time.txt`'s lines left it
+  because of that. A template number is an integer when its `value.Number`
+  is written as an integer and is within 2⁵³ − 1, and a float otherwise,
+  so a float result is written with a point or an exponent: that is how a
+  literal's kind is carried, and whatever binds a data number writes one
+  as ADR-004 D4 item 2 presents it. Shopify's operand and argument
+  coercions are kept (`"abc" | plus: 1` is 1), except that a count or
+  offset Ruby's `Integer()` would read with a radix prefix, an underscore
+  or a leading zero is refused rather than read otherwise. Where Ruby's
+  `[]` decides a filter, an integer element indexed by a property, which
+  Ruby reads as a bit, is `filter_input`; `size` of a number is 0, not
+  Ruby's word size. Apply charges ADR-009 D11 item 2's shallow sizes, the
+  result's before a string is built, and the excess the stdFilter's
+  documentation lists; the 16 units of the application's node are the
+  renderer's. `TestGoldenLiquidFilters` runs Golden Liquid's filter cases
+  of output expressions through the catalog: 447 run, 360 pass, and 87
+  carry `dialect` lines in `filter-exclusions.txt`, under ADR-004 D6 item 1
+  (strict names), D4 item 4 (an object has no text), D4 item 5 (`last` of
+  an object) and D6 item 6 (a number has no property). A case that applies
+  `date` is selected out of every run under `Core()`, mechanically, and
+  the selector fails once `date` is registered.
