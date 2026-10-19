@@ -6,6 +6,8 @@ package csv
 import (
 	"errors"
 	"testing"
+
+	"github.com/kottera/metais/internal/limits"
 )
 
 // TestWriteGolden pins the csv filter's bytes (ADR-004 D10 item 3): a
@@ -65,5 +67,34 @@ func TestWriteRefusals(t *testing.T) {
 				t.Errorf("Write = %q, %v; want %v", b, err, c.want)
 			}
 		})
+	}
+}
+
+// TestWriteCells: a cell marked Quoted is quoted whatever it holds, so the
+// empty string is told from an absent value in a record of any width
+// (ADR-003 D11 item 5), and it reads back so; every other cell is written
+// as Write writes it.
+func TestWriteCells(t *testing.T) {
+	b, err := WriteCells([][]Cell{
+		{{Text: "a"}, {Text: "b"}, {Text: "c"}},
+		{{Text: "", Quoted: true}, {Text: ""}, {Text: "x", Quoted: true}},
+		{{Text: "p,q"}, {Text: `"`}, {Text: "1\n2"}},
+	}, ',')
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "a,b,c\n\"\",,\"x\"\n\"p,q\",\"\"\"\",\"1\n2\"\n"; string(b) != want {
+		t.Errorf("wrote %q, want %q", b, want)
+	}
+	tab, fs := Read(b, Comma, Source{}, limits.Defaults())
+	if len(fs) > 0 || len(tab.Records) != 2 {
+		t.Fatalf("read back %+v, %v", tab, fs)
+	}
+	got := tab.Records[0].Fields
+	if got[0].Text != "" || !got[0].Quoted || got[1].Text != "" || got[1].Quoted {
+		t.Errorf("read back %+v", got)
+	}
+	if _, err := WriteCells([][]Cell{{{Text: "a"}}}, '"'); !errors.Is(err, ErrDelimiter) {
+		t.Errorf("a quote delimiter: %v", err)
 	}
 }

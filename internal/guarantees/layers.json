@@ -67,6 +67,12 @@
       "reason": "ADR-010 D2, ADR-007 D2 and D3: the cross-reference is check's, which internal/author holds, so no other command or layer reports template.xref.* findings around it"
     },
     {
+      "rule": "only-importers",
+      "imports": "regexp/syntax",
+      "importers": ["github.com/kottera/metais/internal/regexprofile", "github.com/kottera/metais/internal/sample"],
+      "reason": "ADR-010 D10 item 2, ADR-007 D9 item 18: regexprofile translates and parses every pattern, and the sample generator walks the tree regexprofile parsed, which is the tree the validator matches with, never a parse of its own"
+    },
+    {
       "rule": "only-referrers",
       "symbols": ["os.Args", "os.Stdin", "os.Stdout", "os.Stderr", "os.Exit"],
       "packages": ["github.com/kottera/metais/cmd/metais"],
