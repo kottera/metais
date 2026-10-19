@@ -1112,4 +1112,18 @@ unambiguous; `--inputs-json` remains the whole-array route.
 
 ## Implementation log
 
-Nothing implemented.
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-12.** D7 items 1 to 4 landed as
+  `schema.Bundle` in `internal/schema`, building the combined schema as an
+  `internal/liquid/value` tree from the inputs' declarations and their
+  parsed schema files, with D5 items 1 and 2's `RetrievalURI` and
+  `CanonicalURI`. Bundling rewrites only each resource's `$id` and
+  `$schema`. A boolean schema file has no members to hold an `$id`, so it
+  is embedded as the object schema that means the same: `true` as `{}`,
+  `false` as `{"not": {}}`. D14 item 1 landed as `schema.Walker`, which
+  indexes a document's resources and anchors and walks an instance
+  location through `$ref`, `properties`, `prefixItems` and `items` only.
+  It does not follow a `$ref` to a 2020-12 meta-schema, and reports one
+  unresolved. D14 item 2 landed as `schema.Coerce`, with `CoerceField` for
+  D11 item 5's empty fields. A coerced number keeps its text as its
+  literal. The refusal of a large integer (D8 item 5) stays with the reader
+  that coerces.
