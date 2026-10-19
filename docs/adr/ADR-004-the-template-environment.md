@@ -1191,9 +1191,16 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
     package version can hold `--`, and no value a conforming package or
     `metais` gives holds a byte item 3 encodes as `%XX`.
   - **Item 5's "no file being rendered".** That is a path template, and D16
-    item 5 refuses `provenance` there as `template.tag_context` when the
-    manifest is read, which is W5-4's. The stricter refusal stands, and
-    `template.provenance_style` has no reason for it.
+    item 5 refuses `embed` and `provenance` there as
+    `template.tag_context` when the package is opened, whatever their
+    arguments: chapter 8's MTS-TAG-011, beside MTS-MAN-018's `render`. The
+    stricter refusal stands, and `template.provenance_style` has no reason
+    for it. The loader's dialect for manifest expressions knows the two
+    tags by name only, so that a path holding one is that refusal rather
+    than an unknown tag, and the render's own parse of a path refuses them
+    the same way (W5-4's meeting, `tag/tags-in-path`). In a fan-out,
+    `index: fan_out.index0` embeds each item's raw form
+    (`tag/embed-fan-out`).
   - **D15 item 3 and ADR-011 D10 item 3.** A vector's expected provenance
     writes the tool as `@@TOOL_NAME@@/@@TOOL_VERSION@@` and the package
     digest literally: D10 item 3 says no other token exists, the digest
