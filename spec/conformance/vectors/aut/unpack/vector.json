@@ -15,7 +15,7 @@
     "byte-level"
   ],
   "requires": [],
-  "notes": "Its package.metais is written by internal/vectorgen (go test ./internal/vectorgen -run TestPackages -args -update), whose test reproduces the committed bytes. It is packed from the source directory aut/unpack/expected/src. Its template reads inputs.report.author, which the report's schema does not declare, so the package's check reports an error and unpack writes it all the same. The manifest's comment and references/notes.md's CRLF are written back byte for byte.",
+  "notes": "Its package.metais is written by internal/vectorgen (go test ./internal/vectorgen -run TestPackages -args -update), whose test reproduces the committed bytes. It is packed from the source directory aut/unpack/expected/src. Its template reads inputs.report.author, which the report's schema does not declare, so the package's check reports an error, which the new case's last step shows, and unpack writes it all the same. The manifest's comment and references/notes.md's CRLF are written back byte for byte.",
   "cases": [
     {
       "name": "new",
@@ -29,6 +29,11 @@
           "op": "open",
           "args": { "package": "src" },
           "expect": { "ok": true }
+        },
+        {
+          "op": "check",
+          "args": { "source": "src" },
+          "expect": { "ok": false, "findings": "expected/check.json" }
         }
       ]
     },

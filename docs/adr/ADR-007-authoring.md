@@ -1322,6 +1322,19 @@ directory.
 
 ## Implementation log
 
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-5.** D8 landed as
+  `author.Unpack` and `metais unpack`, items 1 to 4 and item 5's half
+  that needs no `pack`: an unpacked committed package opens as a source
+  directory that `inspect` reads with the same result apart from
+  `source`, its package digest included. A target that does not exist is
+  written through `hostfs.StageNew`, an existing one through
+  `hostfs.WriteInPlace` once D1 item 3's emptiness holds, every entry but
+  `.compiled/`'s in byte order, files 0644 and directories 0755 less the
+  umask. An entry the package cannot yield is a failed write of reason
+  `io_error`, whose `written` lists nothing for a staged target and the
+  files left in place otherwise. Chapter 13's statements are MTS-AUT-024
+  to 029.
+
 - **2026-10-19, PLAN-2026-10-metais-v1 W3-6.** D3 landed as
   `internal/xref`, a library `check` wires in Wave 4. `Analyze` takes the
   manifest model, every template under `templates/` as an

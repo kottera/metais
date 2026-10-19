@@ -1584,3 +1584,25 @@ requirements), and the vector schema
   its environment, as `hostenv.Isolate` does, resolves the host's default
   temporary directory instead, which D11 item 4's snapshot does not
   cover; that is open.
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-5.** Amendment A2, proposed:
+  D9 item 4's setup gains `unwritable`, and item 6's requirements
+  `unwritable-dirs`, in the vector schema and `spec/conformance/README.md`.
+  The runner makes each such directory mode 0555 after the rest of the
+  setup and gives it 0755 back when the case's steps are done; it probes
+  the requirement with a file, a directory and a rename into a 0555
+  directory, and refuses, as a harness error, a case that locks a
+  directory in a vector that does not require it. The self-proof covers
+  the pre-state, its control (the same vector without the lock fails the
+  clean fake, which writes as it is scripted), the skip a failing probe
+  gives, which the record lists and no row counts, and the refusal of an
+  undeclared lock. `aut/unpack-write-failed` is the first vector to
+  require it. Two mechanisms spent the self-proof's 5 s wall clock on
+  processes with nothing wrong with them, and both are held away without
+  moving it: the race runtime sleeps a second before every race-built
+  process exits (`atexit_sleep_ms`), so the runner gives a race-built
+  program `GORACE=atexit_sleep_ms=0` in both environments; and the
+  self-proof started every row's processes in one burst, so the runner
+  starts at most `GOMAXPROCS` processes at once, each wall clock starting
+  with its own process. Under the full parallel `go test -race ./...` on a
+  16-core darwin host, the slowest clean self-proof process went from
+  1.47 s to under 1 s, and three in four had taken over a second.
