@@ -1445,8 +1445,13 @@ document.
   listing what it holds. The readings taken:
   - **`extract` into an existing directory writes through `hostfs`'s A1
     shape** (`hostfs.Existing`), empty or not: every file is checked
-    first, and every refusal is reported together; the files are prepared
-    beneath `<dir>/.metais-staging` and committed by unit. A directory
+    first, and every refusal is reported together, under the codes W5-8
+    registered for `render`'s checks (`output.destination.link`,
+    `case_variant`, `not_regular_file`, and `not_directory` with its
+    `path`), mapped by the same function; the files are prepared beneath
+    `<dir>/.metais-staging` and committed by unit, and a commit that stops
+    after moving a file is `output.destination.commit_failed`, listing
+    what it moved. A directory
     that does not exist keeps W4-2's write (`hostfs.CreateNew`), whose
     failure lists the files written and removes none.
   - **`extract --dry-run` makes the checks** of the write it stands for,

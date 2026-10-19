@@ -179,6 +179,18 @@ func TestReadingRefusalsTriggered(t *testing.T) {
 		// A read-only directory refuses no one here.
 		seen["extract"][string(finding.CodeDestinationWriteFailed)] = true
 	}
+	pkg2 := browsePackage(t)
+	for _, c := range extractDestinationCases() {
+		if c.runsHere() {
+			to := testenv.Dir(t)
+			c.setup(t, to)
+			run("extract", "--json", pkg2, "metais.yaml", "references/*.txt", "--to", to, "--overwrite")
+		} else {
+			// Proved where it can be set up: a link, or a directory the
+			// user cannot write.
+			seen["extract"][strings.Fields(c.want[0])[0]] = true
+		}
+	}
 	// A binary entry to a terminal is a refusal of human mode only.
 	saved := isTerminal
 	t.Cleanup(func() { isTerminal = saved })
@@ -688,5 +700,137 @@ func TestExtractOverwrite(t *testing.T) {
 	}
 	if _, err := os.Lstat(filepath.Join(to, ".metais-staging")); err == nil {
 		t.Error("the staging directory was left")
+	}
+}
+
+// extractDestinationCase is one existing --to that extract --overwrite
+// refuses: the host beneath it, made by setup, and the findings it
+// reports, in order, each as its code and parameters.
+type extractDestinationCase struct {
+	name  string
+	posix bool // needs a symbolic link, or permissions the superuser ignores
+	setup func(t *testing.T, to string)
+	want  []string
+}
+
+// extractDestinationCases are W5-12.1's per-file checks and commit, through
+// the command line, each refusing extract of metais.yaml and
+// references/*.txt with --overwrite.
+func extractDestinationCases() []extractDestinationCase {
+	mk := func(t *testing.T, to string, files ...string) {
+		t.Helper()
+		for _, f := range files {
+			p := filepath.Join(to, filepath.FromSlash(f))
+			if strings.HasSuffix(f, "/") {
+				if err := os.MkdirAll(p, 0o755); err != nil {
+					t.Fatal(err)
+				}
+				continue
+			}
+			os.MkdirAll(filepath.Dir(p), 0o755)
+			if err := os.WriteFile(p, []byte("theirs\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	return []extractDestinationCase{
+		{"a directory and a file in the way, together", false, func(t *testing.T, to string) {
+			mk(t, to, "metais.yaml/", "references")
+		}, []string{
+			`output.destination.not_directory {"path":"references/crlf.txt"}`,
+			`output.destination.not_directory {"path":"references/ctx.txt"}`,
+			`output.destination.not_directory {"path":"references/empty.txt"}`,
+			`output.destination.not_directory {"path":"references/long.txt"}`,
+			`output.destination.not_directory {"path":"references/nolf.txt"}`,
+			`output.destination.not_regular_file {"path":"metais.yaml","reason":"is_directory"}`,
+		}},
+		{"a case variant", false, func(t *testing.T, to string) {
+			mk(t, to, "References/")
+		}, []string{
+			`output.destination.case_variant {"path":"references/crlf.txt"}`,
+			`output.destination.case_variant {"path":"references/ctx.txt"}`,
+			`output.destination.case_variant {"path":"references/empty.txt"}`,
+			`output.destination.case_variant {"path":"references/long.txt"}`,
+			`output.destination.case_variant {"path":"references/nolf.txt"}`,
+		}},
+		{"a staging directory left", false, func(t *testing.T, to string) {
+			mk(t, to, ".metais-staging/")
+		}, []string{`output.destination.write_failed {"reason":"exists","written":[]}`}},
+		{"a link", true, func(t *testing.T, to string) {
+			mk(t, to, "target.txt")
+			if err := os.Symlink("target.txt", filepath.Join(to, "metais.yaml")); err != nil {
+				t.Fatal(err)
+			}
+		}, []string{`output.destination.link {"path":"metais.yaml"}`}},
+		{"a commit that fails part way", true, func(t *testing.T, to string) {
+			mk(t, to, "references/")
+			locked := filepath.Join(to, "references")
+			if err := os.Chmod(locked, 0o555); err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() { os.Chmod(locked, 0o755) })
+		}, []string{`output.destination.commit_failed {"committed":["metais.yaml"],"reason":"permission_denied"}`}},
+	}
+}
+
+// runsHere reports whether c can be set up on this host.
+func (c extractDestinationCase) runsHere() bool {
+	return !c.posix || runtime.GOOS != "windows" && os.Geteuid() != 0
+}
+
+// TestExtractDestinationRefusals is W5-12.1's every per-file check a
+// finding before anything is written, and A1 item 3's commit failure,
+// through the command line: each case reports its findings, all of them
+// together, with the exit status of a refused destination, names a next
+// step, and changes nothing in --to but what a commit already moved.
+func TestExtractDestinationRefusals(t *testing.T) {
+	testenv.Home(t)
+	pkg := browsePackage(t)
+	for _, c := range extractDestinationCases() {
+		if !c.runsHere() {
+			continue
+		}
+		t.Run(c.name, func(t *testing.T) {
+			for _, dry := range []bool{false, true} {
+				to := testenv.Dir(t)
+				c.setup(t, to)
+				before := snapshot(t, to)
+				argv := []string{"extract", "--json", pkg, "metais.yaml", "references/*.txt", "--to", to, "--overwrite"}
+				if dry {
+					argv = append(argv, "--dry-run")
+				}
+				r := runTool(t, argv...)
+				var got []string
+				for _, f := range r.doc.Findings {
+					p, _ := json.Marshal(f.Params)
+					got = append(got, f.Code+" "+string(p))
+				}
+				want := c.want
+				if dry && strings.HasPrefix(c.want[0], "output.destination.commit_failed") {
+					// A dry run makes the checks, which this host passes;
+					// only the commit finds the directory unwritable.
+					if r.status != 0 {
+						t.Errorf("dry run: %s", r.stdout)
+					}
+				} else {
+					if r.status != finding.ExitDestination || !slices.Equal(got, want) || len(r.doc.Next) == 0 {
+						t.Errorf("dry run %v: status %d, findings\n%s\nwant\n%s\nnext %v", dry, r.status, strings.Join(got, "\n"), strings.Join(want, "\n"), r.doc.Next)
+					}
+				}
+				after := snapshot(t, to)
+				if !dry && strings.HasPrefix(c.want[0], "output.destination.commit_failed") {
+					if b, err := os.ReadFile(filepath.Join(to, "metais.yaml")); err != nil || len(b) == 0 || string(b) == "theirs\n" {
+						t.Errorf("the file committed: %q %v", b, err)
+					}
+					if _, err := os.Lstat(filepath.Join(to, ".metais-staging")); err == nil {
+						t.Error("the staging directory was left")
+					}
+					continue
+				}
+				if !slices.Equal(after, before) {
+					t.Errorf("dry run %v: the refusal wrote: %q, was %q", dry, after, before)
+				}
+			}
+		})
 	}
 }

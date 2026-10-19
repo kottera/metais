@@ -251,14 +251,34 @@ Refusals:
   manifest.yaml.tag
       The manifest breaks one of its rules (yaml: tag).
       Next: metais inspect <package>
+  output.destination.case_variant
+      In <dir>, an entry's name differs only in case or normalization from a
+      name an entry's path holds.
+      Next: metais extract <package> <glob> --to <dir>
+  output.destination.commit_failed
+      Moving the files into an existing <dir> failed part way; the files already
+      moved are listed, and nothing else was changed.
+      Next: metais extract <package> <glob> --to <dir>
+  output.destination.link
+      In <dir>, an entry's path runs through, or ends at, a symbolic link, a
+      junction or another reparse point, which is never followed.
+      Next: metais extract <package> <glob> --to <dir>
   output.destination.not_directory
-      <dir>, or a directory above it, exists and is not a directory.
+      <dir>, or a directory above it, exists and is not a directory; or, in
+      <dir>, a file stands where an entry's path needs a directory.
       Next: metais extract <package> <glob> --to <dir>
   output.destination.not_empty
       <dir> holds entries, and --overwrite is not given.
       Next: metais extract <package> <glob> --to <dir> --overwrite
+  output.destination.not_regular_file
+      In <dir>, a directory, a named pipe, a socket or a device stands at an
+      entry's path.
+      Next: metais extract <package> <glob> --to <dir>
   output.destination.write_failed
-      A write failed; the files already written are listed and left in place.
+      A write failed: into a new <dir> the files already written are listed and
+      left in place; into an existing one, which also refuses a staging
+      directory left in it, another file system mounted inside it and an entry
+      beneath the staging name, nothing is left.
       Next: metais extract <package> <glob> --to <dir>
   package.compiled.mismatch
       The package is refused (compiled: mismatch).
