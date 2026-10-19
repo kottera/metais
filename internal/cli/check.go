@@ -32,11 +32,11 @@ func checkDeclaration() *Command {
 			"step whose input could not be made is named in one report.step_skipped finding.\n\n" +
 			"A package that cannot be read at all — its container, its entry names, its digests or its " +
 			"source tree — is refused with the findings every command gives it.\n\n" +
-			"check exits 1 when any finding is an error; warnings do not fail it.",
+			"check exits 1 when any finding is an error; warnings do not fail it unless --fail-on warning is given.",
 		Role: finding.RoleAuthoring,
 		Operands: []args.Operand{{Name: "<package>",
 			Description: "A source directory, or a packed package file; the current directory when omitted. - is refused, since a package is read with random access."}},
-		Flags:             []args.Flag{limitFlag},
+		Flags:             []args.Flag{limitFlag, failOnFlag},
 		Format:            "metais.check/1",
 		FindingsAreResult: true,
 		Prints:            "Every finding, then a line counting the errors, warnings and notes, then the Next: block.",
@@ -128,7 +128,7 @@ func runCheck(s *session, p args.Parsed) outcome {
 	res := &checkResult{Counts: checkCounts{Error: sum.Errors, Warning: sum.Warnings, Info: sum.Info}}
 	human := "check: " + plural(sum.Errors, "error", "errors") + ", " + plural(sum.Warnings, "warning", "warnings") + ", " + plural(sum.Info, "note", "notes") + "\n"
 	o := outcome{findings: fs, result: res, human: []byte(human)}
-	if sum.Errors > 0 {
+	if sum.Errors > 0 || s.failOn() == finding.SeverityWarning && sum.Warnings > 0 {
 		o.next = []Next{nextCheckAgain}
 	} else if lookup(s.table, "test") != nil {
 		o.next = []Next{nextTest}

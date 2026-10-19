@@ -355,6 +355,25 @@ func TestFailOn(t *testing.T) {
 	if r := runTool(t, "inspect", "--fail-on", "warning", "--json", filepath.Join(vectorsDir, "pkg/opens-source/package")); r.status != 0 {
 		t.Errorf("inspect --fail-on warning: exit %d", r.status)
 	}
+	// check reports warnings of its own: under --fail-on warning they fail
+	// it, and their severity stays warning.
+	warned := filepath.Join(vectorsDir, "aut/check-source-tree/package")
+	for _, c := range []struct {
+		failOn string
+		status int
+	}{{"error", 0}, {"warning", finding.ExitFindings}} {
+		r := runTool(t, "check", "--json", "--fail-on", c.failOn, warned)
+		var doc struct {
+			OK      bool
+			Summary struct{ Errors, Warnings int }
+		}
+		if err := json.Unmarshal([]byte(r.stdout), &doc); err != nil {
+			t.Fatal(err)
+		}
+		if r.status != c.status || doc.OK != (c.status == 0) || doc.Summary.Warnings == 0 || doc.Summary.Errors != 0 {
+			t.Errorf("check --fail-on %s: exit %d, %s", c.failOn, r.status, r.stdout)
+		}
+	}
 }
 
 // TestValidateLinkedDataDirectory is ADR-009 D7 item 4 through validate:

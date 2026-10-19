@@ -17,77 +17,77 @@ it, and the statements it reports.
 <!-- The code catalog below is generated from findings/registry.json by go generate ./internal/guarantees. Do not edit it by hand. -->
 | Code | Severity | Class | Subject | Parameters | Since | Statements |
 |---|---|---|---|---|---|---|
-| `collection.as_file` | error | content | input | — | 1.0 | — |
-| `collection.directory_name` | error | content | input | — | 1.0 | — |
+| `collection.as_file` | error | content | input | — | 1.0 | [MTS-SUP-015](06-supplying-inputs.md#mts-sup-015) |
+| `collection.directory_name` | error | content | input | — | 1.0 | [MTS-SUP-015](06-supplying-inputs.md#mts-sup-015) |
 | `collection.item_name` | error | content | input | `reason` | 1.0 | — |
-| `collection.stem_duplicate` | error | content | input | `case` | 1.0 | — |
-| `collection.subdirectory` | error | content | input | — | 1.0 | — |
-| `csv.after_quote` | error | content | input | — | 1.0 | — |
-| `csv.bare_quote` | error | content | input | — | 1.0 | — |
-| `csv.field_count` | error | content | input | `expected`, `found` | 1.0 | — |
-| `csv.header_duplicate` | error | content | input | `ordinal`, `first` | 1.0 | — |
-| `csv.header_empty` | error | content | input | `ordinal` | 1.0 | — |
-| `csv.header_missing` | error | content | input | — | 1.0 | — |
-| `csv.unterminated_quote` | error | content | input | — | 1.0 | — |
+| `collection.stem_duplicate` | error | content | input | `case` | 1.0 | [MTS-SUP-016](06-supplying-inputs.md#mts-sup-016) |
+| `collection.subdirectory` | error | content | input | — | 1.0 | [MTS-SUP-015](06-supplying-inputs.md#mts-sup-015) |
+| `csv.after_quote` | error | content | input | — | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
+| `csv.bare_quote` | error | content | input | — | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
+| `csv.field_count` | error | content | input | `expected`, `found` | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
+| `csv.header_duplicate` | error | content | input | `ordinal`, `first` | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
+| `csv.header_empty` | error | content | input | `ordinal` | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
+| `csv.header_missing` | error | content | input | — | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
+| `csv.unterminated_quote` | error | content | input | — | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
 | `example.layout` | error | content | example | `reason` | 1.0 | [MTS-AUT-020](13-authoring.md#mts-aut-020) |
-| `input.additional_item` | error | content | input | `index`, `prefix_count` | 1.0 | — |
-| `input.additional_property` | error | content | input | `property`; optional: `suggestion` | 1.0 | — |
-| `input.any_of` | error | content | input | `branch_count` | 1.0 | — |
-| `input.const` | error | content | input | `expected` | 1.0 | — |
-| `input.constraints_failed` | error | content | invocation | `keyword` | 1.0 | — |
-| `input.constraints_not_evaluated` | info | content | invocation | — | 1.0 | — |
-| `input.contains` | error | content | input | — | 1.0 | — |
-| `input.dependent_required` | error | content | input | `property`, `because` | 1.0 | — |
-| `input.encoding_invalid` | error | content | input | `reason`, `offset` | 1.0 | — |
-| `input.enum` | error | content | input | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | — |
-| `input.exclusive_maximum` | error | content | input | `limit`; optional: `value` | 1.0 | — |
-| `input.exclusive_minimum` | error | content | input | `limit`; optional: `value` | 1.0 | — |
-| `input.extension_not_accepted` | error | content | input | `accepted` | 1.0 | — |
-| `input.file_duplicate` | error | content | input | — | 1.0 | — |
-| `input.file_unknown` | error | content | input | — | 1.0 | — |
-| `input.forbidden` | error | content | input | optional: `property` | 1.0 | — |
-| `input.format` | error | content | input | `format` | 1.0 | — |
-| `input.json_arg_invalid` | error | content | invocation | `problem`; optional: `limit` | 1.0 | — |
-| `input.json_arg_not_object` | error | content | invocation | `actual` | 1.0 | — |
-| `input.json_arg_unknown` | error | content | input | — | 1.0 | — |
-| `input.link` | error | content | input | — | 1.0 | — |
-| `input.max_contains` | error | content | input | `limit`, `count` | 1.0 | — |
-| `input.max_items` | error | content | input | `limit`, `count` | 1.0 | — |
-| `input.max_length` | error | content | input | `limit`; optional: `length` | 1.0 | — |
-| `input.max_properties` | error | content | input | `limit`, `count` | 1.0 | — |
-| `input.maximum` | error | content | input | `limit`; optional: `value` | 1.0 | — |
-| `input.min_contains` | error | content | input | `limit`, `count` | 1.0 | — |
-| `input.min_items` | error | content | input | `limit`, `count` | 1.0 | — |
-| `input.min_length` | error | content | input | `limit`; optional: `length` | 1.0 | — |
-| `input.min_properties` | error | content | input | `limit`, `count` | 1.0 | — |
-| `input.minimum` | error | content | input | `limit`; optional: `value` | 1.0 | — |
-| `input.missing` | error | content | input | — | 1.0 | — |
-| `input.multiple_of` | error | content | input | `divisor`; optional: `value` | 1.0 | — |
-| `input.noncharacter` | error | content | input | `codepoint` | 1.0 | — |
-| `input.not` | error | content | input | — | 1.0 | — |
+| `input.additional_item` | error | content | input | `index`, `prefix_count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.additional_property` | error | content | input | `property`; optional: `suggestion` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.any_of` | error | content | input | `branch_count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-FND-006](12-findings.md#mts-fnd-006) |
+| `input.const` | error | content | input | `expected` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.constraints_failed` | error | content | invocation | `keyword` | 1.0 | [MTS-DAT-012](05-data-specification.md#mts-dat-012) |
+| `input.constraints_not_evaluated` | info | content | invocation | — | 1.0 | [MTS-SUP-029](06-supplying-inputs.md#mts-sup-029) |
+| `input.contains` | error | content | input | — | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.dependent_required` | error | content | input | `property`, `because` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.encoding_invalid` | error | content | input | `reason`, `offset` | 1.0 | [MTS-SUP-001](06-supplying-inputs.md#mts-sup-001) |
+| `input.enum` | error | content | input | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.exclusive_maximum` | error | content | input | `limit`; optional: `value` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.exclusive_minimum` | error | content | input | `limit`; optional: `value` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.extension_not_accepted` | error | content | input | `accepted` | 1.0 | [MTS-SUP-015](06-supplying-inputs.md#mts-sup-015), [MTS-SUP-018](06-supplying-inputs.md#mts-sup-018) |
+| `input.file_duplicate` | error | content | input | — | 1.0 | [MTS-SUP-018](06-supplying-inputs.md#mts-sup-018) |
+| `input.file_unknown` | error | content | input | — | 1.0 | [MTS-SUP-018](06-supplying-inputs.md#mts-sup-018) |
+| `input.forbidden` | error | content | input | optional: `property` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.format` | error | content | input | `format` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-DAT-011](05-data-specification.md#mts-dat-011), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.json_arg_invalid` | error | content | invocation | `problem`; optional: `limit` | 1.0 | [MTS-SUP-020](06-supplying-inputs.md#mts-sup-020) |
+| `input.json_arg_not_object` | error | content | invocation | `actual` | 1.0 | [MTS-SUP-020](06-supplying-inputs.md#mts-sup-020) |
+| `input.json_arg_unknown` | error | content | input | — | 1.0 | [MTS-SUP-020](06-supplying-inputs.md#mts-sup-020) |
+| `input.link` | error | content | input | — | 1.0 | [MTS-SEC-006](14-security.md#mts-sec-006) |
+| `input.max_contains` | error | content | input | `limit`, `count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.max_items` | error | content | input | `limit`, `count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.max_length` | error | content | input | `limit`; optional: `length` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.max_properties` | error | content | input | `limit`, `count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.maximum` | error | content | input | `limit`; optional: `value` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.min_contains` | error | content | input | `limit`, `count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.min_items` | error | content | input | `limit`, `count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.min_length` | error | content | input | `limit`; optional: `length` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.min_properties` | error | content | input | `limit`, `count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.minimum` | error | content | input | `limit`; optional: `value` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.missing` | error | content | input | — | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-DAT-012](05-data-specification.md#mts-dat-012) |
+| `input.multiple_of` | error | content | input | `divisor`; optional: `value` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.noncharacter` | error | content | input | `codepoint` | 1.0 | [MTS-SUP-004](06-supplying-inputs.md#mts-sup-004) |
+| `input.not` | error | content | input | — | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.not_readable` | error | content | input | `reason` | 1.0 | — |
-| `input.not_regular_file` | error | content | input | `kind` | 1.0 | — |
-| `input.number_out_of_range` | error | content | input | `reason` | 1.0 | — |
-| `input.one_of` | error | content | input | `branch_count` | 1.0 | — |
-| `input.one_of.ambiguous` | error | content | input | `branches` | 1.0 | — |
-| `input.pattern` | error | content | input | `pattern` | 1.0 | — |
-| `input.property_name` | error | content | input | `property` | 1.0 | — |
-| `input.required` | error | content | input | `property` | 1.0 | — |
-| `input.set_into_unparsed` | error | content | input | — | 1.0 | — |
-| `input.set_pointer_invalid` | error | content | invocation | `reason` | 1.0 | — |
-| `input.set_traversal` | error | content | input | `reason` | 1.0 | — |
-| `input.type` | error | content | input | `expected`, `actual` | 1.0 | — |
-| `input.unevaluated_item` | error | content | input | `index` | 1.0 | — |
-| `input.unevaluated_property` | error | content | input | `property`; optional: `suggestion` | 1.0 | — |
-| `input.unique_items` | error | content | input | `index`, `duplicate_of` | 1.0 | — |
-| `input.validation.partial` | info | content | input | `unparsed`, `suppressed` | 1.0 | — |
+| `input.not_regular_file` | error | content | input | `kind` | 1.0 | [MTS-SEC-006](14-security.md#mts-sec-006), [MTS-SUP-018](06-supplying-inputs.md#mts-sup-018) |
+| `input.number_out_of_range` | error | content | input | `reason` | 1.0 | [MTS-SUP-005](06-supplying-inputs.md#mts-sup-005) |
+| `input.one_of` | error | content | input | `branch_count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-FND-006](12-findings.md#mts-fnd-006) |
+| `input.one_of.ambiguous` | error | content | input | `branches` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.pattern` | error | content | input | `pattern` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.property_name` | error | content | input | `property` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.required` | error | content | input | `property` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.set_into_unparsed` | error | content | input | — | 1.0 | [MTS-SUP-024](06-supplying-inputs.md#mts-sup-024) |
+| `input.set_pointer_invalid` | error | content | invocation | `reason` | 1.0 | [MTS-SUP-021](06-supplying-inputs.md#mts-sup-021) |
+| `input.set_traversal` | error | content | input | `reason` | 1.0 | [MTS-SUP-022](06-supplying-inputs.md#mts-sup-022) |
+| `input.type` | error | content | input | `expected`, `actual` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.unevaluated_item` | error | content | input | `index` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.unevaluated_property` | error | content | input | `property`; optional: `suggestion` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.unique_items` | error | content | input | `index`, `duplicate_of` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.validation.partial` | info | content | input | `unparsed`, `suppressed` | 1.0 | [MTS-SUP-029](06-supplying-inputs.md#mts-sup-029) |
 | `internal.error` | error | internal | invocation | `tool_version`, `phase` | 1.0 | — |
-| `json.duplicate_name` | error | content | input | `name` | 1.0 | — |
-| `json.lone_surrogate` | error | content | input | — | 1.0 | — |
-| `json.noncharacter` | error | content | input | — | 1.0 | — |
-| `json.syntax` | error | content | input | `expected`, `found` | 1.0 | — |
-| `json.trailing_content` | error | content | input | — | 1.0 | — |
-| `limit.exceeded` | error | content | input | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | — |
+| `json.duplicate_name` | error | content | input | `name` | 1.0 | [MTS-SUP-003](06-supplying-inputs.md#mts-sup-003) |
+| `json.lone_surrogate` | error | content | input | — | 1.0 | [MTS-SUP-004](06-supplying-inputs.md#mts-sup-004) |
+| `json.noncharacter` | error | content | input | — | 1.0 | [MTS-SUP-004](06-supplying-inputs.md#mts-sup-004) |
+| `json.syntax` | error | content | input | `expected`, `found` | 1.0 | [MTS-SUP-003](06-supplying-inputs.md#mts-sup-003) |
+| `json.trailing_content` | error | content | input | — | 1.0 | [MTS-SUP-003](06-supplying-inputs.md#mts-sup-003) |
+| `limit.exceeded` | error | content | input | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-SEC-005](14-security.md#mts-sec-005) |
 | `limit.invalid` | error | usage | invocation | `reason`; optional: `name`, `default`, `unit`, `value` | 1.0 | — |
 | `limit.package` | error | refused | package | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-SEC-001](14-security.md#mts-sec-001) |
 | `manifest.additional_item` | error | content | manifest | `index`, `prefix_count` | 1.0 | — |
@@ -153,9 +153,9 @@ it, and the statements it reports.
 | `manifest.yaml.scalar_refused` | error | content | manifest | `form` | 1.0 | [MTS-MAN-007](03-manifest.md#mts-man-007) |
 | `manifest.yaml.syntax` | error | content | manifest | — | 1.0 | [MTS-MAN-008](03-manifest.md#mts-man-008) |
 | `manifest.yaml.tag` | error | content | manifest | — | 1.0 | [MTS-MAN-005](03-manifest.md#mts-man-005) |
-| `markdown.frontmatter_body_field` | error | content | input | — | 1.0 | — |
-| `markdown.frontmatter_not_mapping` | error | content | input | `actual` | 1.0 | — |
-| `markdown.frontmatter_unclosed` | error | content | input | — | 1.0 | — |
+| `markdown.frontmatter_body_field` | error | content | input | — | 1.0 | [MTS-SUP-012](06-supplying-inputs.md#mts-sup-012) |
+| `markdown.frontmatter_not_mapping` | error | content | input | `actual` | 1.0 | [MTS-SUP-012](06-supplying-inputs.md#mts-sup-012) |
+| `markdown.frontmatter_unclosed` | error | content | input | — | 1.0 | [MTS-SUP-012](06-supplying-inputs.md#mts-sup-012) |
 | `output.additional_item` | error | content | output | `index`, `prefix_count` | 1.0 | — |
 | `output.additional_property` | error | content | output | `property`; optional: `suggestion` | 1.0 | — |
 | `output.any_of` | error | content | output | `branch_count` | 1.0 | — |
@@ -241,7 +241,7 @@ it, and the statements it reports.
 | `package.version.unsupported_major` | error | refused | package | `declared`, `implemented` | 1.0 | [MTS-VER-004](04-versions.md#mts-ver-004) |
 | `package.version.unsupported_minor` | error | refused | package | `declared`, `implemented` | 1.0 | [MTS-VER-005](04-versions.md#mts-ver-005) |
 | `report.step_skipped` | info | content | report | `steps` | 1.0 | [MTS-AUT-002](13-authoring.md#mts-aut-002) |
-| `report.truncated` | info | content | report | `listed`, `omitted` | 1.0 | — |
+| `report.truncated` | info | content | report | `listed`, `omitted` | 1.0 | [MTS-FND-010](12-findings.md#mts-fnd-010) |
 | `schema.dialect` | error | content | package | `reason` | 1.0 | [MTS-DAT-003](05-data-specification.md#mts-dat-003) |
 | `schema.format_unsupported` | error | content | package | `format` | 1.0 | [MTS-DAT-005](05-data-specification.md#mts-dat-005) |
 | `schema.id_duplicate` | error | content | package | `id`; optional: `other` | 1.0 | [MTS-DAT-008](05-data-specification.md#mts-dat-008) |
@@ -285,6 +285,8 @@ it, and the statements it reports.
 | `template.xref.unused_input` | warning | content | input | — | 1.0 | [MTS-AUT-017](13-authoring.md#mts-aut-017) |
 | `template.xref.unused_template` | warning | content | template | — | 1.0 | [MTS-AUT-017](13-authoring.md#mts-aut-017) |
 | `usage.bad_value` | error | usage | invocation | `argument`, `flag`, `reason`; optional: `allowed` | 1.0 | — |
+| `usage.conflicting_flags` | error | usage | invocation | `argument`, `flag` | 1.0 | — |
+| `usage.data_dir_unreadable` | error | usage | invocation | `argument`, `reason` | 1.0 | — |
 | `usage.missing_command` | error | usage | invocation | — | 1.0 | — |
 | `usage.missing_operand` | error | usage | invocation | `command`, `operand` | 1.0 | — |
 | `usage.name_invalid` | error | usage | invocation | `argument`, `source`; optional: `suggestion` | 1.0 | — |
@@ -295,19 +297,19 @@ it, and the statements it reports.
 | `usage.unknown_command` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.unknown_flag` | error | usage | invocation | `argument`, `reason`; optional: `flag`, `command` | 1.0 | — |
 | `usage.unknown_topic` | error | usage | invocation | `argument` | 1.0 | — |
-| `yaml.alias` | error | content | input | — | 1.0 | — |
-| `yaml.anchor` | error | content | input | — | 1.0 | — |
-| `yaml.bom` | error | content | input | — | 1.0 | — |
-| `yaml.character` | error | content | input | `codepoint`, `reason` | 1.0 | — |
-| `yaml.directive` | error | content | input | — | 1.0 | — |
-| `yaml.duplicate_key` | error | content | input | — | 1.0 | — |
-| `yaml.key_empty` | error | content | input | — | 1.0 | — |
-| `yaml.key_not_scalar` | error | content | input | — | 1.0 | — |
-| `yaml.merge_key` | error | content | input | — | 1.0 | — |
-| `yaml.multi_document` | error | content | input | — | 1.0 | — |
-| `yaml.scalar_refused` | error | content | input | `form` | 1.0 | — |
-| `yaml.syntax` | error | content | input | — | 1.0 | — |
-| `yaml.tag` | error | content | input | — | 1.0 | — |
+| `yaml.alias` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
+| `yaml.anchor` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
+| `yaml.bom` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
+| `yaml.character` | error | content | input | `codepoint`, `reason` | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
+| `yaml.directive` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
+| `yaml.duplicate_key` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
+| `yaml.key_empty` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
+| `yaml.key_not_scalar` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
+| `yaml.merge_key` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
+| `yaml.multi_document` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
+| `yaml.scalar_refused` | error | content | input | `form` | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
+| `yaml.syntax` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
+| `yaml.tag` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
 <!-- The end of the generated code catalog. -->
 
 ## 12.2 The finding

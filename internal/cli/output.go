@@ -25,9 +25,12 @@ type outcome struct {
 	// human is the human result, written to standard output.
 	human []byte
 	next  []Next
-	// summary prints the summary line after the human findings of a
-	// command whose findings are its result (ADR-006 D11 item 3).
-	summary bool
+	// report is set when the outcome is the report of a command whose
+	// findings are its result, and nothing else is: validate's. Its
+	// summary line follows its human findings (ADR-006 D11 item 3), and
+	// its result is printed with errors among its findings, since the
+	// command produced it (ADR-008 D10 item 1).
+	report bool
 	// dataDir is the --data argument the command read, for the path
 	// canary alone.
 	dataDir string
@@ -76,7 +79,7 @@ func (s *session) emit(o outcome) int {
 	}
 	if s.line.json {
 		result := o.result
-		if sum.Errors > 0 && !s.reports(fs) {
+		if sum.Errors > 0 && !(o.report && s.reports(fs)) {
 			result = nil
 		}
 		fb := finding.AppendJSON(nil, fs...)
@@ -105,7 +108,7 @@ func (s *session) emit(o outcome) int {
 		if canaryLeak != nil && o.dataDir != "" {
 			b = canaryLeak(b, o.dataDir)
 		}
-		if o.summary {
+		if o.report {
 			b = sum.AppendHuman(b)
 		}
 		write(s.inv.Stdout, appendNext(append(b, o.human...), next))

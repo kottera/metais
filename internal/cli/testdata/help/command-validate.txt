@@ -440,14 +440,6 @@ Refusals:
   template.number_range
       An output's path, when or for_each does not parse (number range).
       Next: metais inspect <package>
-  template.ooxml.split_construct
-      An output's path, when or for_each does not parse (ooxml: split
-      construct).
-      Next: metais inspect <package>
-  template.ooxml.split_delimiter
-      An output's path, when or for_each does not parse (ooxml: split
-      delimiter).
-      Next: metais inspect <package>
   template.syntax
       An output's path, when or for_each does not parse (syntax).
       Next: metais inspect <package>
@@ -456,36 +448,6 @@ Refusals:
       Next: metais inspect <package>
   template.unknown_filter
       An output's path, when or for_each does not parse (unknown filter).
-      Next: metais inspect <package>
-  template.xref.for_each_not_array
-      An output's path, when or for_each does not parse (xref: for each not
-      array).
-      Next: metais inspect <package>
-  template.xref.index_out_of_range
-      An output's path, when or for_each does not parse (xref: index out of
-      range).
-      Next: metais inspect <package>
-  template.xref.missing_asset
-      An output's path, when or for_each does not parse (xref: missing asset).
-      Next: metais inspect <package>
-  template.xref.missing_partial
-      An output's path, when or for_each does not parse (xref: missing partial).
-      Next: metais inspect <package>
-  template.xref.not_an_array
-      An output's path, when or for_each does not parse (xref: not an array).
-      Next: metais inspect <package>
-  template.xref.not_an_object
-      An output's path, when or for_each does not parse (xref: not an object).
-      Next: metais inspect <package>
-  template.xref.unknown_field
-      An output's path, when or for_each does not parse (xref: unknown field).
-      Next: metais inspect <package>
-  template.xref.unknown_input
-      An output's path, when or for_each does not parse (xref: unknown input).
-      Next: metais inspect <package>
-  template.xref.unknown_variable
-      An output's path, when or for_each does not parse (xref: unknown
-      variable).
       Next: metais inspect <package>
   usage.bad_value
       A flag's value is missing, or is not one the flag accepts, or a flag that

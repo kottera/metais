@@ -222,7 +222,7 @@ func runValidate(s *session, p args.Parsed) outcome {
 		next = []Next{nextValidateAgain, nextInputsHelp}
 	}
 	dataDir, _ := p.Value(dataFlag.Name)
-	return outcome{findings: res.Findings, result: out, human: human, next: declaredSteps(next, s.table), summary: true, dataDir: dataDir}
+	return outcome{findings: res.Findings, result: out, human: human, next: declaredSteps(next, s.table), report: true, dataDir: dataDir}
 }
 
 // readStdin reads standard input for --inputs-json -: at most limit bytes

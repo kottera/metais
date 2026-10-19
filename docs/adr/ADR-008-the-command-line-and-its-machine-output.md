@@ -1299,12 +1299,15 @@ document.
   location does; `supplied` is whether any source but a default gave it a
   value. `--resolved`'s `data` is the inputs object in canonical form, and
   in human form indented JSON whose text is neutralised line by line. The
-  findings of `validate` are its result: they go to standard output, with
-  the summary line, the human result and the `Next:` block, and the
-  result is printed when they hold errors (D11 item 3). `--fail-on` is
+  findings of `validate` are its result, as `check`'s are: unless they
+  refuse it, which under a consumer command an error about the package's
+  own content does, they go to standard output with the summary line, the
+  human result and the `Next:` block, and the result is printed when they
+  hold errors (D11 item 3). `--fail-on` is
   declared once and read in one place, the exit status; `inspect`,
-  `validate` and `init` take it, every command that reports findings but
-  `version`, `help` and `limits`. Two codes are registered, beside the
+  `validate`, `check` and `init` take it, every command that reports
+  findings but `version`, `help` and `limits`, and a check that fails on
+  its warnings points at checking again. Two codes are registered, beside the
   Interfaces list, for refusals ADR-003 leaves to the command line:
   `usage.data_dir_unreadable` (the `--data` directory cannot be opened or
   listed, with ADR-006 D9 item 8's reasons and `too_large`) and
