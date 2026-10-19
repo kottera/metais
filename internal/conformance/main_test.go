@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -191,11 +192,31 @@ func TestConformance(t *testing.T) {
 	}
 	r.classes = list(*flagClasses)
 	r.tags, r.skipTags = list(*flagTags), list(*flagSkipTags)
+	if err := checkSelection(r.classes, append(slices.Clone(r.tags), r.skipTags...)); err != nil {
+		t.Fatal(err)
+	}
 	r.keep = *flagKeep
 	if *flagRecord != "" {
 		r.rec = &recorder{path: *flagRecord}
 	}
 	runSuite(t, r)
+}
+
+// checkSelection refuses a class or a tag the suite does not define, so a
+// mistyped flag cannot pass by selecting nothing.
+func checkSelection(classes, tags []string) error {
+	for _, c := range classes {
+		if c != "processor" && c != "authoring" {
+			return fmt.Errorf("-conformance.classes: %q is not processor or authoring", c)
+		}
+	}
+	known := []string{"security", "determinism", "portable-paths", "container", "byte-level", "limits", "regression"}
+	for _, tag := range tags {
+		if !slices.Contains(known, tag) {
+			return fmt.Errorf("-conformance.tags: %q is not a tag of ADR-011 D9 item 5", tag)
+		}
+	}
+	return nil
 }
 
 // compareFiles compares the records at paths, validating each against the

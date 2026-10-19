@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 )
 
@@ -205,16 +206,21 @@ func writeFixture(t testing.TB, root string) string {
 			map[string]any{"ok": true, "stream": map[string]any{"equals": "expected/a.txt"}})))
 
 	// fix/render-dry: a dry run's listing, and nothing written.
+	// Of a container, only the path is compared: its size and digest are
+	// the encoder's.
 	listing := []any{
 		map[string]any{"path": "a.txt", "size": 6, "digest": "sha256:" + digest([]byte(fixtureTree["a.txt"]))},
+		map[string]any{"path": "book.zip", "size": 210, "digest": "sha256:" + digest([]byte("one encoder"))},
 		map[string]any{"path": "sub/b.txt", "size": 5, "digest": "sha256:" + digest([]byte(fixtureTree["sub/b.txt"]))},
 	}
+	expectedListing := slices.Clone(listing)
+	expectedListing[1] = map[string]any{"path": "book.zip", "size": 199, "digest": "sha256:" + digest([]byte("another encoder"))}
 	putJSON(vec(fixRenderDry)+"package/fake.json", map[string]any{"ok": true, "exit": 0, "findings": []any{}, "tree": "tree", "listing": listing})
 	putTree(vec(fixRenderDry)+"package/tree/", streamTree)
-	putJSON(vec(fixRenderDry)+"expected/listing.json", listing)
+	putJSON(vec(fixRenderDry)+"expected/listing.json", expectedListing)
 	vector(fixRenderDry, nil, tcase("dry-run",
 		step("render", map[string]any{"package": "package", "out": "out", "dry_run": true},
-			map[string]any{"ok": true, "listing": "expected/listing.json"})))
+			map[string]any{"ok": true, "listing": map[string]any{"equals": "expected/listing.json", "containers": []string{"book.zip"}}})))
 
 	// fix/repeatable: bytes the implementation chooses, which must be the
 	// same in every run.

@@ -1444,11 +1444,16 @@ project has; when CI exists it runs the same commands.
     line's declaration format is ADR-008's; the item that lands it confirms
     or renames the member.
   - D15 item 3's record also names each step's `invocation`, because a
-    hostile open step runs several commands, and the suite's digest is the
+    hostile open step runs several commands, and lists the cases skipped
+    for an unmet `requires`. D15 item 4 compares a pair of records on the
+    cases both ran: darwin's default volume folds case, so a
+    `case-sensitive-fs` case runs on linux only. The suite's digest is the
     SHA-256 of `<path> <sha256>` lines, one per file, sorted
     (`record.schema.json` states it).
-  - D10 item 6's containers, for a dry-run listing, are the paths the
-    step's trees list in `containers`.
+  - D10 item 6's containers, for a dry-run listing, are listed beside it:
+    `expect.listing` is the listing's file, or `{"equals", "containers"}`.
+  - D10 item 7's `files` are allowed in a repeatable step's trees only; any
+    other step's tree names the tree it `equals`.
   - D13's wall clock is the runner's, as D13 item 1 gives vectors only
     `cpu_ms` and `rss_mib`; the self-proof lowers it to catch its fault in
     seconds.

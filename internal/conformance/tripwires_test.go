@@ -178,7 +178,11 @@ func referenceProblems(rel string, v *vector, set *schemaSet) []string {
 					add("case %s step %d: %s is missing, and no earlier step writes it", c.Name, si+1, p)
 				}
 			}
-			for _, f := range []string{st.Expect.Findings, st.Expect.Listing} {
+			files := []string{st.Expect.Findings}
+			if st.Expect.Listing != nil {
+				files = append(files, st.Expect.Listing.Equals)
+			}
+			for _, f := range files {
 				if f != "" && !name(f) {
 					add("case %s step %d: %s is missing", c.Name, si+1, f)
 				}
@@ -259,6 +263,12 @@ func TestVectorsWellFormedControl(t *testing.T) {
 	}{
 		{"schema", "fails its schema", func(t *testing.T) {
 			edit(t, fixValidate, func(m map[string]any) { m["class"] = "viewer" })
+		}},
+		{"files outside a repeatable step", "fails its schema", func(t *testing.T) {
+			edit(t, fixRenderTree, func(m map[string]any) {
+				st := m["cases"].([]any)[0].(map[string]any)["steps"].([]any)[0].(map[string]any)
+				st["expect"].(map[string]any)["trees"] = []any{map[string]any{"path": "out", "files": []string{}}}
+			})
 		}},
 		{"id", "is not its path", func(t *testing.T) { edit(t, fixValidate, func(m map[string]any) { m["id"] = "fix/other" }) }},
 		{"area", "is not its first statement's", func(t *testing.T) {

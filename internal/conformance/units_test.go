@@ -6,6 +6,7 @@ package conformance
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/binary"
 	"os"
 	"path/filepath"
 	"slices"
@@ -195,6 +196,19 @@ func TestSentinelSources(t *testing.T) {
 	if got := sentinelAt([]byte("MTSSENTINE")); got != "" {
 		t.Errorf("a partial token: %q", got)
 	}
+	// Bytes that are not UTF-8 keep their length when the scan folds case,
+	// so the source is read where the token is.
+	if got := sentinelAt(append(bytes.Repeat([]byte{0xff}, 100), sentinel+"HOME"...)); got != "HOME" {
+		t.Errorf("a token after invalid UTF-8: %q", got)
+	}
+	// A planted path carries the sandbox's token first; the more specific
+	// source is named.
+	if got := sentinelAt([]byte("/t/" + sentinel + "PATH-7/home/" + sentinel + "HOME/x")); got != "HOME" {
+		t.Errorf("a leaked HOME: %q", got)
+	}
+	if got := sentinelAt([]byte("/t/" + sentinel + "PATH-7/work/x")); got != "the sandbox path" {
+		t.Errorf("a leaked work path: %q", got)
+	}
 }
 
 func TestChangesOutside(t *testing.T) {
@@ -244,6 +258,44 @@ func TestSelection(t *testing.T) {
 		edit(r, v)
 		if why := r.selected(v); why == "" {
 			t.Errorf("%s: selected", name)
+		}
+	}
+}
+
+// TestZipFixedFields shows the container check reads ADR-001 D1's fields
+// archive/zip passes over: a clean container passes, and bytes between
+// the entries and the central directory, internal attributes and a
+// comment are each caught.
+func TestZipFixedFields(t *testing.T) {
+	clean := writeZip([]zipEntry{
+		{name: "a.txt", method: zip.Deflate, content: []byte(padding)},
+		{name: "mimetype", method: zip.Store, content: []byte("x")},
+	}, false)
+	if bad := zipFixedFields(clean); len(bad) > 0 {
+		t.Fatalf("a clean container: %q", bad)
+	}
+	le := binary.LittleEndian
+	cd := int(le.Uint32(clean[len(clean)-6:]))
+	for name, c := range map[string]struct {
+		edit func([]byte) []byte
+		want string
+	}{
+		"bytes before the directory": {func(b []byte) []byte {
+			out := append(slices.Clone(b[:cd]), 0)
+			out = append(out, b[cd:]...)
+			le.PutUint32(out[len(out)-6:], uint32(cd+1))
+			return out
+		}, "the central directory is at"},
+		"internal attributes": {func(b []byte) []byte { b[cd+36] = 1; return b }, "internal attributes"},
+		"an archive comment": {func(b []byte) []byte {
+			b = append(b, 'c')
+			le.PutUint16(b[len(b)-3:], 1)
+			return b
+		}, "comment"},
+	} {
+		bad := zipFixedFields(c.edit(slices.Clone(clean)))
+		if !slices.ContainsFunc(bad, func(s string) bool { return strings.Contains(s, c.want) }) {
+			t.Errorf("%s: reported %q", name, bad)
 		}
 	}
 }

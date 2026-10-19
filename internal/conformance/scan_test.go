@@ -4,7 +4,9 @@
 package conformance
 
 import (
+	"archive/zip"
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -25,20 +27,45 @@ var sentinelSources = []struct{ suffix, source string }{
 	{"XDG", "an XDG directory"},
 }
 
-// sentinelAt returns the source of the first sentinel in b, searched for
-// case-insensitively, or "" when b holds none.
-func sentinelAt(b []byte) string {
-	i := bytes.Index(bytes.ToUpper(b), []byte(sentinel))
-	if i < 0 {
-		return ""
-	}
-	rest := strings.ToUpper(string(b[i+len(sentinel) : min(len(b), i+len(sentinel)+8)]))
-	for _, s := range sentinelSources {
-		if strings.HasPrefix(rest, s.suffix) {
-			return s.source
+// asciiUpper upper-cases the ASCII letters of b and nothing else, so an
+// index into the result is an index into b.
+func asciiUpper(b []byte) []byte {
+	out := make([]byte, len(b))
+	for i, c := range b {
+		if 'a' <= c && c <= 'z' {
+			c -= 'a' - 'A'
 		}
+		out[i] = c
 	}
-	return "an unknown source"
+	return out
+}
+
+// sentinelAt returns the source of the sentinel in b, searched for
+// case-insensitively, or "" when b holds none. Every planted path carries
+// the sandbox's token first, so a hit naming a more specific source
+// anywhere in b wins over the sandbox path.
+func sentinelAt(b []byte) string {
+	up := asciiUpper(b)
+	found := ""
+	for i := bytes.Index(up, []byte(sentinel)); i >= 0; {
+		rest := string(up[i+len(sentinel) : min(len(up), i+len(sentinel)+8)])
+		src := "an unknown source"
+		for _, s := range sentinelSources {
+			if strings.HasPrefix(rest, s.suffix) {
+				src = s.source
+				break
+			}
+		}
+		if found == "" || found == "the sandbox path" {
+			found = src
+		}
+		next := bytes.Index(up[i+len(sentinel):], []byte(sentinel))
+		if next < 0 {
+			break
+		}
+		i += len(sentinel) + next
+	}
+	return found
 }
 
 // zipDepth is how deep the scan inflates zips inside zips (ADR-011 D12
@@ -55,15 +82,19 @@ func scanBytes(name string, b []byte, depth int) string {
 	if depth == 0 || !isZip(b) {
 		return ""
 	}
-	entries, err := readZip(b)
-	if err != nil {
-		return ""
+	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
+	if err != nil && !errors.Is(err, zip.ErrInsecurePath) {
+		return fmt.Sprintf("%s reads as a zip that cannot be opened, so the scan cannot see inside it: %v", name, err)
 	}
-	for _, e := range entries {
-		if src := sentinelAt([]byte(e.name)); src != "" {
-			return fmt.Sprintf("%s: the entry name %q holds the sentinel from %s", name, e.name, src)
+	for _, f := range zr.File {
+		if src := sentinelAt([]byte(f.Name)); src != "" {
+			return fmt.Sprintf("%s: the entry name %q holds the sentinel from %s", name, f.Name, src)
 		}
-		if hit := scanBytes(name+": entry "+e.name, e.content, depth-1); hit != "" {
+		content, err := inflate(f)
+		if err != nil {
+			return fmt.Sprintf("%s: the entry %q cannot be inflated, so the scan cannot see inside it: %v", name, f.Name, err)
+		}
+		if hit := scanBytes(name+": entry "+f.Name, content, depth-1); hit != "" {
 			return hit
 		}
 	}
@@ -71,12 +102,10 @@ func scanBytes(name string, b []byte, depth int) string {
 }
 
 // scanTar scans each member of a tar stream: its name and its content,
-// and each zip inside it.
+// and each zip inside it. A stream that does not read as a tar to its end
+// cannot be scanned, which is itself a hit.
 func scanTar(name string, b []byte) string {
 	members, err := readTar(b)
-	if err != nil {
-		return ""
-	}
 	for _, m := range members {
 		if src := sentinelAt([]byte(m.name + "\x00" + m.uname + "\x00" + m.gname)); src != "" {
 			return fmt.Sprintf("%s: the member header %q holds the sentinel from %s", name, m.name, src)
@@ -85,6 +114,9 @@ func scanTar(name string, b []byte) string {
 			return hit
 		}
 	}
+	if err != nil {
+		return fmt.Sprintf("%s does not read as a tar to its end, so the scan cannot see inside it: %v", name, err)
+	}
 	return ""
 }
 
@@ -92,7 +124,7 @@ func scanTar(name string, b []byte) string {
 // produced: standard output and standard error (which hold a driver's
 // response), every file of the step's declared trees and its zips, and
 // the stream and its members.
-func scanInvocation(inv *invocation, trees map[string]*tree) []problem {
+func scanInvocation(inv *invocation, archive bool, trees map[string]*tree) []problem {
 	var ps []problem
 	add := func(hit string) {
 		if hit != "" {
@@ -103,7 +135,9 @@ func scanInvocation(inv *invocation, trees map[string]*tree) []problem {
 	add(scanBytes("standard error", inv.stderr, 0))
 	if inv.stream != nil {
 		add(scanBytes("the stream", inv.stream, zipDepth))
-		add(scanTar("the stream", inv.stream))
+		if archive {
+			add(scanTar("the stream", inv.stream))
+		}
 	}
 	for root, t := range trees {
 		for _, n := range sortedKeys(t.files) {

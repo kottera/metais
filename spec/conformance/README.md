@@ -96,11 +96,14 @@ must equal the byte observed in the other:
 - **Streams**: an archive stream is compared by its tar members (order,
   path, typeflag, mode, owner, group, modification time, size and content); a
   single output byte for byte, or by entries when it is a container.
-- **Listings**: a dry run's listing is compared exactly, except that only the
-  path of a container is.
-- **Repeatable steps**, whose bytes the implementation chooses, name the
-  files that must exist; the case runs a second time and every observed byte
-  must match.
+- **Listings**: `expect.listing` names the file holding a dry run's expected
+  listing, alone or as `{"equals": <file>, "containers": [<path>, …]}`. The
+  listing is compared exactly, except that only the path of a listed
+  container is.
+- **Repeatable steps**, whose bytes the implementation chooses, name in their
+  trees the files that must exist instead of an expected tree; only a
+  repeatable step's trees do. The case runs a second time and every observed
+  byte must match.
 
 Every process runs under 10 seconds of CPU time, 1024 MiB of peak resident
 memory and 120 seconds of wall clock, which a step's `bounds` can lower. CPU
@@ -200,11 +203,13 @@ tool's name and version, the target, the SHA-256 of the suite tree, and for
 every invocation of every step of every case in both environments, `ok` and
 the SHA-256 and length of standard output, standard error, the stream and the
 listing, and every file of every declared tree with its path, size, SHA-256
-and execute bit. No sandbox path appears in it.
+and execute bit. It also lists the cases skipped for an unmet requirement,
+with the reason. No sandbox path appears in it.
 
 `-conformance.compare=a.json,b.json,…` compares records instead of running
 vectors. It refuses records of different tools, tool versions or suites,
 and otherwise fails on any field that differs between any two, the target
-aside. Records taken from one build on different targets agree byte for
+aside. A case one record skipped is compared in neither, since a target
+whose file system folds case cannot run what another can. Records taken from one build on different targets agree byte for
 byte, which proves what no committed expectation can: a container's deflate
 bytes, human messages, and the bytes of repeatable results.

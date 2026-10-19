@@ -4,7 +4,7 @@
   "title": "METAIS cross-platform record",
   "description": "What one run of the suite observed on one target, by digest: the tool, the target, the suite, and for every invocation of every step of every case in each environment, the result and the SHA-256 and length of every byte it produced. Records of one build on different targets agree in every member but target. No sandbox path appears in a record.",
   "type": "object",
-  "required": ["$schema", "tool", "target", "suite_sha256", "steps"],
+  "required": ["$schema", "tool", "target", "suite_sha256", "steps", "skipped"],
   "additionalProperties": false,
   "properties": {
     "$schema": {
@@ -39,6 +39,21 @@
       "description": "One entry per invocation, sorted by vector, case, step, invocation and environment.",
       "type": "array",
       "items": { "$ref": "#/$defs/step" }
+    },
+    "skipped": {
+      "title": "Skipped cases",
+      "description": "The cases skipped for a requirement the target's file system does not meet, sorted by vector and case. Two records are compared on the cases both ran.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["vector", "case", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "vector": { "type": "string", "minLength": 1 },
+          "case": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
     }
   },
   "$defs": {

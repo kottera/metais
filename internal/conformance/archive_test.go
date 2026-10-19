@@ -39,21 +39,30 @@ func readZip(b []byte) ([]zipEntry, error) {
 	}
 	var out []zipEntry
 	for _, f := range zr.File {
-		if f.UncompressedSize64 > maxInflate {
-			return nil, fmt.Errorf("entry %q declares %d bytes, above the runner's %d", f.Name, f.UncompressedSize64, maxInflate)
-		}
-		rc, err := f.Open()
-		if err != nil {
-			return nil, fmt.Errorf("entry %q: %w", f.Name, err)
-		}
-		content, err := io.ReadAll(io.LimitReader(rc, maxInflate+1))
-		rc.Close()
+		content, err := inflate(f)
 		if err != nil {
 			return nil, fmt.Errorf("entry %q: %w", f.Name, err)
 		}
 		out = append(out, zipEntry{name: f.Name, method: f.Method, content: content})
 	}
 	return out, nil
+}
+
+// inflate reads one entry's content, bounded by maxInflate.
+func inflate(f *zip.File) ([]byte, error) {
+	if f.UncompressedSize64 > maxInflate {
+		return nil, fmt.Errorf("it declares %d bytes, above the runner's %d", f.UncompressedSize64, maxInflate)
+	}
+	rc, err := f.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer rc.Close()
+	content, err := io.ReadAll(io.LimitReader(rc, maxInflate+1))
+	if err == nil && len(content) > maxInflate {
+		err = fmt.Errorf("it inflates past the runner's %d bytes", maxInflate)
+	}
+	return content, err
 }
 
 // zipFixedFields lists every header field of b that differs from the value
@@ -134,6 +143,52 @@ func zipFixedFields(b []byte) []string {
 			add(f.Name, "the file data does not follow its local header")
 		}
 		off = off + 30 + nameLen + extraLen + int64(f.CompressedSize64)
+	}
+	return append(bad, zipDirectory(b, off, len(zr.File))...)
+}
+
+// zipDirectory checks what archive/zip reads past in the central
+// directory and the end record (ADR-001 D1 items 2 and 4): the directory
+// starts where the last entry's data ends, each header's disk number,
+// internal attributes and local offset are fixed, and the end record is
+// the file's last 22 bytes, on disk 0, counting every entry, with no
+// comment.
+func zipDirectory(b []byte, start int64, entries int) []string {
+	le := binary.LittleEndian
+	if len(b) < 22 {
+		return []string{"no end record"}
+	}
+	end := b[len(b)-22:]
+	size, at := int64(le.Uint32(end[12:])), int64(le.Uint32(end[16:]))
+	var bad []string
+	switch {
+	case le.Uint32(end) != 0x06054b50:
+		return []string{"the last 22 bytes are not the end record"}
+	case le.Uint16(end[4:]) != 0 || le.Uint16(end[6:]) != 0:
+		bad = append(bad, "the end record names a disk other than 0")
+	case int(le.Uint16(end[8:])) != entries || int(le.Uint16(end[10:])) != entries:
+		bad = append(bad, "the end record's entry counts are not the number of entries")
+	case le.Uint16(end[20:]) != 0:
+		bad = append(bad, "the end record has a comment")
+	}
+	if at != start || at+size != int64(len(b))-22 {
+		return append(bad, fmt.Sprintf("the central directory is at %d for %d bytes, not from the end of the entries at %d to the end record", at, size, start))
+	}
+	local := int64(0)
+	for p := at; p < at+size; {
+		if p+46 > at+size || le.Uint32(b[p:]) != 0x02014b50 {
+			return append(bad, fmt.Sprintf("no central directory header at %d", p))
+		}
+		h := b[p : p+46]
+		name := string(b[p+46 : min(at+size, p+46+int64(le.Uint16(h[28:])))])
+		if le.Uint16(h[34:]) != 0 || le.Uint16(h[36:]) != 0 {
+			bad = append(bad, fmt.Sprintf("entry %q: disk number %d and internal attributes %#04x, not 0 and 0", name, le.Uint16(h[34:]), le.Uint16(h[36:])))
+		}
+		if int64(le.Uint32(h[42:])) != local {
+			bad = append(bad, fmt.Sprintf("entry %q: local header offset %d, not %d", name, le.Uint32(h[42:]), local))
+		}
+		local += 30 + int64(le.Uint16(h[28:])) + int64(le.Uint32(h[20:]))
+		p += 46 + int64(le.Uint16(h[28:])) + int64(le.Uint16(h[30:])) + int64(le.Uint16(h[32:]))
 	}
 	return bad
 }

@@ -217,6 +217,10 @@
         {
           "if": { "properties": { "op": { "const": "sample" } } },
           "then": { "properties": { "args": { "oneOf": [{ "required": ["to"] }, { "required": ["example"] }] } } }
+        },
+        {
+          "if": { "not": { "required": ["repeatable"], "properties": { "repeatable": { "const": true } } } },
+          "then": { "properties": { "expect": { "properties": { "trees": { "items": { "required": ["equals"] } } } } } }
         }
       ]
     },
@@ -310,14 +314,25 @@
         },
         "listing": {
           "title": "Listing",
-          "description": "A vector file holding the dry run's expected listing, an array of path, size and digest.",
-          "$ref": "#/$defs/path"
+          "description": "The dry run's expected listing, an array of path, size and digest in a vector file: named alone, or with the outputs that are containers, of which only the path is compared.",
+          "oneOf": [
+            { "$ref": "#/$defs/path" },
+            {
+              "type": "object",
+              "required": ["equals"],
+              "additionalProperties": false,
+              "properties": {
+                "equals": { "$ref": "#/$defs/path" },
+                "containers": { "$ref": "#/$defs/paths" }
+              }
+            }
+          ]
         }
       }
     },
     "tree": {
       "title": "Tree",
-      "description": "A tree at path in the work directory: exactly the regular files of equals, byte for byte, or, for a repeatable step, at least the files listed.",
+      "description": "A tree at path in the work directory: exactly the regular files of equals, byte for byte, or, only for a repeatable step, at least the files listed.",
       "type": "object",
       "required": ["path"],
       "additionalProperties": false,

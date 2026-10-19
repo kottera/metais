@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"maps"
 	"os"
 	"path/filepath"
@@ -46,8 +47,8 @@ type adapter interface {
 	// race reports whether the program the adapter runs is race-built.
 	race() bool
 	// excluded is a work-directory path the nothing-else-changes check
-	// skips, or "".
-	excluded() string
+	// skips for st, or "".
+	excluded(st *step) string
 }
 
 // plainSandbox makes a sandbox of environment B below base, which the
@@ -74,8 +75,8 @@ type cliAdapter struct {
 	openErr  error
 }
 
-func (a *cliAdapter) name() string     { return "cli" }
-func (a *cliAdapter) excluded() string { return "" }
+func (a *cliAdapter) name() string          { return "cli" }
+func (a *cliAdapter) excluded(*step) string { return "" }
 
 func (a *cliAdapter) race() bool {
 	a.raceOnce.Do(func() { a.isRace = raceBuilt(a.path) })
@@ -371,7 +372,9 @@ func (a *cliAdapter) invoke(sb *sandbox, c command, lim limits, dryRun bool) (*i
 	}
 	doc := p.stdout
 	if c.streaming {
-		inv.stream, doc = p.stdout, p.stderr
+		// Standard output is the stream, so an empty one is a stream of
+		// no bytes.
+		inv.stream, doc = append([]byte{}, p.stdout...), p.stderr
 	}
 	env, err := parseEnvelope(doc)
 	if err != nil {
@@ -503,8 +506,17 @@ type execAdapter struct {
 	isRace   bool
 }
 
-func (a *execAdapter) name() string     { return "exec" }
-func (a *execAdapter) excluded() string { return streamFile }
+func (a *execAdapter) name() string { return "exec" }
+
+// excluded is the stream file on a streaming step: the driver writes it,
+// and the runner reads and removes it. On any other step it is a file
+// like another.
+func (a *execAdapter) excluded(st *step) string {
+	if _, _, streaming := st.args.stream(); streaming {
+		return streamFile
+	}
+	return ""
+}
 
 func (a *execAdapter) race() bool {
 	a.raceOnce.Do(func() { a.isRace = raceBuilt(a.path) })
@@ -545,6 +557,14 @@ func (a *execAdapter) call(sb *sandbox, req driverRequest, lim limits) (*proc, *
 func (a *execAdapter) run(r *runner, sb *sandbox, v *vector, st *step) ([]*invocation, []problem) {
 	lim := stepLimits(st.Bounds, a.race(), r.wall)
 	_, _, streaming := st.args.stream()
+	sp := filepath.Join(sb.work, streamFile)
+	if streaming {
+		// A stream file an earlier step left would otherwise pass for
+		// this step's stream.
+		if err := os.Remove(sp); err != nil && !errors.Is(err, fs.ErrNotExist) {
+			return nil, []problem{{check: checkHarness, harness: true, msg: err.Error()}}
+		}
+	}
 	req := driverRequest{Protocol: driverProtocol, Op: st.Op, Args: st.Args, StreamFile: streamFile}
 	p, resp, ps := a.call(sb, req, lim)
 	inv := &invocation{label: st.Op, proc: p}
@@ -565,13 +585,17 @@ func (a *execAdapter) run(r *runner, sb *sandbox, v *vector, st *step) ([]*invoc
 		inv.findings = []any{}
 	}
 	if streaming {
-		sp := filepath.Join(sb.work, streamFile)
 		b, err := os.ReadFile(sp)
-		if err != nil {
-			b = []byte{}
+		switch {
+		case errors.Is(err, fs.ErrNotExist):
+		case err != nil:
+			return []*invocation{inv}, append(ps, problem{check: checkHarness, harness: true, where: inv.label, msg: err.Error()})
+		default:
+			inv.stream = b
+			if err := os.Remove(sp); err != nil {
+				return []*invocation{inv}, append(ps, problem{check: checkHarness, harness: true, where: inv.label, msg: err.Error()})
+			}
 		}
-		inv.stream = b
-		os.Remove(sp)
 	}
 	return []*invocation{inv}, ps
 }

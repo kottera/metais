@@ -136,11 +136,30 @@ func (a stepArgs) stream() (archive bool, only string, ok bool) {
 
 // expect is what a step must give (ADR-011 D10).
 type expect struct {
-	OK       bool          `json:"ok"`
-	Findings string        `json:"findings"`
-	Trees    []treeExpect  `json:"trees"`
-	Stream   *streamExpect `json:"stream"`
-	Listing  string        `json:"listing"`
+	OK       bool           `json:"ok"`
+	Findings string         `json:"findings"`
+	Trees    []treeExpect   `json:"trees"`
+	Stream   *streamExpect  `json:"stream"`
+	Listing  *listingExpect `json:"listing"`
+}
+
+// listingExpect is a dry run's expected listing: a vector file, and the
+// outputs that are containers, of which only the path is compared.
+type listingExpect struct {
+	Equals     string   `json:"equals"`
+	Containers []string `json:"containers"`
+}
+
+// UnmarshalJSON reads a listing named by its file alone, or as an object
+// that also lists its containers.
+func (l *listingExpect) UnmarshalJSON(b []byte) error {
+	if json.Unmarshal(b, &l.Equals) == nil {
+		return nil
+	}
+	type plain listingExpect
+	dec := json.NewDecoder(bytes.NewReader(b))
+	dec.DisallowUnknownFields()
+	return dec.Decode((*plain)(l))
 }
 
 // treeExpect is one declared tree.

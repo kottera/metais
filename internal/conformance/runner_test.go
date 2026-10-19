@@ -234,7 +234,7 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 			return run
 		}
 		var excluded []string
-		if x := r.adapter.excluded(); x != "" {
+		if x := r.adapter.excluded(st); x != "" {
 			excluded = append(excluded, x)
 		}
 		for _, ch := range changesOutside(before, after, treePaths, excluded) {
@@ -244,8 +244,9 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 			run.problems = append(run.problems, r.expectations(v, si, st, sr)...)
 		}
 		if e == envA {
+			archive, _, _ := st.args.stream()
 			for _, inv := range invs {
-				for _, p := range scanInvocation(inv, sr.trees) {
+				for _, p := range scanInvocation(inv, archive, sr.trees) {
 					p.step, p.where = si+1, inv.label
 					run.problems = append(run.problems, p)
 				}
@@ -287,19 +288,13 @@ func (r *runner) expectations(v *vector, si int, st *step, sr stepRun) []problem
 		wantStream = b
 	}
 	var wantListing any
-	var listingContainers []string
-	if st.Expect.Listing != "" {
-		b, err := os.ReadFile(filepath.Join(v.dir, filepath.FromSlash(st.Expect.Listing)))
+	if l := st.Expect.Listing; l != nil {
+		b, err := os.ReadFile(filepath.Join(v.dir, filepath.FromSlash(l.Equals)))
 		if err == nil {
 			wantListing, err = decodeJSON(b)
 		}
 		if err != nil {
 			return append(ps, problem{check: checkHarness, harness: true, step: si + 1, msg: "the expected listing: " + err.Error()})
-		}
-		for _, te := range st.Expect.Trees {
-			for _, c := range te.Containers {
-				listingContainers = append(listingContainers, c.Path)
-			}
 		}
 	}
 	archive, _, _ := st.args.stream()
@@ -329,8 +324,8 @@ func (r *runner) expectations(v *vector, si int, st *step, sr stepRun) []problem
 				add(checkStream, inv.label, "the stream "+d)
 			}
 		}
-		if st.Expect.Listing != "" {
-			if d := compareListing(wantListing, inv.listing, listingContainers); d != "" {
+		if l := st.Expect.Listing; l != nil {
+			if d := compareListing(wantListing, inv.listing, l.Containers); d != "" {
 				add(checkListing, inv.label, d)
 			}
 		}
@@ -470,6 +465,9 @@ func runSuite(t *testing.T, r *runner) *suiteStats {
 							res := r.runCase(v, c, base)
 							if res.skipped != "" {
 								stats.skipped.Add(1)
+								if r.rec != nil {
+									r.rec.skip(v, c, res.skipped)
+								}
 								t.Skipf("skipped, not passed: %s", res.skipped)
 							}
 							reportCase(t, r, v, c, res, base)

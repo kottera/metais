@@ -29,11 +29,20 @@ const recordFormat = "https://metais.org/schemas/conformance/1/record.schema.jso
 // target, the suite's digest, and what every step of every case gave in
 // each environment. It holds no sandbox path.
 type record struct {
-	Schema string      `json:"$schema"`
-	Tool   toolID      `json:"tool"`
-	Target string      `json:"target"`
-	Suite  string      `json:"suite_sha256"`
-	Steps  []recordRow `json:"steps"`
+	Schema  string       `json:"$schema"`
+	Tool    toolID       `json:"tool"`
+	Target  string       `json:"target"`
+	Suite   string       `json:"suite_sha256"`
+	Steps   []recordRow  `json:"steps"`
+	Skipped []recordSkip `json:"skipped"`
+}
+
+// recordSkip is a case the run skipped for an unmet requirement (ADR-011
+// D9 item 6), which one target may meet and another not.
+type recordSkip struct {
+	Vector string `json:"vector"`
+	Case   string `json:"case"`
+	Reason string `json:"reason"`
 }
 
 // recordRow is one invocation of one step in one environment.
@@ -70,9 +79,17 @@ func blobOf(b []byte) blob { return blob{SHA256: digest(b), Length: len(b)} }
 // recorder gathers the rows of a run, from parallel vectors, and writes
 // the record when the run ends.
 type recorder struct {
-	path string
-	mu   sync.Mutex
-	rows []recordRow
+	path    string
+	mu      sync.Mutex
+	rows    []recordRow
+	skipped []recordSkip
+}
+
+// skip records a skipped case.
+func (rc *recorder) skip(v *vector, c *vcase, reason string) {
+	rc.mu.Lock()
+	defer rc.mu.Unlock()
+	rc.skipped = append(rc.skipped, recordSkip{Vector: v.ID, Case: c.Name, Reason: reason})
 }
 
 // add records every step of a case's runs.
@@ -126,8 +143,14 @@ func (rc *recorder) write(r *runner) error {
 		return err
 	}
 	rc.mu.Lock()
-	rows := slices.Clone(rc.rows)
+	rows, skipped := slices.Clone(rc.rows), slices.Clone(rc.skipped)
 	rc.mu.Unlock()
+	slices.SortFunc(skipped, func(a, b recordSkip) int {
+		return cmp.Or(cmp.Compare(a.Vector, b.Vector), cmp.Compare(a.Case, b.Case))
+	})
+	if skipped == nil {
+		skipped = []recordSkip{}
+	}
 	slices.SortFunc(rows, func(a, b recordRow) int {
 		return cmp.Or(cmp.Compare(a.Vector, b.Vector), cmp.Compare(a.Case, b.Case),
 			cmp.Compare(a.Step, b.Step), cmp.Compare(a.Invocation, b.Invocation), cmp.Compare(a.Env, b.Env))
@@ -135,7 +158,7 @@ func (rc *recorder) write(r *runner) error {
 	if rows == nil {
 		rows = []recordRow{}
 	}
-	rec := record{Schema: recordFormat, Tool: id, Target: runtime.GOOS + "/" + runtime.GOARCH, Suite: sum, Steps: rows}
+	rec := record{Schema: recordFormat, Tool: id, Target: runtime.GOOS + "/" + runtime.GOARCH, Suite: sum, Steps: rows, Skipped: skipped}
 	b, err := json.MarshalIndent(rec, "", "  ")
 	if err != nil {
 		return err
@@ -183,7 +206,9 @@ var errRefused = errors.New("records refused")
 // compareRecords compares records pairwise (ADR-011 D15 item 4). Records
 // of different tools or tool versions, or of different suites, are
 // refused; otherwise every difference in any field but the target is a
-// failure, named by the first record that differs from the first.
+// failure. A case either record skipped for an unmet requirement is left
+// out of that pair's comparison, since the other target ran what this one
+// could not.
 func compareRecords(names []string, recs []*record) []error {
 	var errs []error
 	first := recs[0]
@@ -202,12 +227,27 @@ func compareRecords(names []string, recs []*record) []error {
 	}
 	for i := range recs {
 		for j := i + 1; j < len(recs); j++ {
-			if d := recordDifference(recs[i], recs[j]); d != "" {
+			if d := recordDifference(withoutSkips(recs[i], recs[j]), withoutSkips(recs[j], recs[i])); d != "" {
 				errs = append(errs, fmt.Errorf("%s (%s) and %s (%s): %s", names[i], recs[i].Target, names[j], recs[j].Target, d))
 			}
 		}
 	}
 	return errs
+}
+
+// withoutSkips is a's steps less every case a or b skipped.
+func withoutSkips(a, b *record) *record {
+	skipped := map[[2]string]bool{}
+	for _, r := range [2]*record{a, b} {
+		for _, s := range r.Skipped {
+			skipped[[2]string{s.Vector, s.Case}] = true
+		}
+	}
+	out := *a
+	out.Steps = slices.DeleteFunc(slices.Clone(a.Steps), func(row recordRow) bool {
+		return skipped[[2]string{row.Vector, row.Case}]
+	})
+	return &out
 }
 
 // recordDifference names the first field in which a and b differ, the
@@ -394,6 +434,20 @@ func TestCompareRecordsEveryField(t *testing.T) {
 			t.Errorf("records differing in %s: %v", field, errs)
 		}
 	}
+	// A case one target skips for an unmet requirement leaves the pair to
+	// agree on everything else.
+	ran := base()
+	ran.Steps = append(ran.Steps, recordRow{Vector: "fix/w", Case: "fold", Step: 1, Invocation: 1, Env: "A", Stdout: b, Stderr: b, Files: []recordFile{}})
+	folded := base()
+	folded.Skipped = []recordSkip{{Vector: "fix/w", Case: "fold", Reason: "requires case-sensitive-fs: the file system folds case"}}
+	if errs := compareRecords(names, []*record{ran, folded}); len(errs) > 0 {
+		t.Errorf("a case one target skipped: %v", errs)
+	}
+	folded.Steps[0].OK = false
+	if errs := compareRecords(names, []*record{ran, folded}); len(errs) != 1 {
+		t.Errorf("a difference beside a skipped case: %v", errs)
+	}
+
 	extra := base()
 	extra.Steps = append(extra.Steps, extra.Steps[0])
 	if errs := compareRecords(names, []*record{base(), extra}); len(errs) == 0 {

@@ -98,14 +98,16 @@ func runProc(path string, args []string, dir string, env []string, stdin []byte,
 		cmd.Env = []string{}
 	}
 	cmd.Stdin = bytes.NewReader(stdin)
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+	stdout, stderr := &capped{}, &capped{}
+	cmd.Stdout, cmd.Stderr = stdout, stderr
 	cmd.WaitDelay = time.Second
 	err := cmd.Run()
 	p := &proc{stdout: stdout.Bytes(), stderr: stderr.Bytes(), rss: -1}
 	if cmd.ProcessState == nil {
 		return nil, fmt.Errorf("start %s: %w", path, err)
+	}
+	if stdout.over || stderr.over {
+		return nil, fmt.Errorf("%s wrote more than the runner's %d bytes to a standard stream", path, maxInflate)
 	}
 	ps := cmd.ProcessState
 	p.exit = ps.ExitCode()
@@ -121,6 +123,22 @@ func runProc(path string, args []string, dir string, env []string, stdin []byte,
 		return nil, fmt.Errorf("run %s: %w", path, err)
 	}
 	return p, nil
+}
+
+// capped holds what a process writes to one stream, up to maxInflate
+// bytes, so a runaway tool fails its step rather than the runner.
+type capped struct {
+	bytes.Buffer
+	over bool
+}
+
+func (c *capped) Write(b []byte) (int, error) {
+	if room := maxInflate - c.Len(); len(b) > room {
+		c.over = true
+		c.Buffer.Write(b[:max(room, 0)])
+		return len(b), nil
+	}
+	return c.Buffer.Write(b)
 }
 
 // boundProblems checks p against lim (ADR-011 D13).
