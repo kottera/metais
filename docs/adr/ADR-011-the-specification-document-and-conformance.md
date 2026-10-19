@@ -1523,3 +1523,18 @@ Cross-referenced from ADR-001's implementation log.
   ±(2^53−1) is not itself accepted as input, and a package whose schema
   writes one with an exponent opens. `man/large-integer-source`,
   `man/large-integer-packed` and `man/large-integer-canonical-text` cite it.
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-NB2.** On linux, D13 item 2's
+  `ru_maxrss` is read from a process the runner does not start itself. Go
+  starts a child with `CLONE_VFORK|CLONE_VM`, and the kernel's exec folds
+  the high-water mark of the address space the child was executed from
+  into the child's `ru_maxrss`, so read directly it counts the test
+  process's peak: a whole-package `go test` without `-race` drove the
+  clean fake past a 32 MiB bound. The runner starts each process through
+  a stub, the test binary executed afresh, which starts it, waits for it
+  and reports its usage; `TestRSSIsTheProcessAlone` holds 256 MiB in the
+  test process and requires the fake's peak to stay below half of it. The
+  self-proof's `tmp-refusal` fault writes to `os.TempDir()` on a refusal,
+  which the snapshot of the step's `TMPDIR` catches. A tool that clears
+  its environment, as `hostenv.Isolate` does, resolves the host's default
+  temporary directory instead, which D11 item 4's snapshot does not
+  cover; that is open.
