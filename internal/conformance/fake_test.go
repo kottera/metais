@@ -37,6 +37,11 @@ type fakeScript struct {
 	Executable []string         `json:"executable"`
 	Zips       []fakeZip        `json:"zips"`
 	Listing    []any            `json:"listing"`
+	// WriteFailed, when set, is what the fake reports, with the exit
+	// status WriteFailedExit, when writing the tree into its output
+	// directory fails: a destination it cannot write.
+	WriteFailed     []any `json:"write_failed"`
+	WriteFailedExit int   `json:"write_failed_exit"`
 }
 
 // fakeZip is a container the fake writes: the files below Dir in the
@@ -298,7 +303,10 @@ func fakeRun(fault string, call fakeCall) (*fakeResult, error) {
 		}
 	case call.out != "":
 		if err := writeOutputs(call.out, files, exec, fault); err != nil {
-			return nil, err
+			if sc.WriteFailed == nil {
+				return nil, err
+			}
+			res.ok, res.exit, res.findings = false, sc.WriteFailedExit, sc.WriteFailed
 		}
 	}
 	return res, nil

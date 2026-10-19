@@ -269,6 +269,7 @@
         "values",
         "default",
         "repeatable",
+        "required",
         "description"
       ],
       "additionalProperties": false,
@@ -331,6 +332,10 @@
           ]
         },
         "repeatable": {
+          "type": "boolean"
+        },
+        "required": {
+          "description": "Whether the command refuses a line without the flag, as a missing operand.",
           "type": "boolean"
         },
         "description": {

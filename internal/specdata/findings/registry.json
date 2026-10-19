@@ -3178,7 +3178,9 @@
       "hint": "Name a directory, or a path that does not exist yet beneath directories only. Nothing was written.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-028"
+      ]
     },
     {
       "code": "output.destination.not_empty",
@@ -3204,7 +3206,9 @@
       "hint": "Choose an empty directory, or one that does not exist yet. Nothing was written.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-028"
+      ]
     },
     {
       "code": "output.destination.write_failed",
@@ -3230,7 +3234,10 @@
       "hint": "Fix the cause, and run the command again into an empty directory; remove what was written first if you do not want it.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-026",
+        "MTS-AUT-027"
+      ]
     },
     {
       "code": "output.enum",
@@ -6165,6 +6172,25 @@
       "params": [],
       "message": "metais init needs --name when the directory is omitted or its last element is . or ..; the name is never taken from the working directory.",
       "hint": "Give the package's name with --name, such as `metais init --name acme-report`.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.not_a_packed_package",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the refused argument among the arguments after metais.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} names a source directory; metais unpack reads a packed package.",
+      "hint": "Give a packed package file. A source directory is already the editable tree unpack writes; nothing was written.",
       "location": "none",
       "since": "1.0",
       "statements": []

@@ -369,6 +369,8 @@ func TestEmittedCodes(t *testing.T) {
 		"template.syntax", "template.include", "template.unknown_filter", "template.number_range", "template.tag_context",
 		"template.filter_argument", "template.filter_input", "template.division_by_zero",
 		CodeUsageMissingOperand, CodeUsagePackageFromStdin)
+	// unpack's (W4-5).
+	want = append(want, CodeUsageNotPackedPackage)
 	for _, c := range []string{"syntax", "trailing_content", "duplicate_name", "lone_surrogate", "noncharacter", "encoding"} {
 		want = append(want, Code("manifest.json."+c))
 	}

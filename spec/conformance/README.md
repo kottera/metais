@@ -45,12 +45,19 @@ A vector runs one or more cases. Each case runs in a fresh sandbox holding
 of every step, and every path a step passes is relative to it. Before the
 first step the case's setup is applied: the `copy` tree's contents, the
 empty `dirs`, the `symlinks` and the `fifos`, then the package and every tree
-or file the steps' arguments name, each at the same relative path. Steps of
-a case share the work directory, in order; cases never share one.
+or file the steps' arguments name, each at the same relative path, and last
+the `unwritable` directories, each made mode 0555 so the implementation can
+list it and cannot create, rename or remove anything in it: the pre-state of
+a write that fails. Steps of a case share the work directory, in order; cases
+never share one.
 
-A case that `requires` something the file system does not offer (`symlinks`,
-`fifos`, `case-sensitive-fs`) is skipped with the reason. A skip is
-reported, and is never counted as a pass.
+A case that `requires` something the host does not offer (`symlinks`,
+`fifos`, `case-sensitive-fs`, `unwritable-dirs`) is skipped with the reason.
+A skip is reported, and is never counted as a pass. `unwritable-dirs` is
+absent where a directory of mode 0555 still lets the runner's own process
+create a file, a directory or a rename in it: when it runs as root, or on a
+platform whose directory modes do not govern writing, such as Windows. A
+vector whose setup names an `unwritable` directory requires it.
 
 Every case runs twice, in two environments, and every byte observed in one
 must equal the byte observed in the other:

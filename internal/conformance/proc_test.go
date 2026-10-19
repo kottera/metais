@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"sync/atomic"
 	"time"
 )
 
@@ -76,6 +77,22 @@ func raceBuilt(path string) bool {
 	return false
 }
 
+// procSlots bounds the processes the runner runs at once, across every
+// test of this package, to the processors Go may use. The self-proof
+// starts every row's run together, and each run's environment starts its
+// first process at once: without a bound, a burst of some eighty
+// race-built processes starting on a few processors starves each of them
+// of the time to start, and the wall clock, which only the wall fault is
+// meant to meet, kills a process that merely waited to run. A process
+// waits for its slot before its wall clock starts, so the clock measures
+// the process alone.
+var procSlots = make(chan struct{}, max(1, runtime.GOMAXPROCS(0)))
+
+// procRunning counts the processes running now, and procPeak the most
+// that ever ran at once, which TestProcessesAreBounded holds to
+// procSlots.
+var procRunning, procPeak atomic.Int64
+
 // proc is one finished process.
 type proc struct {
 	stdout, stderr []byte
@@ -89,6 +106,11 @@ type proc struct {
 // stdin, under lim's wall clock. A process that cannot be started is an
 // error; one that runs and fails is a proc.
 func runProc(path string, args []string, dir string, env []string, stdin []byte, wall time.Duration) (*proc, error) {
+	procSlots <- struct{}{}
+	defer func() { <-procSlots }()
+	defer procRunning.Add(-1)
+	for n, peak := procRunning.Add(1), procPeak.Load(); n > peak && !procPeak.CompareAndSwap(peak, n); peak = procPeak.Load() {
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), wall)
 	defer cancel()
 	cmd, usage, err := measured(ctx, path, args)

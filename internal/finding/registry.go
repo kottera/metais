@@ -54,6 +54,7 @@ const (
 	CodeUsagePackageFromStdin  Code = "usage.package_from_stdin"
 	CodeUsageNameInvalid       Code = "usage.name_invalid"
 	CodeUsageNameRequired      Code = "usage.name_required"
+	CodeUsageNotPackedPackage  Code = "usage.not_a_packed_package"
 	CodeUsageRepeatedFlag      Code = "usage.repeated_flag"
 	CodeUsageUnexpectedOperand Code = "usage.unexpected_operand"
 	CodeUsageUnknownCommand    Code = "usage.unknown_command"
@@ -1036,7 +1037,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Name a directory, or a path that does not exist yet beneath directories only. Nothing was written.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-AUT-028"},
 	},
 	{
 		Code:     CodeDestinationNotEmpty,
@@ -1051,7 +1052,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Choose an empty directory, or one that does not exist yet. Nothing was written.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-AUT-028"},
 	},
 	{
 		Code:     CodeDestinationWriteFailed,
@@ -1066,7 +1067,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Fix the cause, and run the command again into an empty directory; remove what was written first if you do not want it.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-AUT-026", "MTS-AUT-027"},
 	},
 	{
 		Code:       "package.compiled.mismatch",
@@ -2455,6 +2456,20 @@ var registry = withSchemaEntries([]Entry{
 		Subject:    SubjectInvocation,
 		Message:    "metais init needs --name when the directory is omitted or its last element is . or ..; the name is never taken from the working directory.",
 		Hint:       "Give the package's name with --name, such as `metais init --name acme-report`.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageNotPackedPackage,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the refused argument among the arguments after metais.", Always: true},
+		},
+		Message:    "Argument {argument} names a source directory; metais unpack reads a packed package.",
+		Hint:       "Give a packed package file. A source directory is already the editable tree unpack writes; nothing was written.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},

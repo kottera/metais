@@ -1,0 +1,42 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/unpack-write-failed",
+  "title": "An unpack whose write fails, into an empty directory it may not write or beneath one, reports output.destination.write_failed and leaves nothing",
+  "statements": [
+    "MTS-AUT-026",
+    "MTS-AUT-027"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "byte-level"
+  ],
+  "requires": [
+    "unwritable-dirs"
+  ],
+  "notes": "Its package.metais is written by internal/vectorgen (go test ./internal/vectorgen -run TestPackages -args -update), whose test reproduces the committed bytes. It is packed from the source directory aut/unpack/expected/src.",
+  "cases": [
+    {
+      "name": "in-place",
+      "setup": { "unwritable": ["src"] },
+      "steps": [
+        {
+          "op": "unpack",
+          "args": { "package": "package.metais", "to": "src" },
+          "expect": { "ok": false, "findings": "expected/findings.json" }
+        }
+      ]
+    },
+    {
+      "name": "staged",
+      "setup": { "unwritable": ["locked"] },
+      "steps": [
+        {
+          "op": "unpack",
+          "args": { "package": "package.metais", "to": "locked/src" },
+          "expect": { "ok": false, "findings": "expected/findings.json" }
+        }
+      ]
+    }
+  ]
+}

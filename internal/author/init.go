@@ -73,10 +73,11 @@ func SuggestName(name string) (string, bool) {
 }
 
 // MaxListed is how many of the entries found in a directory that is not
-// empty init reports (ADR-007 D1 item 3).
+// empty init and unpack report (ADR-007 D1 item 3, D8 item 3).
 const MaxListed = 10
 
-// NotEmptyError is init's refusal of a directory that is not empty.
+// NotEmptyError is init's and unpack's refusal of a directory that is not
+// empty.
 type NotEmptyError struct {
 	// Entries are the first MaxListed names found, in byte order, that
 	// make the directory not empty.
@@ -87,9 +88,10 @@ type NotEmptyError struct {
 
 func (e *NotEmptyError) Error() string { return "author: the directory is not empty" }
 
-// WriteError is a failure that stopped init (ADR-007 D1 item 6). Op and
-// Reason are hostfs's; Written are the files written before it, in the
-// order written, none of which was removed.
+// WriteError is a failure that stopped init or unpack (ADR-007 D1 item 6,
+// D8 item 3). Op and Reason are hostfs's; Written are the files written
+// before it and left in place, in the order written, none of which was
+// removed.
 type WriteError struct {
 	Op      string
 	Reason  hostfs.Reason
@@ -97,7 +99,7 @@ type WriteError struct {
 }
 
 func (e *WriteError) Error() string {
-	return "author: init stopped at " + e.Op + ": " + string(e.Reason)
+	return "author: the write stopped at " + e.Op + ": " + string(e.Reason)
 }
 
 // Init writes the scaffold for a package called name into dir, the
@@ -161,8 +163,9 @@ func Init(dir, name string, dryRun bool) ([]string, error) {
 	return written, nil
 }
 
-// beforeCreate, when set, runs before each file is created. Only this
-// package's tests set it, to make a write fail part way through.
+// beforeCreate, when set, runs before each file init or unpack creates.
+// Only this package's tests set it, to make a write fail part way
+// through.
 var beforeCreate func(path string)
 
 // checkEmpty refuses the directory w when it holds anything but quiet

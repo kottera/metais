@@ -1,0 +1,15 @@
+# Written by its author: unpack writes this file back byte for byte.
+metais: "1.0"
+name: org.example.unpacked
+version: 1.0.0
+title: Unpacked
+description: A package unpacked into the source directory it was packed from.
+guide: |-
+  Supply the report's title.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid

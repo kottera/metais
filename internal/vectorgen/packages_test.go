@@ -187,7 +187,12 @@ func with(files map[string][]byte, name, content string) map[string][]byte {
 
 // sourceFiles reads the source directory of the vector id's package/.
 func sourceFiles(t testing.TB, id string) map[string][]byte {
-	root := filepath.Join(vectorsDir, filepath.FromSlash(id), "package")
+	return treeFiles(t, id, "package")
+}
+
+// treeFiles reads the tree dir of the vector id as a source directory.
+func treeFiles(t testing.TB, id, dir string) map[string][]byte {
+	root := filepath.Join(vectorsDir, filepath.FromSlash(id), filepath.FromSlash(dir))
 	out := map[string][]byte{}
 	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
@@ -236,6 +241,13 @@ func packageCases() []pkgCase {
 		{"aut/check-packed", func(t testing.TB) []byte { return pack(t, sourceFiles(t, "aut/check-source")) }},
 		{"aut/check-xref-packed", func(t testing.TB) []byte { return pack(t, sourceFiles(t, "aut/check-xref-templates")) }},
 		{"aut/check-refused", func(t testing.TB) []byte { return bytes.Repeat([]byte("not a zip archive\n"), 4) }},
+
+		// unpack's packages (W4-5), each packed from the source directory
+		// aut/unpack expects an unpack of it to write, so the expected
+		// tree is the round trip's other half.
+		{"aut/unpack", func(t testing.TB) []byte { return pack(t, treeFiles(t, "aut/unpack", "expected/src")) }},
+		{"aut/unpack-refused", func(t testing.TB) []byte { return pack(t, treeFiles(t, "aut/unpack", "expected/src")) }},
+		{"aut/unpack-write-failed", func(t testing.TB) []byte { return pack(t, treeFiles(t, "aut/unpack", "expected/src")) }},
 
 		// The container (ADR-001 D1, D8 steps 1 to 5).
 		{"pkg/not-zip", func(t testing.TB) []byte { return bytes.Repeat([]byte("not a zip archive\n"), 4) }},

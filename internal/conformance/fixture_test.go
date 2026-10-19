@@ -28,6 +28,7 @@ var fixtureRegistry = map[string]any{"codes": []any{
 	map[string]any{"code": "package.fake_digest", "severity": "error", "class": "refused"},
 	map[string]any{"code": "input.fake_invalid", "severity": "error", "class": "content"},
 	map[string]any{"code": "input.fake_unused", "severity": "warning", "class": "content"},
+	map[string]any{"code": "output.fake_write_failed", "severity": "error", "class": "destination"},
 }}
 
 // The fixture vectors' ids.
@@ -39,6 +40,7 @@ const (
 	fixRenderDry    = "fix/render-dry"
 	fixBounded      = "fix/bounded"
 	fixRepeatable   = "fix/repeatable"
+	fixUnwritable   = "fix/unwritable"
 )
 
 // fixtureTree is the tree fix/render-tree's package renders.
@@ -229,6 +231,23 @@ func writeFixture(t testing.TB, root string) string {
 		map[string]any{"ok": true, "trees": []any{map[string]any{"path": "out", "files": []string{"a.txt", "sub/b.txt"}}}})
 	repeat["repeatable"] = true
 	vector(fixRepeatable, nil, tcase("render", repeat))
+
+	// fix/unwritable: a render into a directory beneath one the setup
+	// makes unwritable (ADR-011 D9 item 6, A2). The fake writes as the
+	// package says and reports the refusal its script names when the
+	// write fails, as a correct implementation does.
+	writeFailed := []any{
+		map[string]any{"code": "output.fake_write_failed", "severity": "error", "message": "m", "hint": "h",
+			"subject": map[string]any{"kind": "invocation"}, "params": map[string]any{"reason": "permission_denied"}},
+	}
+	putJSON(vec(fixUnwritable)+"package/fake.json", map[string]any{"ok": true, "exit": 0, "findings": []any{}, "tree": "tree",
+		"write_failed": writeFailed, "write_failed_exit": 5})
+	putTree(vec(fixUnwritable)+"package/tree/", streamTree)
+	putJSON(vec(fixUnwritable)+"expected/findings.json", projections(writeFailed))
+	unwritable := tcase("locked", step("render", map[string]any{"package": "package", "out": "locked/out"},
+		map[string]any{"ok": false, "findings": "expected/findings.json"}))
+	unwritable["setup"] = map[string]any{"unwritable": []string{"locked"}}
+	vector(fixUnwritable, map[string]any{"requires": []string{"unwritable-dirs"}}, unwritable)
 
 	return filepath.Join(root, "conformance")
 }

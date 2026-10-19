@@ -48,6 +48,10 @@ type setup struct {
 	Dirs     []string  `json:"dirs"`
 	Symlinks []symlink `json:"symlinks"`
 	Fifos    []string  `json:"fifos"`
+	// Unwritable are directories made unwritable to the implementation
+	// once everything else is in place: the pre-state of a write that
+	// fails (ADR-011 D9 item 6, A2).
+	Unwritable []string `json:"unwritable"`
 }
 
 type symlink struct {

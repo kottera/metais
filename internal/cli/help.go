@@ -204,6 +204,7 @@ type flagJSON struct {
 	Values      []string `json:"values"`
 	Default     *string  `json:"default"`
 	Repeatable  bool     `json:"repeatable"`
+	Required    bool     `json:"required"`
 	Description string   `json:"description"`
 }
 
@@ -287,7 +288,7 @@ func flagsJSON(fs []args.Flag) []flagJSON {
 		}
 		out = append(out, flagJSON{
 			Name: "--" + f.Name, Short: opt(short), Value: opt(f.Value), Values: slices.Clone(f.Values),
-			Default: opt(f.Default), Repeatable: f.Repeatable, Description: f.Description,
+			Default: opt(f.Default), Repeatable: f.Repeatable, Required: f.Required, Description: f.Description,
 		})
 	}
 	return out
@@ -465,6 +466,9 @@ func (h *helpText) flags(fs []args.Flag) {
 		}
 		if f.Repeatable {
 			text += " May be given more than once."
+		}
+		if f.Required {
+			text += " Required."
 		}
 		h.para(text, "      ")
 	}

@@ -1315,3 +1315,14 @@ document.
   of `validate` writes its supply flags as `[<supply flags>]`, as D7 does,
   since a usage line is held to 80 columns; `--fail-on`, a global flag, is
   in each command's flag list rather than its synopsis.
+- **PLAN-2026-10-metais-v1 W4-5 — `unpack`.** D9's `unpack` landed
+  without `--dry-run`, which is Wave 5's with the other dry runs. A flag
+  is declared required in `internal/cli/args` (`Flag.Required`), and its
+  absence is `usage.missing_operand` naming it as the usage line writes
+  it, `--to <dir>`, which D13's row reads as "a missing operand or
+  required flag"; `help --json` gains each flag's `required`. D9 item 1's
+  refusal of a directory is `usage.not_a_packed_package`, beside
+  `usage.not_a_source_directory`, registered here. It is made after the
+  package opens, so a source directory every opening command refuses is
+  refused by unpack with the same findings (ADR-011 D16 item 3), and one
+  that opens is refused as a source directory, with nothing written.

@@ -163,9 +163,9 @@ it, and the statements it reports.
 | `output.contains` | error | content | output | — | 1.0 | — |
 | `output.declaration.validate_kind` | error | content | output | `kind` | 1.0 | [MTS-AUT-023](13-authoring.md#mts-aut-023) |
 | `output.dependent_required` | error | content | output | `property`, `because` | 1.0 | — |
-| `output.destination.not_directory` | error | destination | invocation | — | 1.0 | — |
-| `output.destination.not_empty` | error | destination | invocation | `entries`, `more` | 1.0 | — |
-| `output.destination.write_failed` | error | destination | invocation | `reason`, `written` | 1.0 | — |
+| `output.destination.not_directory` | error | destination | invocation | — | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028) |
+| `output.destination.not_empty` | error | destination | invocation | `entries`, `more` | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028) |
+| `output.destination.write_failed` | error | destination | invocation | `reason`, `written` | 1.0 | [MTS-AUT-026](13-authoring.md#mts-aut-026), [MTS-AUT-027](13-authoring.md#mts-aut-027) |
 | `output.enum` | error | content | output | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | — |
 | `output.exclusive_maximum` | error | content | output | `limit`; optional: `value` | 1.0 | — |
 | `output.exclusive_minimum` | error | content | output | `limit`; optional: `value` | 1.0 | — |
@@ -291,6 +291,7 @@ it, and the statements it reports.
 | `usage.missing_operand` | error | usage | invocation | `command`, `operand` | 1.0 | — |
 | `usage.name_invalid` | error | usage | invocation | `argument`, `source`; optional: `suggestion` | 1.0 | — |
 | `usage.name_required` | error | usage | invocation | — | 1.0 | — |
+| `usage.not_a_packed_package` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.package_from_stdin` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.repeated_flag` | error | usage | invocation | `argument`, `flag` | 1.0 | — |
 | `usage.unexpected_operand` | error | usage | invocation | `argument`, `command` | 1.0 | — |

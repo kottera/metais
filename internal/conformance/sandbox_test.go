@@ -43,6 +43,8 @@ type sandbox struct {
 	home string
 	tmp  string
 	work string
+
+	locked []string // the unwritable directories, until unlock
 }
 
 // newSandbox makes a sandbox below base for e. Environment A's sandbox and
@@ -106,6 +108,22 @@ func newSandbox(base string, e env) (*sandbox, error) {
 		}
 	}
 	return sb, nil
+}
+
+// raceExit is the race runtime's option that a race-built program's
+// processes are run with: no sleep before exiting. The runtime otherwise
+// sleeps a second in every process's exit, after its work is done
+// (atexit_sleep_ms, whose default is 1000), which is a fifth of the
+// self-proof's wall clock spent by no implementation, and a second added
+// to every step of a race-built run.
+const raceExit = "atexit_sleep_ms=0"
+
+// quietRaceExit sets GORACE to raceExit in both environments alike, for a
+// program the adapter reports race-built (ADR-011 D13 item 3). It is the
+// same in A and B, so it is never an A/B difference, and a program that is
+// not race-built never receives it.
+func (sb *sandbox) quietRaceExit() {
+	sb.vars["GORACE"] = raceExit
 }
 
 // environ is the sandbox's environment as a process receives it, sorted.
@@ -173,8 +191,8 @@ func (sb *sandbox) plantDecoys(v *vector, c *vcase) error {
 // applySetup prepares the work directory for case c of v (ADR-011 D9 item
 // 4): the setup tree's contents, the empty directories, the links and the
 // named pipes, then the package and every tree or file the steps'
-// arguments name, each at the same relative path. expected/ is never
-// copied.
+// arguments name, each at the same relative path, and last the
+// unwritable directories (lockUnwritable). expected/ is never copied.
 func (sb *sandbox) applySetup(v *vector, c *vcase) error {
 	if s := c.Setup; s != nil {
 		if s.Copy != nil && *s.Copy != "" {
@@ -228,7 +246,47 @@ func (sb *sandbox) applySetup(v *vector, c *vcase) error {
 			return fmt.Errorf("copy %s: %w", rel, err)
 		}
 	}
+	if c.Setup != nil {
+		return sb.lockUnwritable(c.Setup.Unwritable)
+	}
 	return nil
+}
+
+// unwritableMode is the mode an unwritable directory is given: read and
+// search for everyone, write for no one, so the implementation can list
+// it and cannot create, rename or remove anything in it.
+const unwritableMode = 0o555
+
+// lockUnwritable makes each directory of dirs, created if the setup has
+// not made it, unwritable (ADR-011 D9 item 6, A2), after everything else
+// is in place, and records it so unlock can give it its mode back. A case
+// whose setup names one requires unwritable-dirs, which runCase holds it
+// to before the sandbox is made.
+func (sb *sandbox) lockUnwritable(dirs []string) error {
+	for _, d := range dirs {
+		p := filepath.Join(sb.work, filepath.FromSlash(d))
+		if err := os.MkdirAll(p, 0o755); err != nil {
+			return fmt.Errorf("setup unwritable: %w", err)
+		}
+		if err := os.Chmod(p, unwritableMode); err != nil {
+			return fmt.Errorf("setup unwritable: %w", err)
+		}
+		sb.locked = append(sb.locked, p)
+	}
+	return nil
+}
+
+// unlock gives every directory lockUnwritable locked its mode back, so the
+// sandbox can be kept or removed.
+func (sb *sandbox) unlock() error {
+	var first error
+	for _, p := range slices.Backward(sb.locked) {
+		if err := os.Chmod(p, 0o755); err != nil && first == nil {
+			first = err
+		}
+	}
+	sb.locked = nil
+	return first
 }
 
 // inputPaths are the vector paths c's steps read: the package or source,
@@ -405,9 +463,9 @@ func changesOutside(before, after map[string]node, trees, excluded []string) []s
 	return changed
 }
 
-// probe reports whether the file system at dir offers what a vector
+// probeRequirement reports whether the file system at dir offers what a vector
 // requires (ADR-011 D9 item 6), and why not when it does not.
-func probe(dir, req string) (bool, string) {
+func probeRequirement(dir, req string) (bool, string) {
 	d, err := os.MkdirTemp(dir, "probe-")
 	if err != nil {
 		return false, err.Error()
@@ -424,6 +482,8 @@ func probe(dir, req string) (bool, string) {
 			return false, "cannot create a named pipe: " + err.Error()
 		}
 		return true, ""
+	case "unwritable-dirs":
+		return probeUnwritable(d)
 	case "case-sensitive-fs":
 		if err := os.WriteFile(filepath.Join(d, "a"), nil, 0o644); err != nil {
 			return false, err.Error()
@@ -436,4 +496,46 @@ func probe(dir, req string) (bool, string) {
 		return true, ""
 	}
 	return false, "unknown requirement " + req
+}
+
+// probeUnwritable reports whether a directory below dir of the mode
+// lockUnwritable gives refuses this process a new file, a new directory
+// and a rename into it: whether the implementation, which runs as this
+// process's user, meets the pre-state a vector asks for. It does not when
+// the process runs as root, whom a mode does not bind, nor on a file
+// system or platform where a directory's mode does not govern writing
+// into it.
+func probeUnwritable(dir string) (bool, string) {
+	locked := filepath.Join(dir, "locked")
+	if err := os.Mkdir(locked, 0o755); err != nil {
+		return false, err.Error()
+	}
+	outside := filepath.Join(dir, "outside")
+	if err := os.WriteFile(outside, nil, 0o644); err != nil {
+		return false, err.Error()
+	}
+	if err := os.Chmod(locked, unwritableMode); err != nil {
+		return false, "cannot change a directory's mode: " + err.Error()
+	}
+	defer os.Chmod(locked, 0o755)
+	fi, err := os.Stat(locked)
+	if err != nil {
+		return false, err.Error()
+	}
+	if fi.Mode().Perm() != unwritableMode {
+		return false, fmt.Sprintf("a directory given mode %v has mode %v", fs.FileMode(unwritableMode), fi.Mode().Perm())
+	}
+	for _, try := range []struct {
+		what string
+		do   func() error
+	}{
+		{"create a file", func() error { return os.WriteFile(filepath.Join(locked, "file"), nil, 0o644) }},
+		{"create a directory", func() error { return os.Mkdir(filepath.Join(locked, "dir"), 0o755) }},
+		{"rename a file", func() error { return os.Rename(outside, filepath.Join(locked, "moved")) }},
+	} {
+		if err := try.do(); err == nil {
+			return false, "this process can " + try.what + " in a directory of mode 0555, as root can"
+		}
+	}
+	return true, ""
 }

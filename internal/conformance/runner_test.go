@@ -80,6 +80,11 @@ type runner struct {
 	keep     string        // where failing sandboxes are kept, or ""
 	base     string        // a directory for the identity's sandbox
 
+	// probe answers whether a requirement is met, and why not; nil is
+	// probeRequirement. Only the self-proof sets it, to stand for a host
+	// that lacks what a vector requires.
+	probe func(dir, req string) (bool, string)
+
 	idOnce sync.Once
 	id     toolID
 	idErr  error
@@ -148,6 +153,15 @@ type caseResult struct {
 // between the two whatever the load.
 func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
 	res := &caseResult{runs: map[env]*envRun{}}
+	if c.Setup != nil && len(c.Setup.Unwritable) > 0 && !slices.Contains(v.Requires, "unwritable-dirs") {
+		res.problems = append(res.problems, problem{check: checkHarness, harness: true,
+			msg: "the setup makes a directory unwritable, and the vector does not require unwritable-dirs"})
+		return res
+	}
+	probe := r.probe
+	if probe == nil {
+		probe = probeRequirement
+	}
 	for _, req := range v.Requires {
 		if ok, why := probe(base, req); !ok {
 			res.skipped = fmt.Sprintf("requires %s: %s", req, why)
@@ -196,7 +210,15 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 		fail(0, checkHarness, err.Error())
 		return run
 	}
+	if r.adapter.race() {
+		sb.quietRaceExit()
+	}
 	run.sb = sb
+	defer func() {
+		if err := sb.unlock(); err != nil {
+			fail(0, checkHarness, "giving an unwritable directory its mode back: "+err.Error())
+		}
+	}()
 	if err := sb.applySetup(v, c); err != nil {
 		fail(0, checkHarness, err.Error())
 		return run
