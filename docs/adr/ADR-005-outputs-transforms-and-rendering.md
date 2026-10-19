@@ -1591,3 +1591,36 @@ they write into an existing directory too.
   findings are its evaluation's. Mirrors with `escape: html` or
   `newline: crlf` still stop with `internal.error` until W5-2 and W5-7
   implement those fields.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-7.** D10 and D11 run in render's
+  phase 4, after every output renders: each rendered file that declares
+  `newline: crlf` is converted, then each that names `validate` is parsed
+  by its kind and validated, and every finding of every file is reported
+  before anything is written. Four readings where this ADR is silent:
+  - **Which files an output schema loads.** D11 item 3 reads ADR-003 D5
+    item 5 with `inputs/` as the `validate` file's top-level directory.
+    ADR-003 D3 item 1's "every file is loaded" is not carried over, since
+    `references/` and `assets/` hold files that are not schemas: the files
+    compiled are the `validate` files and every JSON or YAML file beneath
+    the directory that their references reach by path, transitively.
+    Beneath `inputs/` every schema file there is loaded as well, as D3
+    item 1 has it. A reference by an `$id` declared only in a file nothing
+    reaches is `schema.ref_unresolved`. A reference into `.compiled/`
+    escapes. The validate files of one top-level directory are compiled
+    together, by `schema.NewOutputCompiler`, which goes through
+    `schema.NewCompiler` so that it stays the one call site of the
+    library's compiler (ADR-010 D5 item 1); their patterns are charged to
+    the command's one `regex-work` meter.
+  - **An output's text its reader refuses** is `output.parse`, the code
+    the interfaces above name, with `form` (`json` or `yaml`) and `rule`,
+    the code an input file breaking the same rule gets (`json.syntax`,
+    `yaml.alias`, …), located in the output. A limit the text breaches is
+    `limit.exceeded.output`, and the text's length is bounded by
+    `output-size` rather than `input-size`.
+  - **A kind only the render knows.** ADR-007's `check` judges D11 item 2
+    where the kind is static (`output.declaration.validate_kind`); render
+    reports the same code for any output with `validate` whose kind is
+    neither `json` nor `yaml`, located at its `validate`.
+  - **An output schema that does not compile** refuses the render with
+    the `schema.*` findings ADR-003 gives it, compiled before any output
+    renders; `check` compiles the same schemas (D11 item 5) and reports
+    the same findings.
