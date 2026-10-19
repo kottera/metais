@@ -278,10 +278,10 @@ func TestRegistryEntries(t *testing.T) {
 // TestEmittedCodes pins the registry to the codes this module emits: the
 // report's own, internal/limits', internal/cli's, internal/zipfmt's
 // container and entry-name refusals, internal/inputs/csv's refusals of a
-// CSV input, internal/schemafail's mapping of JSON Schema failures in each
-// of its three families (ADR-006 D6 item 1), and internal/schema's refusals
-// of a schema file. A code a later change emits is registered by that
-// change.
+// CSV input, internal/manifest's version gate and manifest rules,
+// internal/schemafail's mapping of JSON Schema failures in each of its
+// three families (ADR-006 D6 item 1), and internal/schema's refusals of a
+// schema file. A code a later change emits is registered by that change.
 func TestEmittedCodes(t *testing.T) {
 	var got []Code
 	for _, e := range registry {
@@ -312,6 +312,11 @@ func TestEmittedCodes(t *testing.T) {
 	} {
 		want = append(want, Code("package.name."+c))
 	}
+	for _, c := range []string{"malformed", "missing", "not_string", "unsupported_major", "unsupported_minor"} {
+		want = append(want, Code("package.version."+c))
+	}
+	want = append(want, "manifest.input.duplicate_name", "manifest.license.expression",
+		"manifest.output.duplicate_id", "manifest.output.nested_for_each")
 	for _, family := range []string{"input", "manifest", "output"} {
 		for _, c := range []string{
 			"additional_item", "additional_property", "any_of", "const", "contains", "dependent_required", "enum",

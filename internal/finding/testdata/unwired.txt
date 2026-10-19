@@ -70,6 +70,8 @@ manifest.exclusive_maximum W3
 manifest.exclusive_minimum W3
 manifest.forbidden W3
 manifest.format W3
+manifest.input.duplicate_name W3
+manifest.license.expression W3
 manifest.max_contains W3
 manifest.max_items W3
 manifest.max_length W3
@@ -85,6 +87,8 @@ manifest.not W3
 manifest.number_out_of_range W3
 manifest.one_of W3
 manifest.one_of.ambiguous W3
+manifest.output.duplicate_id W3
+manifest.output.nested_for_each W3
 manifest.pattern W3
 manifest.property_name W3
 manifest.required W3
@@ -166,6 +170,11 @@ package.name.file_directory_conflict W3
 package.name.not_nfc W3
 package.name.not_portable W3
 package.name.shape W3
+package.version.malformed W3
+package.version.missing W3
+package.version.not_string W3
+package.version.unsupported_major W3
+package.version.unsupported_minor W3
 report.truncated W4
 schema.dialect W3
 schema.format_unsupported W3
