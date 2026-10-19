@@ -1586,7 +1586,9 @@ outside the standard library.
   takes `propertyNames`' instance from the evaluation path, because the
   library's `InstanceLocation` for that kind shares a slice later
   validations overwrite. The compiler is the `schemafail.Schemas` of its
-  package. The JSON-Schema-Test-Suite is vendored at
+  package, and `Combined` compiles W2-12's bundled schema under the same
+  configuration, checking `combined-schema-size` and placing a failure in
+  an embedded resource in the file it came from. The JSON-Schema-Test-Suite is vendored at
   `55719286c33ae0d1823bfb65fea10338a19bc37c` and its runner also runs the
   optional format tests of every asserted format; its exclusions name the
   outcome METAIS gives instead, which the runner holds it to. Two
