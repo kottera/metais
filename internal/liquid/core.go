@@ -154,6 +154,10 @@ func arity(min, max int) string {
 		return "one argument"
 	case min == max:
 		return fmt.Sprintf("%d arguments", max)
+	case min == 0 && max == 1:
+		return "at most one argument"
+	case min == 0:
+		return fmt.Sprintf("at most %d arguments", max)
 	}
 	return fmt.Sprintf("%d to %d arguments", min, max)
 }
