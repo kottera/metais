@@ -272,6 +272,10 @@ func fakeRun(fault string, call fakeCall) (*fakeResult, error) {
 		os.WriteFile("stray.txt", []byte("stray\n"), 0o644)
 	case "tmp-left":
 		os.WriteFile(filepath.Join(os.Getenv("TMPDIR"), "left.txt"), []byte("left\n"), 0o644)
+	case "tmp-refusal":
+		if !res.ok {
+			os.WriteFile(filepath.Join(os.TempDir(), "refused.txt"), []byte("refused\n"), 0o644)
+		}
 	}
 	if !sc.OK || call.op != "render" {
 		return res, nil

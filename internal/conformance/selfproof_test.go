@@ -80,6 +80,7 @@ var faults = []fault{
 	{"zip-header", fixRenderTree, checkContainer, both},
 	{"write-outside", fixRenderTree, checkSnapshot, both},
 	{"tmp-left", fixRenderTree, checkSnapshot, both},
+	{"tmp-refusal", fixRefuse, checkSnapshot, both},
 	{"sentinel-stdout", fixRenderTree, checkSentinel, both},
 	{"sentinel-stderr", fixRenderTree, checkSentinel, both},
 	{"sentinel-file", fixRenderTree, checkSentinel, both},

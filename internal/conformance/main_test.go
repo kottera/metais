@@ -37,20 +37,25 @@ var builtTool string
 const moduleRoot = "../.."
 
 // The names the test binary answers to when it is re-executed: as the
-// reference driver, and as a fake implementation in a directory named for
-// its fault (ADR-011 D11 item 7, D18 item 1).
+// reference driver, as a fake implementation in a directory named for its
+// fault (ADR-011 D11 item 7, D18 item 1), and as the stub that starts a
+// measured process on linux (measured).
 const (
 	refDriverName = "metais-refdriver"
+	procStubName  = "metais-procstub"
 	fakeDirPrefix = "metais-fake-"
 	toolName      = "metais"
 )
 
-// TestMain re-executes as the reference driver or a fake when the test
-// binary is run under one of their names. Otherwise it builds ./cmd/metais
-// once, with -trimpath and with -race when this binary is race-built
-// (ADR-011 D11 item 2), and runs the tests.
+// TestMain re-executes as the reference driver, a fake or the stub when
+// the test binary is run under one of their names. Otherwise it builds
+// ./cmd/metais once, with -trimpath and with -race when this binary is
+// race-built (ADR-011 D11 item 2), and runs the tests.
 func TestMain(m *testing.M) {
 	base := filepath.Base(os.Args[0])
+	if base == procStubName {
+		os.Exit(procStubMain(os.Args[1:]))
+	}
 	if base == refDriverName {
 		os.Exit(refDriverMain(filepath.Join(filepath.Dir(os.Args[0]), toolName)))
 	}

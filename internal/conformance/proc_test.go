@@ -91,7 +91,10 @@ type proc struct {
 func runProc(path string, args []string, dir string, env []string, stdin []byte, wall time.Duration) (*proc, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), wall)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, path, args...)
+	cmd, usage, err := measured(ctx, path, args)
+	if err != nil {
+		return nil, err
+	}
 	cmd.Dir = dir
 	cmd.Env = env
 	if env == nil {
@@ -101,28 +104,41 @@ func runProc(path string, args []string, dir string, env []string, stdin []byte,
 	stdout, stderr := &capped{}, &capped{}
 	cmd.Stdout, cmd.Stderr = stdout, stderr
 	cmd.WaitDelay = time.Second
-	err := cmd.Run()
+	err = cmd.Run()
 	p := &proc{stdout: stdout.Bytes(), stderr: stderr.Bytes(), rss: -1}
 	if cmd.ProcessState == nil {
+		usage(nil)
 		return nil, fmt.Errorf("start %s: %w", path, err)
+	}
+	if ctx.Err() != nil {
+		p.killed = true
+	}
+	u, uerr := usage(cmd.ProcessState)
+	if uerr != nil && !p.killed {
+		return nil, fmt.Errorf("run %s: %w", path, uerr)
 	}
 	if stdout.over || stderr.over {
 		return nil, fmt.Errorf("%s wrote more than the runner's %d bytes to a standard stream", path, maxInflate)
 	}
-	ps := cmd.ProcessState
-	p.exit = ps.ExitCode()
-	p.cpu = ps.UserTime() + ps.SystemTime()
-	if raw, ok := rawMaxRSS(ps); ok {
-		p.rss = maxRSSBytes(runtime.GOOS, raw)
-	}
-	if ctx.Err() != nil {
-		p.killed = true
+	p.exit, p.cpu = u.exit, u.cpu
+	if u.rssOK {
+		p.rss = maxRSSBytes(runtime.GOOS, u.rss)
 	}
 	var ee *exec.ExitError
 	if err != nil && !errors.As(err, &ee) && !p.killed && !errors.Is(err, exec.ErrWaitDelay) {
 		return nil, fmt.Errorf("run %s: %w", path, err)
 	}
 	return p, nil
+}
+
+// usage is what a finished process used and how it ended: its exit code,
+// -1 when a signal ended it; its user plus system CPU time; and its
+// ru_maxrss in the platform's unit, when the platform reports it.
+type usage struct {
+	exit  int
+	cpu   time.Duration
+	rss   int64
+	rssOK bool
 }
 
 // capped holds what a process writes to one stream, up to maxInflate
