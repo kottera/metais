@@ -8,12 +8,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kottera/metais/internal/liquid"
 	"github.com/kottera/metais/internal/manifest"
 )
 
 // catalog is ADR-010 D4 item 2's list of the standard filters, Shopify's
 // 5.14.0 standardfilters.rb, as that ADR writes it. The standard catalog
-// is this list without date, which internal/template registers in Wave 5.
+// is this list without date, which internal/template registers in Wave 5,
+// and with escape's alias h, which ADR-004's Context lists.
 const catalog = `abs append at_least at_most
      base64_decode base64_encode base64_url_safe_decode
      base64_url_safe_encode capitalize ceil compact concat date default
@@ -28,7 +30,7 @@ const catalog = `abs append at_least at_most
 // item 10: a signature for every filter of the standard catalog, and the
 // property-name arguments of map, where, sort, sort_natural and sum.
 func TestFilterTableCoversTheCatalog(t *testing.T) {
-	var want []string
+	want := []string{"h"}
 	for _, f := range strings.Fields(catalog) {
 		if f != "date" {
 			want = append(want, f)
@@ -52,6 +54,16 @@ func TestFilterTableCoversTheCatalog(t *testing.T) {
 		if sig.kind == 0 || (sig.kind == sigScalar) != (sig.scalar != 0) {
 			t.Errorf("%s: malformed signature %+v", name, sig)
 		}
+	}
+}
+
+// TestFilterTableMeetsCore is the meeting with W3-4: the signature table
+// names exactly the filters of liquid.Core() (ADR-007 D3 item 10). The
+// filters Wave 5 adds through Extend — date and METAIS's own — are not in
+// Core, and the table gives each of them unknown until it names them.
+func TestFilterTableMeetsCore(t *testing.T) {
+	if got, want := Filters(), liquid.Core().FilterNames(); !slices.Equal(got, want) {
+		t.Errorf("the table names\n\t%q\nCore holds\n\t%q", got, want)
 	}
 }
 

@@ -21,7 +21,7 @@ import (
 // everyConstruct is a template with a variable path in every place the
 // dialect's grammar admits one, each rooted at a name nothing binds:
 // v1, v2 and so on.
-const everyConstruct = `{{ v1 | append: v2, x: v3 }}
+const everyConstruct = `{{ v1 | append: v2 | json: indent: v3 }}
 {% if v4 == v5 and v6 contains "x" or v7 %}{% elsif v8 %}{% else %}{% endif %}
 {% unless v9 %}{% elsif v10 %}{% endunless %}
 {% case v11 %}{% when v12, v13 %}{% else %}{% endcase %}

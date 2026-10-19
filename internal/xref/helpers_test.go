@@ -22,9 +22,9 @@ import (
 	"github.com/kottera/metais/internal/testenv"
 )
 
-// stubFilter and stubTag stand for the definitions internal/liquid's
-// catalog and internal/template supply: the analysis reads only their
-// names, through the tree the parser builds.
+// stubFilter and stubTag stand for the definitions internal/template
+// adds in Wave 5: the analysis reads only their names, through the tree
+// the parser builds.
 type stubFilter string
 
 func (f stubFilter) Name() string                  { return string(f) }
@@ -41,21 +41,19 @@ func (stubTag) Render(liquid.TagContext, *ast.Tag) *liquid.Error {
 	panic("the analysis renders no tag")
 }
 
-// dialect is a dialect with every filter of the signature table, METAIS's
-// json filter (which the table does not name), and METAIS's tags.
+// dialect is the standard catalog, liquid.Core(), extended as Wave 5's
+// internal/template extends it: METAIS's json filter, which the signature
+// table does not name, METAIS's tags, and the reserved names.
 func dialect(t testing.TB) *liquid.Dialect {
 	t.Helper()
-	var spec liquid.Spec
-	for _, name := range append(Filters(), "json") {
-		spec.Filters = append(spec.Filters, stubFilter(name))
-	}
+	spec := liquid.Spec{Filters: []liquid.FilterDef{stubFilter("json")}}
 	for _, name := range []string{"embed", "asset", "provenance"} {
 		spec.Tags = append(spec.Tags, stubTag(name))
 	}
 	spec.Reserved = []string{"inputs", "package", "item", "fan_out", "output", "now", "sources", "forloop", "tablerowloop"}
-	d, err := liquid.NewDialect(spec)
+	d, err := liquid.Core().Extend(spec)
 	if err != nil {
-		t.Fatalf("NewDialect: %v", err)
+		t.Fatalf("Extend: %v", err)
 	}
 	return d
 }

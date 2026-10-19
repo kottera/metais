@@ -45,8 +45,9 @@ type signature struct {
 }
 
 // signatures is the cross-reference's own filter-signature table (ADR-007
-// D3 item 10): every filter of the standard catalog, which is ADR-010 D4
-// item 2's list of Shopify's 5.14.0 filters without date. A filter the
+// D3 item 10): every filter of the standard catalog, liquid.Core()'s,
+// which is ADR-010 D4 item 2's list of Shopify's 5.14.0 filters without
+// date, and with escape's alias h, which ADR-004's Context lists. A filter the
 // table does not name — date and METAIS's own (ADR-004 D10, D11), which
 // internal/template adds to the dialect — gives unknown: its arguments
 // are still analysed.
@@ -92,6 +93,7 @@ var signatures = map[string]signature{
 	"downcase":               {kind: sigScalar, scalar: sString},
 	"escape":                 {kind: sigScalar, scalar: sString},
 	"escape_once":            {kind: sigScalar, scalar: sString},
+	"h":                      {kind: sigScalar, scalar: sString},
 	"join":                   {kind: sigScalar, scalar: sString},
 	"lstrip":                 {kind: sigScalar, scalar: sString},
 	"newline_to_br":          {kind: sigScalar, scalar: sString},
