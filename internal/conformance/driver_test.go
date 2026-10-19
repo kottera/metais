@@ -145,7 +145,18 @@ func TestDriverProtocol(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		runSuite(t, newRunner(t, suite, a))
+		r := newRunner(t, suite, a)
+		runSuite(t, r)
+		// The one operation the real binary answers this wave crosses the
+		// protocol intact.
+		got, err := r.identity()
+		if err != nil {
+			t.Fatalf("version through the reference driver: %v", err)
+		}
+		want, err := (&cliAdapter{path: builtTool}).identity(testenv.Dir(t))
+		if err != nil || got != want {
+			t.Errorf("version through the reference driver is %+v; through the command line, %+v (%v)", got, want, err)
+		}
 	})
 	t.Run("fixtures", func(t *testing.T) {
 		suite := writeFixture(t, testenv.Dir(t))

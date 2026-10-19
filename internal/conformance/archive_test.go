@@ -5,11 +5,12 @@ package conformance
 
 import (
 	"archive/tar"
-	"archive/zip"
 	"bytes"
+	"compress/flate"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"hash/crc32"
 	"io"
 	"slices"
 	"time"
@@ -18,6 +19,16 @@ import (
 // maxInflate bounds what the runner inflates from one zip entry or tar
 // member, so a tool that writes a bomb fails a step rather than the run.
 const maxInflate = 256 << 20
+
+// The compression methods ADR-001 D1 allows.
+const (
+	methodStore   = 0
+	methodDeflate = 8
+)
+
+// The runner reads and writes zips with its own code over compress/flate:
+// it links no part of the implementation, and archive/zip is zipfmt's
+// alone (layers.json).
 
 // zipEntry is one entry of a zip, as a container comparison sees it.
 type zipEntry struct {
@@ -31,166 +42,259 @@ func isZip(b []byte) bool {
 	return len(b) >= 4 && binary.LittleEndian.Uint32(b) == 0x04034b50
 }
 
+// zipHeader is one central directory header.
+type zipHeader struct {
+	name                                       string
+	creator, reader, flags, method, time, date uint16
+	crc, csize, usize                          uint32
+	extra, comment                             int
+	disk, internal                             uint16
+	external, offset                           uint32
+	at                                         int64 // where the header is
+}
+
+// zipArchive is a zip's central directory and end record.
+type zipArchive struct {
+	headers     []zipHeader
+	end         int64 // where the end record is
+	disk, cdDsk uint16
+	count       uint16
+	total       uint16
+	cdSize      int64
+	cdStart     int64
+	comment     int
+}
+
+// parseZip reads b's end record and central directory.
+func parseZip(b []byte) (*zipArchive, error) {
+	le := binary.LittleEndian
+	end := int64(-1)
+	for i := int64(len(b)) - 22; i >= 0 && i >= int64(len(b))-22-0xFFFF; i-- {
+		if le.Uint32(b[i:]) == 0x06054b50 {
+			end = i
+			break
+		}
+	}
+	if end < 0 {
+		return nil, errors.New("no end of central directory record")
+	}
+	e := b[end:]
+	z := &zipArchive{end: end, disk: le.Uint16(e[4:]), cdDsk: le.Uint16(e[6:]), count: le.Uint16(e[8:]), total: le.Uint16(e[10:]),
+		cdSize: int64(le.Uint32(e[12:])), cdStart: int64(le.Uint32(e[16:])), comment: int(le.Uint16(e[20:]))}
+	if z.cdStart+z.cdSize > end {
+		return nil, errors.New("the central directory runs past the end record")
+	}
+	for p := z.cdStart; p < z.cdStart+z.cdSize; {
+		if p+46 > z.cdStart+z.cdSize || le.Uint32(b[p:]) != 0x02014b50 {
+			return nil, fmt.Errorf("no central directory header at %d", p)
+		}
+		h := b[p : p+46]
+		nameLen, extra, comment := int64(le.Uint16(h[28:])), int(le.Uint16(h[30:])), int(le.Uint16(h[32:]))
+		if p+46+nameLen > z.cdStart+z.cdSize {
+			return nil, fmt.Errorf("the central directory header at %d runs past the directory", p)
+		}
+		z.headers = append(z.headers, zipHeader{
+			name: string(b[p+46 : p+46+nameLen]), creator: le.Uint16(h[4:]), reader: le.Uint16(h[6:]), flags: le.Uint16(h[8:]),
+			method: le.Uint16(h[10:]), time: le.Uint16(h[12:]), date: le.Uint16(h[14:]), crc: le.Uint32(h[16:]),
+			csize: le.Uint32(h[20:]), usize: le.Uint32(h[24:]), extra: extra, comment: comment,
+			disk: le.Uint16(h[34:]), internal: le.Uint16(h[36:]), external: le.Uint32(h[38:]), offset: le.Uint32(h[42:]), at: p,
+		})
+		p += 46 + nameLen + int64(extra) + int64(comment)
+	}
+	return z, nil
+}
+
+// data returns the file data of h, which follows its local header.
+func (h zipHeader) data(b []byte) ([]byte, int64, error) {
+	le := binary.LittleEndian
+	off := int64(h.offset)
+	if off+30 > int64(len(b)) || le.Uint32(b[off:]) != 0x04034b50 {
+		return nil, 0, fmt.Errorf("no local header at %d", off)
+	}
+	start := off + 30 + int64(le.Uint16(b[off+26:])) + int64(le.Uint16(b[off+28:]))
+	if start+int64(h.csize) > int64(len(b)) {
+		return nil, 0, errors.New("the file data runs past the archive")
+	}
+	return b[start : start+int64(h.csize)], start, nil
+}
+
+// inflate returns h's content, bounded by maxInflate and checked against
+// its size and CRC-32.
+func (h zipHeader) inflate(b []byte) ([]byte, error) {
+	if h.usize > maxInflate {
+		return nil, fmt.Errorf("it declares %d bytes, above the runner's %d", h.usize, maxInflate)
+	}
+	data, _, err := h.data(b)
+	if err != nil {
+		return nil, err
+	}
+	var content []byte
+	switch h.method {
+	case methodStore:
+		content = bytes.Clone(data)
+	case methodDeflate:
+		fr := flate.NewReader(bytes.NewReader(data))
+		content, err = io.ReadAll(io.LimitReader(fr, int64(h.usize)+1))
+		fr.Close()
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("compression method %d", h.method)
+	}
+	if len(content) != int(h.usize) || crc32.ChecksumIEEE(content) != h.crc {
+		return nil, errors.New("the content does not match its recorded size and CRC-32")
+	}
+	return content, nil
+}
+
 // readZip reads b's entries in central-directory order, inflated.
 func readZip(b []byte) ([]zipEntry, error) {
-	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
-	if err != nil && !errors.Is(err, zip.ErrInsecurePath) {
+	z, err := parseZip(b)
+	if err != nil {
 		return nil, err
 	}
 	var out []zipEntry
-	for _, f := range zr.File {
-		content, err := inflate(f)
+	for _, h := range z.headers {
+		content, err := h.inflate(b)
 		if err != nil {
-			return nil, fmt.Errorf("entry %q: %w", f.Name, err)
+			return nil, fmt.Errorf("entry %q: %w", h.name, err)
 		}
-		out = append(out, zipEntry{name: f.Name, method: f.Method, content: content})
+		out = append(out, zipEntry{name: h.name, method: h.method, content: content})
 	}
 	return out, nil
 }
 
-// inflate reads one entry's content, bounded by maxInflate.
-func inflate(f *zip.File) ([]byte, error) {
-	if f.UncompressedSize64 > maxInflate {
-		return nil, fmt.Errorf("it declares %d bytes, above the runner's %d", f.UncompressedSize64, maxInflate)
-	}
-	rc, err := f.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer rc.Close()
-	content, err := io.ReadAll(io.LimitReader(rc, maxInflate+1))
-	if err == nil && len(content) > maxInflate {
-		err = fmt.Errorf("it inflates past the runner's %d bytes", maxInflate)
-	}
-	return content, err
-}
-
-// zipFixedFields lists every header field of b that differs from the value
-// ADR-001 D1 fixes, local and central, with the structure around them: no
-// prefix, no data descriptor, local headers in order and agreeing with the
-// central directory, and no archive comment.
+// zipFixedFields lists every field of b that differs from the value
+// ADR-001 D1 fixes: no prefix and nothing between the parts; local
+// headers in order, agreeing with the central directory, with no extra
+// field; the central directory's fixed values; and an end record that is
+// the last 22 bytes, on disk 0, counting every entry, with no comment.
 func zipFixedFields(b []byte) []string {
-	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
-	if err != nil && !errors.Is(err, zip.ErrInsecurePath) {
+	z, err := parseZip(b)
+	if err != nil {
 		return []string{err.Error()}
 	}
+	le := binary.LittleEndian
 	var bad []string
 	add := func(name, format string, args ...any) {
 		bad = append(bad, fmt.Sprintf("entry %q: ", name)+fmt.Sprintf(format, args...))
 	}
-	if zr.Comment != "" {
-		bad = append(bad, "the archive has a comment")
-	}
 	off := int64(0)
-	for _, f := range zr.File {
+	for _, h := range z.headers {
 		wantVersion := uint16(10)
-		if f.Method == zip.Deflate {
+		if h.method == methodDeflate {
 			wantVersion = 20
 		}
-		if f.Method != zip.Store && f.Method != zip.Deflate {
-			add(f.Name, "compression method %d, not 0 or 8", f.Method)
+		if h.method != methodStore && h.method != methodDeflate {
+			add(h.name, "compression method %d, not 0 or 8", h.method)
 		}
-		if f.ReaderVersion != wantVersion {
-			add(f.Name, "version needed to extract %d, not %d", f.ReaderVersion, wantVersion)
+		if h.reader != wantVersion {
+			add(h.name, "version needed to extract %d, not %d", h.reader, wantVersion)
 		}
-		if f.Flags != 0x0800 {
-			add(f.Name, "general purpose flags %#04x, not 0x0800", f.Flags)
+		if h.flags != 0x0800 {
+			add(h.name, "general purpose flags %#04x, not 0x0800", h.flags)
 		}
-		if f.ModifiedTime != 0 || f.ModifiedDate != 0x0021 {
-			add(f.Name, "modification time %#04x and date %#04x, not 0x0000 and 0x0021", f.ModifiedTime, f.ModifiedDate)
+		if h.time != 0 || h.date != 0x0021 {
+			add(h.name, "modification time %#04x and date %#04x, not 0x0000 and 0x0021", h.time, h.date)
 		}
-		if len(f.Extra) != 0 {
-			add(f.Name, "an extra field of %d bytes in the central directory", len(f.Extra))
+		if h.extra != 0 || h.comment != 0 {
+			add(h.name, "an extra field or a comment in the central directory")
 		}
-		if f.CreatorVersion != 0x0314 {
-			add(f.Name, "version made by %#04x, not 0x0314", f.CreatorVersion)
+		if h.creator != 0x0314 {
+			add(h.name, "version made by %#04x, not 0x0314", h.creator)
 		}
-		if f.Comment != "" {
-			add(f.Name, "a file comment")
+		if h.disk != 0 || h.internal != 0 {
+			add(h.name, "disk number %d and internal attributes %#04x, not 0 and 0", h.disk, h.internal)
 		}
-		if f.ExternalAttrs != 0x81A40000 {
-			add(f.Name, "external attributes %#08x, not 0x81A40000", f.ExternalAttrs)
+		if h.external != 0x81A40000 {
+			add(h.name, "external attributes %#08x, not 0x81A40000", h.external)
 		}
-		if f.Method == zip.Store && f.CompressedSize64 != f.UncompressedSize64 {
-			add(f.Name, "stored with compressed size %d and uncompressed size %d", f.CompressedSize64, f.UncompressedSize64)
+		if h.method == methodStore && h.csize != h.usize {
+			add(h.name, "stored with compressed size %d and uncompressed size %d", h.csize, h.usize)
 		}
-		// The local header, which archive/zip reads past: it must start
-		// where the previous entry's data ended and repeat the central
-		// directory's values with no extra field.
-		if off+30 > int64(len(b)) {
-			add(f.Name, "no local header at offset %d", off)
+		if int64(h.offset) != off {
+			add(h.name, "its local header is at %d, not where the previous entry ends, %d", h.offset, off)
 			return bad
 		}
-		h := b[off : off+30]
-		le := binary.LittleEndian
-		nameLen, extraLen := int64(le.Uint16(h[26:])), int64(le.Uint16(h[28:]))
+		_, start, err := h.data(b)
+		if err != nil {
+			add(h.name, "%v", err)
+			return bad
+		}
+		l := b[off : off+30]
 		switch {
-		case le.Uint32(h) != 0x04034b50:
-			add(f.Name, "no local header at offset %d", off)
-			return bad
-		case le.Uint16(h[4:]) != f.ReaderVersion, le.Uint16(h[6:]) != f.Flags, le.Uint16(h[8:]) != f.Method,
-			le.Uint16(h[10:]) != f.ModifiedTime, le.Uint16(h[12:]) != f.ModifiedDate, le.Uint32(h[14:]) != f.CRC32,
-			int64(le.Uint32(h[18:])) != int64(f.CompressedSize64), int64(le.Uint32(h[22:])) != int64(f.UncompressedSize64):
-			add(f.Name, "the local header disagrees with the central directory")
-		case extraLen != 0:
-			add(f.Name, "an extra field of %d bytes in the local header", extraLen)
+		case le.Uint16(l[4:]) != h.reader, le.Uint16(l[6:]) != h.flags, le.Uint16(l[8:]) != h.method,
+			le.Uint16(l[10:]) != h.time, le.Uint16(l[12:]) != h.date, le.Uint32(l[14:]) != h.crc,
+			le.Uint32(l[18:]) != h.csize, le.Uint32(l[22:]) != h.usize,
+			string(b[off+30:off+30+int64(le.Uint16(l[26:]))]) != h.name:
+			add(h.name, "the local header disagrees with the central directory")
+		case le.Uint16(l[28:]) != 0:
+			add(h.name, "an extra field of %d bytes in the local header", le.Uint16(l[28:]))
 		}
-		if off+30+nameLen > int64(len(b)) || string(b[off+30:off+30+nameLen]) != f.Name {
-			add(f.Name, "the local header's name disagrees with the central directory")
-		}
-		data, err := f.DataOffset()
-		if err != nil || data != off+30+nameLen+extraLen {
-			add(f.Name, "the file data does not follow its local header")
-		}
-		off = off + 30 + nameLen + extraLen + int64(f.CompressedSize64)
+		off = start + int64(h.csize)
 	}
-	return append(bad, zipDirectory(b, off, len(zr.File))...)
-}
-
-// zipDirectory checks what archive/zip reads past in the central
-// directory and the end record (ADR-001 D1 items 2 and 4): the directory
-// starts where the last entry's data ends, each header's disk number,
-// internal attributes and local offset are fixed, and the end record is
-// the file's last 22 bytes, on disk 0, counting every entry, with no
-// comment.
-func zipDirectory(b []byte, start int64, entries int) []string {
-	le := binary.LittleEndian
-	if len(b) < 22 {
-		return []string{"no end record"}
-	}
-	end := b[len(b)-22:]
-	size, at := int64(le.Uint32(end[12:])), int64(le.Uint32(end[16:]))
-	var bad []string
 	switch {
-	case le.Uint32(end) != 0x06054b50:
-		return []string{"the last 22 bytes are not the end record"}
-	case le.Uint16(end[4:]) != 0 || le.Uint16(end[6:]) != 0:
-		bad = append(bad, "the end record names a disk other than 0")
-	case int(le.Uint16(end[8:])) != entries || int(le.Uint16(end[10:])) != entries:
-		bad = append(bad, "the end record's entry counts are not the number of entries")
-	case le.Uint16(end[20:]) != 0:
-		bad = append(bad, "the end record has a comment")
+	case z.cdStart != off:
+		bad = append(bad, fmt.Sprintf("the central directory starts at %d, not where the entries end, %d", z.cdStart, off))
+	case z.cdStart+z.cdSize != z.end:
+		bad = append(bad, "bytes lie between the central directory and the end record")
 	}
-	if at != start || at+size != int64(len(b))-22 {
-		return append(bad, fmt.Sprintf("the central directory is at %d for %d bytes, not from the end of the entries at %d to the end record", at, size, start))
+	if z.end != int64(len(b))-22 || z.comment != 0 {
+		bad = append(bad, "the end record is not the last 22 bytes: the archive has a comment or trailing bytes")
 	}
-	local := int64(0)
-	for p := at; p < at+size; {
-		if p+46 > at+size || le.Uint32(b[p:]) != 0x02014b50 {
-			return append(bad, fmt.Sprintf("no central directory header at %d", p))
-		}
-		h := b[p : p+46]
-		name := string(b[p+46 : min(at+size, p+46+int64(le.Uint16(h[28:])))])
-		if le.Uint16(h[34:]) != 0 || le.Uint16(h[36:]) != 0 {
-			bad = append(bad, fmt.Sprintf("entry %q: disk number %d and internal attributes %#04x, not 0 and 0", name, le.Uint16(h[34:]), le.Uint16(h[36:])))
-		}
-		if int64(le.Uint32(h[42:])) != local {
-			bad = append(bad, fmt.Sprintf("entry %q: local header offset %d, not %d", name, le.Uint32(h[42:]), local))
-		}
-		local += 30 + int64(le.Uint16(h[28:])) + int64(le.Uint32(h[20:]))
-		p += 46 + int64(le.Uint16(h[28:])) + int64(le.Uint16(h[30:])) + int64(le.Uint16(h[32:]))
+	if z.disk != 0 || z.cdDsk != 0 || int(z.count) != len(z.headers) || int(z.total) != len(z.headers) {
+		bad = append(bad, "the end record's disk numbers or entry counts are not 0 and the number of entries")
 	}
 	return bad
+}
+
+// writeZip writes entries as a zip with every field at ADR-001 D1's fixed
+// value; badHeader sets a non-fixed modification time on the first entry.
+func writeZip(entries []zipEntry, badHeader bool) []byte {
+	le := binary.LittleEndian
+	var out, dir []byte
+	for i, e := range entries {
+		data, version := e.content, uint16(10)
+		if e.method == methodDeflate {
+			var c bytes.Buffer
+			fw, _ := flate.NewWriter(&c, flate.BestCompression)
+			fw.Write(e.content)
+			fw.Close()
+			data, version = c.Bytes(), 20
+		}
+		mtime := uint16(0)
+		if badHeader && i == 0 {
+			mtime = 1
+		}
+		crc, off := crc32.ChecksumIEEE(e.content), len(out)
+		out = le.AppendUint32(out, 0x04034b50)
+		for _, v := range []uint16{version, 0x0800, e.method, mtime, 0x0021} {
+			out = le.AppendUint16(out, v)
+		}
+		out = le.AppendUint32(le.AppendUint32(le.AppendUint32(out, crc), uint32(len(data))), uint32(len(e.content)))
+		out = le.AppendUint16(le.AppendUint16(out, uint16(len(e.name))), 0)
+		out = append(append(out, e.name...), data...)
+
+		dir = le.AppendUint32(dir, 0x02014b50)
+		for _, v := range []uint16{0x0314, version, 0x0800, e.method, mtime, 0x0021} {
+			dir = le.AppendUint16(dir, v)
+		}
+		dir = le.AppendUint32(le.AppendUint32(le.AppendUint32(dir, crc), uint32(len(data))), uint32(len(e.content)))
+		for _, v := range []uint16{uint16(len(e.name)), 0, 0, 0, 0} {
+			dir = le.AppendUint16(dir, v)
+		}
+		dir = le.AppendUint32(le.AppendUint32(dir, 0x81A40000), uint32(off))
+		dir = append(dir, e.name...)
+	}
+	start := len(out)
+	out = append(out, dir...)
+	out = le.AppendUint32(out, 0x06054b50)
+	for _, v := range []uint16{0, 0, uint16(len(entries)), uint16(len(entries))} {
+		out = le.AppendUint16(out, v)
+	}
+	out = le.AppendUint32(le.AppendUint32(out, uint32(len(dir))), uint32(start))
+	return le.AppendUint16(out, 0)
 }
 
 // compareZips compares two zips by entries (ADR-011 D10 item 3): names,

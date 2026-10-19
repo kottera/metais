@@ -106,6 +106,7 @@ NOT open a network connection.
 `,
 
 	"conformance/vectors/out/relative-path/vector.json": `{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
   "id": "out/relative-path",
   "title": "a path is relative",
   "statements": ["MTS-OUT-001", "MTS-OUT-004"],

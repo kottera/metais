@@ -1440,9 +1440,12 @@ project has; when CI exists it runs the same commands.
   running the `metais` beside it with the `cli` adapter's command lines.
   Choices the decisions leave open:
   - D16 item 3's opening set is read from `metais help --json`: each
-    `result.commands[]` member whose `opens_package` is true. The command
-    line's declaration format is ADR-008's; the item that lands it confirms
-    or renames the member.
+    `result.commands[]` member whose `opens_package` is true, which is
+    what the declarations mark (`internal/cli`'s
+    `TestOpeningSetAsTheRunnerReadsIt`).
+  - The runner reads and writes zips with its own code over
+    `compress/flate`: it links no part of the implementation, and
+    `layers.json` gives `archive/zip` to `internal/zipfmt` alone.
   - D15 item 3's record also names each step's `invocation`, because a
     hostile open step runs several commands, and lists the cases skipped
     for an unmet `requires`. D15 item 4 compares a pair of records on the

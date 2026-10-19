@@ -4,7 +4,6 @@
 package conformance
 
 import (
-	"archive/zip"
 	"bytes"
 	"encoding/binary"
 	"os"
@@ -161,9 +160,9 @@ func TestMatches(t *testing.T) {
 func TestScanInflatesToDepthThree(t *testing.T) {
 	token := []byte(padding + sentinel + "ENV" + padding)
 	nest := func(levels int) []byte {
-		b := writeZip([]zipEntry{{name: "deep.txt", method: zip.Deflate, content: token}}, false)
+		b := writeZip([]zipEntry{{name: "deep.txt", method: methodDeflate, content: token}}, false)
 		for range levels - 1 {
-			b = writeZip([]zipEntry{{name: "inner.zip", method: zip.Deflate, content: b}}, false)
+			b = writeZip([]zipEntry{{name: "inner.zip", method: methodDeflate, content: b}}, false)
 		}
 		return b
 	}
@@ -268,8 +267,8 @@ func TestSelection(t *testing.T) {
 // comment are each caught.
 func TestZipFixedFields(t *testing.T) {
 	clean := writeZip([]zipEntry{
-		{name: "a.txt", method: zip.Deflate, content: []byte(padding)},
-		{name: "mimetype", method: zip.Store, content: []byte("x")},
+		{name: "a.txt", method: methodDeflate, content: []byte(padding)},
+		{name: "mimetype", method: methodStore, content: []byte("x")},
 	}, false)
 	if bad := zipFixedFields(clean); len(bad) > 0 {
 		t.Fatalf("a clean container: %q", bad)
@@ -285,7 +284,7 @@ func TestZipFixedFields(t *testing.T) {
 			out = append(out, b[cd:]...)
 			le.PutUint32(out[len(out)-6:], uint32(cd+1))
 			return out
-		}, "the central directory is at"},
+		}, "the central directory starts at"},
 		"internal attributes": {func(b []byte) []byte { b[cd+36] = 1; return b }, "internal attributes"},
 		"an archive comment": {func(b []byte) []byte {
 			b = append(b, 'c')

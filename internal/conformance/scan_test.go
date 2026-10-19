@@ -4,9 +4,7 @@
 package conformance
 
 import (
-	"archive/zip"
 	"bytes"
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -82,19 +80,19 @@ func scanBytes(name string, b []byte, depth int) string {
 	if depth == 0 || !isZip(b) {
 		return ""
 	}
-	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
-	if err != nil && !errors.Is(err, zip.ErrInsecurePath) {
+	z, err := parseZip(b)
+	if err != nil {
 		return fmt.Sprintf("%s reads as a zip that cannot be opened, so the scan cannot see inside it: %v", name, err)
 	}
-	for _, f := range zr.File {
-		if src := sentinelAt([]byte(f.Name)); src != "" {
-			return fmt.Sprintf("%s: the entry name %q holds the sentinel from %s", name, f.Name, src)
+	for _, h := range z.headers {
+		if src := sentinelAt([]byte(h.name)); src != "" {
+			return fmt.Sprintf("%s: the entry name %q holds the sentinel from %s", name, h.name, src)
 		}
-		content, err := inflate(f)
+		content, err := h.inflate(b)
 		if err != nil {
-			return fmt.Sprintf("%s: the entry %q cannot be inflated, so the scan cannot see inside it: %v", name, f.Name, err)
+			return fmt.Sprintf("%s: the entry %q cannot be inflated, so the scan cannot see inside it: %v", name, h.name, err)
 		}
-		if hit := scanBytes(name+": entry "+f.Name, content, depth-1); hit != "" {
+		if hit := scanBytes(name+": entry "+h.name, content, depth-1); hit != "" {
 			return hit
 		}
 	}

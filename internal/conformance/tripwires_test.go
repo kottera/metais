@@ -26,8 +26,9 @@ import (
 // red. TestSuiteTreePortable needs ADR-005 D12's portable-path predicate
 // and lands with it.
 
-// statementIndex reads spec/statements.json beside suite: each
-// statement's since, by identifier. A missing index is nil, no error.
+// statementIndex reads spec/statements.json beside suite, in the form
+// internal/guarantees generates it: each statement's since, by
+// identifier. A missing index is nil, no error.
 func statementIndex(suite string) (map[string]string, error) {
 	b, err := os.ReadFile(filepath.Join(suite, "..", "statements.json"))
 	if errors.Is(err, fs.ErrNotExist) {
@@ -36,22 +37,17 @@ func statementIndex(suite string) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	type entry struct {
-		ID    string `json:"id"`
-		Since string `json:"since"`
+	var index struct {
+		Statements []struct {
+			ID    string `json:"id"`
+			Since string `json:"since"`
+		} `json:"statements"`
 	}
-	var list []entry
-	if err := json.Unmarshal(b, &list); err != nil {
-		var wrapped struct {
-			Statements []entry `json:"statements"`
-		}
-		if err2 := json.Unmarshal(b, &wrapped); err2 != nil {
-			return nil, fmt.Errorf("statements.json: %w", err)
-		}
-		list = wrapped.Statements
+	if err := json.Unmarshal(b, &index); err != nil {
+		return nil, fmt.Errorf("statements.json: %w", err)
 	}
 	idx := map[string]string{}
-	for _, e := range list {
+	for _, e := range index.Statements {
 		if e.Since == "" {
 			e.Since = "1.0"
 		}
@@ -432,6 +428,12 @@ func TestHostileVectorsOpenEverywhere(t *testing.T) {
 	a := &cliAdapter{path: builtTool}
 	for _, b := range hostileOpenProblems(defaultSuite(), a, testenv.Dir(t)) {
 		t.Error(b)
+	}
+	// The set is read from the binary built from source, whatever the
+	// suite holds; internal/cli's TestOpeningSetAsTheRunnerReadsIt holds
+	// that reading to the declarations.
+	if _, err := a.opening(testenv.Dir(t)); err != nil {
+		t.Errorf("the opening set of the built tool: %v", err)
 	}
 }
 

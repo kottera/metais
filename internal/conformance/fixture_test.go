@@ -4,7 +4,6 @@
 package conformance
 
 import (
-	"archive/zip"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -80,12 +79,12 @@ func writeFixture(t testing.TB, root string) string {
 	}
 	put("README.md", []byte("```\nVersion: 1.0\nStatus: Draft\nLatest release: none\n```\n\n# A fixture specification\n"))
 	putJSON("findings/registry.json", fixtureRegistry)
-	putJSON("statements.json", []any{
+	putJSON("statements.json", map[string]any{"statements": []any{
 		map[string]any{"id": "MTS-FIX-001", "chapter": "fixture", "section": "fixture", "kind": "requirement",
 			"since": "1.0", "observable": true, "status": "active"},
 		map[string]any{"id": "MTS-OTH-001", "chapter": "fixture", "section": "fixture", "kind": "requirement",
 			"since": "1.0", "observable": true, "status": "active"},
-	})
+	}})
 	for _, n := range []string{vectorSchema, findingsSchema, driverRequestSchema, driverResponseSchema, recordSchema} {
 		b, err := os.ReadFile(filepath.Join(moduleRoot, "spec", "schemas", "conformance", "1", n))
 		if err != nil {
@@ -126,8 +125,8 @@ func writeFixture(t testing.TB, root string) string {
 	}
 	zipEntries := func() []zipEntry {
 		return []zipEntry{
-			{name: "content/c.txt", method: zip.Deflate, content: []byte(fixtureZip["content/c.txt"])},
-			{name: "mimetype", method: zip.Store, content: []byte(fixtureZip["mimetype"])},
+			{name: "content/c.txt", method: methodDeflate, content: []byte(fixtureZip["content/c.txt"])},
+			{name: "mimetype", method: methodStore, content: []byte(fixtureZip["mimetype"])},
 		}
 	}
 	renderScript := map[string]any{

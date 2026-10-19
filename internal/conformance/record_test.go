@@ -466,3 +466,33 @@ func TestCompareRecordsEveryField(t *testing.T) {
 		}
 	}
 }
+
+// TestRealToolInRecord is where the runner meets the command line (W2-1,
+// W2-2): run with -conformance.record against the metais binary built from
+// source, the runner reads the tool's identity from its version --json and
+// writes a record that carries it.
+func TestRealToolInRecord(t *testing.T) {
+	t.Parallel()
+	p := filepath.Join(testenv.Dir(t), "record.json")
+	cmd := exec.Command(testBinary(t), "-test.run=^TestConformance$", "-test.count=1",
+		"-conformance.tool="+builtTool, "-conformance.record="+p)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("the run: %v\n%s", err, out)
+	}
+	set, err := suiteSchemas(defaultSuite())
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec, err := readRecord(p, set.validator(recordSchema))
+	if err != nil {
+		t.Fatal(err)
+	}
+	a := &cliAdapter{path: builtTool}
+	want, err := a.identity(testenv.Dir(t))
+	if err != nil {
+		t.Fatalf("version --json: %v", err)
+	}
+	if rec.Tool != want || want.Name != "metais" {
+		t.Errorf("the record names %+v; version --json reports %+v", rec.Tool, want)
+	}
+}

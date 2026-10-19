@@ -5,12 +5,9 @@ package conformance
 
 import (
 	"archive/tar"
-	"archive/zip"
 	"bytes"
-	"compress/flate"
 	"encoding/json"
 	"fmt"
-	"hash/crc32"
 	"io"
 	"io/fs"
 	"os"
@@ -358,9 +355,9 @@ func zipEntriesFrom(dir string, stored []string) ([]zipEntry, error) {
 		rel, _ := filepath.Rel(dir, p)
 		name := filepath.ToSlash(rel)
 		b, err := os.ReadFile(p)
-		method := uint16(zip.Deflate)
+		method := uint16(methodDeflate)
 		if slices.Contains(stored, name) || len(b) == 0 {
-			method = zip.Store
+			method = methodStore
 		}
 		entries = append(entries, zipEntry{name: name, method: method, content: b})
 		return err
@@ -380,21 +377,21 @@ func breakZip(fault string, entries []zipEntry) []zipEntry {
 		e.content = append(slices.Clone(e.content), '!')
 	case "zip-method":
 		for i := range entries {
-			if entries[i].method == zip.Store && len(entries[i].content) > 0 {
-				entries[i].method = zip.Deflate
+			if entries[i].method == methodStore && len(entries[i].content) > 0 {
+				entries[i].method = methodDeflate
 			}
 		}
 	case "sentinel-zip":
 		for i := range entries {
-			if entries[i].method == zip.Deflate {
+			if entries[i].method == methodDeflate {
 				entries[i].content = append(slices.Clone(entries[i].content), os.Getenv("METAIS_SENTINEL")...)
 				break
 			}
 		}
 	case "sentinel-zip-nested":
-		deep := writeZip([]zipEntry{{name: "deep.txt", method: zip.Deflate, content: []byte(padding + os.Getenv("METAIS_SENTINEL") + padding)}}, false)
-		inner := writeZip([]zipEntry{{name: "inner.zip", method: zip.Deflate, content: deep}}, false)
-		entries = append(entries, zipEntry{name: "nested.zip", method: zip.Deflate, content: inner})
+		deep := writeZip([]zipEntry{{name: "deep.txt", method: methodDeflate, content: []byte(padding + os.Getenv("METAIS_SENTINEL") + padding)}}, false)
+		inner := writeZip([]zipEntry{{name: "inner.zip", method: methodDeflate, content: deep}}, false)
+		entries = append(entries, zipEntry{name: "nested.zip", method: methodDeflate, content: inner})
 	}
 	return entries
 }
@@ -402,43 +399,6 @@ func breakZip(fault string, entries []zipEntry) []zipEntry {
 // padding makes a deflated entry compress, so the token inside it is
 // coded and only inflating it finds it.
 const padding = "padding padding padding padding padding padding padding padding\n"
-
-// writeZip writes entries as a zip with every header field at ADR-001
-// D1's fixed value; badHeader sets a non-fixed modification time on the
-// first entry.
-func writeZip(entries []zipEntry, badHeader bool) []byte {
-	var buf bytes.Buffer
-	zw := zip.NewWriter(&buf)
-	for i, e := range entries {
-		data := e.content
-		version := uint16(10)
-		if e.method == zip.Deflate {
-			var c bytes.Buffer
-			fw, _ := flate.NewWriter(&c, flate.BestCompression)
-			fw.Write(e.content)
-			fw.Close()
-			data, version = c.Bytes(), 20
-		}
-		h := &zip.FileHeader{
-			Name: e.name, Method: e.method, Flags: 0x0800,
-			CreatorVersion: 0x0314, ReaderVersion: version,
-			ModifiedDate: 0x0021, ExternalAttrs: 0x81A40000,
-			CRC32: crc32.ChecksumIEEE(e.content), CompressedSize64: uint64(len(data)), UncompressedSize64: uint64(len(e.content)),
-		}
-		if badHeader && i == 0 {
-			h.ModifiedTime = 0x0001
-		}
-		w, err := zw.CreateRaw(h)
-		if err != nil {
-			panic(err)
-		}
-		w.Write(data)
-	}
-	if err := zw.Close(); err != nil {
-		panic(err)
-	}
-	return buf.Bytes()
-}
 
 // writeTar writes files, by path, as a tar stream; sentinel adds the
 // sentinel to the first member.
