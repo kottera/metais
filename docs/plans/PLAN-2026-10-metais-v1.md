@@ -1157,6 +1157,39 @@ adds the vector where they meet (§2).
 - R2-113, R2-125 and R2-127: the command line.
 - R2-054: no `sha256` filter in 1.0.
 
+**The integration gate (W5-I1).** W5-1, W5-2, W5-5 and W5-7 to W5-12
+merged without the full gate, by Ed's ruling of 2026-10-19. The full gate
+ran once on `main` at `8278575` with `gate.sh`, on darwin/arm64 under
+`go1.26.9`, with `-p 8` on a 16-core host. It was green, and nothing came
+from the test cache:
+
+```
+=== PASS build (41s)
+=== PASS vet (18s)
+=== PASS test (893s)
+=== PASS tidy (2s)
+=== PASS gofmt (1s)
+=== PASS static (9s)
+=== PASS cross (201s)
+=== PASS specdata (3s)
+GATE DONE: PASS
+```
+
+The wall-clock-bound tests that timed out on the items passed, so no
+timeout was left to settle.
+
+**`TestConformance` is at ADR-011 D11 item 9's 60 seconds, and over it on
+a busy host.** It ran 301 vectors and 413 cases, with none skipped. The
+default run, not race-built and run alone, took 56.5 s, 65.6 s and 84.1 s
+of wall time on that host, against 20 to 62 s of CPU time. The
+mechanism is the A/B start offset. `runCase` sleeps until two seconds
+after A ended before it starts B, and the sleep holds the case's parallel
+slot. So 413 cases at the default `-test.parallel` of 16 spend about 52 s
+asleep, whatever the host's speed. At `-test.parallel 64` the same binary
+took 21.4 s with the same CPU time. The budget needs a runner that does not
+hold a slot while it waits, and no ADR decides that, so the integration
+gate leaves it to the wave orchestrator.
+
 ## 12. Wave 6 — pack, and hardening
 
 **Objective.** `pack` closes the authoring path. The hostile corpus and the
