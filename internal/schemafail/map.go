@@ -103,6 +103,8 @@ func Map(t Target, fs ...Failure) ([]finding.Finding, error) {
 	}
 	m := &mapper{t: t}
 	var out []finding.Finding
+	// suppressed counts the distinct findings D7 item 4 suppresses, as a
+	// report would count them; it lists none of them.
 	suppressed := finding.NewReport(1)
 	for i := range fs {
 		if err := fs[i].Check(); err != nil {
@@ -127,7 +129,7 @@ func Map(t Target, fs ...Failure) ([]finding.Finding, error) {
 		loc := t.Locate("", false).WithPointer("")
 		out = append(out, finding.New(finding.CodeInputValidationPartial, t.Subject, &loc, finding.Params{
 			"unparsed":   finding.Int(int64(t.Partial.Unparsed)),
-			"suppressed": finding.Int(int64(s.Errors + s.Warnings + s.Info)),
+			"suppressed": finding.Int(int64(s.Listed + s.Omitted)),
 		}))
 	}
 	return out, nil
