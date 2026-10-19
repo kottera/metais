@@ -455,3 +455,65 @@ func TestStdoutPurity(t *testing.T) {
 		t.Errorf("with StdoutNotice, the detector caught %d of 7 cases", n)
 	}
 }
+
+// TestRenderContainerStreams is where the dry run, the archive and --only
+// meet containers (W5-6): a container is listed with its entries, its
+// size and digest those of its zip; it is one archive entry holding the
+// zip a directory render writes; and --only selects it whole, its zip
+// written raw.
+func TestRenderContainerStreams(t *testing.T) {
+	pkg, data := declarationPackage(t, `  - id: box
+    path: box.zip
+    container:
+      entries:
+        - id: page
+          template: t.txt.liquid
+          for_each: inputs.pages
+          path: "p/{{ item }}.txt"
+`)
+	root := filepath.Dir(filepath.Dir(pkg))
+	out := filepath.Join(root, "out")
+	if r := runTool(t, "render", pkg, "--data", data, "--out", out, "--json"); r.status != 0 {
+		t.Fatalf("render: status %d, %s", r.status, r.stdout)
+	}
+	zip, err := os.ReadFile(filepath.Join(out, "box.zip"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := runTool(t, "render", pkg, "--data", data, "--out", filepath.Join(root, "dry"), "--dry-run", "--json")
+	files := readRender(t, r).Files
+	if r.status != 0 || len(files) != 1 {
+		t.Fatalf("dry run: status %d, %+v", r.status, files)
+	}
+	box := files[0]
+	if box.Path != "box.zip" || box.Source != "container" || box.Kind != nil || box.Size != int64(len(zip)) ||
+		box.Digest != digestOf(string(zip)) || box.Status != "create" || len(box.Entries) != 3 {
+		t.Errorf("the container's record: %+v", box)
+	}
+	for i, e := range box.Entries {
+		p := "p/" + []string{"a", "b", "c"}[i] + ".txt"
+		if e.Path != p || e.Output == nil || *e.Output != "page" || e.Item == nil || *e.Item != i ||
+			e.Size != int64(len(p)+1) || e.Digest != digestOf(p+"\n") {
+			t.Errorf("entry %d: %+v", i, e)
+		}
+	}
+
+	r = runTool(t, "render", pkg, "--data", data, "--out", "-", "--json")
+	tr := tar.NewReader(strings.NewReader(r.stdout))
+	h, err := tr.Next()
+	if r.status != 0 || err != nil || h.Name != "box.zip" || h.Size != int64(len(zip)) {
+		t.Fatalf("archive: status %d, %v, %+v", r.status, err, h)
+	}
+	if b, _ := io.ReadAll(tr); !bytes.Equal(b, zip) {
+		t.Error("the archive's container entry is not the zip a directory render writes")
+	}
+	if _, err := tr.Next(); !errors.Is(err, io.EOF) {
+		t.Errorf("the archive holds more than the container: %v", err)
+	}
+
+	r = runTool(t, "render", pkg, "--data", data, "--out", "-", "--only", "box.zip", "--json")
+	if r.status != 0 || r.stdout != string(zip) {
+		t.Errorf("--only box.zip: status %d, %d bytes, want the zip's %d", r.status, len(r.stdout), len(zip))
+	}
+}

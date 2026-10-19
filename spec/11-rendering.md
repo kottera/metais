@@ -76,13 +76,19 @@ or `container`); `kind`, for a template file ([chapter 9](09-outputs.md));
 `size` in bytes; `digest`, `sha256:` followed by the lower-case hexadecimal
 SHA-256 of the exact bytes the render would write; `executable`; and, only
 when the render writes into a directory, `status`: `create` for a file written
-where nothing is, `replace` for one written over an existing file.
+where nothing is, `replace` for one written over an existing file. A
+container's `size` and `digest` MUST be those of the zip the render would
+write, and its record MUST also list its `entries`, in the container's order,
+each with `path`, `output` (the entry's id, or null), `item`, `source`,
+`kind`, `method` (`stored` or `deflated`), and the `size` and `digest` of its
+uncompressed content.
 
 <a id="mts-rnd-010"></a>**MTS-RND-010** Rendering to standard output, a
 processor MUST write every top-level file of the render as one POSIX pax
 interchange format archive, built from the rendered bytes and never from
 files on disk: one regular-file entry (typeflag `0`) per file, in byte order
-of its path, and no directory entry, link or global extended header. Every
+of its path, a container being one entry that holds the zip a render into a
+directory writes, and no directory entry, link or global extended header. Every
 entry MUST have the path as its name, as a ustar name, or prefix and name
 split at a `/`, when the path is ASCII and fits, and otherwise in a preceding
 extended header (typeflag `x`) that carries exactly one record, `path`; mode
