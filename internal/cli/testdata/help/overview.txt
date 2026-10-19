@@ -28,6 +28,8 @@ Commands:
               and an example.
     check     Check a package without data, and report every finding of every
               step at once.
+    sample    Generate sample data from the inputs' schemas, and keep it as a
+              data directory or an example.
     unpack    Write a packed package's source directory, to edit it.
   The tool:
     version   Print the tool's version and the specification versions it

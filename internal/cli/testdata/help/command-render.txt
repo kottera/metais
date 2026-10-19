@@ -3,7 +3,9 @@ new directory or to standard output.
 
 Usage:
   metais render <package> --out <dir|-> [supply flags] [--only <path>]
-                [--dry-run] [--now <time>] [--json]
+                [--dry-run] [--now <time>]
+                [--sample [--optional <mode>] [--seed <n>] [--items <n>]]
+                [--json]
 
 The package is opened and verified whole, and the inputs are supplied and
 validated, as metais inspect and metais validate do; an input that fails ends
@@ -52,6 +54,15 @@ once for each element of its array, which its when, its path and its template
 see as item, with its position as fan_out; an output, or an element, whose when
 is false writes no file.
 
+--sample renders from sample data, the author's preview: the generator makes
+every input from its schema, as metais sample does, in the data directory's
+place, so --data is refused with it. Values given with --set, --set-json and
+--inputs-json are kept as given and the rest is made around them, conditionals
+included, so one value can be pinned to see one branch. The data is validated as
+supplied data is before anything is rendered. --optional, --seed and --items are
+taken only with --sample. A render with --sample is an authoring command: a
+defect of the package fails it with exit status 1, as check does.
+
 Operands:
   <package>
       A packed package file, or a source directory; - is refused, since a
@@ -87,6 +98,20 @@ Flags:
   --now <date-time>
       The render time, an RFC 3339 date-time with an offset, which templates see
       as now; without it there is no time.
+  --sample
+      Render from sample data the generator makes from the inputs' schemas, in
+      the data directory's place; values given with --set, --set-json and
+      --inputs-json are kept as given, and the rest is made around them.
+  --optional <mode>
+      Which optional properties and inputs the generator makes: all of them,
+      none (and null wherever null is allowed), or a mix the seed decides.
+      Values: all, none, mixed. Default: all.
+  --seed <n>
+      The generator's seed, an unsigned 64-bit integer: the same package,
+      options, supplied values and seed give the same data. Default: 0.
+  --items <n>
+      The number of items the generator aims for in every array and collection,
+      within the schema's bounds. Default: 3.
   --limit <name>=<value>
       Lower one resource limit for this run, to a whole number no higher than
       its default (a size may end in KiB, MiB or GiB). metais limits lists them.
@@ -849,9 +874,14 @@ Refusals:
   schema.ref_unresolved
       An input schema is refused (ref unresolved).
       Next: metais inspect <package>
+  schema.sample_invalid
+      With --sample, the generated data cannot be made or does not validate
+      (sample invalid).
+      Next: metais schema <package> <name>
   schema.sample_unsatisfiable
-      An input schema is refused (sample unsatisfiable).
-      Next: metais inspect <package>
+      With --sample, the generated data cannot be made or does not validate
+      (sample unsatisfiable).
+      Next: metais schema <package> <name>
   schema.syntax
       An input schema is refused (syntax).
       Next: metais inspect <package>
@@ -959,7 +989,8 @@ Refusals:
       takes no value is given one.
       Next: metais render --help
   usage.bad_value
-      --now is not an RFC 3339 date-time with an offset.
+      --now is not an RFC 3339 date-time with an offset, or --seed or --items is
+      not a whole number in range.
       Next: metais render <package> --out <dir> --now 2026-01-31T09:00:00Z
   usage.conflicting_flags
       --inputs-json - is given twice, and standard input is read once.
@@ -968,6 +999,13 @@ Refusals:
       The data directory given to --data does not exist, is not a directory, or
       cannot be read.
       Next: metais render <package> --data <dir> --out <dir>
+  usage.flag_excluded
+      --data is given with --sample, whose generated data takes the data
+      directory's place.
+      Next: metais render <package> --sample --out <dir>
+  usage.flag_requires
+      --optional, --seed or --items is given without --sample.
+      Next: metais render <package> --sample --out <dir>
   usage.missing_flag
       --out is not given.
       Next: metais render <package> --out <dir>
@@ -1045,3 +1083,7 @@ Examples:
   metais render report.metais --data data --out - --only report.md
       Renders the whole package and writes the bytes of report.md alone to
       standard output.
+  metais render . --sample --out preview
+      Previews the source directory's outputs from sample data.
+  metais render . --sample --set /incident/stage=final --seed 7 --out preview
+      Previews them with one value pinned and other generated values.

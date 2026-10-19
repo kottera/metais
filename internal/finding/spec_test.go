@@ -304,6 +304,7 @@ func TestEmittedCodes(t *testing.T) {
 		CodeUsageBadValue, CodeUsageConflictingFlags, CodeUsageDataDirUnreadable, CodeUsageMissingCommand, CodeUsageRepeatedFlag, CodeUsageUnexpectedOperand,
 		CodeUsageUnknownCommand, CodeUsageUnknownFlag, CodeUsageUnknownTopic,
 		CodeUsageNameInvalid, CodeUsageNameRequired,
+		CodeUsageFlagExcluded, CodeUsageFlagRequires, CodeUsageNotSourceDir, CodeSampleInvalid,
 		CodeDestinationNotDirectory, CodeDestinationNotEmpty, CodeDestinationWriteFailed,
 	}
 	for _, c := range []string{

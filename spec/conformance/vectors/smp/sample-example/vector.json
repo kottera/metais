@@ -1,0 +1,82 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "smp/sample-example",
+  "title": "Sample saves its data as a new example's inputs beside an example.yaml, and refuses an example that exists, writing nothing",
+  "statements": [
+    "MTS-SMP-007",
+    "MTS-SMP-008"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "new",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "example": "smp"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "package/examples/smp",
+                "files": [
+                  "example.yaml",
+                  "inputs/events/001.yaml",
+                  "inputs/events/002.yaml",
+                  "inputs/events/003.yaml",
+                  "inputs/lines.csv",
+                  "inputs/summary.txt",
+                  "inputs/vendor.json"
+                ]
+              }
+            ]
+          },
+          "repeatable": true
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "package/examples/smp/inputs"
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "exists",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "example": "taken"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/exists.json"
+          },
+          "repeatable": true
+        }
+      ]
+    }
+  ]
+}

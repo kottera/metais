@@ -408,9 +408,6 @@ Refusals:
   schema.ref_unresolved
       An input schema is refused (ref unresolved).
       Next: metais inspect <package>
-  schema.sample_unsatisfiable
-      An input schema is refused (sample unsatisfiable).
-      Next: metais inspect <package>
   schema.syntax
       An input schema is refused (syntax).
       Next: metais inspect <package>

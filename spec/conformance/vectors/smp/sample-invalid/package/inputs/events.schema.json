@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "maxItems": 5,
+  "items": {
+    "type": "object",
+    "required": ["at"],
+    "properties": {
+      "at": { "type": "string", "format": "date-time" },
+      "what": { "type": "string" }
+    }
+  }
+}

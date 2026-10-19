@@ -1,0 +1,124 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "smp/sample-fixed-points",
+  "title": "Values given to sample are written as given, and the rest is generated around them, conditionals evaluated against them",
+  "statements": [
+    "MTS-SMP-003"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "set",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out",
+            "set": [
+              "/vendor/kind=company"
+            ],
+            "set_json": [
+              "/vendor/name=\"Acme\""
+            ]
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "files": [
+                  "vendor.json"
+                ]
+              }
+            ]
+          },
+          "repeatable": true
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "out"
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "out",
+            "out": "report"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "report",
+                "equals": "expected/report"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "inputs-json",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out",
+            "inputs_json": "data/vendor.json"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "files": [
+                  "vendor.json"
+                ]
+              }
+            ]
+          },
+          "repeatable": true
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "out"
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "out",
+            "out": "report"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "report",
+                "equals": "expected/report"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

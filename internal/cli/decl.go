@@ -212,6 +212,7 @@ func declarations() []*Command {
 			run: runInit,
 		},
 		checkDeclaration(),
+		sampleDeclaration(),
 		unpackDeclaration(),
 		{
 			Name: "version", Group: "The tool", Synopsis: "version [--json]",
@@ -281,8 +282,11 @@ var table = declarations()
 // command's refusals in code order.
 func init() {
 	for _, c := range table {
-		if c.Name == "render" {
+		switch c.Name {
+		case "render":
 			renderRefusals(c)
+		case "sample":
+			sampleRefusals(c)
 		}
 		c.Refusals = append(lineRefusals(c.Name), c.Refusals...)
 		slices.SortStableFunc(c.Refusals, func(a, b Refusal) int { return strings.Compare(string(a.Code), string(b.Code)) })

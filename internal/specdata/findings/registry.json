@@ -3495,7 +3495,8 @@
       "since": "1.0",
       "statements": [
         "MTS-AUT-028",
-        "MTS-RND-003"
+        "MTS-RND-003",
+        "MTS-SMP-006"
       ]
     },
     {
@@ -3524,7 +3525,8 @@
       "since": "1.0",
       "statements": [
         "MTS-AUT-028",
-        "MTS-RND-004"
+        "MTS-RND-004",
+        "MTS-SMP-006"
       ]
     },
     {
@@ -3554,7 +3556,8 @@
       "statements": [
         "MTS-AUT-026",
         "MTS-AUT-027",
-        "MTS-RND-006"
+        "MTS-RND-006",
+        "MTS-SMP-008"
       ]
     },
     {
@@ -5960,7 +5963,7 @@
         {
           "name": "code",
           "type": "string",
-          "meaning": "The code the data's validation reported there, as it would report it about a supplied input.",
+          "meaning": "The code the data's validation reported there, as it would report it about a supplied input; or form, when the input's first form cannot write a value given with --set, --set-json or --inputs-json so that its reader reads it back as given.",
           "always": true
         }
       ],
@@ -5969,7 +5972,8 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-SMP-002"
+        "MTS-SMP-002",
+        "MTS-SMP-009"
       ]
     },
     {
@@ -5995,7 +5999,10 @@
       "hint": "Add an examples value to this field and the generator will use it, such as \"examples\": [\"…\"]; check that the field's keywords do not contradict each other.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SMP-004",
+        "MTS-SMP-009"
+      ]
     },
     {
       "code": "schema.syntax",

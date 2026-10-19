@@ -108,7 +108,10 @@ func (s *Generator) located(at *place, c *conj) (value.Value, bool) {
 		return nil, false
 	}
 	if loc.fixed != nil {
-		if _, ok := loc.fixed.(value.Object); !ok {
+		if _, ok := loc.fixed.(value.Object); !ok || !fillsAround(&loc, c) {
+			// A supplied value is taken as given (item 2), an object too
+			// where C makes no object to fill it around; validation then
+			// reports one that C refuses.
 			return loc.fixed, true
 		}
 	}
@@ -151,6 +154,18 @@ func (s *Generator) located(at *place, c *conj) (value.Value, bool) {
 		}
 	}
 	return v, true
+}
+
+// fillsAround reports whether C makes an object at loc that a supplied
+// object is filled around (item 2): one whose type set allows an object,
+// or that declares none, with no const or enum to take whole, outside a
+// CSV field.
+func fillsAround(loc *place, c *conj) bool {
+	if loc.cell || c.has("const", "enum") {
+		return false
+	}
+	types, declared := c.types()
+	return !declared || slices.Contains(types, "object")
 }
 
 // size is what v costs spend: a string its bytes, any other value one.
@@ -375,8 +390,9 @@ func (s *Generator) chooseType(loc *place, c *conj) (string, bool) {
 	if loc.cell {
 		types = slices.DeleteFunc(slices.Clone(types), func(t string) bool { return t == "null" || t == "array" || t == "object" })
 	}
-	if _, ok := loc.fixed.(value.Object); ok && (!declared || slices.Contains(types, "object")) {
-		// A supplied object is filled around (item 2).
+	if _, ok := loc.fixed.(value.Object); ok {
+		// A supplied object is filled around (item 2); located takes one
+		// C makes no object for as given.
 		return "object", true
 	}
 	if len(types) == 0 {

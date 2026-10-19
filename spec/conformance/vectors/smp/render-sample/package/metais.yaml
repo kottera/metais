@@ -1,0 +1,37 @@
+metais: "1.0"
+name: "sample-vector"
+version: "1.0.0"
+title: "Sample vector"
+description: "A package whose inputs exercise the sample generator."
+guide: |-
+  This package produces report.md from a vendor, its order lines, a summary and its events.
+  Read [the vendor](inputs/vendor.md) before you supply it.
+inputs:
+  - name: vendor
+    title: "Vendor"
+    schema: inputs/vendor.schema.json
+    meaning: inputs/vendor.md
+    forms:
+      - json
+  - name: lines
+    title: "Lines"
+    schema: inputs/lines.schema.json
+    meaning: inputs/vendor.md
+    forms:
+      - csv
+  - name: summary
+    title: "Summary"
+    schema: inputs/summary.schema.json
+    meaning: inputs/vendor.md
+    forms:
+      - text
+  - name: events
+    title: "Events"
+    schema: inputs/events.schema.json
+    meaning: inputs/vendor.md
+    collection: true
+    forms:
+      - yaml
+outputs:
+  - id: report
+    template: report.md.liquid

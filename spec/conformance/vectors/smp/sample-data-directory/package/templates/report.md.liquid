@@ -1,0 +1,6 @@
+{%- assign lines = inputs.lines | size -%}
+{%- assign events = inputs.events | size -%}
+{%- assign summary = inputs.summary | size -%}
+# {{ inputs.vendor.name }}
+
+The vendor is a {{ inputs.vendor.kind }}{% if inputs.vendor.registration %}, registered{% endif %}.

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "smp/sample-invalid",
+  "title": "Sample refuses data that fails its schema, a supplied value the schema refuses among it, with schema.sample_invalid, writing nothing",
+  "statements": [
+    "MTS-SMP-002"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "set",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out",
+            "set": [
+              "/vendor/rating=9"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/set.json"
+          },
+          "repeatable": true
+        }
+      ]
+    },
+    {
+      "name": "set-json",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out",
+            "set_json": [
+              "/summary=\"Too short\"",
+              "/vendor/kind=\"robot\""
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/set-json.json"
+          },
+          "repeatable": true
+        }
+      ]
+    }
+  ]
+}
