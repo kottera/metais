@@ -140,8 +140,8 @@ func Map(t Target, fs ...Failure) ([]finding.Finding, error) {
 type mapper struct {
 	t   Target
 	err error
-	// paths makes each finding's instance path, reading a token's text
-	// once however many failures are under it.
+	// paths makes each finding's instance path from the one it made
+	// before, so the failures under one member name read it once.
 	paths finding.PathCache
 }
 
