@@ -657,7 +657,10 @@ guarantee depends on whether the output directory exists.
    complete render. A process killed at any point leaves at most the hidden
    staging directory and the created ancestors.
 2. **The output directory exists — each file atomic, the set atomic against
-   every failure but a crash during commit.**
+   every failure but a crash during commit.** *(Under Amendment A1 the
+   files are prepared beneath one staging directory inside the output
+   directory and committed by unit; A1 replaces items 2.1 to 2.3's
+   temporary files, and item 5's ownership rule.)*
    1. **Prepare.** For each planned file in path order: create missing
       directories (recorded), then write its bytes to a temporary file in
       the target's own directory, `.metais-tmp-<h>`, where `<h>` is the first
@@ -1261,6 +1264,90 @@ the render.
   under `!go1.27`, `tables17.0.0.go` under `go1.27`), read 2026-10-18:
   https://github.com/golang/text/blob/v0.43.0/unicode/norm/tables15.0.0.go,
   https://github.com/golang/text/tree/v0.43.0/cases
+
+## Amendments
+
+### A1 — An existing output directory is prepared beneath one staging directory inside it
+
+**Status:** Accepted 2026-10-19 by Ed Funnekotter, in design session
+`01a15284-df6e-7668-b799-62f4c380a84f` (PLAN-2026-10-metais-v1, W2-A1).
+**Amends:** D14 item 2 (prepare and commit), D14 item 5 (what the render
+removes), D15 item 4 (two further per-file checks), and the alternative
+rejected as *Staging inside the output directory*, which now argues D14
+item 1 only. Amends ADR-009 D8 items 1 and 5 to match, and is
+cross-referenced from ADR-009's implementation log. ADR-008 reuses the
+overwrite rule for `extract --overwrite` and `sample --to`, so A1 is how
+they write into an existing directory too.
+
+1. **Prepare.** A render into an existing directory (D14 item 2) first
+   creates one staging directory inside it, `<out>/.metais-staging`,
+   exclusively, and holds it open for the rest of the render. An existing
+   one — a killed render's leftover, or a concurrent render into the same
+   directory — refuses the render with `output.destination.write_failed`,
+   reason `exists`, nothing written. Every planned file is written beneath
+   the staging directory at its own path, with every directory that path
+   needs, through an `os.Root` on it. Nothing is created in the existing
+   tree while preparing. Any failure removes the staging directory and
+   refuses: nothing changed.
+2. **Commit units.** A planned path's commit unit is its shallowest
+   component that did not exist in the output directory at the check: a
+   missing directory, committed whole with everything planned beneath it,
+   or the file itself when its parent exists. Each unit is committed once,
+   in path order, by renaming it from the staging directory into place: a
+   missing directory and a `create` with D14 item 1.4's no-replace rename,
+   a `replace` with D14 item 2.2's replacing rename. A directory that
+   appeared since the check refuses its unit's rename, which is a failure
+   during commit. After the last unit, the staging directory holds only
+   directories the render created there, and they and it are removed.
+3. **A failure during commit** is D14 item 2.3: the commit stops, the
+   staging directory and everything still in it are removed, and the
+   render is refused with `output.destination.commit_failed`, listing the
+   paths already committed. A path is committed when its unit was renamed.
+   A process killed during commit leaves a mix of whole old and whole new
+   files, and the staging directory, which the next render into the same
+   directory refuses (item 1).
+4. **One filesystem.** Every rename stays on one filesystem, because D15
+   item 4 refuses, before anything is written, a planned file whose
+   deepest existing directory is on a different device from the output
+   directory — a mount point inside it — with
+   `output.destination.write_failed`, reason `io_error`, nothing written.
+   The device is compared and never reported: it decides the refusal and
+   reaches no finding, output or message (ADR-009 D12). A conformance
+   vector cannot make a mount point without privilege, so this case is a
+   unit test of `internal/hostfs`, as ADR-009's device cases are.
+5. **The staging name is the tool's.** `.metais-staging` is one fixed name
+   in every output directory, since one output directory has one staging
+   directory; it reads no random source and no process identity (proposed
+   ruling 16). D15 item 4 refuses a planned path whose first segment is an
+   ASCII-case-insensitive match for it, with
+   `output.destination.write_failed`, reason `exists`, nothing written. A
+   render into a new directory (D14 item 1) stages beside it and reserves
+   nothing inside it. D14 item 2 writes no temporary file beside a target.
+6. **One ownership rule** (D14 item 5). The render removes only what lies
+   within a directory it created exclusively and holds open — the staging
+   directory of either case, and the ancestors D14 item 1.1 creates — and
+   beneath a staging directory only a name it created, while that name
+   still holds the kind it created, a directory only when it is empty.
+   Nothing outside a staging directory is created except by a commit
+   rename, so a failure the render survives leaves nothing it made in the
+   caller's tree. The one declared gap is the one the Wave 4 ruling
+   accepted for D14 item 1: a foreign file swapped in at a name the render
+   created beneath its own hidden staging directory is removed.
+7. **Bounded handles.** A render holds the staging directory, the
+   ancestors it created, the roots it opened and the file it is writing,
+   however many files it plans. The host's open-file limit therefore never
+   refuses a render within ADR-009's limits, and no handle is held per
+   planned file.
+8. **What does not change.** D14 item 2's guarantee — each file whole, the
+   set whole against every failure but a crash during commit — and D15's
+   checks, policy and refusals other than items 4 and 5 here. A1 moves
+   where files are prepared and how ownership is proved, not what a caller
+   is promised. D14 item 1 keeps its staging directory beside the output
+   directory, which gives that case its atomicity and puts nothing in the
+   output; the rejected alternative's argument stands for it. For an
+   existing directory that argument does not apply: there is no atomicity
+   to lose, a leftover is refused by name as a temporary file was, item 5
+   reserves the name, and item 4 keeps every rename on one filesystem.
 
 ## Implementation log
 

@@ -973,8 +973,9 @@ references from a JSON parser alone.**
   `extract` and `sample --to`); ADR-005 D16's dry-run records, which are
   `render`'s `result.files`; output identity by rendered path (for
   `--only`, ADR-005 D18); mirror expansion (for `inspect`); file modes
-  (reused by `extract`); staging beside the output directory, never in the
-  OS temporary directory. I own `--only`, which replaces the brief's
+  (reused by `extract`); staging beside the output directory (inside an
+  existing one, under ADR-005 Amendment A1), never in the OS temporary
+  directory. I own `--only`, which replaces the brief's
   `--output <name>`.
 - **ADR-006** — I rely on: the finding object, severities, ordering and human
   wording; D12's exit table, which D13 maps every outcome onto; the
