@@ -1350,10 +1350,15 @@ What changes later waves:
   (`01a155c2-5c85-7762-a3d8-2541e178e29c`) ran at `cdce4d9` in both locales:
   liquid-spec exited 0, with "1845 pass, 549 departures fail as listed, 0
   fail otherwise, 0 departures pass".
-- **For Ed: `278c96a` (W5b-1) carries four `Co-Authored-By` trailers**,
-  against AGENTS.md. So do `30929d5` and W2-2F's squash. Removing them means
-  rewriting `main`'s history, which is Ed's decision. Later squash messages
-  are written explicitly.
+- **For Ed: 36 commits on `main` carry `Co-authored-by` trailers**, against
+  AGENTS.md. Among them are `278c96a` (W5b-1), `30929d5` (W5-I1) and every
+  squash merge of the plan orchestrator's own briefs and verdicts, #5 to
+  #121. GitHub adds the trailer to a default squash body when a commit's
+  local author identity, a machine-local address, differs from the account
+  that merges. Removing them means rewriting `main`'s history, which is
+  Ed's decision. From #122 on, the plan orchestrator commits under the
+  account's noreply address and merges with an explicit body, and the
+  Wave 6 brief tells every item to do the same.
 - **Still running when the wave closed:** W5b-NB1
   (`01a1566a-4184-7367-92dc-49ee5d5dcc56`) and W5b-NB2
   (`01a1566a-70f6-73a5-b93a-d57fae90a1a0`).
