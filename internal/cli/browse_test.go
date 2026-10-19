@@ -276,6 +276,7 @@ func TestReadingNextSteps(t *testing.T) {
 		{[]string{"ls", "--json", pkg, "references/x/y"}, "metais ls <package> references/"},
 		{[]string{"ls", "--json", pkg, "nope"}, "metais ls <package> ."},
 		{[]string{"read", "--json", pkg, "references/"}, "metais ls <package> references/"},
+		{[]string{"outline", "--json", pkg, "."}, "metais ls <package> ."},
 		{[]string{"read", "--json", pkg, "references/nolf.txt", "--lines", "9-"}, "metais read <package> references/nolf.txt --lines 1-3"},
 		{[]string{"read", "--json", pkg, "references/empty.txt", "--lines", "1"}, "metais read <package> references/empty.txt"},
 		{[]string{"outline", "--json", pkg, "references/bin.dat"}, "metais extract <package> references/bin.dat --to <dir>"},

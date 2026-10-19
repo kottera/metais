@@ -251,7 +251,11 @@ func (s *session) lookupRefusal(p args.Parsed, i int, err error) outcome {
 		f := finding.New(finding.CodeUsageIsADirectory, invocation, nil, finding.Params{
 			"argument": s.operandArg(p, i), "command": finding.String(s.line.cmd.Name),
 		})
-		return s.refuseFilled(f, map[string]string{"<path>": shellQuote(browse.Clean(p.Operands[i]) + "/")})
+		dir := "."
+		if c := browse.Clean(p.Operands[i]); c != "" {
+			dir = c + "/"
+		}
+		return s.refuseFilled(f, map[string]string{"<path>": shellQuote(dir)})
 	}
 	panic("cli: a lookup refused with " + err.Error())
 }
