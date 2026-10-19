@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"slices"
+	"strings"
 )
 
 // Kind is what a directory entry is, from its Lstat mode: nothing is
@@ -93,10 +94,25 @@ func (d *Dir) Lstat(name string) (Entry, error) {
 	return entryOf(info), nil
 }
 
+// lstat describes name under root without following it. Every component
+// above it must be a directory and not a link: no link is followed, even
+// one whose target stays inside (ADR-009 D7 item 2), and os.Root alone
+// would follow one in the middle of a name.
 func lstat(root *os.Root, name string) (fs.FileInfo, error) {
 	n, ok := osName(name)
 	if !ok {
 		return nil, fail("stat", BadName)
+	}
+	if name != "." {
+		if exist, err := checkParents(root, "stat", name); ReasonOf(err) == NotDirectory {
+			// A file above the name, as the OS's ENOTDIR says: nothing
+			// has that name.
+			return nil, fail("stat", NotFound)
+		} else if err != nil {
+			return nil, err
+		} else if exist < strings.Count(name, "/") {
+			return nil, fail("stat", NotFound)
+		}
 	}
 	info, err := root.Lstat(n)
 	if err != nil {

@@ -48,6 +48,11 @@ type SourceOptions struct {
 	// NFC, the portable characters, case collisions, reserved names,
 	// ".git" — is Names' to say.
 	Names func(paths []string) error
+
+	// listed, when set, is told the path of every directory the walk
+	// lists, "." for the source directory itself. Only this package's
+	// tests set it, to hold the walk to the layout's roots.
+	listed func(rel string)
 }
 
 // ProblemKind is why a source directory is refused. Each names the
@@ -190,6 +195,7 @@ func OpenSource(path string, opt SourceOptions) (*Source, error) {
 		files:       map[string]sourceFile{},
 		maxEntries:  opt.Limits.Value(limits.Entries),
 		maxProblems: opt.Limits.Value(limits.Findings),
+		listed:      opt.listed,
 	}
 	w.top()
 	if err := w.refusal(opt.Names); err != nil {
@@ -213,6 +219,8 @@ type walker struct {
 
 	maxEntries, maxProblems int64
 	stopped                 bool
+
+	listed func(rel string)
 }
 
 func (w *walker) problem(p Problem) {
@@ -242,6 +250,9 @@ func (w *walker) list(rel string, info fs.FileInfo) ([]fs.FileInfo, bool) {
 		return nil, false
 	}
 	defer f.Close()
+	if w.listed != nil {
+		w.listed(rel)
+	}
 	if got, err := f.Stat(); err != nil || !got.IsDir() || !os.SameFile(info, got) {
 		w.problem(Problem{Kind: ProblemUnreadable, Path: pathOf(rel), Reason: Changed})
 		return nil, false
@@ -311,6 +322,9 @@ func (w *walker) top() {
 			manifest = true
 			w.file(name, fi)
 		case (name == manifestName || slices.Contains(layoutDirs, name)) && (kind == KindLink || kind == KindOther):
+			// A link named metais.yaml is refused as what it is, not
+			// also as a missing manifest.
+			manifest = manifest || name == manifestName
 			w.problem(Problem{Kind: ProblemNonRegularFile, Path: name})
 		case slices.Contains(layoutDirs, name) && kind == KindDir:
 			w.dir(name, fi, 1)

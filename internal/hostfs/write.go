@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"syscall"
 )
 
 // The modes ADR-005 D14 item 4 creates with, less the process umask.
@@ -92,7 +93,8 @@ func OpenNearest(path string) (*Writer, string, error) {
 			}
 			break
 		}
-		if !errors.Is(err, fs.ErrNotExist) {
+		// ENOTDIR is a file above p, which the next Stat up finds.
+		if !errors.Is(err, fs.ErrNotExist) && !errors.Is(err, syscall.ENOTDIR) {
 			return nil, "", mapErr("open", err)
 		}
 		parent := filepath.Dir(p)
@@ -147,13 +149,13 @@ func (w *Writer) List(name string, max int) ([]Entry, error) {
 	return d.List(name, max)
 }
 
-// checkParents examines every component of name but the last with Lstat:
-// each that exists must be a directory and not a link. It returns the
-// number of components that exist.
-func (w *Writer) checkParents(op, name string) (int, error) {
+// checkParents examines every component of name but the last with Lstat
+// under root: each that exists must be a directory and not a link. It
+// returns the number of components that exist.
+func checkParents(root *os.Root, op, name string) (int, error) {
 	segs := strings.Split(name, "/")
 	for i := range len(segs) - 1 {
-		info, err := w.root.Lstat(filepath.FromSlash(strings.Join(segs[:i+1], "/")))
+		info, err := root.Lstat(filepath.FromSlash(strings.Join(segs[:i+1], "/")))
 		if errors.Is(err, fs.ErrNotExist) {
 			return i, nil
 		}
@@ -178,7 +180,7 @@ func (w *Writer) Mkdir(name string) error {
 	if !ok || name == "." {
 		return fail("mkdir", BadName)
 	}
-	if _, err := w.checkParents("mkdir", name); err != nil {
+	if _, err := checkParents(w.root, "mkdir", name); err != nil {
 		return err
 	}
 	return w.mkdir(name, n)
@@ -240,7 +242,7 @@ func (w *Writer) Create(name string, executable bool, r io.Reader) error {
 	if !ok || name == "." {
 		return fail("create", BadName)
 	}
-	if _, err := w.checkParents("create", name); err != nil {
+	if _, err := checkParents(w.root, "create", name); err != nil {
 		return err
 	}
 	mode := fs.FileMode(fileMode)
@@ -277,7 +279,7 @@ func (w *Writer) Sub(name string) (*Writer, error) {
 	if name == "." {
 		return w, nil
 	}
-	if _, err := w.checkParents("open", name); err != nil {
+	if _, err := checkParents(w.root, "open", name); err != nil {
 		return nil, err
 	}
 	info, err := lstat(w.root, name)
@@ -349,7 +351,7 @@ func (w *Writer) rename(from, to string, replace bool) error {
 	if dir != toDir {
 		return fail("rename", BadName)
 	}
-	if _, err := w.checkParents("rename", from); err != nil {
+	if _, err := checkParents(w.root, "rename", from); err != nil {
 		return err
 	}
 	info, err := w.root.Lstat(fn)
