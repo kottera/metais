@@ -59,9 +59,16 @@ func (e *DestinationError) Error() string { return "browse: the destination exis
 // CheckError is Extract's refusal, with nothing written, of the files an
 // existing directory's checks refused (ADR-005 D15 items 4 and 8, as
 // Amendment A1 extends them): every check that refused its path, in path
-// order, each with its Err.
+// order.
 type CheckError struct {
-	Refused []hostfs.PathCheck
+	Refused []Refusal
+}
+
+// Refusal is one file an existing directory's checks refused: its path,
+// and Err, the hostfs error whose reason refuses it.
+type Refusal struct {
+	Path string
+	Err  error
 }
 
 func (e *CheckError) Error() string { return "browse: the destination's checks refused a file" }
@@ -122,6 +129,29 @@ func (e *CommitError) Error() string { return "browse: extract's commit stopped 
 // It is the one function of this package that reaches the host
 // (layers.json): everything else reads a tree.
 func Extract(t pkgtree.Tree, entries []string, to string, opt ExtractOptions, faults fault.Set) ([]File, error) {
+	// Every reach of hostfs is in this function, its closures included
+	// (layers.json): the rest of the package reads a tree.
+	reasonOf := func(err error) string { return string(hostfs.ReasonOf(err)) }
+	// destinationError is a failure to open the destination: a
+	// *DestinationError when it, or a directory above it, is not a
+	// directory, and otherwise a *WriteError listing no file.
+	destinationError := func(err error) error {
+		if hostfs.ReasonOf(err) == hostfs.NotDirectory {
+			return &DestinationError{NotDirectory: true}
+		}
+		return &WriteError{Reason: reasonOf(err)}
+	}
+	// staged reports whether the directory to holds a StagingDir, by
+	// Lstat.
+	staged := func() bool {
+		d, err := hostfs.OpenDir(to)
+		if err != nil {
+			return false
+		}
+		defer d.Close()
+		_, err = d.Lstat(hostfs.StagingDir)
+		return err == nil
+	}
 	files := make([]File, 0, len(entries))
 	for _, e := range entries {
 		info, err := t.Stat(e)
@@ -130,13 +160,86 @@ func Extract(t pkgtree.Tree, entries []string, to string, opt ExtractOptions, fa
 		}
 		files = append(files, File{Path: e, Size: info.Size})
 	}
+	// extractExisting is Extract into to, an existing directory.
+	extractExisting := func() ([]File, error) {
+		x, err := hostfs.OpenExisting(to, hostfs.WithFaults(faults))
+		if err != nil {
+			return nil, destinationError(err)
+		}
+		defer x.Close()
+		found, err := x.List(int(limits.Get(limits.Entries).Default))
+		de := &DestinationError{}
+		switch {
+		case hostfs.ReasonOf(err) == hostfs.TooLarge:
+			de.More = true
+		case err != nil:
+			return nil, &WriteError{Reason: reasonOf(err)}
+		}
+		for _, f := range found {
+			if len(de.Entries) == MaxListed {
+				de.More = true
+				break
+			}
+			de.Entries = append(de.Entries, f.Name)
+		}
+		if (len(de.Entries) > 0 || de.More) && !opt.Overwrite {
+			return nil, de
+		}
+		paths := make([]string, len(files))
+		for i, f := range files {
+			paths[i] = f.Path
+		}
+		checks := x.Check(paths)
+		ce := &CheckError{}
+		for _, c := range checks {
+			if c.Err != nil {
+				ce.Refused = append(ce.Refused, Refusal{c.Path, c.Err})
+			}
+		}
+		if len(ce.Refused) > 0 {
+			return nil, ce
+		}
+		if opt.DryRun {
+			// Stage refuses a staging directory left in to; a dry run finds it
+			// by name, as Stage's exclusive create would.
+			if staged() {
+				return nil, &WriteError{Reason: string(hostfs.Exists)}
+			}
+			return files, nil
+		}
+		out, err := x.Stage(checks)
+		if err != nil {
+			return nil, &WriteError{Reason: reasonOf(err)}
+		}
+		for _, f := range files {
+			r, err := t.Open(f.Path)
+			if err == nil {
+				err = out.Create(f.Path, false, r)
+				r.Close()
+			} else {
+				err = &hostfs.Error{Op: "read", Reason: hostfs.IOError}
+			}
+			if err != nil {
+				out.Abort()
+				return nil, &WriteError{Reason: reasonOf(err)}
+			}
+		}
+		if err := out.Commit(); err != nil {
+			var ce *hostfs.CommitError
+			if errors.As(err, &ce) && len(ce.Committed) > 0 {
+				return nil, &CommitError{Reason: reasonOf(ce.Err), Committed: ce.Committed}
+			}
+			return nil, &WriteError{Reason: reasonOf(err)}
+		}
+		return files, nil
+	}
 	w, rest, err := hostfs.OpenNearest(to)
 	if err != nil {
 		return nil, destinationError(err)
 	}
 	w.Close()
 	if rest == "." {
-		return extractExisting(t, files, to, opt, faults)
+		return extractExisting()
 	}
 	if opt.DryRun {
 		return files, nil
@@ -183,100 +286,3 @@ func Extract(t pkgtree.Tree, entries []string, to string, opt ExtractOptions, fa
 	}
 	return files, nil
 }
-
-// extractExisting is Extract into to, an existing directory.
-func extractExisting(t pkgtree.Tree, files []File, to string, opt ExtractOptions, faults fault.Set) ([]File, error) {
-	x, err := hostfs.OpenExisting(to, hostfs.WithFaults(faults))
-	if err != nil {
-		return nil, destinationError(err)
-	}
-	defer x.Close()
-	found, err := x.List(int(limits.Get(limits.Entries).Default))
-	de := &DestinationError{}
-	switch {
-	case hostfs.ReasonOf(err) == hostfs.TooLarge:
-		de.More = true
-	case err != nil:
-		return nil, &WriteError{Reason: reasonOf(err)}
-	}
-	for _, f := range found {
-		if len(de.Entries) == MaxListed {
-			de.More = true
-			break
-		}
-		de.Entries = append(de.Entries, f.Name)
-	}
-	if (len(de.Entries) > 0 || de.More) && !opt.Overwrite {
-		return nil, de
-	}
-	paths := make([]string, len(files))
-	for i, f := range files {
-		paths[i] = f.Path
-	}
-	checks := x.Check(paths)
-	ce := &CheckError{}
-	for _, c := range checks {
-		if c.Err != nil {
-			ce.Refused = append(ce.Refused, c)
-		}
-	}
-	if len(ce.Refused) > 0 {
-		return nil, ce
-	}
-	if opt.DryRun {
-		// Stage refuses a staging directory left in to; a dry run finds it
-		// by name, as Stage's exclusive create would.
-		if staged(to) {
-			return nil, &WriteError{Reason: string(hostfs.Exists)}
-		}
-		return files, nil
-	}
-	out, err := x.Stage(checks)
-	if err != nil {
-		return nil, &WriteError{Reason: reasonOf(err)}
-	}
-	for _, f := range files {
-		r, err := t.Open(f.Path)
-		if err == nil {
-			err = out.Create(f.Path, false, r)
-			r.Close()
-		} else {
-			err = &hostfs.Error{Op: "read", Reason: hostfs.IOError}
-		}
-		if err != nil {
-			out.Abort()
-			return nil, &WriteError{Reason: reasonOf(err)}
-		}
-	}
-	if err := out.Commit(); err != nil {
-		var ce *hostfs.CommitError
-		if errors.As(err, &ce) && len(ce.Committed) > 0 {
-			return nil, &CommitError{Reason: reasonOf(ce.Err), Committed: ce.Committed}
-		}
-		return nil, &WriteError{Reason: reasonOf(err)}
-	}
-	return files, nil
-}
-
-// staged reports whether the directory to holds a StagingDir, by Lstat.
-func staged(to string) bool {
-	d, err := hostfs.OpenDir(to)
-	if err != nil {
-		return false
-	}
-	defer d.Close()
-	_, err = d.Lstat(hostfs.StagingDir)
-	return err == nil
-}
-
-// destinationError is a failure to open the destination: a
-// *DestinationError when it, or a directory above it, is not a directory,
-// and otherwise a *WriteError listing no file.
-func destinationError(err error) error {
-	if hostfs.ReasonOf(err) == hostfs.NotDirectory {
-		return &DestinationError{NotDirectory: true}
-	}
-	return &WriteError{Reason: reasonOf(err)}
-}
-
-func reasonOf(err error) string { return string(hostfs.ReasonOf(err)) }
