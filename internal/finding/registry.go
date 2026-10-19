@@ -1333,6 +1333,21 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{},
 	},
 	{
+		Code:     "schema.sample_unsatisfiable",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectInput,
+		Params: []ParamSpec{
+			{Name: "instance", Type: TypeString, Meaning: "The JSON Pointer, in the input's value, of the field.", Always: true},
+			{Name: "reason", Type: TypeString, Meaning: "Why no value can be made: type (no type is allowed, or a false schema), range (no number in the bounds, or none within ±(2^53−1)), length (contradictory length, item or property-count bounds), enum or const (no member or value that validates), multiple_of (no multiple in range), pattern_unsupported (the pattern holds a construct the generator does not walk), pattern_unmet (no string meeting the pattern within the length bounds), format (the format's value does not meet the pattern or length bounds), unique_items (too few distinct items), not (every attempt matched a not), conditionals (the conditionals do not settle), or recursion (a recursive reference still recurses at the depth bound).", Always: true},
+		},
+		Message:    "The sample generator cannot make a value for {instance} of the input {input} that its schema allows ({reason}).",
+		Hint:       "Add an examples value to this field and the generator will use it, such as \"examples\": [\"…\"]; check that the field's keywords do not contradict each other.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
 		Code:     "template.ooxml.split_construct",
 		Severity: SeverityError,
 		Class:    ClassContent,

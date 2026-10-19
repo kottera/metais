@@ -218,6 +218,7 @@ it, and the statements it reports.
 | `schema.ref_by_path` | error | content | package | `reference`, `id` | 1.0 | — |
 | `schema.ref_escapes` | error | content | package | `reference` | 1.0 | — |
 | `schema.ref_unresolved` | error | content | package | `reference` | 1.0 | — |
+| `schema.sample_unsatisfiable` | error | content | input | `instance`, `reason` | 1.0 | — |
 | `template.ooxml.split_construct` | error | content | template | `cause`, `text`, `text_elements` | 1.0 | — |
 | `template.ooxml.split_delimiter` | error | content | template | `cause`, `delimiter`, `text`, `text_elements` | 1.0 | — |
 | `template.xref.budget_exhausted` | warning | content | package | `bound`, `limit` | 1.0 | — |

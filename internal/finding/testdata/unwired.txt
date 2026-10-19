@@ -209,6 +209,7 @@ schema.pattern_unsupported W3
 schema.ref_by_path W3
 schema.ref_escapes W3
 schema.ref_unresolved W3
+schema.sample_unsatisfiable W5
 template.ooxml.split_construct W4
 template.ooxml.split_delimiter W4
 template.xref.budget_exhausted W4

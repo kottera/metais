@@ -283,9 +283,9 @@ func TestRegistryEntries(t *testing.T) {
 // internal/schemafail's mapping of JSON Schema failures in each of its
 // three families (ADR-006 D6 item 1), internal/schema's refusals of a
 // schema file, internal/xref's cross-reference (ADR-007 D3),
-// internal/inputs' refusals of a supplied input, and
-// internal/author/ooxml's split runs (ADR-007 D4). A code a later change
-// emits is registered by that change.
+// internal/inputs' refusals of a supplied input, internal/author/ooxml's
+// split runs (ADR-007 D4), and internal/sample's unsatisfiable field
+// (ADR-007 D9). A code a later change emits is registered by that change.
 func TestEmittedCodes(t *testing.T) {
 	var got []Code
 	for _, e := range registry {
@@ -300,7 +300,7 @@ func TestEmittedCodes(t *testing.T) {
 		"markdown.frontmatter_unclosed",
 		"schema.dialect", "schema.format_unsupported", "schema.id_duplicate", "schema.invalid",
 		"schema.keyword_unknown", "schema.pattern_unsupported", "schema.ref_by_path",
-		"schema.ref_escapes", "schema.ref_unresolved",
+		"schema.ref_escapes", "schema.ref_unresolved", "schema.sample_unsatisfiable",
 		CodeUsageBadValue, CodeUsageMissingCommand, CodeUsageRepeatedFlag, CodeUsageUnexpectedOperand,
 		CodeUsageUnknownCommand, CodeUsageUnknownFlag, CodeUsageUnknownTopic,
 	}

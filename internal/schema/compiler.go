@@ -50,6 +50,8 @@ type Compiler struct {
 	roots   map[string]root        // by the library's root URL
 	anchors map[string]root        // by the anchor's URI
 	refs    map[root]string        // each $ref's resolved URI, by the schema object holding it
+	dynRefs map[root]string        // each $dynamicRef's resolved URI, by the schema object holding it
+	subs    map[root]*Schema       // each subschema Subschema compiled
 }
 
 // root is where a resource the library holds as a root document is in the
@@ -102,6 +104,8 @@ func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode) (*Compiler, [
 		roots:   map[string]root{},
 		anchors: map[string]root{},
 		refs:    map[root]string{},
+		dynRefs: map[root]string{},
+		subs:    map[root]*Schema{},
 	}
 	var files []*file
 	var findings []finding.Finding
@@ -136,11 +140,7 @@ func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode) (*Compiler, [
 		for _, a := range f.walk.anchors {
 			c.anchors[a.uri] = root{f.entry, a.ptr}
 		}
-		for _, r := range f.walk.refs {
-			if u, err := url.Parse(r.text); err == nil && strings.HasSuffix(r.ptr, "/$ref") {
-				c.refs[root{f.entry, strings.TrimSuffix(r.ptr, "/$ref")}] = r.base.ResolveReference(u).String()
-			}
-		}
+		c.recordRefs(f.entry, f.walk.refs)
 		if err := c.add(lib, f); err != nil {
 			// The pre-check refused every URI the library could not take.
 			panic(err)
@@ -289,6 +289,22 @@ func checkRef(r reference, known map[string]owner, byRetrieval map[string]*file)
 		}
 	}
 	return CodeRefUnresolved, finding.Params{}
+}
+
+// recordRefs records the resolved URI of each $ref and $dynamicRef of
+// refs, the references the pre-check found in entry.
+func (c *Compiler) recordRefs(entry string, refs []reference) {
+	for _, r := range refs {
+		u, err := url.Parse(r.text)
+		if err != nil {
+			continue
+		}
+		if at, ok := strings.CutSuffix(r.ptr, "/$ref"); ok {
+			c.refs[root{entry, at}] = r.base.ResolveReference(u).String()
+		} else if at, ok := strings.CutSuffix(r.ptr, "/$dynamicRef"); ok {
+			c.dynRefs[root{entry, at}] = r.base.ResolveReference(u).String()
+		}
+	}
 }
 
 // add registers f with the library under its retrieval URI, its canonical

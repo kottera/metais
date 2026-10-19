@@ -4228,6 +4228,31 @@
       "statements": []
     },
     {
+      "code": "schema.sample_unsatisfiable",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "instance",
+          "type": "string",
+          "meaning": "The JSON Pointer, in the input's value, of the field.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why no value can be made: type (no type is allowed, or a false schema), range (no number in the bounds, or none within ±(2^53−1)), length (contradictory length, item or property-count bounds), enum or const (no member or value that validates), multiple_of (no multiple in range), pattern_unsupported (the pattern holds a construct the generator does not walk), pattern_unmet (no string meeting the pattern within the length bounds), format (the format's value does not meet the pattern or length bounds), unique_items (too few distinct items), not (every attempt matched a not), conditionals (the conditionals do not settle), or recursion (a recursive reference still recurses at the depth bound).",
+          "always": true
+        }
+      ],
+      "message": "The sample generator cannot make a value for {instance} of the input {input} that its schema allows ({reason}).",
+      "hint": "Add an examples value to this field and the generator will use it, such as \"examples\": [\"…\"]; check that the field's keywords do not contradict each other.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "template.ooxml.split_construct",
       "severity": "error",
       "class": "content",
