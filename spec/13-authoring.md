@@ -89,7 +89,20 @@ for a container whose profile requires an entry when no entry has that path
 so, and no entry's path is one only a render can know — a path template, an
 asset or a mirror.
 
+A package declares the specification minor it is written to
+([chapter 4](04-versions.md)), and an author is best served by the lowest
+minor whose constructs it uses, which every tool implementing that minor or
+a later one renders. A check computes that lowest minor from the constructs
+the package uses and the minor that added each. While 1.0 is the only minor
+the computation is trivial: every package needs 1.0 and declares it, so a
+check reports nothing of it.
+
 ### Step 5: the schemas
+
+<a id="mts-aut-032"></a>**MTS-AUT-032** A check MUST compile, without
+data, the schema every output's `validate` names, at every depth of a
+container, by the rules of [chapter 10](10-transforms.md) §10.4, and MUST
+report every finding of every one of them as a render would.
 
 <a id="mts-aut-007"></a>**MTS-AUT-007** For every schema object of every
 schema file, a check MUST validate its `default` against that object and

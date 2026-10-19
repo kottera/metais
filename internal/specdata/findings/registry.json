@@ -4006,6 +4006,34 @@
       "statements": []
     },
     {
+      "code": "output.parse",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "form",
+          "type": "string",
+          "meaning": "The form the output is parsed in, by its kind: json or yaml.",
+          "always": true
+        },
+        {
+          "name": "rule",
+          "type": "string",
+          "meaning": "The code an input file breaking the same rule of the form is reported with, such as json.syntax or yaml.alias.",
+          "always": true
+        }
+      ],
+      "message": "The output {output} is not {form} the specification reads: it breaks the rule {rule} reports for an input.",
+      "hint": "Correct the template so that it writes valid {form} at this place; the output was not validated against its schema.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TRN-002",
+        "MTS-TRN-003"
+      ]
+    },
+    {
       "code": "output.path.case_collision",
       "severity": "error",
       "class": "content",

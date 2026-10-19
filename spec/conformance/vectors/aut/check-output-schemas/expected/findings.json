@@ -1,0 +1,62 @@
+[
+  {
+    "code": "schema.ref_escapes",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/schemas/escapes.json",
+      "pointer": "/$ref"
+    },
+    "params": {
+      "reference": "../../references/reached.json"
+    }
+  },
+  {
+    "code": "schema.keyword_unknown",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "references/misspelt.json",
+      "pointer": "/maxLenght"
+    },
+    "params": {
+      "keyword": "maxLenght"
+    }
+  },
+  {
+    "code": "schema.format_unsupported",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "references/parts/label.json",
+      "pointer": "/format"
+    },
+    "params": {
+      "format": "colour"
+    }
+  },
+  {
+    "code": "schema.ref_unresolved",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "references/reached.json",
+      "pointer": "/properties/other/$ref"
+    },
+    "params": {
+      "reference": "parts/missing.json"
+    }
+  }
+]

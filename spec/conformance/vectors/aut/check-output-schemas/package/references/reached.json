@@ -1,0 +1,1 @@
+{"properties": {"label": {"$ref": "parts/label.json"}, "other": {"$ref": "parts/missing.json"}}}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/newline-crlf",
+  "title": "newline: crlf makes every LF not preceded by CR a CR LF in the whole file, a value's line endings included, and leaves a CR LF and a lone CR; as-written, declared or by default, writes the bytes the template produced",
+  "statements": [
+    "MTS-TRN-001"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "determinism"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

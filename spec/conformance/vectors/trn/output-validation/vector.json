@@ -1,0 +1,72 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/output-validation",
+  "title": "A json or yaml output naming validate is parsed after CRLF conversion and validated against its schema, whose references stay beneath its top-level directory; a failing keyword is reported by its output. code and a text its reader refuses as output.parse, every finding of every output located in it, and nothing is written",
+  "statements": [
+    "MTS-TRN-002",
+    "MTS-TRN-003"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "every-keyword",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "keywords",
+            "data": "data",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/every-keyword.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "parse",
+            "data": "data",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/parse.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "valid",
+            "data": "data",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/valid"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

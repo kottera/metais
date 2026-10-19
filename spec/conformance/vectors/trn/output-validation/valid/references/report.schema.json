@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "required": ["label", "lines"],
+  "properties": {
+    "label": {"$ref": "parts/label.yaml"},
+    "lines": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": false
+}

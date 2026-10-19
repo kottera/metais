@@ -1,0 +1,48 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-output-schemas",
+  "title": "Check compiles every output validation schema without data, each with the files its references reach beneath its own top-level directory, and reports every finding of every one as a render refuses with them",
+  "statements": [
+    "MTS-AUT-030",
+    "MTS-TRN-002"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

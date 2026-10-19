@@ -56,8 +56,10 @@ func renderDeclaration() *Command {
 			"the inputs. Then every output is planned, an asset or a mirror as each file it writes, its " +
 			"path checked by the portable-path rules, and rendered in memory: every output is attempted, " +
 			"and each reports its first error. An asset is copied as it is, never rendered: its size counts " +
-			"against the output limits, and its bytes are read from the package as it is written. If any " +
-			"finding is an error, nothing is written anywhere. A container output is one zip of its entries, " +
+			"against the output limits, and its bytes are read from the package as it is written. An output " +
+			"declaring newline: crlf then has its line endings made CR LF, and one naming a validate schema " +
+			"is parsed and validated against it, every finding of every output reported. If any finding is " +
+			"an error, nothing is written anywhere. A container output is one zip of its entries, " +
 			"each rendered as an output is, in the order its profile and its first entries give; its zip is " +
 			"written as it is assembled.\n\n" +
 			"--out is required, and names a directory that does not exist yet. The outputs are written " +
