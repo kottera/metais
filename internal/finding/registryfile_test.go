@@ -109,7 +109,7 @@ func TestGenerateRegistry(t *testing.T) {
 	}
 }
 
-// registryFileProblem describes how the committed registry file got
+// registryFileProblem describes how got, a committed registry file,
 // differs from what the table generates, or returns "".
 func registryFileProblem(got []byte, entries []Entry) string {
 	want, err := registryFile(entries)
