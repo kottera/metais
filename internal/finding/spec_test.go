@@ -282,8 +282,9 @@ func TestRegistryEntries(t *testing.T) {
 // internal/manifest's version gate and manifest rules,
 // internal/schemafail's mapping of JSON Schema failures in each of its
 // three families (ADR-006 D6 item 1), internal/schema's refusals of a
-// schema file, internal/xref's cross-reference (ADR-007 D3), and
-// internal/inputs' refusals of a supplied input. A code a later change
+// schema file, internal/xref's cross-reference (ADR-007 D3),
+// internal/inputs' refusals of a supplied input, and
+// internal/author/ooxml's split runs (ADR-007 D4). A code a later change
 // emits is registered by that change.
 func TestEmittedCodes(t *testing.T) {
 	var got []Code
@@ -340,6 +341,7 @@ func TestEmittedCodes(t *testing.T) {
 		want = append(want, Code("manifest.yaml."+c), Code("yaml."+c))
 	}
 	want = append(want, "manifest.number_out_of_range", "manifest.yaml.encoding", "manifest.yaml.root_not_mapping")
+	want = append(want, "template.ooxml.split_construct", "template.ooxml.split_delimiter")
 	for _, c := range []string{
 		"budget_exhausted", "dynamic_reference", "for_each_not_array", "index_out_of_range", "missing_asset",
 		"missing_partial", "not_an_array", "not_an_object", "partial_parameter_not_passed", "unknown_field",

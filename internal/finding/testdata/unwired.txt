@@ -209,6 +209,8 @@ schema.pattern_unsupported W3
 schema.ref_by_path W3
 schema.ref_escapes W3
 schema.ref_unresolved W3
+template.ooxml.split_construct W4
+template.ooxml.split_delimiter W4
 template.xref.budget_exhausted W4
 template.xref.dynamic_reference W4
 template.xref.for_each_not_array W4

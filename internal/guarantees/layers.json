@@ -6,6 +6,12 @@
       "reason": "ADR-010 D2 item 2: the Liquid engine imports no other internal package and nothing outside the standard library, so it is testable against Golden Liquid with no METAIS concept in scope"
     },
     {
+      "rule": "never-depends",
+      "package": "github.com/kottera/metais/internal/author/ooxml",
+      "imports": "github.com/kottera/metais/internal/manifest/...",
+      "reason": "ADR-007 D4 item 1: the split-run scan does not depend on the manifest, so it runs before a container is wired up"
+    },
+    {
       "rule": "single-entry-point",
       "package": "github.com/kottera/metais/internal/browse",
       "imports": "github.com/kottera/metais/internal/hostfs",
