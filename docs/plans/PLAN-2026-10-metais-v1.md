@@ -1298,6 +1298,15 @@ new command and no new finding code; render-pipeline extension points
 These are Ed's rulings, not the train's, and need no ratification at the
 close.
 
+**Rulings made during the wave:**
+- **ADR-011 D3 item 3 permits gaps in statement numbers**, so §2's
+  statement-number blocks need no ADR change. The item protects the
+  stability of an identifier: it is never assigned by position, never
+  reused, and never renumbered. A number allotted in a block and never used
+  is never assigned, so none of that is broken. Within each item, numbers
+  are still taken in order of addition. No contiguity check is added.
+  Ed's guidance reserved the question to him only if the item forbade gaps.
+
 ## 12. Wave 6 — pack, and hardening
 
 **Objective.** `pack` closes the authoring path. The hostile corpus and the
