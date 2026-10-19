@@ -49,11 +49,7 @@ func (c *Compiler) Combined(doc value.Value) (*Schema, []finding.Finding) {
 	for _, a := range w.anchors {
 		c.anchors[a.uri] = root{CombinedEntry, a.ptr}
 	}
-	for _, r := range w.refs {
-		if u, err := url.Parse(r.text); err == nil && strings.HasSuffix(r.ptr, "/$ref") {
-			c.refs[root{CombinedEntry, strings.TrimSuffix(r.ptr, "/$ref")}] = r.base.ResolveReference(u).String()
-		}
-	}
+	c.recordRefs(CombinedEntry, w.refs)
 	if err := c.lib.AddResource(CombinedURI, toLibrary(doc)); err != nil {
 		panic(err)
 	}

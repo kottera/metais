@@ -1093,4 +1093,10 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
 
 ## Implementation log
 
-Nothing implemented.
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-5.** D10 item 2's writer
+  (`yamlx.Write`, Wave 2) escapes U+FFFE and U+FFFF, which a YAML stream
+  may not hold raw, and writes an integral number of magnitude above
+  2^53−1 and below 1e21 in exponent notation (`9.007199254740992e+15`),
+  not the integer literal the `json` filter writes, which ADR-003 D8 item
+  5 refuses for an input. Every other number is written as `json` writes
+  it.

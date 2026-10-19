@@ -1,0 +1,7 @@
+go test fuzz v1
+[]byte("{\"type\":\"string\",\"minLength\":50}")
+uint64(5)
+byte('\x00')
+byte('\x00')
+byte('\x03')
+bool(false)

@@ -1,0 +1,7 @@
+go test fuzz v1
+[]byte("{\"anyOf\":[{\"type\":\"integer\",\"minimum\":5,\"maximum\":1},{\"type\":\"object\",\"properties\":{\"k\":{\"$ref\":\"#/$defs/k\"}},\"if\":{\"required\":[\"k\"]},\"then\":{\"required\":[\"z\"]}}],\"$defs\":{\"k\":{\"oneOf\":[{\"type\":\"integer\"},{\"type\":\"integer\",\"examples\":[0]}]}}}")
+uint64(6)
+byte('\x00')
+byte('\x03')
+byte('\x00')
+bool(false)
