@@ -38,6 +38,7 @@ func TestHas(t *testing.T) {
 func TestFaultBits(t *testing.T) {
 	for name, tt := range map[string]struct{ got, want Set }{
 		"SkipDigest":   {SkipDigest, 1 << 0},
+		"FirstFinding": {FirstFinding, 1 << 1},
 		"UnpackToTemp": {UnpackToTemp, 1 << 2},
 		"SkipConfine":  {SkipConfine, 1 << 3},
 	} {
