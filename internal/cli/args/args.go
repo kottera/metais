@@ -118,6 +118,9 @@ type Parsed struct {
 	values   map[string][]string // by long name; a boolean flag holds one "" per occurrence
 	first    map[string]int      // the index of each flag's first occurrence
 	Operands []string
+	// OperandArgs holds the index of each operand in the slice Parse was
+	// given.
+	OperandArgs []int
 }
 
 // Has reports whether the flag called name was given.
@@ -163,7 +166,6 @@ func (p Parsed) Arg(name string) (int, bool) {
 func Parse(spec Spec, args []string) (Parsed, []Error) {
 	p := Parsed{values: map[string][]string{}, first: map[string]int{}}
 	var errs []Error
-	operandArgs := []int{}
 	add := func(f Flag, i int, v string) {
 		if _, seen := p.values[f.Name]; seen && !f.Repeatable {
 			errs = append(errs, Error{Kind: RepeatedFlag, Arg: i, Flag: f.Name})
@@ -184,7 +186,7 @@ func Parse(spec Spec, args []string) (Parsed, []Error) {
 		switch {
 		case ended || a == "-" || !strings.HasPrefix(a, "-"):
 			p.Operands = append(p.Operands, a)
-			operandArgs = append(operandArgs, i)
+			p.OperandArgs = append(p.OperandArgs, i)
 		case a == "--":
 			ended = true
 		case strings.HasPrefix(a, "--"):
@@ -238,7 +240,7 @@ func Parse(spec Spec, args []string) (Parsed, []Error) {
 	n := len(spec.Operands)
 	repeatable := n > 0 && spec.Operands[n-1].Repeatable
 	if !repeatable && len(p.Operands) > n {
-		for _, i := range operandArgs[n:] {
+		for _, i := range p.OperandArgs[n:] {
 			errs = append(errs, Error{Kind: ExtraOperand, Arg: i})
 		}
 	}
