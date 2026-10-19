@@ -1,6 +1,6 @@
 ---
 name: root-cause
-description: How to find out why something failed, with an instrument instead of repetition. Read this the moment a test fails, a behaviour is wrong, or a failure looks intermittent and you do not yet know WHY, before re-running anything. Names the two moves that beat sampling (make the failure deterministic, or make one occurrence sufficient), a catalogue of instruments keyed by the kind of failure (seam logging, forcing an interleaving, the timeout's goroutine dump, stretching a timing failure's interval at its seam rather than loading the host, CPU time instead of wall time, environment diffs, bisect last), the TEMP-DEBUG rule for temporary instrumentation, and how to confirm a fix so the green means something.
+description: How to find out why something failed, with an instrument instead of repetition. Read this the moment a test fails, a behaviour is wrong, or a failure looks intermittent and you do not yet know WHY, before re-running anything. Names the two moves that beat sampling (make the failure deterministic, or make one occurrence sufficient), a catalogue of instruments keyed by the kind of failure (seam logging, forcing an interleaving, the timeout's goroutine dump, stretching a timing failure's interval at its seam rather than loading the host, CPU time instead of wall time, environment diffs, bisect last), metais's own instruments and the failure each is for (internal/fault's bits, internal/testenv, the guarantee detectors and their fault controls, the host-isolation canaries, CPU-time measurement and the work counters), why a failure under load is a defect with a mechanism and passing alone closes nothing, the TEMP-DEBUG rule for temporary instrumentation, and how to confirm a fix so the green means something.
 ---
 
 # Root-cause: find out why
@@ -13,8 +13,10 @@ The run that finally reproduces the failure tells you only what the first one
 did: it fails.
 
 This project aims at **zero intermittent failures**. Every red is a defect
-with a mechanism, and it is cheapest to find while it is fresh. Nothing gets
-recorded as "known flaky" and left alone.
+with a mechanism, and it is cheapest to find while it is fresh. There is no
+list of tolerated failures, and nothing is recorded as "known flaky" and
+left alone: a red is fixed at its mechanism, or it stays open as a defect
+with the evidence you gathered.
 
 ## The two moves
 
@@ -59,7 +61,8 @@ Then shrink the problem: one test (`-run '^TestName$'`), one package,
 | Hang | The `-timeout` panic's goroutine dump names the stuck goroutine and the call it is blocked in; set `GOTRACEBACK=all` for every goroutine. Shorten `-timeout` for the one test you are investigating, so the dump arrives in seconds instead of ten minutes | Reading only the top frame, or killing the run from the shell and losing the dump |
 | A host-facing failure (a file, a path, a link, a device, open-file limits) | The `internal/hostfs` seam and `internal/testenv`'s hermetic `HOME` and directories. Reproduce the exact host state the test builds, then step through it | Assuming the host is the same as the test's fixture: a umask, a case-insensitive filesystem, a lowered `RLIMIT_NOFILE` |
 | "Only fails there": one operating system, one host, the dispatch sandbox | **Diff the environment.** `GOOS`-specific files (`*_unix_test.go`, `*_windows.go`), `TMPDIR`, `HOME`, the `go env` output, the umask, what the sandbox denies. Reproduce that constraint locally | Treating the environment as a mystery; it is a variable |
-| A guarantee a detector should catch | The fault switches in `internal/fault`. A fault breaks one guarantee at one named seam, to show its detector catches it. Read the seam the fault names, and you have the path the guarantee takes | Adding a fault to debug something: faults are permanent, assigned in the brief, and prove detectors. Temporary instrumentation is TEMP-DEBUG (below) |
+| A guarantee a detector should catch | The fault switches in `internal/fault`. A fault breaks one guarantee at one named seam, to show its detector catches it. Read the seam the fault names, and you have the path the guarantee takes (metais's instruments, below) | Adding a fault to debug something: faults are permanent, assigned in the brief, and prove detectors. Temporary instrumentation is TEMP-DEBUG (below) |
+| A host fact in an output, a finding or a stream | The host-isolation harness and its canaries (below): the sentinel names its channel, and the A/B differential names the stream | Grepping the output for your own user name: the sentinels exist so that the hit says where it came from |
 | Mechanism still unknown after all of the above | `git bisect` over **commits**: last, and never over re-runs | Bisecting first, because it feels like progress |
 
 `dlv` (delve) is the instrument for hidden state, such as a wedged goroutine
@@ -68,6 +71,27 @@ is not part of the Go toolchain and may not be installed. It also builds
 without `-race` and perturbs timing, so it is the wrong tool for a race.
 
 ## "It fails under load" is a symptom, not a mechanism
+
+A test that times out, or fails only under load, is a defect with a
+mechanism to find. Look first for one of these four, and fix the one you
+find:
+
+- **a timing assumption**: an order one goroutine or process assumes it
+  wins, or a stage assumed to finish within some interval;
+- **an unbounded wait**: a read, a lock or a process wait with nothing that
+  ends it, which a busy host only makes long enough to see;
+- **a test that charges wall time**: a bound on work asserted against the
+  clock, so the host's other work is counted as the test's (CPU-time
+  measurement, below);
+- **a gate that oversubscribes the host**: more packages, processes or
+  parallel tests at once than the cores can run, so every clock in them
+  includes waiting for a turn.
+
+**"It passed alone" closes nothing.** A test that passes run by itself and
+fails in the full run has told you the mechanism needs company to show,
+which narrows the four above; it has not told you the code is right. **No
+assertion is widened and no timeout raised to hide it**: either deletes the
+report and keeps the defect.
 
 Load does one thing: it stretches some interval. Somewhere a wait depends on
 that interval being short: a deadline, a timeout, a polling loop, an order one
@@ -98,6 +122,164 @@ minutes reaches the ten-minute `go test` timeout when several gates share
 the host. That mechanism is oversubscription, and the `verification-gate`
 skill's `-p` cap is its fix. Establish it by measurement: the package's time
 alone, and its time in the full run. Do not assume it.
+
+`internal/conformance/wallclock_test.go` is a worked example. The
+self-proof's rows ran out their 5 s wall clock under the full parallel
+`go test -race` on processes with nothing wrong with them, and two
+mechanisms, neither the implementation's, were spending the clock: the race
+runtime sleeps a second before every race-built process exits
+(`atexit_sleep_ms`), and the self-proof started some eighty race-built
+processes at once on a few processors. Each is fixed at its mechanism
+(`GORACE` with `atexit_sleep_ms=0`, and `procSlots` starting at most
+`GOMAXPROCS` processes together) and pinned by a test, and the clock did
+not move.
+
+## metais's own instruments
+
+These are already in the tree. Each is built for a kind of failure; read
+the code it names before you add anything of your own.
+
+### `internal/fault`'s bits
+
+`fault.Set` is a `uint64`, one bit per fault, and `Set.Has(f)` is true only
+for a non-empty `f` wholly in the set. A fault breaks one headline
+guarantee at one named seam, so that the guarantee's detector can be shown
+to catch it in every `go test` (ADR-010 D13). Faults are injected through
+options, never a flag or the environment: `internal/cli` builds a zero
+`Set`, and `TestFaultsOnlyAtSeams` in `internal/guarantees` fails when a
+non-test file outside `internal/fault` and the seams names one.
+`TestFaultBits` pins each bit:
+
+| Bit | Fault | Seam | What it breaks | The detector that must see it |
+|---|---|---|---|---|
+| 0 | `SkipDigest` | `internal/pkgtree` | digest verification returns success | `TestDigestDetector` |
+| 1 | `FirstFinding` | `internal/finding` | a report keeps only its first error | `TestOnePassDetector` (SC8's planted errors) |
+| 2 | `UnpackToTemp` | `internal/browse` | browse reads an entry by extracting it to a temporary file | `TestReadInPlaceDetector` |
+| 3 | `SkipConfine` | `internal/hostfs` | the output path check returns success | `TestConfinementDetector` |
+| 4 | `MapOrder` | `internal/template` (`Env.UnorderedObjects`) | object members iterate in Go map order | `TestDeterminismDetector` |
+| 5 | `ReadExisting` | `internal/hostfs` | a write into an existing directory reads what it replaces | `TestExistingDestinationDetector` |
+| 6 | `RemoveForeign` | `internal/hostfs` | a write into an existing directory removes files it did not plan | `TestExistingDestinationDetector` |
+| 7 | `StdoutNotice` | `internal/cli` | a render to standard output writes a notice before the bytes | `TestStdoutPurity` |
+| 8 | `UpdateBeyondExpected` | `internal/cli` | `test --update` removes files outside `expected/` | `TestUpdateConfinement` |
+
+**The kind of failure it is for: a detector's red, and which half of it is
+red.** Every detector runs twice: on the tool, where it must find nothing,
+and with its fault, where it must find something. A red on the tool is the
+guarantee broken; follow the seam the fault names, which is the path the
+guarantee takes. A red on the control ("the detector caught 0 of …") is
+the detector gone blind: a snapshot taken in the wrong place, a sentinel no
+longer planted, a fixture that stopped exercising the seam. The tool may
+be fine. Fix the detector, never by dropping the control.
+
+### `internal/testenv`
+
+`testenv.Home(t)` gives a test a fresh, empty home directory and points
+`HOME` and `USERPROFILE` at it until the test ends; `testenv.Dir(t)` gives a
+fresh directory removed when the test ends. The package is built only on
+the testing package's own helpers, so it holds no host access of its own.
+A test that calls `Home` sets the environment, so it never calls
+`t.Parallel`.
+
+**The kind of failure it is for: "passes on my machine", "fails only in the
+sandbox", or a test whose result depends on what ran before it.** The first
+question is whether the test is hermetic. One that reads the real `HOME`,
+writes to a fixed path or shares a directory with another test is the
+suspect; put it on `testenv` and the difference between hosts either goes
+away or becomes a variable you can set.
+
+### The detectors
+
+The detectors live in `internal/guarantees/`, except `TestStdoutPurity`
+and `TestUpdateConfinement`, which are in `internal/cli`. Each has its own
+instrument in its failure output, which is the one occurrence that is
+enough:
+
+- **Confinement** (`TestConfinementDetector`) snapshots the tree around the
+  output directory (path, type, size, SHA-256) before and after, and names
+  every path that changed outside it.
+- **Digests** (`TestDigestDetector`) runs the hostile corpus's
+  digest-mismatch members, and names the member that was not refused.
+- **Read in place** (`TestReadInPlaceDetector`) points `TMPDIR`, the
+  working directory and `HOME` at snapshotted directories, and names what
+  appeared in them.
+- **Determinism** (`TestDeterminismDetector`) renders each vector three
+  times in one process at `GOMAXPROCS` 1 and `runtime.NumCPU()`, and once
+  in a fresh process under `TZ=Pacific/Chatham`, `LC_ALL=tr_TR.UTF-8`,
+  `umask 077` and `GODEBUG=zipinsecurepath=0,tarinsecurepath=0`, and
+  compares SHA-256s. When it is red, those settings are the variables:
+  render the one vector under each alone, and the one that changes the
+  bytes is the input the output wrongly depends on.
+- **One pass** (`TestOnePassDetector`) plants SC8's errors and names those
+  the report missed.
+- **Existing destination** (`TestExistingDestinationDetector`), standard
+  output purity (`TestStdoutPurity`) and `test --update`'s confinement
+  (`TestUpdateConfinement`) each name the case and what it found.
+- **No network, no execution** (`TestNoHostFacts`) runs the import rule and
+  the host-API symbol rule over `cmd/metais`'s closure as `go list -deps`
+  reports it, for darwin, linux and windows. Its controls are
+  `testdata/netleak`, a main package importing `net`, and the
+  `testdata/hostfacts` fixture, and a red names each violation and the
+  target it was found for.
+
+**The kind of failure they are for: a headline guarantee broken.** Read
+what the red names before anything else. A guarantee red is never made
+green by narrowing what the detector looks at: plan §4's "do not widen a
+refusal to make a proof pass" holds for detectors as well.
+
+### The host-isolation canaries
+
+`TestHostIsolation` in `internal/conformance` runs the built binary over
+every vector in a sentinel environment A and a plain environment B
+(ADR-009 D16 item 1). Its checks are: no sentinel in any stream; none of
+the real host's names or paths; A and B byte-identical; and nothing
+written outside a declared output. A sentinel is letters only, begins
+`MTSSENTINEL` and names its channel (`MTSSENTINELHOME`), so a hit says where
+the fact came from.
+
+The canaries keep that harness honest (ADR-009 D16 item 2). Under a build
+tag `metais_canary_<channel>`, a file `canary_<channel>.go` inserts one
+realistic leak: `env`, `cwd`, `home` and `pid` in `internal/template`, `tz`
+and `clock` in `internal/dates`, and `path` in `internal/cli`.
+`TestHostIsolationCanaries` builds every canary binary in every `go test`
+and requires the harness to report a violation on that canary's channel,
+and requires none of the release build. They are build tags rather than
+faults because the harness drives a subprocess, which no injected option
+reaches.
+
+**The kind of failure they are for: a host fact reaching a template, an
+output or a finding (SC7), and a harness that can no longer see one.** A
+red `TestHostIsolation` names the channel by its sentinel, or the stream by
+the A/B difference; the canary for that channel shows the shape such a
+leak takes. A red `TestHostIsolationCanaries` is the harness gone blind on
+one channel; build that canary with its tag and run its probe vector by
+hand to see what the harness missed.
+
+### CPU-time measurement, and counters before either
+
+A bound on work is proved by counting the work, and only where a duration
+must be asserted by the process's CPU time (ADR-010 D14 item 7):
+
+- **Counters first.** The Liquid meter (`internal/liquid/meter.go`) counts
+  each kind of work and reads no clock, so the same work is refused at the
+  same charge on every machine. `TestOpenReadsEveryByteOnce` in
+  `internal/zipfmt` counts the bytes a counting `ReaderAt` reads, with
+  `TestReadOnceControl` as its control. A counted bound cannot be red
+  because the host was busy.
+- **CPU time.** `selfCPU` in `internal/cli/cpu_unix_test.go` is
+  `getrusage(RUSAGE_SELF)`'s user plus system time, and reports that it did
+  not measure off unix (`cpu_other_test.go`), so a bound there is skipped,
+  not timed. `internal/conformance` reads its own (`host_unix_test.go`) and
+  each child's: `measure_linux_test.go` starts the child through a stub,
+  because on linux a child's `ru_maxrss` counts the address space it was
+  executed from. Off unix, `host_other_test.go`'s `selfCPU` is the
+  process's age: wall time, so it proves nothing about CPU there.
+
+**The kind of failure it is for: a time bound red, above all one that is
+red only under load.** Measure the stage in CPU time and in wall time. If
+the CPU time is within the bound and the wall time is not, the host's other
+work is in the clock: the test charges wall time, or the gate
+oversubscribes the host, and that is the defect to fix. If the CPU time is
+over the bound too, the work grew; find out by what, with the counters.
 
 ## Temporary instrumentation: how it leaves
 

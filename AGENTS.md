@@ -121,6 +121,19 @@ Agents that do not load skills read them as plain files:
   tooling choices are made by ADR; until one exists, ask.
 - **Edit this file only when a convention changes.** Status belongs in the
   plans and the ADRs' implementation logs.
+- **An implementation log entry is a file of its own.** A work item never
+  appends to an ADR's "Implementation log" section: it writes its entry to
+  `docs/adr/logs/ADR-<NNN>/<address>.md`, where `<address>` is the bracketed
+  address of its title (`docs/adr/logs/ADR-010/W5b-1.md`). The file begins
+  with a heading naming the ADR, the address and the change, and its first
+  paragraph opens with the date and the plan, as a log entry always has. An
+  item that logs against several ADRs writes one file in each ADR's
+  directory. Work outside a train names its file by date and a short slug
+  (`2026-11-02-zip64-reader.md`). A file is never overwritten: a later train
+  whose address an earlier train's file already holds prefixes its plan's
+  name (`PLAN-2027-01-metais-v2-W1-1.md`). Sibling items each add a file,
+  so parallel work never edits the same lines; the entries an ADR held
+  before this rule stay in it.
 - **Never explain what the text used to say.** State the rule; where it is
   counterintuitive, say why it is right. A change log records *that*
   something moved, not the old wording.

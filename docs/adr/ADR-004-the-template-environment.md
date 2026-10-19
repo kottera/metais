@@ -1093,6 +1093,11 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
 
 ## Implementation log
 
+Each work item writes its entry as a file of its own, in
+`docs/adr/logs/ADR-004/`, named by the item's address (AGENTS.md, "Writing
+documentation"). The entries below are the ones written in this file
+before that rule, and stay where they were written.
+
 - **2026-10-19, PLAN-2026-10-metais-v1 W3-5.** D10 item 2's writer
   (`yamlx.Write`, Wave 2) escapes U+FFFE and U+FFFF, which a YAML stream
   may not hold raw, and writes an integral number of magnitude above

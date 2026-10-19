@@ -1325,6 +1325,11 @@ directory.
 
 ## Implementation log
 
+Each work item writes its entry as a file of its own, in
+`docs/adr/logs/ADR-007/`, named by the item's address (AGENTS.md, "Writing
+documentation"). The entries below are the ones written in this file
+before that rule, and stay where they were written.
+
 - **2026-10-19, PLAN-2026-10-metais-v1 W5-11.** D5 (without containers' entry
   comparison) and D6 landed as `metais test`, through ADR-011 D8's `test`
   operation. Chapter 13's §13.7 states it as MTS-AUT-034 to 042, each with an

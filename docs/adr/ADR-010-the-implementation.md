@@ -1639,6 +1639,11 @@ at the train's close, with A1 and A3.
 
 ## Implementation log
 
+Each work item writes its entry as a file of its own, in
+`docs/adr/logs/ADR-010/`, named by the item's address (AGENTS.md, "Writing
+documentation"). The entries below are the ones written in this file
+before that rule, and stay where they were written.
+
 - **2026-10-18, PLAN-2026-10-metais-v1 W1-4.** D2 item 2's layering rules
   landed as `internal/guarantees/layers_test.go` over `layers.json`; D11
   items 9 and 10 as ADR-009's `TestNoHostFacts`; D13 item 2's fault rule
