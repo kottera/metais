@@ -18,9 +18,34 @@ import (
 // fixtureIDs are every fixture vector.
 var fixtureIDs = []string{fixRenderTree, fixBounded, fixRefuse, fixValidate, fixRenderStream, fixRenderDry, fixRepeatable}
 
-// selfProofWall is the wall clock the self-proof runs every process
+// selfProofWall is the wall clock the self-proof runs its processes
 // under, clean and faulty alike, so the wall fault is caught in seconds.
+// The rows that prove a resource bound are the exception (rowWall).
 const selfProofWall = 5 * time.Second
+
+// accruing are the faults whose proof needs the fake to accrue a resource
+// past its bound: CPU time and resident memory accrue only as fast as the
+// host schedules the fake, so under a wall clock they would race it.
+var accruing = []string{"cpu", "rss"}
+
+// rowWall is the wall clock the self-proof's row for fault runs under:
+// short for every row but an accruing one, which runs under no wall clock
+// that can fire before the test's own deadline. The runner checks a
+// process's bounds only as it finds them when the process ends, and a
+// starved fake killed by the wall clock has not yet used what its fault
+// burns, so a short wall would make that row's verdict a matter of
+// scheduler share. Past the deadline go test fails the whole binary, so
+// the row ends with its own check or with the test's timeout, never with
+// the wall check.
+func rowWall(t *testing.T, fault string, short time.Duration) time.Duration {
+	if !slices.Contains(accruing, fault) {
+		return short
+	}
+	if d, ok := t.Deadline(); ok {
+		return time.Until(d) + time.Minute
+	}
+	return 24 * time.Hour
+}
 
 // fault is one fault of ADR-011 D18 item 1: the fake breaks one thing,
 // on one fixture vector, and the runner must fail it on one check.
@@ -88,7 +113,7 @@ func fakeProgram(t testing.TB, base, fault string) string {
 // fixtureRunner makes a runner over the fixture suite against the fake
 // for fault, through adapter kind, with both environments whatever the
 // test flags say: the self-proof's detectors and controls run in every go
-// test.
+// test. Its wall clock is selfProofWall.
 func fixtureRunner(t testing.TB, suite, kind, fault string) *runner {
 	t.Helper()
 	a, err := newAdapter(kind, fakeProgram(t, testenv.Dir(t), fault), suite)
@@ -128,12 +153,29 @@ func runVector(r *runner, suite, id, base string) []problem {
 // passes every fixture vector through each adapter, and each faulty fake
 // fails its vector on the one check its fault breaks. It needs no vector
 // of the suite.
+func TestSelfProof(t *testing.T) {
+	t.Parallel()
+	selfProof(t, selfProofWall, true, func(fault) bool { return true })
+}
+
+// TestSelfProofAccruingRowsIgnoreWall starves the accruing faults of the
+// time they need: their rows run with the self-proof's wall clock at half
+// the CPU bound the cpu fault exceeds, which a fake burning on one thread
+// cannot outrun. Each must still fail on its own check, so its verdict
+// does not hang on how much of the host the fake was given.
+func TestSelfProofAccruingRowsIgnoreWall(t *testing.T) {
+	t.Parallel()
+	selfProof(t, fakeCPUBound()/2, false, func(f fault) bool { return slices.Contains(accruing, f.name) })
+}
+
+// selfProof runs the clean fake, when clean is set, and every fault keep
+// selects, through each of its adapters, with short as every row's wall
+// clock but an accruing one's (rowWall).
 //
 // The runs go concurrently, each a few processes that mostly wait out
 // environment B's two seconds, and are reported afterwards, one subtest
 // per run.
-func TestSelfProof(t *testing.T) {
-	t.Parallel()
+func selfProof(t *testing.T, short time.Duration, clean bool, keep func(fault) bool) {
 	suite := writeFixture(t, testenv.Dir(t))
 	type run struct {
 		name   string
@@ -146,15 +188,24 @@ func TestSelfProof(t *testing.T) {
 	}
 	var runs []*run
 	for _, kind := range both {
+		if !clean {
+			break
+		}
 		r := fixtureRunner(t, suite, kind, "clean")
+		r.wall = short
 		for _, id := range fixtureIDs {
 			runs = append(runs, &run{name: "clean/" + kind + "/" + id, vector: id, r: r, base: testenv.Dir(t)})
 		}
 	}
 	for i := range faults {
+		if !keep(faults[i]) {
+			continue
+		}
 		for _, kind := range faults[i].adapters {
+			r := fixtureRunner(t, suite, kind, faults[i].name)
+			r.wall = rowWall(t, faults[i].name, short)
 			runs = append(runs, &run{name: faults[i].name + "/" + kind, f: &faults[i], vector: faults[i].vector,
-				r: fixtureRunner(t, suite, kind, faults[i].name), base: testenv.Dir(t)})
+				r: r, base: testenv.Dir(t)})
 		}
 	}
 	var wg sync.WaitGroup
@@ -168,7 +219,7 @@ func TestSelfProof(t *testing.T) {
 	wg.Wait()
 	for _, rn := range runs {
 		t.Run(rn.name, func(t *testing.T) {
-			t.Logf("ran in %v", rn.took.Round(time.Millisecond))
+			t.Logf("ran in %v under a %v wall clock", rn.took.Round(time.Millisecond), rn.r.wall.Round(time.Millisecond))
 			for _, p := range rn.ps {
 				t.Log(p)
 			}
