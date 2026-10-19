@@ -475,6 +475,72 @@ func TestExistingCommitRefusesALinkPlantedAtWriteTime(t *testing.T) {
 	}
 }
 
+// W5-0.2: a link planted at a replace target between the check and its
+// rename fails the commit with link, by the target's re-check at write
+// time, even though it points inside the output directory: neither the
+// file it points at nor the link is touched. The replacing rename would
+// replace the link's entry without following it, and the root does not
+// refuse a link that stays inside. On a posix host the re-check's
+// linkLike and fileRefusal refuse a symbolic link alike, so this pins the
+// two together; only a windows reparse point that is not a symbolic link
+// tells linkLike apart.
+func TestExistingCommitRefusesALinkPlantedAtAReplaceTarget(t *testing.T) {
+	_, out := existingOut(t, map[string]string{"a/keep.txt": "K", "a/r.txt": "old"})
+	x := openExisting(t, out)
+	o := stage(t, x, "a/r.txt")
+	write(t, o, "a/r.txt", "new")
+	x.w.beforeRename = func(from, to string) {
+		if to == "a/r.txt" {
+			if err := os.Remove(filepath.Join(out, "a", "r.txt")); err != nil {
+				t.Fatal(err)
+			}
+			symlink(t, out, "keep.txt", "a/r.txt")
+		}
+	}
+	err := o.Commit()
+	var ce *CommitError
+	if !errors.As(err, &ce) || len(ce.Committed) != 0 {
+		t.Fatalf("Commit = %v, want a *CommitError with nothing committed", err)
+	}
+	wantReason(t, err, Link, out)
+	if got := readHost(t, filepath.Join(out, "a", "keep.txt")); got != "K" {
+		t.Errorf("a/keep.txt holds %q", got)
+	}
+	if target, err := os.Readlink(filepath.Join(out, "a", "r.txt")); err != nil || target != "keep.txt" {
+		t.Errorf("a/r.txt is no longer the planted link: %q, %v", target, err)
+	}
+}
+
+// W5-0.2: a link planted in place of a directory the commit opens, between
+// the check and the rename, fails the commit with link, by that
+// directory's own re-check at write time, even though it points at a
+// directory inside the output directory: nothing is written through it.
+// Without the re-check the directory is refused as not a directory, and
+// the root does not refuse a link that stays inside.
+func TestExistingCommitRefusesALinkPlantedAtACommitDirectory(t *testing.T) {
+	_, out := existingOut(t, map[string]string{"a/x": "X", "m/x": "X"})
+	x := openExisting(t, out)
+	o := stage(t, x, "m/n.txt")
+	write(t, o, "m/n.txt", "M")
+	x.w.beforeRename = func(from, to string) {
+		if to == "m/n.txt" {
+			if err := os.RemoveAll(filepath.Join(out, "m")); err != nil {
+				t.Fatal(err)
+			}
+			symlink(t, out, "a", "m")
+		}
+	}
+	err := o.Commit()
+	var ce *CommitError
+	if !errors.As(err, &ce) || len(ce.Committed) != 0 {
+		t.Fatalf("Commit = %v, want a *CommitError with nothing committed", err)
+	}
+	wantReason(t, err, Link, out)
+	if want, got := []string{"x"}, tree(t, filepath.Join(out, "a")); !slices.Equal(got, want) {
+		t.Fatalf("the commit wrote through the link: a holds %q, want %q", got, want)
+	}
+}
+
 // W5-0.6: beneath the staging directory the write removes only names it
 // created: a name planted there is left, and so then is the staging
 // directory, whether the write is aborted or committed; a committed write
