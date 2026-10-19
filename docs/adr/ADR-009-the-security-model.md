@@ -1658,3 +1658,12 @@ checks before the library sees a schema). No dependency changes.
   `output.link`, and the family's name governs that difference
   (ADR-005's implementation log). Item 4 holds for `render --overwrite`,
   which `TestExistingDestinationDetector` runs in every `go test`.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-V2.** D8 holds for a planned
+  directory, which `sample --to` writes into an existing directory for an
+  empty collection. Its path is checked segment by segment with Lstat, as
+  a file's is, and a link at or above it is `output.destination.link`.
+  Nothing is opened in the existing tree. The directory is created beneath
+  `.metais-staging`, never in the caller's tree, and is placed by the
+  commit's rename, which checks its target's directories again
+  (ADR-005's implementation log). `TestExistingDestinationDetector` runs
+  `sample --to --overwrite --items 0` in every `go test`.
