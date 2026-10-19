@@ -24,7 +24,12 @@ type outcome struct {
 	result any
 	// human is the human result, written to standard output.
 	human []byte
-	next  []Next
+	// notice is said about the result in human mode, on standard error
+	// (ADR-008 D11 item 3): a grep truncation, the entries it skipped, an
+	// outline with no headings. The JSON document carries the same in its
+	// result.
+	notice []byte
+	next   []Next
 	// report is set when the outcome is the report of a command whose
 	// findings are its result, and nothing else is: validate's. Its
 	// summary line follows its human findings (ADR-006 D11 item 3), and
@@ -126,7 +131,7 @@ func (s *session) emit(o outcome) int {
 		return status
 	}
 	write(s.inv.Stdout, o.human)
-	write(s.inv.Stderr, appendNext(b, next))
+	write(s.inv.Stderr, appendNext(append(b, o.notice...), next))
 	return status
 }
 

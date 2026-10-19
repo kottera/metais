@@ -308,3 +308,102 @@ func mustObject(ms ...value.Member) value.Object {
 	}
 	return o
 }
+
+// InputDocument returns the schema of the input called name as one
+// self-contained Compound Schema Document (ADR-008 D5, schema item 2),
+// cut from combined, the combined schema Bundle returned: the slot's
+// title and description beside the `$ref` to its schema's canonical URI,
+// as the combined schema's property carries them, with `$defs` embedding
+// every resource of combined's `$defs` that the `$ref` reaches, in their
+// order there. Nothing is rewritten, so every reference resolves as it
+// does in the combined schema.
+//
+// A resource is reached by a `$ref` or `$dynamicRef` whose URI, resolved
+// against the base the enclosing `$id`s give it and without its
+// fragment, is the canonical URI of a resource or an `$id` within one.
+// A string that only looks like a reference, as an `enum` value may,
+// can embed a resource no reference needs, which leaves the document
+// self-contained.
+func InputDocument(combined value.Object, name string) value.Object {
+	props, _ := combined.Get("properties")
+	prop, _ := props.(value.Object).Get(name)
+	defsV, _ := combined.Get("$defs")
+	defs := defsV.(value.Object)
+
+	owner := map[string]int{} // an $id's URI → the index of its resource in defs
+	refs := make([][]string, defs.Len())
+	for i := range defs.Len() {
+		m := defs.At(i)
+		walkRefs(m.Value, nil, func(id string) { owner[id] = i }, func(ref string) { refs[i] = append(refs[i], ref) })
+	}
+	reached := make([]bool, defs.Len())
+	var reach func(ref string)
+	reach = func(ref string) {
+		i, ok := owner[ref]
+		if !ok || reached[i] {
+			return
+		}
+		reached[i] = true
+		for _, r := range refs[i] {
+			reach(r)
+		}
+	}
+	walkRefs(prop, nil, func(string) {}, reach)
+
+	var embedded []value.Member
+	for i := range defs.Len() {
+		if reached[i] {
+			embedded = append(embedded, defs.At(i))
+		}
+	}
+	members := []value.Member{{Name: "$schema", Value: str(Dialect)}}
+	for n, v := range prop.(value.Object).All() {
+		members = append(members, value.Member{Name: n, Value: v})
+	}
+	members = append(members, value.Member{Name: "$defs", Value: mustObject(embedded...)})
+	return mustObject(members...)
+}
+
+// walkRefs walks v, a schema or a value within one, whose base URI is
+// base, calling id with each `$id` it declares and ref with each `$ref`
+// and `$dynamicRef`, both resolved and without their fragments.
+func walkRefs(v value.Value, base *url.URL, id, ref func(string)) {
+	switch v := v.(type) {
+	case value.Object:
+		if s, ok := v.Get("$id"); ok {
+			if t, ok := s.(value.String); ok {
+				if u, err := resolveURL(base, t.Text()); err == nil {
+					base = u
+					id(u.String())
+				}
+			}
+		}
+		for n, m := range v.All() {
+			if t, ok := m.(value.String); ok && (n == "$ref" || n == "$dynamicRef") {
+				if u, err := resolveURL(base, t.Text()); err == nil {
+					ref(u.String())
+				}
+				continue
+			}
+			walkRefs(m, base, id, ref)
+		}
+	case value.Array:
+		for _, e := range v.All() {
+			walkRefs(e, base, id, ref)
+		}
+	}
+}
+
+// resolveURL resolves the URI reference s against base, when there is
+// one, and drops its fragment.
+func resolveURL(base *url.URL, s string) (*url.URL, error) {
+	u, err := url.Parse(s)
+	if err != nil {
+		return nil, err
+	}
+	if base != nil {
+		u = base.ResolveReference(u)
+	}
+	u.Fragment, u.RawFragment = "", ""
+	return u, nil
+}

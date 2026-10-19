@@ -168,8 +168,7 @@ var exitCodes = []exitCode{
 // declarations returns the command table, in the order help lists each
 // group's commands (ADR-008 D1 item 1).
 func declarations() []*Command {
-	return []*Command{
-		inspectDeclaration(),
+	return slices.Concat([]*Command{inspectDeclaration()}, readingDeclarations(), []*Command{
 		validateDeclaration(),
 		{
 			Name: "init", Group: "Authoring", Synopsis: "init [<dir>] [--name <name>] [--dry-run] [--json]",
@@ -271,7 +270,7 @@ func declarations() []*Command {
 			},
 			run: runHelp,
 		},
-	}
+	})
 }
 
 // table is the command table every invocation is dispatched through.

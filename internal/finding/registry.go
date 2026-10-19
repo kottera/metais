@@ -60,6 +60,15 @@ const (
 	CodeUsageUnknownCommand    Code = "usage.unknown_command"
 	CodeUsageUnknownFlag       Code = "usage.unknown_flag"
 	CodeUsageUnknownTopic      Code = "usage.unknown_topic"
+	CodeUsageBadGlob           Code = "usage.bad_glob"
+	CodeUsageBadPattern        Code = "usage.bad_pattern"
+	CodeUsageBinaryToTerminal  Code = "usage.binary_to_terminal"
+	CodeUsageEntryNotFound     Code = "usage.entry_not_found"
+	CodeUsageIsADirectory      Code = "usage.is_a_directory"
+	CodeUsageLineOutOfRange    Code = "usage.line_out_of_range"
+	CodeUsageNoMatch           Code = "usage.no_match"
+	CodeUsageNotText           Code = "usage.not_text"
+	CodeUsageUnknownInput      Code = "usage.unknown_input"
 )
 
 // registry is the tool's table of codes, in code order. It is the Go form
@@ -2361,6 +2370,38 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{"MTS-AUT-017"},
 	},
 	{
+		Code:     CodeUsageBadGlob,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the glob among the arguments after metais.", Always: true},
+			{Name: "reason", Type: TypeString, Meaning: "Why the glob is refused: double_star (** that does not stand alone as a segment), class (a character class with no closing ], or a range whose ends are reversed), escape (a \\ with nothing after it), empty_segment (an empty glob, or one with a leading or doubled /), or encoding (it is not UTF-8).", Always: true},
+		},
+		Message:    "The glob at argument {argument} is refused ({reason}).",
+		Hint:       "Run `metais help globs` for the grammar: ** stands alone as a segment, a class is closed by ], and there are no braces.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageBadPattern,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the pattern among the arguments after metais.", Always: true},
+			{Name: "reason", Type: TypeString, Meaning: "Why the pattern is refused: syntax (it is not RE2 syntax as Go's regexp defines it), pattern_length (it is longer than the pattern-length limit), regex_program (its compiled program has more instructions than the regex-program limit), or regex_work (matching it against the lines searched needs more than the regex-work limit).", Always: true},
+			{Name: "limit", Type: TypeString, Meaning: "The limit's name, as metais limits lists it, when the reason is a limit."},
+			{Name: "bound", Type: TypeNumber, Meaning: "The limit's value in this command, its default or the lower value given with --limit, when the reason is a limit."},
+		},
+		Message:    "The grep pattern at argument {argument} is refused ({reason}).",
+		Hint:       "Write the pattern in RE2 syntax (https://github.com/google/re2/wiki/Syntax), within the limits `metais limits` lists; a simpler pattern, or globs that select fewer entries, needs less work.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
 		Code:     CodeUsageBadValue,
 		Severity: SeverityError,
 		Class:    ClassUsage,
@@ -2373,6 +2414,20 @@ var registry = withSchemaEntries([]Entry{
 		},
 		Message:    "The value of {flag} at argument {argument} is refused ({reason}).",
 		Hint:       "Give {flag} a value it accepts, as --name value or --name=value; a flag that takes no value is written alone, without =.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageBinaryToTerminal,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the entry's path among the arguments after metais.", Always: true},
+		},
+		Message:    "The entry at argument {argument} is binary, and a binary entry is not written to a terminal.",
+		Hint:       "Redirect standard output to a file, or write the entry with `metais extract`; with --json, metais read prints it in base64.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},
@@ -2403,6 +2458,50 @@ var registry = withSchemaEntries([]Entry{
 		},
 		Message:    "The data directory given at argument {argument} cannot be read ({reason}).",
 		Hint:       "Give --data a directory that exists and that you can read, holding one file per input; run `metais inspect {package}` to see each input's file names.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageEntryNotFound,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the path among the arguments after metais.", Always: true},
+		},
+		Message:    "Argument {argument} names no entry and no directory of the package.",
+		Hint:       "Run `metais ls <package>` for the entries: a path is matched byte for byte and case-sensitively, with / as its separator.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageIsADirectory,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the path among the arguments after metais.", Always: true},
+			{Name: "command", Type: TypeString, Meaning: "The command that reads one entry.", Always: true},
+		},
+		Message:    "Argument {argument} names a directory of the package, and metais {command} reads one entry.",
+		Hint:       "Run `metais ls <package>` with the directory for the entries beneath it.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageLineOutOfRange,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of --lines among the arguments after metais.", Always: true},
+			{Name: "total", Type: TypeNumber, Meaning: "The number of lines the entry has.", Always: true},
+		},
+		Message:    "The range of --lines at argument {argument} starts beyond the entry's {total} lines.",
+		Hint:       "Start the range at a line from 1 to the entry's last; an end beyond the last line is clamped to it.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},
@@ -2461,6 +2560,20 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{},
 	},
 	{
+		Code:     CodeUsageNoMatch,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the glob among the arguments after metais.", Always: true},
+		},
+		Message:    "The glob at argument {argument} selects no entry of the package; nothing was written.",
+		Hint:       "Run `metais ls <package> -r` for the entries, and `metais help globs` for the grammar: *, ? and ** never enter a segment that begins with a dot unless the glob names it.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
 		Code:     CodeUsageNotPackedPackage,
 		Severity: SeverityError,
 		Class:    ClassUsage,
@@ -2470,6 +2583,21 @@ var registry = withSchemaEntries([]Entry{
 		},
 		Message:    "Argument {argument} names a source directory; metais unpack reads a packed package.",
 		Hint:       "Give a packed package file. A source directory is already the editable tree unpack writes; nothing was written.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageNotText,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the entry's path among the arguments after metais.", Always: true},
+			{Name: "command", Type: TypeString, Meaning: "The command that reads the entry as lines.", Always: true},
+		},
+		Message:    "The entry at argument {argument} is binary, not valid UTF-8 with no NUL byte, and metais {command} reads lines of text.",
+		Hint:       "Write the entry to a file with `metais extract`; metais read without --lines and --number prints its bytes.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},
@@ -2545,6 +2673,21 @@ var registry = withSchemaEntries([]Entry{
 		},
 		Message:    "Argument {argument} is not a flag this command line accepts ({reason}).",
 		Hint:       "Run `metais help` for the global flags, or the command's --help for its own; write each flag's name in full, and each one-letter alias on its own.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageUnknownInput,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the input's name among the arguments after metais.", Always: true},
+			{Name: "inputs", Type: TypeArray, Items: TypeString, Meaning: "Every input the package declares, in the manifest's order.", Always: true},
+		},
+		Message:    "Argument {argument} names no input of the package.",
+		Hint:       "Give one of the inputs the finding lists; `metais inspect <package>` shows each with what it means.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},

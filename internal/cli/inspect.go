@@ -205,22 +205,47 @@ type inspectExample struct {
 
 // runInspect is metais inspect.
 func runInspect(s *session, p args.Parsed) outcome {
-	operand := p.Operands[0]
-	if operand == "-" {
-		f := finding.New(finding.CodeUsagePackageFromStdin, invocation, nil,
-			finding.Params{"argument": finding.Int(int64(s.line.at[p.OperandArgs[0]] + 1))})
-		return outcome{findings: []finding.Finding{f}, next: s.nextSteps([]finding.Finding{f})}
-	}
-	lim, fs := s.limits(p)
-	if len(fs) > 0 {
-		return outcome{findings: fs, next: s.nextSteps(fs)}
-	}
-	pkg, fs := loader.Open(operand, loader.Options{Limits: lim}, s.inv.Options.Faults)
+	pkg, refused := s.open(p)
 	if pkg == nil {
-		return outcome{findings: fs, next: s.nextSteps(fs)}
+		return refused
 	}
 	defer pkg.Close()
 	return inspectOutcome(pkg, p.Has("guide"), s.table)
+}
+
+// open opens the package its first operand names (ADR-008 D2), within
+// the command's limits, or returns the refusal: - as the package, a bad
+// --limit, or every finding that refuses the package. The caller closes
+// the package.
+func (s *session) open(p args.Parsed) (*loader.Package, outcome) {
+	operand := p.Operands[0]
+	if operand == "-" {
+		f := finding.New(finding.CodeUsagePackageFromStdin, invocation, nil,
+			finding.Params{"argument": s.operandArg(p, 0)})
+		return nil, s.refuseWith(f)
+	}
+	lim, fs := s.limits(p)
+	if len(fs) > 0 {
+		return nil, outcome{findings: fs, next: s.nextSteps(fs)}
+	}
+	pkg, fs := loader.Open(operand, loader.Options{Limits: lim}, s.inv.Options.Faults)
+	if pkg == nil {
+		return nil, outcome{findings: fs, next: s.nextSteps(fs)}
+	}
+	return pkg, outcome{}
+}
+
+// operandArg is the 1-based position on the whole line of the operand i,
+// a finding's argument parameter.
+func (s *session) operandArg(p args.Parsed, i int) finding.Value {
+	return finding.Int(int64(s.line.at[p.OperandArgs[i]] + 1))
+}
+
+// flagArg is the 1-based position on the whole line of the flag called
+// name, which was given.
+func (s *session) flagArg(p args.Parsed, name string) finding.Value {
+	i, _ := p.Arg(name)
+	return finding.Int(int64(s.line.at[i] + 1))
 }
 
 // limits is the command's limits: the defaults, each lowered by a --limit
