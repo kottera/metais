@@ -3,7 +3,12 @@
 
 package xref
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+
+	"github.com/kottera/metais/internal/manifest"
+)
 
 // metricsSchema is the worked resolution's schema (ADR-007 D3): metrics
 // is {type: object, properties: {rows: {$ref: "#/$defs/rows"}}}, and
@@ -208,5 +213,34 @@ func TestDeclaredBoundsTheNames(t *testing.T) {
 	d := describe(t, r.Findings[0])
 	if !contains(d, "declared_count=25") || !contains(d, `"pt"]`) || contains(d, `"pu"`) {
 		t.Errorf("%s: want the first 20 of 25 names", d)
+	}
+}
+
+// TestDynamicRef holds $dynamicRef to ADR-007 D3 item 4.1: it reaches its
+// static target and, where the input's schema resources declare more than
+// one $dynamicAnchor of its name, every one of them; a resource the input
+// does not reach is none of them.
+func TestDynamicRef(t *testing.T) {
+	const tree = `{"$dynamicAnchor": "node", "type": "object", "properties": {"name": {}, "kids": {"type": "array", "items": {"$dynamicRef": "#node"}}}%s}`
+	const other = `{"$dynamicAnchor": "node", "type": "object", "properties": {"extra": {}}}`
+	for _, c := range []struct {
+		name, schema, text string
+		want               []string
+	}{
+		{"the static target", fmt.Sprintf(tree, ""), `{{ inputs.metrics.kids[0].name }}{{ inputs.metrics.kids[0].kids[1].name }}`, nil},
+		{"the static target, checked", fmt.Sprintf(tree, ""), `{{ inputs.metrics.kids[0].extra }}`, []string{unknownField}},
+		{"every anchor the input's resources declare", fmt.Sprintf(tree, `, "$defs": {"ext": {"$ref": "other.json"}}`), `{{ inputs.metrics.kids[0].extra }}{{ inputs.metrics.kids[0].name }}`, nil},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			fx := fixture{
+				inputs:    []fxInput{in("metrics", c.schema)},
+				files:     map[string]string{"inputs/other.json": other},
+				templates: map[string]string{"report.md.liquid": c.text},
+				outputs:   []manifest.Output{tpl("report", "report.md.liquid")},
+			}
+			if got := codes(fx.run(t)); !equalCodes(got, c.want) {
+				t.Errorf("codes %q, want %q", got, c.want)
+			}
+		})
 	}
 }

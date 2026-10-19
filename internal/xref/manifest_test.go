@@ -6,6 +6,7 @@ package xref
 import (
 	"testing"
 
+	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/manifest"
 )
 
@@ -190,3 +191,45 @@ func TestMirror(t *testing.T) {
 		`template.xref.unused_template templates/site/_layout.html.liquid`,
 	)
 }
+
+// TestUnreadableLeavesUseUnknown: when a manifest expression or a
+// template an output renders cannot be read, what it reads is unknown, so
+// no input is called unused.
+func TestUnreadableLeavesUseUnknown(t *testing.T) {
+	out := tpl("main", "main.liquid")
+	out.When = "inputs.metrics and"
+	fx := fixture{inputs: []fxInput{in("metrics", tuple)}, templates: map[string]string{"main.liquid": ``}, outputs: []manifest.Output{out}}
+	expect(t, fx.run(t))
+	fx.outputs = []manifest.Output{tpl("main", "main.liquid")}
+	fx.broken = []string{"main.liquid"}
+	expect(t, fx.run(t))
+	fx.broken = nil
+	expect(t, fx.run(t), `template.xref.unused_input metais.yaml#/inputs/0`)
+}
+
+// TestManifestPositions: a finding about a manifest expression has the
+// line of the expression's value when the manifest's reader kept
+// positions.
+func TestManifestPositions(t *testing.T) {
+	out := tpl("main", "main.liquid")
+	out.When = "inputs.metrics.nope_nope"
+	fx := fixture{inputs: []fxInput{in("metrics", tuple)}, templates: map[string]string{"main.liquid": ``}, outputs: []manifest.Output{out}}
+	p := fx.pkg(t)
+	p.Positions = positions{"/outputs/0/when": {Line: 7, Column: 11}}
+	r, err := Analyze(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(r.Findings) != 1 {
+		t.Fatalf("findings %q", describeAll(t, r))
+	}
+	if d := describe(t, r.Findings[0]); !contains(d, "metais.yaml:7:11#/outputs/0/when") {
+		t.Errorf("%s: want line 7, column 11", d)
+	}
+}
+
+// positions is a manifest reader's position table.
+type positions map[string]finding.Pos
+
+func (p positions) Value(ptr string) (finding.Pos, bool) { v, ok := p[ptr]; return v, ok }
+func (p positions) Key(ptr string) (finding.Pos, bool)   { return finding.Pos{}, false }
