@@ -48,9 +48,9 @@ const (
 )
 
 // TestMain re-executes as the reference driver, a fake or the stub when
-// the test binary is run under one of their names. Otherwise it builds ./cmd/metais
-// once, with -trimpath and with -race when this binary is race-built
-// (ADR-011 D11 item 2), and runs the tests.
+// the test binary is run under one of their names. Otherwise it builds
+// ./cmd/metais once, with -trimpath and with -race when this binary is
+// race-built (ADR-011 D11 item 2), and runs the tests.
 func TestMain(m *testing.M) {
 	base := filepath.Base(os.Args[0])
 	if base == procStubName {
