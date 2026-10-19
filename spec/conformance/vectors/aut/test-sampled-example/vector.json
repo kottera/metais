@@ -1,0 +1,54 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/test-sampled-example",
+  "title": "An example sample saves, its example.yaml and inputs, is accepted and rendered by test, and with no expected/ is not compared",
+  "statements": [
+    "MTS-AUT-036",
+    "MTS-AUT-037",
+    "MTS-AUT-040"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "sampled",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "example": "smp"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "package/examples",
+                "files": [
+                  "smp/example.yaml",
+                  "smp/inputs/report.json"
+                ]
+              }
+            ]
+          },
+          "repeatable": true
+        },
+        {
+          "op": "test",
+          "args": {
+            "source": "package",
+            "examples": [
+              "smp"
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    }
+  ]
+}

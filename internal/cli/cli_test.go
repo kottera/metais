@@ -335,8 +335,8 @@ func TestVersionFlag(t *testing.T) {
 
 // TestDeclarationsOpeningSet is W2-1.9 as this wave leaves it: every
 // declaration marks whether its command opens a package: inspect (W3-1),
-// validate (W4-1), check (W4-4), unpack (W4-5), render (W4-3) and sample
-// (W5-10) do. init
+// validate (W4-1), check (W4-4), test (W5-11), unpack (W4-5), render
+// (W4-3) and sample (W5-10) do. init
 // is an authoring command (ADR-008 D13) that opens no package: it writes a
 // new source directory.
 func TestDeclarationsOpeningSet(t *testing.T) {
@@ -346,7 +346,7 @@ func TestDeclarationsOpeningSet(t *testing.T) {
 		}
 	}
 	consumers := []string{"inspect", "ls", "read", "outline", "grep", "schema", "extract", "validate", "render"}
-	authoring := []string{"check", "sample", "unpack"}
+	authoring := []string{"check", "sample", "test", "unpack"}
 	if got, want := OpeningCommands(), slices.Concat(consumers, authoring); !slices.Equal(got, want) {
 		t.Errorf("OpeningCommands() = %q, want %q", got, want)
 	}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/test-example-yaml",
+  "title": "example.yaml is read as metais.yaml is, YAML or JSON; a syntax error, a root that is not a mapping, another member, a member that is not a string, a title with a line break and a now that is not a date-time with an offset are each example.metadata, and that example is not rendered",
+  "statements": [
+    "MTS-AUT-036"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "test",
+      "steps": [
+        {
+          "op": "test",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/test.json"
+          }
+        }
+      ]
+    }
+  ]
+}

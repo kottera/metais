@@ -16,14 +16,15 @@ import (
 // faultSeams is ADR-010 D13 item 2's table: each named fault and the one
 // package, its seam, that consults it.
 var faultSeams = map[string]string{
-	"SkipConfine":   "internal/hostfs",
-	"SkipDigest":    "internal/pkgtree",
-	"UnpackToTemp":  "internal/browse",
-	"MapOrder":      "internal/template",
-	"FirstFinding":  "internal/finding",
-	"ReadExisting":  "internal/hostfs",
-	"RemoveForeign": "internal/hostfs",
-	"StdoutNotice":  "internal/cli",
+	"SkipConfine":          "internal/hostfs",
+	"SkipDigest":           "internal/pkgtree",
+	"UnpackToTemp":         "internal/browse",
+	"MapOrder":             "internal/template",
+	"FirstFinding":         "internal/finding",
+	"ReadExisting":         "internal/hostfs",
+	"RemoveForeign":        "internal/hostfs",
+	"StdoutNotice":         "internal/cli",
+	"UpdateBeyondExpected": "internal/cli",
 }
 
 const (

@@ -1,0 +1,52 @@
+[
+  {
+    "code": "input.file_unknown",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "other"
+    },
+    "location": {
+      "origin": "example",
+      "file": "examples/bad/inputs/other.json"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.missing",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "location": {
+      "origin": "example",
+      "file": "examples/bad/inputs/report.json",
+      "line": 1,
+      "column": 11,
+      "pointer": "/title"
+    },
+    "schema": {
+      "entry": "inputs/report.schema.json",
+      "pointer": "/properties/title/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "string"
+      ],
+      "actual": "number"
+    }
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "code": "template.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 1,
+      "column": 3
+    },
+    "params": {
+      "column": 3,
+      "cause": "a construct the dialect's grammar does not allow"
+    }
+  }
+]

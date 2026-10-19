@@ -1,0 +1,31 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/test-crlf-validate",
+  "title": "An example renders through its outputs' CRLF conversion and output validation as a render does: a converted output compares equal to an expected file with CR LF, and one its schema refuses fails the example with the render's finding",
+  "statements": [
+    "MTS-AUT-038",
+    "MTS-AUT-040"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "test",
+      "steps": [
+        {
+          "op": "test",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/test.json"
+          }
+        }
+      ]
+    }
+  ]
+}

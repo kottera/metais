@@ -1,0 +1,26 @@
+[
+  {
+    "code": "output.max_length",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "data"
+    },
+    "location": {
+      "origin": "output",
+      "file": "data.yaml",
+      "line": 1,
+      "column": 8,
+      "pointer": "/title"
+    },
+    "schema": {
+      "entry": "references/data.schema.json",
+      "pointer": "/properties/title/maxLength",
+      "keyword": "maxLength"
+    },
+    "params": {
+      "limit": 3,
+      "length": 4
+    }
+  }
+]

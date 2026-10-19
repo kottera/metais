@@ -240,6 +240,9 @@ func packageCases() []pkgCase {
 		{"man/large-integer-packed", func(t testing.TB) []byte { return pack(t, sourceFiles(t, "man/large-integer-source")) }},
 		{"aut/check-packed", func(t testing.TB) []byte { return pack(t, sourceFiles(t, "aut/check-source")) }},
 		{"aut/check-xref-packed", func(t testing.TB) []byte { return pack(t, sourceFiles(t, "aut/check-xref-templates")) }},
+		// test on a packed package reads its examples in place, with the
+		// result test gives its source directory (W5-11).
+		{"aut/test-packed", func(t testing.TB) []byte { return pack(t, sourceFiles(t, "aut/test-compare")) }},
 		{"aut/check-refused", func(t testing.TB) []byte { return bytes.Repeat([]byte("not a zip archive\n"), 4) }},
 
 		// unpack's packages (W4-5), each packed from the source directory

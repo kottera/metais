@@ -98,6 +98,10 @@ type Supply struct {
 
 	dataDir bool
 	files   map[string]*fileInput // by input name
+	// locPrefix is the package entry path of the directory ReadPackageDir
+	// reads, whose findings are located with origin example; "" for a
+	// data directory on the host.
+	locPrefix string
 
 	jsonArgs []*jsonArg
 	sets     []*pathSet

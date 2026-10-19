@@ -1325,6 +1325,44 @@ directory.
 
 ## Implementation log
 
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-11.** D5 (without containers' entry
+  comparison) and D6 landed as `metais test`, through ADR-011 D8's `test`
+  operation. Chapter 13's §13.7 states it as MTS-AUT-034 to 042, each with an
+  `aut/test-*` vector; `aut/test-packed` runs `aut/test-compare`'s package
+  packed, with the same findings. An example's inputs are read in place by
+  `inputs.Supply.ReadPackageDir`, located with ADR-006's `example` origin.
+  The render is `render`'s own phases 1 to 4 (`planOutputs`, `renderPlan`)
+  with a zero `digest.Sum` and the tool `test` (ADR-004 D15). `--update`
+  writes through `hostfs`'s two write shapes and removes through
+  `hostfs.RemoveFile` and `hostfs.RemoveEmptyDir`, the latter added here,
+  since removing the last file of a directory of `expected/` would leave
+  an empty directory a source directory may not hold. Readings, where the
+  text left a choice:
+  - the codes are `example.metadata` (reason `syntax`, `not_an_object`,
+    `member`, `type`, `title` or `now`, with `member`), and
+    `example.output_missing`, `example.output_unexpected` and
+    `example.output_differs`. A difference's detail is the finding's
+    parameters: `binary`, `cause` (the first hint of item 4 that holds, or
+    `none`) and `crlf`; for text, `diff` and `diff_truncated`, the location
+    giving the first differing line and column; for binary, `offset`, both
+    sizes and both digests. The diff's hunks are the implementation's, so
+    vectors do not compare `diff`;
+  - `example.output_unexpected` is located with the origin `output` at the
+    path, which no package entry holds; the others at the expected file;
+  - an example is a directory under `examples/` with an input's name; any
+    other entry is `check`'s `example.layout` and test does not run it;
+  - test's result adds `update` beside item 2's `examples`: null without
+    `--update`, otherwise `dry_run`, `written` and `removed`;
+  - after a real `--update`, an updated example reports `pass` and its
+    comparison findings are dropped, since `expected/` is then its render;
+    under `--dry-run` it reports as without `--update`;
+  - `--update` and `--dry-run` are the command line's (ADR-008 D9), stated
+    in `docs/cli/test.md` and in help, not in chapter 13: the operation
+    takes no `update`, so no vector can observe them;
+  - item 3's comparison of a container by entries is Wave 6's; until then
+    a container output's zip is compared byte for byte as any file, which
+    the tool's deterministic zip writer makes exact (`TestTestContainer`).
+
 - **2026-10-19, PLAN-2026-10-metais-v1 W4-5.** D8 landed as
   `author.Unpack` and `metais unpack`, items 1 to 4 and item 5's half
   that needs no `pack`: an unpacked committed package opens as a source

@@ -320,9 +320,8 @@ func TestSampleExample(t *testing.T) {
 	if res.Example == nil || *res.Example != "preview" || res.Seed != 4 || !slices.Contains(res.Files, "example.yaml") || !slices.Contains(res.Files, "inputs/vendor.json") {
 		t.Errorf("result %+v", res)
 	}
-	if len(r.doc.Next) != 0 {
-		// metais test is not declared yet, and a next step names a
-		// command a caller can run.
+	if len(r.doc.Next) != 1 || !strings.HasPrefix(r.doc.Next[0].Run, "metais test <package> --example") {
+		// With metais test declared, the next step runs the example.
 		t.Errorf("next %+v", r.doc.Next)
 	}
 	ex := hostTree(t, filepath.Join(pkg, "examples", "preview"))

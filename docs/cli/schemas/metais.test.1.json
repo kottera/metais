@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.test.1.json",
+  "title": "metais.test/1",
+  "description": "What metais test prints with --json: every finding of the package's load and of each example, and as its result each example's status and differences, with what --update wrote and removed (ADR-007 D5, ADR-008 D9). The result is null when the run is refused: by a usage error, a package that cannot be read, or a failed write of --update.",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.test/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "examples",
+        "update"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "examples": {
+          "description": "Each example run, in byte order of name: every example, or each one --example named. Empty when a template of the package did not parse, since no example then runs.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/example"
+          }
+        },
+        "update": {
+          "description": "What --update wrote into and removed from the examples' expected/, or with --dry-run would; null without --update.",
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/update"
+            }
+          ]
+        }
+      }
+    },
+    "example": {
+      "type": "object",
+      "required": [
+        "name",
+        "status",
+        "differences"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "description": "The example's name: its directory under examples/.",
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "description": "pass when the render equals expected/, or when --update made expected/ the render; fail when its example.yaml or inputs were refused, its render made an error, or a file differs; no-expected when it has no expected/ and so was rendered and not compared.",
+          "enum": [
+            "pass",
+            "fail",
+            "no-expected"
+          ]
+        },
+        "differences": {
+          "description": "Each path the comparison found different, in byte order of path; after --update, what the update changed.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/difference"
+          }
+        }
+      }
+    },
+    "difference": {
+      "type": "object",
+      "required": [
+        "path",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "The output's path, relative to expected/ and to the output directory.",
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "description": "missing: in expected/ and not written by the render; unexpected: written and not in expected/; differs: in both, with other content.",
+          "enum": [
+            "missing",
+            "unexpected",
+            "differs"
+          ]
+        },
+        "line": {
+          "description": "For a text file that differs, the expected file's first differing line, from 1.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "update": {
+      "type": "object",
+      "required": [
+        "dry_run",
+        "written",
+        "removed"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "dry_run": {
+          "description": "Whether --dry-run was given, so that nothing was written or removed.",
+          "type": "boolean"
+        },
+        "written": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Each file written or replaced, as its path in the source directory, examples/<name>/expected/<path>, by example and then in path order."
+        },
+        "removed": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Each file removed because the render no longer writes it, as its path in the source directory, in the order removed. A directory of expected/ the removals emptied is removed too, and is not listed."
+        }
+      }
+    }
+  }
+}

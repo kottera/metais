@@ -245,8 +245,12 @@ func (s *Supply) readEntries(src dirSource, top []dirEntry) {
 }
 
 // fileLoc is the location of the data-directory entry at name, a path
-// relative to the data directory (ADR-006 D4 item 4).
+// relative to the data directory (ADR-006 D4 item 4): an example's, read
+// from the package, is located at its package entry.
 func (s *Supply) fileLoc(name string) finding.Location {
+	if s.locPrefix != "" {
+		return finding.Location{Origin: finding.OriginExample, File: s.locPrefix + name}
+	}
 	return finding.Location{Origin: finding.OriginDataDir, File: name}
 }
 

@@ -86,6 +86,7 @@ const (
 	CodeUsageNoMatch           Code = "usage.no_match"
 	CodeUsageNotText           Code = "usage.not_text"
 	CodeUsageUnknownInput      Code = "usage.unknown_input"
+	CodeUsageUnknownExample    Code = "usage.unknown_example"
 	CodeUsageUnknownOutput     Code = "usage.unknown_output"
 	CodeUsageArchiveToTerminal Code = "usage.archive_to_terminal"
 	CodeUsageNotSourceDir      Code = "usage.not_a_source_directory"
@@ -259,6 +260,73 @@ var registry = withSchemaEntries([]Entry{
 		Span:       SpanValue,
 		Since:      "1.0",
 		Statements: []string{"MTS-AUT-020"},
+	},
+	{
+		Code:     "example.metadata",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectExample,
+		Params: []ParamSpec{
+			{Name: "reason", Type: TypeString, Meaning: "What breaks the example layout's rule for example.yaml: \"syntax\" when it does not parse as YAML, or as JSON when its first byte other than white space is {; \"not_an_object\" when its root is not a mapping; \"member\" for a member other than title, description and now; \"type\" for a member that is not a string; \"title\" for a title holding a line break; and \"now\" for a now that is not an RFC 3339 date-time with an offset.", Always: true},
+			{Name: "member", Type: TypeString, Meaning: "The member the reason is about, for every reason but syntax and not_an_object."},
+		},
+		Message:    "The example's example.yaml breaks the example layout's rule ({reason}).",
+		Hint:       "example.yaml is a mapping of title (one line), description (Markdown) and now (an RFC 3339 date-time with an offset), each optional, and nothing else; the example was not rendered.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-AUT-036"},
+	},
+	{
+		Code:     "example.output_differs",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectExample,
+		Params: []ParamSpec{
+			{Name: "path", Type: TypeString, Meaning: "The output's path, relative to the example's expected/ and to the output directory.", Always: true},
+			{Name: "binary", Type: TypeBoolean, Meaning: "Whether the difference is between binary files: true unless both files are valid UTF-8 holding no NUL byte.", Always: true},
+			{Name: "cause", Type: TypeString, Meaning: "The first of the likely causes that applies: \"line_endings\" when the two are equal once every CR LF is LF, \"final_newline\" when they are equal apart from one final LF, \"bom\" when they are equal apart from a leading UTF-8 byte order mark, \"trailing_whitespace\" when they are equal once the spaces and tabs ending each line are removed, and \"none\" otherwise.", Always: true},
+			{Name: "crlf", Type: TypeString, Meaning: "For the cause line_endings, the side holding CR LF: \"expected\", \"rendered\" or \"both\"."},
+			{Name: "diff", Type: TypeString, Meaning: "For text, a unified diff from the expected file to the rendered one, with three lines of context; its hunks are the implementation's own."},
+			{Name: "diff_truncated", Type: TypeBoolean, Meaning: "For text, whether the diff was cut at 16 KiB."},
+			{Name: "offset", Type: TypeNumber, Meaning: "For binary files, the 0-based offset of the first byte that differs, or the shorter file's size when one is a prefix of the other."},
+			{Name: "expected_size", Type: TypeNumber, Meaning: "For binary files, the expected file's size in bytes."},
+			{Name: "rendered_size", Type: TypeNumber, Meaning: "For binary files, the rendered file's size in bytes."},
+			{Name: "expected_digest", Type: TypeString, Meaning: "For binary files, sha256: and the lower-case hexadecimal SHA-256 of the expected file."},
+			{Name: "rendered_digest", Type: TypeString, Meaning: "For binary files, sha256: and the lower-case hexadecimal SHA-256 of the rendered file."},
+		},
+		Message:    "The render wrote {path} with content that differs from the example's expected file (likely cause: {cause}).",
+		Hint:       "Read the difference: line_endings is CR LF on one side, from an output's newline: crlf or from git's line-ending conversion; final_newline is one final line feed; bom a leading byte order mark; trailing_whitespace spaces or tabs at a line's end, often Liquid's whitespace control ({{%- and -%}}). When the render is right, `metais test <package> --update` records it.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-AUT-040", "MTS-AUT-041", "MTS-AUT-042"},
+	},
+	{
+		Code:     "example.output_missing",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectExample,
+		Params: []ParamSpec{
+			{Name: "path", Type: TypeString, Meaning: "The expected output's path, relative to the example's expected/.", Always: true},
+		},
+		Message:    "The example expects the output {path}, which its render did not write.",
+		Hint:       "Make the render write it, or remove it from expected/; when the render is right, `metais test <package> --update` makes expected/ what it writes.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-AUT-040"},
+	},
+	{
+		Code:     "example.output_unexpected",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectExample,
+		Params: []ParamSpec{
+			{Name: "path", Type: TypeString, Meaning: "The rendered output's path, relative to the output directory.", Always: true},
+		},
+		Message:    "The render wrote {path}, which the example's expected/ does not hold.",
+		Hint:       "Add the file to expected/ if the render is right, which `metais test <package> --update` does, or stop the render writing it.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-AUT-040"},
 	},
 	{
 		Code:     "input.constraints_failed",
@@ -3514,6 +3582,21 @@ var registry = withSchemaEntries([]Entry{
 		},
 		Message:    "Argument {argument} names no metais command; a command is never abbreviated and has no alias.",
 		Hint:       "Run `metais help` for the commands.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     "usage.unknown_example",
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the example's name among the arguments after metais.", Always: true},
+			{Name: "examples", Type: TypeArray, Items: TypeString, Meaning: "Every example of the package, in byte order of name.", Always: true},
+		},
+		Message:    "Argument {argument} names no example of the package.",
+		Hint:       "Give one of the examples the finding lists, each a directory under examples/.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},
