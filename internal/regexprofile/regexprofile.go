@@ -198,3 +198,45 @@ func (m *Meter) charge(insts, length int64) bool {
 	m.spent += insts * length
 	return true
 }
+
+// ErrRE2Syntax is a grep pattern that is not RE2 syntax as Go's regexp
+// defines it.
+var ErrRE2Syntax = errors.New("regexprofile: the pattern is not RE2 syntax")
+
+// CompileRE2 compiles pattern, a grep pattern, which is RE2 syntax as Go's
+// regexp defines it and is not read by the profile (ADR-008 D5, grep item
+// 1; ADR-009 D10 item 5). pattern-length bounds the pattern as written and
+// regex-program the instruction count of its compiled regexp/syntax
+// program. With ignoreCase, (?i) is prepended. Each match charges m
+// (ADR-009 D10 item 7); a nil m charges nothing.
+//
+// The error is ErrRE2Syntax or a *LimitError.
+func CompileRE2(pattern string, ignoreCase bool, lim limits.Set, m *Meter) (*Regexp, error) {
+	if n := int64(len(pattern)); n > lim.Value(limits.PatternLength) {
+		return nil, &LimitError{Limit: limits.PatternLength, Observed: n, HasObserved: true}
+	}
+	src := pattern
+	if ignoreCase {
+		src = "(?i)" + pattern
+	}
+	tree, err := syntax.Parse(src, syntax.Perl)
+	if err != nil {
+		var se *syntax.Error
+		if errors.As(err, &se) && (se.Code == syntax.ErrLarge || se.Code == syntax.ErrNestingDepth) {
+			return nil, &LimitError{Limit: limits.RegexProgram}
+		}
+		return nil, ErrRE2Syntax
+	}
+	prog, err := syntax.Compile(tree.Simplify())
+	if err != nil {
+		return nil, &LimitError{Limit: limits.RegexProgram}
+	}
+	if n := int64(len(prog.Inst)); n > lim.Value(limits.RegexProgram) {
+		return nil, &LimitError{Limit: limits.RegexProgram, Observed: n, HasObserved: true}
+	}
+	re, err := regexp.Compile(src)
+	if err != nil {
+		return nil, &LimitError{Limit: limits.RegexProgram}
+	}
+	return &Regexp{pattern: pattern, translated: src, tree: tree, insts: len(prog.Inst), re: re, meter: m}, nil
+}
