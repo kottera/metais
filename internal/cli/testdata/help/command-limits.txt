@@ -1,0 +1,50 @@
+metais limits — List every resource limit, with its default, unit and class.
+
+Usage:
+  metais limits [--json]
+
+Every size, count and ratio metais reads, computes or writes is bounded, and
+every bound has a name and a default. A package within every package limit is
+portable: every conforming tool accepts it at the defaults. A limit may be
+lowered for one run, and is never raised.
+
+A default in bytes is shown in the largest of KiB, MiB and GiB (powers of 1024)
+that it is a whole number of; --json gives every default as a number in the
+limit's unit.
+
+Flags:
+  --json
+      Print the result as one JSON document on standard output.
+  --color <when>
+      Colour human output: auto colours a stream that is a terminal when
+      NO_COLOR is unset or empty; always and never override NO_COLOR. Values:
+      auto, always, never. Default: auto.
+  -h, --help
+      Print help to standard output and exit 0; nothing else runs.
+
+Prints:
+  A table of every limit: its name, default, unit (bytes, count or ratio) and
+  class (package, data or work), in the specification's order. With --json, one
+  metais.limits/1 document.
+
+Refusals:
+  usage.bad_value
+      A flag's value is missing, or is not one the flag accepts, or a flag that
+      takes no value is given one.
+      Next: metais limits --help
+  usage.repeated_flag
+      A flag that may be given once is given again.
+      Next: metais limits --help
+  usage.unexpected_operand
+      An operand the command does not take.
+      Next: metais limits --help
+  usage.unknown_flag
+      An argument that is not a flag the command accepts, an abbreviated flag,
+      or one-letter aliases written together.
+      Next: metais limits --help
+
+Examples:
+  metais limits
+      Prints the table of limits.
+  metais limits --json
+      Prints it as one metais.limits/1 document.

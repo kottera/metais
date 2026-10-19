@@ -1,0 +1,59 @@
+metais help — Print the overview, a command's help, or a topic.
+
+Usage:
+  metais help [<command> | <topic>] [--json]
+
+With no operand, prints the overview: the commands by group, the global flags,
+the topics and the exit codes. With a command's name, prints that command's
+help, as metais <command> --help does. With a topic, prints the topic.
+
+With --json, prints the help as one metais.help/1 document: every command's full
+declaration and every topic for the overview, or the one command or topic asked
+for.
+
+Operands:
+  <command> | <topic>
+      A command's name, or one of the topics inputs, globs, json and exit-codes.
+
+Flags:
+  --json
+      Print the result as one JSON document on standard output.
+  --color <when>
+      Colour human output: auto colours a stream that is a terminal when
+      NO_COLOR is unset or empty; always and never override NO_COLOR. Values:
+      auto, always, never. Default: auto.
+  -h, --help
+      Print help to standard output and exit 0; nothing else runs.
+
+Prints:
+  The help asked for, wrapped at 80 columns, never coloured. With --json, one
+  metais.help/1 document.
+
+Refusals:
+  usage.bad_value
+      A flag's value is missing, or is not one the flag accepts, or a flag that
+      takes no value is given one.
+      Next: metais help --help
+  usage.repeated_flag
+      A flag that may be given once is given again.
+      Next: metais help --help
+  usage.unexpected_operand
+      An operand the command does not take.
+      Next: metais help --help
+  usage.unknown_flag
+      An argument that is not a flag the command accepts, an abbreviated flag,
+      or one-letter aliases written together.
+      Next: metais help --help
+  usage.unknown_topic
+      The operand names no command and no topic.
+      Next: metais help
+
+Examples:
+  metais help
+      Prints the overview.
+  metais help limits
+      Prints the help of metais limits.
+  metais help exit-codes
+      Prints what each exit status means.
+  metais help --json
+      Prints every command's declaration and every topic as one document.

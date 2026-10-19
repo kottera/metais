@@ -1,0 +1,20 @@
+metais help exit-codes — What each exit status means.
+
+metais exits with the same status with and without --json:
+
+  0  Success, warnings included; help, version and limits.
+  1  An error in content: invalid inputs, a failing check or test, an output
+     refused by its schema or its path, a package's own defect under an
+     authoring command, or a warning under --fail-on warning.
+  2  A defect in metais itself (internal.error), or the Go runtime's status
+     after a crash.
+  3  The command line is wrong: an unknown command or flag, a missing or extra
+     operand, a malformed or repeated flag, or no command at all.
+  4  The package is refused: not found, unreadable, out of specification, a
+     digest mismatch, an unsupported specification version or a package limit;
+     or a package's own defect under a consuming command.
+  5  The destination is refused: not empty without --overwrite, a link or
+     special file in the way, or a failed write.
+
+When several apply, the first in the order 2, 3, 4, 1, 5 is the status: fixing a
+destination alone would not help a run whose inputs are invalid.

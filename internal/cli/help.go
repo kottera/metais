@@ -20,18 +20,19 @@ const helpWidth = 80
 // overview.
 const description = "metais reads, validates and renders METAIS packages, and helps author them."
 
-// topic is one help topic (ADR-008 D15 item 4).
+// topic is one help topic (ADR-008 D15 item 4). Its body is written by
+// the help printer, and help --json carries the same text.
 type topic struct {
 	Name  string
 	Title string
-	text  func(t []*Command) string
+	body  func(h *helpText, t []*Command)
 }
 
 var topics = []topic{
-	{"inputs", "Supplying a package's inputs, and which source wins.", func([]*Command) string { return inputsTopic }},
-	{"globs", "The patterns that select a package's entries.", func([]*Command) string { return globsTopic }},
+	{"inputs", "Supplying a package's inputs, and which source wins.", inputsTopic},
+	{"globs", "The patterns that select a package's entries.", globsTopic},
 	{"json", "The JSON document every command prints with --json.", jsonTopic},
-	{"exit-codes", "What each exit status means.", func([]*Command) string { return exitCodesTopic() }},
+	{"exit-codes", "What each exit status means.", exitCodesTopic},
 }
 
 func lookupTopic(name string) (topic, bool) {
@@ -42,78 +43,101 @@ func lookupTopic(name string) (topic, bool) {
 	return topics[i], true
 }
 
-const inputsTopic = "A package declares its inputs, each with a schema, and a caller supplies " +
-	"them from three sources, applied in this order, each to the result of the one " +
-	"before:\n\n" +
-	"1. The data directory, given with --data: one file per input, named after the " +
-	"input with the extension of its form (vendor.json, criteria.csv), or one " +
-	"directory per collection input. Each gives its input's whole value. A file that " +
-	"names no declared input is a finding, and so is a second file for one input.\n\n" +
-	"2. Each --inputs-json, in command-line order: a JSON object whose members are " +
-	"input names, each replacing that input's whole value; values are never merged. " +
-	"--inputs-json - reads the object from standard input, once.\n\n" +
-	"3. Each path set, in command-line order: --set /input/pointer=text sets one value " +
-	"at a JSON Pointer whose first token is an input's name, coercing the text by the " +
-	"schema; --set-json /input/pointer=json sets it to a JSON value, which is how null, " +
-	"an array or an object is set. Each replaces only the value at its pointer.\n\n" +
-	"The order is fixed by kind, not by position: every --inputs-json applies before " +
-	"every path set, wherever they are written, and among one kind the later wins. To " +
-	"change one nested value and keep the rest, use a path set; --inputs-json replaces " +
-	"the whole input.\n\n" +
-	"Defaults from the schemas are applied after all three, and then the inputs are " +
-	"validated, every finding at once."
+// text is tp's body as help prints it.
+func (tp topic) text(t []*Command) string {
+	var h helpText
+	tp.body(&h, t)
+	return string(h.bytes())
+}
 
-const globsTopic = "A glob selects a package's entries by path. It is matched against the " +
-	"whole entry path, segment by segment, with / as the separator, and is " +
-	"case-sensitive.\n\n" +
-	"*  matches any run of characters within one segment.\n" +
-	"?  matches one character other than /.\n" +
-	"[...] and [^...]  match one character in, or not in, a class; lo-hi is a range.\n" +
-	"\\  makes the next character literal.\n" +
-	"**  standing alone as a segment matches zero or more whole segments; ** anywhere " +
-	"else is a usage error.\n\n" +
-	"There are no braces. *, ?, [...] and ** never match a segment that begins with " +
-	"a dot; a pattern segment that itself begins with a dot matches one. So **/*.md " +
-	"does not reach into .compiled/, and .compiled/** does. A pattern with no wildcard " +
-	"that names a directory selects every entry beneath it."
+func inputsTopic(h *helpText, _ []*Command) {
+	h.para("A package declares its inputs, each with a schema, and a caller supplies "+
+		"them from three sources, applied in this order, each to the result of the one "+
+		"before:", "")
+	h.blank()
+	h.item("1.", 3, "The data directory, given with --data: one file per input, named after the "+
+		"input with the extension of its form (vendor.json, criteria.csv), or one "+
+		"directory per collection input. Each gives its input's whole value. A file that "+
+		"names no declared input is a finding, and so is a second file for one input.")
+	h.item("2.", 3, "Each --inputs-json, in command-line order: a JSON object whose members are "+
+		"input names, each replacing that input's whole value; values are never merged. "+
+		"--inputs-json - reads the object from standard input, once.")
+	h.item("3.", 3, "Each path set, in command-line order: --set /input/pointer=text sets one "+
+		"value at a JSON Pointer whose first token is an input's name, coercing the text "+
+		"by the schema; --set-json /input/pointer=json sets it to a JSON value, which is "+
+		"how null, an array or an object is set. Each replaces only the value at its "+
+		"pointer.")
+	h.blank()
+	h.para("The order is fixed by kind, not by position: every --inputs-json applies before "+
+		"every path set, wherever they are written, and among one kind the later wins. To "+
+		"change one nested value and keep the rest, use a path set; --inputs-json replaces "+
+		"the whole input.", "")
+	h.blank()
+	h.para("Defaults from the schemas are applied after all three, and then the inputs are "+
+		"validated, every finding at once.", "")
+}
+
+func globsTopic(h *helpText, _ []*Command) {
+	h.para("A glob selects a package's entries by path. It is matched against the whole "+
+		"entry path, segment by segment, with / as the separator, and is case-sensitive.", "")
+	h.blank()
+	for _, row := range [][2]string{
+		{"*", "matches any run of characters within one segment."},
+		{"?", "matches one character other than /."},
+		{"[...]", "matches one character in a class; lo-hi is a range."},
+		{"[^...]", "matches one character not in a class."},
+		{"\\", "makes the next character literal."},
+		{"**", "standing alone as a segment, matches zero or more whole segments; ** anywhere else is a usage error."},
+	} {
+		h.item("  "+row[0], 10, row[1])
+	}
+	h.blank()
+	h.para("There are no braces. *, ?, [...] and ** never match a segment that begins with "+
+		"a dot; a pattern segment that itself begins with a dot matches one. So **/*.md "+
+		"does not reach into .compiled/, and .compiled/** does. A pattern with no wildcard "+
+		"that names a directory selects every entry beneath it.", "")
+}
 
 // jsonTopic describes the envelope and names every format the table's
 // commands print.
-func jsonTopic(t []*Command) string {
-	var formats []string
-	for _, c := range t {
-		formats = append(formats, c.Format+" ("+c.Name+")")
+func jsonTopic(h *helpText, t []*Command) {
+	h.para("With --json, a run prints exactly one JSON document on standard output: "+
+		"compact UTF-8 with no byte order mark, one line ending in one LF, HTML "+
+		"escaping off, and standard error empty. Its members are always present, in "+
+		"this order:", "")
+	h.blank()
+	for _, row := range [][2]string{
+		{"format", "The document's name and major version, metais.<command>/<major>."},
+		{"ok", "True when the command completed and no finding is an error."},
+		{"findings", "The findings, in the specification's order; [] when there are none. A usage error is a finding too."},
+		{"summary", "The exact counts of errors, warnings and info, how many findings are listed and omitted, and the count of each code."},
+		{"result", "The command's result, or null when it was refused before producing one."},
+		{"next", "The commands to run next, each {\"run\", \"why\"}; [] when there is nothing to suggest, and never empty after a refusal."},
+	} {
+		h.item("  "+row[0], 12, row[1])
 	}
-	formats = append(formats, usageFormat+" (a line that names no command)")
-	return "With --json, a run prints exactly one JSON document on standard output: " +
-		"compact UTF-8 with no byte order mark, one line ending in one LF, HTML " +
-		"escaping off, and standard error empty. Its members are always present, in " +
-		"this order:\n\n" +
-		"format: the document's name and major version, metais.<command>/<major>.\n" +
-		"ok: true when the command completed and no finding is an error.\n" +
-		"findings: the findings, in the specification's order; [] when there are none. " +
-		"A usage error is a finding too.\n" +
-		"summary: the exact counts of errors, warnings and info, how many findings are " +
-		"listed and omitted, and the count of each code.\n" +
-		"result: the command's result, or null when it was refused before producing one.\n" +
-		"next: the commands to run next, each {\"run\", \"why\"}; [] when there is " +
-		"nothing to suggest, and never empty after a refusal.\n\n" +
-		"The exit status is the same with and without --json, and --json is honoured " +
-		"even on a command line that does not parse. Within a major version a format " +
-		"only gains members and enumeration values: ignore a member you do not know, " +
-		"and read an unknown value as other.\n\n" +
-		"The formats: " + strings.Join(formats, ", ") + "."
+	h.blank()
+	h.para("The exit status is the same with and without --json, and --json is honoured "+
+		"even on a command line that does not parse. Within a major version a format "+
+		"only gains members and enumeration values: ignore a member you do not know, "+
+		"and read an unknown value as other.", "")
+	h.blank()
+	h.line("The formats:")
+	for _, c := range t {
+		h.item("  "+c.Format, 20, "metais "+c.Name)
+	}
+	h.item("  "+usageFormat, 20, "a line that names no command")
 }
 
-func exitCodesTopic() string {
-	var b strings.Builder
-	b.WriteString("metais exits with the same status with and without --json:\n\n")
+func exitCodesTopic(h *helpText, _ []*Command) {
+	h.para("metais exits with the same status with and without --json:", "")
+	h.blank()
 	for _, e := range exitCodes {
-		b.WriteString(strconv.Itoa(e.Code) + "  " + e.Meaning + "\n")
+		h.item("  "+strconv.Itoa(e.Code), 5, e.Meaning)
 	}
-	b.WriteString("\nWhen several apply, the first in the order 2, 3, 4, 1, 5 is the status: " +
-		"fixing a destination alone would not help a run whose inputs are invalid.")
-	return b.String()
+	h.blank()
+	h.para("When several apply, the first in the order 2, 3, 4, 1, 5 is the status: "+
+		"fixing a destination alone would not help a run whose inputs are invalid.", "")
 }
 
 // overview is the outcome of metais help and metais --help.
@@ -377,7 +401,7 @@ func topicText(t []*Command, tp topic) []byte {
 	var b helpText
 	b.para("metais help "+tp.Name+" — "+tp.Title, "")
 	b.blank()
-	b.para(tp.text(t), "")
+	tp.body(&b, t)
 	return b.bytes()
 }
 

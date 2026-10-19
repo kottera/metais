@@ -1,0 +1,49 @@
+metais version — Print the tool's version and the specification versions it
+implements.
+
+Usage:
+  metais version [--json]
+
+The tool's version is a semantic version. Its version is independent of the
+specification's: a release may implement a new minor version of the
+specification without a new major version of the tool. Every specification
+version the tool implements is listed, ascending, so a caller tests membership
+without knowing which minor versions imply which.
+
+metais --version, before any command, is this command.
+
+Flags:
+  --json
+      Print the result as one JSON document on standard output.
+  --color <when>
+      Colour human output: auto colours a stream that is a terminal when
+      NO_COLOR is unset or empty; always and never override NO_COLOR. Values:
+      auto, always, never. Default: auto.
+  -h, --help
+      Print help to standard output and exit 0; nothing else runs.
+
+Prints:
+  Two lines: metais and the tool's version, then the specification versions it
+  implements. With --json, one metais.version/1 document.
+
+Refusals:
+  usage.bad_value
+      A flag's value is missing, or is not one the flag accepts, or a flag that
+      takes no value is given one.
+      Next: metais version --help
+  usage.repeated_flag
+      A flag that may be given once is given again.
+      Next: metais version --help
+  usage.unexpected_operand
+      An operand the command does not take.
+      Next: metais version --help
+  usage.unknown_flag
+      An argument that is not a flag the command accepts, an abbreviated flag,
+      or one-letter aliases written together.
+      Next: metais version --help
+
+Examples:
+  metais version
+      Prints the tool's version and the specification versions it implements.
+  metais version --json
+      Prints the same as one metais.version/1 document.

@@ -1,0 +1,26 @@
+metais help inputs — Supplying a package's inputs, and which source wins.
+
+A package declares its inputs, each with a schema, and a caller supplies them
+from three sources, applied in this order, each to the result of the one before:
+
+1. The data directory, given with --data: one file per input, named after the
+   input with the extension of its form (vendor.json, criteria.csv), or one
+   directory per collection input. Each gives its input's whole value. A file
+   that names no declared input is a finding, and so is a second file for one
+   input.
+2. Each --inputs-json, in command-line order: a JSON object whose members are
+   input names, each replacing that input's whole value; values are never
+   merged. --inputs-json - reads the object from standard input, once.
+3. Each path set, in command-line order: --set /input/pointer=text sets one
+   value at a JSON Pointer whose first token is an input's name, coercing the
+   text by the schema; --set-json /input/pointer=json sets it to a JSON value,
+   which is how null, an array or an object is set. Each replaces only the value
+   at its pointer.
+
+The order is fixed by kind, not by position: every --inputs-json applies before
+every path set, wherever they are written, and among one kind the later wins. To
+change one nested value and keep the rest, use a path set; --inputs-json
+replaces the whole input.
+
+Defaults from the schemas are applied after all three, and then the inputs are
+validated, every finding at once.
