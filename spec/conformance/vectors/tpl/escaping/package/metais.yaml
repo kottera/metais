@@ -1,0 +1,22 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: v
+    title: V
+    schema: inputs/v.schema.json
+outputs:
+  - id: page
+    template: page.html.liquid
+    escape: html
+  - id: plain
+    template: plain.txt.liquid
+    escape: none
+  - id: default
+    template: default.txt.liquid
+  - id: tags
+    template: tags.html.liquid
+    escape: html

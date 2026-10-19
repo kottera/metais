@@ -1,0 +1,9 @@
+{
+  "s": "<a href=\"x\" title='y'>Tom & Jerry</a>",
+  "lines": "a<b\nc>d",
+  "ref": "&amp; &#39; & &x; &#x41;",
+  "o": {
+    "z": "</script><!-- -->",
+    "a": "& \u2028 \u2029 \u00e9"
+  }
+}

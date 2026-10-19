@@ -1,0 +1,49 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "flt/safe-position",
+  "title": "safe anywhere but last in an output expression — before another filter, in an assign in a dead branch, twice in an echo inside a liquid tag, before a filter in a path, and in a for_each — is template.safe_position, each found at parse at its token, and nothing is written; safe last, in a template and in a path, is not refused",
+  "statements": [
+    "MTS-FLT-002",
+    "MTS-MAN-018",
+    "MTS-TPL-048",
+    "MTS-TPL-051"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "open",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package-expressions"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/expressions.json"
+          }
+        }
+      ]
+    }
+  ]
+}

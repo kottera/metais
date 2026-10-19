@@ -59,10 +59,14 @@ func (d *Dialect) TagNames() []string { return slices.Sorted(maps.Keys(d.tags)) 
 //     compares for equality or keys by; and for sort and sort_natural,
 //     n·⌈log2 n⌉ comparisons of n elements, with each string key's bytes
 //     charged ⌈log2 n⌉ times.
+//
+// safe marks the result safe from escaping (ADR-004 D9 item 2): escape,
+// its alias h, and escape_once.
 type stdFilter struct {
 	name string
 	sig  signature
 	fn   func(c *call, in value.Value) (value.Value, *Error)
+	safe bool
 }
 
 // signature is the shape of a filter's applications: from min to max
@@ -75,6 +79,8 @@ type signature struct {
 }
 
 func (f *stdFilter) Name() string { return f.name }
+
+func (f *stdFilter) MarksSafe() bool { return f.safe }
 
 // Check refuses an application that is wrong whatever the data: an
 // argument count the filter never takes, a keyword it does not know or

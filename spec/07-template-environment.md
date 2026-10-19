@@ -441,3 +441,43 @@ an error, MUST write no output at all.
 input of a kind the filter does not take with `template.filter_input`, an
 argument it does not take with `template.filter_argument`, and a decoded
 result that is not UTF-8 with `template.invalid_utf8`, each naming the filter.
+
+## 7.10 Escaping
+
+An output declares how the values its templates write are escaped: its
+`escape` is `none`, the default, or `html` ([chapter 9](09-outputs.md)).
+Escaping is a property of the output being rendered, never of a template, so
+one partial serves both kinds of output.
+
+<a id="mts-tpl-059"></a>**MTS-TPL-059** In an output whose `escape` is
+`html`, a processor MUST write the text of every value that `{{ }}`, `echo`
+or `cycle` writes with each `&` written as `&amp;`, each `<` as `&lt;`, each
+`>` as `&gt;`, each `"` as `&quot;` and each `'` as `&#39;`, and nothing
+else changed, unless the value is safe (MTS-TPL-060); and MUST write the
+template's own text, outside `{{ }}` and `{% %}`, unescaped. In an output
+whose `escape` is `none`, a processor MUST escape nothing.
+
+<a id="mts-tpl-060"></a>**MTS-TPL-060** A value is safe, and a processor
+MUST write it as it is in every output, when the last filter applied to it
+is `safe`, `escape`, `escape_once` or `json_script`
+([chapter 8](08-filters-and-tags.md)), or when it is the text of a `capture`
+made while rendering an output whose `escape` is `html`, whose values were
+escaped as they were captured. Safety MUST NOT be carried through a later
+filter: `{{ x | escape | newline_to_br }}` escapes `newline_to_br`'s result
+again, and `{{ x | escape | newline_to_br | safe }}` writes escaped text with
+line breaks.
+
+<a id="mts-tpl-061"></a>**MTS-TPL-061** A partial MUST be escaped as the
+output being rendered is: a partial rendered into an output whose `escape` is
+`html` is escaped, and the same partial rendered into one whose `escape` is
+`none` is not.
+
+<a id="mts-tpl-062"></a>**MTS-TPL-062** A processor MUST write the text of a
+`raw` block, and what `embed` and `provenance` write
+([chapter 8](08-filters-and-tags.md)), unchanged in every output, whatever
+its `escape`.
+
+> **Note.** Escaping does not make output safe inside JavaScript, CSS or a
+> URL. `json_script` is the filter for data placed in a `<script>` element,
+> and `url_encode` the one for a URL component; the dialect offers nothing
+> else for those contexts.

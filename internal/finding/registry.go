@@ -2700,6 +2700,20 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{"MTS-TPL-040"},
 	},
 	{
+		Code:     "template.safe_position",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectTemplate,
+		Params: []ParamSpec{
+			{Name: "column", Type: TypeNumber, Meaning: "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.", Always: true},
+		},
+		Message:    "The safe filter is applied other than as the last filter of an output expression.",
+		Hint:       "Apply safe only as the last filter of an output tag or an echo tag, as in x | escape | newline_to_br | safe; anywhere else it marks nothing.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-FLT-002"},
+	},
+	{
 		Code:     "template.syntax",
 		Severity: SeverityError,
 		Class:    ClassContent,

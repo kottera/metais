@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/kottera/metais/internal/liquid/ast"
+	"github.com/kottera/metais/internal/liquid/value"
 	"github.com/kottera/metais/internal/testenv"
 )
 
@@ -44,6 +45,39 @@ func refused(t *testing.T, d *Dialect, text string, want ...Code) []*Error {
 		t.Errorf("Parse(%q) returned a template beside its errors", text)
 	}
 	return errs
+}
+
+// TestLastFilterPosition: a LastFilter may be the last filter of "{{ }}"
+// or echo, and anywhere else — before another filter, in an assign, or in
+// a value ParseValue reads — is CodeSafePosition, found at parse with every
+// other parse error, whether or not the branch would run (ADR-004 D9 item
+// 3).
+func TestLastFilterPosition(t *testing.T) {
+	testenv.Home(t)
+	identity := func(_ FilterContext, in value.Value, _ []Arg) (value.Value, *Error) { return in, nil }
+	d, err := NewDialect(Spec{Filters: []FilterDef{
+		lastFilter{safeFilter{fnFilter{"last", identity}}},
+		fnFilter{"id", identity},
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, ok := range []string{
+		`{{ x | last }}`, `{{ x | id | last }}`, `{% echo x | last %}`, `{% liquid
+echo x | id | last %}`,
+	} {
+		if _, errs := parse(t, d, ok); len(errs) > 0 {
+			t.Errorf("Parse(%q): %v", ok, errs)
+		}
+	}
+	errs := refused(t, d, `{{ x | last | id }}{% if false %}{% assign y = x | last %}{% endif %}{% echo x | last | last %}{{ x | nope }}`,
+		CodeSafePosition, CodeSafePosition, CodeSafePosition, CodeUnknownFilter)
+	if e := errs[0]; e.Args["filter"] != "last" || e.Line != 1 || e.Col != 1 {
+		t.Errorf("the first refusal: %v; want filter last at the output, 1:1", e)
+	}
+	if _, e := ParseValue(d, Source{Name: "m", Text: []byte(`xs | last`)}, ParseLimits{}); e == nil || e.Code != CodeSafePosition {
+		t.Errorf("ParseValue of a LastFilter: %v; want %s", e, CodeSafePosition)
+	}
 }
 
 // TestCoreTagsParse holds every tag of ADR-004 D2 to the grammar, in each

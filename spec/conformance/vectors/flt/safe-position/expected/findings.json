@@ -1,0 +1,53 @@
+[
+  {
+    "code": "template.safe_position",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/page.html.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/page.html.liquid",
+      "line": 1,
+      "column": 2
+    },
+    "params": {
+      "column": 2
+    }
+  },
+  {
+    "code": "template.safe_position",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/page.html.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/page.html.liquid",
+      "line": 2,
+      "column": 15
+    },
+    "params": {
+      "column": 15
+    }
+  },
+  {
+    "code": "template.safe_position",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/page.html.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/page.html.liquid",
+      "line": 4,
+      "column": 3
+    },
+    "params": {
+      "column": 3
+    }
+  }
+]

@@ -413,6 +413,9 @@ Refusals:
   template.number_range
       An output's path, when or for_each does not parse (number range).
       Next: metais inspect <package>
+  template.safe_position
+      An output's path, when or for_each does not parse (safe position).
+      Next: metais inspect <package>
   template.syntax
       An output's path, when or for_each does not parse (syntax).
       Next: metais inspect <package>

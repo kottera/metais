@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "s": {
+      "type": "string"
+    },
+    "lines": {
+      "type": "string"
+    },
+    "ref": {
+      "type": "string"
+    },
+    "o": {
+      "type": "object"
+    }
+  }
+}

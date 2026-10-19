@@ -94,6 +94,11 @@ func TestNoDeclarationStops(t *testing.T) {
     kind: json
     validate: references/number.json
 `, []string{"1"}, nil},
+		{"escape: html", `  - id: h
+    template: t.txt.liquid
+    path: h.html
+    escape: html
+`, []string{"h.html"}, nil},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			pkg, data := declarationPackage(t, c.decls)

@@ -94,7 +94,7 @@ func ParseValue(d *Dialect, s Source, lim ParseLimits) (e *ast.Expr, err *Error)
 	if x.atEnd() {
 		return nil, x.errorf("expected a value")
 	}
-	e, fatal := x.valueExpr()
+	e, fatal := x.valueExpr(false)
 	if fatal == nil {
 		fatal = x.end()
 	}
@@ -530,7 +530,7 @@ func (p *parser) output(t tok) (*ast.Output, *Error) {
 	if x.atEnd() {
 		return o, nil
 	}
-	e, err := x.valueExpr()
+	e, err := x.valueExpr(true)
 	if err == nil {
 		err = x.end()
 	}
@@ -554,7 +554,7 @@ func (p *parser) inlineTag(ts source, t tok, inLiquid bool) (ast.Node, *Error) {
 		if x.atEnd() {
 			return n, nil
 		}
-		v, e := x.valueExpr()
+		v, e := x.valueExpr(true)
 		if e == nil {
 			e = x.end()
 		}
@@ -627,7 +627,7 @@ func (p *parser) assign(t tok, x *exprParser) (ast.Node, *Error) {
 	if x.atEnd() {
 		return nil, x.errorf("assign needs a value")
 	}
-	v, e := x.valueExpr()
+	v, e := x.valueExpr(false)
 	if e == nil {
 		e = x.end()
 	}

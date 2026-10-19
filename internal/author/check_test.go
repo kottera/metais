@@ -18,6 +18,7 @@ import (
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/liquid"
 	"github.com/kottera/metais/internal/loader"
+	templates "github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/testenv"
 )
 
@@ -379,6 +380,9 @@ func TestParseHintCauses(t *testing.T) {
 // METAIS's embed, asset and provenance tags known by name, which no
 // expression may hold (ADR-004 D16 item 5).
 func TestCheckOneParse(t *testing.T) {
+	if got, want := loader.Dialect().FilterNames(), templates.Dialect().FilterNames(); !slices.Equal(got, want) {
+		t.Errorf("the expressions' filters are %q, the templates' %q", got, want)
+	}
 	for _, tag := range []string{"embed", "asset", "provenance"} {
 		if _, ok := loader.Dialect().Tag(tag); !ok {
 			t.Errorf("the dialect does not know the %s tag", tag)

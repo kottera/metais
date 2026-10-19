@@ -14,13 +14,14 @@ import (
 
 // Output is one file a render writes from a template: the declaration's
 // id, the template's name beneath templates/, the file's path relative to
-// the root of its tree, the evaluation of a fan-out it is, or nil, and its
+// the root of its tree, the evaluation of a fan-out it is, or nil, its
 // kind (ADR-005 D7), from which the provenance tag chooses its style
 // (ADR-004 D14 item 5). For a container's entry, In is the path of the
 // container, itself within its own tree's containers, joined by "/", and
 // Path is the entry's path within the container (ADR-004 D7 item 6).
 // In is also the tree the file is written in, as a Placement names it:
 // "" for the output directory.
+// HTML is whether its escape is html (ADR-005 D2 item 4).
 type Output struct {
 	ID       string
 	Template string
@@ -28,6 +29,7 @@ type Output struct {
 	Fan      *Fan
 	Kind     string
 	In       string
+	HTML     bool
 }
 
 // file is the path a finding about o names: its path, or for a
@@ -126,6 +128,11 @@ func (r *Renderer) Render(o Output) ([]byte, *finding.Finding) {
 			ArraySize:    r.lim.Value(limits.ArraySize),
 		},
 		UnorderedObjects: r.unordered,
+	}
+	if o.HTML {
+		// Every value an expression writes is escaped unless safe, in the
+		// template and every partial it renders (ADR-004 D8 item 5, D9).
+		env.Escape = liquid.EscapeHTML
 	}
 	var buf bytes.Buffer
 	if e := liquid.Render(&buf, t, env); e != nil {

@@ -1,0 +1,18 @@
+text: <b class="t">{{ inputs.v.s }}</b>
+echo: {% echo inputs.v.s %}
+cycle: {% cycle inputs.v.s, "b" %}
+raw: {% raw %}<r a='1'>&{{ inputs.v.s }}</r>{% endraw %}
+escape: {{ inputs.v.s | escape }}
+h: {{ inputs.v.s | h }}
+escape_once: {{ inputs.v.ref | escape_once }}
+escape, then append: {{ inputs.v.s | escape | append: "" }}
+lines: {{ inputs.v.lines | escape | newline_to_br }}
+lines, safe: {{ inputs.v.lines | escape | newline_to_br | safe }}
+safe: {{ inputs.v.s | safe }}
+echo safe: {% echo inputs.v.s | safe %}
+{% capture c %}<em>{{ inputs.v.s }}</em>{% endcapture %}capture: {{ c }}
+capture, assigned: {% assign d = c %}{{ d }}
+capture, then append: {{ c | append: "" }}
+json_script: <script type="application/json" id="d">{{ inputs.v.o | json_script }}</script>
+json_script, then append: {{ inputs.v.o | json_script | append: "" }}
+{% render "parts/show.liquid", x: inputs.v.s %}

@@ -1,0 +1,17 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: box
+    path: box.zip
+    container:
+      entries:
+        - template: p.liquid
+          path: page.html
+          escape: html
+        - template: p.liquid
+          path: page.txt

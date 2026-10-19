@@ -32,6 +32,12 @@ type safeFilter struct{ fnFilter }
 
 func (safeFilter) MarksSafe() bool { return true }
 
+// lastFilter is a safeFilter that may be applied only as the last filter
+// of an output expression, as METAIS's safe is.
+type lastFilter struct{ safeFilter }
+
+func (lastFilter) OnlyLast() bool { return true }
+
 // panicTag is a TagDef whose Render panics.
 type panicTag struct{}
 

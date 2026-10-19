@@ -1,0 +1,38 @@
+[
+  {
+    "code": "template.safe_position",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 11,
+      "pointer": "/outputs/1/path"
+    },
+    "params": {
+      "column": 1
+    }
+  },
+  {
+    "code": "template.safe_position",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 15,
+      "pointer": "/outputs/2/for_each"
+    },
+    "params": {
+      "column": 15
+    }
+  }
+]

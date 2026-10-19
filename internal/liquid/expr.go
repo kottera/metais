@@ -435,8 +435,10 @@ func (x *exprParser) segments(path *ast.Path) (ast.Primary, *Error) {
 	}
 }
 
-// valueExpr parses a primary and its filters.
-func (x *exprParser) valueExpr() (*ast.Expr, *Error) {
+// valueExpr parses a primary and its filters. output says whether it is
+// an output expression, "{{ }}" or echo's, the only place a LastFilter may
+// be applied, and there only last.
+func (x *exprParser) valueExpr(output bool) (*ast.Expr, *Error) {
 	first := x.peek()
 	base, e := x.primary()
 	if e != nil {
@@ -473,6 +475,9 @@ func (x *exprParser) valueExpr() (*ast.Expr, *Error) {
 				off = x.at
 			}
 			x.p.errs = append(x.p.errs, x.p.locate(r, off))
+		} else if l, ok := def.(LastFilter); ok && l.OnlyLast() && (!output || x.peek().kind == etPipe) {
+			x.report(nt, CodeSafePosition, map[string]string{"filter": f.Name},
+				fmt.Sprintf("%s may only be the last filter of an output expression", f.Name))
 		}
 		ex.Filters = append(ex.Filters, f)
 	}

@@ -303,6 +303,7 @@ it, and the statements it reports.
 | `template.provenance_argument` | error | content | template | `reason`, `column`; optional: `argument` | 1.0 | [MTS-TAG-005](08-filters-and-tags.md#mts-tag-005) |
 | `template.provenance_style` | error | content | template | `reason`, `column`; optional: `kind`, `style`, `type`, `output_path` | 1.0 | [MTS-TAG-010](08-filters-and-tags.md#mts-tag-010) |
 | `template.reserved_name` | error | content | template | `name`, `column` | 1.0 | [MTS-TPL-040](07-template-environment.md#mts-tpl-040) |
+| `template.safe_position` | error | content | template | `column` | 1.0 | [MTS-FLT-002](08-filters-and-tags.md#mts-flt-002) |
 | `template.syntax` | error | content | template | `column`, `cause` | 1.0 | [MTS-AUT-010](13-authoring.md#mts-aut-010), [MTS-AUT-011](13-authoring.md#mts-aut-011), [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-005](07-template-environment.md#mts-tpl-005), [MTS-TPL-006](07-template-environment.md#mts-tpl-006) |
 | `template.tag_argument` | error | content | template | `argument`, `type`, `column`; optional: `tag`, `output_path` | 1.0 | [MTS-TPL-013](07-template-environment.md#mts-tpl-013) |
 | `template.tag_context` | error | content | template | `tag`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TAG-011](08-filters-and-tags.md#mts-tag-011) |

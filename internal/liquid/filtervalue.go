@@ -224,6 +224,14 @@ func deepSize(v value.Value) int64 {
 	return n
 }
 
+// Shallow is ADR-009 D11 item 2's shallow size of v, which a filter of
+// internal/template charges as FilterDef's contract says.
+func Shallow(v value.Value) int64 { return shallow(v) }
+
+// DeepSize is the deep size of v: the shallow sizes of v and of every
+// value beneath it.
+func DeepSize(v value.Value) int64 { return deepSize(v) }
+
 // rubySpace reports whether c is whitespace as Ruby's strip removes it:
 // U+0000, tab, line feed, vertical tab, form feed, carriage return and
 // space.
