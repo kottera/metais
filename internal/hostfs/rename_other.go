@@ -22,8 +22,14 @@ func platformRenameNoReplace(*os.File, string, string, *os.File, string, string)
 }
 
 // platformUnlink has no directory-relative call here that refuses a
-// directory, so it answers errUnlinkUnsupported, and the caller removes
+// directory, so it answers errHandleUnsupported, and the caller removes
 // through the root what it has examined as a regular file.
 func platformUnlink(*os.File, string, string) error {
-	return errUnlinkUnsupported
+	return errHandleUnsupported
+}
+
+// platformRenameReplace answers errHandleUnsupported, and the caller
+// renames through the root.
+func platformRenameReplace(*os.File, string, string, *os.File, string, string) error {
+	return errHandleUnsupported
 }

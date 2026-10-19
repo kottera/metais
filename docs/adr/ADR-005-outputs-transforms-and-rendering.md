@@ -1509,3 +1509,52 @@ they write into an existing directory too.
   entry's `for_each`. The zip writer resets one deflater per zip rather
   than making one per entry: level 9's state is large, and a container of
   tens of thousands of entries spent most of its time allocating it.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-0.** Amendment A1's library
+  half landed in `internal/hostfs`, ahead of the writers that wire it
+  (render, `extract --overwrite`, `sample --to`): `OpenExisting` opens the
+  existing output directory; `Existing.Check` makes D15 item 4's checks of
+  every planned path, as A1 items 4 and 5 extend them, from `Lstat` through
+  the root and a listing of names, and gives each path its status,
+  `create` or `replace`, or the reason that refuses it, writing nothing
+  anywhere, so the dry run reports it (D16 items 1 and 2); `Existing.Stage`
+  creates `<out>/.metais-staging` exclusively and pins it; the `Output` it
+  returns writes only the planned paths, each beneath the staging
+  directory with the directories it needs; and `Commit` commits by unit
+  (A1 item 2), a missing directory and a `create` with the no-replace
+  rename, a `replace` with the replacing rename, each relative to a held
+  handle on the target directory. Readings taken:
+  - A canonical caseless match that is not byte-equal is the reason
+    `case_variant`, a `hostfs` reason the command maps to its own
+    destination code, as `link` is mapped. The checks report one reason
+    per path: the first segment's refusal, or failing that the caseless
+    match.
+  - Every check is made again at write time as one whole `Check` before
+    the first rename: a path now refused fails the commit with its reason,
+    and a path whose status or unit changed fails it with `changed`, in
+    both cases with nothing committed. A `*hostfs.CommitError` whose
+    `Committed` is empty therefore means nothing in the output directory
+    changed, which a command reports as `output.destination.write_failed`;
+    one that lists paths is `output.destination.commit_failed`. Each
+    directory a run of units is committed into is then checked segment by
+    segment again, opened, and proved by its handle's `Stat` to be the
+    directory checked, and its renames are made relative to that handle,
+    so a link planted at its name since is never followed.
+  - A name the write did not create, found beneath the staging directory
+    after the last unit, is left with the staging directory, and `Commit`
+    reports every path committed with reason `exists`, since the next
+    write into the directory is refused until the caller removes it.
+  - On windows the device is not compared: `Lstat` there does not name a
+    volume, and a volume mounted inside the output directory is a mount
+    point, a reparse point, which is refused as a link (D15 item 4) before
+    a device would be. Every reparse point is recognised from its file
+    attributes, since `Lstat` reports a junction or mount point as
+    irregular rather than as a link.
+  The write holds the output directory's root, the staging directory's pin
+  and root, the file being written, and while checking or committing one
+  directory or one pair of directories, so 100,000 planned files, the
+  `outputs` default, commit and abort under an open-file soft limit of 128
+  (A1 item 7). The existing-destination detector, which every writer of
+  this shape runs its command through, is `internal/guarantees`'
+  `TestExistingDestinationDetector`; its faults are `fault.ReadExisting`
+  and `fault.RemoveForeign` at this package's seam. `StageNew`,
+  `WriteInPlace` and `CreateNew` are unchanged.

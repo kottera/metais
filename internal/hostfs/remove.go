@@ -61,7 +61,7 @@ func RemoveFile(dir, name string) error {
 	}
 	defer d.Close()
 	err = platformUnlink(d, path, base)
-	if errors.Is(err, errUnlinkUnsupported) {
+	if errors.Is(err, errHandleUnsupported) {
 		err = root.Remove(n)
 	}
 	return mapErr("remove", err)

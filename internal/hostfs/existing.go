@@ -8,6 +8,8 @@ import (
 	"io"
 	"io/fs"
 	"math"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"unicode/utf8"
@@ -497,8 +499,10 @@ func (o *Output) commitExisting() error {
 		beneath[c.unit] = append(beneath[c.unit], c.Path)
 	}
 	var committed []string
+	var cd *commitDir
+	defer func() { cd.close() }()
 	for _, u := range units {
-		if err := o.commitUnit(u); err != nil {
+		if err := o.commitUnit(u, &cd); err != nil {
 			slices.Sort(committed)
 			return o.failCommit(committed, err)
 		}
@@ -508,6 +512,7 @@ func (o *Output) commitExisting() error {
 			o.removeForeign(u.unit)
 		}
 	}
+	cd.close()
 	slices.Sort(committed)
 	o.ended = true
 	errs := []error{o.removeStaged(), o.parent.RemoveCreated()}
@@ -526,22 +531,96 @@ func (o *Output) commitExisting() error {
 	return nil
 }
 
-// commitUnit renames u's unit from the staging directory into place.
-func (o *Output) commitUnit(u PathCheck) error {
-	x := o.parent
-	if exist, err := checkParents(x.root, "rename", u.unit); err != nil {
-		return err
-	} else if exist < strings.Count(u.unit, "/") {
-		return fail("rename", NotFound)
+// commitDir is the directory a run of units in path order is committed
+// into: a handle on it in the output directory, opened once every segment
+// of its name was found a directory and not a link, and proved by its own
+// Stat to be the directory Lstat found, and a handle on its counterpart
+// beneath the staging directory. Every rename of the run is made relative
+// to the two handles, so a link planted at the directory's name since it
+// was proved is never followed: the rename reaches the directory proved,
+// or fails. A commit holds one commitDir at a time.
+type commitDir struct {
+	name             string
+	to, from         *os.File
+	toPath, fromPath string
+}
+
+func (d *commitDir) close() {
+	if d != nil {
+		d.to.Close()
+		d.from.Close()
 	}
-	from := join(StagingDir, u.unit)
+}
+
+// openCommitDir makes the checks of ADR-005 D15 item 4 again, at write
+// time, on every segment of dir, a directory in the output directory, and
+// opens it and its staged counterpart as a commitDir.
+func (o *Output) openCommitDir(dir string) (*commitDir, error) {
+	x := o.parent
+	info, err := x.root.Lstat(".")
+	if dir != "." {
+		segs := strings.Split(dir, "/")
+		for k := range segs {
+			n, _ := osName(strings.Join(segs[:k+1], "/"))
+			if info, err = x.root.Lstat(n); err != nil {
+				break
+			}
+			if linkLike(info) {
+				return nil, fail("rename", Link)
+			}
+			if !info.IsDir() {
+				return nil, fail("rename", NotDirectory)
+			}
+		}
+	}
+	if err != nil {
+		return nil, mapErr("rename", err)
+	}
+	n, _ := osName(dir)
+	to, err := x.root.Open(n)
+	if err != nil {
+		return nil, mapErr("rename", err)
+	}
+	if got, err := to.Stat(); err != nil || !os.SameFile(info, got) {
+		to.Close()
+		return nil, fail("rename", Changed)
+	}
+	staged := StagingDir
+	if dir != "." {
+		staged = join(StagingDir, dir)
+	}
+	from, fromPath, err := x.openDirAt(staged)
+	if err != nil {
+		to.Close()
+		return nil, err
+	}
+	return &commitDir{name: dir, to: to, toPath: filepath.Join(x.root.Name(), n), from: from, fromPath: fromPath}, nil
+}
+
+// commitUnit renames u's unit from the staging directory into place,
+// through *cd, which it opens, or moves on to the unit's directory.
+func (o *Output) commitUnit(u PathCheck, cd **commitDir) error {
+	x := o.parent
+	dir, base := split(u.unit)
 	if x.beforeRename != nil {
-		x.beforeRename(from, u.unit)
+		x.beforeRename(join(StagingDir, u.unit), u.unit)
+	}
+	if *cd == nil || (*cd).name != dir {
+		(*cd).close()
+		*cd = nil
+		d, err := o.openCommitDir(dir)
+		if err != nil {
+			return err
+		}
+		*cd = d
+	}
+	d := *cd
+	staged := StagingDir
+	if dir != "." {
+		staged = join(StagingDir, dir)
 	}
 	if u.unitDir || u.Status == Create {
-		fromDir, fromBase := split(from)
-		toDir, toBase := split(u.unit)
-		return x.renameAcross(fromDir, fromBase, toDir, toBase)
+		return x.renameNoReplaceAt(d.from, d.fromPath, staged, base, d.to, d.toPath, dir, base)
 	}
 	tn, _ := osName(u.unit)
 	if t, err := x.root.Lstat(tn); err == nil {
@@ -554,8 +633,12 @@ func (o *Output) commitUnit(u PathCheck) error {
 	} else if !errors.Is(err, fs.ErrNotExist) {
 		return mapErr("rename", err)
 	}
-	fn, _ := osName(from)
-	return mapErr("rename", x.root.Rename(fn, tn))
+	err := platformRenameReplace(d.from, d.fromPath, base, d.to, d.toPath, base)
+	if errors.Is(err, errHandleUnsupported) {
+		fn, _ := osName(join(staged, base))
+		err = x.root.Rename(fn, tn)
+	}
+	return mapErr("rename", err)
 }
 
 // forget drops from the write's records what the commit of unit moved out

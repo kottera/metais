@@ -551,7 +551,15 @@ func (w *Writer) renameAcross(fromDir, from, toDir, to string) error {
 		}
 		defer td.Close()
 	}
-	err = platformRenameNoReplace(fd, fp, from, td, tp, to)
+	return w.renameNoReplaceAt(fd, fp, fromDir, from, td, tp, toDir, to)
+}
+
+// renameNoReplaceAt renames from, a single name in the directory fromDir
+// beneath w, open as fd at host path fp, to to, a single name in the
+// directory toDir, open as td at tp, refusing an existing target with
+// Exists.
+func (w *Writer) renameNoReplaceAt(fd *os.File, fp, fromDir, from string, td *os.File, tp, toDir, to string) error {
+	err := platformRenameNoReplace(fd, fp, from, td, tp, to)
 	if !errors.Is(err, errNoReplaceUnsupported) {
 		return mapErr("rename", err)
 	}
@@ -586,9 +594,9 @@ func (w *Writer) openDirAt(dir string) (*os.File, string, error) {
 // system does not support refusing an existing target.
 var errNoReplaceUnsupported = errors.New("no-replace rename unsupported")
 
-// errUnlinkUnsupported is a platform unlink's answer where it has no call
-// that removes a file relative to a directory handle.
-var errUnlinkUnsupported = errors.New("directory-relative unlink unsupported")
+// errHandleUnsupported is a platform call's answer where it has no call
+// that names a file relative to a directory handle.
+var errHandleUnsupported = errors.New("directory-relative call unsupported")
 
 // release closes the pins of everything recorded beneath from, a name
 // relative to w. When renamed, from has been renamed by w: its own record

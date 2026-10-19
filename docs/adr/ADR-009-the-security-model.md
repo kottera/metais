@@ -1533,3 +1533,32 @@ checks before the library sees a schema). No dependency changes.
   `TestHostIsolation` runs the probe on the release build and finds
   nothing. In process, `internal/template`'s
   `TestProvenanceWritesNothingOfTheHost` fails when built with the tag.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-0.** D8 as ADR-005 Amendment A1
+  amends it landed in `internal/hostfs` as `OpenExisting`, `Check`,
+  `Stage` and the commit by unit (ADR-005's implementation log). Item 4 is
+  held by construction and by a detector: the checks open no existing file
+  in the output directory, using `Lstat` and listings of names only, and a
+  replace renames over the directory entry, so a hard link to a replaced
+  file keeps the old bytes. The detector, `TestExistingDestinationDetector`
+  in `internal/guarantees`, seeds an output directory with files the write
+  replaces, each hard-linked from outside it, and foreign files beside them
+  and at its top, with every access time set behind its modification time,
+  and runs each writer of an existing directory through it: a moved access
+  time is a read, a foreign file gone or changed a removal of a name the
+  write did not create, a hard link holding new bytes a write into a
+  replaced file. A file system that records no read in access times
+  (probed with a file of the detector's own) skips the read half and says
+  so. Its faults are `ReadExisting` (bit 5), which reads every file the
+  write replaces, and `RemoveForeign` (bit 6), which removes the files
+  beside each committed unit that the write did not plan. A1 item 4's
+  device is compared from `Lstat` and reaches no error, finding or
+  message (D12); its case is the unit test
+  `TestExistingRefusesAnotherDevice`, which replaces the device the checks
+  read, beside `TestExistingRefusesARealMountPoint`, which uses `/dev`
+  where the host lets it be examined. The one removal outside a staging
+  directory, `test --update`'s in `expected/` (ADR-007 D5 item 5, RULINGS
+  R1-006), is `hostfs.RemoveFile`: through a root on the directory the
+  caller names, it refuses a link, a junction or other reparse point, or a
+  file that is not regular at any segment, and removes with a call made
+  relative to a handle on the file's directory that refuses a directory
+  (`unlinkat` with no flag, `DeleteFileW`).

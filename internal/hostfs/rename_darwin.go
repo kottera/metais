@@ -34,3 +34,11 @@ func platformRenameNoReplace(fromDir *os.File, _ string, from string, toDir *os.
 func platformUnlink(dir *os.File, _ string, name string) error {
 	return unix.Unlinkat(int(dir.Fd()), name, 0)
 }
+
+// platformRenameReplace renames from, a single name in the open directory
+// fromDir, over to, a single name in the open directory toDir, with
+// renameat, which replaces the directory entry and never writes into the
+// file it replaces (ADR-005 D15 item 6).
+func platformRenameReplace(fromDir *os.File, _ string, from string, toDir *os.File, _ string, to string) error {
+	return unix.Renameat(int(fromDir.Fd()), from, int(toDir.Fd()), to)
+}

@@ -52,3 +52,10 @@ func platformUnlink(_ *os.File, dirPath string, name string) error {
 	}
 	return syscall.DeleteFile(p)
 }
+
+// platformRenameReplace answers errHandleUnsupported: windows names files
+// by path, and the caller renames through the root, whose rename replaces
+// an existing file.
+func platformRenameReplace(*os.File, string, string, *os.File, string, string) error {
+	return errHandleUnsupported
+}
