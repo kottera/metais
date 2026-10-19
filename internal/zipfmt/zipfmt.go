@@ -25,6 +25,8 @@ const (
 	sigEOCD     = 0x06054b50 // end of central directory signature
 	sigZip64Loc = 0x07064b50 // zip64 end of central directory locator signature
 
+	zip64ExtraID = 0x0001 // the zip64 extended information extra field's header ID
+
 	localLen   = 30 // a local file header without its name and extra field
 	centralLen = 46 // a central directory header without its name, extra field and comment
 	eocdLen    = 22 // the end of central directory record, with no comment

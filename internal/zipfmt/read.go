@@ -261,10 +261,14 @@ func (o *opener) directory() error {
 		} else if err := r.skip(int64(e.nameLen)); err != nil {
 			return err
 		}
-		if err := r.skip(int64(e.extraLen) + int64(commentLen)); err != nil {
+		extra := make([]byte, e.extraLen)
+		if err := r.readFull(extra); err != nil {
 			return err
 		}
-		o.header(&e, h, commentLen)
+		if err := r.skip(int64(commentLen)); err != nil {
+			return err
+		}
+		o.header(&e, h, extra, commentLen)
 		if e.nameRead {
 			o.found = append(o.found, nameFindings(e.name, off, unitext.CheckPath(e.name, o.lim), o.lim)...)
 			if len(names) > 0 && e.name < names[len(names)-1] {
@@ -289,9 +293,10 @@ func (o *opener) directory() error {
 	return nil
 }
 
-// header checks the fixed fields of one central directory header, h, and
-// its declared sizes (ADR-001 D1 items 3 to 6, D3; ADR-009 D5 item 4).
-func (o *opener) header(e *entry, h []byte, commentLen uint16) {
+// header checks the fixed fields of one central directory header, h, its
+// extra field and its declared sizes (ADR-001 D1 items 2 to 6, D3;
+// ADR-009 D5 item 4).
+func (o *opener) header(e *entry, h, extra []byte, commentLen uint16) {
 	le := binary.LittleEndian
 	name, off := e.name, e.header
 	if v := le.Uint16(h[4:]); v != versionMadeBy {
@@ -300,6 +305,9 @@ func (o *opener) header(e *entry, h []byte, commentLen uint16) {
 	o.fields(e, recordCentral, off, h[6:])
 	if e.extraLen != 0 {
 		o.add(container(CodeExtraField, name, off, finding.Params{"length": num(int64(e.extraLen))}))
+		if at, ok := zip64Field(extra); ok {
+			o.add(container(CodeZip64, name, off+centralLen+int64(e.nameLen)+int64(at), nil))
+		}
 	}
 	if commentLen != 0 {
 		o.add(fieldValue(name, recordCentral, "file comment length", off+32, int64(commentLen), 0))
@@ -335,6 +343,21 @@ func (o *opener) header(e *entry, h []byte, commentLen uint16) {
 			o.breached(limits.EntryRatio, name, int64(e.usize)/int64(e.csize), true)
 		}
 	}
+}
+
+// zip64Field reports whether extra, an extra field, holds a zip64
+// extended information record (header ID 0x0001, APPNOTE 4.5.3), and the
+// offset in extra at which it starts. It reads extra as the sequence of
+// records it should be, and stops at the first that does not fit.
+func zip64Field(extra []byte) (int, bool) {
+	le := binary.LittleEndian
+	for at := 0; at+4 <= len(extra); {
+		if le.Uint16(extra[at:]) == zip64ExtraID {
+			return at, true
+		}
+		at += 4 + int(le.Uint16(extra[at+2:]))
+	}
+	return 0, false
 }
 
 // fields checks the fields a local header and a central directory header
