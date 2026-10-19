@@ -41,3 +41,7 @@ of `metais sample` and `render --sample` that only the command line has.
 [dev/calibration.md](dev/calibration.md) is how the limit-calibration suite
 of ADR-009 D18 item 4 is run on a target, the record it writes, and what
 plan §6's act reports back.
+
+[dev/benchmarks.md](dev/benchmarks.md) is how the benchmarks of ADR-010 D15
+are run and compared with their committed baselines, and which benchmark
+measures which budget.

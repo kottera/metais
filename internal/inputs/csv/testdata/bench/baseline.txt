@@ -1,0 +1,19 @@
+# ADR-010 D15 item 1's benchmarks of ./internal/inputs/csv, in benchstat's input format.
+# sandbox figure, not a budget
+# host: MacBook-Pro, a contended Work Order sandbox
+# cpu: Apple M2 Max
+# go version go1.26.9 darwin/arm64
+# GOOS=darwin GOARCH=arm64
+# command: go test -run '^$' -bench . -benchmem -count 6 ./internal/inputs/csv
+goos: darwin
+goarch: arm64
+pkg: github.com/kottera/metais/internal/inputs/csv
+cpu: Apple M2 Max
+BenchmarkRead-12    	      12	  95945451 ns/op	 109.29 MB/s	131917958 B/op	 1796645 allocs/op
+BenchmarkRead-12    	      12	 202565198 ns/op	  51.76 MB/s	131916674 B/op	 1796644 allocs/op
+BenchmarkRead-12    	      10	 205732058 ns/op	  50.97 MB/s	131916232 B/op	 1796643 allocs/op
+BenchmarkRead-12    	      10	 188542262 ns/op	  55.62 MB/s	131916256 B/op	 1796643 allocs/op
+BenchmarkRead-12    	      10	 205169562 ns/op	  51.11 MB/s	131916268 B/op	 1796643 allocs/op
+BenchmarkRead-12    	       7	 162015119 ns/op	  64.72 MB/s	131916224 B/op	 1796643 allocs/op
+PASS
+ok  	github.com/kottera/metais/internal/inputs/csv	11.310s

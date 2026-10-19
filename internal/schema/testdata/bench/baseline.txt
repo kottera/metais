@@ -1,0 +1,19 @@
+# ADR-010 D15 item 1's benchmarks of ./internal/schema, in benchstat's input format.
+# sandbox figure, not a budget
+# host: MacBook-Pro, a contended Work Order sandbox
+# cpu: Apple M2 Max
+# go version go1.26.9 darwin/arm64
+# GOOS=darwin GOARCH=arm64
+# command: go test -run '^$' -bench . -benchmem -count 6 ./internal/schema
+goos: darwin
+goarch: arm64
+pkg: github.com/kottera/metais/internal/schema
+cpu: Apple M2 Max
+BenchmarkValidate-12    	      12	 126214104 ns/op	48830109 B/op	 1125402 allocs/op
+BenchmarkValidate-12    	      12	  87827569 ns/op	48826601 B/op	 1125399 allocs/op
+BenchmarkValidate-12    	      21	 103350448 ns/op	48826765 B/op	 1125398 allocs/op
+BenchmarkValidate-12    	       9	 137401755 ns/op	48825992 B/op	 1125393 allocs/op
+BenchmarkValidate-12    	       7	 151978298 ns/op	48827340 B/op	 1125394 allocs/op
+BenchmarkValidate-12    	      12	 114532045 ns/op	48826985 B/op	 1125395 allocs/op
+PASS
+ok  	github.com/kottera/metais/internal/schema	9.769s
