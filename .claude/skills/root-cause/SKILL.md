@@ -73,8 +73,8 @@ without `-race` and perturbs timing, so it is the wrong tool for a race.
 ## "It fails under load" is a symptom, not a mechanism
 
 A test that times out, or fails only under load, is a defect with a
-mechanism to find. The mechanism is one of four, and the fix is to that
-mechanism:
+mechanism to find. Look first for one of these four, and fix the one you
+find:
 
 - **a timing assumption**: an order one goroutine or process assumes it
   wins, or a stage assumed to finish within some interval;
@@ -124,7 +124,7 @@ skill's `-p` cap is its fix. Establish it by measurement: the package's time
 alone, and its time in the full run. Do not assume it.
 
 `internal/conformance/wallclock_test.go` is a worked example. The
-self-proof's rows met their 5 s wall clock under the full parallel
+self-proof's rows ran out their 5 s wall clock under the full parallel
 `go test -race` on processes with nothing wrong with them, and two
 mechanisms, neither the implementation's, were spending the clock: the race
 runtime sleeps a second before every race-built process exits
