@@ -13,6 +13,7 @@ import (
 	"github.com/kottera/metais/internal/browse"
 	"github.com/kottera/metais/internal/cli/args"
 	"github.com/kottera/metais/internal/finding"
+	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/jsonx"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
@@ -332,7 +333,7 @@ func (s *session) entry(pkg *loader.Package, p args.Parsed, i int) (string, []by
 		o := s.lookupRefusal(p, i, err)
 		return "", nil, &o
 	}
-	b, err := browse.Content(pkg.Tree, info.Path, browse.Options{Faults: s.inv.Options.Faults})
+	b, err := browse.Content(pkg.Tree, info.Path, s.inv.Options.Faults)
 	if err != nil {
 		// The package was verified whole when it opened, so an entry
 		// that cannot be read again is a file that changed beneath the
@@ -555,9 +556,8 @@ func runGrep(s *session, p args.Parsed) outcome {
 			entries = append(entries, e)
 		}
 	}
-	found, err := browse.Grep(pkg.Tree, entries, re, meter, browse.GrepOptions{
-		Options: browse.Options{Faults: s.inv.Options.Faults}, Context: int(context), MaxResults: int(maxResults),
-	})
+	found, err := browse.Grep(pkg.Tree, entries, re, meter,
+		browse.GrepOptions{Context: int(context), MaxResults: int(maxResults)}, s.inv.Options.Faults)
 	if err != nil {
 		return s.badPattern(p, err, lim)
 	}
@@ -752,7 +752,7 @@ func runExtract(s *session, p args.Parsed) outcome {
 	slices.Sort(entries)
 	entries = slices.Compact(entries)
 	dry := p.Has("dry-run")
-	files, err := browse.Extract(pkg.Tree, entries, to, browse.ExtractOptions{Faults: s.inv.Options.Faults, DryRun: dry})
+	files, err := browse.Extract(pkg.Tree, entries, to, browse.ExtractOptions{DryRun: dry}, s.inv.Options.Faults)
 	if err != nil {
 		return s.extractFailed(err)
 	}
@@ -790,7 +790,7 @@ func (s *session) extractFailed(err error) outcome {
 			written = []string{}
 		}
 		o := s.refuseWith(finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
-			"reason":  finding.String(writeReason(we.Reason)),
+			"reason":  finding.String(writeReason(hostfs.Reason(we.Reason))),
 			"written": stringList(written),
 		}))
 		if len(written) > 0 {

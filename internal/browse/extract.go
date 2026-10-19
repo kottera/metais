@@ -15,9 +15,6 @@ import (
 // ExtractOptions is what Extract takes beside the tree, the entries and
 // the destination.
 type ExtractOptions struct {
-	// Faults is the test-only fault set, handed to hostfs, whose seam
-	// consults fault.SkipConfine (ADR-010 D13 item 2).
-	Faults fault.Set
 	// DryRun reports the files Extract would write, and writes nothing.
 	DryRun bool
 
@@ -53,15 +50,15 @@ type DestinationError struct {
 
 func (e *DestinationError) Error() string { return "browse: the destination exists" }
 
-// WriteError is a failure that stopped Extract. Reason is hostfs's;
-// Written are the files written before it, in the order written, none of
-// which was removed.
+// WriteError is a failure that stopped Extract. Reason is hostfs's
+// reason, as its text; Written are the files written before it, in the
+// order written, none of which was removed.
 type WriteError struct {
-	Reason  hostfs.Reason
+	Reason  string
 	Written []string
 }
 
-func (e *WriteError) Error() string { return "browse: extract stopped (" + string(e.Reason) + ")" }
+func (e *WriteError) Error() string { return "browse: extract stopped (" + e.Reason + ")" }
 
 // Extract writes the entries of t named by entries, in their order, each
 // to <to>/<entry path> (ADR-008 D5, extract), and returns the files
@@ -74,9 +71,13 @@ func (e *WriteError) Error() string { return "browse: extract stopped (" + strin
 // wrote is what the error lists, and nothing it did not create is ever
 // touched.
 //
+// faults is the test-only fault set (ADR-010 D13 item 2), handed to
+// hostfs, whose seam consults fault.SkipConfine; the tool builds it zero.
+//
 // It is the one function of this package that reaches the host
 // (layers.json): everything else reads a tree.
-func Extract(t pkgtree.Tree, entries []string, to string, opt ExtractOptions) ([]File, error) {
+func Extract(t pkgtree.Tree, entries []string, to string, opt ExtractOptions, faults fault.Set) ([]File, error) {
+	reasonOf := func(err error) string { return string(hostfs.ReasonOf(err)) }
 	files := make([]File, 0, len(entries))
 	for _, e := range entries {
 		info, err := t.Stat(e)
@@ -91,14 +92,14 @@ func Extract(t pkgtree.Tree, entries []string, to string, opt ExtractOptions) ([
 			return &DestinationError{NotDirectory: true}
 		case hostfs.Exists:
 		default:
-			return &WriteError{Reason: hostfs.ReasonOf(err)}
+			return &WriteError{Reason: reasonOf(err)}
 		}
 		d, derr := hostfs.OpenDir(to)
 		if derr != nil {
 			if hostfs.ReasonOf(derr) == hostfs.NotDirectory {
 				return &DestinationError{NotDirectory: true}
 			}
-			return &WriteError{Reason: hostfs.ReasonOf(derr)}
+			return &WriteError{Reason: reasonOf(derr)}
 		}
 		defer d.Close()
 		de := &DestinationError{}
@@ -106,7 +107,7 @@ func Extract(t pkgtree.Tree, entries []string, to string, opt ExtractOptions) ([
 		if hostfs.ReasonOf(lerr) == hostfs.TooLarge {
 			de.More = true
 		} else if lerr != nil {
-			return &WriteError{Reason: hostfs.ReasonOf(lerr)}
+			return &WriteError{Reason: reasonOf(lerr)}
 		}
 		for _, f := range found {
 			if len(de.Entries) == MaxListed {
@@ -128,14 +129,14 @@ func Extract(t pkgtree.Tree, entries []string, to string, opt ExtractOptions) ([
 		}
 		return files, nil
 	}
-	out, err := hostfs.CreateNew(to, hostfs.WriteOptions{Faults: opt.Faults})
+	out, err := hostfs.CreateNew(to, hostfs.WriteOptions{Faults: faults})
 	if err != nil {
 		return nil, existing(err)
 	}
 	stop := func(err error) ([]File, error) {
 		written := out.Written()
 		out.Abort()
-		return nil, &WriteError{Reason: hostfs.ReasonOf(err), Written: written}
+		return nil, &WriteError{Reason: reasonOf(err), Written: written}
 	}
 	for _, f := range files {
 		if dir := path.Dir(f.Path); dir != "." {
@@ -154,7 +155,7 @@ func Extract(t pkgtree.Tree, entries []string, to string, opt ExtractOptions) ([
 		}
 	}
 	if err := out.Commit(); err != nil {
-		return nil, &WriteError{Reason: hostfs.ReasonOf(err), Written: out.Written()}
+		return nil, &WriteError{Reason: reasonOf(err), Written: out.Written()}
 	}
 	if opt.readBack != nil && len(files) > 0 {
 		d, err := hostfs.OpenDir(to)

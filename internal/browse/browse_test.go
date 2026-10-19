@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/pkgtree"
@@ -249,7 +250,7 @@ func grepOf(t *testing.T, tr pkgtree.Tree, pattern string, globs []string, conte
 			}
 		}
 	}
-	res, err := Grep(tr, entries, re, nil, GrepOptions{Context: context, MaxResults: max})
+	res, err := Grep(tr, entries, re, nil, GrepOptions{Context: context, MaxResults: max}, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -317,7 +318,7 @@ func TestGrepRegexWork(t *testing.T) {
 	}{{need, nil}, {need - 1, ErrRegexWork}} {
 		m := regexprofile.NewMeter(c.budget)
 		re, _ := regexprofile.CompileRE2("(a|aa)*b", false, limits.Defaults(), m)
-		_, err := Grep(tr, []string{"a.txt"}, re, m, GrepOptions{MaxResults: 1})
+		_, err := Grep(tr, []string{"a.txt"}, re, m, GrepOptions{MaxResults: 1}, 0)
 		if !errors.Is(err, c.err) {
 			t.Errorf("a budget of %d for %d units of work: %v, want %v", c.budget, need, err, c.err)
 		}
@@ -359,7 +360,7 @@ func TestExtract(t *testing.T) {
 	tr := tree(t, map[string]string{"metais.yaml": "m", "inputs/a.json": "{}", "inputs/x/b.json": "{}!"})
 	base := testenv.Dir(t)
 	to := filepath.Join(base, "a", "b", "out")
-	files, err := Extract(tr, []string{"inputs/a.json", "inputs/x/b.json"}, to, ExtractOptions{})
+	files, err := Extract(tr, []string{"inputs/a.json", "inputs/x/b.json"}, to, ExtractOptions{}, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -379,14 +380,14 @@ func TestExtract(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(to, "metais.yaml")); err == nil {
 		t.Error("an entry not selected was written")
 	}
-	_, err = Extract(tr, []string{"metais.yaml"}, to, ExtractOptions{})
+	_, err = Extract(tr, []string{"metais.yaml"}, to, ExtractOptions{}, 0)
 	var de *DestinationError
 	if !errors.As(err, &de) || de.NotDirectory || !slices.Equal(de.Entries, []string{"inputs"}) || de.More {
 		t.Errorf("an existing destination: %#v", err)
 	}
 	empty := filepath.Join(base, "empty")
 	os.Mkdir(empty, 0o755)
-	if _, err := Extract(tr, []string{"metais.yaml"}, empty, ExtractOptions{}); !errors.As(err, &de) || len(de.Entries) != 0 {
+	if _, err := Extract(tr, []string{"metais.yaml"}, empty, ExtractOptions{}, 0); !errors.As(err, &de) || len(de.Entries) != 0 {
 		t.Errorf("an existing empty destination: %#v", err)
 	}
 	if _, err := os.Stat(filepath.Join(empty, "metais.yaml")); err == nil {
@@ -395,19 +396,19 @@ func TestExtract(t *testing.T) {
 	file := filepath.Join(base, "file")
 	os.WriteFile(file, nil, 0o644)
 	for _, p := range []string{file, filepath.Join(file, "under")} {
-		if _, err := Extract(tr, []string{"metais.yaml"}, p, ExtractOptions{}); !errors.As(err, &de) || !de.NotDirectory {
+		if _, err := Extract(tr, []string{"metais.yaml"}, p, ExtractOptions{}, 0); !errors.As(err, &de) || !de.NotDirectory {
 			t.Errorf("a destination that is or lies beneath a file: %#v", err)
 		}
 	}
 	dry := filepath.Join(base, "dry")
-	files, err = Extract(tr, []string{"metais.yaml"}, dry, ExtractOptions{DryRun: true})
+	files, err = Extract(tr, []string{"metais.yaml"}, dry, ExtractOptions{DryRun: true}, 0)
 	if err != nil || !slices.Equal(files, []File{{"metais.yaml", 1}}) {
 		t.Errorf("dry run: %+v %v", files, err)
 	}
 	if _, err := os.Stat(dry); err == nil {
 		t.Error("a dry run wrote")
 	}
-	if _, err := Extract(tr, []string{"metais.yaml"}, to, ExtractOptions{DryRun: true}); !errors.As(err, &de) {
+	if _, err := Extract(tr, []string{"metais.yaml"}, to, ExtractOptions{DryRun: true}, 0); !errors.As(err, &de) {
 		t.Errorf("a dry run into an existing destination: %v", err)
 	}
 }
@@ -419,9 +420,9 @@ func TestExtractStopsAndRemovesNothing(t *testing.T) {
 	tr := tree(t, map[string]string{"a.txt": "a", "b/c.txt": "c"})
 	to := filepath.Join(testenv.Dir(t), "out")
 	// The tree changes beneath Extract: its second entry cannot be read.
-	_, err := Extract(failing{tr, "b/c.txt"}, []string{"a.txt", "b/c.txt"}, to, ExtractOptions{})
+	_, err := Extract(failing{tr, "b/c.txt"}, []string{"a.txt", "b/c.txt"}, to, ExtractOptions{}, 0)
 	var we *WriteError
-	if !errors.As(err, &we) || !slices.Equal(we.Written, []string{"a.txt"}) || we.Reason != hostfs.IOError {
+	if !errors.As(err, &we) || !slices.Equal(we.Written, []string{"a.txt"}) || we.Reason != string(hostfs.IOError) {
 		t.Fatalf("a failed read: %#v", err)
 	}
 	if b, err := os.ReadFile(filepath.Join(to, "a.txt")); err != nil || string(b) != "a" {
@@ -446,8 +447,25 @@ func (f failing) Open(p string) (io.ReadCloser, error) {
 // the working directory and returns the same bytes.
 func TestContentReadsInPlace(t *testing.T) {
 	tr := tree(t, map[string]string{"a.txt": "hello"})
-	b, err := Content(tr, "a.txt", Options{})
+	b, err := Content(tr, "a.txt", 0)
 	if err != nil || !bytes.Equal(b, []byte("hello")) {
 		t.Errorf("Content: %q %v", b, err)
+	}
+}
+
+// TestUnpackToTemp is fault.UnpackToTemp at its seam: the entry is read
+// back from a file extracted beneath the working directory, which is left
+// for the read-in-place detector to find.
+func TestUnpackToTemp(t *testing.T) {
+	tr := tree(t, map[string]string{"a/b.txt": "hello"})
+	dir := testenv.Dir(t)
+	t.Chdir(dir)
+	b, err := Content(tr, "a/b.txt", fault.UnpackToTemp)
+	if err != nil || string(b) != "hello" {
+		t.Fatalf("Content under UnpackToTemp: %q %v", b, err)
+	}
+	found, _ := filepath.Glob(filepath.Join(dir, ".metais-unpack-*", "a", "b.txt"))
+	if len(found) != 1 {
+		t.Errorf("the extracted file is not left beneath the working directory: %q", found)
 	}
 }

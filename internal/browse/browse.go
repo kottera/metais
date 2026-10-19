@@ -25,13 +25,6 @@ import (
 	"github.com/kottera/metais/internal/pkgtree"
 )
 
-// Options is what the reading functions take beside the tree.
-type Options struct {
-	// Faults is the test-only fault set (ADR-010 D13 item 2). The tool
-	// builds it zero; browse consults only fault.UnpackToTemp.
-	Faults fault.Set
-}
-
 // NotFoundError is a path that names no entry and no directory of the
 // tree. Nearest is the nearest directory above it that exists, "." for the
 // root.
@@ -166,15 +159,16 @@ func Lookup(t pkgtree.Tree, p string) (pkgtree.Info, error) {
 }
 
 // Content returns the bytes of the entry at path, read in place through t
-// (ADR-008 D5; PRD R2 item 1).
+// (ADR-008 D5; PRD R2 item 1). faults is the test-only fault set (ADR-010
+// D13 item 2), which the tool builds zero.
 //
 // It is the seam of fault.UnpackToTemp (ADR-010 D13 item 2): under that
 // fault the entry is extracted to a temporary file, in a directory named
 // for it beneath the working directory, and read back from there, and
 // the file is left behind. The read-in-place detector must catch it. The
 // tool itself never holds a fault.
-func Content(t pkgtree.Tree, path string, opt Options) ([]byte, error) {
-	if opt.Faults.Has(fault.UnpackToTemp) {
+func Content(t pkgtree.Tree, path string, faults fault.Set) ([]byte, error) {
+	if faults.Has(fault.UnpackToTemp) {
 		return unpackToTemp(t, path)
 	}
 	r, err := t.Open(path)
@@ -194,7 +188,7 @@ var unpacked atomic.Int64
 func unpackToTemp(t pkgtree.Tree, path string) ([]byte, error) {
 	dir := fmt.Sprintf(".metais-unpack-%d", unpacked.Add(1))
 	var back []byte
-	if _, err := Extract(t, []string{path}, dir, ExtractOptions{readBack: &back}); err != nil {
+	if _, err := Extract(t, []string{path}, dir, ExtractOptions{readBack: &back}, 0); err != nil {
 		return nil, err
 	}
 	return back, nil

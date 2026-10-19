@@ -7,6 +7,7 @@ import (
 	"errors"
 	"unicode/utf8"
 
+	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/pkgtree"
 	"github.com/kottera/metais/internal/regexprofile"
 )
@@ -18,7 +19,6 @@ const MaxDisplayed = 1024
 // GrepOptions is what Grep takes beside the tree, the entries and the
 // pattern.
 type GrepOptions struct {
-	Options
 	// Context is the number of lines shown before and after each matching
 	// line reported.
 	Context int
@@ -65,10 +65,12 @@ var ErrRegexWork = errors.New("browse: the search exceeds regex-work")
 // separately, without its line ending (ADR-008 D5, grep). Binary entries
 // are skipped and listed. re charges m for every line it is matched
 // against, and an exhausted m ends the search with ErrRegexWork.
-func Grep(t pkgtree.Tree, entries []string, re *regexprofile.Regexp, m *regexprofile.Meter, opt GrepOptions) (GrepResult, error) {
+//
+// faults is the test-only fault set, which Content consults.
+func Grep(t pkgtree.Tree, entries []string, re *regexprofile.Regexp, m *regexprofile.Meter, opt GrepOptions, faults fault.Set) (GrepResult, error) {
 	res := GrepResult{Matches: []Match{}, Skipped: []string{}}
 	for _, e := range entries {
-		b, err := Content(t, e, opt.Options)
+		b, err := Content(t, e, faults)
 		if err != nil {
 			return GrepResult{}, err
 		}
