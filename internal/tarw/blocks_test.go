@@ -14,9 +14,8 @@ import (
 
 // The tests read the archive by the format, block by block, and never
 // through archive/tar's reader, so a field archive/tar would write and
-// then read back the same wrong way is still seen.
-
-const blockSize = 512
+// then read back the same wrong way is still seen. They share the
+// package's blockSize.
 
 // file is one file handed to the writer under test.
 type file struct {

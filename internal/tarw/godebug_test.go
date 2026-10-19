@@ -23,8 +23,8 @@ const godebugChildEnv = "METAIS_TARW_GODEBUG_CHILD"
 var godebugFiles = append([]file{{"../up", false, "up"}, {"/abs", false, "abs"}}, samples...)
 
 // TestGODEBUGChild writes godebugFiles and prints them, hex-encoded. It runs
-// only as TestGODEBUG's child, so GODEBUG is set before the process starts
-// and archive/tar reads it as it would in the tool.
+// only as TestGODEBUG's child, so GODEBUG is set before the process starts,
+// as it is for the tool.
 func TestGODEBUGChild(t *testing.T) {
 	if os.Getenv(godebugChildEnv) != "1" {
 		t.Skip("run only as TestGODEBUG's child")

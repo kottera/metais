@@ -1933,3 +1933,18 @@ at the train's close, with A1 and A3.
   new. Of 1,098 cases, all run at render: 911 pass and 187 are excluded,
   the seven new exclusions being `dialect` lines (ADR-004's log). The
   server renders every liquid-spec case; ADR-011's log has the run.
+- **PLAN-2026-10-metais-v1 W5-9 — the archive in the binary.** Linking
+  `internal/tarw` into `cmd/metais` for `render --out -` put `archive/tar`
+  in the binary's closure, and `archive/tar` imports `os/user` (for
+  `FileInfoHeader`'s owner names), which D11 item 10 forbids there:
+  `TestNoHostFacts` was red on all four shipped targets. D2's table and
+  ADR-005 D17 item 5 have `archive/tar` write the archive; D11 item 10 is
+  the stricter rule, and it is kept. `internal/tarw` encodes the ustar
+  header, the pax `path` record and its `PaxHeaders.0` header itself,
+  and `archive/tar` stays a test dependency: the golden files of D14 item
+  5 still pass byte for byte, and `TestMatchesArchiveTar` holds the
+  encoder to what `archive/tar` writes, under the pinned toolchain, for
+  every path shape a render plans (ustar names, prefix splits, unsplittable
+  ASCII, non-ASCII, the cut `PaxHeaders.0` name), six size classes and
+  both modes. D17 item 5's claim is therefore a proved equivalence rather
+  than a call. No module is added.

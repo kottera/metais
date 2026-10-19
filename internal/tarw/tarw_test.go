@@ -4,6 +4,7 @@
 package tarw
 
 import (
+	"archive/tar"
 	"bytes"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 )
 
 var (
@@ -424,9 +426,61 @@ func TestAddAfterClose(t *testing.T) {
 	}
 }
 
-// TestModTime holds the two spellings of D17 item 3's mtime to each other.
+// TestModTime holds D17 item 3's mtime to the instant it names.
 func TestModTime(t *testing.T) {
-	if got := modTime.Unix(); got != mtime {
-		t.Errorf("modTime is %d seconds, want %d", got, mtime)
+	if got := time.Date(1980, time.January, 1, 0, 0, 0, 0, time.UTC).Unix(); got != mtime {
+		t.Errorf("1980-01-01T00:00:00Z is %d seconds, and mtime is %d", got, mtime)
+	}
+}
+
+// TestMatchesArchiveTar is ADR-005 D17 item 5's claim about the encoder:
+// for every path shape a render can plan, every size class and both
+// modes, the archive is byte for byte what archive/tar writes, under the
+// pinned toolchain, when it is given D17 item 3's header with no format
+// forced. archive/tar is a test dependency only (the package's doc).
+func TestMatchesArchiveTar(t *testing.T) {
+	long := strings.Repeat("d/", 60)
+	paths := []string{
+		"a",
+		strings.Repeat("n", 100),
+		strings.Repeat("n", 101),
+		strings.Repeat("p", 155) + "/" + strings.Repeat("n", 100),
+		strings.Repeat("p", 156) + "/n",
+		"p/" + strings.Repeat("n", 101),
+		long + "file.txt",
+		strings.Repeat("ab/", 40) + strings.Repeat("c", 90),
+		"café/menü.sh",
+		strings.Repeat("ü", 60) + ".txt",
+		strings.Repeat("ü", 40) + "/" + strings.Repeat("é", 40) + "/x",
+		strings.Repeat("x", 99) + "/" + strings.Repeat("y", 20),
+		strings.Repeat("é", 50) + "/" + strings.Repeat("z", 95) + "/" + strings.Repeat("w", 30),
+		"dir/" + strings.Repeat("ö", 200),
+	}
+	for _, p := range paths {
+		for _, size := range []int{0, 1, 511, 512, 513, 1500} {
+			for _, exec := range []bool{false, true} {
+				content := strings.Repeat("q", size)
+				got := write(t, file{p, exec, content})
+				var want bytes.Buffer
+				tw := tar.NewWriter(&want)
+				mode := int64(0o644)
+				if exec {
+					mode = 0o755
+				}
+				if err := tw.WriteHeader(&tar.Header{Typeflag: tar.TypeReg, Name: p, Mode: mode, Size: int64(size),
+					ModTime: time.Date(1980, time.January, 1, 0, 0, 0, 0, time.UTC)}); err != nil {
+					t.Fatal(err)
+				}
+				if _, err := io.WriteString(tw, content); err != nil {
+					t.Fatal(err)
+				}
+				if err := tw.Close(); err != nil {
+					t.Fatal(err)
+				}
+				if err := sameBytes(got, want.Bytes()); err != nil {
+					t.Errorf("%q, %d bytes, executable %t: %v", p, size, exec, err)
+				}
+			}
+		}
 	}
 }
