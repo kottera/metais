@@ -110,6 +110,22 @@ func newSandbox(base string, e env) (*sandbox, error) {
 	return sb, nil
 }
 
+// raceExit is the race runtime's option that a race-built program's
+// processes are run with: no sleep before exiting. The runtime otherwise
+// sleeps a second in every process's exit, after its work is done
+// (atexit_sleep_ms, whose default is 1000), which is a fifth of the
+// self-proof's wall clock spent by no implementation, and a second added
+// to every step of a race-built run.
+const raceExit = "atexit_sleep_ms=0"
+
+// quietRaceExit sets GORACE to raceExit in both environments alike, for a
+// program the adapter reports race-built (ADR-011 D13 item 3). It is the
+// same in A and B, so it is never an A/B difference, and a program that is
+// not race-built never receives it.
+func (sb *sandbox) quietRaceExit() {
+	sb.vars["GORACE"] = raceExit
+}
+
 // environ is the sandbox's environment as a process receives it, sorted.
 func (sb *sandbox) environ() []string {
 	var out []string

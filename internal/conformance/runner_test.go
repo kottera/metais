@@ -210,6 +210,9 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 		fail(0, checkHarness, err.Error())
 		return run
 	}
+	if r.adapter.race() {
+		sb.quietRaceExit()
+	}
 	run.sb = sb
 	defer func() {
 		if err := sb.unlock(); err != nil {
