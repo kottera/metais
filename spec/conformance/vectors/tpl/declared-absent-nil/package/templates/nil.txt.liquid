@@ -1,0 +1,7 @@
+{% for m in inputs.r %}{{ m[0] }}:{% if m[1] == nil %}nil{% else %}set{% endif %} {% endfor %}
+rows: {{ inputs.r.rows[0].y | default: "y is nil" }}, {{ inputs.r.rows.size }}, {% if inputs.r.rows[5] == nil %}index 5 is nil{% endif %}, {{ inputs.r.rows[-1].x }}
+pair: {% if inputs.r.pair[0].p == nil %}p nil{% endif %} {% if inputs.r.pair[1].q == nil %}q nil{% endif %}
+x-one: {% if inputs.r["x-one"].g == nil %}g nil{% endif %}; other: {% if inputs.r.other.h == nil %}h nil{% endif %}
+undeclared: {{ inputs.r.other.extra }}
+vendor: {% if inputs.r.vendor %}present{% else %}absent{% endif %}{% if inputs.r.vendor and inputs.r.vendor.name %}{{ inputs.r.vendor.name }}{% endif %}
+opt: {% if inputs.opt == nil %}nil{% endif %}

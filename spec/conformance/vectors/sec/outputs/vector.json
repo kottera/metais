@@ -1,0 +1,60 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/outputs",
+  "title": "outputs bounds the files a render plans",
+  "statements": [
+    "MTS-SEC-011"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "at-the-limit",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "outputs": 3
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/at-the-limit-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-limit",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "outputs": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beyond-the-limit.json"
+          }
+        }
+      ]
+    }
+  ]
+}

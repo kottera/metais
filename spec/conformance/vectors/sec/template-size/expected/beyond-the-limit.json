@@ -1,0 +1,19 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/a.txt.liquid"
+    },
+    "params": {
+      "limit": "template-size",
+      "bound": 9,
+      "lowered": true,
+      "observed": 10
+    }
+  }
+]

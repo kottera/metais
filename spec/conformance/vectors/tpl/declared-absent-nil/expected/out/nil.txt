@@ -1,0 +1,7 @@
+b:nil c:nil d:nil e:nil f:nil name:set other:set pair:set rows:set vendor:nil x-one:set 
+rows: y is nil, 2, index 5 is nil, 2
+pair: p nil q nil
+x-one: g nil; other: h nil
+undeclared: E
+vendor: absent
+opt: nil

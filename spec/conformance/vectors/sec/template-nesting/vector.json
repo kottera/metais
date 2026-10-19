@@ -1,0 +1,60 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/template-nesting",
+  "title": "template-nesting bounds the block tags open at once in a template",
+  "statements": [
+    "MTS-SEC-001"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "at-the-limit",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "template-nesting": 3
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/at-the-limit-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-limit",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "template-nesting": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beyond-the-limit.json"
+          }
+        }
+      ]
+    }
+  ]
+}

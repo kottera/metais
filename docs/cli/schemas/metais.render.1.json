@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.render.1.json",
+  "title": "metais.render/1",
+  "description": "What metais render prints with --json: where the outputs went, and one record per file written (ADR-008 D8 item 9, ADR-005 D16 item 2).",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.render/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "out",
+        "dry_run",
+        "only",
+        "files",
+        "sample"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "out": {
+          "description": "Where the outputs went: directory for --out <dir>; the path itself is never echoed.",
+          "enum": [
+            "directory",
+            "stdout"
+          ]
+        },
+        "dry_run": {
+          "description": "Whether --dry-run was given, so that nothing was written.",
+          "type": "boolean"
+        },
+        "only": {
+          "description": "The path --only selected, or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "files": {
+          "description": "One record per top-level file, in byte order of its path.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/file"
+          }
+        },
+        "sample": {
+          "description": "The sample settings of a render with --sample, or null.",
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "optional",
+                "seed",
+                "items"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "optional": {
+                  "enum": [
+                    "all",
+                    "none",
+                    "mixed"
+                  ]
+                },
+                "seed": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "file": {
+      "type": "object",
+      "required": [
+        "path",
+        "output",
+        "item",
+        "source",
+        "kind",
+        "size",
+        "digest",
+        "executable",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "The file's path relative to the output directory, /-separated.",
+          "type": "string",
+          "minLength": 1
+        },
+        "output": {
+          "description": "The id of the declaration that wrote it.",
+          "type": "string",
+          "minLength": 1
+        },
+        "item": {
+          "description": "The 0-based index of the for_each element it was rendered for, or null.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "source": {
+          "description": "What wrote it: template, asset or container.",
+          "enum": [
+            "template",
+            "asset",
+            "container"
+          ]
+        },
+        "kind": {
+          "description": "The file's kind, for a template file (ADR-005 D7).",
+          "enum": [
+            "html",
+            "xml",
+            "markdown",
+            "json",
+            "yaml",
+            "csv",
+            "css",
+            "hash",
+            "slash",
+            "sql",
+            "text"
+          ]
+        },
+        "size": {
+          "description": "The file's size in bytes.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "digest": {
+          "description": "sha256: and the lowercase hex SHA-256 of the file's bytes.",
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "executable": {
+          "description": "Whether the file was written with the owner's execute bit.",
+          "type": "boolean"
+        },
+        "status": {
+          "description": "create, for a file written where nothing was.",
+          "enum": [
+            "create",
+            "replace"
+          ]
+        }
+      }
+    }
+  }
+}

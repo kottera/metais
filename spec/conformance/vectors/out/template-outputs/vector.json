@@ -1,0 +1,44 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "out/template-outputs",
+  "title": "A template output is written to its path, or to its template's path with .liquid removed, with the execute bit only where executable is true, into a new directory whose parents are created, and nothing else is left",
+  "statements": [
+    "MTS-OUT-001",
+    "MTS-OUT-002",
+    "MTS-RND-002",
+    "MTS-RND-005"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "determinism"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "a/b/out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "a",
+                "equals": "expected/a",
+                "executable": [
+                  "b/out/run.sh"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

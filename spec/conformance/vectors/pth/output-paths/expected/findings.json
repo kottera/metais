@@ -1,0 +1,419 @@
+[
+  {
+    "code": "output.path.encoding",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p00"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 11,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "﻿bom.md",
+      "reason": "byte_order_mark"
+    }
+  },
+  {
+    "code": "output.path.not_nfc",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p01"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 11,
+      "pointer": "/outputs/1/path"
+    },
+    "params": {
+      "path": "é.md"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p02"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 11,
+      "pointer": "/outputs/2/path"
+    },
+    "params": {
+      "path": "/lead.md",
+      "reason": "leading_slash"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p03"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 11,
+      "pointer": "/outputs/3/path"
+    },
+    "params": {
+      "path": "trail/",
+      "reason": "trailing_slash"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p04"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 23,
+      "column": 11,
+      "pointer": "/outputs/4/path"
+    },
+    "params": {
+      "path": "a//b.md",
+      "reason": "empty_segment"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p05"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 26,
+      "column": 11,
+      "pointer": "/outputs/5/path"
+    },
+    "params": {
+      "path": "../up.md",
+      "reason": "dot_segment"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p06"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 29,
+      "column": 11,
+      "pointer": "/outputs/6/path"
+    },
+    "params": {
+      "path": "./dot.md",
+      "reason": "dot_segment"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p07"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 32,
+      "column": 11,
+      "pointer": "/outputs/7/path"
+    },
+    "params": {
+      "path": "back\\slash.md",
+      "reason": "backslash"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p08"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 35,
+      "column": 11,
+      "pointer": "/outputs/8/path"
+    },
+    "params": {
+      "path": "co:lon.md",
+      "reason": "colon"
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p09"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 38,
+      "column": 11,
+      "pointer": "/outputs/9/path"
+    },
+    "params": {
+      "path": "ctl\u0001.md",
+      "code_point": 1
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p10"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 41,
+      "column": 11,
+      "pointer": "/outputs/10/path"
+    },
+    "params": {
+      "path": "bidi‎b.md",
+      "code_point": 8206
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p11"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 44,
+      "column": 11,
+      "pointer": "/outputs/11/path"
+    },
+    "params": {
+      "path": "ast*.md",
+      "code_point": 42
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p12"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 47,
+      "column": 11,
+      "pointer": "/outputs/12/path"
+    },
+    "params": {
+      "path": "￰.md",
+      "code_point": 65520
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p13"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 50,
+      "column": 11,
+      "pointer": "/outputs/13/path"
+    },
+    "params": {
+      "path": "CON.md",
+      "reason": "reserved_name"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p14"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 53,
+      "column": 11,
+      "pointer": "/outputs/14/path"
+    },
+    "params": {
+      "path": "com1.txt",
+      "reason": "reserved_name"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p15"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 56,
+      "column": 11,
+      "pointer": "/outputs/15/path"
+    },
+    "params": {
+      "path": "Con .md",
+      "reason": "reserved_name"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p16"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 59,
+      "column": 11,
+      "pointer": "/outputs/16/path"
+    },
+    "params": {
+      "path": "lpt¹.txt",
+      "reason": "reserved_name"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p17"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 62,
+      "column": 11,
+      "pointer": "/outputs/17/path"
+    },
+    "params": {
+      "path": ".git/config",
+      "reason": "git"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p18"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 65,
+      "column": 11,
+      "pointer": "/outputs/18/path"
+    },
+    "params": {
+      "path": "GIT~1/x",
+      "reason": "git"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p19"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 68,
+      "column": 11,
+      "pointer": "/outputs/19/path"
+    },
+    "params": {
+      "path": "dot.",
+      "reason": "segment_end"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p20"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 71,
+      "column": 11,
+      "pointer": "/outputs/20/path"
+    },
+    "params": {
+      "path": "space ",
+      "reason": "segment_end"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "p21"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 74,
+      "column": 11,
+      "pointer": "/outputs/21/path"
+    },
+    "params": {
+      "path": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "reason": "segment_length"
+    }
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 13,
+      "column": 5,
+      "pointer": "/outputs/2"
+    },
+    "params": {
+      "limit": "outputs",
+      "bound": 2,
+      "lowered": true,
+      "observed": 3
+    }
+  }
+]

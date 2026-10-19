@@ -29,6 +29,7 @@ The formats:
   metais.schema/1    metais schema
   metais.extract/1   metais extract
   metais.validate/1  metais validate
+  metais.render/1    metais render
   metais.init/1      metais init
   metais.check/1     metais check
   metais.unpack/1    metais unpack

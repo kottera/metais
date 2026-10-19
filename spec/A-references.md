@@ -55,6 +55,10 @@ background only.
   https://json-schema.org/draft/2020-12
 - <a id="commonmark"></a>**[CommonMark]** MacFarlane, J., *CommonMark Spec*,
   version 0.31.2, January 2024 — https://spec.commonmark.org/0.31.2/
+- <a id="liquid"></a>**[Liquid]** Shopify Inc., *Liquid*, the `liquid` Ruby
+  gem, release 5.14.0, tag `v5.14.0` (commit
+  `4e39ae4cc3da73921923c0669e0fc84a66b2f696`), September 2026 —
+  https://github.com/Shopify/liquid/tree/v5.14.0
 - <a id="semver"></a>**[SemVer]** Preston-Werner, T., *Semantic Versioning
   2.0.0* — https://semver.org/spec/v2.0.0.html
 - <a id="spdx"></a>**[SPDX]** The Linux Foundation, *The Software Package

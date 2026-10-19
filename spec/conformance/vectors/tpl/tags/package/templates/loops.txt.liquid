@@ -1,0 +1,1 @@
+{% for i in (1..6) reversed offset: 1 limit: 3 %}{{ i }}{% endfor %}|{% for i in (1..6) reversed limit: 3 offset: 1 %}{{ i }}{% endfor %}|{% for i in (1..6) limit: 2 %}{{ i }}{% endfor %}{% for i in (1..6) offset: continue limit: 2 %}{{ i }}{% endfor %}

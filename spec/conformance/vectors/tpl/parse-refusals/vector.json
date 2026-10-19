@@ -1,0 +1,42 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/parse-refusals",
+  "title": "Every template a render uses is parsed and every parse-time finding reported at once, each at its template, line and column: include, an unknown filter in a dead branch, the grammar, an unknown tag, reversed after a named parameter, U+0000, text that is not UTF-8, a reserved name, a non-literal or missing partial and a number beyond range; and nothing is written",
+  "statements": [
+    "MTS-TPL-002",
+    "MTS-TPL-004",
+    "MTS-TPL-005",
+    "MTS-TPL-006",
+    "MTS-TPL-019",
+    "MTS-TPL-040",
+    "MTS-TPL-041",
+    "MTS-TPL-042",
+    "MTS-TPL-047",
+    "MTS-TPL-048",
+    "MTS-TPL-051",
+    "MTS-RND-001"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

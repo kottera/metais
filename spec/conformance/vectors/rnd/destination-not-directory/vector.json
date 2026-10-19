@@ -1,0 +1,53 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/destination-not-directory",
+  "title": "A render whose output directory is a file, or lies beneath a file, is refused before anything is written",
+  "statements": [
+    "MTS-RND-003"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "is-a-file",
+      "setup": {
+        "copy": "setup"
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "file"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/is-a-file.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "beneath-a-file",
+      "setup": {
+        "copy": "setup"
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "file/out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beneath-a-file.json"
+          }
+        }
+      ]
+    }
+  ]
+}

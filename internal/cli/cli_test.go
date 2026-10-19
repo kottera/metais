@@ -335,16 +335,16 @@ func TestVersionFlag(t *testing.T) {
 
 // TestDeclarationsOpeningSet is W2-1.9 as this wave leaves it: every
 // declaration marks whether its command opens a package: inspect (W3-1),
-// validate (W4-1), check (W4-4) and unpack (W4-5) do. init is an
-// authoring command (ADR-008 D13) that opens no package: it writes a new
-// source directory.
+// validate (W4-1), check (W4-4), unpack (W4-5) and render (W4-3) do. init
+// is an authoring command (ADR-008 D13) that opens no package: it writes a
+// new source directory.
 func TestDeclarationsOpeningSet(t *testing.T) {
 	for _, c := range table {
 		if c.Role < finding.RoleConsumer || c.Role > finding.RoleNoPackage {
 			t.Errorf("%s declares no role", c.Name)
 		}
 	}
-	consumers := []string{"inspect", "ls", "read", "outline", "grep", "schema", "extract", "validate"}
+	consumers := []string{"inspect", "ls", "read", "outline", "grep", "schema", "extract", "validate", "render"}
 	authoring := []string{"check", "unpack"}
 	if got, want := OpeningCommands(), slices.Concat(consumers, authoring); !slices.Equal(got, want) {
 		t.Errorf("OpeningCommands() = %q, want %q", got, want)

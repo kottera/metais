@@ -1,0 +1,35 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: include
+    template: include.txt.liquid
+  - id: filter
+    template: filter.txt.liquid
+  - id: grammar
+    template: grammar.txt.liquid
+  - id: tag
+    template: tag.txt.liquid
+  - id: reversed
+    template: reversed.txt.liquid
+  - id: zero_byte
+    template: zero-byte.txt.liquid
+  - id: latin1
+    template: latin1.txt.liquid
+  - id: reserved
+    template: reserved.txt.liquid
+  - id: partials
+    template: partials.txt.liquid
+  - id: number
+    template: number.txt.liquid
+  - id: ok
+    template: ok.txt.liquid
+  - id: shared
+    template: shared.txt.liquid
+  - id: shared_again
+    template: shared.txt.liquid
+    path: again.txt

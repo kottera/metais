@@ -1876,3 +1876,20 @@ at the train's close, with A1 and A3.
   test hook in `internal/cli` that hands a test the package a command
   opened. A `grep` pattern is compiled by `regexprofile.CompileRE2`, which
   holds the `regexp/syntax` program count that `regex-program` bounds.
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-3.** A2 landed: the engine's
+  `Env.UnorderedObjects` takes a `for` over an object, and the `first` and
+  `last` shorthands, through `unorderedMembers`, the one function
+  `TestNoMapIteration` admits; `internal/template` sets it from
+  `fault.MapOrder` (`1 << 4`); and `TestUnorderedObjectsOnlyInTemplate`
+  is A2 item 4's tripwire, with its rule cases. D13 item 4's confinement
+  and determinism detectors are `TestConfinementDetector` and
+  `TestDeterminismDetector` in `internal/guarantees`, each replaying every
+  render step of the suite in-process, with their controls in the same
+  run; the fresh process of the determinism detector gets its umask of
+  077 from the test binary re-executed as a stub that sets it and execs
+  the built tool. The `SkipConfine` seam gained `hostfs.CheckPaths`, which
+  `render` applies the portable-path predicate through (ADR-005's log),
+  because the predicate alone would otherwise stop every hostile output
+  path before the confinement on disk could be shown to be needed. The
+  SC7 harness's canary tests are in `internal/conformance`, beside the
+  runner they extend, rather than in `internal/guarantees`.

@@ -1,0 +1,19 @@
+[
+  {
+    "code": "limit.exceeded.output",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "a"
+    },
+    "location": {
+      "origin": "output",
+      "file": "a.txt"
+    },
+    "params": {
+      "limit": "output-size",
+      "bound": 9,
+      "lowered": true
+    }
+  }
+]

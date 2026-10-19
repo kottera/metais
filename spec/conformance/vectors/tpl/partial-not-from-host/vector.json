@@ -1,0 +1,35 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/partial-not-from-host",
+  "title": "A partial the package lacks is refused even when a file of its name is in the working directory",
+  "statements": [
+    "MTS-TPL-043",
+    "MTS-TPL-042"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "setup": {
+        "copy": "setup"
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

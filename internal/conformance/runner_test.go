@@ -272,6 +272,10 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 			run.problems = append(run.problems, r.expectations(v, si, st, sr)...)
 		}
 		if e == envA {
+			for _, p := range scanWritten(sb, before, after, append(treePaths, excluded...)) {
+				p.step = si + 1
+				run.problems = append(run.problems, p)
+			}
 			archive, _, _ := st.args.stream()
 			for _, inv := range invs {
 				for _, p := range scanInvocation(inv, archive, sr.trees) {

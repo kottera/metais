@@ -87,6 +87,7 @@ var faults = []fault{
 	{"sentinel-zip", fixRenderTree, checkSentinel, both},
 	{"sentinel-zip-nested", fixRenderTree, checkSentinel, both},
 	{"sentinel-tar", fixRenderStream, checkSentinel, both},
+	{"sentinel-outside", fixRenderTree, checkSentinel, both},
 	{"stream", fixRenderStream, checkStream, both},
 	{"listing", fixRenderDry, checkListing, both},
 	{"ab", fixRenderTree, checkAB, both},

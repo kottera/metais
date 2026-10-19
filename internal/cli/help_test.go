@@ -250,8 +250,10 @@ func TestWrap(t *testing.T) {
 // TestGoldenPaths shows each golden path once every command it names is
 // declared, and not before (ADR-008 D15 item 2).
 func TestGoldenPaths(t *testing.T) {
-	if got := declaredPaths(table); len(got) != 0 {
-		t.Errorf("paths shown with no command of theirs declared: %v", got)
+	// Every command of the consuming path is declared since render
+	// (W4-3); the authoring path's test and pack are not yet.
+	if got := declaredPaths(table); len(got) != 1 || got[0].Title != "Consuming a package" {
+		t.Errorf("the table shows the paths %v, want the consuming path alone", got)
 	}
 	var fake []*Command
 	for _, name := range []string{"inspect", "read", "schema", "validate", "render"} {

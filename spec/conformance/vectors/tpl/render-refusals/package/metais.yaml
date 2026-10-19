@@ -1,0 +1,62 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: r
+    title: R
+    schema: inputs/r.schema.json
+    required: false
+outputs:
+  - id: unbound
+    template: unbound.txt.liquid
+  - id: self
+    template: self.txt.liquid
+  - id: env
+    template: env.txt.liquid
+  - id: item
+    template: item.txt.liquid
+  - id: fanout
+    template: fanout.txt.liquid
+  - id: undeclared
+    template: undeclared.txt.liquid
+  - id: package
+    template: package.txt.liquid
+  - id: output
+    template: output.txt.liquid
+  - id: nil
+    template: nil.txt.liquid
+  - id: default
+    template: default.txt.liquid
+  - id: index
+    template: index.txt.liquid
+  - id: string
+    template: string.txt.liquid
+  - id: object
+    template: object.txt.liquid
+  - id: compare
+    template: compare.txt.liquid
+  - id: limit
+    template: limit.txt.liquid
+  - id: range
+    template: range.txt.liquid
+  - id: input
+    template: input.txt.liquid
+  - id: argument
+    template: argument.txt.liquid
+  - id: decode
+    template: decode.txt.liquid
+  - id: range_result
+    template: range-result.txt.liquid
+  - id: zero
+    template: zero.txt.liquid
+  - id: partial
+    template: partial.txt.liquid
+  - id: isolated
+    template: isolated.txt.liquid
+  - id: liquid
+    template: liquid.txt.liquid
+  - id: first_only
+    template: first-only.txt.liquid

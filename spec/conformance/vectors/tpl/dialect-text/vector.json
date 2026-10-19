@@ -1,0 +1,41 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/dialect-text",
+  "title": "A template is rendered as the pinned gem renders it, its text kept byte for byte, string literals read without escapes and case mapped simply",
+  "statements": [
+    "MTS-TPL-001",
+    "MTS-TPL-007",
+    "MTS-TPL-008",
+    "MTS-TPL-009"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "determinism"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

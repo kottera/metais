@@ -1,0 +1,34 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: a
+    template: t.txt.liquid
+    path: same.md
+  - id: b
+    template: t.txt.liquid
+    path: same.md
+  - id: c
+    template: t.txt.liquid
+    path: straße.md
+  - id: d
+    template: t.txt.liquid
+    path: STRASSE.md
+  - id: e
+    template: t.txt.liquid
+    path: Docs/a.md
+  - id: f
+    template: t.txt.liquid
+    path: docs/b.md
+  - id: g
+    template: t.txt.liquid
+    path: dir
+  - id: h
+    template: t.txt.liquid
+    path: dir/file.md
+  - id: i
+    template: same.md.liquid

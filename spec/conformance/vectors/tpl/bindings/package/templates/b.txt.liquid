@@ -1,0 +1,9 @@
+metais={{ package.metais }} name={{ package.name }} version={{ package.version }} title={{ package.title }} license={{ package.license }} homepage={% if package.homepage == nil %}nil{% endif %} authors={{ package.authors.size }}
+digest={{ package.digest }}
+guide={{ package.guide }}
+description={{ package.description }}
+now={% if now %}{{ now }}{% else %}nil{% endif %}
+output={{ output.path }} root=[{{ output.root }}]
+inputs={% for m in inputs %}{{ m[0] }},{% endfor %} who={{ inputs.who.name }} opt={% if inputs.opt == nil %}nil{% endif %} def={{ inputs.def }}
+sources={{ sources.who.origin }} {{ sources.def.origin }} {% if sources.opt == nil %}nil{% endif %} {{ sources.cl.origin }}
+{% render "_partial.liquid" %}{% for inputs in (1..2) %}{{ inputs }}{% endfor %}{% render "_shadow.liquid" for (1..1) as package %}

@@ -1,0 +1,508 @@
+[
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/argument.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/argument.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "truncate",
+      "argument": "1",
+      "column": 1,
+      "output_path": "argument.txt"
+    }
+  },
+  {
+    "code": "template.comparison",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/compare.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/compare.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "operator": "<",
+      "left": "string",
+      "right": "integer",
+      "column": 1,
+      "output_path": "compare.txt"
+    }
+  },
+  {
+    "code": "template.invalid_utf8",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/decode.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/decode.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "base64_decode",
+      "column": 1,
+      "output_path": "decode.txt"
+    }
+  },
+  {
+    "code": "template.nil_property",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/default.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/default.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "path": "inputs.r.v.name",
+      "column": 1,
+      "output_path": "default.txt"
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/env.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/env.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "name": "env",
+      "column": 1,
+      "output_path": "env.txt"
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/fanout.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/fanout.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "name": "fan_out",
+      "column": 1,
+      "output_path": "fanout.txt"
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/first-only.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/first-only.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "name": "first_unbound",
+      "column": 1,
+      "output_path": "first-only.txt"
+    }
+  },
+  {
+    "code": "template.undefined_property",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/index.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/index.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "path": "inputs.r.a[\"x\"]",
+      "column": 1,
+      "output_path": "index.txt"
+    }
+  },
+  {
+    "code": "template.filter_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/input.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/input.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "where",
+      "type": "integer",
+      "column": 1,
+      "output_path": "input.txt"
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/item.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/item.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "name": "item",
+      "column": 1,
+      "output_path": "item.txt"
+    }
+  },
+  {
+    "code": "template.tag_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/limit.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/limit.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "argument": "limit",
+      "type": "string",
+      "tag": "for",
+      "column": 1,
+      "output_path": "limit.txt"
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/liquid.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/liquid.txt.liquid",
+      "line": 4,
+      "column": 6
+    },
+    "params": {
+      "name": "nothing_here",
+      "column": 6,
+      "output_path": "liquid.txt"
+    }
+  },
+  {
+    "code": "template.nil_property",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/nil.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/nil.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "path": "inputs.r.v.name",
+      "column": 1,
+      "output_path": "nil.txt"
+    }
+  },
+  {
+    "code": "template.object_output",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/object.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/object.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "column": 1,
+      "output_path": "object.txt"
+    }
+  },
+  {
+    "code": "template.undefined_property",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/output.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/output.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "path": "output.nope",
+      "column": 1,
+      "output_path": "output.txt"
+    }
+  },
+  {
+    "code": "template.undefined_property",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/package.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/package.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "path": "package.nope",
+      "column": 1,
+      "output_path": "package.txt"
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/parts/inner.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/parts/inner.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "name": "deep",
+      "column": 1,
+      "output_path": "partial.txt"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "templates/partial.txt.liquid",
+        "line": 2,
+        "column": 1,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/parts/outer.liquid",
+        "line": 3,
+        "column": 1,
+        "note": "rendered from"
+      }
+    ]
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/parts/isolated.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/parts/isolated.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "name": "mine",
+      "column": 1,
+      "output_path": "isolated.txt"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "templates/isolated.txt.liquid",
+        "line": 1,
+        "column": 22,
+        "note": "rendered from"
+      }
+    ]
+  },
+  {
+    "code": "template.number_range",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/range-result.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/range-result.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "column": 1,
+      "filter": "times",
+      "output_path": "range-result.txt"
+    }
+  },
+  {
+    "code": "template.tag_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/range.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/range.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "argument": "range",
+      "type": "array",
+      "column": 1,
+      "output_path": "range.txt"
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/self.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/self.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "name": "self",
+      "column": 1,
+      "output_path": "self.txt"
+    }
+  },
+  {
+    "code": "template.undefined_property",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/string.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/string.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "path": "inputs.r.s.length",
+      "column": 1,
+      "output_path": "string.txt"
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/unbound.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/unbound.txt.liquid",
+      "line": 2,
+      "column": 3
+    },
+    "params": {
+      "name": "nothing",
+      "column": 3,
+      "output_path": "unbound.txt"
+    }
+  },
+  {
+    "code": "template.undefined_property",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/undeclared.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/undeclared.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "path": "inputs.r.undeclared",
+      "column": 1,
+      "output_path": "undeclared.txt"
+    }
+  },
+  {
+    "code": "template.division_by_zero",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/zero.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/zero.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "divided_by",
+      "column": 1,
+      "output_path": "zero.txt"
+    }
+  }
+]

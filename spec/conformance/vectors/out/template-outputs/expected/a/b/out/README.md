@@ -1,0 +1,3 @@
+# Example
+
+From README.md.

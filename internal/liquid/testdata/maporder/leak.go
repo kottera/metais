@@ -28,3 +28,13 @@ func Leak(m map[string]int, t table) int {
 	n += len(slices.Sorted(maps.Keys(m)))
 	return n
 }
+
+// unorderedMembers has the allowed function's name, but as a method it is
+// not that function, and its range is found.
+func (t table) unorderedMembers() int {
+	n := 0
+	for range t {
+		n++
+	}
+	return n
+}

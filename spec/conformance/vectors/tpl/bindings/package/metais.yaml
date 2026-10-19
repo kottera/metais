@@ -1,0 +1,36 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+license: Apache-2.0
+authors:
+  - name: Ada
+inputs:
+  - name: who
+    title: Who
+    schema: inputs/who.schema.json
+    required: false
+  - name: opt
+    title: Opt
+    schema: inputs/opt.schema.json
+    required: false
+  - name: def
+    title: Def
+    schema: inputs/def.schema.json
+    required: false
+  - name: cl
+    title: Cl
+    schema: inputs/cl.schema.json
+    required: false
+outputs:
+  - id: top
+    template: b.txt.liquid
+    path: b.txt
+  - id: one
+    template: b.txt.liquid
+    path: d/b.txt
+  - id: two
+    template: b.txt.liquid
+    path: d/e/b.txt

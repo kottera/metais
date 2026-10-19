@@ -1,0 +1,50 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/render-refusals",
+  "title": "Every output is rendered and reports its first error, at its template, line and column, with the output's path and the render tags that led to a partial: an unbound name, self, env, item outside a fan-out, an undeclared or closed member, a property of nil, a bad index, an object written, a comparison of unordered kinds, a tag argument, a filter's input and argument, a decode that is not UTF-8, a result beyond range and a division by zero; and nothing is written",
+  "statements": [
+    "MTS-TPL-003",
+    "MTS-TPL-013",
+    "MTS-TPL-019",
+    "MTS-TPL-021",
+    "MTS-TPL-023",
+    "MTS-TPL-027",
+    "MTS-TPL-029",
+    "MTS-TPL-030",
+    "MTS-TPL-031",
+    "MTS-TPL-032",
+    "MTS-TPL-033",
+    "MTS-TPL-034",
+    "MTS-TPL-045",
+    "MTS-TPL-047",
+    "MTS-TPL-048",
+    "MTS-TPL-049",
+    "MTS-TPL-051",
+    "MTS-TPL-052",
+    "MTS-RND-001"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}
