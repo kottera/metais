@@ -59,6 +59,9 @@ func TestPathological(t *testing.T) {
 		return
 	}
 	cases := pathologicalCases(t)
+	for name := range ownCases {
+		cases = append(cases, pathologicalCase{name: name})
+	}
 	exe, err := os.Executable()
 	if err != nil {
 		t.Fatal(err)
@@ -98,6 +101,9 @@ func TestPathological(t *testing.T) {
 // runPathological is the child's half: it runs the one case named.
 func runPathological(t *testing.T, name string) {
 	var in string
+	if gen, ok := ownCases[name]; ok {
+		in = gen()
+	}
 	for _, c := range pathologicalCases(t) {
 		if c.name == name {
 			in = c.input(t)
@@ -144,6 +150,42 @@ func lineCount(src []byte) int {
 		n++
 	}
 	return n
+}
+
+// ownCases are inputs of METAIS's own, not cmark's, run beside cmark's
+// cases under the same bound. Each is aimed at a place where a reading
+// would read the same bytes again for each of many markers or openers,
+// and so be quadratic: the indentation before each of thousands of open
+// list items, a thematic break looked for after each list marker of a
+// line, a title, an attribute value or a comment that never closes, and
+// a long paragraph made a heading.
+var ownCases = map[string]func() string{
+	"metais: deep list indentation": func() string {
+		var b strings.Builder
+		for x := range 2000 {
+			b.WriteString(strings.Repeat("  ", x) + "* a\n")
+		}
+		return b.String()
+	},
+	"metais: list markers on one line": func() string { return strings.Repeat("* ", 100000) + "x\n" },
+	"metais: unclosed titles":          func() string { return strings.Repeat("[a](b \"", 50000) },
+	"metais: unclosed attribute values": func() string {
+		return strings.Repeat("<a b=\"", 50000) + strings.Repeat("<a b='", 50000)
+	},
+	"metais: unclosed comments and declarations": func() string {
+		return strings.Repeat("<!--<?<![CDATA[<!x", 50000)
+	},
+	"metais: lazy lines in deep block quotes": func() string {
+		return strings.Repeat(">", 30000) + " a\n" + strings.Repeat("b\n", 30000)
+	},
+	"metais: a long paragraph": func() string { return strings.Repeat("a *b* [c]\n", 100000) },
+	"metais: many definitions": func() string {
+		var b strings.Builder
+		for i := range 50000 {
+			b.WriteString("[l" + strconv.Itoa(i) + "]: /u \"t\"\n")
+		}
+		return b.String() + "# [l1] [l2][] [x][l3]\n"
+	},
 }
 
 // A pathological case is one entry of the suite's dictionaries: its name
