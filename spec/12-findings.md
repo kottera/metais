@@ -17,6 +17,14 @@ it, and the statements it reports.
 <!-- The code catalog below is generated from findings/registry.json by go generate ./internal/guarantees. Do not edit it by hand. -->
 | Code | Severity | Class | Subject | Parameters | Since | Statements |
 |---|---|---|---|---|---|---|
+| `internal.error` | error | internal | invocation | `tool_version`, `phase` | 1.0 | — |
 | `limit.invalid` | error | usage | invocation | `reason`; optional: `name`, `default`, `unit`, `value` | 1.0 | — |
 | `report.truncated` | info | content | report | `listed`, `omitted` | 1.0 | — |
+| `usage.bad_value` | error | usage | invocation | `argument`, `flag`, `reason`; optional: `allowed` | 1.0 | — |
+| `usage.missing_command` | error | usage | invocation | — | 1.0 | — |
+| `usage.repeated_flag` | error | usage | invocation | `argument`, `flag` | 1.0 | — |
+| `usage.unexpected_operand` | error | usage | invocation | `argument`, `command` | 1.0 | — |
+| `usage.unknown_command` | error | usage | invocation | `argument` | 1.0 | — |
+| `usage.unknown_flag` | error | usage | invocation | `argument`, `reason`; optional: `flag`, `command` | 1.0 | — |
+| `usage.unknown_topic` | error | usage | invocation | `argument` | 1.0 | — |
 <!-- The end of the generated code catalog. -->
