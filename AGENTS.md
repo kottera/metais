@@ -82,14 +82,25 @@ There is no CI; this list is the gate. The conformance vectors run as part
 of `go test`. The race detector needs cgo, so `go test -race` runs with it
 enabled; the static build is the separate check of a cgo-free binary.
 
+Two skills under `.claude/skills/` carry the procedure behind this list.
+Agents that do not load skills read them as plain files:
+
+- **`verification-gate`**: read it before you run the gate, before you
+  publish a test run as evidence, and whenever a step goes red. Its `gate.sh`
+  runs the list above, and `gate-wait.sh` watches the run.
+- **`root-cause`**: read it the moment something fails and you do not yet
+  know why, before re-running anything.
+
 - **Test-driven.** Every behaviour has a test that fails without it, written
   against the specification's wording. Every refusal has a negative test.
 - **Pin the property false first.** A headline guarantee — no write outside
   the output directory, no network, byte-identical outputs — gets a test
   that is red before the code that makes it true.
 - **Debug the mechanism, not the blame.** A failure asks *why*. Make it
-  deterministic or make one occurrence sufficient; never close a flaky test
-  by widening its assertion.
+  deterministic or make one occurrence sufficient. The aim is no
+  intermittent failures at all: a red that passes on a re-run still has a
+  mechanism to find, and no test is closed by widening its assertion or
+  raising its timeout.
 - **Bounded work is measured.** A test that holds work to a time measures
   CPU time, not wall time alone.
 - **A fuzz target is proved by its seed corpus.** The corpus under
