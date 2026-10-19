@@ -159,6 +159,11 @@ func checkSource(path string, opt Options) (*Checked, []finding.Finding) {
 		return nil, []finding.Finding{notReadable(hostfs.ReasonOf(err))}
 	}
 	o := &opening{form: Directory, tree: src, names: src.List(), unknown: src.Unknown(), lim: lim, c: newContents()}
+	// ADR-002 D11 item 2 bounds the manifest before it is read.
+	if fs := o.manifestSize(manifest.ManifestFile); len(fs) > 0 {
+		src.Close()
+		return nil, fs
+	}
 	for _, n := range o.names {
 		if _, err := o.read(n); err != nil {
 			src.Close()
