@@ -1,0 +1,4 @@
+go test fuzz v1
+string("\"%FF%zz+%C3%A9\"")
+string("")
+string("")
