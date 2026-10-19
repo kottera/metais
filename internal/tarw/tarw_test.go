@@ -423,3 +423,10 @@ func TestAddAfterClose(t *testing.T) {
 		t.Errorf("%d bytes written, want the two end blocks", buf.Len())
 	}
 }
+
+// TestModTime holds the two spellings of D17 item 3's mtime to each other.
+func TestModTime(t *testing.T) {
+	if got := modTime.Unix(); got != mtime {
+		t.Errorf("modTime is %d seconds, want %d", got, mtime)
+	}
+}

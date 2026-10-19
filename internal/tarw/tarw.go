@@ -40,8 +40,9 @@ const (
 	modeFile       = 0o644
 	modeExecutable = 0o755
 
-	// mtime is 1980-01-01T00:00:00Z, the instant ADR-001 fixes for zip
-	// entries, so every archive the tool writes carries one timestamp.
+	// mtime is 1980-01-01T00:00:00Z as Unix seconds, the instant ADR-001
+	// fixes for zip entries, so every archive the tool writes carries one
+	// timestamp. modTime is the same instant as archive/tar takes it.
 	mtime = 315532800
 
 	// maxSize is the largest size a ustar header's eleven octal digits
@@ -49,6 +50,8 @@ const (
 	// extended header carries only path.
 	maxSize = 0o77777777777
 )
+
+var modTime = time.Date(1980, time.January, 1, 0, 0, 0, 0, time.UTC)
 
 // Writer writes one standard-output archive. Add each file in byte order of
 // its path, then Close.
@@ -125,7 +128,7 @@ func header(path string, executable bool, size int64) *tar.Header {
 		Name:     path,
 		Mode:     mode,
 		Size:     size,
-		ModTime:  time.Unix(mtime, 0),
+		ModTime:  modTime,
 	}
 }
 
