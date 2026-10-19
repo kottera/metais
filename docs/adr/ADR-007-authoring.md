@@ -1347,3 +1347,37 @@ directory.
   `max(1, ⌊n/3⌋)` would refuse for the worked resolution's `vaule`. Every
   `template.xref.*` code is registered, of class `content`, and listed
   unwired for Wave 4. Both bounds are reached by tests that count.
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-5.** D9 items 2 and 4 to 23
+  landed as `internal/sample`, a library ahead of the commands that reach
+  it (item 1, Wave 5). `Generate` makes one input's value from the
+  package's compiled schemas, validating each value it keeps against its
+  location's subschemas through `schema.Compiler.Subschema`; `Files`
+  writes it as item 21 says, through `jsonx.Encode`, `yamlx.Write` and
+  `csv.WriteCells`. `schema.sample_unsatisfiable` is registered with
+  item 23's reasons as fixed words, about the input, located at the
+  subschema in its schema file, with the instance as a parameter. Where
+  the text left a choice, the library takes these readings:
+  - the JSON and YAML writers write members in canonical order, which is
+    the order of every serializer of the data model (ADR-004 D4 item 5),
+    not item 21's declaration order, which a value does not keep; a CSV
+    header is in declaration order, read from each schema file's position
+    table. The YAML writer double-quotes only the strings ADR-004 D10
+    item 2 does; each reads back as itself;
+  - a text file and a Markdown body always end in one added LF, whatever
+    the string ends in, since ADR-003 D12 removes one; and a Markdown
+    input is an object, as ADR-003 D1 item 6 requires, never a string;
+  - a chosen anyOf or oneOf branch from which no value can be made is
+    passed over for the next, as a oneOf mismatch is; a scalar that fails
+    a selected then or else is made again with the branch added, so
+    contradicting branches are a contradiction (item 9's last sentence);
+  - under `mixed`, null is chosen when the type stream's first draw is
+    odd; a boolean is true when the value stream's first draw is even;
+  - no generated or authored value is kept that its form cannot write so
+    that it reads back: a string with a noncharacter, a CR where line
+    breaks are normalized, and an integral number of magnitude above
+    2^53−1, which the JSON writer and a CSV field write as an integer
+    literal ADR-003 D8 item 5 refuses. The numeric range is held within
+    ±(2^53−1), and a range wholly outside it is `range`;
+  - the generator's work is held to `input-size`, the limit the data it
+    makes is held to (item 22): a schema asking for more is
+    `limit.exceeded` about the input, before the work is done.
