@@ -815,6 +815,23 @@ and the split-run scanner. `init` writes its scaffold.
   library-level CPU-time proof. The proofs through `inspect` and the inputs
   layer are meetings. This replaces the brief's "whichever item first makes
   that input reachable", which was a race between two parallel items.
+- **ADR-003 D8 item 5's large-integer refusal keeps its reach by spelling.**
+  ADR-003's ruling 9, ratified, makes that reach deliberate. ADR-002 D4
+  item 3 governs the manifest only, so the two do not disagree. Every
+  binary64 above 2^53 is integral, so refusing by value would also refuse
+  ordinary large floats in a user's data.
+  - The brief's rule that a file the tool writes must be readable by the
+    tool holds for numbers within ±(2^53−1).
+  - Beyond that range, RFC 8785's integer spelling of a canonical number is
+    a stated property: the specification says such text is not accepted as
+    input, and a vector shows that `maximum: 11e17` opens. Compiled files
+    are compared as bytes, so no package becomes unopenable.
+  - The sample generator's JSON writer spells such a number with an
+    exponent, so a supplied one can be saved and read back. A CSV integer
+    column still refuses it.
+- **Chapter 2's statement area is `PKG`** (`MTS-PKG-nnn`, `vectors/pkg/`),
+  not `CON`, because `con` is a Windows device name that ADR-011 D9 item 8
+  refuses. ADR-011's amendment, proposed, is ratified at the train's close.
 
 ## 10. Wave 4 — validate, read, the first render, check and unpack
 
