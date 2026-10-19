@@ -397,18 +397,22 @@ func runSample(s *session, p args.Parsed) outcome {
 	if res.Files == nil {
 		res.Files = []string{}
 	}
-	if !res.DryRun {
-		var f finding.Finding
-		var ok bool
+	// A dry run makes every check the write makes, and writes nothing, so
+	// it is refused exactly as the write would be.
+	var f finding.Finding
+	var ok bool
+	if hasExample {
+		f, ok = s.writeExample(dest, files, res.DryRun)
+	} else {
+		f, ok = s.writeData(dest, files, p.Has("overwrite"), res.DryRun)
+	}
+	if !ok {
+		fs = append(fs, f)
+		next := s.nextSteps(fs)
 		if hasExample {
-			f, ok = s.writeExample(dest, files)
-		} else {
-			f, ok = s.writeData(dest, files, p.Has("overwrite"))
+			next = []Next{nextSampleExample}
 		}
-		if !ok {
-			fs = append(fs, f)
-			return outcome{findings: fs, next: s.nextSteps(fs)}
-		}
+		return outcome{findings: fs, next: next}
 	}
 	heading := "Wrote " + strconv.Itoa(len(res.Files)) + " files:"
 	if res.DryRun {
@@ -450,8 +454,8 @@ func exampleYAML(name string, opts sample.Options) []byte {
 // ADR-005 D14 item 2 as Amendment A1 amends it, when it holds no entry or
 // overwrite is set, every file it does not plan left alone. A directory
 // entry of files, a collection's, is created when it has no file to
-// create it.
-func (s *session) writeData(to string, files []inputs.File, overwrite bool) (finding.Finding, bool) {
+// create it. A dry run makes every check and writes nothing.
+func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool) (finding.Finding, bool) {
 	opt := hostfs.WithFaults(s.inv.Options.Faults)
 	w, rest, err := hostfs.OpenNearest(to)
 	if err != nil {
@@ -459,6 +463,9 @@ func (s *session) writeData(to string, files []inputs.File, overwrite bool) (fin
 	}
 	if rest != "." {
 		w.Close()
+		if dry {
+			return finding.Finding{}, true
+		}
 		o, err := hostfs.StageNew(to, opt)
 		if err != nil {
 			return destinationRefusal(err), false
@@ -508,6 +515,9 @@ func (s *session) writeData(to string, files []inputs.File, overwrite bool) (fin
 		if c.Err != nil {
 			return checkRefusal(c), false
 		}
+	}
+	if dry {
+		return finding.Finding{}, true
 	}
 	o, err := x.Stage(checks)
 	if err != nil {
@@ -568,8 +578,8 @@ func (s *session) emptyDirs(to string, dirs, paths []string) (finding.Finding, b
 // writeExample writes files as the new example directory dest, which must
 // not exist: staged beside it and renamed into place with a rename that
 // never replaces (ADR-007 D9 item 21), so an example is never merged into
-// or replaced.
-func (s *session) writeExample(dest string, files []inputs.File) (finding.Finding, bool) {
+// or replaced. A dry run makes the check and writes nothing.
+func (s *session) writeExample(dest string, files []inputs.File, dry bool) (finding.Finding, bool) {
 	w, rest, err := hostfs.OpenNearest(dest)
 	if err != nil {
 		return destinationRefusal(err), false
@@ -577,6 +587,9 @@ func (s *session) writeExample(dest string, files []inputs.File) (finding.Findin
 	w.Close()
 	if rest == "." {
 		return writeFailed(hostfs.Exists), false
+	}
+	if dry {
+		return finding.Finding{}, true
 	}
 	o, err := hostfs.StageNew(dest, hostfs.WithFaults(s.inv.Options.Faults))
 	if err != nil {

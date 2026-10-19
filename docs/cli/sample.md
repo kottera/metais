@@ -21,8 +21,10 @@ operation can express, so they live here and in `metais help sample` and
   giving neither is `usage.missing_operand`.
 - **`--example` with a packed package** is `usage.not_a_source_directory`;
   the next step is `metais unpack`.
-- **`--dry-run`** generates and validates the data, lists the files, and
-  writes nothing anywhere. The result's `dry_run` says so.
+- **`--dry-run`** generates and validates the data, makes every check of
+  the destination the write would make, lists the files, and writes nothing
+  anywhere: it is refused exactly as the write would be. The result's
+  `dry_run` says so.
 - **`render --sample --data <dir>`** is `usage.flag_excluded`: the generated
   data takes the data directory's place. **`--optional`, `--seed` and
   `--items` without `--sample`** are `usage.flag_requires`.

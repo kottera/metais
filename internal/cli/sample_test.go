@@ -390,6 +390,35 @@ func TestSampleDryRun(t *testing.T) {
 	if after := hostTree(t, root); !equalTrees(before, after) {
 		t.Errorf("a dry run wrote something")
 	}
+
+	// A dry run is refused as the write would be.
+	full := filepath.Join(root, "full")
+	if err := os.MkdirAll(filepath.Join(full, "vendor.json"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(pkg, "examples", "taken"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(pkg, "examples", "taken", "example.yaml"), []byte("title: Taken\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	before = hostTree(t, root)
+	for _, tc := range []struct {
+		line []string
+		code string
+	}{
+		{[]string{"sample", pkg, "--to", full, "--dry-run"}, "output.destination.not_empty"},
+		{[]string{"sample", pkg, "--to", full, "--overwrite", "--dry-run"}, "output.destination.write_failed"},
+		{[]string{"sample", pkg, "--example", "taken", "--dry-run"}, "output.destination.write_failed"},
+	} {
+		r := runTool(t, append(tc.line, "--json")...)
+		if r.status != 5 || len(r.codes()) != 1 || r.codes()[0] != tc.code {
+			t.Errorf("metais %q: status %d, %v", tc.line, r.status, r.codes())
+		}
+	}
+	if after := hostTree(t, root); !equalTrees(before, after) {
+		t.Errorf("a refused dry run wrote something")
+	}
 }
 
 // TestSampleRefusals is each refusal of sample's line and of render
