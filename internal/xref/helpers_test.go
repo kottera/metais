@@ -27,7 +27,7 @@ import (
 // names, through the tree the parser builds.
 type stubFilter string
 
-func (f stubFilter) Name() string                 { return string(f) }
+func (f stubFilter) Name() string                  { return string(f) }
 func (stubFilter) Check(*ast.Filter) *liquid.Error { return nil }
 func (stubFilter) Apply(liquid.FilterContext, value.Value, []liquid.Arg) (value.Value, *liquid.Error) {
 	panic("the analysis applies no filter")
@@ -35,8 +35,8 @@ func (stubFilter) Apply(liquid.FilterContext, value.Value, []liquid.Arg) (value.
 
 type stubTag string
 
-func (t stubTag) Name() string                   { return string(t) }
-func (stubTag) Check(*ast.Tag) *liquid.Error      { return nil }
+func (t stubTag) Name() string               { return string(t) }
+func (stubTag) Check(*ast.Tag) *liquid.Error { return nil }
 func (stubTag) Render(liquid.TagContext, *ast.Tag) *liquid.Error {
 	panic("the analysis renders no tag")
 }
@@ -178,8 +178,8 @@ func (fx fixture) run(t testing.TB) Result {
 func describe(t testing.TB, f finding.Finding) string {
 	t.Helper()
 	var js []struct {
-		Code    string
-		Subject struct{ Name string }
+		Code     string
+		Subject  struct{ Name string }
 		Location *struct {
 			File         string
 			Line, Column int
