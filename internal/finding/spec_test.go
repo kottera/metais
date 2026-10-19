@@ -281,8 +281,8 @@ func TestRegistryEntries(t *testing.T) {
 // CSV input, internal/markdown's refusal of an unclosed frontmatter block,
 // internal/manifest's version gate and manifest rules,
 // internal/schemafail's mapping of JSON Schema failures in each of its
-// three families (ADR-006 D6 item 1), and internal/schema's refusals of a
-// schema file. A code a later change emits is registered by that change.
+// three families (ADR-006 D6 item 1), internal/schema's refusals of a
+// schema file, and internal/xref's cross-reference (ADR-007 D3). A code a later change emits is registered by that change.
 func TestEmittedCodes(t *testing.T) {
 	var got []Code
 	for _, e := range registry {
@@ -338,6 +338,13 @@ func TestEmittedCodes(t *testing.T) {
 		want = append(want, Code("manifest.yaml."+c), Code("yaml."+c))
 	}
 	want = append(want, "manifest.number_out_of_range", "manifest.yaml.encoding", "manifest.yaml.root_not_mapping")
+	for _, c := range []string{
+		"budget_exhausted", "dynamic_reference", "for_each_not_array", "index_out_of_range", "missing_asset",
+		"missing_partial", "not_an_array", "not_an_object", "partial_parameter_not_passed", "unknown_field",
+		"unknown_input", "unknown_variable", "unused_input", "unused_template",
+	} {
+		want = append(want, Code("template.xref."+c))
+	}
 	slices.Sort(want)
 	if !slices.Equal(got, want) {
 		t.Errorf("registered %q, want %q", got, want)

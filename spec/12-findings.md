@@ -195,6 +195,20 @@ it, and the statements it reports.
 | `schema.ref_by_path` | error | content | package | `reference`, `id` | 1.0 | — |
 | `schema.ref_escapes` | error | content | package | `reference` | 1.0 | — |
 | `schema.ref_unresolved` | error | content | package | `reference` | 1.0 | — |
+| `template.xref.budget_exhausted` | warning | content | package | `bound`, `limit` | 1.0 | — |
+| `template.xref.dynamic_reference` | warning | content | template | optional: `output` | 1.0 | — |
+| `template.xref.for_each_not_array` | error | content | output | `types` | 1.0 | — |
+| `template.xref.index_out_of_range` | error | content | template | `index`; optional: `input`, `output` | 1.0 | — |
+| `template.xref.missing_asset` | error | content | template | `asset` | 1.0 | — |
+| `template.xref.missing_partial` | error | content | template | `partial`; optional: `output` | 1.0 | — |
+| `template.xref.not_an_array` | error | content | template | `types`; optional: `input`, `output` | 1.0 | — |
+| `template.xref.not_an_object` | error | content | template | `property`, `types`; optional: `input`, `output` | 1.0 | — |
+| `template.xref.partial_parameter_not_passed` | warning | content | template | `name`; optional: `output` | 1.0 | — |
+| `template.xref.unknown_field` | error | content | template | `property`, `declared`, `declared_count`; optional: `suggestion`, `input`, `output` | 1.0 | — |
+| `template.xref.unknown_input` | error | content | template | `name`; optional: `suggestion` | 1.0 | — |
+| `template.xref.unknown_variable` | error | content | template | `name`; optional: `suggestion`, `output` | 1.0 | — |
+| `template.xref.unused_input` | warning | content | input | — | 1.0 | — |
+| `template.xref.unused_template` | warning | content | template | — | 1.0 | — |
 | `usage.bad_value` | error | usage | invocation | `argument`, `flag`, `reason`; optional: `allowed` | 1.0 | — |
 | `usage.missing_command` | error | usage | invocation | — | 1.0 | — |
 | `usage.repeated_flag` | error | usage | invocation | `argument`, `flag` | 1.0 | — |

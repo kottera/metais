@@ -21,7 +21,7 @@ const (
 	codePackageName    Code = "package.fixture.name"
 	codeTemplateParse  Code = "template.parse"
 	codeUsageFlag      Code = "usage.test_flag"
-	codeWarnUnused     Code = "template.xref.unused_input"
+	codeWarnUnused     Code = "template.xref_test.unused_input"
 	codeDestNonEmpty   Code = "output.destination.not_empty"
 	codeInternalError  Code = "internal.test_error"
 )
