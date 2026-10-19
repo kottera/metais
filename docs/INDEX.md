@@ -29,3 +29,9 @@
 | [ADR-011](adr/ADR-011-the-specification-document-and-conformance.md) | The specification document and conformance | Accepted |
 
 PRD-001 §27 maps each requirement to the ADR that designs it. [RULINGS-v1](adr/RULINGS-v1.md) records the rulings the v1 ADRs proposed, ratified 2026-10-18.
+
+## The command line
+
+The JSON documents each command prints are defined by the schemas under
+[cli/schemas](cli/schemas/). [cli/sample.md](cli/sample.md) states the rules
+of `metais sample` and `render --sample` that only the command line has.

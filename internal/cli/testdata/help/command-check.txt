@@ -445,9 +445,6 @@ Refusals:
   schema.required_not_declared
       A schema (required not declared), a warning.
       Next: metais check <package>
-  schema.sample_unsatisfiable
-      An input schema is refused (sample unsatisfiable).
-      Next: metais check <package>
   schema.syntax
       An input schema is refused (syntax).
       Next: metais check <package>

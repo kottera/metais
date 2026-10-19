@@ -1,0 +1,181 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "smp/sample-destination",
+  "title": "Sample creates a directory that does not exist and writes into an empty one, and refuses one holding any entry or a file in the way, writing nothing",
+  "statements": [
+    "MTS-SMP-005",
+    "MTS-SMP-006"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "nested",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "a/b/out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "a",
+                "files": [
+                  "b/out/events/001.yaml",
+                  "b/out/events/002.yaml",
+                  "b/out/events/003.yaml",
+                  "b/out/lines.csv",
+                  "b/out/summary.txt",
+                  "b/out/vendor.json"
+                ]
+              }
+            ]
+          },
+          "repeatable": true
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "a/b/out"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty",
+      "setup": {
+        "dirs": [
+          "out"
+        ]
+      },
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "files": [
+                  "events/001.yaml",
+                  "events/002.yaml",
+                  "events/003.yaml",
+                  "lines.csv",
+                  "summary.txt",
+                  "vendor.json"
+                ]
+              }
+            ]
+          },
+          "repeatable": true
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "out"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "not-empty",
+      "setup": {
+        "copy": "setup/full"
+      },
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-empty.json"
+          },
+          "repeatable": true
+        }
+      ]
+    },
+    {
+      "name": "hidden",
+      "setup": {
+        "dirs": [
+          "out/.cache"
+        ]
+      },
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/hidden.json"
+          },
+          "repeatable": true
+        }
+      ]
+    },
+    {
+      "name": "file",
+      "setup": {
+        "copy": "setup/file"
+      },
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-directory.json"
+          },
+          "repeatable": true
+        }
+      ]
+    },
+    {
+      "name": "beneath-a-file",
+      "setup": {
+        "copy": "setup/file"
+      },
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out/sub"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-directory.json"
+          },
+          "repeatable": true
+        }
+      ]
+    }
+  ]
+}

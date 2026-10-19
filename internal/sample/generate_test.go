@@ -266,3 +266,22 @@ func TestSuppliedOpen(t *testing.T) {
 		t.Errorf("%s %v%s", text(v), err, describe(fs))
 	}
 }
+
+// TestSuppliedObjectKept is item 2 where the schema makes no object to fill
+// a supplied object around: an array, a scalar, a const or an enum. The
+// object is taken as given, so the validation that follows reports it,
+// rather than replaced by a generated value.
+func TestSuppliedObjectKept(t *testing.T) {
+	for _, schema := range []string{
+		`{"type":"array","items":{"type":"object","properties":{"qty":{"type":"integer"}}}}`,
+		`{"type":"string"}`,
+		`{"const":{"a":1}}`,
+		`{"enum":[{"a":1},"x"]}`,
+	} {
+		p := compile(t, map[string]string{entry: schema})
+		v, _, fs, err := p.gen(Options{}).Generate(Input{Name: "data", Schema: entry, Forms: []Form{FormJSON}, Supplied: parse(t, `{"0":{"qty":0}}`)})
+		if err != nil || fs != nil || text(v) != `{"0":{"qty":0}}` {
+			t.Errorf("%s: %s %v%s", schema, text(v), err, describe(fs))
+		}
+	}
+}

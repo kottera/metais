@@ -296,3 +296,82 @@ It has no way to overwrite.
 writes MUST open as a source directory, and MUST hold the same package:
 its entries are the packed package's outside `.compiled/`, and its package
 digest is the packed package's (§2.6).
+
+## 13.6 Sample data
+
+An author previews a package before any real data exists, and keeps what
+the preview showed as an example to test against. The data an authoring
+tool generates for this is the tool's own: this section fixes what the data
+must be — a data directory that validates, holding the values the author
+pinned — and not how it is made. Two tools may generate different data from
+the same package, and one tool's data may change between its versions;
+what an author keeps is kept as files, so nothing kept depends on a
+generator.
+
+<a id="mts-smp-001"></a>**MTS-SMP-001** An authoring tool's sample
+operation MUST write the data it generates as a data directory
+([§6.9](06-supplying-inputs.md)): one file for each
+input it generates a value for, in the first form the input declares and
+named as a data directory names a file of that form, and for a collection
+input a directory holding one file per item.
+
+<a id="mts-smp-002"></a>**MTS-SMP-002** The sample operation MUST validate
+the data it generates as data supplied in a data directory is validated
+([chapter 6](06-supplying-inputs.md)), before it writes anything, and MUST
+refuse data that fails with one `schema.sample_invalid` error for each
+error the validation reports about an input, writing nothing. Data the
+operation writes therefore validates.
+
+<a id="mts-smp-003"></a>**MTS-SMP-003** Each value given to the sample
+operation with `set`, `set_json` or `inputs_json` MUST be written at its
+place as given, the values applied in the order and with the precedence of
+[§6.11](06-supplying-inputs.md), and the operation MUST
+generate only the values they leave absent, evaluating each conditional of
+the schemas against the value that holds the given ones.
+
+<a id="mts-smp-004"></a>**MTS-SMP-004** A field for which the sample
+operation can generate no value its schema allows MUST be reported as
+`schema.sample_unsatisfiable`, an error about the input whose `instance`
+parameter is the field's place in the input's value. Every such field MUST
+be reported in one run, and nothing written.
+
+<a id="mts-smp-005"></a>**MTS-SMP-005** When `to` names a directory that
+does not exist, the sample operation MUST create it, with its missing
+parent directories, holding the data directory; when `to` names an
+existing directory with no entry at all, it MUST write the data directory
+into it.
+
+<a id="mts-smp-006"></a>**MTS-SMP-006** The sample operation MUST refuse a
+`to` directory that holds any entry, a hidden one included, with
+`output.destination.not_empty` listing up to ten of the entries in byte
+order, and a `to` that exists and is not a directory, or lies beneath a
+file, with `output.destination.not_directory`; in either case it MUST write
+nothing.
+
+The operation has no way to write into a directory that holds entries. The
+reference tool's command line adds one, `--overwrite`, which replaces the
+files it writes and leaves every other file alone; it is documented with
+the command, as the command line is the tool's own contract.
+
+<a id="mts-smp-007"></a>**MTS-SMP-007** With `example`, the sample
+operation MUST write the data directory as `examples/<name>/inputs/` of the
+source directory, beside an `examples/<name>/example.yaml`
+(§13.4), and nothing else.
+
+<a id="mts-smp-008"></a>**MTS-SMP-008** With `example`, the sample
+operation MUST refuse when `examples/<name>/` exists at all, with
+`output.destination.write_failed` whose `reason` is `exists` and whose
+`written` is empty, and MUST write nothing: an example is never merged into
+or replaced.
+
+<a id="mts-smp-009"></a>**MTS-SMP-009** A render with `sample` MUST render
+from data generated as the sample operation generates it with the same
+options, in the data directory's place: the values given with `set`,
+`set_json` and `inputs_json` held as [MTS-SMP-003](#mts-smp-003) holds
+them, the data validated as [MTS-SMP-002](#mts-smp-002) validates it, and a
+field that cannot be generated reported as [MTS-SMP-004](#mts-smp-004)
+reports it; when any of them fails, nothing is rendered or written.
+
+Since the generated data takes the data directory's place, a render with
+`sample` takes no data directory; the reference tool refuses `--data`
+given with `--sample` as a usage error.

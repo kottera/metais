@@ -1,0 +1,19 @@
+[
+  {
+    "code": "schema.sample_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "sample",
+      "file": "vendor.json",
+      "pointer": "/rating"
+    },
+    "params": {
+      "code": "input.maximum"
+    }
+  }
+]

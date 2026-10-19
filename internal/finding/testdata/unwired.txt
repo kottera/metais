@@ -38,4 +38,3 @@ manifest.unevaluated_property W7
 manifest.unique_items W6
 package.not_found W7
 package.not_readable W7
-schema.sample_unsatisfiable W5

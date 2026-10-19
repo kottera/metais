@@ -1,0 +1,40 @@
+[
+  {
+    "code": "schema.sample_unsatisfiable",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "summary"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/summary.schema.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {
+      "instance": "",
+      "reason": "pattern_unsupported"
+    }
+  },
+  {
+    "code": "schema.sample_unsatisfiable",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/vendor.schema.json",
+      "line": 10,
+      "column": 13,
+      "pointer": "/properties/name"
+    },
+    "params": {
+      "instance": "/name",
+      "reason": "length"
+    }
+  }
+]

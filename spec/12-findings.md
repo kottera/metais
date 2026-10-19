@@ -173,9 +173,9 @@ it, and the statements it reports.
 | `output.declaration.empty_name` | error | content | output | `template` | 1.0 | [MTS-OUT-018](09-outputs.md#mts-out-018) |
 | `output.declaration.validate_kind` | error | content | output | `kind` | 1.0 | [MTS-AUT-023](13-authoring.md#mts-aut-023) |
 | `output.dependent_required` | error | content | output | `property`, `because` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
-| `output.destination.not_directory` | error | destination | invocation | — | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028), [MTS-RND-003](11-rendering.md#mts-rnd-003) |
-| `output.destination.not_empty` | error | destination | invocation | `entries`, `more` | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028), [MTS-RND-004](11-rendering.md#mts-rnd-004) |
-| `output.destination.write_failed` | error | destination | invocation | `reason`, `written` | 1.0 | [MTS-AUT-026](13-authoring.md#mts-aut-026), [MTS-AUT-027](13-authoring.md#mts-aut-027), [MTS-RND-006](11-rendering.md#mts-rnd-006) |
+| `output.destination.not_directory` | error | destination | invocation | — | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028), [MTS-RND-003](11-rendering.md#mts-rnd-003), [MTS-SMP-006](13-authoring.md#mts-smp-006) |
+| `output.destination.not_empty` | error | destination | invocation | `entries`, `more` | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028), [MTS-RND-004](11-rendering.md#mts-rnd-004), [MTS-SMP-006](13-authoring.md#mts-smp-006) |
+| `output.destination.write_failed` | error | destination | invocation | `reason`, `written` | 1.0 | [MTS-AUT-026](13-authoring.md#mts-aut-026), [MTS-AUT-027](13-authoring.md#mts-aut-027), [MTS-RND-006](11-rendering.md#mts-rnd-006), [MTS-SMP-008](13-authoring.md#mts-smp-008) |
 | `output.enum` | error | content | output | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `output.exclusive_maximum` | error | content | output | `limit`; optional: `value` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `output.exclusive_minimum` | error | content | output | `limit`; optional: `value` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
@@ -274,7 +274,8 @@ it, and the statements it reports.
 | `schema.ref_escapes` | error | content | package | `reference` | 1.0 | [MTS-DAT-007](05-data-specification.md#mts-dat-007) |
 | `schema.ref_unresolved` | error | content | package | `reference` | 1.0 | [MTS-DAT-007](05-data-specification.md#mts-dat-007) |
 | `schema.required_not_declared` | warning | content | package | `name` | 1.0 | [MTS-AUT-009](13-authoring.md#mts-aut-009) |
-| `schema.sample_unsatisfiable` | error | content | input | `instance`, `reason` | 1.0 | — |
+| `schema.sample_invalid` | error | content | input | `code` | 1.0 | [MTS-SMP-002](13-authoring.md#mts-smp-002), [MTS-SMP-009](13-authoring.md#mts-smp-009) |
+| `schema.sample_unsatisfiable` | error | content | input | `instance`, `reason` | 1.0 | [MTS-SMP-004](13-authoring.md#mts-smp-004), [MTS-SMP-009](13-authoring.md#mts-smp-009) |
 | `schema.syntax` | error | content | package | `form`, `rule` | 1.0 | [MTS-DAT-002](05-data-specification.md#mts-dat-002) |
 | `schema.unsatisfiable` | error | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
 | `schema.unusable_enum_member` | warning | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
@@ -335,6 +336,8 @@ it, and the statements it reports.
 | `usage.conflicting_flags` | error | usage | invocation | `argument`, `flag` | 1.0 | — |
 | `usage.data_dir_unreadable` | error | usage | invocation | `argument`, `reason` | 1.0 | — |
 | `usage.entry_not_found` | error | usage | invocation | `argument` | 1.0 | — |
+| `usage.flag_excluded` | error | usage | invocation | `argument`, `command`, `flag`, `other` | 1.0 | — |
+| `usage.flag_requires` | error | usage | invocation | `argument`, `command`, `flag`, `requires` | 1.0 | — |
 | `usage.is_a_directory` | error | usage | invocation | `argument`, `command` | 1.0 | — |
 | `usage.line_out_of_range` | error | usage | invocation | `argument`, `total` | 1.0 | — |
 | `usage.missing_command` | error | usage | invocation | — | 1.0 | — |
@@ -344,6 +347,7 @@ it, and the statements it reports.
 | `usage.name_required` | error | usage | invocation | — | 1.0 | — |
 | `usage.no_match` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.not_a_packed_package` | error | usage | invocation | `argument` | 1.0 | — |
+| `usage.not_a_source_directory` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.not_text` | error | usage | invocation | `argument`, `command` | 1.0 | — |
 | `usage.package_from_stdin` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.repeated_flag` | error | usage | invocation | `argument`, `flag` | 1.0 | — |

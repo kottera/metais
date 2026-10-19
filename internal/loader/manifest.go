@@ -6,6 +6,7 @@ package loader
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/kottera/metais/internal/finding"
@@ -297,4 +298,52 @@ func decodeSchema(entry string, src []byte, lim limits.Set) (value.Value, []find
 		}))
 	}
 	return nil, out
+}
+
+// SchemaPositions returns, for the package p under lim, a function giving
+// the position table of the schema file at a package path: where its
+// reader found each key and value, from which the order its object
+// schemas declare their properties in is read (ADR-007 D9 items 15 and
+// 21). A file is read from the package again, in place, the first time it
+// is asked for; a file that is not a schema the package opened, or that
+// cannot be read again, has none.
+func (p *Package) SchemaPositions(lim limits.Set) func(entry string) finding.Positions {
+	read := map[string]finding.Positions{}
+	return func(entry string) finding.Positions {
+		if pos, ok := read[entry]; ok {
+			return pos
+		}
+		read[entry] = nil
+		if _, ok := p.Schemas.Schema(entry); !ok {
+			return nil
+		}
+		info, err := p.Tree.Stat(entry)
+		if err != nil || info.Size > lim.Value(limits.SchemaSize) {
+			return nil
+		}
+		r, err := p.Tree.Open(entry)
+		if err != nil {
+			return nil
+		}
+		defer r.Close()
+		src, err := io.ReadAll(io.LimitReader(r, info.Size))
+		if err != nil {
+			return nil
+		}
+		subject := finding.Subject{Kind: finding.SubjectInput, Name: entry}
+		var pos finding.Positions
+		if strings.HasSuffix(entry, ".json") {
+			doc, fs := jsonx.Parse(src, jsonx.Source{Input: subject, At: entryLocation(entry)}, lim)
+			if len(fs) == 0 {
+				pos = doc.Positions()
+			}
+		} else {
+			doc, fs := yamlx.Parse(bytes.TrimPrefix(src, []byte("\uFEFF")), yamlx.Source{Subject: subject, At: entryLocation(entry), Size: limits.SchemaSize}, lim)
+			if len(fs) == 0 {
+				pos = doc.Positions()
+			}
+		}
+		read[entry] = pos
+		return pos
+	}
 }

@@ -32,6 +32,7 @@ The formats:
   metais.render/1    metais render
   metais.init/1      metais init
   metais.check/1     metais check
+  metais.sample/1    metais sample
   metais.unpack/1    metais unpack
   metais.version/1   metais version
   metais.limits/1    metais limits

@@ -1,0 +1,36 @@
+[
+  {
+    "code": "schema.sample_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "summary",
+      "title": "Summary"
+    },
+    "location": {
+      "origin": "sample",
+      "file": "summary.txt",
+      "pointer": ""
+    },
+    "params": {
+      "code": "input.min_length"
+    }
+  },
+  {
+    "code": "schema.sample_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "sample",
+      "file": "vendor.json",
+      "pointer": "/kind"
+    },
+    "params": {
+      "code": "input.enum"
+    }
+  }
+]

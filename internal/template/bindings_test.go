@@ -131,6 +131,11 @@ func TestBindingsArePlainData(t *testing.T) {
 		}
 		sup := layer.NewSupply(lim)
 		if rv.args.Data != "" {
+			if _, err := os.Stat(filepath.Join(rv.dir, filepath.FromSlash(rv.args.Data))); err != nil {
+				// A data directory an earlier step of the case writes,
+				// as sample does, is not in the vector.
+				continue
+			}
 			if err := sup.ReadDataDir(filepath.Join(rv.dir, filepath.FromSlash(rv.args.Data))); err != nil {
 				t.Fatal(err)
 			}

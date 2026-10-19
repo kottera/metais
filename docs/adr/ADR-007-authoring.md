@@ -1427,3 +1427,42 @@ directory.
   reports `template.embed_index` for an `index:` given to an input that is
   not a collection or missing for one, from the function render uses
   after the one parse (ADR-004's log).
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-10.** D9 item 1 is reachable:
+  `metais sample` and `render --sample` reach `internal/sample` through
+  one step in `internal/cli`. The supply flags are assembled by ADR-003
+  D18 into the fixed points (`inputs.Supply.Fixed`), every input is
+  generated and written in its first form, and the files are read back in
+  memory through the data-directory reader (`inputs.Supply.ReadFiles`) and
+  validated, so the data previewed is the data saved: `render --data` of
+  what `sample --to` wrote renders byte for byte what `render --sample`
+  rendered. Schema files are read again in place for their position
+  tables (`loader.Package.SchemaPositions`), which give item 15's
+  declaration order and a finding's line. Chapter 13's §13.6 states
+  MTS-SMP-001 to 009, and `smp/` holds their vectors: every `sample` step
+  is `repeatable`, and every one that writes is followed by a `validate`
+  of its data. The readings taken:
+  - **Item 22's `schema.sample_invalid`** is registered: one error for each
+    validation error about an input, about that input, with the same
+    field, schema keyword and conditions, located at the same place in the
+    generated file (origin `sample`), and the code validation gave as its
+    `code` parameter. A supplied value is part of the data, so a value
+    given with `--set` that the schema refuses is reported this way, and
+    the hint says so. A cross-input constraint, about no one input, keeps
+    its own code. A supplied value whose input's first form cannot write
+    it so that it reads back (item 21's writers refuse it) is
+    `schema.sample_invalid` with `code` `form`.
+  - **Item 2 when the schema makes no object.** A supplied object at a
+    place whose conjunction allows no object, or has a `const` or `enum`,
+    is kept as given rather than replaced by a generated value, so the
+    validation that follows refuses it; W3-5 had generated an array there
+    and dropped what was given.
+  - **Item 21's example.** `example.yaml` holds `title: Sample data` and a
+    double-quoted `description` naming the seed, mode and item count and
+    the `metais test --example <name> --update` step. The example is staged
+    beside `examples/<name>/` and renamed into place with a rename that
+    never replaces; an `examples/<name>` that exists, empty or not, is
+    `output.destination.write_failed` with `reason` `exists` and nothing
+    written.
+  - **A collection with no item** written into an existing directory gets
+    its empty directory after the commit, created only where missing, so
+    the data reads back as the empty collection it is.

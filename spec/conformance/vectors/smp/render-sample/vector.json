@@ -1,0 +1,90 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "smp/render-sample",
+  "title": "A render with sample renders from generated data that holds the given values and validates",
+  "statements": [
+    "MTS-SMP-009"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "fixed",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "sample": {},
+            "set": [
+              "/vendor/kind=company"
+            ],
+            "set_json": [
+              "/vendor/name=\"Acme\""
+            ]
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/report"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "options",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "sample": {
+              "optional": "none",
+              "seed": 5,
+              "items": 1
+            },
+            "inputs_json": "data/vendor.json"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/report"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "sample": {},
+            "set": [
+              "/vendor/rating=9"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/invalid.json"
+          }
+        }
+      ]
+    }
+  ]
+}

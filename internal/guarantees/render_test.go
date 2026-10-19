@@ -56,6 +56,12 @@ type renderArgs struct {
 	Stream json.RawMessage `json:"stream"`
 	Only   json.RawMessage `json:"only"`
 	DryRun bool            `json:"dry_run"`
+	// Sample is a render from sample data's options (ADR-011 D8).
+	Sample *struct {
+		Optional string          `json:"optional"`
+		Seed     json.RawMessage `json:"seed"`
+		Items    json.RawMessage `json:"items"`
+	} `json:"sample"`
 }
 
 // streams reports whether the step writes bytes to standard output.
@@ -154,7 +160,7 @@ func renderSteps(t *testing.T) []renderStep {
 			if err := json.Unmarshal(c.Steps[0].Args, &st.args); err != nil {
 				t.Fatal(err)
 			}
-			for _, k := range []string{"overwrite", "sample"} {
+			for _, k := range []string{"overwrite"} {
 				if _, ok := all[k]; ok {
 					t.Fatalf("%s: a render step with %s, which this detector does not replay", st.id, k)
 				}
@@ -237,6 +243,18 @@ func (st renderStep) argv(work string) []string {
 	}
 	if st.args.FailOn != "" {
 		a = append(a, "--fail-on", st.args.FailOn)
+	}
+	if sm := st.args.Sample; sm != nil {
+		a = append(a, "--sample")
+		if sm.Optional != "" {
+			a = append(a, "--optional", sm.Optional)
+		}
+		if len(sm.Seed) > 0 {
+			a = append(a, "--seed", string(sm.Seed))
+		}
+		if len(sm.Items) > 0 {
+			a = append(a, "--items", string(sm.Items))
+		}
 	}
 	for _, s := range st.args.Set {
 		a = append(a, "--set", s)

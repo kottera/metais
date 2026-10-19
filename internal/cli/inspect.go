@@ -94,7 +94,9 @@ func packageRefusals(name string) []Refusal {
 	for _, e := range finding.Registry() {
 		family, rest, _ := strings.Cut(string(e.Code), ".")
 		opened := family == "package" || family == "manifest" || family == "schema" || openTemplateCodes[e.Code]
-		if !opened || e.Severity != finding.SeverityError || slices.Contains(checkOnly, e.Code) {
+		// The generator's codes are about an input, and no open reports
+		// them.
+		if !opened || e.Severity != finding.SeverityError || e.Subject == finding.SubjectInput || slices.Contains(checkOnly, e.Code) {
 			continue
 		}
 		what := map[string]string{

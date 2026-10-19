@@ -48,6 +48,8 @@ const (
 	CodeDestinationNotEmpty     Code = "output.destination.not_empty"
 	CodeDestinationWriteFailed  Code = "output.destination.write_failed"
 
+	CodeSampleInvalid Code = "schema.sample_invalid"
+
 	CodeContainerMissingEntry   Code = "output.container.missing_entry"
 	CodeContainerNonASCII       Code = "output.container.non_ascii"
 	CodeContainerReservedEntry  Code = "output.container.reserved_entry"
@@ -81,6 +83,9 @@ const (
 	CodeUsageUnknownInput      Code = "usage.unknown_input"
 	CodeUsageUnknownOutput     Code = "usage.unknown_output"
 	CodeUsageArchiveToTerminal Code = "usage.archive_to_terminal"
+	CodeUsageNotSourceDir      Code = "usage.not_a_source_directory"
+	CodeUsageFlagRequires      Code = "usage.flag_requires"
+	CodeUsageFlagExcluded      Code = "usage.flag_excluded"
 )
 
 // registry is the tool's table of codes, in code order. It is the Go form
@@ -1210,7 +1215,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Name a directory, or a path that does not exist yet beneath directories only. Nothing was written.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-028", "MTS-RND-003"},
+		Statements: []string{"MTS-AUT-028", "MTS-RND-003", "MTS-SMP-006"},
 	},
 	{
 		Code:     "output.destination.not_empty",
@@ -1225,7 +1230,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Choose an empty directory, or one that does not exist yet. Nothing was written.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-028", "MTS-RND-004"},
+		Statements: []string{"MTS-AUT-028", "MTS-RND-004", "MTS-SMP-006"},
 	},
 	{
 		Code:     "output.destination.write_failed",
@@ -1240,7 +1245,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Fix the cause, and run the command again into an empty directory; remove what was written first if you do not want it.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-026", "MTS-AUT-027", "MTS-RND-006"},
+		Statements: []string{"MTS-AUT-026", "MTS-AUT-027", "MTS-RND-006", "MTS-SMP-008"},
 	},
 	{
 		Code:     "output.expression.for_each_type",
@@ -2256,6 +2261,20 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{"MTS-AUT-009"},
 	},
 	{
+		Code:     CodeSampleInvalid,
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectInput,
+		Params: []ParamSpec{
+			{Name: "code", Type: TypeString, Meaning: "The code the data's validation reported there, as it would report it about a supplied input; or form, when the input's first form cannot write a value given with --set, --set-json or --inputs-json so that its reader reads it back as given.", Always: true},
+		},
+		Message:    "The sample data for the input {input} fails its schema ({code}).",
+		Hint:       "A value given with --set, --set-json or --inputs-json is taken as given: correct it if it is the value at this place. Otherwise the generator made a value the schema refuses: add an examples value to this field and the generator will use it.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-SMP-002", "MTS-SMP-009"},
+	},
+	{
 		Code:     "schema.sample_unsatisfiable",
 		Severity: SeverityError,
 		Class:    ClassContent,
@@ -2268,7 +2287,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Add an examples value to this field and the generator will use it, such as \"examples\": [\"…\"]; check that the field's keywords do not contradict each other.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SMP-004", "MTS-SMP-009"},
 	},
 	{
 		Code:     "schema.syntax",
@@ -3188,6 +3207,40 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{},
 	},
 	{
+		Code:     CodeUsageFlagExcluded,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position, among the arguments after metais, of the flag refused.", Always: true},
+			{Name: "command", Type: TypeString, Meaning: "The command the line names.", Always: true},
+			{Name: "flag", Type: TypeString, Meaning: "The flag refused, written with its leading --.", Always: true},
+			{Name: "other", Type: TypeString, Meaning: "The flag it cannot be given with, written with its leading --.", Always: true},
+		},
+		Message:    "{flag} at argument {argument} cannot be given with {other}.",
+		Hint:       "Give one of {flag} and {other}; run `metais {command} --help` for how its flags combine.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageFlagRequires,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position, among the arguments after metais, of the flag refused.", Always: true},
+			{Name: "command", Type: TypeString, Meaning: "The command the line names.", Always: true},
+			{Name: "flag", Type: TypeString, Meaning: "The flag refused, written with its leading --.", Always: true},
+			{Name: "requires", Type: TypeString, Meaning: "The flag it is accepted only with, written with its leading --.", Always: true},
+		},
+		Message:    "{flag} at argument {argument} is accepted only with {requires}.",
+		Hint:       "Add {requires}, or leave out {flag}; run `metais {command} --help` for how its flags combine.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
 		Code:     CodeUsageIsADirectory,
 		Severity: SeverityError,
 		Class:    ClassUsage,
@@ -3309,6 +3362,20 @@ var registry = withSchemaEntries([]Entry{
 		},
 		Message:    "Argument {argument} names a source directory; metais unpack reads a packed package.",
 		Hint:       "Give a packed package file. A source directory is already the editable tree unpack writes; nothing was written.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageNotSourceDir,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the refused argument among the arguments after metais.", Always: true},
+		},
+		Message:    "Argument {argument} names a packed package, and this writes into a source directory.",
+		Hint:       "Unpack it with metais unpack and give the source directory it writes; nothing was written.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},

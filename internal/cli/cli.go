@@ -62,6 +62,10 @@ type session struct {
 	// lim is the command's limits once --limit has been read, nil before
 	// and on a line that gives none a command reads.
 	lim *limits.Set
+	// role, when set, is what the run is to the package in place of its
+	// command's role: render --sample is an authoring command (ADR-008 D8
+	// item 8).
+	role finding.Role
 }
 
 // Run dispatches inv to the command its arguments name and returns the

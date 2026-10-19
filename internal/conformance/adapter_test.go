@@ -109,6 +109,7 @@ var openingCommands = map[string][]string{
 	"validate": {"validate", "--json", "{package}"},
 	"render":   {"render", "--json", "{package}", "--out", "out"},
 	"unpack":   {"unpack", "--json", "{package}", "--to", "unpacked"},
+	"sample":   {"sample", "--json", "{package}", "--to", "sampled"},
 }
 
 // openPlan returns the command lines a hostile open step runs: one for
@@ -131,7 +132,7 @@ func openPlan(set []string, pkg string) ([]command, error) {
 				args[i] = pkg
 			}
 		}
-		plan = append(plan, command{args: args, authoring: name == "unpack" || name == "check"})
+		plan = append(plan, command{args: args, authoring: name == "unpack" || name == "check" || name == "sample"})
 	}
 	return plan, nil
 }

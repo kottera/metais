@@ -1,0 +1,134 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "smp/sample-data-directory",
+  "title": "Sample writes a data directory, one file per input in its first form and a directory per collection, whose data validates",
+  "statements": [
+    "MTS-SMP-001",
+    "MTS-SMP-002"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "defaults",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "files": [
+                  "events/001.yaml",
+                  "events/002.yaml",
+                  "events/003.yaml",
+                  "lines.csv",
+                  "summary.txt",
+                  "vendor.json"
+                ]
+              }
+            ]
+          },
+          "repeatable": true
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "out"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "none",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out",
+            "optional": "none",
+            "seed": 9,
+            "items": 1
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "files": [
+                  "events/001.yaml",
+                  "lines.csv",
+                  "summary.txt",
+                  "vendor.json"
+                ]
+              }
+            ]
+          },
+          "repeatable": true
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "out"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "mixed",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out",
+            "optional": "mixed",
+            "seed": 18446744073709551615,
+            "items": 2
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "files": [
+                  "lines.csv",
+                  "summary.txt",
+                  "vendor.json"
+                ]
+              }
+            ]
+          },
+          "repeatable": true
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "out"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    }
+  ]
+}
