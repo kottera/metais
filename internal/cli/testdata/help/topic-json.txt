@@ -23,6 +23,7 @@ an unknown value as other.
 The formats:
   metais.inspect/1  metais inspect
   metais.init/1     metais init
+  metais.check/1    metais check
   metais.version/1  metais version
   metais.limits/1   metais limits
   metais.help/1     metais help

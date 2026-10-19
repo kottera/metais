@@ -334,17 +334,17 @@ func TestVersionFlag(t *testing.T) {
 }
 
 // TestDeclarationsOpeningSet is W2-1.9 as this wave leaves it: every
-// declaration marks whether its command opens a package, and inspect is
-// the one that does (W3-1). init is an authoring command (ADR-008 D13)
-// that opens no package: it writes a new source directory.
+// declaration marks whether its command opens a package: inspect (W3-1)
+// and check (W4-4) do. init is an authoring command (ADR-008 D13) that
+// opens no package: it writes a new source directory.
 func TestDeclarationsOpeningSet(t *testing.T) {
 	for _, c := range table {
 		if c.Role < finding.RoleConsumer || c.Role > finding.RoleNoPackage {
 			t.Errorf("%s declares no role", c.Name)
 		}
 	}
-	if got := OpeningCommands(); !slices.Equal(got, []string{"inspect"}) {
-		t.Errorf("OpeningCommands() = %q, want [inspect]", got)
+	if got := OpeningCommands(); !slices.Equal(got, []string{"inspect", "check"}) {
+		t.Errorf("OpeningCommands() = %q, want [inspect check]", got)
 	}
 	// The marking is read from the role, both ways, and from WritesSource.
 	if !(&Command{Role: finding.RoleConsumer}).OpensPackage() || !(&Command{Role: finding.RoleAuthoring}).OpensPackage() {
@@ -362,11 +362,11 @@ func TestDeclarationsOpeningSet(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, c := range res.Commands {
-		want := map[string]string{"init": "authoring", "inspect": "consumer"}[c.Name]
+		want := map[string]string{"init": "authoring", "check": "authoring", "inspect": "consumer"}[c.Name]
 		if want == "" {
 			want = "none"
 		}
-		if c.OpensPackage != (c.Name == "inspect") || c.Role != want {
+		if c.OpensPackage != (c.Name == "inspect" || c.Name == "check") || c.Role != want {
 			t.Errorf("help --json marks %s as opening a package: %v, with the role %s", c.Name, c.OpensPackage, c.Role)
 		}
 	}

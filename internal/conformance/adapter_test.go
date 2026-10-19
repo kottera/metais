@@ -98,6 +98,7 @@ var openingCommands = map[string][]string{
 	"inspect":  {"inspect", "--json", "{package}"},
 	"ls":       {"ls", "--json", "--recursive", "{package}"},
 	"schema":   {"schema", "--json", "{package}"},
+	"check":    {"check", "--json", "{package}"},
 	"validate": {"validate", "--json", "{package}"},
 	"render":   {"render", "--json", "{package}", "--out", "out"},
 	"unpack":   {"unpack", "--json", "{package}", "--to", "unpacked"},
@@ -123,7 +124,7 @@ func openPlan(set []string, pkg string) ([]command, error) {
 				args[i] = pkg
 			}
 		}
-		plan = append(plan, command{args: args, authoring: name == "unpack"})
+		plan = append(plan, command{args: args, authoring: name == "unpack" || name == "check"})
 	}
 	return plan, nil
 }

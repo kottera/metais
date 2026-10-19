@@ -43,7 +43,7 @@ func TestInit(t *testing.T) {
 	root := testenv.Dir(t)
 	dir := filepath.Join(root, "a", "acme-report")
 	r := runTool(t, "init", dir, "--json")
-	if r.status != 0 || !r.doc.OK || len(r.doc.Findings) != 0 || len(r.doc.Next) != 0 {
+	if r.status != 0 || !r.doc.OK || len(r.doc.Findings) != 0 || len(r.doc.Next) != 1 || r.doc.Next[0].Run != "metais check <dir>" {
 		t.Fatalf("metais init --json: status %d, %s", r.status, r.stdout)
 	}
 	if res := readInit(t, r); res.DryRun || !slices.Equal(res.Files, scaffoldFiles) {
@@ -56,7 +56,7 @@ func TestInit(t *testing.T) {
 
 	dir2 := filepath.Join(root, "b")
 	r = runTool(t, "init", dir2, "--name", "other-name")
-	if r.status != 0 || r.stderr != "" {
+	if r.status != 0 || r.stderr != "\nNext:\n  metais check <dir>  — Checks the package, which reports no finding until you edit it.\n" {
 		t.Fatalf("metais init: status %d, stderr %q", r.status, r.stderr)
 	}
 	want := "Wrote 8 files:\n  " + strings.Join(scaffoldFiles, "\n  ") + "\n\nEdit inputs/ and templates/ to make the package yours.\n"
@@ -100,13 +100,9 @@ func TestInitDryRun(t *testing.T) {
 }
 
 // TestInitNextOnceCheckExists is ADR-008 D14 item 3: init's next step is
-// check, named once metais has a check command, with <dir> when the
-// caller named a directory.
+// check, with <dir> when the caller named a directory.
 func TestInitNextOnceCheckExists(t *testing.T) {
-	withCheck := append(slices.Clone(table), &Command{
-		Name: "check", Group: "Authoring", Synopsis: "check [<package>]", Description: "Checks.",
-		Role: finding.RoleAuthoring, Format: "metais.check/1", Prints: "Findings.", Refusals: lineRefusals("check"),
-	})
+	withCheck := table
 	for _, c := range []struct {
 		args []string
 		next string

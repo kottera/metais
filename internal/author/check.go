@@ -53,6 +53,16 @@ const (
 	exampleFile                                   = "example.yaml"                 // an example's own file
 )
 
+// CheckCodes are the codes only check reports: its own, the
+// cross-reference's and the split-run scan's. A command that opens a
+// package for any other purpose reports none of them.
+func CheckCodes() []finding.Code {
+	out := []finding.Code{CodeStepSkipped, CodeOSLitter, CodeNotPacked, CodeGuideLinkMissing, CodeInvalidDefault,
+		CodeInvalidExample, CodeUnsatisfiable, CodeUnusableEnumMember, CodeRequiredNotDeclared, CodeTemplateCRLF,
+		CodeExampleLayout, codeTemplateNotUTF8, ooxml.CodeSplitConstruct, ooxml.CodeSplitDelimiter}
+	return append(out, xref.Codes()...)
+}
+
 // The names of the steps and parts of steps report.step_skipped names
 // (ADR-007 D2 item 2), in the order check runs them.
 const (

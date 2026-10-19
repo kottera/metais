@@ -33,3 +33,10 @@ const (
 	noteSchema   = "where the schema declares it"
 	noteCallSite = "the render tag that does not pass it"
 )
+
+// Codes returns every code the cross-reference reports.
+func Codes() []finding.Code {
+	return []finding.Code{CodeUnknownVariable, CodeDynamicReference, CodeUnknownField, CodeNotAnObject,
+		CodeNotAnArray, CodeIndexOutOfRange, CodeMissingPartial, CodeParameterNotPassed, CodeForEachNotArray,
+		CodeUnusedInput, CodeUnusedTemplate, CodeUnknownInput, CodeMissingAsset, CodeBudgetExhausted}
+}
