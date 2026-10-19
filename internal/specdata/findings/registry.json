@@ -1,6 +1,31 @@
 {
   "codes": [
     {
+      "code": "internal.error",
+      "severity": "error",
+      "class": "internal",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "tool_version",
+          "type": "string",
+          "meaning": "The tool's version, as metais version prints it.",
+          "always": true
+        },
+        {
+          "name": "phase",
+          "type": "string",
+          "meaning": "Where the tool met the defect: parse (reading the command line), run (running the command) or output (writing its result).",
+          "always": true
+        }
+      ],
+      "message": "metais {tool_version} met a defect in itself ({phase}); neither the command line nor the package caused it.",
+      "hint": "Report the command you ran to the metais project; running it again will meet the same defect.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "limit.invalid",
       "severity": "error",
       "class": "usage",
@@ -64,6 +89,181 @@
       ],
       "message": "The report lists the first {listed} findings; {omitted} more were found and are counted in the summary but not listed.",
       "hint": "Fix the findings listed and run the command again, or read the summary's totals by code.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.bad_value",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the refused argument among the arguments after metais.",
+          "always": true
+        },
+        {
+          "name": "flag",
+          "type": "string",
+          "meaning": "The flag whose value is refused, written with its leading --.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the value is refused: missing_value (the flag takes a value and none follows it), boolean_value (the flag takes no value and was written with =), or value_not_allowed (the value is not one the flag accepts).",
+          "always": true
+        },
+        {
+          "name": "allowed",
+          "type": "array",
+          "items": "string",
+          "meaning": "Every value the flag accepts, present when the flag accepts a closed set of values.",
+          "always": false
+        }
+      ],
+      "message": "The value of {flag} at argument {argument} is refused ({reason}).",
+      "hint": "Give {flag} a value it accepts, as --name value or --name=value; a flag that takes no value is written alone, without =.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.missing_command",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [],
+      "message": "No command was given; metais runs one command, named after any global flags.",
+      "hint": "Run `metais help` for the commands, and run one as metais <command>.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.repeated_flag",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position, among the arguments after metais, of the flag's second occurrence.",
+          "always": true
+        },
+        {
+          "name": "flag",
+          "type": "string",
+          "meaning": "The flag given more than once, written with its leading --.",
+          "always": true
+        }
+      ],
+      "message": "{flag} is given again at argument {argument}; it may be given only once.",
+      "hint": "Give {flag} once: a repeated flag is refused rather than letting the last one win.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.unexpected_operand",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the refused argument among the arguments after metais.",
+          "always": true
+        },
+        {
+          "name": "command",
+          "type": "string",
+          "meaning": "The command that does not take the operand.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} is an operand that metais {command} does not take.",
+      "hint": "Run `metais {command} --help` for the operands it takes; after --, every argument is an operand.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.unknown_command",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the refused argument among the arguments after metais.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} names no metais command; a command is never abbreviated and has no alias.",
+      "hint": "Run `metais help` for the commands.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.unknown_flag",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the refused argument among the arguments after metais.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the argument is refused: unknown (it names no flag accepted where it is written; before the command name only the global flags are), abbreviated (it is a prefix of a flag's name, and no flag may be abbreviated), or grouped (one-letter aliases written together, which they never are).",
+          "always": true
+        },
+        {
+          "name": "flag",
+          "type": "string",
+          "meaning": "The flag the argument abbreviates, or whose one-letter alias begins the group, written with its leading --; present when the reason is abbreviated or grouped.",
+          "always": false
+        },
+        {
+          "name": "command",
+          "type": "string",
+          "meaning": "The command whose flags the argument was read against, present when a command was named.",
+          "always": false
+        }
+      ],
+      "message": "Argument {argument} is not a flag this command line accepts ({reason}).",
+      "hint": "Run `metais help` for the global flags, or the command's --help for its own; write each flag's name in full, and each one-letter alias on its own.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.unknown_topic",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the refused argument among the arguments after metais.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} names no command or help topic.",
+      "hint": "Run `metais help` for the commands and the topics.",
       "location": "none",
       "since": "1.0",
       "statements": []
