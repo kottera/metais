@@ -528,36 +528,67 @@ func (w *Writer) rename(from, to string, replace bool) error {
 }
 
 // renameNoReplace renames from to to, both single names in the directory
-// dir beneath w. The platform's call is made relative to a handle on dir,
-// opened through the root, so neither name is resolved anywhere else.
+// dir beneath w.
 func (w *Writer) renameNoReplace(dir, from, to string) error {
-	n, _ := osName(dir)
-	d, err := w.root.Open(n)
+	return w.renameAcross(dir, from, dir, to)
+}
+
+// renameAcross renames from, a single name in the directory fromDir
+// beneath w, to to, a single name in the directory toDir beneath w, with a
+// rename that refuses an existing target with Exists. The platform's call
+// is made relative to handles on the two directories, each opened through
+// the root, so neither name is resolved anywhere else.
+func (w *Writer) renameAcross(fromDir, from, toDir, to string) error {
+	fd, fp, err := w.openDirAt(fromDir)
 	if err != nil {
-		return mapErr("rename", err)
+		return err
 	}
-	defer d.Close()
-	if st, err := d.Stat(); err != nil || !st.IsDir() {
-		return fail("rename", Changed)
+	defer fd.Close()
+	td, tp := fd, fp
+	if toDir != fromDir {
+		if td, tp, err = w.openDirAt(toDir); err != nil {
+			return err
+		}
+		defer td.Close()
 	}
-	err = platformRenameNoReplace(d, filepath.Join(w.root.Name(), n), from, to)
+	err = platformRenameNoReplace(fd, fp, from, td, tp, to)
 	if !errors.Is(err, errNoReplaceUnsupported) {
 		return mapErr("rename", err)
 	}
 	// The file system refused the flag: check, then rename.
-	tn, _ := osName(join(dir, to))
+	tn, _ := osName(join(toDir, to))
 	if _, err := w.root.Lstat(tn); err == nil {
 		return fail("rename", Exists)
 	} else if !errors.Is(err, fs.ErrNotExist) {
 		return mapErr("rename", err)
 	}
-	sn, _ := osName(join(dir, from))
+	sn, _ := osName(join(fromDir, from))
 	return mapErr("rename", w.root.Rename(sn, tn))
+}
+
+// openDirAt opens the directory dir beneath w through the root, and
+// returns it with its host path, which only a platform call that names
+// files by path uses.
+func (w *Writer) openDirAt(dir string) (*os.File, string, error) {
+	n, _ := osName(dir)
+	d, err := w.root.Open(n)
+	if err != nil {
+		return nil, "", mapErr("rename", err)
+	}
+	if st, err := d.Stat(); err != nil || !st.IsDir() {
+		d.Close()
+		return nil, "", fail("rename", Changed)
+	}
+	return d, filepath.Join(w.root.Name(), n), nil
 }
 
 // errNoReplaceUnsupported is a platform rename's answer when the file
 // system does not support refusing an existing target.
 var errNoReplaceUnsupported = errors.New("no-replace rename unsupported")
+
+// errUnlinkUnsupported is a platform unlink's answer where it has no call
+// that removes a file relative to a directory handle.
+var errUnlinkUnsupported = errors.New("directory-relative unlink unsupported")
 
 // release closes the pins of everything recorded beneath from, a name
 // relative to w. When renamed, from has been renamed by w: its own record

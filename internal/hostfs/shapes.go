@@ -82,6 +82,10 @@ type Output struct {
 	// directory and of the output directory relative to parent.
 	staging, rest string
 
+	// plan is, for a write into an existing directory (Existing.Stage),
+	// the planned paths and their checks.
+	plan *plan
+
 	made  []entry  // what this write created beneath w, in order
 	files []string // the files written, in order
 	ended bool
@@ -273,6 +277,17 @@ func (o *Output) Create(name string, executable bool, r io.Reader) error {
 	if o.ended {
 		return fail("create", IOError)
 	}
+	if o.plan != nil {
+		// A Stage writes only its planned paths, each with every
+		// directory it needs.
+		if !o.plan.planned[name] {
+			return fail("create", BadName)
+		}
+		dir, _ := split(name)
+		if err := o.MkdirAll(dir); err != nil {
+			return opAs("create", err)
+		}
+	}
 	if !o.confined() {
 		return o.createUnconfined(name, executable, r)
 	}
@@ -302,6 +317,9 @@ func (o *Output) Commit() error {
 	if o.ended {
 		return fail("rename", IOError)
 	}
+	if o.plan != nil {
+		return o.commitExisting()
+	}
 	if o.rest != "" {
 		if err := o.parent.RenameNoReplace(o.staging, o.rest); err != nil {
 			o.Abort()
@@ -325,7 +343,7 @@ func (o *Output) Abort() error {
 	}
 	o.ended = true
 	var errs []error
-	if o.rest != "" {
+	if o.rest != "" || o.plan != nil {
 		errs = append(errs, o.removeStaged(), o.parent.RemoveCreated())
 	}
 	errs = append(errs, o.parent.Close())

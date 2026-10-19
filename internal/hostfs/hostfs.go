@@ -58,6 +58,12 @@ const (
 	// NotDirectory is a name that must be a directory and is not.
 	NotDirectory Reason = "not_directory"
 
+	// CaseVariant is an existing entry that is a canonical caseless match
+	// for a name being written but not byte-equal to it (ADR-005 D15 item
+	// 4): what a case-insensitive file system would do with the name is
+	// not portable.
+	CaseVariant Reason = "case_variant"
+
 	// Exists is a target that already exists where an exclusive create or
 	// a no-replace rename needs it absent.
 	Exists Reason = "exists"
@@ -96,8 +102,8 @@ func (r Reason) IsOS() bool {
 // text, which differs by platform and can carry a path the caller did not
 // give (ADR-006 D9 item 8, ADR-009 D15).
 type Error struct {
-	// Op is the operation: "open", "read", "list", "stat", "create",
-	// "mkdir", "rename", "remove" or "close".
+	// Op is the operation: "open", "read", "list", "stat", "check",
+	// "create", "mkdir", "rename", "remove" or "close".
 	Op string
 
 	// Reason is why it failed.
