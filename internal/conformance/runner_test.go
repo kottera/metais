@@ -119,7 +119,6 @@ type stepRun struct {
 // envRun is one environment's run of a case.
 type envRun struct {
 	sb       *sandbox
-	started  time.Time
 	steps    []stepRun
 	problems []problem
 }
@@ -138,9 +137,15 @@ type caseResult struct {
 }
 
 // runCase runs case c of v in fresh sandboxes below base: environment A,
-// then, unless short, environment B at least two seconds after A started,
+// then, unless short, environment B at least two seconds after A ended,
 // and environment A again when a step is repeatable (ADR-011 D10 item 7,
 // D12).
+//
+// B's two seconds are counted from the end of A's last process, not from
+// A's start, so every clock reading B's processes make is at
+// least two seconds after every one A's made, however long the host took
+// to run A: a tool that writes the clock at second resolution differs
+// between the two whatever the load.
 func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
 	res := &caseResult{runs: map[env]*envRun{}}
 	for _, req := range v.Requires {
@@ -150,6 +155,7 @@ func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
 		}
 	}
 	a := r.runEnv(v, c, base, envA, true)
+	aEnded := time.Now()
 	res.runs[envA] = a
 	res.problems = append(res.problems, a.problems...)
 	if a.fatal() {
@@ -165,7 +171,7 @@ func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
 	if r.short {
 		return res
 	}
-	if wait := time.Until(a.started.Add(2 * time.Second)); wait > 0 {
+	if wait := time.Until(aEnded.Add(2 * time.Second)); wait > 0 {
 		time.Sleep(wait)
 	}
 	b := r.runEnv(v, c, base, envB, false)
@@ -181,7 +187,7 @@ func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
 // checks the expectations when expectations is set, and in environment A
 // scans for the sentinel.
 func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bool) *envRun {
-	run := &envRun{started: time.Now()}
+	run := &envRun{}
 	fail := func(si int, check, msg string) {
 		run.problems = append(run.problems, problem{check: check, harness: true, step: si, msg: msg})
 	}
