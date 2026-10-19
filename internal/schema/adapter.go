@@ -79,7 +79,7 @@ func (a adapter) convert(ve *jsonschema.ValidationError, kwLoc, parentURL string
 	}
 	t := reflect.TypeOf(ve.ErrorKind)
 	if strings.HasPrefix(ve.SchemaURL, parentURL) {
-		kwLoc += unescapePointer(ve.SchemaURL[len(parentURL):])
+		kwLoc += unescapePointer(strings.TrimPrefix(ve.SchemaURL[len(parentURL):], "#"))
 	}
 	if transparent[t] {
 		return a.children(ve.Causes, kwLoc, ve.SchemaURL)
@@ -130,11 +130,13 @@ func (a adapter) convert(ve *jsonschema.ValidationError, kwLoc, parentURL string
 	} else {
 		f.Keyword = path[0]
 	}
+	// The keyword's own path ends its location; its causes' schema URLs
+	// extend the schema's, which already name the keyword.
+	f.KeywordLocation = kwLoc
 	for _, p := range path {
 		f.SchemaPointer += "/" + escapeToken(p)
-		kwLoc += "/" + escapeToken(p)
+		f.KeywordLocation += "/" + escapeToken(p)
 	}
-	f.KeywordLocation = kwLoc
 	f.Data = fields(ve.ErrorKind)
 	kids, err := a.children(ve.Causes, kwLoc, childURL)
 	if err != nil {
@@ -320,6 +322,9 @@ func list(v reflect.Value) (any, bool) {
 	}
 	switch n := v.Len(); {
 	case len(strs) == n:
+		// Names in the library's order, which may follow a map's: sorted,
+		// they owe it nothing.
+		slices.Sort(strs)
 		return nonNil(strs), true
 	case len(bools) == n:
 		return bools, true
