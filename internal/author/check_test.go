@@ -375,10 +375,14 @@ func TestParseHintCauses(t *testing.T) {
 
 // TestCheckOneParse is W4-4.7: check parses a template with the parse the
 // manifest's expressions use, Dialect() under ParseLimits(), and reports
-// exactly the errors that parse gives.
+// exactly the errors that parse gives. Dialect() is liquid.Core() with
+// METAIS's embed and provenance tags known by name, which no expression
+// may hold (ADR-004 D16 item 5).
 func TestCheckOneParse(t *testing.T) {
-	if loader.Dialect() != liquid.Core() {
-		t.Error("the dialect is not liquid.Core()")
+	for _, tag := range []string{"embed", "provenance"} {
+		if _, ok := loader.Dialect().Tag(tag); !ok {
+			t.Errorf("the dialect does not know the %s tag", tag)
+		}
 	}
 	srcs := []string{"{{ a | nosuchfilter }}", "{% include 'x' %}", "{{ 1 | divided_by: 0 }}", "{% for %}", "{{ 99999999999999999999 }}"}
 	for _, src := range srcs {
