@@ -23,6 +23,7 @@ var faultSeams = map[string]string{
 	"FirstFinding":  "internal/finding",
 	"ReadExisting":  "internal/hostfs",
 	"RemoveForeign": "internal/hostfs",
+	"StdoutNotice":  "internal/cli",
 }
 
 const (

@@ -44,6 +44,7 @@ func TestFaultBits(t *testing.T) {
 		"MapOrder":      {MapOrder, 1 << 4},
 		"ReadExisting":  {ReadExisting, 1 << 5},
 		"RemoveForeign": {RemoveForeign, 1 << 6},
+		"StdoutNotice":  {StdoutNotice, 1 << 7},
 	} {
 		if tt.got != tt.want {
 			t.Errorf("%s = %#x, want %#x", name, uint64(tt.got), uint64(tt.want))
