@@ -528,30 +528,15 @@ func (w *Writer) rename(from, to string, replace bool) error {
 }
 
 // renameNoReplace renames from to to, both single names in the directory
-// dir beneath w.
+// dir beneath w. The platform's call is made relative to a handle on dir,
+// opened through the root, so neither name is resolved anywhere else.
 func (w *Writer) renameNoReplace(dir, from, to string) error {
-	return w.renameAcross(dir, from, dir, to)
-}
-
-// renameAcross renames from, a single name in the directory fromDir
-// beneath w, to to, a single name in the directory toDir beneath w, with a
-// rename that refuses an existing target with Exists. The platform's call
-// is made relative to handles on the two directories, each opened through
-// the root, so neither name is resolved anywhere else.
-func (w *Writer) renameAcross(fromDir, from, toDir, to string) error {
-	fd, fp, err := w.openDirAt(fromDir)
+	d, p, err := w.openDirAt(dir)
 	if err != nil {
 		return err
 	}
-	defer fd.Close()
-	td, tp := fd, fp
-	if toDir != fromDir {
-		if td, tp, err = w.openDirAt(toDir); err != nil {
-			return err
-		}
-		defer td.Close()
-	}
-	return w.renameNoReplaceAt(fd, fp, fromDir, from, td, tp, toDir, to)
+	defer d.Close()
+	return w.renameNoReplaceAt(d, p, dir, from, d, p, dir, to)
 }
 
 // renameNoReplaceAt renames from, a single name in the directory fromDir

@@ -18,7 +18,8 @@
 // created, and removes only those records (ADR-005 D14 item 5). Staging and
 // temporary names are fixed, from a SHA-256 of a name (ADR-005 D14), and
 // the rename that commits a staged directory or a new file refuses an
-// existing target.
+// existing target. A write into an existing directory (Existing) never
+// opens a file there: it replaces one only by renaming over it.
 //
 // No error this package returns carries a path, or the operating system's
 // text: an OS error is mapped to one of ADR-006 D9 item 8's reasons, which
