@@ -50,7 +50,7 @@ func TestStream(t *testing.T) {
 	}
 	seen := map[uint64]string{}
 	for _, tc := range []struct {
-		seed                 uint64
+		seed                uint64
 		input, ptr, purpose string
 	}{
 		{0, "vendor", "", "value"},
