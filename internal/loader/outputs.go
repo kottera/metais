@@ -16,6 +16,7 @@ import (
 // which for a manifest expression is metais.yaml.
 const (
 	CodeTemplateSyntax        finding.Code = "template.syntax"
+	CodeTemplateNotUTF8       finding.Code = "template.not_utf8"
 	CodeTemplateInclude       finding.Code = "template.include"
 	CodeTemplateUnknownFilter finding.Code = "template.unknown_filter"
 	CodeTemplateNumberRange   finding.Code = "template.number_range"
@@ -172,34 +173,62 @@ var templateSubject = finding.Subject{Kind: finding.SubjectTemplate, Name: manif
 // finding (ADR-004 D16 item 1): its code, and its column within the
 // expression.
 func (o *opening) templateFinding(ptr string, e *liquid.Error) finding.Finding {
+	return TemplateFinding(e, templateSubject, *o.at(ptr), o.lim, CauseGrammar)
+}
+
+// The causes a template.syntax finding names (ADR-007 D2 item 4).
+const (
+	// CauseGrammar is a construct the dialect's grammar does not allow.
+	CauseGrammar = "a construct the dialect's grammar does not allow"
+	// CauseQuotes is a construct holding U+2018, U+2019, U+201C or
+	// U+201D, which a word processor puts in place of straight quotes.
+	CauseQuotes = "typographic quotes, which a word processor puts in place of straight ones; a Liquid string literal is quoted with \" or '"
+	// CauseEscaped is a construct of an Office Open XML template holding
+	// an entity reference outside a string literal.
+	CauseEscaped = "a character the document escaped (&lt;, &gt;, &amp;, &quot; or &apos;), which Liquid reads raw; type the literal character inside the construct"
+	// CauseMarkup is a construct of an Office Open XML template holding
+	// XML markup, which the template.ooxml finding at the same place
+	// explains.
+	CauseMarkup = "document markup inside the construct, which the template.ooxml finding at the same place explains"
+)
+
+// TemplateFinding maps the engine's parse error e to its finding (ADR-004
+// D16 item 1) about the template subj, located at at: its code, and the
+// error's column within the template or expression. cause is the cause a
+// template.syntax finding names (ADR-007 D2 item 4); the other codes name
+// none. A limit the parse reached is limit.package: a template is the
+// package's own content.
+func TemplateFinding(e *liquid.Error, subj finding.Subject, at finding.Location, lim limits.Set, cause string) finding.Finding {
 	column := finding.Int(int64(max(e.Col, 1)))
 	switch e.Code {
 	case liquid.CodeInclude:
-		return finding.New(CodeTemplateInclude, templateSubject, o.at(ptr), finding.Params{"column": column})
+		return finding.New(CodeTemplateInclude, subj, &at, finding.Params{"column": column})
 	case liquid.CodeUnknownFilter:
-		return finding.New(CodeTemplateUnknownFilter, templateSubject, o.at(ptr), finding.Params{"filter": finding.String(e.Args["filter"]), "column": column})
+		return finding.New(CodeTemplateUnknownFilter, subj, &at, finding.Params{"filter": finding.String(e.Args["filter"]), "column": column})
 	case liquid.CodeFilterArgument:
-		return finding.New(CodeTemplateFilterArg, templateSubject, o.at(ptr), finding.Params{"filter": finding.String(e.Args["filter"]), "argument": finding.String(e.Args["argument"]), "column": column})
+		return finding.New(CodeTemplateFilterArg, subj, &at, finding.Params{"filter": finding.String(e.Args["filter"]), "argument": finding.String(e.Args["argument"]), "column": column})
 	case liquid.CodeFilterInput:
-		return finding.New(CodeTemplateFilterInput, templateSubject, o.at(ptr), finding.Params{"filter": finding.String(e.Args["filter"]), "type": finding.String(e.Args["type"]), "column": column})
+		return finding.New(CodeTemplateFilterInput, subj, &at, finding.Params{"filter": finding.String(e.Args["filter"]), "type": finding.String(e.Args["type"]), "column": column})
 	case liquid.CodeDivisionByZero:
-		return finding.New(CodeTemplateDivision, templateSubject, o.at(ptr), finding.Params{"filter": finding.String(e.Args["filter"]), "column": column})
+		return finding.New(CodeTemplateDivision, subj, &at, finding.Params{"filter": finding.String(e.Args["filter"]), "column": column})
 	case liquid.CodeNumberRange:
-		return finding.New(CodeTemplateNumberRange, templateSubject, o.at(ptr), finding.Params{"column": column})
+		return finding.New(CodeTemplateNumberRange, subj, &at, finding.Params{"column": column})
 	case liquid.CodePartialName:
-		return finding.New(CodeTemplateTagContext, templateSubject, o.at(ptr), finding.Params{"tag": finding.String("render"), "column": column})
+		return finding.New(CodeTemplateTagContext, subj, &at, finding.Params{"tag": finding.String("render"), "column": column})
+	case liquid.CodeNotUTF8:
+		return finding.New(CodeTemplateNotUTF8, subj, &at, nil)
 	case liquid.CodeLimit:
 		id := limits.TemplateNesting
 		if e.Args["limit"] == limits.Get(limits.TemplateSize).Name {
 			id = limits.TemplateSize
 		}
-		return o.lim.Breached(id, *o.at(ptr), 0, false)
+		return lim.Breached(id, at, 0, false)
 	case liquid.CodeInternal:
 		panic("loader: the Liquid parser met a defect: " + e.Detail)
 	}
-	// CodeSyntax, and CodeNotUTF8 and CodeReservedName, which a manifest
-	// string under Core(), which reserves no name, cannot give.
-	return finding.New(CodeTemplateSyntax, templateSubject, o.at(ptr), finding.Params{"column": column})
+	// CodeSyntax, and CodeReservedName, which Dialect(), reserving no
+	// name, cannot give.
+	return finding.New(CodeTemplateSyntax, subj, &at, finding.Params{"column": column, "cause": finding.String(cause)})
 }
 
 // isMarkdown reports whether the entry name ends in .md or .markdown,

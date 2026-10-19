@@ -116,6 +116,23 @@ func Scan(templates []Template) []finding.Finding {
 	return out
 }
 
+// Scanned reports, for each of templates, whether Scan scans it: whether
+// it declares a main namespace, or is rendered, directly or transitively,
+// from one that does (D4 item 1). It is how a parse error's hint knows a
+// template is Office Open XML (ADR-007 D2 item 4).
+func Scanned(templates []Template) []bool {
+	ts := make([]*template, len(templates))
+	byPath := make(map[string]int, len(templates))
+	for i, t := range templates {
+		ts[i] = prepare(t)
+		if _, dup := byPath[t.Path]; !dup {
+			byPath[t.Path] = i
+		}
+	}
+	_, scanned := inherit(ts, byPath)
+	return scanned
+}
+
 // prepare reads what the scan needs of t before propagating bindings: its
 // constructs, whether it declares a main namespace, the declarations on
 // its root element, the prefixes it uses where it declares none, and the
