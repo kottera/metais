@@ -1264,4 +1264,14 @@ the render.
 
 ## Implementation log
 
-Nothing implemented.
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-5.** D14 and D15's library half
+  landed in `internal/hostfs`, ahead of the renderer that composes it:
+  `StagingName` and `TempName` derive D14's fixed names from a SHA-256 of
+  the base or file name; `Writer` creates every file and directory
+  exclusively, with D14 item 4's modes, records what it created, and
+  `RemoveCreated` removes only those records, newest first, leaving a
+  name that now holds something else and a directory that is not empty;
+  `RenameNoReplace` is D14 item 1.4's rename, with its `Lstat` fallback
+  where the file system refuses the flag, and `RenameReplace` D14 item
+  2.2's. A rename that succeeds takes what it moved out of the record, so
+  a committed output is never the render's to remove.

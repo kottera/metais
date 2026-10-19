@@ -680,9 +680,11 @@ func dependencyViolations(hits []dependencyHit, list []dependencyAllowance) []st
 // The reasons rest on what METAIS calls: internal/hostenv is the one
 // importer of golang.org/x/term and calls only term.IsTerminal (ADR-010 D2
 // item 2, D11 item 8), and only on unix, where it calls
-// unix.IoctlGetTermios; nothing in the module imports golang.org/x/sys
-// itself yet, so neither module is in the windows closure. A change to
-// what the module calls in either re-reads these reasons.
+// unix.IoctlGetTermios; internal/hostfs is the one importer of
+// golang.org/x/sys (ADR-010 D11 item 3), and calls only unix.Renameat2 on
+// linux and unix.RenameatxNp on darwin, for the no-replace rename; neither
+// module is in the windows closure (TestWindowsLinksNoXModules). A change
+// to what the module calls in either re-reads these reasons.
 var dependencyAllowList = []dependencyAllowance{
 	{"golang.org/x/sys/unix", "env_unix.go", "syscall.Clearenv", reasonUnixEnv},
 	{"golang.org/x/sys/unix", "env_unix.go", "syscall.Environ", reasonUnixEnv},

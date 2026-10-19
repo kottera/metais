@@ -1376,3 +1376,20 @@ headers agree with it exactly.
   `GetConsoleMode` through `syscall` on windows, so neither module is
   linked there; any later use of `golang.org/x/sys/windows` in the binary
   is refused by the import rule.
+
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-5.** D7 and D8 landed in
+  `internal/hostfs`. Every name a caller passes is checked component by
+  component with `Lstat` under the `os.Root`, because a root follows a link
+  that stays inside it in the middle of a name, and D7 item 2 follows none.
+  A read refuses a non-regular file from its `Lstat` mode, opens with
+  `O_NONBLOCK` on unix so a FIFO put in its place cannot block, and then
+  requires the handle to be the same regular file. OS errors become D9
+  item 8's reasons with no path and none of the system's text (D15 item
+  2). The source-directory `pkgtree.Tree` (D7 item 8) lists only the
+  source directory and the directories beneath the layout's roots, opens
+  only their regular files, and is bounded by `entries`, `entry-size`,
+  `package-uncompressed`, `path-length`, `path-depth` and, for its
+  problems, `findings`. It refuses an empty directory for every command,
+  not only `check` and `pack`, because a tree that opened would mean
+  something its packed form cannot carry. The device cases are unit tests
+  of `hostfs` (D17).
