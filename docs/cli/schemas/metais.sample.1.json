@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.sample.1.json",
+  "title": "metais.sample/1",
+  "description": "What metais sample prints with --json: the generator's options and the files of the sample data it wrote (ADR-007 D9, ADR-008 D9).",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.sample/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "optional",
+        "seed",
+        "items",
+        "example",
+        "dry_run",
+        "files"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "optional": {
+          "description": "The optional-field mode the data was made with.",
+          "enum": [
+            "all",
+            "none",
+            "mixed"
+          ]
+        },
+        "seed": {
+          "description": "The seed the data was made with, an unsigned 64-bit integer.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "items": {
+          "description": "The number of items the generator aimed for in every array and collection.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "example": {
+          "description": "The name of the example the data was saved as, or null for a data directory.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dry_run": {
+          "description": "Whether the files were only listed, and nothing was written.",
+          "type": "boolean"
+        },
+        "files": {
+          "description": "Each file written, or that a dry run would write, as a path relative to the data directory or to the example's directory, in byte order.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

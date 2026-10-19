@@ -206,11 +206,7 @@ func (s *session) stdinOnce(p args.Parsed) []finding.Finding {
 // supply. It returns the result, or no result and the refusal of a data
 // directory that cannot be read.
 func (s *session) supply(p args.Parsed, pkg *loader.Package, lim limits.Set) (*inputs.Result, []finding.Finding) {
-	layer, err := inputs.New(inputs.Package{Manifest: pkg.Manifest, Compiler: pkg.Schemas, Combined: pkg.CombinedValue, Schema: pkg.Combined})
-	if err != nil {
-		panic("cli: " + err.Error())
-	}
-	sup := layer.NewSupply(lim)
+	sup := inputsLayer(pkg).NewSupply(lim)
 	if dir, ok := p.Value(dataFlag.Name); ok {
 		var de *inputs.DataDirError
 		if err := sup.ReadDataDir(dir); errors.As(err, &de) {
@@ -223,6 +219,26 @@ func (s *session) supply(p args.Parsed, pkg *loader.Package, lim limits.Set) (*i
 			panic("cli: " + err.Error())
 		}
 	}
+	s.supplyArgs(p, sup, lim)
+	res, err := sup.Validate()
+	if err != nil {
+		panic("cli: " + err.Error())
+	}
+	return res, res.Findings
+}
+
+// inputsLayer is the inputs layer of pkg.
+func inputsLayer(pkg *loader.Package) *inputs.Layer {
+	layer, err := inputs.New(inputs.Package{Manifest: pkg.Manifest, Compiler: pkg.Schemas, Combined: pkg.CombinedValue, Schema: pkg.Combined})
+	if err != nil {
+		panic("cli: " + err.Error())
+	}
+	return layer
+}
+
+// supplyArgs gives sup each --inputs-json, then each --set and
+// --set-json, in command-line order (ADR-008 D7, ADR-003 D18).
+func (s *session) supplyArgs(p args.Parsed, sup *inputs.Supply, lim limits.Set) {
 	for _, v := range p.Values(inputsJSONFlag.Name) {
 		text := []byte(v)
 		if v == stdinOperand {
@@ -241,11 +257,6 @@ func (s *session) supply(p args.Parsed, pkg *loader.Package, lim limits.Set) (*i
 			j++
 		}
 	}
-	res, err := sup.Validate()
-	if err != nil {
-		panic("cli: " + err.Error())
-	}
-	return res, res.Findings
 }
 
 // readStdin reads standard input for --inputs-json -: at most limit bytes

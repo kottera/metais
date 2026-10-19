@@ -82,6 +82,9 @@ func (s *session) emit(o outcome) int {
 	if s.line.cmd != nil {
 		role = s.line.cmd.Role
 	}
+	if s.role != 0 {
+		role = s.role
+	}
 	status := r.Exit(role, s.failOn())
 	fs, sum := r.Findings(), r.Summary()
 	next := o.next

@@ -5952,6 +5952,27 @@
       ]
     },
     {
+      "code": "schema.sample_invalid",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "code",
+          "type": "string",
+          "meaning": "The code the data's validation reported there, as it would report it about a supplied input.",
+          "always": true
+        }
+      ],
+      "message": "The sample data for the input {input} fails its schema ({code}).",
+      "hint": "A value given with --set, --set-json or --inputs-json is taken as given: correct it if it is the value at this place. Otherwise the generator made a value the schema refuses: add an examples value to this field and the generator will use it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-SMP-002"
+      ]
+    },
+    {
       "code": "schema.sample_unsatisfiable",
       "severity": "error",
       "class": "content",
@@ -7779,6 +7800,80 @@
       "statements": []
     },
     {
+      "code": "usage.flag_excluded",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position, among the arguments after metais, of the flag refused.",
+          "always": true
+        },
+        {
+          "name": "command",
+          "type": "string",
+          "meaning": "The command the line names.",
+          "always": true
+        },
+        {
+          "name": "flag",
+          "type": "string",
+          "meaning": "The flag refused, written with its leading --.",
+          "always": true
+        },
+        {
+          "name": "other",
+          "type": "string",
+          "meaning": "The flag it cannot be given with, written with its leading --.",
+          "always": true
+        }
+      ],
+      "message": "{flag} at argument {argument} cannot be given with {other}.",
+      "hint": "Give one of {flag} and {other}; run `metais {command} --help` for how its flags combine.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.flag_requires",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position, among the arguments after metais, of the flag refused.",
+          "always": true
+        },
+        {
+          "name": "command",
+          "type": "string",
+          "meaning": "The command the line names.",
+          "always": true
+        },
+        {
+          "name": "flag",
+          "type": "string",
+          "meaning": "The flag refused, written with its leading --.",
+          "always": true
+        },
+        {
+          "name": "requires",
+          "type": "string",
+          "meaning": "The flag it is accepted only with, written with its leading --.",
+          "always": true
+        }
+      ],
+      "message": "{flag} at argument {argument} is accepted only with {requires}.",
+      "hint": "Add {requires}, or leave out {flag}; run `metais {command} --help` for how its flags combine.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "usage.is_a_directory",
       "severity": "error",
       "class": "usage",
@@ -7967,6 +8062,25 @@
       ],
       "message": "Argument {argument} names a source directory; metais unpack reads a packed package.",
       "hint": "Give a packed package file. A source directory is already the editable tree unpack writes; nothing was written.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.not_a_source_directory",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the refused argument among the arguments after metais.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} names a packed package, and this writes into a source directory.",
+      "hint": "Unpack it with metais unpack and give the source directory it writes; nothing was written.",
       "location": "none",
       "since": "1.0",
       "statements": []

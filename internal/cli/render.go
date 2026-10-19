@@ -19,10 +19,12 @@ import (
 	"github.com/kottera/metais/internal/dates"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
+	"github.com/kottera/metais/internal/inputs"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/pkgtree"
+	"github.com/kottera/metais/internal/sample"
 	"github.com/kottera/metais/internal/schema"
 	"github.com/kottera/metais/internal/tarw"
 	"github.com/kottera/metais/internal/template"
@@ -49,13 +51,15 @@ var (
 		Why: "Writes one file's bytes, which may go to a terminal; or redirect standard output to a file for the archive."}
 	nextRenderDryRun = Next{Run: "metais render <package> --out <dir> --dry-run",
 		Why: "Lists every file the render writes, by the path --only takes, and writes nothing."}
+	nextRenderSample = Next{Run: "metais render <package> --sample --out <dir>",
+		Why: "Renders from sample data in place of a data directory; --optional, --seed and --items tune the generator."}
 )
 
 // renderDeclaration is metais render (ADR-008 D8).
 func renderDeclaration() *Command {
 	return &Command{
 		Name: "render", Group: "Supplying and rendering",
-		Synopsis:    "render <package> --out <dir|-> [supply flags] [--only <path>] [--dry-run] [--now <time>] [--json]",
+		Synopsis:    "render <package> --out <dir|-> [supply flags] [--only <path>] [--dry-run] [--now <time>] [--sample [--optional <mode>] [--seed <n>] [--items <n>]] [--json]",
 		Description: "Render the package's outputs from the inputs supplied, into a new directory or to standard output.",
 		Detail: "The package is opened and verified whole, and the inputs are supplied and validated, as " +
 			"metais inspect and metais validate do; an input that fails ends the render with every finding of " +
@@ -91,7 +95,14 @@ func renderDeclaration() *Command {
 			"directory, user or clock — reaches a template.\n\n" +
 			"Each output's path is a Liquid template too. An output with for_each is rendered once for each " +
 			"element of its array, which its when, its path and its template see as item, with its position " +
-			"as fan_out; an output, or an element, whose when is false writes no file.",
+			"as fan_out; an output, or an element, whose when is false writes no file.\n\n" +
+			"--sample renders from sample data, the author's preview: the generator makes every input from its " +
+			"schema, as metais sample does, in the data directory's place, so --data is refused with it. Values " +
+			"given with --set, --set-json and --inputs-json are kept as given and the rest is made around them, " +
+			"conditionals included, so one value can be pinned to see one branch. The data is validated as " +
+			"supplied data is before anything is rendered. --optional, --seed and --items are taken only with " +
+			"--sample. A render with --sample is an authoring command: a defect of the package fails it with exit " +
+			"status 1, as check does.",
 		Role:     finding.RoleConsumer,
 		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file, or a source directory; - is refused, since a package is read with random access."}},
 		Flags: []args.Flag{
@@ -100,6 +111,7 @@ func renderDeclaration() *Command {
 			{Name: "only", Value: "<path>", Description: "Write only the file at this path, as --dry-run lists it: its bytes alone with --out -."},
 			{Name: "dry-run", Description: "List every file the render would write, with its size and digest, and write nothing."},
 			{Name: "now", Value: "<date-time>", Description: "The render time, an RFC 3339 date-time with an offset, which templates see as now; without it there is no time."},
+			sampleFlag, optionalFlag, seedFlag, itemsFlag,
 			limitFlag, failOnFlag,
 		},
 		Format: "metais.render/1",
@@ -108,9 +120,11 @@ func renderDeclaration() *Command {
 			"With --out -, standard output is the archive, or the one file's bytes.",
 		Refusals: append(packageRefusals("render"),
 			Refusal{finding.CodeUsageMissingFlag, "--out is not given.", nextRenderOut},
-			Refusal{finding.CodeUsageBadValue, "--now is not an RFC 3339 date-time with an offset.", nextRenderNow},
 			Refusal{finding.CodeUsageArchiveToTerminal, "--out - is given without --only, and standard output is a terminal.", nextRenderArchive},
 			Refusal{finding.CodeUsageUnknownOutput, "--only names no file the render writes.", nextRenderDryRun},
+			Refusal{finding.CodeUsageBadValue, "--now is not an RFC 3339 date-time with an offset, or --seed or --items is not a whole number in range.", nextRenderNow},
+			Refusal{finding.CodeUsageFlagExcluded, "--data is given with --sample, whose generated data takes the data directory's place.", nextRenderSample},
+			Refusal{finding.CodeUsageFlagRequires, "--optional, --seed or --items is given without --sample.", nextRenderSample},
 			Refusal{finding.CodeUsageDataDirUnreadable, "The data directory given to --data does not exist, is not a directory, or cannot be read.", nextRenderData},
 			Refusal{finding.CodeUsageConflictingFlags, "--inputs-json - is given twice, and standard input is read once.", nextInputsHelp},
 			Refusal{finding.CodeDestinationNotDirectory, "--out, or a directory above it, exists and is not a directory.", nextRenderDest},
@@ -125,6 +139,8 @@ func renderDeclaration() *Command {
 			{"metais render . --data data --out out --now 2026-10-19T09:30:00+02:00 --json", "Renders the source directory in the working directory with a render time, and prints the files as one metais.render/1 document."},
 			{"metais render report.metais --data data --out out --dry-run", "Lists every file the render would write into out, with its size and digest, and writes nothing."},
 			{"metais render report.metais --data data --out - --only report.md", "Renders the whole package and writes the bytes of report.md alone to standard output."},
+			{"metais render . --sample --out preview", "Previews the source directory's outputs from sample data."},
+			{"metais render . --sample --set /incident/stage=final --seed 7 --out preview", "Previews them with one value pinned and other generated values."},
 		},
 		run: runRender,
 	}
@@ -145,9 +161,10 @@ func renderRefusals(c *Command) {
 		switch {
 		case have[e.Code]:
 			continue
-		case family == "input" || family == "json" || family == "yaml" || family == "csv" || family == "text" ||
-			family == "markdown" || family == "collection" || e.Code == finding.CodeLimitExceeded:
+		case inputFamily(e.Code):
 			r = Refusal{e.Code, "An input is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextRenderInputs}
+		case e.Code == sample.CodeUnsatisfiable || e.Code == finding.CodeSampleInvalid:
+			r = Refusal{e.Code, "With --sample, the generated data cannot be made or does not validate (" + strings.ReplaceAll(rest, "_", " ") + ").", nextSampleSchema}
 		case family == "template" && e.Severity == finding.SeverityError && !strings.HasPrefix(rest, "xref.") && !strings.HasPrefix(rest, "ooxml."):
 			r = Refusal{e.Code, "A template is refused (" + strings.ReplaceAll(rest, "_", " ") + ").", nextRenderTemplates}
 		case strings.HasPrefix(string(e.Code), "limit.exceeded."), strings.HasPrefix(string(e.Code), "output.path."),
@@ -165,13 +182,48 @@ func renderRefusals(c *Command) {
 	}
 }
 
+// inputFamily reports whether code is one a supply reports about an
+// input: the input families, and limit.exceeded.
+func inputFamily(code finding.Code) bool {
+	family, _, _ := strings.Cut(string(code), ".")
+	return family == "input" || family == "json" || family == "yaml" || family == "csv" || family == "text" ||
+		family == "markdown" || family == "collection" || code == finding.CodeLimitExceeded
+}
+
+// sampleRefusals adds to sample's declared refusals the codes a supply
+// reports about an input, and the generator's own (ADR-008 D16 item 2).
+func sampleRefusals(c *Command) {
+	have := map[finding.Code]bool{}
+	for _, r := range c.Refusals {
+		have[r.Code] = true
+	}
+	for _, e := range finding.Registry() {
+		_, rest, _ := strings.Cut(string(e.Code), ".")
+		switch {
+		case have[e.Code]:
+		case inputFamily(e.Code):
+			c.Refusals = append(c.Refusals, Refusal{e.Code, "A value given with --set, --set-json or --inputs-json is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextSampleInputs})
+		case e.Code == sample.CodeUnsatisfiable || e.Code == finding.CodeSampleInvalid:
+			c.Refusals = append(c.Refusals, Refusal{e.Code, "The generated data cannot be made or does not validate (" + strings.ReplaceAll(rest, "_", " ") + ").", nextSampleSchema})
+		}
+	}
+}
+
 // renderResult is metais.render/1's result (ADR-008 D8 item 9).
 type renderResult struct {
-	Out    string       `json:"out"`
-	DryRun bool         `json:"dry_run"`
-	Only   *string      `json:"only"`
-	Files  []renderFile `json:"files"`
-	Sample *struct{}    `json:"sample"`
+	Out    string        `json:"out"`
+	DryRun bool          `json:"dry_run"`
+	Only   *string       `json:"only"`
+	Files  []renderFile  `json:"files"`
+	Sample *renderSample `json:"sample"`
+}
+
+// renderSample is the result's sample: the generator's options of a
+// render with --sample (ADR-008 D8 item 9).
+type renderSample struct {
+	Optional string `json:"optional"`
+	Seed     uint64 `json:"seed"`
+	Items    int    `json:"items"`
 }
 
 // renderFile is one file's record (ADR-005 D16 item 2).
@@ -332,6 +384,26 @@ func runRender(s *session, p args.Parsed) outcome {
 			}))
 		}
 	}
+	// A render from sample data is the author's preview, an authoring
+	// command (ADR-008 D8 item 8, ADR-006 D12 item 2).
+	isSample := p.Has(sampleFlag.Name)
+	var opts sample.Options
+	if isSample {
+		s.role = finding.RoleAuthoring
+		if p.Has(dataFlag.Name) {
+			return s.refuseWith(s.excluded(p, dataFlag.Name, sampleFlag.Name))
+		}
+		var fs []finding.Finding
+		if opts, fs = s.sampleOptions(p); len(fs) > 0 {
+			return s.refuseWith(fs[0])
+		}
+	} else {
+		for _, f := range generatorFlags {
+			if p.Has(f.Name) {
+				return s.refuseWith(s.requires(p, f.Name, sampleFlag.Name))
+			}
+		}
+	}
 	lim, fs := s.limits(p)
 	if len(fs) > 0 {
 		return outcome{findings: fs, next: s.nextSteps(fs)}
@@ -353,8 +425,18 @@ func runRender(s *session, p args.Parsed) outcome {
 	}()
 
 	// Phase 0: the inputs (ADR-005 D13 item 0).
+	// With --sample, the generated data, validated, is the data
+	// directory's (ADR-007 D9 item 22).
 	dataDir, _ := p.Value(dataFlag.Name)
-	res, fs := s.supply(p, pkg, lim)
+	var res *inputs.Result
+	if isSample {
+		var data *sampled
+		if data, fs = s.generate(p, pkg, lim, opts); data != nil {
+			res = data.res
+		}
+	} else {
+		res, fs = s.supply(p, pkg, lim)
+	}
 	if res == nil || s.fails(fs) {
 		return outcome{findings: fs, next: s.nextSteps(fs), dataDir: dataDir}
 	}
@@ -402,6 +484,9 @@ func runRender(s *session, p args.Parsed) outcome {
 		written = plan[i : i+1]
 	}
 	result := &renderResult{Out: "directory", DryRun: dryRun, Files: []renderFile{}}
+	if isSample {
+		result.Sample = &renderSample{Optional: opts.Optional.String(), Seed: opts.Seed, Items: opts.Items}
+	}
 	if toStream {
 		result.Out = "stdout"
 	}

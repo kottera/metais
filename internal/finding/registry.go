@@ -48,6 +48,8 @@ const (
 	CodeDestinationNotEmpty     Code = "output.destination.not_empty"
 	CodeDestinationWriteFailed  Code = "output.destination.write_failed"
 
+	CodeSampleInvalid Code = "schema.sample_invalid"
+
 	CodeContainerMissingEntry   Code = "output.container.missing_entry"
 	CodeContainerNonASCII       Code = "output.container.non_ascii"
 	CodeContainerReservedEntry  Code = "output.container.reserved_entry"
@@ -81,6 +83,9 @@ const (
 	CodeUsageUnknownInput      Code = "usage.unknown_input"
 	CodeUsageUnknownOutput     Code = "usage.unknown_output"
 	CodeUsageArchiveToTerminal Code = "usage.archive_to_terminal"
+	CodeUsageNotSourceDir      Code = "usage.not_a_source_directory"
+	CodeUsageFlagRequires      Code = "usage.flag_requires"
+	CodeUsageFlagExcluded      Code = "usage.flag_excluded"
 )
 
 // registry is the tool's table of codes, in code order. It is the Go form
@@ -2256,6 +2261,20 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{"MTS-AUT-009"},
 	},
 	{
+		Code:     CodeSampleInvalid,
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectInput,
+		Params: []ParamSpec{
+			{Name: "code", Type: TypeString, Meaning: "The code the data's validation reported there, as it would report it about a supplied input.", Always: true},
+		},
+		Message:    "The sample data for the input {input} fails its schema ({code}).",
+		Hint:       "A value given with --set, --set-json or --inputs-json is taken as given: correct it if it is the value at this place. Otherwise the generator made a value the schema refuses: add an examples value to this field and the generator will use it.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-SMP-002"},
+	},
+	{
 		Code:     "schema.sample_unsatisfiable",
 		Severity: SeverityError,
 		Class:    ClassContent,
@@ -3188,6 +3207,40 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{},
 	},
 	{
+		Code:     CodeUsageFlagExcluded,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position, among the arguments after metais, of the flag refused.", Always: true},
+			{Name: "command", Type: TypeString, Meaning: "The command the line names.", Always: true},
+			{Name: "flag", Type: TypeString, Meaning: "The flag refused, written with its leading --.", Always: true},
+			{Name: "other", Type: TypeString, Meaning: "The flag it cannot be given with, written with its leading --.", Always: true},
+		},
+		Message:    "{flag} at argument {argument} cannot be given with {other}.",
+		Hint:       "Give one of {flag} and {other}; run `metais {command} --help` for how its flags combine.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageFlagRequires,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position, among the arguments after metais, of the flag refused.", Always: true},
+			{Name: "command", Type: TypeString, Meaning: "The command the line names.", Always: true},
+			{Name: "flag", Type: TypeString, Meaning: "The flag refused, written with its leading --.", Always: true},
+			{Name: "requires", Type: TypeString, Meaning: "The flag it is accepted only with, written with its leading --.", Always: true},
+		},
+		Message:    "{flag} at argument {argument} is accepted only with {requires}.",
+		Hint:       "Add {requires}, or leave out {flag}; run `metais {command} --help` for how its flags combine.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
 		Code:     CodeUsageIsADirectory,
 		Severity: SeverityError,
 		Class:    ClassUsage,
@@ -3309,6 +3362,20 @@ var registry = withSchemaEntries([]Entry{
 		},
 		Message:    "Argument {argument} names a source directory; metais unpack reads a packed package.",
 		Hint:       "Give a packed package file. A source directory is already the editable tree unpack writes; nothing was written.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageNotSourceDir,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the refused argument among the arguments after metais.", Always: true},
+		},
+		Message:    "Argument {argument} names a packed package, and this writes into a source directory.",
+		Hint:       "Unpack it with metais unpack and give the source directory it writes; nothing was written.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},
