@@ -32,11 +32,14 @@ type layerRule struct {
 	// inside its top-level function Function.
 	// test-only: no package but Package imports Package in its non-test
 	// files; tests may.
+	// never-depends: Package does not depend, directly or through another
+	// package, on a package matching Imports.
 	Package  string `json:"package,omitempty"`
 	Function string `json:"function,omitempty"`
 
 	// only-importers: only Importers import a package matching Imports,
-	// tests included. single-entry-point uses Imports too.
+	// tests included. single-entry-point and never-depends use Imports
+	// too.
 	Imports   string   `json:"imports,omitempty"`
 	Importers []string `json:"importers,omitempty"`
 
@@ -73,6 +76,8 @@ func readLayers(path string) ([]layerRule, error) {
 			ok = r.Package != "" && r.Imports != "" && r.Function != "" && r.Packages == nil && r.Importers == nil && r.Symbols == nil
 		case "test-only":
 			ok = r.Package != "" && r.Packages == nil && r.Imports == "" && r.Function == "" && r.Importers == nil && r.Symbols == nil
+		case "never-depends":
+			ok = r.Package != "" && r.Imports != "" && r.Function == "" && r.Packages == nil && r.Importers == nil && r.Symbols == nil
 		case "only-importers":
 			ok = r.Imports != "" && len(r.Importers) > 0 && r.Packages == nil && r.Package == "" && r.Symbols == nil
 		case "only-referrers":
@@ -126,6 +131,14 @@ func layerViolations(rules []layerRule, pkgs []*listedPackage, files []*sourceFi
 				for _, imp := range slices.Concat(p.Imports, p.TestImports, p.XTestImports) {
 					if matchPattern(r.Imports, imp) {
 						bad = append(bad, fmt.Sprintf("%s imports %s, which only %s may (%s)", p.ImportPath, imp, strings.Join(r.Importers, ", "), r.Reason))
+					}
+				}
+			}
+		case "never-depends":
+			if p := byPath[r.Package]; p != nil {
+				for _, dep := range p.Deps {
+					if matchPattern(r.Imports, dep) {
+						bad = append(bad, fmt.Sprintf("%s depends on %s (%s)", p.ImportPath, dep, r.Reason))
 					}
 				}
 			}
@@ -223,10 +236,11 @@ func TestLayersControl(t *testing.T) {
 	pkgs := goList(t, dir, target{"linux", "amd64"}, "./...")
 	got := layerViolations(rules, pkgs, moduleNonTestFiles(t, pkgs))
 	for i, v := range got {
-		got[i], _, _ = strings.Cut(v, " (ADR-010")
+		got[i], _, _ = strings.Cut(v, " (ADR-")
 	}
 	slices.Sort(got)
 	want := []string{
+		"github.com/kottera/metais/internal/author/ooxml depends on github.com/kottera/metais/internal/manifest",
 		"github.com/kottera/metais/internal/browse/browse.go:15: refers to github.com/kottera/metais/internal/hostfs.Write in List, not in Extract",
 		"github.com/kottera/metais/internal/browse/browse.go:23: refers to github.com/kottera/metais/internal/hostfs.Write in T.Extract, not in Extract",
 		"github.com/kottera/metais/internal/browse/browse.go:25: refers to github.com/kottera/metais/internal/hostfs.Write outside any function, not in Extract",
@@ -258,6 +272,7 @@ func TestReadLayersRefusesMalformedRules(t *testing.T) {
 		"mixed fields":           `{"rules": [{"rule": "only-importers", "imports": "a", "importers": ["b"], "symbols": ["os.Args"], "reason": "r"}]}`,
 		"wrong shape":            `{"rules": [{"rule": "standard-library-only", "packages": ["a"], "reason": "r"}]}`,
 		"test-only with imports": `{"rules": [{"rule": "test-only", "package": "a", "imports": "b", "reason": "r"}]}`,
+		"never-depends unnamed":  `{"rules": [{"rule": "never-depends", "imports": "b", "reason": "r"}]}`,
 	} {
 		path := filepath.Join(testenv.Dir(t), "layers.json")
 		if err := os.WriteFile(path, []byte(table), 0o644); err != nil {
