@@ -36,6 +36,10 @@ const (
 	// Replace is a planned path whose target is a regular file, which the
 	// write replaces by renaming over it.
 	Replace Status = "replace"
+
+	// Present is a planned directory that exists already, which the write
+	// leaves as it is.
+	Present Status = "present"
 )
 
 // PathCheck is ADR-005 D15 item 4's checks of one planned path, as
@@ -59,8 +63,9 @@ type PathCheck struct {
 // D14 item 2, as Amendment A1 amends it: render's, and extract's and
 // sample's with their --overwrite. It is opened by OpenExisting, its
 // planned paths are checked by Check, and Stage begins the write, which is
-// an Output: Create prepares every planned file beneath one staging
-// directory inside it, StagingDir, and Commit commits them by unit.
+// an Output: Create prepares every planned file, and MkdirAll every planned
+// directory, beneath one staging directory inside it, StagingDir, and
+// Commit commits them by unit.
 //
 // One ownership rule governs what such a write removes (A1 item 6): only
 // what lies within the staging directory, which it created exclusively and
@@ -137,7 +142,10 @@ func (x *Existing) Close() error {
 // Amendment A1 items 4 and 5 extend them, walking each segment beneath the
 // output directory with Lstat through the root on it, and returns one
 // PathCheck per path, in the order given, so a caller reports every
-// refusal with the others (D15 item 8). A path is refused:
+// refusal with the others (D15 item 8). A path that ends in "/" is a
+// planned directory, which a data directory's empty collection is (ADR-003
+// D15): it is checked as a file is, except that its target must be a
+// directory, and an existing one is Present. A path is refused:
 //
 //   - with BadName, when it is not a relative "/"-separated name;
 //   - with Exists, when its first segment is an ASCII-case-insensitive
@@ -149,13 +157,16 @@ func (x *Existing) Close() error {
 //     is a canonical caseless match for it but not byte-equal to it;
 //   - with IsDirectory or NotRegularFile, when the target is a directory
 //     or another file that is not regular (a FIFO, socket or device);
+//   - with NotDirectory, when the target of a planned directory is not a
+//     directory;
 //   - with IOError, when the deepest existing directory of the path is on
 //     another device from the output directory (A1 item 4); the device is
 //     compared and never reported (ADR-009 D12);
 //   - with the reason of an error that stopped a check.
 //
-// Otherwise its Status is Create when the target is absent and Replace
-// when it is a regular file. Check writes nothing and opens no file:
+// Otherwise its Status is Create when the target is absent, Replace when it
+// is a regular file, and Present when it is a planned directory's
+// directory. Check writes nothing and opens no file:
 // directories are listed by name, for the caseless match, one at a time.
 // Commit makes every check again.
 func (x *Existing) Check(paths []string) []PathCheck {
@@ -218,6 +229,7 @@ func (c *checker) lstat(name string) (fs.FileInfo, error) {
 // no link to reach it.
 func (c *checker) walk(i int, p string) PathCheck {
 	pc := PathCheck{Path: p}
+	p, dir := strings.CutSuffix(p, "/")
 	if _, ok := osName(p); !ok || p == "." {
 		if c.x.faults.Has(fault.SkipConfine) {
 			// The output path check's seam (CheckPaths): under the
@@ -239,7 +251,7 @@ func (c *checker) walk(i int, p string) PathCheck {
 		c.wantCase(parent, seg, i)
 		info, err := c.lstat(name)
 		if errors.Is(err, fs.ErrNotExist) {
-			pc.Status, pc.unit, pc.unitDir = Create, name, k < len(segs)-1
+			pc.Status, pc.unit, pc.unitDir = Create, name, dir || k < len(segs)-1
 			pc.Err = c.sameDevice(parent)
 			return pc
 		}
@@ -258,6 +270,14 @@ func (c *checker) walk(i int, p string) PathCheck {
 			}
 			parent = name
 			continue
+		}
+		if dir {
+			if !info.IsDir() {
+				pc.Err = fail("check", NotDirectory)
+				return pc
+			}
+			pc.Status, pc.unit = Present, p
+			return pc
 		}
 		if r := fileRefusal(info.Mode()); r != "" {
 			pc.Err = fail("check", r)
@@ -490,11 +510,12 @@ func (e *CommitError) Unwrap() error { return e.Err }
 
 // commitExisting is Commit for a Stage: it commits the planned paths by
 // unit (ADR-005 A1 item 2). Before the first rename every planned path must
-// have been written, and every check is made again, through the root, and
+// have been written, a planned directory made, and every check is made
+// again, through the root, and
 // must still give each path its status and unit; then each unit is renamed
 // from the staging directory into place once, in path order, a missing
 // directory and a Create with the no-replace rename, a Replace with the
-// replacing rename. Each rename checks its target's directories again, so
+// replacing rename. A Present directory has no unit and is not renamed. Each rename checks its target's directories again, so
 // a link planted since fails the commit rather than being followed out.
 //
 // A failure stops the commit and ends the write as Abort does, returning a
@@ -507,9 +528,14 @@ func (o *Output) commitExisting() error {
 	for _, f := range o.files {
 		written[f] = true
 	}
+	for _, e := range o.made {
+		if e.dir {
+			written[e.name+"/"] = true
+		}
+	}
 	paths := make([]string, len(p.checks))
 	for i, c := range p.checks {
-		if !written[c.Path] {
+		if !written[c.Path] && c.Status != Present {
 			return o.failCommit(nil, fail("rename", NotFound))
 		}
 		paths[i] = c.Path
@@ -525,6 +551,9 @@ func (o *Output) commitExisting() error {
 	var units []PathCheck
 	beneath := map[string][]string{}
 	for _, c := range p.checks {
+		if c.Status == Present {
+			continue
+		}
 		if _, ok := beneath[c.unit]; !ok {
 			units = append(units, c)
 		}

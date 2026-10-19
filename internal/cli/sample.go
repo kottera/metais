@@ -47,6 +47,8 @@ var generatorFlags = []args.Flag{optionalFlag, seedFlag, itemsFlag}
 var (
 	nextSampleTo = Next{Run: "metais sample <package> --to <dir>",
 		Why: "Writes the sample data as a data directory into a directory that is empty or does not exist yet."}
+	nextSampleInTheWay = Next{Run: "metais sample <package> --to <dir>",
+		Why: "Writes again once what stands in the way in <dir> is moved or removed, or into a directory that does not exist yet."}
 	nextSampleOverwrite = Next{Run: "metais sample <package> --to <dir> --overwrite",
 		Why: "Writes into the directory anyway, replacing the files sample writes and leaving every other file as it is."}
 	nextSampleExample = Next{Run: "metais sample --example <name>",
@@ -69,8 +71,12 @@ func sampleDeclaration() *Command {
 		Refusal{Code: finding.CodeUsageFlagExcluded, Cause: "--to and --example are both given, or --overwrite is given with --example.", Next: nextCommandHelp("sample")},
 		Refusal{Code: finding.CodeUsageNotSourceDir, Cause: "--example is given with a packed package, whose examples are not edited.", Next: nextSampleUnpack},
 		Refusal{Code: finding.CodeDestinationNotEmpty, Cause: "--to names a directory that holds entries, and --overwrite is not given.", Next: nextSampleOverwrite},
-		Refusal{Code: finding.CodeDestinationNotDirectory, Cause: "--to, or a directory above it, exists and is not a directory.", Next: nextSampleTo},
-		Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A file sample writes is in the way (a link, a directory or a special file), the example already exists, or a write failed.", Next: nextSampleTo},
+		Refusal{Code: finding.CodeDestinationNotDirectory, Cause: "--to, or a directory above it, exists and is not a directory; or, in <dir>, a file stands where a path sample writes needs a directory.", Next: nextSampleInTheWay},
+		Refusal{Code: finding.CodeDestinationLink, Cause: "In <dir>, a path sample writes runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed.", Next: nextSampleInTheWay},
+		Refusal{Code: finding.CodeDestinationCaseVariant, Cause: "In <dir>, an entry's name differs only in case or normalization from a name a path sample writes holds.", Next: nextSampleInTheWay},
+		Refusal{Code: finding.CodeDestinationNotRegularFile, Cause: "In <dir>, a directory, a named pipe, a socket or a device stands where sample writes a file.", Next: nextSampleInTheWay},
+		Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A write failed, another file system is mounted on a path sample writes, a staging directory is left in <dir>, or the example already exists; nothing is left written.", Next: nextSampleTo},
+		Refusal{Code: finding.CodeDestinationCommitFailed, Cause: "Moving the files into an existing <dir> failed part way; the files already moved are listed, and nothing else was changed.", Next: nextSampleTo},
 	)
 	return &Command{
 		Name: "sample", Group: "Authoring",
@@ -89,8 +95,11 @@ func sampleDeclaration() *Command {
 			"With --to, the data directory is <dir>: a <dir> that does not exist is created, with its missing " +
 			"parents, beside it and renamed into place; an empty one is written into. A <dir> that holds any " +
 			"entry, a hidden one included, is refused unless --overwrite is given, and then each file sample " +
-			"writes replaces the file of that name, and nothing else in <dir> is read, changed or removed. A " +
-			"link, a directory or a special file where sample writes a file is refused.\n\n" +
+			"writes replaces the file of that name, and nothing else in <dir> is read, changed or removed. " +
+			"Everything sample writes into an existing <dir>, an empty collection's directory included, is " +
+			"prepared beneath <dir>/.metais-staging and moved into place. A link, a directory or a special " +
+			"file where sample writes a file, a file where it needs a directory, and a name that differs only " +
+			"in case from one it writes are each refused, all of them together, before anything is written.\n\n" +
 			"With --example, the source directory's examples/<name>/ is written: its inputs/ holds the data, " +
 			"and its example.yaml records how it was made. It is refused with a packed package, and when " +
 			"examples/<name>/ exists at all; nothing in an example is ever replaced. --dry-run lists the files " +
@@ -108,7 +117,7 @@ func sampleDeclaration() *Command {
 				limitFlag, failOnFlag,
 			})...),
 		Format:   "metais.sample/1",
-		Prints:   "The files written, relative to <dir> or to examples/<name>/, in path order.",
+		Prints:   "The files written, relative to <dir> or to examples/<name>/, in path order; an empty directory, a collection with no item, is listed with a trailing /.",
 		Refusals: refusals,
 		Examples: []Example{
 			{"metais sample --to data", "Writes sample data for the source directory in the working directory into the new directory data."},
@@ -389,10 +398,9 @@ func runSample(s *session, p args.Parsed) outcome {
 		dest = filepath.Join(operand, "examples", name)
 		files = exampleFiles(name, opts, files)
 	}
+	files = emptyDirs(files)
 	for _, f := range files {
-		if !strings.HasSuffix(f.Path, "/") {
-			res.Files = append(res.Files, f.Path)
-		}
+		res.Files = append(res.Files, f.Path)
 	}
 	slices.Sort(res.Files)
 	if res.Files == nil {
@@ -400,30 +408,41 @@ func runSample(s *session, p args.Parsed) outcome {
 	}
 	// A dry run makes every check the write makes, and writes nothing, so
 	// it is refused exactly as the write would be.
-	var f finding.Finding
-	var ok bool
+	var refused []finding.Finding
 	if hasExample {
-		f, ok = s.writeExample(dest, files, res.DryRun)
+		refused = s.writeExample(dest, files, res.DryRun)
 	} else {
-		f, ok = s.writeData(dest, files, p.Has("overwrite"), res.DryRun)
+		refused = s.writeData(dest, files, p.Has("overwrite"), res.DryRun)
 	}
-	if !ok {
-		fs = append(fs, f)
+	if len(refused) > 0 {
+		fs = append(fs, refused...)
 		next := s.nextSteps(fs)
 		if hasExample {
 			next = []Next{nextSampleExample}
 		}
 		return outcome{findings: fs, next: next}
 	}
-	heading := "Wrote " + strconv.Itoa(len(res.Files)) + " files:"
+	heading := "Wrote " + plural(len(res.Files), "file", "files") + ":"
 	if res.DryRun {
-		heading = "Would write " + strconv.Itoa(len(res.Files)) + " files:"
+		heading = "Would write " + plural(len(res.Files), "file", "files") + ":"
 	}
 	next := []Next{{Run: "metais render <package> --data <dir> --out <dir>", Why: "Renders the package's outputs from the data just written."}}
 	if hasExample {
 		next = []Next{{Run: "metais test <package> --example <name>", Why: "Renders the example; with --update it records the outputs as the example's expected ones."}}
 	}
 	return outcome{findings: fs, result: res, human: listing(heading, res.Files, false)[1:], next: declaredSteps(next, s.table)}
+}
+
+// emptyDirs is files with each directory entry, a path ending in "/", kept
+// only when no file of files lies beneath it: an empty directory, which a
+// collection with no item is (ADR-003 D15), is written and reported as
+// itself, and any other directory comes with the files beneath it.
+func emptyDirs(files []inputs.File) []inputs.File {
+	return slices.DeleteFunc(slices.Clone(files), func(d inputs.File) bool {
+		return strings.HasSuffix(d.Path, "/") && slices.ContainsFunc(files, func(f inputs.File) bool {
+			return f.Path != d.Path && strings.HasPrefix(f.Path, d.Path)
+		})
+	})
 }
 
 // exampleFiles are the files of the example name: the data under inputs/,
@@ -453,39 +472,40 @@ func exampleYAML(name string, opts sample.Options) []byte {
 // for it: a directory that does not exist is staged beside it and renamed
 // into place (ADR-005 D14 item 1); an existing one is written into under
 // ADR-005 D14 item 2 as Amendment A1 amends it, when it holds no entry or
-// overwrite is set, every file it does not plan left alone. A directory
-// entry of files, a collection's, is created when it has no file to
-// create it. A dry run makes every check and writes nothing.
-func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool) (finding.Finding, bool) {
+// overwrite is set, every file it does not plan left alone. An empty
+// directory of files, a collection's, is planned, prepared and committed
+// as a file is. A dry run makes every check and writes nothing; every
+// refusal of the checks is reported together (ADR-005 D15 item 8).
+func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool) []finding.Finding {
 	opt := hostfs.WithFaults(s.inv.Options.Faults)
 	w, rest, err := hostfs.OpenNearest(to)
 	if err != nil {
-		return destinationRefusal(err), false
+		return []finding.Finding{destinationRefusal(err)}
 	}
 	if rest != "." {
 		w.Close()
 		if dry {
-			return finding.Finding{}, true
+			return nil
 		}
 		o, err := hostfs.StageNew(to, opt)
 		if err != nil {
-			return destinationRefusal(err), false
+			return []finding.Finding{destinationRefusal(err)}
 		}
 		for _, f := range files {
 			if err := writeFile(o, f); err != nil {
 				o.Abort()
-				return writeFailed(hostfs.ReasonOf(err)), false
+				return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
 			}
 		}
 		if err := o.Commit(); err != nil {
-			return writeFailed(hostfs.ReasonOf(err)), false
+			return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
 		}
-		return finding.Finding{}, true
+		return nil
 	}
 	entries, err := w.List(".", maxListed+1)
 	w.Close()
 	if err != nil && hostfs.ReasonOf(err) != hostfs.TooLarge {
-		return writeFailed(hostfs.ReasonOf(err)), false
+		return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
 	}
 	if len(entries) > 0 && !overwrite {
 		var names []string
@@ -493,119 +513,95 @@ func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool)
 			names = append(names, e.Name)
 		}
 		slices.Sort(names)
-		return finding.New(finding.CodeDestinationNotEmpty, invocation, nil, finding.Params{
+		return []finding.Finding{finding.New(finding.CodeDestinationNotEmpty, invocation, nil, finding.Params{
 			"entries": stringList(names),
 			"more":    finding.Bool(len(entries) > maxListed),
-		}), false
+		})}
 	}
 	x, err := hostfs.OpenExisting(to, opt)
 	if err != nil {
-		return destinationRefusal(err), false
+		return []finding.Finding{destinationRefusal(err)}
 	}
 	defer x.Close()
-	var paths, dirs []string
-	for _, f := range files {
-		if d, ok := strings.CutSuffix(f.Path, "/"); ok {
-			dirs = append(dirs, d)
-		} else {
-			paths = append(paths, f.Path)
-		}
+	var fs []finding.Finding
+	if _, err := x.Lstat(hostfs.StagingDir); err == nil {
+		fs = append(fs, writeFailed(hostfs.Exists))
+	} else if r := hostfs.ReasonOf(err); r != hostfs.NotFound {
+		fs = append(fs, writeFailed(r))
+	}
+	paths := make([]string, len(files))
+	for i, f := range files {
+		paths[i] = f.Path
 	}
 	checks := x.Check(paths)
 	for _, c := range checks {
 		if c.Err != nil {
-			return checkRefusal(c), false
+			fs = append(fs, pathRefusal(c.Path, c.Err))
 		}
 	}
-	if dry {
-		return finding.Finding{}, true
+	if len(fs) > 0 || dry {
+		return fs
 	}
 	o, err := x.Stage(checks)
 	if err != nil {
-		return destinationRefusal(err), false
+		return []finding.Finding{destinationRefusal(err)}
 	}
 	for _, f := range files {
-		if strings.HasSuffix(f.Path, "/") {
-			continue
+		var err error
+		if d, ok := strings.CutSuffix(f.Path, "/"); ok {
+			err = o.MkdirAll(d)
+		} else {
+			err = o.Create(f.Path, false, bytes.NewReader(f.Data))
 		}
-		if err := o.Create(f.Path, false, bytes.NewReader(f.Data)); err != nil {
+		if err != nil {
 			o.Abort()
-			return writeFailed(hostfs.ReasonOf(err)), false
+			return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
 		}
 	}
-	if err := o.Commit(); err != nil {
-		var ce *hostfs.CommitError
-		if errors.As(err, &ce) {
-			return finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
-				"reason":  finding.String(writeReason(hostfs.ReasonOf(ce.Err))),
-				"written": stringList(ce.Committed),
-			}), false
-		}
-		return writeFailed(hostfs.ReasonOf(err)), false
+	err = o.Commit()
+	var ce *hostfs.CommitError
+	switch {
+	case err == nil:
+		return nil
+	case errors.As(err, &ce) && len(ce.Committed) > 0:
+		return []finding.Finding{finding.New(finding.CodeDestinationCommitFailed, invocation, nil, finding.Params{
+			"reason":    finding.String(writeReason(hostfs.ReasonOf(err))),
+			"committed": stringList(ce.Committed),
+		})}
 	}
-	return s.emptyDirs(to, dirs, paths)
-}
-
-// emptyDirs creates each directory of dirs that no path of paths lies
-// beneath, inside the existing directory to: a collection with no item is
-// an empty directory (ADR-003 D15). Only a missing directory is created;
-// nothing is replaced, and a link in the way is refused.
-func (s *session) emptyDirs(to string, dirs, paths []string) (finding.Finding, bool) {
-	var empty []string
-	for _, d := range dirs {
-		if !slices.ContainsFunc(paths, func(p string) bool { return strings.HasPrefix(p, d+"/") }) {
-			empty = append(empty, d)
-		}
-	}
-	if len(empty) == 0 {
-		return finding.Finding{}, true
-	}
-	w, err := hostfs.OpenWriter(to)
-	if err != nil {
-		return writeFailed(hostfs.ReasonOf(err)), false
-	}
-	defer w.Close()
-	for _, d := range empty {
-		if err := w.MkdirAll(d); err != nil {
-			return finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
-				"reason":  finding.String(writeReason(hostfs.ReasonOf(err))),
-				"written": stringList(paths),
-			}), false
-		}
-	}
-	return finding.Finding{}, true
+	return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
 }
 
 // writeExample writes files as the new example directory dest, which must
 // not exist: staged beside it and renamed into place with a rename that
 // never replaces (ADR-007 D9 item 21), so an example is never merged into
 // or replaced. A dry run makes the check and writes nothing.
-func (s *session) writeExample(dest string, files []inputs.File, dry bool) (finding.Finding, bool) {
+func (s *session) writeExample(dest string, files []inputs.File, dry bool) []finding.Finding {
 	w, rest, err := hostfs.OpenNearest(dest)
 	if err != nil {
-		return destinationRefusal(err), false
+		return []finding.Finding{destinationRefusal(err)}
 	}
 	w.Close()
 	if rest == "." {
-		return writeFailed(hostfs.Exists), false
+		return []finding.Finding{writeFailed(hostfs.Exists)}
 	}
 	if dry {
-		return finding.Finding{}, true
+		return nil
 	}
 	o, err := hostfs.StageNew(dest, hostfs.WithFaults(s.inv.Options.Faults))
 	if err != nil {
-		return destinationRefusal(err), false
+		return []finding.Finding{destinationRefusal(err)}
 	}
 	for _, f := range files {
 		if err := writeFile(o, f); err != nil {
 			o.Abort()
-			return writeFailed(hostfs.ReasonOf(err)), false
+			return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
 		}
 	}
 	if err := o.Commit(); err != nil {
-		return writeFailed(hostfs.ReasonOf(err)), false
+		return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
 	}
-	return finding.Finding{}, true
+	return nil
 }
 
 // writeFile writes f beneath a new directory o: a directory, or a file
@@ -628,11 +624,4 @@ func destinationRefusal(err error) finding.Finding {
 		return finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil)
 	}
 	return writeFailed(hostfs.ReasonOf(err))
-}
-
-// checkRefusal is the finding for c, a planned path an existing
-// destination refuses (ADR-005 D15 item 4): a write that cannot be made,
-// with nothing written.
-func checkRefusal(c hostfs.PathCheck) finding.Finding {
-	return writeFailed(hostfs.ReasonOf(c.Err))
 }

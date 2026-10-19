@@ -157,6 +157,101 @@ func TestExistingReplaceKeepsAHardLink(t *testing.T) {
 	}
 }
 
+// W5-V2.A1: a planned directory, a path that ends in "/", is checked with
+// the files, prepared beneath the staging directory, and arrives in the
+// output directory only by the commit's rename of its unit. One that
+// exists already is Present and left as it is; one with a file, a link or
+// a case variant in its way is refused with the others.
+func TestExistingPlannedDirectory(t *testing.T) {
+	parent, out := existingOut(t, map[string]string{"r.txt": "old", "kept/x.txt": "X"})
+	x := openExisting(t, out)
+	before := tree(t, parent)
+	plan := []string{"empty/", "kept/", "new/deep/", "r.txt"}
+	checks := x.Check(plan)
+	type got struct {
+		status  Status
+		unit    string
+		unitDir bool
+	}
+	want := []got{{Create, "empty", true}, {Present, "kept", false}, {Create, "new", true}, {Replace, "r.txt", false}}
+	for i, c := range checks {
+		if c.Err != nil || c.Path != plan[i] || (got{c.Status, c.unit, c.unitDir}) != want[i] {
+			t.Errorf("Check %d = %+v, want %s %+v", i, c, plan[i], want[i])
+		}
+	}
+	o, err := x.Stage(checks)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, d := range []string{"empty", "new/deep"} {
+		if err := o.MkdirAll(d); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write(t, o, "r.txt", "new")
+	var renamed []string
+	x.w.beforeRename = func(from, to string) {
+		if to == "empty" || to == "new" {
+			if _, err := os.Lstat(filepath.Join(out, to)); err == nil {
+				t.Errorf("%s is in the output directory before its rename", to)
+			}
+			if _, err := os.Lstat(filepath.Join(out, filepath.FromSlash(from))); err != nil {
+				t.Errorf("%s is not staged at its rename: %v", to, err)
+			}
+		}
+		renamed = append(renamed, to)
+	}
+	staged := slices.DeleteFunc(tree(t, parent), func(p string) bool { return slices.Contains(before, p) })
+	wantStaged := []string{"out/.metais-staging/", "out/.metais-staging/empty/", "out/.metais-staging/new/", "out/.metais-staging/new/deep/", "out/.metais-staging/r.txt"}
+	if !slices.Equal(staged, wantStaged) {
+		t.Fatalf("prepared %q, want %q", staged, wantStaged)
+	}
+	if err := o.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"empty", "new", "r.txt"}; !slices.Equal(renamed, want) {
+		t.Errorf("renamed %q, want %q", renamed, want)
+	}
+	wantTree := []string{"out/", "out/empty/", "out/kept/", "out/kept/x.txt", "out/new/", "out/new/deep/", "out/r.txt"}
+	if got := tree(t, parent); !slices.Equal(got, wantTree) {
+		t.Fatalf("after Commit: %q, want %q", got, wantTree)
+	}
+
+	t.Run("refused", func(t *testing.T) {
+		parent, out := existingOut(t, map[string]string{"file": "F", "Cased/x.txt": "X"})
+		symlink(t, out, "Cased", "link")
+		before := tree(t, parent)
+		x := openExisting(t, out)
+		plan := []string{"cased/", "file/", "link/", "ok/"}
+		reasons := []Reason{CaseVariant, NotDirectory, Link, ""}
+		for i, c := range x.Check(plan) {
+			if reasons[i] == "" {
+				if c.Err != nil {
+					t.Errorf("%s: %v", c.Path, c.Err)
+				}
+				continue
+			}
+			wantReason(t, c.Err, reasons[i], out)
+		}
+		if after := tree(t, parent); !slices.Equal(after, before) {
+			t.Fatalf("Check wrote: %q, was %q", after, before)
+		}
+	})
+
+	t.Run("not made", func(t *testing.T) {
+		parent, out := existingOut(t, map[string]string{"keep.txt": "K"})
+		before := tree(t, parent)
+		o := stage(t, openExisting(t, out), "empty/")
+		var ce *CommitError
+		if err := o.Commit(); !errors.As(err, &ce) || len(ce.Committed) > 0 {
+			t.Fatalf("Commit of a directory not made = %v, want a CommitError with nothing committed", err)
+		}
+		if after := tree(t, parent); !slices.Equal(after, before) {
+			t.Fatalf("after the refused commit: %q, was %q", after, before)
+		}
+	})
+}
+
 // W5-0.2: every refusal is reported per planned path, with the others, in
 // the order planned, and nothing is written.
 func TestExistingCheckRefusals(t *testing.T) {
