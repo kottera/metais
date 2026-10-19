@@ -329,7 +329,9 @@ func TestVersionFlag(t *testing.T) {
 }
 
 // TestDeclarationsOpenNoPackage is W2-1.9: every declaration marks whether
-// its command opens a package, and this wave's commands open none.
+// its command opens a package, and the commands declared so far open none.
+// init is an authoring command (ADR-008 D13) that opens no package: it
+// writes a new source directory.
 func TestDeclarationsOpenNoPackage(t *testing.T) {
 	for _, c := range table {
 		if c.Role < finding.RoleConsumer || c.Role > finding.RoleNoPackage {
@@ -342,9 +344,15 @@ func TestDeclarationsOpenNoPackage(t *testing.T) {
 	if got := OpeningCommands(); len(got) != 0 {
 		t.Errorf("OpeningCommands() = %q, want none this wave", got)
 	}
-	// The marking is read from the role, both ways.
+	// The marking is read from the role, both ways, and from WritesSource.
 	if !(&Command{Role: finding.RoleConsumer}).OpensPackage() || !(&Command{Role: finding.RoleAuthoring}).OpensPackage() {
 		t.Error("a consumer or authoring command is not marked as opening a package")
+	}
+	if (&Command{Role: finding.RoleAuthoring, WritesSource: true}).OpensPackage() {
+		t.Error("an authoring command that writes a new source directory is marked as opening a package")
+	}
+	if c := lookup(table, "init"); c == nil || c.Role != finding.RoleAuthoring || !c.WritesSource {
+		t.Error("init is not declared as an authoring command that writes a source directory")
 	}
 	r := runTool(t, "help", "--json")
 	var res helpResult
@@ -352,8 +360,12 @@ func TestDeclarationsOpenNoPackage(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, c := range res.Commands {
-		if c.OpensPackage || c.Role != "none" {
-			t.Errorf("help --json marks %s as opening a package", c.Name)
+		want := "none"
+		if c.Name == "init" {
+			want = "authoring"
+		}
+		if c.OpensPackage || c.Role != want {
+			t.Errorf("help --json marks %s as opening a package, or with the role %s", c.Name, c.Role)
 		}
 	}
 }

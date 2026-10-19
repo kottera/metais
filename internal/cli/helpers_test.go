@@ -267,15 +267,20 @@ func runWith(t testing.TB, d hostenv.Display, argv ...string) ran {
 }
 
 // parsesAsLine reports whether line, a metais command line from help or
-// a next step, reads cleanly against the declarations. Placeholders in
-// angle brackets would be substituted by a harness; none of this wave's
-// lines has one.
+// a next step, reads cleanly against the declarations. Each placeholder in
+// angle brackets that ADR-008 D14 item 2 names is substituted as a harness
+// would substitute it.
 func parsesAsLine(line string) error {
 	fields := strings.Fields(line)
 	if len(fields) == 0 || fields[0] != "metais" {
 		return fmt.Errorf("%q is not a metais command line", line)
 	}
-	if strings.ContainsAny(line, "<>'\"") {
+	for i, f := range fields {
+		if sub, ok := placeholders[f]; ok {
+			fields[i] = sub
+		}
+	}
+	if strings.ContainsAny(strings.Join(fields, " "), "<>'\"") {
 		return fmt.Errorf("%q holds a placeholder or quoting this test cannot substitute", line)
 	}
 	l := readLine(table, fields[1:])
@@ -296,6 +301,13 @@ func parsesAsLine(line string) error {
 		}
 	}
 	return nil
+}
+
+// placeholders are the placeholders a next step may hold, each with a
+// value a harness might substitute for it.
+var placeholders = map[string]string{
+	"<dir>":  "some-dir",
+	"<name>": "some-name",
 }
 
 // allFlags is every flag declared anywhere, the lead's included.

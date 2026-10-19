@@ -150,6 +150,9 @@ it, and the statements it reports.
 | `output.const` | error | content | output | `expected` | 1.0 | — |
 | `output.contains` | error | content | output | — | 1.0 | — |
 | `output.dependent_required` | error | content | output | `property`, `because` | 1.0 | — |
+| `output.destination.not_directory` | error | destination | invocation | — | 1.0 | — |
+| `output.destination.not_empty` | error | destination | invocation | `entries`, `more` | 1.0 | — |
+| `output.destination.write_failed` | error | destination | invocation | `reason`, `written` | 1.0 | — |
 | `output.enum` | error | content | output | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | — |
 | `output.exclusive_maximum` | error | content | output | `limit`; optional: `value` | 1.0 | — |
 | `output.exclusive_minimum` | error | content | output | `limit`; optional: `value` | 1.0 | — |
@@ -237,6 +240,8 @@ it, and the statements it reports.
 | `template.xref.unused_template` | warning | content | template | — | 1.0 | — |
 | `usage.bad_value` | error | usage | invocation | `argument`, `flag`, `reason`; optional: `allowed` | 1.0 | — |
 | `usage.missing_command` | error | usage | invocation | — | 1.0 | — |
+| `usage.name_invalid` | error | usage | invocation | `argument`, `source`; optional: `suggestion` | 1.0 | — |
+| `usage.name_required` | error | usage | invocation | — | 1.0 | — |
 | `usage.repeated_flag` | error | usage | invocation | `argument`, `flag` | 1.0 | — |
 | `usage.unexpected_operand` | error | usage | invocation | `argument`, `command` | 1.0 | — |
 | `usage.unknown_command` | error | usage | invocation | `argument` | 1.0 | — |

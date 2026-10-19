@@ -28,6 +28,9 @@ type Command struct {
 	// decides its exit status; RoleNoPackage marks a command that opens
 	// no package.
 	Role finding.Role
+	// WritesSource marks an authoring command that writes a new source
+	// directory and opens no package: init (ADR-008 D9).
+	WritesSource bool
 	// Operands and Flags are the command's own; every command also takes
 	// the global flags.
 	Operands []args.Operand
@@ -42,8 +45,10 @@ type Command struct {
 	run func(s *session, p args.Parsed) outcome
 }
 
-// OpensPackage reports whether the command opens a package.
-func (c *Command) OpensPackage() bool { return c.Role != finding.RoleNoPackage }
+// OpensPackage reports whether the command opens a package: every
+// consumer and authoring command but one that writes a new source
+// directory.
+func (c *Command) OpensPackage() bool { return c.Role != finding.RoleNoPackage && !c.WritesSource }
 
 // spec is everything the command's line may hold after its name.
 func (c *Command) spec() args.Spec {
@@ -157,6 +162,45 @@ var exitCodes = []exitCode{
 // group's commands (ADR-008 D1 item 1).
 func declarations() []*Command {
 	return []*Command{
+		{
+			Name: "init", Group: "Authoring", Synopsis: "init [<dir>] [--name <name>] [--dry-run] [--json]",
+			Description: "Write a new package's source directory, with an input, a template and an example.",
+			Detail: "Writes eight files into <dir>: metais.yaml, one input with its schema and meaning " +
+				"document, one template, one example with its inputs and expected output, and a " +
+				".gitattributes that keeps git from converting line endings. The scaffold is a " +
+				"small package to edit rather than an empty one.\n\n" +
+				"The package's name is --name, or else the last element of <dir> as written. When " +
+				"<dir> is omitted or ends in . or .., --name is required: metais never looks up the " +
+				"working directory's name. The name must satisfy the package name rule.\n\n" +
+				"<dir> is created, with its missing parents, when it does not exist. An existing " +
+				"<dir> must be empty, apart from names beginning with . (such as .git) other than " +
+				".compiled and .gitattributes, and files ending .metais; init never overwrites, and " +
+				"refuses anything else, listing up to ten of the entries it found. A failed write " +
+				"stops init, which lists the files it wrote and removes none of them.",
+			Role:         finding.RoleAuthoring,
+			WritesSource: true,
+			Operands: []args.Operand{{Name: "<dir>",
+				Description: "The directory to write into, created when absent; the current directory when omitted."}},
+			Flags: []args.Flag{
+				{Name: "name", Value: "<name>", Description: "The package's name. It is required when <dir> is omitted or its last element is . or ..; otherwise it defaults to that element."},
+				{Name: "dry-run", Description: "Report the files init would write, and write nothing."},
+			},
+			Format: "metais.init/1",
+			Prints: "The files written, relative to <dir>, in the order written, then what to edit.",
+			Refusals: []Refusal{
+				{finding.CodeUsageNameRequired, "<dir> is omitted or ends in . or .., and --name is not given.", nextInitName},
+				{finding.CodeUsageNameInvalid, "The name, from --name or from <dir>, does not satisfy the package name rule.", nextInitValidName},
+				{finding.CodeDestinationNotEmpty, "<dir> holds an entry other than the quiet ones.", nextInitEmpty},
+				{finding.CodeDestinationNotDirectory, "<dir>, or a directory above it, exists and is not a directory.", nextInitEmpty},
+				{finding.CodeDestinationWriteFailed, "A write failed; the files already written are listed and left in place.", nextInitAgain},
+			},
+			Examples: []Example{
+				{"metais init acme-report", "Writes the scaffold of a package called acme-report into the directory acme-report."},
+				{"metais init --name acme-report", "Writes it into the current directory, which must be empty."},
+				{"metais init acme-report --dry-run --json", "Lists the files it would write, as one metais.init/1 document."},
+			},
+			run: runInit,
+		},
 		{
 			Name: "version", Group: "The tool", Synopsis: "version [--json]",
 			Description: "Print the tool's version and the specification versions it implements.",

@@ -41,9 +41,15 @@ const (
 	CodeLimitPackage    Code = "limit.package"
 	CodeLimitExceeded   Code = "limit.exceeded"
 
+	CodeDestinationNotDirectory Code = "output.destination.not_directory"
+	CodeDestinationNotEmpty     Code = "output.destination.not_empty"
+	CodeDestinationWriteFailed  Code = "output.destination.write_failed"
+
 	CodeInternalError          Code = "internal.error"
 	CodeUsageBadValue          Code = "usage.bad_value"
 	CodeUsageMissingCommand    Code = "usage.missing_command"
+	CodeUsageNameInvalid       Code = "usage.name_invalid"
+	CodeUsageNameRequired      Code = "usage.name_required"
 	CodeUsageRepeatedFlag      Code = "usage.repeated_flag"
 	CodeUsageUnexpectedOperand Code = "usage.unexpected_operand"
 	CodeUsageUnknownCommand    Code = "usage.unknown_command"
@@ -790,6 +796,47 @@ var registry = withSchemaEntries([]Entry{
 		Message:    "The input {input} begins with a frontmatter line of --- and has no later line of --- to close it.",
 		Hint:       "End the frontmatter with a line that is exactly ---; a file meant to begin with a thematic break begins with *** instead. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:       CodeDestinationNotDirectory,
+		Severity:   SeverityError,
+		Class:      ClassDestination,
+		Subject:    SubjectInvocation,
+		Message:    "The destination, or a directory above it, exists and is not a directory.",
+		Hint:       "Name a directory, or a path that does not exist yet beneath directories only. Nothing was written.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeDestinationNotEmpty,
+		Severity: SeverityError,
+		Class:    ClassDestination,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "entries", Type: TypeArray, Items: TypeString, Meaning: "Up to ten of the entries that make the directory not empty, by name, in byte order.", Always: true},
+			{Name: "more", Type: TypeBoolean, Meaning: "Whether the directory holds such entries beyond those listed.", Always: true},
+		},
+		Message:    "The destination directory is not empty, and nothing in it is ever overwritten.",
+		Hint:       "Choose an empty directory, or one that does not exist yet. Nothing was written.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeDestinationWriteFailed,
+		Severity: SeverityError,
+		Class:    ClassDestination,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "reason", Type: TypeString, Meaning: "Why the write failed: not_found, permission_denied, is_directory, not_regular_file or io_error, as ADR-006 D9 item 8 maps an operating-system error; or exists, when something appeared at a name being written, which is never overwritten.", Always: true},
+			{Name: "written", Type: TypeArray, Items: TypeString, Meaning: "The files written before the failure, relative to the destination, in the order written. None of them was removed.", Always: true},
+		},
+		Message:    "Writing to the destination stopped at a failed write ({reason}); the files already written were left in place.",
+		Hint:       "Fix the cause, and run the command again into an empty directory; remove what was written first if you do not want it.",
+		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},
 	},
@@ -1613,6 +1660,33 @@ var registry = withSchemaEntries([]Entry{
 		Subject:    SubjectInvocation,
 		Message:    "No command was given; metais runs one command, named after any global flags.",
 		Hint:       "Run `metais help` for the commands, and run one as metais <command>.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageNameInvalid,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position, among the arguments after metais, of the argument the name was taken from: --name, or the directory operand.", Always: true},
+			{Name: "source", Type: TypeString, Meaning: "Where the name was taken from: name, the --name flag; or directory, the last element of the directory operand.", Always: true},
+			{Name: "suggestion", Type: TypeString, Meaning: "A name the rule accepts, made from the refused one by lower-casing it and writing each run of other characters as one hyphen; present when the name came from --name and one exists. A name from the directory is part of a path the caller gave, which is never printed."},
+		},
+		Message:    "The package name taken from argument {argument} does not satisfy the name rule.",
+		Hint:       "Give a name with --name: lower-case ASCII letters and digits in runs joined by single hyphens, in segments joined by dots, at most 128 characters.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:       CodeUsageNameRequired,
+		Severity:   SeverityError,
+		Class:      ClassUsage,
+		Subject:    SubjectInvocation,
+		Message:    "metais init needs --name when the directory is omitted or its last element is . or ..; the name is never taken from the working directory.",
+		Hint:       "Give the package's name with --name, such as `metais init --name acme-report`.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},

@@ -177,11 +177,11 @@
           "type": "string"
         },
         "opens_package": {
-          "description": "Whether the command opens a package.",
+          "description": "Whether the command opens a package. A command whose role is none opens none, and so does init, an authoring command that writes a new source directory.",
           "type": "boolean"
         },
         "role": {
-          "description": "What the command is to a package (ADR-008 D13): consumer, authoring, or none for a command that opens none.",
+          "description": "What the command is to a package (ADR-008 D13): consumer, authoring, or none for a command that is neither.",
           "enum": [
             "consumer",
             "authoring",
@@ -247,25 +247,15 @@
       },
       "if": {
         "properties": {
-          "opens_package": {
-            "const": false
-          }
-        }
-      },
-      "then": {
-        "properties": {
           "role": {
             "const": "none"
           }
         }
       },
-      "else": {
+      "then": {
         "properties": {
-          "role": {
-            "enum": [
-              "consumer",
-              "authoring"
-            ]
+          "opens_package": {
+            "const": false
           }
         }
       }

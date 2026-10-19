@@ -445,3 +445,9 @@ func plural(n int, one, many string) string {
 	}
 	return many
 }
+
+// AppendText appends s as human output writes text from a package, an
+// input or a host's directory (ADR-006 D9 item 9): every C0, DEL, C1 and
+// bidirectional control as a \u escape, and every invalid UTF-8 byte as
+// U+FFFD.
+func AppendText(b []byte, s string) []byte { return appendText(b, s) }
