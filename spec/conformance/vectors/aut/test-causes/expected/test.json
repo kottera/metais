@@ -1,0 +1,98 @@
+[
+  {
+    "code": "example.output_differs",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "bom"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/bom/expected/report.md",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "path": "report.md",
+      "binary": false,
+      "cause": "bom"
+    }
+  },
+  {
+    "code": "example.output_differs",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "crlf"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/crlf/expected/report.md",
+      "line": 1,
+      "column": 2
+    },
+    "params": {
+      "path": "report.md",
+      "binary": false,
+      "cause": "line_endings",
+      "crlf": "expected"
+    }
+  },
+  {
+    "code": "example.output_differs",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "final"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/final/expected/report.md",
+      "line": 3,
+      "column": 1
+    },
+    "params": {
+      "path": "report.md",
+      "binary": false,
+      "cause": "final_newline"
+    }
+  },
+  {
+    "code": "example.output_differs",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "none"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/none/expected/report.md",
+      "line": 2,
+      "column": 1
+    },
+    "params": {
+      "path": "report.md",
+      "binary": false,
+      "cause": "none"
+    }
+  },
+  {
+    "code": "example.output_differs",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "trailing"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/trailing/expected/report.md",
+      "line": 1,
+      "column": 2
+    },
+    "params": {
+      "path": "report.md",
+      "binary": false,
+      "cause": "trailing_whitespace"
+    }
+  }
+]

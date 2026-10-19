@@ -1,0 +1,106 @@
+[
+  {
+    "code": "example.metadata",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "list"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/list/example.yaml",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "not_an_object"
+    }
+  },
+  {
+    "code": "example.metadata",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "member"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/member/example.yaml",
+      "line": 2,
+      "column": 9
+    },
+    "params": {
+      "reason": "member",
+      "member": "author"
+    }
+  },
+  {
+    "code": "example.metadata",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "now"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/now/example.yaml",
+      "line": 1,
+      "column": 6
+    },
+    "params": {
+      "reason": "now",
+      "member": "now"
+    }
+  },
+  {
+    "code": "example.metadata",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "syntax"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/syntax/example.yaml"
+    },
+    "params": {
+      "reason": "syntax"
+    }
+  },
+  {
+    "code": "example.metadata",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "title"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/title/example.yaml",
+      "line": 1,
+      "column": 8
+    },
+    "params": {
+      "reason": "title",
+      "member": "title"
+    }
+  },
+  {
+    "code": "example.metadata",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "type"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/type/example.yaml",
+      "line": 2,
+      "column": 14
+    },
+    "params": {
+      "reason": "type",
+      "member": "description"
+    }
+  }
+]

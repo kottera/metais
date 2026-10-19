@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/test-causes",
+  "title": "A difference names the first likely cause that holds: line endings with the side holding CR LF, one final newline, a byte order mark, trailing whitespace, or none",
+  "statements": [
+    "MTS-AUT-042"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "test",
+      "steps": [
+        {
+          "op": "test",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/test.json"
+          }
+        }
+      ]
+    }
+  ]
+}

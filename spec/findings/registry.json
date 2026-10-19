@@ -258,7 +258,7 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-AUT-037"
+        "MTS-AUT-036"
       ]
     },
     {
@@ -339,9 +339,9 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-AUT-038",
-        "MTS-AUT-039",
-        "MTS-AUT-040"
+        "MTS-AUT-040",
+        "MTS-AUT-041",
+        "MTS-AUT-042"
       ]
     },
     {
@@ -362,7 +362,7 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-AUT-038"
+        "MTS-AUT-040"
       ]
     },
     {
@@ -383,7 +383,7 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-AUT-038"
+        "MTS-AUT-040"
       ]
     },
     {

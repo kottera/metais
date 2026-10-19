@@ -30,6 +30,10 @@ it, and the statements it reports.
 | `csv.header_missing` | error | content | input | — | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
 | `csv.unterminated_quote` | error | content | input | — | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
 | `example.layout` | error | content | example | `reason` | 1.0 | [MTS-AUT-020](13-authoring.md#mts-aut-020) |
+| `example.metadata` | error | content | example | `reason`; optional: `member` | 1.0 | [MTS-AUT-036](13-authoring.md#mts-aut-036) |
+| `example.output_differs` | error | content | example | `path`, `binary`, `cause`; optional: `crlf`, `diff`, `diff_truncated`, `offset`, `expected_size`, `rendered_size`, `expected_digest`, `rendered_digest` | 1.0 | [MTS-AUT-040](13-authoring.md#mts-aut-040), [MTS-AUT-041](13-authoring.md#mts-aut-041), [MTS-AUT-042](13-authoring.md#mts-aut-042) |
+| `example.output_missing` | error | content | example | `path` | 1.0 | [MTS-AUT-040](13-authoring.md#mts-aut-040) |
+| `example.output_unexpected` | error | content | example | `path` | 1.0 | [MTS-AUT-040](13-authoring.md#mts-aut-040) |
 | `input.additional_item` | error | content | input | `index`, `prefix_count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.additional_property` | error | content | input | `property`; optional: `suggestion` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.any_of` | error | content | input | `branch_count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-FND-006](12-findings.md#mts-fnd-006) |
@@ -357,6 +361,7 @@ it, and the statements it reports.
 | `usage.repeated_flag` | error | usage | invocation | `argument`, `flag` | 1.0 | — |
 | `usage.unexpected_operand` | error | usage | invocation | `argument`, `command` | 1.0 | — |
 | `usage.unknown_command` | error | usage | invocation | `argument` | 1.0 | — |
+| `usage.unknown_example` | error | usage | invocation | `argument`, `examples` | 1.0 | — |
 | `usage.unknown_flag` | error | usage | invocation | `argument`, `reason`; optional: `flag`, `command` | 1.0 | — |
 | `usage.unknown_input` | error | usage | invocation | `argument`, `inputs` | 1.0 | — |
 | `usage.unknown_output` | error | usage | invocation | `argument`, `paths`, `path_count` | 1.0 | — |

@@ -29,6 +29,7 @@ import (
 	"github.com/kottera/metais/internal/liquid/value"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
+	"github.com/kottera/metais/internal/schema"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/yamlx"
 )
@@ -159,6 +160,10 @@ func testRefusals() []Refusal {
 		case strings.HasPrefix(string(e.Code), "limit.exceeded."), strings.HasPrefix(string(e.Code), "output.path."),
 			strings.HasPrefix(string(e.Code), "output.expression."), strings.HasPrefix(string(e.Code), "output.container."):
 			cause = "An example's output is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ")."
+		case family == "output" && e.Subject == finding.SubjectOutput:
+			// An output its kind's reader or its schema refuses, and a
+			// validate its rendered path's kind cannot take (ADR-005 D11).
+			cause = "An example's output fails its validation (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ")."
 		default:
 			continue
 		}
@@ -281,14 +286,18 @@ func runTest(s *session, p args.Parsed) outcome {
 		slices.SortFunc(selected, func(a, b *exampleRun) int { return strings.Compare(a.name, b.name) })
 	}
 
-	// The package's templates are parsed once, and an error there stops
-	// test before any example runs (ADR-007 D5 item 2).
+	// The package's templates are parsed once, and its output validation
+	// schemas compiled once; an error there stops test before any example
+	// runs (ADR-007 D5 item 2, ADR-005 D11 item 3).
 	ts := template.NewTemplates(pkg.Tree, lim, pkg.Manifest.Inputs)
-	if pfs := parseTemplates(pkg.Manifest.Outputs, ts); len(pfs) > 0 {
-		return outcome{findings: pfs, result: &testResult{Examples: []testExample{}}, report: true, next: []Next{nextTestAgain}}
+	pfs := parseTemplates(pkg.Manifest.Outputs, ts)
+	schemas, sfs := outputSchemas(pkg, lim)
+	if pfs = append(pfs, sfs...); s.fails(pfs) {
+		return outcome{findings: append(fs, pfs...), result: &testResult{Examples: []testExample{}}, report: true, next: []Next{nextTestAgain}}
 	}
+	fs = append(fs, pfs...)
 	for _, e := range selected {
-		s.runExample(pkg, ts, lim, e)
+		s.runExample(pkg, ts, schemas, lim, e)
 	}
 	result := &testResult{Examples: []testExample{}}
 	var upd *testUpdate
@@ -396,7 +405,7 @@ func parseTemplates(decls []manifest.Output, ts *template.Templates) []finding.F
 // runExample runs e (ADR-007 D5 item 2): its example.yaml, its inputs,
 // its render into memory under the fixed identity (ADR-004 D15), and its
 // comparison with expected/ (items 3 and 4). Every finding is e's.
-func (s *session) runExample(pkg *loader.Package, ts *template.Templates, lim limits.Set, e *exampleRun) {
+func (s *session) runExample(pkg *loader.Package, ts *template.Templates, schemas map[string]*schema.Compiler, lim limits.Set, e *exampleRun) {
 	e.result = testExample{Name: e.name, Status: "fail", Differences: []testDifference{}}
 	now, fs := exampleNow(pkg, e, lim)
 	e.fs = append(e.fs, fs...)
@@ -426,23 +435,21 @@ func (s *session) runExample(pkg *loader.Package, ts *template.Templates, lim li
 	}
 	r := template.NewRenderer(ts, b, lim, s.inv.Options.Faults)
 	plan, pfs := planOutputs(pkg, lim, s, r)
-	pfs = append(pfs, renderPlan(pkg, plan, ts, r, lim)...)
+	pfs = append(pfs, renderPlan(pkg, plan, ts, r, lim, schemas)...)
 	e.fs = append(e.fs, pfs...)
 	if s.fails(pfs) {
 		return
 	}
 	e.rendered, e.exec = map[string][]byte{}, map[string]bool{}
 	for _, pf := range plan {
-		if pf.isContainer() {
-			var buf bytes.Buffer
-			if _, err := writeContainer(&buf, pf); err != nil {
-				panic("cli: a measured container does not write: " + err.Error())
-			}
-			e.rendered[pf.path] = buf.Bytes()
-		} else {
-			e.rendered[pf.path] = pf.bytes
+		// Each file's bytes as render writes them: a template's, an
+		// asset's from the package, or a container's zip.
+		r, done := content(pf)
+		b, err := io.ReadAll(r)
+		if derr := done(err); err != nil || derr != nil {
+			panic("cli: a rendered file does not read: " + errors.Join(err, derr).Error())
 		}
-		e.exec[pf.path] = pf.decl.Executable
+		e.rendered[pf.path], e.exec[pf.path] = b, pf.decl.Executable
 	}
 	e.ok = true
 	if !e.hasExpected {

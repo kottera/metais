@@ -1,0 +1,43 @@
+[
+  {
+    "code": "example.output_differs",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "binary"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/binary/expected/report.md"
+    },
+    "params": {
+      "path": "report.md",
+      "binary": true,
+      "cause": "none",
+      "offset": 8,
+      "expected_size": 13,
+      "rendered_size": 27,
+      "expected_digest": "sha256:e46f113881c520f2fae38d611b71cfa472e2568098990fc063e72a4a729a761e",
+      "rendered_digest": "sha256:5f1d80b04a4ffade46558a97c7269a81188b711c0435bfe7b037abf3f04bccf1"
+    }
+  },
+  {
+    "code": "example.output_differs",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "text"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/text/expected/report.md",
+      "line": 2,
+      "column": 11
+    },
+    "params": {
+      "path": "report.md",
+      "binary": false,
+      "cause": "none"
+    }
+  }
+]

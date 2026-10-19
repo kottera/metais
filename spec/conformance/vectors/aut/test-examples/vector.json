@@ -1,0 +1,67 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/test-examples",
+  "title": "Every example runs, in byte order of name, whatever another found; one named runs alone; an example without expected/ is rendered and not compared",
+  "statements": [
+    "MTS-AUT-035",
+    "MTS-AUT-040"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "all",
+      "steps": [
+        {
+          "op": "test",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/all.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "named",
+      "steps": [
+        {
+          "op": "test",
+          "args": {
+            "source": "package",
+            "examples": [
+              "c",
+              "b"
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "one-failing",
+      "steps": [
+        {
+          "op": "test",
+          "args": {
+            "source": "package",
+            "examples": [
+              "d"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/one-failing.json"
+          }
+        }
+      ]
+    }
+  ]
+}

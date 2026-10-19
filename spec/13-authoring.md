@@ -375,3 +375,101 @@ reports it; when any of them fails, nothing is rendered or written.
 Since the generated data takes the data directory's place, a render with
 `sample` takes no data directory; the reference tool refuses `--data`
 given with `--sample` as a usage error.
+
+## 13.7 Testing a package against its examples
+
+An example is a set of inputs and the outputs a render of them should
+produce, kept inside the package. Testing renders every example and
+compares what it writes with what the example expects, byte for byte, so an
+author hears of any change to an output before a supplier does. The
+expected outputs are part of the package whose digest a provenance line
+records, and the tool that renders them changes version; testing therefore
+renders under one fixed identity, so that neither a change to the package
+nor a new tool changes what an example expects.
+
+An example is a directory `examples/<name>/` whose name follows the rule
+for an input's name ([chapter 3](03-manifest.md)). It holds `inputs/`,
+laid out as a data directory ([chapter 6](06-supplying-inputs.md)) and
+absent for an example that supplies nothing; `expected/`, optional, laid
+out as the output directory a render writes; and `example.yaml`, optional
+([MTS-AUT-020](#mts-aut-020) refuses anything else). A packed package
+carries its examples, and they are read in place.
+
+<a id="mts-aut-034"></a>**MTS-AUT-034** An authoring tool's test MUST take a
+source directory or a packed package and MUST open it as every operation
+that opens one does ([chapter 2](02-container.md)), and MUST parse every
+template an output reaches. A package that is refused, or a template that
+does not parse, MUST be reported with its findings, and then no example
+MUST run.
+
+<a id="mts-aut-035"></a>**MTS-AUT-035** Test MUST run every example, or
+each one named, in byte order of name, and MUST run each one whatever
+another found. It MUST fail when, and only when, a finding has error
+severity: an example fails exactly when one of its findings is an error.
+
+<a id="mts-aut-036"></a>**MTS-AUT-036** `example.yaml` MUST be read as
+`metais.yaml` is read ([chapter 3](03-manifest.md)): as JSON when its first
+byte other than U+0020, U+0009, U+000A and U+000D is `{`, and otherwise as
+YAML. It MUST be a mapping whose members are `title`, a string holding no
+line break; `description`, a string; and `now`, an RFC 3339 date-time with
+an offset; each optional. Test MUST report anything else as
+`example.metadata`, an error located in `example.yaml`, and MUST NOT
+supply or render that example.
+
+<a id="mts-aut-037"></a>**MTS-AUT-037** Test MUST supply an example's
+inputs by reading its `inputs/` as a data directory, applying defaults and
+validating them as [chapter 6](06-supplying-inputs.md) does, and MUST
+locate each finding about them with the origin `example` at the package
+entry it is about, such as `examples/basic/inputs/vendor.yaml`. An example
+whose inputs are refused MUST NOT be rendered.
+
+<a id="mts-aut-038"></a>**MTS-AUT-038** Test MUST render an example whose
+inputs are valid as a render does ([chapter 11](11-rendering.md)), into
+memory, with every finding a render reports, and with the render time
+`now` that `example.yaml` gives, or with none; no other value of the host
+reaches its templates.
+
+<a id="mts-aut-039"></a>**MTS-AUT-039** Under test, `package.digest`
+([chapter 7](07-template-environment.md)) and the `provenance` tag's
+`package_digest` ([chapter 8](08-filters-and-tags.md)) MUST be `sha256:`
+followed by 64 `0`, and the `provenance` tag's `tool` MUST be `test`. Only
+test renders under this identity: a render records the package digest and
+the processor.
+
+<a id="mts-aut-040"></a>**MTS-AUT-040** When an example rendered and holds
+`expected/`, test MUST compare the files it rendered with the files of
+`expected/` by path, ignoring directories: a path in `expected/` the render
+did not write MUST be reported as `example.output_missing`, located at the
+expected file; a path the render wrote that `expected/` does not hold, as
+`example.output_unexpected`, located with the origin `output` at the path;
+and a path in both whose bytes differ, as `example.output_differs`, located
+at the expected file. Each finding's `path` is the path within the output
+directory. An example without `expected/` is rendered and not compared.
+
+A container output ([chapter 9](09-outputs.md)) is compared as any other
+file in this draft; its comparison by entries is not yet specified.
+
+<a id="mts-aut-041"></a>**MTS-AUT-041** Two files are text when both are
+valid UTF-8 and neither holds a NUL byte, and are otherwise binary, as
+`example.output_differs`'s `binary` says. For text, the finding MUST be
+located at the line and column of the expected file
+([chapter 12](12-findings.md)) where the first code point that differs
+starts, and its `diff` MUST be a unified diff from the expected file to the
+rendered one; the hunks it shows are the implementation's own. For binary
+files, `offset` MUST be the offset of the first byte that differs, or the
+shorter file's size when it is a prefix of the other, with each file's size
+and its digest, `sha256:` and the lower-case hexadecimal SHA-256 of its
+bytes.
+
+<a id="mts-aut-042"></a>**MTS-AUT-042** `example.output_differs`'s `cause`
+MUST be the first of these that holds of the expected and the rendered
+bytes: `line_endings` when they are equal once every CR LF is replaced by LF,
+with `crlf` naming the side that holds CR LF, `expected`, `rendered` or
+`both`; `final_newline` when one is the other followed by one LF; `bom` when
+they are equal once a leading UTF-8 byte order mark is removed from each;
+`trailing_whitespace` when they are equal once the U+0020 and U+0009 ending
+each line are removed from each; and otherwise `none`.
+
+A reference tool's command line adds what the operation cannot observe,
+such as writing an example's render into its `expected/`; its help
+documents it.

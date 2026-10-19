@@ -1,0 +1,33 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/test-packed",
+  "title": "Test on a packed package reads its examples in place and gives the result it gives the source directory it was packed from (aut/test-compare)",
+  "statements": [
+    "MTS-AUT-034",
+    "MTS-AUT-040"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "byte-level"
+  ],
+  "requires": [],
+  "notes": "package.metais is aut/test-compare's source directory packed by internal/vectorgen.",
+  "cases": [
+    {
+      "name": "test",
+      "steps": [
+        {
+          "op": "test",
+          "args": {
+            "source": "package.metais"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/test.json"
+          }
+        }
+      ]
+    }
+  ]
+}

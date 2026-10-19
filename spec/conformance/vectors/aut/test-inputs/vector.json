@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/test-inputs",
+  "title": "An example's inputs/ is read as a data directory and validated, findings located with the origin example at the package entry; an example whose inputs are refused, or missing, is not rendered",
+  "statements": [
+    "MTS-AUT-037"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "test",
+      "steps": [
+        {
+          "op": "test",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/test.json"
+          }
+        }
+      ]
+    }
+  ]
+}

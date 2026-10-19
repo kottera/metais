@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/test-refused-template",
+  "title": "A template that does not parse is reported, and no example runs: neither the example whose inputs are invalid nor the one that would pass",
+  "statements": [
+    "MTS-AUT-034"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "test",
+      "steps": [
+        {
+          "op": "test",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/test.json"
+          }
+        }
+      ]
+    }
+  ]
+}

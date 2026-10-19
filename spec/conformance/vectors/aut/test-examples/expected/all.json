@@ -1,0 +1,44 @@
+[
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "location": {
+      "origin": "example",
+      "file": "examples/d/inputs/report.json",
+      "line": 1,
+      "column": 11,
+      "pointer": "/title"
+    },
+    "schema": {
+      "entry": "inputs/report.schema.json",
+      "pointer": "/properties/title/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "string"
+      ],
+      "actual": "number"
+    }
+  },
+  {
+    "code": "example.output_missing",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "a"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/a/expected/notes.md"
+    },
+    "params": {
+      "path": "notes.md"
+    }
+  }
+]

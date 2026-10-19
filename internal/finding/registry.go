@@ -274,7 +274,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "example.yaml is a mapping of title (one line), description (Markdown) and now (an RFC 3339 date-time with an offset), each optional, and nothing else; the example was not rendered.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-037"},
+		Statements: []string{"MTS-AUT-036"},
 	},
 	{
 		Code:     "example.output_differs",
@@ -298,7 +298,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Read the difference: line_endings is CR LF on one side, from an output's newline: crlf or from git's line-ending conversion; final_newline is one final line feed; bom a leading byte order mark; trailing_whitespace spaces or tabs at a line's end, often Liquid's whitespace control ({{%- and -%}}). When the render is right, `metais test <package> --update` records it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-038", "MTS-AUT-039", "MTS-AUT-040"},
+		Statements: []string{"MTS-AUT-040", "MTS-AUT-041", "MTS-AUT-042"},
 	},
 	{
 		Code:     "example.output_missing",
@@ -312,7 +312,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Make the render write it, or remove it from expected/; when the render is right, `metais test <package> --update` makes expected/ what it writes.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-038"},
+		Statements: []string{"MTS-AUT-040"},
 	},
 	{
 		Code:     "example.output_unexpected",
@@ -326,7 +326,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Add the file to expected/ if the render is right, which `metais test <package> --update` does, or stop the render writing it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-038"},
+		Statements: []string{"MTS-AUT-040"},
 	},
 	{
 		Code:     "input.constraints_failed",

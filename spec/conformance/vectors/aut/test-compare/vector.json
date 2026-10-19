@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/test-compare",
+  "title": "Files are compared by path, directories ignored: a file expected and not written is example.output_missing, one written and not expected example.output_unexpected, and one whose bytes differ example.output_differs",
+  "statements": [
+    "MTS-AUT-040"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "test",
+      "steps": [
+        {
+          "op": "test",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/test.json"
+          }
+        }
+      ]
+    }
+  ]
+}
