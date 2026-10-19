@@ -1,0 +1,36 @@
+[
+  {
+    "code": "input.min_items",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 1,
+      "pointer": "/either"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/either/anyOf/1/minItems",
+      "keyword": "minItems"
+    },
+    "field": {
+      "title": "A list"
+    },
+    "params": {
+      "limit": 2,
+      "count": 0
+    },
+    "via": [
+      {
+        "keyword": "anyOf",
+        "schema_pointer": "/properties/either/anyOf",
+        "branch": 1,
+        "title": "A list"
+      }
+    ]
+  }
+]

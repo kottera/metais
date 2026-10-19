@@ -1,0 +1,20 @@
+[
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "deep",
+      "title": "Deep"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "deep.json"
+    },
+    "params": {
+      "limit": "inputs-total",
+      "bound": 40,
+      "lowered": true
+    }
+  }
+]

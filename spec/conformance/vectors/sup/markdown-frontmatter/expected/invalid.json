@@ -1,0 +1,68 @@
+[
+  {
+    "code": "markdown.frontmatter_unclosed",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "a",
+      "title": "A"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "a.md",
+      "line": 1,
+      "column": 1
+    },
+    "params": {}
+  },
+  {
+    "code": "markdown.frontmatter_not_mapping",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "b",
+      "title": "B"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "b.md",
+      "line": 2,
+      "column": 1
+    },
+    "params": {
+      "actual": "array"
+    }
+  },
+  {
+    "code": "markdown.frontmatter_body_field",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "c",
+      "title": "C"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "c.md",
+      "line": 2,
+      "column": 1,
+      "pointer": "/body"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "d",
+      "title": "D"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "d.md",
+      "line": 3
+    },
+    "params": {}
+  }
+]

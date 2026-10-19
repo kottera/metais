@@ -1,0 +1,62 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/data-directory",
+  "title": "A data directory's entries are named for the inputs they supply, and every other entry but a dot entry is refused",
+  "statements": [
+    "MTS-SUP-018"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/valid"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/invalid"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/invalid.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "file-and-directory",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/file-and-directory"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/file-and-directory.json"
+          }
+        }
+      ]
+    }
+  ]
+}

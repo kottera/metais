@@ -1,0 +1,53 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [
+      "n"
+    ],
+    "properties": {
+      "n": {
+        "type": "integer"
+      }
+    }
+  },
+  "prefixItems": [
+    {
+      "const": {
+        "n": 1
+      }
+    },
+    {
+      "const": {
+        "n": 2
+      }
+    },
+    {
+      "const": {
+        "n": 3
+      }
+    },
+    {
+      "const": {
+        "n": 4
+      }
+    },
+    {
+      "const": {
+        "n": 5,
+        "body": "B"
+      }
+    },
+    {
+      "const": {
+        "n": 6
+      }
+    },
+    {
+      "const": {
+        "n": 7
+      }
+    }
+  ],
+  "maxItems": 7
+}

@@ -1,0 +1,386 @@
+[
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 2,
+      "column": 3,
+      "pointer": "/0"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/0/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "date-time"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 3,
+      "column": 3,
+      "pointer": "/1"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/1/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "date-time"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 4,
+      "column": 3,
+      "pointer": "/2"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/2/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "date"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 5,
+      "column": 3,
+      "pointer": "/3"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/3/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "time"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 6,
+      "column": 3,
+      "pointer": "/4"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/4/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "duration"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 7,
+      "column": 3,
+      "pointer": "/5"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/5/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "email"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 8,
+      "column": 3,
+      "pointer": "/6"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/6/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "hostname"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 9,
+      "column": 3,
+      "pointer": "/7"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/7/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "hostname"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 10,
+      "column": 3,
+      "pointer": "/8"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/8/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "ipv4"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 11,
+      "column": 3,
+      "pointer": "/9"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/9/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "ipv6"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 12,
+      "column": 3,
+      "pointer": "/10"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/10/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "uri"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 13,
+      "column": 3,
+      "pointer": "/11"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/11/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "uri-reference"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 14,
+      "column": 3,
+      "pointer": "/12"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/12/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "uuid"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 15,
+      "column": 3,
+      "pointer": "/13"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/13/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "uri-template"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 16,
+      "column": 3,
+      "pointer": "/14"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/14/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "json-pointer"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "bad",
+      "title": "Bad"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "bad.json",
+      "line": 17,
+      "column": 3,
+      "pointer": "/15"
+    },
+    "schema": {
+      "entry": "inputs/bad.schema.json",
+      "pointer": "/prefixItems/15/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "relative-json-pointer"
+    }
+  }
+]

@@ -1,0 +1,89 @@
+[
+  {
+    "code": "input.enum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "criteria",
+      "title": "Criteria"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "criteria.csv",
+      "line": 3,
+      "column": 1,
+      "pointer": "/1/id"
+    },
+    "schema": {
+      "entry": "inputs/constraints.schema.json",
+      "pointer": "/allOf/0/then/properties/criteria/items/properties/id/enum",
+      "keyword": "enum"
+    },
+    "params": {
+      "allowed": [
+        "\"1.1.1\"",
+        "\"1.2.1\""
+      ],
+      "allowed_count": 2
+    },
+    "via": [
+      {
+        "keyword": "then",
+        "schema_pointer": "/allOf/0/then",
+        "condition": {
+          "schema_pointer": "/allOf/0/if"
+        }
+      }
+    ]
+  },
+  {
+    "code": "input.required",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 3,
+      "pointer": "/conclusion"
+    },
+    "schema": {
+      "entry": "inputs/constraints.schema.json",
+      "pointer": "/allOf/2/then/properties/report/required",
+      "keyword": "required"
+    },
+    "params": {
+      "property": "conclusion"
+    },
+    "via": [
+      {
+        "keyword": "then",
+        "schema_pointer": "/allOf/2/then",
+        "condition": {
+          "schema_pointer": "/allOf/2/if"
+        }
+      }
+    ]
+  },
+  {
+    "code": "input.missing",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "signoff",
+      "title": "Signoff"
+    },
+    "params": {},
+    "via": [
+      {
+        "keyword": "then",
+        "schema_pointer": "/allOf/2/then",
+        "condition": {
+          "schema_pointer": "/allOf/2/if"
+        }
+      }
+    ]
+  }
+]

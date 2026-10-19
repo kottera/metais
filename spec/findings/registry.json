@@ -10,7 +10,9 @@
       "hint": "Make a directory named after the input and put one file in it per item; the file was not read.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-015"
+      ]
     },
     {
       "code": "collection.directory_name",
@@ -22,7 +24,9 @@
       "hint": "Name the collection's directory after the input alone, with no extension; it was not read.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-015"
+      ]
     },
     {
       "code": "collection.item_name",
@@ -60,7 +64,9 @@
       "hint": "Rename one of them: the stem is the item's identity, and a case-insensitive file system cannot hold both. The later item was not read.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-016"
+      ]
     },
     {
       "code": "collection.subdirectory",
@@ -72,7 +78,9 @@
       "hint": "Move the files up into the collection's directory, or remove the subdirectory; it was not read.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-015"
+      ]
     },
     {
       "code": "csv.after_quote",
@@ -84,7 +92,9 @@
       "hint": "End a quoted field at its closing quote, followed by the delimiter or the end of the line, and write a quote inside it as two quotes; the rest of this record was not read. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-008"
+      ]
     },
     {
       "code": "csv.bare_quote",
@@ -96,7 +106,9 @@
       "hint": "Enclose the whole field in quotes and write each quote inside it as two quotes; the rest of this record was not read. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-008"
+      ]
     },
     {
       "code": "csv.field_count",
@@ -121,7 +133,9 @@
       "hint": "Give every record one field per header name; leave a field empty, rather than out, when it has no value. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-008"
+      ]
     },
     {
       "code": "csv.header_duplicate",
@@ -146,7 +160,9 @@
       "hint": "Give each column its own name; names are compared exactly, with no trimming or case folding. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-008"
+      ]
     },
     {
       "code": "csv.header_empty",
@@ -165,7 +181,9 @@
       "hint": "Name every column in the first record of the file. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-008"
+      ]
     },
     {
       "code": "csv.header_missing",
@@ -177,7 +195,9 @@
       "hint": "Begin the file with a record naming each column, separated by the input's delimiter. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-008"
+      ]
     },
     {
       "code": "csv.unterminated_quote",
@@ -189,7 +209,9 @@
       "hint": "Close the field with a quote; the rest of the file was read as part of this field, so nothing after it was checked. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-008"
+      ]
     },
     {
       "code": "example.layout",
@@ -235,7 +257,10 @@
       "hint": "Remove the items after the first {prefix_count}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.additional_property",
@@ -260,7 +285,10 @@
       "hint": "Remove `{property}`, or rename it to a member the schema declares.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.any_of",
@@ -279,7 +307,11 @@
       "hint": "Change the value to match one alternative; each alternative's findings are listed under it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004",
+        "MTS-FND-006"
+      ]
     },
     {
       "code": "input.const",
@@ -298,7 +330,10 @@
       "hint": "Write {expected}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.constraints_failed",
@@ -317,7 +352,9 @@
       "hint": "Read the rule at the schema location this finding names; it relates the inputs to each other rather than constraining one of them.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-012"
+      ]
     },
     {
       "code": "input.constraints_not_evaluated",
@@ -329,7 +366,9 @@
       "hint": "Fix the inputs that did not parse and validate again, which evaluates the constraints and may report more.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-029"
+      ]
     },
     {
       "code": "input.contains",
@@ -341,7 +380,10 @@
       "hint": "Add an item that the contains subschema accepts.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.dependent_required",
@@ -366,7 +408,10 @@
       "hint": "Add the member `{property}`, or remove `{because}`.",
       "location": "parent",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.encoding_invalid",
@@ -391,7 +436,9 @@
       "hint": "Save the file as UTF-8, with or without a byte order mark. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-001"
+      ]
     },
     {
       "code": "input.enum",
@@ -423,7 +470,10 @@
       "hint": "Write one of the allowed values: {allowed}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.exclusive_maximum",
@@ -448,7 +498,10 @@
       "hint": "Write a number less than {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.exclusive_minimum",
@@ -473,7 +526,10 @@
       "hint": "Write a number greater than {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.extension_not_accepted",
@@ -493,7 +549,10 @@
       "hint": "Name the file with one of these extensions: {accepted}. The file was not read.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-015",
+        "MTS-SUP-018"
+      ]
     },
     {
       "code": "input.file_duplicate",
@@ -505,7 +564,9 @@
       "hint": "Keep one file or directory for the input and remove the others; none of them was read.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-018"
+      ]
     },
     {
       "code": "input.file_unknown",
@@ -517,7 +578,9 @@
       "hint": "Rename the entry after a declared input, or remove it. Run `metais inspect {package}` to see every input.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-018"
+      ]
     },
     {
       "code": "input.forbidden",
@@ -536,7 +599,10 @@
       "hint": "Remove the value.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.format",
@@ -555,7 +621,11 @@
       "hint": "Write a value in the {format} format.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-DAT-011",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.json_arg_invalid",
@@ -580,7 +650,9 @@
       "hint": "Correct the argument's JSON and give it again; none of the inputs it holds was read.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-020"
+      ]
     },
     {
       "code": "input.json_arg_not_object",
@@ -599,7 +671,9 @@
       "hint": "Give an object whose members are input names, each holding that input's whole value.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-020"
+      ]
     },
     {
       "code": "input.json_arg_unknown",
@@ -611,7 +685,9 @@
       "hint": "Name a declared input, or remove the member. Run `metais inspect {package}` to see every input.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-020"
+      ]
     },
     {
       "code": "input.link",
@@ -623,7 +699,9 @@
       "hint": "Copy the file into the data directory in place of the link.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SEC-006"
+      ]
     },
     {
       "code": "input.max_contains",
@@ -648,7 +726,10 @@
       "hint": "Remove items the contains subschema accepts until there are at most {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.max_items",
@@ -673,7 +754,10 @@
       "hint": "Remove items until there are at most {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.max_length",
@@ -698,7 +782,10 @@
       "hint": "Write at most {limit} characters.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.max_properties",
@@ -723,7 +810,10 @@
       "hint": "Remove members until there are at most {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.maximum",
@@ -748,7 +838,10 @@
       "hint": "Write a number of at most {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.min_contains",
@@ -773,7 +866,10 @@
       "hint": "Add items the contains subschema accepts until there are at least {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.min_items",
@@ -798,7 +894,10 @@
       "hint": "Add items until there are at least {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.min_length",
@@ -823,7 +922,10 @@
       "hint": "Write at least {limit} characters.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.min_properties",
@@ -848,7 +950,10 @@
       "hint": "Add members until there are at least {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.minimum",
@@ -873,7 +978,10 @@
       "hint": "Write a number of at least {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.missing",
@@ -885,7 +993,10 @@
       "hint": "Supply it as a file named after it in the data directory, as an --inputs-json member, or with --set. Run `metais inspect {package}` to see every input.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-DAT-012"
+      ]
     },
     {
       "code": "input.multiple_of",
@@ -910,7 +1021,10 @@
       "hint": "Write a multiple of {divisor}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.noncharacter",
@@ -929,7 +1043,9 @@
       "hint": "Remove the noncharacter. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-004"
+      ]
     },
     {
       "code": "input.not",
@@ -941,7 +1057,10 @@
       "hint": "Change the value so that the not subschema no longer accepts it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.not_readable",
@@ -979,7 +1098,10 @@
       "hint": "Supply the input as a regular file; only a collection input is a directory. The entry was not read.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SEC-006",
+        "MTS-SUP-018"
+      ]
     },
     {
       "code": "input.number_out_of_range",
@@ -998,7 +1120,9 @@
       "hint": "Supply it as a string, or as a number of magnitude at most 9007199254740991. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-005"
+      ]
     },
     {
       "code": "input.one_of",
@@ -1017,7 +1141,11 @@
       "hint": "Change the value to match one alternative; each alternative's findings are listed under it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004",
+        "MTS-FND-006"
+      ]
     },
     {
       "code": "input.one_of.ambiguous",
@@ -1037,7 +1165,10 @@
       "hint": "Change the value so that only one alternative accepts it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.pattern",
@@ -1056,7 +1187,10 @@
       "hint": "Write a value that matches the pattern {pattern}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.property_name",
@@ -1075,7 +1209,10 @@
       "hint": "Rename `{property}` to a name the schema's propertyNames allows.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.required",
@@ -1094,7 +1231,10 @@
       "hint": "Add the member `{property}`.",
       "location": "parent",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.set_into_unparsed",
@@ -1106,7 +1246,9 @@
       "hint": "Fix what refused the input's file or argument, then validate again, which applies the set.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-024"
+      ]
     },
     {
       "code": "input.set_pointer_invalid",
@@ -1125,7 +1267,9 @@
       "hint": "Write the set as /<input>/<member>=<value>, beginning with a declared input's name. Run `metais inspect {package}` to see every input.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-021"
+      ]
     },
     {
       "code": "input.set_traversal",
@@ -1144,7 +1288,9 @@
       "hint": "Set an existing member or element, append with - as the last token, or replace the whole parent with --set-json.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-022"
+      ]
     },
     {
       "code": "input.type",
@@ -1170,7 +1316,10 @@
       "hint": "Write a value of type {expected}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.unevaluated_item",
@@ -1189,7 +1338,10 @@
       "hint": "Remove the item.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.unevaluated_property",
@@ -1214,7 +1366,10 @@
       "hint": "Remove `{property}`, or rename it to a member the schema declares.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.unique_items",
@@ -1239,7 +1394,10 @@
       "hint": "Remove the repeated item, or change it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-FND-004"
+      ]
     },
     {
       "code": "input.validation.partial",
@@ -1264,7 +1422,9 @@
       "hint": "Fix the items that did not parse and validate again, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-029"
+      ]
     },
     {
       "code": "internal.error",
@@ -1308,7 +1468,9 @@
       "hint": "Keep one member with this name and remove the others. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-003"
+      ]
     },
     {
       "code": "json.lone_surrogate",
@@ -1320,7 +1482,9 @@
       "hint": "Write the character it was meant to be, or a surrogate pair of a high and a low surrogate escape. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-004"
+      ]
     },
     {
       "code": "json.noncharacter",
@@ -1332,7 +1496,9 @@
       "hint": "Remove the noncharacter (U+FDD0 to U+FDEF, or a code point ending in FFFE or FFFF) from the string. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-004"
+      ]
     },
     {
       "code": "json.syntax",
@@ -1357,7 +1523,9 @@
       "hint": "Correct the JSON at this line and column; a JSON file holds one value, with no comments and no trailing commas. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-003"
+      ]
     },
     {
       "code": "json.trailing_content",
@@ -1369,7 +1537,9 @@
       "hint": "Remove what follows the value, or enclose several values in one array. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-003"
+      ]
     },
     {
       "code": "limit.exceeded",
@@ -1406,7 +1576,9 @@
       "hint": "Supply a smaller or shallower input; a limit can be lowered with --limit but never raised. Run `metais limits` to see every limit.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SEC-005"
+      ]
     },
     {
       "code": "limit.invalid",
@@ -2811,7 +2983,9 @@
       "hint": "Rename the field. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-012"
+      ]
     },
     {
       "code": "markdown.frontmatter_not_mapping",
@@ -2830,7 +3004,9 @@
       "hint": "Write the frontmatter as key: value lines, or leave it empty. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-012"
+      ]
     },
     {
       "code": "markdown.frontmatter_unclosed",
@@ -2842,7 +3018,9 @@
       "hint": "End the frontmatter with a line that is exactly ---; a file meant to begin with a thematic break begins with *** instead. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-012"
+      ]
     },
     {
       "code": "output.additional_item",
@@ -4785,7 +4963,9 @@
       "hint": "Fix the findings listed and run the command again, or read the summary's totals by code.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-010"
+      ]
     },
     {
       "code": "schema.dialect",
@@ -5860,6 +6040,56 @@
       "statements": []
     },
     {
+      "code": "usage.conflicting_flags",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position, among the arguments after metais, of the flag that conflicts with an earlier one.",
+          "always": true
+        },
+        {
+          "name": "flag",
+          "type": "string",
+          "meaning": "The flag, written with its leading --.",
+          "always": true
+        }
+      ],
+      "message": "{flag} at argument {argument} reads standard input, which an earlier {flag} already reads.",
+      "hint": "Read standard input once: give - to one {flag}, and the other inputs inline or in the data directory.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.data_dir_unreadable",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position, among the arguments after metais, of the --data flag.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the data directory cannot be read: not_found, permission_denied, not_regular_file (it is not a directory), too_large (it holds more entries than the collection-items limit) or io_error.",
+          "always": true
+        }
+      ],
+      "message": "The data directory given at argument {argument} cannot be read ({reason}).",
+      "hint": "Give --data a directory that exists and that you can read, holding one file per input; run `metais inspect {package}` to see each input's file names.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "usage.missing_command",
       "severity": "error",
       "class": "usage",
@@ -6093,7 +6323,9 @@
       "hint": "Replace the `*` alias with the value it names, written out. The input's schema was not checked; fix the file and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     },
     {
       "code": "yaml.anchor",
@@ -6105,7 +6337,9 @@
       "hint": "Remove the `&` anchor and write the value out where it is used. The input's schema was not checked; fix the file and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     },
     {
       "code": "yaml.bom",
@@ -6117,7 +6351,9 @@
       "hint": "Remove the byte order mark. The input's schema was not checked; fix the file and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     },
     {
       "code": "yaml.character",
@@ -6142,7 +6378,9 @@
       "hint": "Write the character as a double-quoted escape, such as \\u2028, or remove it. The input's schema was not checked; fix the file and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     },
     {
       "code": "yaml.directive",
@@ -6154,7 +6392,9 @@
       "hint": "Remove the `%YAML` or `%TAG` line. The input's schema was not checked; fix the file and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     },
     {
       "code": "yaml.duplicate_key",
@@ -6166,7 +6406,9 @@
       "hint": "Keep one member of that name in the mapping. The input's schema was not checked; fix the file and run the command again.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     },
     {
       "code": "yaml.key_empty",
@@ -6178,7 +6420,9 @@
       "hint": "Give the key a name, or quote it as `\"\"` if an empty name is meant. The input's schema was not checked; fix the file and run the command again.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     },
     {
       "code": "yaml.key_not_scalar",
@@ -6190,7 +6434,9 @@
       "hint": "Write the key as plain or quoted text. The input's schema was not checked; fix the file and run the command again.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     },
     {
       "code": "yaml.merge_key",
@@ -6202,7 +6448,9 @@
       "hint": "Write the merged members out in the mapping, or quote `\"<<\"` if it is an ordinary key. The input's schema was not checked; fix the file and run the command again.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     },
     {
       "code": "yaml.multi_document",
@@ -6214,7 +6462,9 @@
       "hint": "Remove everything after the first document, or put each document in a file of its own. The input's schema was not checked; fix the file and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     },
     {
       "code": "yaml.scalar_refused",
@@ -6233,7 +6483,9 @@
       "hint": "Write `null`, `true` or `false`, or the number as JSON writes it; quote the scalar if it is text. The input's schema was not checked; fix the file and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     },
     {
       "code": "yaml.syntax",
@@ -6245,7 +6497,9 @@
       "hint": "Correct the YAML near this line. The input's schema was not checked; fix the file and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     },
     {
       "code": "yaml.tag",
@@ -6257,7 +6511,9 @@
       "hint": "Remove the tag; quote the value if it is text. The input's schema was not checked; fix the file and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-006"
+      ]
     }
   ]
 }

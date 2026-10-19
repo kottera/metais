@@ -147,8 +147,12 @@ func TestLookupAndRegistryCopies(t *testing.T) {
 		t.Error("Lookup returned the registry's own slice")
 	}
 	r := Registry()
-	r[0].Statements = append(r[0].Statements, "x")
-	if Registry()[0].Statements != nil && len(Registry()[0].Statements) != 0 {
+	n := len(r[0].Statements)
+	r[0].Statements = append(r[0].Statements[:n:n], "x")
+	if len(r[0].Statements) > 0 {
+		r[0].Statements[0] = "changed"
+	}
+	if again := Registry()[0].Statements; len(again) != n || n > 0 && again[0] == "changed" {
 		t.Error("Registry returned the registry's own slice")
 	}
 	if _, ok := Lookup("no.such"); ok {

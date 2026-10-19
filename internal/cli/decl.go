@@ -170,6 +170,7 @@ var exitCodes = []exitCode{
 func declarations() []*Command {
 	return []*Command{
 		inspectDeclaration(),
+		validateDeclaration(),
 		{
 			Name: "init", Group: "Authoring", Synopsis: "init [<dir>] [--name <name>] [--dry-run] [--json]",
 			Description: "Write a new package's source directory, with an input, a template and an example.",
@@ -192,6 +193,7 @@ func declarations() []*Command {
 			Flags: []args.Flag{
 				{Name: "name", Value: "<name>", Description: "The package's name. It is required when <dir> is omitted or its last element is . or ..; otherwise it defaults to that element."},
 				{Name: "dry-run", Description: "Report the files init would write, and write nothing."},
+				failOnFlag,
 			},
 			Format: "metais.init/1",
 			Prints: "The files written, relative to <dir>, in the order written, then what to edit.",

@@ -25,7 +25,22 @@ type outcome struct {
 	// human is the human result, written to standard output.
 	human []byte
 	next  []Next
+	// report is set when the outcome is the report of a command whose
+	// findings are its result, and nothing else is: validate's. Its
+	// summary line follows its human findings (ADR-006 D11 item 3), and
+	// its result is printed with errors among its findings, since the
+	// command produced it (ADR-008 D10 item 1).
+	report bool
+	// dataDir is the --data argument the command read, for the path
+	// canary alone.
+	dataDir string
 }
+
+// canaryLeak is nil in every release build. The path canary of ADR-009
+// D16 item 2 sets it, under its build tag, to put the data directory's
+// absolute path into each finding's message, so the SC7 harness can be
+// shown to see a host path in a finding.
+var canaryLeak func(b []byte, dataDir string) []byte
 
 // envelope is the JSON document every run prints with --json (ADR-008
 // D10), its members in their declared order: format, ok, findings,
@@ -41,9 +56,14 @@ type envelope struct {
 }
 
 // emit writes o for the line s read and returns the exit status, which
-// ADR-008 D13 maps from o's findings and the command's role.
+// ADR-008 D13 maps from o's findings, the command's role and --fail-on.
+// The report lists at most the findings limit of the command's limits.
 func (s *session) emit(o outcome) int {
-	r := finding.NewReport(int(limits.Get(limits.Findings).Default))
+	listed := limits.Get(limits.Findings).Default
+	if s.lim != nil {
+		listed = s.lim.Value(limits.Findings)
+	}
+	r := finding.NewReportFaults(int(min(listed, int64(^uint(0)>>1))), s.inv.Options.Faults)
 	for _, f := range o.findings {
 		r.Add(f)
 	}
@@ -51,7 +71,7 @@ func (s *session) emit(o outcome) int {
 	if s.line.cmd != nil {
 		role = s.line.cmd.Role
 	}
-	status := r.Exit(role, finding.SeverityError)
+	status := r.Exit(role, s.failOn())
 	fs, sum := r.Findings(), r.Summary()
 	next := o.next
 	if next == nil {
@@ -59,13 +79,17 @@ func (s *session) emit(o outcome) int {
 	}
 	if s.line.json {
 		result := o.result
-		if sum.Errors > 0 {
+		if sum.Errors > 0 && !(o.report && s.reports(fs)) {
 			result = nil
+		}
+		fb := finding.AppendJSON(nil, fs...)
+		if canaryLeak != nil && o.dataDir != "" {
+			fb = canaryLeak(fb, o.dataDir)
 		}
 		writeJSON(s.inv.Stdout, envelope{
 			Format:   s.line.format(),
 			OK:       status == finding.ExitOK && sum.Errors == 0,
-			Findings: finding.AppendJSON(nil, fs...),
+			Findings: fb,
 			Summary:  sum.AppendJSON(nil),
 			Result:   result,
 			Next:     next,
@@ -75,9 +99,18 @@ func (s *session) emit(o outcome) int {
 	// Human mode (ADR-008 D11 item 3): a refusal, its findings and its
 	// next steps go to standard error and nothing to standard output;
 	// otherwise the result goes to standard output, and any finding and
-	// the Next: block to standard error.
-	if s.line.cmd != nil && s.line.cmd.FindingsAreResult && !refusal(fs) {
+	// the Next: block to standard error. The findings of a command whose
+	// findings are its result go to standard output when they do not
+	// refuse it, with its summary line, its human result and the Next:
+	// block (ADR-006 D11 item 3).
+	if s.reports(fs) {
 		b := finding.AppendHuman(nil, s.colour(s.inv.Stdout), fs...)
+		if canaryLeak != nil && o.dataDir != "" {
+			b = canaryLeak(b, o.dataDir)
+		}
+		if o.report {
+			b = sum.AppendHuman(b)
+		}
 		write(s.inv.Stdout, appendNext(append(b, o.human...), next))
 		return status
 	}
@@ -97,10 +130,43 @@ func (s *session) emit(o outcome) int {
 	return status
 }
 
+// reports reports whether fs are the command's result rather than its
+// refusal: the command's findings are its result, and fs do not refuse
+// it, nor, under a consumer command, hold an error about the package's
+// own content, which refuses it as the exit status does (ADR-006 D12 item
+// 2).
+func (s *session) reports(fs []finding.Finding) bool {
+	if s.line.cmd == nil || !s.line.cmd.FindingsAreResult || refusal(fs) {
+		return false
+	}
+	return s.line.cmd.Role != finding.RoleConsumer || !slices.ContainsFunc(fs, func(f finding.Finding) bool {
+		return f.Severity() == finding.SeverityError && packageContent(f.Subject().Kind)
+	})
+}
+
 // refusal reports whether fs refuse the command rather than report on its
 // package: a finding of class usage, refused, destination or internal.
 func refusal(fs []finding.Finding) bool {
 	return slices.ContainsFunc(fs, func(f finding.Finding) bool { return f.Class() != finding.ClassContent })
+}
+
+// packageContent reports whether a finding about k is about the package's
+// own content.
+func packageContent(k finding.SubjectKind) bool {
+	switch k {
+	case finding.SubjectPackage, finding.SubjectManifest, finding.SubjectSchema, finding.SubjectTemplate, finding.SubjectAsset, finding.SubjectReference:
+		return true
+	}
+	return false
+}
+
+// failOn is the severity that fails the command (ADR-006 D2 item 5): a
+// warning when the line gave --fail-on warning, else an error.
+func (s *session) failOn() finding.Severity {
+	if v, _ := s.line.parsed.Value(failOnFlag.Name); v == "warning" {
+		return finding.SeverityWarning
+	}
+	return finding.SeverityError
 }
 
 // refuse is the outcome of a line refused before any command ran: its

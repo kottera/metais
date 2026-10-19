@@ -86,7 +86,10 @@ func encodeReport(r *finding.Report) []byte {
 // names under a long pointer gives, under the default limits and with the
 // findings limit lowered, byte for byte as the code before W3-9 wrote it:
 // the same codes, parameters, locations, related locations, order and
-// totals. The digests were taken from that code's encodeReport output.
+// totals. The digests were taken from that code's encodeReport output,
+// with its messages bounded to 240 code points as W4-1 bounds them
+// (ADR-006 D9 item 1): the bound changed the text of the messages that
+// named the long pointer, and nothing else.
 func TestHostileReportUnchanged(t *testing.T) {
 	testenv.Home(t)
 	for _, tt := range []struct {
@@ -95,10 +98,10 @@ func TestHostileReportUnchanged(t *testing.T) {
 		lim    limits.Set
 		digest string
 	}{
-		{"one line, default limits", hostile(4096, ","), limits.Defaults(), "011402124b08b43d4efe07a4935188f77725e1fbdc6358a1ea0592021da9165d"},
-		{"one line, findings=7", hostile(4096, ","), lowered(t, "findings=7"), "234ebb7aef85e6854b4da151f75fc78da4b2a1a48f9e4c1ef482ffe9646528b9"},
-		{"a line each, default limits", hostile(4096, ",\n"), limits.Defaults(), "8560796ba5dcdb56e2cf862a0bf4683ddd22007611279404f88af23e29325d46"},
-		{"a line each, findings=7", hostile(4096, ",\r\n "), lowered(t, "findings=7"), "9df12c7f430f57a06bdcef74e8e895457231d594a0fad8b2dbb5eb32165d9105"},
+		{"one line, default limits", hostile(4096, ","), limits.Defaults(), "95bdc074d3ae528502b93c7378879be5558c30a0a19e19a3434b8183447b688d"},
+		{"one line, findings=7", hostile(4096, ","), lowered(t, "findings=7"), "b3efa4275b6b53f260b2226ab36cef2b499580c6b6f9665097881b9771193baf"},
+		{"a line each, default limits", hostile(4096, ",\n"), limits.Defaults(), "0f6f734b0c7f371dd14b2f6d8ecf9a1c34c7989c6047e36ec268709f17467cef"},
+		{"a line each, findings=7", hostile(4096, ",\r\n "), lowered(t, "findings=7"), "3ef5007f288d63b88e6d8de83dcfca0c396c6ed73cfaabcc7976348625a1ee20"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			out := encodeReport(hostileReport(t, tt.src, tt.lim))

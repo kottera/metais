@@ -1,0 +1,146 @@
+[
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "big",
+      "title": "Big"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "big.json"
+    },
+    "params": {
+      "limit": "input-size",
+      "bound": 96,
+      "lowered": true,
+      "observed": 122
+    }
+  },
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "cell",
+      "title": "Cell"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "cell.csv",
+      "line": 2,
+      "column": 1,
+      "pointer": "/0/a"
+    },
+    "params": {
+      "limit": "csv-cell",
+      "bound": 8,
+      "lowered": true
+    }
+  },
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "cols",
+      "title": "Cols"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "cols.csv",
+      "line": 1,
+      "column": 5
+    },
+    "params": {
+      "limit": "csv-columns",
+      "bound": 2,
+      "lowered": true
+    }
+  },
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "deep",
+      "title": "Deep"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "deep.json",
+      "line": 1,
+      "column": 6,
+      "pointer": "/0/0/0/0/0"
+    },
+    "params": {
+      "limit": "value-depth",
+      "bound": 5,
+      "lowered": true
+    }
+  },
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "front",
+      "title": "Front"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "front.md",
+      "line": 2,
+      "column": 1
+    },
+    "params": {
+      "limit": "frontmatter-size",
+      "bound": 16,
+      "lowered": true
+    }
+  },
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "num",
+      "title": "Num"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "num.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {
+      "limit": "number-length",
+      "bound": 8,
+      "lowered": true,
+      "observed": 10
+    }
+  },
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.csv",
+      "line": 4,
+      "column": 1,
+      "pointer": "/2"
+    },
+    "params": {
+      "limit": "csv-rows",
+      "bound": 2,
+      "lowered": true
+    }
+  }
+]

@@ -1290,3 +1290,28 @@ document.
   `loader.Package.References`, derived by the code that re-derives it at
   open. A mirror is listed with the templates it renders; the transforms
   are named `validate`, `crlf` and `zip`.
+
+- **PLAN-2026-10-metais-v1 W4-1 — `validate` and `--fail-on`.** D7 landed,
+  with `metais.validate/1` under `docs/cli/schemas/`. Each input's `from`
+  lists objects, `{"source", "file"}` for the data directory and
+  `{"source", "argument"}` for a flag, `argument` numbering a path set
+  among the `--set` and `--set-json` flags together as a finding's
+  location does; `supplied` is whether any source but a default gave it a
+  value. `--resolved`'s `data` is the inputs object in canonical form, and
+  in human form indented JSON whose text is neutralised line by line. The
+  findings of `validate` are its result, as `check`'s are: unless they
+  refuse it, which under a consumer command an error about the package's
+  own content does, they go to standard output with the summary line, the
+  human result and the `Next:` block, and the result is printed when they
+  hold errors (D11 item 3). `--fail-on` is
+  declared once and read in one place, the exit status; `inspect`,
+  `validate`, `check` and `init` take it, every command that reports
+  findings but `version`, `help` and `limits`, and a check that fails on
+  its warnings points at checking again. Two codes are registered, beside the
+  Interfaces list, for refusals ADR-003 leaves to the command line:
+  `usage.data_dir_unreadable` (the `--data` directory cannot be opened or
+  listed, with ADR-006 D9 item 8's reasons and `too_large`) and
+  `usage.conflicting_flags` (`--inputs-json -` given twice). The synopsis
+  of `validate` writes its supply flags as `[<supply flags>]`, as D7 does,
+  since a usage line is held to 80 columns; `--fail-on`, a global flag, is
+  in each command's flag list rather than its synopsis.

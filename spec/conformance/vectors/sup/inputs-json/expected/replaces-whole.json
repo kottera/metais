@@ -1,0 +1,26 @@
+[
+  {
+    "code": "input.required",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "inputs_json",
+      "argument": 1,
+      "line": 1,
+      "column": 12,
+      "pointer": "/name"
+    },
+    "schema": {
+      "entry": "inputs/vendor.schema.json",
+      "pointer": "/required",
+      "keyword": "required"
+    },
+    "params": {
+      "property": "name"
+    }
+  }
+]

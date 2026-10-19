@@ -1,0 +1,31 @@
+[
+  {
+    "code": "json.duplicate_name",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "inputs_json",
+      "argument": 1,
+      "line": 2,
+      "column": 30,
+      "pointer": "/name"
+    },
+    "params": {
+      "name": "name"
+    },
+    "related": [
+      {
+        "origin": "inputs_json",
+        "argument": 1,
+        "line": 2,
+        "column": 14,
+        "pointer": "/name",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]

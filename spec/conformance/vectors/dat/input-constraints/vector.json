@@ -1,0 +1,99 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "dat/input-constraints",
+  "title": "The input constraints are evaluated over the whole inputs object: an edition's table and a stage's fields",
+  "statements": [
+    "MTS-DAT-012",
+    "MTS-FND-006"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "satisfied",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/satisfied-1",
+            "set": [
+              "/edition=2.2",
+              "/stage=draft"
+            ],
+            "set_json": [
+              "/report={}"
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/satisfied-2",
+            "set": [
+              "/edition=2.1",
+              "/stage=final"
+            ],
+            "set_json": [
+              "/report={\"conclusion\": \"Done\"}",
+              "/signoff={}"
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "failed",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/failed-1",
+            "set": [
+              "/edition=2.1",
+              "/stage=final"
+            ],
+            "set_json": [
+              "/report={}"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/failed-1.json"
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set": [
+              "/edition=2.2",
+              "/stage=draft"
+            ],
+            "set_json": [
+              "/report={}",
+              "/signoff={}",
+              "/waiver={}",
+              "/criteria=[]"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/failed-2.json"
+          }
+        }
+      ]
+    }
+  ]
+}

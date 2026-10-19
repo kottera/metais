@@ -1,0 +1,14 @@
+{
+  "if": {
+    "properties": {
+      "edition": {
+        "const": "2.2"
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "summary"
+    ]
+  }
+}

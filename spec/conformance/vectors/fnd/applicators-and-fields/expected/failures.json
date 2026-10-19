@@ -1,0 +1,389 @@
+[
+  {
+    "code": "input.minimum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 4,
+      "column": 15,
+      "pointer": "/shape/radius"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/shape/oneOf/0/properties/radius/minimum",
+      "keyword": "minimum"
+    },
+    "params": {
+      "limit": 0,
+      "value": -1
+    },
+    "via": [
+      {
+        "keyword": "oneOf",
+        "schema_pointer": "/properties/shape/oneOf",
+        "branch": 0,
+        "title": "Circle"
+      }
+    ]
+  },
+  {
+    "code": "input.any_of",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 6,
+      "column": 13,
+      "pointer": "/either"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/either/anyOf",
+      "keyword": "anyOf"
+    },
+    "field": {
+      "title": "Either"
+    },
+    "params": {
+      "branch_count": 2
+    },
+    "alternatives": [
+      {
+        "branch": 0,
+        "title": "A number",
+        "findings": [
+          {
+            "code": "input.type",
+            "severity": "error",
+            "subject": {
+              "kind": "input",
+              "name": "v",
+              "title": "V"
+            },
+            "location": {
+              "origin": "data_dir",
+              "file": "v.json",
+              "line": 6,
+              "column": 13,
+              "pointer": "/either"
+            },
+            "schema": {
+              "entry": "inputs/v.schema.json",
+              "pointer": "/properties/either/anyOf/0/type",
+              "keyword": "type"
+            },
+            "field": {
+              "title": "A number"
+            },
+            "params": {
+              "expected": [
+                "number"
+              ],
+              "actual": "string"
+            }
+          }
+        ],
+        "omitted": 0
+      },
+      {
+        "branch": 1,
+        "title": "A list",
+        "findings": [
+          {
+            "code": "input.type",
+            "severity": "error",
+            "subject": {
+              "kind": "input",
+              "name": "v",
+              "title": "V"
+            },
+            "location": {
+              "origin": "data_dir",
+              "file": "v.json",
+              "line": 6,
+              "column": 13,
+              "pointer": "/either"
+            },
+            "schema": {
+              "entry": "inputs/v.schema.json",
+              "pointer": "/properties/either/anyOf/1/type",
+              "keyword": "type"
+            },
+            "field": {
+              "title": "A list"
+            },
+            "params": {
+              "expected": [
+                "array"
+              ],
+              "actual": "string"
+            }
+          }
+        ],
+        "omitted": 0
+      }
+    ]
+  },
+  {
+    "code": "input.required",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 8,
+      "column": 13,
+      "pointer": "/detail/level"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/then/properties/detail/required",
+      "keyword": "required"
+    },
+    "params": {
+      "property": "level"
+    },
+    "via": [
+      {
+        "keyword": "then",
+        "schema_pointer": "/then",
+        "condition": {
+          "schema_pointer": "/if",
+          "title": "Detailed mode"
+        }
+      }
+    ]
+  },
+  {
+    "code": "input.minimum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 9,
+      "column": 12,
+      "pointer": "/price"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/$defs/money/minimum",
+      "keyword": "minimum"
+    },
+    "field": {
+      "title": "Money",
+      "description": "What it costs."
+    },
+    "params": {
+      "limit": 0,
+      "value": -1
+    }
+  },
+  {
+    "code": "input.minimum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 10,
+      "column": 11,
+      "pointer": "/cost"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/$defs/money/minimum",
+      "keyword": "minimum"
+    },
+    "field": {
+      "title": "Money"
+    },
+    "params": {
+      "limit": 0,
+      "value": -2
+    }
+  },
+  {
+    "code": "input.min_length",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 12,
+      "column": 14,
+      "pointer": "/thing/label"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/$defs/named/properties/label/minLength",
+      "keyword": "minLength"
+    },
+    "params": {
+      "limit": 2,
+      "length": 1
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 15,
+      "column": 14,
+      "pointer": "/parent/child"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/parent/properties/child/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.pattern",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 17,
+      "column": 13,
+      "pointer": "/shared"
+    },
+    "schema": {
+      "entry": "inputs/shared.schema.json",
+      "pointer": "/$defs/code/pattern",
+      "keyword": "pattern"
+    },
+    "field": {
+      "title": "Shared code"
+    },
+    "params": {
+      "pattern": "^[A-Z]{3}$"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 25,
+      "column": 21,
+      "pointer": "/tree/children/0/children/0/size"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/$defs/node/properties/size/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 32,
+      "column": 5,
+      "pointer": "/list/0"
+    },
+    "schema": {
+      "entry": "inputs/list.schema.json",
+      "pointer": "/$defs/item/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "array"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 35,
+      "column": 5,
+      "pointer": "/list/1"
+    },
+    "schema": {
+      "entry": "inputs/list.schema.json",
+      "pointer": "/$defs/item/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  }
+]

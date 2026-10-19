@@ -5,19 +5,22 @@ Usage:
 
 Commands:
   Reading a package:
-    inspect  Print what a supplier reads first: the package's identity, its
-             guide, its inputs, outputs, references and examples, and the
-             commands to run next.
+    inspect   Print what a supplier reads first: the package's identity, its
+              guide, its inputs, outputs, references and examples, and the
+              commands to run next.
+  Supplying and rendering:
+    validate  Validate inputs against a package, and report every finding at
+              once.
   Authoring:
-    init     Write a new package's source directory, with an input, a template
-             and an example.
-    check    Check a package without data, and report every finding of every
-             step at once.
+    init      Write a new package's source directory, with an input, a template
+              and an example.
+    check     Check a package without data, and report every finding of every
+              step at once.
   The tool:
-    version  Print the tool's version and the specification versions it
-             implements.
-    limits   List every resource limit, with its default, unit and class.
-    help     Print the overview, a command's help, or a topic.
+    version   Print the tool's version and the specification versions it
+              implements.
+    limits    List every resource limit, with its default, unit and class.
+    help      Print the overview, a command's help, or a topic.
 
 Global flags:
   --json

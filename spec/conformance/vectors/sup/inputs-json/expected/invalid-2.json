@@ -1,0 +1,47 @@
+[
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "other",
+      "title": "Other"
+    },
+    "location": {
+      "origin": "inputs_json",
+      "argument": 1,
+      "line": 4,
+      "column": 12,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/other.schema.json",
+      "pointer": "/type",
+      "keyword": "type"
+    },
+    "field": {
+      "title": "Other"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.json_arg_unknown",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendro"
+    },
+    "location": {
+      "origin": "inputs_json",
+      "argument": 1,
+      "line": 3,
+      "column": 3
+    },
+    "params": {}
+  }
+]

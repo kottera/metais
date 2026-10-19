@@ -1,0 +1,94 @@
+[
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.json",
+      "line": 1,
+      "column": 2,
+      "pointer": "/0"
+    },
+    "schema": {
+      "entry": "inputs/rows.schema.json",
+      "pointer": "/items/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.json",
+      "line": 1,
+      "column": 7,
+      "pointer": "/1"
+    },
+    "schema": {
+      "entry": "inputs/rows.schema.json",
+      "pointer": "/items/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.json",
+      "line": 1,
+      "column": 12,
+      "pointer": "/2"
+    },
+    "schema": {
+      "entry": "inputs/rows.schema.json",
+      "pointer": "/items/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "report.truncated",
+    "severity": "info",
+    "subject": {
+      "kind": "report"
+    },
+    "params": {
+      "listed": 3,
+      "omitted": 7
+    }
+  }
+]

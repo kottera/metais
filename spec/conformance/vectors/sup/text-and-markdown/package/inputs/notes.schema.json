@@ -1,0 +1,7 @@
+{
+  "type": "array",
+  "const": [
+    "md as text",
+    "markdown as text"
+  ]
+}

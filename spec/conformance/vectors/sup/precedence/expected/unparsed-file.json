@@ -1,0 +1,36 @@
+[
+  {
+    "code": "json.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "vendor.json",
+      "line": 1,
+      "column": 10,
+      "pointer": "/name"
+    },
+    "params": {
+      "expected": "value",
+      "found": "end of input"
+    }
+  },
+  {
+    "code": "input.set_into_unparsed",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 1
+    },
+    "params": {}
+  }
+]

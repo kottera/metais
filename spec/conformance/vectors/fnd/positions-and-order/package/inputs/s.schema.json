@@ -1,0 +1,23 @@
+{
+  "$defs": {
+    "short": {
+      "maxLength": 2
+    }
+  },
+  "type": "object",
+  "properties": {
+    "n": {
+      "type": "integer"
+    },
+    "w": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/short"
+        },
+        {
+          "$ref": "#/$defs/short"
+        }
+      ]
+    }
+  }
+}

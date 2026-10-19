@@ -1393,3 +1393,15 @@ headers agree with it exactly.
   not only `check` and `pack`, because a tree that opened would mean
   something its packed form cannot carry. The device cases are unit tests
   of `hostfs` (D17).
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-1.** D7's data-directory rules
+  and D3's data limits are observable through `validate`, as chapter 14's
+  §14.3 and §14.4 state, with the vectors `sec/data-limits`,
+  `sec/data-directory-entries` and `sec/nothing-expanded`. The `path`
+  canary of D16 item 2 is `internal/cli/canary_path.go`, under
+  `metais_canary_path`: it writes the data directory, made absolute, into
+  every finding's message. Its probe vector is `dat/required-input-missing`.
+  Run by the conformance runner with that build as its tool, the probe
+  fails: standard output holds the sandbox path's sentinel (check 1) and
+  differs between the environments (check 3). The canary's row in
+  `TestHostIsolationCanaries`, and its red run recorded here before the
+  release build is shown to pass it, are W4-3's harness's.

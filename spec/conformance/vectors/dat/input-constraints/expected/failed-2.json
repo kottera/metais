@@ -1,0 +1,17 @@
+[
+  {
+    "code": "input.constraints_failed",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "schema": {
+      "entry": "inputs/constraints.schema.json",
+      "pointer": "/allOf/3/not",
+      "keyword": "not"
+    },
+    "params": {
+      "keyword": "not"
+    }
+  }
+]

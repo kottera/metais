@@ -1,0 +1,178 @@
+[
+  {
+    "code": "json.duplicate_name",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "a",
+      "title": "A"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "a.json",
+      "line": 1,
+      "column": 10,
+      "pointer": "/n"
+    },
+    "params": {
+      "name": "n"
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "a.json",
+        "line": 1,
+        "column": 2,
+        "pointer": "/n",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "json.trailing_content",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "b",
+      "title": "B"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "b.json",
+      "line": 1,
+      "column": 8
+    },
+    "params": {}
+  },
+  {
+    "code": "input.number_out_of_range",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "c",
+      "title": "C"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "c.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {
+      "reason": "unsafe_integer"
+    }
+  },
+  {
+    "code": "json.lone_surrogate",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "d",
+      "title": "D"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "d.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {}
+  },
+  {
+    "code": "json.noncharacter",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "e",
+      "title": "E"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "e.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {}
+  },
+  {
+    "code": "input.number_out_of_range",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "f",
+      "title": "F"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "f.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {
+      "reason": "overflow"
+    }
+  },
+  {
+    "code": "json.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "g",
+      "title": "G"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "g.json",
+      "line": 2,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {
+      "expected": "value",
+      "found": "end of input"
+    }
+  },
+  {
+    "code": "json.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "h",
+      "title": "H"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "h.json",
+      "line": 1,
+      "column": 9,
+      "pointer": ""
+    },
+    "params": {
+      "expected": "member name",
+      "found": "unexpected character"
+    }
+  },
+  {
+    "code": "input.number_out_of_range",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "i",
+      "title": "I"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "i.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {
+      "reason": "unsafe_integer"
+    }
+  }
+]

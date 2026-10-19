@@ -59,3 +59,43 @@ link, or open a named pipe, socket or device, beneath a source directory's
 package names — a schema's `$ref`, `$schema` or `$id`, a manifest's
 `homepage` — and MUST resolve a schema reference only within the package and
 the 2020-12 meta-schemas.
+
+## 14.3 Data limits
+
+Every size and count a processor reads from the inputs of one operation is
+bounded too. A caller may lower a data limit for one operation; nothing raises
+one. A limit of §14.1 that bounds a parsed document, `value-depth` and
+`number-length`, bounds every input as it bounds the manifest.
+
+| Limit | Default | Bounds |
+|---|---|---|
+| `input-size` | 32 MiB | one input file, one collection item, one `--inputs-json`, `--set` or `--set-json` value |
+| `inputs-total` | 128 MiB | all the input bytes one operation reads |
+| `csv-rows` | 1,000,000 | the data records of one CSV input |
+| `csv-columns` | 1,024 | the fields of one record |
+| `csv-cell` | 1 MiB | one field |
+| `collection-items` | 100,000 | the files of one collection, and the entries of a data directory |
+| `frontmatter-size` | 1 MiB | the frontmatter of one Markdown file |
+| `findings` | 100,000 | the findings one operation lists ([chapter 12](12-findings.md)) |
+
+<a id="mts-sec-005"></a>**MTS-SEC-005** A processor MUST enforce every limit
+of §14.3, and `value-depth` and `number-length` on every input, at its default
+or at the lower value a caller gives for one operation, and MUST refuse an
+input that breaches one with `limit.exceeded` about that input, naming the
+limit and its bound, before it reads the bytes the limit bounds; the input
+then gives no value.
+
+## 14.4 Reading the host
+
+<a id="mts-sec-006"></a>**MTS-SEC-006** Inside a data directory a processor
+MUST open only the entries a declared input could be and the items of those
+collections; MUST NOT follow a symbolic link, whatever it points at, refusing
+it with `input.link`; and MUST NOT open a named pipe, socket or device,
+refusing it with `input.not_regular_file` from what the directory says it is.
+The data directory itself is the caller's own name, and a processor follows it
+when it is a link.
+
+<a id="mts-sec-007"></a>**MTS-SEC-007** A processor MUST take every supplied
+text, a file's content, an `--inputs-json` argument and a path set's value,
+as data: `$VAR`, `${VAR}`, `%VAR%`, `~` and `@path` in it are those characters,
+and nothing in it is looked up in the environment or read from a file.

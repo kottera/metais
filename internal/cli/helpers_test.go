@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -19,6 +20,7 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 
 	"github.com/kottera/metais/internal/cli/args"
+	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostenv"
 	"github.com/kottera/metais/internal/specdata"
@@ -226,10 +228,16 @@ func runTool(t testing.TB, argv ...string) ran {
 //   - a refusal names at least one next step (ADR-008 D14).
 func runWith(t testing.TB, d hostenv.Display, argv ...string) ran {
 	t.Helper()
+	return runIn(t, d, failingReader{t}, 0, argv...)
+}
+
+// runIn is runWith with stdin as standard input and faults injected.
+func runIn(t testing.TB, d hostenv.Display, stdin io.Reader, faults fault.Set, argv ...string) ran {
+	t.Helper()
 	var stdout, stderr bytes.Buffer
 	status := Run(context.Background(), Invocation{
-		Args: argv, Stdin: failingReader{t}, Stdout: &stdout, Stderr: &stderr,
-		Options: Options{Display: d},
+		Args: argv, Stdin: stdin, Stdout: &stdout, Stderr: &stderr,
+		Options: Options{Display: d, Faults: faults},
 	})
 	r := ran{args: argv, status: status, stdout: stdout.String(), stderr: stderr.String()}
 	l := readLine(table, argv)
@@ -249,7 +257,14 @@ func runWith(t testing.TB, d hostenv.Display, argv ...string) ran {
 		if l.cmd != nil {
 			refusals = l.cmd.Refusals
 		}
+		// A refusal leaves no result, and its codes are the ones a
+		// command declares (ADR-008 D16 item 2); a report's findings are
+		// its result.
+		refused := string(doc.Result) == "null"
 		for _, code := range r.codes() {
+			if !refused {
+				break
+			}
 			if code != string(finding.CodeInternalError) && !slices.ContainsFunc(refusals, func(rf Refusal) bool { return string(rf.Code) == code }) {
 				t.Errorf("metais %q emitted %s, which its declaration does not list", argv, code)
 			}
@@ -272,7 +287,8 @@ func runWith(t testing.TB, d hostenv.Display, argv ...string) ran {
 // (ADR-008 D14 item 2) and each single-quoted word unquoted as a POSIX
 // shell unquotes it.
 func parsesAsLine(line string) error {
-	sub := strings.NewReplacer("<package>", "pkg.metais", "<data dir>", "data", "<dir>", "some-dir", "<name>", "some-name", "<pattern>", "x")
+	sub := strings.NewReplacer("<package>", "pkg.metais", "<data dir>", "data",
+		"<your --set, --set-json and --inputs-json flags>", "--set /a=1 --set-json /b=2 --inputs-json {}", "<dir>", "some-dir", "<name>", "some-name", "<pattern>", "x")
 	fields, err := shellFields(sub.Replace(line))
 	if err != nil {
 		return fmt.Errorf("%q: %v", line, err)

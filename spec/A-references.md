@@ -41,6 +41,9 @@ background only.
 - <a id="rfc8785"></a>**[RFC8785]** Rundgren, A., Jordan, B., and S. Erdtman,
   *JSON Canonicalization Scheme (JCS)*, RFC 8785, June 2020 —
   https://www.rfc-editor.org/rfc/rfc8785
+- <a id="rfc4180"></a>**[RFC4180]** Shafranovich, Y., *Common Format and MIME
+  Type for Comma-Separated Values (CSV) Files*, RFC 4180, October 2005 —
+  https://www.rfc-editor.org/rfc/rfc4180
 - <a id="unicode"></a>**[Unicode]** The Unicode Consortium, *The Unicode
   Standard, Version 15.0.0*, with its Character Database, including
   `CaseFolding.txt` — https://www.unicode.org/versions/Unicode15.0.0/

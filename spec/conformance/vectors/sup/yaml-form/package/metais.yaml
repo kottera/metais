@@ -1,0 +1,95 @@
+metais: "1.0"
+name: org.example.inputs
+version: 1.0.0
+title: Inputs
+description: A package whose inputs are validated.
+guide: Supply the inputs.
+inputs:
+  - name: a
+    title: A
+    schema: inputs/a.schema.json
+    forms: [yaml]
+    required: false
+  - name: b
+    title: B
+    schema: inputs/b.schema.json
+    forms: [yaml]
+    required: false
+  - name: c
+    title: C
+    schema: inputs/c.schema.json
+    forms: [yaml]
+    required: false
+  - name: d
+    title: D
+    schema: inputs/d.schema.json
+    forms: [yaml]
+    required: false
+  - name: e
+    title: E
+    schema: inputs/e.schema.json
+    forms: [yaml]
+    required: false
+  - name: f
+    title: F
+    schema: inputs/f.schema.json
+    forms: [yaml]
+    required: false
+  - name: g
+    title: G
+    schema: inputs/g.schema.json
+    forms: [yaml]
+    required: false
+  - name: h
+    title: H
+    schema: inputs/h.schema.json
+    forms: [yaml]
+    required: false
+  - name: i
+    title: I
+    schema: inputs/i.schema.json
+    forms: [yaml]
+    required: false
+  - name: j
+    title: J
+    schema: inputs/j.schema.json
+    forms: [yaml]
+    required: false
+  - name: k
+    title: K
+    schema: inputs/k.schema.json
+    forms: [yaml]
+    required: false
+  - name: l
+    title: L
+    schema: inputs/l.schema.json
+    forms: [yaml]
+    required: false
+  - name: m
+    title: M
+    schema: inputs/m.schema.json
+    forms: [yaml]
+    required: false
+  - name: n
+    title: N
+    schema: inputs/n.schema.json
+    forms: [yaml]
+    required: false
+  - name: o
+    title: O
+    schema: inputs/o.schema.json
+    forms: [yaml]
+    required: false
+  - name: p
+    title: P
+    schema: inputs/p.schema.json
+    forms: [yaml]
+    required: false
+  - name: q
+    title: Q
+    schema: inputs/q.schema.json
+    forms: [yaml]
+    required: false
+outputs:
+  - id: report
+    template: report.md.liquid

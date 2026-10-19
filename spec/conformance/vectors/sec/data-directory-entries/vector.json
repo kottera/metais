@@ -1,0 +1,76 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/data-directory-entries",
+  "title": "No link inside a data directory is followed, and no special file in it is opened",
+  "statements": [
+    "MTS-SEC-006",
+    "MTS-SUP-018"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [
+    "symlinks",
+    "fifos"
+  ],
+  "notes": "",
+  "cases": [
+    {
+      "name": "links",
+      "setup": {
+        "symlinks": [
+          {
+            "path": "data/links/vendor.json",
+            "target": "inside.json"
+          },
+          {
+            "path": "data/links/tags/a.json",
+            "target": "../../../package/metais.yaml"
+          },
+          {
+            "path": "data/links/items",
+            "target": "."
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/links"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/links.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "special-files",
+      "setup": {
+        "fifos": [
+          "data/special-files/vendor.json",
+          "data/special-files/tags/a.json",
+          "data/special-files/unrelated"
+        ]
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/special-files"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/special-files.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "type": "array",
+  "prefixItems": [
+    {
+      "format": "date-time"
+    },
+    {
+      "format": "date-time"
+    },
+    {
+      "format": "date-time"
+    },
+    {
+      "format": "date"
+    },
+    {
+      "format": "time"
+    },
+    {
+      "format": "time"
+    },
+    {
+      "format": "duration"
+    },
+    {
+      "format": "duration"
+    },
+    {
+      "format": "email"
+    },
+    {
+      "format": "email"
+    },
+    {
+      "format": "email"
+    },
+    {
+      "format": "email"
+    },
+    {
+      "format": "hostname"
+    },
+    {
+      "format": "ipv4"
+    },
+    {
+      "format": "ipv6"
+    },
+    {
+      "format": "uri"
+    },
+    {
+      "format": "uri-reference"
+    },
+    {
+      "format": "uuid"
+    },
+    {
+      "format": "uri-template"
+    },
+    {
+      "format": "json-pointer"
+    },
+    {
+      "format": "relative-json-pointer"
+    },
+    {
+      "format": "relative-json-pointer"
+    },
+    {
+      "format": "email"
+    }
+  ],
+  "items": false
+}

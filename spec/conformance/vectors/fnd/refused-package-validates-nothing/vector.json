@@ -1,0 +1,31 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "fnd/refused-package-validates-nothing",
+  "title": "A package refused at open is refused under validate with the open's findings alone, and no input is read",
+  "statements": [
+    "MTS-FND-002"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "manifest-defect",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/manifest-defect"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/manifest-defect.json"
+          }
+        }
+      ]
+    }
+  ]
+}

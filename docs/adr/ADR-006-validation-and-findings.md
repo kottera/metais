@@ -1252,3 +1252,25 @@ changes the exit status and nothing in the report.
   and its subschema's failures beneath it, as D6 items 4 and 5 both say.
   D13 item 5's echo test is `TestNoEcho`, with its control beside it;
   `TestChildOrder` permutes every node's children.
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-1.** D9 items 1 and 2 hold every
+  message and hint the finding renders: a value that would carry the text
+  past 240 code points is cut to its share of what the template's own
+  text leaves, `{field}`'s pointer keeping its end behind `…` and any
+  other value its start before it, and the finding's members keep the
+  whole of each. The digests `internal/jsonx` and `internal/inputs` pin
+  for their hostile reports were taken again, the messages the only bytes
+  that changed. The report lists at most the command's `findings` limit,
+  `--limit findings=` included (D8 item 5). `fault.FirstFinding` is a
+  `Report` built by `NewReportFaults`, which keeps the first error and
+  drops every later one; `internal/guarantees`' `TestOnePassDetector` is
+  SC8's planted-errors test over the vector
+  `sup/every-finding-one-pass`, with the fault as its control. Chapter 12
+  gains D6's mapping, `schema` and applicators, D6 item 9's field, D5's
+  positions, D8's cap and totals, and D9's echo and neutralisation rules,
+  each with its vector; a vector compares a finding's members, so the
+  bytes of D9 item 9's escapes are proved by `internal/cli`'s
+  `TestValidateEscapesPackageText`. D12's exit statuses are the command
+  line's and are not a vector's to state: the cli adapter checks every
+  step's status against its findings, which proves the consumer role's
+  rule for a manifest defect under `validate`
+  (`fnd/refused-package-validates-nothing`).

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/nothing-expanded",
+  "title": "Supplied text is data: no variable, home directory or file reference in it is expanded",
+  "statements": [
+    "MTS-SEC-007"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "literal",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/literal",
+            "set": [
+              "/v/d=~/x",
+              "/v/e=@metais.yaml"
+            ],
+            "set_json": [
+              "/v/d=\"~/x\""
+            ],
+            "inputs_json": "args/literal.json"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "const": "2026-10-18"
+    },
+    "yes": {
+      "type": "string",
+      "const": "yes"
+    },
+    "on": {
+      "const": "on"
+    },
+    "empty": {
+      "type": "null"
+    },
+    "n": {
+      "const": 1
+    },
+    "t": {
+      "const": true
+    },
+    "z": {
+      "type": "null"
+    }
+  }
+}

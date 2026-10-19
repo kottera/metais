@@ -1,0 +1,20 @@
+[
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items"
+    },
+    "params": {
+      "limit": "collection-items",
+      "bound": 2,
+      "lowered": true
+    }
+  }
+]

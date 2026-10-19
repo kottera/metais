@@ -137,6 +137,12 @@ func TestParsedAccessors(t *testing.T) {
 	if v, _ := p.Value("set"); v != "/a=1" {
 		t.Error("Values returned the parse's own slice")
 	}
+	if at := p.ArgsOf("set"); !slices.Equal(at, []int{1, 4}) {
+		t.Errorf("ArgsOf(set) = %v, want [1 4]", at)
+	}
+	if at := p.ArgsOf("color"); at != nil {
+		t.Errorf("ArgsOf(color) = %v for a flag not given", at)
+	}
 }
 
 // TestErrorsCarryNoArgumentText holds Parse to never putting a refused

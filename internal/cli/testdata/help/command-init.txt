@@ -30,6 +30,10 @@ Flags:
       element is . or ..; otherwise it defaults to that element.
   --dry-run
       Report the files init would write, and write nothing.
+  --fail-on <severity>
+      With warning, a warning fails the command with exit status 1 as an error
+      does; no finding's severity changes. Values: error, warning. Default:
+      error.
   --json
       Print the result as one JSON document on standard output.
   --color <when>

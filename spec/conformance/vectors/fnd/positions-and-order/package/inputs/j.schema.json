@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "é": {
+      "type": "integer"
+    },
+    "a/b~c": {
+      "type": "integer"
+    },
+    "list": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    }
+  }
+}

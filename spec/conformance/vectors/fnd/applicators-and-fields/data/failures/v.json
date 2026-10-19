@@ -1,0 +1,37 @@
+{
+  "shape": {
+    "kind": "circle",
+    "radius": -1
+  },
+  "either": "text",
+  "mode": "detailed",
+  "detail": {},
+  "price": -1,
+  "cost": -2,
+  "thing": {
+    "label": "x"
+  },
+  "parent": {
+    "child": "no"
+  },
+  "shared": "abc",
+  "tree": {
+    "size": 1,
+    "children": [
+      {
+        "size": 2,
+        "children": [
+          {
+            "size": "three"
+          }
+        ]
+      }
+    ]
+  },
+  "list": [
+    [
+      1
+    ],
+    "two"
+  ]
+}

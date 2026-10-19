@@ -1,0 +1,963 @@
+[
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 2,
+      "column": 11,
+      "pointer": "/type"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/type/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.enum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 3,
+      "column": 11,
+      "pointer": "/enum"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/enum/enum",
+      "keyword": "enum"
+    },
+    "params": {
+      "allowed": [
+        "\"red\"",
+        "\"green\""
+      ],
+      "allowed_count": 2
+    }
+  },
+  {
+    "code": "input.const",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 4,
+      "column": 12,
+      "pointer": "/const"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/const/const",
+      "keyword": "const"
+    },
+    "params": {
+      "expected": "\"fixed\""
+    }
+  },
+  {
+    "code": "input.multiple_of",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 5,
+      "column": 18,
+      "pointer": "/multiple_of"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/multiple_of/multipleOf",
+      "keyword": "multipleOf"
+    },
+    "params": {
+      "divisor": 5,
+      "value": 7
+    }
+  },
+  {
+    "code": "input.maximum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 6,
+      "column": 14,
+      "pointer": "/maximum"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/maximum/maximum",
+      "keyword": "maximum"
+    },
+    "params": {
+      "limit": 10,
+      "value": 11
+    }
+  },
+  {
+    "code": "input.exclusive_maximum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 7,
+      "column": 24,
+      "pointer": "/exclusive_maximum"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/exclusive_maximum/exclusiveMaximum",
+      "keyword": "exclusiveMaximum"
+    },
+    "params": {
+      "limit": 10,
+      "value": 10
+    }
+  },
+  {
+    "code": "input.minimum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 8,
+      "column": 14,
+      "pointer": "/minimum"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/minimum/minimum",
+      "keyword": "minimum"
+    },
+    "params": {
+      "limit": 10,
+      "value": 9
+    }
+  },
+  {
+    "code": "input.exclusive_minimum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 9,
+      "column": 24,
+      "pointer": "/exclusive_minimum"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/exclusive_minimum/exclusiveMinimum",
+      "keyword": "exclusiveMinimum"
+    },
+    "params": {
+      "limit": 10,
+      "value": 10
+    }
+  },
+  {
+    "code": "input.max_length",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 10,
+      "column": 17,
+      "pointer": "/max_length"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/max_length/maxLength",
+      "keyword": "maxLength"
+    },
+    "params": {
+      "limit": 3,
+      "length": 4
+    }
+  },
+  {
+    "code": "input.min_length",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 11,
+      "column": 17,
+      "pointer": "/min_length"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/min_length/minLength",
+      "keyword": "minLength"
+    },
+    "params": {
+      "limit": 3,
+      "length": 2
+    }
+  },
+  {
+    "code": "input.pattern",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 12,
+      "column": 14,
+      "pointer": "/pattern"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/pattern/pattern",
+      "keyword": "pattern"
+    },
+    "params": {
+      "pattern": "^[a-z]+$"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 13,
+      "column": 13,
+      "pointer": "/format"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/format/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "date"
+    }
+  },
+  {
+    "code": "input.max_items",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 14,
+      "column": 16,
+      "pointer": "/max_items"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/max_items/maxItems",
+      "keyword": "maxItems"
+    },
+    "params": {
+      "limit": 1,
+      "count": 2
+    }
+  },
+  {
+    "code": "input.min_items",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 18,
+      "column": 16,
+      "pointer": "/min_items"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/min_items/minItems",
+      "keyword": "minItems"
+    },
+    "params": {
+      "limit": 3,
+      "count": 1
+    }
+  },
+  {
+    "code": "input.unique_items",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 24,
+      "column": 5,
+      "pointer": "/unique_items/2"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/unique_items/uniqueItems",
+      "keyword": "uniqueItems"
+    },
+    "params": {
+      "index": 2,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "v.json",
+        "line": 22,
+        "column": 5,
+        "pointer": "/unique_items/0",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "input.contains",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 26,
+      "column": 15,
+      "pointer": "/contains"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/contains/contains",
+      "keyword": "contains"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.min_contains",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 30,
+      "column": 19,
+      "pointer": "/min_contains"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/min_contains/minContains",
+      "keyword": "minContains"
+    },
+    "params": {
+      "limit": 2,
+      "count": 1
+    }
+  },
+  {
+    "code": "input.max_contains",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 34,
+      "column": 19,
+      "pointer": "/max_contains"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/max_contains/maxContains",
+      "keyword": "maxContains"
+    },
+    "params": {
+      "limit": 1,
+      "count": 2
+    }
+  },
+  {
+    "code": "input.max_properties",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 38,
+      "column": 21,
+      "pointer": "/max_properties"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/max_properties/maxProperties",
+      "keyword": "maxProperties"
+    },
+    "params": {
+      "limit": 1,
+      "count": 2
+    }
+  },
+  {
+    "code": "input.min_properties",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 42,
+      "column": 21,
+      "pointer": "/min_properties"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/min_properties/minProperties",
+      "keyword": "minProperties"
+    },
+    "params": {
+      "limit": 2,
+      "count": 1
+    }
+  },
+  {
+    "code": "input.required",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 45,
+      "column": 15,
+      "pointer": "/required/a"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/required/required",
+      "keyword": "required"
+    },
+    "params": {
+      "property": "a"
+    }
+  },
+  {
+    "code": "input.required",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 45,
+      "column": 15,
+      "pointer": "/required/b"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/required/required",
+      "keyword": "required"
+    },
+    "params": {
+      "property": "b"
+    }
+  },
+  {
+    "code": "input.dependent_required",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 46,
+      "column": 25,
+      "pointer": "/dependent_required/b"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/dependent_required/dependentRequired",
+      "keyword": "dependentRequired"
+    },
+    "params": {
+      "property": "b",
+      "because": "a"
+    }
+  },
+  {
+    "code": "input.additional_item",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 51,
+      "column": 5,
+      "pointer": "/additional_item/1"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/additional_item/items",
+      "keyword": "items"
+    },
+    "params": {
+      "index": 1,
+      "prefix_count": 1
+    }
+  },
+  {
+    "code": "input.unevaluated_property",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 55,
+      "column": 5,
+      "pointer": "/unevaluated_property/z"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/unevaluated_property/unevaluatedProperties",
+      "keyword": "unevaluatedProperties"
+    },
+    "params": {
+      "property": "z",
+      "suggestion": "a"
+    }
+  },
+  {
+    "code": "input.unevaluated_item",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 59,
+      "column": 5,
+      "pointer": "/unevaluated_item/1"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/unevaluated_item/unevaluatedItems",
+      "keyword": "unevaluatedItems"
+    },
+    "params": {
+      "index": 1
+    }
+  },
+  {
+    "code": "input.property_name",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 62,
+      "column": 5,
+      "pointer": "/property_name/Upper"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/property_name/propertyNames",
+      "keyword": "propertyNames"
+    },
+    "params": {
+      "property": "Upper"
+    }
+  },
+  {
+    "code": "input.forbidden",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 65,
+      "column": 13,
+      "pointer": "/forbidden/gone"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/forbidden/properties/gone",
+      "keyword": "properties"
+    },
+    "params": {
+      "property": "gone"
+    }
+  },
+  {
+    "code": "input.not",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 67,
+      "column": 10,
+      "pointer": "/not"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/not/not",
+      "keyword": "not"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.any_of",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 68,
+      "column": 13,
+      "pointer": "/any_of"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/any_of/anyOf",
+      "keyword": "anyOf"
+    },
+    "params": {
+      "branch_count": 2
+    },
+    "alternatives": [
+      {
+        "branch": 0,
+        "findings": [
+          {
+            "code": "input.type",
+            "severity": "error",
+            "subject": {
+              "kind": "input",
+              "name": "v",
+              "title": "V"
+            },
+            "location": {
+              "origin": "data_dir",
+              "file": "v.json",
+              "line": 68,
+              "column": 13,
+              "pointer": "/any_of"
+            },
+            "schema": {
+              "entry": "inputs/v.schema.json",
+              "pointer": "/properties/any_of/anyOf/0/type",
+              "keyword": "type"
+            },
+            "params": {
+              "expected": [
+                "integer"
+              ],
+              "actual": "string"
+            }
+          }
+        ],
+        "omitted": 0
+      },
+      {
+        "branch": 1,
+        "findings": [
+          {
+            "code": "input.type",
+            "severity": "error",
+            "subject": {
+              "kind": "input",
+              "name": "v",
+              "title": "V"
+            },
+            "location": {
+              "origin": "data_dir",
+              "file": "v.json",
+              "line": 68,
+              "column": 13,
+              "pointer": "/any_of"
+            },
+            "schema": {
+              "entry": "inputs/v.schema.json",
+              "pointer": "/properties/any_of/anyOf/1/type",
+              "keyword": "type"
+            },
+            "params": {
+              "expected": [
+                "boolean"
+              ],
+              "actual": "string"
+            }
+          }
+        ],
+        "omitted": 0
+      }
+    ]
+  },
+  {
+    "code": "input.one_of",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 69,
+      "column": 13,
+      "pointer": "/one_of"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/one_of/oneOf",
+      "keyword": "oneOf"
+    },
+    "params": {
+      "branch_count": 2
+    },
+    "alternatives": [
+      {
+        "branch": 0,
+        "findings": [
+          {
+            "code": "input.type",
+            "severity": "error",
+            "subject": {
+              "kind": "input",
+              "name": "v",
+              "title": "V"
+            },
+            "location": {
+              "origin": "data_dir",
+              "file": "v.json",
+              "line": 69,
+              "column": 13,
+              "pointer": "/one_of"
+            },
+            "schema": {
+              "entry": "inputs/v.schema.json",
+              "pointer": "/properties/one_of/oneOf/0/type",
+              "keyword": "type"
+            },
+            "params": {
+              "expected": [
+                "integer"
+              ],
+              "actual": "string"
+            }
+          }
+        ],
+        "omitted": 0
+      },
+      {
+        "branch": 1,
+        "findings": [
+          {
+            "code": "input.type",
+            "severity": "error",
+            "subject": {
+              "kind": "input",
+              "name": "v",
+              "title": "V"
+            },
+            "location": {
+              "origin": "data_dir",
+              "file": "v.json",
+              "line": 69,
+              "column": 13,
+              "pointer": "/one_of"
+            },
+            "schema": {
+              "entry": "inputs/v.schema.json",
+              "pointer": "/properties/one_of/oneOf/1/type",
+              "keyword": "type"
+            },
+            "params": {
+              "expected": [
+                "boolean"
+              ],
+              "actual": "string"
+            }
+          }
+        ],
+        "omitted": 0
+      }
+    ]
+  },
+  {
+    "code": "input.one_of.ambiguous",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 70,
+      "column": 23,
+      "pointer": "/one_of_ambiguous"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/one_of_ambiguous/oneOf",
+      "keyword": "oneOf"
+    },
+    "params": {
+      "branches": [
+        0,
+        1
+      ]
+    }
+  },
+  {
+    "code": "input.additional_property",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 71,
+      "column": 3,
+      "pointer": "/extra_member"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/additionalProperties",
+      "keyword": "additionalProperties"
+    },
+    "params": {
+      "property": "extra_member"
+    }
+  }
+]

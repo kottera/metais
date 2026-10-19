@@ -1,0 +1,35 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "fnd/report-cap",
+  "title": "A report lists at most the findings limit, then report.truncated, and its totals count every finding",
+  "statements": [
+    "MTS-FND-010",
+    "MTS-FND-009"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "ten-errors",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/ten-errors",
+            "limits": {
+              "findings": 3
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/ten-errors.json"
+          }
+        }
+      ]
+    }
+  ]
+}

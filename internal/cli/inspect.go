@@ -29,6 +29,13 @@ var nextInspectAgain = Next{Run: "metais inspect <package>", Why: "Opens the pac
 
 var nextLimits = Next{Run: "metais limits", Why: "Lists every limit with its default; a limit can be lowered and never raised."}
 
+// failOnFlag is --fail-on, which every command that reports findings
+// takes (ADR-008 D4, ADR-006 D2 item 5).
+var failOnFlag = args.Flag{
+	Name: "fail-on", Value: "<severity>", Values: []string{"error", "warning"}, Default: "error",
+	Description: "With warning, a warning fails the command with exit status 1 as an error does; no finding's severity changes.",
+}
+
 // limitFlag is --limit, which every command that reads a package takes
 // (ADR-009 D4 item 1).
 var limitFlag = args.Flag{
@@ -56,11 +63,12 @@ func inspectDeclaration() *Command {
 		Flags: []args.Flag{
 			{Name: "guide", Description: "Print only the package's identity and its whole guide."},
 			limitFlag,
+			failOnFlag,
 		},
 		Format:       "metais.inspect/1",
 		NextToStdout: true,
 		Prints:       "The package's summary: its title, name and version, description, specification version, form and digest, then the sections Guide, Inputs, Outputs, References, Assets, Examples and Read next; with --guide, the guide's Markdown alone.",
-		Refusals:     packageRefusals(),
+		Refusals:     packageRefusals("inspect"),
 		Examples: []Example{
 			{"metais inspect report-1.0.0.metais", "Prints the summary of a packed package."},
 			{"metais inspect .", "Prints the summary of the source directory in the working directory."},
@@ -71,14 +79,14 @@ func inspectDeclaration() *Command {
 	}
 }
 
-// packageRefusals are the refusals of a command that opens a package: the
-// operand's, the limits', and every registered code of the families the
-// open reports (ADR-008 D16 item 2's declaration of each), but those only
-// check reports.
-func packageRefusals() []Refusal {
+// packageRefusals are the refusals of the command called name, which opens
+// a package: the operand's, the limits', and every registered code of the
+// families the open reports (ADR-008 D16 item 2's declaration of each), but
+// those only check reports.
+func packageRefusals(name string) []Refusal {
 	out := []Refusal{
-		{finding.CodeUsageMissingOperand, "The package operand is not given.", nextCommandHelp("inspect")},
-		{finding.CodeUsagePackageFromStdin, "The package operand is -, standard input.", nextCommandHelp("inspect")},
+		{finding.CodeUsageMissingOperand, "The package operand is not given.", nextCommandHelp(name)},
+		{finding.CodeUsagePackageFromStdin, "The package operand is -, standard input.", nextCommandHelp(name)},
 		{finding.CodeLimitInvalid, "A --limit names no limit, gives a malformed value, or tries to raise one.", nextLimits},
 		{finding.CodeLimitPackage, "The package breaches one of its limits.", nextLimits},
 	}
@@ -216,7 +224,8 @@ func runInspect(s *session, p args.Parsed) outcome {
 }
 
 // limits is the command's limits: the defaults, each lowered by a --limit
-// in the order given (ADR-009 D4 item 1).
+// in the order given (ADR-009 D4 item 1). The session keeps them, so the
+// report lists at most the findings limit they give.
 func (s *session) limits(p args.Parsed) (limits.Set, []finding.Finding) {
 	lim := limits.Defaults()
 	var fs []finding.Finding
@@ -224,6 +233,9 @@ func (s *session) limits(p args.Parsed) (limits.Set, []finding.Finding) {
 		if f, ok := lim.Lower(v); !ok {
 			fs = append(fs, f)
 		}
+	}
+	if len(fs) == 0 {
+		s.lim = &lim
 	}
 	return lim, fs
 }
@@ -516,10 +528,7 @@ func inspectNext(res *inspectResult, t []*Command) []Next {
 	// A step names a command this tool has, or it is not one a caller can
 	// take: the reading, supplying and rendering commands join the list
 	// as they are declared.
-	return slices.DeleteFunc(out, func(n Next) bool {
-		name, _, _ := strings.Cut(strings.TrimPrefix(n.Run, "metais "), " ")
-		return lookup(t, name) == nil
-	})
+	return declaredSteps(out, t)
 }
 
 // shellQuote quotes s for a POSIX shell when it holds anything outside

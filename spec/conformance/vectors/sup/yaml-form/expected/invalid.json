@@ -1,0 +1,325 @@
+[
+  {
+    "code": "yaml.multi_document",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "a",
+      "title": "A"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "a.yaml",
+      "line": 2,
+      "column": 1
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.directive",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "b",
+      "title": "B"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "b.yaml",
+      "line": 1,
+      "column": 1
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "c",
+      "title": "C"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "c.yaml",
+      "line": 1,
+      "column": 4,
+      "pointer": "/a"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "d",
+      "title": "D"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "d.yaml",
+      "line": 1,
+      "column": 4,
+      "pointer": "/a"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "d",
+      "title": "D"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "d.yaml",
+      "line": 2,
+      "column": 4,
+      "pointer": "/b"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.merge_key",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "e",
+      "title": "E"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "e.yaml",
+      "line": 3,
+      "column": 3,
+      "pointer": "/m"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.tag",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "f",
+      "title": "F"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "f.yaml",
+      "line": 1,
+      "column": 4,
+      "pointer": "/a"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.duplicate_key",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "g",
+      "title": "G"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "g.yaml",
+      "line": 2,
+      "column": 1,
+      "pointer": "/a"
+    },
+    "params": {},
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "g.yaml",
+        "line": 1,
+        "column": 1,
+        "pointer": "/a",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "yaml.key_not_scalar",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "h",
+      "title": "H"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "h.yaml",
+      "line": 1,
+      "column": 3,
+      "pointer": ""
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.key_empty",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "i",
+      "title": "I"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "i.yaml",
+      "line": 1,
+      "column": 2,
+      "pointer": ""
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.scalar_refused",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "j",
+      "title": "J"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "j.yaml",
+      "line": 1,
+      "column": 4,
+      "pointer": "/a"
+    },
+    "params": {
+      "form": "null"
+    }
+  },
+  {
+    "code": "yaml.scalar_refused",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "k",
+      "title": "K"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "k.yaml",
+      "line": 1,
+      "column": 4,
+      "pointer": "/a"
+    },
+    "params": {
+      "form": "number"
+    }
+  },
+  {
+    "code": "yaml.scalar_refused",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "l",
+      "title": "L"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "l.yaml",
+      "line": 1,
+      "column": 4,
+      "pointer": "/a"
+    },
+    "params": {
+      "form": "number"
+    }
+  },
+  {
+    "code": "yaml.scalar_refused",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "m",
+      "title": "M"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "m.yaml",
+      "line": 1,
+      "column": 4,
+      "pointer": "/a"
+    },
+    "params": {
+      "form": "number"
+    }
+  },
+  {
+    "code": "yaml.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "n",
+      "title": "N"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "n.yaml",
+      "line": 2
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.character",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "o",
+      "title": "O"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "o.yaml",
+      "line": 1,
+      "column": 5
+    },
+    "params": {
+      "codepoint": "U+0007",
+      "reason": "forbidden"
+    }
+  },
+  {
+    "code": "input.number_out_of_range",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "p",
+      "title": "P"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "p.yaml",
+      "line": 1,
+      "column": 4,
+      "pointer": "/a"
+    },
+    "params": {
+      "reason": "unsafe_integer"
+    }
+  },
+  {
+    "code": "yaml.bom",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "q",
+      "title": "Q"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "q.yaml",
+      "line": 1,
+      "column": 1
+    },
+    "params": {}
+  }
+]

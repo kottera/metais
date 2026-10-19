@@ -1,0 +1,44 @@
+[
+  {
+    "code": "input.file_duplicate",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.csv"
+    },
+    "params": {},
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "rows",
+        "note": "first entry"
+      }
+    ]
+  },
+  {
+    "code": "input.file_duplicate",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml"
+    },
+    "params": {},
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "tags",
+        "note": "first entry"
+      }
+    ]
+  }
+]

@@ -29,6 +29,12 @@ func (s Set) Has(f Set) bool {
 // internal/pkgtree.
 const SkipDigest Set = 1 << 0
 
+// FirstFinding makes a report keep only the first error it is given and
+// drop every later one (ADR-010 D13 item 2): the SC8 planted-errors test
+// must catch a report that stops at its first error. Its seam is
+// internal/finding.
+const FirstFinding Set = 1 << 1
+
 // SkipConfine makes the output path check return success (ADR-010 D13
 // item 2): a write goes to its name joined onto the output directory's host
 // path, through no root, so a name that climbs out of the directory or

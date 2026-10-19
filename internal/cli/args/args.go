@@ -117,6 +117,7 @@ type Error struct {
 type Parsed struct {
 	values   map[string][]string // by long name; a boolean flag holds one "" per occurrence
 	first    map[string]int      // the index of each flag's first occurrence
+	at       map[string][]int    // the index of each occurrence, in order
 	Operands []string
 	// OperandArgs holds the index of each operand in the slice Parse was
 	// given.
@@ -150,6 +151,10 @@ func (p Parsed) Arg(name string) (int, bool) {
 	return i, ok
 }
 
+// ArgsOf returns the index of each occurrence of the flag called name,
+// in command-line order: the occurrences Values holds the values of.
+func (p Parsed) ArgsOf(name string) []int { return slices.Clone(p.at[name]) }
+
 // Parse parses args against spec and returns every argument it refuses, in
 // the order of the arguments, with the parse of everything it accepted.
 //
@@ -164,7 +169,7 @@ func (p Parsed) Arg(name string) (int, bool) {
 // checked only on a line with no other refusal: an unknown flag may have
 // been meant to take the operand after it.
 func Parse(spec Spec, args []string) (Parsed, []Error) {
-	p := Parsed{values: map[string][]string{}, first: map[string]int{}}
+	p := Parsed{values: map[string][]string{}, first: map[string]int{}, at: map[string][]int{}}
 	var errs []Error
 	add := func(f Flag, i int, v string) {
 		if _, seen := p.values[f.Name]; seen && !f.Repeatable {
@@ -179,6 +184,7 @@ func Parse(spec Spec, args []string) (Parsed, []Error) {
 			p.first[f.Name] = i
 		}
 		p.values[f.Name] = append(p.values[f.Name], v)
+		p.at[f.Name] = append(p.at[f.Name], i)
 	}
 	ended := false
 	for i := 0; i < len(args); i++ {

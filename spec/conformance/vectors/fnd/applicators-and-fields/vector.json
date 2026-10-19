@@ -1,0 +1,52 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "fnd/applicators-and-fields",
+  "title": "A failure under anyOf, oneOf, if or $ref names its branch, condition and authored rule, and the field its title",
+  "statements": [
+    "MTS-FND-006",
+    "MTS-FND-007",
+    "MTS-FND-005",
+    "MTS-DAT-007"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "failures",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/failures"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/failures.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "collapse",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set_json": [
+              "/v={\"shape\": {\"kind\": \"square\", \"side\": 1, \"radius\": 1}, \"either\": []}"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/collapse.json"
+          }
+        }
+      ]
+    }
+  ]
+}

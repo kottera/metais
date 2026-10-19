@@ -1,0 +1,33 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "fnd/neutralised-text",
+  "title": "Control and bidirectional characters of package text are written as escapes in the JSON report",
+  "statements": [
+    "MTS-FND-012"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "escaped",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set_json": [
+              "/v={\"name\": 1}"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/escaped.json"
+          }
+        }
+      ]
+    }
+  ]
+}

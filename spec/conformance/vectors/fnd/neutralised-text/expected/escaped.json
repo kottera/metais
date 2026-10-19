@@ -1,0 +1,31 @@
+[
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 1,
+      "pointer": "/name"
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/properties/name/type",
+      "keyword": "type"
+    },
+    "field": {
+      "title": "Name\u001b[31m",
+      "description": "Line one\nline two ‮evil⁦"
+    },
+    "params": {
+      "expected": [
+        "string"
+      ],
+      "actual": "number"
+    }
+  }
+]

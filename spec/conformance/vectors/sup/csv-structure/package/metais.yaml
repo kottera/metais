@@ -1,0 +1,45 @@
+metais: "1.0"
+name: org.example.inputs
+version: 1.0.0
+title: Inputs
+description: A package whose inputs are validated.
+guide: Supply the inputs.
+inputs:
+  - name: a
+    title: A
+    schema: inputs/a.schema.json
+    forms: [csv]
+    required: false
+  - name: b
+    title: B
+    schema: inputs/b.schema.json
+    forms: [csv]
+    required: false
+  - name: c
+    title: C
+    schema: inputs/c.schema.json
+    forms: [csv]
+    required: false
+  - name: d
+    title: D
+    schema: inputs/d.schema.json
+    forms: [csv]
+    required: false
+  - name: e
+    title: E
+    schema: inputs/e.schema.json
+    forms: [csv]
+    required: false
+  - name: f
+    title: F
+    schema: inputs/f.schema.json
+    forms: [csv]
+    required: false
+  - name: g
+    title: G
+    schema: inputs/g.schema.json
+    forms: [csv]
+    required: false
+outputs:
+  - id: report
+    template: report.md.liquid

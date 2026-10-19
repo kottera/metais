@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "properties": {
+    "user": {
+      "type": "string",
+      "maxLength": 3
+    },
+    "pin": {
+      "type": "integer",
+      "writeOnly": true,
+      "maximum": 9999
+    },
+    "colour": {
+      "enum": [
+        "red",
+        "green"
+      ]
+    },
+    "code": {
+      "type": "integer"
+    },
+    "word": {
+      "const": "fixed"
+    },
+    "id": {
+      "pattern": "^[0-9]+$"
+    },
+    "when": {
+      "format": "date"
+    },
+    "tags": {
+      "type": "array",
+      "uniqueItems": true
+    }
+  }
+}
