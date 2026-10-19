@@ -1129,6 +1129,10 @@ A release can be built.
 - **Limit calibration**: the worst case of each work and output limit at its
   default, recorded per target, with ADR-009 D18 item 2's ceilings as the
   acceptance. The suite is written here and run on real hosts by §6.
+- **Schema compile bounds** (ADR-009 Amendment A1): `schema-subschemas` and
+  `schema-location-length` in D3's table, `internal/limits` and the
+  pre-check, with vectors for both refusals and the combined schema's
+  count; their joint worst case joins the calibration suite.
 - **Benchmarks** of ADR-010 D15 item 1, with committed baselines.
 - **The release builder** (ADR-010 D12):
   - `internal/tools/release`, which builds twice and compares;

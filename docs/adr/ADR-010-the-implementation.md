@@ -633,8 +633,9 @@ formats with METAIS's definitions, and uses the package regex profile.**
 3. **What METAIS checks before the library sees a schema** (in
    `internal/schema`): unknown keywords (ADR-003 D3 item 5 — the library
    treats them as annotations), formats outside ADR-003 D4's list, the
-   `$schema` value, and the nesting and size limits of ADR-009. The library
-   then compiles; a compile error becomes a finding through the same adapter.
+   `$schema` value, and the nesting and size limits of ADR-009, including
+   the subschema count and location length of ADR-009 Amendment A1, which
+   bound the library's compile cost. The library then compiles; a compile error becomes a finding through the same adapter.
 4. **Instances are METAIS's data model**, converted for the library as
    `map[string]any`, `[]any`, `string`, `bool`, `nil` and `json.Number` (the
    literal text from the parser), never `float64`, so a number's value is not
