@@ -1,0 +1,25 @@
+[
+  {
+    "code": "package.name.file_directory_conflict",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/a/b"
+    },
+    "params": {
+      "offset": 2744,
+      "member": "assets/a",
+      "other": "assets/a"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "assets/a",
+        "note": "collides with"
+      }
+    ]
+  }
+]

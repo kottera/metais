@@ -938,4 +938,27 @@ it (ADR-002).
 
 ## Implementation log
 
-Nothing implemented.
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-1.** D5 to D9 landed as
+  `internal/loader` over Wave 2's trees, and as `metais inspect`; D6 as
+  `internal/digest`. D8 steps 1 to 5 stay `zipfmt.Open`'s; `OpenWith` hands
+  step 5's decoded bytes to the loader as they pass, so the open reads every
+  byte of the file once and decodes every entry once, the manifest, the
+  schemas and the three re-derived compiled files included. Choices the
+  decisions leave open:
+  - a zip missing any compiled file is refused with `package.compiled.missing`
+    before step 6, since step 6 cannot run without the digest file; an
+    unknown top-level name and an unknown `.compiled/` file are judged after
+    the version gate, as D5 item 4 places them;
+  - the digest file's form has one code, `package.digest.not_canonical`,
+    whose `reason` says whether it is not JSON, not of D6 item 1's shape, or
+    not canonical; `package.digest.entries_mismatch` is reported once per
+    name, with `reason` `not_listed` or `no_entry`;
+  - a source directory's names are refused by the same `package.name.*`
+    codes as a packed package's, without `offset`, which the registry now
+    marks optional;
+  - the media type and the detection rule of D9 are informative text in
+    chapter 2, and `.metais` is a recommendation to authors.
+  The specification's area for chapter 2 is `PKG`, not `CON`: a vector
+  directory `con/` is a Windows device name, which ADR-011 D9 item 8
+  refuses, against ADR-011 D9 item 1's lower-cased area. The rename is
+  provisional, pending a ruling.

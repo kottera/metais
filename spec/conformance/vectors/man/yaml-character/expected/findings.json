@@ -1,0 +1,19 @@
+[
+  {
+    "code": "manifest.yaml.character",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 5,
+      "column": 24
+    },
+    "params": {
+      "codepoint": "U+2028",
+      "reason": "line_separator"
+    }
+  }
+]

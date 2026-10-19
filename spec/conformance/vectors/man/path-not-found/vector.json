@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "man/path-not-found",
+  "title": "A schema, a meaning document, a template, an asset and a mirror the manifest names that are no entry are each refused",
+  "statements": [
+    "MTS-MAN-017"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "open",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

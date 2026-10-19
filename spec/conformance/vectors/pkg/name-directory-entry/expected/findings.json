@@ -1,0 +1,16 @@
+[
+  {
+    "code": "package.name.directory_entry",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/dir/"
+    },
+    "params": {
+      "offset": 2574
+    }
+  }
+]

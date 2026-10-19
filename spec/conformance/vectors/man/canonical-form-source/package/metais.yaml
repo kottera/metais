@@ -1,0 +1,17 @@
+# Comments and formatting are the source's own; the canonical form keeps
+# only the data model.
+metais:   "1.0"
+version: '1.0.0-rc.1+build.7'
+name: canonical
+title: "Quote \" backslash \\ é 😀 \uE000"
+description: >-
+  Folded text, a tab	inside,
+  and a line break kept
+
+  by a blank line.
+guide: "Line one\nLine two\twith a tab"
+inputs: []
+outputs:
+  - template: out.txt.liquid
+    id: out
+    escape: none

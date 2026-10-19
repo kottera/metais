@@ -157,6 +157,19 @@ var schemaKeywords = []schemaKeyword{
 
 // schemaEntries are the registry entries of ADR-006 D6 item 4's keyword
 // codes in each family, and D7 item 4's partial-validation finding.
+// schemaStatements are the statements each keyword code a vector produces
+// reports, by code; a code it does not name reports none yet.
+var schemaStatements = map[Code][]string{
+	"manifest.additional_property": {"MTS-MAN-011", "MTS-MAN-019"},
+	"manifest.enum":                {"MTS-MAN-019"},
+	"manifest.max_length":          {"MTS-MAN-012", "MTS-MAN-014", "MTS-MAN-019"},
+	"manifest.min_items":           {"MTS-MAN-019"},
+	"manifest.not":                 {"MTS-MAN-014", "MTS-MAN-019"},
+	"manifest.pattern":             {"MTS-MAN-012", "MTS-MAN-014", "MTS-MAN-019", "MTS-VER-008"},
+	"manifest.required":            {"MTS-MAN-011", "MTS-MAN-019"},
+	"manifest.type":                {"MTS-MAN-011", "MTS-MAN-019", "MTS-VER-008"},
+}
+
 func schemaEntries() []Entry {
 	var out []Entry
 	for _, fam := range schemaFamilies {
@@ -171,7 +184,7 @@ func schemaEntries() []Entry {
 				Hint:       k.hint,
 				Span:       k.span,
 				Since:      "1.0",
-				Statements: []string{},
+				Statements: append([]string{}, schemaStatements[Code(fam.prefix+"."+k.suffix)]...),
 			})
 		}
 	}

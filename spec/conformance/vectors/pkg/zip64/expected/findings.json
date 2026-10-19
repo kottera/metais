@@ -1,0 +1,15 @@
+[
+  {
+    "code": "package.container.zip64",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package"
+    },
+    "params": {
+      "offset": 2652
+    }
+  }
+]

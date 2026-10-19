@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.container.extra_field",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid"
+    },
+    "params": {
+      "offset": 2580,
+      "length": 5
+    }
+  }
+]

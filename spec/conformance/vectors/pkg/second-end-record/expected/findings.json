@@ -1,0 +1,15 @@
+[
+  {
+    "code": "package.container.second_end_record",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package"
+    },
+    "params": {
+      "offset": 1797
+    }
+  }
+]

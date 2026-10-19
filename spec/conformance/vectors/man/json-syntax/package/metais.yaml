@@ -1,0 +1,5 @@
+
+  {"metais": "1.0", "name": "json-manifest", "version": "1.0.0", "title": "JSON manifest",
+   "description": "A manifest written in JSON.", "guide": "Supply a report.",
+   "inputs": [{"name": "report", "title": "Report", "schema": "inputs/report.schema.json"}],
+   "outputs": [{"id": "report", "template": "report.md.liquid"},]}

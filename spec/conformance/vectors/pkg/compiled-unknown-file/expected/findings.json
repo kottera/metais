@@ -1,0 +1,14 @@
+[
+  {
+    "code": "package.compiled.unknown_file",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/extra.json"
+    },
+    "params": {}
+  }
+]

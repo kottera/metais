@@ -21,6 +21,7 @@ gains members and enumeration values: ignore a member you do not know, and read
 an unknown value as other.
 
 The formats:
+  metais.inspect/1  metais inspect
   metais.init/1     metais init
   metais.version/1  metais version
   metais.limits/1   metais limits

@@ -1,0 +1,428 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.inspect.1.json",
+  "title": "metais.inspect/1",
+  "description": "What metais inspect prints with --json: what a supplier reads first about a package (ADR-008 D6). With --guide, only package and guide are present.",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.inspect/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "package",
+        "guide"
+      ],
+      "additionalProperties": false,
+      "dependentRequired": {
+        "inputs": [
+          "outputs",
+          "references",
+          "assets",
+          "examples"
+        ]
+      },
+      "properties": {
+        "package": {
+          "type": "object",
+          "required": [
+            "name",
+            "version",
+            "title",
+            "description",
+            "specification",
+            "implemented",
+            "digest",
+            "source"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "specification": {
+              "description": "The specification version the package targets.",
+              "type": "string"
+            },
+            "implemented": {
+              "description": "Whether this tool implements that version.",
+              "type": "boolean"
+            },
+            "digest": {
+              "description": "The package digest; for a source directory, that of the package pack would write.",
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "source": {
+              "enum": [
+                "packed",
+                "directory"
+              ]
+            }
+          }
+        },
+        "guide": {
+          "type": "object",
+          "required": [
+            "text",
+            "excerpt_lines",
+            "total_lines",
+            "truncated"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "text": {
+              "description": "The guide, or its excerpt when truncated.",
+              "type": "string"
+            },
+            "excerpt_lines": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "total_lines": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "truncated": {
+              "type": "boolean"
+            }
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "title",
+              "description",
+              "required",
+              "collection",
+              "forms",
+              "files",
+              "meaning",
+              "schema_entry",
+              "examples"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "collection": {
+                "type": "boolean"
+              },
+              "forms": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "json",
+                    "yaml",
+                    "csv",
+                    "text",
+                    "markdown"
+                  ]
+                }
+              },
+              "files": {
+                "description": "The names a data directory may hold the input under.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "meaning": {
+                "description": "The entry path of the input's meaning document, or null.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "schema_entry": {
+                "description": "The entry path of the input's schema file.",
+                "type": "string"
+              },
+              "examples": {
+                "description": "The names of the examples that supply the input.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/output"
+          }
+        },
+        "references": {
+          "type": "object",
+          "required": [
+            "count",
+            "size",
+            "entries"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "path",
+                  "title",
+                  "size"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "size": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "assets": {
+          "type": "object",
+          "required": [
+            "count",
+            "size"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "inputs",
+              "expected"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "inputs": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "expected": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": [
+        "id",
+        "form",
+        "source",
+        "path",
+        "for_each",
+        "when",
+        "escape",
+        "newline",
+        "validate",
+        "kind",
+        "executable",
+        "transforms"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "The declaration's identifier; null for a container entry that has none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "form": {
+          "description": "The declaration's form, named by its source key.",
+          "enum": [
+            "template",
+            "asset",
+            "mirror",
+            "container"
+          ]
+        },
+        "source": {
+          "description": "The template, asset or mirror the declaration names; null for a container.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "description": "The destination's path template, or its default where the declaration omits one.",
+          "type": "string"
+        },
+        "for_each": {
+          "description": "The for_each expression, or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "when": {
+          "description": "The when condition, or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "escape": {
+          "description": "The escape mode.",
+          "type": "string"
+        },
+        "newline": {
+          "description": "The newline mode.",
+          "type": "string"
+        },
+        "validate": {
+          "description": "The package path of the output's schema, or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "description": "The output kind the declaration writes, or null to derive it from the path.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "executable": {
+          "type": "boolean"
+        },
+        "transforms": {
+          "description": "The transforms the declaration applies, by name: validate, crlf, zip.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "templates": {
+          "description": "For a mirror: every template it renders, and its path beneath the destination.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "template",
+              "path"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "template": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "container": {
+          "description": "For a container: its format, its profile and its entries.",
+          "type": "object",
+          "required": [
+            "format",
+            "profile",
+            "entries"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "type": "string"
+            },
+            "profile": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/output"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

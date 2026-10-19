@@ -1,0 +1,58 @@
+[
+  {
+    "code": "manifest.min_items",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 4,
+      "column": 10,
+      "pointer": "/authors"
+    },
+    "schema": {
+      "entry": "https://metais.org/schemas/1.0/manifest.schema.json",
+      "pointer": "/properties/authors/minItems",
+      "keyword": "minItems"
+    },
+    "field": {
+      "title": "Authors",
+      "description": "The package's authors, 1 to 64 of them: people or organizations."
+    },
+    "params": {
+      "limit": 1,
+      "count": 0
+    }
+  },
+  {
+    "code": "manifest.enum",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 12,
+      "column": 13,
+      "pointer": "/inputs/0/forms/0"
+    },
+    "schema": {
+      "entry": "https://metais.org/schemas/1.0/manifest.schema.json",
+      "pointer": "/$defs/input/properties/forms/items/enum",
+      "keyword": "enum"
+    },
+    "params": {
+      "allowed": [
+        "\"json\"",
+        "\"yaml\"",
+        "\"csv\"",
+        "\"text\"",
+        "\"markdown\""
+      ],
+      "allowed_count": 5
+    }
+  }
+]

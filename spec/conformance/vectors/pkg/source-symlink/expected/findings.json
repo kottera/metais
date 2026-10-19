@@ -1,0 +1,14 @@
+[
+  {
+    "code": "package.layout.non_regular_file",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/linked.md.liquid"
+    },
+    "params": {}
+  }
+]

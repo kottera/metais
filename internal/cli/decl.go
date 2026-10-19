@@ -38,9 +38,12 @@ type Command struct {
 	// Format is the name of the JSON document the command prints.
 	Format string
 	// Prints says what the command writes in human mode.
-	Prints   string
-	Refusals []Refusal
-	Examples []Example
+	Prints string
+	// NextToStdout puts the human Next: block on standard output, after
+	// the result, rather than on standard error (ADR-008 D11 item 3).
+	NextToStdout bool
+	Refusals     []Refusal
+	Examples     []Example
 
 	run func(s *session, p args.Parsed) outcome
 }
@@ -162,6 +165,7 @@ var exitCodes = []exitCode{
 // group's commands (ADR-008 D1 item 1).
 func declarations() []*Command {
 	return []*Command{
+		inspectDeclaration(),
 		{
 			Name: "init", Group: "Authoring", Synopsis: "init [<dir>] [--name <name>] [--dry-run] [--json]",
 			Description: "Write a new package's source directory, with an input, a template and an example.",

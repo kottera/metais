@@ -179,6 +179,11 @@ func readLine(t []*Command, argv []string) line {
 		rest, at = append(rest, argv[i]), append(at, i)
 	}
 	p, errs := args.Parse(l.cmd.spec(), rest)
+	if p.Has("help") {
+		// Help needs no operand: a line that asks for it is refused only
+		// for an argument it does not accept (ADR-008 D4 item 2).
+		errs = slices.DeleteFunc(errs, func(e args.Error) bool { return e.Kind == args.MissingOperand })
+	}
 	for _, e := range errs {
 		i := len(argv)
 		if e.Arg < len(at) {
@@ -266,10 +271,12 @@ func usageFinding(e args.Error, i int, cmd string) finding.Finding {
 	case args.ExtraOperand:
 		code = finding.CodeUsageUnexpectedOperand
 		p["command"] = finding.String(cmd)
+	case args.MissingOperand:
+		code = finding.CodeUsageMissingOperand
+		delete(p, "argument")
+		p["command"] = finding.String(cmd)
+		p["operand"] = finding.String(e.Operand)
 	default:
-		// No declared command requires an operand, so no line can miss
-		// one; usage.missing_operand is registered by the first command
-		// that does.
 		panic("cli: no usage code for " + e.Kind.String())
 	}
 	return finding.New(code, invocation, nil, p)

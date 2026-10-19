@@ -6,7 +6,8 @@
 // both a Tree, and nothing reads a package any other way: the JSON Schema
 // compiler, the loader and the browse commands are all written against it.
 //
-// The package defines the interface and its contract and nothing else. It
+// The package defines the interface and its contract, and the one seam of
+// ADR-010 D13 that guards every tree's verification, VerifyDigests. It
 // performs no host file access and imports nothing that does; the trees
 // that read a file or a directory live with the code that reaches the host
 // (ADR-010 D11 item 3), and internal/pkgtree/pkgtreetest holds an in-memory
@@ -17,6 +18,8 @@ import (
 	"errors"
 	"io"
 	"strconv"
+
+	"github.com/kottera/metais/internal/fault"
 )
 
 // A Tree is a package, opened: a fixed set of regular files, each addressed
@@ -118,4 +121,18 @@ func (e *PathError) Error() string {
 // Unwrap returns Err, so errors.Is(err, ErrNotExist) finds the reason.
 func (e *PathError) Unwrap() error {
 	return e.Err
+}
+
+// VerifyDigests runs verify, ADR-001 D8 step 6's check of a packed
+// package's digest file, and returns what it reports: its findings, whose
+// type the package does not import so that it reaches nothing of the
+// host. It is the seam of
+// fault.SkipDigest (ADR-010 D13 item 2): with that fault in faults the
+// check is not run and verification returns success, which the digest
+// detector must catch. The tool itself never holds a fault.
+func VerifyDigests[F any](faults fault.Set, verify func() []F) []F {
+	if faults.Has(fault.SkipDigest) {
+		return nil
+	}
+	return verify()
 }

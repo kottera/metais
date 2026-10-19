@@ -68,6 +68,11 @@ var lineCases = []lineCase{
 	{args: []string{"-"}, status: 3, codes: []string{"usage.unknown_command"}},
 	{args: []string{"--version", "limits"}, status: 3, codes: []string{"usage.unexpected_operand"}},
 
+	// A command's required operand, and standard input as a package.
+	{args: []string{"inspect", "--json"}, status: 3, codes: []string{"usage.missing_operand"}, json: true},
+	{args: []string{"inspect", "-", "--json"}, status: 3, codes: []string{"usage.package_from_stdin"}, json: true},
+	{args: []string{"inspect", "--json", "--limit", "entries=99999999"}, status: 3, codes: []string{"usage.missing_operand"}, json: true},
+
 	// An unknown flag, with and without --json, before and after the command.
 	{args: []string{"version", "--bogus"}, status: 3, codes: []string{"usage.unknown_flag"}},
 	{args: []string{"version", "--bogus", "--json"}, status: 3, codes: []string{"usage.unknown_flag"}, json: true},
@@ -248,7 +253,7 @@ func TestUsageCodesTriggered(t *testing.T) {
 	for _, code := range []finding.Code{
 		finding.CodeUsageBadValue, finding.CodeUsageMissingCommand, finding.CodeUsageRepeatedFlag,
 		finding.CodeUsageUnexpectedOperand, finding.CodeUsageUnknownCommand, finding.CodeUsageUnknownFlag,
-		finding.CodeUsageUnknownTopic,
+		finding.CodeUsageUnknownTopic, finding.CodeUsageMissingOperand, finding.CodeUsagePackageFromStdin,
 	} {
 		e, ok := finding.Lookup(code)
 		if !ok || e.Class != finding.ClassUsage || len(e.Statements) != 0 {
@@ -328,21 +333,18 @@ func TestVersionFlag(t *testing.T) {
 	}
 }
 
-// TestDeclarationsOpenNoPackage is W2-1.9: every declaration marks whether
-// its command opens a package, and the commands declared so far open none.
-// init is an authoring command (ADR-008 D13) that opens no package: it
-// writes a new source directory.
-func TestDeclarationsOpenNoPackage(t *testing.T) {
+// TestDeclarationsOpeningSet is W2-1.9 as this wave leaves it: every
+// declaration marks whether its command opens a package, and inspect is
+// the one that does (W3-1). init is an authoring command (ADR-008 D13)
+// that opens no package: it writes a new source directory.
+func TestDeclarationsOpeningSet(t *testing.T) {
 	for _, c := range table {
 		if c.Role < finding.RoleConsumer || c.Role > finding.RoleNoPackage {
 			t.Errorf("%s declares no role", c.Name)
 		}
-		if c.OpensPackage() {
-			t.Errorf("%s is marked as opening a package", c.Name)
-		}
 	}
-	if got := OpeningCommands(); len(got) != 0 {
-		t.Errorf("OpeningCommands() = %q, want none this wave", got)
+	if got := OpeningCommands(); !slices.Equal(got, []string{"inspect"}) {
+		t.Errorf("OpeningCommands() = %q, want [inspect]", got)
 	}
 	// The marking is read from the role, both ways, and from WritesSource.
 	if !(&Command{Role: finding.RoleConsumer}).OpensPackage() || !(&Command{Role: finding.RoleAuthoring}).OpensPackage() {
@@ -360,30 +362,30 @@ func TestDeclarationsOpenNoPackage(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, c := range res.Commands {
-		want := "none"
-		if c.Name == "init" {
-			want = "authoring"
+		want := map[string]string{"init": "authoring", "inspect": "consumer"}[c.Name]
+		if want == "" {
+			want = "none"
 		}
-		if c.OpensPackage || c.Role != want {
-			t.Errorf("help --json marks %s as opening a package, or with the role %s", c.Name, c.Role)
+		if c.OpensPackage != (c.Name == "inspect") || c.Role != want {
+			t.Errorf("help --json marks %s as opening a package: %v, with the role %s", c.Name, c.OpensPackage, c.Role)
 		}
 	}
 }
 
-// TestNoRequiredOperand keeps the declarations to what the usage codes
-// cover: no command requires an operand while usage.missing_operand is
-// not registered, so usageFinding's panic for a missing operand is
-// unreachable from the command line.
-func TestNoRequiredOperand(t *testing.T) {
-	for _, c := range table {
-		for _, o := range c.Operands {
-			if o.Required {
-				t.Errorf("%s requires %s; register usage.missing_operand with the first command that does", c.Name, o.Name)
-			}
-		}
+// TestMissingOperand is usage.missing_operand, which inspect's required
+// operand makes reachable: the line is refused naming the command and the
+// operand's placeholder, and --help needs no operand.
+func TestMissingOperand(t *testing.T) {
+	r := runTool(t, "inspect", "--json")
+	if r.status != finding.ExitUsage || len(r.doc.Findings) != 1 {
+		t.Fatalf("metais inspect --json: status %d, %s", r.status, r.stdout)
 	}
-	if _, ok := finding.Lookup("usage.missing_operand"); ok {
-		t.Error("usage.missing_operand is registered: map args.MissingOperand to it in usageFinding")
+	f := r.doc.Findings[0]
+	if f.Code != string(finding.CodeUsageMissingOperand) || f.Params["command"] != "inspect" || f.Params["operand"] != "<package>" {
+		t.Errorf("metais inspect --json: %+v", f)
+	}
+	if h := runTool(t, "inspect", "--help"); h.status != 0 || !strings.HasPrefix(h.stdout, "metais inspect") {
+		t.Errorf("metais inspect --help: status %d, %q", h.status, h.stdout)
 	}
 }
 

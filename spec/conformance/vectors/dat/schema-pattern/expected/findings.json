@@ -1,0 +1,17 @@
+[
+  {
+    "code": "schema.pattern_unsupported",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/pattern"
+    },
+    "params": {
+      "construct": "lookahead"
+    }
+  }
+]

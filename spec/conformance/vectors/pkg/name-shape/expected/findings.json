@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.name.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/../evil.txt"
+    },
+    "params": {
+      "offset": 2589,
+      "reason": "dot_segment"
+    }
+  }
+]

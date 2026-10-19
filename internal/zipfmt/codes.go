@@ -67,13 +67,16 @@ var pkg = finding.Subject{Kind: finding.SubjectPackage}
 func num(n int64) finding.Value { return finding.Int(n) }
 
 // container builds a package.container finding about name (empty for the
-// file as a whole) at offset, with params beside offset.
-func container(code finding.Code, name string, offset int64, p finding.Params) finding.Finding {
+// file as a whole) at offset, with params beside offset. A negative offset
+// is none: a source directory's names have no offsets.
+func container(code finding.Code, name string, offset int64, p finding.Params, opts ...finding.Option) finding.Finding {
 	if p == nil {
 		p = finding.Params{}
 	}
-	p["offset"] = num(offset)
-	return finding.New(code, pkg, at(name), p)
+	if offset >= 0 {
+		p["offset"] = num(offset)
+	}
+	return finding.New(code, pkg, at(name), p, opts...)
 }
 
 func fieldValue(name, record, field string, offset, value, expected int64) finding.Finding {
@@ -116,4 +119,41 @@ func nameFindings(name string, offset int64, problems []unitext.Problem, lim lim
 		out = append(out, f)
 	}
 	return out
+}
+
+// NameFindings maps the portable-path predicate's refusal of a source
+// directory's names (unitext.CheckTree's *unitext.TreeError) to the
+// package.name findings, and limit.package for path-length and
+// path-depth, that a packed package with the same names is refused with,
+// without the offsets a source directory does not have (ADR-001 D8 item
+// 5). Each path's problems come first, in the order given, then each
+// collision.
+func NameFindings(e *unitext.TreeError, lim limits.Set) []finding.Finding {
+	var out []finding.Finding
+	for _, pp := range e.Paths {
+		out = append(out, nameFindings(pp.Path, -1, pp.Problems, lim)...)
+	}
+	for _, c := range e.Collisions {
+		out = append(out, collisionFinding(c, -1))
+	}
+	return out
+}
+
+// collisionFinding is the finding for c, at the central directory header
+// at off, or at no offset when off is negative.
+func collisionFinding(c unitext.Collision, off int64) finding.Finding {
+	related := finding.WithRelated(finding.Related{Location: *at(c.Other), Note: "collides with"})
+	switch c.Kind {
+	case unitext.Duplicate:
+		return container(CodeNameDuplicate, c.Path, off, nil,
+			finding.WithRelated(finding.Related{Location: *at(c.Other), Note: "first occurrence"}))
+	case unitext.CaseCollision:
+		return container(CodeNameCaseCollision, c.Path, off, memberParams(c), related)
+	default:
+		return container(CodeNameFileDirectory, c.Path, off, memberParams(c), related)
+	}
+}
+
+func memberParams(c unitext.Collision) finding.Params {
+	return finding.Params{"member": finding.String(c.Member), "other": finding.String(c.OtherMember)}
 }

@@ -31,6 +31,11 @@
       "reason": "ADR-010 D2 item 2: pkgtreetest is a test-only helper package, an importable package only so that other packages' tests can build a package in memory and hold a Tree to its contract; no release code imports it"
     },
     {
+      "rule": "test-only",
+      "package": "github.com/kottera/metais/internal/vectorgen",
+      "reason": "ADR-011 D16 item 5: vectorgen is the program that produces the suite's committed packages, with its reproduction test; it holds no release code, and nothing imports it"
+    },
+    {
       "rule": "only-importers",
       "imports": "golang.org/x/term",
       "importers": ["github.com/kottera/metais/internal/hostenv"],

@@ -1,0 +1,14 @@
+[
+  {
+    "code": "package.layout.empty_directory",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/empty"
+    },
+    "params": {}
+  }
+]

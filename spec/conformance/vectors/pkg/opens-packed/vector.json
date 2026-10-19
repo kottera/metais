@@ -1,0 +1,36 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pkg/opens-packed",
+  "title": "A valid packed package, packed from pkg/opens-source, opens: every step of verification passes and its compiled files are what its sources derive",
+  "statements": [
+    "MTS-PKG-001",
+    "MTS-PKG-025",
+    "MTS-PKG-026",
+    "MTS-PKG-031",
+    "MTS-PKG-032",
+    "MTS-FND-002"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "byte-level"
+  ],
+  "requires": [],
+  "notes": "Its package.metais is written by internal/vectorgen (go test ./internal/vectorgen -run TestPackages -args -update), whose test reproduces the committed bytes. It is packed from the source directory of pkg/opens-source.",
+  "cases": [
+    {
+      "name": "open",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package.metais"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    }
+  ]
+}

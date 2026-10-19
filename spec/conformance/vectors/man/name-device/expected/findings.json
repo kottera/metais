@@ -1,0 +1,26 @@
+[
+  {
+    "code": "manifest.not",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 2,
+      "column": 7,
+      "pointer": "/name"
+    },
+    "schema": {
+      "entry": "https://metais.org/schemas/1.0/manifest.schema.json",
+      "pointer": "/properties/name/not",
+      "keyword": "not"
+    },
+    "field": {
+      "title": "Package name",
+      "description": "The package's name: lower-case ASCII segments of letters and digits joined by single hyphens, the segments joined by dots, such as org.example.vpat-acr. A segment is at most 63 characters, and the leading segment is not a Windows device name."
+    },
+    "params": {}
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.container.prepended_data",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/digests.json"
+    },
+    "params": {
+      "offset": 0,
+      "declared": 24
+    }
+  }
+]

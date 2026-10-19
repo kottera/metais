@@ -1470,3 +1470,13 @@ project has; when CI exists it runs the same commands.
   The self-proof's `ab-clock` fault writes the clock in seconds, and
   `TestBStartsTwoSecondsAfterA` holds each of B's clock readings to two
   seconds after every one of A's, through each adapter.
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-1.** The suite's first vectors:
+  chapters 2 to 4 whole, and the rules of chapters 5, 12 and 14 an open
+  makes observable. D9 item 1 and D9 item 8 disagree for chapter 2's area:
+  `vectors/con/` is a Windows device name, which item 8 and
+  `TestSuiteTreePortable` refuse. The stricter rule stands, and the area is
+  `PKG`, provisionally, pending a ruling. The `cli` adapter passes an
+  `open` step's `limits` as `--limit`, as it does a `validate` step's. A
+  case's setup may make part of a tree a step names — an empty directory or
+  a link inside the package — and the runner now copies the tree's files
+  around it, as D9 item 4 says, rather than skipping the tree.

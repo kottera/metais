@@ -1,0 +1,17 @@
+[
+  {
+    "code": "manifest.yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 5,
+      "column": 8,
+      "pointer": "/title"
+    },
+    "params": {}
+  }
+]

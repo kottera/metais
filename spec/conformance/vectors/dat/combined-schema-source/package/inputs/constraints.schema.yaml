@@ -1,0 +1,3 @@
+allOf:
+  - if: {properties: {vendor: {properties: {stage: {const: final}}}}}
+    then: {required: [incident]}

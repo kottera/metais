@@ -1,0 +1,10 @@
+[
+  {
+    "code": "package.layout.missing_manifest",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "params": {}
+  }
+]

@@ -4,6 +4,10 @@ Usage:
   metais <command> [operands] [flags]
 
 Commands:
+  Reading a package:
+    inspect  Print what a supplier reads first: the package's identity, its
+             guide, its inputs, outputs, references and examples, and the
+             commands to run next.
   Authoring:
     init     Write a new package's source directory, with an input, a template
              and an example.

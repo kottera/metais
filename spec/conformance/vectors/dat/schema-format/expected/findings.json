@@ -1,0 +1,17 @@
+[
+  {
+    "code": "schema.format_unsupported",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/format"
+    },
+    "params": {
+      "format": "idn-email"
+    }
+  }
+]

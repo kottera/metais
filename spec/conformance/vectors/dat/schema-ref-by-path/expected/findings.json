@@ -1,0 +1,18 @@
+[
+  {
+    "code": "schema.ref_by_path",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/$ref"
+    },
+    "params": {
+      "reference": "common.schema.json",
+      "id": "https://example.org/common.json"
+    }
+  }
+]

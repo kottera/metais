@@ -1,0 +1,14 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+homepage: ftp://example.org/
+title: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+description: " leading space"
+guide: Supply a report.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid

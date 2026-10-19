@@ -21,6 +21,32 @@ const (
 	CodeLimitExceeded    finding.Code = "limit.exceeded"
 )
 
+// The codes of a manifest read under ADR-002 D3's JSON profile, the
+// manifest family's (ADR-006 D3 item 2), by the code the same refusal has
+// in an input. A limit the manifest breaches is the package's own content,
+// limit.package (ADR-009 D19).
+const (
+	CodeManifestSyntax           finding.Code = "manifest.json.syntax"
+	CodeManifestTrailing         finding.Code = "manifest.json.trailing_content"
+	CodeManifestDuplicateName    finding.Code = "manifest.json.duplicate_name"
+	CodeManifestLoneSurrogate    finding.Code = "manifest.json.lone_surrogate"
+	CodeManifestNoncharacter     finding.Code = "manifest.json.noncharacter"
+	CodeManifestEncoding         finding.Code = "manifest.json.encoding"
+	CodeManifestNumberOutOfRange finding.Code = "manifest.number_out_of_range"
+	CodeLimitPackage             finding.Code = "limit.package"
+)
+
+var manifestCodes = map[finding.Code]finding.Code{
+	CodeSyntax:           CodeManifestSyntax,
+	CodeTrailingContent:  CodeManifestTrailing,
+	CodeDuplicateName:    CodeManifestDuplicateName,
+	CodeLoneSurrogate:    CodeManifestLoneSurrogate,
+	CodeNoncharacter:     CodeManifestNoncharacter,
+	CodeEncodingInvalid:  CodeManifestEncoding,
+	CodeNumberOutOfRange: CodeManifestNumberOutOfRange,
+	CodeLimitExceeded:    CodeLimitPackage,
+}
+
 // The words a json.syntax finding's expected and found params are made of.
 // They describe the text by its class and never echo it (ADR-006 D9 item
 // 4).
@@ -66,7 +92,14 @@ func (p *parser) report(code finding.Code, loc *finding.Location, params finding
 	if params == nil {
 		params = finding.Params{}
 	}
-	p.findings = append(p.findings, finding.New(code, p.from.Input, loc, params, opts...))
+	subject := p.from.Input
+	if subject.Kind == finding.SubjectManifest {
+		code = manifestCodes[code]
+		if code == CodeLimitPackage {
+			subject = finding.Subject{Kind: finding.SubjectPackage}
+		}
+	}
+	p.findings = append(p.findings, finding.New(code, subject, loc, params, opts...))
 }
 
 // syntaxError reports json.syntax at off, inside the value at ptr, and

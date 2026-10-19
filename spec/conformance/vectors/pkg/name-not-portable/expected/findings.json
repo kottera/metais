@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.name.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/.git/config"
+    },
+    "params": {
+      "offset": 2589,
+      "reason": "git"
+    }
+  }
+]

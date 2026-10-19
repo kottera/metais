@@ -27,3 +27,42 @@ background only.
   Notation (JSON) Data Interchange Format*, STD 90, RFC 8259, December 2017 —
   https://www.rfc-editor.org/rfc/rfc8259
 
+- <a id="appnote"></a>**[APPNOTE]** PKWARE Inc., *APPNOTE.TXT — .ZIP File
+  Format Specification*, version 6.3.10, November 2022 —
+  https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
+- <a id="rfc1951"></a>**[RFC1951]** Deutsch, P., *DEFLATE Compressed Data
+  Format Specification version 1.3*, RFC 1951, May 1996 —
+  https://www.rfc-editor.org/rfc/rfc1951
+- <a id="rfc3986"></a>**[RFC3986]** Berners-Lee, T., Fielding, R., and L.
+  Masinter, *Uniform Resource Identifier (URI): Generic Syntax*, STD 66,
+  RFC 3986, January 2005 — https://www.rfc-editor.org/rfc/rfc3986
+- <a id="rfc7493"></a>**[RFC7493]** Bray, T., Ed., *The I-JSON Message
+  Format*, RFC 7493, March 2015 — https://www.rfc-editor.org/rfc/rfc7493
+- <a id="rfc8785"></a>**[RFC8785]** Rundgren, A., Jordan, B., and S. Erdtman,
+  *JSON Canonicalization Scheme (JCS)*, RFC 8785, June 2020 —
+  https://www.rfc-editor.org/rfc/rfc8785
+- <a id="unicode"></a>**[Unicode]** The Unicode Consortium, *The Unicode
+  Standard, Version 15.0.0*, with its Character Database, including
+  `CaseFolding.txt` — https://www.unicode.org/versions/Unicode15.0.0/
+- <a id="yaml"></a>**[YAML]** *YAML Ain't Markup Language (YAML™) revision
+  1.2.2*, October 2021 — https://yaml.org/spec/1.2.2/
+- <a id="jsonschema"></a>**[JSON Schema]** Wright, A., Andrews, H., Hutton, B.,
+  and G. Dennis, *JSON Schema: A Media Type for Describing JSON Documents* and
+  *JSON Schema Validation*, draft 2020-12 —
+  https://json-schema.org/draft/2020-12
+- <a id="commonmark"></a>**[CommonMark]** MacFarlane, J., *CommonMark Spec*,
+  version 0.31.2, January 2024 — https://spec.commonmark.org/0.31.2/
+- <a id="semver"></a>**[SemVer]** Preston-Werner, T., *Semantic Versioning
+  2.0.0* — https://semver.org/spec/v2.0.0.html
+- <a id="spdx"></a>**[SPDX]** The Linux Foundation, *The Software Package
+  Data Exchange (SPDX) Specification*, version 2.3, Annex D, *SPDX License
+  Expressions* — https://spdx.github.io/spdx-spec/v2.3/SPDX-license-expressions/
+
+## A.2 Informative references
+
+- <a id="rfc6838"></a>**[RFC6838]** Freed, N., Klensin, J., and T. Hansen,
+  *Media Type Specifications and Registration Procedures*, BCP 13, RFC 6838,
+  January 2013 — https://www.rfc-editor.org/rfc/rfc6838
+- <a id="rfc6839"></a>**[RFC6839]** Hansen, T., and A. Melnikov, *Additional
+  Media Type Structured Syntax Suffixes*, RFC 6839, January 2013 —
+  https://www.rfc-editor.org/rfc/rfc6839

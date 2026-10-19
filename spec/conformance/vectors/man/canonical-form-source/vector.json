@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "man/canonical-form-source",
+  "title": "A source directory whose manifest holds escapes and characters above U+FFFF opens",
+  "statements": [
+    "MTS-MAN-021",
+    "MTS-MAN-007"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "open",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    }
+  ]
+}

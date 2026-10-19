@@ -1,0 +1,32 @@
+[
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/type"
+    },
+    "params": {
+      "keyword": "enum"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/type"
+    },
+    "params": {
+      "keyword": "type"
+    }
+  }
+]

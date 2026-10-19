@@ -1465,7 +1465,9 @@
       "hint": "Make the package smaller than the limit; run `metais limits` to see every limit, which can be lowered and never raised.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SEC-001"
+      ]
     },
     {
       "code": "manifest.additional_item",
@@ -1515,7 +1517,10 @@
       "hint": "Remove `{property}`, or rename it to a member the schema declares.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-011",
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.any_of",
@@ -1622,7 +1627,9 @@
       "hint": "Write one of the allowed values: {allowed}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.exclusive_maximum",
@@ -1673,6 +1680,20 @@
       "location": "value",
       "since": "1.0",
       "statements": []
+    },
+    {
+      "code": "manifest.file.wrong_name",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The package holds a manifest under a name metais does not read; the one manifest is metais.yaml, exactly.",
+      "hint": "Rename it to metais.yaml; a manifest written in JSON is written in metais.yaml too.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-002"
+      ]
     },
     {
       "code": "manifest.forbidden",
@@ -1729,7 +1750,126 @@
       "hint": "Give each input its own name; the related location is the first input with this one.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-016"
+      ]
+    },
+    {
+      "code": "manifest.json.duplicate_name",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "meaning": "The member name that appears more than once in one object, after escapes are decoded.",
+          "always": true
+        }
+      ],
+      "message": "The member name {name} appears more than once in one object of the manifest.",
+      "hint": "Keep one member with this name. The manifest was not read further; fix this and run the command again.",
+      "location": "key",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-009"
+      ]
+    },
+    {
+      "code": "manifest.json.encoding",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the file is not UTF-8: invalid_utf8 (a byte that begins no UTF-8 character, or ends one early).",
+          "always": true
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "meaning": "The 0-based byte offset of the first byte that is not UTF-8, from the start of the file.",
+          "always": true
+        }
+      ],
+      "message": "The manifest is not UTF-8 ({reason}) at byte {offset}.",
+      "hint": "Save `metais.yaml` as UTF-8, with no byte order mark. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-009"
+      ]
+    },
+    {
+      "code": "manifest.json.lone_surrogate",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "{field} is a string with an escaped UTF-16 surrogate that has no partner, which is no character.",
+      "hint": "Write the character it was meant to be, or a surrogate pair of a high and a low surrogate escape. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-009"
+      ]
+    },
+    {
+      "code": "manifest.json.noncharacter",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "{field} is a string holding a Unicode noncharacter, which I-JSON does not allow.",
+      "hint": "Remove the noncharacter (U+FDD0 to U+FDEF, or a code point ending in FFFE or FFFF) from the string. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-009"
+      ]
+    },
+    {
+      "code": "manifest.json.syntax",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "expected",
+          "type": "string",
+          "meaning": "What the JSON grammar allows at this place: a value, a member name, a colon, a comma or the closing bracket, a digit, four hexadecimal digits, or a closing quote.",
+          "always": true
+        },
+        {
+          "name": "found",
+          "type": "string",
+          "meaning": "What is there instead, by its class: end of input, a control character, an invalid escape, a leading zero, or an unexpected character.",
+          "always": true
+        }
+      ],
+      "message": "The manifest is not valid JSON here: expected {expected}, found {found}.",
+      "hint": "A metais.yaml whose first character is {{ is read as JSON, which allows no comments and no trailing commas; correct it at this line and column. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-009"
+      ]
+    },
+    {
+      "code": "manifest.json.trailing_content",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest has text after its one JSON object.",
+      "hint": "Remove what follows the object. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-009"
+      ]
     },
     {
       "code": "manifest.license.expression",
@@ -1754,7 +1894,9 @@
       "hint": "Write an SPDX license expression such as `MIT` or `Apache-2.0 OR MIT`, with AND, OR and WITH in upper case and every parenthesis paired.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-013"
+      ]
     },
     {
       "code": "manifest.max_contains",
@@ -1829,7 +1971,11 @@
       "hint": "Write at most {limit} characters.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-012",
+        "MTS-MAN-014",
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.max_properties",
@@ -1929,7 +2075,9 @@
       "hint": "Add items until there are at least {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.min_length",
@@ -2041,7 +2189,10 @@
       "hint": "Change the value so that the not subschema no longer accepts it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-014",
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.number_out_of_range",
@@ -2060,7 +2211,9 @@
       "hint": "Write the number as a string, or within binary64's range. The manifest was not read further; fix this and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-010"
+      ]
     },
     {
       "code": "manifest.one_of",
@@ -2118,7 +2271,9 @@
       "hint": "Give each declaration its own id: top-level ids are unique in the manifest, and entry ids within their container. The related location is the first with this one.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-016"
+      ]
     },
     {
       "code": "manifest.output.nested_for_each",
@@ -2130,7 +2285,30 @@
       "hint": "Remove this for_each, or move it to the container: at most one for_each applies to any declaration.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-016"
+      ]
+    },
+    {
+      "code": "manifest.path_not_found",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "directory",
+          "type": "string",
+          "meaning": "The directory the path is resolved in: inputs/ for an input's schema, meaning or input_constraints, which give a whole package path; templates/ for a template or a mirror; assets/ for an asset; and . , the package root, for an output's validate.",
+          "always": true
+        }
+      ],
+      "message": "{field} names a package path where the package has no entry.",
+      "hint": "Add the file the manifest names, or correct the path: it is relative to {directory}, uses /, and is compared byte for byte.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-017"
+      ]
     },
     {
       "code": "manifest.pattern",
@@ -2149,7 +2327,12 @@
       "hint": "Write a value that matches the pattern {pattern}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-012",
+        "MTS-MAN-014",
+        "MTS-MAN-019",
+        "MTS-VER-008"
+      ]
     },
     {
       "code": "manifest.property_name",
@@ -2187,7 +2370,10 @@
       "hint": "Add the member `{property}`.",
       "location": "parent",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-011",
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.type",
@@ -2213,7 +2399,11 @@
       "hint": "Write a value of type {expected}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-011",
+        "MTS-MAN-019",
+        "MTS-VER-008"
+      ]
     },
     {
       "code": "manifest.unevaluated_item",
@@ -2294,7 +2484,9 @@
       "hint": "Replace the `*` alias with the value it names, written out. The manifest was not read further; fix this and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-005"
+      ]
     },
     {
       "code": "manifest.yaml.anchor",
@@ -2306,7 +2498,9 @@
       "hint": "Remove the `&` anchor and write the value out where it is used. The manifest was not read further; fix this and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-005"
+      ]
     },
     {
       "code": "manifest.yaml.bom",
@@ -2318,7 +2512,9 @@
       "hint": "Remove the byte order mark. The manifest was not read further; fix this and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-003"
+      ]
     },
     {
       "code": "manifest.yaml.character",
@@ -2343,7 +2539,9 @@
       "hint": "Write the character as a double-quoted escape, such as \\u2028, or remove it. The manifest was not read further; fix this and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-003"
+      ]
     },
     {
       "code": "manifest.yaml.directive",
@@ -2355,7 +2553,9 @@
       "hint": "Remove the `%YAML` or `%TAG` line. The manifest was not read further; fix this and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-004"
+      ]
     },
     {
       "code": "manifest.yaml.duplicate_key",
@@ -2367,7 +2567,9 @@
       "hint": "Keep one member of that name in the mapping. The manifest was not read further; fix this and run the command again.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-006"
+      ]
     },
     {
       "code": "manifest.yaml.encoding",
@@ -2392,7 +2594,9 @@
       "hint": "Save `metais.yaml` as UTF-8, with no byte order mark. The manifest was not read further; fix this and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-003"
+      ]
     },
     {
       "code": "manifest.yaml.key_empty",
@@ -2404,7 +2608,9 @@
       "hint": "Give the key a name, or quote it as `\"\"` if an empty name is meant. The manifest was not read further; fix this and run the command again.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-006"
+      ]
     },
     {
       "code": "manifest.yaml.key_not_scalar",
@@ -2416,7 +2622,9 @@
       "hint": "Write the key as plain or quoted text. The manifest was not read further; fix this and run the command again.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-006"
+      ]
     },
     {
       "code": "manifest.yaml.merge_key",
@@ -2428,7 +2636,9 @@
       "hint": "Write the merged members out in the mapping, or quote `\"<<\"` if it is an ordinary key. The manifest was not read further; fix this and run the command again.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-005"
+      ]
     },
     {
       "code": "manifest.yaml.multi_document",
@@ -2440,7 +2650,9 @@
       "hint": "Remove everything after the first document, or put each document in a file of its own. The manifest was not read further; fix this and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-004"
+      ]
     },
     {
       "code": "manifest.yaml.root_not_mapping",
@@ -2452,7 +2664,9 @@
       "hint": "Write the manifest as `name: value` members; `metais init` writes one to start from.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-004"
+      ]
     },
     {
       "code": "manifest.yaml.scalar_refused",
@@ -2471,7 +2685,9 @@
       "hint": "Write `null`, `true` or `false`, or the number as JSON writes it; quote the scalar if it is text. The manifest was not read further; fix this and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-007"
+      ]
     },
     {
       "code": "manifest.yaml.syntax",
@@ -2483,7 +2699,9 @@
       "hint": "Correct the YAML near this line. The manifest was not read further; fix this and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-008"
+      ]
     },
     {
       "code": "manifest.yaml.tag",
@@ -2495,7 +2713,9 @@
       "hint": "Remove the tag; quote the value if it is text. The manifest was not read further; fix this and run the command again.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-005"
+      ]
     },
     {
       "code": "markdown.frontmatter_body_field",
@@ -3328,6 +3548,49 @@
       "statements": []
     },
     {
+      "code": "package.compiled.mismatch",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [],
+      "message": "A compiled file of the packed package differs from what its sources derive: it says something its sources do not.",
+      "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-022",
+        "MTS-PKG-025"
+      ]
+    },
+    {
+      "code": "package.compiled.missing",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [],
+      "message": "The packed package lacks a file of .compiled/ that its specification version defines.",
+      "hint": "A zip without a complete .compiled/ is not a package; run `metais pack` on its source directory to make one.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-024"
+      ]
+    },
+    {
+      "code": "package.compiled.unknown_file",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [],
+      "message": "The packed package holds a file in .compiled/ that its specification version does not define.",
+      "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-024"
+      ]
+    },
+    {
       "code": "package.container.archive_comment",
       "severity": "error",
       "class": "refused",
@@ -3350,7 +3613,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-003"
+      ]
     },
     {
       "code": "package.container.crc_mismatch",
@@ -3369,7 +3634,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-011"
+      ]
     },
     {
       "code": "package.container.data_descriptor",
@@ -3388,7 +3655,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-007"
+      ]
     },
     {
       "code": "package.container.deflate_stream",
@@ -3413,7 +3682,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-011"
+      ]
     },
     {
       "code": "package.container.encrypted",
@@ -3432,7 +3703,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-007"
+      ]
     },
     {
       "code": "package.container.entry_order",
@@ -3451,7 +3724,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-010"
+      ]
     },
     {
       "code": "package.container.extra_field",
@@ -3476,7 +3751,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-008"
+      ]
     },
     {
       "code": "package.container.field_value",
@@ -3519,7 +3796,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-006"
+      ]
     },
     {
       "code": "package.container.flags",
@@ -3544,7 +3823,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-007"
+      ]
     },
     {
       "code": "package.container.header_mismatch",
@@ -3569,7 +3850,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-009"
+      ]
     },
     {
       "code": "package.container.method",
@@ -3594,7 +3877,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-007"
+      ]
     },
     {
       "code": "package.container.not_zip",
@@ -3606,7 +3891,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-003"
+      ]
     },
     {
       "code": "package.container.overlap_or_gap",
@@ -3631,7 +3918,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-003"
+      ]
     },
     {
       "code": "package.container.prepended_data",
@@ -3656,7 +3945,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-003"
+      ]
     },
     {
       "code": "package.container.second_end_record",
@@ -3675,7 +3966,9 @@
       "hint": "Pack the package again with `metais pack`; an entry that is itself a stored zip near the end of the package can hold the signature.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-005"
+      ]
     },
     {
       "code": "package.container.size_mismatch",
@@ -3700,7 +3993,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-011"
+      ]
     },
     {
       "code": "package.container.trailing_data",
@@ -3719,7 +4014,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-003"
+      ]
     },
     {
       "code": "package.container.zip64",
@@ -3738,7 +4035,175 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-004"
+      ]
+    },
+    {
+      "code": "package.digest.entries_mismatch",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "not_listed (the entry is in the package and not in the digest file) or no_entry (the digest file lists a name the package has no entry for).",
+          "always": true
+        }
+      ],
+      "message": "The digest file and the package do not list the same entries ({reason}).",
+      "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-028"
+      ]
+    },
+    {
+      "code": "package.digest.mismatch",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [
+        {
+          "name": "listed",
+          "type": "string",
+          "meaning": "The SHA-256 the digest file gives for the entry, in lowercase hexadecimal.",
+          "always": true
+        },
+        {
+          "name": "computed",
+          "type": "string",
+          "meaning": "The SHA-256 of the entry's content, in lowercase hexadecimal.",
+          "always": true
+        }
+      ],
+      "message": "The entry's content is not the content the digest file names: its SHA-256 is {computed}, not {listed}.",
+      "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-029"
+      ]
+    },
+    {
+      "code": "package.digest.not_canonical",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "How the digest file departs from its form: syntax (it is not one JSON object with unique member names), shape (its members are not exactly algorithm sha256, entries and package, each with 64 lowercase hexadecimal digits) or not_canonical (its bytes are not the canonical JSON of its value).",
+          "always": true
+        }
+      ],
+      "message": "The digest file .compiled/digests.json is not in its form ({reason}).",
+      "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-027"
+      ]
+    },
+    {
+      "code": "package.digest.package_mismatch",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [
+        {
+          "name": "listed",
+          "type": "string",
+          "meaning": "The package digest the digest file gives, in lowercase hexadecimal.",
+          "always": true
+        },
+        {
+          "name": "computed",
+          "type": "string",
+          "meaning": "The package digest computed from the digest file's entries, in lowercase hexadecimal.",
+          "always": true
+        }
+      ],
+      "message": "The digest file's package digest is not the digest of its entries: it is {listed}, and they give {computed}.",
+      "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-030"
+      ]
+    },
+    {
+      "code": "package.layout.compiled_in_source",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [],
+      "message": "The source directory holds .compiled/, which only pack writes.",
+      "hint": "Remove .compiled/ from the source directory; `metais pack` derives it, and a stale copy beside the sources could be read as either.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-022"
+      ]
+    },
+    {
+      "code": "package.layout.empty_directory",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [],
+      "message": "The source directory holds an empty directory, which a packed package cannot carry.",
+      "hint": "Remove the empty directory, or put the file it was meant to hold in it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-023"
+      ]
+    },
+    {
+      "code": "package.layout.missing_manifest",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [],
+      "message": "The package has no manifest, metais.yaml, at its top level; it is not a package.",
+      "hint": "Add metais.yaml at the top of the source directory, or run `metais init` to write a new package.",
+      "location": "none",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-020"
+      ]
+    },
+    {
+      "code": "package.layout.non_regular_file",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [],
+      "message": "The source directory holds a symbolic link, named pipe, socket, device or other file that is not a regular file; it was neither followed nor opened.",
+      "hint": "Replace it with the regular file it stands for, or remove it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-023"
+      ]
+    },
+    {
+      "code": "package.layout.unknown_top_level",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [],
+      "message": "The packed package holds a top-level name the layout does not define.",
+      "hint": "A package's top level holds only metais.yaml, inputs/, templates/, references/, assets/, examples/ and .compiled/; Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-019"
+      ]
     },
     {
       "code": "package.name.case_collision",
@@ -3749,8 +4214,8 @@
         {
           "name": "offset",
           "type": "number",
-          "meaning": "The byte offset in the package file of the record or field the finding reports.",
-          "always": true
+          "meaning": "The byte offset in the package file of the record or field the finding reports; absent for a source directory, which has no offsets.",
+          "always": false
         },
         {
           "name": "member",
@@ -3769,7 +4234,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-017"
+      ]
     },
     {
       "code": "package.name.character",
@@ -3780,8 +4247,8 @@
         {
           "name": "offset",
           "type": "number",
-          "meaning": "The byte offset in the package file of the record or field the finding reports.",
-          "always": true
+          "meaning": "The byte offset in the package file of the record or field the finding reports; absent for a source directory, which has no offsets.",
+          "always": false
         },
         {
           "name": "code_point",
@@ -3794,7 +4261,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-015"
+      ]
     },
     {
       "code": "package.name.directory_entry",
@@ -3805,15 +4274,17 @@
         {
           "name": "offset",
           "type": "number",
-          "meaning": "The byte offset in the package file of the record or field the finding reports.",
-          "always": true
+          "meaning": "The byte offset in the package file of the record or field the finding reports; absent for a source directory, which has no offsets.",
+          "always": false
         }
       ],
       "message": "The entry is a directory entry, its name ending in /; a package's directories exist only as prefixes of its files' names.",
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-018"
+      ]
     },
     {
       "code": "package.name.duplicate",
@@ -3824,15 +4295,17 @@
         {
           "name": "offset",
           "type": "number",
-          "meaning": "The byte offset in the package file of the record or field the finding reports.",
-          "always": true
+          "meaning": "The byte offset in the package file of the record or field the finding reports; absent for a source directory, which has no offsets.",
+          "always": false
         }
       ],
       "message": "The entry's name is the name of an earlier entry.",
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-017"
+      ]
     },
     {
       "code": "package.name.encoding",
@@ -3843,8 +4316,8 @@
         {
           "name": "offset",
           "type": "number",
-          "meaning": "The byte offset in the package file of the record or field the finding reports.",
-          "always": true
+          "meaning": "The byte offset in the package file of the record or field the finding reports; absent for a source directory, which has no offsets.",
+          "always": false
         },
         {
           "name": "reason",
@@ -3857,7 +4330,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-012"
+      ]
     },
     {
       "code": "package.name.file_directory_conflict",
@@ -3868,8 +4343,8 @@
         {
           "name": "offset",
           "type": "number",
-          "meaning": "The byte offset in the package file of the record or field the finding reports.",
-          "always": true
+          "meaning": "The byte offset in the package file of the record or field the finding reports; absent for a source directory, which has no offsets.",
+          "always": false
         },
         {
           "name": "member",
@@ -3888,7 +4363,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-017"
+      ]
     },
     {
       "code": "package.name.not_nfc",
@@ -3899,15 +4376,17 @@
         {
           "name": "offset",
           "type": "number",
-          "meaning": "The byte offset in the package file of the record or field the finding reports.",
-          "always": true
+          "meaning": "The byte offset in the package file of the record or field the finding reports; absent for a source directory, which has no offsets.",
+          "always": false
         }
       ],
       "message": "The entry's name is not in Unicode Normalization Form C.",
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-013"
+      ]
     },
     {
       "code": "package.name.not_portable",
@@ -3918,8 +4397,8 @@
         {
           "name": "offset",
           "type": "number",
-          "meaning": "The byte offset in the package file of the record or field the finding reports.",
-          "always": true
+          "meaning": "The byte offset in the package file of the record or field the finding reports; absent for a source directory, which has no offsets.",
+          "always": false
         },
         {
           "name": "reason",
@@ -3932,7 +4411,9 @@
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-016"
+      ]
     },
     {
       "code": "package.name.shape",
@@ -3943,8 +4424,8 @@
         {
           "name": "offset",
           "type": "number",
-          "meaning": "The byte offset in the package file of the record or field the finding reports.",
-          "always": true
+          "meaning": "The byte offset in the package file of the record or field the finding reports; absent for a source directory, which has no offsets.",
+          "always": false
         },
         {
           "name": "reason",
@@ -3956,6 +4437,39 @@
       "message": "The entry's name is not a relative path of /-separated segments ({reason}).",
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-014"
+      ]
+    },
+    {
+      "code": "package.not_found",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [],
+      "message": "No package is at the path given.",
+      "hint": "Give the path of a packed package file or of a source directory; the path is opened as given, relative to the working directory.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "package.not_readable",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the path could not be read as a package: permission_denied, not_regular_file (it is neither a regular file nor a directory), is_directory, not_directory, link, changed (it changed while it was read) or io_error.",
+          "always": true
+        }
+      ],
+      "message": "The package at the path given cannot be read ({reason}).",
+      "hint": "Give the path of a packed package file or of a source directory that metais may read.",
+      "location": "none",
       "since": "1.0",
       "statements": []
     },
@@ -3977,7 +4491,9 @@
       "hint": "Write the version as MAJOR.MINOR, as in `metais: \"1.0\"`; this metais implements {implemented}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-VER-003"
+      ]
     },
     {
       "code": "package.version.missing",
@@ -3997,7 +4513,9 @@
       "hint": "Add `metais: \"1.0\"` to the manifest, naming one of the versions this metais implements: {implemented}.",
       "location": "parent",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-VER-001"
+      ]
     },
     {
       "code": "package.version.not_string",
@@ -4029,7 +4547,9 @@
       "hint": "Quote the version, as in `metais: \"1.0\"`; this metais implements {implemented}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-VER-002"
+      ]
     },
     {
       "code": "package.version.unsupported_major",
@@ -4055,7 +4575,9 @@
       "hint": "Use a metais release that implements METAIS {declared}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-VER-004"
+      ]
     },
     {
       "code": "package.version.unsupported_minor",
@@ -4081,7 +4603,9 @@
       "hint": "Use a metais release that implements METAIS {declared}; this one does not render a newer minor, since it cannot know what that minor added.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-VER-005"
+      ]
     },
     {
       "code": "report.truncated",
@@ -4125,7 +4649,9 @@
       "hint": "Write $schema as https://json-schema.org/draft/2020-12/schema, or leave it out, and remove any $vocabulary keyword.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-003"
+      ]
     },
     {
       "code": "schema.format_unsupported",
@@ -4144,7 +4670,9 @@
       "hint": "Use one of the asserted formats: date-time, date, time, duration, email, hostname, ipv4, ipv6, uri, uri-reference, uuid, uri-template, json-pointer or relative-json-pointer; or write a pattern, or state the expectation in the input's description.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-005"
+      ]
     },
     {
       "code": "schema.id_duplicate",
@@ -4169,7 +4697,9 @@
       "hint": "Give each $id, $anchor and schema file a URI of its own; a file with no $id is named by its path.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-008"
+      ]
     },
     {
       "code": "schema.invalid",
@@ -4188,7 +4718,9 @@
       "hint": "Correct the value at the location given so that it is what draft 2020-12 defines for the keyword that holds it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-003"
+      ]
     },
     {
       "code": "schema.keyword_unknown",
@@ -4207,7 +4739,9 @@
       "hint": "Correct the keyword's spelling, or begin it with x- to carry it as an annotation of your own, which nothing checks.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-004"
+      ]
     },
     {
       "code": "schema.pattern_unsupported",
@@ -4226,7 +4760,9 @@
       "hint": "Rewrite the pattern without the construct; a pattern is an ECMA-262 regular expression without lookaround, backreferences, repeat bounds above 1000 or RE2-only syntax.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-006"
+      ]
     },
     {
       "code": "schema.ref_by_path",
@@ -4251,7 +4787,9 @@
       "hint": "Refer to the file by its $id.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-008"
+      ]
     },
     {
       "code": "schema.ref_escapes",
@@ -4270,7 +4808,9 @@
       "hint": "Refer only to schema files under inputs/; a relative reference may not climb above the package root.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-007"
+      ]
     },
     {
       "code": "schema.ref_unresolved",
@@ -4289,7 +4829,9 @@
       "hint": "Add the schema it names to inputs/ and refer to it there; nothing is ever fetched from outside the package.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-007"
+      ]
     },
     {
       "code": "schema.sample_unsatisfiable",
@@ -4315,6 +4857,166 @@
       "location": "value",
       "since": "1.0",
       "statements": []
+    },
+    {
+      "code": "schema.syntax",
+      "severity": "error",
+      "class": "content",
+      "subject": "package",
+      "params": [
+        {
+          "name": "form",
+          "type": "string",
+          "meaning": "The form the schema file is read in, from its extension: json or yaml.",
+          "always": true
+        },
+        {
+          "name": "rule",
+          "type": "string",
+          "meaning": "The rule of that form the file breaks, named as an input's finding of the same form names it: for JSON syntax, trailing_content, duplicate_name, lone_surrogate, noncharacter, encoding_invalid or number_out_of_range; for YAML the same, and bom, character, directive, multi_document, anchor, alias, tag, merge_key, key_not_scalar, key_empty, duplicate_key and scalar_refused.",
+          "always": true
+        }
+      ],
+      "message": "The schema file cannot be read as {form} ({rule}).",
+      "hint": "Correct the file at this line and column; a schema file follows the rules of an input file of its form.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-DAT-002"
+      ]
+    },
+    {
+      "code": "template.division_by_zero",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "filter",
+          "type": "string",
+          "meaning": "The filter's name.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The filter {filter} divides by zero.",
+      "hint": "Divide by a number that is not zero.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-018"
+      ]
+    },
+    {
+      "code": "template.filter_argument",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "filter",
+          "type": "string",
+          "meaning": "The filter's name.",
+          "always": true
+        },
+        {
+          "name": "argument",
+          "type": "string",
+          "meaning": "The argument refused: its 1-based position, or its keyword.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The filter {filter} is given an argument it never takes, or one of a kind it refuses ({argument}).",
+      "hint": "Give the filter the arguments the specification lists for it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-018"
+      ]
+    },
+    {
+      "code": "template.filter_input",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "filter",
+          "type": "string",
+          "meaning": "The filter's name.",
+          "always": true
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "meaning": "The kind of value the filter was given: nil, boolean, number, string, array or object.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The filter {filter} is given a {type}, which it refuses.",
+      "hint": "Give the filter a value of a kind it takes.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "template.include",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The include tag is not part of the dialect.",
+      "hint": "Use render, which takes a partial's name as a quoted string and gives it its own scope.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-018"
+      ]
+    },
+    {
+      "code": "template.number_range",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "A number written here cannot be held exactly: an integer beyond 2^53-1, or a number beyond binary64's range.",
+      "hint": "Write a smaller number, or a string.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-018"
+      ]
     },
     {
       "code": "template.ooxml.split_construct",
@@ -4383,6 +5085,81 @@
       "location": "value",
       "since": "1.0",
       "statements": []
+    },
+    {
+      "code": "template.syntax",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The Liquid here does not parse under the pinned dialect.",
+      "hint": "Correct the expression at this line and column: a path is a Liquid template, when a condition and for_each a value expression.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-018"
+      ]
+    },
+    {
+      "code": "template.tag_context",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "tag",
+          "type": "string",
+          "meaning": "The tag's name.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The tag {tag} is not allowed here: a path is a template that only computes text.",
+      "hint": "Remove the tag; in a path, use output expressions, filters, if, unless, case, assign and capture.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-018"
+      ]
+    },
+    {
+      "code": "template.unknown_filter",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "filter",
+          "type": "string",
+          "meaning": "The filter's name.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The filter {filter} is not one the dialect defines.",
+      "hint": "Use a filter the specification defines; a misspelt filter is refused, never ignored.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-MAN-018"
+      ]
     },
     {
       "code": "template.xref.budget_exhausted",
@@ -4799,6 +5576,31 @@
       "statements": []
     },
     {
+      "code": "usage.missing_operand",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "command",
+          "type": "string",
+          "meaning": "The command that requires the operand.",
+          "always": true
+        },
+        {
+          "name": "operand",
+          "type": "string",
+          "meaning": "The operand's placeholder, as the command's usage line writes it.",
+          "always": true
+        }
+      ],
+      "message": "metais {command} requires the operand {operand}.",
+      "hint": "Run `metais {command} --help` for the operands it takes.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "usage.name_invalid",
       "severity": "error",
       "class": "usage",
@@ -4837,6 +5639,25 @@
       "params": [],
       "message": "metais init needs --name when the directory is omitted or its last element is . or ..; the name is never taken from the working directory.",
       "hint": "Give the package's name with --name, such as `metais init --name acme-report`.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.package_from_stdin",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the refused argument among the arguments after metais.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} names standard input as the package; a package is read from a file.",
+      "hint": "Write the package to a file and give its path; a zip is read with random access, which standard input does not offer.",
       "location": "none",
       "since": "1.0",
       "statements": []

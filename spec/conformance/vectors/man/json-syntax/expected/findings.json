@@ -1,0 +1,20 @@
+[
+  {
+    "code": "manifest.json.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 5,
+      "column": 65,
+      "pointer": "/outputs/1"
+    },
+    "params": {
+      "expected": "value",
+      "found": "unexpected character"
+    }
+  }
+]

@@ -22,3 +22,9 @@ type Set uint64
 func (s Set) Has(f Set) bool {
 	return f != 0 && s&f == f
 }
+
+// SkipDigest makes the verification of a packed package's digest file
+// return success (ADR-010 D13 item 2): the digest detector must catch a
+// package whose entries are not those its digest file names. Its seam is
+// internal/pkgtree.
+const SkipDigest Set = 1 << 0

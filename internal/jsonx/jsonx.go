@@ -31,7 +31,10 @@ import (
 // input it is part of, and where its text came from. Parse fills in each
 // finding's line, column and pointer.
 type Source struct {
-	// Input is the subject every finding names: an input (ADR-006 D4).
+	// Input is the subject every finding names: an input (ADR-006 D4),
+	// or, for metais.yaml read under ADR-002 D3's JSON profile, the
+	// manifest, whose findings are the manifest.json family and whose
+	// limits are limit.package, about the package.
 	Input finding.Subject
 	// At is the origin of the text, with its file or its argument ordinal.
 	// Its Line, Column and Pointer are ignored.

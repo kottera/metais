@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.container.size_mismatch",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid"
+    },
+    "params": {
+      "offset": 2600,
+      "declared": 29
+    }
+  }
+]

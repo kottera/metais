@@ -1,0 +1,40 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply a report.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+outputs:
+  - id: unclosed
+    template: report.md.liquid
+    path: "{{ inputs.report.title"
+  - id: condition
+    template: report.md.liquid
+    path: condition.md
+    when: "inputs.report and"
+  - id: each
+    template: report.md.liquid
+    path: "each-{{ item.title }}.md"
+    for_each: "inputs.report ]"
+  - id: included
+    template: report.md.liquid
+    path: "{% include 'name' %}.md"
+  - id: large
+    template: report.md.liquid
+    path: "{{ 9007199254740993 }}.md"
+  - id: rendered
+    template: report.md.liquid
+    path: "{% render 'name' %}.md"
+  - id: unknown
+    template: report.md.liquid
+    path: "{{ inputs.report.title | nosuchfilter }}.md"
+  - id: arity
+    template: report.md.liquid
+    path: "{{ 'a' | split }}.md"
+  - id: zero
+    template: report.md.liquid
+    path: "{{ 1 | divided_by: 0 }}.md"

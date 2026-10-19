@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.digest.mismatch",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid"
+    },
+    "params": {
+      "listed": "0aaa4c51f582139bab19e9546ce60e1e2e3741de9d81419ce6e333473945e228",
+      "computed": "830bcef3e4fdbe5f5b1f73d1d7927486eef5f8013285a2a5b6a37f38fdbbaa12"
+    }
+  }
+]

@@ -1,0 +1,21 @@
+[
+  {
+    "code": "package.version.malformed",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 1,
+      "column": 9,
+      "pointer": "/metais"
+    },
+    "params": {
+      "implemented": [
+        "1.0"
+      ]
+    }
+  }
+]

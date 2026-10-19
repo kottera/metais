@@ -1,0 +1,15 @@
+[
+  {
+    "code": "manifest.yaml.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 4
+    },
+    "params": {}
+  }
+]

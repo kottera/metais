@@ -1,0 +1,15 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+authors: []
+title: Example
+description: An example package.
+guide: Supply a report.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+    forms: [xml]
+outputs:
+  - id: report
+    template: report.md.liquid

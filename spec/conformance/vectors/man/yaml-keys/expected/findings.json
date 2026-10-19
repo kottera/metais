@@ -1,0 +1,57 @@
+[
+  {
+    "code": "manifest.yaml.key_not_scalar",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 4,
+      "column": 3,
+      "pointer": ""
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.key_empty",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 6,
+      "column": 2,
+      "pointer": ""
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.duplicate_key",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 8,
+      "column": 1,
+      "pointer": "/name"
+    },
+    "params": {},
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 2,
+        "column": 1,
+        "pointer": "/name",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]

@@ -1,0 +1,79 @@
+[
+  {
+    "code": "manifest.required",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 1,
+      "column": 1,
+      "pointer": "/title"
+    },
+    "schema": {
+      "entry": "https://metais.org/schemas/1.0/manifest.schema.json",
+      "pointer": "/required",
+      "keyword": "required"
+    },
+    "field": {
+      "title": "Title",
+      "description": "What the package is, as a person names it: one line of 1 to 200 characters."
+    },
+    "params": {
+      "property": "title"
+    }
+  },
+  {
+    "code": "manifest.type",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 4,
+      "column": 10,
+      "pointer": "/homepage"
+    },
+    "schema": {
+      "entry": "https://metais.org/schemas/1.0/manifest.schema.json",
+      "pointer": "/$defs/http_uri/type",
+      "keyword": "type"
+    },
+    "field": {
+      "title": "Homepage",
+      "description": "An absolute https or http URI of at most 2048 characters, the scheme in lower case, with a non-empty host, no user information and no fragment."
+    },
+    "params": {
+      "expected": [
+        "string"
+      ],
+      "actual": "null"
+    }
+  },
+  {
+    "code": "manifest.additional_property",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 5,
+      "column": 1,
+      "pointer": "/extra"
+    },
+    "schema": {
+      "entry": "https://metais.org/schemas/1.0/manifest.schema.json",
+      "pointer": "/additionalProperties",
+      "keyword": "additionalProperties"
+    },
+    "params": {
+      "property": "extra"
+    }
+  }
+]

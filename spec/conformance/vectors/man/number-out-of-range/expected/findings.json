@@ -1,0 +1,19 @@
+[
+  {
+    "code": "manifest.number_out_of_range",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 8,
+      "pointer": "/extra"
+    },
+    "params": {
+      "reason": "unsafe_integer"
+    }
+  }
+]

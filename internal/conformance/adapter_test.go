@@ -188,9 +188,13 @@ func (a *cliAdapter) commands(v *vector, sb *sandbox, st *step) ([]command, erro
 			if err != nil {
 				return nil, err
 			}
-			return openPlan(set, x.Package)
+			plan, err := openPlan(set, x.Package)
+			for i := range plan {
+				plan[i].args = limitFlags(plan[i].args)
+			}
+			return plan, err
 		}
-		return []command{{args: []string{"inspect", "--json", x.Package}}}, nil
+		return []command{{args: limitFlags([]string{"inspect", "--json", x.Package})}}, nil
 	case "validate":
 		args, stdin, err := supply([]string{"validate", "--json", x.Package})
 		if err != nil {

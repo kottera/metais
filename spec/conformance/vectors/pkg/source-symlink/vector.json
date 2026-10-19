@@ -1,0 +1,43 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pkg/source-symlink",
+  "title": "A symbolic link beneath templates/ is refused, and never followed",
+  "statements": [
+    "MTS-PKG-023",
+    "MTS-SEC-003"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [
+    "symlinks"
+  ],
+  "notes": "",
+  "cases": [
+    {
+      "name": "open",
+      "setup": {
+        "symlinks": [
+          {
+            "path": "package/templates/linked.md.liquid",
+            "target": "report.md.liquid"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

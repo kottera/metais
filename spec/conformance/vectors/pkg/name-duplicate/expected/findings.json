@@ -1,0 +1,23 @@
+[
+  {
+    "code": "package.name.duplicate",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/a.txt"
+    },
+    "params": {
+      "offset": 2678
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "assets/a.txt",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]
