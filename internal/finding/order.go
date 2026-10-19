@@ -32,12 +32,11 @@ func Compare(a, b Finding) int {
 }
 
 // comparePrefix compares the members of the key before schema: subject,
-// location and code. Two duplicates (D8 item 3) are always equal here,
-// since the report refuses duplicates at different lines or columns; they
-// can differ only in the members after it.
+// location and code. Two duplicates (D8 item 3) can differ here only in
+// their line and column.
 func comparePrefix(a, b Finding) int {
 	la, lb := a.locationOrZero(), b.locationOrZero()
-	return cmp.Or(
+	if c := cmp.Or(
 		cmp.Compare(a.subject.Kind, b.subject.Kind),
 		strings.Compare(a.subject.Name, b.subject.Name),
 		cmpBool(a.location != nil, b.location != nil),
@@ -47,9 +46,13 @@ func comparePrefix(a, b Finding) int {
 		cmp.Compare(la.Line, lb.Line),
 		cmp.Compare(la.Column, lb.Column),
 		cmpBool(la.HasPointer, lb.HasPointer),
-		comparePointers(a.ptrTokens, b.ptrTokens),
-		strings.Compare(string(a.entry.Code), string(b.entry.Code)),
-	)
+	); c != 0 {
+		return c
+	}
+	// The pointer, which can be as long as the input, is compared only
+	// between findings at the same place: cmp.Or is given every result,
+	// so it is not one of them.
+	return cmp.Or(comparePaths(la.path, lb.path), strings.Compare(string(a.entry.Code), string(b.entry.Code)))
 }
 
 // cmpBool orders false before true: an absent member before a present one.
@@ -63,23 +66,13 @@ func cmpBool(a, b bool) int {
 	return 1
 }
 
-// comparePointers compares two JSON Pointers token by token (D8 item 1.6).
-// A pointer that is a prefix of another sorts first. Two tokens that are
-// both array indexes (0, or a decimal without a leading zero) compare as
-// numbers, so /9 sorts before /10; an index sorts before any other token,
-// which keeps the order total; other tokens compare by their decoded
-// UTF-8 bytes. Whether a token indexes an array or names a member is not
-// known from the pointer alone, so a member named 10 is ordered as an
-// index would be.
-func comparePointers(ta, tb []string) int {
-	for i := 0; i < len(ta) && i < len(tb); i++ {
-		if c := compareTokens(ta[i], tb[i]); c != 0 {
-			return c
-		}
-	}
-	return cmp.Compare(len(ta), len(tb))
-}
-
+// compareTokens compares two tokens of JSON Pointers, which comparePaths
+// compares token by token (D8 item 1.6). Two tokens that are both array
+// indexes (0, or a decimal without a leading zero) compare as numbers, so
+// /9 sorts before /10; an index sorts before any other token, which keeps
+// the order total; other tokens compare by their decoded UTF-8 bytes.
+// Whether a token indexes an array or names a member is not known from
+// the pointer alone, so a member named 10 is ordered as an index would be.
 func compareTokens(a, b string) int {
 	ia, ib := isIndex(a), isIndex(b)
 	switch {
@@ -189,7 +182,9 @@ func appendCanonicalString(b []byte, s string) []byte {
 // duplicateKey is the SHA-256 digest of the members that make two
 // findings duplicates (D8 item 3): code, subject, location's origin, file,
 // argument and pointer, and params. Each member is written with its
-// length, so no two keys share an encoding.
+// length, so no two keys share an encoding; the pointer is written as its
+// path's digest, which is as unique as its tokens and costs nothing to
+// write however long the pointer is.
 func (f Finding) duplicateKey() [sha256.Size]byte {
 	h := sha256.New()
 	var n [8]byte
@@ -213,7 +208,8 @@ func (f Finding) duplicateKey() [sha256.Size]byte {
 		num(l.Argument)
 		if l.HasPointer {
 			num(1)
-			str(l.Pointer)
+			d := l.path.digest()
+			h.Write(d[:])
 		} else {
 			num(0)
 		}

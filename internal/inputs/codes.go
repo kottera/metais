@@ -4,6 +4,8 @@
 package inputs
 
 import (
+	"fmt"
+
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/inputs/csv"
 	"github.com/kottera/metais/internal/jsonx"
@@ -105,12 +107,12 @@ func rebuild(f finding.Finding, subj finding.Subject, loc func(finding.Location)
 	}
 	opts = append(opts, finding.WithVia(append(via, f.Via()...)...), finding.WithAlternatives(f.Alternatives()...))
 	var related []finding.Related
-	for _, r := range f.Related() {
+	for _, r := range f.RelatedAt() {
 		related = append(related, finding.Related{Location: loc(r.Location), Note: r.Note})
 	}
 	opts = append(opts, finding.WithRelated(related...))
 	var at *finding.Location
-	if l, ok := f.Location(); ok {
+	if l, ok := f.At(); ok {
 		l = loc(l)
 		at = &l
 	}
@@ -121,11 +123,17 @@ func rebuild(f finding.Finding, subj finding.Subject, loc func(finding.Location)
 func keep(l finding.Location) finding.Location { return l }
 
 // under is rebuild's loc for a document placed at prefix in its input: a
-// pointer the reader gave below its document's root is prefixed.
+// pointer the reader gave below its document's root is prefixed. A
+// location's pointer is read as a path, so placing it costs its depth, not
+// its length.
 func under(prefix string) func(finding.Location) finding.Location {
+	pp, ok := finding.ParsePath(prefix)
+	if !ok {
+		panic(fmt.Sprintf("inputs: %q is not a JSON Pointer", prefix))
+	}
 	return func(l finding.Location) finding.Location {
 		if l.HasPointer {
-			l.Pointer = prefix + l.Pointer
+			l = l.WithPath(l.Path().Under(pp))
 		}
 		return l
 	}

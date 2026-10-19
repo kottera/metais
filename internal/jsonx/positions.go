@@ -20,10 +20,21 @@ const bom = "\xEF\xBB\xBF"
 // and column: lines end at LF, CRLF or a lone CR, each one line break;
 // columns count code points from the start of the line, an invalid byte
 // counting as one; a leading byte order mark is not counted.
+//
+// A column is counted from the nearest checkpoint, not from the start of
+// its line, so a finding on a long line costs a bounded count, never the
+// line's length.
 type lineIndex struct {
 	src    []byte
 	starts []int // the offset of each line's first byte, ascending
+	// runes holds, for valid UTF-8, the code points before each multiple
+	// of checkpoint bytes; nil for text that is not, whose columns are
+	// counted from the line's start.
+	runes []int
 }
+
+// checkpoint is how many bytes apart lineIndex counts code points.
+const checkpoint = 256
 
 func newLineIndex(src []byte) *lineIndex {
 	start := 0
@@ -42,7 +53,32 @@ func newLineIndex(src []byte) *lineIndex {
 			starts = append(starts, i+1)
 		}
 	}
-	return &lineIndex{src: src, starts: starts}
+	x := &lineIndex{src: src, starts: starts}
+	if utf8.Valid(src) {
+		x.runes = make([]int, len(src)/checkpoint+1)
+		n := 0
+		for i, c := range src {
+			if utf8.RuneStart(c) {
+				n++
+			}
+			if (i+1)%checkpoint == 0 {
+				x.runes[(i+1)/checkpoint] = n
+			}
+		}
+	}
+	return x
+}
+
+// runesTo returns how many code points of valid UTF-8 come before off.
+// Every byte that starts a code point is one.
+func (x *lineIndex) runesTo(off int) int {
+	n := x.runes[off/checkpoint]
+	for _, c := range x.src[off/checkpoint*checkpoint : off] {
+		if utf8.RuneStart(c) {
+			n++
+		}
+	}
+	return n
 }
 
 // pos returns the line and column of the byte at off, which is in [0,
@@ -52,7 +88,10 @@ func newLineIndex(src []byte) *lineIndex {
 func (x *lineIndex) pos(off int) finding.Pos {
 	off = max(off, x.starts[0])
 	line := sort.Search(len(x.starts), func(i int) bool { return x.starts[i] > off }) - 1
-	return finding.Pos{Line: line + 1, Column: utf8.RuneCount(x.src[x.starts[line]:off]) + 1}
+	if x.runes == nil {
+		return finding.Pos{Line: line + 1, Column: utf8.RuneCount(x.src[x.starts[line]:off]) + 1}
+	}
+	return finding.Pos{Line: line + 1, Column: x.runesTo(off) - x.runesTo(x.starts[line]) + 1}
 }
 
 // node is where one value of a document is: the offset of its first byte,

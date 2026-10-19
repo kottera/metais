@@ -370,8 +370,8 @@ func TestPositions(t *testing.T) {
 				t.Errorf("%q: key %q at %v, want %v", eol, ptr, got, want)
 			}
 		}
-		if len(doc.pos.values) != len(values) || len(doc.pos.keys) != len(keys) {
-			t.Errorf("%q: %d values and %d keys, want %d and %d", eol, len(doc.pos.values), len(doc.pos.keys), len(values), len(keys))
+		if all, allKeys := doc.pos.entries(); len(all) != len(values) || len(allKeys) != len(keys) {
+			t.Errorf("%q: %d values and %d keys, want %d and %d", eol, len(all), len(allKeys), len(values), len(keys))
 		}
 		if _, ok := doc.Positions().Key("/liste/0"); ok {
 			t.Errorf("an element has a key position")

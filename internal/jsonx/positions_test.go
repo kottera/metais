@@ -5,6 +5,7 @@ package jsonx
 
 import (
 	"testing"
+	"unicode/utf8"
 
 	"github.com/kottera/metais/internal/finding"
 )
@@ -113,6 +114,35 @@ func TestLineIndex(t *testing.T) {
 	for _, c := range []struct{ off, col int }{{0, 1}, {2, 1}, {3, 1}, {4, 2}} {
 		if p := x.pos(c.off); p != (finding.Pos{Line: 1, Column: c.col}) {
 			t.Errorf("after a byte order mark, offset %d: %+v, want 1:%d", c.off, p, c.col)
+		}
+	}
+}
+
+// TestLineIndexCheckpoints pins that a column counted from a checkpoint
+// is the column counted from the start of its line, at every code point
+// and at the end of a text, whatever its length against the checkpoint's
+// and wherever a line or a multi-byte character falls across one.
+func TestLineIndexCheckpoints(t *testing.T) {
+	for _, n := range []int{checkpoint - 1, checkpoint, checkpoint + 1, 3*checkpoint + 7} {
+		for _, prefix := range []string{"", bom} {
+			src := []byte(prefix)
+			for i := 0; len(src) < n; i++ {
+				src = append(src, []string{"é", "a", "\U0001F600", "\r\n", "€", "\n", "b"}[i%7]...)
+			}
+			x := newLineIndex(src)
+			line, start := 1, len(prefix)
+			for off := 0; off <= len(src); off++ {
+				if off < len(src) && !utf8.RuneStart(src[off]) {
+					continue
+				}
+				if off > start && (src[off-1] == '\n' || src[off-1] == '\r' && (off == len(src) || src[off] != '\n')) {
+					line, start = line+1, off
+				}
+				want := finding.Pos{Line: line, Column: utf8.RuneCount(src[start:max(off, start)]) + 1}
+				if p := x.pos(off); p != want {
+					t.Fatalf("length %d, prefix %q, offset %d: %+v, want %+v", len(src), prefix, off, p, want)
+				}
+			}
 		}
 	}
 }

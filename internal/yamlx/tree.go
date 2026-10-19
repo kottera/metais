@@ -27,21 +27,17 @@ func (r *reader) pos(n *yaml.Node) finding.Pos {
 	return finding.Pos{Line: n.Line, Column: n.Column}
 }
 
-// atPtr is the finding location of n, about the value or member at ptr.
-func (r *reader) atPtr(n *yaml.Node, ptr string) finding.Location {
-	return r.at(r.pos(n)).WithPointer(ptr)
+// atPtr is the finding location of n, about the value or member at pl.
+func (r *reader) atPtr(n *yaml.Node, pl *place) finding.Location {
+	return r.at(r.pos(n)).WithPath(pl.pointer())
 }
 
-// child is the pointer of the member or element token of the value at
-// ptr.
-func child(ptr, token string) string { return ptr + finding.Pointer(token) }
-
-// node checks n, the value at ptr, nested in depth-1 arrays and objects,
+// node checks n, the value at pl, nested in depth-1 arrays and objects,
 // and returns its value. A refused node is reported and its value is
 // null: once anything is reported the document is refused, so the value
 // is never used.
-func (r *reader) node(n *yaml.Node, ptr string, depth int) value.Value {
-	r.positions.values[ptr] = r.inFile(r.pos(n))
+func (r *reader) node(n *yaml.Node, ptr *place, depth int) value.Value {
+	ptr.value, ptr.hasValue = r.inFile(r.pos(n)), true
 	r.properties(n, ptr)
 	switch n.Kind {
 	case yaml.AliasNode:
@@ -57,7 +53,7 @@ func (r *reader) node(n *yaml.Node, ptr string, depth int) value.Value {
 	if n.Kind == yaml.SequenceNode {
 		elems := make([]value.Value, len(n.Content))
 		for i, c := range n.Content {
-			elems[i] = r.node(c, child(ptr, strconv.Itoa(i)), depth+1)
+			elems[i] = r.node(c, ptr.child(strconv.Itoa(i)), depth+1)
 		}
 		a, err := value.NewArray(elems...)
 		if err != nil {
@@ -73,7 +69,7 @@ func (r *reader) node(n *yaml.Node, ptr string, depth int) value.Value {
 
 // mapping checks the members of n, the mapping at ptr (ADR-002 D2 items 6
 // to 8), and returns its object.
-func (r *reader) mapping(n *yaml.Node, ptr string, depth int) value.Value {
+func (r *reader) mapping(n *yaml.Node, ptr *place, depth int) value.Value {
 	var members []value.Member
 	// first is where each name was first given, kept as it is seen so a
 	// duplicate costs no walk back along its line.
@@ -96,16 +92,16 @@ func (r *reader) mapping(n *yaml.Node, ptr string, depth int) value.Value {
 			continue
 		}
 		name := k.Value
-		at := child(ptr, name)
+		at := ptr.child(name)
 		r.text(k, at, name)
 		if f, dup := first[name]; dup {
 			r.add(ruleDuplicateKey, r.atPtr(k, at), nil,
-				finding.WithRelated(finding.Related{Location: r.at(f).WithPointer(at), Note: noteFirst}))
+				finding.WithRelated(finding.Related{Location: r.at(f).WithPath(at.pointer()), Note: noteFirst}))
 			r.node(v, at, depth+1)
 			continue
 		}
 		first[name] = r.pos(k)
-		r.positions.keys[at] = r.inFile(first[name])
+		at.key, at.hasKey = r.inFile(first[name]), true
 		members = append(members, value.Member{Name: name, Value: r.node(v, at, depth+1)})
 	}
 	o, err := value.NewObject(members...)
@@ -119,7 +115,7 @@ func (r *reader) mapping(n *yaml.Node, ptr string, depth int) value.Value {
 // The library marks an explicit tag in n's style, except the non-specific
 // tag `!`, which it resolves without a trace; so a tag is also found in
 // the text, where n begins with its properties.
-func (r *reader) properties(n *yaml.Node, ptr string) {
+func (r *reader) properties(n *yaml.Node, ptr *place) {
 	if n.Anchor != "" {
 		r.add(ruleAnchor, r.atPtr(n, ptr), nil)
 	}
@@ -183,7 +179,7 @@ func plain(n *yaml.Node) bool {
 
 // scalar resolves n, the scalar at ptr. Quoted and block scalars are
 // strings; a plain scalar is resolved by ADR-002 D2 item 9's table.
-func (r *reader) scalar(n *yaml.Node, ptr string) value.Value {
+func (r *reader) scalar(n *yaml.Node, ptr *place) value.Value {
 	if !plain(n) {
 		return r.text(n, ptr, n.Value)
 	}
@@ -234,7 +230,7 @@ func refusedForm(s string) string {
 // manifest, which refuses any integer value beyond 2^53-1, and ADR-003 D8
 // item 5 for an input, which refuses one written without fraction or
 // exponent.
-func (r *reader) number(n *yaml.Node, ptr, lit string) value.Value {
+func (r *reader) number(n *yaml.Node, ptr *place, lit string) value.Value {
 	if l := int64(len(lit)); l > r.lim.Value(limits.NumberLength) {
 		r.findings = append(r.findings, r.limit(limits.NumberLength, r.atPtr(n, ptr), l, true))
 		return value.Null{}
@@ -260,7 +256,7 @@ func (r *reader) number(n *yaml.Node, ptr, lit string) value.Value {
 
 // text is the string s, the text of n at ptr. An input's strings hold no
 // noncharacter (ADR-003 D8 item 4); the first one is reported.
-func (r *reader) text(n *yaml.Node, ptr, s string) value.Value {
+func (r *reader) text(n *yaml.Node, ptr *place, s string) value.Value {
 	if !r.manifest {
 		for _, c := range s {
 			if noncharacter(c) {

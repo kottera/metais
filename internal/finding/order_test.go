@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -77,7 +78,7 @@ func orderedFindings() []Finding {
 // describe is a finding as the ordering tests compare it: every member of
 // the sort key and the duplicate key, and the message.
 func describe(f Finding) string {
-	return fmt.Sprintf("%s %+v %+v %+v %s %s", f.Code(), f.subject, f.locationOrZero(), f.schemaOrZero(), f.canonicalParams(), f.message)
+	return fmt.Sprintf("%s %+v %+v %+v %s %s", f.Code(), f.subject, f.locationOrZero().written(), f.schemaOrZero(), f.canonicalParams(), f.Message())
 }
 
 func describeAll(fs []Finding) []string {
@@ -155,13 +156,13 @@ func TestCompareTotal(t *testing.T) {
 	}
 }
 
-func TestComparePointers(t *testing.T) {
+func TestComparePaths(t *testing.T) {
 	// Tokens are decoded before they compare: ~1 is "/" and ~0 is "~". The
 	// empty member name "/" is not an index.
 	ordered := []string{"", "/0", "/1", "/9", "/10", "/10/0", "/10/a", "/100", "/", "/00", "/01", "/A", "/a", "/a/b", "/a~1", "/a~0", "/b", "/\u00e9"}
 	for i, a := range ordered {
 		for j, b := range ordered {
-			got := comparePointers(pointerTokens(a), pointerTokens(b))
+			got := comparePaths(parsePath(a), parsePath(b))
 			want := 0
 			if i < j {
 				want = -1
@@ -169,9 +170,50 @@ func TestComparePointers(t *testing.T) {
 				want = 1
 			}
 			if got != want {
-				t.Errorf("comparePointers(%q, %q) = %d, want %d", a, b, got, want)
+				t.Errorf("comparePaths(%q, %q) = %d, want %d", a, b, got, want)
 			}
 		}
+	}
+}
+
+// TestPathShared pins that a Path built a token at a time is the pointer
+// of its tokens: it writes the same string, has the same digest as the
+// same tokens built apart, and orders the same against a path that shares
+// its nodes as against one that does not.
+func TestPathShared(t *testing.T) {
+	long := strings.Repeat("x", 1000)
+	shared := parsePath("/a").Child(long)
+	for _, tt := range []struct {
+		p    *Path
+		want string
+	}{
+		{nil, ""},
+		{parsePath("/"), "/"},
+		{shared.Child("b/c"), "/a/" + long + "/b~1c"},
+		{shared.Child("~"), "/a/" + long + "/~0"},
+		{parsePath("/a").Child("\xff"), "/a/\ufffd"},
+	} {
+		if got := tt.p.String(); got != tt.want {
+			t.Errorf("String() = %q, want %q", got, tt.want)
+		}
+		if apart := parsePath(tt.want); apart.digest() != tt.p.digest() || comparePaths(apart, tt.p) != 0 {
+			t.Errorf("%q built apart is not the same path", tt.want)
+		}
+	}
+	if parsePath("").digest() == parsePath("/").digest() {
+		t.Error("the root and the empty token share a digest")
+	}
+	b, c := shared.Child("10"), shared.Child("9")
+	for _, pair := range [][2]*Path{{b, c}, {parsePath(b.String()), c}, {b, parsePath(c.String())}} {
+		if got := comparePaths(pair[0], pair[1]); got != 1 {
+			t.Errorf("comparePaths(%q, %q) = %d, want 1", pair[0], pair[1], got)
+		}
+		if got := comparePaths(pair[1], pair[0]); got != -1 {
+			t.Errorf("comparePaths(%q, %q) = %d, want -1", pair[1], pair[0], got)
+		}
+	}
+	if got := comparePaths(shared, b); got != -1 {
+		t.Errorf("a prefix compares %d to its extension, want -1", got)
 	}
 }
 
@@ -193,5 +235,43 @@ func TestPointer(t *testing.T) {
 		if got := pointerTokens(tt.want); !slices.Equal(got, tt.tokens) && len(got)+len(tt.tokens) > 0 {
 			t.Errorf("pointerTokens(%q) = %q, want %q", tt.want, got, tt.tokens)
 		}
+	}
+}
+
+// TestWithPathIsWithPointer pins that a location given its pointer as a
+// Path makes the finding a pointer string makes: the same members, the
+// same encodings, the same place in the order and the same duplicate key,
+// with its related locations' pointers written out alike.
+func TestWithPathIsWithPointer(t *testing.T) {
+	withTestCodes(t)
+	subj := Subject{Kind: SubjectInput, Name: "vendor"}
+	at := Location{Origin: OriginDataDir, File: "vendor.json", Line: 3, Column: 9}
+	params := Params{"limit": Int(10), "length": Int(4)}
+	for _, ptr := range []string{"", "/", "/a~1b/0/é", "/~0/" + strings.Repeat("x", 300)} {
+		loc := at.WithPointer(ptr)
+		byString := New(codeInputMinLength, subj, &loc, params, WithRelated(Related{Location: at.WithPointer(ptr), Note: "n"}))
+		loc = at.WithPath(parsePath(ptr))
+		byPath := New(codeInputMinLength, subj, &loc, params, WithRelated(Related{Location: at.WithPath(parsePath(ptr)), Note: "n"}))
+		if a, b := string(AppendJSON(nil, byString)), string(AppendJSON(nil, byPath)); a != b {
+			t.Errorf("%q: JSON\n%s\nand\n%s", ptr, a, b)
+		}
+		if a, b := string(AppendHuman(nil, false, byString)), string(AppendHuman(nil, false, byPath)); a != b {
+			t.Errorf("%q: human\n%s\nand\n%s", ptr, a, b)
+		}
+		if Compare(byString, byPath) != 0 || byString.duplicateKey() != byPath.duplicateKey() {
+			t.Errorf("%q: the two findings order or de-duplicate apart", ptr)
+		}
+		l, _ := byPath.Location()
+		if want := at.WithPointer(ptr); l != want {
+			t.Errorf("%q: Location() = %+v, want %+v", ptr, l, want)
+		}
+		if r := byPath.Related(); len(r) != 1 || r[0].Location != at.WithPointer(ptr) {
+			t.Errorf("%q: Related() = %+v", ptr, r)
+		}
+	}
+	noPtr := at
+	noPtr.path = parsePath("/a")
+	if f := New(codeInputMinLength, subj, &noPtr, params); Compare(f, New(codeInputMinLength, subj, &at, params)) != 0 {
+		t.Error("a path on a location with no pointer is ordered")
 	}
 }

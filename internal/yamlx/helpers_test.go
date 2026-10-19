@@ -90,7 +90,8 @@ func positionsWithin(src Source, text string, doc Doc, fs []finding.Finding) err
 		return nil
 	}
 	if doc.Value != nil {
-		for ptr, p := range doc.pos.values {
+		values, keys := doc.pos.entries()
+		for ptr, p := range values {
 			if p.Column < 1 {
 				return fmt.Errorf("value %q has no column", ptr)
 			}
@@ -98,7 +99,7 @@ func positionsWithin(src Source, text string, doc Doc, fs []finding.Finding) err
 				return err
 			}
 		}
-		for ptr, p := range doc.pos.keys {
+		for ptr, p := range keys {
 			if err := check("key "+ptr, p); err != nil {
 				return err
 			}
@@ -172,4 +173,24 @@ func describe(fs []finding.Finding) string {
 		b.WriteByte('\n')
 	}
 	return b.String()
+}
+
+// entries returns every position the table holds, by pointer: the
+// values', and the member names'.
+func (p *positions) entries() (values, keys map[string]finding.Pos) {
+	values, keys = map[string]finding.Pos{}, map[string]finding.Pos{}
+	var walk func(pl *place, ptr string)
+	walk = func(pl *place, ptr string) {
+		if pl.hasValue {
+			values[ptr] = pl.value
+		}
+		if pl.hasKey {
+			keys[ptr] = pl.key
+		}
+		for tok, c := range pl.children {
+			walk(c, ptr+finding.Pointer(tok))
+		}
+	}
+	walk(p.root, "")
+	return values, keys
 }

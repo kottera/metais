@@ -42,7 +42,7 @@ func newReader(src Source, data []byte, lim limits.Set) *reader {
 		data:      data,
 		lim:       lim,
 		lines:     []int{0},
-		positions: &positions{values: map[string]finding.Pos{}, keys: map[string]finding.Pos{}},
+		positions: &positions{root: &place{}},
 	}
 	return r
 }

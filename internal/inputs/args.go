@@ -65,13 +65,13 @@ func (s *Supply) AddInputsJSON(text []byte) {
 	doc, fs := jsonx.Parse(text, jsonx.Source{Input: argSubject, At: loc}, s.lim)
 	unknown := map[string]bool{}
 	for _, f := range fs {
-		l, _ := f.Location()
-		name := firstToken(l.Pointer)
+		l, _ := f.At()
+		name := firstToken(l.Path())
 		limit := ""
 		if v, ok := f.Param("limit"); ok {
 			limit, _ = v.Str()
 		}
-		if !l.HasPointer || l.Pointer == "" {
+		if !l.HasPointer || l.Path() == nil {
 			invalid(l, f.Code(), limit)
 			continue
 		}
@@ -86,7 +86,7 @@ func (s *Supply) AddInputsJSON(text []byte) {
 			continue
 		}
 		s.broken[name] = true
-		s.add(rebuild(f, s.l.subject(name), below(name)))
+		s.add(rebuild(f, s.l.subject(name), below))
 	}
 	if len(fs) > 0 {
 		// The argument gave no value, so which inputs its other members
@@ -125,15 +125,13 @@ func (s *Supply) unknownMember(loc finding.Location, doc jsonx.Doc, name string)
 }
 
 // below is rebuild's loc for a finding of an --inputs-json argument inside
-// the member name: its pointer becomes one within the input.
-func below(name string) func(finding.Location) finding.Location {
-	prefix := finding.Pointer(name)
-	return func(l finding.Location) finding.Location {
-		if l.HasPointer {
-			l.Pointer = strings.TrimPrefix(l.Pointer, prefix)
-		}
-		return l
+// a member, whose name is its pointer's first token: its pointer becomes
+// one within the input.
+func below(l finding.Location) finding.Location {
+	if l.HasPointer {
+		l = l.WithPath(l.Path().Below(1))
 	}
+	return l
 }
 
 // AddSet parses arg, the value of the next --set flag: a text set, an

@@ -115,8 +115,8 @@ func (f Finding) appendJSON(b []byte) []byte {
 	o := openObject(b)
 	o.str("code", string(f.entry.Code))
 	o.str("severity", f.entry.Severity.String())
-	o.str("message", f.message)
-	o.str("hint", f.hint)
+	o.str("message", f.Message())
+	o.str("hint", f.Hint())
 	o.key("subject")
 	s := openObject(o.b)
 	s.str("kind", f.subject.Kind.String())
@@ -218,7 +218,7 @@ func appendLocation(b []byte, l Location, note string) []byte {
 	o.numIf("line", l.Line)
 	o.numIf("column", l.Column)
 	if l.HasPointer {
-		o.str("pointer", l.Pointer)
+		o.str("pointer", l.pointer())
 	}
 	o.strIf("note", note)
 	return o.close()
@@ -274,7 +274,7 @@ func (f Finding) appendHuman(b []byte, colour bool, indent string) []byte {
 		b = append(b, sgrReset...)
 	}
 	b = append(b, ": "...)
-	b = appendText(b, f.message)
+	b = appendText(b, f.Message())
 	b = append(b, " ["...)
 	b = append(b, f.entry.Code...)
 	b = append(b, "]\n"...)
@@ -287,9 +287,9 @@ func (f Finding) appendHuman(b []byte, colour bool, indent string) []byte {
 		b = append(b, '\n')
 	}
 	if l := f.location; l != nil && l.HasPointer {
-		at := l.Pointer
+		at := l.pointer()
 		if f.subject.Kind == SubjectInput {
-			at = Pointer(f.subject.Name) + l.Pointer
+			at = Pointer(f.subject.Name) + at
 		} else if at == "" {
 			at = `""`
 		}
@@ -342,7 +342,7 @@ func (f Finding) appendHuman(b []byte, colour bool, indent string) []byte {
 			line("option", text)
 		}
 	}
-	line("hint", f.hint)
+	line("hint", f.Hint())
 	for _, a := range f.alternatives {
 		b = append(b, indent...)
 		b = append(b, "  option "...)

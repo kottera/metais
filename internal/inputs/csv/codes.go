@@ -25,13 +25,14 @@ const (
 // occurrence (ADR-006 D5 item 9).
 const noteFirst = "first occurrence"
 
-// report records the finding for code at p, pointing at *ptr when ptr is
-// not nil.
-func (r *reader) report(code finding.Code, p finding.Pos, ptr *string, params finding.Params, opts ...finding.Option) {
+// report records the finding for code at p, pointing at ptr when ptr is
+// not nil. No finding of a file points at its root, the array of its
+// records, so nil is no pointer.
+func (r *reader) report(code finding.Code, p finding.Pos, ptr *finding.Path, params finding.Params, opts ...finding.Option) {
 	l := r.from.At.At(p)
 	l.Pointer, l.HasPointer = "", false
 	if ptr != nil {
-		l = l.WithPointer(*ptr)
+		l = l.WithPath(ptr)
 	}
 	if params == nil {
 		params = finding.Params{}
@@ -42,7 +43,7 @@ func (r *reader) report(code finding.Code, p finding.Pos, ptr *string, params fi
 // limitExceeded reports limit.exceeded for id at p and stops the reading.
 // The reading stops at the bound, so the finding carries no observed value
 // (ADR-009 D2 item 5).
-func (r *reader) limitExceeded(id limits.ID, p finding.Pos, ptr *string) {
+func (r *reader) limitExceeded(id limits.ID, p finding.Pos, ptr *finding.Path) {
 	r.report(CodeLimitExceeded, p, ptr, finding.Params{
 		"limit":   finding.String(limits.Get(id).Name),
 		"bound":   finding.Int(r.lim.Value(id)),

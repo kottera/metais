@@ -29,28 +29,29 @@ type parser struct {
 
 // path is where in the document a value is, as the frames of the arrays
 // and objects above it. Its JSON Pointer is built only when a finding
-// needs it, and once per frame, so reading costs nothing per value for the
-// pointers no finding names.
+// needs it, and once per frame from its parent's, so reading costs nothing
+// per value for the pointers no finding names, and a finding costs its own
+// token, never the whole pointer.
 type path struct {
 	parent *path
 	token  string
-	ptr    string
+	ptr    *finding.Path
 	built  bool
 }
 
-func (p *path) pointer() string {
+func (p *path) pointer() *finding.Path {
 	if p == nil {
-		return ""
+		return nil
 	}
 	if !p.built {
-		p.ptr, p.built = p.parent.pointer()+finding.Pointer(p.token), true
+		p.ptr, p.built = p.parent.pointer().Child(p.token), true
 	}
 	return p.ptr
 }
 
 func (p *parser) document() (value.Value, *node) {
 	if n := int64(len(p.src)); n > p.lim.Value(limits.InputSize) {
-		p.limitExceeded(limits.InputSize, 0, "", false, n)
+		p.limitExceeded(limits.InputSize, 0, nil, false, n)
 		return nil, nil
 	}
 	if !p.encoding() {
@@ -65,7 +66,7 @@ func (p *parser) document() (value.Value, *node) {
 	}
 	p.space()
 	if p.i < len(p.src) {
-		p.report(CodeTrailingContent, p.at(p.i, "", false), nil)
+		p.report(CodeTrailingContent, p.at(p.i, nil, false), nil)
 		return nil, &root
 	}
 	return v, &root
@@ -76,7 +77,7 @@ func (p *parser) document() (value.Value, *node) {
 func (p *parser) encoding() bool {
 	src := p.src
 	if len(src) >= 2 && (src[0] == 0xFE && src[1] == 0xFF || src[0] == 0xFF && src[1] == 0xFE) {
-		p.report(CodeEncodingInvalid, p.at(0, "", false), finding.Params{"reason": finding.String(reasonUTF16), "offset": finding.Int(0)})
+		p.report(CodeEncodingInvalid, p.at(0, nil, false), finding.Params{"reason": finding.String(reasonUTF16), "offset": finding.Int(0)})
 		return false
 	}
 	if utf8.Valid(src) {
@@ -85,7 +86,7 @@ func (p *parser) encoding() bool {
 	for i := 0; i < len(src); {
 		r, n := utf8.DecodeRune(src[i:])
 		if r == utf8.RuneError && n == 1 {
-			p.report(CodeEncodingInvalid, p.at(i, "", false), finding.Params{"reason": finding.String(reasonInvalidUTF8), "offset": finding.Int(int64(i))})
+			p.report(CodeEncodingInvalid, p.at(i, nil, false), finding.Params{"reason": finding.String(reasonInvalidUTF8), "offset": finding.Int(int64(i))})
 			return false
 		}
 		i += n

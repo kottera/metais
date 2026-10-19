@@ -5,6 +5,7 @@ package finding
 
 import (
 	"bytes"
+	"cmp"
 	"container/heap"
 	"crypto/sha256"
 	"fmt"
@@ -32,14 +33,42 @@ type Report struct {
 	listed itemHeap // the last listed finding first
 	spill  itemHeap // past the cap, tying with listed's first on the prefix; the first in order first
 	sum    counts
+	lost   bool // a finding has gone past the cap
 }
 
 // group is one distinct finding: every finding with one duplicate key.
+// Beside the kept finding's schema.keyword_location it holds the members
+// of D8 item 1's key in which two duplicates can differ, so a later
+// duplicate is judged against the kept one even once the cap has let it
+// go.
 type group struct {
-	keywordLocation string            // the kept finding's, which sorts first
-	digest          [sha256.Size]byte // the kept finding's encoding, which breaks a tie
-	line, column    int               // every duplicate's
-	it              *item             // the kept finding while it is held; nil once it cannot be listed
+	keywordLocation string // the kept finding's, which sorts first
+	line, column    int    // the kept finding's
+	hasSchema       bool   // the kept finding's
+	entry, pointer  string // the kept finding's schema.entry and schema.pointer
+	it              *item  // the kept finding while it is held; nil once it cannot be listed
+}
+
+// keep records f as the group's kept finding.
+func (g *group) keep(f Finding) {
+	l, s := f.locationOrZero(), f.schemaOrZero()
+	g.keywordLocation, g.line, g.column = f.keywordLocation(), l.Line, l.Column
+	g.hasSchema, g.entry, g.pointer = f.schema != nil, s.Entry, s.Pointer
+}
+
+// order compares f, a duplicate of the group's kept finding, with it by
+// D8 item 1's key. The members a duplicate shares with it compare equal,
+// so only these can decide: line and column, then schema.entry and
+// schema.pointer.
+func (g *group) order(f Finding) int {
+	l, s := f.locationOrZero(), f.schemaOrZero()
+	return cmp.Or(
+		cmp.Compare(l.Line, g.line),
+		cmp.Compare(l.Column, g.column),
+		cmpBool(f.schema != nil, g.hasSchema),
+		strings.Compare(s.Entry, g.entry),
+		strings.Compare(s.Pointer, g.pointer),
+	)
 }
 
 type item struct {
@@ -47,6 +76,19 @@ type item struct {
 	g       *group
 	index   int // in listed, or in spill
 	spilled bool
+	digest  *[sha256.Size]byte // f's encoding's, once a tie has needed it
+}
+
+// encodingDigest returns the SHA-256 digest of the item's JSON encoding,
+// which breaks a tie between duplicates. It is computed only when a tie
+// needs it, since the encoding holds the pointer, which can be as long as
+// the input.
+func (it *item) encodingDigest() [sha256.Size]byte {
+	if it.digest == nil {
+		d := sha256.Sum256(AppendJSON(nil, it.f))
+		it.digest = &d
+	}
+	return *it.digest
 }
 
 type counts struct {
@@ -78,38 +120,65 @@ func NewReport(maxFindings int) *Report {
 // keyword_location, the one whose JSON encoding has the lower SHA-256
 // digest, so which is kept never depends on the order they came in.
 //
-// Add panics when f was not built by New, or when f is a duplicate at
-// another line or column: a value's position is fixed by its file and
-// pointer, so that is a defect in whatever positioned it.
+// Duplicates at different places are one finding too, as D8 item 3's key,
+// which holds no line or column, makes them: a reader reports every
+// repeat of one member name in one object, each at its own name, with the
+// same pointer and params. Of two that tie on keyword_location, or have
+// none, the one that sorts first by D8 item 1's key is kept; of two that
+// tie on that as well, the one whose encoding has the lower digest.
+//
+// Add panics when f was not built by New. It also panics when a duplicate
+// at a place after the kept finding's wins on keyword_location while the
+// kept one is listed and a finding has already gone past the cap:
+// the list could then be made exact only from findings the report no
+// longer holds. A value's place is fixed by its file and pointer, and only
+// a schema finding has a keyword_location, so that is a defect in
+// whatever positioned the two.
+//
+// Add costs a finding nothing for the length of its pointer: the pointer
+// is de-duplicated by its path's digest, compared only against findings at
+// the same place, and encoded only to break a tie between duplicates that
+// are both held.
 func (r *Report) Add(f Finding) {
 	if f.entry == nil {
 		panic("finding: Report.Add of a Finding New did not build")
 	}
 	key := f.duplicateKey()
 	kl := f.keywordLocation()
-	l := f.locationOrZero()
 	g, seen := r.groups[key]
+	it := &item{f: f}
 	if !seen {
-		g = &group{keywordLocation: kl, digest: sha256.Sum256(AppendJSON(nil, f)), line: l.Line, column: l.Column}
+		g = &group{}
+		g.keep(f)
 		r.groups[key] = g
 		r.count(f)
 	} else {
-		if l.Line != g.line || l.Column != g.column {
-			panic(fmt.Sprintf("finding: duplicates of %s at %s are at %d:%d and %d:%d", f.entry.Code, l.Pointer, g.line, g.column, l.Line, l.Column))
+		order := g.order(f)
+		c := cmp.Or(strings.Compare(kl, g.keywordLocation), order)
+		if c == 0 {
+			// A group the cap has let go was past the last listed finding
+			// on the members before schema, which a duplicate at the same
+			// place shares and the last listed finding only ever moves
+			// back from, so no such duplicate of it can be listed either.
+			if g.it == nil {
+				return
+			}
+			d, kept := it.encodingDigest(), g.it.encodingDigest()
+			c = bytes.Compare(d[:], kept[:])
 		}
-		if kl > g.keywordLocation {
+		if c >= 0 {
 			return
 		}
-		d := sha256.Sum256(AppendJSON(nil, f))
-		if kl == g.keywordLocation && bytes.Compare(d[:], g.digest[:]) >= 0 {
-			return
+		l := f.locationOrZero()
+		if cmp.Or(cmp.Compare(l.Line, g.line), cmp.Compare(l.Column, g.column)) > 0 && g.it != nil && !g.it.spilled && r.lost {
+			panic(fmt.Sprintf("finding: duplicates of %s at %s, at %d:%d and %d:%d, differ in keyword_location", f.entry.Code, l.pointer(), g.line, g.column, l.Line, l.Column))
 		}
-		g.keywordLocation, g.digest = kl, d
+		g.keep(f)
 		if g.it != nil {
 			r.remove(g.it)
 		}
 	}
-	it := &item{f: f, g: g}
+	it.g = g
 	g.it = it
 	r.insert(it)
 }
@@ -143,6 +212,7 @@ func (r *Report) insert(it *item) {
 		return
 	}
 	out := heap.Pop(&r.listed).(*item)
+	r.lost = true
 	if r.listed.Len() == 0 {
 		drop(out)
 		return

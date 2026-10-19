@@ -156,7 +156,9 @@ type Subject struct {
 // File is relative to its origin's root and empty when absent; Argument is
 // the 1-based ordinal of a command-line argument, zero when absent; Line
 // and Column are 1-based, zero when unknown. Pointer is an RFC 6901 JSON
-// Pointer, present when HasPointer is set: "" is the root.
+// Pointer, present when HasPointer is set: "" is the root. WithPath gives
+// the pointer as a Path instead, which a Location a finding returns has
+// written out as Pointer.
 type Location struct {
 	Origin     Origin
 	File       string
@@ -165,6 +167,8 @@ type Location struct {
 	Column     int
 	Pointer    string
 	HasPointer bool
+
+	path *Path // the pointer, when it was given as a Path or once New has taken it
 }
 
 // At returns l with its line and column set from p.
@@ -175,7 +179,52 @@ func (l Location) At(p Pos) Location {
 
 // WithPointer returns l pointing at ptr.
 func (l Location) WithPointer(ptr string) Location {
-	l.Pointer, l.HasPointer = ptr, true
+	l.Pointer, l.path, l.HasPointer = ptr, nil, true
+	return l
+}
+
+// WithPath returns l pointing at p, nil for the root.
+func (l Location) WithPath(p *Path) Location {
+	l.Pointer, l.path, l.HasPointer = "", p, true
+	return l
+}
+
+// Path returns l's pointer as a Path: nil for the root, and for a location
+// with no pointer.
+func (l Location) Path() *Path {
+	switch {
+	case !l.HasPointer:
+		return nil
+	case l.path != nil:
+		return l.path
+	}
+	return parsePath(l.Pointer)
+}
+
+// pointer returns l's pointer in its JSON-string form.
+func (l Location) pointer() string {
+	if l.path != nil {
+		return l.path.String()
+	}
+	return l.Pointer
+}
+
+// withPath returns l with its pointer held as a Path, so a finding orders
+// and de-duplicates it by its tokens.
+func (l Location) withPath() Location {
+	switch {
+	case !l.HasPointer:
+		l.path, l.Pointer = nil, ""
+	case l.path == nil:
+		l.path, l.Pointer = parsePath(l.Pointer), ""
+	}
+	return l
+}
+
+// written returns l with its pointer written out as Pointer, as a caller
+// outside the package reads it.
+func (l Location) written() Location {
+	l.Pointer, l.path = l.pointer(), nil
 	return l
 }
 
@@ -236,35 +285,61 @@ type Finding struct {
 	subject      Subject
 	location     *Location
 	params       Params
-	message      string
-	hint         string
 	schema       *Schema
 	field        *Field
 	via          []Via
 	alternatives []Alternative
 	related      []Related
 
-	ptrTokens []string // the location's pointer, decoded, for Compare
-	paramsKey string   // the canonical form of params, for Compare and the duplicate key
+	paramsKey string // the canonical form of params, for Compare and the duplicate key
 }
 
-func (f Finding) Code() Code                  { return f.entry.Code }
-func (f Finding) Severity() Severity          { return f.entry.Severity }
-func (f Finding) Class() Class                { return f.entry.Class }
-func (f Finding) Message() string             { return f.message }
-func (f Finding) Hint() string                { return f.hint }
+func (f Finding) Code() Code         { return f.entry.Code }
+func (f Finding) Severity() Severity { return f.entry.Severity }
+func (f Finding) Class() Class       { return f.entry.Class }
+
+// Message returns the finding's message, rendered from its code's
+// template (ADR-006 D9).
+func (f Finding) Message() string { return f.mustRender(f.entry.Message) }
+
+// Hint returns the finding's hint, rendered from its code's template.
+func (f Finding) Hint() string                { return f.mustRender(f.entry.Hint) }
 func (f Finding) Subject() Subject            { return f.subject }
 func (f Finding) Via() []Via                  { return slices.Clone(f.via) }
 func (f Finding) Alternatives() []Alternative { return slices.Clone(f.alternatives) }
-func (f Finding) Related() []Related          { return slices.Clone(f.related) }
+
+// Related returns the other locations the finding concerns.
+func (f Finding) Related() []Related {
+	out := slices.Clone(f.related)
+	for i := range out {
+		out[i].Location = out[i].Location.written()
+	}
+	return out
+}
 
 // Location returns the finding's location, and false when it has none.
+// Its pointer is written out as Pointer, which costs the pointer's length.
 func (f Finding) Location() (Location, bool) {
+	if f.location == nil {
+		return Location{}, false
+	}
+	return f.location.written(), true
+}
+
+// At returns the finding's location as Location does, with its pointer
+// held as a Path, which Location.Path reads, and Pointer empty. It costs
+// nothing for the pointer's length, so a caller that remakes many
+// findings under one long pointer reads them by At.
+func (f Finding) At() (Location, bool) {
 	if f.location == nil {
 		return Location{}, false
 	}
 	return *f.location, true
 }
+
+// RelatedAt returns the finding's related locations as Related does, with
+// their pointers held as At holds them.
+func (f Finding) RelatedAt() []Related { return slices.Clone(f.related) }
 
 // Schema returns the schema keyword the finding reports, and false when it
 // has none.
@@ -358,15 +433,21 @@ func New(code Code, subj Subject, loc *Location, p Params, opts ...Option) Findi
 	if err := f.checkPointers(); err != nil {
 		panic(fmt.Sprintf("finding: %s: %v", code, err))
 	}
-	if f.location != nil && f.location.HasPointer {
-		f.ptrTokens = pointerTokens(f.location.Pointer)
+	if f.location != nil {
+		l := f.location.withPath()
+		f.location = &l
+	}
+	for i := range f.related {
+		f.related[i].Location = f.related[i].Location.withPath()
 	}
 	f.paramsKey = canonicalForm(f.params)
-	var err error
-	if f.message, err = f.render(e.Message); err != nil {
+	// The message and hint are checked here and written when they are
+	// read: {field} can be the location's pointer, as long as the input,
+	// and a finding the report's cap leaves out is never read.
+	if _, err := f.render(e.Message, false); err != nil {
 		panic(fmt.Sprintf("finding: %s message: %v", code, err))
 	}
-	if f.hint, err = f.render(e.Hint); err != nil {
+	if _, err := f.render(e.Hint, false); err != nil {
 		panic(fmt.Sprintf("finding: %s hint: %v", code, err))
 	}
 	return f
@@ -393,7 +474,7 @@ func checkSubject(s Subject) error {
 
 // checkPointers reports the first pointer of f that is not an RFC 6901
 // pointer: its location's and its related locations', and every schema
-// pointer it names.
+// pointer it names. A pointer given as a Path is one by construction.
 func (f Finding) checkPointers() error {
 	var ptrs []string
 	locs := []*Location{f.location}
@@ -401,7 +482,7 @@ func (f Finding) checkPointers() error {
 		locs = append(locs, &f.related[i].Location)
 	}
 	for _, l := range locs {
-		if l != nil && l.HasPointer {
+		if l != nil && l.HasPointer && l.path == nil {
 			ptrs = append(ptrs, l.Pointer)
 		}
 	}
@@ -439,10 +520,20 @@ func validPointer(p string) bool {
 	return true
 }
 
+// mustRender expands tmpl, which New has checked.
+func (f Finding) mustRender(tmpl string) string {
+	s, err := f.render(tmpl, true)
+	if err != nil {
+		panic(fmt.Sprintf("finding: %s: %v", f.entry.Code, err))
+	}
+	return s
+}
+
 // render expands a message or hint template (ADR-006 D3 item 7): {name}
 // is a parameter or one of the built-ins field, input, output and
-// package; {{ and }} are literal braces.
-func (f Finding) render(tmpl string) (string, error) {
+// package; {{ and }} are literal braces. Unless write is set it only
+// checks tmpl, and returns "".
+func (f Finding) render(tmpl string, write bool) (string, error) {
 	var b strings.Builder
 	for i := 0; i < len(tmpl); {
 		c := tmpl[i]
@@ -458,7 +549,7 @@ func (f Finding) render(tmpl string) (string, error) {
 			if end < 0 {
 				return "", fmt.Errorf("unclosed placeholder at byte %d", i)
 			}
-			s, err := f.placeholder(tmpl[i+1 : i+end])
+			s, err := f.placeholder(tmpl[i+1:i+end], write)
 			if err != nil {
 				return "", err
 			}
@@ -471,14 +562,20 @@ func (f Finding) render(tmpl string) (string, error) {
 			i++
 		}
 	}
+	if !write {
+		return "", nil
+	}
 	return b.String(), nil
 }
 
-func (f Finding) placeholder(name string) (string, error) {
+func (f Finding) placeholder(name string, write bool) (string, error) {
 	switch name {
 	case "package":
 		return "<package>", nil
 	case "field":
+		if !write {
+			return "", nil
+		}
 		return f.fieldText(), nil
 	case "input":
 		if (f.subject.Kind == SubjectInput || f.subject.Kind == SubjectSchema) && f.subject.Name != "" {
@@ -495,6 +592,9 @@ func (f Finding) placeholder(name string) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("placeholder {%s} names no parameter given", name)
 	}
+	if !write {
+		return "", nil
+	}
 	return v.render(), nil
 }
 
@@ -504,8 +604,8 @@ func (f Finding) fieldText() string {
 	if f.field != nil && f.field.Title != "" {
 		return f.field.Title
 	}
-	if f.location != nil && f.location.HasPointer && f.location.Pointer != "" {
-		return "`" + f.location.Pointer + "`"
+	if f.location != nil && f.location.HasPointer && (f.location.path != nil || f.location.Pointer != "") {
+		return "`" + f.location.pointer() + "`"
 	}
 	if f.subject.Name != "" {
 		return "the " + f.subject.Kind.String() + " `" + f.subject.Name + "`"
