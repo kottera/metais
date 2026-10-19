@@ -1548,3 +1548,13 @@ outside the standard library.
   the binary's closure, to Amendment A1's rule that windows links neither
   `golang.org/x/sys` nor `golang.org/x/term`. `golang.org/x/sys` is now a
   direct requirement in `go.mod`.
+
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-8.** D8 landed as
+  `internal/inputs/csv`: `Read` over ADR-003 D8's normalized text, with each
+  field's text, quotedness, line and column, `csv-rows`, `csv-columns` and
+  `csv-cell` checked as each record is read (ADR-009 D10 item 3), and `Write`
+  for the `csv` filter. `Write` quotes a record of one empty field as `""`,
+  the case ADR-004 D10 item 3's quoting rule leaves bare and ADR-003 D11 item
+  1 requires, since an empty line is no record. `FuzzCSVRead` holds the
+  write-then-read round trip of fields and quotedness. `TestNoEncodingCSV`
+  holds item 1 over every target.
