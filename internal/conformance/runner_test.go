@@ -90,6 +90,17 @@ type runner struct {
 	idErr  error
 
 	rec *recorder // nil unless a record is written
+
+	// slots bounds the environments run at once, -test.parallel of them
+	// unless set; nil bounds none. A case holds a slot only while an
+	// environment runs, never through the wait between A and B, so the
+	// wait costs no other case its turn and the default run is bound by
+	// its work rather than by one wait of two seconds per case (ADR-011
+	// D11 item 9).
+	slots chan struct{}
+	// wait sleeps until B may start; nil is time.Sleep. Only the tests
+	// that pin the wait set it.
+	wait func(until time.Time)
 }
 
 // identity is the tool's identity, asked once.
@@ -185,8 +196,10 @@ func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
 	if r.short {
 		return res
 	}
-	if wait := time.Until(aEnded.Add(2 * time.Second)); wait > 0 {
-		time.Sleep(wait)
+	if until := aEnded.Add(2 * time.Second); r.wait != nil {
+		r.wait(until)
+	} else {
+		time.Sleep(time.Until(until))
 	}
 	b := r.runEnv(v, c, base, envB, false)
 	res.runs[envB] = b
@@ -201,6 +214,10 @@ func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
 // checks the expectations when expectations is set, and in environment A
 // scans for the sentinel.
 func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bool) *envRun {
+	if r.slots != nil {
+		r.slots <- struct{}{}
+		defer func() { <-r.slots }()
+	}
 	run := &envRun{}
 	fail := func(si int, check, msg string) {
 		run.problems = append(run.problems, problem{check: check, harness: true, step: si, msg: msg})
@@ -454,6 +471,16 @@ func (s *suiteStats) summary() string {
 // runSuite runs every selected vector of r's suite as subtests named
 // <area>/<slug>/<case>, each vector in parallel, and reports the summary
 // when they are done.
+//
+// A subtest holds a parallel slot for as long as it runs, so a case run
+// inside one holds it through the two seconds between A and B as well.
+// So each case starts its run before its subtest waits for a slot, and
+// the subtest only waits for the result and reports it; and an area and
+// a vector start their cases before they wait for a slot themselves,
+// since otherwise the cases already waiting for their results would hold
+// every slot while the vectors not yet started waited behind them. Every
+// selected case has started when runSuite returns, and the runner's own
+// slots bound the work.
 func runSuite(t *testing.T, r *runner) *suiteStats {
 	stats := &suiteStats{}
 	dirs, err := vectorDirs(r.suite)
@@ -475,11 +502,9 @@ func runSuite(t *testing.T, r *runner) *suiteStats {
 	}
 	for _, area := range sortedKeys(byArea) {
 		t.Run(area, func(t *testing.T) {
-			t.Parallel()
 			for _, d := range byArea[area] {
 				rel := vectorPath(r.suite, d)
 				t.Run(path.Base(rel), func(t *testing.T) {
-					t.Parallel()
 					v, err := readVector(d)
 					if err != nil {
 						t.Fatalf("%s: %v", rel, err)
@@ -494,7 +519,10 @@ func runSuite(t *testing.T, r *runner) *suiteStats {
 						t.Run(c.Name, func(t *testing.T) {
 							stats.cases.Add(1)
 							base := t.TempDir()
-							res := r.runCase(v, c, base)
+							done := make(chan *caseResult, 1)
+							go func() { done <- r.runCase(v, c, base) }()
+							t.Parallel()
+							res := <-done
 							if res.skipped != "" {
 								stats.skipped.Add(1)
 								if r.rec != nil {
@@ -505,8 +533,10 @@ func runSuite(t *testing.T, r *runner) *suiteStats {
 							reportCase(t, r, v, c, res, base)
 						})
 					}
+					t.Parallel()
 				})
 			}
+			t.Parallel()
 		})
 	}
 	return stats
