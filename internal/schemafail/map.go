@@ -109,6 +109,9 @@ func Map(t Target, fs ...Failure) ([]finding.Finding, error) {
 			return nil, err
 		}
 		for _, e := range m.node(nil, &fs[i], nil) {
+			if !e.ok {
+				continue
+			}
 			if e.suppressed {
 				suppressed.Add(e.f)
 			} else {
@@ -135,10 +138,12 @@ type mapper struct {
 	err error
 }
 
-// emitted is one finding, and whether D7 item 4 suppresses it.
+// emitted is one finding, and whether D7 item 4 suppresses it. A failure
+// the mapping refuses emits none: ok is false.
 type emitted struct {
 	f          finding.Finding
 	suppressed bool
+	ok         bool
 }
 
 func (m *mapper) fail(n *Failure, format string, args ...any) {
@@ -309,7 +314,7 @@ func (m *mapper) choice(path []*Failure, n *Failure, via []finding.Via) []emitte
 		alts[b] = finding.Alternative{Branch: b, Title: m.branchTitle(n, b)}
 		for _, c := range cs {
 			for _, e := range m.node(p, c, nil) {
-				if !e.suppressed {
+				if e.ok && !e.suppressed {
 					alts[b].Findings = append(alts[b].Findings, e.f)
 				}
 			}
@@ -436,13 +441,13 @@ func (m *mapper) uniqueItems(path []*Failure, n *Failure, via []finding.Via) emi
 // location inst, its schema keyword kw.
 func (m *mapper) emit(path []*Failure, n *Failure, inst []string, suffix, kw string, p finding.Params, via []finding.Via, opts ...finding.Option) emitted {
 	if m.err != nil {
-		return emitted{suppressed: true}
+		return emitted{}
 	}
 	code := finding.Code(m.t.Family.String() + "." + suffix)
 	entry, ok := finding.Lookup(code)
 	if !ok {
 		m.fail(n, "%s is not registered", code)
-		return emitted{suppressed: true}
+		return emitted{}
 	}
 	var fd finding.Field
 	writeOnly := false
@@ -478,9 +483,9 @@ func (m *mapper) emit(path []*Failure, n *Failure, inst []string, suffix, kw str
 		finding.WithVia(via...),
 	}, opts...)
 	if m.err != nil {
-		return emitted{suppressed: true}
+		return emitted{}
 	}
-	return emitted{finding.New(code, m.t.Subject, &loc, p, opts...), suppressed}
+	return emitted{finding.New(code, m.t.Subject, &loc, p, opts...), suppressed, true}
 }
 
 // suppressed reports whether D7 item 4 suppresses a finding of n at inst:
