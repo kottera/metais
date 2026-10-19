@@ -1,0 +1,85 @@
+metais init — Write a new package's source directory, with an input, a template
+and an example.
+
+Usage:
+  metais init [<dir>] [--name <name>] [--dry-run] [--json]
+
+Writes eight files into <dir>: metais.yaml, one input with its schema and
+meaning document, one template, one example with its inputs and expected output,
+and a .gitattributes that keeps git from converting line endings. The scaffold
+is a small package to edit rather than an empty one.
+
+The package's name is --name, or else the last element of <dir> as written. When
+<dir> is omitted or ends in . or .., --name is required: metais never looks up
+the working directory's name. The name must satisfy the package name rule.
+
+<dir> is created, with its missing parents, when it does not exist. An existing
+<dir> must be empty, apart from names beginning with . (such as .git) other than
+.compiled and .gitattributes, and files ending .metais; init never overwrites,
+and refuses anything else, listing up to ten of the entries it found. A failed
+write stops init, which lists the files it wrote and removes none of them.
+
+Operands:
+  <dir>
+      The directory to write into, created when absent; the current directory
+      when omitted.
+
+Flags:
+  --name <name>
+      The package's name. It is required when <dir> is omitted or its last
+      element is . or ..; otherwise it defaults to that element.
+  --dry-run
+      Report the files init would write, and write nothing.
+  --json
+      Print the result as one JSON document on standard output.
+  --color <when>
+      Colour human output: auto colours a stream that is a terminal when
+      NO_COLOR is unset or empty; always and never override NO_COLOR. Values:
+      auto, always, never. Default: auto.
+  -h, --help
+      Print help to standard output and exit 0; nothing else runs.
+
+Prints:
+  The files written, relative to <dir>, in the order written, then what to edit.
+  With --json, one metais.init/1 document.
+
+Refusals:
+  output.destination.not_directory
+      <dir>, or a directory above it, exists and is not a directory.
+      Next: metais init <dir>
+  output.destination.not_empty
+      <dir> holds an entry other than the quiet ones.
+      Next: metais init <dir>
+  output.destination.write_failed
+      A write failed; the files already written are listed and left in place.
+      Next: metais init <dir>
+  usage.bad_value
+      A flag's value is missing, or is not one the flag accepts, or a flag that
+      takes no value is given one.
+      Next: metais init --help
+  usage.name_invalid
+      The name, from --name or from <dir>, does not satisfy the package name
+      rule.
+      Next: metais init <dir> --name <name>
+  usage.name_required
+      <dir> is omitted or ends in . or .., and --name is not given.
+      Next: metais init --name <name>
+  usage.repeated_flag
+      A flag that may be given once is given again.
+      Next: metais init --help
+  usage.unexpected_operand
+      An operand the command does not take.
+      Next: metais init --help
+  usage.unknown_flag
+      An argument that is not a flag the command accepts, an abbreviated flag,
+      or one-letter aliases written together.
+      Next: metais init --help
+
+Examples:
+  metais init acme-report
+      Writes the scaffold of a package called acme-report into the directory
+      acme-report.
+  metais init --name acme-report
+      Writes it into the current directory, which must be empty.
+  metais init acme-report --dry-run --json
+      Lists the files it would write, as one metais.init/1 document.

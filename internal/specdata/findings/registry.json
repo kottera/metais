@@ -2666,6 +2666,70 @@
       "statements": []
     },
     {
+      "code": "output.destination.not_directory",
+      "severity": "error",
+      "class": "destination",
+      "subject": "invocation",
+      "params": [],
+      "message": "The destination, or a directory above it, exists and is not a directory.",
+      "hint": "Name a directory, or a path that does not exist yet beneath directories only. Nothing was written.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.destination.not_empty",
+      "severity": "error",
+      "class": "destination",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "entries",
+          "type": "array",
+          "items": "string",
+          "meaning": "Up to ten of the entries that make the directory not empty, by name, in byte order.",
+          "always": true
+        },
+        {
+          "name": "more",
+          "type": "boolean",
+          "meaning": "Whether the directory holds such entries beyond those listed.",
+          "always": true
+        }
+      ],
+      "message": "The destination directory is not empty, and nothing in it is ever overwritten.",
+      "hint": "Choose an empty directory, or one that does not exist yet. Nothing was written.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.destination.write_failed",
+      "severity": "error",
+      "class": "destination",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the write failed: not_found, permission_denied, is_directory, not_regular_file or io_error, as ADR-006 D9 item 8 maps an operating-system error; or exists, when something appeared at a name being written, which is never overwritten.",
+          "always": true
+        },
+        {
+          "name": "written",
+          "type": "array",
+          "items": "string",
+          "meaning": "The files written before the failure, relative to the destination, in the order written. None of them was removed.",
+          "always": true
+        }
+      ],
+      "message": "Writing to the destination stopped at a failed write ({reason}); the files already written were left in place.",
+      "hint": "Fix the cause, and run the command again into an empty directory; remove what was written first if you do not want it.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "output.enum",
       "severity": "error",
       "class": "content",
@@ -4730,6 +4794,49 @@
       "params": [],
       "message": "No command was given; metais runs one command, named after any global flags.",
       "hint": "Run `metais help` for the commands, and run one as metais <command>.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.name_invalid",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position, among the arguments after metais, of the argument the name was taken from: --name, or the directory operand.",
+          "always": true
+        },
+        {
+          "name": "source",
+          "type": "string",
+          "meaning": "Where the name was taken from: name, the --name flag; or directory, the last element of the directory operand.",
+          "always": true
+        },
+        {
+          "name": "suggestion",
+          "type": "string",
+          "meaning": "A name the rule accepts, made from the refused one by lower-casing it and writing each run of other characters as one hyphen; present when the name came from --name and one exists. A name from the directory is part of a path the caller gave, which is never printed.",
+          "always": false
+        }
+      ],
+      "message": "The package name taken from argument {argument} does not satisfy the name rule.",
+      "hint": "Give a name with --name: lower-case ASCII letters and digits in runs joined by single hyphens, in segments joined by dots, at most 128 characters.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.name_required",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [],
+      "message": "metais init needs --name when the directory is omitted or its last element is . or ..; the name is never taken from the working directory.",
+      "hint": "Give the package's name with --name, such as `metais init --name acme-report`.",
       "location": "none",
       "since": "1.0",
       "statements": []

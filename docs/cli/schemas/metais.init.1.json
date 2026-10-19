@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.init.1.json",
+  "title": "metais.init/1",
+  "description": "What metais init prints with --json: the files of the scaffold it wrote, or with --dry-run would write (ADR-007 D1 item 5, ADR-008 D9).",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.init/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "dry_run",
+        "files"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "dry_run": {
+          "description": "Whether --dry-run was given, so that nothing was written.",
+          "type": "boolean"
+        },
+        "files": {
+          "description": "Each file written, or that would be written, as a path relative to the directory init writes into, in the order written.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

@@ -303,6 +303,8 @@ func TestEmittedCodes(t *testing.T) {
 		"schema.ref_escapes", "schema.ref_unresolved", "schema.sample_unsatisfiable",
 		CodeUsageBadValue, CodeUsageMissingCommand, CodeUsageRepeatedFlag, CodeUsageUnexpectedOperand,
 		CodeUsageUnknownCommand, CodeUsageUnknownFlag, CodeUsageUnknownTopic,
+		CodeUsageNameInvalid, CodeUsageNameRequired,
+		CodeDestinationNotDirectory, CodeDestinationNotEmpty, CodeDestinationWriteFailed,
 	}
 	for _, c := range []string{
 		"archive_comment", "crc_mismatch", "data_descriptor", "deflate_stream", "encrypted", "entry_order",

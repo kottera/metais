@@ -22,7 +22,7 @@ const (
 	codeTemplateParse  Code = "template.parse"
 	codeUsageFlag      Code = "usage.test_flag"
 	codeWarnUnused     Code = "template.xref_test.unused_input"
-	codeDestNonEmpty   Code = "output.destination.not_empty"
+	codeDestNonEmpty   Code = "output.destination_test.not_empty"
 	codeInternalError  Code = "internal.test_error"
 )
 
