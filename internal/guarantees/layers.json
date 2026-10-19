@@ -48,6 +48,12 @@
       "reason": "ADR-010 D6 item 5: one implementation of the YAML profile serves the manifest, YAML inputs and frontmatter, so no second package reads YAML around it"
     },
     {
+      "rule": "only-importers",
+      "imports": "github.com/kottera/metais/internal/xref",
+      "importers": ["github.com/kottera/metais/internal/author"],
+      "reason": "ADR-010 D2, ADR-007 D2 and D3: the cross-reference is check's, which internal/author holds, so no other command or layer reports template.xref.* findings around it"
+    },
+    {
       "rule": "only-referrers",
       "symbols": ["os.Args", "os.Stdin", "os.Stdout", "os.Stderr", "os.Exit"],
       "packages": ["github.com/kottera/metais/cmd/metais"],
