@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/jsonx"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/liquid/value"
@@ -57,7 +58,7 @@ func sameText(a, b value.Value, ptr string) string {
 		}
 	case value.Array:
 		for i, e := range a.All() {
-			if d := sameText(e, b.(value.Array).At(i), child(ptr, strconv.Itoa(i))); d != "" {
+			if d := sameText(e, b.(value.Array).At(i), ptr+finding.Pointer(strconv.Itoa(i))); d != "" {
 				return d
 			}
 		}
@@ -68,7 +69,7 @@ func sameText(a, b value.Value, ptr string) string {
 		}
 		for n, m := range a.All() {
 			bm, _ := bo.Get(n)
-			if d := sameText(m, bm, child(ptr, n)); d != "" {
+			if d := sameText(m, bm, ptr+finding.Pointer(n)); d != "" {
 				return d
 			}
 		}

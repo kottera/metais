@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"strings"
 
 	"go.yaml.in/yaml/v3"
 
@@ -61,28 +62,103 @@ func (d Doc) Positions() finding.Positions { return d.pos }
 
 // positions is a document's position table: for each value, by its JSON
 // Pointer, the line and the column in code points of its first
-// character, and for each object member the same of its name.
+// character, and for each object member the same of its name. It is held
+// as a tree of the document's places, so reading a value costs its own
+// token, never its whole pointer.
 type positions struct {
-	values map[string]finding.Pos
-	keys   map[string]finding.Pos
+	root *place
+}
+
+// place is one value of the document: where it and, for an object member,
+// its name are, and the places within it by token.
+type place struct {
+	parent   *place
+	token    string
+	value    finding.Pos
+	hasValue bool
+	key      finding.Pos
+	hasKey   bool
+	children map[string]*place
+	path     *finding.Path // built when a finding first needs it
+	built    bool
+}
+
+// child returns the place of the member or element token of the value at
+// p. Every occurrence of a duplicate name is one place.
+func (p *place) child(token string) *place {
+	if c, ok := p.children[token]; ok {
+		return c
+	}
+	if p.children == nil {
+		p.children = map[string]*place{}
+	}
+	c := &place{parent: p, token: token}
+	p.children[token] = c
+	return c
+}
+
+// pointer is p's JSON Pointer, built once, from its parent's.
+func (p *place) pointer() *finding.Path {
+	if p.parent == nil {
+		return nil
+	}
+	if !p.built {
+		p.path, p.built = p.parent.pointer().Child(p.token), true
+	}
+	return p.path
+}
+
+// find returns the place ptr names, an RFC 6901 pointer in its
+// JSON-string form.
+func (p *positions) find(ptr string) (*place, bool) {
+	if p == nil {
+		return nil, false
+	}
+	pl := p.root
+	if ptr == "" {
+		return pl, true
+	}
+	if ptr[0] != '/' {
+		return nil, false
+	}
+	for _, tok := range strings.Split(ptr[1:], "/") {
+		if !escaped(tok) {
+			return nil, false
+		}
+		if pl = pl.children[tokenUnescaper.Replace(tok)]; pl == nil {
+			return nil, false
+		}
+	}
+	return pl, true
+}
+
+var tokenUnescaper = strings.NewReplacer("~1", "/", "~0", "~")
+
+// escaped reports whether tok, a token of a pointer in its JSON-string
+// form, has ~ only in ~0 and ~1.
+func escaped(tok string) bool {
+	for i := 0; i < len(tok); i++ {
+		if tok[i] == '~' && (i+1 == len(tok) || (tok[i+1] != '0' && tok[i+1] != '1')) {
+			return false
+		}
+	}
+	return true
 }
 
 // Value is the position of the value at ptr.
 func (p *positions) Value(ptr string) (finding.Pos, bool) {
-	if p == nil {
-		return finding.Pos{}, false
+	if pl, ok := p.find(ptr); ok && pl.hasValue {
+		return pl.value, true
 	}
-	pos, ok := p.values[ptr]
-	return pos, ok
+	return finding.Pos{}, false
 }
 
 // Key is the position of the member name of the object member at ptr.
 func (p *positions) Key(ptr string) (finding.Pos, bool) {
-	if p == nil {
-		return finding.Pos{}, false
+	if pl, ok := p.find(ptr); ok && pl.hasKey {
+		return pl.key, true
 	}
-	pos, ok := p.keys[ptr]
-	return pos, ok
+	return finding.Pos{}, false
 }
 
 // Parse reads src, one YAML document, under the profile. It returns the
@@ -148,7 +224,7 @@ func (r *reader) parse() (value.Value, []finding.Finding) {
 	if r.manifest && top.Kind != yaml.MappingNode && top.Kind != yaml.AliasNode {
 		r.add(ruleRootNotMapping, r.at(r.pos(top)).WithPointer(""), nil)
 	}
-	v := r.node(top, "", 1)
+	v := r.node(top, r.positions.root, 1)
 	if len(r.findings) > 0 {
 		return nil, r.findings
 	}
