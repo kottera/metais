@@ -89,9 +89,11 @@ func (s *session) refuseWith(f finding.Finding) outcome {
 // taken from the directory is part of a path the caller gave, and no part
 // of one is printed (ADR-008 D11 item 5, R1-011).
 func (s *session) refuseInvalidName(p args.Parsed, name, source string) outcome {
-	i := p.OperandArgs[0]
+	var i int
 	if source == "name" {
 		i, _ = p.Arg("name")
+	} else {
+		i = p.OperandArgs[0]
 	}
 	params := finding.Params{
 		"argument": finding.Int(int64(s.line.at[i] + 1)),

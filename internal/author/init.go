@@ -147,6 +147,9 @@ func Init(dir, name string, dryRun bool) ([]string, error) {
 				return written, writeError(err, written)
 			}
 		}
+		if beforeCreate != nil {
+			beforeCreate(f.Path)
+		}
 		if err := sub.Create(f.Path, false, strings.NewReader(string(f.Data))); err != nil {
 			return written, writeError(err, written)
 		}
@@ -157,6 +160,10 @@ func Init(dir, name string, dryRun bool) ([]string, error) {
 	}
 	return written, nil
 }
+
+// beforeCreate, when set, runs before each file is created. Only this
+// package's tests set it, to make a write fail part way through.
+var beforeCreate func(path string)
 
 // checkEmpty refuses the directory w when it holds anything but quiet
 // entries, or a quiet entry the scaffold writes, since init never
