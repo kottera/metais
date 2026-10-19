@@ -13,3 +13,8 @@ coverage.*
 # Local scratch
 /.local/
 .DS_Store
+
+# Conformance fixtures are committed bytes, litter-named ones included: a
+# vector may need a .DS_Store, a *.out or a coverage.* file in its setup or
+# package tree, and an ignore rule must never drop it silently.
+!/spec/conformance/**
