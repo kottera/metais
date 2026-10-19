@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("!{% if true %}\n\n{% capture foo %}\n{{ '' }}\n{% endcapture %}\n\n{% endif %}!")

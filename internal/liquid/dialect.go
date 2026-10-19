@@ -6,6 +6,7 @@ package liquid
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
 
 	"github.com/kottera/metais/internal/liquid/ast"
@@ -56,15 +57,9 @@ func (d *Dialect) Extend(s Spec) (*Dialect, error) {
 		filters:  make(map[string]FilterDef, len(d.filters)+len(s.Filters)),
 		reserved: make(map[string]bool, len(d.reserved)+len(s.Reserved)),
 	}
-	for k, v := range d.tags {
-		n.tags[k] = v
-	}
-	for k, v := range d.filters {
-		n.filters[k] = v
-	}
-	for k := range d.reserved {
-		n.reserved[k] = true
-	}
+	maps.Copy(n.tags, d.tags)
+	maps.Copy(n.filters, d.filters)
+	maps.Copy(n.reserved, d.reserved)
 	for _, t := range s.Tags {
 		name := t.Name()
 		switch {

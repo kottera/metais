@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% assign foo = 'hello' %}{% ifchanged %}{{ foo }}{% endifchanged %}{% ifchanged %}{{ foo }}{% endifchanged %}{% assign foo = 'goodbye' %}{% ifchanged %}{{ foo }}{% endifchanged %}")

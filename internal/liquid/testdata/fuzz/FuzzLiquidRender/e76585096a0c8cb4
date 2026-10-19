@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% assign foo = 5 %}{{ foo }} {% increment foo %} {% increment foo %} {{ foo }}")

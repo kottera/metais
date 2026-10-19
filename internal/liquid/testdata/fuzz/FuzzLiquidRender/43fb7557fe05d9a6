@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% capture c %}{{ s }}{{ s }}{% endcapture %}{% for i in (1..20) %}{% capture c %}{{ c }}{{ c }}{% endcapture %}{% endfor %}{{ c }}")

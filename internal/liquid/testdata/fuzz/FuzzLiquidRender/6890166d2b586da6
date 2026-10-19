@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% for i in (1..2)%}{% for j in (1..2) %}{{ i }} {{j}} {{ forloop.parentloop.index }} {{ forloop.index }} {% endfor %}{% endfor %}")

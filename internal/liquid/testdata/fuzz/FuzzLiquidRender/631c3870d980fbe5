@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% tablerow x in xs cols: 2 limit: neg offset: b %}{{ x }}{% break %}{% endtablerow %}")

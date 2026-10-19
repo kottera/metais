@@ -47,6 +47,9 @@ type echoTag struct{}
 func (echoTag) Name() string          { return "say" }
 func (echoTag) Check(*ast.Tag) *Error { return nil }
 func (echoTag) Render(c TagContext, t *ast.Tag) *Error {
+	if len(t.Args) == 0 {
+		return &Error{Code: "tag_input", Detail: "say takes a string"}
+	}
 	v, err := c.Eval(t.Args[0].Value)
 	if err != nil {
 		return err
@@ -64,7 +67,7 @@ func (echoTag) Render(c TagContext, t *ast.Tag) *Error {
 // testDialect is the renderer's test dialect: a few filters of its own,
 // and two added tags.
 //
-//   - suffix: its input's text followed by its argument's;
+//   - suffix: its input's text followed by its one argument's;
 //   - pair: an array of its input twice;
 //   - object: an object {"a": its input};
 //   - fail: refuses with code "filter_input";
@@ -73,16 +76,14 @@ func (echoTag) Render(c TagContext, t *ast.Tag) *Error {
 //   - grow: a string of its argument's length, charging nothing itself.
 func testDialect(t testing.TB) *Dialect {
 	t.Helper()
-	text := func(v value.Value) string {
-		if s, ok := v.(value.String); ok {
-			return s.Text()
-		}
-		return scalarText(v)
-	}
+	argErr := &Error{Code: "filter_argument", Args: map[string]string{"filter": "suffix"}}
 	d, err := NewDialect(Spec{
 		Filters: []FilterDef{
 			fnFilter{"suffix", func(_ FilterContext, in value.Value, args []Arg) (value.Value, *Error) {
-				return stringValue(text(in) + text(args[0].Value)), nil
+				if len(args) != 1 || composite(in) || composite(args[0].Value) {
+					return nil, argErr
+				}
+				return stringValue(scalarText(in) + scalarText(args[0].Value)), nil
 			}},
 			fnFilter{"pair", func(_ FilterContext, in value.Value, _ []Arg) (value.Value, *Error) {
 				return mustArray([]value.Value{in, in}), nil
@@ -106,6 +107,24 @@ func testDialect(t testing.TB) *Dialect {
 		},
 		Tags: []TagDef{panicTag{}, echoTag{}},
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return d
+}
+
+// fuzzDialect is testDialect without the definitions that are defective
+// on purpose, or that trust their arguments: what FuzzLiquidRender
+// renders with, where any panic is the engine's.
+func fuzzDialect(t testing.TB) *Dialect {
+	t.Helper()
+	td := testDialect(t)
+	var fs []FilterDef
+	for _, name := range []string{"suffix", "pair", "object", "fail", "mark"} {
+		f, _ := td.Filter(name)
+		fs = append(fs, f)
+	}
+	d, err := NewDialect(Spec{Filters: fs, Tags: []TagDef{echoTag{}}})
 	if err != nil {
 		t.Fatal(err)
 	}
