@@ -69,7 +69,7 @@ relative.
 <a id="mts-out-006"></a>**MTS-OUT-006** *(not observable; amended by E-1.0-002)* A processor MUST
 NOT open a network connection.
 
-> **Note.** See [MTS-OUT-001](#mts-out-001) and [the slug rule](09-outputs.md#mts-out-004).
+> **Note.** See [MTS-OUT-001](#mts-out-001) and [the slug rule](09-outputs.md#mts-out-004); ` + "`metais`" + ` is proved by a test.
 
 <!-- example: out/relative-path -->
 
@@ -383,6 +383,48 @@ func TestRecommendationsNotObservableControl(t *testing.T) {
 		{"a SHOULD in a requirement's nested list", edit("09-outputs.md", "  - nested detail.", "  - nested detail.\n- <a id=\"mts-out-015\"></a>**MTS-OUT-015** A tool MUST warn.\n  - an author SHOULD listen."), []string{"MTS-OUT-015 says SHOULD"}},
 		{"a MAY statement may be observable", appendTo("09-outputs.md", "\n<a id=\"mts-out-016\"></a>**MTS-OUT-016** A processor MAY stop.\n"), nil},
 	})
+}
+
+func TestProofNotesControl(t *testing.T) {
+	runControl(t, func(t *testing.T, f *specFixture) []string { return proofNoteProblems(f.docs(t)) }, []tripwireCase{
+		{"a not-observable requirement with its note dropped", edit("09-outputs.md", "> **Note.** See [MTS-OUT-001](#mts-out-001) and [the slug rule](09-outputs.md#mts-out-004); `metais` is proved by a test.\n", ""), []string{"09-outputs.md:27: MTS-OUT-006 is a requirement marked not observable, and no note"}},
+		{"a note that does not name the reference tool", edit("09-outputs.md", "; `metais` is proved by a test.", "."), []string{"MTS-OUT-006 is a requirement marked not observable"}},
+		{"a block quote that is not a note", edit("09-outputs.md", "> **Note.** See", "> See"), []string{"MTS-OUT-006 is a requirement marked not observable"}},
+		{"a note separated from its statement", edit("09-outputs.md", "NOT open a network connection.\n", "NOT open a network connection.\n\nA paragraph between.\n"), []string{"MTS-OUT-006 is a requirement marked not observable"}},
+		{"a note in a list item's statement", edit("09-outputs.md", "- a plain item.", "- <a id=\"mts-out-017\"></a>**MTS-OUT-017** *(not observable)* A processor MUST NOT keep state.\n\n  > **Note.** `metais` is proved by a test.\n- a plain item."), nil},
+		{"a not-observable requirement in a list item with no note", edit("09-outputs.md", "- a plain item.", "- <a id=\"mts-out-017\"></a>**MTS-OUT-017** *(not observable)* A processor MUST NOT keep state.\n- a plain item."), []string{"MTS-OUT-017 is a requirement marked not observable"}},
+		{"a recommendation needs no note", appendTo("09-outputs.md", "\n<a id=\"mts-out-018\"></a>**MTS-OUT-018** *(not observable)* An author SHOULD write short paths.\n"), nil},
+		{"a withdrawn requirement needs no note", appendTo("09-outputs.md", "\n<a id=\"mts-out-019\"></a>**MTS-OUT-019** *(not observable; withdrawn by E-1.0-001)* A processor MUST NOT log.\n"), nil},
+		{"an observable requirement needs no note", appendTo("09-outputs.md", "\n<a id=\"mts-out-020\"></a>**MTS-OUT-020** A processor MUST stop.\n"), nil},
+	})
+}
+
+// TestProofNotesOnTheSpecification drops MTS-VER-007's note from the
+// specification itself and requires the tripwire to report it.
+func TestProofNotesOnTheSpecification(t *testing.T) {
+	docs := mustDocs(t, specRoot)
+	if p := proofNoteProblems(docs); len(p) != 0 {
+		t.Fatalf("the specification already reports %q", p)
+	}
+	const chapter = "04-versions.md"
+	i := slices.IndexFunc(docs, func(d *mdDoc) bool { return d.path == chapter })
+	if i < 0 {
+		t.Fatalf("no %s", chapter)
+	}
+	var kept []string
+	for _, l := range docs[i].lines {
+		if !strings.HasPrefix(l, ">") {
+			kept = append(kept, l)
+		}
+	}
+	if len(kept) == len(docs[i].lines) {
+		t.Fatalf("%s holds no note to drop", chapter)
+	}
+	docs[i] = scanDoc(chapter, strings.Join(kept, "\n")+"\n")
+	p := proofNoteProblems(docs)
+	if len(p) != 1 || !strings.Contains(p[0], "MTS-VER-007 is a requirement marked not observable") {
+		t.Errorf("with MTS-VER-007's note dropped, the tripwire reports %q", p)
+	}
 }
 
 func TestCoverageControl(t *testing.T) {

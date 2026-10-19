@@ -636,6 +636,47 @@ func recommendationProblems(stmts []statement) []string {
 	return problems
 }
 
+// proofNoteRe is the lead of a proof note: a block quote that opens as
+// a note and names the reference tool.
+var proofNoteRe = regexp.MustCompile(`^\*\*Note\.\*\* .*` + "`metais`")
+
+// proofNoteProblems is TestProofNotes' check: every active requirement
+// marked not observable is followed by a note naming how the reference
+// tool is proved to meet it (ADR-011 D3 item 5). ADR-011 D3 item 5 says
+// that every SHOULD statement addresses people, and that a rule about a
+// package is observable. So a requirement that is not observable is on a
+// processor, and its kind, which its key words decide, tells the
+// tripwire which statements need a note. The note is the block that comes
+// next: a block quote that opens "**Note.**" and names `metais`.
+func proofNoteProblems(docs []*mdDoc) []string {
+	var problems []string
+	for _, d := range docs {
+		stmts, _ := d.statements()
+		for _, s := range stmts {
+			if s.Observable || !s.active() || s.Kind != "requirement" {
+				continue
+			}
+			i := slices.IndexFunc(d.blocks, func(b mdBlock) bool { return b.start == s.Line-1 })
+			if i >= 0 && i+1 < len(d.blocks) {
+				if next := d.blocks[i+1]; next.kind == 'q' && proofNoteRe.MatchString(collapse(strings.Join(quoteText(d.lines[next.start:next.end]), " "))) {
+					continue
+				}
+			}
+			problems = append(problems, fmt.Sprintf("%s:%d: %s is a requirement marked not observable, and no note naming how `metais` is proved to meet it follows it (ADR-011 D3 item 5)", s.File, s.Line, s.ID))
+		}
+	}
+	return problems
+}
+
+// quoteText is a block quote's lines without their markers.
+func quoteText(lines []string) []string {
+	var text []string
+	for _, l := range lines {
+		text = append(text, strings.TrimPrefix(strings.TrimLeft(l, " "), ">"))
+	}
+	return text
+}
+
 // mustDocs reads the specification's documents for a test.
 func mustDocs(t *testing.T, root string) []*mdDoc {
 	t.Helper()
@@ -670,4 +711,9 @@ func TestKeywordsOnlyInStatements(t *testing.T) {
 func TestRecommendationsNotObservable(t *testing.T) {
 	stmts, _ := specStatements(mustDocs(t, specRoot))
 	report(t, recommendationProblems(stmts))
+}
+
+// TestProofNotes is ADR-011 D3 item 5's tripwire over spec/.
+func TestProofNotes(t *testing.T) {
+	report(t, proofNoteProblems(mustDocs(t, specRoot)))
 }

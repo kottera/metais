@@ -57,6 +57,14 @@ make the specification versions it implements available on request, every one
 listed explicitly in ascending order of major and then minor, so a caller tests
 membership without knowing which minors imply which.
 
+> **Note.** `metais`, the reference tool, makes them available as the
+> `specification.implements` member of `metais version --json`. `TestVersion`
+> in `internal/cli` requires that member to equal the list `Implements` in
+> `internal/version` returns, and the document's bytes to hold it as
+> `["1.0"]`; `TestImplements` in `internal/version` proves that list ascends
+> by major and then minor and names every minor of a major from `.0` to the
+> highest.
+
 ### 4.1.2 What a minor promises
 
 A minor adds only constructs that every earlier minor of the same major
