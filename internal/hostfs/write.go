@@ -225,10 +225,11 @@ func (w *Writer) mkdir(name, n string) error {
 	if err := w.root.Mkdir(n, dirMode); err != nil {
 		return mapErr("mkdir", err)
 	}
-	pin, err := w.root.Open(n)
+	pin, err := w.root.OpenFile(n, os.O_RDONLY|openFlags, 0)
 	if err != nil {
-		// The directory is this render's own, just made and empty, as
-		// Create's file is when its write fails.
+		// The directory is this render's own, just made and empty. No
+		// handle holds it, so this one removal is made by name alone,
+		// and a directory is removed only when it is empty.
 		w.root.Remove(n)
 		return mapErr("mkdir", err)
 	}
@@ -308,20 +309,56 @@ func (w *Writer) Create(name string, executable bool, r io.Reader) error {
 	if err != nil {
 		return mapErr("create", err)
 	}
-	// The handle that created the file is its pin.
-	_, err = io.Copy(f, r)
-	var info fs.FileInfo
+	info, err := f.Stat()
 	if err == nil {
-		info, err = f.Stat()
+		_, err = io.Copy(f, r)
+	}
+	var pin *os.File
+	if err == nil {
+		pin, err = w.pin(n, info)
 	}
 	if err != nil {
-		// The file is this render's own, just made and still held.
-		w.root.Remove(n)
+		w.removeHeld(n, info)
 		f.Close()
 		return mapErr("create", err)
 	}
-	w.rec.made = append(w.rec.made, made{w: w, name: name, info: info, pin: f})
+	if err := f.Close(); err != nil {
+		w.removeHeld(n, info)
+		pin.Close()
+		return mapErr("create", err)
+	}
+	w.rec.made = append(w.rec.made, made{w: w, name: name, info: info, pin: pin})
 	return nil
+}
+
+// removeHeld removes n, a file Create made that a handle still holds, if
+// n still holds it: info is that handle's Stat, nil when there is none.
+func (w *Writer) removeHeld(n string, info fs.FileInfo) {
+	if info == nil {
+		return
+	}
+	if now, err := w.root.Lstat(n); err == nil && os.SameFile(info, now) {
+		w.root.Remove(n)
+	}
+}
+
+// pin opens n, which while the handle that created it is still open holds
+// the entry info describes, for reading as its pin. A name replaced in the
+// meantime is refused with Changed: what it holds is not the render's.
+func (w *Writer) pin(n string, info fs.FileInfo) (*os.File, error) {
+	pin, err := w.root.OpenFile(n, os.O_RDONLY|openFlags, 0)
+	if err != nil {
+		return nil, err
+	}
+	held, err := pin.Stat()
+	if err == nil && !os.SameFile(info, held) {
+		err = fail("create", Changed)
+	}
+	if err != nil {
+		pin.Close()
+		return nil, err
+	}
+	return pin, nil
 }
 
 // Sub opens the directory name beneath w as a Writer of its own, sharing
