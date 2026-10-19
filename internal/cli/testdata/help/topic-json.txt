@@ -34,6 +34,7 @@ The formats:
   metais.check/1     metais check
   metais.sample/1    metais sample
   metais.test/1      metais test
+  metais.pack/1      metais pack
   metais.unpack/1    metais unpack
   metais.version/1   metais version
   metais.limits/1    metais limits

@@ -40,12 +40,12 @@ var (
 		Why: "Renders every example and compares it; fix the package or the examples that fail, then pack again."}
 	nextPackAgain = Next{Run: "metais pack <dir>",
 		Why: "Packs the source directory again once the cause is fixed; nothing was written."}
-	nextPackOut = Next{Run: "metais pack <dir> --out <file>",
+	nextPackOut = Next{Run: "metais pack <dir> --out <path>",
 		Why: "Writes the package to a file outside the layout trees: in the source directory itself, or anywhere outside it."}
 	nextPackUnpack = Next{Run: "metais unpack <package> --to <dir>",
 		Why: "Writes the packed package's source directory, which pack reads."}
-	nextPackStream = Next{Run: "metais pack <dir> --out - > <file>",
-		Why: "Redirects standard output to a file or a pipe; a package is not written to a terminal."}
+	nextPackStream = Next{Run: "metais pack <dir> --out <path>",
+		Why: "Writes the package to a file; or redirect standard output to a file or a pipe, since a package is not written to a terminal."}
 	nextPackWrite = Next{Run: "metais pack <dir>",
 		Why: "Writes the package the dry run described; the dry run wrote nothing."}
 	nextPackInspect = Next{Run: "metais inspect <package>",
@@ -90,6 +90,7 @@ func packDeclaration() *Command {
 			{Name: "out", Value: "<file>", Description: "The package file to write, an existing directory to write <name>-<version>.metais in, or - for standard output. Default: <name>-<version>.metais in the working directory."},
 			{Name: "dry-run", Description: "Check, test and build the package, and write nothing."},
 			limitFlag,
+			failOnFlag,
 		},
 		Format:   "metais.pack/1",
 		Prints:   "The package file's name when pack chose it, its size, its package digest and its entry count; with --dry-run, the entries it would pack.",
@@ -97,7 +98,7 @@ func packDeclaration() *Command {
 		Examples: []Example{
 			{"metais pack", "Checks, tests and packs the source directory in the working directory into <name>-<version>.metais there."},
 			{"metais pack report --out dist", "Packs the source directory report into dist/<name>-<version>.metais, dist being an existing directory."},
-			{"metais pack --out - > report.metais", "Writes the package to standard output."},
+			{"metais pack --out -", "Writes the package to standard output, which must be a file or a pipe, not a terminal."},
 			{"metais pack --dry-run --json", "Checks, tests and builds the package, writes nothing, and prints its size and digest as one metais.pack/1 document."},
 		},
 		run: runPack,

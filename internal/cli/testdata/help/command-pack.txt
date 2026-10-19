@@ -1,0 +1,193 @@
+metais pack — Check and test a source directory, then write it as one package
+file.
+
+Usage:
+  metais pack [<dir>] [--out <file>|-] [--dry-run] [--limit <name>=<value>]...
+              [--json]
+
+Runs metais check on the source directory, the current directory when omitted.
+Any error stops pack: every finding is reported and nothing is written. With no
+error it runs metais test over every example; an example that fails stops it the
+same way. Warnings are reported and do not stop it. There is no way to skip a
+step: the bytes a supplier receives are the bytes whose examples passed.
+
+The package holds metais.yaml and every file of inputs/, templates/,
+references/, assets/ and examples/, names beginning with . included, and
+.compiled/, computed afresh. A top-level name beginning with ., and a top-level
+file ending .metais, is left out silently; any other top-level name is left out
+and reported as package.layout.not_packed. Each file is packed byte for byte.
+The package's bytes depend only on its entries' paths and contents: never on a
+file's time, mode or owner, the order a directory lists its names in, the
+platform, the locale or the clock. One build of metais packs a source directory
+to the same bytes every time.
+
+--out names the package file. Without it, the file is <name>-<version>.metais,
+from the manifest, in the working directory; an --out that names an existing
+directory writes that file inside it. The file is written to a temporary file
+.metais-tmp-<h> beside it, created exclusively, synced, and renamed over the
+file, so a reader never sees part of a package and a package file already there
+is replaced: replacing its own previous package is pack's edit loop, so there is
+no --overwrite. A file inside one of the layout trees, or the manifest itself,
+is refused, and so is an --out that exists and is not a regular file or a
+directory. --out - writes the package to standard output, and is refused when
+standard output is a terminal; with --json the document then goes to standard
+error, after the package.
+
+--dry-run checks, tests and builds the package as pack does, and checks where it
+would write it, and writes nothing: it reports the package's size, digest and
+entries as pack would, and is refused exactly when pack would be refused before
+writing. A packed package is refused as the operand: unpack it first.
+
+Operands:
+  <dir>
+      The source directory to pack; the current directory when omitted. A packed
+      package file is refused.
+
+Flags:
+  --out <file>
+      The package file to write, an existing directory to write
+      <name>-<version>.metais in, or - for standard output. Default:
+      <name>-<version>.metais in the working directory.
+  --dry-run
+      Check, test and build the package, and write nothing.
+  --limit <name>=<value>
+      Lower one resource limit for this run, to a whole number no higher than
+      its default (a size may end in KiB, MiB or GiB). metais limits lists them.
+      May be given more than once.
+  --fail-on <severity>
+      With warning, a warning fails the command with exit status 1 as an error
+      does; no finding's severity changes. Values: error, warning. Default:
+      error.
+  --json
+      Print the result as one JSON document on standard output.
+  --color <when>
+      Colour human output: auto colours a stream that is a terminal when
+      NO_COLOR is unset or empty; always and never override NO_COLOR. Values:
+      auto, always, never. Default: auto.
+  -h, --help
+      Print help to standard output and exit 0; nothing else runs.
+
+Prints:
+  The package file's name when pack chose it, its size, its package digest and
+  its entry count; with --dry-run, the entries it would pack. With --json, one
+  metais.pack/1 document.
+
+Refusals:
+  limit.invalid
+      A --limit names no limit, gives a malformed value, or tries to raise one.
+      Next: metais pack --help
+  limit.package
+      The package breaches one of its limits.
+      Next: metais check <dir>
+  output.destination.in_package
+      The package file would be inside one of the layout trees of the source
+      directory, or be its manifest.
+      Next: metais pack <dir> --out <path>
+  output.destination.not_directory
+      A directory above the package file exists and is not a directory.
+      Next: metais pack <dir> --out <path>
+  output.destination.nothing_written
+      The package file could not be written, and nothing was: its directory does
+      not exist, what stands at its name is not a regular file, a temporary file
+      .metais-tmp-<h> is left beside it, or a write failed.
+      Next: metais pack <dir>
+  usage.archive_to_terminal
+      --out - is given, and standard output is a terminal.
+      Next: metais pack <dir> --out <path>
+  usage.bad_value
+      A flag's value is missing, or is not one the flag accepts, or a flag that
+      takes no value is given one.
+      Next: metais pack --help
+  usage.bad_value
+      --out is empty, or names a file whose name metais will not write.
+      Next: metais pack --help
+  usage.not_a_source_directory
+      The operand is a packed package, which pack does not read: it packs a
+      source directory.
+      Next: metais unpack <package> --to <dir>
+  usage.package_from_stdin
+      The package operand is -, standard input.
+      Next: metais pack --help
+  usage.repeated_flag
+      A flag that may be given once is given again.
+      Next: metais pack --help
+  usage.unexpected_operand
+      An operand the command does not take.
+      Next: metais pack --help
+  usage.unknown_flag
+      An argument that is not a flag the command accepts, an abbreviated flag,
+      or one-letter aliases written together.
+      Next: metais pack --help
+
+  Each line below is a family of codes: how many there are, the cause they share
+  and their next step. 'metais help refusals pack' lists every code, and help
+  --json gives each code's own cause.
+
+  collection.* (5)          An example's inputs are refused.
+                            Next: metais test <dir>
+  csv.* (7)                 An example's inputs are refused.
+                            Next: metais test <dir>
+  example.layout (1)        An example's layout (layout), an error.
+                            Next: metais check <dir>
+  example.* (4)             An example fails. Next: metais test <dir>
+  input.* (52)              An example's inputs are refused.
+                            Next: metais test <dir>
+  json.* (5)                An example's inputs are refused.
+                            Next: metais test <dir>
+  limit.exceeded (1)        An example's inputs are refused (exceeded).
+                            Next: metais test <dir>
+  limit.exceeded.* (2)      An example's output is refused.
+                            Next: metais test <dir>
+  manifest.* (60)           The manifest breaks one of its rules.
+                            Next: metais check <dir>
+  manifest.guide_link_missing (1)
+                            The manifest (guide link missing), a warning.
+                            Next: metais check <dir>
+  manifest.input.* (2)      The manifest, an error. Next: metais check <dir>
+  markdown.* (3)            An example's inputs are refused.
+                            Next: metais test <dir>
+  output.* (35)             An example's output fails its validation.
+                            Next: metais test <dir>
+  output.container.* (3)    A container's profile, an error.
+                            Next: metais check <dir>
+  output.container.space (1)
+                            A container's profile (container: space), a warning.
+                            Next: metais check <dir>
+  output.* (10)             An example's output is refused.
+                            Next: metais test <dir>
+  output.declaration.validate_kind (1)
+                            An output's declaration (declaration: validate
+                            kind), an error. Next: metais check <dir>
+  package.* (46)            The package is refused. Next: metais check <dir>
+  package.layout.* (2)      The package's tree, a warning.
+                            Next: metais check <dir>
+  report.step_skipped (1)   The report (step skipped), an info.
+                            Next: metais check <dir>
+  schema.* (10)             An input schema is refused. Next: metais check <dir>
+  schema.* (3)              A schema, an error. Next: metais check <dir>
+  schema.* (2)              A schema, a warning. Next: metais check <dir>
+  template.* (15)           A template is refused. Next: metais test <dir>
+  template.* (6)            A template or a manifest expression, a warning.
+                            Next: metais check <dir>
+  template.* (9)            An output's path, when or for_each does not parse.
+                            Next: metais check <dir>
+  template.* (8)            A template does not parse, an error.
+                            Next: metais check <dir>
+  template.* (11)           A template or a manifest expression, an error.
+                            Next: metais check <dir>
+  yaml.* (13)               An example's inputs are refused.
+                            Next: metais test <dir>
+
+Examples:
+  metais pack
+      Checks, tests and packs the source directory in the working directory into
+      <name>-<version>.metais there.
+  metais pack report --out dist
+      Packs the source directory report into dist/<name>-<version>.metais, dist
+      being an existing directory.
+  metais pack --out -
+      Writes the package to standard output, which must be a file or a pipe, not
+      a terminal.
+  metais pack --dry-run --json
+      Checks, tests and builds the package, writes nothing, and prints its size
+      and digest as one metais.pack/1 document.
