@@ -1248,4 +1248,31 @@ document.
 
 ## Implementation log
 
-Nothing implemented.
+- **PLAN-2026-10-metais-v1 W2-1 — the command-line core.** `internal/cli`
+  and `internal/cli/args` implement D1 for `version`, `limits` and `help`,
+  D3, D4's `--json`, `--color` and `--help` (`--limit` and `--fail-on`
+  arrive with the first commands that take them), D10 to D13, D15, and D16
+  items 1, 2 (for the codes declared so far), 3 and 7. The JSON schemas are
+  committed under `docs/cli/schemas/`.
+  - **The envelope carries `summary`.** Its members are `format`, `ok`,
+    `findings`, `summary`, `result`, `next`, in that order, with `summary`
+    always present, immediately after `findings`. ADR-006 D10 item 4
+    requires every command's envelope to carry `findings` and `summary`;
+    D10 item 1's member list omits `summary`. The plan orchestrator's
+    ruling for Wave 2 reconciles the two this way, and
+    `metais.envelope.1.json` states it. For Ed to ratify at the train's
+    close.
+  - **Codes registered beside the Interfaces list:** `usage.missing_command`
+    (`metais` with no command, D1 item 4), `usage.unknown_topic` (`metais
+    help` with an operand that names no command and no topic) and
+    `usage.unexpected_operand` (an operand the command does not take, the
+    "extra argument" ADR-006 D3's `usage` family covers). An abbreviated
+    flag and grouped aliases are `usage.unknown_flag`, its `reason`
+    parameter saying which; a flag written last with no value, and a
+    boolean given `=value`, are `usage.bad_value`. `internal.error` is
+    registered with the panic recovery of ADR-006 D12 item 4. No usage
+    finding echoes an argument's text: it names the argument by its
+    1-based position, and a flag by its declared name.
+  - **A line that does not parse is refused, `--help` included**: help runs
+    only on a line every argument of which is accepted, so `metais version
+    --help --bogus` exits 3.
