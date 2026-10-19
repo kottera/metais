@@ -1,0 +1,27 @@
+metais: "1.0"
+name: org.example.provenance
+version: 1.0.0-rc--1
+title: Provenance
+description: A package whose outputs record where they came from.
+guide: Supply the order, and the notes if there are any.
+inputs:
+  - name: order
+    title: Order
+    schema: inputs/order.schema.json
+  - name: notes
+    title: Notes
+    schema: inputs/notes.schema.json
+    required: false
+  - name: defaults
+    title: Defaults
+    schema: inputs/defaults.schema.json
+    required: false
+outputs:
+  - id: page
+    template: page.html.liquid
+  - id: data
+    template: data.json.liquid
+  - id: styles
+    template: styles.txt.liquid
+  - id: order
+    template: order.txt.liquid

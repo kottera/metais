@@ -30,6 +30,9 @@ type Package struct {
 	ManifestValue value.Value
 	Digest        digest.Sum
 	Combined      value.Value
+	// Tool is the implementation's name and version as the provenance tag
+	// records them: metais/<version> (ADR-004 D14 item 2).
+	Tool string
 }
 
 // canaryGlobals, when set, adds globals to every render. Only a canary
@@ -48,6 +51,12 @@ var packageMembers = []string{"metais", "name", "version", "title", "description
 // the data model, its numbers as a template reads them (D4 item 2).
 type Bindings struct {
 	members []value.Member
+	// pkg, records and now are what the embed and provenance tags read:
+	// the package's identity, each input's record in manifest order, and
+	// the render time normalized, or "" (ADR-004 D12, D14).
+	pkg     Package
+	records []inputs.Record
+	now     string
 }
 
 // NewBindings builds the globals of a render of pkg with the records of
@@ -70,7 +79,7 @@ func NewBindings(pkg Package, records []inputs.Record, now string, lim limits.Se
 	if err != nil {
 		return nil, err
 	}
-	b := &Bindings{}
+	b := &Bindings{pkg: pkg, records: records}
 	b.add("inputs", liquid.Data(m.materialize(obj, []string{""})))
 	b.add("package", packageValue(pkg))
 	nowValue := value.Value(value.Null{})
@@ -79,7 +88,8 @@ func NewBindings(pkg Package, records []inputs.Record, now string, lim limits.Se
 		if err != nil {
 			return nil, err
 		}
-		nowValue = str(t.Normalized())
+		b.now = t.Normalized()
+		nowValue = str(b.now)
 	}
 	b.add("now", nowValue)
 	b.add("sources", sourcesValue(pkg.Manifest.Inputs, records))
@@ -87,6 +97,17 @@ func NewBindings(pkg Package, records []inputs.Record, now string, lim limits.Se
 		b.members = append(b.members, canaryGlobals()...)
 	}
 	return b, nil
+}
+
+// input returns the declaration and the record of the input name, and
+// whether the package declares it.
+func (b *Bindings) input(name string) (manifest.Input, inputs.Record, bool) {
+	for i, d := range b.pkg.Manifest.Inputs {
+		if d.Name == name {
+			return d, b.records[i], true
+		}
+	}
+	return manifest.Input{}, inputs.Record{}, false
 }
 
 func (b *Bindings) add(name string, v value.Value) {

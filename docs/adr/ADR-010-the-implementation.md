@@ -1914,3 +1914,11 @@ at the train's close, with A1 and A3.
   still passes in full: of 1,098 cases, 10 are selected out for applying
   `date`, 1,088 run at render, 908 pass and 180 are excluded. The five new
   exclusions are `dialect` lines (ADR-004's log).
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-3.** D13 item 4's confinement
+  and determinism detectors replay a render step that gives
+  `inputs_json`, passing the file's text as `--inputs-json`, and the
+  determinism detector compares a file a tree lists in `substitute` with
+  ADR-011 D10 item 3's tokens replaced by the identity of the tool that
+  rendered it: the test process's `version.String()` for a render in
+  process, and the built binary's `metais version` for the fresh process,
+  whose versions differ.

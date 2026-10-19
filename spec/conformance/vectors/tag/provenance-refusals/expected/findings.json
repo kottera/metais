@@ -1,0 +1,230 @@
+[
+  {
+    "code": "template.provenance_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/all-and-more.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/all-and-more.md.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "repeated",
+      "argument": "tool",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/bad-style.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/bad-style.md.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "unknown_style",
+      "style": "xml",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/computed-style.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/computed-style.md.liquid",
+      "line": 1,
+      "column": 36
+    },
+    "params": {
+      "reason": "unknown_style",
+      "style": "css",
+      "column": 36,
+      "output_path": "computed-style.md"
+    }
+  },
+  {
+    "code": "template.provenance_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/keyword.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/keyword.md.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "unknown",
+      "argument": "comment",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.provenance_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/none.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/none.md.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "missing",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.provenance_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/not-a-word.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/not-a-word.md.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "unknown",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/notes.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/notes.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "style_required",
+      "kind": "text",
+      "column": 1,
+      "output_path": "notes.txt"
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/number-style.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/number-style.md.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "unknown_style",
+      "type": "integer",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.provenance_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/path.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/path.md.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "unknown",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.provenance_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/repeated.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/repeated.md.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "repeated",
+      "argument": "package",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/table.csv.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/table.csv.liquid",
+      "line": 2,
+      "column": 1
+    },
+    "params": {
+      "reason": "no_comments",
+      "kind": "csv",
+      "column": 1,
+      "output_path": "table.csv"
+    }
+  },
+  {
+    "code": "template.provenance_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/unknown.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/unknown.md.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "unknown",
+      "argument": "host",
+      "column": 1
+    }
+  }
+]

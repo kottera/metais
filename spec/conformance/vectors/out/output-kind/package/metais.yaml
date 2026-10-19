@@ -1,0 +1,235 @@
+metais: "1.0"
+name: org.example.kinds
+version: 1.0.0
+title: Kinds
+description: A package that writes one provenance line in a file of every kind.
+guide: Nothing to supply.
+inputs: []
+outputs:
+  - id: f0
+    template: p.liquid
+    path: 'ext/html/f.html'
+  - id: f1
+    template: p.liquid
+    path: 'ext/html/f.htm'
+  - id: f2
+    template: p.liquid
+    path: 'ext/xml/f.xml'
+  - id: f3
+    template: p.liquid
+    path: 'ext/xml/f.xhtml'
+  - id: f4
+    template: p.liquid
+    path: 'ext/xml/f.svg'
+  - id: f5
+    template: p.liquid
+    path: 'ext/xml/f.rels'
+  - id: f6
+    template: p.liquid
+    path: 'ext/xml/f.opf'
+  - id: f7
+    template: p.liquid
+    path: 'ext/xml/f.ncx'
+  - id: f8
+    template: p.liquid
+    path: 'ext/xml/f.xsd'
+  - id: f9
+    template: p.liquid
+    path: 'ext/xml/f.xsl'
+  - id: f10
+    template: p.liquid
+    path: 'ext/xml/f.xslt'
+  - id: f11
+    template: p.liquid
+    path: 'ext/xml/f.plist'
+  - id: f12
+    template: p.liquid
+    path: 'ext/markdown/f.md'
+  - id: f13
+    template: p.liquid
+    path: 'ext/markdown/f.markdown'
+  - id: f14
+    template: p.liquid
+    path: 'ext/json/f.json'
+  - id: f15
+    template: p.liquid
+    path: 'ext/json/f.geojson'
+  - id: f16
+    template: p.liquid
+    path: 'ext/json/f.webmanifest'
+  - id: f17
+    template: p.liquid
+    path: 'ext/yaml/f.yaml'
+  - id: f18
+    template: p.liquid
+    path: 'ext/yaml/f.yml'
+  - id: f19
+    template: p.liquid
+    path: 'ext/css/f.css'
+  - id: f20
+    template: p.liquid
+    path: 'ext/css/f.scss'
+  - id: f21
+    template: p.liquid
+    path: 'ext/css/f.less'
+  - id: f22
+    template: p.liquid
+    path: 'ext/hash/f.sh'
+  - id: f23
+    template: p.liquid
+    path: 'ext/hash/f.bash'
+  - id: f24
+    template: p.liquid
+    path: 'ext/hash/f.zsh'
+  - id: f25
+    template: p.liquid
+    path: 'ext/hash/f.py'
+  - id: f26
+    template: p.liquid
+    path: 'ext/hash/f.rb'
+  - id: f27
+    template: p.liquid
+    path: 'ext/hash/f.pl'
+  - id: f28
+    template: p.liquid
+    path: 'ext/hash/f.r'
+  - id: f29
+    template: p.liquid
+    path: 'ext/hash/f.toml'
+  - id: f30
+    template: p.liquid
+    path: 'ext/hash/f.ps1'
+  - id: f31
+    template: p.liquid
+    path: 'ext/hash/f.properties'
+  - id: f32
+    template: p.liquid
+    path: 'ext/hash/f.tf'
+  - id: f33
+    template: p.liquid
+    path: 'ext/slash/f.js'
+  - id: f34
+    template: p.liquid
+    path: 'ext/slash/f.mjs'
+  - id: f35
+    template: p.liquid
+    path: 'ext/slash/f.cjs'
+  - id: f36
+    template: p.liquid
+    path: 'ext/slash/f.ts'
+  - id: f37
+    template: p.liquid
+    path: 'ext/slash/f.tsx'
+  - id: f38
+    template: p.liquid
+    path: 'ext/slash/f.jsx'
+  - id: f39
+    template: p.liquid
+    path: 'ext/slash/f.GO'
+  - id: f40
+    template: p.liquid
+    path: 'ext/slash/f.c'
+  - id: f41
+    template: p.liquid
+    path: 'ext/slash/f.h'
+  - id: f42
+    template: p.liquid
+    path: 'ext/slash/f.cc'
+  - id: f43
+    template: p.liquid
+    path: 'ext/slash/f.cpp'
+  - id: f44
+    template: p.liquid
+    path: 'ext/slash/f.hpp'
+  - id: f45
+    template: p.liquid
+    path: 'ext/slash/f.java'
+  - id: f46
+    template: p.liquid
+    path: 'ext/slash/f.kt'
+  - id: f47
+    template: p.liquid
+    path: 'ext/slash/f.kts'
+  - id: f48
+    template: p.liquid
+    path: 'ext/slash/f.swift'
+  - id: f49
+    template: p.liquid
+    path: 'ext/slash/f.rs'
+  - id: f50
+    template: p.liquid
+    path: 'ext/slash/f.cs'
+  - id: f51
+    template: p.liquid
+    path: 'ext/slash/f.scala'
+  - id: f52
+    template: p.liquid
+    path: 'ext/slash/f.dart'
+  - id: f53
+    template: p.liquid
+    path: 'ext/slash/f.jsonc'
+  - id: f54
+    template: p.liquid
+    path: 'ext/slash/f.proto'
+  - id: f55
+    template: p.liquid
+    path: 'ext/slash/f.groovy'
+  - id: f56
+    template: p.liquid
+    path: 'ext/slash/f.gradle'
+  - id: f57
+    template: p.liquid
+    path: 'ext/sql/f.sql'
+  - id: f58
+    template: p.liquid
+    path: 'name/Makefile'
+  - id: f59
+    template: p.liquid
+    path: 'name/Dockerfile'
+  - id: f60
+    template: p.liquid
+    path: 'name/Containerfile'
+  - id: f61
+    template: p.liquid
+    path: 'name/.gitignore'
+  - id: f62
+    template: p.liquid
+    path: 'name/.gitattributes'
+  - id: f63
+    template: p.liquid
+    path: 'name/.dockerignore'
+  - id: f64
+    template: p.liquid
+    path: 'name/.env'
+  - id: f65
+    template: p.liquid
+    path: 'case/PAGE.HTML'
+  - id: f66
+    template: p.liquid
+    path: 'case/Style.Css'
+  - id: f67
+    template: p.liquid
+    path: 'case/data.Json'
+  - id: f68
+    template: p.liquid
+    path: 'case/[Content_Types].xml'
+  - id: f69
+    template: p.liquid
+    path: 'override/notes.txt'
+    kind: markdown
+  - id: f70
+    template: p.liquid
+    path: 'override/data.json'
+    kind: yaml
+  - id: f71
+    template: p.liquid
+    path: 'override/table.csv'
+    kind: sql
+  - id: f72
+    template: p.liquid
+    path: 'override/page.html'
+    kind: css
+  - id: f73
+    template: p.liquid
+    path: 'override/script.js'
+    kind: json

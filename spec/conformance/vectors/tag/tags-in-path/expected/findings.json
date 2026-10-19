@@ -1,0 +1,78 @@
+[
+  {
+    "code": "template.tag_context",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "tag": "embed",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.tag_context",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 11,
+      "pointer": "/outputs/1/path"
+    },
+    "params": {
+      "tag": "provenance",
+      "column": 3
+    }
+  },
+  {
+    "code": "template.tag_context",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 11,
+      "pointer": "/outputs/2/path"
+    },
+    "params": {
+      "tag": "provenance",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.tag_context",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 11,
+      "pointer": "/outputs/2/path"
+    },
+    "params": {
+      "tag": "embed",
+      "column": 18
+    }
+  }
+]

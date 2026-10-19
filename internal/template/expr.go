@@ -82,12 +82,22 @@ func ParseExprs(o manifest.Output, id string, at func(ptr string) finding.Locati
 			// beyond the path's own text, is refused in it (ADR-005 D4
 			// item 1).
 			ast.Walk(t.Root, func(n ast.Node) bool {
-				if r, ok := n.(*ast.Render); ok {
-					loc := x.at("path")
-					fs = append(fs, finding.New(loader.CodeTemplateTagContext, exprSubject, &loc, finding.Params{
-						"tag": finding.String("render"), "column": finding.Int(int64(r.Span.Col)),
-					}))
+				var tag string
+				var col int
+				switch n := n.(type) {
+				case *ast.Render:
+					tag, col = "render", n.Span.Col
+				case *ast.Tag:
+					// embed and provenance write what no path may hold
+					// (ADR-004 D16 item 5).
+					tag, col = n.Name, n.Span.Col
+				default:
+					return true
 				}
+				loc := x.at("path")
+				fs = append(fs, finding.New(loader.CodeTemplateTagContext, exprSubject, &loc, finding.Params{
+					"tag": finding.String(tag), "column": finding.Int(int64(col)),
+				}))
 				return true
 			})
 		}
@@ -108,6 +118,13 @@ var exprSubject = finding.Subject{Kind: finding.SubjectTemplate, Name: manifest.
 // expression located at at: check's, and template.reserved_name, which
 // only the dialect of a render reserves.
 func exprParseFinding(e *liquid.Error, at finding.Location, lim limits.Set) finding.Finding {
+	// A tag that has no place in a path is refused there whatever its
+	// arguments (ADR-004 D16 item 5).
+	if tag := tagOf(e.Code); tag != "" {
+		return finding.New(loader.CodeTemplateTagContext, exprSubject, &at, finding.Params{
+			"tag": finding.String(tag), "column": finding.Int(int64(max(e.Col, 1))),
+		})
+	}
 	if e.Code == liquid.CodeReservedName {
 		return finding.New(CodeReservedName, exprSubject, &at, finding.Params{
 			"name": finding.String(e.Args["name"]), "column": finding.Int(int64(max(e.Col, 1))),

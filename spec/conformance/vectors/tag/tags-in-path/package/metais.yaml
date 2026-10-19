@@ -1,0 +1,21 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply a stylesheet.
+inputs:
+  - name: style
+    title: Style
+    schema: inputs/style.schema.json
+    forms: [text]
+outputs:
+  - id: embedded
+    template: t.txt.liquid
+    path: "{% embed 'style' %}.txt"
+  - id: provenance
+    template: t.txt.liquid
+    path: "a-{% provenance package %}.txt"
+  - id: refused_arguments
+    template: t.txt.liquid
+    path: "{% provenance %}/{% embed %}.txt"

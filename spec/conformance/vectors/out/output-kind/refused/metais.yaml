@@ -1,0 +1,37 @@
+metais: "1.0"
+name: org.example.kinds
+version: 1.0.0
+title: Kinds
+description: A package whose provenance lines have no style in a csv or text file.
+guide: Nothing to supply.
+inputs: []
+outputs:
+  - id: f0
+    template: p.liquid
+    path: 'csv/f.csv'
+  - id: f1
+    template: p.liquid
+    path: 'csv/G.CSV'
+  - id: f2
+    template: p.liquid
+    path: 'text/f.txt'
+  - id: f3
+    template: p.liquid
+    path: 'text/README'
+  - id: f4
+    template: p.liquid
+    path: 'text/makefile'
+  - id: f5
+    template: p.liquid
+    path: 'text/f.markdown.bak'
+  - id: f6
+    template: p.liquid
+    path: 'text/f.liquid'
+  - id: f7
+    template: p.liquid
+    path: 'override/page.html'
+    kind: text
+  - id: f8
+    template: p.liquid
+    path: 'override/data.json'
+    kind: csv

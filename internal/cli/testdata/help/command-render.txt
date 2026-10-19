@@ -702,6 +702,12 @@ Refusals:
   template.division_by_zero
       An output's path, when or for_each does not parse (division by zero).
       Next: metais inspect <package>
+  template.embed_index
+      A template is refused (embed index).
+      Next: metais inspect <package>
+  template.embed_unknown_input
+      A template is refused (embed unknown input).
+      Next: metais inspect <package>
   template.filter_argument
       An output's path, when or for_each does not parse (filter argument).
       Next: metais inspect <package>
@@ -731,6 +737,12 @@ Refusals:
       Next: metais inspect <package>
   template.partial_not_found
       A template is refused (partial not found).
+      Next: metais inspect <package>
+  template.provenance_argument
+      A template is refused (provenance argument).
+      Next: metais inspect <package>
+  template.provenance_style
+      A template is refused (provenance style).
       Next: metais inspect <package>
   template.reserved_name
       A template is refused (reserved name).

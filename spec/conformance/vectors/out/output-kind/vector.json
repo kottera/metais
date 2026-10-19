@@ -1,0 +1,54 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "out/output-kind",
+  "title": "Every rendered file has a kind: its declaration's kind, else the table's by final extension without regard to ASCII case, then by whole file name, else text; provenance's style is the kind's, and a csv or text file has none",
+  "statements": [
+    "MTS-OUT-012",
+    "MTS-TAG-009",
+    "MTS-TAG-010"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "refused",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "refused",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/refused.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+[
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/p.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/p.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "no_comments",
+      "kind": "csv",
+      "column": 1,
+      "output_path": "csv/G.CSV"
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/p.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/p.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "no_comments",
+      "kind": "csv",
+      "column": 1,
+      "output_path": "csv/f.csv"
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/p.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/p.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "no_comments",
+      "kind": "csv",
+      "column": 1,
+      "output_path": "override/data.json"
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/p.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/p.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "style_required",
+      "kind": "text",
+      "column": 1,
+      "output_path": "override/page.html"
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/p.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/p.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "style_required",
+      "kind": "text",
+      "column": 1,
+      "output_path": "text/README"
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/p.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/p.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "style_required",
+      "kind": "text",
+      "column": 1,
+      "output_path": "text/f.liquid"
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/p.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/p.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "style_required",
+      "kind": "text",
+      "column": 1,
+      "output_path": "text/f.markdown.bak"
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/p.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/p.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "style_required",
+      "kind": "text",
+      "column": 1,
+      "output_path": "text/f.txt"
+    }
+  },
+  {
+    "code": "template.provenance_style",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/p.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/p.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "style_required",
+      "kind": "text",
+      "column": 1,
+      "output_path": "text/makefile"
+    }
+  }
+]

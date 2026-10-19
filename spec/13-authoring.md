@@ -168,6 +168,12 @@ error, and a name a partial reads that is neither a global, its own local
 nor passed by the call as `template.xref.partial_parameter_not_passed`, a
 warning located at the read.
 
+<a id="mts-aut-030"></a>**MTS-AUT-030** A check MUST report an `embed`
+whose literal names no input the manifest declares as
+`template.xref.unknown_input`, an error naming the nearest declared input
+within edit distance 2 as its `suggestion`, and MUST count an `embed` of an
+input as a use of it ([MTS-AUT-017](#mts-aut-017)).
+
 <a id="mts-aut-016"></a>**MTS-AUT-016** A check MUST analyse each output's
 `path`, `when` and `for_each` in that output's context, and MUST report a
 `for_each` whose value cannot be an array as

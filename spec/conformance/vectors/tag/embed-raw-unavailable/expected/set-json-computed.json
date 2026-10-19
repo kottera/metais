@@ -1,0 +1,21 @@
+[
+  {
+    "code": "input.raw_unavailable",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "snippets"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/page.txt.liquid",
+      "line": 3,
+      "column": 19
+    },
+    "params": {
+      "index": 1,
+      "column": 19,
+      "output_path": "page.txt"
+    }
+  }
+]

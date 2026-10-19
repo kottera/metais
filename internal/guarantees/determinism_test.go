@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/testenv"
+	"github.com/kottera/metais/internal/version"
 )
 
 // outputs returns the SHA-256 of every file below dir, by its path
@@ -45,16 +47,48 @@ func outputs(t *testing.T, dir string) map[string]string {
 	return out
 }
 
-// baseline is the digest of every output the step's vector expects.
-func (st renderStep) baseline(t *testing.T) map[string]string {
+// baseline is the digest of every output the step's vector expects from
+// the tool whose version is version: in a file the tree lists in
+// substitute, ADR-011 D10 item 3's tokens stand for metais and version.
+func (st renderStep) baseline(t *testing.T, version string) map[string]string {
 	t.Helper()
 	out := map[string]string{}
 	for _, tr := range st.trees {
-		for p, d := range outputs(t, filepath.Join(st.dir, filepath.FromSlash(tr.Equals))) {
+		dir := filepath.Join(st.dir, filepath.FromSlash(tr.Equals))
+		for p, d := range outputs(t, dir) {
+			if slices.Contains(tr.Substitute, p) {
+				b, err := os.ReadFile(filepath.Join(dir, filepath.FromSlash(p)))
+				if err != nil {
+					t.Fatal(err)
+				}
+				b = bytes.ReplaceAll(b, []byte("@@TOOL_NAME@@"), []byte("metais"))
+				sum := sha256.Sum256(bytes.ReplaceAll(b, []byte("@@TOOL_VERSION@@"), []byte(version)))
+				d = hex.EncodeToString(sum[:])
+			}
 			out[tr.Path+"/"+p] = d
 		}
 	}
 	return out
+}
+
+// toolVersion is the version the binary bin reports (ADR-008 D9).
+func toolVersion(t *testing.T, bin string) string {
+	t.Helper()
+	b, err := exec.Command(bin, "version", "--json").Output()
+	if err != nil {
+		t.Fatalf("%s version: %v", bin, err)
+	}
+	var doc struct {
+		Result struct {
+			Tool struct {
+				Version string `json:"version"`
+			} `json:"tool"`
+		} `json:"result"`
+	}
+	if err := json.Unmarshal(b, &doc); err != nil || doc.Result.Tool.Version == "" {
+		t.Fatalf("%s version --json names no version: %v", bin, err)
+	}
+	return doc.Result.Tool.Version
 }
 
 // rendered is the digest of every output a render of st wrote in work.
@@ -111,6 +145,7 @@ func renderIn(t *testing.T, st renderStep, faults fault.Set) map[string]string {
 func TestDeterminismDetector(t *testing.T) {
 	testenv.Home(t)
 	bin := buildMetais(t)
+	binVersion := toolVersion(t, bin)
 	var control *renderStep
 	defer runtime.GOMAXPROCS(runtime.GOMAXPROCS(0))
 	for _, st := range renderSteps(t) {
@@ -120,7 +155,7 @@ func TestDeterminismDetector(t *testing.T) {
 		if st.id == "tpl/object-order/render" {
 			control = &st
 		}
-		want := st.baseline(t)
+		want := st.baseline(t, version.String())
 		for i, procs := range []int{1, runtime.NumCPU(), runtime.NumCPU()} {
 			runtime.GOMAXPROCS(procs)
 			if d := differs(want, renderIn(t, st, 0)); d != "" {
@@ -132,14 +167,14 @@ func TestDeterminismDetector(t *testing.T) {
 			t.Errorf("%s in a fresh process: %v", st.id, err)
 			continue
 		}
-		if d := differs(want, st.rendered(t, work)); d != "" {
+		if d := differs(st.baseline(t, binVersion), st.rendered(t, work)); d != "" {
 			t.Errorf("%s in a fresh process under TZ, LC_ALL, umask and GODEBUG: %s", st.id, d)
 		}
 	}
 	if control == nil {
 		t.Fatal("the suite holds no tpl/object-order")
 	}
-	want := control.baseline(t)
+	want := control.baseline(t, version.String())
 	for range 20 {
 		if differs(want, renderIn(t, *control, fault.MapOrder)) != "" {
 			return

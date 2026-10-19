@@ -45,11 +45,17 @@ type renderArgs struct {
 	Set     []string       `json:"set"`
 	SetJSON []string       `json:"set_json"`
 	Limits  map[string]any `json:"limits"`
+	// InputsJSON names a file of the vector holding an --inputs-json
+	// argument's JSON text.
+	InputsJSON string `json:"inputs_json"`
 }
 
 type expectedTree struct {
 	Path   string `json:"path"`
 	Equals string `json:"equals"`
+	// Substitute is the files in which the tool's name and version stand
+	// as ADR-011 D10 item 3's tokens.
+	Substitute []string `json:"substitute"`
 }
 
 // renderSteps returns every render step of the suite whose case is its
@@ -114,7 +120,7 @@ func renderSteps(t *testing.T) []renderStep {
 			if err := json.Unmarshal(c.Steps[0].Args, &st.args); err != nil {
 				t.Fatal(err)
 			}
-			for _, k := range []string{"stream", "only", "overwrite", "dry_run", "sample", "inputs_json"} {
+			for _, k := range []string{"stream", "only", "overwrite", "dry_run", "sample"} {
 				if _, ok := all[k]; ok {
 					t.Fatalf("%s: a render step with %s, which this detector does not replay", st.id, k)
 				}
@@ -167,7 +173,8 @@ func (st renderStep) prepare(t *testing.T, base string) string {
 	return work
 }
 
-// argv is the command line of st in work, every path absolute.
+// argv is the command line of st in work, every path absolute, and an
+// inputs_json file's text given as --inputs-json's value.
 func (st renderStep) argv(work string) []string {
 	abs := func(p string) string { return filepath.Join(work, filepath.FromSlash(p)) }
 	a := []string{"render", "--json", abs(st.args.Package), "--out", abs(st.args.Out)}
@@ -182,6 +189,13 @@ func (st renderStep) argv(work string) []string {
 	}
 	for _, s := range st.args.SetJSON {
 		a = append(a, "--set-json", s)
+	}
+	if st.args.InputsJSON != "" {
+		b, err := os.ReadFile(filepath.Join(st.dir, filepath.FromSlash(st.args.InputsJSON)))
+		if err != nil {
+			panic("guarantees: reading " + st.id + "'s inputs_json: " + err.Error())
+		}
+		a = append(a, "--inputs-json", string(b))
 	}
 	names := make([]string, 0, len(st.args.Limits))
 	for k := range st.args.Limits {

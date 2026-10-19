@@ -14,12 +14,15 @@ import (
 
 // Output is one file a render writes from a template: the declaration's
 // id, the template's name beneath templates/, the file's path relative to
-// the root of its tree, and the evaluation of a fan-out it is, or nil.
+// the root of its tree, the evaluation of a fan-out it is, or nil, and its
+// kind (ADR-005 D7), from which the provenance tag chooses its style
+// (ADR-004 D14 item 5).
 type Output struct {
 	ID       string
 	Template string
 	Path     string
 	Fan      *Fan
+	Kind     string
 }
 
 // Renderer renders one command's outputs. Their work is counted together,
@@ -31,6 +34,10 @@ type Renderer struct {
 	lim       limits.Set
 	meter     *meter
 	unordered bool
+	// dialect is the dialect a template renders in: Dialect's, its tags
+	// rendering through this renderer. out is the output being rendered.
+	dialect *liquid.Dialect
+	out     Output
 }
 
 // NewRenderer returns the renderer of one command, over the package's
@@ -38,7 +45,7 @@ type Renderer struct {
 // test-only fault set (ADR-010 D13 item 2), which the tool builds zero; a
 // render consults only fault.MapOrder.
 func NewRenderer(ts *Templates, b *Bindings, lim limits.Set, faults fault.Set) *Renderer {
-	return &Renderer{
+	r := &Renderer{
 		ts: ts, b: b, lim: lim,
 		meter: &meter{
 			cmd: liquid.NewMeter(liquid.MeterLimits{
@@ -52,6 +59,8 @@ func NewRenderer(ts *Templates, b *Bindings, lim limits.Set, faults fault.Set) *
 		// The MapOrder seam (ADR-010 D13 item 2, Amendment A2).
 		unordered: faults.Has(fault.MapOrder),
 	}
+	r.dialect = newDialect(r)
+	return r
 }
 
 // Render renders o's template, every template it reaches having parsed
@@ -63,9 +72,12 @@ func (r *Renderer) Render(o Output) ([]byte, *finding.Finding) {
 	if t == nil {
 		panic("template: render of " + o.Template + ", whose parse failed: " + string(fs[0].Code()))
 	}
-	r.meter.out = 0
+	if o.Kind == "" {
+		panic("template: render of " + o.Path + ", which has no kind")
+	}
+	r.meter.out, r.out = 0, o
 	env := &liquid.Env{
-		Dialect:  dialect,
+		Dialect:  r.dialect,
 		Globals:  r.b.scope(o.Fan, &o.Path),
 		Partials: partials{r.ts},
 		Meter:    r.meter,

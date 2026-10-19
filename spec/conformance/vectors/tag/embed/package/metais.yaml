@@ -1,0 +1,30 @@
+metais: "1.0"
+name: org.example.embed
+version: 1.0.0
+title: Embed
+description: A package that embeds its inputs' bytes.
+guide: Supply a stylesheet and the snippets.
+inputs:
+  - name: style
+    title: Style
+    schema: inputs/style.schema.json
+    forms: [text]
+  - name: snippets
+    title: Snippets
+    schema: inputs/snippets.schema.json
+    forms: [text, json]
+    collection: true
+  - name: extra
+    title: Extra
+    schema: inputs/extra.schema.json
+    forms: [text]
+    required: false
+  - name: more
+    title: More
+    schema: inputs/more.schema.json
+    forms: [text]
+    required: false
+    collection: true
+outputs:
+  - id: page
+    template: page.html.liquid

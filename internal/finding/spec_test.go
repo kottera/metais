@@ -394,6 +394,9 @@ func TestEmittedCodes(t *testing.T) {
 		"manifest.guide_link_missing", "schema.invalid_default", "schema.invalid_example", "schema.unsatisfiable",
 		"schema.unusable_enum_member", "schema.required_not_declared", "template.not_utf8", "template.crlf",
 		"example.layout", "manifest.input.form_shape", "manifest.input.collection_shape", "output.declaration.validate_kind")
+	// The embed and provenance tags (W5-3).
+	want = append(want, "template.embed_index", "template.embed_unknown_input", "template.provenance_argument",
+		"template.provenance_style")
 	// The reading commands' (W4-2).
 	want = append(want, CodeUsageBadGlob, CodeUsageBadPattern, CodeUsageBinaryToTerminal, CodeUsageEntryNotFound,
 		CodeUsageIsADirectory, CodeUsageLineOutOfRange, CodeUsageNoMatch, CodeUsageNotText, CodeUsageUnknownInput)

@@ -260,7 +260,7 @@ func (s *server) compile(params json.RawMessage) (any, *rpcError) {
 		return compileResult{Error: &liquidError{Type: "parse_error", Message: HeldOut}}, nil
 	}
 	tree, name := newTree(p.Filesystem, *p.Template)
-	ts := template.NewTemplates(tree, limits.Defaults())
+	ts := template.NewTemplates(tree, limits.Defaults(), nil)
 	for _, n := range ts.Reach(name) {
 		if _, fs := ts.Parse(n); len(fs) > 0 {
 			return compileResult{Error: parseError(fs[0])}, nil

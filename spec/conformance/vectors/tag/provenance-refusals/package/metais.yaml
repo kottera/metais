@@ -1,0 +1,32 @@
+metais: "1.0"
+name: org.example.provenance
+version: 1.0.0
+title: Provenance
+description: A package whose provenance tags are refused.
+guide: Nothing to supply.
+inputs: []
+outputs:
+  - id: none
+    template: none.md.liquid
+  - id: unknown
+    template: unknown.md.liquid
+  - id: not_a_word
+    template: not-a-word.md.liquid
+  - id: path
+    template: path.md.liquid
+  - id: keyword
+    template: keyword.md.liquid
+  - id: repeated
+    template: repeated.md.liquid
+  - id: all_and_more
+    template: all-and-more.md.liquid
+  - id: bad_style
+    template: bad-style.md.liquid
+  - id: number_style
+    template: number-style.md.liquid
+  - id: computed_style
+    template: computed-style.md.liquid
+  - id: table
+    template: table.csv.liquid
+  - id: notes
+    template: notes.txt.liquid

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tag/embed-raw-unavailable",
+  "title": "An input or item a --set, --set-json or --inputs-json touched has no raw form: an embed of it is input.raw_unavailable, before anything renders for a literal name and index, in a branch that never runs too, and when the tag is rendered for a computed index; and nothing is written",
+  "statements": [
+    "MTS-TAG-004",
+    "MTS-RND-001"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "set",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out",
+            "set": [
+              "/style=x"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/set.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set-item",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out",
+            "set": [
+              "/snippets/0=x"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/set-item.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set-json-computed-index",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out",
+            "set_json": [
+              "/snippets/1=\"x\""
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/set-json-computed.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "inputs-json",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out",
+            "inputs_json": "args/inputs.json"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/inputs-json.json"
+          }
+        }
+      ]
+    }
+  ]
+}
