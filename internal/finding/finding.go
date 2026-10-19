@@ -279,16 +279,16 @@ type Finding struct {
 	paramsKey string // the canonical form of params, for Compare and the duplicate key
 }
 
-func (f Finding) Code() Code                  { return f.entry.Code }
-func (f Finding) Severity() Severity          { return f.entry.Severity }
-func (f Finding) Class() Class                { return f.entry.Class }
+func (f Finding) Code() Code         { return f.entry.Code }
+func (f Finding) Severity() Severity { return f.entry.Severity }
+func (f Finding) Class() Class       { return f.entry.Class }
 
 // Message returns the finding's message, rendered from its code's
 // template (ADR-006 D9).
 func (f Finding) Message() string { return f.mustRender(f.entry.Message) }
 
 // Hint returns the finding's hint, rendered from its code's template.
-func (f Finding) Hint() string { return f.mustRender(f.entry.Hint) }
+func (f Finding) Hint() string                { return f.mustRender(f.entry.Hint) }
 func (f Finding) Subject() Subject            { return f.subject }
 func (f Finding) Via() []Via                  { return slices.Clone(f.via) }
 func (f Finding) Alternatives() []Alternative { return slices.Clone(f.alternatives) }
