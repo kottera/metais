@@ -129,7 +129,7 @@ another harness's type to get past a capacity wait.** Park on
 |---|---|---|---|
 | 0 | PRD-001, ADR-001 to ADR-011, RULINGS-v1 and this plan, merged to `main` | — | **authored** |
 | 1 | **The seams**: the module on Go 1.26.9; `cmd/metais` and the host seams; the finding model and registry; the limits table; the fault, test-environment, version and spec-data packages; the shared interfaces later waves build against; the guarantee tripwires; the `spec/` skeleton | 0 | **complete** — [verdict](#7-wave-1--the-seams) |
-| 2 | **The leaf libraries and the proof harness**: the command-line core with `version`, `limits` and `help`; the conformance runner and its self-proof; the document tripwires; zip, Unicode and the portable-path predicate; host files; JSON; YAML; CSV and Markdown; the JSON Schema compiler with the pattern profile; failure mapping, bundling and the static walk; the tar writer; dates; the Liquid front end; the manifest library | 1 | not started |
+| 2 | **The leaf libraries and the proof harness**: the command-line core with `version`, `limits` and `help`; the conformance runner and its self-proof; the document tripwires; zip, Unicode and the portable-path predicate; host files; JSON; YAML; CSV and Markdown; the JSON Schema compiler with the pattern profile; failure mapping, bundling and the static walk; the tar writer; dates; the Liquid front end; the manifest library | 1 | **complete** — [verdict](#8-wave-2--the-leaf-libraries-and-the-proof-harness) |
 | 3 | **Opening a package, and the composed libraries**: the package loader and `inspect`, with the container, manifest and version chapters and their vectors; the inputs layer; the Liquid renderer; the standard filter catalog; the sample-value generator; the cross-reference analysis; the OOXML split-run scanner; `init` | 2 | not started |
 | 4 | **Validate, read, the first render, check and unpack**: `validate`; `ls`, `read`, `outline`, `grep`, `schema` and `extract`; `render` of template outputs into a new directory with the template environment; `check`; `unpack`; the Liquid closure | 3 | not started |
 | 5 | **The render's capabilities, and the rest of authoring**: the METAIS filters and `date`; escaping; `embed` and `provenance`; fan-out, conditions and path templates; assets and the mirror; zip containers and their profiles; CRLF and output validation; existing destinations; dry run, the standard-output archive and `--only`; `sample`; `render --sample`; `test` | 4 | not started |
@@ -628,6 +628,60 @@ wave's.
   ADR-010 Amendment A3, proposed, records the change to D3 and D9 item 2,
   superseding R2-156's library choice. Ed ratifies it at the train's close,
   with A1.
+
+**Verdict (2026-10-19): complete.** Every leaf library §8 asks for landed,
+in 16 items (#20 to #38). The command line answers `version`, `limits` and
+`help`. The conformance runner is proved by a self-proof of 33 faults, and
+it reports that it ran no vector. The verification round mutated every item
+and found two blocking defects:
+
+- the self-proof's CPU row depended on host load;
+- `RemoveCreated` trusted a reusable inode number and removed another
+  party's file on linux.
+
+Both were fixed (#39, #40) and the gate is green on go1.26.9. Neither fix
+was re-verified in the wave, and the `hostfs` fix has not run on linux.
+Brief and closeout:
+[brief-plan-2026-10-metais-v1-wave2.md](../briefs/brief-plan-2026-10-metais-v1-wave2.md)
+(brief [#18](https://github.com/kottera/metais/pull/18), Markdown ruling
+[#35](https://github.com/kottera/metais/pull/35), closeout
+[#41](https://github.com/kottera/metais/pull/41)).
+
+A correction to the closeout: ruling R3 (the Markdown reading) was the
+plan orchestrator's, under §4, not Ed's. No person was consulted during
+this wave. The breakdown review was the plan orchestrator's too.
+
+What changes later waves:
+
+- **For Ed to ratify at the train's close:**
+  - ADR-010 A3 (the Markdown reading, superseding R2-156);
+  - the dependency-scan entries ruled as R1 and R2;
+  - R4 (the notices file follows ADR-010 D12 item 6);
+  - ADR-008's envelope `summary`.
+- **Ed ruled the MapOrder seam** (W1-F3, ADR-010 A2,
+  [#23](https://github.com/kottera/metais/pull/23)). `internal/template`
+  sets the engine's test-only `Env.UnorderedObjects`. Wave 4 builds it.
+- **`hostfs` holds one open handle per uncommitted entry**, since #40, and
+  darwin's default open-file limit is far below ADR-009's outputs limit.
+  Design session `01a15284-df6e-7668-b799-62f4c380a84f` must decide this
+  before Wave 4's render.
+- **Wave 3's wiring names jcs, yaml.v3, jsonschema/v6 and x/text in
+  `THIRD-PARTY-NOTICES.txt`.**
+- **Wave 3's renderer owes 97 deferred Golden Liquid cases**, listed in
+  `render-time.txt`.
+- **Open ADR questions:**
+  - `limit.exceeded`'s single subject;
+  - large integers refused by spelling;
+  - `json.duplicate_name`'s `name` parameter;
+  - finding construction costing O(pointer length) per finding;
+  - two `yaml` writer gaps.
+
+  The Wave 3 brief rules what it can.
+- **AGENTS.md now forbids `go test -fuzz` in a Work Order**
+  ([#29](https://github.com/kottera/metais/pull/29), by Ed).
+- **Carried and still running when the wave closed:** W2-NB1
+  `01a15284-bed3-7226-9f3f-495ea5e82436` (two unpinned boundaries), and the
+  `hostfs` design session above.
 
 ## 9. Wave 3 — opening a package, and the composed libraries
 
