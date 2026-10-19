@@ -37,9 +37,12 @@
 #
 # The shared-host cap: `go test -p` is a third of the host's cores (at least
 # 2), the share AGENTS.md gives a fuzzer, because the hosts that run this gate
-# run about three sessions at once. -parallel is the host's cores divided by
-# -p (at least 2), so one gate never asks for more tests at once than the
-# host has cores. METAIS_GATE_P overrides -p, and -parallel follows it.
+# run about three sessions at once. METAIS_GATE_P overrides it. -parallel is
+# the host's cores, never fewer: a test binary's own CPU is already bounded by
+# GOMAXPROCS, and the packages whose parallel tests wait on child processes
+# (internal/conformance) need the slots. Measured, -parallel 3 took
+# internal/conformance from 252 s to its ten-minute timeout (ADR-010
+# Amendment A5 item 6).
 #
 # Exit 0 when every item passes, 1 when any fails, 2 when it cannot start.
 
@@ -107,8 +110,7 @@ export GOTOOLCHAIN=auto
 ncpu=$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
 third=$((ncpu / 3))
 p=${METAIS_GATE_P:-$((third > 2 ? third : 2))}
-parallel=$((ncpu / p))
-[ "$parallel" -ge 2 ] || parallel=2
+parallel=$ncpu
 
 # snapshot prints the working tree's git tree id, untracked files included,
 # through a scratch index so the real index is never touched.
