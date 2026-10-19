@@ -19,19 +19,25 @@ import (
 
 // W5-0.9: a write into an existing directory of as many files as ADR-009
 // D3's outputs limit admits holds a bounded number of handles, and is not
-// refused by an open-file soft limit far below that number, whether it
-// commits or aborts. Half the directories exist, and a tenth of the files
-// in them are replaced. No limit is lowered to fit (R1-015).
+// refused by an open-file soft limit far below that number. Half the
+// directories exist, and a tenth of the files in them are replaced. No
+// limit is lowered to fit (R1-015). An aborted write removes what it
+// prepared under the same limit; it is run with a thousand files, eight
+// times the limit, since removal opens nothing and the commit has proved
+// the prepare at the full count.
 func TestExistingWritesItsLimitUnderTheOpenFileLimit(t *testing.T) {
-	n := limits.Get(limits.Outputs).Default
-	names := manyNames(n)
-	seed := map[string]string{}
-	for i, name := range names {
-		if d := i / 1000; d%2 == 0 && i%10 == 0 {
-			seed[name] = "old"
-		}
-	}
 	for _, commit := range []bool{true, false} {
+		n := limits.Get(limits.Outputs).Default
+		if !commit {
+			n = 1000
+		}
+		names := manyNames(n)
+		seed := map[string]string{}
+		for i, name := range names {
+			if d := i / 1000; d%2 == 0 && i%10 == 0 {
+				seed[name] = "old"
+			}
+		}
 		t.Run(fmt.Sprint("commit=", commit), func(t *testing.T) {
 			parent, out := existingOut(t, seed)
 			before := tree(t, parent)
