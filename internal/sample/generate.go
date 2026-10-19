@@ -876,7 +876,14 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 		if unique {
 			child.earlier = items
 		}
+		mark := len(s.findings)
 		v, good := s.value(child, starts)
+		if !good && unique && s.err == nil {
+			// No value but one equal to an earlier item: the item is a
+			// duplicate, not unsatisfiable.
+			s.findings = s.findings[:mark]
+			v, good = s.value(s.itemPlace(loc, int(i)), starts)
+		}
 		if !good {
 			ok = false
 			continue
@@ -887,18 +894,19 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 			}
 			return i >= minC && hasMaxC && counted >= maxC && s.matchesAny(contains, v)
 		}
-		for k := 1; clash(v) && k <= maxAttempts; k++ {
+		for k := 1; clash(v) && k <= maxAttempts && s.err == nil; k++ {
 			again := s.itemPlace(loc, int(i))
 			again.purpose, again.earlier = attempt(k), child.earlier
-			if v, good = s.value(again, starts); !good {
-				break
+			mark := len(s.findings)
+			if w, good := s.value(again, starts); good {
+				v = w
+			} else {
+				s.findings = s.findings[:mark]
 			}
 		}
-		if !good {
-			ok = false
-			continue
-		}
 		if clash(v) {
+			// Dropped: the array is shortened, and below minItems it is
+			// unsatisfiable.
 			continue
 		}
 		if len(contains) > 0 && (i < minC || s.matchesAny(contains, v)) {
