@@ -400,6 +400,8 @@ func TestEmittedCodes(t *testing.T) {
 	// Containers' (W5-6).
 	want = append(want, CodeContainerMissingEntry, CodeContainerNonASCII, CodeContainerReservedEntry, CodeContainerSpace,
 		CodeContainerTooManyEntries)
+	// Output validation's (W5-7).
+	want = append(want, "output.parse")
 	// The reading commands' (W4-2).
 	want = append(want, CodeUsageBadGlob, CodeUsageBadPattern, CodeUsageBinaryToTerminal, CodeUsageEntryNotFound,
 		CodeUsageIsADirectory, CodeUsageLineOutOfRange, CodeUsageNoMatch, CodeUsageNotText, CodeUsageUnknownInput)

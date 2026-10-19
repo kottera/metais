@@ -3163,7 +3163,10 @@
       "hint": "Remove the items after the first {prefix_count}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.additional_property",
@@ -3188,7 +3191,10 @@
       "hint": "Remove `{property}`, or rename it to a member the schema declares.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.any_of",
@@ -3207,7 +3213,11 @@
       "hint": "Change the value to match one alternative; each alternative's findings are listed under it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-FND-006",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.const",
@@ -3226,7 +3236,10 @@
       "hint": "Write {expected}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.container.missing_entry",
@@ -3374,7 +3387,10 @@
       "hint": "Add an item that the contains subschema accepts.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.declaration.empty_mirror",
@@ -3462,7 +3478,10 @@
       "hint": "Add the member `{property}`, or remove `{because}`.",
       "location": "parent",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.destination.not_directory",
@@ -3568,7 +3587,10 @@
       "hint": "Write one of the allowed values: {allowed}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.exclusive_maximum",
@@ -3593,7 +3615,10 @@
       "hint": "Write a number less than {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.exclusive_minimum",
@@ -3618,7 +3643,10 @@
       "hint": "Write a number greater than {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.expression.for_each_type",
@@ -3658,7 +3686,10 @@
       "hint": "Remove the value.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.format",
@@ -3677,7 +3708,11 @@
       "hint": "Write a value in the {format} format.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-DAT-011",
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.max_contains",
@@ -3702,7 +3737,10 @@
       "hint": "Remove items the contains subschema accepts until there are at most {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.max_items",
@@ -3727,7 +3765,10 @@
       "hint": "Remove items until there are at most {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.max_length",
@@ -3752,7 +3793,10 @@
       "hint": "Write at most {limit} characters.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.max_properties",
@@ -3777,7 +3821,10 @@
       "hint": "Remove members until there are at most {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.maximum",
@@ -3802,7 +3849,10 @@
       "hint": "Write a number of at most {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.min_contains",
@@ -3827,7 +3877,10 @@
       "hint": "Add items the contains subschema accepts until there are at least {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.min_items",
@@ -3852,7 +3905,10 @@
       "hint": "Add items until there are at least {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.min_length",
@@ -3877,7 +3933,10 @@
       "hint": "Write at least {limit} characters.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.min_properties",
@@ -3902,7 +3961,10 @@
       "hint": "Add members until there are at least {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.minimum",
@@ -3927,7 +3989,10 @@
       "hint": "Write a number of at least {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.multiple_of",
@@ -3952,7 +4017,10 @@
       "hint": "Write a multiple of {divisor}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.not",
@@ -3964,7 +4032,10 @@
       "hint": "Change the value so that the not subschema no longer accepts it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.one_of",
@@ -3983,7 +4054,11 @@
       "hint": "Change the value to match one alternative; each alternative's findings are listed under it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-FND-006",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.one_of.ambiguous",
@@ -4003,7 +4078,10 @@
       "hint": "Change the value so that only one alternative accepts it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.parse",
@@ -4330,7 +4408,10 @@
       "hint": "Write a value that matches the pattern {pattern}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.property_name",
@@ -4349,7 +4430,10 @@
       "hint": "Rename `{property}` to a name the schema's propertyNames allows.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.required",
@@ -4368,7 +4452,10 @@
       "hint": "Add the member `{property}`.",
       "location": "parent",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.type",
@@ -4394,7 +4481,10 @@
       "hint": "Write a value of type {expected}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.unevaluated_item",
@@ -4413,7 +4503,10 @@
       "hint": "Remove the item.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.unevaluated_property",
@@ -4438,7 +4531,10 @@
       "hint": "Remove `{property}`, or rename it to a member the schema declares.",
       "location": "key",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "output.unique_items",
@@ -4463,7 +4559,10 @@
       "hint": "Remove the repeated item, or change it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-FND-004",
+        "MTS-TRN-003"
+      ]
     },
     {
       "code": "package.compiled.mismatch",

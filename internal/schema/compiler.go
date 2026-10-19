@@ -71,7 +71,9 @@ type file struct {
 }
 
 // NewCompiler compiles every schema file of tree (ADR-003 D3 item 1) under
-// lim. It configures the library closed:
+// lim, or, given output, the output validation schemas NewOutputCompiler
+// names. It is the one call site of jsonschema.NewCompiler in the module
+// (ADR-010 D5 item 1), and configures the library closed:
 //
 //   - the draft is 2020-12;
 //   - the loader refuses every URL, so nothing is ever fetched or opened;
@@ -88,21 +90,78 @@ type file struct {
 // package, escapes InputsDir, names a file by its path where it has an $id, or
 // resolves to nothing; and two resources with one URI. Every finding of
 // every file is reported at once. When there is any, the compiler is nil.
-func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode) (*Compiler, []finding.Finding) {
-	c := newCompiler(lim, InputsDir, nil)
+func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode, output ...outputScope) (*Compiler, []finding.Finding) {
+	var c *Compiler
 	var files []*file
 	var findings []finding.Finding
-	for _, entry := range tree.List() {
-		if !IsSchemaFile(entry) {
-			continue
-		}
-		f, fs := c.read(tree, entry, decode)
-		findings = append(findings, fs...)
-		if f != nil {
-			files = append(files, f)
+	if len(output) > 0 {
+		o := output[0]
+		c = newCompiler(lim, o.scope, o.meter)
+		files, findings = c.reached(tree, o.roots, decode)
+	} else {
+		c = newCompiler(lim, InputsDir, nil)
+		for _, entry := range tree.List() {
+			if !IsSchemaFile(entry) {
+				continue
+			}
+			f, fs := c.read(tree, entry, decode)
+			findings = append(findings, fs...)
+			if f != nil {
+				files = append(files, f)
+			}
 		}
 	}
-	return c.compile(files, findings)
+	findings = append(findings, c.checkResources(files)...)
+	if len(findings) > 0 {
+		return nil, findings
+	}
+
+	lib := jsonschema.NewCompiler()
+	c.lib = lib
+	lib.DefaultDraft(jsonschema.Draft2020)
+	lib.UseLoader(refuseLoader{})
+	lib.AssertFormat()
+	for _, name := range Formats() {
+		lib.RegisterFormat(&jsonschema.Format{Name: name, Validate: formatCheck(formats[name])})
+	}
+	lib.UseRegexpEngine(func(p string) (jsonschema.Regexp, error) {
+		return regexprofile.Compile(p, lim, c.meter)
+	})
+	for _, f := range files {
+		c.docs[f.entry] = f.doc
+		for _, a := range f.walk.anchors {
+			c.anchors[a.uri] = root{f.entry, a.ptr}
+		}
+		c.recordRefs(f.entry, f.walk.refs)
+		if err := c.add(lib, f); err != nil {
+			// The pre-check refused every URI the library could not take.
+			panic(err)
+		}
+	}
+	for _, f := range files {
+		s, err := lib.Compile(f.retrieval)
+		if err != nil {
+			fs, ierr := c.compileFindings(f.entry, err)
+			if ierr != nil {
+				panic(ierr)
+			}
+			findings = append(findings, fs...)
+			continue
+		}
+		c.schemas[f.entry] = &Schema{c: c, lib: s}
+	}
+	if len(findings) > 0 {
+		return nil, findings
+	}
+	return c, nil
+}
+
+// outputScope is what NewOutputCompiler compiles: its roots, beneath
+// scope, charged to meter.
+type outputScope struct {
+	scope string
+	roots []string
+	meter *regexprofile.Meter
 }
 
 // NewOutputCompiler compiles the output validation schemas roots (ADR-005
@@ -116,7 +175,13 @@ func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode) (*Compiler, [
 // are charged to meter, the command's matching budget, or to a meter of
 // its own when meter is nil.
 func NewOutputCompiler(tree pkgtree.Tree, scope string, roots []string, lim limits.Set, decode Decode, meter *regexprofile.Meter) (*Compiler, []finding.Finding) {
-	c := newCompiler(lim, scope, meter)
+	return NewCompiler(tree, lim, decode, outputScope{scope: scope, roots: roots, meter: meter})
+}
+
+// reached reads roots and every JSON or YAML file of tree beneath the
+// compiler's scope that their references reach by path, transitively, in
+// byte order of their entries.
+func (c *Compiler) reached(tree pkgtree.Tree, roots []string, decode Decode) ([]*file, []finding.Finding) {
 	var files []*file
 	var findings []finding.Finding
 	queue := slices.Clone(roots)
@@ -156,7 +221,7 @@ func NewOutputCompiler(tree pkgtree.Tree, scope string, roots []string, lim limi
 		queue = append(queue, next...)
 	}
 	slices.SortFunc(files, func(a, b *file) int { return strings.Compare(a.entry, b.entry) })
-	return c.compile(files, findings)
+	return files, findings
 }
 
 // newCompiler is a compiler with nothing compiled, whose references stay
@@ -195,55 +260,6 @@ func schemaExtension(entry string) bool {
 		return true
 	}
 	return false
-}
-
-// compile pre-checks files across one another, then compiles each. It is
-// the one call site of jsonschema.NewCompiler in the module (ADR-010 D5
-// item 1).
-func (c *Compiler) compile(files []*file, findings []finding.Finding) (*Compiler, []finding.Finding) {
-	findings = append(findings, c.checkResources(files)...)
-	if len(findings) > 0 {
-		return nil, findings
-	}
-
-	lib := jsonschema.NewCompiler()
-	c.lib = lib
-	lib.DefaultDraft(jsonschema.Draft2020)
-	lib.UseLoader(refuseLoader{})
-	lib.AssertFormat()
-	for _, name := range Formats() {
-		lib.RegisterFormat(&jsonschema.Format{Name: name, Validate: formatCheck(formats[name])})
-	}
-	lib.UseRegexpEngine(func(p string) (jsonschema.Regexp, error) {
-		return regexprofile.Compile(p, c.lim, c.meter)
-	})
-	for _, f := range files {
-		c.docs[f.entry] = f.doc
-		for _, a := range f.walk.anchors {
-			c.anchors[a.uri] = root{f.entry, a.ptr}
-		}
-		c.recordRefs(f.entry, f.walk.refs)
-		if err := c.add(lib, f); err != nil {
-			// The pre-check refused every URI the library could not take.
-			panic(err)
-		}
-	}
-	for _, f := range files {
-		s, err := lib.Compile(f.retrieval)
-		if err != nil {
-			fs, ierr := c.compileFindings(f.entry, err)
-			if ierr != nil {
-				panic(ierr)
-			}
-			findings = append(findings, fs...)
-			continue
-		}
-		c.schemas[f.entry] = &Schema{c: c, lib: s}
-	}
-	if len(findings) > 0 {
-		return nil, findings
-	}
-	return c, nil
 }
 
 // read checks schema-size, decodes entry and walks it.
