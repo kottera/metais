@@ -1,0 +1,20 @@
+[
+  {
+    "code": "schema.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "line": 1,
+      "column": 31,
+      "pointer": "/maximum"
+    },
+    "params": {
+      "form": "json",
+      "rule": "number_out_of_range"
+    }
+  }
+]

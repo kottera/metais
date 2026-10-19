@@ -254,6 +254,18 @@ person reading the source manifest and a consumer reading the compiled one
 see the same manifest, and a compiled manifest that is not itself canonical is
 refused the same way.
 
+<a id="mts-man-023"></a>**MTS-MAN-023** The canonical text of an integral
+number whose magnitude is above 2⁵³ − 1 and below 10²¹ is its digits, with no
+fraction or exponent, as ECMAScript formats it, and that text is not itself
+accepted as input: a schema file that holds it is refused under
+[MTS-DAT-002](05-data-specification.md#mts-dat-002) with `schema.syntax`, whose
+`rule` is `number_out_of_range`. A processor MUST accept such a number where a
+schema file writes it with a fraction or an exponent, as in `"maximum": 11e17`,
+and MUST open a package whose compiled file holds its canonical text, because
+a compiled file is compared byte for byte and never read back as input. The
+canonical text of every other number a processor accepts is accepted as
+input.
+
 > **Note.** The canonical form is the one every JSON file under `.compiled/`
 > is written in, so each is byte-stable; a consumer that is not a processor of
 > this specification needs only a JSON parser to read any of them.

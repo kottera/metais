@@ -1,6 +1,9 @@
 # ADR-011: The specification document and conformance — Markdown chapters under `spec/` whose every normative sentence is an `MTS-` statement, one living text per major released by tag, and a black-box suite of vectors that each cite the statements they prove, run in a sentinel sandbox on every target
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
+[Amendment A1](#amendments) (chapter 2's statement area is `PKG`, not `CON`)
+is proposed by PLAN-2026-10-metais-v1 Wave 3 and awaits Ed Funnekotter's
+ratification; the passages it changes are marked *(A1, proposed)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R16 (items 1–3); the document side of R15 (items 1 and
@@ -173,7 +176,7 @@ generated statement index.**
    | File | Subject | Areas | Designed by |
    |---|---|---|---|
    | `01-introduction.md` | scope, conformance classes, terminology, notation, the BCP 14 statement | `GEN` | ADR-011 |
-   | `02-container.md` | the zip profile, entry names, the layout, `.compiled/`, digests and their verification | `CON` | ADR-001 |
+   | `02-container.md` | the zip profile, entry names, the layout, `.compiled/`, digests and their verification | `CON` *(A1, proposed)* | ADR-001 |
    | `03-manifest.md` | the manifest's structure and fields, the YAML and JSON profiles, the canonical form | `MAN` | ADR-002 |
    | `04-versions.md` | specification and package versions, compatibility, what a tool states | `VER` | ADR-002 |
    | `05-data-specification.md` | the `inputs` section, the JSON Schema dialect and asserted keywords and formats, meaning documents, the combined schema | `DAT` | ADR-003 |
@@ -555,7 +558,7 @@ each an ordered list of steps.**
 1. **Location and identity.** `spec/conformance/vectors/<area>/<slug>/`,
    where `<area>` is the lower-cased area of the vector's first statement and
    `<slug>` matches `[a-z0-9]+(-[a-z0-9]+)*` in at most 64 characters. The
-   vector's `id` is `<area>/<slug>`, and equals its path.
+   vector's `id` is `<area>/<slug>`, and equals its path. *(A1, proposed)*
 2. **Contents:**
 
    ```
@@ -961,7 +964,7 @@ exact findings and to write nothing anywhere.**
    ADR-005's path cases). This decision fixes their form.
 2. **Placement.** A traversal entry is `con/…`, a reserved output name
    `pth/…`, an exhausted limit `sec/…`: the area of the first statement the
-   vector proves. The corpus is the set selected by `-conformance.tags=security`.
+   vector proves. *(A1, proposed)* The corpus is the set selected by `-conformance.tags=security`.
 3. **Every opening path refuses.** A vector whose hostility is in the package
    has an `open` step; the `cli` adapter runs it as each of ADR-008's commands
    that opens a package — `inspect`, `ls --recursive`, `schema`, `validate`,
@@ -1065,7 +1068,7 @@ the package digest being content-defined (so provenance that records it, and
 where the specification fixes it" (its D4 item 6), which D10's `methods`
 expresses; the `.compiled/` file names (`digests.json`, `manifest.json`,
 `schema.json`, `references.json`); its Conformance list, which becomes
-`con/` vectors. I promise: a vector can say "refused with these findings"
+`con/` vectors *(A1, proposed)*. I promise: a vector can say "refused with these findings"
 and "packs to these entries, in this order, with these methods and this
 package digest" — the digest is inside `digests.json`, compared as entry
 content.
@@ -1398,6 +1401,40 @@ project has; when CI exists it runs the same commands.
 - Microsoft, Maximum Path Length Limitation (`MAX_PATH`, 260 characters) —
   https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation
 
+## Amendments
+
+### A1 — Chapter 2's statement area is `PKG`, not `CON`
+
+**Status:** Proposed 2026-10-19 by PLAN-2026-10-metais-v1 Wave 3 (W3-1F,
+from W3-1's finding, ruled by the plan orchestrator in plan §9's "Rulings
+made during the wave"); awaiting ratification by Ed Funnekotter at the
+train's close.
+**Amends:** D1 item 2 (the `02-container.md` row's area), D9 item 1 (the
+vector directory of a chapter 2 statement), D16 item 2 (`con/…`), and the
+promise to ADR-001 under *Interfaces with sibling ADRs* (`con/` vectors).
+Cross-referenced from ADR-001's implementation log.
+
+1. **Chapter 2's area is `PKG`.** Its statements are `MTS-PKG-nnn`, and a
+   vector whose first statement is one of them lives under
+   `spec/conformance/vectors/pkg/`. Wherever D1 item 2's table names
+   `CON`, D9 item 1 derives `vectors/con/`, D16 item 2 places a traversal
+   entry in `con/…` and *Interfaces* promises ADR-001 `con/` vectors, read
+   `PKG`, `vectors/pkg/`, `pkg/…` and `pkg/` vectors.
+2. **Why.** D9 item 1 makes a vector's directory the lower-cased area, and
+   `con` is a Windows device name, which ADR-005's portable-path rules
+   refuse and D9 item 8 applies to every path under `spec/conformance/`,
+   because a checkout on Windows cannot create it (`TestSuiteTreePortable`
+   holds the tree to that rule). The two items
+   cannot both hold for `CON`, and the stricter rule wins (RULINGS-v1's
+   convention; PLAN-2026-10-metais-v1 §4). Renaming the area, rather than
+   exempting chapter 2 from D9 item 1, keeps one rule for every vector's
+   location.
+3. **Nothing else moves.** No statement was ever identified as
+   `MTS-CON-nnn`: the specification's area registry (chapter 1, §1.8) has
+   named `PKG` since chapter 2's first statement, so D3's rule that an
+   identifier is assigned once and never renumbered is untouched. `PKG` is
+   the area of no other chapter.
+
 ## Implementation log
 
 - **2026-10-19, PLAN-2026-10-metais-v1 W2-3.** D14's document tripwires
@@ -1480,3 +1517,9 @@ project has; when CI exists it runs the same commands.
   case's setup may make part of a tree a step names — an empty directory or
   a link inside the package — and the runner now copies the tree's files
   around it, as D9 item 4 says, rather than skipping the tree.
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-1F.** Amendment A1, proposed,
+  records W3-1's `PKG` area, ruled in plan §9. Chapter 3's §3.7 gains
+  MTS-MAN-023: the canonical text of an integral number beyond
+  ±(2^53−1) is not itself accepted as input, and a package whose schema
+  writes one with an exponent opens. `man/large-integer-source`,
+  `man/large-integer-packed` and `man/large-integer-canonical-text` cite it.
