@@ -60,10 +60,12 @@ type Target struct {
 	Family  Family
 	Subject finding.Subject
 	Schemas Schemas
-	// Locate returns where the value at the instance pointer ptr is: its
+	// Locate returns where the value at the instance pointer p is: its
 	// origin and file, and its line and column; those of the member's name
-	// when key is set (ADR-006 D5 item 6). Map sets the pointer.
-	Locate func(ptr string, key bool) finding.Location
+	// when key is set (ADR-006 D5 item 6). Map sets the pointer. Map gives
+	// the paths under one member name the same tokens, so a Locate that
+	// reads a path by its parent's costs each its depth, never its length.
+	Locate func(p *finding.Path, key bool) finding.Location
 	// Partial, when set, says the document is an array validated without
 	// the items that did not parse (ADR-006 D7 item 4).
 	Partial *Partial
@@ -126,7 +128,7 @@ func Map(t Target, fs ...Failure) ([]finding.Finding, error) {
 	}
 	if t.Partial != nil {
 		s := suppressed.Summary()
-		loc := t.Locate("", false).WithPointer("")
+		loc := t.Locate(nil, false).WithPath(nil)
 		out = append(out, finding.New(finding.CodeInputValidationPartial, t.Subject, &loc, finding.Params{
 			"unparsed":   finding.Int(int64(t.Partial.Unparsed)),
 			"suppressed": finding.Int(int64(s.Listed + s.Omitted)),
@@ -138,6 +140,9 @@ func Map(t Target, fs ...Failure) ([]finding.Finding, error) {
 type mapper struct {
 	t   Target
 	err error
+	// paths makes each finding's instance path from the one it made
+	// before, so the failures under one member name read it once.
+	paths finding.PathCache
 }
 
 // emitted is one finding, and whether D7 item 4 suppresses it. A failure
@@ -433,8 +438,8 @@ func (m *mapper) uniqueItems(path []*Failure, n *Failure, via []finding.Via) emi
 	if len(inst) == 0 {
 		first, later = m.original(n, first), m.original(n, later)
 	}
-	firstPtr := pointer(m.remap(n, at))
-	rel := finding.Related{Location: m.t.Locate(firstPtr, false).WithPointer(firstPtr), Note: noteFirst}
+	firstPath := m.paths.Path(nil, m.remap(n, at))
+	rel := finding.Related{Location: m.t.Locate(firstPath, false).WithPath(firstPath), Note: noteFirst}
 	return m.emit(path, n, append(slices.Clip(inst), strconv.Itoa(max(d[0], d[1]))), "unique_items", n.Keyword,
 		finding.Params{"index": finding.Int(int64(later)), "duplicate_of": finding.Int(int64(first))}, via, finding.WithRelated(rel))
 }
@@ -467,18 +472,17 @@ func (m *mapper) emit(path []*Failure, n *Failure, inst []string, suffix, kw str
 		delete(p, "suggestion")
 	}
 	suppressed := m.suppressed(n, inst)
-	orig := m.remap(n, inst)
-	ptr := pointer(orig)
+	at := m.paths.Path(nil, m.remap(n, inst))
 	var loc finding.Location
 	switch entry.Span {
 	case finding.SpanKey:
-		loc = m.t.Locate(ptr, true)
+		loc = m.t.Locate(at, true)
 	case finding.SpanParent:
-		loc = m.t.Locate(pointer(orig[:max(len(orig)-1, 0)]), false)
+		loc = m.t.Locate(at.Parent(), false)
 	default:
-		loc = m.t.Locate(ptr, false)
+		loc = m.t.Locate(at, false)
 	}
-	loc = loc.WithPointer(ptr)
+	loc = loc.WithPath(at)
 	opts = append([]finding.Option{
 		finding.WithSchema(finding.Schema{Entry: n.Entry, Pointer: n.SchemaPointer, Keyword: kw, KeywordLocation: n.KeywordLocation}),
 		finding.WithField(fd),

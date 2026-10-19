@@ -82,7 +82,7 @@ func (s *Supply) Validate() (*Result, error) {
 		// validation has an answer: each input present says so.
 		for _, in := range s.l.inputs {
 			if n, ok := root.obj[in.Name]; ok {
-				l := n.locate("", false).WithPointer("")
+				l := n.locator()(nil, false).WithPath(nil)
 				vfs = append(vfs, s.lim.Exceeded(limits.RegexWork, s.l.subject(in.Name), l, 0, false))
 			}
 		}
@@ -216,7 +216,7 @@ func (s *Supply) mapFailures(failures []schemafail.Failure, root *node, states m
 			Family:  schemafail.FamilyInput,
 			Subject: s.l.subject(in.Name),
 			Schemas: s.l.pkg.Compiler,
-			Locate:  n.locate,
+			Locate:  n.locator(),
 		}
 		if st.partial != nil {
 			t.Partial = &schemafail.Partial{Kept: st.partial.kept, Unparsed: st.partial.unparsed}
