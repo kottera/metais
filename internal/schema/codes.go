@@ -40,7 +40,8 @@ func at(entry, ptr string) *finding.Location {
 	return &l
 }
 
-func str(s string) finding.Value { return finding.String(s) }
+// fstr is a string parameter of a finding.
+func fstr(s string) finding.Value { return finding.String(s) }
 
 func report(code finding.Code, entry, ptr string, p finding.Params) finding.Finding {
 	if p == nil {
@@ -54,7 +55,7 @@ func report(code finding.Code, entry, ptr string, p finding.Params) finding.Find
 func regexFinding(err error, entry, ptr string, lim limits.Set) (finding.Finding, bool) {
 	switch e := err.(type) {
 	case *regexprofile.UnsupportedError:
-		return report(CodePatternUnsupported, entry, ptr, finding.Params{"construct": str(string(e.Construct))}), true
+		return report(CodePatternUnsupported, entry, ptr, finding.Params{"construct": fstr(string(e.Construct))}), true
 	case *regexprofile.LimitError:
 		return lim.Breached(e.Limit, *at(entry, ptr), e.Observed, e.HasObserved), true
 	}

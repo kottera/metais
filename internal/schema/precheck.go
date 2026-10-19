@@ -14,10 +14,6 @@ import (
 	"github.com/kottera/metais/internal/regexprofile"
 )
 
-// Dialect is the one $schema value a schema may declare (ADR-003 D3 item
-// 2). Absent, it is assumed.
-const Dialect = "https://json-schema.org/draft/2020-12/schema"
-
 // shape is what a keyword's value holds: a value the walk does not enter,
 // a subschema, an array of subschemas, or an object of them.
 type shape uint8
@@ -78,9 +74,9 @@ var metaSchemas = map[string]bool{
 	"https://json-schema.org/draft/2020-12/meta/content":           true,
 }
 
-// resource is a schema resource of a file: its root, or a subschema that
-// declares its own $id.
-type resource struct {
+// declared is a schema resource of a file, its root or a subschema that
+// declares its own $id, or an anchor.
+type declared struct {
 	uri string // canonical, absolute, without a fragment
 	ptr string // where it is in the file
 	v   value.Value
@@ -93,26 +89,22 @@ type reference struct {
 	text string
 }
 
-// walker is the pre-check of one schema file (ADR-010 D5 item 3): what
+// prechecker is the pre-check of one schema file (ADR-010 D5 item 3): what
 // the library would let through or never sees, checked before it sees
 // the file.
-type walker struct {
+type prechecker struct {
 	entry     string
 	lim       limits.Set
 	findings  []finding.Finding
-	resources []resource
+	resources []declared
 	refs      []reference
-	anchors   []resource // each $anchor and $dynamicAnchor, by its URI
+	anchors   []declared // each $anchor and $dynamicAnchor, by its URI
 	deep      bool       // schema-depth has been reported
-}
-
-func escapeToken(t string) string {
-	return strings.NewReplacer("~", "~0", "/", "~1").Replace(t)
 }
 
 // walk checks the subschema v at ptr, depth levels below the file's root
 // schema, whose base URI is base.
-func (w *walker) walk(v value.Value, ptr string, base *url.URL, depth int) {
+func (w *prechecker) walk(v value.Value, ptr string, base *url.URL, depth int) {
 	o, ok := v.(value.Object)
 	if !ok {
 		// A boolean schema has nothing to check, and a value that is not a
@@ -134,7 +126,7 @@ func (w *walker) walk(v value.Value, ptr string, base *url.URL, depth int) {
 				abs := base.ResolveReference(u)
 				abs.Fragment, abs.RawFragment = "", ""
 				base = abs
-				w.resources = append(w.resources, resource{uri: abs.String(), ptr: ptr, v: v})
+				w.resources = append(w.resources, declared{uri: abs.String(), ptr: ptr, v: v})
 			}
 		}
 	}
@@ -143,11 +135,11 @@ func (w *walker) walk(v value.Value, ptr string, base *url.URL, depth int) {
 		sh, known := keywords[name]
 		switch {
 		case name == "$vocabulary":
-			w.findings = append(w.findings, report(CodeDialect, w.entry, at, finding.Params{"reason": str(dialectVocabulary)}))
+			w.findings = append(w.findings, report(CodeDialect, w.entry, at, finding.Params{"reason": fstr(dialectVocabulary)}))
 			continue
 		case !known:
 			if !strings.HasPrefix(name, "x-") {
-				w.findings = append(w.findings, report(CodeKeywordUnknown, w.entry, at, finding.Params{"keyword": str(name)}))
+				w.findings = append(w.findings, report(CodeKeywordUnknown, w.entry, at, finding.Params{"keyword": fstr(name)}))
 			}
 			continue
 		}
@@ -155,11 +147,11 @@ func (w *walker) walk(v value.Value, ptr string, base *url.URL, depth int) {
 		switch name {
 		case "$schema":
 			if isString && s.Text() != Dialect {
-				w.findings = append(w.findings, report(CodeDialect, w.entry, at, finding.Params{"reason": str(dialectSchema)}))
+				w.findings = append(w.findings, report(CodeDialect, w.entry, at, finding.Params{"reason": fstr(dialectSchema)}))
 			}
 		case "format":
 			if _, ok := formats[s.Text()]; isString && !ok {
-				w.findings = append(w.findings, report(CodeFormatUnsupported, w.entry, at, finding.Params{"format": str(s.Text())}))
+				w.findings = append(w.findings, report(CodeFormatUnsupported, w.entry, at, finding.Params{"format": fstr(s.Text())}))
 			}
 		case "pattern":
 			if isString {
@@ -173,7 +165,7 @@ func (w *walker) walk(v value.Value, ptr string, base *url.URL, depth int) {
 			}
 		case "$anchor", "$dynamicAnchor":
 			if isString {
-				w.anchors = append(w.anchors, resource{uri: base.String() + "#" + s.Text(), ptr: ptr})
+				w.anchors = append(w.anchors, declared{uri: base.String() + "#" + s.Text(), ptr: ptr})
 			}
 		case "$ref", "$dynamicRef":
 			if isString {
@@ -202,7 +194,7 @@ func (w *walker) walk(v value.Value, ptr string, base *url.URL, depth int) {
 // pattern compiles a pattern or a patternProperties name by the profile,
 // which refuses what ADR-009 D10 item 6 refuses and checks pattern-length
 // and regex-program.
-func (w *walker) pattern(p, at string) {
+func (w *prechecker) pattern(p, at string) {
 	_, err := regexprofile.Compile(p, w.lim, nil)
 	if err == nil {
 		return

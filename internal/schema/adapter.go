@@ -170,7 +170,7 @@ func leaf(k jsonschema.ErrorKind) (string, schemafail.Data, error) {
 	case *kind.Enum:
 		allowed := make([]string, len(k.Want))
 		for i, w := range k.Want {
-			allowed[i] = canonical(w)
+			allowed[i] = canonicalText(w)
 		}
 		d := schemafail.Data{"allowed": allowed}
 		if s, ok := k.Got.(string); ok {
@@ -178,7 +178,7 @@ func leaf(k jsonschema.ErrorKind) (string, schemafail.Data, error) {
 		}
 		return "enum", d, nil
 	case *kind.Const:
-		return "const", schemafail.Data{"expected": canonical(k.Want)}, nil
+		return "const", schemafail.Data{"expected": canonicalText(k.Want)}, nil
 	case *kind.Required:
 		return "required", schemafail.Data{"missing": slices.Sorted(slices.Values(k.Missing))}, nil
 	case *kind.DependentRequired:
@@ -234,8 +234,8 @@ func bound(kw, name string, limit, got *big.Rat) (string, schemafail.Data, error
 	return kw, schemafail.Data{name: l, "value": v}, nil
 }
 
-// canonical is a value as the library holds it, in RFC 8785's text.
-func canonical(v any) string {
+// canonicalText is a value as the library holds it, in RFC 8785's text.
+func canonicalText(v any) string {
 	return string(jsonx.Canonical(fromLibrary(v)))
 }
 

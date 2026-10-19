@@ -1,13 +1,6 @@
 // Copyright 2026 Kottera
 // SPDX-License-Identifier: Apache-2.0
 
-// Package schema is METAIS's JSON Schema 2020-12 compiler and validator
-// (ADR-003 D3 to D5, ADR-010 D5): santhosh-tekuri/jsonschema configured
-// closed. It compiles schemas from the package only, refuses before the
-// library sees a schema what the library would let through, asserts
-// METAIS's formats with METAIS's own validators, matches patterns by the
-// package regular-expression profile, and turns the library's errors into
-// the library-neutral schemafail tree, never reading their text.
 package schema
 
 import (
@@ -29,14 +22,10 @@ import (
 	"github.com/kottera/metais/internal/schemafail"
 )
 
-// Dir is the directory whose schema files the compiler loads and to which
-// every reference is confined (ADR-003 D3 item 1, D5 item 5).
-const Dir = "inputs/"
-
 // IsSchemaFile reports whether entry is a schema file: a JSON or YAML file
-// under Dir (ADR-003 D3 item 1).
+// under InputsDir (ADR-003 D3 item 1).
 func IsSchemaFile(entry string) bool {
-	if !strings.HasPrefix(entry, Dir) {
+	if !strings.HasPrefix(entry, InputsDir) {
 		return false
 	}
 	switch path.Ext(entry) {
@@ -46,14 +35,6 @@ func IsSchemaFile(entry string) bool {
 	return false
 }
 
-// RetrievalURI is the URI a package entry is retrieved by,
-// metais:/// and its path, percent-encoded where RFC 3986 requires
-// (ADR-003 D5 item 1).
-func RetrievalURI(entry string) string {
-	u := url.URL{Scheme: "metais", Path: "/" + entry}
-	return "metais://" + u.EscapedPath()
-}
-
 // Decode reads the bytes of a schema file into the data model by the
 // rules of its form (ADR-003 D9, D10), reporting what it refuses. The
 // package loader supplies it; the compiler never parses a file itself.
@@ -61,6 +42,7 @@ type Decode func(entry string, src []byte) (value.Value, []finding.Finding)
 
 // Compiler holds every schema file of a package, compiled.
 type Compiler struct {
+	lib     *jsonschema.Compiler
 	lim     limits.Set
 	meter   *regexprofile.Meter
 	schemas map[string]*Schema     // by entry
@@ -89,7 +71,7 @@ type file struct {
 	canonical string
 	hasID     bool
 	doc       value.Value
-	walk      *walker
+	walk      *prechecker
 }
 
 // NewCompiler compiles every schema file of tree (ADR-003 D3 item 1) under
@@ -108,7 +90,7 @@ type file struct {
 // decodes it with decode and refuses unknown keywords, formats outside
 // ADR-003 D4, any $schema but 2020-12's and any $vocabulary, patterns
 // outside the profile, schema-depth, and every reference that leaves the
-// package, escapes Dir, names a file by its path where it has an $id, or
+// package, escapes InputsDir, names a file by its path where it has an $id, or
 // resolves to nothing; and two resources with one URI. Every finding of
 // every file is reported at once. When there is any, the compiler is nil.
 func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode) (*Compiler, []finding.Finding) {
@@ -139,6 +121,7 @@ func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode) (*Compiler, [
 	}
 
 	lib := jsonschema.NewCompiler()
+	c.lib = lib
 	lib.DefaultDraft(jsonschema.Draft2020)
 	lib.UseLoader(refuseLoader{})
 	lib.AssertFormat()
@@ -210,7 +193,7 @@ func (c *Compiler) read(tree pkgtree.Tree, entry string, decode Decode) (*file, 
 	}
 	f := &file{entry: entry, retrieval: RetrievalURI(entry), doc: doc}
 	base, _ := url.Parse(f.retrieval)
-	f.walk = &walker{entry: entry, lim: c.lim}
+	f.walk = &prechecker{entry: entry, lim: c.lim}
 	f.walk.walk(doc, "", base, 1)
 	f.canonical = f.retrieval
 	if rs := f.walk.resources; len(rs) > 0 && rs[0].ptr == "" {
@@ -243,10 +226,10 @@ func checkResources(files []*file) []finding.Finding {
 		if g, ok := byRetrieval[uri]; ok && g != self && !taken {
 			prior, taken = owner{g.entry, ""}, true
 		}
-		p := finding.Params{"id": str(uri)}
+		p := finding.Params{"id": fstr(uri)}
 		switch {
 		case taken:
-			p["other"] = str(prior.entry)
+			p["other"] = fstr(prior.entry)
 		case builtIn(uri):
 		default:
 			known[uri] = o
@@ -267,7 +250,7 @@ func checkResources(files []*file) []finding.Finding {
 	for _, f := range files {
 		for _, r := range f.walk.refs {
 			if code, p := checkRef(r, known, byRetrieval); code != "" {
-				p["reference"] = str(r.text)
+				p["reference"] = fstr(r.text)
 				findings = append(findings, report(code, f.entry, r.ptr, p))
 			}
 		}
@@ -289,7 +272,7 @@ func checkRef(r reference, known map[string]owner, byRetrieval map[string]*file)
 	t.Fragment, t.RawFragment = "", ""
 	target := t.String()
 	if _, ok := known[target]; ok {
-		if t.Scheme == "metais" && !strings.HasPrefix(t.Path, "/"+Dir) {
+		if t.Scheme == "metais" && !strings.HasPrefix(t.Path, "/"+InputsDir) {
 			return CodeRefEscapes, finding.Params{}
 		}
 		return "", nil
@@ -298,11 +281,11 @@ func checkRef(r reference, known map[string]owner, byRetrieval map[string]*file)
 		return "", nil
 	}
 	if t.Scheme == "metais" {
-		if !strings.HasPrefix(t.Path, "/"+Dir) {
+		if !strings.HasPrefix(t.Path, "/"+InputsDir) {
 			return CodeRefEscapes, finding.Params{}
 		}
 		if f, ok := byRetrieval[target]; ok && f.hasID {
-			return CodeRefByPath, finding.Params{"id": str(f.canonical)}
+			return CodeRefByPath, finding.Params{"id": fstr(f.canonical)}
 		}
 	}
 	return CodeRefUnresolved, finding.Params{}
@@ -390,7 +373,8 @@ func (c *Compiler) locate(u string) (entry, ptr string, ok bool) {
 		// An anchor names no pointer.
 		return r.entry, r.ptr, true
 	}
-	return r.entry, r.ptr + unescapePointer(frag), true
+	entry, ptr = c.embedded(r.entry, r.ptr+unescapePointer(frag))
+	return entry, ptr, true
 }
 
 // compileFindings maps an error of the library's Compile, which the
@@ -434,37 +418,37 @@ func (c *Compiler) compileFindings(entry string, err error) ([]finding.Finding, 
 		}
 		var out []finding.Finding
 		for _, f := range leaves(fails) {
-			out = append(out, report(CodeInvalid, e, base+f.Instance(), finding.Params{"keyword": str(f.Keyword)}))
+			out = append(out, report(CodeInvalid, e, base+f.Instance(), finding.Params{"keyword": fstr(f.Keyword)}))
 		}
 		return out, nil
 	case errors.As(err, &load):
-		return []finding.Finding{report(CodeRefUnresolved, entry, "", finding.Params{"reference": str(load.URL)})}, nil
+		return []finding.Finding{report(CodeRefUnresolved, entry, "", finding.Params{"reference": fstr(load.URL)})}, nil
 	case errors.As(err, &anc):
 		e, p := where(anc.URL)
-		return []finding.Finding{report(CodeRefUnresolved, e, p, finding.Params{"reference": str(anc.Reference)})}, nil
+		return []finding.Finding{report(CodeRefUnresolved, e, p, finding.Params{"reference": fstr(anc.Reference)})}, nil
 	case errors.As(err, &ptr):
-		return []finding.Finding{report(CodeRefUnresolved, entry, "", finding.Params{"reference": str(ptr.URL)})}, nil
+		return []finding.Finding{report(CodeRefUnresolved, entry, "", finding.Params{"reference": fstr(ptr.URL)})}, nil
 	case errors.As(err, &iptr):
-		return []finding.Finding{report(CodeRefUnresolved, entry, "", finding.Params{"reference": str(iptr.URL)})}, nil
+		return []finding.Finding{report(CodeRefUnresolved, entry, "", finding.Params{"reference": fstr(iptr.URL)})}, nil
 	case errors.As(err, &purl):
-		return []finding.Finding{report(CodeRefUnresolved, entry, "", finding.Params{"reference": str(purl.URL)})}, nil
+		return []finding.Finding{report(CodeRefUnresolved, entry, "", finding.Params{"reference": fstr(purl.URL)})}, nil
 	case errors.As(err, &dupID):
 		e, base := where(dupID.URL)
 		first, _ := where(dupID.URL + "#" + dupID.Ptr1)
-		return []finding.Finding{report(CodeIDDuplicate, e, base+dupID.Ptr2, finding.Params{"id": str(dupID.ID), "other": str(first)})}, nil
+		return []finding.Finding{report(CodeIDDuplicate, e, base+dupID.Ptr2, finding.Params{"id": fstr(dupID.ID), "other": fstr(first)})}, nil
 	case errors.As(err, &dupA):
 		e, base := where(dupA.URL)
-		return []finding.Finding{report(CodeIDDuplicate, e, base+dupA.Ptr2, finding.Params{"id": str("#" + dupA.Anchor), "other": str(e)})}, nil
+		return []finding.Finding{report(CodeIDDuplicate, e, base+dupA.Ptr2, finding.Params{"id": fstr("#" + dupA.Anchor), "other": fstr(e)})}, nil
 	case errors.As(err, &pid):
 		e, p := where(pid.URL)
-		return []finding.Finding{report(CodeInvalid, e, p+"/$id", finding.Params{"keyword": str("$id")})}, nil
+		return []finding.Finding{report(CodeInvalid, e, p+"/$id", finding.Params{"keyword": fstr("$id")})}, nil
 	case errors.As(err, &panc):
 		e, p := where(panc.URL)
-		return []finding.Finding{report(CodeInvalid, e, p+"/$anchor", finding.Params{"keyword": str("$anchor")})}, nil
+		return []finding.Finding{report(CodeInvalid, e, p+"/$anchor", finding.Params{"keyword": fstr("$anchor")})}, nil
 	case errors.As(err, &vocab), errors.As(err, &draft), errors.As(err, &cycle), errors.As(err, &mism), errors.As(err, &murl):
 		// The pre-check refuses every $schema but 2020-12's, and every
 		// $vocabulary, so none of these is reached.
-		return []finding.Finding{report(CodeDialect, entry, "", finding.Params{"reason": str(dialectSchema)})}, nil
+		return []finding.Finding{report(CodeDialect, entry, "", finding.Params{"reason": fstr(dialectSchema)})}, nil
 	case errors.As(err, &re):
 		e, p := where(re.URL)
 		if f, ok := regexFinding(re.Err, e, p, c.lim); ok {
