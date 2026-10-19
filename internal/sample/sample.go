@@ -163,6 +163,10 @@ type Generator struct {
 	input    Input
 	findings []finding.Finding
 	err      error
+	// size is what the generation has made so far, held to input-size
+	// (spend), and over is the finding for its breach.
+	size int64
+	over []finding.Finding
 }
 
 // New returns the generator over c, the package's compiled schemas, with
@@ -185,7 +189,7 @@ func New(c *schema.Compiler, pos Positions, lim limits.Set, opts Options) *Gener
 // nil. err is a failure of the schema library, or the regex-work budget
 // spent, either of which leaves the value unknown.
 func (s *Generator) Generate(in Input) (v value.Value, present bool, fs []finding.Finding, err error) {
-	s.input, s.findings, s.err = in, nil, nil
+	s.input, s.findings, s.err, s.size, s.over = in, nil, nil, 0, nil
 	if in.Supplied == nil && !in.Required && !s.include("") {
 		return nil, false, nil, nil
 	}
@@ -201,8 +205,11 @@ func (s *Generator) Generate(in Input) (v value.Value, present bool, fs []findin
 	if s.err != nil {
 		return nil, false, nil, s.err
 	}
-	if !ok || len(s.findings) > 0 {
-		return nil, true, s.findings, nil
+	if fs := append(s.findings, s.over...); !ok || len(fs) > 0 {
+		if len(fs) == 0 {
+			panic("sample: a value failed with no finding")
+		}
+		return nil, true, fs, nil
 	}
 	return v, true, nil, nil
 }
@@ -282,6 +289,40 @@ func (s *Generator) include(ptr string) bool {
 	}
 	return true
 }
+
+// spend charges n, a value's size, to input-size (ADR-009 D10): the data
+// the generator makes is held to the limits supplied data is (item 22),
+// so making more than an input may hold is work for nothing, and the
+// generator's work is bounded by the limit rather than by the schema. A
+// string counts its bytes, and every other value one. The first breach is
+// limit.exceeded about the input, at the place that breached it, and ends
+// the generation.
+func (s *Generator) spend(loc *place, n int64) bool {
+	if !s.affords(loc, n) {
+		return false
+	}
+	s.size += n
+	return true
+}
+
+// affords reports whether n more can be made at loc within input-size, as
+// spend does without charging it: a bound a value is about to be made to,
+// such as minItems, is checked before any of it is made.
+func (s *Generator) affords(loc *place, n int64) bool {
+	if s.over != nil {
+		return false
+	}
+	if n <= s.lim.Value(limits.InputSize)-s.size {
+		return true
+	}
+	at := finding.Location{Origin: finding.OriginSample}.WithPointer(loc.ptr)
+	s.over = []finding.Finding{s.lim.Exceeded(limits.InputSize, finding.Subject{Kind: finding.SubjectInput, Name: s.input.Name}, at, 0, false)}
+	return false
+}
+
+// stopped reports whether the generation can go no further: the schema
+// library failed, or input-size is spent.
+func (s *Generator) stopped() bool { return s.err != nil || s.over != nil }
 
 // valid reports whether v validates against each schema of starts.
 func (s *Generator) valid(starts []node, v value.Value) bool {

@@ -28,7 +28,7 @@ const (
 // once (item 8). A branch from which no value can be made is passed over
 // the same way, for the next.
 func (s *Generator) value(loc *place, starts []node) (value.Value, bool) {
-	if s.err != nil {
+	if s.stopped() {
 		return nil, false
 	}
 	choose := map[string]int{}
@@ -53,7 +53,7 @@ func (s *Generator) value(loc *place, starts []node) (value.Value, bool) {
 		mark := len(s.findings)
 		c := s.effective(loc, starts, choose)
 		v, ok := s.located(loc, c)
-		if s.err != nil {
+		if s.stopped() {
 			return nil, false
 		}
 		if !ok {
@@ -113,7 +113,7 @@ func (s *Generator) located(at *place, c *conj) (value.Value, bool) {
 		}
 	}
 	v, ok := s.fromC(&loc, c)
-	if !ok {
+	if !ok || !s.spend(&loc, size(v)) {
 		return nil, false
 	}
 	if _, isObj := v.(value.Object); !isObj {
@@ -151,6 +151,16 @@ func (s *Generator) located(at *place, c *conj) (value.Value, bool) {
 		}
 	}
 	return v, true
+}
+
+// size is what v costs spend: a string its bytes, any other value one.
+// The members and items of an object or array are charged as they are
+// made.
+func size(v value.Value) int64 {
+	if str, ok := v.(value.String); ok {
+		return int64(len(str.Text())) + 1
+	}
+	return 1
 }
 
 // matchesAny reports whether v validates against any schema of ns.
@@ -675,6 +685,9 @@ func (s *Generator) sized(loc *place, c *conj, next map[string]value.Value, gen 
 			}
 		}
 	}
+	if hasMin && !s.affords(loc, minP-int64(len(next))) {
+		return false
+	}
 	if hasMin {
 		for _, name := range omitted {
 			if int64(len(next)) >= minP {
@@ -853,6 +866,9 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 	if hasMax {
 		n = min(n, maxI)
 	}
+	if !s.affords(loc, n) {
+		return nil, false
+	}
 	contains := c.nodesAt("contains")
 	minC, maxC, hasMaxC := int64(0), int64(0), false
 	if len(contains) > 0 {
@@ -878,7 +894,7 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 		}
 		mark := len(s.findings)
 		v, good := s.value(child, starts)
-		if !good && unique && s.err == nil {
+		if !good && unique && !s.stopped() {
 			// No value but one equal to an earlier item: the item is a
 			// duplicate, not unsatisfiable.
 			s.findings = s.findings[:mark]
@@ -894,7 +910,7 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 			}
 			return i >= minC && hasMaxC && counted >= maxC && s.matchesAny(contains, v)
 		}
-		for k := 1; clash(v) && k <= maxAttempts && s.err == nil; k++ {
+		for k := 1; clash(v) && k <= maxAttempts && !s.stopped(); k++ {
 			again := s.itemPlace(loc, int(i))
 			again.purpose, again.earlier = attempt(k), child.earlier
 			mark := len(s.findings)

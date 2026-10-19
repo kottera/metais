@@ -120,3 +120,25 @@ func TestEveryUnsatisfiableField(t *testing.T) {
 		t.Errorf("instances %v, want %v%s", got, want, describe(fs))
 	}
 }
+
+// TestInputSize: the generator's work is bounded by input-size, the limit
+// the data it makes is held to (item 22): a schema that asks for more
+// than an input may hold is limit.exceeded about the input, before the
+// work is done.
+func TestInputSize(t *testing.T) {
+	for _, sch := range []string{
+		`{"type":"array","minItems":1000000000}`,
+		`{"type":"string","minLength":1000000000}`,
+		`{"type":"object","minProperties":1000000000,"additionalProperties":true}`,
+		`{"type":"array","minItems":40000,"items":{"type":"string","minLength":1000}}`,
+	} {
+		_, fs := one(t, sch, Options{})
+		if len(fs) != 1 || fs[0].Code() != "limit.exceeded" {
+			t.Errorf("%s:%s", sch, describe(fs))
+			continue
+		}
+		if l, _ := fs[0].Param("limit"); func() string { s, _ := l.Str(); return s }() != "input-size" {
+			t.Errorf("%s: the limit is not input-size", sch)
+		}
+	}
+}

@@ -56,7 +56,7 @@ func compileErr(t testing.TB, files map[string]string) (*pkg, []finding.Finding)
 	p := &pkg{pos: map[string]finding.Positions{}}
 	decode := func(e string, src []byte) (value.Value, []finding.Finding) {
 		doc, fs := jsonx.Parse(src, jsonx.Source{
-			Input: finding.Subject{Kind: finding.SubjectSchema, Name: e},
+			Input: finding.Subject{Kind: finding.SubjectInput, Name: "schema"},
 			At:    finding.Location{Origin: finding.OriginPackage, File: e},
 		}, limits.Defaults())
 		if len(fs) > 0 {

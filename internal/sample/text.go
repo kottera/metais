@@ -90,6 +90,9 @@ func (s *Generator) text(loc *place, c *conj) (value.Value, bool) {
 		s.unsatisfiable(loc, s.holder(c, "minLength"), ReasonLength)
 		return nil, false
 	}
+	if !s.affords(loc, l.min) {
+		return nil, false
+	}
 	st := s.stream(loc.ptr, loc.valuePurpose())
 	patterns := c.strings("pattern")
 	// keep reports whether str meets the length bounds and every pattern,
