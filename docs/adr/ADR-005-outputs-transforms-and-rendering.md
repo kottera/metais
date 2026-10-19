@@ -1701,3 +1701,13 @@ they write into an existing directory too.
   detectors replay `overwrite` steps and setups with links and named
   pipes. A setup the host cannot make skips the step, as the runner's
   probes do.
+
+  W5-9 merged first, so W5-8 adds the meeting with it (D16 item 2, D18 item 3,
+  ADR-008 D8 item 4). `rnd/overwrite-dry-run-only` proves that a dry run into an
+  existing directory lists each file's status, `create` or `replace`, and writes
+  nothing, and that `--only` into an existing directory, whether empty or
+  holding entries, writes the selected file alone by A1's commit. MTS-RND-012's
+  "by the rules of §11.1" now also names §11.3 for an existing directory.
+  `--overwrite` with `--out -` is `usage.flag_excluded`, the code W5-10
+  registers, with `other` set to `--out -`. `internal/cli`'s tests prove it,
+  as they prove every usage code.
