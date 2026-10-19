@@ -613,6 +613,22 @@ wave's.
 - **The runner's own uses of the JSON Schema validator are in test files.**
   ADR-010 D5 item 1's single-call-site tripwire covers non-test code.
 
+**Rulings made during the wave:**
+- **The Markdown outline meets ADR-009 D10 item 4 with METAIS's own linear
+  CommonMark reading, not goldmark.** W2-9 measured goldmark v2.1.6 as
+  roughly quadratic on 10 to 11 of cmark's 25 pathological cases.
+  ADR-010 D3's fallback, goldmark v1.8.6, is also superlinear. R2-156 and
+  ADR-010 D9 chose goldmark assuming it met the bound. Plan §4's rule, that
+  the stricter security rule wins, settles the disagreement:
+  - the bound stands whole;
+  - `Outline` is METAIS's code, linear by CPU time and faithful to
+    CommonMark 0.31.2 on what decides a heading;
+  - goldmark leaves the module.
+
+  ADR-010 Amendment A2, proposed, records the change to D3 and D9 item 2,
+  superseding R2-156's library choice. Ed ratifies it at the train's close,
+  with A1.
+
 ## 9. Wave 3 — opening a package, and the composed libraries
 
 **Objective.** `metais inspect` opens a packed package or a source directory,
