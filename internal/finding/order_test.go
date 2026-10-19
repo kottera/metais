@@ -78,7 +78,7 @@ func orderedFindings() []Finding {
 // describe is a finding as the ordering tests compare it: every member of
 // the sort key and the duplicate key, and the message.
 func describe(f Finding) string {
-	return fmt.Sprintf("%s %+v %+v %+v %s %s", f.Code(), f.subject, f.locationOrZero(), f.schemaOrZero(), f.canonicalParams(), f.Message())
+	return fmt.Sprintf("%s %+v %+v %+v %s %s", f.Code(), f.subject, f.locationOrZero().written(), f.schemaOrZero(), f.canonicalParams(), f.Message())
 }
 
 func describeAll(fs []Finding) []string {

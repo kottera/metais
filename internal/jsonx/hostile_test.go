@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"math/rand/v2"
 	"os"
 	"os/exec"
 	"slices"
@@ -198,4 +199,57 @@ func runHostile(t *testing.T, size string) {
 		t.Fatal("the capped report does not hold its ten pointers")
 	}
 	fmt.Printf("hostile text read: %d\n", n)
+}
+
+// TestRepeatedNameIsOneFinding: every repeat of one member name in one
+// object is reported, each at its own name with the same pointer and
+// params, so by ADR-006 D8 item 3's key they are duplicates, and a report
+// keeps one: the repeat that sorts first, the second occurrence. The
+// report neither panics nor depends on the order the findings come in,
+// and its totals count the name once.
+func TestRepeatedNameIsOneFinding(t *testing.T) {
+	testenv.Home(t)
+	many := `{"a": 0` + strings.Repeat(`, "a": 0`, 60) + "}"
+	for _, tt := range []struct {
+		name, src string
+		line, col int
+	}{
+		{"three", `{"a": 1, "a": 2, "a": 3}`, 1, 10},
+		{"many", many, 1, 10},
+		{"many, a line each", strings.ReplaceAll(many, ", ", ",\n "), 2, 2},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			_, fs := Parse([]byte(tt.src), vendor, limits.Defaults())
+			if len(fs) < 2 {
+				t.Fatalf("%d findings, want one per repeat", len(fs))
+			}
+			rng := rand.New(rand.NewPCG(1, uint64(len(fs))))
+			for _, cap := range []int{100_000, 1, 0} {
+				var want string
+				for range 20 {
+					rng.Shuffle(len(fs), func(a, b int) { fs[a], fs[b] = fs[b], fs[a] })
+					r := finding.NewReport(cap)
+					for _, f := range fs {
+						r.Add(f)
+					}
+					s := r.Summary()
+					if s.Errors != 1 || len(s.ByCode) == 0 || s.ByCode[0] != (finding.CodeCount{Code: CodeDuplicateName, Count: 1}) {
+						t.Fatalf("cap %d: summary %+v, want one json.duplicate_name", cap, s)
+					}
+					if cap > 0 {
+						l, _ := r.Findings()[0].Location()
+						if l.Line != tt.line || l.Column != tt.col || l.Pointer != "/a" {
+							t.Fatalf("cap %d: kept the repeat at %d:%d %q, want the first at %d:%d", cap, l.Line, l.Column, l.Pointer, tt.line, tt.col)
+						}
+					}
+					got := string(encodeReport(r))
+					if want == "" {
+						want = got
+					} else if got != want {
+						t.Fatalf("cap %d: another order gave another report", cap)
+					}
+				}
+			}
+		})
+	}
 }

@@ -5,6 +5,7 @@ package finding
 
 import (
 	"bytes"
+	"cmp"
 	"crypto/sha256"
 	"fmt"
 	"math/rand/v2"
@@ -14,8 +15,9 @@ import (
 )
 
 // reference is ADR-006 D8 computed the slow way, holding everything: keep
-// the one of each set of duplicates whose keyword_location sorts first
-// (then the lower digest of its encoding), sort, and cut at the cap.
+// the one of each set of duplicates whose keyword_location sorts first,
+// then the one that sorts first by D8 item 1's key, then the lower digest
+// of its encoding; sort, and cut at the cap.
 func reference(fs []Finding, max int) (listed []Finding, total int) {
 	best := map[[sha256.Size]byte]Finding{}
 	var keys [][sha256.Size]byte
@@ -27,13 +29,13 @@ func reference(fs []Finding, max int) (listed []Finding, total int) {
 			best[k] = f
 			continue
 		}
-		if f.keywordLocation() < old.keywordLocation() {
-			best[k] = f
-		} else if f.keywordLocation() == old.keywordLocation() {
+		c := cmp.Or(strings.Compare(f.keywordLocation(), old.keywordLocation()), Compare(f, old))
+		if c == 0 {
 			a, b := sha256.Sum256(AppendJSON(nil, f)), sha256.Sum256(AppendJSON(nil, old))
-			if bytes.Compare(a[:], b[:]) < 0 {
-				best[k] = f
-			}
+			c = bytes.Compare(a[:], b[:])
+		}
+		if c < 0 {
+			best[k] = f
 		}
 	}
 	for _, k := range keys {
@@ -262,19 +264,42 @@ func TestReportBounded(t *testing.T) {
 	}
 }
 
-// TestReportRefusesMovedDuplicate: duplicates are at one place, since a
-// value's position is fixed by its file and pointer; two that are not
-// show a defect in what positioned them.
-func TestReportRefusesMovedDuplicate(t *testing.T) {
+// TestReportCollapsesMovedDuplicates: duplicates by D8 item 3's key at
+// different places, as a reader reports each repeat of one member name,
+// are one finding, the one that sorts first by D8 item 1's key, whatever
+// order they come in and whatever the cap; the totals count it once.
+func TestReportCollapsesMovedDuplicates(t *testing.T) {
 	withTestCodes(t)
-	r := NewReport(5)
-	r.Add(minLength("a", "a.csv", 2, "/0", 4))
-	defer func() {
-		if recover() == nil {
-			t.Error("a duplicate at another line was accepted")
+	rng := rand.New(rand.NewPCG(9, 10))
+	for trial := range 2000 {
+		var fs []Finding
+		for range 1 + rng.IntN(30) {
+			// Two values, each repeated at several places, beside
+			// findings that sort before, between and after them.
+			line := 1 + rng.IntN(12)
+			ptr := []string{"/a", "/b", fmt.Sprintf("/%d", line)}[rng.IntN(3)]
+			fs = append(fs, minLength("a", "a.json", line, ptr, 4))
 		}
-	}()
-	r.Add(minLength("a", "a.csv", 3, "/0", 4))
+		max := rng.IntN(6)
+		want, total := reference(fs, max)
+		for range 3 {
+			rng.Shuffle(len(fs), func(a, b int) { fs[a], fs[b] = fs[b], fs[a] })
+			r := NewReport(max)
+			for _, f := range fs {
+				r.Add(f)
+			}
+			got := r.Findings()
+			if total > max {
+				got = got[:len(got)-1]
+			}
+			if d := outOfOrder(got, want); d != "" {
+				t.Fatalf("trial %d (cap %d, %d added): %s", trial, max, len(fs), d)
+			}
+			if s := r.Summary(); s.Listed != len(want) || s.Errors != total {
+				t.Fatalf("trial %d: summary %+v, want %d listed of %d", trial, s, len(want), total)
+			}
+		}
+	}
 }
 
 func TestReportAddRefusesZeroFinding(t *testing.T) {

@@ -32,9 +32,8 @@ func Compare(a, b Finding) int {
 }
 
 // comparePrefix compares the members of the key before schema: subject,
-// location and code. Two duplicates (D8 item 3) are always equal here,
-// since the report refuses duplicates at different lines or columns; they
-// can differ only in the members after it.
+// location and code. Two duplicates (D8 item 3) can differ here only in
+// their line and column.
 func comparePrefix(a, b Finding) int {
 	la, lb := a.locationOrZero(), b.locationOrZero()
 	if c := cmp.Or(
