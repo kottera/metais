@@ -982,6 +982,20 @@ output (Wave 5); `sample`, `render --sample` and `test` (Wave 5); `pack`
 - R2-144 and R2-145: truncation and neutralisation.
 - R2-176 and R2-182: the liquid-spec pin.
 
+**Rulings made during the wave:**
+- **Four intra-wave edges are sanctioned in Wave 4, and no others.**
+  - One item changes `hostfs`'s write side for the wave's writers, and
+    render, unpack and the reading commands wait on it. Wave 2's #40, which
+    §2's slicing did not foresee, made that change shared, and parallel
+    edits of security-critical code would be worse than one short serial
+    step.
+  - The Liquid closure waits on the render item, because each delegated
+    departure names a chapter 7 statement that the render item writes.
+- **`extract --overwrite` moves to Wave 5.** Replacing files in an existing
+  directory is an existing destination (§10 "Does not touch"), and it rests
+  on `hostfs`'s general ownership mechanism, which awaits Ed's design
+  session. Wave 4's `extract` writes only where the target does not exist.
+
 ## 11. Wave 5 — the render's capabilities, and the rest of authoring
 
 **Objective.** Everything `render` can do, it does, each capability with its
