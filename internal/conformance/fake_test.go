@@ -262,6 +262,10 @@ func fakeRun(fault string, call fakeCall) (*fakeResult, error) {
 		res.listing = append([]any{l}, res.listing[1:]...)
 	case "sentinel-stdout":
 		res.note = os.Getenv("HOME")
+	case "ab-clock":
+		res.note = fmt.Sprintf("rendered at %d", time.Now().Unix())
+	case "clock":
+		res.note = fmt.Sprintf("clock %d", time.Now().UnixNano())
 	case "sentinel-stderr":
 		fmt.Fprintln(os.Stderr, "home is", os.Getenv("HOME"))
 	case "write-outside":

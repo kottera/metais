@@ -263,6 +263,84 @@ func TestOpenAccepts(t *testing.T) {
 	}
 }
 
+// signatureFromEnd is a one-entry package whose stored content holds an
+// end-record signature dist bytes before the end of the file.
+func signatureFromEnd(t testing.TB, dist int) []byte {
+	t.Helper()
+	build := func(pad int) []byte {
+		content := append([]byte("PK\x05\x06"), make([]byte, pad)...)
+		return rawZip{entries: []rawEntry{{name: "a.zip", content: content}}}.bytes()
+	}
+	b := build(0)
+	pad := dist - (len(b) - bytes.Index(b, []byte("PK\x05\x06")))
+	if pad < 0 {
+		t.Fatalf("no package holds a signature %d bytes from its end", dist)
+	}
+	b = build(pad)
+	if got := len(b) - bytes.Index(b, []byte("PK\x05\x06")); got != dist {
+		t.Fatalf("signature %d bytes from the end, want %d", got, dist)
+	}
+	return b
+}
+
+// only returns the single finding of code in found, failing the test when
+// there is not exactly one, and its offset.
+func only(t testing.TB, found []finding.Finding, code finding.Code) int64 {
+	t.Helper()
+	var n []int64
+	for _, f := range found {
+		if f.Code() == code {
+			off, _ := f.Param("offset")
+			v, _ := off.Int()
+			n = append(n, v)
+		}
+	}
+	if len(n) != 1 {
+		t.Fatalf("found %q, want one %s", codes(found), code)
+	}
+	return n[0]
+}
+
+// TestOpenEndSearchBoundary pins ADR-001 D8 step 2's window, R1-014's
+// final 65,557 bytes, at both its edges and within the end record itself.
+func TestOpenEndSearchBoundary(t *testing.T) {
+	def := limits.Defaults()
+
+	// The window's first byte is the file's size less 65,557.
+	b := signatureFromEnd(t, 65_557)
+	_, found := open(t, b, def)
+	if off := only(t, found, CodeSecondEndRecord); off != int64(len(b)-65_557) {
+		t.Errorf("second end record at offset %d, want %d", off, len(b)-65_557)
+	}
+
+	// One byte further from the end lies outside it.
+	if _, found := open(t, signatureFromEnd(t, 65_558), def); len(found) > 0 {
+		t.Errorf("a signature 65,558 bytes from the end: refused with %q", codes(found))
+	}
+
+	// A maximum-length comment puts the end record at the window's first
+	// byte, where it is found and its comment's length reported.
+	b = rawZip{entries: two(), comment: bytes.Repeat([]byte("c"), 0xFFFF)}.bytes()
+	_, found = open(t, b, def)
+	if off := only(t, found, CodeArchiveComment); off != int64(len(b)-65_557) {
+		t.Errorf("archive comment at offset %d, want %d", off, len(b)-65_557)
+	}
+	length, _ := found[0].Param("length")
+	if n, _ := length.Int(); n != 0xFFFF {
+		t.Errorf("archive comment length %d, want 65535", n)
+	}
+
+	// A signature in the end record's own fields, after its signature.
+	for _, field := range []int{4, 8, 12, 16} {
+		b := rawZip{entries: two()}.bytes()
+		copy(b[len(b)-eocdLen+field:], "PK\x05\x06")
+		_, found := open(t, b, def)
+		if off := only(t, found, CodeSecondEndRecord); off != int64(len(b)-eocdLen+field) {
+			t.Errorf("field %d: second end record at offset %d, want %d", field, off, len(b)-eocdLen+field)
+		}
+	}
+}
+
 // TestOpenReportsEveryFindingOfAStep holds the reader to ADR-001 D8 item 2:
 // within a step every independent finding is reported, and a later step
 // does not run once one has refused.

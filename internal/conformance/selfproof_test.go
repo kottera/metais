@@ -6,7 +6,9 @@ package conformance
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -87,6 +89,7 @@ var faults = []fault{
 	{"stream", fixRenderStream, checkStream, both},
 	{"listing", fixRenderDry, checkListing, both},
 	{"ab", fixRenderTree, checkAB, both},
+	{"ab-clock", fixRenderTree, checkAB, both},
 	{"repeatable", fixRepeatable, checkRepeat, both},
 	{"cpu", fixBounded, checkCPU, both},
 	{"rss", fixBounded, checkRSS, both},
@@ -236,6 +239,60 @@ func selfProof(t *testing.T, short time.Duration, clean bool, keep func(fault) b
 				}
 				t.Errorf("the fake with fault %s passed the %s check of %s; the runner reported:\n%s",
 					rn.f.name, rn.f.check, rn.f.vector, strings.Join(got, "\n"))
+			}
+		})
+	}
+}
+
+// TestBStartsTwoSecondsAfterA pins ADR-011 D12 item 4's offset directly:
+// a fake that writes the clock to the nanosecond into every document
+// shows that each clock reading of B's processes is at least two seconds
+// after every one of A's, through each adapter. The ab-clock row proves
+// the offset catches a fault; this proves the offset, which a row of
+// second resolution can see only when A and B straddle a second.
+func TestBStartsTwoSecondsAfterA(t *testing.T) {
+	t.Parallel()
+	suite := writeFixture(t, testenv.Dir(t))
+	v, err := readVector(filepath.Join(suite, "vectors", filepath.FromSlash(fixRenderTree)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	clock := regexp.MustCompile(`clock (\d+)`)
+	readings := func(t *testing.T, run *envRun) []time.Time {
+		t.Helper()
+		var out []time.Time
+		for _, st := range run.steps {
+			for _, inv := range st.invs {
+				m := clock.FindSubmatch(inv.stdout)
+				if m == nil {
+					t.Fatalf("%s wrote no clock reading: %q", inv.label, inv.stdout)
+				}
+				n, err := strconv.ParseInt(string(m[1]), 10, 64)
+				if err != nil {
+					t.Fatal(err)
+				}
+				out = append(out, time.Unix(0, n))
+			}
+		}
+		if len(out) == 0 {
+			t.Fatal("no invocation ran")
+		}
+		return out
+	}
+	for _, kind := range both {
+		t.Run(kind, func(t *testing.T) {
+			t.Parallel()
+			r := fixtureRunner(t, suite, kind, "clock")
+			dir := testenv.Dir(t)
+			res := r.runCase(v, &v.Cases[0], dir)
+			a, b := res.runs[envA], res.runs[envB]
+			if a == nil || b == nil || a.fatal() || b.fatal() {
+				t.Fatalf("a run did not finish: %v", res.problems)
+			}
+			last := slices.MaxFunc(readings(t, a), time.Time.Compare)
+			first := slices.MinFunc(readings(t, b), time.Time.Compare)
+			if gap := first.Sub(last); gap < 2*time.Second {
+				t.Errorf("B's first clock reading is %v after A's last, want at least 2s", gap)
 			}
 		})
 	}

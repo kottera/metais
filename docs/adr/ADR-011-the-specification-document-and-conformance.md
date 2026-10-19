@@ -1462,3 +1462,11 @@ project has; when CI exists it runs the same commands.
     seconds.
   - The `cli` adapter's exit check reads each code's class from
     `spec/findings/registry.json`, the one source of codes.
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-NB1.** D12 item 4's two seconds
+  are counted from the end of A's last process, which also satisfies "at
+  least two seconds after A" read from A's start: counted from A's start,
+  a host slow to run A leaves A's and B's clock readings within one
+  second, and a tool that writes the clock at second resolution passes.
+  The self-proof's `ab-clock` fault writes the clock in seconds, and
+  `TestBStartsTwoSecondsAfterA` holds each of B's clock readings to two
+  seconds after every one of A's, through each adapter.
