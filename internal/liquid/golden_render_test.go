@@ -192,14 +192,32 @@ func appliesFilter(d *Dialect, c goldenRenderCase) bool {
 // follows instead, and then must not render that result, so a stale line
 // is found. A listed case that the parse refuses is the parse test's;
 // every other listed case must be one this run renders, so no line is
-// left unchecked. No case may recover an internal error.
+// left unchecked. Each case of render-time.txt that applies no filter is
+// refused at render, the renderer's refusal its line names. No case may
+// recover an internal error.
 func TestGoldenLiquidRender(t *testing.T) {
 	testenv.Home(t)
 	excluded := readList(t, "exclusions.txt")
+	renderTime := readList(t, "render-time.txt")
 	d := goldenDialect(t)
-	var run, passed, skipped, filtered, invalid int
+	var run, passed, skipped, filtered, invalid, refused int
 	for _, c := range loadGoldenRender(t) {
 		if c.Invalid {
+			if _, ok := renderTime[c.Name]; ok && !appliesFilter(d, c) {
+				// render-time.txt's lines whose refusal is the renderer's.
+				out, parsed, err := renderGolden(t, d, c)
+				switch {
+				case !parsed:
+					t.Errorf("%q is in render-time.txt and refused at parse: %v", c.Name, err)
+				case err == nil:
+					t.Errorf("%q is invalid and renders %q", c.Name, out)
+				case err.Code == CodeInternal:
+					t.Errorf("%q: internal error: %v", c.Name, err)
+				default:
+					refused++
+				}
+				continue
+			}
 			invalid++
 			continue
 		}
@@ -247,8 +265,8 @@ func TestGoldenLiquidRender(t *testing.T) {
 		}
 		passed++
 	}
-	t.Logf("valid cases without filters: %d rendered, %d pass, %d excluded; %d apply a filter, %d invalid, not run here",
-		run, passed, skipped, filtered, invalid)
+	t.Logf("valid cases without filters: %d rendered, %d pass, %d excluded; render-time.txt cases without filters: %d refused; "+
+		"%d valid cases apply a filter and %d other invalid cases, not run here", run, passed, skipped, refused, filtered, invalid)
 	if run == 0 {
 		t.Fatal("no case rendered")
 	}

@@ -1772,3 +1772,39 @@ R2-156 (RULINGS-v1); R2-156's own frontmatter split stands.
   an object) and D6 item 6 (a number has no property). A case that applies
   `date` is selected out of every run under `Core()`, mechanically, and
   the selector fails once `date` is registered.
+
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-3.** D4's renderer landed in
+  `internal/liquid`: `Render`, `Eval` and `EvalCondition` over an `Env` of
+  `Dialect`, `Globals`, `Partials`, `Escape`, `Meter` and `Limits`
+  (`PartialDepth`, `ValueSize`, `ArraySize`). The sketch's `Env` gains
+  `Dialect`, since `Eval` applies filters to an expression that carries no
+  template, and `Limits`, the per-value bounds a `Meter`'s running counts
+  do not hold; `Meter` is Wave 2's interface, and `NewMeter(MeterLimits)`
+  its counting implementation, which names `render-work`, `output-size`,
+  `assign-bytes` and `loop-iterations` and reads no clock. A template
+  number is an integer when its literal is written as one and its value
+  is within ±(2⁵³ − 1), so literals keep their spelling, and `Data` spells
+  every data number by its value before it is bound (ADR-004 D4 item 2).
+  Object iteration — `for`, `tablerow` and `render … for` over an object,
+  and the `first` and `last` shorthands — goes through one method, the
+  seam Amendment A2 names; `TestNoMapIteration` type-checks the engine and
+  finds no range over a map, so `Dialect.Extend` copies with `maps.Copy`.
+  `value.Object` gained `At`, so every step reads its member in constant
+  time. ADR-009 D11 item 2's table is charged as written; beside it a
+  range made a value costs a unit per element, writing an array a unit
+  per element, and a string's `size` a unit per byte, so no step does work
+  the meter does not see. A range literal's span is charged to
+  `loop-iterations` before its first iteration, and other loops their
+  visited items. Where ADR-004 is silent the renderer follows Shopify:
+  `contains` with `nil` or `false` on either side is false, a boolean on
+  the left of `<` is false, `empty` and `blank` order as false, `case`
+  renders each matching value's body, and a group-less `cycle` with a
+  variable among its values keeps its own position. A `render` alias is
+  bound even to `nil`, where Shopify leaves it unbound. A loop modifier, a
+  `tablerow` attribute or a range bound of the wrong type is the engine's
+  `argument` code, which ADR-004 D16 does not name; `internal/template`
+  maps it. Golden Liquid's render run covers every valid case that applies
+  no filter: 400 render, 358 pass, and 42 carry a `dialect` line, each
+  naming ADR-004 D4 item 5 or 7 or D6 item 1, 4 or 5; the 5 cases of
+  `render-time.txt` that apply no filter are refused. `FuzzLiquidRender`
+  renders at small limits with the input as its own partial.
