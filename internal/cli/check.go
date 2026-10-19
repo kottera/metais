@@ -80,7 +80,12 @@ func checkRefusals() []Refusal {
 		"template": "A template or a manifest expression",
 		"example":  "An example's layout",
 		"report":   "The report",
+		"output":   "An output's declaration",
 	}
+	// wholesale are the families whose every warning and note check
+	// declares; of the others, it declares only the codes its own steps
+	// report.
+	wholesale := []string{"package", "manifest", "schema", "template", "example", "report"}
 	for _, e := range finding.Registry() {
 		family, rest, _ := strings.Cut(string(e.Code), ".")
 		declared := slices.ContainsFunc(out, func(r Refusal) bool { return r.Code == e.Code })
@@ -88,7 +93,7 @@ func checkRefusals() []Refusal {
 			continue
 		}
 		profile := slices.Contains(author.ContainerCodes(), e.Code)
-		if !slices.Contains(author.CheckCodes(), e.Code) && !profile && (what[family] == "" || e.Severity == finding.SeverityError) {
+		if !slices.Contains(author.CheckCodes(), e.Code) && !profile && (!slices.Contains(wholesale, family) || e.Severity == finding.SeverityError) {
 			continue
 		}
 		subject := what[family]
@@ -96,13 +101,7 @@ func checkRefusals() []Refusal {
 			subject = "A container's profile"
 		}
 		cause := subject + " (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + "), a " + e.Severity.String() + "."
-		r := Refusal{Code: e.Code, Cause: cause, Next: nextCheckAgain}
-		// A code of a family what names no subject for, which check alone
-		// reports, has no cause to share and is listed on its own.
-		if subject != "" {
-			r.gist = subject + ", a " + e.Severity.String() + "."
-		}
-		out = append(out, r)
+		out = append(out, Refusal{Code: e.Code, Cause: cause, Next: nextCheckAgain, gist: subject + ", a " + e.Severity.String() + "."})
 	}
 	return out
 }
