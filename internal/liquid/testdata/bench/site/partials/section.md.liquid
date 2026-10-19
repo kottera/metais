@@ -1,0 +1,6 @@
+## {{ number }}. {{ section.heading | capitalize }}
+
+{{ section.body | strip_newlines }}
+{% if section.note %}
+> {{ section.note | upcase }}
+{% endif %}

@@ -1,0 +1,6 @@
+# Ledger
+
+{{ inputs.rows | size }} rows.
+{%- assign headers = "Id,Name,Status,Amount (EUR)" | split: "," %}
+
+{{ inputs.rows | markdown_table: "id", "name", "status", "amount", headers: headers }}

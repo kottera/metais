@@ -1,0 +1,3 @@
+{%- assign n = pages | size -%}
+---
+Page {{ page.index | plus: 1 }} of {{ n }}{% unless page.index == 0 %} · [previous]({{ pages[page.prev].slug }}.md){% endunless %}
