@@ -77,11 +77,11 @@ func FuzzJSONParse(f *testing.F) {
 			if err != nil || string(e) != string(c) {
 				t.Fatalf("Encode %q (%v) is not Canonical %q", e, err, c)
 			}
-			// The canonical text reads back as the value, except that
-			// ADR-003 D8 item 5 refuses an integer beyond 2^53-1 only
-			// when it is written without a fraction or exponent: 11e17
-			// is read, and its canonical text 1100000000000000000 is
-			// refused.
+			// The canonical text reads back as the value, except as
+			// MTS-MAN-023 states: ADR-003 D8 item 5 refuses an integer
+			// beyond 2^53-1 only when it is written without a fraction
+			// or exponent, so 11e17 is read, and its canonical text
+			// 1100000000000000000 is refused.
 			again, fs := Parse(c, vendor, limits.Defaults())
 			for _, fd := range fs {
 				r, _ := fd.Param("reason")
