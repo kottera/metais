@@ -117,9 +117,7 @@ manifest.type W3
 manifest.unevaluated_item W3
 manifest.unevaluated_property W3
 manifest.unique_items W3
-manifest.template.ooxml.split_construct W4
-template.ooxml.split_delimiter W4
-yaml.alias W3
+manifest.yaml.alias W3
 manifest.yaml.anchor W3
 manifest.yaml.bom W3
 manifest.yaml.character W3
@@ -211,6 +209,8 @@ schema.pattern_unsupported W3
 schema.ref_by_path W3
 schema.ref_escapes W3
 schema.ref_unresolved W3
+template.ooxml.split_construct W4
+template.ooxml.split_delimiter W4
 template.xref.budget_exhausted W4
 template.xref.dynamic_reference W4
 template.xref.for_each_not_array W4
