@@ -1287,3 +1287,18 @@ the render.
   open-file limit may refuse first. On windows the handles beneath a
   directory are released before it is renamed, and those records fall back
   to the NTFS file id, whose sequence number is never reused.
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-0.** `internal/hostfs` gives
+  this wave's writers their write shapes, `Output`: `StageNew` is D14
+  item 1 (render into a new directory, and unpack into a target that does
+  not exist); `WriteInPlace` is ADR-007 D8 item 3's in-place write into an
+  existing empty directory; `CreateNew` is ADR-008 D5's extract into a
+  directory that does not exist. Only the staging directory and the
+  ancestors `StageNew` creates are pinned, so a write holds a bounded
+  number of handles whatever its entry count, and the host's open-file
+  limit no longer refuses a write within ADR-009's limits. The in-place
+  shapes remove nothing they wrote; a file whose bytes fail part way is
+  removed while the handle that wrote it is open. D14 item 4's modes are
+  kept under a umask that withholds an owner bit: `os.Root` reaches a name
+  by opening the directories above it for reading, so a directory created
+  without the owner's bits gets them for the write and its own mode back
+  at the end.
