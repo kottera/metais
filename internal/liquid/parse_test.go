@@ -290,6 +290,18 @@ func TestOneSyntaxError(t *testing.T) {
 	}
 }
 
+// TestErrorOrder pins that errors come in source order, a block never
+// closed being located at its opening tag.
+func TestErrorOrder(t *testing.T) {
+	testenv.Home(t)
+	errs := refused(t, goldenDialect(t), `{{ a | n1 }}{% if a %}{{ b | n2 }}`, CodeUnknownFilter, CodeSyntax, CodeUnknownFilter)
+	for i := 1; i < len(errs); i++ {
+		if errs[i-1].Offset > errs[i].Offset {
+			t.Errorf("error %d at %d after error %d at %d", i, errs[i].Offset, i-1, errs[i-1].Offset)
+		}
+	}
+}
+
 // TestErrorLocation pins ADR-004 D16 item 2: an error names the line and
 // column of the "{{" or "{%" opening its token, the column in code
 // points, and inside a liquid tag the inner line's first non-blank

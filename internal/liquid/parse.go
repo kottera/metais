@@ -4,8 +4,10 @@
 package liquid
 
 import (
+	"cmp"
 	"fmt"
 	"runtime/debug"
+	"slices"
 	"strings"
 	"unicode/utf8"
 
@@ -68,6 +70,9 @@ func Parse(d *Dialect, s Source, lim ParseLimits) (t *Template, errs []*Error) {
 		p.errs = append(p.errs, fatal)
 	}
 	if len(p.errs) > 0 {
+		// A block never closed is located at its opening tag, before
+		// errors already reported inside it.
+		slices.SortStableFunc(p.errs, func(a, b *Error) int { return cmp.Compare(a.Offset, b.Offset) })
 		return nil, p.errs
 	}
 	return &Template{Name: s.Name, Root: root}, nil

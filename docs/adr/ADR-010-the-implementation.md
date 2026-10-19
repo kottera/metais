@@ -1603,3 +1603,34 @@ outside the standard library.
   `golang.org/x/text/message`; each has its allow-list entry, by the W2
   orchestrator's ruling under ADR-009 D16 item 3 and Wave 1 ruling (b), and
   each reason resting on NewCompiler's configuration has its test.
+
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-15.** D4's front end landed as
+  `internal/liquid` and `internal/liquid/ast`, standard-library-only. The
+  lexer splits a template where Shopify's tokenizer does (a tag runs to the
+  first `%}`, an output to the first `}`, and a `{%` inside an output makes
+  it run on to the next `%}`), and the grammar refuses what does not parse.
+  `Parse`, `ParseValue` and `ParseCondition` each take a `ParseLimits`
+  (`Nesting`, which also bounds the brackets and ranges nested in one
+  expression, and `Size`), so the two standalone forms are bounded like a
+  template. A `Dialect` is built by `NewDialect(Spec)` and `Extend(Spec)`,
+  which return an error for a duplicate, a core tag's name, `include`, an
+  `end…` name or a non-identifier; a `Spec` carries tags, filters and the
+  reserved names of ADR-004 D7 item 8, which `internal/template` supplies.
+  `Core()` and its contents are Wave 3's, with the catalog. `TagDef` and
+  `FilterDef` are interfaces with a parse-time `Check` beside their render
+  side, and `Meter` is an interface; their contracts are in their doc
+  comments. Errors stop the parse only for syntax, UTF-8, U+0000 and a
+  limit; `include`, an unknown filter, a reserved name, a non-literal
+  partial name, a definition's `Check` and an integer literal beyond
+  2⁵³ − 1 are reported and the parse goes on. A `case` keeps its clauses in
+  order with any `else` among them, as Shopify evaluates them. The AST's
+  literals hold `value` values made by `value`'s own constructors, so
+  `value` needed no extension. Golden Liquid is vendored at
+  `65c2f76ea64ef20647c295b000df5fcd9fc471cd`; its 29 exclusions are all
+  `dialect` lines: the corpus's `include` cases under ADR-004 D1 item 5,
+  and its strict-mode cases whose strict2 counterparts the corpus marks
+  invalid, together with Shopify's ignored `else` markup and branches after
+  `else`, under D1 item 2. The corpus's 97 invalid cases that ADR-004
+  refuses at render are listed in `render-time.txt`, each naming the
+  ADR-004 item that places the refusal at render; the parse test holds each
+  to parsing, and Wave 3's render run is their proof.
