@@ -132,7 +132,7 @@ func TestTestRefusals(t *testing.T) {
 	}{
 		{"unknown example", []string{"test", src, "--example", "equal", "--example", "nope"}, finding.CodeUsageUnknownExample, finding.ExitUsage,
 			map[string]any{"argument": float64(6), "examples": []any{"equal", "mixed"}}},
-		{"update on a packed package", []string{"test", packed, "--update"}, finding.CodeUsageNotSourceDirectory, finding.ExitUsage,
+		{"update on a packed package", []string{"test", packed, "--update"}, finding.CodeUsageNotSourceDir, finding.ExitUsage,
 			map[string]any{"argument": float64(2)}},
 		{"unknown example, written with =", []string{"test", src, "--example=nope"}, finding.CodeUsageUnknownExample, finding.ExitUsage,
 			map[string]any{"argument": float64(3)}},
