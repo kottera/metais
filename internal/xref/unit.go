@@ -119,11 +119,12 @@ func (u *unit) location(sp ast.Span) finding.Location {
 	return finding.Location{Origin: finding.OriginPackage, File: u.file, Line: sp.Line, Column: sp.Col}
 }
 
-// report records a finding about this unit's text at sp, on the
-// reporting pass and while the budget lasts. withOutput adds the output
-// whose context the unit is in, when there is one. A finding repeated by
-// another context, or by another output's, is recorded once.
-func (u *unit) report(code finding.Code, sp ast.Span, p finding.Params, withOutput bool, opts ...finding.Option) {
+// report records a finding about this unit's text at sp, with the related
+// locations rel, on the reporting pass and while the budget lasts.
+// withOutput adds the output whose context the unit is in, when there is
+// one. A finding repeated by another context, or by another output's, is
+// recorded once.
+func (u *unit) report(code finding.Code, sp ast.Span, p finding.Params, withOutput bool, rel ...finding.Related) {
 	if !u.reporting || u.a.exhausted {
 		return
 	}
@@ -140,10 +141,11 @@ func (u *unit) report(code finding.Code, sp ast.Span, p finding.Params, withOutp
 	for _, n := range names {
 		key += fmt.Sprintf("|%s=%+v", n, p[n])
 	}
+	key += fmt.Sprintf("|%+v", rel)
 	if withOutput && u.ctx.output != "" {
 		p["output"] = finding.String(u.ctx.output)
 	}
-	f := finding.New(code, finding.Subject{Kind: finding.SubjectTemplate, Name: u.file}, &loc, p, opts...)
+	f := finding.New(code, finding.Subject{Kind: finding.SubjectTemplate, Name: u.file}, &loc, p, finding.WithRelated(rel...))
 	u.a.add(f, key)
 }
 
@@ -360,7 +362,7 @@ func (u *unit) root(p *ast.Path) (v set, isInputs bool) {
 		// Every name nothing binds may be a partial parameter.
 	case u.partial != nil && !globalNames[name]:
 		u.report(CodeParameterNotPassed, p.Span, finding.Params{"name": finding.String(name)}, true,
-			finding.WithRelated(finding.Related{Location: u.partial.site, Note: noteCallSite}))
+			finding.Related{Location: u.partial.site, Note: noteCallSite})
 	default:
 		params := finding.Params{"name": finding.String(name)}
 		if s, ok := nearest(name, u.visible()); ok {
@@ -636,7 +638,7 @@ func (u *unit) reject(rejs []*rejection, p string, i int, sp ast.Span) {
 	if input != "" {
 		params["input"] = finding.String(input)
 	}
-	u.report(code, sp, params, true, finding.WithRelated(related...))
+	u.report(code, sp, params, true, related...)
 }
 
 // typeList is a types param.
