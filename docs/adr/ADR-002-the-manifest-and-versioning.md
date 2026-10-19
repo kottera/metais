@@ -884,4 +884,19 @@ format.
 
 ## Implementation log
 
-Nothing implemented.
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-16.** D10 landed as
+  `spec/schemas/1.0/manifest.schema.json`, embedded through
+  `internal/specdata`, with `$defs/inputs` per ADR-003 D1 and
+  `$defs/outputs` per ADR-005 D1, D2 and D7 to D9. D4 to D7 landed in
+  `internal/manifest`, over an already-parsed value tree: `Gate` is D7
+  items 1, 7, 8 and 11 as `package.version.*`; `Check` runs the gate first
+  and then the D10 item 6 rules the schema does not express, the SPDX
+  grammar, unique input names and output ids, and ADR-005 D3 item 6's one
+  `for_each` per chain; `Build` returns the typed model, re-judging every
+  rule with the schema's own patterns, and refuses a tree that breaks one.
+  The library never calls the validator. A homepage is RFC 3986's
+  `absolute-URI`, which has no fragment. An input's `description` is D4
+  item 6's prose with no length bound, its `schema` ends `.json`, `.yaml`
+  or `.yml` and its `meaning` ends `.md`, and `csv` requires `delimiter`.
+  The nesting depth of containers, a limit a caller may lower, is the
+  loader's.
