@@ -42,6 +42,9 @@
 #     the module, which no import edge records. Their importers are not
 #     tested for it, since the blind package's own code did not change.
 #
+# Unless given --paths, it first runs merge-setup.sh, on stderr, so a clone
+# that is about to rebase has the generated files' merge drivers.
+#
 # Exit 0 with the facts on stdout, 2 when the change cannot be measured.
 
 set -u
@@ -77,6 +80,7 @@ while [ $# -gt 0 ]; do
 		;;
 	esac
 done
+[ -n "$paths_file" ] || "$root/.claude/skills/verification-gate/merge-setup.sh" >&2
 
 work=$(mktemp -d "${TMPDIR:-/tmp}/gate-select.XXXXXX") || exit 2
 trap 'rm -rf "$work"' EXIT

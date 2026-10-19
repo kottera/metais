@@ -42,6 +42,10 @@
 # at once in one binary, and internal/conformance's tool processes) are both
 # the share. METAIS_GATE_P sets the share, and is the one override.
 #
+# Every run first runs merge-setup.sh, which installs the generated files'
+# merge drivers in this clone's configuration and says so, on the terminal
+# and in the log, when they were missing.
+#
 # Exit 0 when every item passes, 1 when any fails, 2 when it cannot start.
 
 set -u
@@ -92,6 +96,9 @@ if [ -n "$resume" ]; then
 	}
 fi
 
+setup=$("$here/merge-setup.sh" 2>&1)
+echo "$setup"
+
 run="$tier-$(date -u +%Y%m%dT%H%M%SZ)"
 log="$state/$run.log"
 record="$state/$run.record"
@@ -129,6 +136,7 @@ tree=$(snapshot) || {
 	exit 2
 }
 
+echo "$setup"
 echo "tier: $tier"
 echo "go:   $(go version)"
 echo "head: $(git rev-parse HEAD)"

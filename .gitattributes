@@ -1,3 +1,23 @@
 spec/conformance/** -text
 THIRD-PARTY-NOTICES.txt -text
 internal/zipfmt/testdata/canary/** -text
+
+# The committed generated files merge themselves (ADR-011 D3 item 7, as
+# amended by A1). A merge keeps one side of each, and
+# .claude/skills/verification-gate/regenerate.sh rewrites it from the merged
+# sources; each file's drift test fails until it has run. The drivers live in
+# a clone's configuration: merge-setup.sh beside regenerate.sh installs them,
+# and every gate script runs it. spec/12-findings.md is hand-written around
+# its generated code catalog, so only the catalog keeps one side, and its text
+# gets git's own three-way merge.
+spec/statements.json merge=metais-generated
+spec/findings/registry.json merge=metais-generated
+spec/12-findings.md merge=metais-generated-region
+internal/specdata/findings/** merge=metais-generated
+internal/specdata/schemas/** merge=metais-generated
+internal/cli/testdata/help/** merge=metais-generated
+internal/author/testdata/scaffold/** merge=metais-generated
+internal/tarw/testdata/*.tar merge=metais-generated
+internal/yamlx/testdata/write/document.yaml merge=metais-generated
+spec/conformance/vectors/**/package.metais merge=metais-generated
+THIRD-PARTY-NOTICES.txt merge=metais-generated
