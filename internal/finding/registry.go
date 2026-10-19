@@ -600,7 +600,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Supply less data, or render fewer or smaller files; a limit can be lowered with --limit and never raised. Run `metais limits` to see every limit.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-SEC-010"},
+		Statements: []string{"MTS-OUT-012", "MTS-PTH-009", "MTS-SEC-010"},
 	},
 	{
 		Code:     "limit.exceeded.template",
@@ -617,7 +617,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Render less: fewer iterations, partials nested less deeply, smaller strings and arrays; a limit can be lowered with --limit and never raised. Run `metais limits` to see every limit.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-SEC-008", "MTS-SEC-009", "MTS-TPL-046"},
+		Statements: []string{"MTS-OUT-011", "MTS-SEC-008", "MTS-SEC-009", "MTS-TPL-046"},
 	},
 	{
 		Code:     CodeLimitInvalid,
@@ -1132,12 +1132,27 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{"MTS-AUT-026", "MTS-AUT-027", "MTS-RND-006"},
 	},
 	{
+		Code:     "output.expression.for_each_type",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectOutput,
+		Params: []ParamSpec{
+			{Name: "type", Type: TypeString, Meaning: "The type of the for_each's value: string, number, boolean or object.", Always: true},
+		},
+		Message:    "The for_each of the output {output} is a {type}, and only an array, or nil, can be repeated over.",
+		Hint:       "Give for_each an expression whose value is an array, such as a collection input or a property its schema declares an array.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-OUT-008"},
+	},
+	{
 		Code:     "output.path.case_collision",
 		Severity: SeverityError,
 		Class:    ClassContent,
 		Subject:  SubjectOutput,
 		Params: []ParamSpec{
 			{Name: "path", Type: TypeString, Meaning: "The output's path, as planned.", Always: true},
+			{Name: "item", Type: TypeNumber, Meaning: "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each."},
 			{Name: "member", Type: TypeString, Meaning: "The path, or the directory prefix of it, that collides.", Always: true},
 			{Name: "other", Type: TypeString, Meaning: "The earlier path, or directory prefix, it collides with.", Always: true},
 		},
@@ -1145,7 +1160,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Give the outputs paths that differ in more than letter case or normalization.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-PTH-006"},
+		Statements: []string{"MTS-OUT-010", "MTS-PTH-006", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.character",
@@ -1154,13 +1169,14 @@ var registry = withSchemaEntries([]Entry{
 		Subject:  SubjectOutput,
 		Params: []ParamSpec{
 			{Name: "path", Type: TypeString, Meaning: "The output's path, as planned.", Always: true},
+			{Name: "item", Type: TypeNumber, Meaning: "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each."},
 			{Name: "code_point", Type: TypeNumber, Meaning: "The first code point the rule refuses.", Always: true},
 		},
 		Message:    "The output's path holds a character a portable path may not: a control, format, private-use, unassigned or separator character, or one Windows reserves.",
 		Hint:       "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-PTH-004"},
+		Statements: []string{"MTS-OUT-010", "MTS-PTH-004", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.duplicate",
@@ -1169,12 +1185,13 @@ var registry = withSchemaEntries([]Entry{
 		Subject:  SubjectOutput,
 		Params: []ParamSpec{
 			{Name: "path", Type: TypeString, Meaning: "The output's path, as planned.", Always: true},
+			{Name: "item", Type: TypeNumber, Meaning: "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each."},
 		},
 		Message:    "The output's path is the path of an earlier output.",
 		Hint:       "Give each output its own path.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-PTH-006"},
+		Statements: []string{"MTS-OUT-010", "MTS-PTH-006", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.encoding",
@@ -1183,13 +1200,14 @@ var registry = withSchemaEntries([]Entry{
 		Subject:  SubjectOutput,
 		Params: []ParamSpec{
 			{Name: "path", Type: TypeString, Meaning: "The output's path, as planned.", Always: true},
+			{Name: "item", Type: TypeNumber, Meaning: "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each."},
 			{Name: "reason", Type: TypeString, Meaning: "Why: invalid_utf8, or byte_order_mark (it begins with U+FEFF).", Always: true},
 		},
 		Message:    "The output's path is not UTF-8 without a byte order mark ({reason}).",
 		Hint:       "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-PTH-001"},
+		Statements: []string{"MTS-OUT-010", "MTS-PTH-001", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.file_directory_conflict",
@@ -1198,6 +1216,7 @@ var registry = withSchemaEntries([]Entry{
 		Subject:  SubjectOutput,
 		Params: []ParamSpec{
 			{Name: "path", Type: TypeString, Meaning: "The output's path, as planned.", Always: true},
+			{Name: "item", Type: TypeNumber, Meaning: "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each."},
 			{Name: "member", Type: TypeString, Meaning: "The path, or the directory prefix of it, that is both a file and a directory.", Always: true},
 			{Name: "other", Type: TypeString, Meaning: "The other path, or directory prefix, it matches.", Always: true},
 		},
@@ -1205,7 +1224,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Give the outputs paths in which no file's path is a directory of another's.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-PTH-006"},
+		Statements: []string{"MTS-OUT-010", "MTS-PTH-006", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.not_nfc",
@@ -1214,12 +1233,13 @@ var registry = withSchemaEntries([]Entry{
 		Subject:  SubjectOutput,
 		Params: []ParamSpec{
 			{Name: "path", Type: TypeString, Meaning: "The output's path, as planned.", Always: true},
+			{Name: "item", Type: TypeNumber, Meaning: "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each."},
 		},
 		Message:    "The output's path is not in Unicode Normalization Form C.",
 		Hint:       "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-PTH-002"},
+		Statements: []string{"MTS-OUT-010", "MTS-PTH-002", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.not_portable",
@@ -1228,13 +1248,14 @@ var registry = withSchemaEntries([]Entry{
 		Subject:  SubjectOutput,
 		Params: []ParamSpec{
 			{Name: "path", Type: TypeString, Meaning: "The output's path, as planned.", Always: true},
+			{Name: "item", Type: TypeNumber, Meaning: "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each."},
 			{Name: "reason", Type: TypeString, Meaning: "Why: reserved_name (a Windows device name), git (a spelling of .git), segment_end (a segment ends in . or a space), or segment_length (a segment is longer than 255 bytes).", Always: true},
 		},
 		Message:    "The output's path cannot be written on every platform ({reason}).",
 		Hint:       "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-PTH-005"},
+		Statements: []string{"MTS-OUT-010", "MTS-PTH-005", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.shape",
@@ -1243,13 +1264,14 @@ var registry = withSchemaEntries([]Entry{
 		Subject:  SubjectOutput,
 		Params: []ParamSpec{
 			{Name: "path", Type: TypeString, Meaning: "The output's path, as planned.", Always: true},
+			{Name: "item", Type: TypeNumber, Meaning: "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each."},
 			{Name: "reason", Type: TypeString, Meaning: "Why: empty, leading_slash, trailing_slash, empty_segment, dot_segment, backslash or colon.", Always: true},
 		},
 		Message:    "The output's path is not a relative path of /-separated segments ({reason}).",
 		Hint:       "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-PTH-003"},
+		Statements: []string{"MTS-OUT-010", "MTS-PTH-003", "MTS-PTH-008"},
 	},
 	{
 		Code:       "package.compiled.mismatch",
@@ -2449,7 +2471,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Remove the tag; in a path, use output expressions, filters, if, unless, case, assign and capture.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-MAN-018"},
+		Statements: []string{"MTS-MAN-018", "MTS-OUT-004"},
 	},
 	{
 		Code:     "template.undefined_property",
@@ -2481,7 +2503,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Read a global — inputs, package, now, sources or output — a name the template binds, or a loop's variable inside its loop; an undefined name is refused, never rendered as nothing.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-TPL-003", "MTS-TPL-027", "MTS-TPL-033", "MTS-TPL-034"},
+		Statements: []string{"MTS-OUT-005", "MTS-TPL-003", "MTS-TPL-027", "MTS-TPL-033", "MTS-TPL-034", "MTS-TPL-058"},
 	},
 	{
 		Code:     "template.unknown_filter",

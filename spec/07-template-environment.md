@@ -322,6 +322,53 @@ of `inputs`, `package`, `item`, `fan_out`, `output`, `now`, `sources`,
 — a `for` or `tablerow` variable, a `render` parameter or a `render … as`
 alias — take any name, shadowing a global only within its block or partial.
 
+### 7.7.8 `item` and `fan_out`
+
+An output with `for_each` ([chapter 9](09-outputs.md)) is evaluated once per
+element of its array. Each evaluation binds the element to `item` and its
+position to `fan_out`, so that a page names its file after its element and
+links to its neighbours without index arithmetic.
+
+<a id="mts-tpl-056"></a>**MTS-TPL-056** In each evaluation of an output
+with `for_each`, `item` MUST be the element of the `for_each` array that
+evaluation is for, in its `when`, its `path`, its template's body and every
+partial that body renders.
+
+<a id="mts-tpl-057"></a>**MTS-TPL-057** `fan_out` MUST be bound exactly
+where `item` is, an object whose members are `index`, the evaluation's
+position counted from 1; `index0`, counted from 0; `rindex` and `rindex0`,
+counted from the end, from 1 and from 0; `first` and `last`, booleans;
+`length`, the number of elements; and `previous` and `next`, the elements
+before and after, nil at either end. Every position MUST be the element's
+in the `for_each` array before any `when` is applied, so `length`, `last`,
+`previous` and `next` count elements a `when` drops.
+
+The way to name one file per item of a collection after the item's own
+file is `for_each: inputs.<name>`, a `when` to drop the items not wanted,
+and `sources.<name>[fan_out.index0].stem` in the path: since `fan_out`
+counts positions before `when`, `index0` is the item's position in the
+collection (§7.7.5). A `for_each` expression that filters or reorders the
+collection loses that correspondence.
+
+### 7.7.9 Where each global is bound
+
+| Context ([chapter 9](09-outputs.md)) | `inputs` `package` `now` `sources` | `item` `fan_out` | `output` |
+|---|---|---|---|
+| a declaration's `for_each` expression | yes | no: it computes them | no |
+| `when` of a declaration without `for_each` | yes | no | no |
+| `when` of a declaration with `for_each`, evaluated per element | yes | yes | no |
+| `path` template | yes | as for `when` | no: the path is being computed |
+| template body, and every partial it renders | yes | in a fan-out only | yes |
+
+`forloop` and `tablerowloop` exist only inside their blocks, in every
+context where those tags are allowed.
+
+<a id="mts-tpl-058"></a>**MTS-TPL-058** A processor MUST bind in each
+context exactly the globals this table gives it, and MUST refuse a read of
+a global the table does not bind there — `item` or `fan_out` in a
+`for_each` expression, `output` in a `path`, a `when` or a `for_each` —
+with `template.undefined_variable`.
+
 ## 7.8 Partials
 
 <a id="mts-tpl-041"></a>**MTS-TPL-041** `render` MUST name its partial by a

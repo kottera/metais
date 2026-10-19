@@ -1641,6 +1641,8 @@
       "location": "value",
       "since": "1.0",
       "statements": [
+        "MTS-OUT-012",
+        "MTS-PTH-009",
         "MTS-SEC-010"
       ]
     },
@@ -1680,6 +1682,7 @@
       "location": "value",
       "since": "1.0",
       "statements": [
+        "MTS-OUT-011",
         "MTS-SEC-008",
         "MTS-SEC-009",
         "MTS-TPL-046"
@@ -3432,6 +3435,27 @@
       "statements": []
     },
     {
+      "code": "output.expression.for_each_type",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "type",
+          "type": "string",
+          "meaning": "The type of the for_each's value: string, number, boolean or object.",
+          "always": true
+        }
+      ],
+      "message": "The for_each of the output {output} is a {type}, and only an array, or nil, can be repeated over.",
+      "hint": "Give for_each an expression whose value is an array, such as a collection input or a property its schema declares an array.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-OUT-008"
+      ]
+    },
+    {
       "code": "output.forbidden",
       "severity": "error",
       "class": "content",
@@ -3808,6 +3832,12 @@
           "always": true
         },
         {
+          "name": "item",
+          "type": "number",
+          "meaning": "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each.",
+          "always": false
+        },
+        {
           "name": "member",
           "type": "string",
           "meaning": "The path, or the directory prefix of it, that collides.",
@@ -3825,7 +3855,9 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-PTH-006"
+        "MTS-OUT-010",
+        "MTS-PTH-006",
+        "MTS-PTH-008"
       ]
     },
     {
@@ -3841,6 +3873,12 @@
           "always": true
         },
         {
+          "name": "item",
+          "type": "number",
+          "meaning": "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each.",
+          "always": false
+        },
+        {
           "name": "code_point",
           "type": "number",
           "meaning": "The first code point the rule refuses.",
@@ -3852,7 +3890,9 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-PTH-004"
+        "MTS-OUT-010",
+        "MTS-PTH-004",
+        "MTS-PTH-008"
       ]
     },
     {
@@ -3866,6 +3906,12 @@
           "type": "string",
           "meaning": "The output's path, as planned.",
           "always": true
+        },
+        {
+          "name": "item",
+          "type": "number",
+          "meaning": "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each.",
+          "always": false
         }
       ],
       "message": "The output's path is the path of an earlier output.",
@@ -3873,7 +3919,9 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-PTH-006"
+        "MTS-OUT-010",
+        "MTS-PTH-006",
+        "MTS-PTH-008"
       ]
     },
     {
@@ -3889,6 +3937,12 @@
           "always": true
         },
         {
+          "name": "item",
+          "type": "number",
+          "meaning": "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each.",
+          "always": false
+        },
+        {
           "name": "reason",
           "type": "string",
           "meaning": "Why: invalid_utf8, or byte_order_mark (it begins with U+FEFF).",
@@ -3900,7 +3954,9 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-PTH-001"
+        "MTS-OUT-010",
+        "MTS-PTH-001",
+        "MTS-PTH-008"
       ]
     },
     {
@@ -3914,6 +3970,12 @@
           "type": "string",
           "meaning": "The output's path, as planned.",
           "always": true
+        },
+        {
+          "name": "item",
+          "type": "number",
+          "meaning": "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each.",
+          "always": false
         },
         {
           "name": "member",
@@ -3933,7 +3995,9 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-PTH-006"
+        "MTS-OUT-010",
+        "MTS-PTH-006",
+        "MTS-PTH-008"
       ]
     },
     {
@@ -3947,6 +4011,12 @@
           "type": "string",
           "meaning": "The output's path, as planned.",
           "always": true
+        },
+        {
+          "name": "item",
+          "type": "number",
+          "meaning": "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each.",
+          "always": false
         }
       ],
       "message": "The output's path is not in Unicode Normalization Form C.",
@@ -3954,7 +4024,9 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-PTH-002"
+        "MTS-OUT-010",
+        "MTS-PTH-002",
+        "MTS-PTH-008"
       ]
     },
     {
@@ -3970,6 +4042,12 @@
           "always": true
         },
         {
+          "name": "item",
+          "type": "number",
+          "meaning": "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each.",
+          "always": false
+        },
+        {
           "name": "reason",
           "type": "string",
           "meaning": "Why: reserved_name (a Windows device name), git (a spelling of .git), segment_end (a segment ends in . or a space), or segment_length (a segment is longer than 255 bytes).",
@@ -3981,7 +4059,9 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-PTH-005"
+        "MTS-OUT-010",
+        "MTS-PTH-005",
+        "MTS-PTH-008"
       ]
     },
     {
@@ -3997,6 +4077,12 @@
           "always": true
         },
         {
+          "name": "item",
+          "type": "number",
+          "meaning": "The 0-based index of the for_each evaluation that rendered the path; absent for a declaration without for_each.",
+          "always": false
+        },
+        {
           "name": "reason",
           "type": "string",
           "meaning": "Why: empty, leading_slash, trailing_slash, empty_segment, dot_segment, backslash or colon.",
@@ -4008,7 +4094,9 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-PTH-003"
+        "MTS-OUT-010",
+        "MTS-PTH-003",
+        "MTS-PTH-008"
       ]
     },
     {
@@ -6214,7 +6302,8 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-MAN-018"
+        "MTS-MAN-018",
+        "MTS-OUT-004"
       ]
     },
     {
@@ -6282,10 +6371,12 @@
       "location": "value",
       "since": "1.0",
       "statements": [
+        "MTS-OUT-005",
         "MTS-TPL-003",
         "MTS-TPL-027",
         "MTS-TPL-033",
-        "MTS-TPL-034"
+        "MTS-TPL-034",
+        "MTS-TPL-058"
       ]
     },
     {

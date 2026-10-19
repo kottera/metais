@@ -5,6 +5,7 @@ package template
 
 import (
 	"bytes"
+	"math"
 	"strconv"
 	"strings"
 
@@ -211,9 +212,14 @@ func (r *Renderer) When(x *Exprs, fan *Fan) (bool, *finding.Finding) {
 // Path renders x's path in the evaluation fan, unescaped, and returns the
 // rendered string, which is the path exactly (ADR-005 D4 items 1 and 2). Its
 // bytes are held to path-length as they are written: a path template that
-// writes more is refused there, with limit.exceeded.output.
+// writes more is refused there, with limit.exceeded.output. A literal
+// path renders as itself.
 func (r *Renderer) Path(x *Exprs, fan *Fan) (string, *finding.Finding) {
 	pm := &pathMeter{m: r.meter, limit: r.lim.Value(limits.PathLength)}
+	if x.Literal {
+		// The manifest's own text, which D12 judges whole: limit.package.
+		pm.limit = math.MaxInt64
+	}
 	var buf bytes.Buffer
 	if e := liquid.Render(&buf, x.Path, r.exprEnv(fan, pm)); e != nil {
 		if e.Code == liquid.CodeLimit && e.Args["limit"] == limits.Get(limits.PathLength).Name {
