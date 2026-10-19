@@ -37,7 +37,7 @@ func browsePackage(t *testing.T) string {
 		"references/empty.txt": "",
 		"references/bin.dat":   "\x00\x01\x02",
 		"references/long.txt":  strings.Repeat("x", 1030) + "\n",
-		"references/evil.md":   "# Head \x1b[31mred\u202e\n\tline \x1b[2J gone\n",
+		"references/evil.md":   "# Head \x1b[31mred\u202e\u2069\n\tline \x1b[2J gone\u2066\u2067\u2068\u2069\n",
 		"references/ctx.txt":   "1\n2\nhit\n4\nhit\n6\n7\n8\n9\nhit\n",
 	}
 	if err := os.MkdirAll(filepath.Join(dir, "references"), 0o755); err != nil {
@@ -309,7 +309,7 @@ func TestReadCommand(t *testing.T) {
 		{[]string{"references/nolf.txt", "--number"}, "1\ta\n2\tb\n3\tc", readLines{1, 3, 3}},
 		{[]string{"references/crlf.txt", "--number", "--lines", "2-"}, "2\tb\r\n3\tc\r\n", readLines{2, 3, 3}},
 		{[]string{"references/empty.txt"}, "", readLines{0, 0, 0}},
-		{[]string{"references/evil.md"}, "# Head \x1b[31mred\u202e\n\tline \x1b[2J gone\n", readLines{1, 2, 2}},
+		{[]string{"references/evil.md"}, "# Head \x1b[31mred\u202e\u2069\n\tline \x1b[2J gone\u2066\u2067\u2068\u2069\n", readLines{1, 2, 2}},
 	} {
 		argv := append([]string{"read", pkg}, c.args...)
 		h := runTool(t, argv...)
@@ -363,12 +363,12 @@ func TestOutlineCommand(t *testing.T) {
 		t.Errorf("outline:\n%q\nwant\n%q", r.stdout, want)
 	}
 	r = runTool(t, "outline", pkg, "references/evil.md")
-	if want := "1-2\t# Head \\u001b[31mred\\u202e\n"; r.stdout != want {
+	if want := "1-2\t# Head \\u001b[31mred\\u202e\\u2069\n"; r.stdout != want {
 		t.Errorf("a heading with controls: %q, want %q", r.stdout, want)
 	}
 	var res outlineResult
 	result(t, runTool(t, "outline", "--json", pkg, "references/evil.md"), &res)
-	if len(res.Headings) != 1 || res.Headings[0].Text != "Head \x1b[31mred\u202e" {
+	if len(res.Headings) != 1 || res.Headings[0].Text != "Head \x1b[31mred\u202e\u2069" {
 		t.Errorf("JSON carries the exact text: %+v", res)
 	}
 	r = runTool(t, "outline", pkg, "references/nolf.txt")
@@ -414,11 +414,11 @@ func TestGrepCommand(t *testing.T) {
 		t.Errorf("the skipped list: %q", r.stderr)
 	}
 	r = runTool(t, "grep", pkg, "gone")
-	if want := "references/evil.md:2:\tline \\u001b[2J gone\n"; r.stdout != want {
+	if want := "references/evil.md:2:\tline \\u001b[2J gone\\u2066\\u2067\\u2068\\u2069\n"; r.stdout != want {
 		t.Errorf("a line with controls: %q, want %q", r.stdout, want)
 	}
 	result(t, runTool(t, "grep", "--json", pkg, "gone"), &res)
-	if res.Matches[0].Text != "\tline \x1b[2J gone" {
+	if res.Matches[0].Text != "\tline \x1b[2J gone\u2066\u2067\u2068\u2069" {
 		t.Errorf("JSON carries the exact text: %q", res.Matches[0].Text)
 	}
 	r = runTool(t, "grep", "--json", pkg, "no such text")
