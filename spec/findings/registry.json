@@ -4228,6 +4228,74 @@
       "statements": []
     },
     {
+      "code": "template.ooxml.split_construct",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "cause",
+          "type": "string",
+          "meaning": "What split the construct, named from the markup found between its pieces, as one of these values in this order of preference: \"spelling or grammar marks\" for w:proofErr or a DrawingML run property err=\"1\"; \"tracked changes (accept or reject them first)\" for w:ins, w:del or w:delText; \"a bookmark or comment\" for w:bookmarkStart, w:bookmarkEnd, w:commentRangeStart or w:commentRangeEnd; \"a field\" for w:fldChar or w:instrText; otherwise \"a change of run properties (formatting)\".",
+          "always": true
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "meaning": "The construct's visible text: the content of the text elements it spans, with entity and character references decoded and markup removed.",
+          "always": true
+        },
+        {
+          "name": "text_elements",
+          "type": "number",
+          "meaning": "The number of text elements whose content the construct spans.",
+          "always": true
+        }
+      ],
+      "message": "This Liquid construct is broken by the document's markup, which the engine would read inside it.",
+      "hint": "It was split by {cause}: delete it and type it again in one go, with no formatting change, spelling mark or tracked change inside it, or edit the XML so it lies in one text element.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "template.ooxml.split_delimiter",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "cause",
+          "type": "string",
+          "meaning": "What split the delimiter, named from the markup found between its two characters, as one of these values in this order of preference: \"spelling or grammar marks\" for w:proofErr or a DrawingML run property err=\"1\"; \"tracked changes (accept or reject them first)\" for w:ins, w:del or w:delText; \"a bookmark or comment\" for w:bookmarkStart, w:bookmarkEnd, w:commentRangeStart or w:commentRangeEnd; \"a field\" for w:fldChar or w:instrText; otherwise \"a change of run properties (formatting)\".",
+          "always": true
+        },
+        {
+          "name": "delimiter",
+          "type": "string",
+          "meaning": "The delimiter its two characters would form: {{, {%, }} or %}.",
+          "always": true
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "meaning": "The visible text of the content of the two text elements, with entity and character references decoded and markup removed.",
+          "always": true
+        },
+        {
+          "name": "text_elements",
+          "type": "number",
+          "meaning": "The number of text elements the delimiter's characters lie in: 2, or 1 when markup inside one text element separates them.",
+          "always": true
+        }
+      ],
+      "message": "The Liquid delimiter {delimiter} is broken between two text elements, so the engine never reads it as one.",
+      "hint": "It was split by {cause}: delete the construct and type it again in one go, with no formatting change, spelling mark or tracked change inside it, or edit the XML so it lies in one text element.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "template.xref.budget_exhausted",
       "severity": "warning",
       "class": "content",
