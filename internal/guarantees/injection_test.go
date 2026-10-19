@@ -19,7 +19,7 @@ var faultSeams = map[string]string{
 	"SkipConfine":  "internal/hostfs",
 	"SkipDigest":   "internal/pkgtree",
 	"UnpackToTemp": "internal/browse",
-	"MapOrder":     "internal/liquid/value",
+	"MapOrder":     "internal/template",
 	"FirstFinding": "internal/finding",
 }
 
