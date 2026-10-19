@@ -179,6 +179,18 @@ func TestReadingRefusalsTriggered(t *testing.T) {
 		// A read-only directory refuses no one here.
 		seen["extract"][string(finding.CodeDestinationWriteFailed)] = true
 	}
+	pkg2 := browsePackage(t)
+	for _, c := range extractDestinationCases() {
+		if c.runsHere() {
+			to := testenv.Dir(t)
+			c.setup(t, to)
+			run("extract", "--json", pkg2, "metais.yaml", "references/*.txt", "--to", to, "--overwrite")
+		} else {
+			// Proved where it can be set up: a link, or a directory the
+			// user cannot write.
+			seen["extract"][strings.Fields(c.want[0])[0]] = true
+		}
+	}
 	// A binary entry to a terminal is a refusal of human mode only.
 	saved := isTerminal
 	t.Cleanup(func() { isTerminal = saved })
@@ -245,6 +257,9 @@ func TestReadingRefusalExits(t *testing.T) {
 	testenv.Home(t)
 	pkg := browsePackage(t)
 	dest := testenv.Dir(t)
+	if err := os.WriteFile(filepath.Join(dest, "notes.txt"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
 	for _, c := range []struct {
 		argv []string
 		code string
@@ -516,12 +531,19 @@ func TestExtractCommand(t *testing.T) {
 		t.Errorf("an existing destination: %d %q", r.status, r.stderr)
 	}
 	if _, err := os.Stat(filepath.Join(to, "references", "bin.dat")); err == nil {
-		t.Error("extract wrote into an existing directory")
+		t.Error("extract wrote into an existing directory without --overwrite")
+	}
+	if r := runTool(t, "extract", "--json", pkg, "references/bin.dat", "--to", to); !slices.Contains(r.doc.Next, nextExtractOverwrite) {
+		t.Errorf("the refusal does not name --overwrite as its next step: %v", r.doc.Next)
 	}
 	empty := filepath.Join(base, "empty")
 	os.Mkdir(empty, 0o755)
-	if r := runTool(t, "extract", "--json", pkg, "metais.yaml", "--to", empty); !slices.Equal(r.codes(), []string{"output.destination.not_empty"}) {
-		t.Errorf("an existing empty destination: %s", r.stdout)
+	result(t, runTool(t, "extract", "--json", pkg, "metais.yaml", "--to", empty), &res)
+	if res.DryRun || len(res.Files) != 1 {
+		t.Errorf("an existing empty destination: %+v", res)
+	}
+	if _, err := os.Stat(filepath.Join(empty, "metais.yaml")); err != nil {
+		t.Errorf("extract did not write into an existing empty directory: %v", err)
 	}
 	dry := filepath.Join(base, "dry")
 	result(t, runTool(t, "extract", "--json", pkg, "references", "--to", dry, "--dry-run"), &res)
@@ -530,12 +552,6 @@ func TestExtractCommand(t *testing.T) {
 	}
 	if _, err := os.Stat(dry); err == nil {
 		t.Error("a dry run wrote")
-	}
-	if r := runTool(t, "extract", "--json", pkg, "metais.yaml", "--to", filepath.Join(base, "o"), "--overwrite"); !slices.Equal(r.codes(), []string{"usage.unknown_flag"}) {
-		t.Errorf("--overwrite is offered: %s", r.stdout)
-	}
-	if strings.Contains(string(commandText(lookup(table, "extract"))), "overwrite") {
-		t.Error("extract's help promises --overwrite")
 	}
 	if r := runTool(t, "extract", pkg, "metais.yaml", "--to", filepath.Join(base, "h")); !strings.HasPrefix(r.stdout, "Wrote 1 file:\n  metais.yaml\n") || strings.Contains(r.stdout+r.stderr, base) {
 		t.Errorf("extract's human result: %q %q", r.stdout, r.stderr)
@@ -630,5 +646,191 @@ func TestReadLinesDecompressesOnceMore(t *testing.T) {
 		if entries := len(pkg.Tree.List()); atOpen < entries || d.Decodes()-atOpen != 1 {
 			t.Errorf("metais %q decoded %d entries at open, of %d, and %d after; the budget is one", argv, atOpen, entries, d.Decodes()-atOpen)
 		}
+	}
+}
+
+// TestExtractOverwrite is W5-12.1 and W5-12.2 through the command line:
+// with --overwrite, extract writes into a directory that holds entries,
+// replacing the file at a path it writes and leaving every other entry,
+// a hidden one included, as it was; with --dry-run as well it lists the
+// same files and writes nothing.
+func TestExtractOverwrite(t *testing.T) {
+	testenv.Home(t)
+	pkg := browsePackage(t)
+	host := func(t *testing.T) string {
+		t.Helper()
+		to := testenv.Dir(t)
+		for _, f := range []string{".hidden", "metais.yaml", "references/theirs.txt"} {
+			p := filepath.Join(to, filepath.FromSlash(f))
+			os.MkdirAll(filepath.Dir(p), 0o755)
+			if err := os.WriteFile(p, []byte("theirs\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		return to
+	}
+	want, _ := os.ReadFile(filepath.Join(pkg, "metais.yaml"))
+	if len(want) == 0 {
+		t.Fatal("the fixture's manifest is not readable as a file")
+	}
+
+	dry := host(t)
+	before := snapshot(t, dry)
+	var res extractResult
+	result(t, runTool(t, "extract", "--json", pkg, "metais.yaml", "references/*.txt", "--to", dry, "--overwrite", "--dry-run"), &res)
+	if !res.DryRun || len(res.Files) != 6 {
+		t.Errorf("a dry run with --overwrite: %+v", res)
+	}
+	if after := snapshot(t, dry); !slices.Equal(after, before) {
+		t.Errorf("the dry run wrote: %q, was %q", after, before)
+	}
+
+	to := host(t)
+	r := runTool(t, "extract", pkg, "metais.yaml", "references/*.txt", "--to", to, "--overwrite")
+	if r.status != 0 || !strings.HasPrefix(r.stdout, "Wrote 6 files:\n  metais.yaml\n") {
+		t.Fatalf("extract --overwrite: %d %q %q", r.status, r.stdout, r.stderr)
+	}
+	if b, _ := os.ReadFile(filepath.Join(to, "metais.yaml")); !bytes.Equal(b, want) {
+		t.Errorf("metais.yaml holds %q, not the entry's bytes", b)
+	}
+	for _, f := range []string{".hidden", "references/theirs.txt"} {
+		if b, err := os.ReadFile(filepath.Join(to, filepath.FromSlash(f))); err != nil || string(b) != "theirs\n" {
+			t.Errorf("%s, which extract does not write: %q %v", f, b, err)
+		}
+	}
+	if _, err := os.Lstat(filepath.Join(to, ".metais-staging")); err == nil {
+		t.Error("the staging directory was left")
+	}
+}
+
+// extractDestinationCase is one existing --to that extract --overwrite
+// refuses: the host beneath it, made by setup, and the findings it
+// reports, in order, each as its code and parameters.
+type extractDestinationCase struct {
+	name  string
+	posix bool // needs a symbolic link, or permissions the superuser ignores
+	setup func(t *testing.T, to string)
+	want  []string
+}
+
+// extractDestinationCases are W5-12.1's per-file checks and commit, through
+// the command line, each refusing extract of metais.yaml and
+// references/*.txt with --overwrite.
+func extractDestinationCases() []extractDestinationCase {
+	mk := func(t *testing.T, to string, files ...string) {
+		t.Helper()
+		for _, f := range files {
+			p := filepath.Join(to, filepath.FromSlash(f))
+			if strings.HasSuffix(f, "/") {
+				if err := os.MkdirAll(p, 0o755); err != nil {
+					t.Fatal(err)
+				}
+				continue
+			}
+			os.MkdirAll(filepath.Dir(p), 0o755)
+			if err := os.WriteFile(p, []byte("theirs\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	return []extractDestinationCase{
+		{"a directory and a file in the way, together", false, func(t *testing.T, to string) {
+			mk(t, to, "metais.yaml/", "references")
+		}, []string{
+			`output.destination.not_directory {"path":"references/crlf.txt"}`,
+			`output.destination.not_directory {"path":"references/ctx.txt"}`,
+			`output.destination.not_directory {"path":"references/empty.txt"}`,
+			`output.destination.not_directory {"path":"references/long.txt"}`,
+			`output.destination.not_directory {"path":"references/nolf.txt"}`,
+			`output.destination.not_regular_file {"path":"metais.yaml","reason":"is_directory"}`,
+		}},
+		{"a case variant", false, func(t *testing.T, to string) {
+			mk(t, to, "References/")
+		}, []string{
+			`output.destination.case_variant {"path":"references/crlf.txt"}`,
+			`output.destination.case_variant {"path":"references/ctx.txt"}`,
+			`output.destination.case_variant {"path":"references/empty.txt"}`,
+			`output.destination.case_variant {"path":"references/long.txt"}`,
+			`output.destination.case_variant {"path":"references/nolf.txt"}`,
+		}},
+		{"a staging directory left", false, func(t *testing.T, to string) {
+			mk(t, to, ".metais-staging/")
+		}, []string{`output.destination.write_failed {"reason":"exists","written":[]}`}},
+		{"a link", true, func(t *testing.T, to string) {
+			mk(t, to, "target.txt")
+			if err := os.Symlink("target.txt", filepath.Join(to, "metais.yaml")); err != nil {
+				t.Fatal(err)
+			}
+		}, []string{`output.destination.link {"path":"metais.yaml"}`}},
+		{"a commit that fails part way", true, func(t *testing.T, to string) {
+			mk(t, to, "references/")
+			locked := filepath.Join(to, "references")
+			if err := os.Chmod(locked, 0o555); err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() { os.Chmod(locked, 0o755) })
+		}, []string{`output.destination.commit_failed {"committed":["metais.yaml"],"reason":"permission_denied"}`}},
+	}
+}
+
+// runsHere reports whether c can be set up on this host.
+func (c extractDestinationCase) runsHere() bool {
+	return !c.posix || runtime.GOOS != "windows" && os.Geteuid() != 0
+}
+
+// TestExtractDestinationRefusals is W5-12.1's every per-file check a
+// finding before anything is written, and A1 item 3's commit failure,
+// through the command line: each case reports its findings, all of them
+// together, with the exit status of a refused destination, names a next
+// step, and changes nothing in --to but what a commit already moved.
+func TestExtractDestinationRefusals(t *testing.T) {
+	testenv.Home(t)
+	pkg := browsePackage(t)
+	for _, c := range extractDestinationCases() {
+		if !c.runsHere() {
+			continue
+		}
+		t.Run(c.name, func(t *testing.T) {
+			for _, dry := range []bool{false, true} {
+				to := testenv.Dir(t)
+				c.setup(t, to)
+				before := snapshot(t, to)
+				argv := []string{"extract", "--json", pkg, "metais.yaml", "references/*.txt", "--to", to, "--overwrite"}
+				if dry {
+					argv = append(argv, "--dry-run")
+				}
+				r := runTool(t, argv...)
+				var got []string
+				for _, f := range r.doc.Findings {
+					p, _ := json.Marshal(f.Params)
+					got = append(got, f.Code+" "+string(p))
+				}
+				want := c.want
+				if dry && strings.HasPrefix(c.want[0], "output.destination.commit_failed") {
+					// A dry run makes the checks, which this host passes;
+					// only the commit finds the directory unwritable.
+					if r.status != 0 {
+						t.Errorf("dry run: %s", r.stdout)
+					}
+				} else {
+					if r.status != finding.ExitDestination || !slices.Equal(got, want) || len(r.doc.Next) == 0 {
+						t.Errorf("dry run %v: status %d, findings\n%s\nwant\n%s\nnext %v", dry, r.status, strings.Join(got, "\n"), strings.Join(want, "\n"), r.doc.Next)
+					}
+				}
+				after := snapshot(t, to)
+				if !dry && strings.HasPrefix(c.want[0], "output.destination.commit_failed") {
+					if b, err := os.ReadFile(filepath.Join(to, "metais.yaml")); err != nil || len(b) == 0 || string(b) == "theirs\n" {
+						t.Errorf("the file committed: %q %v", b, err)
+					}
+					if _, err := os.Lstat(filepath.Join(to, ".metais-staging")); err == nil {
+						t.Error("the staging directory was left")
+					}
+					continue
+				}
+				if !slices.Equal(after, before) {
+					t.Errorf("dry run %v: the refusal wrote: %q, was %q", dry, after, before)
+				}
+			}
+		})
 	}
 }

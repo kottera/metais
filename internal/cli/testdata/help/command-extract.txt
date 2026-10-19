@@ -1,18 +1,31 @@
-metais extract — Write the entries the globs select to a new directory.
+metais extract — Write the entries the globs select to a directory.
 
 Usage:
-  metais extract <package> <glob>... --to <dir> [--dry-run]
+  metais extract <package> <glob>... --to <dir> [--overwrite] [--dry-run]
                  [--limit <name>=<value>]... [--json]
 
 Writes every entry any glob selects to <dir>/<entry path>, as stored (metais
 help globs). Every glob must select at least one entry, or nothing is written: a
 glob that selects nothing is a typo to hear about.
 
-<dir> must not exist: it is created, with its missing parents, and every file is
-created beneath it, never through a link. An existing <dir> is refused, empty or
-not, and nothing in it is touched. A failed write stops extract, which lists the
-files it wrote and removes none of them. --dry-run lists the files it would
-write, and writes nothing.
+A <dir> that does not exist is created, with its missing parents, and every file
+is created beneath it, never through a link. A failed write stops extract, which
+lists the files it wrote and removes none of them.
+
+An existing <dir> with no entry at all is written into. One that holds any
+entry, a hidden one included, is refused unless --overwrite is given, and then a
+file at a path extract writes is replaced, and nothing is deleted: every other
+entry is left as it is. Into an existing <dir>, every file is checked before
+anything is written, and every refusal is reported together: a link at or above
+a file's path, which is never followed, a name that differs only in case from
+one extract writes, and a directory or anything else that is not a regular file
+where a file goes. An existing file is never read: it is replaced by moving the
+new file onto its name. The files are prepared beneath a staging directory,
+.metais-staging, inside <dir>, and moved into place; a failure before then
+leaves <dir> as it was, and one while moving them lists the files already moved.
+
+--dry-run lists the files extract would write, makes every check, and writes
+nothing.
 
 Operands:
   <package>
@@ -23,7 +36,11 @@ Operands:
 
 Flags:
   --to <dir>
-      The directory to write into, which must not exist; required.
+      The directory to write into: a new one, or an existing one that is empty,
+      or holds entries with --overwrite; required.
+  --overwrite
+      Write into a <dir> that holds entries, replacing a file at a path extract
+      writes; nothing is deleted.
   --dry-run
       List the files extract would write, and write nothing.
   --limit <name>=<value>
@@ -234,14 +251,34 @@ Refusals:
   manifest.yaml.tag
       The manifest breaks one of its rules (yaml: tag).
       Next: metais inspect <package>
+  output.destination.case_variant
+      In <dir>, an entry's name differs only in case or normalization from a
+      name an entry's path holds.
+      Next: metais extract <package> <glob> --to <dir>
+  output.destination.commit_failed
+      Moving the files into an existing <dir> failed part way; the files already
+      moved are listed, and nothing else was changed.
+      Next: metais extract <package> <glob> --to <dir>
+  output.destination.link
+      In <dir>, an entry's path runs through, or ends at, a symbolic link, a
+      junction or another reparse point, which is never followed.
+      Next: metais extract <package> <glob> --to <dir>
   output.destination.not_directory
-      <dir>, or a directory above it, exists and is not a directory.
+      <dir>, or a directory above it, exists and is not a directory; or, in
+      <dir>, a file stands where an entry's path needs a directory.
       Next: metais extract <package> <glob> --to <dir>
   output.destination.not_empty
-      <dir> exists; extract writes only into a directory it creates.
+      <dir> holds entries, and --overwrite is not given.
+      Next: metais extract <package> <glob> --to <dir> --overwrite
+  output.destination.not_regular_file
+      In <dir>, a directory, a named pipe, a socket or a device stands at an
+      entry's path.
       Next: metais extract <package> <glob> --to <dir>
   output.destination.write_failed
-      A write failed; the files already written are listed and left in place.
+      A write failed: into a new <dir> the files already written are listed and
+      left in place; into an existing one, which also refuses a staging
+      directory left in it, another file system mounted inside it and an entry
+      beneath the staging name, nothing is left.
       Next: metais extract <package> <glob> --to <dir>
   package.compiled.mismatch
       The package is refused (compiled: mismatch).
@@ -470,3 +507,6 @@ Examples:
       Writes the example basic into the new directory basic.
   metais extract report-1.0.0.metais references --to refs --dry-run
       Lists the references it would write.
+  metais extract report-1.0.0.metais 'templates/**' --to . --overwrite
+      Writes the templates into the current directory, replacing the files
+      already there.

@@ -6,6 +6,7 @@ package guarantees
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -49,6 +50,42 @@ var existingWrites = []existingWrite{
 		files: hostfsFiles,
 		run:   runRenderOverwrite,
 	},
+	{
+		name:  "metais extract --overwrite",
+		files: extractFiles,
+		run:   runExtractOverwrite,
+	},
+}
+
+// extractFiles are the entries runExtractOverwrite extracts. The detector
+// seeds every other one, so extract replaces a file in a directory it
+// creates in the staging directory and one at the top, writes a file
+// beneath directories that do not exist, and one into a directory that
+// does.
+var extractFiles = []string{"examples/basic/expected/report.md", "references/standards/practice.md", "inputs/project.md", "inputs/items.schema.yaml", "metais.yaml"}
+
+// runExtractOverwrite runs metais extract --overwrite in-process, with each
+// of extractFiles as a glob, from a committed packed package into out.
+func runExtractOverwrite(t *testing.T, out string, faults fault.Set) error {
+	t.Helper()
+	pkg, err := filepath.Abs(filepath.Join(moduleRoot, "spec", vectorsDir, "pkg", "opens-packed", "package.metais"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	args := append([]string{"extract", "--json", pkg}, extractFiles...)
+	args = append(args, "--to", out, "--overwrite")
+	var stdout, stderr bytes.Buffer
+	cli.Run(context.Background(), cli.Invocation{
+		Args: args, Stdin: strings.NewReader(""), Stdout: &stdout, Stderr: &stderr,
+		Options: cli.Options{Faults: faults},
+	})
+	var doc struct {
+		OK bool `json:"ok"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &doc); err != nil || !doc.OK {
+		return fmt.Errorf("metais extract --overwrite: %q %q", stdout.String(), stderr.String())
+	}
+	return nil
 }
 
 // hostfsFiles are the files runHostfsExisting writes. The detector seeds

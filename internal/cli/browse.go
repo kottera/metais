@@ -26,15 +26,17 @@ import (
 // angle brackets is filled with what the refusal knows: the nearest
 // directory that exists, an entry's path, a line count.
 var (
-	nextLsNearest = Next{Run: "metais ls <package> <path>", Why: "Lists the nearest directory above the path that exists."}
-	nextLsDir     = Next{Run: "metais ls <package> <path>", Why: "Lists the entries beneath the directory."}
-	nextExtract   = Next{Run: "metais extract <package> <path> --to <dir>", Why: "Writes the entry, as stored, to a file beneath a new directory."}
-	nextReadLines = Next{Run: "metais read <package> <path> --lines 1-<total>", Why: "Reads the entry's lines, from its first to its last."}
-	nextGlobs     = Next{Run: "metais help globs", Why: "Prints the glob grammar."}
-	nextPattern   = Next{Run: "metais limits", Why: "Lists the limits a grep pattern is held to: pattern-length, regex-program and regex-work."}
-	nextLsAll     = Next{Run: "metais ls <package> -r", Why: "Lists every entry, so a glob can be written against them."}
-	nextExtractTo = Next{Run: "metais extract <package> <glob> --to <dir>", Why: "Writes into a directory that does not exist yet; extract never writes into an existing one."}
-	nextInspect   = Next{Run: "metais inspect <package>", Why: "Lists the package's inputs, each with how to supply it."}
+	nextLsNearest        = Next{Run: "metais ls <package> <path>", Why: "Lists the nearest directory above the path that exists."}
+	nextLsDir            = Next{Run: "metais ls <package> <path>", Why: "Lists the entries beneath the directory."}
+	nextExtract          = Next{Run: "metais extract <package> <path> --to <dir>", Why: "Writes the entry, as stored, to a file beneath a new directory."}
+	nextReadLines        = Next{Run: "metais read <package> <path> --lines 1-<total>", Why: "Reads the entry's lines, from its first to its last."}
+	nextGlobs            = Next{Run: "metais help globs", Why: "Prints the glob grammar."}
+	nextPattern          = Next{Run: "metais limits", Why: "Lists the limits a grep pattern is held to: pattern-length, regex-program and regex-work."}
+	nextLsAll            = Next{Run: "metais ls <package> -r", Why: "Lists every entry, so a glob can be written against them."}
+	nextExtractTo        = Next{Run: "metais extract <package> <glob> --to <dir>", Why: "Writes into a directory that does not exist yet, or an empty one."}
+	nextExtractInTheWay  = Next{Run: "metais extract <package> <glob> --to <dir>", Why: "Extracts again once what stands in the way in <dir> is moved or removed, or into a directory that does not exist yet."}
+	nextExtractOverwrite = Next{Run: "metais extract <package> <glob> --to <dir> --overwrite", Why: "Writes into the directory, replacing a file at a path extract writes and deleting nothing."}
+	nextInspect          = Next{Run: "metais inspect <package>", Why: "Lists the package's inputs, each with how to supply it."}
 )
 
 // readingCommand is the declaration every reading command shares: its
@@ -190,18 +192,29 @@ func readingDeclarations() []*Command {
 			run: runSchema,
 		}, Refusal{finding.CodeUsageUnknownInput, "The operand names no input of the package; the finding lists them.", nextInspect}),
 		readingCommand(&Command{
-			Name: "extract", Synopsis: "extract <package> <glob>... --to <dir> [--dry-run] [--limit <name>=<value>]... [--json]",
-			Description: "Write the entries the globs select to a new directory.",
+			Name: "extract", Synopsis: "extract <package> <glob>... --to <dir> [--overwrite] [--dry-run] [--limit <name>=<value>]... [--json]",
+			Description: "Write the entries the globs select to a directory.",
 			Detail: "Writes every entry any glob selects to <dir>/<entry path>, as stored (metais help globs). " +
 				"Every glob must select at least one entry, or nothing is written: a glob that selects nothing " +
 				"is a typo to hear about.\n\n" +
-				"<dir> must not exist: it is created, with its missing parents, and every file is created " +
-				"beneath it, never through a link. An existing <dir> is refused, empty or not, and nothing in " +
-				"it is touched. A failed write stops extract, which lists the files it wrote and removes none " +
-				"of them. --dry-run lists the files it would write, and writes nothing.",
+				"A <dir> that does not exist is created, with its missing parents, and every file is created " +
+				"beneath it, never through a link. A failed write stops extract, which lists the files it " +
+				"wrote and removes none of them.\n\n" +
+				"An existing <dir> with no entry at all is written into. One that holds any entry, a hidden " +
+				"one included, is refused unless --overwrite is given, and then a file at a path extract " +
+				"writes is replaced, and nothing is deleted: every other entry is left as it is. Into an " +
+				"existing <dir>, every file is checked before anything is written, and every refusal is " +
+				"reported together: a link at or above a file's path, which is never followed, a name that " +
+				"differs only in case from one extract writes, and a directory or anything else that is not " +
+				"a regular file where a file goes. An existing file is never read: it is replaced by moving " +
+				"the new file onto its name. The files are prepared beneath a staging directory, " +
+				".metais-staging, inside <dir>, and moved into place; a failure before then leaves <dir> as " +
+				"it was, and one while moving them lists the files already moved.\n\n" +
+				"--dry-run lists the files extract would write, makes every check, and writes nothing.",
 			Operands: []args.Operand{{Name: "<glob>", Required: true, Repeatable: true, Description: "A glob selecting entries to write."}},
 			Flags: []args.Flag{
-				{Name: "to", Value: "<dir>", Description: "The directory to write into, which must not exist; required."},
+				{Name: "to", Value: "<dir>", Description: "The directory to write into: a new one, or an existing one that is empty, or holds entries with --overwrite; required."},
+				{Name: "overwrite", Description: "Write into a <dir> that holds entries, replacing a file at a path extract writes; nothing is deleted."},
 				{Name: "dry-run", Description: "List the files extract would write, and write nothing."},
 			},
 			Format: "metais.extract/1",
@@ -209,14 +222,19 @@ func readingDeclarations() []*Command {
 			Examples: []Example{
 				{"metais extract report-1.0.0.metais 'examples/basic/**' --to basic", "Writes the example basic into the new directory basic."},
 				{"metais extract report-1.0.0.metais references --to refs --dry-run", "Lists the references it would write."},
+				{"metais extract report-1.0.0.metais 'templates/**' --to . --overwrite", "Writes the templates into the current directory, replacing the files already there."},
 			},
 			run: runExtract,
 		},
 			Refusal{finding.CodeUsageBadGlob, "A glob does not satisfy the glob grammar.", nextGlobs},
 			Refusal{finding.CodeUsageNoMatch, "A glob selects no entry; nothing is written.", nextLsAll},
-			Refusal{finding.CodeDestinationNotEmpty, "<dir> exists; extract writes only into a directory it creates.", nextExtractTo},
-			Refusal{finding.CodeDestinationNotDirectory, "<dir>, or a directory above it, exists and is not a directory.", nextExtractTo},
-			Refusal{finding.CodeDestinationWriteFailed, "A write failed; the files already written are listed and left in place.", nextExtractTo},
+			Refusal{finding.CodeDestinationNotEmpty, "<dir> holds entries, and --overwrite is not given.", nextExtractOverwrite},
+			Refusal{finding.CodeDestinationNotDirectory, "<dir>, or a directory above it, exists and is not a directory; or, in <dir>, a file stands where an entry's path needs a directory.", nextExtractInTheWay},
+			Refusal{finding.CodeDestinationLink, "In <dir>, an entry's path runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed.", nextExtractInTheWay},
+			Refusal{finding.CodeDestinationCaseVariant, "In <dir>, an entry's name differs only in case or normalization from a name an entry's path holds.", nextExtractInTheWay},
+			Refusal{finding.CodeDestinationNotRegularFile, "In <dir>, a directory, a named pipe, a socket or a device stands at an entry's path.", nextExtractInTheWay},
+			Refusal{finding.CodeDestinationWriteFailed, "A write failed: into a new <dir> the files already written are listed and left in place; into an existing one, which also refuses a staging directory left in it, another file system mounted inside it and an entry beneath the staging name, nothing is left.", nextExtractTo},
+			Refusal{finding.CodeDestinationCommitFailed, "Moving the files into an existing <dir> failed part way; the files already moved are listed, and nothing else was changed.", nextExtractTo},
 		),
 	}
 }
@@ -747,7 +765,8 @@ func runExtract(s *session, p args.Parsed) outcome {
 	slices.Sort(entries)
 	entries = slices.Compact(entries)
 	dry := p.Has("dry-run")
-	files, err := browse.Extract(pkg.Tree, entries, to, browse.ExtractOptions{DryRun: dry}, s.inv.Options.Faults)
+	opt := browse.ExtractOptions{DryRun: dry, Overwrite: p.Has("overwrite")}
+	files, err := browse.Extract(pkg.Tree, entries, to, opt, s.inv.Options.Faults)
 	if err != nil {
 		return s.extractFailed(err)
 	}
@@ -767,8 +786,24 @@ func runExtract(s *session, p args.Parsed) outcome {
 // extractFailed is the outcome of err from browse.Extract.
 func (s *session) extractFailed(err error) outcome {
 	var de *browse.DestinationError
+	var ce *browse.CheckError
+	var me *browse.CommitError
 	var we *browse.WriteError
 	switch {
+	case errors.As(err, &ce):
+		// Every file the checks refused, together (ADR-005 D15 item 8).
+		fs := make([]finding.Finding, len(ce.Refused))
+		for i, c := range ce.Refused {
+			fs[i] = pathRefusal(c.Path, c.Err)
+		}
+		return outcome{findings: fs, next: s.nextSteps(fs)}
+	case errors.As(err, &me):
+		o := s.refuseWith(finding.New(finding.CodeDestinationCommitFailed, invocation, nil, finding.Params{
+			"reason":    finding.String(writeReason(hostfs.Reason(me.Reason))),
+			"committed": stringList(me.Committed),
+		}))
+		o.human = listing("Moved into place before the failure, with their new bytes:", me.Committed, false)
+		return o
 	case errors.As(err, &de) && de.NotDirectory:
 		return s.refuseWith(finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil))
 	case errors.As(err, &de):

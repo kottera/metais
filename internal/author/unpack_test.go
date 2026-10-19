@@ -305,3 +305,87 @@ func TestUnpackRefusesAStagingLeftover(t *testing.T) {
 		t.Errorf("after the refusal: %q", got)
 	}
 }
+
+// TestUnpackDryRun is W5-12.3 in this package: for every target Unpack
+// writes into or refuses, UnpackDryRun, run on a second copy of the same
+// host, returns the files Unpack wrote, or refuses as Unpack refused, and
+// changes nothing on its copy.
+func TestUnpackDryRun(t *testing.T) {
+	write := func(t *testing.T, root string, files ...string) {
+		t.Helper()
+		for _, f := range files {
+			p := filepath.Join(root, filepath.FromSlash(f))
+			if strings.HasSuffix(f, "/") {
+				if err := os.MkdirAll(p, 0o755); err != nil {
+					t.Fatal(err)
+				}
+				continue
+			}
+			if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(p, []byte("theirs\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	for _, c := range []struct {
+		name  string
+		host  []string // beneath the root, "/"-separated; a trailing "/" is a directory
+		to    string   // the target, beneath the root
+		write bool     // whether Unpack writes rather than refuses
+	}{
+		{"a new directory", nil, "src", true},
+		{"beneath missing parents", nil, "a/b/src", true},
+		{"an empty directory", []string{"src/"}, "src", true},
+		{"quiet entries", []string{".git/HEAD", ".gitattributes", "old-1.0.0.metais"}, ".", true},
+		{"one entry", []string{"src/notes.txt", "src/.git"}, "src", false},
+		{"a compiled directory", []string{"src/.compiled/x"}, "src", false},
+		{"eleven entries", []string{"src/k", "src/j", "src/i", "src/h", "src/g", "src/f", "src/e", "src/d", "src/c", "src/b", "src/a"}, "src", false},
+		{"a file", []string{"file"}, "file", false},
+		{"beneath a file", []string{"file"}, "file/src", false},
+		{"a staging leftover", []string{hostfs.StagingName("src") + "/"}, "src", false},
+		{"a staging leftover beneath a missing parent", []string{"a/" + hostfs.StagingName("src") + "/"}, "a/src", false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			dry, wet := testenv.Dir(t), testenv.Dir(t)
+			write(t, dry, c.host...)
+			write(t, wet, c.host...)
+			before := tree(t, dry)
+			got, gerr := UnpackDryRun(packedTree(t), filepath.Join(dry, filepath.FromSlash(c.to)))
+			want, werr := Unpack(packedTree(t), filepath.Join(wet, filepath.FromSlash(c.to)), 0)
+			if after := tree(t, dry); !slices.Equal(after, before) {
+				t.Errorf("the dry run changed the host: %q, was %q", after, before)
+			}
+			if (werr == nil) != c.write {
+				t.Fatalf("Unpack: %v, %q", werr, want)
+			}
+			if !slices.Equal(got, want) {
+				t.Errorf("the dry run lists %q, and Unpack wrote %q", got, want)
+			}
+			var gne, wne *NotEmptyError
+			var gwe, wwe *WriteError
+			switch {
+			case werr == nil:
+				if gerr != nil {
+					t.Errorf("the dry run refused with %v, and Unpack wrote", gerr)
+				}
+			case errors.As(werr, &wne):
+				if !errors.As(gerr, &gne) || !slices.Equal(gne.Entries, wne.Entries) || gne.More != wne.More {
+					t.Errorf("the dry run refused with %#v, and Unpack with %#v", gerr, wne)
+				}
+			case errors.As(werr, &wwe):
+				// Op is not compared: it names the step that failed, and
+				// the dry run takes none.
+				if !errors.As(gerr, &gwe) || gwe.Reason != wwe.Reason || len(gwe.Written) != 0 || len(wwe.Written) != 0 {
+					t.Errorf("the dry run refused with %#v, and Unpack with %#v", gerr, wwe)
+				}
+				if wwe.Reason == hostfs.NotDirectory && (gwe.Op != "open" || wwe.Op != "open") {
+					t.Errorf("not a directory at ops %q and %q, want open", gwe.Op, wwe.Op)
+				}
+			default:
+				t.Fatalf("Unpack: %v", werr)
+			}
+		})
+	}
+}

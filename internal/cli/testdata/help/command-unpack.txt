@@ -1,7 +1,8 @@
 metais unpack — Write a packed package's source directory, to edit it.
 
 Usage:
-  metais unpack <package> --to <dir> [--limit <name>=<value>]... [--json]
+  metais unpack <package> --to <dir> [--dry-run] [--limit <name>=<value>]...
+                [--json]
 
 Writes every entry of the packed package into <dir>, as the source directory it
 was packed from: the manifest as its author wrote it, the inputs, templates,
@@ -22,6 +23,12 @@ it is written in place, and a failed write stops unpack, which lists the files
 it wrote and removes none of them. There is no --overwrite: a file left from an
 earlier tree would join the unpacked source and be packed with it.
 
+--dry-run lists the files unpack would write, and writes nothing anywhere. It is
+refused exactly when unpack would be refused before writing, with the same
+findings: a package that fails to open, a source directory, a <dir> that is not
+empty or not a directory, and a staging directory left beside a <dir> that does
+not exist. What only writing finds out, such as a full disk, it cannot report.
+
 Operands:
   <package>
       A packed package file; - is refused, since a package is read with random
@@ -31,6 +38,8 @@ Flags:
   --to <dir>
       The directory to write the source directory into: one that does not exist
       yet, or an empty one. Required.
+  --dry-run
+      List the files unpack would write, and write nothing.
   --limit <name>=<value>
       Lower one resource limit for this run, to a whole number no higher than
       its default (a size may end in KiB, MiB or GiB). metais limits lists them.
@@ -49,8 +58,8 @@ Flags:
       Print help to standard output and exit 0; nothing else runs.
 
 Prints:
-  The files written, relative to <dir>, in the order written. With --json, one
-  metais.unpack/1 document.
+  The files written, or with --dry-run that would be, relative to <dir>, in the
+  order written. With --json, one metais.unpack/1 document.
 
 Refusals:
   limit.invalid
@@ -475,3 +484,5 @@ Examples:
   metais unpack report-1.0.0.metais --to . --json
       Writes it into the current directory, which must be empty, and lists the
       files as one metais.unpack/1 document.
+  metais unpack report-1.0.0.metais --to report --dry-run
+      Lists the files it would write into report, and writes nothing.

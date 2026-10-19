@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://metais.org/cli/schemas/metais.unpack.1.json",
   "title": "metais.unpack/1",
-  "description": "What metais unpack prints with --json: the files of the source directory it wrote (ADR-007 D8, ADR-008 D9).",
+  "description": "What metais unpack prints with --json: the files of the source directory it wrote, or with --dry-run would write (ADR-007 D8, ADR-008 D9).",
   "$ref": "metais.envelope.1.json",
   "properties": {
     "format": {
@@ -23,12 +23,17 @@
     "result": {
       "type": "object",
       "required": [
+        "dry_run",
         "files"
       ],
       "additionalProperties": false,
       "properties": {
+        "dry_run": {
+          "description": "Whether --dry-run was given, so that nothing was written.",
+          "type": "boolean"
+        },
         "files": {
-          "description": "Each file written, as a path relative to the directory unpack writes into, in the order written: every entry of the package but those beneath .compiled/, in byte order.",
+          "description": "Each file written, or with --dry-run that would be, as a path relative to the directory unpack writes into, in the order written: every entry of the package but those beneath .compiled/, in byte order.",
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,

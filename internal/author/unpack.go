@@ -5,6 +5,7 @@ package author
 
 import (
 	"errors"
+	"io/fs"
 	"path"
 	"strings"
 
@@ -71,7 +72,7 @@ func Unpack(tree pkgtree.Tree, to string, faults fault.Set) ([]string, error) {
 		case hostfs.ReasonOf(err) == hostfs.NotFound:
 			err = exists
 		case err == nil:
-			err = unpackEmpty(out)
+			err = unpackEmpty(out.List)
 		}
 	}
 	if err != nil {
@@ -125,11 +126,51 @@ func unpackEntry(tree pkgtree.Tree, out *hostfs.Output, e string) error {
 	return out.Create(e, false, r)
 }
 
-// unpackEmpty refuses the directory out writes into when it holds
-// anything but quiet entries (ADR-007 D8 item 3, with D1 item 3's
-// meaning of empty).
-func unpackEmpty(out *hostfs.Output) error {
-	entries, err := out.List(".", int(limits.Get(limits.Entries).Default))
+// UnpackDryRun is Unpack with nothing written anywhere (ADR-008 D9,
+// unpack): it returns the paths Unpack would write into to, in the order
+// it would write them, or the error Unpack would refuse with before its
+// first write, which is a *NotEmptyError or a *WriteError listing no
+// file. Like Unpack it opens no file in to: a directory there is listed
+// by name and Lstat mode, and a staging leftover beside a target that
+// does not exist is found by Lstat.
+//
+// What it cannot foresee is what only writing finds out: a file system
+// that runs out of space, or a name that appears after the check.
+func UnpackDryRun(tree pkgtree.Tree, to string) ([]string, error) {
+	w, rest, err := hostfs.OpenNearest(to)
+	if err != nil {
+		return nil, writeError(err, nil)
+	}
+	defer w.Close()
+	if rest == "." {
+		// Unpack's in-place write (hostfs.WriteInPlace) into an existing
+		// directory, which must be empty apart from the quiet list.
+		if err := unpackEmpty(w.List); err != nil {
+			var ne *NotEmptyError
+			if errors.As(err, &ne) {
+				return nil, err
+			}
+			return nil, writeError(err, nil)
+		}
+		return UnpackedEntries(tree), nil
+	}
+	// The staged write (hostfs.StageNew) of a target that does not exist,
+	// which an existing staging directory beside it refuses.
+	dir, base := path.Split(rest)
+	staging := path.Join(dir, hostfs.StagingName(base))
+	switch _, err := w.Lstat(staging); {
+	case err == nil:
+		return nil, writeError(&hostfs.Error{Op: "mkdir", Reason: hostfs.Exists}, nil)
+	case !errors.Is(err, fs.ErrNotExist):
+		return nil, writeError(err, nil)
+	}
+	return UnpackedEntries(tree), nil
+}
+
+// unpackEmpty refuses the directory list lists when it holds anything but
+// quiet entries (ADR-007 D8 item 3, with D1 item 3's meaning of empty).
+func unpackEmpty(list func(name string, max int) ([]hostfs.Entry, error)) error {
+	entries, err := list(".", int(limits.Get(limits.Entries).Default))
 	if hostfs.ReasonOf(err) == hostfs.TooLarge {
 		return &NotEmptyError{More: true}
 	}
