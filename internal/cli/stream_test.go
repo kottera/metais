@@ -561,3 +561,60 @@ func warningPackage(t *testing.T) (pkg, data, archive string) {
 	}
 	return pkg, data, b.String()
 }
+
+// TestRenderAssetStreams is where the dry run, the archive and --only
+// meet assets (W5-5): an asset is listed with source asset, no kind and
+// the digest of the package's bytes, which a dry run reads for it; it is
+// an archive entry holding those bytes, in a container too, read from a
+// package still open as the stream is written; and --only writes it raw.
+func TestRenderAssetStreams(t *testing.T) {
+	pkg, data := declarationPackage(t, `  - id: logo
+    asset: logo.svg
+  - id: box
+    path: box.zip
+    container:
+      entries:
+        - asset: logo.svg
+`)
+	logo := "<svg/>\n"
+	if err := os.MkdirAll(filepath.Join(pkg, "assets"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(pkg, "assets", "logo.svg"), []byte(logo), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	root := filepath.Dir(filepath.Dir(pkg))
+
+	r := runTool(t, "render", pkg, "--data", data, "--out", filepath.Join(root, "dry"), "--dry-run", "--json")
+	files := readRender(t, r).Files
+	if r.status != 0 || len(files) != 2 {
+		t.Fatalf("dry run: status %d, %+v", r.status, files)
+	}
+	if f := files[1]; f.Path != "logo.svg" || f.Source != "asset" || f.Kind != nil || f.Size != int64(len(logo)) || f.Digest != digestOf(logo) {
+		t.Errorf("the asset's record: %+v", f)
+	}
+
+	r = runTool(t, "render", pkg, "--data", data, "--out", "-", "--json")
+	if r.status != 0 {
+		t.Fatalf("archive: status %d, %s", r.status, r.stderr)
+	}
+	tr := tar.NewReader(strings.NewReader(r.stdout))
+	for _, name := range []string{"box.zip", "logo.svg"} {
+		h, err := tr.Next()
+		if err != nil || h.Name != name {
+			t.Fatalf("archive entry %q: %v, %+v", name, err, h)
+		}
+		b, _ := io.ReadAll(tr)
+		if name == "logo.svg" && string(b) != logo || name == "box.zip" && !bytes.Contains(b, []byte(logo)) {
+			t.Errorf("archive entry %q holds %q", name, b)
+		}
+	}
+	if f := readRender(t, r).Files[1]; f.Digest != digestOf(logo) {
+		t.Errorf("the archive's record of the asset: %+v", f)
+	}
+
+	r = runTool(t, "render", pkg, "--data", data, "--out", "-", "--only", "logo.svg", "--json")
+	if r.status != 0 || r.stdout != logo {
+		t.Errorf("--only logo.svg: status %d, %q", r.status, r.stdout)
+	}
+}

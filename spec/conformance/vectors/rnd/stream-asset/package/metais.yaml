@@ -1,0 +1,17 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: logo
+    asset: logo.svg
+  - id: tool
+    asset: tool.sh
+    path: bin/tool.sh
+    executable: true
+  - id: a
+    template: t.txt.liquid
+    path: a.txt

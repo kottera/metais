@@ -7,11 +7,16 @@ Usage:
 
 The package is opened and verified whole, and the inputs are supplied and
 validated, as metais inspect and metais validate do; an input that fails ends
-the render with every finding of the inputs. Then every output is planned, its
-path checked by the portable-path rules, and rendered in memory: every output is
-attempted, and each reports its first error. If any finding is an error, nothing
-is written anywhere. A container output is one zip of its entries, each rendered
-as an output is, in the order its profile and its first entries give; its zip is
+the render with every finding of the inputs. Then every output is planned, an
+asset or a mirror as each file it writes, its path checked by the portable-path
+rules, and rendered in memory: every output is attempted, and each reports its
+first error. An asset is copied as it is, never rendered: its size counts
+against the output limits, and its bytes are read from the package as it is
+written. An output declaring newline: crlf then has its line endings made CR LF,
+and one naming a validate schema is parsed and validated against it, every
+finding of every output reported. If any finding is an error, nothing is written
+anywhere. A container output is one zip of its entries, each rendered as an
+output is, in the order its profile and its first entries give; its zip is
 written as it is assembled.
 
 --out is required, and names a directory that does not exist yet. The outputs
@@ -518,6 +523,18 @@ Refusals:
   markdown.frontmatter_unclosed
       An input is refused (frontmatter unclosed).
       Next: metais inspect <package>
+  output.additional_item
+      An output fails its validation (additional item).
+      Next: metais inspect <package>
+  output.additional_property
+      An output fails its validation (additional property).
+      Next: metais inspect <package>
+  output.any_of
+      An output fails its validation (any of).
+      Next: metais inspect <package>
+  output.const
+      An output fails its validation (const).
+      Next: metais inspect <package>
   output.container.missing_entry
       An output is refused (container: missing entry).
       Next: metais inspect <package>
@@ -533,6 +550,23 @@ Refusals:
   output.container.too_many_entries
       An output is refused (container: too many entries).
       Next: metais inspect <package>
+  output.contains
+      An output fails its validation (contains).
+      Next: metais inspect <package>
+  output.declaration.empty_mirror
+      A mirror renders no file, and --fail-on warning makes its warning fail the
+      render.
+      Next: metais inspect <package>
+  output.declaration.empty_name
+      A mirror would write a template whose file name is exactly .liquid with an
+      empty name.
+      Next: metais inspect <package>
+  output.declaration.validate_kind
+      An output fails its validation (declaration: validate kind).
+      Next: metais inspect <package>
+  output.dependent_required
+      An output fails its validation (dependent required).
+      Next: metais inspect <package>
   output.destination.not_directory
       --out, or a directory above it, exists and is not a directory.
       Next: metais render <package> --out <dir>
@@ -542,8 +576,68 @@ Refusals:
   output.destination.write_failed
       --out exists, or a write failed; whatever was written is removed.
       Next: metais render <package> --out <dir>
+  output.enum
+      An output fails its validation (enum).
+      Next: metais inspect <package>
+  output.exclusive_maximum
+      An output fails its validation (exclusive maximum).
+      Next: metais inspect <package>
+  output.exclusive_minimum
+      An output fails its validation (exclusive minimum).
+      Next: metais inspect <package>
   output.expression.for_each_type
       An output is refused (expression: for each type).
+      Next: metais inspect <package>
+  output.forbidden
+      An output fails its validation (forbidden).
+      Next: metais inspect <package>
+  output.format
+      An output fails its validation (format).
+      Next: metais inspect <package>
+  output.max_contains
+      An output fails its validation (max contains).
+      Next: metais inspect <package>
+  output.max_items
+      An output fails its validation (max items).
+      Next: metais inspect <package>
+  output.max_length
+      An output fails its validation (max length).
+      Next: metais inspect <package>
+  output.max_properties
+      An output fails its validation (max properties).
+      Next: metais inspect <package>
+  output.maximum
+      An output fails its validation (maximum).
+      Next: metais inspect <package>
+  output.min_contains
+      An output fails its validation (min contains).
+      Next: metais inspect <package>
+  output.min_items
+      An output fails its validation (min items).
+      Next: metais inspect <package>
+  output.min_length
+      An output fails its validation (min length).
+      Next: metais inspect <package>
+  output.min_properties
+      An output fails its validation (min properties).
+      Next: metais inspect <package>
+  output.minimum
+      An output fails its validation (minimum).
+      Next: metais inspect <package>
+  output.multiple_of
+      An output fails its validation (multiple of).
+      Next: metais inspect <package>
+  output.not
+      An output fails its validation (not).
+      Next: metais inspect <package>
+  output.one_of
+      An output fails its validation (one of).
+      Next: metais inspect <package>
+  output.one_of.ambiguous
+      An output fails its validation (one of: ambiguous).
+      Next: metais inspect <package>
+  output.parse
+      An output fails its validation (parse).
       Next: metais inspect <package>
   output.path.case_collision
       An output is refused (path: case collision).
@@ -568,6 +662,27 @@ Refusals:
       Next: metais inspect <package>
   output.path.shape
       An output is refused (path: shape).
+      Next: metais inspect <package>
+  output.pattern
+      An output fails its validation (pattern).
+      Next: metais inspect <package>
+  output.property_name
+      An output fails its validation (property name).
+      Next: metais inspect <package>
+  output.required
+      An output fails its validation (required).
+      Next: metais inspect <package>
+  output.type
+      An output fails its validation (type).
+      Next: metais inspect <package>
+  output.unevaluated_item
+      An output fails its validation (unevaluated item).
+      Next: metais inspect <package>
+  output.unevaluated_property
+      An output fails its validation (unevaluated property).
+      Next: metais inspect <package>
+  output.unique_items
+      An output fails its validation (unique items).
       Next: metais inspect <package>
   package.compiled.mismatch
       The package is refused (compiled: mismatch).
@@ -739,6 +854,21 @@ Refusals:
       Next: metais inspect <package>
   schema.syntax
       An input schema is refused (syntax).
+      Next: metais inspect <package>
+  template.asset_ambiguous
+      A template is refused (asset ambiguous).
+      Next: metais inspect <package>
+  template.asset_not_found
+      A template is refused (asset not found).
+      Next: metais inspect <package>
+  template.asset_not_text
+      A template is refused (asset not text).
+      Next: metais inspect <package>
+  template.asset_not_written
+      A template is refused (asset not written).
+      Next: metais inspect <package>
+  template.asset_tree
+      A template is refused (asset tree).
       Next: metais inspect <package>
   template.comparison
       A template is refused (comparison).

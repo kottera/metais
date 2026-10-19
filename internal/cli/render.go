@@ -343,7 +343,14 @@ func runRender(s *session, p args.Parsed) outcome {
 	if pkg == nil {
 		return outcome{findings: fs, next: s.nextSteps(fs)}
 	}
-	defer pkg.Close()
+	// A stream reads the package as emit writes it, after runRender has
+	// returned, so the package is closed by the stream when there is one.
+	streaming := false
+	defer func() {
+		if !streaming {
+			pkg.Close()
+		}
+	}()
 
 	// Phase 0: the inputs (ADR-005 D13 item 0).
 	dataDir, _ := p.Value(dataFlag.Name)
@@ -428,6 +435,14 @@ func runRender(s *session, p args.Parsed) outcome {
 			if derr := done(err); err != nil || derr != nil {
 				panic("cli: reading an asset the plan found: " + errors.Join(err, derr).Error())
 			}
+		}
+	}
+	if stream != nil {
+		streaming = true
+		emit := stream
+		stream = func(w io.Writer) {
+			defer pkg.Close()
+			emit(w)
 		}
 	}
 	var human strings.Builder

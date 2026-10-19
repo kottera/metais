@@ -3,9 +3,9 @@
   "id": "rnd/stream-container",
   "title": "A container output is listed by a dry run with its entries, is one archive entry holding the zip a directory render writes, and is selected whole by its path",
   "statements": [
-    "MTS-RND-008",
     "MTS-RND-009",
-    "MTS-RND-011"
+    "MTS-RND-010",
+    "MTS-RND-012"
   ],
   "since": "1.0",
   "class": "processor",

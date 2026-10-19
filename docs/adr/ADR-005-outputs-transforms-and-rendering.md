@@ -1643,5 +1643,13 @@ they write into an existing directory too.
     archive to a terminal are usage refusals, which no vector can produce
     (ADR-011 D8), so chapter 11 states them as informative text and
     `internal/cli`'s tests prove them.
-  Assets and containers in the listing and the archive are W5-5's and
-  W5-6's meetings with this item.
+  - **An asset's digest in a record** is taken by reading the asset when
+    the run has not read it yet (a dry run, the archive, `--only`), so it
+    is the digest of the package's bytes; a read of the package in place,
+    and no write.
+  - **A stream reads the package as it is written**, in emission, so the
+    package stays open until the archive or the selected file is written.
+  W5-9 merged after W5-5 and W5-6, so their meetings with it are its
+  vectors: `rnd/stream-asset` and `rnd/stream-container`. Standard-output
+  purity "with warnings present" is a render that warns
+  `output.container.space`.
