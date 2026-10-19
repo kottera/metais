@@ -1,0 +1,13 @@
+# The unwired list (PLAN-2026-10-metais-v1 §8, "The unwired list").
+#
+# Each line names a code registered in spec/findings/registry.json, of
+# class refused, content or destination, that no conformance vector
+# produces yet, and the wave expected to wire it: "<code> W<n>", in the
+# byte order of the codes. A listed code need not name a statement until
+# its wave wires it. TestFindingCodesCovered, in internal/guarantees, fails
+# on a listed code that a vector produces, so the list only shrinks; on a
+# listed code that is not registered; and on a code of class usage or
+# internal, which internal/cli's tests prove instead. The list is empty by
+# Wave 7's close.
+
+report.truncated W4
