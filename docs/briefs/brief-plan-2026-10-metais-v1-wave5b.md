@@ -324,5 +324,210 @@ re-run W5-A1 (`01a155c2-5c85-7762-a3d8-2541e178e29c`) and registering
 
 ## Closeout
 
-*Not yet written. The wave orchestrator replaces this line with the wave's
-closeout.*
+Wave orchestrator: `01a155c8-f9a1-7493-b5c8-764ddeaca7dc`
+(`wave-orchestrator-derive`). Base `dcaa698`; the wave ended with `main` at
+`20eeeb2`.
+
+**This is not a correctness verdict.** What I checked, and how:
+
+- I read each child's outputs and pull request summary.
+- In the merged tree I checked that each mechanism the brief named exists:
+  - the four amendments: ADR-010 A5, ADR-008 A1, ADR-006 A2, ADR-011 A5;
+  - the per-item log files;
+  - the gate and merge scripts and `.gitattributes`;
+  - `TestRegistryFamilies`, `TestRegistryFileGenerated` and
+    `TestHelpListsNoGeneratedRefusalOnItsOwn`;
+  - `check --help`'s family line for `output.declaration.validate_kind`.
+- I ran no test, no gate and no mutation. Every result of a run below is a
+  child's or the verifier's, and is attributed to them.
+
+The breakdown was approved as drafted on 2026-10-19. The approval also
+settled ruling B2 as R-W5b-B2, below.
+
+### 1. Did each item land, and does it match the ask?
+
+All seven items and the one blocking fix are complete and merged.
+
+| Item | Work Order | PR | Merge | What landed (as the producer reports it) |
+|---|---|---|---|---|
+| W5b-1 two-tier gate | `01a155d9-7eb7-7651-984b-478569461461` | #113 | `278c96a` | ADR-010 A5 defines the scoped tier and the wave tier, what "touched" means, the shared seams (`go.mod`, `go.sum`, `internal/fault`, `internal/testenv`, the gate's scripts) and what the scoped tier cannot catch. `gate.sh` runs either tier (`gate.sh` and `gate.sh wave`) and resumes with `--resume`; `gate-select.sh` is the selector and `gate-why.sh` re-runs one test. The cap is a third of the cores, for both `-p` and `-parallel`, set by `METAIS_GATE_P`. AGENTS.md and the skill are rewritten to match |
+| W5b-2 hostfs tests | `01a155d9-c53d-741e-acfd-0875abe8af05` | #111 | `1896cb8` | `StageNew_abort` was **slow, not hung**: one instrumented run timed all 300,100 calls and none took more than 1 s. Redundant test work was removed (about 1 to 1.7 s of CPU). The cost floor is recorded in `docs/adr/logs/ADR-010/W5b-2.md` |
+| W5b-3 one edit per code | `01a155da-1e3b-78ed-8591-958ed15fbc36` | #108 | `a4773de` | 16 `registry_<family>.go` files. `spec/findings/registry.json` is now generated from the table (`go generate ./internal/finding`), recorded as ADR-006 A2. `TestEmittedCodes` is replaced by `TestRegistryFamilies`. `unwired.txt` stays hand-written, by argument |
+| W5b-4 `render.go` split | `01a155da-50af-7094-bf04-ac93b117ce42` | #109 | `960b567` | `render.go` (the command), `render_plan.go`, `render_check.go`, `render_parse.go` and `render_write.go`; `sampleRefusals` moved to `sample.go`. A go/ast comparison found all 357 declarations identical |
+| W5b-5 help refusals | `01a155da-eb27-79fa-b7ef-758928b49bd3` | #114 | `3803a73` | ADR-008 A1. Text help lists generated refusals as one line per family; `metais help refusals <command>` is a new topic with its own goldens; the JSON help goldens are indented. `render --help` went from 1,138 to 305 lines and `check --help` from 584 to 120 |
+| W5b-6 per-item logs and root-cause | `01a155da-9d18-7b9c-bdd2-bb14538c688d` | #110 | `e92d2a4` | A pointer after every ADR's `## Implementation log` heading. AGENTS.md's rule for log-entry files. Existing entries left in place, by argument. The `root-cause` skill gains a section on metais's own instruments |
+| W5b-7 generated files merge | `01a155db-42da-7904-be5c-ce47870180a7` | #116 | `8834408` | Two drivers: `metais-generated` for whole files, and `metais-generated-region` for the catalog in `12-findings.md`. `merge-setup.sh` installs them, and every gate script runs it. `regenerate.sh`; `merge-check.sh` (five cases on a fresh clone); ADR-011 A5. Ruling B2's reading is in `docs/adr/logs/ADR-011/W5b-7.md` |
+| W5b-V1 blocking fix | `01a15660-639e-77c4-901c-a0eb005c3ad0` | #117 | `20eeeb2` | `check` gives the `output` family a subject, so `output.declaration.validate_kind` is on a family line. A separate `wholesale` list keeps check's declared codes unchanged. `TestHelpListsNoGeneratedRefusalOnItsOwn` was red at `8834408` |
+
+**Divergences from the ask:**
+
+- **W5b-1** keeps the six-target cross build in the scoped tier, from
+  measurement: 22.5 s of CPU warm, up to 310 s cold, against 1,397 s for the
+  whole `-race` suite.
+  - Both tiers pass `-count=1`, which the old skill said the gate never
+    does. W5b-1 found that the test cache returned stale "(cached)" verdicts
+    for the black-box packages after a code change. The amendment records
+    this.
+- **W5b-2** made the tests barely cheaper. Most of their cost is the
+  product's own per-entry work at ADR-009 D3's defaults. The brief's
+  alternative, "the reason they cannot be is recorded", is what landed.
+- **W5b-3** makes the Go table the source of `registry.json`. ADR-006 A2
+  records this under Ed's ruling B4. ADR-011 D3 item 9 stands as written.
+- **W5b-7** covers more generated files than the brief listed: the
+  scaffold, tar, YAML-writer and vector-package goldens, and
+  `THIRD-PARTY-NOTICES.txt`. The verifier confirmed that all 110 files
+  under a driver regenerate.
+
+### 2. What children flagged, degraded, declined or discovered
+
+None of this was verified by me unless I say so.
+
+- **W5b-1 found two defects in the old gate and fixed them:**
+  - the stale-cache verdict above;
+  - its own first `gate.sh` reported PASS over a red package (a `tee`
+    exit status). A planted failing test showed it.
+- **W5b-1's squash commit `278c96a` carries Co-Authored-By trailers**,
+  which AGENTS.md forbids. The producer declared it, and the verifier
+  counted four trailers. Removing them would rewrite `main`'s history, so
+  no child was filed (question 4).
+- **The selector over-selects, and says so.** A path outside every package
+  reaches the packages whose tests name it as a path literal, so a docs
+  edit reaches `unitext`. A5 item 8 states what this can miss.
+- **The hostfs tests ran only on darwin/arm64** (W5b-2); their linux branch
+  did not run. W5b-4's and W5b-7's gates ran on linux/amd64. Every other
+  item ran on darwin/arm64.
+- **W5b-6 and W5b-3 merged in the same minute.** W5b-6 re-ran its checks on
+  the merged `main` afterwards. The verifier's wave tier covers both.
+- **W5b-7's drivers have not run on Windows or darwin.**
+  - A modify/delete conflict never reaches a driver; the skill says to take
+    either side and regenerate.
+  - In a clone where `merge-setup.sh` has not run, a rebase falls back to
+    git's text merge. That merge is loud on a conflict and silent on a
+    clean merge, and the drift tests catch a stale result. The next gate
+    run installs the drivers and prints a `NOTE`. The verifier judged
+    W5b-7.2 met: git gives a repository no way to install a driver on
+    clone.
+- **W5-NB1, W5-NB2 and W5-NB3 (Wave 5's children) landed during this
+  wave** (#107, #115, #112). W5b-1 re-measured its cap after NB3. Before
+  NB3, `-parallel 3` ran conformance into its 10-minute timeout. A5
+  records the rule that "a test must not hold a parallel slot while it
+  waits".
+
+### 3. What carries to the next wave
+
+- **The gate for Wave 6:**
+  - items run the scoped tier with `gate.sh`, in the background, resumed
+    after a rebase with `gate.sh --resume`;
+  - an item that touches a shared seam (`go.mod`, `go.sum`,
+    `internal/fault`, `internal/testenv`, the gate's scripts) also runs
+    `gate.sh wave` before merging;
+  - the wave verifier runs `gate.sh wave` on a fresh clone;
+  - every session runs `merge-setup.sh` before its first rebase and
+    `regenerate.sh` after every rebase.
+- **ADR implementation logs** are files under
+  `docs/adr/logs/ADR-<NNN>/<address>.md`, as AGENTS.md now states. A
+  breakdown no longer needs to fix the path for its items.
+- **Statement numbers:** a breakdown allots each item a block per area, and
+  gaps are permitted (R-W5b-B2). This wave allotted none, because it added
+  no statement.
+- **The help goldens are indented, and the generated refusals are
+  grouped.** A Wave 6 item that adds a refusal code changes one family
+  line's count, not 80 lines per command.
+- **Wave 6 adds the hostile corpus in full.** W5-NB3 (#112)
+  made the conformance runner hold no parallel slot through its A/B wait,
+  so a case's wait no longer blocks another case. The verifier's wave tier passed the whole suite at
+  `-parallel 4`.
+- **What I would do differently:**
+  - **I fixed the log-file shape at breakdown,** and W5b-6 adopted it
+    without a park. That worked; do it for any convention a sibling must
+    follow before its owner merges.
+  - **I filed W5b-NB2 into the blocking-fixes cohort** by passing the wrong
+    id. It had dispatched before I could re-file it. Only its cohort label
+    is wrong.
+
+### 4. What the verification round found, and where every finding went
+
+**Verifier:** W5b-V, `01a15653-b323-7747-854b-86d92fdb3f0f`
+(`wave-verification`).
+
+- **The gate:** it ran the wave tier,
+  `GOTOOLCHAIN=auto .claude/skills/verification-gate/gate.sh wave`, on a
+  fresh clone of `main` at `8834408`, with go1.26.9 linux/amd64 at
+  `-p 4 -parallel 4`. **GREEN**: 42 of 42 packages under `-race`, and
+  build, vet, tidy, gofmt, static, cross and specdata all passed.
+- **Other checks:**
+  - `merge-check.sh` passed all five cases on a fresh clone;
+  - after it corrupted all 110 files under a driver, `regenerate.sh`
+    restored every one;
+  - it confirmed W5b-4's 357 identical declarations independently.
+- **Verdict: blocking**, with one finding.
+- **Coverage:** it returned all seven ids I sent, and audited
+  `dcaa698..8834408`. The seven items plus the four commits I named as not
+  this wave's account for all eleven commits in the range.
+
+**Depth per item:**
+
+| Item | Depth | What the verifier mutated |
+|---|---|---|
+| W5b-1 | **inspected, not mutated** | No guard of the gate scripts was mutated. The wave tier itself ran through `gate.sh wave` |
+| W5b-2 | mutated | A descriptor leak on `Output.MkdirAll`'s existing-directory branch. `StageNew_abort` stayed green (finding NB-1 below); `TestExisting…` alone went red |
+| W5b-3 | mutated | Hand edits of both `registry.json` copies and the catalog went red. Dropping a family from the table went red. Swapping two families stayed green, which is an equivalent mutant, since the table is sorted |
+| W5b-4 | **inspected, not mutated** | It re-ran the go/ast identity comparison |
+| W5b-5 | mutated | Dropping the code-family test or the `p and p.*` branch went red, as did omitting a code from the topic and an extra space in `help.json`. Dropping `f.next == r.Next` stayed green (finding NB-2a) |
+| W5b-6 | **inspected, not mutated** | — |
+| W5b-7 | mutated | Making `merge-generated.sh` report success on a prose conflict turned `merge-check.sh` red |
+
+W5b-1, W5b-4 and W5b-6 were read, not broken. That is a weaker result than
+"verified", and for W5b-1's scripts it means `--resume` and the selector's
+guards are untested by anyone but their producer.
+
+**Cross-item findings:** none. The verifier checked that:
+
+- W5b-5's new goldens fall under W5b-7's glob and `regenerate.sh`;
+- `gate.sh`'s tripwire names all exist;
+- every amendment sits before `## Implementation log`;
+- the wave tier is green although W5b-5 and W5b-7 were never gated
+  together.
+
+**Findings, one row each:**
+
+| Finding | Item | Disposition | Where it went |
+|---|---|---|---|
+| `check --help` lists the registry-loop refusal `output.declaration.validate_kind` on its own, with a generated, subject-less cause (quoted W5b-5.2) | W5b-5 | **blocking** | Fix child W5b-V1 `01a15660-639e-77c4-901c-a0eb005c3ad0`, PR #117, merged `20eeeb2`. **Not re-verified**, under the one-round rule |
+| NB-1: `StageNew_abort` no longer takes `MkdirAll`'s existing-directory path, which render's `prepare` takes once per file | W5b-2 | non-blocking | Child W5b-NB1 `01a1566a-4184-7367-92dc-49ee5d5dcc56` |
+| NB-2a: no test exercises the next-step part of `families()`'s grouping key | W5b-5 | non-blocking | Child W5b-NB2 `01a1566a-70f6-73a5-b93a-d57fae90a1a0` |
+| NB-2b: check's generated causes say "a error" / "a info" (predates the wave) | W5b-5 | non-blocking | Child W5b-NB2 `01a1566a-70f6-73a5-b93a-d57fae90a1a0` |
+| Three comments cite ADR-011's merge-driver amendment as A1; it is A5 | W5b-7 | non-blocking, prose-only and inert | Janitorial issue [#118](https://github.com/kottera/metais/issues/118) |
+| Squash commit `278c96a` carries Co-Authored-By trailers, against AGENTS.md | W5b-1 | non-blocking | **Not filed.** The only repair rewrites `main`'s history, which no Work Order should do. It is for Ed: rewrite `main`, or let it stand |
+| The answer to my W5b-7.2 question: without `merge-setup.sh`, a rebase falls back to text merge | W5b-7 | non-blocking | **Not filed.** It is an answer, not a defect. The verifier judged W5b-7.2 met, and the drift tests catch a stale clean merge |
+
+NB-2a and NB-2b share one child, W5b-NB2. Both are in `internal/cli`'s help
+code and regenerate the same goldens, and its task says they are
+severable. **The wave completed without waiting for W5b-NB1 and W5b-NB2.
+That is the intent:** they run beside the next wave and are not
+re-verified.
+
+### 5. Out-of-band acts
+
+None. The brief carried none, and no child needed one. The train's open
+acts (W5-A1's liquid-spec re-run, registering `metais.org`) are the plan
+orchestrator's.
+
+### Rulings made during this wave
+
+- **R-W5b-B2** (Ed, answering the breakdown, 2026-10-19):
+  - ADR-011 D3 item 3 permits gaps in statement numbers: a number allotted
+    and never used is never assigned.
+  - This is not an ADR-011 change, and no contiguity check is added.
+  - Plan §11b records it (#106), and so does
+    `docs/adr/logs/ADR-011/W5b-7.md`. It governs every later breakdown's
+    statement blocks.
+- **Kept by Ed at approval:**
+  - (a) W5b-7 amends ADR-011 D3 item 7, which became ADR-011 A5;
+  - (b) the merge driver covers only `12-findings.md`'s generated region.
+- **Fixed at breakdown:**
+  - the log-file path `docs/adr/logs/ADR-<NNN>/W5b-<N>.md`;
+  - ADR amendments go before `## Implementation log`, and W5b-6's pointers
+    after it.
+
+I made no ruling on a child's question; no child asked one.
