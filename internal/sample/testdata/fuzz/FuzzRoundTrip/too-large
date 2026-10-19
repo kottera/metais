@@ -1,0 +1,7 @@
+go test fuzz v1
+[]byte("{\"type\":\"array\",\"minItems\":1000000,\"items\":{\"type\":\"string\"}}")
+uint64(0)
+byte('\x00')
+byte('\x03')
+byte('\x00')
+bool(false)

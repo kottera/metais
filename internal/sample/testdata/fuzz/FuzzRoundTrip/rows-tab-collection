@@ -1,0 +1,7 @@
+go test fuzz v1
+[]byte("{\"type\":\"array\",\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"name\"],\"properties\":{\"name\":{\"type\":\"string\",\"pattern\":\"^[a-z,;|\\t]{2,5}$\"},\"e\":{\"const\":\"\"},\"n\":{\"type\":\"integer\"},\"r\":{\"type\":\"number\"},\"b\":{\"type\":\"boolean\"},\"p\":{\"enum\":[\"a,b\",\"x\\\"y\",\"l\\nm\"]}}}}}")
+uint64(2)
+byte('\x02')
+byte('\x02')
+byte('\x1b')
+bool(true)

@@ -1,0 +1,7 @@
+go test fuzz v1
+[]byte("{\"type\":\"objec")
+uint64(0)
+byte('\x00')
+byte('\x00')
+byte('\x00')
+bool(false)

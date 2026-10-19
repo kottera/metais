@@ -1,0 +1,7 @@
+go test fuzz v1
+[]byte("{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"title\"],\"properties\":{\"title\":{\"type\":\"string\"},\"draft\":{\"type\":\"boolean\"},\"body\":{\"type\":\"string\"}}}}")
+uint64(4)
+byte('\x01')
+byte('\x02')
+byte('\x04')
+bool(true)

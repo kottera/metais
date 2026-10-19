@@ -1,0 +1,3 @@
+go test fuzz v1
+string("[é-ê]{2}|é")
+uint64(70)
