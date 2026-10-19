@@ -39,6 +39,10 @@ type Source struct {
 	// At is the origin of the text, with its file or its argument ordinal.
 	// Its Line, Column and Pointer are ignored.
 	At finding.Location
+	// Output says the text is a rendered output, parsed to be validated by
+	// its schema (ADR-005 D11 item 3), whose length output-size bounds
+	// rather than input-size.
+	Output bool
 }
 
 // Doc is one parsed JSON text: its value and where each part of it is.
