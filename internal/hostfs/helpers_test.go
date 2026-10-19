@@ -101,3 +101,21 @@ func tree(t *testing.T, root string) []string {
 	slices.Sort(out)
 	return out
 }
+
+// countFiles counts the entries beneath root that are not directories, as
+// tree does, without building or sorting their names: the count is all a
+// test of many entries asks of the tree it wrote.
+func countFiles(t *testing.T, root string) int {
+	t.Helper()
+	n := 0
+	err := filepath.WalkDir(root, func(_ string, d os.DirEntry, err error) error {
+		if err == nil && !d.IsDir() {
+			n++
+		}
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return n
+}

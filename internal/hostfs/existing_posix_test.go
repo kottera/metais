@@ -40,7 +40,10 @@ func TestExistingWritesItsLimitUnderTheOpenFileLimit(t *testing.T) {
 		}
 		t.Run(fmt.Sprint("commit=", commit), func(t *testing.T) {
 			parent, out := existingOut(t, seed)
-			before := tree(t, parent)
+			var before []string
+			if !commit {
+				before = tree(t, parent)
+			}
 			lowerOpenFiles(t, openFiles)
 			x, err := OpenExisting(out, WriteOptions{})
 			if err != nil {
@@ -89,13 +92,7 @@ func TestExistingWritesItsLimitUnderTheOpenFileLimit(t *testing.T) {
 					t.Fatalf("%s holds %q", name, got)
 				}
 			}
-			files := 0
-			for _, p := range tree(t, parent) {
-				if !strings.HasSuffix(p, "/") {
-					files++
-				}
-			}
-			if files != len(names) {
+			if files := countFiles(t, parent); files != len(names) {
 				t.Fatalf("the output holds %d files, want %d", files, len(names))
 			}
 		})
