@@ -6,6 +6,7 @@ package sample
 import (
 	"math/big"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -73,6 +74,35 @@ func TestNumbers(t *testing.T) {
 		if len(seen) < 2 {
 			t.Errorf("%s: 12 seeds gave only %v", tc.name, seen)
 		}
+	}
+}
+
+// TestSafeBound pins item 17's clamp at its exact edge: the generator
+// makes no integer beyond ±(2^53−1), so a range that starts at 2^53 holds
+// none it may make, and a range that reaches 2^53 is cut back to 2^53−1.
+// Each range here holds one value the generator may make, or none, so
+// every seed gives the same answer. 2^53 is spelled with an exponent,
+// since an integer literal beyond 2^53−1 does not open (ADR-003 D8 item
+// 5).
+func TestSafeBound(t *testing.T) {
+	for _, sch := range []string{
+		`{"type":"integer","minimum":9.007199254740992e15}`,
+		`{"type":"integer","maximum":-9.007199254740992e15}`,
+	} {
+		_, fs := one(t, sch, Options{Items: 3})
+		if got := reasons(t, fs); !slices.Equal(got, []string{ReasonRange}) {
+			t.Errorf("%s: reasons %v, want %s%s", sch, got, ReasonRange, describe(fs))
+		}
+	}
+	for _, tc := range []struct{ schema, want string }{
+		{`{"type":"integer","minimum":9007199254740991,"maximum":9.007199254740992e15}`, "9007199254740991"},
+		{`{"type":"integer","minimum":-9.007199254740992e15,"maximum":-9007199254740991}`, "-9007199254740991"},
+	} {
+		each(t, tc.schema, 12, func(seed int, v value.Value) {
+			if n, ok := v.(value.Number); !ok || n.Literal() != tc.want {
+				t.Errorf("%s, seed %d: %s, want %s", tc.schema, seed, text(v), tc.want)
+			}
+		})
 	}
 }
 
