@@ -10,6 +10,7 @@ import (
 	"slices"
 
 	"github.com/kottera/metais/internal/cli/args"
+	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostenv"
 	"github.com/kottera/metais/internal/limits"
@@ -39,6 +40,11 @@ type outcome struct {
 	// dataDir is the --data argument the command read, for the path
 	// canary alone.
 	dataDir string
+	// stream writes the bytes standard output carries (ADR-008 D11 item
+	// 1): render --out -'s archive, or the one file --only selects. It is
+	// set only on a render that succeeded, and runs before anything else
+	// is written.
+	stream func(w io.Writer)
 }
 
 // canaryLeak is nil in every release build. The path canary of ADR-009
@@ -82,6 +88,19 @@ func (s *session) emit(o outcome) int {
 	if next == nil {
 		next = []Next{}
 	}
+	// Standard output carries the bytes and nothing else when the command
+	// writes bytes there, a refusal's included, so that a refused render's
+	// standard output is empty (ADR-008 D11 items 2 and 4).
+	stdout := s.inv.Stdout
+	if s.line.streamsBytes() {
+		if s.inv.Options.Faults.Has(fault.StdoutNotice) {
+			write(stdout, []byte("metais: writing the render to standard output\n"))
+		}
+		if o.stream != nil {
+			o.stream(stdout)
+		}
+		stdout = s.inv.Stderr
+	}
 	if s.line.json {
 		result := o.result
 		if sum.Errors > 0 && !(o.report && s.reports(fs)) {
@@ -91,7 +110,7 @@ func (s *session) emit(o outcome) int {
 		if canaryLeak != nil && o.dataDir != "" {
 			fb = canaryLeak(fb, o.dataDir)
 		}
-		writeJSON(s.inv.Stdout, envelope{
+		writeJSON(stdout, envelope{
 			Format:   s.line.format(),
 			OK:       status == finding.ExitOK && sum.Errors == 0,
 			Findings: fb,
@@ -133,6 +152,15 @@ func (s *session) emit(o outcome) int {
 	write(s.inv.Stdout, o.human)
 	write(s.inv.Stderr, appendNext(append(b, o.notice...), next))
 	return status
+}
+
+// streamsBytes reports whether standard output carries bytes on the line
+// l, render --out -'s, from before the command runs, so that a refusal of
+// the line, its own or the render's, writes nothing there: render --out -
+// with no --dry-run, which writes none.
+func (l line) streamsBytes() bool {
+	out, _ := l.parsed.Value("out")
+	return l.cmd != nil && l.cmd.Name == "render" && out == "-" && !l.parsed.Has("dry-run")
 }
 
 // reports reports whether fs are the command's result rather than its

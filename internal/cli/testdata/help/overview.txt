@@ -22,7 +22,7 @@ Commands:
     validate  Validate inputs against a package, and report every finding at
               once.
     render    Render the package's outputs from the inputs supplied, into a new
-              directory.
+              directory or to standard output.
   Authoring:
     init      Write a new package's source directory, with an input, a template
               and an example.

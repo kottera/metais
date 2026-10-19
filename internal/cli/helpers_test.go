@@ -242,14 +242,20 @@ func runIn(t testing.TB, d hostenv.Display, stdin io.Reader, faults fault.Set, a
 	r := ran{args: argv, status: status, stdout: stdout.String(), stderr: stderr.String()}
 	l := readLine(table, argv)
 	if l.json {
-		if err := checkDocument(stdout.Bytes()); err != nil {
+		// When standard output carries bytes, the document is on standard
+		// error (ADR-008 D11 item 2).
+		docOut, other := &stdout, &stderr
+		if l.streamsBytes() {
+			docOut, other = &stderr, nil
+		}
+		if err := checkDocument(docOut.Bytes()); err != nil {
 			t.Errorf("metais %q: %v", argv, err)
 		}
-		if stderr.Len() != 0 {
-			t.Errorf("metais %q --json wrote standard error: %q", argv, stderr.String())
+		if other != nil && other.Len() != 0 {
+			t.Errorf("metais %q --json wrote standard error: %q", argv, other.String())
 		}
 		var doc document
-		if err := json.Unmarshal(stdout.Bytes(), &doc); err != nil {
+		if err := json.Unmarshal(docOut.Bytes(), &doc); err != nil {
 			t.Fatalf("metais %q: %v", argv, err)
 		}
 		r.doc = &doc

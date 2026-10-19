@@ -1,28 +1,38 @@
 metais render — Render the package's outputs from the inputs supplied, into a
-new directory.
+new directory or to standard output.
 
 Usage:
-  metais render <package> --out <dir> [supply flags] [--now <time>] [--json]
+  metais render <package> --out <dir|-> [supply flags] [--only <path>]
+                [--dry-run] [--now <time>] [--json]
 
 The package is opened and verified whole, and the inputs are supplied and
 validated, as metais inspect and metais validate do; an input that fails ends
-the render with every finding of the inputs. Then every output is planned, an
-asset or a mirror as each file it writes, its path checked by the portable-path
-rules, and rendered in memory: every output is attempted, and each reports its
-first error. An asset is copied as it is, never rendered: its size counts
-against the output limits, and its bytes are read from the package as it is
-written. An output declaring newline: crlf then has its line endings made CR LF,
-and one naming a validate schema is parsed and validated against it, every
-finding of every output reported. If any finding is an error, nothing is written
-anywhere. A container output is one zip of its entries, each rendered as an
-output is, in the order its profile and its first entries give; its zip is
-written as it is assembled.
+the render with every finding of the inputs. Then every output is planned, its
+path checked by the portable-path rules, and rendered in memory: every output is
+attempted, and each reports its first error. If any finding is an error, nothing
+is written anywhere.
 
 --out is required, and names a directory that does not exist yet. The outputs
 are written beneath a staging directory beside it, .metais-staging- followed by
 16 hex digits, which is then renamed to it in one step that never replaces
 anything: the directory either does not exist or holds every output. Its missing
 parents are created. An --out that exists is refused before anything is written.
+
+--out - writes every file to standard output as one pax archive instead, in path
+order, each entry with mode 0644, or 0755 for an executable output, owner 0 and
+the time 1980-01-01T00:00:00Z; with --json the document then goes to standard
+error, after the archive. Standard output carries the archive and nothing else,
+and nothing at all when the render is refused. An archive is not written to a
+terminal.
+
+--only <path> selects one file by the path --dry-run lists. The whole render
+still runs and is checked, so --only never makes a refused render succeed; it
+chooses what is written: with --out -, the file's bytes alone, which may go to a
+terminal, and with --out <dir>, that file alone.
+
+--dry-run renders everything and checks --out as a render would, writes nothing
+anywhere, and lists every file the render would write with its size and digest.
+It is refused exactly when the render would be.
 
 A template sees the inputs as inputs, the package's identity as package, where
 each input came from as sources, the output being rendered as output, and the
@@ -41,8 +51,9 @@ Operands:
       package is read with random access. Required.
 
 Flags:
-  --out <dir>
-      The directory to render into, which must not exist; required.
+  --out <dir|->
+      The directory to render into, which must not exist, or - for an archive on
+      standard output; required.
   --data <dir>
       The data directory: one file per input named <input>.<ext>, and one
       directory per collection input. metais inspect lists each input's file
@@ -60,6 +71,12 @@ Flags:
       A JSON object whose members are inputs, each replacing that input's whole
       value; - reads it from standard input, once. Applied after --data, in
       command-line order. May be given more than once.
+  --only <path>
+      Write only the file at this path, as --dry-run lists it: its bytes alone
+      with --out -.
+  --dry-run
+      List every file the render would write, with its size and digest, and
+      write nothing.
   --now <date-time>
       The render time, an RFC 3339 date-time with an offset, which templates see
       as now; without it there is no time.
@@ -82,8 +99,9 @@ Flags:
 
 Prints:
   One line per file written, in path order: its size, its digest and its path,
-  separated by tabs; a container's entries are indented beneath it, in its
-  order. With --json, one metais.render/1 document.
+  separated by tabs; on a dry run, headed would write. With --out -, standard
+  output is the archive, or the one file's bytes. With --json, one
+  metais.render/1 document.
 
 Refusals:
   collection.as_file
@@ -497,50 +515,6 @@ Refusals:
   markdown.frontmatter_unclosed
       An input is refused (frontmatter unclosed).
       Next: metais inspect <package>
-  output.additional_item
-      An output fails its validation (additional item).
-      Next: metais inspect <package>
-  output.additional_property
-      An output fails its validation (additional property).
-      Next: metais inspect <package>
-  output.any_of
-      An output fails its validation (any of).
-      Next: metais inspect <package>
-  output.const
-      An output fails its validation (const).
-      Next: metais inspect <package>
-  output.container.missing_entry
-      An output is refused (container: missing entry).
-      Next: metais inspect <package>
-  output.container.non_ascii
-      An output is refused (container: non ascii).
-      Next: metais inspect <package>
-  output.container.reserved_entry
-      An output is refused (container: reserved entry).
-      Next: metais inspect <package>
-  output.container.space
-      An output is refused (container: space).
-      Next: metais inspect <package>
-  output.container.too_many_entries
-      An output is refused (container: too many entries).
-      Next: metais inspect <package>
-  output.contains
-      An output fails its validation (contains).
-      Next: metais inspect <package>
-  output.declaration.empty_mirror
-      A mirror renders no file, and --fail-on warning makes its warning fail the
-      render.
-      Next: metais inspect <package>
-  output.declaration.empty_name
-      A mirror would write a template whose file name is exactly .liquid with an
-      empty name.
-      Next: metais inspect <package>
-  output.declaration.validate_kind
-      An output fails its validation (declaration: validate kind).
-      Next: metais inspect <package>
-  output.dependent_required
-      An output fails its validation (dependent required).
-      Next: metais inspect <package>
   output.destination.not_directory
       --out, or a directory above it, exists and is not a directory.
       Next: metais render <package> --out <dir>
@@ -550,68 +524,8 @@ Refusals:
   output.destination.write_failed
       --out exists, or a write failed; whatever was written is removed.
       Next: metais render <package> --out <dir>
-  output.enum
-      An output fails its validation (enum).
-      Next: metais inspect <package>
-  output.exclusive_maximum
-      An output fails its validation (exclusive maximum).
-      Next: metais inspect <package>
-  output.exclusive_minimum
-      An output fails its validation (exclusive minimum).
-      Next: metais inspect <package>
   output.expression.for_each_type
       An output is refused (expression: for each type).
-      Next: metais inspect <package>
-  output.forbidden
-      An output fails its validation (forbidden).
-      Next: metais inspect <package>
-  output.format
-      An output fails its validation (format).
-      Next: metais inspect <package>
-  output.max_contains
-      An output fails its validation (max contains).
-      Next: metais inspect <package>
-  output.max_items
-      An output fails its validation (max items).
-      Next: metais inspect <package>
-  output.max_length
-      An output fails its validation (max length).
-      Next: metais inspect <package>
-  output.max_properties
-      An output fails its validation (max properties).
-      Next: metais inspect <package>
-  output.maximum
-      An output fails its validation (maximum).
-      Next: metais inspect <package>
-  output.min_contains
-      An output fails its validation (min contains).
-      Next: metais inspect <package>
-  output.min_items
-      An output fails its validation (min items).
-      Next: metais inspect <package>
-  output.min_length
-      An output fails its validation (min length).
-      Next: metais inspect <package>
-  output.min_properties
-      An output fails its validation (min properties).
-      Next: metais inspect <package>
-  output.minimum
-      An output fails its validation (minimum).
-      Next: metais inspect <package>
-  output.multiple_of
-      An output fails its validation (multiple of).
-      Next: metais inspect <package>
-  output.not
-      An output fails its validation (not).
-      Next: metais inspect <package>
-  output.one_of
-      An output fails its validation (one of).
-      Next: metais inspect <package>
-  output.one_of.ambiguous
-      An output fails its validation (one of: ambiguous).
-      Next: metais inspect <package>
-  output.parse
-      An output fails its validation (parse).
       Next: metais inspect <package>
   output.path.case_collision
       An output is refused (path: case collision).
@@ -636,27 +550,6 @@ Refusals:
       Next: metais inspect <package>
   output.path.shape
       An output is refused (path: shape).
-      Next: metais inspect <package>
-  output.pattern
-      An output fails its validation (pattern).
-      Next: metais inspect <package>
-  output.property_name
-      An output fails its validation (property name).
-      Next: metais inspect <package>
-  output.required
-      An output fails its validation (required).
-      Next: metais inspect <package>
-  output.type
-      An output fails its validation (type).
-      Next: metais inspect <package>
-  output.unevaluated_item
-      An output fails its validation (unevaluated item).
-      Next: metais inspect <package>
-  output.unevaluated_property
-      An output fails its validation (unevaluated property).
-      Next: metais inspect <package>
-  output.unique_items
-      An output fails its validation (unique items).
       Next: metais inspect <package>
   package.compiled.mismatch
       The package is refused (compiled: mismatch).
@@ -829,21 +722,6 @@ Refusals:
   schema.syntax
       An input schema is refused (syntax).
       Next: metais inspect <package>
-  template.asset_ambiguous
-      A template is refused (asset ambiguous).
-      Next: metais inspect <package>
-  template.asset_not_found
-      A template is refused (asset not found).
-      Next: metais inspect <package>
-  template.asset_not_text
-      A template is refused (asset not text).
-      Next: metais inspect <package>
-  template.asset_not_written
-      A template is refused (asset not written).
-      Next: metais inspect <package>
-  template.asset_tree
-      A template is refused (asset tree).
-      Next: metais inspect <package>
   template.comparison
       A template is refused (comparison).
       Next: metais inspect <package>
@@ -925,6 +803,9 @@ Refusals:
   template.unknown_filter
       An output's path, when or for_each does not parse (unknown filter).
       Next: metais inspect <package>
+  usage.archive_to_terminal
+      --out - is given without --only, and standard output is a terminal.
+      Next: metais render <package> --out - --only <path>
   usage.bad_value
       A flag's value is missing, or is not one the flag accepts, or a flag that
       takes no value is given one.
@@ -958,6 +839,9 @@ Refusals:
       An argument that is not a flag the command accepts, an abbreviated flag,
       or one-letter aliases written together.
       Next: metais render --help
+  usage.unknown_output
+      --only names no file the render writes.
+      Next: metais render <package> --out <dir> --dry-run
   yaml.alias
       An input is refused (alias).
       Next: metais inspect <package>
@@ -1007,3 +891,9 @@ Examples:
   metais render . --data data --out out --now 2026-10-19T09:30:00+02:00 --json
       Renders the source directory in the working directory with a render time,
       and prints the files as one metais.render/1 document.
+  metais render report.metais --data data --out out --dry-run
+      Lists every file the render would write into out, with its size and
+      digest, and writes nothing.
+  metais render report.metais --data data --out - --only report.md
+      Renders the whole package and writes the bytes of report.md alone to
+      standard output.

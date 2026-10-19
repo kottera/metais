@@ -32,7 +32,7 @@
       "additionalProperties": false,
       "properties": {
         "out": {
-          "description": "Where the outputs went: directory for --out <dir>; the path itself is never echoed.",
+          "description": "Where the outputs went: directory for --out <dir>, stdout for --out -; the path itself is never echoed.",
           "enum": [
             "directory",
             "stdout"
@@ -50,7 +50,7 @@
           ]
         },
         "files": {
-          "description": "One record per top-level file, in byte order of its path.",
+          "description": "One record per top-level file written, or that a dry run would write, in byte order of its path; with --only, the selected file alone.",
           "type": "array",
           "items": {
             "$ref": "#/$defs/file"
@@ -102,8 +102,7 @@
         "kind",
         "size",
         "digest",
-        "executable",
-        "status"
+        "executable"
       ],
       "additionalProperties": false,
       "properties": {
@@ -165,7 +164,7 @@
           "type": "boolean"
         },
         "status": {
-          "description": "create, for a file written where nothing was.",
+          "description": "create, for a file written where nothing was; present only when --out is a directory.",
           "enum": [
             "create",
             "replace"
