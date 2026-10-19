@@ -625,3 +625,22 @@ func destinationRefusal(err error) finding.Finding {
 	}
 	return writeFailed(hostfs.ReasonOf(err))
 }
+
+// sampleRefusals adds to sample's declared refusals the codes a supply
+// reports about an input, and the generator's own (ADR-008 D16 item 2).
+func sampleRefusals(c *Command) {
+	have := map[finding.Code]bool{}
+	for _, r := range c.Refusals {
+		have[r.Code] = true
+	}
+	for _, e := range finding.Registry() {
+		_, rest, _ := strings.Cut(string(e.Code), ".")
+		switch {
+		case have[e.Code]:
+		case inputFamily(e.Code):
+			c.Refusals = append(c.Refusals, Refusal{Code: e.Code, Cause: "A value given with --set, --set-json or --inputs-json is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", Next: nextSampleInputs})
+		case e.Code == sample.CodeUnsatisfiable || e.Code == finding.CodeSampleInvalid:
+			c.Refusals = append(c.Refusals, Refusal{Code: e.Code, Cause: "The generated data cannot be made or does not validate (" + strings.ReplaceAll(rest, "_", " ") + ").", Next: nextSampleSchema})
+		}
+	}
+}
