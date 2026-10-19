@@ -256,6 +256,7 @@ func declarations() []*Command {
 		checkDeclaration(),
 		sampleDeclaration(),
 		testDeclaration(),
+		packDeclaration(),
 		unpackDeclaration(),
 		{
 			Name: "version", Group: "The tool", Synopsis: "version [--json]",

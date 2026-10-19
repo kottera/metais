@@ -158,12 +158,12 @@ func (s *session) emit(o outcome) int {
 }
 
 // streamsBytes reports whether standard output carries bytes on the line
-// l, render --out -'s, from before the command runs, so that a refusal of
-// the line, its own or the render's, writes nothing there: render --out -
-// with no --dry-run, which writes none.
+// l, render --out -'s or pack --out -'s, from before the command runs, so
+// that a refusal of the line, its own or the command's, writes nothing
+// there: render or pack --out - with no --dry-run, which writes none.
 func (l line) streamsBytes() bool {
 	out, _ := l.parsed.Value("out")
-	return l.cmd != nil && l.cmd.Name == "render" && out == "-" && !l.parsed.Has("dry-run")
+	return l.cmd != nil && (l.cmd.Name == "render" || l.cmd.Name == "pack") && out == "-" && !l.parsed.Has("dry-run")
 }
 
 // reports reports whether fs are the command's result rather than its
