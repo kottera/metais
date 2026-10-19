@@ -316,9 +316,9 @@ func (s *scanner) splitConstructs() []located {
 			why |= p.cause
 		}
 		out = append(out, located{c.Span.Start, s.finding(CodeSplitConstruct, c.Span.Line, c.Span.Col, finding.Params{
-			"text":     finding.String(text.String()),
-			"elements": finding.Int(int64(elems)),
-			"cause":    finding.String(why.name()),
+			"text":          finding.String(text.String()),
+			"text_elements": finding.Int(int64(elems)),
+			"cause":         finding.String(why.name()),
 		})})
 	}
 	return out
@@ -356,10 +356,10 @@ func (s *scanner) splitDelimiters() []located {
 		why := s.causesIn(prev.end, cur.start) | prev.cause | cur.cause
 		line, col := pos.at(prev.end - 1)
 		out = append(out, located{prev.end - 1, s.finding(CodeSplitDelimiter, line, col, finding.Params{
-			"delimiter": finding.String(d),
-			"text":      finding.String(text.String()),
-			"elements":  finding.Int(int64(elems)),
-			"cause":     finding.String(why.name()),
+			"delimiter":     finding.String(d),
+			"text":          finding.String(text.String()),
+			"text_elements": finding.Int(int64(elems)),
+			"cause":         finding.String(why.name()),
 		})})
 	}
 	return out
