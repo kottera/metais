@@ -319,8 +319,9 @@ const (
 )
 
 // schemaProperty resolves the property segment p on the node at ptr of
-// input's schema (ADR-007 D3 item 4).
-func (a *analyzer) schemaProperty(input, ptr, p string) (set, *rejection) {
+// input's schema (ADR-007 D3 item 4). Liquid's command names apply only
+// to a ".p" segment, for which dot is set.
+func (a *analyzer) schemaProperty(input, ptr, p string, dot bool) (set, *rejection) {
 	ap := a.applicableSet(input, ptr)
 	if ap.open {
 		return open, nil
@@ -366,12 +367,13 @@ func (a *analyzer) schemaProperty(input, ptr, p string) (set, *rejection) {
 		return union(out), nil
 	}
 	t := a.typesOf(ptr)
-	switch p {
-	case "size":
+	switch {
+	case !dot:
+	case p == "size":
 		if t&(schema.TypeArray|schema.TypeObject|schema.TypeString) != 0 {
 			return num, nil
 		}
-	case "first", "last":
+	case p == "first" || p == "last":
 		var r set
 		if t&schema.TypeArray != 0 {
 			i := 0

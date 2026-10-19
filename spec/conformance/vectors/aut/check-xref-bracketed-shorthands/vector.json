@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-xref-bracketed-shorthands",
+  "title": "The cross-reference reads size, first and last as Liquid commands only after a dot: bracketed, on an array or a string they are a field of a non-object, and on an object an undeclared field unless the schema declares them",
+  "statements": [
+    "MTS-AUT-013"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

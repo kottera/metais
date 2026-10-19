@@ -1,0 +1,93 @@
+[
+  {
+    "code": "template.xref.not_an_object",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 1,
+      "column": 53
+    },
+    "params": {
+      "property": "first",
+      "types": [
+        "array"
+      ],
+      "input": "report",
+      "output": "report"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "inputs/report.schema.json",
+        "pointer": "/properties/rows",
+        "note": "where the schema declares it"
+      }
+    ]
+  },
+  {
+    "code": "template.xref.not_an_object",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 2,
+      "column": 54
+    },
+    "params": {
+      "property": "size",
+      "types": [
+        "string"
+      ],
+      "input": "report",
+      "output": "report"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "inputs/report.schema.json",
+        "pointer": "/properties/title",
+        "note": "where the schema declares it"
+      }
+    ]
+  },
+  {
+    "code": "template.xref.unknown_field",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 3,
+      "column": 56
+    },
+    "params": {
+      "property": "last",
+      "declared": [
+        "count"
+      ],
+      "declared_count": 1,
+      "input": "report",
+      "output": "report"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "inputs/report.schema.json",
+        "pointer": "/properties/totals",
+        "note": "where the schema declares it"
+      }
+    ]
+  }
+]
