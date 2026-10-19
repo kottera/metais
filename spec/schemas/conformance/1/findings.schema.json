@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/schemas/conformance/1/findings.schema.json",
+  "title": "METAIS expected findings",
+  "description": "A vector's expected findings, in order: each holds only the members a finding's contract makes stable, never its message, its hint or its schema keyword location, whose wording or form is the implementation's. Each member present must equal the actual finding's member of the same name, recursively.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["code"],
+    "additionalProperties": false,
+    "properties": {
+      "code": { "type": "string", "minLength": 1 },
+      "severity": { "enum": ["error", "warning", "info"] },
+      "subject": { "type": "object" },
+      "location": { "type": "object" },
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "entry": { "type": "string" },
+          "pointer": { "type": "string" },
+          "keyword": { "type": "string" }
+        }
+      },
+      "field": { "type": "object" },
+      "params": { "type": "object" },
+      "via": { "type": "array" },
+      "alternatives": { "type": "array" },
+      "related": { "type": "array" }
+    }
+  }
+}

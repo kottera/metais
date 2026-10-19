@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/schemas/conformance/1/record.schema.json",
+  "title": "METAIS cross-platform record",
+  "description": "What one run of the suite observed on one target, by digest: the tool, the target, the suite, and for every invocation of every step of every case in each environment, the result and the SHA-256 and length of every byte it produced. Records of one build on different targets agree in every member but target. No sandbox path appears in a record.",
+  "type": "object",
+  "required": ["$schema", "tool", "target", "suite_sha256", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "title": "Schema",
+      "description": "This schema's identifier.",
+      "const": "https://metais.org/schemas/conformance/1/record.schema.json"
+    },
+    "tool": {
+      "title": "Tool",
+      "description": "The implementation's name and version, as it reports them.",
+      "type": "object",
+      "required": ["name", "version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "target": {
+      "title": "Target",
+      "description": "The operating system and architecture the suite ran on, as <os>/<arch>.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+/[a-z0-9]+$"
+    },
+    "suite_sha256": {
+      "title": "Suite digest",
+      "description": "The SHA-256, in lower-case hexadecimal, of the lines \"<path> <sha256>\" each ended by LF, one per regular file below the suite directory, sorted, with slash-separated paths relative to it.",
+      "$ref": "#/$defs/sha256"
+    },
+    "steps": {
+      "title": "Steps",
+      "description": "One entry per invocation, sorted by vector, case, step, invocation and environment.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/step" }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "blob": {
+      "title": "Bytes",
+      "description": "The SHA-256 and length of some bytes.",
+      "type": "object",
+      "required": ["sha256", "length"],
+      "additionalProperties": false,
+      "properties": {
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "length": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "step": {
+      "title": "Step",
+      "description": "One invocation of one step of one case in one environment.",
+      "type": "object",
+      "required": ["vector", "case", "step", "invocation", "env", "ok", "stdout", "stderr", "stream", "listing", "files"],
+      "additionalProperties": false,
+      "properties": {
+        "vector": { "type": "string", "minLength": 1 },
+        "case": { "type": "string", "minLength": 1 },
+        "step": { "type": "integer", "minimum": 1 },
+        "invocation": {
+          "description": "1, or the position of the command among those a hostile open step runs.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "env": { "enum": ["A", "B"] },
+        "ok": { "type": "boolean" },
+        "stdout": { "$ref": "#/$defs/blob" },
+        "stderr": { "$ref": "#/$defs/blob" },
+        "stream": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/blob" }] },
+        "listing": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/blob" }] },
+        "files": {
+          "description": "Every regular file of the step's declared trees, by path from the work directory.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "size", "sha256", "executable"],
+            "additionalProperties": false,
+            "properties": {
+              "path": { "type": "string", "minLength": 1 },
+              "size": { "type": "integer", "minimum": 0 },
+              "sha256": { "$ref": "#/$defs/sha256" },
+              "executable": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

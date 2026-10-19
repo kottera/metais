@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/schemas/conformance/1/driver-response.schema.json",
+  "title": "METAIS conformance driver response",
+  "description": "The one JSON document a driver prints on standard output before exiting 0: the operation's result, or, for version, only the implementation's identity. Within the protocol's major version members are only added, and a runner ignores members it does not know.",
+  "type": "object",
+  "oneOf": [
+    { "required": ["ok", "findings"] },
+    { "required": ["tool"], "not": { "anyOf": [{ "required": ["ok"] }, { "required": ["findings"] }] } }
+  ],
+  "properties": {
+    "ok": {
+      "title": "OK",
+      "description": "True when the operation completed and no finding is of error severity.",
+      "type": "boolean"
+    },
+    "findings": {
+      "title": "Findings",
+      "description": "The finding objects, in the specification's order.",
+      "type": "array",
+      "items": { "type": "object", "required": ["code"] }
+    },
+    "listing": {
+      "title": "Listing",
+      "description": "For a dry run, the outputs the render would write; otherwise null or absent.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "size", "digest"],
+            "properties": {
+              "path": { "type": "string" },
+              "size": { "type": "integer", "minimum": 0 },
+              "digest": { "type": "string" }
+            }
+          }
+        }
+      ]
+    },
+    "tool": {
+      "title": "Tool",
+      "description": "The implementation's name and version.",
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
