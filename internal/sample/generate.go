@@ -5,6 +5,7 @@ package sample
 
 import (
 	"cmp"
+	"maps"
 	"math"
 	"slices"
 	"strings"
@@ -21,26 +22,50 @@ const (
 	maxAttempts = 16
 )
 
-// value makes the value at loc from the schemas starts. Each oneOf in C
-// takes a branch, and when the finished value does not match exactly one
-// of its branches the next branch in order is tried, each once (item 8).
+// value makes the value at loc from the schemas starts. Each anyOf and
+// oneOf in C takes a branch, and when the finished value does not match
+// exactly one branch of a oneOf, the next branch in order is tried, each
+// once (item 8). A branch from which no value can be made is passed over
+// the same way, for the next.
 func (s *Generator) value(loc *place, starts []node) (value.Value, bool) {
 	if s.err != nil {
 		return nil, false
 	}
 	choose := map[string]int{}
 	tried := map[string]int{}
+	// next moves the first group of c that has a branch left, and that
+	// moves, to its next branch, and reports whether one did.
+	next := func(c *conj, moves func(group) bool) bool {
+		for _, g := range c.groups {
+			if tried[g.key()]+1 >= g.branches || !moves(g) {
+				continue
+			}
+			tried[g.key()]++
+			for _, h := range c.groups {
+				choose[h.key()] = h.chosen
+			}
+			choose[g.key()] = (g.chosen + 1) % g.branches
+			return true
+		}
+		return false
+	}
 	for {
 		mark := len(s.findings)
 		c := s.effective(loc, starts, choose)
 		v, ok := s.located(loc, c)
-		if !ok || s.err != nil {
+		if s.err != nil {
 			return nil, false
 		}
-		retry := false
-		for _, g := range c.groups {
-			if g.keyword != "oneOf" || tried[g.key()]+1 >= g.branches {
+		if !ok {
+			if next(c, func(group) bool { return true }) {
+				s.findings = s.findings[:mark]
 				continue
+			}
+			return nil, false
+		}
+		mismatched := func(g group) bool {
+			if g.keyword != "oneOf" {
+				return false
 			}
 			matched := 0
 			for i := range g.branches {
@@ -48,17 +73,9 @@ func (s *Generator) value(loc *place, starts []node) (value.Value, bool) {
 					matched++
 				}
 			}
-			if matched != 1 {
-				tried[g.key()]++
-				for _, h := range c.groups {
-					choose[h.key()] = h.chosen
-				}
-				choose[g.key()] = (g.chosen + 1) % g.branches
-				retry = true
-				break
-			}
+			return matched != 1
 		}
-		if !retry {
+		if !next(c, mismatched) {
 			return v, true
 		}
 		s.findings = s.findings[:mark]
@@ -558,11 +575,12 @@ func (s *Generator) object(loc *place, base *conj) (value.Value, bool) {
 		gen := func(name string, starts []node) {
 			child := s.memberPlace(loc, name)
 			k := key(starts)
-			if v, had := members[name]; had && made[name] == k {
+			prev, tried := made[name]
+			if v, had := members[name]; had && tried && prev == k {
 				next[name] = v
 				return
 			}
-			if _, had := members[name]; !had && made[name] == k {
+			if _, had := members[name]; !had && tried && prev == k {
 				// It failed from these schemas before, and was reported.
 				ok = false
 				return
@@ -574,7 +592,13 @@ func (s *Generator) object(loc *place, base *conj) (value.Value, bool) {
 				ok = false
 			}
 		}
-		for _, name := range s.declared(c) {
+		order := s.declared(c)
+		for _, name := range slices.Sorted(maps.Keys(required)) {
+			if !slices.Contains(order, name) {
+				order = append(order, name)
+			}
+		}
+		for _, name := range order {
 			starts := s.propStarts(c, name)
 			req := required[name]
 			if fv, has := fixedMember(fixed, name); has {
