@@ -2162,6 +2162,18 @@
       "statements": []
     },
     {
+      "code": "markdown.frontmatter_unclosed",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} begins with a frontmatter line of --- and has no later line of --- to close it.",
+      "hint": "End the frontmatter with a line that is exactly ---; a file meant to begin with a thematic break begins with *** instead. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "output.additional_item",
       "severity": "error",
       "class": "content",

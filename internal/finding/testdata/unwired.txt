@@ -111,6 +111,7 @@ manifest.yaml.root_not_mapping W3
 manifest.yaml.scalar_refused W3
 manifest.yaml.syntax W3
 manifest.yaml.tag W3
+markdown.frontmatter_unclosed W3
 output.additional_item W5
 output.additional_property W5
 output.any_of W5

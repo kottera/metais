@@ -120,6 +120,7 @@ it, and the statements it reports.
 | `manifest.yaml.scalar_refused` | error | content | manifest | `form` | 1.0 | — |
 | `manifest.yaml.syntax` | error | content | manifest | — | 1.0 | — |
 | `manifest.yaml.tag` | error | content | manifest | — | 1.0 | — |
+| `markdown.frontmatter_unclosed` | error | content | input | — | 1.0 | — |
 | `output.additional_item` | error | content | output | `index`, `prefix_count` | 1.0 | — |
 | `output.additional_property` | error | content | output | `property`; optional: `suggestion` | 1.0 | — |
 | `output.any_of` | error | content | output | `branch_count` | 1.0 | — |

@@ -1,0 +1,13 @@
+Repository: https://github.com/commonmark/cmark
+Commit:     ee05faf6cd95f6c949e2c0d17c73041dea7214fe (2026-10-14)
+Files:      test/pathological_tests.py, COPYING
+Licence:    COPYING (BSD-2-Clause for cmark's own code; the file's
+            other notices cover code this directory does not hold)
+
+pathological_tests.py is copied byte for byte. cmark states its
+pathological cases only as this Python generator: each input is a Python
+expression, and one, "reference collisions", is the value of the function
+hash_collisions(). pathological_test.go reads the file and evaluates the
+inputs as data; see its comment for how, and for the one function it
+mirrors. Updating the file is a deliberate change: take a new commit, copy
+both files again, and update this note.

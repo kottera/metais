@@ -493,6 +493,17 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{},
 	},
 	{
+		Code:       "markdown.frontmatter_unclosed",
+		Severity:   SeverityError,
+		Class:      ClassContent,
+		Subject:    SubjectInput,
+		Message:    "The input {input} begins with a frontmatter line of --- and has no later line of --- to close it.",
+		Hint:       "End the frontmatter with a line that is exactly ---; a file meant to begin with a thematic break begins with *** instead. The input's schema was not checked; validate again after the fix, which may report more.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
 		Code:     "package.container.archive_comment",
 		Severity: SeverityError,
 		Class:    ClassRefused,

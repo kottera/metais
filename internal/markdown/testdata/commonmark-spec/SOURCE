@@ -1,0 +1,13 @@
+Repository: https://github.com/commonmark/commonmark-spec
+Tag:        0.31.2
+Commit:     9103e341a973013013bb1a80e13567007c5cef6f
+Files:      spec.txt, LICENSE
+Licence:    LICENSE (spec.txt is CC-BY-SA 4.0, Copyright (C) 2014-16 John
+            MacFarlane)
+
+spec.txt is copied byte for byte. Its examples are read as data by
+spec_test.go: each example's Markdown is given to Outline, and the headings
+of its expected HTML are what Outline must find. exclusions.txt lists the
+examples that are not compared, each with its reason. Updating spec.txt is a
+deliberate change: take a new tag, copy both files again, update this note
+and read the exclusions again.
