@@ -1,0 +1,18 @@
+metais: "1.0"
+name: org.example.crlfembed
+version: 1.0.0
+title: CRLF over embed
+description: A package whose CRLF output embeds an input's bytes.
+guide: Supply a note.
+inputs:
+  - name: note
+    title: Note
+    schema: inputs/note.schema.json
+    forms: [text]
+outputs:
+  - id: converted
+    template: note.txt.liquid
+    newline: crlf
+  - id: as_written
+    template: note.txt.liquid
+    path: as-written.txt

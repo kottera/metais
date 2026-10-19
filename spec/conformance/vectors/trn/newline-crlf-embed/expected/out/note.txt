@@ -1,0 +1,5 @@
+before
+LF
+CRLF
+lone CRlast
+after
