@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% increment foo %} {% increment bar %} {% increment foo %} {% increment bar %}")

@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% if empty == blank or e == empty and n == blank %}y{% endif %}")

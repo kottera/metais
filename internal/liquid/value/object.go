@@ -73,6 +73,10 @@ func (o Object) Get(name string) (Value, bool) {
 	return nil, false
 }
 
+// At returns the member at index i in canonical order, which must be in
+// [0, Len()).
+func (o Object) At(i int) Member { return o.members[i] }
+
 // All yields each member's name and value in canonical order.
 func (o Object) All() iter.Seq2[string, Value] {
 	return func(yield func(string, Value) bool) {

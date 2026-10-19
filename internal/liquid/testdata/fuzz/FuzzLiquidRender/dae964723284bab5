@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("\n\t{% if customer -%}\t\nWelcome back,  {{ customer.first_name -}}\t !\x0d\n {%- endif -%}")

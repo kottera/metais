@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{%- liquid\n  liquid echo 'bar'\n  echo \x22foo\x22\n-%}")

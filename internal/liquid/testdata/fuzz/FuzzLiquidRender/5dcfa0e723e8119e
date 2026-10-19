@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% for i in (0..10) %}  {% endfor %}")

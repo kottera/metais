@@ -14,7 +14,7 @@ import (
 // iterated by the UTF-16 code units of its names, whatever order its
 // members were given in. The names include one outside the Basic
 // Multilingual Plane and one in U+E000 to U+FFFF, where UTF-16 order and
-// UTF-8 byte order disagree.
+// UTF-8 byte order disagree. Names, All and At agree on it.
 func TestObjectCanonicalOrder(t *testing.T) {
 	want := []string{"", "1", "A", "B", "a", "aa", "ab", "b", "é", "\U0001F600", "\uE000", "\uFFFD"}
 	for _, given := range [][]string{
@@ -36,6 +36,13 @@ func TestObjectCanonicalOrder(t *testing.T) {
 		}
 		if !slices.Equal(iterated, want) {
 			t.Errorf("given %q, All() = %q, want %q", given, iterated, want)
+		}
+		var indexed []string
+		for i := range o.Len() {
+			indexed = append(indexed, o.At(i).Name)
+		}
+		if !slices.Equal(indexed, want) {
+			t.Errorf("given %q, At(0…) = %q, want %q", given, indexed, want)
 		}
 	}
 }

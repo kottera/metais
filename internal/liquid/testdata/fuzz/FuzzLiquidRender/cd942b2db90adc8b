@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{{ s | escape | mark }}{{ s | strip_html | truncate: 3 }}{{ s | url_encode | url_decode }}")

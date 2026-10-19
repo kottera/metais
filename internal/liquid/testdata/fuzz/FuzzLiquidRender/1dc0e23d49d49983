@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% capture some %}hello{% endcapture %}{% assign other = some %}{{ some }}-{{ other }}")

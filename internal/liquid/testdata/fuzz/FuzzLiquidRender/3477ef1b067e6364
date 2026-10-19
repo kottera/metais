@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% cycle o: 1, 2 %}{% cycle xs: 1 %}{% cycle 'a', b, s %}")

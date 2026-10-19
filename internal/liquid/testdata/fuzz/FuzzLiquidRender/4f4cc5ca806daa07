@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% assign foo = bar %}{{ foo[0] }}/{{ foo[1] }}")

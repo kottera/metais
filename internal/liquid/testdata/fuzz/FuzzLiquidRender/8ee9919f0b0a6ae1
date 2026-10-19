@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% assign i = 1 %}{{ product.tags[i] }}")

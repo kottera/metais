@@ -1,15 +1,70 @@
-# Golden Liquid cases excluded from TestGoldenLiquidParse, one per line:
-# <case name><TAB><reason><TAB><note>. The reason is one of ADR-010 D4
-# item 7's closed set; a dialect line names its ADR-004 item.
+# Golden Liquid cases excluded from TestGoldenLiquidParse and
+# TestGoldenLiquidRender, one per line: <case name><TAB><reason><TAB><note>.
+# The reason is one of ADR-010 D4 item 7's closed set; a dialect line names
+# its ADR-004 item. A case the parse refuses is excluded at parse, and must
+# still be refused there; a case that parses is excluded at render, and must
+# not render its expected result.
+blank and empty, undefined is equal to blank	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+blank and empty, undefined is not equal to empty	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+filters, compact, array of objects with key property	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, find index, array of hashes, with a nil	dialect	ADR-004 D6 item 5: a property of nil is template.nil_property; this case is lax mode's, rendering it as nothing
+filters, find, array of hashes, with a nil	dialect	ADR-004 D6 item 5: a property of nil is template.nil_property; this case is lax mode's, rendering it as nothing
+filters, find, hash input, explicit nil, match	dialect	ADR-004 D6 item 5: a property of nil is template.nil_property; this case is lax mode's, rendering it as nothing
+filters, map, undefined argument	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+filters, reject, first argument is undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+filters, reject, input is a hash, default value, nil match	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, reject, input is a hash, default value, no match	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, reject, input is a hash, explicit nil match	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, reject, input is a hash, int value, no match	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, reject, input is undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+filters, reject, second argument is undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+filters, sort natural, argument is undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+filters, uniq, array of objects with key property	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, uniq, array of objects with missing key property	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, where, second argument is undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
 identifiers, allowed symbols	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
 identifiers, allowed symbols, parens	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
 identifiers, capture only digits	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
 identifiers, only digits	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
 identifiers, repeated parens	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
+identifiers, true followed by variable segments is not a reserved word	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+output, access an undefined variable by index	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+output, render an undefined property	dialect	ADR-004 D6 item 4: a property an object neither declares nor holds is template.undefined_property; this case is lax mode's, rendering it as nothing
+output, render an undefined variable	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+range, slice uses range string representation	dialect	ADR-004 D4 item 1: a range is an array of its integers, since every value is one of D4 item 1's kinds; Shopify's Range has a string form, which slice reads
+special, last of a object	dialect	ADR-004 D4 item 7: last applies to an object, its last [name, value] pair, where Ruby's Hash has no last
+special, size of undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, case, 'when' expression using an out of scope identifier	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, case, name not in scope	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
 tags, case, unexpected when token	dialect	ADR-004 D1 item 2: strict2 refuses and in a when, as the corpus's own "tags, case, unexpected when token, strict2" shows; this case is strict mode's
+tags, cycle, multiple undefined variable names	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, cycle, named with different number of arguments	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, cycle, named with growing number of arguments	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, cycle, named with shrinking number of arguments	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, cycle, undefined variable names mixed with no name	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, echo, access an undefined variable by index	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, echo, render an undefined property	dialect	ADR-004 D6 item 4: a property an object neither declares nor holds is template.undefined_property; this case is lax mode's, rendering it as nothing
+tags, echo, render an undefined variable	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, for, forloop goes out of scope	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, for, forloop no such attribute	dialect	ADR-004 D6 item 4: a property an object neither declares nor holds is template.undefined_property; this case is lax mode's, rendering it as nothing
+tags, for, loop over undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, for, parentloop goes out of scope	dialect	ADR-004 D6 item 5: a property of nil is template.nil_property; this case is lax mode's, rendering it as nothing
+tags, for, parentloop is normally undefined	dialect	ADR-004 D6 item 5: a property of nil is template.nil_property; this case is lax mode's, rendering it as nothing
+tags, for, simple hash loop	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+tags, if, array contains undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
 tags, if, else tag expressions are ignored	dialect	ADR-004 D1 item 2: Shopify ignores markup on else, and METAIS refuses what Shopify ignores
 tags, if, extra else blocks are ignored	dialect	ADR-004 D1 item 2: Shopify ignores a branch after else, and METAIS refuses what Shopify ignores
 tags, if, extra elsif blocks are ignored	dialect	ADR-004 D1 item 2: Shopify ignores a branch after else, and METAIS refuses what Shopify ignores
+tags, if, object contains nil	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, if, object contains undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, if, string contains undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, if, undefined contains array	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, if, undefined contains object	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, if, undefined contains string	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, if, undefined contains undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, if, undefined is equal to nil	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, if, undefined is equal to null	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, if, undefined variables are falsy	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
 tags, include, assign persists in outer scope	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
 tags, include, assign to a keyword argument	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
 tags, include, bound array variable	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
@@ -27,6 +82,13 @@ tags, include, some keyword arguments with range literal	dialect	ADR-004 D1 item
 tags, include, some keyword arguments without leading comma	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
 tags, include, string literal name	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
 tags, include, use globals from outer scope	dialect	ADR-004 D1 item 5: include is excluded and refused, naming render
+tags, render, assign to keyword argument	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, render, assigned variables do not leak into outer scope	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, render, bound variable does not exist	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, render, for loop variables go out of scope	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, render, parent variables go out of scope	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+tags, render, render loops can't access parentloop	dialect	ADR-004 D6 item 5: a property of nil is template.nil_property; this case is lax mode's, rendering it as nothing
+tags, render, render loops don't add parentloop	dialect	ADR-004 D6 item 5: a property of nil is template.nil_property; this case is lax mode's, rendering it as nothing
 tags, unless, else tag expressions are ignored	dialect	ADR-004 D1 item 2: Shopify ignores markup on else, and METAIS refuses what Shopify ignores
 tags, unless, extra else blocks are ignored	dialect	ADR-004 D1 item 2: Shopify ignores a branch after else, and METAIS refuses what Shopify ignores
 tags, unless, extra elsif blocks are ignored	dialect	ADR-004 D1 item 2: Shopify ignores a branch after else, and METAIS refuses what Shopify ignores

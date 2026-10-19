@@ -4,6 +4,7 @@
 package liquid
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/kottera/metais/internal/liquid/ast"
@@ -118,6 +119,106 @@ func FuzzFilterApply(f *testing.F) {
 			if _, err := def.Apply(testContext{small}, input, args); err != nil && err.Code == CodeInternal {
 				t.Fatalf("%s under a small meter: %v", name, err)
 			}
+		}
+	})
+}
+
+// fuzzGlobals is FuzzLiquidRender's data: a value of every kind, nested.
+const fuzzGlobals = `{"a": 1, "b": 2.5, "s": "<x&y>", "e": "", "n": null, "t": true, "f": false,
+	"xs": [1, "two", [3, 4], {"k": "v"}, null], "o": {"a": 1, "b": [1, 2], "size": 3, "c": {"d": null}},
+	"big": 9007199254740991, "neg": -7}`
+
+// fuzzMeter and fuzzRenderLimits are FuzzLiquidRender's small limits, so
+// that every input's render is cheap and every bound is reachable.
+var (
+	fuzzMeter        = MeterLimits{RenderWork: 1 << 14, OutputSize: 1 << 12, AssignBytes: 1 << 12, LoopIterations: 1 << 10}
+	fuzzRenderLimits = RenderLimits{PartialDepth: 3, ValueSize: 1 << 10, ArraySize: 1 << 8}
+)
+
+// FuzzLiquidRender is ADR-010 D14 item 6's render target, at small
+// limits: whatever template parses, Render, and Eval and EvalCondition
+// over the same bytes, recover no internal error — a recovered panic
+// fails the target, since every one is a bug (ADR-010 D4 item 6); every
+// error and every call site it carries is located within the input; the
+// meter never passes a limit and the output never passes output-size;
+// and a second render gives the same bytes, the same error and the same
+// counts. The template may render itself, as the partial "self", so
+// recursion reaches partial-depth; its dialect is Core() and the test
+// definitions. Its seed corpus, under testdata/fuzz/FuzzLiquidRender,
+// holds a valid Golden Liquid template for each of the corpus's tag
+// groups, the renderer's own edges and filter chains under Core(), and
+// runs in every go test.
+func FuzzLiquidRender(f *testing.F) {
+	d := fuzzDialect(f)
+	v, err := jsonValue([]byte(fuzzGlobals))
+	if err != nil {
+		f.Fatal(err)
+	}
+	globals := Data(v).(value.Object)
+	plim := ParseLimits{Nesting: 8, Size: 1 << 10}
+	f.Fuzz(func(t *testing.T, src []byte) {
+		x := newLineIndex(string(src))
+		at := func(what string, source string, off, line, col int) {
+			if source != "f" && source != "" {
+				t.Fatalf("%s: located in %q, not the input", what, source)
+			}
+			if off < 0 || off > len(src) {
+				t.Fatalf("%s: offset %d, outside %d bytes", what, off, len(src))
+			}
+			if l, c := x.at(off); l != line || c != col {
+				t.Fatalf("%s: offset %d is %d:%d, want %d:%d", what, off, line, col, l, c)
+			}
+		}
+		checkErr := func(what string, e *Error) {
+			if e == nil {
+				return
+			}
+			if e.Code == CodeInternal {
+				t.Fatalf("%s: internal error: %v", what, e)
+			}
+			at(what, e.Source, e.Offset, e.Line, e.Col)
+			for _, s := range e.Chain {
+				at(what+"'s call site", s.Source, s.Offset, s.Line, s.Col)
+			}
+		}
+		render := func() (string, *Error, Meter) {
+			tpl, errs := Parse(d, Source{Name: "f", Text: src}, plim)
+			if len(errs) > 0 {
+				return "", nil, nil
+			}
+			m := NewMeter(fuzzMeter)
+			env := &Env{Dialect: d, Globals: globals, Partials: mapPartials{"self": tpl}, Meter: m, Limits: fuzzRenderLimits}
+			var b bytes.Buffer
+			err := Render(&b, tpl, env)
+			return b.String(), err, m
+		}
+		out, err, m := render()
+		if m == nil {
+			return
+		}
+		checkErr("Render", err)
+		if len(out) > int(fuzzMeter.OutputSize) {
+			t.Fatalf("Render wrote %d bytes, above output-size %d", len(out), fuzzMeter.OutputSize)
+		}
+		for w, lim := range map[Work]int64{WorkUnits: fuzzMeter.RenderWork, WorkOutputBytes: fuzzMeter.OutputSize,
+			WorkHeldBytes: fuzzMeter.AssignBytes, WorkIterations: fuzzMeter.LoopIterations} {
+			if m.Used(w) > lim {
+				t.Fatalf("work %d: %d charged, above its limit %d", w, m.Used(w), lim)
+			}
+		}
+		out2, err2, m2 := render()
+		if out2 != out || (err == nil) != (err2 == nil) || (err != nil && err.Error() != err2.Error()) ||
+			m2.Used(WorkUnits) != m.Used(WorkUnits) || m2.Used(WorkIterations) != m.Used(WorkIterations) {
+			t.Fatalf("two renders differ: %q, %v and %q, %v", out, err, out2, err2)
+		}
+		env := &Env{Dialect: d, Globals: globals, Meter: NewMeter(fuzzMeter), Limits: fuzzRenderLimits}
+		if e, perr := ParseValue(d, Source{Name: "f", Text: src}, plim); perr == nil {
+			_, err := Eval(e, env)
+			checkErr("Eval", err)
+		}
+		if c, perr := ParseCondition(d, Source{Name: "f", Text: src}, plim); perr == nil {
+			_, err := EvalCondition(c, env)
+			checkErr("EvalCondition", err)
 		}
 	})
 }

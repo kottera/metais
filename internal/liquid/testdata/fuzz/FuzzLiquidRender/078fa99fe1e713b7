@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{{ s | suffix: s | pair | object }}{{ 1 | fail }}{{ s | mark }}")

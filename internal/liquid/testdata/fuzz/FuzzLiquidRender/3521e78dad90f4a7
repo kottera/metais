@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% for x in (2..2) %}{{ x }},{% endfor %}")

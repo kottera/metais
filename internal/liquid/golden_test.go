@@ -154,7 +154,8 @@ func parseGolden(d *Dialect, c goldenCase) []*Error {
 //     parse, and Wave 3's render run proves their refusal;
 //   - a case that cannot do either is listed in exclusions.txt with a
 //     reason from D4 item 7's closed set, and must still fail, so a stale
-//     line is found.
+//     line is found. A listed valid case that parses is excluded at
+//     render, where TestGoldenLiquidRender holds it to failing.
 //
 // No case may recover an internal error, listed or not. A case that
 // applies date is selected out (goldenDateSelector), and counted.
@@ -224,7 +225,7 @@ func TestGoldenLiquidParse(t *testing.T) {
 			ok = len(errs) > 0
 		}
 		if x, isExcluded := excluded[c.Name]; isExcluded {
-			if ok {
+			if ok && c.Invalid {
 				t.Errorf("exclusions.txt:%d: %q passes; remove the line", x.line, c.Name)
 			}
 			skipped++

@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% say s %}{% say %}{% say 1 %}")

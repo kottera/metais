@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% capture this-thing %}Hello, {{ customer.first_name }}.{% endcapture %}{{ this-thing }}")

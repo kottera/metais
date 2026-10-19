@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% if s < a %}{% endif %}{% if xs contains xs %}{% endif %}{% if o == o %}y{% endif %}")

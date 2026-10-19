@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{{ xs | where: 'k', 'v' | first }}{{ xs | map: 'k' | uniq | size }}")
