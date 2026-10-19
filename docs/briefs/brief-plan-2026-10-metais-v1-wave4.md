@@ -328,5 +328,304 @@ Placement is the wave orchestrator's.
 
 ## Closeout
 
-*Not yet written. The wave orchestrator replaces this line with the wave's
-closeout.*
+The wave orchestrator wrote this closeout (Work Order
+`01a1534a-2fe2-7c9a-9ea7-bcc2fea20cad`) after the wave drained. It reports
+what landed and what carries forward. **It is not a correctness verdict.**
+
+**What I checked, and how:**
+- I read every child's report, the verifier's full report, and the merge
+  commits on `main`.
+- In the merged tree at `d4ba3ba`, I read:
+  - `internal/fault`: the five bits are as assigned at breakdown;
+  - `unwired.txt`: no `W4` line remains;
+  - `spec/07-template-environment.md`;
+  - `spec/conformance/delegated/`;
+  - ADR-009's implementation log: the three canary red runs are recorded;
+  - W4-V1's diff.
+- I confirmed the missing `hidden-only` fixture myself before filing its fix.
+- I ran no test, no gate and no mutation. Where a guarantee is said below to
+  be proved, the proof is the producer's or the verifier's, and it is
+  attributed to them.
+
+**Wave range:** `c9fa2d5..d4ba3ba` on `main`.
+- **The breakdown:** seven implementation items. The plan orchestrator
+  approved it with one edit (Decision 2) and sanctioned four `depends_on`
+  edges (Decision 1). It was released as one set.
+- **Verification:** one round, which found one blocking defect. It got one
+  fix child, W4-V1, which merged and is not re-verified.
+- **Non-blocking findings:** they went to two children, and some to the plan
+  orchestrator, with reasons (question 4). **The wave completed without
+  waiting for them, deliberately.**
+- **The liquid-spec act** is filed and carried (question 5).
+- **Commits in the range that are not items:**
+  - #66, the plan orchestrator's record of this wave's rulings;
+  - #65 and #73 (W3-NB2);
+  - #74 (W2-A1);
+  - #76 (W3-A2);
+  - #78 (W3-A1, design session `01a15348-4ab5`'s ruling).
+- **No person was consulted.** The breakdown review went to the plan
+  orchestrator. W4-0's question was decided here, as ruling R-W4-0 below.
+
+### 1. Did each item land, and does it match the ask?
+
+| Item | Work Order | PR | Merge | Landed |
+|---|---|---|---|---|
+| W4-0 `hostfs` write shapes | `01a15353-d737-7e8e-85a6-e44c3ea43abc` | #67 | `7afb1a9` | `StageNew` (a new directory through staging), `WriteInPlace` (an empty target) and `CreateNew` (`extract`). Each holds bounded handles: 100,000 files under an open-file soft limit of 128. Each makes a umask grant. `fault.SkipConfine` sits at its `hostfs` seam. The ownership boundary is ruling R-W4-0 |
+| W4-1 `validate` | `01a15354-8220-791c-94f4-4bfd86717d7a` | #69 | `d8b621d` | `validate` with every supply flag and `--resolved`. 44 statements across chapters 5, 6, 12 and 14, with 27 vectors. `FirstFinding` and `TestOnePassDetector` (SC8). The 240-code-point bound. `--fail-on`, once, for every command that reports findings. The `path` canary. 84 codes off the unwired list |
+| W4-2 reading commands | `01a15354-f1c0-7d90-a712-ac7ded2a72b5` | #70 | `c8c717c` | `ls`, `read`, `outline`, `grep`, `schema` and `extract`, in `internal/browse`. `UnpackToTemp` and the read-in-place detector. The `read --lines` budget, counted in decodes. All six commands join the opening set. `extract` refuses an existing target and has no `--overwrite` (Decision 2) |
+| W4-3 render | `01a15355-804e-736e-817f-11db46f96057` | #72 | `f341681` | `internal/template` and `render --out <new dir>` through `StageNew`. Chapter 7 (MTS-TPL-001 to 052), plus render's statements in chapters 9, 11 and 14, with 33 vectors. The confinement and determinism detectors, and A2's tripwire. `TestHostIsolation` and `TestHostIsolationCanaries`, with the `env`, `cwd` and `path` canaries. Every meeting it was second to |
+| W4-4 `check` | `01a15355-e7a5-70e2-8357-d8c0cc2cfc5e` | #68 | `c7cd167` | Every ADR-007 D2 step, with `report.step_skipped`. xref and the OOXML scan are wired. MTS-AUT-001 to 023, with 18 vectors. The `template.xref.*` and `template.ooxml.*` codes are off the list, except two moved to W5 |
+| W4-5 `unpack` and the unwritable pre-state | `01a15356-4a5e-7989-aea3-f6acf17091a4` | #71 | `84d3885` | `unpack`, staged or in place, and the round trip without `pack`. MTS-AUT-024 to 029. `setup.unwritable` with `requires: unwritable-dirs` (ADR-011 A2, proposed). `aut/unpack-write-failed`. The self-proof flake's two mechanisms, fixed |
+| W4-6 Liquid closure | `01a15356-b4cf-734b-a531-f1fe881b47a7` | #75 | `aee03df` | Golden Liquid in full: 1,098 cases, 10 selected out for `date`, 1,088 run, 908 pass and 180 excluded, all on `dialect` lines. `internal/liquidspec`, the JSON-RPC server. `spec/conformance/delegated/` with the pin, the gates, 490 departures each tied to a statement, `liquid-spec.rb` and the run's README. Engine fixes against gem 5.14.0 `strict2`, with MTS-TPL-053 to 055 |
+| W4-V1 blocking fix | `01a153fb-d8a6-7284-8be0-0f0bc4fada17` | #77 | `d4ba3ba` | Commits `rnd/destination-not-empty`'s `setup/hidden-only/.DS_Store`, and adds `!/spec/conformance/**` to `.gitignore` so that no conformance fixture can be dropped again |
+
+**The gate.** Every item reports AGENTS.md's whole gate green on go1.26.9
+before merge:
+- W4-0, W4-1, W4-2 and W4-6 ran on linux/amd64;
+- W4-3, W4-4, W4-5 and W4-V1 ran on darwin/arm64.
+
+There are two exceptions:
+- **W4-6 merged over a red it did not cause.** It reported the red, and it is
+  question 4's blocking finding.
+- **W4-3, W4-4 and W4-5 did not run `go test -race ./internal/hostfs/...` on
+  linux,** because their hosts were darwin. W4-0, W4-2 and W4-6 did.
+
+**Divergences from the ask:**
+- **W4-0.2 is narrowed by ruling R-W4-0.** For `StageNew`, a foreign file
+  swapped in at a name the write created, inside the staging directory, is
+  removed. This is a declared gap.
+- **W4-1.1:** `--resolved`'s document is proved by a Go test, not a vector.
+  The vector format compares only findings, trees, streams and listings.
+- **W4-1.4:** `collection.item_name` and `input.not_readable` moved from W4
+  to W7, because no vector could produce them (question 4, finding b).
+- **W4-3.5 is partly unmet:** `input.raw_unavailable` is listed W5 with no
+  vector, because only `embed`, which is Wave 5's, raises it.
+- **W4-3.5:** `argument` maps to a new code, `template.tag_argument`.
+- **W4-3.4:** `limit.exceeded`'s subject is settled with two new codes,
+  `limit.exceeded.template` and `limit.exceeded.output`, inside ADR-006's
+  registry model.
+- **W4-4.8 is unmet:** the OOXML CPU-ratio flake did not reproduce on
+  darwin/arm64, for the producer or the verifier.
+- **W4-5.8 is fixed but not observed:** two mechanisms were found, pinned by
+  tests and fixed, with the 5 s bound unchanged. Neither host reproduced the
+  flake.
+- **W4-6.2:** the server is the `internal/liquidspec` test binary run with
+  `-serve`, not a `main` package, because R2-143's allow-list keeps
+  `os.Stdin` and `os.Exit` to `cmd/metais`.
+- **W4-6 touched outside its item where engine fixes forced it:**
+  MTS-AUT-014's text and the `dynamic_reference` hint, and xref's dead
+  branch.
+
+### 2. What children flagged, degraded, declined or discovered
+
+None of this was verified by me.
+
+- **Wave 5's share of chapter 7 (W4-3):**
+  - the `fan_out` and `item` members;
+  - D7 item 10's table of contexts;
+  - D9's escaping;
+  - render-work's per-filter charge table.
+
+  Declarations this wave does not render end with `internal.error`, by
+  design, until Wave 5:
+  - assets, mirrors and containers;
+  - `when`, `for_each`, `escape: html` and `newline: crlf`;
+  - `validate`;
+  - Liquid paths;
+  - `--out -`.
+- **`check`'s Wave 5 share (W4-4):**
+  - output validation schemas are not compiled;
+  - container profiles are not checked;
+  - the lowest minor is not computed, because 1.0 is the only minor.
+- **`--fail-on warning` on render** is implemented but unobservable, because
+  render emits no warning this wave.
+- **The canaries' red runs** are recorded in ADR-009's log, but they land in
+  the same squash commit as the release code that passes them. "Recorded
+  first" holds within the PR's history only (W4-3).
+- **Stricter rules that won, each named in its PR:**
+  - W4-5 opens the package before refusing a directory operand
+    (`usage.not_a_packed_package`), so that security vectors refuse
+    identically through `unpack`. ADR-008 D9 item 1 alone would refuse
+    earlier.
+  - W4-2 adds `read`, `outline`, `grep` and `extract` to the opening set,
+    beyond ADR-011 D16 item 3's list.
+- **Readings taken where the ADRs are silent**, each recorded in the
+  ADRs' implementation logs by its producer:
+  - W4-1: refusals the ADRs leave to the command line get
+    `usage.data_dir_unreadable` and `usage.conflicting_flags`.
+  - W4-2: a pattern or glob is an operand, so it gets `usage.bad_glob` and
+    `usage.bad_pattern`; `grep`'s regex-work exhaustion is
+    `usage.bad_pattern` with reason `regex_work`.
+  - W4-3: an existing empty `--out` is `output.destination.write_failed`,
+    reason `exists`.
+  - W4-4:
+    - a package refused on read gets no `report.step_skipped`;
+    - a step is skipped only when the manifest's model is absent;
+    - it adds the codes `manifest.input.form_shape`,
+      `manifest.input.collection_shape` and
+      `output.declaration.validate_kind`;
+    - `template.syntax` gains an always-present `cause`.
+- **Conformance timing.** Measured on darwin/arm64:
+  - `TestConformance` alone, under `-race`, took 31.4 s for the verifier, and
+    20 to 47 s for the producers;
+  - the whole `internal/conformance` package takes about 100 s, because
+    `TestRealToolInRecord` and `TestDriverProtocol` re-run the suite.
+
+  W4-1 and W4-2 read ADR-011 D11 item 9's 60 s as applying to the package.
+  The verifier read it as the default run, as D11 item 9's text says, and
+  found it within the bound.
+- **Flakes:** none met in the wave apart from the two named above, which did
+  not reproduce.
+- **The liquid-spec departures are a prediction.** No Ruby was available,
+  and W4-6 derived them by emulation: 2,394 run, 1,801 pass, 490 departures,
+  103 held out for `date`. Until Wave 5 registers `date`, the verdict is
+  `TestDelegatedRun`, not liquid-spec's exit status.
+
+### 3. What carries to the next wave
+
+- **For Wave 5's brief:**
+  - `extract --overwrite` (Decision 2);
+  - `unpack --dry-run` (cross-item finding X2);
+  - `input.raw_unavailable`'s vector through `embed`;
+  - `template.xref.unknown_input` and `template.xref.missing_asset`, now
+    listed W5;
+  - the chapter 7 and `check` remainders in question 2.
+
+  Wave 5's existing destinations should settle one answer for an existing
+  empty destination across `render` and `extract` (X1). Today `render` says
+  `write_failed`/`exists` and `extract` says `not_empty`. Both are interim
+  refusals that Wave 5 replaces.
+- **Before Wave 5 is filed:** the liquid-spec act (question 5) must end. It
+  will turn the 490 predicted departures into a measured result.
+- **For the plan orchestrator, or Ed:**
+  - **(b)** The W7 list is 18, not 16. #78 resolved the original 16, but
+    `collection.item_name` and `input.not_readable` joined it in W4-1, and
+    they need the same treatment. ADR-011 A4's `unreadable` setup, from
+    #78, may make `input.not_readable` producible.
+  - **X4** `init` has no conformance operation, so `init`'s
+    `output.destination.write_failed` is proved only by Go tests. The code
+    itself is produced by `aut/unpack-write-failed`.
+  - **X5** Settle which run ADR-011 D11 item 9's 60 s binds. Producers read
+    it two ways.
+- **For Ed to ratify:**
+  - ADR-011 A2, proposed (`unwritable-dirs`);
+  - ruling R-W4-0;
+  - Decisions 1 and 2, which are already recorded under plan §10;
+  - the new codes and readings in question 2.
+- **What I would do differently:**
+  - **Look for shared infrastructure when deriving.** Three writers shared
+    `hostfs`, and that cost one sanctioned edge set. The SC7 harness shared
+    by two items worked as a meeting only because the owner was named.
+  - **Check that each criterion is achievable inside the brief's scope**
+    before filing. W4-3.5 asked for a vector that only Wave 5's `embed` can
+    produce.
+  - **Have the verifier run the gate on a fresh clone.** The red came from
+    an ignored file, which a dirty working tree hides. W4-V1's `.gitignore`
+    negation now prevents the case.
+
+### 4. What the verification round found, and where every finding went
+
+**Verifier:** `01a153e4-09bc-7799-9e9f-e904d0cb882d` (`wave-verification`),
+on a clean worktree of `main` at `aee03df`, go1.26.9 darwin/arm64. Verdict:
+**blocking**, with one blocking finding.
+- **Every id I sent came back,** all 7 at depth **mutated**, with 31
+  mutations in total.
+- **It audited the range against `base_ref`.** All 7 merges are ancestors of
+  `main`, and the four non-item commits then in the range are placed.
+  Completeness of the item list is trusted, not verified: the verifier
+  cannot see its siblings.
+- **The guards that went RED under mutation, as they should:**
+  - the five faults' controls (SC8, read-in-place, determinism,
+    confinement) and A2's `UnorderedObjects` tripwire;
+  - `hostfs`'s kind check, its `Remove`-not-`RemoveAll`, and its umask
+    restore;
+  - `--fail-on` on `check`;
+  - supply order;
+  - the `{field}` bound;
+  - `read --lines` edges and the binary-to-terminal refusal;
+  - `unpack`'s `.compiled/` exclusion, its Abort and its in-place report;
+  - `render`'s outputs limit;
+  - `bindings`' materialisation;
+  - the departure-statement check;
+  - the `date` hold-out.
+- **Every meeting exists:**
+  - the `path` canary's row, with its red run in ADR-009's log;
+  - `rnd/destination-unwritable`;
+  - `template.ParseEntry`, with `TestCheckAndRenderParseAlike`;
+  - the opening set: 11 commands, green.
+- **The gate:** RED in four tests, all on `rnd/destination-not-empty/hidden-only`.
+  Everything else was green, including the six-target vet and build, and
+  the spec-data drift check.
+
+**The blocking finding.** It quotes the brief: "The gate, AGENTS.md's
+Development list, run whole on go1.26.9 by every item before merge, and by
+the verification round on the merged tree."
+- The fixture `setup/hidden-only/.DS_Store` was ignored by `.gitignore`
+  line 15, and never committed by W4-3.
+- **Fix child:** W4-V1 `01a153fb-d8a6-7284-8be0-0f0bc4fada17`, #77
+  (`d4ba3ba`). It reports the whole gate green on a fresh clone at its head.
+  It is **not re-verified**: one round, hard stop.
+
+**Non-blocking findings.** Each is listed with where it went. **The wave
+completed without waiting for any child below, deliberately.**
+
+| Finding (verifier's title, shortened) | Item | Where it went |
+|---|---|---|
+| (a) `CreateNew`'s exclusive Mkdir is unpinned in its race window (MkdirAll mutation GREEN) | W4-0 | child W4-NB1 `01a15414-2558-70cb-9443-095630a625eb`, member A |
+| (b) Two W4 codes reclassified to W7, growing the design session's list | W4-1 | not filed as a child: it is a notification, not a change. The plan orchestrator owns the relation with design session `01a15348-4ab5`, which #78 has since ruled on for the original 16; question 3 relays it |
+| (c) `browse`'s neutralisation of U+2066–U+2069 is untested | W4-2 | W4-NB1, member B |
+| (d) W4-3.5's `input.raw_unavailable` vector is unmeetable before `embed` | W4-3 | not filed: the vector needs Wave 5's `embed`. The code is listed W5 in `unwired.txt`, so `TestFindingCodesCovered` makes Wave 5 produce it. Carried in question 3 |
+| (e) MTS-TPL-028's `$dynamicRef` clause has no vector | W4-3 | W4-NB1, member C |
+| (f) render's Abort after a failed create is unpinned | W4-3 | W4-NB1, member D |
+| (g) `check`'s statics beneath `allOf`/`anyOf`/`oneOf`/`prefixItems` are untested | W4-4 | W4-NB1, member E |
+| (h) The OOXML CPU-ratio flake did not reproduce | W4-4 | not filed: there is nothing to fix without a reproduction, and the producer recorded an observation on the test. It stays open as an observation, and whoever meets it next debugs it under AGENTS.md |
+| (i) No self-proof wall-bound flake was seen | W4-5 | not filed: the fix landed, and the verifier's run neither confirms nor refutes it |
+| (j) The 490 departures are a prediction until the run | W4-6 | the liquid-spec act, question 5 |
+| X1 Three answers for an existing empty destination | W4-2/3/5 | not filed: both differing refusals are interim until Wave 5's existing destinations replace them. Carried to Wave 5's brief, question 3 |
+| X2 `extract` ships `--dry-run`, while `unpack` deferred its own under the same plan line | W4-2/5 | not filed: a reading of plan §10's "dry run" that the plan orchestrator owns. Carried, question 3 |
+| X3 `check`'s xref and render disagree on `xs["first"]` after W4-6 | W4-4/6 | child W4-NB2 `01a15414-8ee4-71c1-b5ec-15de3abbb36b` |
+| X4 `init` has no vector operation for its `write_failed` | W4-5 | not filed: the code is produced by `aut/unpack-write-failed`, and an `init` op would be a chapter 15 change nothing asks for. Relayed, question 3 |
+| X5 Conformance timing against ADR-011 D11 item 9 | all | not filed: within the bound under D11 item 9's text (31.4 s). Its reading is relayed, question 3 |
+
+**Why five findings share W4-NB1.** Members A to E are one kind of work: pin
+a guard that a mutation showed blind. They touch different packages
+(`hostfs`, `browse`, a `tpl/` vector, `internal/cli`, `internal/author`), so
+they cannot conflict, and one gate run verifies all of them. Its task marks
+them severable. X3 is a behaviour change in `internal/xref`, so it has its
+own child.
+
+**Where the verifier found nothing:** W4-5 and W4-6 have no defect beyond
+the unreproduced flake (i) and the predicted departures (j). On W4-1, every
+mutation went red; its one finding (b) is bookkeeping.
+
+### 5. Out-of-band acts
+
+| Act | Type | Work Order | Placement |
+|---|---|---|---|
+| Run the pinned liquid-spec selection against the reference engine through the JSON-RPC server, and record the result (plan §6, ADR-011 D17) | `manual-qa-pass` | `01a15414-bf58-7436-8dc0-e1df81410d34` | **Carried, not waited on.** Its Before is Wave 5. It has `depends_on` W4-6 (`01a15356-b4cf-734b-a531-f1fe881b47a7`), as plan §10's acceptance asks. Its `build` is `d4ba3ba`. Its `focus` carries the exact commands from `spec/conformance/delegated/README.md`, the versions to record, and what to report |
+
+It is open when this closeout merges. The plan orchestrator files Wave 5
+only after it has ended.
+
+### Rulings made during this wave
+
+- **Decision 1 (the plan orchestrator, on the breakdown).** Exactly four
+  intra-wave edges are sanctioned: W4-0 → W4-2, W4-3 and W4-5, and W4-3 →
+  W4-6. A new need for one is still plan §2's slicing defect.
+- **Decision 2 (the plan orchestrator).** `extract --overwrite` moves to
+  Wave 5. This wave's `extract` writes only where the target does not exist,
+  and does not declare `--overwrite`.
+- **Chapters 9 and 11 (the plan orchestrator).** W4-3 writes, with vectors,
+  whatever its render makes observable.
+- **R-W4-0 (the wave orchestrator, answering W4-0).** For the `StageNew`
+  shape, the ownership boundary is the staging directory: created
+  exclusively under its fixed name, and held by the write's root handle.
+  - It follows ADR-005 D14 item 1.5: "remove the staging directory and the
+    ancestors created in step 1 (everything removed is the render's own)".
+  - It is not `hostfs`'s general mechanism, which stays with design session
+    `01a15284-df6e-7668-b799-62f4c380a84f`.
+  - The declared residual gap: a foreign file swapped in at a name the write
+    created, inside the staging directory, is removed.
+  - In-place shapes remove nothing on failure.
+
+  For the plan orchestrator's ratification.
