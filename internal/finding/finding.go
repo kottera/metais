@@ -270,8 +270,6 @@ type Finding struct {
 	subject      Subject
 	location     *Location
 	params       Params
-	message      string
-	hint         string
 	schema       *Schema
 	field        *Field
 	via          []Via
@@ -284,8 +282,13 @@ type Finding struct {
 func (f Finding) Code() Code                  { return f.entry.Code }
 func (f Finding) Severity() Severity          { return f.entry.Severity }
 func (f Finding) Class() Class                { return f.entry.Class }
-func (f Finding) Message() string             { return f.message }
-func (f Finding) Hint() string                { return f.hint }
+
+// Message returns the finding's message, rendered from its code's
+// template (ADR-006 D9).
+func (f Finding) Message() string { return f.mustRender(f.entry.Message) }
+
+// Hint returns the finding's hint, rendered from its code's template.
+func (f Finding) Hint() string { return f.mustRender(f.entry.Hint) }
 func (f Finding) Subject() Subject            { return f.subject }
 func (f Finding) Via() []Via                  { return slices.Clone(f.via) }
 func (f Finding) Alternatives() []Alternative { return slices.Clone(f.alternatives) }
@@ -407,11 +410,13 @@ func New(code Code, subj Subject, loc *Location, p Params, opts ...Option) Findi
 		f.related[i].Location = f.related[i].Location.withPath()
 	}
 	f.paramsKey = canonicalForm(f.params)
-	var err error
-	if f.message, err = f.render(e.Message); err != nil {
+	// The message and hint are checked here and written when they are
+	// read: {field} can be the location's pointer, as long as the input,
+	// and a finding the report's cap leaves out is never read.
+	if _, err := f.render(e.Message, false); err != nil {
 		panic(fmt.Sprintf("finding: %s message: %v", code, err))
 	}
-	if f.hint, err = f.render(e.Hint); err != nil {
+	if _, err := f.render(e.Hint, false); err != nil {
 		panic(fmt.Sprintf("finding: %s hint: %v", code, err))
 	}
 	return f
@@ -484,10 +489,20 @@ func validPointer(p string) bool {
 	return true
 }
 
+// mustRender expands tmpl, which New has checked.
+func (f Finding) mustRender(tmpl string) string {
+	s, err := f.render(tmpl, true)
+	if err != nil {
+		panic(fmt.Sprintf("finding: %s: %v", f.entry.Code, err))
+	}
+	return s
+}
+
 // render expands a message or hint template (ADR-006 D3 item 7): {name}
 // is a parameter or one of the built-ins field, input, output and
-// package; {{ and }} are literal braces.
-func (f Finding) render(tmpl string) (string, error) {
+// package; {{ and }} are literal braces. Unless write is set it only
+// checks tmpl, and returns "".
+func (f Finding) render(tmpl string, write bool) (string, error) {
 	var b strings.Builder
 	for i := 0; i < len(tmpl); {
 		c := tmpl[i]
@@ -503,7 +518,7 @@ func (f Finding) render(tmpl string) (string, error) {
 			if end < 0 {
 				return "", fmt.Errorf("unclosed placeholder at byte %d", i)
 			}
-			s, err := f.placeholder(tmpl[i+1 : i+end])
+			s, err := f.placeholder(tmpl[i+1:i+end], write)
 			if err != nil {
 				return "", err
 			}
@@ -516,14 +531,20 @@ func (f Finding) render(tmpl string) (string, error) {
 			i++
 		}
 	}
+	if !write {
+		return "", nil
+	}
 	return b.String(), nil
 }
 
-func (f Finding) placeholder(name string) (string, error) {
+func (f Finding) placeholder(name string, write bool) (string, error) {
 	switch name {
 	case "package":
 		return "<package>", nil
 	case "field":
+		if !write {
+			return "", nil
+		}
 		return f.fieldText(), nil
 	case "input":
 		if (f.subject.Kind == SubjectInput || f.subject.Kind == SubjectSchema) && f.subject.Name != "" {
@@ -539,6 +560,9 @@ func (f Finding) placeholder(name string) (string, error) {
 	v, ok := f.params[name]
 	if !ok {
 		return "", fmt.Errorf("placeholder {%s} names no parameter given", name)
+	}
+	if !write {
+		return "", nil
 	}
 	return v.render(), nil
 }

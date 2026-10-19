@@ -115,8 +115,8 @@ func (f Finding) appendJSON(b []byte) []byte {
 	o := openObject(b)
 	o.str("code", string(f.entry.Code))
 	o.str("severity", f.entry.Severity.String())
-	o.str("message", f.message)
-	o.str("hint", f.hint)
+	o.str("message", f.Message())
+	o.str("hint", f.Hint())
 	o.key("subject")
 	s := openObject(o.b)
 	s.str("kind", f.subject.Kind.String())
@@ -274,7 +274,7 @@ func (f Finding) appendHuman(b []byte, colour bool, indent string) []byte {
 		b = append(b, sgrReset...)
 	}
 	b = append(b, ": "...)
-	b = appendText(b, f.message)
+	b = appendText(b, f.Message())
 	b = append(b, " ["...)
 	b = append(b, f.entry.Code...)
 	b = append(b, "]\n"...)
@@ -342,7 +342,7 @@ func (f Finding) appendHuman(b []byte, colour bool, indent string) []byte {
 			line("option", text)
 		}
 	}
-	line("hint", f.hint)
+	line("hint", f.Hint())
 	for _, a := range f.alternatives {
 		b = append(b, indent...)
 		b = append(b, "  option "...)

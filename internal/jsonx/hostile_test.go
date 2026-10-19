@@ -27,9 +27,11 @@ import (
 // twice: every first occurrence, then every duplicate in reverse order,
 // joined by sep. Each json.duplicate_name finding it gives has a pointer
 // as long as half the text, and, with sep a comma, a column as far along
-// one line, with its first occurrence's far behind it. The name escapes
-// to ~0 and ~1 in a pointer, and the duplicated names hold a multi-byte
-// character, so columns count code points.
+// one line, with its first occurrence's far behind it. Three in four of
+// the first occurrences hold a lone surrogate, a number out of range or a
+// noncharacter, whose findings' messages name the field by its pointer.
+// The name escapes to ~0 and ~1 in a pointer, and the duplicated names
+// hold a multi-byte character, so columns count code points.
 func hostile(n int, sep string) []byte {
 	long := strings.Repeat("~/é", max(n/2, 4)/4)
 	var names []string
@@ -45,7 +47,7 @@ func hostile(n int, sep string) []byte {
 		if i > 0 {
 			b.WriteString(sep)
 		}
-		fmt.Fprintf(&b, "%q:%d", name, i%10)
+		fmt.Fprintf(&b, "%q:%s", name, []string{`"\ud800"`, "1e400", `"\uFFFE"`, "7"}[i%4])
 	}
 	for _, name := range slices.Backward(names) {
 		fmt.Fprintf(&b, "%s%q:%d", sep, name, len(name)%10)
@@ -92,10 +94,10 @@ func TestHostileReportUnchanged(t *testing.T) {
 		lim    limits.Set
 		digest string
 	}{
-		{"one line, default limits", hostile(4096, ","), limits.Defaults(), "865a9e74ac9c9760515791114f5bc539d2af0d56782bb44e9a881608ee3f346a"},
-		{"one line, findings=7", hostile(4096, ","), lowered(t, "findings=7"), "ae7b902242309d526dbf5129c548b1aba9a96a5221f1f24e529486b1bf6b0058"},
-		{"a line each, default limits", hostile(4096, ",\n"), limits.Defaults(), "27cf523c3a8ebc0752c17415179b3528c6ffa2b2386ca7c35b60bbf3ab592749"},
-		{"a line each, findings=7", hostile(4096, ",\r\n "), lowered(t, "findings=7"), "11c320ad74502fb14d393b4f72f5b6dd6d19cc408c5c83f1a2349e916fb10db7"},
+		{"one line, default limits", hostile(4096, ","), limits.Defaults(), "011402124b08b43d4efe07a4935188f77725e1fbdc6358a1ea0592021da9165d"},
+		{"one line, findings=7", hostile(4096, ","), lowered(t, "findings=7"), "234ebb7aef85e6854b4da151f75fc78da4b2a1a48f9e4c1ef482ffe9646528b9"},
+		{"a line each, default limits", hostile(4096, ",\n"), limits.Defaults(), "8560796ba5dcdb56e2cf862a0bf4683ddd22007611279404f88af23e29325d46"},
+		{"a line each, findings=7", hostile(4096, ",\r\n "), lowered(t, "findings=7"), "9df12c7f430f57a06bdcef74e8e895457231d594a0fad8b2dbb5eb32165d9105"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			out := encodeReport(hostileReport(t, tt.src, tt.lim))

@@ -116,8 +116,10 @@ func TestRenderRefusesBadTemplates(t *testing.T) {
 	withTestCodes(t)
 	f := New(codeUsageFlag, Subject{Kind: SubjectInvocation}, nil, nil)
 	for _, tmpl := range []string{"{unclosed", "a } b", "{nope}"} {
-		if _, err := f.render(tmpl); err == nil {
-			t.Errorf("render(%q) succeeded", tmpl)
+		for _, write := range []bool{false, true} {
+			if _, err := f.render(tmpl, write); err == nil {
+				t.Errorf("render(%q, %v) succeeded", tmpl, write)
+			}
 		}
 	}
 }
