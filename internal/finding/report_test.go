@@ -132,7 +132,7 @@ func TestReportCap(t *testing.T) {
 		t.Errorf("omitted = %d, want 7", n)
 	}
 	got := string(r.Summary().AppendJSON(nil))
-	want := `{"errors":10,"warnings":0,"info":1,"listed":3,"omitted":7,"by_code":{"input.min_length":10,"report.truncated":1}}`
+	want := `{"errors":10,"warnings":0,"info":1,"listed":3,"omitted":7,"by_code":{"input.fixture_min_length":10,"report.truncated":1}}`
 	if got != want {
 		t.Errorf("summary\n got  %s\n want %s", got, want)
 	}

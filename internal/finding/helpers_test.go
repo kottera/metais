@@ -13,9 +13,9 @@ import (
 // the codes later waves register, so the report can be proved over every
 // subject, origin and span before those codes exist.
 const (
-	codeInputMinLength Code = "input.min_length"
-	codeInputRequired  Code = "input.required"
-	codeInputType      Code = "input.type"
+	codeInputMinLength Code = "input.fixture_min_length"
+	codeInputRequired  Code = "input.fixture_required"
+	codeInputType      Code = "input.fixture_type"
 	codeManifestField  Code = "manifest.unknown_member"
 	codeOutputPath     Code = "output.path.traversal"
 	codePackageName    Code = "package.fixture.name"

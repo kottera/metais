@@ -52,8 +52,9 @@ const (
 
 // registry is the tool's table of codes, in code order. It is the Go form
 // of spec/findings/registry.json, which is the normative text; a test fails
-// on any difference between the two (ADR-006 D13 item 4).
-var registry = []Entry{
+// on any difference between the two (ADR-006 D13 item 4). The JSON Schema
+// keyword codes are expanded from one table per family (schemacodes.go).
+var registry = withSchemaEntries([]Entry{
 	{
 		Code:       "csv.after_quote",
 		Severity:   SeverityError,
@@ -814,7 +815,7 @@ var registry = []Entry{
 		Since:      "1.0",
 		Statements: []string{},
 	},
-}
+})
 
 // Registry returns a copy of the tool's table of codes, in code order.
 func Registry() []Entry {

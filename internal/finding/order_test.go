@@ -53,7 +53,7 @@ func orderedFindings() []Finding {
 		New(codeInputType, input("alpha"), set(1, "/10/x"), typ("null")),
 		New(codeInputType, input("alpha"), set(1, "/10/x~1y"), typ("null")),
 		New(codeInputType, input("alpha"), set(1, "/a"), typ("null")),
-		// 7. code: input.min_length before input.required before input.type.
+		// 7. code: input.fixture_min_length before input.fixture_required before input.fixture_type.
 		New(codeInputMinLength, input("alpha"), set(2, "/0"), Params{"limit": Int(10), "length": Int(4)}),
 		New(codeInputRequired, input("alpha"), set(2, "/0"), Params{"property": String("z")},
 			WithSchema(Schema{Entry: "inputs/alpha.schema.json", Pointer: "/a/required", Keyword: "required", KeywordLocation: "/a/required"})),
