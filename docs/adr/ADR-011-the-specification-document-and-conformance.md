@@ -4,6 +4,9 @@
 [Amendment A1](#amendments) (chapter 2's statement area is `PKG`, not `CON`)
 is proposed by PLAN-2026-10-metais-v1 Wave 3 and awaits Ed Funnekotter's
 ratification; the passages it changes are marked *(A1, proposed)*.
+[Amendment A3](#amendments) (the temporary directory is the step's
+`TMPDIR`) was ruled by Ed Funnekotter on 2026-10-19; the passages it
+changes are marked *(A3)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R16 (items 1–3); the document side of R15 (items 1 and
@@ -703,7 +706,9 @@ freedom: container compression, finding wording, and the tool's identity.**
 4. **Nothing else changes.** The runner records the whole sandbox (D11 item
    4) before and after each step; any file created, changed or removed
    outside a declared tree fails the step. **A step with no `trees` writes
-   nothing anywhere**, which is how every refusal is checked.
+   nothing anywhere** the sandbox holds — its work directory, its home
+   directory and its temporary directory, the step's `TMPDIR` — which is
+   how every refusal is checked. *(A3)*
 5. **Stream** — `expect.stream` is `{"equals": <file>}`. An archive stream is
    compared **by entries**, as ADR-005 D17 item 5 states — order, path,
    typeflag, mode, uid, gid, uname, gname, mtime, size and content — because
@@ -977,7 +982,7 @@ exact findings and to write nothing anywhere.**
    pathological `pattern`) uses `validate` or `render` steps.
 4. **Expectations**: `ok: false`; the exact findings; no `trees`, so nothing
    is written in the work directory, the home directory or the temporary
-   directory (D10 item 4) — stronger than SC6's "nothing outside the output
+   directory — the step's `TMPDIR`, `<sandbox>/tmp/` (D10 item 4) *(A3)* — stronger than SC6's "nothing outside the output
    directory"; and `bounds` lowered to what the defence should need (a zip
    bomb's vector sets `rss_mib` well below its expanded size).
 5. **One defect per package.** A hostile `package.metais` carries a correct
@@ -1481,6 +1486,30 @@ requirements), and the vector schema
    value within its major version (`spec/conformance/README.md`), and no
    released vector changes.
 
+### A3 — The temporary directory is the step's `TMPDIR`
+
+**Status:** Ruled 2026-10-19 by Ed Funnekotter (PLAN-2026-10-metais-v1
+W3-NB2, option D of the question W3-NB2 raised).
+**Amends:** D10 item 4 and D16 item 4, which now say so in place.
+
+1. **"The temporary directory"** of D10 item 4 and D16 item 4 is the
+   step's `TMPDIR`, `<sandbox>/tmp/`, which D11 item 4's snapshot records.
+   This is proposed ruling 9's reading ("including `TMPDIR`"); D16 item 4
+   now says it.
+2. **Where the runner stops.** An implementation that ignores `TMPDIR` and
+   writes to the host's default temporary directory is not seen by the
+   runner. The runner does not snapshot that directory: other processes
+   write to it too, so a check of it could not be deterministic.
+3. **The reference tool's gap is closed statically.** `hostenv.Isolate`
+   clears the environment, so the reference tool would resolve the host's
+   default temporary directory, not `TMPDIR`. It never asks:
+   ADR-009's `TestNoHostFacts`, in `internal/guarantees`, refuses
+   `os.TempDir`, `os.CreateTemp` and `os.MkdirTemp` in every non-test file
+   of the module.
+4. **The runner's half is proved red first.** The self-proof's
+   `tmp-refusal` fault writes to `os.TempDir()` on a refusal, and the
+   snapshot of the step's `TMPDIR` catches it (D18).
+
 ## Implementation log
 
 - **2026-10-19, PLAN-2026-10-metais-v1 W2-3.** D14's document tripwires
@@ -1583,7 +1612,12 @@ requirements), and the vector schema
   which the snapshot of the step's `TMPDIR` catches. A tool that clears
   its environment, as `hostenv.Isolate` does, resolves the host's default
   temporary directory instead, which D11 item 4's snapshot does not
-  cover; that is open.
+  cover. Ruled by Ed Funnekotter, 2026-10-19, option D: amendment A3 reads
+  D10 item 4's and D16 item 4's temporary directory as the step's
+  `TMPDIR`, states that the runner does not see the host's default one,
+  and cites `TestNoHostFacts` as the reference tool's static proof.
+  `hostenv.Isolate` is unchanged and the host's temporary directory is
+  not snapshotted.
 - **2026-10-19, PLAN-2026-10-metais-v1 W4-5.** Amendment A2, proposed:
   D9 item 4's setup gains `unwritable`, and item 6's requirements
   `unwritable-dirs`, in the vector schema and `spec/conformance/README.md`.
