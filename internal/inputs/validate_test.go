@@ -4,6 +4,7 @@
 package inputs
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -196,5 +197,34 @@ func TestRegexWorkSpent(t *testing.T) {
 	wantFindings(t, res.Findings,
 		`limit.exceeded a set:1 # {"limit":"regex-work","bound":10,"lowered":true}`,
 		`limit.exceeded b set:2 # {"limit":"regex-work","bound":10,"lowered":true}`,
+	)
+}
+
+// TestConstraintsNotEvaluatedWhenOthersFail: the input constraints are not
+// evaluated while any input is unparsed, even when the inputs they read
+// are all present and would fail them (ADR-003 D22 item 4). Here stage
+// and incident are supplied and break the Final report rule, and a third
+// input the rule never names did not parse: no constraint finding is
+// reported, and the info finding says the constraints were skipped.
+func TestConstraintsNotEvaluatedWhenOthersFail(t *testing.T) {
+	testenv.Home(t)
+	p := stagedPkg
+	p.inputs = append(slices.Clone(stagedPkg.inputs), slot("other", "inputs/other.json", "required", false))
+	p.schemas = map[string]string{"inputs/other.json": `{}`}
+	for k, v := range stagedPkg.schemas {
+		p.schemas[k] = v
+	}
+	l := layer(t, p)
+	files := map[string]string{"incident.json": `{"root_cause": "x"}`}
+	a := args{data: dataDir(t, files), flags: []string{"--set=/stage=final"}}
+	res := run(t, l, limits.Defaults(), a)
+	wantFindings(t, res.Findings, `input.required incident data_dir:incident.json:1:1 #/resolution_date {"property":"resolution_date"} via:then`)
+
+	files["other.json"] = `{`
+	a.data = dataDir(t, files)
+	res = run(t, l, limits.Defaults(), a)
+	wantFindings(t, res.Findings,
+		`json.syntax other data_dir:other.json:1:2 # {"expected":"member name","found":"end of input"}`,
+		`input.constraints_not_evaluated`,
 	)
 }
