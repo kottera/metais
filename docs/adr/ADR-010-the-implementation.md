@@ -1893,3 +1893,23 @@ at the train's close, with A1 and A3.
   path before the confinement on disk could be shown to be needed. The
   SC7 harness's canary tests are in `internal/conformance`, beside the
   runner they extend, rather than in `internal/guarantees`.
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-6.** ADR-011 D17's test-only
+  program is `internal/liquidspec`. Its tests are the program, as
+  `internal/vectorgen`'s are: the test binary run with `-serve` is the
+  JSON-RPC server, because a main package beneath `internal/` would have
+  to name `os.Stdin` and `os.Exit`, which R2-143's allow-list keeps to
+  `cmd/metais`. The layering table holds the package to `test-only`. A
+  compile parses through `internal/template`'s `Templates`, over a tree of
+  the request's file system beneath `templates/`, so partials are found and
+  refused as `metais render` finds and refuses them. A render binds the
+  environment as the globals, under ADR-009's default limits. A render
+  error is the protocol's `-32001` error. At the pinned commit, liquid-spec's
+  `Adapter#render` reads only a result's `output`, so a render error
+  written as `result.error` would be read as empty output. Until Wave 5
+  registers `date`, a compile whose template applies it is held out with a
+  parse error that `TestDelegatedRun` counts apart from the departures.
+  The selection is mechanical, as `goldenDateSelector`'s is, and
+  `TestDateNotRegistered` fails once `date` is registered. Golden Liquid
+  still passes in full: of 1,098 cases, 10 are selected out for applying
+  `date`, 1,088 run at render, 908 pass and 180 are excluded. The five new
+  exclusions are `dialect` lines (ADR-004's log).

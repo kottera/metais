@@ -18,6 +18,11 @@ vectors/<area>/<slug>/
   expected/          expected trees, findings, streams and listings
 ```
 
+`delegated/` holds the delegated runs: the pinned selection of Shopify's
+liquid-spec that proves the core Liquid chapter 7 adopts by reference, with
+its departures, its adapter and how it is run
+([`delegated/README.md`](delegated/README.md)).
+
 `<area>` is the lower-cased area of the vector's first statement, and
 `<slug>` is lower-case letters and digits in hyphen-separated runs, at most
 64 characters. A vector's `id` is `<area>/<slug>`, its path. Every file of a

@@ -38,8 +38,9 @@ func dateProbe() (*liquid.Dialect, error) {
 	return d.Extend(liquid.Spec{Filters: []liquid.FilterDef{stubFilter("date")}})
 }
 
-// appliesDate reports whether src, or a file of fs, applies date under
-// probe. The selection is mechanical: it names no case.
+// appliesDate reports whether src, or a file of fs, parses under probe
+// and applies date. The selection is mechanical: it names no case. A
+// template that does not parse even with date is left to its parse.
 func appliesDate(probe *liquid.Dialect, fs map[string]string, src string) bool {
 	srcs := []string{src}
 	for _, name := range slices.Sorted(maps.Keys(fs)) {

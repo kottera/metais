@@ -1122,3 +1122,21 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
   tags, `date`, and `item` and `fan_out`'s shape are Wave 5's; chapter 7
   states that `item` and `fan_out` are unbound outside a fan-out, which
   this wave proves.
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-6.** Reading liquid-spec at the
+  pinned commit found the engine apart from the gem where no statement
+  said it differed. It now reads as the gem's 5.14.0 `strict2` does, under
+  D1 items 2 and 5, D4 items 6 and 7 and D5 item 2. A path that begins with
+  an index, as in `{{ ['a'] }}` or `{{ [k] }}`, is a syntax finding, since
+  it looks a variable up by a computed name. The `size`, `first` and `last`
+  shorthands are read only after a `.`, so `xs["first"]` is an index like
+  any other. A boolean on either side of `<` and its kin is false. Neither
+  `empty` nor `blank` equals a keyword, itself included. The one `-` of
+  `{{-}}` trims both sides. A string is a loop's one item whatever its
+  `offset` and `limit`. Golden Liquid's five bracketed-root cases, valid
+  in its 5.12.0 corpus, became `dialect` lines under D1 items 2 and 5, and
+  MTS-AUT-014's `template.xref.dynamic_reference` names no bracketed root,
+  since one cannot parse. Where the engine stays apart from
+  the gem, chapter 7 now says so: MTS-TPL-053 (a range used as a value is
+  the array of its integers), MTS-TPL-054 (`size` of a number is 0), and
+  MTS-TPL-055 (what `strict2` accepts and then ignores or overrides is
+  refused, under D1 item 2).
