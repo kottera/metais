@@ -337,3 +337,21 @@ func parseValue(v string, u Unit) (int64, error) {
 	}
 	return n * mult, nil
 }
+
+// Breached returns the limit.package finding (ADR-009 D19): the package's
+// own content breaches id, a limit of s. loc is where, in the package. It
+// carries the fields of ADR-009 D2 item 5: the limit's name, its bound in
+// s, whether the caller lowered it, and observed, the value found, when
+// hasObserved is set; a reading that stopped at the bound has none.
+func (s Set) Breached(id ID, loc finding.Location, observed int64, hasObserved bool) finding.Finding {
+	s.check(id)
+	p := finding.Params{
+		"limit":   finding.String(table[id].Name),
+		"bound":   finding.Int(s.value[id]),
+		"lowered": finding.Bool(s.lowered[id]),
+	}
+	if hasObserved && observed <= maxEchoed {
+		p["observed"] = finding.Int(observed)
+	}
+	return finding.New(finding.CodeLimitPackage, finding.Subject{Kind: finding.SubjectPackage}, &loc, p)
+}

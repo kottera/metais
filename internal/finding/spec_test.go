@@ -274,18 +274,33 @@ func TestRegistryEntries(t *testing.T) {
 }
 
 // TestEmittedCodes pins the registry to the codes this module emits: the
-// report's own, internal/limits' and internal/cli's. A code a later change
-// emits is registered by that change.
+// report's own, internal/limits', internal/cli's, and internal/zipfmt's
+// container and entry-name refusals. A code a later change emits is
+// registered by that change.
 func TestEmittedCodes(t *testing.T) {
 	var got []Code
 	for _, e := range registry {
 		got = append(got, e.Code)
 	}
 	want := []Code{
-		CodeInternalError, CodeLimitInvalid, CodeReportTruncated,
+		CodeInternalError, CodeLimitInvalid, CodeLimitPackage, CodeReportTruncated,
 		CodeUsageBadValue, CodeUsageMissingCommand, CodeUsageRepeatedFlag, CodeUsageUnexpectedOperand,
 		CodeUsageUnknownCommand, CodeUsageUnknownFlag, CodeUsageUnknownTopic,
 	}
+	for _, c := range []string{
+		"archive_comment", "crc_mismatch", "data_descriptor", "deflate_stream", "encrypted", "entry_order",
+		"extra_field", "field_value", "flags", "header_mismatch", "method", "not_zip", "overlap_or_gap",
+		"prepended_data", "second_end_record", "size_mismatch", "trailing_data", "zip64",
+	} {
+		want = append(want, Code("package.container."+c))
+	}
+	for _, c := range []string{
+		"case_collision", "character", "directory_entry", "duplicate", "encoding", "file_directory_conflict",
+		"not_nfc", "not_portable", "shape",
+	} {
+		want = append(want, Code("package.name."+c))
+	}
+	slices.Sort(want)
 	if !slices.Equal(got, want) {
 		t.Errorf("registered %q, want %q", got, want)
 	}
