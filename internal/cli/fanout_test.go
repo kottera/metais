@@ -30,7 +30,7 @@ inputs:
 outputs:
 ` + decls,
 		"pkg/inputs/pages.schema.json": `{"type": "array", "items": {"type": "string"}}`,
-		"pkg/templates/t.txt.liquid":    "{{ output.path }}\n",
+		"pkg/templates/t.txt.liquid":   "{{ output.path }}\n",
 		"data/pages.json":              `["a", "b", "c"]`,
 	})
 	return filepath.Join(dir, "pkg"), filepath.Join(dir, "data")
