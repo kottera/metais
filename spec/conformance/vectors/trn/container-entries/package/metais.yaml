@@ -1,0 +1,33 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: readme
+    template: readme.md.liquid
+  - id: bundle
+    path: dist/bundle.zip
+    container:
+      entries:
+        - template: part.txt.liquid
+          path: z/last.txt
+        - id: alpha
+          template: part.txt.liquid
+          path: b/alpha.txt
+          first: true
+        - template: part.txt.liquid
+          path: a/first-too.txt
+          first: true
+        - template: empty.txt.liquid
+          path: empty.txt
+        - id: big
+          template: big.txt.liquid
+          path: Big.txt
+          stored: true
+        - template: readme.md.liquid
+          path: mimetype
+        - template: part.txt.liquid
+          path: m/deep/c.txt

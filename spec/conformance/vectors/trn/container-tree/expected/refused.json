@@ -1,0 +1,81 @@
+[
+  {
+    "code": "output.path.file_directory_conflict",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "two"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 17,
+      "pointer": "/outputs/0/container/entries/1/path"
+    },
+    "params": {
+      "path": "Docs",
+      "member": "Docs",
+      "other": "docs"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 15,
+        "column": 17,
+        "pointer": "/outputs/0/container/entries/0/path",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "up"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 17,
+      "pointer": "/outputs/0/container/entries/2/path"
+    },
+    "params": {
+      "path": "../escape.txt",
+      "reason": "dot_segment"
+    }
+  },
+  {
+    "code": "output.path.case_collision",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "upper"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 27,
+      "column": 17,
+      "pointer": "/outputs/0/container/entries/4/path"
+    },
+    "params": {
+      "path": "STRASSE.txt",
+      "member": "STRASSE.txt",
+      "other": "straße.txt"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 24,
+        "column": 17,
+        "pointer": "/outputs/0/container/entries/3/path",
+        "note": "collides with"
+      }
+    ]
+  }
+]

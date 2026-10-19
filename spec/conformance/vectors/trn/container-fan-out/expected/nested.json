@@ -1,0 +1,17 @@
+[
+  {
+    "code": "manifest.output.nested_for_each",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 21,
+      "pointer": "/outputs/0/container/entries/0/for_each"
+    },
+    "params": {}
+  }
+]

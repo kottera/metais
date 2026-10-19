@@ -1,0 +1,26 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: outer
+    path: outer.zip
+    container:
+      entries:
+        - path: level2.zip
+          stored: true
+          container:
+            entries:
+              - path: level3.zip
+                stored: true
+                container:
+                  entries:
+                    - path: level4.zip
+                      stored: true
+                      container:
+                        entries:
+                          - template: a.txt.liquid
+                            stored: true

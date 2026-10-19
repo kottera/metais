@@ -247,6 +247,18 @@ Refusals:
   manifest.yaml.tag
       The manifest breaks one of its rules (yaml: tag).
       Next: metais check <package>
+  output.container.missing_entry
+      A container's profile (container: missing entry), a error.
+      Next: metais check <package>
+  output.container.non_ascii
+      A container's profile (container: non ascii), a error.
+      Next: metais check <package>
+  output.container.reserved_entry
+      A container's profile (container: reserved entry), a error.
+      Next: metais check <package>
+  output.container.space
+      A container's profile (container: space), a warning.
+      Next: metais check <package>
   output.declaration.validate_kind
       (declaration: validate kind), a error.
       Next: metais check <package>

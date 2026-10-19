@@ -48,6 +48,12 @@ const (
 	CodeDestinationNotEmpty     Code = "output.destination.not_empty"
 	CodeDestinationWriteFailed  Code = "output.destination.write_failed"
 
+	CodeContainerMissingEntry   Code = "output.container.missing_entry"
+	CodeContainerNonASCII       Code = "output.container.non_ascii"
+	CodeContainerReservedEntry  Code = "output.container.reserved_entry"
+	CodeContainerSpace          Code = "output.container.space"
+	CodeContainerTooManyEntries Code = "output.container.too_many_entries"
+
 	CodeInternalError          Code = "internal.error"
 	CodeUsageBadValue          Code = "usage.bad_value"
 	CodeUsageConflictingFlags  Code = "usage.conflicting_flags"
@@ -1076,6 +1082,80 @@ var registry = withSchemaEntries([]Entry{
 		Span:       SpanValue,
 		Since:      "1.0",
 		Statements: []string{"MTS-SUP-012"},
+	},
+	{
+		Code:     "output.container.missing_entry",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectOutput,
+		Params: []ParamSpec{
+			{Name: "profile", Type: TypeString, Meaning: "The container's profile: ooxml, odf or epub.", Always: true},
+			{Name: "entry", Type: TypeString, Meaning: "The entry path the profile requires.", Always: true},
+		},
+		Message:    "The container {output} has the {profile} profile, and no entry is {entry}, which the profile requires.",
+		Hint:       "Declare an entry whose path is {entry}, at the container's root; the format cannot be opened without it.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-TRN-009", "MTS-TRN-010", "MTS-TRN-011", "MTS-AUT-031"},
+	},
+	{
+		Code:     "output.container.non_ascii",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectOutput,
+		Params: []ParamSpec{
+			{Name: "profile", Type: TypeString, Meaning: "The container's profile, ooxml.", Always: true},
+			{Name: "path", Type: TypeString, Meaning: "The entry's path, as planned.", Always: true},
+		},
+		Message:    "An entry of the container {output} has a path with a character outside ASCII, which the {profile} profile refuses.",
+		Hint:       "Percent-encode the character in the entry's path, as Office Open XML names a part.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-TRN-009", "MTS-AUT-031"},
+	},
+	{
+		Code:     "output.container.reserved_entry",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectOutput,
+		Params: []ParamSpec{
+			{Name: "profile", Type: TypeString, Meaning: "The container's profile: odf or epub.", Always: true},
+			{Name: "path", Type: TypeString, Meaning: "The entry's path, mimetype.", Always: true},
+		},
+		Message:    "An entry of the container {output} is named mimetype, which the {profile} profile writes itself.",
+		Hint:       "Remove the entry: the profile writes the mimetype entry with the exact bytes and settings the format requires.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-TRN-010", "MTS-TRN-011", "MTS-AUT-031"},
+	},
+	{
+		Code:     "output.container.space",
+		Severity: SeverityWarning,
+		Class:    ClassContent,
+		Subject:  SubjectOutput,
+		Params: []ParamSpec{
+			{Name: "profile", Type: TypeString, Meaning: "The container's profile, epub.", Always: true},
+			{Name: "path", Type: TypeString, Meaning: "The entry's path, as planned.", Always: true},
+		},
+		Message:    "An entry of the container {output} has a path with a space, which the {profile} format says an entry name should not have.",
+		Hint:       "Name the entry without a space, with a hyphen or an underscore in its place.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-TRN-011", "MTS-AUT-031"},
+	},
+	{
+		Code:     "output.container.too_many_entries",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectOutput,
+		Params: []ParamSpec{
+			{Name: "count", Type: TypeNumber, Meaning: "The number of entries the container plans.", Always: true},
+		},
+		Message:    "The container {output} plans {count} entries, and a zip holds at most 65,534.",
+		Hint:       "Split the entries between containers, or nest a container of them as one entry.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-TRN-007"},
 	},
 	{
 		Code:     "output.declaration.validate_kind",

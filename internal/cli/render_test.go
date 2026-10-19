@@ -53,7 +53,7 @@ func TestRender(t *testing.T) {
 		t.Fatalf("result %+v", res)
 	}
 	f := res.Files[0]
-	if f.Path != "greeting.md" || f.Output != "greeting" || f.Source != "template" || f.Kind != "markdown" || f.Status != "create" || f.Executable {
+	if f.Path != "greeting.md" || f.Output != "greeting" || f.Source != "template" || f.Kind == nil || *f.Kind != "markdown" || f.Status != "create" || f.Executable {
 		t.Errorf("file %+v", f)
 	}
 	got, err := os.ReadFile(filepath.Join(out, "greeting.md"))

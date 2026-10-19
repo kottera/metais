@@ -1,0 +1,20 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: doc
+    path: report.docx
+    container:
+      profile: ooxml
+      entries:
+        - template: document.xml.liquid
+          path: word/document.xml
+        - template: rels.liquid
+          path: _rels/.rels
+          first: true
+        - template: types.xml.liquid
+          path: "[Content_Types].xml"

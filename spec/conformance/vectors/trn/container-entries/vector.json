@@ -1,0 +1,51 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/container-entries",
+  "title": "A container is one zip of its entries' files, none written on its own, in the first: true declarations' order and then byte order, with stored: true and an empty entry stored, and with no profile written exactly as declared",
+  "statements": [
+    "MTS-TRN-001",
+    "MTS-TRN-004",
+    "MTS-TRN-005",
+    "MTS-TRN-006",
+    "MTS-TRN-008"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "determinism"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out",
+                "containers": [
+                  {
+                    "path": "dist/bundle.zip",
+                    "methods": [
+                      "Big.txt",
+                      "empty.txt"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

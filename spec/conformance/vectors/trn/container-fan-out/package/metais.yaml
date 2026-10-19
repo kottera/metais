@@ -1,0 +1,19 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: book
+    for_each: (1..3)
+    when: item != 2
+    path: "book-{{ item }}.zip"
+    container:
+      entries:
+        - template: page.txt.liquid
+          path: "page-{{ item }}.txt"
+        - template: page.txt.liquid
+          path: last.txt
+          when: fan_out.last

@@ -1,0 +1,40 @@
+[
+  {
+    "code": "output.container.missing_entry",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "doc"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 12,
+      "column": 16,
+      "pointer": "/outputs/0/container/profile"
+    },
+    "params": {
+      "profile": "ooxml",
+      "entry": "[Content_Types].xml"
+    }
+  },
+  {
+    "code": "output.container.non_ascii",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "doc"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 17,
+      "pointer": "/outputs/0/container/entries/0/path"
+    },
+    "params": {
+      "profile": "ooxml",
+      "path": "word/média.xml"
+    }
+  }
+]

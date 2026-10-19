@@ -1,0 +1,17 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: doc
+    path: report.odt
+    container:
+      profile: odf
+      mimetype: application/vnd.oasis.opendocument.text
+      entries:
+        - template: content.xml.liquid
+        - template: mimetype.liquid
+          path: mimetype

@@ -5,6 +5,7 @@ package author
 
 import (
 	"bytes"
+	"cmp"
 	"errors"
 	"fmt"
 	"io"
@@ -62,6 +63,13 @@ func CheckCodes() []finding.Code {
 		CodeInvalidExample, CodeUnsatisfiable, CodeUnusableEnumMember, CodeRequiredNotDeclared, CodeTemplateCRLF,
 		CodeExampleLayout, CodeFormShape, CodeCollectionShape, CodeValidateKind, codeTemplateNotUTF8, ooxml.CodeSplitConstruct, ooxml.CodeSplitDelimiter}
 	return append(out, xref.Codes()...)
+}
+
+// ContainerCodes are the codes of ADR-005 D9's profile rules, which check
+// reports statically and a render on the planned entry paths (D9 item 6).
+func ContainerCodes() []finding.Code {
+	return []finding.Code{finding.CodeContainerMissingEntry, finding.CodeContainerNonASCII,
+		finding.CodeContainerReservedEntry, finding.CodeContainerSpace}
 }
 
 // The codes of ADR-003's and ADR-005's rules that only check can judge,
@@ -153,6 +161,7 @@ func (k *checker) run() []finding.Finding {
 		k.skip(stepGuideLinks)
 	} else {
 		k.add(k.validateKinds(c.Manifest.Outputs, "")...)
+		k.add(k.containers(c.Manifest.Outputs, "", 0)...)
 		k.add(k.guideLinks()...)
 	}
 
@@ -490,6 +499,74 @@ func (k *checker) validateKinds(outs []manifest.Output, owner string) []finding.
 		}
 	}
 	return out
+}
+
+// containers is ADR-005 D9 item 6 and D8 item 4 for outs, the
+// declarations of one tree within depth containers: no container nests
+// deeper than container-depth (limit.package, ADR-009 D19), and each
+// profile is verified as far as it can be without data. An entry whose
+// path is literal, or the default of a template, is held to the
+// profile's rules on entry paths; and a profile's required entry is
+// missing when no entry has it as such a path and no entry's path is
+// one only a render can know: a path template, an asset or a mirror.
+func (k *checker) containers(outs []manifest.Output, owner string, depth int) []finding.Finding {
+	var out []finding.Finding
+	for _, d := range outs {
+		if d.Container == nil {
+			continue
+		}
+		id := d.ID
+		if id == "" {
+			id = owner
+		}
+		if int64(depth) >= k.lim.Value(limits.ContainerDepth) {
+			out = append(out, k.lim.Breached(limits.ContainerDepth, *k.manifestAt(d.Pointer + "/container"), int64(depth)+1, true))
+			continue
+		}
+		c := d.Container
+		found, unknown := false, false
+		for _, e := range c.Entries {
+			p, ptr, ok := staticPath(e)
+			if !ok {
+				unknown = true
+				continue
+			}
+			found = found || p == c.RequiredEntry()
+			subj := finding.Subject{Kind: finding.SubjectOutput, Name: cmp.Or(e.ID, id)}
+			params := finding.Params{"path": finding.String(p), "profile": finding.String(c.Profile)}
+			switch c.CheckEntry(p) {
+			case manifest.EntryReserved:
+				out = append(out, finding.New(finding.CodeContainerReservedEntry, subj, k.manifestAt(ptr), params))
+			case manifest.EntryNonASCII:
+				out = append(out, finding.New(finding.CodeContainerNonASCII, subj, k.manifestAt(ptr), params))
+			case manifest.EntrySpace:
+				out = append(out, finding.New(finding.CodeContainerSpace, subj, k.manifestAt(ptr), params))
+			}
+		}
+		if req := c.RequiredEntry(); req != "" && !found && !unknown {
+			out = append(out, finding.New(finding.CodeContainerMissingEntry, finding.Subject{Kind: finding.SubjectOutput, Name: id},
+				k.manifestAt(d.Pointer+"/container/profile"), finding.Params{"entry": finding.String(req), "profile": finding.String(c.Profile)}))
+		}
+		out = append(out, k.containers(c.Entries, id, depth+1)...)
+	}
+	return out
+}
+
+// staticPath is the one path d's file has, and the pointer it is written
+// at, when check can know it: a literal path, or a template's default;
+// false for a path template, an asset and a mirror, whose files a render
+// plans.
+func staticPath(d manifest.Output) (string, string, bool) {
+	switch {
+	case strings.Contains(d.Path, "{{"), strings.Contains(d.Path, "{%"),
+		d.Form == manifest.OutputAsset, d.Form == manifest.OutputMirror:
+		return "", "", false
+	case d.Path != "":
+		return d.Path, d.Pointer + "/path", true
+	case d.Form == manifest.OutputTemplate:
+		return strings.TrimSuffix(d.Source, ".liquid"), d.Pointer + "/template", true
+	}
+	return "", "", false
 }
 
 // staticKind is the kind ADR-005 D7's table gives a template output's

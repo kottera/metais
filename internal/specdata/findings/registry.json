@@ -3229,6 +3229,142 @@
       "statements": []
     },
     {
+      "code": "output.container.missing_entry",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "profile",
+          "type": "string",
+          "meaning": "The container's profile: ooxml, odf or epub.",
+          "always": true
+        },
+        {
+          "name": "entry",
+          "type": "string",
+          "meaning": "The entry path the profile requires.",
+          "always": true
+        }
+      ],
+      "message": "The container {output} has the {profile} profile, and no entry is {entry}, which the profile requires.",
+      "hint": "Declare an entry whose path is {entry}, at the container's root; the format cannot be opened without it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TRN-009",
+        "MTS-TRN-010",
+        "MTS-TRN-011",
+        "MTS-AUT-031"
+      ]
+    },
+    {
+      "code": "output.container.non_ascii",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "profile",
+          "type": "string",
+          "meaning": "The container's profile, ooxml.",
+          "always": true
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The entry's path, as planned.",
+          "always": true
+        }
+      ],
+      "message": "An entry of the container {output} has a path with a character outside ASCII, which the {profile} profile refuses.",
+      "hint": "Percent-encode the character in the entry's path, as Office Open XML names a part.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TRN-009",
+        "MTS-AUT-031"
+      ]
+    },
+    {
+      "code": "output.container.reserved_entry",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "profile",
+          "type": "string",
+          "meaning": "The container's profile: odf or epub.",
+          "always": true
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The entry's path, mimetype.",
+          "always": true
+        }
+      ],
+      "message": "An entry of the container {output} is named mimetype, which the {profile} profile writes itself.",
+      "hint": "Remove the entry: the profile writes the mimetype entry with the exact bytes and settings the format requires.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TRN-010",
+        "MTS-TRN-011",
+        "MTS-AUT-031"
+      ]
+    },
+    {
+      "code": "output.container.space",
+      "severity": "warning",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "profile",
+          "type": "string",
+          "meaning": "The container's profile, epub.",
+          "always": true
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The entry's path, as planned.",
+          "always": true
+        }
+      ],
+      "message": "An entry of the container {output} has a path with a space, which the {profile} format says an entry name should not have.",
+      "hint": "Name the entry without a space, with a hyphen or an underscore in its place.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TRN-011",
+        "MTS-AUT-031"
+      ]
+    },
+    {
+      "code": "output.container.too_many_entries",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "The number of entries the container plans.",
+          "always": true
+        }
+      ],
+      "message": "The container {output} plans {count} entries, and a zip holds at most 65,534.",
+      "hint": "Split the entries between containers, or nest a container of them as one entry.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TRN-007"
+      ]
+    },
+    {
       "code": "output.contains",
       "severity": "error",
       "class": "content",

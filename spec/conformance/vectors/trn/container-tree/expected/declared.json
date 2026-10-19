@@ -1,0 +1,29 @@
+[
+  {
+    "code": "manifest.output.duplicate_id",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 15,
+      "pointer": "/outputs/0/container/entries/1/id"
+    },
+    "params": {
+      "id": "same"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 13,
+        "column": 15,
+        "pointer": "/outputs/0/container/entries/0/id",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]

@@ -202,3 +202,78 @@ func TestLimitsWithinCeilings(t *testing.T) {
 		}
 	}
 }
+
+// TestWritePartsStreams is ADR-005 D13 item 5 for the writer: a part's
+// content is written through to the zip as it is produced, never held
+// whole, stored or deflated, and the zip is the one Write writes for the
+// same bytes. A zip written as a part of another is that zip's bytes.
+func TestWritePartsStreams(t *testing.T) {
+	const chunk, chunks = 8 << 10, 512 // 4 MiB of each
+	text := []byte(strings.Repeat("a line of text that deflates well\n", chunk/34+1))[:chunk]
+	content := func(w io.Writer) error {
+		for range chunks {
+			if _, err := w.Write(text); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	for _, m := range []Method{Store, Auto} {
+		var out bytes.Buffer
+		w := &largestWrite{w: &out}
+		if _, err := WriteParts(w, []Part{{Name: "big.txt", Method: m, Content: content}}); err != nil {
+			t.Fatal(err)
+		}
+		if w.max > 2*chunk {
+			t.Errorf("method %d: a write of %d bytes reached the zip: the entry was held, not streamed", m, w.max)
+		}
+		want := write(t, []Entry{{Name: "big.txt", Content: bytes.Repeat(text, chunks), Method: m}})
+		if !bytes.Equal(out.Bytes(), want) {
+			t.Errorf("method %d: WriteParts wrote other bytes than Write", m)
+		}
+	}
+	inner := write(t, sample())
+	var outer bytes.Buffer
+	written, err := WriteParts(&outer, []Part{{Name: "inner.zip", Method: Auto, Content: func(w io.Writer) error {
+		parts := make([]Part, 0, len(sample()))
+		for _, e := range sample() {
+			parts = append(parts, Part{Name: e.Name, Method: e.Method, Content: func(w io.Writer) error {
+				_, err := w.Write(e.Content)
+				return err
+			}})
+		}
+		_, err := WriteParts(w, parts)
+		return err
+	}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := write(t, []Entry{{Name: "inner.zip", Content: inner, Method: Auto}}); !bytes.Equal(outer.Bytes(), want) || len(written) != 1 {
+		t.Error("a zip written as a part is not the zip's bytes")
+	}
+}
+
+// TestWritePartsRefusesChangedContent: content that writes other bytes
+// the second time is refused, never written with a wrong header.
+func TestWritePartsRefusesChangedContent(t *testing.T) {
+	calls := 0
+	_, err := WriteParts(io.Discard, []Part{{Name: "a", Method: Store, Content: func(w io.Writer) error {
+		calls++
+		_, err := w.Write([]byte(strings.Repeat("x", calls)))
+		return err
+	}}})
+	if err == nil {
+		t.Error("content that changed between its measure and its write was written")
+	}
+}
+
+// largestWrite records the largest single write passed through it.
+type largestWrite struct {
+	w   io.Writer
+	max int
+}
+
+func (l *largestWrite) Write(b []byte) (int, error) {
+	l.max = max(l.max, len(b))
+	return l.w.Write(b)
+}

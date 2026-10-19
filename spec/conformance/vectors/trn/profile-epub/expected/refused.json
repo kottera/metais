@@ -1,0 +1,40 @@
+[
+  {
+    "code": "output.container.missing_entry",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "book"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 12,
+      "column": 16,
+      "pointer": "/outputs/0/container/profile"
+    },
+    "params": {
+      "profile": "epub",
+      "entry": "META-INF/container.xml"
+    }
+  },
+  {
+    "code": "output.container.reserved_entry",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "book"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 17,
+      "pointer": "/outputs/0/container/entries/1/path"
+    },
+    "params": {
+      "profile": "epub",
+      "path": "mimetype"
+    }
+  }
+]
