@@ -130,7 +130,7 @@ another harness's type to get past a capacity wait.** Park on
 | 0 | PRD-001, ADR-001 to ADR-011, RULINGS-v1 and this plan, merged to `main` | — | **authored** |
 | 1 | **The seams**: the module on Go 1.26.9; `cmd/metais` and the host seams; the finding model and registry; the limits table; the fault, test-environment, version and spec-data packages; the shared interfaces later waves build against; the guarantee tripwires; the `spec/` skeleton | 0 | **complete** — [verdict](#7-wave-1--the-seams) |
 | 2 | **The leaf libraries and the proof harness**: the command-line core with `version`, `limits` and `help`; the conformance runner and its self-proof; the document tripwires; zip, Unicode and the portable-path predicate; host files; JSON; YAML; CSV and Markdown; the JSON Schema compiler with the pattern profile; failure mapping, bundling and the static walk; the tar writer; dates; the Liquid front end; the manifest library | 1 | **complete** — [verdict](#8-wave-2--the-leaf-libraries-and-the-proof-harness) |
-| 3 | **Opening a package, and the composed libraries**: the package loader and `inspect`, with the container, manifest and version chapters and their vectors; the inputs layer; the Liquid renderer; the standard filter catalog; the sample-value generator; the cross-reference analysis; the OOXML split-run scanner; `init` | 2 | not started |
+| 3 | **Opening a package, and the composed libraries**: the package loader and `inspect`, with the container, manifest and version chapters and their vectors; the inputs layer; the Liquid renderer; the standard filter catalog; the sample-value generator; the cross-reference analysis; the OOXML split-run scanner; `init` | 2 | **complete** — [verdict](#9-wave-3--opening-a-package-and-the-composed-libraries) |
 | 4 | **Validate, read, the first render, check and unpack**: `validate`; `ls`, `read`, `outline`, `grep`, `schema` and `extract`; `render` of template outputs into a new directory with the template environment; `check`; `unpack`; the Liquid closure | 3 | not started |
 | 5 | **The render's capabilities, and the rest of authoring**: the METAIS filters and `date`; escaping; `embed` and `provenance`; fan-out, conditions and path templates; assets and the mirror; zip containers and their profiles; CRLF and output validation; existing destinations; dry run, the standard-output archive and `--only`; `sample`; `render --sample`; `test` | 4 | not started |
 | 6 | **Pack, and hardening**: `pack` with the example-package harness; `test`'s container comparison; the hostile corpus in full; the SC7 harness's full reach; limit calibration; benchmark budgets; the release builder | 5 | not started |
@@ -832,6 +832,54 @@ and the split-run scanner. `init` writes its scaffold.
 - **Chapter 2's statement area is `PKG`** (`MTS-PKG-nnn`, `vectors/pkg/`),
   not `CON`, because `con` is a Windows device name that ADR-011 D9 item 8
   refuses. ADR-011's amendment, proposed, is ratified at the train's close.
+
+**Verdict (2026-10-19): complete.** `metais inspect` opens packed packages
+and source directories, verifies all of each, and refuses the committed
+hostile packages. Chapters 2 to 4 have a vector for every statement, and the
+suite runs its first vectors in both environments. Every library Wave 4
+wires is in place: the inputs layer, the renderer and `Core()`, the sample
+generator, the cross-reference, the OOXML scanner, and `init`.
+
+That took nine items, three corrective items and one blocking fix, #46 to
+#59. The verification round made about 150 mutations across all twelve, and
+its gate was green on go1.26.9 linux/amd64. Its one blocking finding, a
+missing proof note on MTS-VER-007, was fixed in #59 and not re-verified.
+Wave 2's `hostfs` fix #40 has now passed on linux.
+
+Brief and closeout:
+[brief-plan-2026-10-metais-v1-wave3.md](../briefs/brief-plan-2026-10-metais-v1-wave3.md)
+(brief [#43](https://github.com/kottera/metais/pull/43), rulings
+[#45](https://github.com/kottera/metais/pull/45) and
+[#54](https://github.com/kottera/metais/pull/54), closeout
+[#61](https://github.com/kottera/metais/pull/61)). No person was consulted
+during the wave.
+
+What changes later waves:
+
+- **Two findings for Ed are now on his board as design sessions, and
+  neither blocks Wave 4:**
+  - `01a15348-4ab5-7743-9802-86072e41b5bf`: 16 registered codes no vector
+    can produce (§8). Needed by Wave 7.
+  - `01a15348-66d1-73ef-bed1-8d62aa3dff0e`: jsonschema v6's `Compile` is
+    quadratic on a hostile schema, and fixing it at the cause needs a
+    dependency change. Needed by Wave 6's calibration.
+- **The `hostfs` open-handle design session**
+  (`01a15284-df6e-7668-b799-62f4c380a84f`) is still open. Wave 4's render
+  writes only into a new directory, and its brief states the constraint
+  that render must meet from ADR-009's exact limits. The general mechanism
+  must be settled before Wave 5's existing destinations.
+- **The gate flaked under load on linux** in two producers' runs: a CPU-ratio
+  test, and self-proof wall bounds under parallel `-race`. The merged-tree
+  gate was green. Plan §4 and AGENTS.md apply: the mechanism is debugged,
+  and no assertion is widened.
+- **For Ed to ratify at the train's close:**
+  - ADR-011 A1 (`PKG`);
+  - the rulings recorded under this section;
+  - the readings Wave 3 took where ADRs disagree on reporting rather than
+    on acceptance. ADR-006 D8 de-duplicates repeats of one name. ADR-007
+    D3's suggestion distance is followed.
+- **Still running when the wave closed:** W3-NB2
+  (`01a15339-e49f-757a-b579-8991efd5d775`) and janitorial issue #60.
 
 ## 10. Wave 4 — validate, read, the first render, check and unpack
 
