@@ -262,7 +262,8 @@ func TestSampleOverwrite(t *testing.T) {
 		t.Errorf("--overwrite left %d entries from %d: %v", len(after), len(before), after)
 	}
 
-	// A link where sample writes a file is refused, and nothing is written.
+	// A link where sample writes a file is refused, by path, and nothing is
+	// written.
 	linked := filepath.Join(root, "linked")
 	if err := os.Mkdir(linked, 0o755); err != nil {
 		t.Fatal(err)
@@ -271,7 +272,7 @@ func TestSampleOverwrite(t *testing.T) {
 		t.Skipf("no symbolic link here: %v", err)
 	}
 	r = runTool(t, "sample", pkg, "--to", linked, "--overwrite", "--json")
-	if r.status != 5 || len(r.doc.Findings) != 1 || r.doc.Findings[0].Code != "output.destination.write_failed" {
+	if r.status != 5 || len(r.doc.Findings) != 1 || r.doc.Findings[0].Code != "output.destination.link" || r.doc.Findings[0].Params["path"] != "vendor.json" {
 		t.Errorf("a link in the way: status %d, %s", r.status, r.stdout)
 	}
 	if got := hostTree(t, linked); len(got) != 2 {
@@ -279,29 +280,133 @@ func TestSampleOverwrite(t *testing.T) {
 	}
 }
 
-// TestSampleEmptyCollection is a collection with no item written into an
-// existing directory: its directory is created, so the data reads back as
-// the empty collection it is (ADR-003 D15).
+// TestSampleEmptyCollection is a collection with no item: its directory
+// is written, so the data reads back as the empty collection it is
+// (ADR-003 D15), and is listed in files. Into an existing directory it is
+// W5-V2.A: the directory is checked with the files, before anything is
+// written, prepared beneath .metais-staging, and arrives by the commit.
 func TestSampleEmptyCollection(t *testing.T) {
 	root := testenv.Dir(t)
 	pkg := samplePackage(t, root)
-	for _, dir := range []string{"new", "empty"} {
+	want := []string{"events/", "lines.csv", "summary.txt", "vendor.json"}
+	for _, dir := range []string{"new", "empty", "full"} {
 		data := filepath.Join(root, dir)
-		if dir == "empty" {
+		line := []string{"sample", pkg, "--to", data, "--items", "0", "--json"}
+		if dir != "new" {
 			if err := os.Mkdir(data, 0o755); err != nil {
 				t.Fatal(err)
 			}
 		}
-		r := runTool(t, "sample", pkg, "--to", data, "--items", "0", "--json")
+		if dir == "full" {
+			// The verifier's case: an existing directory written with
+			// --overwrite.
+			if err := os.WriteFile(filepath.Join(data, "keep"), nil, 0o644); err != nil {
+				t.Fatal(err)
+			}
+			line = append(line, "--overwrite")
+		}
+		r := runTool(t, line...)
 		if r.status != 0 {
 			t.Fatalf("%s: %s", dir, r.stdout)
+		}
+		if res := readSample(t, r); !slices.Equal(res.Files, want) {
+			t.Errorf("%s: files %q, want %q", dir, res.Files, want)
 		}
 		if info, err := os.Lstat(filepath.Join(data, "events")); err != nil || !info.IsDir() {
 			t.Errorf("%s: events/ is %v, %v", dir, info, err)
 		}
-		if r := runTool(t, "validate", pkg, "--data", data, "--json"); r.status != 0 || len(r.doc.Findings) != 0 {
+		if _, err := os.Lstat(filepath.Join(data, ".metais-staging")); err == nil {
+			t.Errorf("%s: the staging directory is left", dir)
+		}
+		// full's keep is no input, so only the others validate.
+		if r := runTool(t, "validate", pkg, "--data", data, "--json"); dir != "full" && (r.status != 0 || len(r.doc.Findings) != 0) {
 			t.Errorf("%s: %s", dir, r.stdout)
 		}
+		// Written again, the directory is there, and is left as it is.
+		if dir == "full" {
+			if r := runTool(t, line...); r.status != 0 || !slices.Equal(readSample(t, r).Files, want) {
+				t.Errorf("again: status %d, %s", r.status, r.stdout)
+			}
+		}
+	}
+
+	// A file where the collection's directory goes is refused with the
+	// other checks, and nothing is written: the directory is part of the
+	// plan, not made after the commit.
+	in := filepath.Join(root, "in-the-way")
+	if err := os.Mkdir(in, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(in, "events"), []byte("a file\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	before := hostTree(t, in)
+	for _, dry := range []bool{true, false} {
+		line := []string{"sample", pkg, "--to", in, "--items", "0", "--overwrite", "--json"}
+		if dry {
+			line = append(line, "--dry-run")
+		}
+		r := runTool(t, line...)
+		if r.status != 5 || len(r.doc.Findings) != 1 || r.doc.Findings[0].Code != "output.destination.not_directory" || r.doc.Findings[0].Params["path"] != "events/" {
+			t.Errorf("dry run %v: a file in the way: status %d, %s", dry, r.status, r.stdout)
+		}
+		if after := hostTree(t, in); !equalTrees(before, after) {
+			t.Errorf("dry run %v: a refused write changed the directory: %v", dry, after)
+		}
+	}
+}
+
+// TestSampleReportsEveryRefusal is W5-V2.B: every planned path the checks
+// refuse is reported, each with render's and extract's code and its path,
+// together with a staging directory left in the way, before anything is
+// written, on a dry run as on the write.
+func TestSampleReportsEveryRefusal(t *testing.T) {
+	root := testenv.Dir(t)
+	pkg := samplePackage(t, root)
+	data := filepath.Join(root, "data")
+	for _, d := range []string{"vendor.json", "lines.csv", ".metais-staging"} {
+		if err := os.MkdirAll(filepath.Join(data, d), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	before := hostTree(t, data)
+	for _, dry := range []bool{false, true} {
+		line := []string{"sample", pkg, "--to", data, "--overwrite", "--json"}
+		if dry {
+			line = append(line, "--dry-run")
+		}
+		r := runTool(t, line...)
+		type got struct{ code, path, reason string }
+		var gots []got
+		for _, f := range r.doc.Findings {
+			p, _ := f.Params["path"].(string)
+			reason, _ := f.Params["reason"].(string)
+			gots = append(gots, got{f.Code, p, reason})
+		}
+		want := []got{
+			{"output.destination.not_regular_file", "lines.csv", "is_directory"},
+			{"output.destination.not_regular_file", "vendor.json", "is_directory"},
+			{"output.destination.write_failed", "", "exists"},
+		}
+		if r.status != 5 || !slices.Equal(gots, want) {
+			t.Errorf("dry run %v: status %d, findings %+v, want %+v", dry, r.status, gots, want)
+		}
+		if after := hostTree(t, data); !equalTrees(before, after) {
+			t.Errorf("dry run %v: a refused write changed the directory: %v", dry, after)
+		}
+	}
+}
+
+// TestSampleHumanCount is W5-V2.C: the human heading agrees in number with
+// the files it lists, as extract's does.
+func TestSampleHumanCount(t *testing.T) {
+	pkg, _ := declarationPackage(t, "  - id: t\n    template: t.txt.liquid\n")
+	to := filepath.Join(testenv.Dir(t), "data")
+	if r := runTool(t, "sample", pkg, "--to", to, "--dry-run"); r.status != 0 || r.stdout != "Would write 1 file:\n  pages.json\n" {
+		t.Errorf("dry run: status %d, %q", r.status, r.stdout)
+	}
+	if r := runTool(t, "sample", pkg, "--to", to); r.status != 0 || r.stdout != "Wrote 1 file:\n  pages.json\n" {
+		t.Errorf("status %d, %q", r.status, r.stdout)
 	}
 }
 
@@ -407,7 +512,7 @@ func TestSampleDryRun(t *testing.T) {
 		code string
 	}{
 		{[]string{"sample", pkg, "--to", full, "--dry-run"}, "output.destination.not_empty"},
-		{[]string{"sample", pkg, "--to", full, "--overwrite", "--dry-run"}, "output.destination.write_failed"},
+		{[]string{"sample", pkg, "--to", full, "--overwrite", "--dry-run"}, "output.destination.not_regular_file"},
 		{[]string{"sample", pkg, "--example", "taken", "--dry-run"}, "output.destination.write_failed"},
 	} {
 		r := runTool(t, append(tc.line, "--json")...)

@@ -24,8 +24,12 @@ With --to, the data directory is <dir>: a <dir> that does not exist is created,
 with its missing parents, beside it and renamed into place; an empty one is
 written into. A <dir> that holds any entry, a hidden one included, is refused
 unless --overwrite is given, and then each file sample writes replaces the file
-of that name, and nothing else in <dir> is read, changed or removed. A link, a
-directory or a special file where sample writes a file is refused.
+of that name, and nothing else in <dir> is read, changed or removed. Everything
+sample writes into an existing <dir>, an empty collection's directory included,
+is prepared beneath <dir>/.metais-staging and moved into place. A link, a
+directory or a special file where sample writes a file, a file where it needs a
+directory, and a name that differs only in case from one it writes are each
+refused, all of them together, before anything is written.
 
 With --example, the source directory's examples/<name>/ is written: its inputs/
 holds the data, and its example.yaml records how it was made. It is refused with
@@ -92,8 +96,9 @@ Flags:
       Print help to standard output and exit 0; nothing else runs.
 
 Prints:
-  The files written, relative to <dir> or to examples/<name>/, in path order.
-  With --json, one metais.sample/1 document.
+  The files written, relative to <dir> or to examples/<name>/, in path order; an
+  empty directory, a collection with no item, is listed with a trailing /. With
+  --json, one metais.sample/1 document.
 
 Refusals:
   collection.as_file
@@ -565,15 +570,33 @@ Refusals:
       A value given with --set, --set-json or --inputs-json is refused
       (frontmatter unclosed).
       Next: metais inspect <package>
+  output.destination.case_variant
+      In <dir>, an entry's name differs only in case or normalization from a
+      name a path sample writes holds.
+      Next: metais sample <package> --to <dir>
+  output.destination.commit_failed
+      Moving the files into an existing <dir> failed part way; the files already
+      moved are listed, and nothing else was changed.
+      Next: metais sample <package> --to <dir>
+  output.destination.link
+      In <dir>, a path sample writes runs through, or ends at, a symbolic link,
+      a junction or another reparse point, which is never followed.
+      Next: metais sample <package> --to <dir>
   output.destination.not_directory
-      --to, or a directory above it, exists and is not a directory.
+      --to, or a directory above it, exists and is not a directory; or, in
+      <dir>, a file stands where a path sample writes needs a directory.
       Next: metais sample <package> --to <dir>
   output.destination.not_empty
       --to names a directory that holds entries, and --overwrite is not given.
       Next: metais sample <package> --to <dir> --overwrite
+  output.destination.not_regular_file
+      In <dir>, a directory, a named pipe, a socket or a device stands where
+      sample writes a file.
+      Next: metais sample <package> --to <dir>
   output.destination.write_failed
-      A file sample writes is in the way (a link, a directory or a special
-      file), the example already exists, or a write failed.
+      A write failed, another file system is mounted on a path sample writes, a
+      staging directory is left in <dir>, or the example already exists; nothing
+      is left written.
       Next: metais sample <package> --to <dir>
   package.compiled.mismatch
       The package is refused (compiled: mismatch).

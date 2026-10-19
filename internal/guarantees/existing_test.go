@@ -25,14 +25,15 @@ import (
 
 // existingWrite is one writer of an existing output directory, as the
 // existing-destination detector runs it: files are the paths it writes
-// beneath the output directory, "/"-separated, and run makes the write
-// into out under faults. A command that writes into an existing directory
+// beneath the output directory, "/"-separated, dirs the empty directories
+// it creates there, and run makes the write into out under faults. A command that writes into an existing directory
 // under ADR-005 Amendment A1 — render, extract --overwrite, sample --to,
 // test --update — is run through the detector by giving it one of these,
 // whose run invokes the command with out as its destination.
 type existingWrite struct {
 	name  string
 	files []string
+	dirs  []string
 	run   func(t *testing.T, out string, faults fault.Set) error
 }
 
@@ -217,7 +218,8 @@ func atime(t *testing.T, p string) (int64, bool) {
 //     wrote into it rather than renaming over it;
 //   - a seeded file's access time moved: the write read an existing file
 //     (when the file system records reads at all, which reads reports);
-//   - a planned file is not written, or the staging directory is left.
+//   - a planned file is not written, a planned directory not created, or
+//     the staging directory is left.
 func detectExisting(t *testing.T, w existingWrite, faults fault.Set) (found []string, reads bool) {
 	t.Helper()
 	base := testenv.Dir(t)
@@ -298,6 +300,11 @@ func detectExisting(t *testing.T, w existingWrite, faults fault.Set) (found []st
 		}
 		if b, _ := os.ReadFile(host(f)); bytes.Equal(b, []byte("old "+f)) {
 			found = append(found, "left the old bytes of "+f)
+		}
+	}
+	for _, d := range w.dirs {
+		if info, err := os.Lstat(host(d)); err != nil || !info.IsDir() {
+			found = append(found, "did not create "+d+"/")
 		}
 	}
 	if _, err := os.Lstat(filepath.Join(out, hostfs.StagingDir)); err == nil {

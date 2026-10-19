@@ -1711,3 +1711,20 @@ they write into an existing directory too.
   `--overwrite` with `--out -` is `usage.flag_excluded`, the code W5-10
   registers, with `other` set to `--out -`. `internal/cli`'s tests prove it,
   as they prove every usage code.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-V2.** A1 item 6, "nothing
+  outside a staging directory is created except by a commit rename", holds
+  for a data directory's empty collection, which `sample --to` writes as an
+  empty directory (ADR-003 D15). `hostfs.Existing` takes a planned
+  directory as a planned path that ends in `/`. `Check` checks it as it
+  checks a file: links, case variants, another device and the staging name
+  are refused the same way, and a target that is not a directory is
+  `NotDirectory`. An absent one is `Create`, and its unit is its shallowest
+  missing component, a directory. `Output.MkdirAll` prepares it beneath
+  the staging directory, and the commit renames the unit into place as it
+  renames any missing directory, after making every check again. One that
+  exists already is `Present`, has no unit, and is left as it is. A1's
+  ownership rule and its bounded handles are unchanged: a planned directory
+  adds no handle, and removal is still only of names the write created
+  beneath the staging directory. `sample --to` reports every per-path
+  refusal together, through the codes `render` and `extract` use, and a
+  leftover staging directory with them, on a dry run as on the write.

@@ -1435,6 +1435,22 @@ document.
     command (ADR-006 D12 item 2) through a role the run sets on its
     session, so a defect of the package exits 1, not 4.
 
+- **PLAN-2026-10-metais-v1 W5-V2 — `sample --to` through A1, every
+  refusal.** `sample --to` into an existing directory plans the directory
+  of an empty collection with its files. The directory is checked with
+  them, prepared beneath `<dir>/.metais-staging` and committed by ADR-005
+  A1's rename, never made in `<dir>` by any other call. D9 `sample` item
+  5's `files` lists it, with a trailing `/`, wherever it is written. A
+  directory that holds a file is not listed, because its files are. A
+  planned path the checks refuse is reported with every other one, before
+  anything is written, under the codes W5-8 registered for `render` and
+  W5-12 uses for `extract`: `output.destination.link`, `case_variant`,
+  `not_regular_file`, and `not_directory` with its `path`. A staging
+  directory left in `<dir>` is `write_failed` with reason `exists`. A
+  commit that stops after moving a file is
+  `output.destination.commit_failed`. Each is declared in `metais help
+  sample`. The human heading agrees in number: `Wrote 1 file:`.
+
 - **PLAN-2026-10-metais-v1 W5-12 — `extract --overwrite` and `unpack
   --dry-run`.** D5's `extract` item 3 landed under ADR-005 D15 and
   Amendment A1, and D9's `unpack --dry-run`. W4-2's interim refusal of an

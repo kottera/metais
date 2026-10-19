@@ -62,7 +62,7 @@
           "type": "boolean"
         },
         "files": {
-          "description": "Each file written, or that a dry run would write, as a path relative to the data directory or to the example's directory, in byte order.",
+          "description": "Each file written, or that a dry run would write, as a path relative to the data directory or to the example's directory, in byte order; an empty directory, a collection with no item, ends in /.",
           "type": "array",
           "uniqueItems": true,
           "items": {

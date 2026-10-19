@@ -9,13 +9,23 @@ operation can express, so they live here and in `metais help sample` and
 - **`sample --to <dir> --overwrite`** writes into a directory that holds
   entries, a hidden one included. Each file `sample` writes replaces the
   file of that name by a rename, without reading or writing into it; every
-  other file in `<dir>` is left as it was, and nothing is removed. A link, a
-  directory or a special file where `sample` writes a file refuses the run
-  before anything is written, as `output.destination.write_failed`. The
+  other file in `<dir>` is left as it was, and nothing is removed. The
   write goes through ADR-005 Amendment A1's staging directory,
-  `<dir>/.metais-staging`, committed unit by unit. Without `--overwrite`, a
-  directory that holds any entry is `output.destination.not_empty`, and an
-  empty one is written into.
+  `<dir>/.metais-staging`, committed unit by unit. Everything `sample`
+  creates arrives that way, including the empty directory of a collection
+  with no item. Every path `sample` writes is checked before anything is
+  written, and every refusal is reported together, with the path it
+  names. `render` and `extract` use the same codes:
+  `output.destination.link` for a link on the path,
+  `output.destination.not_regular_file` for a directory or a special file
+  where a file goes, `output.destination.not_directory` for a file where a
+  directory goes, and `output.destination.case_variant` for a name that
+  differs only in case or normalization. A staging directory left in
+  `<dir>` is `output.destination.write_failed` with reason `exists`, and a
+  commit that stops after moving a file is
+  `output.destination.commit_failed`, listing what it moved. Without
+  `--overwrite`, a directory that holds any entry is
+  `output.destination.not_empty`, and an empty one is written into.
 - **`--overwrite` with `--example`** is `usage.flag_excluded`: an example is
   never merged into or replaced. So is giving both `--to` and `--example`;
   giving neither is `usage.missing_operand`.
@@ -37,6 +47,7 @@ operation can express, so they live here and in `metais help sample` and
   where `render` without it refuses the package with status 4.
 - **The result.** `metais.sample/1` carries `optional`, `seed`, `items`,
   `example` (or `null`), `dry_run`, and `files`, each relative to the data
-  directory or the example's directory, in byte order. `metais.render/1`'s
-  `sample` is `{"optional", "seed", "items"}` with `--sample`, and `null`
-  without.
+  directory or the example's directory, in byte order. An empty directory,
+  a collection with no item, is listed with a trailing `/`.
+  `metais.render/1`'s `sample` is `{"optional", "seed", "items"}` with
+  `--sample`, and `null` without.
