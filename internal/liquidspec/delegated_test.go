@@ -353,3 +353,69 @@ func TestServeProgram(t *testing.T) {
 		t.Errorf("standard output %q, want three responses, the last rendering 42", out)
 	}
 }
+
+// adapterPath is the delegated run's liquid-spec adapter.
+var adapterPath = filepath.Join(repoRoot, "spec", "conformance", "delegated", "liquid-spec.rb")
+
+// The adapter's lines that the delegated run needs before anything else:
+// liquid-spec requires liquid/spec/deps/liquid_ruby right after the
+// adapter's setup block, and that file needs the liquid gem loaded; and
+// the server's output is UTF-8 whatever the host's locale says.
+const (
+	adapterEncoding      = `Encoding.default_external = Encoding::UTF_8`
+	adapterRequireLiquid = `require "liquid"`
+)
+
+// adapterProblems returns what is wrong with the adapter src: its first
+// statement must set the default external encoding to UTF-8, and the
+// first statement of its setup block must load the liquid gem.
+func adapterProblems(src string) []string {
+	var code []string
+	for _, l := range strings.Split(src, "\n") {
+		if l = strings.TrimSpace(l); l != "" && !strings.HasPrefix(l, "#") {
+			code = append(code, l)
+		}
+	}
+	var problems []string
+	if len(code) == 0 || code[0] != adapterEncoding {
+		problems = append(problems, "the first statement is not "+adapterEncoding)
+	}
+	i := slices.Index(code, "LiquidSpec.setup do |ctx|")
+	switch {
+	case i < 0:
+		problems = append(problems, "there is no setup block")
+	case i+1 == len(code) || code[i+1] != adapterRequireLiquid:
+		problems = append(problems, "the setup block does not begin with "+adapterRequireLiquid)
+	}
+	return problems
+}
+
+// TestAdapterSetup is W4-A1F: the adapter sets UTF-8 as the default
+// external encoding before anything else, and its setup block loads the
+// liquid gem before anything else; and, as its control, an adapter
+// lacking either is found. The real run needs Ruby and the network, so
+// this is the guard a go test can give.
+func TestAdapterSetup(t *testing.T) {
+	testenv.Home(t)
+	b, err := os.ReadFile(adapterPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if problems := adapterProblems(string(b)); len(problems) != 0 {
+		t.Errorf("%s: %q", adapterPath, problems)
+	}
+	good := "# c\n" + adapterEncoding + "\nrequire \"json\"\n\nLiquidSpec.setup do |ctx|\n  # c\n  " + adapterRequireLiquid + "\n  x = 1\nend\n"
+	if problems := adapterProblems(good); len(problems) != 0 {
+		t.Errorf("a good adapter: %q", problems)
+	}
+	for _, c := range []struct{ src, want string }{
+		{"require \"json\"\n" + adapterEncoding + "\nLiquidSpec.setup do |ctx|\n  " + adapterRequireLiquid + "\nend\n", "the first statement is not " + adapterEncoding},
+		{adapterEncoding + "\nLiquidSpec.setup do |ctx|\n  x = 1\n  " + adapterRequireLiquid + "\nend\n", "the setup block does not begin with " + adapterRequireLiquid},
+		{adapterEncoding + "\nLiquidSpec.setup do |ctx|\n", "the setup block does not begin with " + adapterRequireLiquid},
+		{adapterEncoding + "\n" + adapterRequireLiquid + "\n", "there is no setup block"},
+	} {
+		if problems := adapterProblems(c.src); !slices.Equal(problems, []string{c.want}) {
+			t.Errorf("adapter\n%s\nfound %q, want %q", c.src, problems, c.want)
+		}
+	}
+}

@@ -9,6 +9,11 @@
 # --command. README.md is how to run it; it is written for this
 # repository, and nothing of liquid-spec is copied into it.
 
+# The server speaks UTF-8, and so do liquid-spec's cases. Ruby takes the
+# default external encoding from the host's locale, and in the C locale
+# that is US-ASCII, so the run sets it here rather than asking the host.
+Encoding.default_external = Encoding::UTF_8
+
 require "json"
 require "liquid/spec/cli/adapter_dsl"
 require "liquid/spec/json_rpc/adapter"
@@ -16,6 +21,9 @@ require "liquid/spec/json_rpc/adapter"
 PINNED = JSON.parse(File.read(File.join(__dir__, "liquid-spec.json")))
 
 LiquidSpec.setup do |ctx|
+  # liquid-spec requires its liquid_ruby support right after this block,
+  # and that needs the liquid gem loaded.
+  require "liquid"
   root = Liquid::Spec::CLI::Runner::GEM_ROOT
   head = IO.popen(["git", "-C", root, "rev-parse", "HEAD"], &:read).strip
   unless head == PINNED["commit"]

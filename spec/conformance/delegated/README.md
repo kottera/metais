@@ -31,6 +31,10 @@ repository.
 - Go, with `GOTOOLCHAIN=auto`, so that the server is built with the
   toolchain `go.mod` names.
 
+The run does not depend on the host's locale: the adapter sets Ruby's
+default external encoding to UTF-8 itself, so a `C` or `POSIX` locale is as
+good as any other.
+
 Record the host and each version before the run:
 
 ```sh
