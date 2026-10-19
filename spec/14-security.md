@@ -27,6 +27,8 @@ lower a limit for one operation; nothing raises one.
 | `schema-size` | 4 MiB | one schema file |
 | `combined-schema-size` | 16 MiB | the combined schema, stored or derived |
 | `schema-depth` | 64 | the nesting of subschemas |
+| `schema-subschemas` | 20,000 | the subschemas of every schema file of a package together, and of the combined schema |
+| `schema-location-length` | 512 bytes | the location of one subschema of a schema file |
 | `pattern-length` | 4,096 bytes | one `pattern` or `patternProperties` key |
 | `regex-program` | 4,096 instructions | one compiled regular expression |
 | `template-size` | 8 MiB | one template, and one `path` of the manifest |
@@ -40,6 +42,36 @@ KiB, MiB and GiB are powers of 1024.
 §14.1 at its default, or at the lower value a caller gives for one operation,
 and MUST refuse a package whose own content breaches one with `limit.package`,
 naming the limit and its bound, before it reads the bytes the limit bounds.
+
+A schema's cost to compile grows with how many subschemas it has and how long
+their locations are, which its size in bytes does not measure, so two limits
+bound them. A subschema is the root of a schema file and every value a
+keyword of [chapter 5](05-data-specification.md) gives as a schema, as an
+array of schemas or as an object of them, a boolean schema included.
+
+<a id="mts-sec-020"></a>**MTS-SEC-020** A processor MUST count the subschemas
+of every schema file of a package together, file by file in the byte order of
+their names and within a file root first, then each object's members in the
+byte order of their names, and MUST refuse a package whose count exceeds
+`schema-subschemas` with `limit.package`, located at the file and JSON Pointer
+of the first subschema past the limit, before it compiles any schema.
+
+<a id="mts-sec-021"></a>**MTS-SEC-021** A subschema's location is the URI of
+its resource, which is the longer of the canonical URI of the nearest `$id`
+at or above it and its file's retrieval URI, then `#`, then its JSON Pointer
+within its file as RFC 6901 escapes it. A processor MUST refuse a schema file
+holding a subschema whose location is longer, in bytes, than
+`schema-location-length` with `limit.package`, located at the file and JSON
+Pointer of the first such subschema in the order of MTS-SEC-020, before it
+compiles any schema.
+
+<a id="mts-sec-022"></a>**MTS-SEC-022** A processor MUST count the subschemas
+of the combined schema ([chapter 5](05-data-specification.md)) as a whole,
+apart from the schema files', and MUST refuse a package whose combined
+schema, stored or derived, has more than `schema-subschemas` with
+`limit.package`, located at `.compiled/schema.json` and the JSON Pointer of
+its first subschema past the limit, before it compiles the combined schema.
+A location in the combined schema is not bounded by `schema-location-length`.
 
 ## 14.2 Entry confinement
 

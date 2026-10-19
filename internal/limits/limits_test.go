@@ -206,6 +206,10 @@ func TestLowerRefuses(t *testing.T) {
 		{"output-total=2GiB", want{ReasonAboveDefault, `"name":"output-total","default":1073741824,"unit":"bytes","value":2147483648`}},
 		{"findings=9007199254740993", want{ReasonAboveDefault, findingsLimit}},
 		{"findings=99999999999999999999999", want{ReasonAboveDefault, findingsLimit}},
+		// Amendment A1's two, each one above its default.
+		{"schema-subschemas=20001", want{ReasonAboveDefault, `"name":"schema-subschemas","default":20000,"unit":"count","value":20001`}},
+		{"schema-location-length=513", want{ReasonAboveDefault, `"name":"schema-location-length","default":512,"unit":"bytes","value":513`}},
+		{"schema-location-length=1KiB", want{ReasonAboveDefault, `"name":"schema-location-length","default":512,"unit":"bytes","value":1024`}},
 		{"entry-size=9007199254740992GiB", want{ReasonAboveDefault, `"name":"entry-size","default":67108864,"unit":"bytes"`}},
 		// An unknown name.
 		{"nope=1", want{ReasonUnknownName, ""}},

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/schema-subschemas",
+  "title": "schema-subschemas bounds the subschemas of every schema file together, and of the combined schema as a whole",
+  "statements": [
+    "MTS-SEC-020",
+    "MTS-SEC-022"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "The schema files hold 6 subschemas together, booleans none, in inputs/common.schema.json then inputs/report.schema.json; the combined schema holds 9. At 6 the files pass and the combined schema is refused, so the files' own bound is shown at 6 and 5.",
+  "cases": [
+    {
+      "name": "at-the-limit",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package",
+            "limits": {
+              "schema-subschemas": 9
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "combined-beyond-the-limit",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package",
+            "limits": {
+              "schema-subschemas": 8
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/combined-beyond-the-limit.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "files-at-the-limit",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package",
+            "limits": {
+              "schema-subschemas": 6
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/files-at-the-limit.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "files-beyond-the-limit",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package",
+            "limits": {
+              "schema-subschemas": 5
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/files-beyond-the-limit.json"
+          }
+        }
+      ]
+    }
+  ]
+}

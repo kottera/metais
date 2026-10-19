@@ -1,0 +1,20 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/schema.json",
+      "pointer": "/properties/report"
+    },
+    "params": {
+      "limit": "schema-subschemas",
+      "bound": 8,
+      "lowered": true,
+      "observed": 9
+    }
+  }
+]

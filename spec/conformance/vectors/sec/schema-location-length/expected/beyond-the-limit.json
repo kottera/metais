@@ -1,0 +1,20 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/title"
+    },
+    "params": {
+      "limit": "schema-location-length",
+      "bound": 52,
+      "lowered": true,
+      "observed": 53
+    }
+  }
+]

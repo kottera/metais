@@ -96,7 +96,7 @@ it, and the statements it reports.
 | `limit.exceeded.output` | error | content | output | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-OUT-011](09-outputs.md#mts-out-011), [MTS-PTH-009](11-rendering.md#mts-pth-009), [MTS-SEC-010](14-security.md#mts-sec-010) |
 | `limit.exceeded.template` | error | content | template | `limit`, `bound`, `lowered`; optional: `output_path` | 1.0 | [MTS-OUT-010](09-outputs.md#mts-out-010), [MTS-SEC-008](14-security.md#mts-sec-008), [MTS-SEC-009](14-security.md#mts-sec-009), [MTS-TPL-046](07-template-environment.md#mts-tpl-046) |
 | `limit.invalid` | error | usage | invocation | `reason`; optional: `name`, `default`, `unit`, `value` | 1.0 | — |
-| `limit.package` | error | refused | package | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-PTH-007](11-rendering.md#mts-pth-007), [MTS-SEC-001](14-security.md#mts-sec-001), [MTS-SEC-011](14-security.md#mts-sec-011) |
+| `limit.package` | error | refused | package | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-PTH-007](11-rendering.md#mts-pth-007), [MTS-SEC-001](14-security.md#mts-sec-001), [MTS-SEC-011](14-security.md#mts-sec-011), [MTS-SEC-020](14-security.md#mts-sec-020), [MTS-SEC-021](14-security.md#mts-sec-021), [MTS-SEC-022](14-security.md#mts-sec-022) |
 | `manifest.additional_item` | error | content | manifest | `index`, `prefix_count` | 1.0 | — |
 | `manifest.additional_property` | error | content | manifest | `property`; optional: `suggestion` | 1.0 | [MTS-MAN-011](03-manifest.md#mts-man-011), [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.any_of` | error | content | manifest | `branch_count` | 1.0 | — |
