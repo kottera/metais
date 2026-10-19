@@ -30,6 +30,8 @@
 package ooxml
 
 import (
+	"slices"
+
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/liquid"
 )
@@ -85,9 +87,10 @@ type template struct {
 	path    string
 	src     string
 	cons    []liquid.Construct
-	ooxml   bool     // its source declares one of the main namespaces
-	root    bindings // the prefixes its root element declares
-	renders []string // the partials its render tags name
+	ooxml   bool                // its source declares one of the main namespaces
+	root    bindings            // the prefixes its root element declares
+	free    map[string]struct{} // the prefixes it resolves through what it inherits
+	renders []string            // the partials its render tags name
 }
 
 // Scan scans templates for constructs split across text runs, and returns
@@ -115,31 +118,15 @@ func Scan(templates []Template) []finding.Finding {
 
 // prepare reads what the scan needs of t before propagating bindings: its
 // constructs, whether it declares a main namespace, the declarations on
-// its root element, and the partials it renders.
+// its root element, the prefixes it uses where it declares none, and the
+// partials it renders.
 func prepare(t Template) *template {
-	p := &template{path: t.Path, src: string(t.Text), root: bindings{}}
+	p := &template{path: t.Path, src: string(t.Text)}
 	p.cons = liquid.Constructs(p.src)
-	z := newTokenizer(p.src, p.cons)
-	first := true
-	for ev, ok := z.next(); ok; ev, ok = z.next() {
-		if ev.kind != evStart {
-			continue
-		}
-		for _, a := range ev.attrs {
-			prefix, ok := declared(a)
-			if !ok {
-				continue
-			}
-			f := families[decode(a.value)]
-			if f != 0 {
-				p.ooxml = true
-			}
-			if first {
-				p.root[prefix] = f
-			}
-		}
-		first = false
-	}
+	s := newScanner(p, nil)
+	s.free = map[string]struct{}{}
+	s.walk()
+	p.ooxml, p.root, p.free = s.ooxml, s.root, s.free
 	for _, c := range p.cons {
 		p.renders = append(p.renders, renders(c)...)
 	}
@@ -163,50 +150,118 @@ func declared(a attr) (string, bool) {
 // is scanned, and so is every template rendered from a scanned one, which
 // inherits the bindings of its renderer's root element. A renderer's root
 // bindings are those it inherits with its own root element's declarations
-// over them. A partial rendered from several renderers inherits all of
-// their bindings at once, so a construct split in any one context is
+// over them, so a root element declaring a prefix stops what it would
+// inherit for it. A partial rendered from several renderers inherits all
+// of their bindings at once, so a construct split in any one context is
 // found.
 //
-// Bindings only grow, by one of a few bits per prefix, so the propagation
-// ends.
+// Only a prefix some scanned template resolves through what it inherits
+// is propagated, by one walk of the render graph per prefix, which visits
+// each template at most once per vocabulary. What is kept is only what a
+// template resolves, so the memory is bounded by the templates' size,
+// whatever the graph.
 func inherit(ts []*template, byPath map[string]int) ([]bindings, []bool) {
-	inherited := make([]bindings, len(ts))
-	scanned := make([]bool, len(ts))
-	var queue []int
+	children := make([][]int, len(ts))
 	for i, t := range ts {
-		inherited[i] = bindings{}
-		if t.ooxml {
-			scanned[i] = true
-			queue = append(queue, i)
-		}
-	}
-	for len(queue) > 0 {
-		i := queue[0]
-		queue = queue[1:]
-		eff := bindings{}
-		for p, f := range inherited[i] {
-			eff[p] = f
-		}
-		for p, f := range ts[i].root {
-			eff[p] = f
-		}
-		for _, name := range ts[i].renders {
-			c, ok := byPath[name]
-			if !ok {
-				continue
-			}
-			changed := !scanned[c]
-			for p, f := range eff {
-				if f != 0 && inherited[c][p]|f != inherited[c][p] {
-					inherited[c][p] |= f
-					changed = true
+		seen := map[int]struct{}{}
+		for _, name := range t.renders {
+			if c, ok := byPath[name]; ok {
+				if _, dup := seen[c]; !dup {
+					seen[c] = struct{}{}
+					children[i] = append(children[i], c)
 				}
 			}
-			if changed {
+		}
+	}
+	scanned := make([]bool, len(ts))
+	var stack []int
+	for i, t := range ts {
+		if t.ooxml {
+			scanned[i] = true
+			stack = append(stack, i)
+		}
+	}
+	for len(stack) > 0 {
+		i := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		for _, c := range children[i] {
+			if !scanned[c] {
 				scanned[c] = true
-				queue = append(queue, c)
+				stack = append(stack, c)
 			}
 		}
+	}
+	// Each prefix a scanned template resolves through its inheritance, in
+	// order, with the scanned roots that declare it.
+	type source struct {
+		t int
+		f family
+	}
+	sources := map[string][]source{}
+	var prefixes []string
+	for i, t := range ts {
+		if !scanned[i] {
+			continue
+		}
+		for p := range t.free {
+			if _, ok := sources[p]; !ok {
+				sources[p] = []source{}
+				prefixes = append(prefixes, p)
+			}
+		}
+	}
+	for i, t := range ts {
+		if !scanned[i] {
+			continue
+		}
+		for p, f := range t.root {
+			if _, ok := sources[p]; ok && f != 0 {
+				sources[p] = append(sources[p], source{i, f})
+			}
+		}
+	}
+	slices.Sort(prefixes)
+	inherited := make([]bindings, len(ts))
+	reached := make([]family, len(ts)) // the vocabularies this prefix's walk has brought to each template
+	var touched []int
+	type step struct {
+		t int
+		f family
+	}
+	var walk []step
+	for _, p := range prefixes {
+		for _, src := range sources[p] {
+			for _, c := range children[src.t] {
+				walk = append(walk, step{c, src.f})
+			}
+		}
+		for len(walk) > 0 {
+			st := walk[len(walk)-1]
+			walk = walk[:len(walk)-1]
+			add := st.f &^ reached[st.t]
+			if add == 0 {
+				continue
+			}
+			if reached[st.t] == 0 {
+				touched = append(touched, st.t)
+			}
+			reached[st.t] |= add
+			if _, ok := ts[st.t].free[p]; ok {
+				if inherited[st.t] == nil {
+					inherited[st.t] = bindings{}
+				}
+				inherited[st.t][p] |= add
+			}
+			if _, shadowed := ts[st.t].root[p]; !shadowed {
+				for _, c := range children[st.t] {
+					walk = append(walk, step{c, add})
+				}
+			}
+		}
+		for _, i := range touched {
+			reached[i] = 0
+		}
+		touched = touched[:0]
 	}
 	return inherited, scanned
 }

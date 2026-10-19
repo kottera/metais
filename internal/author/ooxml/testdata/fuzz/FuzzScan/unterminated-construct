@@ -1,0 +1,3 @@
+go test fuzz v1
+[]byte("<w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><w:body><w:p><w:r><w:t>{% if </w:t></w:r><w:r><w:t>x</w:body></w:document>")
+[]byte("{{")

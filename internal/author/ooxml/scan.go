@@ -84,15 +84,23 @@ type causeAt struct {
 
 // scanner scans one template.
 type scanner struct {
-	t      *template
-	file   string
-	base   bindings
-	ns     map[string][]family // the in-template declarations in scope
-	open   map[qname]int       // how many elements of each name are open
-	stack  []frame
-	nextID int
-	pieces []piece
-	causes []causeAt
+	t    *template
+	file string
+	base bindings
+	// free, when not nil, collects each prefix the template resolves
+	// through base: one used where no declaration of the template is in
+	// scope.
+	free map[string]struct{}
+	// ooxml is set when a start tag declares a main namespace, and root
+	// holds the declarations of the first start tag, the root element.
+	ooxml, started bool
+	root           bindings
+	ns             map[string][]family // the in-template declarations in scope
+	open           map[qname]int       // how many elements of each name are open
+	stack          []frame
+	nextID         int
+	pieces         []piece
+	causes         []causeAt
 	// counts[k][i] is how many of causes[:i] name the cause 1<<k, so the
 	// causes between two offsets are found in logarithmic time however
 	// the containers nest.
@@ -108,18 +116,8 @@ type located struct {
 // scanTemplate scans t, whose prefixes not bound in its own source resolve
 // through base.
 func scanTemplate(t *template, base bindings) []finding.Finding {
-	s := &scanner{t: t, file: TemplatesDir + t.path, base: base, ns: map[string][]family{}, open: map[qname]int{}}
-	z := newTokenizer(t.src, t.cons)
-	for ev, ok := z.next(); ok; ev, ok = z.next() {
-		switch ev.kind {
-		case evStart:
-			s.start(ev)
-		case evEnd:
-			s.end(ev)
-		case evText, evCDATA:
-			s.text(ev)
-		}
-	}
+	s := newScanner(t, base)
+	s.walk()
 	for k := range causeKinds {
 		s.counts[k] = make([]int, len(s.causes)+1)
 		for i, c := range s.causes {
@@ -138,6 +136,27 @@ func scanTemplate(t *template, base bindings) []finding.Finding {
 	return out
 }
 
+func newScanner(t *template, base bindings) *scanner {
+	return &scanner{t: t, file: TemplatesDir + t.path, base: base, ns: map[string][]family{}, open: map[qname]int{}, root: bindings{}}
+}
+
+// walk reads the template's events, keeping the elements open and the
+// declarations in scope, and records its text pieces and the markup that
+// names a cause.
+func (s *scanner) walk() {
+	z := newTokenizer(s.t.src, s.t.cons)
+	for ev, ok := z.next(); ok; ev, ok = z.next() {
+		switch ev.kind {
+		case evStart:
+			s.start(ev)
+		case evEnd:
+			s.end(ev)
+		case evText, evCDATA:
+			s.text(ev)
+		}
+	}
+}
+
 // resolve returns the vocabularies prefix is bound to where the scanner
 // stands.
 func (s *scanner) resolve(prefix string) family {
@@ -147,6 +166,9 @@ func (s *scanner) resolve(prefix string) family {
 	if st := s.ns[prefix]; len(st) > 0 {
 		return st[len(st)-1]
 	}
+	if s.free != nil {
+		s.free[prefix] = struct{}{}
+	}
 	return s.base[prefix]
 }
 
@@ -154,10 +176,16 @@ func (s *scanner) start(ev *event) {
 	var decls []string
 	for _, a := range ev.attrs {
 		if p, ok := declared(a); ok {
-			s.ns[p] = append(s.ns[p], families[decode(a.value)])
+			f := families[decode(a.value)]
+			s.ns[p] = append(s.ns[p], f)
 			decls = append(decls, p)
+			s.ooxml = s.ooxml || f != 0
+			if !s.started {
+				s.root[p] = f
+			}
 		}
 	}
+	s.started = true
 	f := s.resolve(ev.prefix)
 	if c := markupCause(f, ev); c != 0 {
 		s.causes = append(s.causes, causeAt{ev.start, c})
