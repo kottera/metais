@@ -624,7 +624,8 @@ each an ordered list of steps.**
    create; `fifos` lists named pipes to create (ADR-009 D17's input cases).
    These hold what git cannot: empty directories, links and FIFOs. Then the
    runner copies the package and every tree or file the steps' arguments name
-   to the same relative paths. Steps of one case share the work directory, in
+   to the same relative paths, and last makes the `unwritable` directories
+   unwritable. *(A2, proposed)* Steps of one case share the work directory, in
    order; cases never share one.
 5. **Tags** (closed; adding one edits the vector schema):
 
@@ -643,7 +644,9 @@ each an ordered list of steps.**
    step creates names differing only in case). The runner probes each in the work directory's file system and
    skips the case with the reason when it is absent; a skip is reported, never
    counted as a pass. Linux meets both, so every vector runs on at least one
-   platform of the matrix (D15).
+   platform of the matrix (D15). `unwritable-dirs` (the setup makes a
+   directory unwritable) is met where a directory of mode 0555 refuses the
+   runner's own process a write. *(A2, proposed)*
 7. **Packed packages are committed bytes**, used only where the case is about
    bytes — the zip profile, digests, a hostile container. Everything else uses
    a source directory, so a change to the packer does not churn the suite.
@@ -1434,6 +1437,49 @@ Cross-referenced from ADR-001's implementation log.
    named `PKG` since chapter 2's first statement, so D3's rule that an
    identifier is assigned once and never renumbered is untouched. `PKG` is
    the area of no other chapter.
+
+
+### A2 — An unwritable directory in the setup, behind `unwritable-dirs`
+
+**Status:** Proposed 2026-10-19 by PLAN-2026-10-metais-v1 Wave 4 (W4-5,
+from Wave 3's closeout, question 3, which the wave 4 brief carries as
+runner work); awaiting ratification by Ed Funnekotter at the train's
+close.
+**Amends:** D9 item 4 (the setup), D9 item 6 (the closed set of
+requirements), and the vector schema
+`spec/schemas/conformance/1/vector.schema.json`.
+
+1. **The setup gains `unwritable`**, a list of directories, each created
+   when the rest of the setup has not made it, and made unwritable to the
+   implementation, mode 0555, after everything else D9 item 4 puts in
+   place: the package and the trees the steps name included. The
+   implementation can list such a directory and cannot create, rename or
+   remove anything in it. The runner gives each its mode back when the
+   case's steps are done, so the sandbox can be kept or removed.
+2. **The requirements gain `unwritable-dirs`.** The runner probes it in
+   the work directory's file system as D9 item 6 probes the others: a
+   directory below the work directory's base is given mode 0555, and the
+   requirement is met when the runner's own process can then create
+   neither a file nor a directory in it, nor rename a file into it. It is
+   not met when the process runs as root, whom a mode does not bind, nor
+   where a directory's mode does not govern writing into it, as on
+   Windows. A case whose requirement is not met is skipped with the
+   reason and reported, never counted as a pass, as D9 item 6 says. Linux
+   and darwin, run as an ordinary user, meet it.
+3. **A vector whose setup names an `unwritable` directory requires
+   `unwritable-dirs`**; a case that breaks this is a harness error, not a
+   pass and not a skip.
+4. **Why.** A statement that a failed write is reported, and what it
+   leaves, has no vector without a destination the implementation cannot
+   write: `output.destination.write_failed` and a render's failed commit
+   among them (PLAN-2026-10-metais-v1 §8, "The unwired list"). git cannot
+   hold a directory's mode, and D9 item 4 already gives the setup what git
+   cannot hold. A probe, rather than an assumption, keeps a run as root
+   honest: there no mode stops a write, and a vector that expects a
+   failure would otherwise fail, or worse, pass for the wrong reason.
+5. **Nothing else moves.** The suite's format only gains a member and a
+   value within its major version (`spec/conformance/README.md`), and no
+   released vector changes.
 
 ## Implementation log
 

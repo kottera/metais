@@ -57,7 +57,7 @@
       "description": "What the work directory's file system must offer; a case whose requirement is absent is skipped and reported, never counted as a pass.",
       "type": "array",
       "uniqueItems": true,
-      "items": { "enum": ["symlinks", "fifos", "case-sensitive-fs"] }
+      "items": { "enum": ["symlinks", "fifos", "case-sensitive-fs", "unwritable-dirs"] }
     },
     "notes": {
       "title": "Notes",
@@ -162,6 +162,11 @@
         "fifos": {
           "title": "Named pipes",
           "description": "Named pipes to create.",
+          "$ref": "#/$defs/paths"
+        },
+        "unwritable": {
+          "title": "Unwritable directories",
+          "description": "Directories, created when the rest of the setup has not made them, that are made unwritable to the implementation after everything else is in place: it can list them and cannot create, rename or remove anything in them. A vector whose setup names one requires unwritable-dirs.",
           "$ref": "#/$defs/paths"
         }
       }
