@@ -7,6 +7,10 @@ Funnekotter's ratification; the passages it changes are marked *(A1,
 proposed)*. [Amendment A2](#amendments) (the `MapOrder` fault is named by
 `internal/template` and carried into the engine by a plain option) is
 accepted by Ed Funnekotter; the passages it changes are marked *(A2)*.
+[Amendment A3](#amendments) (the Markdown outline is METAIS's own CommonMark
+reading, and goldmark leaves the module) is proposed by PLAN-2026-10-metais-v1
+Wave 2 and awaits Ed Funnekotter's ratification; the passages it changes are
+marked *(A3, proposed)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R18 item 1 (one static binary, the supported targets,
@@ -418,7 +422,6 @@ the specification defines.**
    |---|---|---|---|---|
    | `github.com/santhosh-tekuri/jsonschema/v6` | v6.0.3 | Apache-2.0 | JSON Schema 2020-12 validation (D5) | METAIS's own validator for the asserted keywords and formats |
    | `go.yaml.in/yaml/v3` | v3.0.5 | Apache-2.0 and MIT | YAML node trees (D6) | `go.yaml.in/yaml/v4` once final; then METAIS's own parser of the profile |
-   | `github.com/yuin/goldmark/v2` | v2.1.6 | MIT | heading outline (D9) | `github.com/yuin/goldmark` v1.8.6 |
    | `github.com/gowebpki/jcs` | v1.0.2 | Apache-2.0 | RFC 8785 serialization (D7) | METAIS's own RFC 8785 writer |
    | `golang.org/x/text` | v0.43.0 | BSD-3-Clause | NFC check, case folding (D11) | none needed; already required by the JSON Schema library |
    | `golang.org/x/sys` | v0.49.0 | BSD-3-Clause | no-replace rename on darwin and linux (D11); not linked on windows | none |
@@ -426,6 +429,10 @@ the specification defines.**
 
    Every licence here is compatible with Apache-2.0 distribution of a binary,
    given the notices of D12 item 6.
+
+   **No module parses Markdown.** The heading outline is METAIS's own
+   reading of CommonMark (D9), and the table has no row for it and no
+   fallback. *(A3, proposed)*
 
    **`golang.org/x/sys` and `golang.org/x/term` are linked on unix targets
    only.** `golang.org/x/sys/windows` imports `net`, which D11 item 10 and
@@ -721,7 +728,7 @@ not used to read inputs.**
    the `csv` filter writes, reading it back yields the same fields and
    quotedness.
 
-### D9 — Markdown: `goldmark/v2` for the outline; frontmatter split by METAIS
+### D9 — Markdown: the outline and the frontmatter split are METAIS's own *(A3, proposed)*
 
 1. **`markdown.SplitFrontmatter(src) (front []byte, frontLine int, body
    []byte, finding)`** implements ADR-003 D13 item 2 in METAIS code: the first
@@ -729,17 +736,24 @@ not used to read inputs.**
    normalization. A library is not used: the rule is a dozen lines of
    specification, and the common frontmatter libraries add TOML and JSON forms
    the specification does not have.
-2. **`markdown.Outline(src) []Heading`** (ADR-008's `outline`) parses with
-   `goldmark/v2`'s CommonMark parser and walks `*ast.Heading` nodes, giving
-   level, text (inline content flattened to its literal characters) and the
-   line computed from `Node.Pos()`. The frontmatter is split off first and
-   line numbers are offset by its length, so a heading's line is its line in
-   the file.
+2. **`markdown.Outline(src) []Heading`** (ADR-008's `outline`) reads
+   CommonMark 0.31.2 with METAIS's own code, giving each heading's level,
+   text (inline content flattened to its literal characters) and line. A
+   block pass reads the block structure as far as it decides which lines are
+   headings, and keeps each heading's raw content and the labels of the link
+   reference definitions; an inline pass then reads each heading's content
+   alone. Both are linear in the input, cmark's pathological cases included
+   (ADR-009 D10 item 4). The frontmatter is split off first and line numbers
+   are offset by its length, so a heading's line is its line in the file.
+   *(A3, proposed)*
 3. **No Markdown is rendered.** The tool converts no Markdown to HTML; R4
    item 3's `body` is a string (ADR-003 D13 item 3).
-4. **Tests**: the CommonMark heading examples relevant to ATX and setext
-   headings, fences and containers, plus the probe's cases; a fuzz target
-   over `Outline`.
+4. **Tests**: every example of CommonMark 0.31.2's specification, vendored
+   from commonmark/commonmark-spec at its 0.31.2 tag, held to the headings
+   of its expected HTML, and each single-paragraph example held, made a
+   setext heading, to the paragraph's plain text, with each exclusion named;
+   cmark's pathological cases under a CPU-time bound; and fuzz targets over
+   `Outline` and `SplitFrontmatter`. *(A3, proposed)*
 
 ### D10 — Regular expressions and the argument parser
 
@@ -854,7 +868,7 @@ not used to read inputs.**
 10. **Forbidden in the binary's dependency closure**, checked by the same
     tripwire over `go list -deps ./cmd/metais`: `net` (the socket package;
     `net/url` and `net/netip` are pure parsers and allowed — the JSON Schema
-    library and goldmark import them), `net/http` and below, `net/rpc`,
+    library imports them *(A3, proposed)*), `net/http` and below, `net/rpc`,
     `net/smtp`, `crypto/tls`, `os/exec`, `os/signal`, `plugin`, `os/user`,
     `log/syslog`, `runtime/cgo`, `syscall/js`. The probe found none of them
     in the closure of a program importing every admitted module at the
@@ -1147,8 +1161,8 @@ packages `internal/author`, `internal/xref` and `internal/sample`.
 only), the parser behaviour of D3 (long flags, the closed short-alias list,
 no grouping, no abbreviation). Promised: `internal/cli/args` (D10 item 3),
 `internal/hostenv` as the single reader of `NO_COLOR` and of the terminal
-state, goldmark v2 for `outline` and the references index (CommonMark
-0.31.2), Go `regexp` for `grep`, `encoding/json` with HTML escaping off and
+state, METAIS's own CommonMark 0.31.2 reading for `outline` and the
+references index *(A3, proposed)*, Go `regexp` for `grep`, `encoding/json` with HTML escaping off and
 declared member order, the version string of D12 item 3.
 
 **ADR-009 — the security model.** Relied on: every limit with its default,
@@ -1356,6 +1370,7 @@ into, and an environment switch contradicts R14 item 4's spirit.
 8. **goldmark v2 (v2.1.6) for the outline; own frontmatter split** (D9).
    Lean: v2. Why: start positions on every node, the maintained line.
    Alternative: goldmark v1.8.6, more mature, positions from segments.
+   The library choice is superseded by Amendment A3. *(A3, proposed)*
 9. **RE2 is the only regex engine, behind a profile walk** (D10). Lean: yes.
    Alternative: `regexp2` in ECMAScript mode with a timeout.
 10. **Own argument parser** (D10 item 3). Lean: yes. Alternative: `pflag`
@@ -1527,6 +1542,77 @@ outside the standard library.
    iterate through `value.Object.All`; the fault does not reach them, and
    the detector does not need it to.
 
+### A3 — The Markdown outline is METAIS's own CommonMark reading; goldmark leaves the module
+
+**Status:** Proposed 2026-10-19 by PLAN-2026-10-metais-v1 Wave 2 (W2-9's
+finding, ruled by Ed Funnekotter in plan §8's "Rulings made during the
+wave"); awaiting ratification by Ed Funnekotter at the train's close, with
+A1.
+**Amends:** D3 item 3 (the `github.com/yuin/goldmark/v2` row and its
+fallback), D9 (its title, item 2 and item 4), D11 item 10 (which admitted
+module imports `net/url`), proposed ruling 8, and the promise to ADR-008
+under *Interfaces with sibling ADRs*. It supersedes the library choice of
+R2-156 (RULINGS-v1); R2-156's own frontmatter split stands.
+
+1. **goldmark does not meet ADR-009 D10 item 4.** That item requires the
+   parser `outline` uses to be linear on cmark's pathological cases. Run
+   through them, goldmark v2.1.6's own `Parse` is roughly quadratic on
+   10 to 11 of the 25: nested emphasis, emphasis openers, `![[]()`
+   repeated, unclosed links and comments, empty lines in deeply nested
+   lists, and backticks. Under the race detector these took 9 to 28 seconds
+   of CPU time each, where cmark allows 5. D3's fallback, goldmark v1.8.6,
+   is linear on the emphasis cases and still superlinear on empty lines in
+   nested lists, on unclosed links and on backticks.
+2. **The stricter rule wins.** R2-156 and D9 chose goldmark on the
+   assumption that it met ADR-009 D10 item 4, so two ratified decisions
+   disagree on what is accepted. RULINGS-v1's convention, carried by plan
+   §4, settles it: the stricter rule is implemented, the disagreement is
+   named, and the change is recorded here for ratification, as A1 was.
+   Amending ADR-009 D10 item 4 to a looser bound would widen a refusal,
+   which plan §4 forbids. Removing a dependency needs no prior
+   ratification.
+3. **`Outline` is METAIS's own reading of CommonMark 0.31.2**, written from
+   the specification, with no code from goldmark, cmark or any other parser.
+   - A block pass reads container blocks (block quotes and list items, with
+     their continuation and laziness) and the leaf blocks that decide
+     whether a line is a heading: ATX and setext headings, thematic breaks,
+     indented and fenced code, the seven kinds of HTML block, paragraphs,
+     and the link reference definitions at a paragraph's start. It keeps
+     only each heading's raw content and line, and the definitions' labels.
+   - An inline pass reads each heading's content alone, for its plain text:
+     backslash escapes, entity and numeric references, code spans,
+     emphasis by §6.2's algorithm, links and images, inline or by a defined
+     reference, autolinks and raw HTML.
+   - Every line is read once. Where a reading would otherwise read the same
+     bytes again for each of many markers, openers or open blocks, the work
+     is bounded or remembered. Indentation is read only as far as a block's
+     continuation asks. A blank rest of a line is known to continue the
+     open blocks a blank rest continued before. A failed thematic break is
+     not looked for again on its line. A code span's closer is found through
+     an index of backtick strings. Emphasis keeps §6.2's `openers_bottom`
+     by delimiter order. A link label holds at most 999 characters, and
+     whether a link's text holds a bracket is read from an index. A
+     destination's parentheses nest at most 32 deep, as §6.3 allows. A
+     title, an attribute value or an HTML construct whose terminator is
+     absent from some offset is not looked for again past it.
+   - Link labels match under full Unicode case folding,
+     `internal/unitext.Fold`, so `golang.org/x/text` stays imported by
+     `internal/unitext` alone.
+4. **Fidelity is proved against the specification's own examples.**
+   `spec.txt` is vendored from commonmark/commonmark-spec at the 0.31.2
+   tag, with its licence and a `SOURCE` file. Every one of its 652 examples
+   is run through `Outline`, and its headings, by level and plain text,
+   must be those of the example's expected HTML. Every example whose
+   Markdown has no blank line and whose HTML is one paragraph is also made
+   a setext heading, and the heading's text must be the paragraph's plain
+   text. An excluded example is listed with its reason, and an exclusion
+   that passes fails the test.
+5. **No module replaces goldmark.** D3's table has no Markdown row, so no
+   fallback either, and goldmark is not in `go.mod`, `go.sum` or
+   `THIRD-PARTY-NOTICES.txt`. Its `os.Stdout` reference, which
+   `TestNoHostFacts`' dependency scan flagged, leaves with it, and no
+   allow-list entry is added.
+
 ## Implementation log
 
 - **2026-10-18, PLAN-2026-10-metais-v1 W1-4.** D2 item 2's layering rules
@@ -1634,3 +1720,23 @@ outside the standard library.
   refuses at render are listed in `render-time.txt`, each naming the
   ADR-004 item that places the refusal at render; the parse test holds each
   to parsing, and Wave 3's render run is their proof.
+
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-9.** D9 landed as
+  `internal/markdown`, under Amendment A3. `SplitFrontmatter(src, Source,
+  limits.Set)` takes the file's origin and the limits beside the bytes:
+  `markdown.frontmatter_unclosed` names the input and its file, and the
+  reading stops at `frontmatter-size` (ADR-009 D10 item 4), which is
+  `limit.exceeded`. `src` is taken after ADR-003 D8 item 1's UTF-8 check
+  and byte order mark removal, as `internal/inputs/csv` takes it, and the
+  body keeps its final LF for ADR-003 D13 item 3's caller to remove.
+  `Outline` gives each heading's level, text and line; its lines count LFs
+  only (ADR-008 D5), so a lone CR ends a CommonMark line without starting a
+  line of the file. cmark's pathological cases are vendored from
+  commonmark/cmark at `ee05faf6cd95f6c949e2c0d17c73041dea7214fe`; cmark
+  states them only as a Python generator, so its input expressions are
+  evaluated as data, and each case runs in its own process under a 5-second
+  bound on CPU time, as the file, as a heading's content and through
+  `SplitFrontmatter`. Of the specification's examples, one is excluded from
+  each comparison: example 96, whose first lines are a frontmatter block,
+  and example 39 made a heading, whose LF character reference the expected
+  HTML cannot tell from a line ending.

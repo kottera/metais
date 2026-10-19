@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("[foo]: /url \"t\"\n[Bar]:\n<b>\n# [foo] [bar][] [x][foo] ![img](/i)\n[foo]\n===\n")

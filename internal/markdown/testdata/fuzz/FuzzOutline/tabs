@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("#\tFoo\n>\t\t# bar\n-\t\tcode\n*\t# baz\n")
