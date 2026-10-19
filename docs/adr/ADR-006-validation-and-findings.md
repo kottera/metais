@@ -1239,6 +1239,42 @@ changes the exit status and nothing in the report.
 - RFC 8785, JSON Canonicalization Scheme (the canonical form of `params` in
   the sort key; ADR-002's choice): https://www.rfc-editor.org/rfc/rfc8785
 
+## Amendments
+
+### A1 — The `manifest` family registers only the keyword codes the manifest schema can produce
+
+**Status:** Accepted 2026-10-19 by Ed Funnekotter, in design session
+`01a15348-4ab5-7743-9802-86072e41b5bf` (PLAN-2026-10-metais-v1, W3-A1).
+**Amends:** D6 item 1 (the three families) and the registry
+`spec/findings/registry.json`.
+
+1. **A keyword code is registered in the `manifest` family only when the
+   specification's manifest schema uses its keyword.** The 1.0 manifest
+   schema uses none of `additionalItems`, `exclusiveMaximum`,
+   `exclusiveMinimum`, `format`, `maxContains`, `maxProperties`, `maximum`,
+   `minContains`, `minProperties`, `minimum`, `multipleOf`,
+   `propertyNames`, `unevaluatedItems` and `unevaluatedProperties`, so
+   their `manifest.*` codes are not registered: `manifest.additional_item`,
+   `manifest.exclusive_maximum`, `manifest.exclusive_minimum`,
+   `manifest.format`, `manifest.max_contains`, `manifest.max_properties`,
+   `manifest.maximum`, `manifest.min_contains`, `manifest.min_properties`,
+   `manifest.minimum`, `manifest.multiple_of`, `manifest.property_name`,
+   `manifest.unevaluated_item` and `manifest.unevaluated_property`.
+2. **D6's mapping is unchanged.** It names a manifest failure exactly as it
+   names an input's or an output's, with the family prefix. A keyword the
+   manifest schema does not use has no failure to name.
+3. **The `input` and `output` families keep every keyword code**, because
+   a package's own schemas may use any keyword ADR-003 admits.
+4. **A tripwire holds item 1.** A test walks the embedded manifest schema
+   and fails when a keyword it uses maps to a `manifest.*` code the
+   registry lacks. A minor that extends the manifest schema with such a
+   keyword therefore registers its code, with `since` set to that minor,
+   and `TestFindingCodesCovered` then requires a vector that produces it.
+5. **D3 item 4 is not broken.** Its rule binds a registry that has been
+   released: a released code is never removed. No specification has been
+   released, so these codes leave a draft. The registry that 1.0 publishes
+   lists only codes the 1.0 tool can emit.
+
 ## Implementation log
 
 - **2026-10-19, PLAN-2026-10-metais-v1 W2-11.** D6 and D7 item 4 landed as
