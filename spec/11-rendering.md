@@ -108,6 +108,6 @@ rewrite it.
 
 <a id="mts-pth-009"></a>**MTS-PTH-009** A processor MUST refuse a path a
 path template renders beyond `path-length` or `path-depth` with
-`limit.exceeded.output`, naming the declaration and the limit, since the
-inputs gave it. It MUST stop rendering such a path once its bytes exceed
+`limit.exceeded.output`, naming the declaration and the limit: the path
+is the render's, not the manifest's own text (MTS-PTH-007). It MUST stop rendering such a path once its bytes exceed
 `path-length`, and then gives no `observed`.
