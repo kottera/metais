@@ -107,6 +107,14 @@ not touch, and carries these rules whole.**
 - **An item that finds it needs a sibling's unmerged work has found a defect
   in this plan's slicing.** It does not reach into the sibling's scope. It
   parks and asks its wave orchestrator.
+- **Shared seams are named at breakdown** (Ed, 2026-10-19). The wave
+  orchestrator names the shared seams its items will touch: a file, a
+  generated artefact or a package that several items would edit. Items that
+  touch one seam either run in sequence, with `depends_on`, or are split by
+  phase rather than by feature.
+- **Statement numbers are allotted at breakdown** (Ed, 2026-10-19). The wave
+  orchestrator gives each item a block of statement numbers in each area it
+  will add to, in the item's task. Numbers an item does not use stay unused.
 
 ### Harness policy — Claude throughout
 
@@ -132,8 +140,9 @@ another harness's type to get past a capacity wait.** Park on
 | 2 | **The leaf libraries and the proof harness**: the command-line core with `version`, `limits` and `help`; the conformance runner and its self-proof; the document tripwires; zip, Unicode and the portable-path predicate; host files; JSON; YAML; CSV and Markdown; the JSON Schema compiler with the pattern profile; failure mapping, bundling and the static walk; the tar writer; dates; the Liquid front end; the manifest library | 1 | **complete** — [verdict](#8-wave-2--the-leaf-libraries-and-the-proof-harness) |
 | 3 | **Opening a package, and the composed libraries**: the package loader and `inspect`, with the container, manifest and version chapters and their vectors; the inputs layer; the Liquid renderer; the standard filter catalog; the sample-value generator; the cross-reference analysis; the OOXML split-run scanner; `init` | 2 | **complete** — [verdict](#9-wave-3--opening-a-package-and-the-composed-libraries) |
 | 4 | **Validate, read, the first render, check and unpack**: `validate`; `ls`, `read`, `outline`, `grep`, `schema` and `extract`; `render` of template outputs into a new directory with the template environment; `check`; `unpack`; the Liquid closure | 3 | **complete** — [verdict](#10-wave-4--validate-read-the-first-render-check-and-unpack) |
-| 5 | **The render's capabilities, and the rest of authoring**: the METAIS filters and `date`; escaping; `embed` and `provenance`; fan-out, conditions and path templates; assets and the mirror; zip containers and their profiles; CRLF and output validation; existing destinations; dry run, the standard-output archive and `--only`; `sample`; `render --sample`; `test` | 4 | not started |
-| 6 | **Pack, and hardening**: `pack` with the example-package harness; `test`'s container comparison; the hostile corpus in full; the SC7 harness's full reach; limit calibration; benchmark budgets; the release builder | 5 | not started |
+| 5 | **The render's capabilities, and the rest of authoring**: the METAIS filters and `date`; escaping; `embed` and `provenance`; fan-out, conditions and path templates; assets and the mirror; zip containers and their profiles; CRLF and output validation; existing destinations; dry run, the standard-output archive and `--only`; `sample`; `render --sample`; `test` | 4 | **complete** — [verdict](#11-wave-5--the-renders-capabilities-and-the-rest-of-authoring) |
+| 5b | **The gate's cost and merge friction** (inserted by Ed, 2026-10-19): the two-tier gate and its scripts; the shared-host cap; the skills; the `hostfs` limit tests; self-merging generated files; per-item ADR logs; one edit per finding code; help refusals by family; `render.go` split by phase | 5 | not started |
+| 6 | **Pack, and hardening**: `pack` with the example-package harness; `test`'s container comparison; the hostile corpus in full; the SC7 harness's full reach; limit calibration; benchmark budgets; the release builder | 5b | not started |
 | 7 | **The example packages and the close-out**: the packages of PRD §4.1 to §4.5; the worked package of `B-worked-package.md`; the specification's 1.0 text complete; the README, documentation and ADR implementation logs | 6 | not started |
 | — | **The out-of-band acts**: §6 | — | — |
 
@@ -1190,6 +1199,105 @@ took 21.4 s with the same CPU time. The budget needs a runner that does not
 hold a slot while it waits, and no ADR decides that, so the integration
 gate leaves it to the wave orchestrator.
 
+**Verdict (2026-10-19): complete.** Every capability §11 asks of `render`
+landed, each with its statements and vectors:
+
+- the METAIS filters and `date`;
+- escaping;
+- `embed` and `provenance`;
+- fan-out, conditions and path templates;
+- assets and the mirror;
+- zip containers with their profiles;
+- CRLF and output validation;
+- existing destinations under ADR-005 A1;
+- dry run, the standard-output archive and `--only`.
+
+So did `sample`, `render --sample` and `test`, and Wave 4's carried items.
+No declaration reaches `internal.error` except through a panic. `unwired.txt`
+holds no W5 entry, and the `home`, `tz`, `clock` and `pid` canaries are
+caught.
+
+That took thirteen items (#86 to #99). Ed changed the gate mid-wave, by
+guidance: each item ran directed checks, and W5-I1
+([#100](https://github.com/kottera/metais/pull/100)) ran the full gate once
+on the merged tree, green. The verification round ran the full gate green on
+a fresh clone and found two blocking composition defects. Both were fixed
+(#101, #102) and not re-verified. Two items, W5-10 and W5-I1, were inspected
+by the verifier but not mutated. Restoring `date` changed the delegated
+counts to "1845 pass, 549 departures fail as listed".
+
+Brief and closeout:
+[brief-plan-2026-10-metais-v1-wave5.md](../briefs/brief-plan-2026-10-metais-v1-wave5.md)
+(brief [#85](https://github.com/kottera/metais/pull/85), closeout
+[#103](https://github.com/kottera/metais/pull/103)).
+
+What changes later waves:
+
+- **Ed ruled, by guidance to the plan orchestrator, that the gate's cost and
+  the merge friction are fixed before Wave 6.** That is Wave 5b, below.
+- **`TestConformance` sits at its 60 s budget, because it is sleep-bound.**
+  W5-NB3 (`01a155c2-3d8a-7af0-8fea-3d7e111536e1`) must land before Wave 6
+  grows the hostile corpus.
+- **The liquid-spec run is due again after this wave's chapter 8.** The
+  carried act W5-A1 (`01a155c2-5c85-7762-a3d8-2541e178e29c`) asks for it.
+  W5-1's own run passed, but not cleanly.
+- **For Ed to ratify at the train's close:**
+  - the wave's breakdown readings (a) to (d);
+  - R-W5-11 and R-W5-12;
+  - `hostfs.RemoveEmptyDir`;
+  - W5-V2's `Present` status;
+  - ADR-009 D8 item 3's `output.link`, which contradicts its own table's
+    `output.destination.link`.
+- **Still running when the wave closed:** W5-NB1, W5-NB2 and W5-NB3.
+
+## 11b. Wave 5b — the gate's cost and merge friction (inserted by Ed, 2026-10-19)
+
+**Why it exists.** Wave 5's items spent longer in the gate than in their
+work. Seven full gates ran at once on two laptops, packages timed out under
+load in items that never touched them, and every sibling merge forced a
+rebase and another full gate. Most rebase conflicts came from file layout,
+not from overlapping code. Ed ruled the fixes by guidance on 2026-10-19,
+and they land before Wave 6, which waits on this wave.
+
+**Objective.** When this wave is done:
+
+- the gate has two tiers, by an ADR-010 amendment to D15 item 3, with
+  scripts that run it in the background, resume it, and re-run one test
+  alone;
+- `go test` is capped on a shared host;
+- the `verification-gate` and `root-cause` skills match;
+- the `hostfs` open-file-limit tests are cheap, or the reason they cannot
+  be is recorded;
+- adding a finding code, a statement, a help golden entry or an ADR log
+  entry no longer collides with a sibling;
+- text help groups generated refusals by family (an ADR-008 D15
+  amendment);
+- `internal/cli/render.go` is split by phase.
+
+**Scope.** Ed's rulings, carried whole in the wave's brief:
+
+- the test-time item;
+- the four conflict fixes;
+- Fix 5 (help refusals);
+- Fix 6b (the `render.go` split).
+
+**Does not touch:** any behaviour of the tool beyond help's text layout; no
+new command and no new finding code; render-pipeline extension points
+(after the train, §14).
+
+**Decisions settled before filing** (Ed, 2026-10-19):
+
+- the two-tier model;
+- no flake register, and every red is root-caused;
+- the shared-host `-p` cap;
+- the four conflict fixes;
+- Fix 5;
+- Fix 6b;
+- §2's shared-seams and statement-number rules.
+
+These are Ed's rulings, not the train's, and need no ratification at the
+close.
+
 ## 12. Wave 6 — pack, and hardening
 
 **Objective.** `pack` closes the authoring path. The hostile corpus and the
@@ -1388,6 +1496,12 @@ These are ruled out by PRD-001 §3, or deferred:
 - Continuous integration.
 - A second implementation.
 - A register of third-party conformance claims.
+
+**Follow-up after the train** (Ed, 2026-10-19): design extension points for
+the render pipeline. Output forms become handlers, post-render transforms an
+ordered table of stages, and destinations sinks, so that a new feature is
+one new file and one table entry. It is filed at the train's close as a
+design item for Ed, and it is not built in this train.
 
 ## Appendix A — where each requirement and success criterion is proved
 
