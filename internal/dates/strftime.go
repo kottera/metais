@@ -6,6 +6,7 @@ package dates
 import (
 	"fmt"
 	"strings"
+	"unicode/utf8"
 )
 
 // Format is a compiled `date` format: Ruby strftime's language, closed to
@@ -68,6 +69,12 @@ func ParseFormat(f string) (Format, error) {
 		}
 		it, n, ok := directive(f[i:])
 		if !ok {
+			// A directive refused at a multi-byte character is named
+			// through the whole character, so the name is valid UTF-8.
+			if c := f[i+n-1]; c >= utf8.RuneSelf {
+				_, size := utf8.DecodeRuneInString(f[i+n-1:])
+				n += size - 1
+			}
 			return Format{}, &FormatError{Format: f, Directive: f[i : i+n]}
 		}
 		items = append(items, it)

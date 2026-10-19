@@ -43,11 +43,11 @@ var (
 )
 
 // MinUnix and MaxUnix are the least and greatest integer `date` accepts as
-// seconds since 1970-01-01T00:00:00Z: the first and last second of years
-// 0000 and 9999.
-var (
-	MinUnix = minUTC.Unix()
-	MaxUnix = maxUTC.Unix()
+// seconds since 1970-01-01T00:00:00Z: the first second of year 0000 and the
+// last of year 9999.
+const (
+	MinUnix = -62167219200
+	MaxUnix = 253402300799
 )
 
 func mustParse(s string) time.Time {

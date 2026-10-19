@@ -141,6 +141,9 @@ func TestFromValueRefuses(t *testing.T) {
 }
 
 func TestFromUnixBounds(t *testing.T) {
+	if MinUnix != minUTC.Unix() || MaxUnix != maxUTC.Unix() {
+		t.Fatalf("MinUnix, MaxUnix = %d, %d; the range's ends are %d and %d", MinUnix, MaxUnix, minUTC.Unix(), maxUTC.Unix())
+	}
 	for _, sec := range []int64{MinUnix - 1, MaxUnix + 1, -1 << 63, 1<<63 - 1} {
 		if got, ok := FromUnix(sec); ok {
 			t.Errorf("FromUnix(%d) = %v, want refused", sec, got.Normalized())

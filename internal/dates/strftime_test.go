@@ -283,7 +283,9 @@ func TestParseFormatRefuses(t *testing.T) {
 		{"%^^a", "%^^"},
 		{"%%%", "%"},
 		{"ok %Y then %Ex", "%E"},
-		{"%é", "%\xc3"},
+		{"%é", "%é"},
+		{"%-日", "%-日"},
+		{"%3é", "%3é"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.format, func(t *testing.T) {
