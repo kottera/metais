@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.schema.1.json",
+  "title": "metais.schema/1",
+  "description": "What metais schema prints with --json: the combined input schema, or one input's schema as a self-contained Compound Schema Document (ADR-008 D5, schema).",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.schema/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "input",
+        "schema"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "description": "The input's name, or null for the combined schema.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "schema": {
+          "description": "The schema, a JSON Schema 2020-12 document, its members in canonical key order.",
+          "type": "object"
+        }
+      }
+    }
+  }
+}

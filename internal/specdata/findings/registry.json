@@ -6009,6 +6009,68 @@
       ]
     },
     {
+      "code": "usage.bad_glob",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the glob among the arguments after metais.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the glob is refused: double_star (** that does not stand alone as a segment), class (a character class with no closing ], or a range whose ends are reversed), escape (a \\ with nothing after it), empty_segment (an empty glob, or one with a leading or doubled /), or encoding (it is not UTF-8).",
+          "always": true
+        }
+      ],
+      "message": "The glob at argument {argument} is refused ({reason}).",
+      "hint": "Run `metais help globs` for the grammar: ** stands alone as a segment, a class is closed by ], and there are no braces.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.bad_pattern",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the pattern among the arguments after metais.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the pattern is refused: syntax (it is not RE2 syntax as Go's regexp defines it), pattern_length (it is longer than the pattern-length limit), regex_program (its compiled program has more instructions than the regex-program limit), or regex_work (matching it against the lines searched needs more than the regex-work limit).",
+          "always": true
+        },
+        {
+          "name": "limit",
+          "type": "string",
+          "meaning": "The limit's name, as metais limits lists it, when the reason is a limit.",
+          "always": false
+        },
+        {
+          "name": "bound",
+          "type": "number",
+          "meaning": "The limit's value in this command, its default or the lower value given with --limit, when the reason is a limit.",
+          "always": false
+        }
+      ],
+      "message": "The grep pattern at argument {argument} is refused ({reason}).",
+      "hint": "Write the pattern in RE2 syntax (https://github.com/google/re2/wiki/Syntax), within the limits `metais limits` lists; a simpler pattern, or globs that select fewer entries, needs less work.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "usage.bad_value",
       "severity": "error",
       "class": "usage",
@@ -6042,6 +6104,25 @@
       ],
       "message": "The value of {flag} at argument {argument} is refused ({reason}).",
       "hint": "Give {flag} a value it accepts, as --name value or --name=value; a flag that takes no value is written alone, without =.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.binary_to_terminal",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the entry's path among the arguments after metais.",
+          "always": true
+        }
+      ],
+      "message": "The entry at argument {argument} is binary, and a binary entry is not written to a terminal.",
+      "hint": "Redirect standard output to a file, or write the entry with `metais extract`; with --json, metais read prints it in base64.",
       "location": "none",
       "since": "1.0",
       "statements": []
@@ -6092,6 +6173,75 @@
       ],
       "message": "The data directory given at argument {argument} cannot be read ({reason}).",
       "hint": "Give --data a directory that exists and that you can read, holding one file per input; run `metais inspect {package}` to see each input's file names.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.entry_not_found",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the path among the arguments after metais.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} names no entry and no directory of the package.",
+      "hint": "Run `metais ls <package>` for the entries: a path is matched byte for byte and case-sensitively, with / as its separator.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.is_a_directory",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the path among the arguments after metais.",
+          "always": true
+        },
+        {
+          "name": "command",
+          "type": "string",
+          "meaning": "The command that reads one entry.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} names a directory of the package, and metais {command} reads one entry.",
+      "hint": "Run `metais ls <package>` with the directory for the entries beneath it.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.line_out_of_range",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of --lines among the arguments after metais.",
+          "always": true
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "meaning": "The number of lines the entry has.",
+          "always": true
+        }
+      ],
+      "message": "The range of --lines at argument {argument} starts beyond the entry's {total} lines.",
+      "hint": "Start the range at a line from 1 to the entry's last; an end beyond the last line is clamped to it.",
       "location": "none",
       "since": "1.0",
       "statements": []
@@ -6177,6 +6327,25 @@
       "statements": []
     },
     {
+      "code": "usage.no_match",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the glob among the arguments after metais.",
+          "always": true
+        }
+      ],
+      "message": "The glob at argument {argument} selects no entry of the package; nothing was written.",
+      "hint": "Run `metais ls <package> -r` for the entries, and `metais help globs` for the grammar: *, ? and ** never enter a segment that begins with a dot unless the glob names it.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "usage.not_a_packed_package",
       "severity": "error",
       "class": "usage",
@@ -6191,6 +6360,31 @@
       ],
       "message": "Argument {argument} names a source directory; metais unpack reads a packed package.",
       "hint": "Give a packed package file. A source directory is already the editable tree unpack writes; nothing was written.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.not_text",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the entry's path among the arguments after metais.",
+          "always": true
+        },
+        {
+          "name": "command",
+          "type": "string",
+          "meaning": "The command that reads the entry as lines.",
+          "always": true
+        }
+      ],
+      "message": "The entry at argument {argument} is binary, not valid UTF-8 with no NUL byte, and metais {command} reads lines of text.",
+      "hint": "Write the entry to a file with `metais extract`; metais read without --lines and --number prints its bytes.",
       "location": "none",
       "since": "1.0",
       "statements": []
@@ -6316,6 +6510,32 @@
       ],
       "message": "Argument {argument} is not a flag this command line accepts ({reason}).",
       "hint": "Run `metais help` for the global flags, or the command's --help for its own; write each flag's name in full, and each one-letter alias on its own.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.unknown_input",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the input's name among the arguments after metais.",
+          "always": true
+        },
+        {
+          "name": "inputs",
+          "type": "array",
+          "items": "string",
+          "meaning": "Every input the package declares, in the manifest's order.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} names no input of the package.",
+      "hint": "Give one of the inputs the finding lists; `metais inspect <package>` shows each with what it means.",
       "location": "none",
       "since": "1.0",
       "statements": []

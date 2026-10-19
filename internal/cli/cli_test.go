@@ -344,8 +344,10 @@ func TestDeclarationsOpeningSet(t *testing.T) {
 			t.Errorf("%s declares no role", c.Name)
 		}
 	}
-	if got := OpeningCommands(); !slices.Equal(got, []string{"inspect", "validate", "check", "unpack"}) {
-		t.Errorf("OpeningCommands() = %q, want [inspect validate check unpack]", got)
+	consumers := []string{"inspect", "ls", "read", "outline", "grep", "schema", "extract", "validate"}
+	authoring := []string{"check", "unpack"}
+	if got, want := OpeningCommands(), slices.Concat(consumers, authoring); !slices.Equal(got, want) {
+		t.Errorf("OpeningCommands() = %q, want %q", got, want)
 	}
 	// The marking is read from the role, both ways, and from WritesSource.
 	if !(&Command{Role: finding.RoleConsumer}).OpensPackage() || !(&Command{Role: finding.RoleAuthoring}).OpensPackage() {
@@ -363,11 +365,17 @@ func TestDeclarationsOpeningSet(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, c := range res.Commands {
-		want := map[string]string{"init": "authoring", "check": "authoring", "inspect": "consumer", "validate": "consumer", "unpack": "authoring"}[c.Name]
+		want := map[string]string{"init": "authoring"}[c.Name]
+		if slices.Contains(consumers, c.Name) {
+			want = "consumer"
+		}
+		if slices.Contains(authoring, c.Name) {
+			want = "authoring"
+		}
 		if want == "" {
 			want = "none"
 		}
-		if c.OpensPackage != (c.Name == "inspect" || c.Name == "validate" || c.Name == "check" || c.Name == "unpack") || c.Role != want {
+		if c.OpensPackage != (slices.Contains(consumers, c.Name) || slices.Contains(authoring, c.Name)) || c.Role != want {
 			t.Errorf("help --json marks %s as opening a package: %v, with the role %s", c.Name, c.OpensPackage, c.Role)
 		}
 	}

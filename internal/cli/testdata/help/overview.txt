@@ -8,6 +8,13 @@ Commands:
     inspect   Print what a supplier reads first: the package's identity, its
               guide, its inputs, outputs, references and examples, and the
               commands to run next.
+    ls        List the entries under a path of a package.
+    read      Print an entry of a package, or a range of its lines.
+    outline   List the headings of a Markdown entry, each with the lines of its
+              section.
+    grep      Search a package's entries for a regular expression, with context.
+    schema    Print the package's combined input schema, or one input's schema.
+    extract   Write the entries the globs select to a new directory.
   Supplying and rendering:
     validate  Validate inputs against a package, and report every finding at
               once.

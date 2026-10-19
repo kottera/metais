@@ -367,7 +367,7 @@ func commandText(c *Command) []byte {
 	var b helpText
 	b.para("metais "+c.Name+" — "+c.Description, "")
 	b.heading("Usage:")
-	b.line("  metais " + c.Synopsis)
+	b.b = append(b.b, usageLines(c)...)
 	if c.Detail != "" {
 		b.blank()
 		b.para(c.Detail, "")
@@ -477,6 +477,45 @@ func (h *helpText) flags(fs []args.Flag) {
 // wrap appends text as words filling lines of at most helpWidth columns,
 // the first line beginning with first and the rest with rest. A word
 // longer than a line has a line to itself.
+// usageLines is c's usage line, wrapped at helpWidth between its words
+// and bracketed groups, never inside a group, each continuation indented
+// beneath the first operand.
+func usageLines(c *Command) []byte {
+	var groups []string
+	depth, start := 0, 0
+	for i := 0; i <= len(c.Synopsis); i++ {
+		switch {
+		case i == len(c.Synopsis) || c.Synopsis[i] == ' ' && depth == 0:
+			if i > start {
+				groups = append(groups, c.Synopsis[start:i])
+			}
+			start = i + 1
+		case c.Synopsis[i] == '[':
+			depth++
+		case c.Synopsis[i] == ']':
+			depth--
+		}
+	}
+	first := "  metais " + groups[0] + " "
+	text := strings.Join(groups[1:], "\x00")
+	var b []byte
+	line, n := first, utf8.RuneCountInString(first)
+	rest := strings.Repeat(" ", n)
+	for i, g := range strings.Split(text, "\x00") {
+		gn := utf8.RuneCountInString(g)
+		if i > 0 && n+1+gn > helpWidth {
+			b = append(append(b, line...), '\n')
+			line, n = rest, len(rest)
+		} else if i > 0 {
+			line += " "
+			n++
+		}
+		line += g
+		n += gn
+	}
+	return append(append(b, line...), '\n')
+}
+
 func wrap(b []byte, text, first, rest string) []byte {
 	line, n, empty := first, utf8.RuneCountInString(first), true
 	for _, w := range strings.Fields(text) {

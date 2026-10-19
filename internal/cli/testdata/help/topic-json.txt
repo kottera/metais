@@ -22,6 +22,12 @@ an unknown value as other.
 
 The formats:
   metais.inspect/1   metais inspect
+  metais.ls/1        metais ls
+  metais.read/1      metais read
+  metais.outline/1   metais outline
+  metais.grep/1      metais grep
+  metais.schema/1    metais schema
+  metais.extract/1   metais extract
   metais.validate/1  metais validate
   metais.init/1      metais init
   metais.check/1     metais check

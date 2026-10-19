@@ -288,7 +288,8 @@ func runIn(t testing.TB, d hostenv.Display, stdin io.Reader, faults fault.Set, a
 // shell unquotes it.
 func parsesAsLine(line string) error {
 	sub := strings.NewReplacer("<package>", "pkg.metais", "<data dir>", "data",
-		"<your --set, --set-json and --inputs-json flags>", "--set /a=1 --set-json /b=2 --inputs-json {}", "<dir>", "some-dir", "<name>", "some-name", "<pattern>", "x")
+		"<your --set, --set-json and --inputs-json flags>", "--set /a=1 --set-json /b=2 --inputs-json {}", "<dir>", "some-dir", "<name>", "some-name", "<pattern>", "x",
+		"<path>", "some/path", "<glob>", "some/**", "<total>", "3")
 	fields, err := shellFields(sub.Replace(line))
 	if err != nil {
 		return fmt.Errorf("%q: %v", line, err)

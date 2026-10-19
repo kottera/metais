@@ -35,6 +35,12 @@ const SkipDigest Set = 1 << 0
 // internal/finding.
 const FirstFinding Set = 1 << 1
 
+// UnpackToTemp makes browse read an entry by extracting it to a temporary
+// file and reading it back (ADR-010 D13 item 2): the read-in-place detector
+// must catch a reading command that writes to the host. Its seam is
+// internal/browse.
+const UnpackToTemp Set = 1 << 2
+
 // SkipConfine makes the output path check return success (ADR-010 D13
 // item 2): a write goes to its name joined onto the output directory's host
 // path, through no root, so a name that climbs out of the directory or

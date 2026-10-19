@@ -185,7 +185,7 @@ func TestHelpCoverage(t *testing.T) {
 
 // TestParsesAsLineControl holds the line check to failing what it must.
 func TestParsesAsLineControl(t *testing.T) {
-	for _, l := range []string{"metais", "metais versio", "metais version --jsn", "metais help nope", "metais version extra", "grep x", "metais inspect <nothing>", "metais inspect 'unclosed", "metais read <package> x", ""} {
+	for _, l := range []string{"metais", "metais versio", "metais version --jsn", "metais help nope", "metais version extra", "grep x", "metais inspect <nothing>", "metais inspect 'unclosed", "metais nope <package> x", ""} {
 		if parsesAsLine(l) == nil {
 			t.Errorf("%q parses", l)
 		}

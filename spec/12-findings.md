@@ -284,19 +284,28 @@ it, and the statements it reports.
 | `template.xref.unknown_variable` | error | content | template | `name`; optional: `suggestion`, `output` | 1.0 | [MTS-AUT-012](13-authoring.md#mts-aut-012) |
 | `template.xref.unused_input` | warning | content | input | — | 1.0 | [MTS-AUT-017](13-authoring.md#mts-aut-017) |
 | `template.xref.unused_template` | warning | content | template | — | 1.0 | [MTS-AUT-017](13-authoring.md#mts-aut-017) |
+| `usage.bad_glob` | error | usage | invocation | `argument`, `reason` | 1.0 | — |
+| `usage.bad_pattern` | error | usage | invocation | `argument`, `reason`; optional: `limit`, `bound` | 1.0 | — |
 | `usage.bad_value` | error | usage | invocation | `argument`, `flag`, `reason`; optional: `allowed` | 1.0 | — |
+| `usage.binary_to_terminal` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.conflicting_flags` | error | usage | invocation | `argument`, `flag` | 1.0 | — |
 | `usage.data_dir_unreadable` | error | usage | invocation | `argument`, `reason` | 1.0 | — |
+| `usage.entry_not_found` | error | usage | invocation | `argument` | 1.0 | — |
+| `usage.is_a_directory` | error | usage | invocation | `argument`, `command` | 1.0 | — |
+| `usage.line_out_of_range` | error | usage | invocation | `argument`, `total` | 1.0 | — |
 | `usage.missing_command` | error | usage | invocation | — | 1.0 | — |
 | `usage.missing_operand` | error | usage | invocation | `command`, `operand` | 1.0 | — |
 | `usage.name_invalid` | error | usage | invocation | `argument`, `source`; optional: `suggestion` | 1.0 | — |
 | `usage.name_required` | error | usage | invocation | — | 1.0 | — |
+| `usage.no_match` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.not_a_packed_package` | error | usage | invocation | `argument` | 1.0 | — |
+| `usage.not_text` | error | usage | invocation | `argument`, `command` | 1.0 | — |
 | `usage.package_from_stdin` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.repeated_flag` | error | usage | invocation | `argument`, `flag` | 1.0 | — |
 | `usage.unexpected_operand` | error | usage | invocation | `argument`, `command` | 1.0 | — |
 | `usage.unknown_command` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.unknown_flag` | error | usage | invocation | `argument`, `reason`; optional: `flag`, `command` | 1.0 | — |
+| `usage.unknown_input` | error | usage | invocation | `argument`, `inputs` | 1.0 | — |
 | `usage.unknown_topic` | error | usage | invocation | `argument` | 1.0 | — |
 | `yaml.alias` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
 | `yaml.anchor` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |

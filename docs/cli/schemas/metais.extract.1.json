@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.extract.1.json",
+  "title": "metais.extract/1",
+  "description": "What metais extract prints with --json: the files it wrote, or with --dry-run would write, beneath a new directory, which is not echoed (ADR-008 D5, extract).",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.extract/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "dry_run",
+        "files"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "dry_run": {
+          "description": "Whether --dry-run was given, so that nothing was written.",
+          "type": "boolean"
+        },
+        "files": {
+          "description": "Each file written, or that would be, in path order.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "size"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "description": "The entry's path, which is the file's path beneath the directory.",
+                "type": "string",
+                "minLength": 1
+              },
+              "size": {
+                "description": "Its size in bytes.",
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
