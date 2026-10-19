@@ -100,8 +100,9 @@ go generate ./internal/specdata && git diff --exit-code internal/specdata
 Run either tier in the background, and watch it with `gate-wait.sh` until
 it says `DONE`. After a fix, or after a rebase onto a sibling,
 `gate.sh --resume` re-runs only what the change since the last run reaches.
-`go test -p` is capped at a third of the host's cores, the share a fuzzer
-gets, because the host is shared; `METAIS_GATE_P` overrides it. The
+`go test -p` and `-parallel` are both capped at a third of the host's cores,
+the share a fuzzer gets, because the host is shared. `METAIS_GATE_P` sets
+that share. The
 conformance vectors run as part of `go test`. The race detector needs cgo,
 so `go test -race` runs with it enabled; the static build is the separate
 check of a cgo-free binary.

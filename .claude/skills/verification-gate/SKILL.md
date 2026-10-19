@@ -184,12 +184,14 @@ one host then ask for many times the cores it has. A time-bound test
 stretches past its bound under that load: a wrong verdict caused by the
 gate, not by the code.
 
-- **`gate.sh` passes `-p` at a third of the host's cores** (at least 2), the
-  share AGENTS.md gives a fuzzer. `METAIS_GATE_P` overrides it.
-- **`-parallel` stays at the host's core count.** A test binary's own CPU is
-  already bounded by `GOMAXPROCS`. `internal/conformance`'s parallel tests
-  wait on child processes. At `-parallel 3` it ran into its ten-minute
-  timeout (Amendment A5 item 7).
+- **The gate's share is a third of the host's cores** (at least 2), the
+  share AGENTS.md gives a fuzzer. `gate.sh` passes it as `-p`, the package
+  binaries at once, and as `-parallel`, the parallel tests at once in one
+  binary. `-parallel` also bounds the tool processes `internal/conformance`
+  runs. `METAIS_GATE_P` sets the share (Amendment A5 item 7).
+- **A test must not hold a parallel slot while it waits.** One that does
+  turns a lower `-parallel` into a timeout the gate caused. Fix the test,
+  not the cap.
 - **Never raise `-timeout` to get past a timeout.** A test that times out
   has a mechanism to find (`root-cause`).
 - **Both tiers pass `-count=1`.** Go's test cache keys on the test binary,

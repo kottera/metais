@@ -1778,22 +1778,31 @@ ruling made by the train and needs no ratification.
    caused it had merged.
 
 7. **The shared-host cap.** The hosts that run the gate run about three
-   sessions at once, the reasoning AGENTS.md applies to fuzzing. So
-   `go test -p` is a third of the host's cores, at least 2, in both tiers.
-   `METAIS_GATE_P` overrides it, and is the gate's one override. At `-p 8`
-   the whole suite used 4.9 cores on average (1,397 CPU seconds over 287 s),
-   so a third of the cores holds one gate near its share. `-parallel` is
-   the host's core count, Go's own default, passed explicitly so that an
-   inherited `GOMAXPROCS` cannot narrow it. It is never set lower:
-   - a test binary's own CPU is already bounded by `GOMAXPROCS`;
-   - the parallel tests that `-parallel` alone governs are the ones that
-     wait on child processes, and `internal/conformance` bounds its own
-     measured processes by `GOMAXPROCS` (`procSlots`).
+   sessions at once, the reasoning AGENTS.md applies to fuzzing. So the
+   gate's share is a third of the host's cores, at least 2, in both tiers,
+   and `METAIS_GATE_P` sets it as the gate's one override. The share is
+   passed twice:
+   - **`go test -p`** bounds the package binaries at once;
+   - **`-parallel`** bounds the parallel tests at once in one binary. Since
+     W5-NB3 it also bounds the tool processes `internal/conformance` runs:
+     its runner's slots are `-test.parallel`.
 
-   Measured, `go test -race -count=1 -parallel 3 ./internal/conformance`
-   ran to the package's ten-minute timeout (601.9 s wall, 463 s CPU),
-   where the default finishes in 252 s. A lower `-parallel` makes the gate
-   report a timeout that the gate itself caused.
+   Measured on `main` at `1896cb8` (16 cores, darwin/arm64, go1.26.9, CPU
+   as user plus system):
+
+   | Run | Wall | CPU |
+   |---|---|---|
+   | `go test -race -count=1 ./internal/conformance`, `-parallel 16` | 165.3 s | 631 s (443 + 188) |
+   | the same, `-parallel 5` | 185.4 s | 571 s (406 + 166) |
+   | `go test -race -count=1 -p 5 -parallel 5 ./...` | 199.4 s | 1,219 s (862 + 357) |
+
+   At the share, the whole suite averages 6.1 of the host's 16 cores, about
+   a third. **A test must not hold a parallel slot while it waits.** Before
+   W5-NB3, `internal/conformance` held one through a two-second wait per
+   case, and `-parallel 3` ran the package into its ten-minute timeout
+   (601.9 s wall, 463 s CPU, against 252 s at the default). That is a
+   timeout the gate causes, and the fix belongs in the test, not in a
+   higher cap.
 
 8. **What the scoped tier cannot catch, and why the wave tier does.**
    - **Data read by a path the selector cannot see.** A test that builds a
