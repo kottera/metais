@@ -4,6 +4,7 @@
 package yamlx
 
 import (
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,8 +17,11 @@ import (
 // 1.2 block document with no `---` and no trailing line feed, members in
 // canonical order, and no anchor, alias, tag, block scalar or flow
 // collection but `{}` and `[]`, so a value has one text. A number is
-// written as the `json` filter writes it, by jsonx.FormatNumber. Every
-// byte is METAIS code (ADR-010 D3 item 2); no library serializes it.
+// written as the `json` filter writes it, by jsonx.FormatNumber, except
+// where that text is one the reader refuses (number). Every byte is METAIS
+// code (ADR-010 D3 item 2); no library serializes it. What Write writes,
+// Parse reads back as the same value, wherever the profile it reads under
+// holds that value at all.
 func Write(v value.Value) []byte {
 	if scalar, ok := inline(v); ok {
 		return []byte(scalar)
@@ -41,7 +45,7 @@ func inline(v value.Value) (string, bool) {
 	case value.Bool:
 		return strconv.FormatBool(bool(v)), true
 	case value.Number:
-		return jsonx.FormatNumber(v.Float64()), true
+		return number(v.Float64()), true
 	case value.String:
 		return quote(v.Text()), true
 	case value.Array:
@@ -91,14 +95,30 @@ func block(v value.Value) []string {
 	return lines
 }
 
+// number is f as the `json` filter writes it, except for an integral f of
+// magnitude above 2^53−1 and below 1e21. ECMAScript writes that in fixed
+// notation, as an integer literal, which ADR-003 D8 item 5 refuses for an
+// input; so it is written in the exponent notation ECMAScript uses from
+// 1e21, the shortest digits that round-trip, a point after the first, and
+// e+ with the exponent, 15 to 20.
+func number(f float64) string {
+	s := jsonx.FormatNumber(f)
+	if math.Abs(f) <= value.MaxSafeInteger || strings.ContainsAny(s, ".e") {
+		return s
+	}
+	return strconv.FormatFloat(f, 'e', -1, 64)
+}
+
 // plainText is the form a string or name is written plain in; any other
 // is double-quoted.
 var plainText = regexp.MustCompile(`^[A-Za-z_/]([A-Za-z0-9_./ -]*[A-Za-z0-9_./])?$`)
 
 // quote is s as a plain scalar when ADR-004 D10 item 2 allows it, and
 // double-quoted otherwise: `"`, `\` and U+0000 to U+001F escaped as the
-// `json` filter escapes them, and U+007F to U+009F, U+2028, U+2029 and
-// U+FEFF as \uxxxx in lowercase hexadecimal.
+// `json` filter escapes them, and U+007F to U+009F, U+2028, U+2029,
+// U+FEFF, U+FFFE and U+FFFF as \uxxxx in lowercase hexadecimal. U+FFFE
+// and U+FFFF may not stand raw in a YAML stream (YAML 1.2.2 §5.1), and the
+// reader refuses them there.
 func quote(s string) string {
 	if plainText.MatchString(s) {
 		switch strings.ToLower(s) {
@@ -125,7 +145,7 @@ func quote(s string) string {
 			b.WriteString(`\f`)
 		case c == '\r':
 			b.WriteString(`\r`)
-		case c < 0x20, 0x7F <= c && c <= 0x9F, c == 0x2028, c == 0x2029, c == 0xFEFF:
+		case c < 0x20, 0x7F <= c && c <= 0x9F, c == 0x2028, c == 0x2029, c == 0xFEFF, c == 0xFFFE, c == 0xFFFF:
 			const hex = "0123456789abcdef"
 			b.WriteString(`\u`)
 			for shift := 12; shift >= 0; shift -= 4 {

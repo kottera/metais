@@ -9,6 +9,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/kottera/metais/internal/jsonx"
@@ -49,13 +50,20 @@ func TestWrite(t *testing.T) {
 		{"a negative", num("-1.5"), "-1.5"},
 		{"an exponent", num("1E30"), "1e+30"},
 		{"1e21", num("1e21"), "1e+21"},
-		{"just below 1e21", num("999999999999999900000"), "999999999999999900000"},
+		{"just below 1e21", num("999999999999999900000"), "9.999999999999999e+20"},
 		{"a small number", num("0.000001"), "0.000001"},
 		{"a smaller number", num("0.0000001"), "1e-7"},
 		{"a small mantissa", num("1.5e-7"), "1.5e-7"},
 		{"the largest double", num("1.7976931348623157e308"), "1.7976931348623157e+308"},
 		{"the smallest denormal", num("5e-324"), "5e-324"},
-		{"2^53", num("9007199254740992"), "9007199254740992"},
+		{"2^53-1", num("9007199254740991"), "9007199254740991"},
+		{"-(2^53-1)", num("-9007199254740991"), "-9007199254740991"},
+		{"2^53", num("9007199254740992"), "9.007199254740992e+15"},
+		{"-2^53", num("-9007199254740992"), "-9.007199254740992e+15"},
+		{"1e20", num("1e20"), "1e+20"},
+		{"11e17", num("11e17"), "1.1e+18"},
+		{"2^53 written with a fraction", num("9007199254740992.0"), "9.007199254740992e+15"},
+		{"above 2^53 every number is integral", num("9007199254740993.5"), "9.007199254740994e+15"},
 		{"a long fraction", num("0.1"), "0.1"},
 		{"a third", num("0.3333333333333333"), "0.3333333333333333"},
 		{"123.456", num("123.456"), "123.456"},
@@ -97,6 +105,9 @@ func TestWrite(t *testing.T) {
 		{"other C0 controls", str("\x00\x01\x1f"), `"\u0000\u0001\u001f"`},
 		{"DEL and C1", str("\x7f\u0080\u0085\u009f\u00a0"), "\"\\u007f\\u0080\\u0085\\u009f\u00a0\""},
 		{"LS, PS and BOM", str("\u2028\u2029\ufeff"), `"\u2028\u2029\ufeff"`},
+		{"U+FFFE and U+FFFF", str("a\ufffe\uffffb"), `"a\ufffe\uffffb"`},
+		{"U+FFFE and U+FFFF in a name", obj("\uffff", num("1")), `"\uffff": 1`},
+		{"other noncharacters as they are", str("\ufdd0\U0001FFFE"), "\"\ufdd0\U0001FFFE\""},
 		{"other characters as they are", str("\u00e9\u2027\u202a\U0001F600/"), "\"\u00e9\u2027\u202a\U0001F600/\""},
 	}
 	for _, tc := range cases {
@@ -162,26 +173,35 @@ func TestWriteReadsBack(t *testing.T) {
 
 // TestNumbersAsJSONWrites is where the yaml writer meets the json one
 // (ADR-004 D10 item 2, "numbers as in json"): every number, over the
-// boundaries of ECMAScript's notations, is written by both alike.
+// boundaries of ECMAScript's notations, is written by both alike, except
+// an integral number of magnitude above 2^53−1 that ECMAScript writes in
+// fixed notation. That text is an integer literal, which the reader
+// refuses (ADR-003 D8 item 5), so the yaml writer writes it in the
+// exponent notation ECMAScript uses from 1e21.
 func TestNumbersAsJSONWrites(t *testing.T) {
 	for _, tc := range []struct {
 		f    float64
 		want string
+		json string // the json writer's text, when it differs
 	}{
-		{1e20, "100000000000000000000"},
-		{1e21, "1e+21"},
-		{123e18, "123000000000000000000"},
-		{1.5e21, "1.5e+21"},
-		{1e-6, "0.000001"},
-		{1.25e-6, "0.00000125"},
-		{1e-7, "1e-7"},
-		{-1e-7, "-1e-7"},
-		{math.MaxFloat64, "1.7976931348623157e+308"},
-		{math.SmallestNonzeroFloat64, "5e-324"},
-		{math.Nextafter(0.3, 1), "0.30000000000000004"},
-		{math.Copysign(0, -1), "0"},
-		{100, "100"},
-		{1.5, "1.5"},
+		{1e20, "1e+20", "100000000000000000000"},
+		{1e21, "1e+21", ""},
+		{123e18, "1.23e+20", "123000000000000000000"},
+		{1 << 53, "9.007199254740992e+15", "9007199254740992"},
+		{-(1 << 53), "-9.007199254740992e+15", "-9007199254740992"},
+		{1<<53 - 1, "9007199254740991", ""},
+		{-(1<<53 - 1), "-9007199254740991", ""},
+		{1.5e21, "1.5e+21", ""},
+		{1e-6, "0.000001", ""},
+		{1.25e-6, "0.00000125", ""},
+		{1e-7, "1e-7", ""},
+		{-1e-7, "-1e-7", ""},
+		{math.MaxFloat64, "1.7976931348623157e+308", ""},
+		{math.SmallestNonzeroFloat64, "5e-324", ""},
+		{math.Nextafter(0.3, 1), "0.30000000000000004", ""},
+		{math.Copysign(0, -1), "0", ""},
+		{100, "100", ""},
+		{1.5, "1.5", ""},
 	} {
 		n, err := value.NumberFromFloat(tc.f)
 		if err != nil {
@@ -191,8 +211,57 @@ func TestNumbersAsJSONWrites(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if got := string(Write(n)); got != tc.want || got != string(j) {
-			t.Errorf("%v: yaml %s, json %s, want %s", tc.f, got, j, tc.want)
+		wantJSON := tc.json
+		if wantJSON == "" {
+			wantJSON = tc.want
+		}
+		if got := string(Write(n)); got != tc.want || string(j) != wantJSON {
+			t.Errorf("%v: yaml %s, json %s, want %s and %s", tc.f, got, j, tc.want, wantJSON)
+		}
+	}
+}
+
+// TestWriteReadsBackGaps is W3-5.3: the two texts the Wave 2 writer
+// wrote that its own reader refuses. U+FFFE and U+FFFF may not stand raw
+// in a YAML stream (YAML 1.2.2 §5.1), so they are escaped, and the
+// manifest profile, which holds no noncharacter refusal, reads them back;
+// an integral number above 2^53−1 written without fraction or exponent is
+// refused for an input (ADR-003 D8 item 5), so it is written with an
+// exponent, and the input profile reads it back as the same number.
+func TestWriteReadsBackGaps(t *testing.T) {
+	testenv.Home(t)
+	for _, v := range []value.Value{
+		str("\ufffe"),
+		str("a\uffffb"),
+		obj("\ufffe", str("\uffff")),
+		arr(str("x\ufffe"), str("\uffff\uffff")),
+	} {
+		// The manifest's root is a mapping, so v is read as a member's
+		// value.
+		text := Write(obj("k", v))
+		doc, fs := parse(t, manifestSrc, string(text))
+		if fs != nil {
+			t.Errorf("%q: %s", text, describe(fs))
+			continue
+		}
+		got, _ := doc.Value.(value.Object).Get("k")
+		if !value.Equal(got, v) || !strings.Contains(string(text), `\uff`) {
+			t.Errorf("%q: read back as %#v", text, got)
+		}
+	}
+	for _, lit := range []string{
+		"9007199254740991", "9007199254740992", "-9007199254740992", "9007199254740993",
+		"1e20", "11e17", "123e18", "999999999999999900000", "1e21", "1e300",
+	} {
+		v := num(lit)
+		text := Write(arr(v, obj("n", v)))
+		doc, fs := parse(t, inputSrc, string(text))
+		if fs != nil {
+			t.Errorf("%s: %q: %s", lit, text, describe(fs))
+			continue
+		}
+		if !value.Equal(doc.Value, arr(v, obj("n", v))) {
+			t.Errorf("%s: %q read back as %#v", lit, text, doc.Value)
 		}
 	}
 }
