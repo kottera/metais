@@ -1,0 +1,506 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/schemas/1.0/manifest.schema.json",
+  "title": "METAIS manifest",
+  "description": "The manifest of a METAIS 1.0 package: its identity, its versions, the guide for suppliers, its inputs and its outputs. Every object is closed, and no member is ever null: an optional member is omitted. The SPDX grammar of license, the uniqueness of input names and output ids, and the nesting of for_each are manifest rules the specification states and this schema does not express.",
+  "type": "object",
+  "required": ["metais", "name", "version", "title", "description", "guide", "inputs", "outputs"],
+  "additionalProperties": false,
+  "properties": {
+    "metais": {
+      "title": "Specification version",
+      "description": "The METAIS specification version the package targets, as a quoted string. A tool processes the package under exactly that version's rules.",
+      "const": "1.0"
+    },
+    "name": {
+      "title": "Package name",
+      "description": "The package's name: lower-case ASCII segments of letters and digits joined by single hyphens, the segments joined by dots, such as org.example.vpat-acr. A segment is at most 63 characters, and the leading segment is not a Windows device name.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(\\.[a-z0-9]+(-[a-z0-9]+)*)*$",
+      "not": {
+        "anyOf": [
+          { "pattern": "^(con|prn|aux|nul|com[0-9]|lpt[0-9])(\\.|$)" },
+          { "pattern": "[a-z0-9-]{64}" }
+        ]
+      }
+    },
+    "version": {
+      "title": "Package version",
+      "description": "The package's own version, a Semantic Versioning 2.0.0 version such as 1.2.0, written without a leading v and quoted. Pre-release and build metadata are allowed.",
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\\+([0-9a-zA-Z-]+(\\.[0-9a-zA-Z-]+)*))?$"
+    },
+    "title": {
+      "title": "Title",
+      "description": "What the package is, as a person names it: one line of 1 to 200 characters.",
+      "$ref": "#/$defs/line",
+      "maxLength": 200
+    },
+    "description": {
+      "title": "Description",
+      "description": "What the package produces, in a sentence or a short paragraph of 1 to 1000 characters, displayed verbatim.",
+      "$ref": "#/$defs/prose",
+      "maxLength": 1000
+    },
+    "guide": {
+      "title": "Guide",
+      "description": "The guide for suppliers, in CommonMark, of 1 to 16384 characters: what the package is for, how its inputs relate, the order in which to gather them, and where to read further.",
+      "$ref": "#/$defs/prose",
+      "maxLength": 16384
+    },
+    "authors": {
+      "title": "Authors",
+      "description": "The package's authors, 1 to 64 of them: people or organizations.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/author" }
+    },
+    "license": {
+      "title": "License",
+      "description": "The terms of the package's own content, as an SPDX license expression of 1 to 512 characters, with the operators AND, OR and WITH in upper case.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "homepage": {
+      "title": "Homepage",
+      "description": "The package's home page, an absolute https or http URI with a host and no user information. No command ever fetches it.",
+      "$ref": "#/$defs/http_uri"
+    },
+    "inputs": {
+      "title": "Inputs",
+      "description": "The inputs the package takes, in the order a supplier meets them. It may be empty.",
+      "$ref": "#/$defs/inputs"
+    },
+    "input_constraints": {
+      "title": "Input constraints",
+      "description": "The package path, under inputs/, of a schema evaluated against the object holding every input, for rules that relate one input to another.",
+      "type": "string",
+      "pattern": "^inputs/([^/]+/)*[^/]+\\.(json|yaml|yml)$"
+    },
+    "outputs": {
+      "title": "Outputs",
+      "description": "The output declarations, in the order they are planned. There is at least one.",
+      "$ref": "#/$defs/outputs"
+    }
+  },
+  "$defs": {
+    "line": {
+      "description": "A line: text of at least one character with no control character, neither beginning nor ending with a space.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\u0000- \u007f-\u009f]([^\u0000-\u001f\u007f-\u009f]*[^\u0000- \u007f-\u009f])?$"
+    },
+    "prose": {
+      "description": "Prose: text of at least one character whose only control characters are line feeds and tabs, neither beginning nor ending with a space, a line feed or a tab.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\u0000- \u007f-\u009f]([^\u0000-\u0008\u000b-\u001f\u007f-\u009f]*[^\u0000- \u007f-\u009f])?$"
+    },
+    "http_uri": {
+      "description": "An absolute https or http URI of at most 2048 characters, the scheme in lower case, with a non-empty host, no user information and no fragment.",
+      "type": "string",
+      "maxLength": 2048,
+      "pattern": "^https?://(([-A-Za-z0-9._~!$&'()*+,;=]|%[0-9A-Fa-f]{2})+|\\[((([0-9A-Fa-f]{1,4}:){6}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]))|::([0-9A-Fa-f]{1,4}:){5}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]))|([0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:){4}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]))|(([0-9A-Fa-f]{1,4}:){0,1}[0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:){3}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]))|(([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:){2}([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]))|(([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}:([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]))|(([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})?::([0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]))|(([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}|(([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})?::)|v[0-9A-Fa-f]+\\.[-A-Za-z0-9._~!$&'()*+,;=:]+)\\])(:[0-9]*)?(/([-A-Za-z0-9._~!$&'()*+,;=:@]|%[0-9A-Fa-f]{2})*)*(\\?(([-A-Za-z0-9._~!$&'()*+,;=:@]|%[0-9A-Fa-f]{2})|[/?])*)?$"
+    },
+    "author": {
+      "title": "Author",
+      "description": "One author of the package.",
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Author name",
+          "description": "The person or organization: one line of 1 to 200 characters.",
+          "$ref": "#/$defs/line",
+          "maxLength": 200
+        },
+        "email": {
+          "title": "Author email",
+          "description": "An email address of 3 to 254 characters, with exactly one @ and no space. It is not validated further, and no command sends mail.",
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 254,
+          "pattern": "^[^@ \u0000-\u001f\u007f-\u009f]+@[^@ \u0000-\u001f\u007f-\u009f]+$"
+        },
+        "url": {
+          "title": "Author URL",
+          "description": "The author's web page, an absolute https or http URI with a host and no user information.",
+          "$ref": "#/$defs/http_uri"
+        }
+      }
+    },
+    "inputs": {
+      "title": "Inputs",
+      "description": "The data specification: the package's input slots, in order.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/input" }
+    },
+    "input": {
+      "title": "Input",
+      "description": "One input slot: a named place for one piece of data, with its schema.",
+      "type": "object",
+      "required": ["name", "title", "schema"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Input name",
+          "description": "The input's name: a lower-case letter, then up to 63 lower-case letters, digits and underscores. It is unique among the package's inputs, and is not one of Liquid's reserved words.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "not": { "enum": ["blank", "empty", "false", "first", "last", "nil", "null", "size", "true"] }
+        },
+        "title": {
+          "title": "Input title",
+          "description": "What the input is, in brief: one line of 1 to 200 characters.",
+          "$ref": "#/$defs/line",
+          "maxLength": 200
+        },
+        "description": {
+          "title": "Input description",
+          "description": "What the input means, as plain text, line breaks allowed.",
+          "$ref": "#/$defs/prose"
+        },
+        "schema": {
+          "title": "Input schema",
+          "description": "The package path, under inputs/, of the input's JSON Schema file, ending .json, .yaml or .yml.",
+          "type": "string",
+          "pattern": "^inputs/([^/]+/)*[^/]+\\.(json|yaml|yml)$"
+        },
+        "meaning": {
+          "title": "Meaning document",
+          "description": "The package path, under inputs/, of a CommonMark document ending .md that says what the data is for and what good data looks like.",
+          "type": "string",
+          "pattern": "^inputs/([^/]+/)*[^/]+\\.md$"
+        },
+        "forms": {
+          "title": "Forms",
+          "description": "The file forms the input may be supplied in, without repeats. When it is omitted the forms are json and yaml.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "enum": ["json", "yaml", "csv", "text", "markdown"] }
+        },
+        "csv": {
+          "title": "CSV options",
+          "description": "How a CSV file of this input is read. Allowed only when forms contains csv.",
+          "type": "object",
+          "required": ["delimiter"],
+          "additionalProperties": false,
+          "properties": {
+            "delimiter": {
+              "title": "Delimiter",
+              "description": "The character that separates fields: a comma, a semicolon, a vertical bar or a tab.",
+              "enum": [",", ";", "|", "\t"]
+            }
+          }
+        },
+        "collection": {
+          "title": "Collection",
+          "description": "Whether the input is a collection: an array of items, supplied as a directory of item files. When it is omitted the input is not a collection.",
+          "type": "boolean"
+        },
+        "required": {
+          "title": "Required",
+          "description": "Whether the input must be supplied. When it is omitted the input is required.",
+          "type": "boolean"
+        }
+      },
+      "dependentSchemas": {
+        "csv": {
+          "required": ["forms"],
+          "properties": {
+            "forms": {
+              "title": "Forms",
+              "description": "The forms of an input with CSV options, which include csv.",
+              "contains": { "const": "csv" }
+            }
+          }
+        }
+      }
+    },
+    "outputs": {
+      "title": "Outputs",
+      "description": "The output declarations: at least one.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/output" }
+    },
+    "output": {
+      "title": "Output declaration",
+      "description": "One output declaration, of exactly one form, named by the one source key it carries: template, asset, mirror or container.",
+      "oneOf": [
+        { "$ref": "#/$defs/template_output" },
+        { "$ref": "#/$defs/asset_output" },
+        { "$ref": "#/$defs/mirror_output" },
+        { "$ref": "#/$defs/container_output" }
+      ]
+    },
+    "entry": {
+      "title": "Container entry",
+      "description": "One entry of a zip container: a declaration of one of the output forms, placed inside the container.",
+      "oneOf": [
+        { "$ref": "#/$defs/template_entry" },
+        { "$ref": "#/$defs/asset_entry" },
+        { "$ref": "#/$defs/mirror_entry" },
+        { "$ref": "#/$defs/container_entry" }
+      ]
+    },
+    "template_output": {
+      "title": "Template output",
+      "description": "A template output: one file per evaluation, rendered from a template under templates/.",
+      "type": "object",
+      "required": ["id", "template"],
+      "additionalProperties": false,
+      "dependentRequired": { "for_each": ["path"] },
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "template": { "$ref": "#/$defs/template" },
+        "path": { "$ref": "#/$defs/path" },
+        "when": { "$ref": "#/$defs/when" },
+        "for_each": { "$ref": "#/$defs/for_each" },
+        "escape": { "$ref": "#/$defs/escape" },
+        "newline": { "$ref": "#/$defs/newline" },
+        "validate": { "$ref": "#/$defs/validate" },
+        "kind": { "$ref": "#/$defs/kind" },
+        "executable": { "$ref": "#/$defs/executable" }
+      }
+    },
+    "asset_output": {
+      "title": "Asset copy",
+      "description": "An asset copy: a file under assets/, or every file beneath a directory there, copied byte for byte.",
+      "type": "object",
+      "required": ["id", "asset"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "asset": { "$ref": "#/$defs/asset" },
+        "path": { "$ref": "#/$defs/path" },
+        "when": { "$ref": "#/$defs/when" },
+        "executable": { "$ref": "#/$defs/executable" }
+      }
+    },
+    "mirror_output": {
+      "title": "Mirror",
+      "description": "A mirror: one rendered file per template beneath a directory under templates/.",
+      "type": "object",
+      "required": ["id", "mirror"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "mirror": { "$ref": "#/$defs/mirror" },
+        "path": { "$ref": "#/$defs/path" },
+        "when": { "$ref": "#/$defs/when" },
+        "escape": { "$ref": "#/$defs/escape" },
+        "newline": { "$ref": "#/$defs/newline" }
+      }
+    },
+    "container_output": {
+      "title": "Zip container",
+      "description": "A zip container: one zip file whose entries are declarations.",
+      "type": "object",
+      "required": ["id", "container", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "container": { "$ref": "#/$defs/container" },
+        "path": { "$ref": "#/$defs/path" },
+        "when": { "$ref": "#/$defs/when" },
+        "for_each": { "$ref": "#/$defs/for_each" }
+      }
+    },
+    "template_entry": {
+      "title": "Template entry",
+      "description": "A template output placed in a container.",
+      "type": "object",
+      "required": ["template"],
+      "additionalProperties": false,
+      "dependentRequired": { "for_each": ["path"] },
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "template": { "$ref": "#/$defs/template" },
+        "path": { "$ref": "#/$defs/path" },
+        "when": { "$ref": "#/$defs/when" },
+        "for_each": { "$ref": "#/$defs/for_each" },
+        "escape": { "$ref": "#/$defs/escape" },
+        "newline": { "$ref": "#/$defs/newline" },
+        "validate": { "$ref": "#/$defs/validate" },
+        "kind": { "$ref": "#/$defs/kind" },
+        "first": { "$ref": "#/$defs/first" },
+        "stored": { "$ref": "#/$defs/stored" }
+      }
+    },
+    "asset_entry": {
+      "title": "Asset entry",
+      "description": "An asset copy placed in a container.",
+      "type": "object",
+      "required": ["asset"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "asset": { "$ref": "#/$defs/asset" },
+        "path": { "$ref": "#/$defs/path" },
+        "when": { "$ref": "#/$defs/when" },
+        "first": { "$ref": "#/$defs/first" },
+        "stored": { "$ref": "#/$defs/stored" }
+      }
+    },
+    "mirror_entry": {
+      "title": "Mirror entry",
+      "description": "A mirror placed in a container.",
+      "type": "object",
+      "required": ["mirror"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "mirror": { "$ref": "#/$defs/mirror" },
+        "path": { "$ref": "#/$defs/path" },
+        "when": { "$ref": "#/$defs/when" },
+        "escape": { "$ref": "#/$defs/escape" },
+        "newline": { "$ref": "#/$defs/newline" },
+        "first": { "$ref": "#/$defs/first" },
+        "stored": { "$ref": "#/$defs/stored" }
+      }
+    },
+    "container_entry": {
+      "title": "Zip container entry",
+      "description": "A zip container placed in a container.",
+      "type": "object",
+      "required": ["container", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "container": { "$ref": "#/$defs/container" },
+        "path": { "$ref": "#/$defs/path" },
+        "when": { "$ref": "#/$defs/when" },
+        "for_each": { "$ref": "#/$defs/for_each" },
+        "first": { "$ref": "#/$defs/first" },
+        "stored": { "$ref": "#/$defs/stored" }
+      }
+    },
+    "container": {
+      "title": "Container",
+      "description": "A zip container's shape: its format, its profile, and its entries.",
+      "type": "object",
+      "required": ["entries"],
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "title": "Container format",
+          "description": "The container's format. zip is the only one.",
+          "const": "zip"
+        },
+        "profile": {
+          "title": "Container profile",
+          "description": "The packaging rules of a format the container follows: ooxml, odf or epub. Without one, the container is written exactly as declared.",
+          "enum": ["ooxml", "odf", "epub"]
+        },
+        "mimetype": {
+          "title": "Media type",
+          "description": "The odf profile's media type, type/subtype in printable ASCII with no whitespace, which the tool writes as the mimetype entry. Required with the odf profile, and allowed only with it.",
+          "type": "string",
+          "pattern": "^[!-.0-~]+/[!-.0-~]+$"
+        },
+        "entries": {
+          "title": "Entries",
+          "description": "The container's entries, at least one, each a declaration.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/entry" }
+        }
+      },
+      "if": {
+        "properties": { "profile": { "title": "Container profile", "description": "The odf profile.", "const": "odf" } },
+        "required": ["profile"]
+      },
+      "then": { "required": ["mimetype"] },
+      "else": {
+        "properties": { "mimetype": false }
+      }
+    },
+    "id": {
+      "title": "Output id",
+      "description": "The declaration's identifier: a lower-case letter, then up to 63 lower-case letters, digits and underscores. Top-level ids are unique in the manifest, and entry ids within their container.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,63}$"
+    },
+    "template": {
+      "title": "Template",
+      "description": "The template's path relative to templates/.",
+      "type": "string",
+      "pattern": "^([^/]+/)*[^/]+$"
+    },
+    "asset": {
+      "title": "Asset",
+      "description": "The asset's path relative to assets/, a file or a directory; . is the whole of assets/.",
+      "type": "string",
+      "pattern": "^([^/]+/)*[^/]+$"
+    },
+    "mirror": {
+      "title": "Mirror",
+      "description": "The directory relative to templates/ whose every template is rendered; . is the whole of templates/.",
+      "type": "string",
+      "pattern": "^([^/]+/)*[^/]+$"
+    },
+    "path": {
+      "title": "Path",
+      "description": "The destination, a Liquid template whose rendered text is a path; . is the root of the tree. Required on a container and on a declaration with for_each.",
+      "type": "string",
+      "minLength": 1
+    },
+    "when": {
+      "title": "When",
+      "description": "A Liquid condition: the declaration produces files only where it holds.",
+      "type": "string",
+      "minLength": 1
+    },
+    "for_each": {
+      "title": "For each",
+      "description": "A Liquid value expression whose array gives one evaluation per element, bound to item.",
+      "type": "string",
+      "minLength": 1
+    },
+    "escape": {
+      "title": "Escape",
+      "description": "How values are escaped when rendered: none, the default, or html.",
+      "enum": ["none", "html"]
+    },
+    "newline": {
+      "title": "Newline",
+      "description": "The rendered file's line endings: as-written, the default, or crlf.",
+      "enum": ["as-written", "crlf"]
+    },
+    "validate": {
+      "title": "Validate",
+      "description": "The package path of a JSON Schema the output's final bytes are validated against, anywhere in the package except .compiled/.",
+      "type": "string",
+      "pattern": "^([^/]+/)*[^/]+$",
+      "not": { "pattern": "^\\.compiled/" }
+    },
+    "kind": {
+      "title": "Kind",
+      "description": "The output kind, overriding the one its rendered path gives.",
+      "enum": ["html", "xml", "markdown", "json", "yaml", "csv", "css", "hash", "slash", "sql", "text"]
+    },
+    "executable": {
+      "title": "Executable",
+      "description": "Whether the file is written with mode 0755 instead of 0644. Default false.",
+      "type": "boolean"
+    },
+    "first": {
+      "title": "First",
+      "description": "Whether the entry's files are placed before every other entry the profile does not place. Default false.",
+      "type": "boolean"
+    },
+    "stored": {
+      "title": "Stored",
+      "description": "Whether the entry's files are stored rather than compressed. Default false.",
+      "type": "boolean"
+    }
+  }
+}
