@@ -1096,7 +1096,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Declare an entry whose path is {entry}, at the container's root; the format cannot be opened without it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-TRN-009", "MTS-TRN-010", "MTS-TRN-011", "MTS-AUT-030"},
+		Statements: []string{"MTS-TRN-009", "MTS-TRN-010", "MTS-TRN-011", "MTS-AUT-031"},
 	},
 	{
 		Code:     "output.container.non_ascii",
@@ -1111,7 +1111,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Percent-encode the character in the entry's path, as Office Open XML names a part.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-TRN-009", "MTS-AUT-030"},
+		Statements: []string{"MTS-TRN-009", "MTS-AUT-031"},
 	},
 	{
 		Code:     "output.container.reserved_entry",
@@ -1126,7 +1126,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Remove the entry: the profile writes the mimetype entry with the exact bytes and settings the format requires.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-TRN-010", "MTS-TRN-011", "MTS-AUT-030"},
+		Statements: []string{"MTS-TRN-010", "MTS-TRN-011", "MTS-AUT-031"},
 	},
 	{
 		Code:     "output.container.space",
@@ -1141,7 +1141,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Name the entry without a space, with a hyphen or an underscore in its place.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-TRN-011", "MTS-AUT-030"},
+		Statements: []string{"MTS-TRN-011", "MTS-AUT-031"},
 	},
 	{
 		Code:     "output.container.too_many_entries",

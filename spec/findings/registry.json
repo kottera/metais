@@ -3255,7 +3255,7 @@
         "MTS-TRN-009",
         "MTS-TRN-010",
         "MTS-TRN-011",
-        "MTS-AUT-030"
+        "MTS-AUT-031"
       ]
     },
     {
@@ -3283,7 +3283,7 @@
       "since": "1.0",
       "statements": [
         "MTS-TRN-009",
-        "MTS-AUT-030"
+        "MTS-AUT-031"
       ]
     },
     {
@@ -3312,7 +3312,7 @@
       "statements": [
         "MTS-TRN-010",
         "MTS-TRN-011",
-        "MTS-AUT-030"
+        "MTS-AUT-031"
       ]
     },
     {
@@ -3340,7 +3340,7 @@
       "since": "1.0",
       "statements": [
         "MTS-TRN-011",
-        "MTS-AUT-030"
+        "MTS-AUT-031"
       ]
     },
     {

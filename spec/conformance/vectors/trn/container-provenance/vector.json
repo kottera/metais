@@ -3,9 +3,9 @@
   "id": "trn/container-provenance",
   "title": "provenance in a container's entry writes in the style of that entry's kind, by its path or its kind, and a csv entry without style: is refused at the container's path and its own",
   "statements": [
+    "MTS-TRN-001",
     "MTS-TAG-009",
-    "MTS-TAG-010",
-    "MTS-TRN-001"
+    "MTS-TAG-010"
   ],
   "since": "1.0",
   "class": "processor",

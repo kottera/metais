@@ -79,7 +79,7 @@ its path gives it: a path omitted, or one whose text after its last Liquid
 construct holds the file's extension. A kind only a render can know is
 the render's to judge.
 
-<a id="mts-aut-030"></a>**MTS-AUT-030** A check MUST verify each container
+<a id="mts-aut-031"></a>**MTS-AUT-031** A check MUST verify each container
 profile ([chapter 10](10-transforms.md)) as far as it can without data, and
 report what it finds with the code a render gives it: a container nested
 deeper than `container-depth`; and, for each entry whose path is written
