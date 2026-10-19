@@ -29,6 +29,25 @@ func TestIsNFC(t *testing.T) {
 	}
 }
 
+// TestNFC: a host name is normalized to NFC (ADR-003 D15 item 5), so the
+// decomposed and precomposed spellings of one name are the same name.
+func TestNFC(t *testing.T) {
+	for _, c := range []struct{ s, want string }{
+		{"", ""},
+		{"readme.md", "readme.md"},
+		{"cafe\u0301.md", "caf\u00e9.md"},
+		{"caf\u00e9.md", "caf\u00e9.md"},
+		{"\u212b", "\u00c5"},
+	} {
+		if got := NFC(c.s); got != c.want {
+			t.Errorf("NFC(%+q) = %+q, want %+q", c.s, got, c.want)
+		}
+		if !IsNFC(NFC(c.s)) {
+			t.Errorf("NFC(%+q) is not NFC", c.s)
+		}
+	}
+}
+
 func TestCaselessKey(t *testing.T) {
 	for _, c := range []struct {
 		a, b  string

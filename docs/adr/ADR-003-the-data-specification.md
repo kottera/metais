@@ -1127,3 +1127,69 @@ unambiguous; `--inputs-json` remains the whole-array route.
   D11 item 5's empty fields. A coerced number keeps its text as its
   literal. The refusal of a large integer (D8 item 5) stays with the reader
   that coerces.
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-2.** D8 to D22 landed as
+  `internal/inputs`, a library Wave 4's `validate` and `render` wire. A
+  `Layer` is built from what D22 step 1 produced: the manifest, the
+  `schema.Compiler` and the combined schema with its compiled form. A
+  `Supply` takes one command's flags through one entry point each,
+  `ReadDataDir`, `AddInputsJSON`, `AddSet` and `AddSetJSON`, each parsing
+  what it is given at once (D22 step 2), and `Validate` assembles (D18),
+  applies the defaults (D19) and validates the inputs object against the
+  combined schema (D22 steps 3 and 4), returning every finding and one
+  `Record` per input (D21). The forms are Wave 2's readers; coercion and
+  defaults walk the combined schema statically, through `schema.Walker`
+  and its new `Chain`, the `$ref` chain D19 reads defaults along; an item
+  name is normalized by the new `unitext.NFC`. The data directory is read
+  through `hostfs`'s read side alone, in `Supply.ReadDataDir`, which a
+  layering rule holds every reference to `hostfs` to. The combined
+  schema's failures are split by D6 item 2's rule, each input's subtree
+  mapped by `schemafail.Map` with that input as its target, its
+  `keyword_location` taken from the input's own root schema (the combined
+  schema's `/properties/<name>` step removed, so ADR-006 D7 item 4's
+  suppression reads it), the constraints' kept from the combined root.
+  Where the text is silent, these readings were taken:
+  - a failure at the root of the inputs object other than `required`,
+    which only the input constraints can give (a `not`, an `anyOf` over
+    inputs), names no input, and ADR-006 D4 has no subject for the inputs
+    object: it is `input.constraints_failed`, about the invocation, with
+    its schema location. A root `required` or `dependentRequired` is
+    `input.missing` for each member, with the conditions above it as
+    `via`;
+  - a finding of an `--inputs-json` argument inside a member is about that
+    member's input, at its pointer within the input; one outside every
+    member is `input.json_arg_invalid`, about the invocation. An argument
+    that does not parse, or is not an object, leaves the inputs it would
+    have supplied unknown, so no input is reported missing and the
+    constraints are not evaluated;
+  - an input any file or argument of which does not parse is unparsed and
+    left out (D22 item 3), and no path set is applied into it, which is
+    D18 item 4 read for arguments as for files; an `--inputs-json` member
+    that replaces an input whose file did not parse is validated, and the
+    set is still refused;
+  - D11 item 9 says a CSV file with a structural finding contributes no
+    value, and ADR-006 D7 item 4 says a CSV input with a record rejected
+    alone is validated in part. The layer applies D7 item 4 to an input's
+    own CSV file (a wrong field count, a quote finding, and a number the
+    data model or `number-length` refuses, each rejects its record alone)
+    and D11 item 9 to a collection's item that is a table, which is left
+    out whole; a header finding, an unterminated quote and a limit refuse
+    the file whole. A path set into an array validated in part is refused,
+    since its indexes would not name the items they say;
+  - `number-length` holds a number coerced from a CSV field or a text set
+    as it holds a literal in JSON or YAML;
+  - `collection-items` bounds every entry of a collection's directory, dot
+    entries included, and the data directory's own listing, whose breach
+    is the caller's argument refused (`DataDirError`, `too_large`), as is a
+    data directory that cannot be opened;
+  - when the input constraints are not evaluated, the combined schema,
+    which is compiled once, is evaluated whole and the constraints'
+    failures are discarded; once `regex-work` is spent, each input present
+    is `limit.exceeded`;
+  - the codes beyond the Interfaces list: `input.not_readable` (ADR-006 D9
+    item 8's reasons), `input.noncharacter` (D8 item 4 in a CSV, text or
+    Markdown file), `collection.item_name` (a name that is not UTF-8 or
+    holds `\` or `:`), `collection.directory_name` (a collection's
+    directory named with an extension, which D15 item 2's `<name>/` is
+    not), `input.json_arg_unknown`, `input.json_arg_invalid` and
+    `input.constraints_failed`. `input.raw_unavailable` is a render's
+    refusal and is Wave 4's to register.

@@ -1,0 +1,4 @@
+go test fuzz v1
+[]byte("{\"vendor\": {\"name\": }")
+string("/vendor/name")
+string("/vendor/name=[1,")
