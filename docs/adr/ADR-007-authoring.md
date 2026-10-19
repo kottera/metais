@@ -361,11 +361,14 @@ make "seed 7" mean different data in two builds of one tool version.
       one is reading a name the author never wrote, which is the typo this
       check exists to catch. An author who means "any key" writes
       `additionalProperties: true` or a schema for the values.
-   5. **Liquid's command names.** With no candidate: `size` on a node whose
-      types (item 5) include array, object or string gives `scalar(number)`;
+   5. **Liquid's command names.** With no candidate, a `.p` segment `size`
+      on a node whose types (item 5) include array, object or string gives
+      `scalar(number)`;
       `first` and `last` on an array give the element (as `[0]` and `[-1]`),
       on a string `scalar(string)`. A declared property of that name wins, as
-      in Liquid's lookup.
+      in Liquid's lookup. A bracketed `["size"]`, `["first"]` or `["last"]`
+      is a name like any other, as ADR-004 D4 item 7 reads it, and goes on
+      to the next sub-item.
    6. **Otherwise** the segment is an error: `template.xref.not_an_object` when the
       node's types exclude object, else `template.xref.unknown_field`. The finding
       names the template location, the input, the schema location (file and
@@ -1407,3 +1410,12 @@ directory.
   - the generator's work is held to `input-size`, the limit the data it
     makes is held to (item 22): a schema asking for more is
     `limit.exceeded` about the input, before the work is done.
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-NB2.** W4-6 made the engine
+  read the `size`, `first` and `last` shorthands only after a `.`, and D3
+  item 4.5 now says the same of the cross-reference, which read
+  `xs["first"]` as the shorthand and so was silent where render refuses.
+  A bracketed one on an array or a string is `template.xref.not_an_object`,
+  and on an object that does not declare it `template.xref.unknown_field`,
+  by item 4.6. `aut/check-xref-bracketed-shorthands` proves it under
+  MTS-AUT-013, and `TestShorthandAgreement` holds render and check to the
+  same outcome for each form on an array, a string and an object.

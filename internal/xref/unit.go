@@ -419,12 +419,12 @@ func (u *unit) visible() []string {
 // segment resolves one segment of a path on cur.
 func (u *unit) segment(cur set, s *ast.Segment) set {
 	if s.Index == nil {
-		return u.property(cur, s.Name, s.Span)
+		return u.property(cur, s.Name, true, s.Span)
 	}
 	if lit, ok := s.Index.(*ast.Literal); ok && lit != nil {
 		switch lit.Kind {
 		case ast.LitString:
-			return u.property(cur, lit.Text, s.Span)
+			return u.property(cur, lit.Text, false, s.Span)
 		case ast.LitInteger:
 			if n, ok := lit.Value.(value.Number); ok {
 				if i, ok := n.SafeInt(); ok {
@@ -440,8 +440,10 @@ func (u *unit) segment(cur set, s *ast.Segment) set {
 }
 
 // property resolves the property segment p on cur (ADR-007 D3 item 4):
-// an error only when every alternative rejects it.
-func (u *unit) property(cur set, p string, sp ast.Span) set {
+// an error only when every alternative rejects it. dot is set for a
+// ".p" segment, the only one that reads Liquid's command names: a
+// bracketed "first" is a name like any other (ADR-004 D4 item 7).
+func (u *unit) property(cur set, p string, dot bool, sp ast.Span) set {
 	var out []set
 	var rejs []*rejection
 	for _, x := range cur {
@@ -449,7 +451,7 @@ func (u *unit) property(cur set, p string, sp ast.Span) set {
 		case kOpen, kUnknown:
 			out = append(out, set{x})
 		case kSchema:
-			s, rej := u.a.schemaProperty(x.input, x.ptr, p)
+			s, rej := u.a.schemaProperty(x.input, x.ptr, p, dot)
 			if rej != nil {
 				rejs = append(rejs, rej)
 			} else {
@@ -461,27 +463,27 @@ func (u *unit) property(cur set, p string, sp ast.Span) set {
 					u.a.use(u.ctx, p)
 				}
 				out = append(out, f)
-			} else if p == "size" {
+			} else if dot && p == "size" {
 				out = append(out, num)
 			} else {
 				rejs = append(rejs, &rejection{code: rejUnknownField, declared: x.rec.names})
 			}
 		case kArray:
-			switch p {
-			case "size":
+			switch {
+			case dot && p == "size":
 				out = append(out, num)
-			case "first", "last":
+			case dot && (p == "first" || p == "last"):
 				out = append(out, x.elem)
 			default:
 				rejs = append(rejs, &rejection{code: rejNotAnObject, types: schema.TypeArray})
 			}
 		case kScalar:
 			switch {
-			case x.sc == sString && p == "size":
+			case dot && x.sc == sString && p == "size":
 				out = append(out, num)
-			case x.sc == sString && (p == "first" || p == "last"):
+			case dot && x.sc == sString && (p == "first" || p == "last"):
 				out = append(out, str)
-			case (x.sc == sNumber || x.sc == sBool) && (p == "size" || p == "first" || p == "last"):
+			case dot && (x.sc == sNumber || x.sc == sBool) && (p == "size" || p == "first" || p == "last"):
 				out = append(out, unknown)
 			default:
 				rejs = append(rejs, &rejection{code: rejNotAnObject, types: x.sc.types()})
@@ -718,7 +720,7 @@ func (u *unit) filter(in set, f *ast.Filter) set {
 			if !u.a.spend() {
 				return unknown
 			}
-			projected = u.property(u.elements(in), lit.Text, lit.Span)
+			projected = u.property(u.elements(in), lit.Text, true, lit.Span)
 		}
 	}
 	switch sig.kind {
