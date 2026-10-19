@@ -21,8 +21,8 @@ const articlesSchema = `{
 
 // collection locates each item in its own file, as a collection does: the
 // item's original index names it.
-func collection(ptr string, key bool) finding.Location {
-	toks := tokens(ptr)
+func collection(p *finding.Path, key bool) finding.Location {
+	toks := p.Tokens()
 	if len(toks) == 0 {
 		return finding.Location{Origin: finding.OriginDataDir, File: "articles"}
 	}

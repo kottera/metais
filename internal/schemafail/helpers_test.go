@@ -85,12 +85,12 @@ func (d docs) Properties(entry, ptr string) []string {
 
 // locate is a Target's Locate: the line is one more than the pointer's
 // depth, and a member name is at column 3, its value at column 1.
-func locate(ptr string, key bool) finding.Location {
+func locate(p *finding.Path, key bool) finding.Location {
 	col := 1
 	if key {
 		col = 3
 	}
-	return finding.Location{Origin: finding.OriginDataDir, File: "vendor.json", Line: len(tokens(ptr)) + 1, Column: col}
+	return finding.Location{Origin: finding.OriginDataDir, File: "vendor.json", Line: p.Depth() + 1, Column: col}
 }
 
 var vendor = finding.Subject{Kind: finding.SubjectInput, Name: "vendor", Title: "Vendor"}

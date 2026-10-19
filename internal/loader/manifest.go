@@ -156,12 +156,12 @@ func (o *opening) validate(p *Package) []finding.Finding {
 		Family:  schemafail.FamilyManifest,
 		Subject: manifestSubject,
 		Schemas: manifestSchemas{c},
-		Locate: func(ptr string, key bool) finding.Location {
+		Locate: func(ptr *finding.Path, key bool) finding.Location {
 			l := manifestLocation
 			if pos := o.doc.src.Positions; pos != nil {
-				at, ok := pos.Value(ptr)
+				at, ok := finding.ValueAt(pos, ptr)
 				if key {
-					at, ok = pos.Key(ptr)
+					at, ok = finding.KeyAt(pos, ptr)
 				}
 				if ok {
 					l = l.At(at)

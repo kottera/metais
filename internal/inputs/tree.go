@@ -41,7 +41,7 @@ type node struct {
 // member name's position rather than the value's (ADR-006 D5 item 6). The
 // location it returns has no pointer.
 type locator interface {
-	locate(rel []string, key bool) finding.Location
+	locate(rel *finding.Path, key bool) finding.Location
 }
 
 // fromValue is v as a node, located by at.
@@ -114,37 +114,49 @@ func (n *node) element(i int) (*node, bool) {
 	return n.arr[j], true
 }
 
-// locate returns where the value at ptr, a pointer below n, came from: the
-// deepest node at or above it that records a source, asked for the rest
-// of the pointer. A pointer that names an absent value (ADR-006 D5 item 2)
-// is located through the nearest node above it.
-func (n *node) locate(ptr string, key bool) finding.Location {
-	toks := pointerTokens(ptr)
-	at, rel := n.at, toks
-	cur := n
-	for i, tok := range toks {
+// locator returns a Target's Locate for the values below n: where the
+// value at a path below n came from, the deepest node at or above it that
+// records a source asked for the rest of the path. A path that names an
+// absent value (ADR-006 D5 item 2) is located through the nearest node
+// above it. It reads a path a token at a time from its parent's, so the
+// paths under one long member name cost each its depth.
+func (n *node) locator() func(p *finding.Path, key bool) finding.Location {
+	r := finding.NewResolver(reached{node: n, at: n.at}, func(r reached, tok string) (reached, bool) {
 		var next *node
 		ok := false
 		switch {
-		case cur.isObj:
-			next, ok = cur.obj[tok]
-		case cur.isArr:
+		case r.node.isObj:
+			next, ok = r.node.obj[tok]
+		case r.node.isArr:
 			if idx, isIdx := arrayIndex(tok); isIdx {
-				next, ok = cur.element(idx)
+				next, ok = r.node.element(idx)
 			}
 		}
 		if !ok {
-			break
+			return reached{}, false
 		}
-		cur = next
-		if cur.at != nil {
-			at, rel = cur.at, toks[i+1:]
+		r.node, r.depth = next, r.depth+1
+		if next.at != nil {
+			r.at, r.atDepth = next.at, r.depth
 		}
+		return r, true
+	})
+	return func(p *finding.Path, key bool) finding.Location {
+		at, _ := r.Resolve(p)
+		if at.at == nil {
+			panic("inputs: a value with no source")
+		}
+		return at.at.locate(p.Below(at.atDepth), key)
 	}
-	if at == nil {
-		panic("inputs: a value with no source")
-	}
-	return at.locate(rel, key)
+}
+
+// reached is a node a path below another reaches, how many tokens below
+// it is, and the deepest node at or above it that records a source.
+type reached struct {
+	node    *node
+	depth   int
+	at      locator
+	atDepth int
 }
 
 // depth is how deeply arrays and objects nest in n: zero for a scalar.
@@ -198,21 +210,20 @@ func arrayIndex(tok string) (int, bool) {
 }
 
 // docLocator locates a value in a parsed JSON or YAML document by its
-// position table: the document at its origin, the value's pointer in it
-// being prefix and then the pointer below the node.
+// position table: the document at its origin, the value's path in it
+// being prefix and then the path below the node.
 type docLocator struct {
 	at     finding.Location
 	pos    finding.Positions
-	prefix string
+	prefix *finding.Path
 }
 
-func (d docLocator) locate(rel []string, key bool) finding.Location {
-	ptr := d.prefix + finding.Pointer(rel...)
-	get := d.pos.Value
-	if key && len(rel) > 0 {
-		get = d.pos.Key
+func (d docLocator) locate(rel *finding.Path, key bool) finding.Location {
+	get := finding.ValueAt
+	if key && rel.Depth() > 0 {
+		get = finding.KeyAt
 	}
-	if p, ok := get(ptr); ok {
+	if p, ok := get(d.pos, rel.Under(d.prefix)); ok {
 		return d.at.At(p)
 	}
 	return d.at
@@ -223,7 +234,7 @@ func (d docLocator) locate(rel []string, key bool) finding.Location {
 // default.
 type plainLocator struct{ at finding.Location }
 
-func (p plainLocator) locate([]string, bool) finding.Location { return p.at }
+func (p plainLocator) locate(*finding.Path, bool) finding.Location { return p.at }
 
 // csvLocator locates a value in a CSV file's rows: a row at its first
 // field, a member at its field.
@@ -233,7 +244,8 @@ type csvLocator struct {
 	cells map[int]map[string]finding.Pos // by the row's index, then the column
 }
 
-func (c csvLocator) locate(rel []string, _ bool) finding.Location {
+func (c csvLocator) locate(at *finding.Path, _ bool) finding.Location {
+	rel := at.Tokens()
 	if len(rel) == 0 {
 		return c.at
 	}
@@ -261,11 +273,11 @@ type markdownLocator struct {
 	bodyLine int
 }
 
-func (m markdownLocator) locate(rel []string, key bool) finding.Location {
+func (m markdownLocator) locate(rel *finding.Path, key bool) finding.Location {
 	switch {
-	case len(rel) == 0:
+	case rel.Depth() == 0:
 		return m.at.At(finding.Pos{Line: 1, Column: 1})
-	case rel[0] == bodyField && len(rel) == 1:
+	case rel.Depth() == 1 && rel.Last() == bodyField:
 		if key {
 			return m.at
 		}

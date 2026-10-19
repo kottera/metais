@@ -66,7 +66,18 @@ func (d Doc) Positions() finding.Positions { return d.pos }
 // as a tree of the document's places, so reading a value costs its own
 // token, never its whole pointer.
 type positions struct {
-	root *place
+	root  *place
+	paths *finding.Resolver[*place] // the places read by Path
+}
+
+var _ finding.PathPositions = (*positions)(nil)
+
+func newPositions() *positions {
+	root := &place{}
+	return &positions{root: root, paths: finding.NewResolver(root, func(pl *place, tok string) (*place, bool) {
+		c := pl.children[tok]
+		return c, c != nil
+	})}
 }
 
 // place is one value of the document: where it and, for an object member,
@@ -156,6 +167,33 @@ func (p *positions) Value(ptr string) (finding.Pos, bool) {
 // Key is the position of the member name of the object member at ptr.
 func (p *positions) Key(ptr string) (finding.Pos, bool) {
 	if pl, ok := p.find(ptr); ok && pl.hasKey {
+		return pl.key, true
+	}
+	return finding.Pos{}, false
+}
+
+// findPath returns the place p names, as find does: its cost is p's
+// depth, and a token of p is read only the first time a path through it
+// is.
+func (p *positions) findPath(path *finding.Path) (*place, bool) {
+	if p == nil {
+		return nil, false
+	}
+	pl, depth := p.paths.Resolve(path)
+	return pl, depth == path.Depth()
+}
+
+// ValueAt is Value of the pointer path names.
+func (p *positions) ValueAt(path *finding.Path) (finding.Pos, bool) {
+	if pl, ok := p.findPath(path); ok && pl.hasValue {
+		return pl.value, true
+	}
+	return finding.Pos{}, false
+}
+
+// KeyAt is Key of the pointer path names.
+func (p *positions) KeyAt(path *finding.Path) (finding.Pos, bool) {
+	if pl, ok := p.findPath(path); ok && pl.hasKey {
 		return pl.key, true
 	}
 	return finding.Pos{}, false

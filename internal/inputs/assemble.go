@@ -75,7 +75,7 @@ func (s *Supply) assemble() (*node, map[string]*state) {
 	}
 	for _, a := range s.jsonArgs {
 		for name, v := range a.members {
-			root.obj[name] = fromValue(v, docLocator{at: a.at.at, pos: a.at.pos, prefix: finding.Pointer(name)})
+			root.obj[name] = fromValue(v, docLocator{at: a.at.at, pos: a.at.pos, prefix: (*finding.Path)(nil).Child(name)})
 			st := states[name]
 			st.fromFile, st.partial, st.replaced = false, nil, true
 			st.from = []From{{Kind: FromInputsJSON, Argument: a.ordinal}}

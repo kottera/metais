@@ -68,7 +68,8 @@ func messageMapping(tg Target, cases []echoCase) []finding.Finding {
 		code := finding.Code(tg.Family.String() + "." + map[string]string{"pattern": "pattern", "format": "format", "enum": "const", "anyOf": "pattern"}[c.f.Keyword])
 		param := map[string]string{"pattern": "pattern", "format": "format", "enum": "expected", "anyOf": "pattern"}[c.f.Keyword]
 		ptr := c.f.Instance()
-		loc := tg.Locate(ptr, false).WithPointer(ptr)
+		at, _ := finding.ParsePath(ptr)
+		loc := tg.Locate(at, false).WithPointer(ptr)
 		out = append(out, finding.New(code, tg.Subject, &loc, finding.Params{param: finding.String(c.message)}))
 	}
 	return out

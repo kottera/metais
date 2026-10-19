@@ -76,7 +76,7 @@ func (d Doc) KeyOffset(ptr string) (int, bool) { return d.pos.keyOffset(ptr) }
 func Parse(src []byte, from Source, lim limits.Set) (Doc, []finding.Finding) {
 	p := &parser{src: src, from: from, lim: lim, lines: newLineIndex(src)}
 	v, root := p.document()
-	d := Doc{pos: &table{lines: p.lines, root: root}}
+	d := Doc{pos: newTable(p.lines, root)}
 	if len(p.findings) == 0 {
 		d.Value = v
 	}

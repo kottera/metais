@@ -130,6 +130,25 @@ func (n *node) member(name string) (*member, bool) {
 type table struct {
 	lines *lineIndex
 	root  *node
+	paths *finding.Resolver[place] // the places read by Path
+}
+
+// place is a value of the document a Path names: its node, and the
+// member it is when the path names an object member.
+type place struct {
+	n *node
+	m *member
+}
+
+var _ finding.PathPositions = (*table)(nil)
+
+func newTable(lines *lineIndex, root *node) *table {
+	t := &table{lines: lines, root: root}
+	t.paths = finding.NewResolver(place{n: root}, func(at place, tok string) (place, bool) {
+		n, m, ok := at.n.child(tok)
+		return place{n, m}, ok
+	})
+	return t
 }
 
 // find returns the node at ptr, and the member it is when ptr names an
@@ -147,25 +166,45 @@ func (t *table) find(ptr string) (*node, *member, bool) {
 	n := t.root
 	var m *member
 	for _, tok := range strings.Split(ptr[1:], "/") {
-		tok = tokenUnescaper.Replace(tok)
-		switch {
-		case n.members != nil:
-			var ok bool
-			if m, ok = n.member(tok); !ok {
-				return nil, nil, false
-			}
-			n = &m.node
-		case n.elems != nil:
-			i, ok := arrayIndex(tok)
-			if !ok || i >= len(n.elems) {
-				return nil, nil, false
-			}
-			n, m = &n.elems[i], nil
-		default:
+		var ok bool
+		if n, m, ok = n.child(tokenUnescaper.Replace(tok)); !ok {
 			return nil, nil, false
 		}
 	}
 	return n, m, true
+}
+
+// child returns the node of the member or element tok, a decoded token,
+// of n, and the member it is when n is an object.
+func (n *node) child(tok string) (*node, *member, bool) {
+	switch {
+	case n.members != nil:
+		m, ok := n.member(tok)
+		if !ok {
+			return nil, nil, false
+		}
+		return &m.node, m, true
+	case n.elems != nil:
+		i, ok := arrayIndex(tok)
+		if !ok || i >= len(n.elems) {
+			return nil, nil, false
+		}
+		return &n.elems[i], nil, true
+	}
+	return nil, nil, false
+}
+
+// findPath returns the node at p, as find does: its cost is p's depth,
+// and a token of p is read only the first time a path through it is.
+func (t *table) findPath(p *finding.Path) (*node, *member, bool) {
+	if t == nil || t.root == nil {
+		return nil, nil, false
+	}
+	at, depth := t.paths.Resolve(p)
+	if depth != p.Depth() {
+		return nil, nil, false
+	}
+	return at.n, at.m, true
 }
 
 var tokenUnescaper = strings.NewReplacer("~1", "/", "~0", "~")
@@ -218,4 +257,22 @@ func (t *table) Key(ptr string) (finding.Pos, bool) {
 		return finding.Pos{}, false
 	}
 	return t.lines.pos(off), true
+}
+
+// ValueAt is Value of the pointer p names.
+func (t *table) ValueAt(p *finding.Path) (finding.Pos, bool) {
+	n, _, ok := t.findPath(p)
+	if !ok {
+		return finding.Pos{}, false
+	}
+	return t.lines.pos(n.off), true
+}
+
+// KeyAt is Key of the pointer p names.
+func (t *table) KeyAt(p *finding.Path) (finding.Pos, bool) {
+	_, m, ok := t.findPath(p)
+	if !ok || m == nil {
+		return finding.Pos{}, false
+	}
+	return t.lines.pos(m.keyOff), true
 }

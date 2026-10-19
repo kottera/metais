@@ -18,7 +18,7 @@ func target(c *Compiler) schemafail.Target {
 		Family:  schemafail.FamilyInput,
 		Subject: finding.Subject{Kind: finding.SubjectInput, Name: "vendor"},
 		Schemas: c,
-		Locate: func(string, bool) finding.Location {
+		Locate: func(*finding.Path, bool) finding.Location {
 			return finding.Location{Origin: finding.OriginDataDir, File: "vendor.json"}
 		},
 	}
