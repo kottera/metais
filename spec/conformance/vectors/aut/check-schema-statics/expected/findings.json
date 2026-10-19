@@ -1,0 +1,65 @@
+[
+  {
+    "code": "schema.unusable_enum_member",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/kind/enum/1"
+    }
+  },
+  {
+    "code": "schema.unsatisfiable",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/level/const"
+    }
+  },
+  {
+    "code": "schema.invalid_default",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/title/default"
+    }
+  },
+  {
+    "code": "schema.invalid_example",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/title/examples/1"
+    }
+  },
+  {
+    "code": "schema.required_not_declared",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/required/1"
+    },
+    "params": {
+      "name": "titel"
+    }
+  }
+]

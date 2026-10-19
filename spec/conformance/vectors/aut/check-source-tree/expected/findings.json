@@ -1,0 +1,46 @@
+[
+  {
+    "code": "package.layout.os_litter",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/Thumbs.db"
+    }
+  },
+  {
+    "code": "package.layout.os_litter",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/desktop.ini"
+    }
+  },
+  {
+    "code": "package.layout.not_packed",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "notes.txt"
+    }
+  },
+  {
+    "code": "package.layout.os_litter",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "references/._notes.md"
+    }
+  }
+]

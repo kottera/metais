@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/kottera/metais/internal/author"
 	"github.com/kottera/metais/internal/cli/args"
 	"github.com/kottera/metais/internal/digest"
 	"github.com/kottera/metais/internal/finding"
@@ -72,7 +73,8 @@ func inspectDeclaration() *Command {
 
 // packageRefusals are the refusals of a command that opens a package: the
 // operand's, the limits', and every registered code of the families the
-// open reports (ADR-008 D16 item 2's declaration of each).
+// open reports (ADR-008 D16 item 2's declaration of each), but those only
+// check reports.
 func packageRefusals() []Refusal {
 	out := []Refusal{
 		{finding.CodeUsageMissingOperand, "The package operand is not given.", nextCommandHelp("inspect")},
@@ -80,10 +82,11 @@ func packageRefusals() []Refusal {
 		{finding.CodeLimitInvalid, "A --limit names no limit, gives a malformed value, or tries to raise one.", nextLimits},
 		{finding.CodeLimitPackage, "The package breaches one of its limits.", nextLimits},
 	}
+	checkOnly := author.CheckCodes()
 	for _, e := range finding.Registry() {
 		family, rest, _ := strings.Cut(string(e.Code), ".")
 		opened := family == "package" || family == "manifest" || family == "schema" || family == "template"
-		if !opened || e.Severity != finding.SeverityError {
+		if !opened || e.Severity != finding.SeverityError || slices.Contains(checkOnly, e.Code) {
 			continue
 		}
 		what := map[string]string{

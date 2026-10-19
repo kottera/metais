@@ -1,0 +1,57 @@
+[
+  {
+    "code": "template.xref.unused_input",
+    "severity": "warning",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 8,
+      "column": 5,
+      "pointer": "/inputs/0"
+    }
+  },
+  {
+    "code": "template.ooxml.split_construct",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.xml.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.xml.liquid",
+      "line": 1,
+      "column": 107
+    },
+    "params": {
+      "cause": "spelling or grammar marks",
+      "text": "{{ 'ab' }}",
+      "text_elements": 2
+    }
+  },
+  {
+    "code": "template.ooxml.split_delimiter",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.xml.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.xml.liquid",
+      "line": 1,
+      "column": 205
+    },
+    "params": {
+      "cause": "a change of run properties (formatting)",
+      "delimiter": "{{",
+      "text": "{{ inputs.report.title }}",
+      "text_elements": 2
+    }
+  }
+]

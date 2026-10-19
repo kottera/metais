@@ -1,0 +1,47 @@
+[
+  {
+    "code": "example.layout",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "Bad"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/Bad/inputs/report.json"
+    },
+    "params": {
+      "reason": "name"
+    }
+  },
+  {
+    "code": "example.layout",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "basic"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/basic/notes.md"
+    },
+    "params": {
+      "reason": "entry"
+    }
+  },
+  {
+    "code": "example.layout",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "readme.md"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/readme.md"
+    },
+    "params": {
+      "reason": "entry"
+    }
+  }
+]

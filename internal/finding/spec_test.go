@@ -285,7 +285,7 @@ func TestRegistryEntries(t *testing.T) {
 // schema file, internal/xref's cross-reference (ADR-007 D3),
 // internal/inputs' refusals of a supplied input, internal/author/ooxml's
 // split runs (ADR-007 D4), and internal/sample's unsatisfiable field
-// (ADR-007 D9). A code a later change emits is registered by that change.
+// (ADR-007 D9), and check's steps (ADR-007 D2). A code a later change emits is registered by that change.
 func TestEmittedCodes(t *testing.T) {
 	var got []Code
 	for _, e := range registry {
@@ -372,6 +372,11 @@ func TestEmittedCodes(t *testing.T) {
 	for _, c := range []string{"syntax", "trailing_content", "duplicate_name", "lone_surrogate", "noncharacter", "encoding"} {
 		want = append(want, Code("manifest.json."+c))
 	}
+	// check's (W4-4).
+	want = append(want, "report.step_skipped", "package.layout.os_litter", "package.layout.not_packed",
+		"manifest.guide_link_missing", "schema.invalid_default", "schema.invalid_example", "schema.unsatisfiable",
+		"schema.unusable_enum_member", "schema.required_not_declared", "template.not_utf8", "template.crlf",
+		"example.layout", "manifest.input.form_shape", "manifest.input.collection_shape", "output.declaration.validate_kind")
 	slices.Sort(want)
 	if !slices.Equal(got, want) {
 		t.Errorf("registered %q, want %q", got, want)

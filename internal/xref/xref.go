@@ -61,8 +61,13 @@ type Package struct {
 	// manifest expression has a line; nil when the reader kept none.
 	Positions finding.Positions
 	// Schema is the combined schema of the package's inputs, as
-	// schema.Bundle returns it.
+	// schema.Bundle returns it. It is ignored when NoSchemas is set.
 	Schema value.Object
+	// NoSchemas reports that the package's schemas could not be read:
+	// a schema file did not compile, so there is no combined schema.
+	// Every input's value is then unknown (D3 item 2): nothing read
+	// through it is checked, and every other reference is.
+	NoSchemas bool
 	// Templates is every entry under templates/, by its path relative to
 	// templates/. Root is the template's syntax tree, or nil when it did
 	// not parse; its parse findings are the caller's to report.

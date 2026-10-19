@@ -29,6 +29,7 @@ it, and the statements it reports.
 | `csv.header_empty` | error | content | input | `ordinal` | 1.0 | — |
 | `csv.header_missing` | error | content | input | — | 1.0 | — |
 | `csv.unterminated_quote` | error | content | input | — | 1.0 | — |
+| `example.layout` | error | content | example | `reason` | 1.0 | [MTS-AUT-020](13-authoring.md#mts-aut-020) |
 | `input.additional_item` | error | content | input | `index`, `prefix_count` | 1.0 | — |
 | `input.additional_property` | error | content | input | `property`; optional: `suggestion` | 1.0 | — |
 | `input.any_of` | error | content | input | `branch_count` | 1.0 | — |
@@ -101,7 +102,10 @@ it, and the statements it reports.
 | `manifest.file.wrong_name` | error | content | manifest | — | 1.0 | [MTS-MAN-002](03-manifest.md#mts-man-002) |
 | `manifest.forbidden` | error | content | manifest | optional: `property` | 1.0 | — |
 | `manifest.format` | error | content | manifest | `format` | 1.0 | — |
+| `manifest.guide_link_missing` | warning | content | manifest | `target` | 1.0 | [MTS-AUT-006](13-authoring.md#mts-aut-006) |
+| `manifest.input.collection_shape` | error | content | manifest | — | 1.0 | [MTS-AUT-022](13-authoring.md#mts-aut-022) |
 | `manifest.input.duplicate_name` | error | content | manifest | `name` | 1.0 | [MTS-MAN-016](03-manifest.md#mts-man-016) |
+| `manifest.input.form_shape` | error | content | manifest | `form`, `types` | 1.0 | [MTS-AUT-022](13-authoring.md#mts-aut-022) |
 | `manifest.json.duplicate_name` | error | content | manifest | `name` | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
 | `manifest.json.encoding` | error | content | manifest | `reason`, `offset` | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
 | `manifest.json.lone_surrogate` | error | content | manifest | — | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
@@ -157,6 +161,7 @@ it, and the statements it reports.
 | `output.any_of` | error | content | output | `branch_count` | 1.0 | — |
 | `output.const` | error | content | output | `expected` | 1.0 | — |
 | `output.contains` | error | content | output | — | 1.0 | — |
+| `output.declaration.validate_kind` | error | content | output | `kind` | 1.0 | [MTS-AUT-023](13-authoring.md#mts-aut-023) |
 | `output.dependent_required` | error | content | output | `property`, `because` | 1.0 | — |
 | `output.destination.not_directory` | error | destination | invocation | — | 1.0 | — |
 | `output.destination.not_empty` | error | destination | invocation | `entries`, `more` | 1.0 | — |
@@ -216,6 +221,8 @@ it, and the statements it reports.
 | `package.layout.empty_directory` | error | refused | package | — | 1.0 | [MTS-PKG-023](02-container.md#mts-pkg-023) |
 | `package.layout.missing_manifest` | error | refused | package | — | 1.0 | [MTS-PKG-020](02-container.md#mts-pkg-020) |
 | `package.layout.non_regular_file` | error | refused | package | — | 1.0 | [MTS-PKG-023](02-container.md#mts-pkg-023) |
+| `package.layout.not_packed` | warning | content | package | — | 1.0 | [MTS-AUT-004](13-authoring.md#mts-aut-004) |
+| `package.layout.os_litter` | warning | content | package | — | 1.0 | [MTS-AUT-004](13-authoring.md#mts-aut-004) |
 | `package.layout.unknown_top_level` | error | refused | package | — | 1.0 | [MTS-PKG-019](02-container.md#mts-pkg-019) |
 | `package.name.case_collision` | error | refused | package | `member`, `other`; optional: `offset` | 1.0 | [MTS-PKG-017](02-container.md#mts-pkg-017) |
 | `package.name.character` | error | refused | package | `code_point`; optional: `offset` | 1.0 | [MTS-PKG-015](02-container.md#mts-pkg-015) |
@@ -233,42 +240,50 @@ it, and the statements it reports.
 | `package.version.not_string` | error | refused | package | `actual`, `implemented`; optional: `written` | 1.0 | [MTS-VER-002](04-versions.md#mts-ver-002) |
 | `package.version.unsupported_major` | error | refused | package | `declared`, `implemented` | 1.0 | [MTS-VER-004](04-versions.md#mts-ver-004) |
 | `package.version.unsupported_minor` | error | refused | package | `declared`, `implemented` | 1.0 | [MTS-VER-005](04-versions.md#mts-ver-005) |
+| `report.step_skipped` | info | content | report | `steps` | 1.0 | [MTS-AUT-002](13-authoring.md#mts-aut-002) |
 | `report.truncated` | info | content | report | `listed`, `omitted` | 1.0 | — |
 | `schema.dialect` | error | content | package | `reason` | 1.0 | [MTS-DAT-003](05-data-specification.md#mts-dat-003) |
 | `schema.format_unsupported` | error | content | package | `format` | 1.0 | [MTS-DAT-005](05-data-specification.md#mts-dat-005) |
 | `schema.id_duplicate` | error | content | package | `id`; optional: `other` | 1.0 | [MTS-DAT-008](05-data-specification.md#mts-dat-008) |
 | `schema.invalid` | error | content | package | `keyword` | 1.0 | [MTS-DAT-003](05-data-specification.md#mts-dat-003) |
+| `schema.invalid_default` | error | content | package | — | 1.0 | [MTS-AUT-007](13-authoring.md#mts-aut-007) |
+| `schema.invalid_example` | error | content | package | — | 1.0 | [MTS-AUT-007](13-authoring.md#mts-aut-007) |
 | `schema.keyword_unknown` | error | content | package | `keyword` | 1.0 | [MTS-DAT-004](05-data-specification.md#mts-dat-004) |
 | `schema.pattern_unsupported` | error | content | package | `construct` | 1.0 | [MTS-DAT-006](05-data-specification.md#mts-dat-006) |
 | `schema.ref_by_path` | error | content | package | `reference`, `id` | 1.0 | [MTS-DAT-008](05-data-specification.md#mts-dat-008) |
 | `schema.ref_escapes` | error | content | package | `reference` | 1.0 | [MTS-DAT-007](05-data-specification.md#mts-dat-007) |
 | `schema.ref_unresolved` | error | content | package | `reference` | 1.0 | [MTS-DAT-007](05-data-specification.md#mts-dat-007) |
+| `schema.required_not_declared` | warning | content | package | `name` | 1.0 | [MTS-AUT-009](13-authoring.md#mts-aut-009) |
 | `schema.sample_unsatisfiable` | error | content | input | `instance`, `reason` | 1.0 | — |
 | `schema.syntax` | error | content | package | `form`, `rule` | 1.0 | [MTS-DAT-002](05-data-specification.md#mts-dat-002) |
+| `schema.unsatisfiable` | error | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
+| `schema.unusable_enum_member` | warning | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
+| `template.crlf` | warning | content | template | — | 1.0 | [MTS-AUT-010](13-authoring.md#mts-aut-010) |
 | `template.division_by_zero` | error | content | template | `filter`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
 | `template.filter_argument` | error | content | template | `filter`, `argument`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
 | `template.filter_input` | error | content | template | `filter`, `type`, `column` | 1.0 | — |
 | `template.include` | error | content | template | `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
+| `template.not_utf8` | error | content | template | — | 1.0 | [MTS-AUT-010](13-authoring.md#mts-aut-010) |
 | `template.number_range` | error | content | template | `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
-| `template.ooxml.split_construct` | error | content | template | `cause`, `text`, `text_elements` | 1.0 | — |
-| `template.ooxml.split_delimiter` | error | content | template | `cause`, `delimiter`, `text`, `text_elements` | 1.0 | — |
-| `template.syntax` | error | content | template | `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
+| `template.ooxml.split_construct` | error | content | template | `cause`, `text`, `text_elements` | 1.0 | [MTS-AUT-019](13-authoring.md#mts-aut-019) |
+| `template.ooxml.split_delimiter` | error | content | template | `cause`, `delimiter`, `text`, `text_elements` | 1.0 | [MTS-AUT-019](13-authoring.md#mts-aut-019) |
+| `template.syntax` | error | content | template | `column`, `cause` | 1.0 | [MTS-AUT-010](13-authoring.md#mts-aut-010), [MTS-AUT-011](13-authoring.md#mts-aut-011), [MTS-MAN-018](03-manifest.md#mts-man-018) |
 | `template.tag_context` | error | content | template | `tag`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
 | `template.unknown_filter` | error | content | template | `filter`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
-| `template.xref.budget_exhausted` | warning | content | package | `bound`, `limit` | 1.0 | — |
-| `template.xref.dynamic_reference` | warning | content | template | optional: `output` | 1.0 | — |
-| `template.xref.for_each_not_array` | error | content | output | `types` | 1.0 | — |
-| `template.xref.index_out_of_range` | error | content | template | `index`; optional: `input`, `output` | 1.0 | — |
+| `template.xref.budget_exhausted` | warning | content | package | `bound`, `limit` | 1.0 | [MTS-AUT-018](13-authoring.md#mts-aut-018) |
+| `template.xref.dynamic_reference` | warning | content | template | optional: `output` | 1.0 | [MTS-AUT-014](13-authoring.md#mts-aut-014) |
+| `template.xref.for_each_not_array` | error | content | output | `types` | 1.0 | [MTS-AUT-016](13-authoring.md#mts-aut-016) |
+| `template.xref.index_out_of_range` | error | content | template | `index`; optional: `input`, `output` | 1.0 | [MTS-AUT-014](13-authoring.md#mts-aut-014) |
 | `template.xref.missing_asset` | error | content | template | `asset` | 1.0 | — |
-| `template.xref.missing_partial` | error | content | template | `partial`; optional: `output` | 1.0 | — |
-| `template.xref.not_an_array` | error | content | template | `types`; optional: `input`, `output` | 1.0 | — |
-| `template.xref.not_an_object` | error | content | template | `property`, `types`; optional: `input`, `output` | 1.0 | — |
-| `template.xref.partial_parameter_not_passed` | warning | content | template | `name`; optional: `output` | 1.0 | — |
-| `template.xref.unknown_field` | error | content | template | `property`, `declared`, `declared_count`; optional: `suggestion`, `input`, `output` | 1.0 | — |
+| `template.xref.missing_partial` | error | content | template | `partial`; optional: `output` | 1.0 | [MTS-AUT-015](13-authoring.md#mts-aut-015) |
+| `template.xref.not_an_array` | error | content | template | `types`; optional: `input`, `output` | 1.0 | [MTS-AUT-014](13-authoring.md#mts-aut-014) |
+| `template.xref.not_an_object` | error | content | template | `property`, `types`; optional: `input`, `output` | 1.0 | [MTS-AUT-013](13-authoring.md#mts-aut-013) |
+| `template.xref.partial_parameter_not_passed` | warning | content | template | `name`; optional: `output` | 1.0 | [MTS-AUT-015](13-authoring.md#mts-aut-015) |
+| `template.xref.unknown_field` | error | content | template | `property`, `declared`, `declared_count`; optional: `suggestion`, `input`, `output` | 1.0 | [MTS-AUT-013](13-authoring.md#mts-aut-013) |
 | `template.xref.unknown_input` | error | content | template | `name`; optional: `suggestion` | 1.0 | — |
-| `template.xref.unknown_variable` | error | content | template | `name`; optional: `suggestion`, `output` | 1.0 | — |
-| `template.xref.unused_input` | warning | content | input | — | 1.0 | — |
-| `template.xref.unused_template` | warning | content | template | — | 1.0 | — |
+| `template.xref.unknown_variable` | error | content | template | `name`; optional: `suggestion`, `output` | 1.0 | [MTS-AUT-012](13-authoring.md#mts-aut-012) |
+| `template.xref.unused_input` | warning | content | input | — | 1.0 | [MTS-AUT-017](13-authoring.md#mts-aut-017) |
+| `template.xref.unused_template` | warning | content | template | — | 1.0 | [MTS-AUT-017](13-authoring.md#mts-aut-017) |
 | `usage.bad_value` | error | usage | invocation | `argument`, `flag`, `reason`; optional: `allowed` | 1.0 | — |
 | `usage.missing_command` | error | usage | invocation | — | 1.0 | — |
 | `usage.missing_operand` | error | usage | invocation | `command`, `operand` | 1.0 | — |

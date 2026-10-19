@@ -1,0 +1,29 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply a report.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid
+    validate: references/out.schema.json
+  - id: data
+    template: data.json.liquid
+    validate: references/out.schema.json
+  - id: table
+    template: table.liquid
+    kind: csv
+    validate: references/out.schema.json
+  - id: page
+    template: page.liquid
+    path: "pages/{{ inputs.report.title }}"
+    validate: references/out.schema.json
+  - id: named
+    template: page.liquid
+    path: "{{ inputs.report.title }}.yaml"
+    validate: references/out.schema.json

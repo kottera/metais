@@ -1,0 +1,13 @@
+[
+  {
+    "code": "template.xref.budget_exhausted",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "params": {
+      "bound": "contexts",
+      "limit": 10000
+    }
+  }
+]

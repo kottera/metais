@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "count": {
+      "type": "integer"
+    },
+    "rows": {
+      "type": "array",
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "properties": {
+          "v": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

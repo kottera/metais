@@ -192,6 +192,27 @@
       "statements": []
     },
     {
+      "code": "example.layout",
+      "severity": "error",
+      "class": "content",
+      "subject": "example",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the entry is out of place: \"name\" when the example's name breaks the rule for an input's name, and \"entry\" when it is neither inputs/, expected/ nor example.yaml.",
+          "always": true
+        }
+      ],
+      "message": "The entry is not part of an example: an example directory holds inputs/, expected/ and example.yaml, and is named as an input is ({reason}).",
+      "hint": "Move the entry into inputs/ or expected/, rename the example directory, or remove the entry; check ignores no other entry of an example.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-020"
+      ]
+    },
+    {
       "code": "input.additional_item",
       "severity": "error",
       "class": "content",
@@ -1734,6 +1755,41 @@
       "statements": []
     },
     {
+      "code": "manifest.guide_link_missing",
+      "severity": "warning",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "target",
+          "type": "string",
+          "meaning": "The link's target as written, which names no package entry.",
+          "always": true
+        }
+      ],
+      "message": "The guide links to {target}, which is not an entry of the package.",
+      "hint": "Point the link at a package path from the package root, such as references/<file>, or make it absolute; a supplier reading the guide cannot follow it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-006"
+      ]
+    },
+    {
+      "code": "manifest.input.collection_shape",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The collection input's schema declares no array type, or no items schema.",
+      "hint": "Give the collection's schema type: array and an items schema for one item.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-022"
+      ]
+    },
+    {
       "code": "manifest.input.duplicate_name",
       "severity": "error",
       "class": "content",
@@ -1752,6 +1808,34 @@
       "since": "1.0",
       "statements": [
         "MTS-MAN-016"
+      ]
+    },
+    {
+      "code": "manifest.input.form_shape",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "form",
+          "type": "string",
+          "meaning": "The form that disagrees: csv, text or markdown.",
+          "always": true
+        },
+        {
+          "name": "types",
+          "type": "array",
+          "meaning": "The declared type set of the schema a file of the input holds (the input's, or a collection's item schema), each type's name in the order null, boolean, object, array, number, string, integer; empty when no type is declared.",
+          "always": true,
+          "items": "string"
+        }
+      ],
+      "message": "The input declares the form {form}, which its schema's declared type cannot take.",
+      "hint": "Declare type on the schema to agree with the form — csv needs an array of objects, text a string, markdown an object — or remove the form.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-022"
       ]
     },
     {
@@ -2859,6 +2943,27 @@
       "location": "value",
       "since": "1.0",
       "statements": []
+    },
+    {
+      "code": "output.declaration.validate_kind",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "kind",
+          "type": "string",
+          "meaning": "The output's kind, declared or given by its path.",
+          "always": true
+        }
+      ],
+      "message": "The output {output} names a schema to validate it against, and its kind is {kind}: only json and yaml outputs are validated.",
+      "hint": "Remove validate, or declare an output of kind json or yaml.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-023"
+      ]
     },
     {
       "code": "output.dependent_required",
@@ -4192,6 +4297,34 @@
       ]
     },
     {
+      "code": "package.layout.not_packed",
+      "severity": "warning",
+      "class": "content",
+      "subject": "package",
+      "params": [],
+      "message": "The top-level entry is not part of the package layout, and pack leaves it out.",
+      "hint": "Move it into references/, assets/ or another layout tree if the package needs it, or leave it out of the source directory.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-004"
+      ]
+    },
+    {
+      "code": "package.layout.os_litter",
+      "severity": "warning",
+      "class": "content",
+      "subject": "package",
+      "params": [],
+      "message": "The entry is a file an operating system leaves behind, and pack would write it into the package.",
+      "hint": "Delete it from the source directory; an asset copy would also write it into the outputs.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-004"
+      ]
+    },
+    {
       "code": "package.layout.unknown_top_level",
       "severity": "error",
       "class": "refused",
@@ -4608,6 +4741,28 @@
       ]
     },
     {
+      "code": "report.step_skipped",
+      "severity": "info",
+      "class": "content",
+      "subject": "report",
+      "params": [
+        {
+          "name": "steps",
+          "type": "array",
+          "meaning": "The steps of check that did not run because their input could not be made, each by its name in chapter 13, in their order.",
+          "always": true,
+          "items": "string"
+        }
+      ],
+      "message": "Some steps of check did not run, because what they read could not be made: {steps}.",
+      "hint": "Fix the errors reported and check again, which runs these steps and may report more.",
+      "location": "none",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-002"
+      ]
+    },
+    {
       "code": "report.truncated",
       "severity": "info",
       "class": "content",
@@ -4723,6 +4878,34 @@
       ]
     },
     {
+      "code": "schema.invalid_default",
+      "severity": "error",
+      "class": "content",
+      "subject": "package",
+      "params": [],
+      "message": "The default here does not validate against the schema object that holds it.",
+      "hint": "Change the default to a value the schema accepts, or remove it: a default is applied before validation, so every supplier who omits the field would be refused.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-007"
+      ]
+    },
+    {
+      "code": "schema.invalid_example",
+      "severity": "error",
+      "class": "content",
+      "subject": "package",
+      "params": [],
+      "message": "The example here does not validate against the schema object that holds it.",
+      "hint": "Change the example to a value the schema accepts, or remove it: a supplier who copies it would be refused.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-007"
+      ]
+    },
+    {
       "code": "schema.keyword_unknown",
       "severity": "error",
       "class": "content",
@@ -4834,6 +5017,27 @@
       ]
     },
     {
+      "code": "schema.required_not_declared",
+      "severity": "warning",
+      "class": "content",
+      "subject": "package",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "meaning": "The name required, which the object does not declare.",
+          "always": true
+        }
+      ],
+      "message": "The object requires {name}, and declares no property of that name.",
+      "hint": "Correct the name, which is almost always a typo, or declare the property in properties.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-009"
+      ]
+    },
+    {
       "code": "schema.sample_unsatisfiable",
       "severity": "error",
       "class": "content",
@@ -4883,6 +5087,48 @@
       "since": "1.0",
       "statements": [
         "MTS-DAT-002"
+      ]
+    },
+    {
+      "code": "schema.unsatisfiable",
+      "severity": "error",
+      "class": "content",
+      "subject": "package",
+      "params": [],
+      "message": "The const here fails the rest of the schema object that holds it, so no value can satisfy it.",
+      "hint": "Change the const or the keywords beside it so that the const satisfies them.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-008"
+      ]
+    },
+    {
+      "code": "schema.unusable_enum_member",
+      "severity": "warning",
+      "class": "content",
+      "subject": "package",
+      "params": [],
+      "message": "This enum member fails the rest of the schema object that holds it, so no value can use it.",
+      "hint": "Remove the member, or change the keywords beside the enum so that it satisfies them.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-008"
+      ]
+    },
+    {
+      "code": "template.crlf",
+      "severity": "warning",
+      "class": "content",
+      "subject": "template",
+      "params": [],
+      "message": "The template holds a CR LF line ending, the first of them here.",
+      "hint": "Save the template with LF line endings and declare newline: crlf on the output that needs CR LF; a checkout that converts line endings writes these.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-010"
       ]
     },
     {
@@ -4998,6 +5244,20 @@
       ]
     },
     {
+      "code": "template.not_utf8",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [],
+      "message": "The template is not valid UTF-8.",
+      "hint": "Save the template as UTF-8; a binary file belongs under assets/.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-010"
+      ]
+    },
+    {
       "code": "template.number_range",
       "severity": "error",
       "class": "content",
@@ -5047,7 +5307,9 @@
       "hint": "It was split by {cause}: delete it and type it again in one go, with no formatting change, spelling mark or tracked change inside it, or edit the XML so it lies in one text element.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-019"
+      ]
     },
     {
       "code": "template.ooxml.split_delimiter",
@@ -5084,7 +5346,9 @@
       "hint": "It was split by {cause}: delete the construct and type it again in one go, with no formatting change, spelling mark or tracked change inside it, or edit the XML so it lies in one text element.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-019"
+      ]
     },
     {
       "code": "template.syntax",
@@ -5097,13 +5361,21 @@
           "type": "number",
           "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
           "always": true
+        },
+        {
+          "name": "cause",
+          "type": "string",
+          "meaning": "What the parse error is taken to come from (ADR-007 D2 item 4), as one of these values in this order of preference, the first three only in a template of check: \"document markup inside the construct, which the template.ooxml finding at the same place explains\" for a construct of an Office Open XML template holding XML markup; \"typographic quotes, which a word processor puts in place of straight ones; a Liquid string literal is quoted with \\\" or '\" for a construct holding U+2018, U+2019, U+201C or U+201D; \"a character the document escaped (&lt;, &gt;, &amp;, &quot; or &apos;), which Liquid reads raw; type the literal character inside the construct\" for a construct of an Office Open XML template holding one of those entity references outside a string literal; otherwise \"a construct the dialect's grammar does not allow\".",
+          "always": true
         }
       ],
       "message": "The Liquid here does not parse under the pinned dialect.",
-      "hint": "Correct the expression at this line and column: a path is a Liquid template, when a condition and for_each a value expression.",
+      "hint": "Correct the Liquid at this line and column; what was found is {cause}. In the manifest, a path is a Liquid template, when a condition and for_each a value expression.",
       "location": "value",
       "since": "1.0",
       "statements": [
+        "MTS-AUT-010",
+        "MTS-AUT-011",
         "MTS-MAN-018"
       ]
     },
@@ -5184,7 +5456,9 @@
       "hint": "Nothing was refused. The bound is fixed; a package with fewer partial call contexts or smaller templates is checked whole.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-018"
+      ]
     },
     {
       "code": "template.xref.dynamic_reference",
@@ -5203,7 +5477,9 @@
       "hint": "Nothing is wrong unless the computed name is. A computed name into inputs, or a bracketed root, counts every input as used.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-014"
+      ]
     },
     {
       "code": "template.xref.for_each_not_array",
@@ -5223,7 +5499,9 @@
       "hint": "Give for_each an expression whose value is an array, such as an input or a property the schema declares an array.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-016"
+      ]
     },
     {
       "code": "template.xref.index_out_of_range",
@@ -5254,7 +5532,9 @@
       "hint": "The schema's maxItems, or items: false after prefixItems, rules the index out. Correct the index, or the schema.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-014"
+      ]
     },
     {
       "code": "template.xref.missing_asset",
@@ -5298,7 +5578,9 @@
       "hint": "Name the partial by its full path relative to templates/, with its extension, exactly as the entry is named.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-015"
+      ]
     },
     {
       "code": "template.xref.not_an_array",
@@ -5330,7 +5612,9 @@
       "hint": "Index only an array. Read an object's member by its name, as .name or [\"name\"].",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-014"
+      ]
     },
     {
       "code": "template.xref.not_an_object",
@@ -5368,7 +5652,9 @@
       "hint": "Read members only of an object. A string answers size, first and last, and an array size, first and last.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-013"
+      ]
     },
     {
       "code": "template.xref.partial_parameter_not_passed",
@@ -5393,7 +5679,9 @@
       "hint": "Pass it on the render tag as name: value if the partial needs it. A parameter the partial tests before reading it needs nothing.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-015"
+      ]
     },
     {
       "code": "template.xref.unknown_field",
@@ -5443,7 +5731,9 @@
       "hint": "Correct the name, or declare it. Without additionalProperties a schema declares only the names it lists, so write additionalProperties: true, or a schema for the values, to allow any name.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-013"
+      ]
     },
     {
       "code": "template.xref.unknown_input",
@@ -5499,7 +5789,9 @@
       "hint": "Read a global (inputs, package, now, sources, and output in a template), a name the template binds, or a loop's variable inside its loop. item and fan_out exist only for an output with for_each, forloop only inside a for, and tablerowloop only inside a tablerow.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-012"
+      ]
     },
     {
       "code": "template.xref.unused_input",
@@ -5511,7 +5803,9 @@
       "hint": "Read it where it belongs, as inputs.{input}, or remove the input. A template that no output renders does not count.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-017"
+      ]
     },
     {
       "code": "template.xref.unused_template",
@@ -5523,7 +5817,9 @@
       "hint": "Render it from an output or a render tag, or remove it. Its references were still checked.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-017"
+      ]
     },
     {
       "code": "usage.bad_value",

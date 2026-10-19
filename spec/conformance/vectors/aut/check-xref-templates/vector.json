@@ -1,0 +1,34 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-xref-templates",
+  "title": "The cross-reference reports unknown variables, undeclared fields, a field of a scalar, an index of a non-array and beyond maxItems, a dynamic reference, a missing partial, a parameter not passed and an unused template",
+  "statements": [
+    "MTS-AUT-012",
+    "MTS-AUT-013",
+    "MTS-AUT-014",
+    "MTS-AUT-015",
+    "MTS-AUT-017"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

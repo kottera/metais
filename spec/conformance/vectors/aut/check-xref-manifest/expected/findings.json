@@ -1,0 +1,63 @@
+[
+  {
+    "code": "template.xref.unused_input",
+    "severity": "warning",
+    "subject": {
+      "kind": "input",
+      "name": "spare",
+      "title": "Spare"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 11,
+      "column": 5,
+      "pointer": "/inputs/1"
+    }
+  },
+  {
+    "code": "template.xref.unknown_field",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 11,
+      "pointer": "/outputs/0/when"
+    },
+    "params": {
+      "property": "titel",
+      "declared": [
+        "title"
+      ],
+      "declared_count": 1,
+      "suggestion": "title",
+      "input": "report",
+      "output": "report"
+    }
+  },
+  {
+    "code": "template.xref.for_each_not_array",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "pages"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 15,
+      "pointer": "/outputs/1/for_each"
+    },
+    "params": {
+      "types": [
+        "string"
+      ]
+    }
+  }
+]

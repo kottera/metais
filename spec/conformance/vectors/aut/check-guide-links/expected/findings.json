@@ -1,0 +1,53 @@
+[
+  {
+    "code": "manifest.guide_link_missing",
+    "severity": "warning",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 6,
+      "column": 8,
+      "pointer": "/guide"
+    },
+    "params": {
+      "target": "assets/missing.png"
+    }
+  },
+  {
+    "code": "manifest.guide_link_missing",
+    "severity": "warning",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 6,
+      "column": 8,
+      "pointer": "/guide"
+    },
+    "params": {
+      "target": "references/absent.md"
+    }
+  },
+  {
+    "code": "manifest.guide_link_missing",
+    "severity": "warning",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 6,
+      "column": 8,
+      "pointer": "/guide"
+    },
+    "params": {
+      "target": "references/gone.md"
+    }
+  }
+]

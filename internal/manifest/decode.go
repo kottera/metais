@@ -533,3 +533,7 @@ func (d *decoder) container(v value.Value, ptr string) *Container {
 // ValidName reports whether s satisfies ADR-002 D5's name rule, the rule
 // the manifest's name member is judged by.
 func ValidName(s string) bool { return packageName(s) == "" }
+
+// ValidInputName reports whether s satisfies ADR-003 D1's rule for an
+// input's name, which an example's name follows too (ADR-007 D5 item 1).
+func ValidInputName(s string) bool { return inputName(s) == "" }

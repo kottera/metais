@@ -1,0 +1,198 @@
+[
+  {
+    "code": "template.xref.unused_template",
+    "severity": "warning",
+    "subject": {
+      "kind": "template",
+      "name": "templates/orphan.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/orphan.md.liquid"
+    }
+  },
+  {
+    "code": "template.xref.unknown_field",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/orphan.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/orphan.md.liquid",
+      "line": 1,
+      "column": 17
+    },
+    "params": {
+      "property": "nothing",
+      "declared": [
+        "count",
+        "rows",
+        "title"
+      ],
+      "declared_count": 3,
+      "input": "report"
+    }
+  },
+  {
+    "code": "template.xref.partial_parameter_not_passed",
+    "severity": "warning",
+    "subject": {
+      "kind": "template",
+      "name": "templates/part.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/part.liquid",
+      "line": 1,
+      "column": 16
+    },
+    "params": {
+      "name": "who",
+      "output": "report"
+    }
+  },
+  {
+    "code": "template.xref.unknown_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 1,
+      "column": 4
+    },
+    "params": {
+      "name": "inptus",
+      "suggestion": "inputs",
+      "output": "report"
+    }
+  },
+  {
+    "code": "template.xref.unknown_field",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 2,
+      "column": 17
+    },
+    "params": {
+      "property": "titel",
+      "declared": [
+        "count",
+        "rows",
+        "title"
+      ],
+      "declared_count": 3,
+      "suggestion": "title",
+      "input": "report",
+      "output": "report"
+    }
+  },
+  {
+    "code": "template.xref.not_an_object",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 4,
+      "column": 23
+    },
+    "params": {
+      "property": "value",
+      "types": [
+        "integer"
+      ],
+      "input": "report",
+      "output": "report"
+    }
+  },
+  {
+    "code": "template.xref.not_an_array",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 5,
+      "column": 23
+    },
+    "params": {
+      "types": [
+        "string"
+      ],
+      "input": "report",
+      "output": "report"
+    }
+  },
+  {
+    "code": "template.xref.index_out_of_range",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 6,
+      "column": 22
+    },
+    "params": {
+      "index": 5,
+      "input": "report",
+      "output": "report"
+    }
+  },
+  {
+    "code": "template.xref.dynamic_reference",
+    "severity": "warning",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 8,
+      "column": 35
+    },
+    "params": {
+      "output": "report"
+    }
+  },
+  {
+    "code": "template.xref.missing_partial",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 9,
+      "column": 1
+    },
+    "params": {
+      "partial": "missing.liquid",
+      "output": "report"
+    }
+  }
+]

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-guide-links",
+  "title": "A relative guide link whose target is no package entry is a warning; absolute links, fragments and code are not read",
+  "statements": [
+    "MTS-AUT-006"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": true,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}
