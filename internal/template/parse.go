@@ -211,6 +211,11 @@ func readAll(tree pkgtree.Tree, name string, size int64) ([]byte, error) {
 // template a render reaches parsed without a finding before it began.
 type partials struct{ ts *Templates }
 
+// Partials is the engine's Partials over ts, for a render of a template
+// that Parse returned without a finding, every template its Reach names
+// having parsed without one too.
+func (ts *Templates) Partials() liquid.Partials { return partials{ts} }
+
 func (p partials) Partial(name string) (*liquid.Template, *liquid.Error) {
 	if !p.ts.partialExists(name) {
 		return nil, &liquid.Error{Code: liquid.CodeInternal, Detail: "a render tag names a partial its template's parse did not find: " + name}
