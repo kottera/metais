@@ -276,7 +276,9 @@ func decodeSchema(entry string, src []byte, lim limits.Set) (value.Value, []find
 	}
 	out := make([]finding.Finding, 0, len(fs))
 	for _, f := range fs {
-		loc, _ := f.Location()
+		// At keeps the pointer as the reader's path: writing it out would
+		// cost every finding the pointer's length (ADR-009 D10).
+		loc, _ := f.At()
 		if f.Code() == finding.CodeLimitExceeded {
 			p := finding.Params{}
 			for _, n := range []string{"limit", "bound", "lowered", "observed"} {
