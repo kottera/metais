@@ -438,7 +438,7 @@ func (c *Compiler) compileFindings(entry string, err error) ([]finding.Finding, 
 		}
 		// Each failure's path is made from its tokens, each read once, so
 		// many failures under one long member name cost each its depth.
-		var paths finding.TokenCache
+		var paths finding.PathCache
 		var out []finding.Finding
 		for _, f := range leaves(fails) {
 			l := finding.Location{Origin: finding.OriginPackage, File: e}.WithPath(paths.Path(under, f.InstancePointer))

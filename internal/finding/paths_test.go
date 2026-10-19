@@ -27,13 +27,14 @@ func TestPathParts(t *testing.T) {
 	}
 }
 
-// TestTokenCachePaths: a path the cache makes is the one Child makes, from
-// a string given once or many times, and under a prefix.
-func TestTokenCachePaths(t *testing.T) {
-	var c TokenCache
+// TestPathCachePaths: a path the cache makes is the one Child makes,
+// whether it shares tokens with the path made before it or not, and under
+// the same prefix or another.
+func TestPathCachePaths(t *testing.T) {
+	var c PathCache
 	long := strings.Repeat("~/é", 100)
 	under, _ := ParsePath("/base")
-	for _, toks := range [][]string{nil, {""}, {long, "x"}, {long, "y"}, {"bad\xff", long}} {
+	for _, toks := range [][]string{nil, {""}, {long, "x"}, {long, "y"}, {long}, {long, "y", "z"}, {long + "!", "y"}, {"bad\xff", long}, {long, "x"}} {
 		var want *Path
 		for _, tok := range append([]string{"base"}, toks...) {
 			want = want.Child(tok)
@@ -44,6 +45,9 @@ func TestTokenCachePaths(t *testing.T) {
 				t.Errorf("%q: made %q, want %q", toks, got.String(), want.String())
 			}
 		}
+	}
+	if got := c.Path(nil, []string{long, "x"}); got.String() != (*Path)(nil).Child(long).Child("x").String() {
+		t.Errorf("under the root, made %q", got.String())
 	}
 	if got := c.Path(nil, nil); got != nil {
 		t.Errorf("no tokens made %q, want the root", got.String())

@@ -142,7 +142,7 @@ type mapper struct {
 	err error
 	// paths makes each finding's instance path, reading a token's text
 	// once however many failures are under it.
-	paths finding.TokenCache
+	paths finding.PathCache
 }
 
 // emitted is one finding, and whether D7 item 4 suppresses it. A failure

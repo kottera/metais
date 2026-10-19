@@ -6,7 +6,6 @@ package finding
 import (
 	"crypto/sha256"
 	"sync"
-	"unsafe"
 )
 
 // PathKey identifies a Path's tokens: two paths have the same key exactly
@@ -34,49 +33,37 @@ func (p *Path) Last() string {
 	return p.token.text
 }
 
-// TokenCache makes Paths from the decoded tokens a validator gives, such
-// as a failure's instance location, reading each token's text once: a
-// token given again as the same string, which is how a validator repeats
-// the member names above many values, costs nothing for its length. A path
-// of n tokens costs n steps, so many paths under one long member name cost
-// each its depth, never the name's length. The zero TokenCache is ready to
-// use; it is not safe for concurrent use.
-type TokenCache struct {
-	made map[tokenText]Token
-}
-
-// tokenText names a string by where its bytes are and how many there
-// are. Strings are immutable, so two with the same tokenText have the
-// same text; the key is never read through.
-type tokenText struct {
-	data *byte
-	n    int
-}
-
-// Token returns token as NewToken does, reading it only the first time
-// this string is given.
-func (c *TokenCache) Token(token string) Token {
-	if token == "" {
-		return NewToken("")
-	}
-	k := tokenText{unsafe.StringData(token), len(token)}
-	if t, ok := c.made[k]; ok {
-		return t
-	}
-	if c.made == nil {
-		c.made = map[tokenText]Token{}
-	}
-	t := NewToken(token)
-	c.made[k] = t
-	return t
+// PathCache makes Paths from the decoded tokens a validator gives, such as
+// failures' instance locations, in the order it gives them. It remembers
+// the path it made last, and a path that begins with the same tokens
+// below the same prefix is made from it: only the tokens after the shared
+// ones are read. A validator gives the paths of the values under one
+// member name together, each token the same string, so many paths under
+// one long member name cost each its depth, never the name's length. The
+// zero PathCache is ready to use; it is not safe for concurrent use.
+type PathCache struct {
+	under  *Path
+	tokens []string
+	paths  []*Path // paths[i] is the path of tokens[:i+1] below under
 }
 
 // Path returns the path of tokens below under: under itself when tokens
 // is empty.
-func (c *TokenCache) Path(under *Path, tokens []string) *Path {
+func (c *PathCache) Path(under *Path, tokens []string) *Path {
+	shared := 0
+	if under == c.under {
+		for shared < len(tokens) && shared < len(c.tokens) && tokens[shared] == c.tokens[shared] {
+			shared++
+		}
+	}
+	c.under, c.tokens, c.paths = under, append(c.tokens[:shared], tokens[shared:]...), c.paths[:shared]
 	p := under
-	for _, t := range tokens {
-		p = p.ChildToken(c.Token(t))
+	if shared > 0 {
+		p = c.paths[shared-1]
+	}
+	for _, t := range tokens[shared:] {
+		p = p.Child(t)
+		c.paths = append(c.paths, p)
 	}
 	return p
 }
