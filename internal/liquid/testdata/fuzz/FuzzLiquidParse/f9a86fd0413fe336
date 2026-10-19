@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{{ \x22_#/.\x22 | base64_url_safe_encode }}")

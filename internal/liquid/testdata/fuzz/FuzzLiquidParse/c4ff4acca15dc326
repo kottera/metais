@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% for tag in product.tags %}{% if tag == 'sports' %}{% break %}{% else %}{{ tag }} {% endif %}{% else %}no images{% endfor %}")

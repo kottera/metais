@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{%-\x0a  # spread inline comments\x0a  over multiple lines\x0a-%}")

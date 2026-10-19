@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{{ \x22    one    two three    four  \x22 | truncatewords: 2 }}")

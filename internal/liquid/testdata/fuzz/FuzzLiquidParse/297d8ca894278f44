@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{{ \x22hello5\x22 | replace_first: 5, \x22your\x22 }}")

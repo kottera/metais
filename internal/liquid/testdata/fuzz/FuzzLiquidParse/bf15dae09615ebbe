@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% render 'product-args', foo: 'hello' %}{{ foo }}")

@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% case a %}x{% when 1 or 2, 3 %}{% else %}{% when 4 %}{% endcase %}")

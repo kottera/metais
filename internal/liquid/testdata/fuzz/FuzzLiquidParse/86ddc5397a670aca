@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% tablerow i in (1..4) cols:2.6 %}{{ i }} {{ tablerowloop.col_first }}{% endtablerow %}")

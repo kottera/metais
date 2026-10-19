@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{%- liquid\x0a  if a\x0a    echo a | upcase\x0a  endif\x0a-%}")

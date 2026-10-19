@@ -169,3 +169,25 @@ func TestBinders(t *testing.T) {
 		t.Errorf("plain render binds %v", b)
 	}
 }
+
+// TestSpanViolationsControl shows the span check, which TestSpans and
+// FuzzLiquidParse rely on, flagging the spans it exists to flag.
+func TestSpanViolationsControl(t *testing.T) {
+	testenv.Home(t)
+	src := "ab\ncd"
+	for name, n := range map[string]ast.Node{
+		"past the end": &ast.Text{Span: ast.Span{Start: 0, End: 6, Line: 1, Col: 1}},
+		"inverted":     &ast.Text{Span: ast.Span{Start: 2, End: 1, Line: 1, Col: 3}},
+		"wrong line":   &ast.Text{Span: ast.Span{Start: 3, End: 4, Line: 1, Col: 4}},
+		"wrong column": &ast.Text{Span: ast.Span{Start: 4, End: 5, Line: 2, Col: 1}},
+		"out of order": &ast.Block{Span: ast.Span{Start: 0, End: 5, Line: 1, Col: 1}, Nodes: []ast.Node{&ast.Text{Span: ast.Span{Start: 3, End: 4, Line: 2, Col: 1}}, &ast.Text{Span: ast.Span{Start: 0, End: 1, Line: 1, Col: 1}}}},
+	} {
+		if len(spanViolations(src, n)) == 0 {
+			t.Errorf("%s: not flagged", name)
+		}
+	}
+	ok := &ast.Text{Span: ast.Span{Start: 3, End: 5, Line: 2, Col: 1}}
+	if v := spanViolations(src, ok); len(v) > 0 {
+		t.Errorf("a good span flagged: %v", v)
+	}
+}

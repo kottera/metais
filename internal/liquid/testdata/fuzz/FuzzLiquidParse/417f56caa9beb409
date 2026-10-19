@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% doc hello %}don't render me{% enddoc %}")
