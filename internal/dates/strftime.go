@@ -129,7 +129,7 @@ func directive(s string) (it item, n int, ok bool) {
 }
 
 // Composite directives, as ADR-004 D11 item 3 defines them.
-var composites = map[byte]string{
+var compositeText = map[byte]string{
 	'c': "%a %b %e %H:%M:%S %Y",
 	'D': "%m/%d/%y",
 	'F': "%Y-%m-%d",
@@ -139,6 +139,19 @@ var composites = map[byte]string{
 	'x': "%m/%d/%y",
 	'X': "%H:%M:%S",
 }
+
+// composites are compositeText compiled.
+var composites = func() map[byte]Format {
+	m := make(map[byte]Format, len(compositeText))
+	for c, text := range compositeText {
+		f, err := ParseFormat(text)
+		if err != nil {
+			panic(err)
+		}
+		m[c] = f
+	}
+	return m
+}()
 
 var (
 	weekdays = [...]string{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
@@ -173,11 +186,7 @@ func FormatString(t Time, format string) (string, error) {
 
 // format writes one directive, before the ^ flag.
 func (it item) format(t Time) string {
-	if c, ok := composites[it.conv]; ok {
-		f, err := ParseFormat(c)
-		if err != nil {
-			panic(err)
-		}
+	if f, ok := composites[it.conv]; ok {
 		return f.Apply(t)
 	}
 	lt := t.t
