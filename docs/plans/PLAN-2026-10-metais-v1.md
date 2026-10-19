@@ -802,6 +802,20 @@ and the split-run scanner. `init` writes its scaffold.
 - R2-135: the references index.
 - R2-150 and R2-178: the hostile packages.
 
+**Rulings made during the wave:**
+- **Golden Liquid cases that apply `date` are out of Wave 3's scope, not
+  excluded.** `date` is Wave 5's (§8, §11).
+  - The Wave 3 runs select a case out if and only if it applies `date`, and
+    report the count.
+  - The selector fails as soon as `date` is registered in the dialect, so
+    Wave 5 cannot leave it behind.
+  - Two of the 97 deferred render-time cases are `date` cases, and they stay
+    in `render-time.txt` for Wave 5.
+- **One item owns the fix that keeps finding construction linear**, with a
+  library-level CPU-time proof. The proofs through `inspect` and the inputs
+  layer are meetings. This replaces the brief's "whichever item first makes
+  that input reachable", which was a race between two parallel items.
+
 ## 10. Wave 4 — validate, read, the first render, check and unpack
 
 **Objective.** A supplier validates inputs and renders template outputs into
