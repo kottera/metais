@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "first": {
+      "$dynamicRef": "#item"
+    }
+  },
+  "$defs": {
+    "item": {
+      "$dynamicAnchor": "item",
+      "type": "object"
+    }
+  }
+}

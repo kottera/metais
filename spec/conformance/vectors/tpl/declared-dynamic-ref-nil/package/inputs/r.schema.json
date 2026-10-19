@@ -1,0 +1,12 @@
+{
+  "$ref": "list.schema.json",
+  "$defs": {
+    "item": {
+      "$dynamicAnchor": "item",
+      "type": "object",
+      "properties": {
+        "label": {}
+      }
+    }
+  }
+}
