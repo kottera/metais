@@ -93,12 +93,20 @@ func (b *Bindings) add(name string, v value.Value) {
 	b.members = append(b.members, value.Member{Name: name, Value: v})
 }
 
-// globals returns the globals of a template body rendered as the output
-// at path: b's, and output (ADR-004 D7 item 6).
-func (b *Bindings) globals(path string) value.Object {
-	root := strings.Repeat("../", strings.Count(path, "/"))
-	out := obj(value.Member{Name: "path", Value: str(path)}, value.Member{Name: "root", Value: str(root)})
-	ms := append(slices.Clone(b.members), value.Member{Name: "output", Value: out})
+// scope returns the globals of one context of ADR-004 D7 item 10's table:
+// b's; item and fan_out in the evaluation fan of a fan-out (D7 items 4
+// and 5); and, for a template body rendered as the output at *path,
+// output (D7 item 6), which no manifest expression sees.
+func (b *Bindings) scope(fan *Fan, path *string) value.Object {
+	ms := slices.Clone(b.members)
+	if fan != nil {
+		ms = fan.bind(ms)
+	}
+	if path != nil {
+		root := strings.Repeat("../", strings.Count(*path, "/"))
+		out := obj(value.Member{Name: "path", Value: str(*path)}, value.Member{Name: "root", Value: str(root)})
+		ms = append(ms, value.Member{Name: "output", Value: out})
+	}
 	o, err := value.NewObject(ms...)
 	if err != nil {
 		panic("template: " + err.Error())
@@ -108,7 +116,7 @@ func (b *Bindings) globals(path string) value.Object {
 
 // Each returns every global of b, by name, in canonical order, for a test
 // that holds the set to the data model's plain values (ADR-009 D13 item 3).
-func (b *Bindings) Each(path string) value.Object { return b.globals(path) }
+func (b *Bindings) Each(path string) value.Object { return b.scope(nil, &path) }
 
 // packageValue is package: the canonical manifest's members ADR-004 D7
 // item 3 lists, an omitted one nil, and digest.

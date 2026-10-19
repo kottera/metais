@@ -357,11 +357,14 @@ func (s Set) Exceeded(id ID, input finding.Subject, loc finding.Location, observ
 // ExceededTemplate returns the limit.exceeded.template finding (ADR-009
 // D19, D11): rendering the template tmpl, as the output at outputPath,
 // breaches id, a limit of s, at loc in the template. Its fields are
-// Breached's, with the output's path; opts are the finding's own, such as
-// the render tags that led to a partial.
+// Breached's, with the output's path, or none for a manifest expression's
+// work, outputPath ""; opts are the finding's own, such as the render tags
+// that led to a partial.
 func (s Set) ExceededTemplate(id ID, tmpl finding.Subject, loc finding.Location, outputPath string, opts ...finding.Option) finding.Finding {
 	p := s.breach(id, 0, false)
-	p["output_path"] = finding.String(outputPath)
+	if outputPath != "" {
+		p["output_path"] = finding.String(outputPath)
+	}
 	return finding.New(finding.CodeLimitExceededTemplate, tmpl, &loc, p, opts...)
 }
 
