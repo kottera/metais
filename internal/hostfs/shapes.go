@@ -372,6 +372,9 @@ func (o *Output) Abort() error {
 func (o *Output) removeStaged() error {
 	var first error
 	for _, e := range slices.Backward(o.made) {
+		if o.plan != nil && o.plan.isCommitted(e.name) {
+			continue
+		}
 		n, _ := osName(e.name)
 		info, err := o.w.root.Lstat(n)
 		if err != nil {

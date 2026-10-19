@@ -310,6 +310,12 @@ func (c *checker) caseless(out []PathCheck) {
 	for _, d := range dirs {
 		keys := c.want[d]
 		err := c.eachName(d, func(name string) {
+			if d == "." && name == StagingDir {
+				// The write's own, when the checks are made again at
+				// commit; a leftover refuses Stage, and a first segment
+				// that matches it is refused by walk.
+				return
+			}
 			for _, s := range keys[caselessKey(name)] {
 				if name != s.seg && out[s.i].Err == nil {
 					out[s.i].Err = fail("check", CaseVariant)
@@ -398,6 +404,25 @@ type plan struct {
 	x       *Existing
 	checks  []PathCheck
 	planned map[string]bool
+
+	// committed are the units renamed into place, which removeStaged no
+	// longer reaches: they are not beneath the staging directory.
+	committed map[string]bool
+}
+
+// isCommitted reports whether name, beneath the staging directory, lies
+// within a unit already committed.
+func (p *plan) isCommitted(name string) bool {
+	for {
+		if p.committed[name] {
+			return true
+		}
+		i := strings.LastIndexByte(name, '/')
+		if i < 0 {
+			return false
+		}
+		name = name[:i]
+	}
 }
 
 // Stage begins the write of the planned paths checks names, every one of
@@ -434,7 +459,7 @@ func (x *Existing) Stage(checks []PathCheck) (*Output, error) {
 	}
 	// The staging directory is pinned; what is written beneath it is not.
 	sw.pins = false
-	p := &plan{x: x, checks: slices.Clone(checks), planned: map[string]bool{}}
+	p := &plan{x: x, checks: slices.Clone(checks), planned: map[string]bool{}, committed: map[string]bool{}}
 	slices.SortStableFunc(p.checks, func(a, b PathCheck) int { return strings.Compare(a.Path, b.Path) })
 	for _, c := range p.checks {
 		p.planned[c.Path] = true
@@ -641,13 +666,13 @@ func (o *Output) commitUnit(u PathCheck, cd **commitDir) error {
 	return mapErr("rename", err)
 }
 
-// forget drops from the write's records what the commit of unit moved out
-// of the staging directory: it is no longer the write's to remove. A
+// forget marks unit committed: what its rename moved out of the staging
+// directory is no longer the write's to remove (removeStaged). A
 // directory whose mode a grant changed is now reached through the output
 // directory's root, which gives it its own mode back when the write ends.
 func (o *Output) forget(unit string) {
 	under := func(name string) bool { return name == unit || strings.HasPrefix(name, unit+"/") }
-	o.made = slices.DeleteFunc(o.made, func(e entry) bool { return under(e.name) })
+	o.plan.committed[unit] = true
 	for i, g := range o.parent.rec.grants {
 		if g.w == o.w && under(g.name) {
 			o.parent.rec.grants[i].w = o.parent
