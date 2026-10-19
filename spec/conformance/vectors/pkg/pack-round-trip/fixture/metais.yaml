@@ -1,0 +1,14 @@
+# The manifest is packed byte for byte, this comment included.
+metais: "1.0"
+name: pack
+version: 1.0.0
+title: Pack
+description: A package whose source directory holds every kind of entry pack meets.
+guide: Supply a report.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid
