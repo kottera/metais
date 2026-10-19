@@ -109,20 +109,14 @@ func TestShapesWriteTheirLimitUnderTheOpenFileLimit(t *testing.T) {
 			if err := o.Commit(); err != nil {
 				t.Fatal(err)
 			}
-			n := 0
-			err := filepath.WalkDir(filepath.Join(parent, "out"), func(_ string, d fs.DirEntry, err error) error {
-				if err == nil && !d.IsDir() {
-					n++
-				}
-				return err
-			})
-			if err != nil || n != len(names) {
-				t.Fatalf("the output holds %d files, %v; want %d", n, err, len(names))
+			if n := countFiles(t, filepath.Join(parent, "out")); n != len(names) {
+				t.Fatalf("the output holds %d files; want %d", n, len(names))
 			}
 		})
 	}
 	// A failed StageNew of the outputs limit removes all of it under the
-	// same limit.
+	// same limit. It writes the entries as the commit does, each directory
+	// made once before its first file.
 	t.Run("StageNew abort", func(t *testing.T) {
 		parent := dir(t)
 		names := manyNames(counts["StageNew"])
@@ -131,9 +125,13 @@ func TestShapesWriteTheirLimitUnderTheOpenFileLimit(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		last := ""
 		for _, name := range names {
-			if err := o.MkdirAll(dirOf(name)); err != nil {
-				t.Fatal(err)
+			if d := dirOf(name); d != last {
+				if err := o.MkdirAll(d); err != nil {
+					t.Fatal(err)
+				}
+				last = d
 			}
 			if err := o.Create(name, false, strings.NewReader("x")); err != nil {
 				t.Fatal(err)
