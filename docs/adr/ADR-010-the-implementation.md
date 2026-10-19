@@ -1826,8 +1826,8 @@ ruling made by the train and needs no ratification.
    with the trees they were reached on, so a chain of resumes never
    carries a stale pass forward. A run whose tree changed while it was
    live has verdicts that describe no single tree, and none of them is
-   reused. The cheap steps (gofmt, tidiness, the specdata drift) always
-   run again.
+   reused. The cheap steps (gofmt, tidiness, the specdata drift) run again
+   whenever the tree changed at all.
 
 ## Implementation log
 

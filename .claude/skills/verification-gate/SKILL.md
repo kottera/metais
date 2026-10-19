@@ -146,7 +146,8 @@ The paths that differ between the verdict's tree and yours are judged by
 - a step or package the last run never reached, because it died, was
   killed, or was cut off with your session;
 - a PASS your edit since then reaches;
-- the cheap steps (gofmt, tidiness, the specdata drift).
+- the cheap steps (gofmt, tidiness, the specdata drift), whenever the
+  tree changed at all.
 
 It is the run to start after you fix a red, and the first run to start
 when a resumed session finds a gate that died with its predecessor. A

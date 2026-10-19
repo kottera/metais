@@ -187,7 +187,8 @@ reusable() {
 			grep -q '^code ' "$facts" && return 1
 			;;
 		*)
-			# gofmt, tidy and the specdata drift are cheap; they always run.
+			# gofmt, tidy and the specdata drift are cheap; they run again
+			# whenever the tree changed.
 			return 1
 			;;
 		esac
