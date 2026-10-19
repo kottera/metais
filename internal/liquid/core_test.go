@@ -86,7 +86,7 @@ func readDoc(t *testing.T, path string) string {
 // STANDARD_TAGS without include, and the liquid tag; the filters are
 // standardfilters.rb's, escape's alias h with them, without date (plan
 // §8). It reads the lists from the ADR's own text, and holds ADR-010 D4
-// item 2's filter list to the same set.
+// item 2's filter list, with what its Amendment A4 adds, to the same set.
 func TestCoreIsADR004Catalog(t *testing.T) {
 	testenv.Home(t)
 	adr004 := readDoc(t, "docs/adr/ADR-004-the-template-environment.md")
@@ -118,10 +118,14 @@ func TestCoreIsADR004Catalog(t *testing.T) {
 		t.Fatalf("ADR-010 has no %q", from)
 	}
 	list, _, _ := strings.Cut(adr010[i+len(from):], "`")
-	d4 := append(strings.Fields(list), "h")
+	a4 := adrList(t, adr010, "The list of `standardfilters.rb`'s filters at v5.14.0 also names:", "** `standardfilters.rb` defines")
+	if len(a4) == 0 {
+		t.Fatalf("ADR-010 A4 item 1 names no filter")
+	}
+	d4 := append(strings.Fields(list), a4...)
 	slices.Sort(d4)
 	if !slices.Equal(d4, filters) {
-		t.Errorf("ADR-010 D4 item 2's filters with h are %q, ADR-004's are %q", d4, filters)
+		t.Errorf("ADR-010 D4 item 2's filters with A4's %q are %q, ADR-004's are %q", a4, d4, filters)
 	}
 	for _, n := range []string{"date", "include", "json", "safe", "slug"} {
 		if _, ok := Core().Filter(n); ok {
