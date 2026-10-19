@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("a: !!str 1\nb: ! x\nc: !foo y\n")

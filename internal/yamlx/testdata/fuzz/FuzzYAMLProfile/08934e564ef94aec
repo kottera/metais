@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("a: [1, 2.50, -0, 1e21, 1e-7, true, null, yes, no, on]\n")

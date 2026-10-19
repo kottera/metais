@@ -42,6 +42,12 @@
       "reason": "ADR-010 D11 item 7, RULINGS R1-023: normalization and case folding are unitext's, which holds the one portable-path predicate, so no second one can be built beside it"
     },
     {
+      "rule": "only-importers",
+      "imports": "go.yaml.in/yaml/v3",
+      "importers": ["github.com/kottera/metais/internal/yamlx"],
+      "reason": "ADR-010 D6 item 5: one implementation of the YAML profile serves the manifest, YAML inputs and frontmatter, so no second package reads YAML around it"
+    },
+    {
       "rule": "only-referrers",
       "symbols": ["os.Args", "os.Stdin", "os.Stdout", "os.Stderr", "os.Exit"],
       "packages": ["github.com/kottera/metais/cmd/metais"],

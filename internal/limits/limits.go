@@ -344,6 +344,18 @@ func parseValue(v string, u Unit) (int64, error) {
 // s, whether the caller lowered it, and observed, the value found, when
 // hasObserved is set; a reading that stopped at the bound has none.
 func (s Set) Breached(id ID, loc finding.Location, observed int64, hasObserved bool) finding.Finding {
+	return finding.New(finding.CodeLimitPackage, finding.Subject{Kind: finding.SubjectPackage}, &loc, s.breach(id, observed, hasObserved))
+}
+
+// Exceeded returns the limit.exceeded finding (ADR-009 D19): input, the
+// subject of an input, breaches id, a limit of s. loc is where, in the
+// input. Its fields are Breached's.
+func (s Set) Exceeded(id ID, input finding.Subject, loc finding.Location, observed int64, hasObserved bool) finding.Finding {
+	return finding.New(finding.CodeLimitExceeded, input, &loc, s.breach(id, observed, hasObserved))
+}
+
+// breach is the parameters of a limit finding about id.
+func (s Set) breach(id ID, observed int64, hasObserved bool) finding.Params {
 	s.check(id)
 	p := finding.Params{
 		"limit":   finding.String(table[id].Name),
@@ -353,5 +365,5 @@ func (s Set) Breached(id ID, loc finding.Location, observed int64, hasObserved b
 	if hasObserved && observed <= maxEchoed {
 		p["observed"] = finding.Int(observed)
 	}
-	return finding.New(finding.CodeLimitPackage, finding.Subject{Kind: finding.SubjectPackage}, &loc, p)
+	return p
 }

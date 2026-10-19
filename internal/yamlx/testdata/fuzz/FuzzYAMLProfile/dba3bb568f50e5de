@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("on: 1\n012: 2\ntrue: 3\n")

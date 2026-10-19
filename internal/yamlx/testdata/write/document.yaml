@@ -1,0 +1,34 @@
+"": empty
+"<<": merge
+authors:
+  - email: "ada@example.org"
+    name: Ada Lovelace
+  - name: "Grace \"Amazing\" Hopper"
+description: Renders a status page from a list of checks.
+guide: "# Guide\n\nSupply `checks`.\n"
+inputs:
+  - empty: {}
+    limits:
+      - 1
+      - 2.5
+      - 0
+      - 1e+21
+      - 1e-7
+      - 123456789
+    name: checks
+    nested:
+      - - a
+        - - b
+      - a: 2
+        z: 1
+        "é": 3
+        "🙂": 4
+        "｡": 5
+    none: []
+    nothing: null
+    required: true
+name: status-widget
+outputs: []
+title: Status widget
+version: "1.2.0"
+"yes": "on"

@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("%TAG ! tag:x,2000:\n---\na: !y 1\n")

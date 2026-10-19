@@ -91,6 +91,7 @@ it, and the statements it reports.
 | `manifest.minimum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
 | `manifest.multiple_of` | error | content | manifest | `divisor`; optional: `value` | 1.0 | — |
 | `manifest.not` | error | content | manifest | — | 1.0 | — |
+| `manifest.number_out_of_range` | error | content | manifest | `reason` | 1.0 | — |
 | `manifest.one_of` | error | content | manifest | `branch_count` | 1.0 | — |
 | `manifest.one_of.ambiguous` | error | content | manifest | `branches` | 1.0 | — |
 | `manifest.pattern` | error | content | manifest | `pattern` | 1.0 | — |
@@ -100,6 +101,21 @@ it, and the statements it reports.
 | `manifest.unevaluated_item` | error | content | manifest | `index` | 1.0 | — |
 | `manifest.unevaluated_property` | error | content | manifest | `property`; optional: `suggestion` | 1.0 | — |
 | `manifest.unique_items` | error | content | manifest | `index`, `duplicate_of` | 1.0 | — |
+| `manifest.yaml.alias` | error | content | manifest | — | 1.0 | — |
+| `manifest.yaml.anchor` | error | content | manifest | — | 1.0 | — |
+| `manifest.yaml.bom` | error | content | manifest | — | 1.0 | — |
+| `manifest.yaml.character` | error | content | manifest | `codepoint`, `reason` | 1.0 | — |
+| `manifest.yaml.directive` | error | content | manifest | — | 1.0 | — |
+| `manifest.yaml.duplicate_key` | error | content | manifest | — | 1.0 | — |
+| `manifest.yaml.encoding` | error | content | manifest | `reason`, `offset` | 1.0 | — |
+| `manifest.yaml.key_empty` | error | content | manifest | — | 1.0 | — |
+| `manifest.yaml.key_not_scalar` | error | content | manifest | — | 1.0 | — |
+| `manifest.yaml.merge_key` | error | content | manifest | — | 1.0 | — |
+| `manifest.yaml.multi_document` | error | content | manifest | — | 1.0 | — |
+| `manifest.yaml.root_not_mapping` | error | content | manifest | — | 1.0 | — |
+| `manifest.yaml.scalar_refused` | error | content | manifest | `form` | 1.0 | — |
+| `manifest.yaml.syntax` | error | content | manifest | — | 1.0 | — |
+| `manifest.yaml.tag` | error | content | manifest | — | 1.0 | — |
 | `output.additional_item` | error | content | output | `index`, `prefix_count` | 1.0 | — |
 | `output.additional_property` | error | content | output | `property`; optional: `suggestion` | 1.0 | — |
 | `output.any_of` | error | content | output | `branch_count` | 1.0 | — |
@@ -167,4 +183,17 @@ it, and the statements it reports.
 | `usage.unknown_command` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.unknown_flag` | error | usage | invocation | `argument`, `reason`; optional: `flag`, `command` | 1.0 | — |
 | `usage.unknown_topic` | error | usage | invocation | `argument` | 1.0 | — |
+| `yaml.alias` | error | content | input | — | 1.0 | — |
+| `yaml.anchor` | error | content | input | — | 1.0 | — |
+| `yaml.bom` | error | content | input | — | 1.0 | — |
+| `yaml.character` | error | content | input | `codepoint`, `reason` | 1.0 | — |
+| `yaml.directive` | error | content | input | — | 1.0 | — |
+| `yaml.duplicate_key` | error | content | input | — | 1.0 | — |
+| `yaml.key_empty` | error | content | input | — | 1.0 | — |
+| `yaml.key_not_scalar` | error | content | input | — | 1.0 | — |
+| `yaml.merge_key` | error | content | input | — | 1.0 | — |
+| `yaml.multi_document` | error | content | input | — | 1.0 | — |
+| `yaml.scalar_refused` | error | content | input | `form` | 1.0 | — |
+| `yaml.syntax` | error | content | input | — | 1.0 | — |
+| `yaml.tag` | error | content | input | — | 1.0 | — |
 <!-- The end of the generated code catalog. -->
