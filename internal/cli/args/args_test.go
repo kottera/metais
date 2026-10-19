@@ -115,6 +115,31 @@ func TestParse(t *testing.T) {
 	}
 }
 
+// TestRequiredFlag is a flag declared Required: its absence is refused as
+// a missing operand that names it as the usage line writes it, after the
+// operands, and only when nothing else on the line is refused.
+func TestRequiredFlag(t *testing.T) {
+	spec := Spec{
+		Flags:    []Flag{{Name: "json"}, {Name: "to", Value: "<dir>", Required: true}},
+		Operands: []Operand{{Name: "<package>", Required: true}},
+	}
+	for _, c := range []struct {
+		name string
+		args []string
+		errs []Error
+	}{
+		{"given", []string{"pkg", "--to", "dir"}, nil},
+		{"given with =", []string{"--to=dir", "pkg"}, nil},
+		{"absent", []string{"pkg", "--json"}, []Error{{Kind: MissingOperand, Arg: 2, Operand: "--to <dir>"}}},
+		{"absent beside a missing operand", nil, []Error{{Kind: MissingOperand, Arg: 0, Operand: "<package>"}, {Kind: MissingOperand, Arg: 0, Operand: "--to <dir>"}}},
+		{"absent beside an unknown flag", []string{"pkg", "--bogus"}, []Error{{Kind: UnknownFlag, Arg: 1}}},
+	} {
+		if _, errs := Parse(spec, c.args); !slices.Equal(errs, c.errs) {
+			t.Errorf("%s: Parse(%q) refused %+v, want %+v", c.name, c.args, errs, c.errs)
+		}
+	}
+}
+
 func TestParsedAccessors(t *testing.T) {
 	p, errs := Parse(testSpec, []string{"pkg", "--set", "/a=1", "--json", "--set=/b=2"})
 	if errs != nil {

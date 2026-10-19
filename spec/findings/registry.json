@@ -6170,6 +6170,25 @@
       "statements": []
     },
     {
+      "code": "usage.not_a_packed_package",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the refused argument among the arguments after metais.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} names a source directory; metais unpack reads a packed package.",
+      "hint": "Give a packed package file. A source directory is already the editable tree unpack writes; nothing was written.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "usage.package_from_stdin",
       "severity": "error",
       "class": "usage",

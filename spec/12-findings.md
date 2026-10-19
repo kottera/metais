@@ -291,6 +291,7 @@ it, and the statements it reports.
 | `usage.missing_operand` | error | usage | invocation | `command`, `operand` | 1.0 | — |
 | `usage.name_invalid` | error | usage | invocation | `argument`, `source`; optional: `suggestion` | 1.0 | — |
 | `usage.name_required` | error | usage | invocation | — | 1.0 | — |
+| `usage.not_a_packed_package` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.package_from_stdin` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.repeated_flag` | error | usage | invocation | `argument`, `flag` | 1.0 | — |
 | `usage.unexpected_operand` | error | usage | invocation | `argument`, `command` | 1.0 | — |

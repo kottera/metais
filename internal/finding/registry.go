@@ -54,6 +54,7 @@ const (
 	CodeUsagePackageFromStdin  Code = "usage.package_from_stdin"
 	CodeUsageNameInvalid       Code = "usage.name_invalid"
 	CodeUsageNameRequired      Code = "usage.name_required"
+	CodeUsageNotPackedPackage  Code = "usage.not_a_packed_package"
 	CodeUsageRepeatedFlag      Code = "usage.repeated_flag"
 	CodeUsageUnexpectedOperand Code = "usage.unexpected_operand"
 	CodeUsageUnknownCommand    Code = "usage.unknown_command"
@@ -2455,6 +2456,20 @@ var registry = withSchemaEntries([]Entry{
 		Subject:    SubjectInvocation,
 		Message:    "metais init needs --name when the directory is omitted or its last element is . or ..; the name is never taken from the working directory.",
 		Hint:       "Give the package's name with --name, such as `metais init --name acme-report`.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageNotPackedPackage,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the refused argument among the arguments after metais.", Always: true},
+		},
+		Message:    "Argument {argument} names a source directory; metais unpack reads a packed package.",
+		Hint:       "Give a packed package file. A source directory is already the editable tree unpack writes; nothing was written.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},

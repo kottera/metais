@@ -212,6 +212,7 @@ func declarations() []*Command {
 			run: runInit,
 		},
 		checkDeclaration(),
+		unpackDeclaration(),
 		{
 			Name: "version", Group: "The tool", Synopsis: "version [--json]",
 			Description: "Print the tool's version and the specification versions it implements.",

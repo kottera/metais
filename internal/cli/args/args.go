@@ -35,6 +35,11 @@ type Flag struct {
 	Default string
 	// Repeatable is set for a flag that may be given more than once.
 	Repeatable bool
+	// Required is set for a flag that must be given, such as unpack's
+	// --to. Its absence is a MissingOperand that names the flag as the
+	// usage line writes it, --name <value> (ADR-008 D13: a missing
+	// operand or required flag).
+	Required bool
 	// Description is the flag's one-sentence help.
 	Description string
 }
@@ -80,7 +85,8 @@ const (
 	RepeatedFlag
 	// ExtraOperand is an operand beyond those the spec declares.
 	ExtraOperand
-	// MissingOperand is a required operand not given.
+	// MissingOperand is a required operand, or a required flag, not
+	// given.
 	MissingOperand
 )
 
@@ -109,7 +115,8 @@ type Error struct {
 	// Flag is the long name of the declared flag the argument names or
 	// abbreviates, or "" when it names none.
 	Flag string
-	// Operand is the name of the operand missing, for MissingOperand.
+	// Operand is the name of the operand missing, for MissingOperand; a
+	// required flag's is its usage, such as --to <dir>.
 	Operand string
 }
 
@@ -253,6 +260,11 @@ func Parse(spec Spec, args []string) (Parsed, []Error) {
 	for j := len(p.Operands); j < n; j++ {
 		if spec.Operands[j].Required {
 			errs = append(errs, Error{Kind: MissingOperand, Arg: len(args), Operand: spec.Operands[j].Name})
+		}
+	}
+	for _, f := range spec.Flags {
+		if f.Required && !p.Has(f.Name) {
+			errs = append(errs, Error{Kind: MissingOperand, Arg: len(args), Operand: "--" + f.Name + " " + f.Value})
 		}
 	}
 	return p, errs
