@@ -34,7 +34,9 @@ const (
 //
 // A Writer creates every file and directory exclusively and removes only
 // what it created (ADR-005 D14 item 5): there is no method that removes a
-// name the caller chooses.
+// name the caller chooses. It holds each entry it created open, its pin,
+// until the entry is removed or committed or the Writer is closed, so a
+// render holds one handle per entry it has created and not committed.
 type Writer struct {
 	root *os.Root
 	rec  *record
@@ -58,11 +60,39 @@ type record struct {
 }
 
 // made is one file or directory a render created.
+//
+// Its pin is what proves a name still holds it. A device and inode number
+// are not an identity on their own: once a file is deleted, a file system
+// may give its number to the next file created (ext4 does), and the
+// render's entry and a newcomer at its name would compare the same. An
+// entry held open is never freed, so while the pin is held no other entry
+// can have its number, and the pin's own Stat says what that number is.
 type made struct {
 	w    *Writer // the Writer that created it
 	name string  // its name relative to w
 	dir  bool
-	info fs.FileInfo // what Lstat said just after it was created
+	info fs.FileInfo // the pin's Stat just after the entry was created
+	pin  *os.File    // nil once released
+}
+
+// owns reports whether now, what Lstat says the name holds, is the entry
+// m created.
+func (m *made) owns(now fs.FileInfo) bool {
+	if m.pin == nil {
+		// Released for a rename on windows, whose file ids are never
+		// given to another file (pinsBlockRename).
+		return os.SameFile(m.info, now)
+	}
+	held, err := m.pin.Stat()
+	return err == nil && os.SameFile(held, now)
+}
+
+// release closes m's pin.
+func (m *made) release() {
+	if m.pin != nil {
+		m.pin.Close()
+		m.pin = nil
+	}
 }
 
 // OpenWriter opens the existing directory at path, the caller's own name
@@ -120,9 +150,14 @@ func OpenNearest(path string) (*Writer, string, error) {
 	return w, name, nil
 }
 
-// Close releases the directory and every directory Sub opened beneath it.
-// It removes nothing: a failed render calls RemoveCreated first.
+// Close releases the directory, every directory Sub opened beneath it and
+// every pin. It removes nothing: a failed render calls RemoveCreated
+// first, and nothing is the render's to remove after Close.
 func (w *Writer) Close() error {
+	for i := range w.rec.made {
+		w.rec.made[i].release()
+	}
+	w.rec.made = nil
 	var errs []error
 	for _, r := range slices.Backward(w.rec.roots) {
 		errs = append(errs, r.Close())
@@ -190,11 +225,30 @@ func (w *Writer) mkdir(name, n string) error {
 	if err := w.root.Mkdir(n, dirMode); err != nil {
 		return mapErr("mkdir", err)
 	}
-	info, err := w.root.Lstat(n)
+	pin, err := w.root.OpenFile(n, os.O_RDONLY|openFlags, 0)
 	if err != nil {
+		// The directory is this render's own, just made and empty. No
+		// handle holds it, so this one removal is made by name alone,
+		// and a directory is removed only when it is empty.
+		w.root.Remove(n)
 		return mapErr("mkdir", err)
 	}
-	w.rec.made = append(w.rec.made, made{w: w, name: name, dir: true, info: info})
+	info, err := pin.Stat()
+	var now fs.FileInfo
+	if err == nil {
+		now, err = w.root.Lstat(n)
+	}
+	if err != nil {
+		pin.Close()
+		return mapErr("mkdir", err)
+	}
+	if !os.SameFile(info, now) {
+		// The name was replaced before it was opened: what was opened
+		// is not the render's, and nothing is removed.
+		pin.Close()
+		return fail("mkdir", Changed)
+	}
+	w.rec.made = append(w.rec.made, made{w: w, name: name, dir: true, info: info, pin: pin})
 	return nil
 }
 
@@ -259,16 +313,52 @@ func (w *Writer) Create(name string, executable bool, r io.Reader) error {
 	if err == nil {
 		_, err = io.Copy(f, r)
 	}
-	if cerr := f.Close(); err == nil {
-		err = cerr
+	var pin *os.File
+	if err == nil {
+		pin, err = w.pin(n, info)
 	}
 	if err != nil {
-		// The file is this render's own, just made.
-		w.root.Remove(n)
+		w.removeHeld(n, info)
+		f.Close()
 		return mapErr("create", err)
 	}
-	w.rec.made = append(w.rec.made, made{w: w, name: name, info: info})
+	if err := f.Close(); err != nil {
+		w.removeHeld(n, info)
+		pin.Close()
+		return mapErr("create", err)
+	}
+	w.rec.made = append(w.rec.made, made{w: w, name: name, info: info, pin: pin})
 	return nil
+}
+
+// removeHeld removes n, a file Create made that a handle still holds, if
+// n still holds it: info is that handle's Stat, nil when there is none.
+func (w *Writer) removeHeld(n string, info fs.FileInfo) {
+	if info == nil {
+		return
+	}
+	if now, err := w.root.Lstat(n); err == nil && os.SameFile(info, now) {
+		w.root.Remove(n)
+	}
+}
+
+// pin opens n, which while the handle that created it is still open holds
+// the entry info describes, for reading as its pin. A name replaced in the
+// meantime is refused with Changed: what it holds is not the render's.
+func (w *Writer) pin(n string, info fs.FileInfo) (*os.File, error) {
+	pin, err := w.root.OpenFile(n, os.O_RDONLY|openFlags, 0)
+	if err != nil {
+		return nil, err
+	}
+	held, err := pin.Stat()
+	if err == nil && !os.SameFile(info, held) {
+		err = fail("create", Changed)
+	}
+	if err != nil {
+		pin.Close()
+		return nil, err
+	}
+	return pin, nil
 }
 
 // Sub opens the directory name beneath w as a Writer of its own, sharing
@@ -370,6 +460,9 @@ func (w *Writer) rename(from, to string, replace bool) error {
 			return mapErr("rename", err)
 		}
 	}
+	if pinsBlockRename && info.IsDir() {
+		w.rec.release(w, from, false)
+	}
 	if w.beforeRename != nil {
 		w.beforeRename(from, to)
 	}
@@ -381,7 +474,7 @@ func (w *Writer) rename(from, to string, replace bool) error {
 	if err != nil {
 		return err
 	}
-	w.rec.renamed(w, from)
+	w.rec.release(w, from, true)
 	return nil
 }
 
@@ -417,36 +510,49 @@ func (w *Writer) renameNoReplace(dir, from, to string) error {
 // system does not support refusing an existing target.
 var errNoReplaceUnsupported = errors.New("no-replace rename unsupported")
 
-// renamed drops from, renamed by w, and everything recorded beneath it,
-// from the record: a committed staging directory is the output directory,
-// and a committed temporary file is its target, neither of which is the
-// render's to remove any longer.
-func (r *record) renamed(w *Writer, from string) {
+// release closes the pins of everything recorded beneath from, a name
+// relative to w. When renamed, from has been renamed by w: its own record
+// and every record beneath it are dropped too, because a committed staging
+// directory is the output directory, and a committed temporary file is
+// its target, neither of which is the render's to remove any longer.
+func (r *record) release(w *Writer, from string, renamed bool) {
 	moved := join(w.at, from)
-	r.made = slices.DeleteFunc(r.made, func(m made) bool {
+	kept := r.made[:0]
+	for _, m := range r.made {
 		p := join(m.w.at, m.name)
-		return p == moved || strings.HasPrefix(p, moved+"/")
-	})
+		if strings.HasPrefix(p, moved+"/") || renamed && p == moved {
+			m.release()
+			if renamed {
+				continue
+			}
+		}
+		kept = append(kept, m)
+	}
+	clear(r.made[len(kept):])
+	r.made = kept
 }
 
 // RemoveCreated removes what this render created and has not committed —
 // its staging directory, its temporary files, and the directories it
 // created that are empty — newest first, and nothing else (ADR-005 D14
 // items 1.5, 2.1 and 5). An entry whose name now holds something other
-// than what was created is left alone, and so is a created directory that
-// is not empty. It returns the first error other than those, after trying
-// every entry.
+// than the entry its pin holds is left alone, even one with the device and
+// inode number the render saw when it created the entry, and so is a
+// created directory that is not empty. Each pin is held until its entry's
+// removal is done. It returns the first error other than those, after
+// trying every entry.
 func (w *Writer) RemoveCreated() error {
 	var first error
-	for _, m := range slices.Backward(w.rec.made) {
+	for i := range slices.Backward(w.rec.made) {
+		m := &w.rec.made[i]
 		n, _ := osName(m.name)
 		now, err := m.w.root.Lstat(n)
-		if err != nil || !os.SameFile(m.info, now) {
-			continue
+		if err == nil && m.owns(now) {
+			if err := m.w.root.Remove(n); err != nil && first == nil && !(m.dir && notEmpty(err)) {
+				first = mapErr("remove", err)
+			}
 		}
-		if err := m.w.root.Remove(n); err != nil && first == nil && !(m.dir && notEmpty(err)) {
-			first = mapErr("remove", err)
-		}
+		m.release()
 	}
 	w.rec.made = nil
 	return first
