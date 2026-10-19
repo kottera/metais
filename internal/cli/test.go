@@ -134,11 +134,11 @@ func testRefusals() []Refusal {
 		out = append(out, r)
 	}
 	out = append(out,
-		Refusal{finding.CodeUsageUnknownExample, "An --example names no example of the package.", nextTestNames},
-		Refusal{finding.CodeUsageNotSourceDir, "--update is given with a packed package, which is not edited.", nextTestSource},
-		Refusal{finding.CodeUsageMissingFlag, "--dry-run is given without --update.", nextTestDryRun},
-		Refusal{finding.CodeDestinationNotDirectory, "An example's expected/, or a directory in it, is not a directory where --update writes.", nextTestWrite},
-		Refusal{finding.CodeDestinationWriteFailed, "--update's write into, or removal from, an example's expected/ failed; what it wrote and removed is listed.", nextTestWrite},
+		Refusal{Code: finding.CodeUsageUnknownExample, Cause: "An --example names no example of the package.", Next: nextTestNames},
+		Refusal{Code: finding.CodeUsageNotSourceDir, Cause: "--update is given with a packed package, which is not edited.", Next: nextTestSource},
+		Refusal{Code: finding.CodeUsageMissingFlag, Cause: "--dry-run is given without --update.", Next: nextTestDryRun},
+		Refusal{Code: finding.CodeDestinationNotDirectory, Cause: "An example's expected/, or a directory in it, is not a directory where --update writes.", Next: nextTestWrite},
+		Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "--update's write into, or removal from, an example's expected/ failed; what it wrote and removed is listed.", Next: nextTestWrite},
 	)
 	have := map[finding.Code]bool{}
 	for _, r := range out {
@@ -168,7 +168,7 @@ func testRefusals() []Refusal {
 			continue
 		}
 		have[e.Code] = true
-		out = append(out, Refusal{e.Code, cause, nextTestAgain})
+		out = append(out, Refusal{Code: e.Code, Cause: cause, Next: nextTestAgain})
 	}
 	return out
 }

@@ -44,10 +44,10 @@ func unpackDeclaration() *Command {
 		}
 	}
 	refusals = append(refusals,
-		Refusal{finding.CodeUsageNotPackedPackage, "The package operand is a source directory, which is already what unpack writes.", nextUnpackPacked},
-		Refusal{finding.CodeDestinationNotEmpty, "<dir> holds an entry other than the quiet ones.", nextUnpackEmpty},
-		Refusal{finding.CodeDestinationNotDirectory, "<dir>, or a directory above it, exists and is not a directory.", nextUnpackEmpty},
-		Refusal{finding.CodeDestinationWriteFailed, "A write failed: into a new directory nothing is left; into an existing one the files already written are listed and left in place.", nextUnpackAgain},
+		Refusal{Code: finding.CodeUsageNotPackedPackage, Cause: "The package operand is a source directory, which is already what unpack writes.", Next: nextUnpackPacked},
+		Refusal{Code: finding.CodeDestinationNotEmpty, Cause: "<dir> holds an entry other than the quiet ones.", Next: nextUnpackEmpty},
+		Refusal{Code: finding.CodeDestinationNotDirectory, Cause: "<dir>, or a directory above it, exists and is not a directory.", Next: nextUnpackEmpty},
+		Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A write failed: into a new directory nothing is left; into an existing one the files already written are listed and left in place.", Next: nextUnpackAgain},
 	)
 	return &Command{
 		Name: "unpack", Group: "Authoring",

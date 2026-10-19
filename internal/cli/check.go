@@ -69,7 +69,7 @@ func checkRefusals() []Refusal {
 	}
 	for _, code := range templates.ParseCodes() {
 		if !slices.ContainsFunc(out, func(r Refusal) bool { return r.Code == code }) {
-			out = append(out, Refusal{code, "A template does not parse (" + strings.ReplaceAll(strings.TrimPrefix(string(code), "template."), "_", " ") + "), an error.", nextCheckAgain})
+			out = append(out, Refusal{Code: code, Cause: "A template does not parse (" + strings.ReplaceAll(strings.TrimPrefix(string(code), "template."), "_", " ") + "), an error.", Next: nextCheckAgain})
 		}
 	}
 	what := map[string]string{
@@ -95,7 +95,7 @@ func checkRefusals() []Refusal {
 			subject = "A container's profile"
 		}
 		cause := subject + " (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + "), a " + e.Severity.String() + "."
-		out = append(out, Refusal{e.Code, cause, nextCheckAgain})
+		out = append(out, Refusal{Code: e.Code, Cause: cause, Next: nextCheckAgain})
 	}
 	return out
 }

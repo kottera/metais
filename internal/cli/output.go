@@ -229,20 +229,29 @@ func (s *session) refusals() []Refusal {
 	return toolRefusals
 }
 
-// nextSteps is the declared next step of each of fs's codes, each once,
+// nextSteps is the declared next step of each of fs's causes, each once,
 // in the order of fs.
 func (s *session) nextSteps(fs []finding.Finding) []Next {
 	var out []Next
 	for _, f := range fs {
-		i := slices.IndexFunc(s.refusals(), func(r Refusal) bool { return r.Code == f.Code() })
-		if i < 0 {
-			panic("cli: " + string(f.Code()) + " is not among the refusals declared")
-		}
-		if n := s.refusals()[i].Next; !slices.Contains(out, n) {
+		if n := declaredCause(s.refusals(), f).Next; !slices.Contains(out, n) {
 			out = append(out, n)
 		}
 	}
 	return out
+}
+
+// declaredCause is the refusal of rs that f is a finding of: the row of
+// its code whose match f satisfies, or else the row of its code with no
+// match (ADR-008 D14 item 4).
+func declaredCause(rs []Refusal, f finding.Finding) Refusal {
+	if i := slices.IndexFunc(rs, func(r Refusal) bool { return r.Code == f.Code() && r.match != nil && r.match(f) }); i >= 0 {
+		return rs[i]
+	}
+	if i := slices.IndexFunc(rs, func(r Refusal) bool { return r.Code == f.Code() && r.match == nil }); i >= 0 {
+		return rs[i]
+	}
+	panic("cli: " + string(f.Code()) + " is not among the refusals declared")
 }
 
 // internalError reports a defect met in phase (ADR-006 D12 item 4): one

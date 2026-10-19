@@ -85,10 +85,10 @@ func inspectDeclaration() *Command {
 // those only check reports.
 func packageRefusals(name string) []Refusal {
 	out := []Refusal{
-		{finding.CodeUsageMissingOperand, "The package operand is not given.", nextCommandHelp(name)},
-		{finding.CodeUsagePackageFromStdin, "The package operand is -, standard input.", nextCommandHelp(name)},
-		{finding.CodeLimitInvalid, "A --limit names no limit, gives a malformed value, or tries to raise one.", nextLimits},
-		{finding.CodeLimitPackage, "The package breaches one of its limits.", nextLimits},
+		{Code: finding.CodeUsageMissingOperand, Cause: "The package operand is not given.", Next: nextCommandHelp(name)},
+		{Code: finding.CodeUsagePackageFromStdin, Cause: "The package operand is -, standard input.", Next: nextCommandHelp(name)},
+		{Code: finding.CodeLimitInvalid, Cause: "A --limit names no limit, gives a malformed value, or tries to raise one.", Next: nextLimits},
+		{Code: finding.CodeLimitPackage, Cause: "The package breaches one of its limits.", Next: nextLimits},
 	}
 	checkOnly := author.CheckCodes()
 	for _, e := range finding.Registry() {
@@ -106,7 +106,7 @@ func packageRefusals(name string) []Refusal {
 			"template": "An output's path, when or for_each does not parse",
 		}[family]
 		cause := what + " (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ")."
-		out = append(out, Refusal{e.Code, cause, nextInspectAgain})
+		out = append(out, Refusal{Code: e.Code, Cause: cause, Next: nextInspectAgain})
 	}
 	return out
 }

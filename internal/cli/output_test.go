@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"slices"
@@ -18,6 +19,7 @@ import (
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostenv"
 	"github.com/kottera/metais/internal/limits"
+	"github.com/kottera/metais/internal/testenv"
 	"github.com/kottera/metais/internal/version"
 )
 
@@ -438,5 +440,80 @@ func TestHTMLNotEscaped(t *testing.T) {
 	r := runTool(t, "help", "--json")
 	if strings.Contains(r.stdout, `\u003c`) || !strings.Contains(r.stdout, "<command>") {
 		t.Error("help --json escapes HTML")
+	}
+}
+
+// TestRefusalNextPerCause is W5-V1: when a command declares one refusal
+// code for more than one cause, a finding of that code names the next
+// step declared for its own cause, so help and the emitted next agree
+// (ADR-008 D14 item 4, D15 item 3). Each line triggers one declared
+// cause, named by its code and its cause; every cause of every code a
+// command declares more than once has a line here.
+func TestRefusalNextPerCause(t *testing.T) {
+	root := testenv.Dir(t)
+	pkg := samplePackage(t, root)
+	to := filepath.Join(root, "out")
+	const (
+		lineBadValue   = "A flag's value is missing, or is not one the flag accepts, or a flag that takes no value is given one."
+		renderBadValue = "--now is not an RFC 3339 date-time with an offset, or --seed or --items is not a whole number in range."
+		sampleBadValue = "--seed or --items is not a whole number in range, or --example is not a name an example can have."
+		renderSample   = "--data is given with --sample, whose generated data takes the data directory's place."
+		renderArchive  = "--overwrite is given with --out -, and an archive on standard output replaces nothing."
+	)
+	cases := []struct {
+		line  []string
+		code  finding.Code
+		cause string
+	}{
+		{[]string{"render", pkg, "--out", to, "--now"}, finding.CodeUsageBadValue, lineBadValue},
+		{[]string{"render", pkg, "--out", to, "--json=x"}, finding.CodeUsageBadValue, lineBadValue},
+		{[]string{"render", pkg, "--out", to, "--sample", "--optional", "some"}, finding.CodeUsageBadValue, lineBadValue},
+		{[]string{"render", pkg, "--out", to, "--now", "2026-10-19"}, finding.CodeUsageBadValue, renderBadValue},
+		{[]string{"render", pkg, "--out", to, "--sample", "--seed", "x"}, finding.CodeUsageBadValue, renderBadValue},
+		{[]string{"render", pkg, "--out", to, "--sample", "--items", "-1"}, finding.CodeUsageBadValue, renderBadValue},
+		{[]string{"render", pkg, "--sample", "--data", to, "--out", to}, finding.CodeUsageFlagExcluded, renderSample},
+		{[]string{"render", pkg, "--out", "-", "--overwrite"}, finding.CodeUsageFlagExcluded, renderArchive},
+		{[]string{"render", pkg, "--out", "-", "--overwrite", "--data", to}, finding.CodeUsageFlagExcluded, renderArchive},
+		{[]string{"sample", pkg, "--to", to, "--optional", "some"}, finding.CodeUsageBadValue, lineBadValue},
+		{[]string{"sample", pkg, "--to", ""}, finding.CodeUsageBadValue, lineBadValue},
+		{[]string{"sample", pkg, "--to", to, "--seed=+1"}, finding.CodeUsageBadValue, sampleBadValue},
+		{[]string{"sample", pkg, "--to", to, "--items", "-1"}, finding.CodeUsageBadValue, sampleBadValue},
+		{[]string{"sample", pkg, "--example", "Not-A-Name"}, finding.CodeUsageBadValue, sampleBadValue},
+	}
+	covered := map[string]bool{}
+	for _, tc := range cases {
+		c := lookup(table, tc.line[0])
+		i := slices.IndexFunc(c.Refusals, func(r Refusal) bool { return r.Code == tc.code && r.Cause == tc.cause })
+		if i < 0 {
+			t.Fatalf("metais %s declares no refusal %s for %q", c.Name, tc.code, tc.cause)
+		}
+		covered[c.Name+" "+string(tc.code)+" "+tc.cause] = true
+		r := runTool(t, slices.Insert(slices.Clone(tc.line), 1, "--json")...)
+		if !slices.Equal(r.codes(), []string{string(tc.code)}) {
+			t.Errorf("metais %q: codes %q; want %s", tc.line, r.codes(), tc.code)
+			continue
+		}
+		if want := []Next{c.Refusals[i].Next}; !reflect.DeepEqual(r.doc.Next, want) {
+			t.Errorf("metais %q: next %v; its cause declares %v", tc.line, r.doc.Next, want)
+		}
+	}
+	for _, c := range table {
+		for _, r := range c.Refusals {
+			n, unmatched := 0, 0
+			for _, o := range c.Refusals {
+				if o.Code == r.Code {
+					n++
+					if o.match == nil {
+						unmatched++
+					}
+				}
+			}
+			if unmatched > 1 {
+				t.Errorf("metais %s declares %s for %d causes with no match, and only one can take the code's other findings", c.Name, r.Code, unmatched)
+			}
+			if n > 1 && !covered[c.Name+" "+string(r.Code)+" "+r.Cause] {
+				t.Errorf("metais %s declares %s %d times, and no line here triggers its cause %q", c.Name, r.Code, n, r.Cause)
+			}
+		}
 	}
 }

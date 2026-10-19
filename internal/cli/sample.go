@@ -63,13 +63,14 @@ var (
 func sampleDeclaration() *Command {
 	refusals := packageRefusals("sample")
 	refusals = append(refusals,
-		Refusal{finding.CodeUsageBadValue, "--seed or --items is not a whole number in range, or --example is not a name an example can have.", nextCommandHelp("sample")},
-		Refusal{finding.CodeUsageConflictingFlags, "--inputs-json - is given twice, and standard input is read once.", nextInputsHelp},
-		Refusal{finding.CodeUsageFlagExcluded, "--to and --example are both given, or --overwrite is given with --example.", nextCommandHelp("sample")},
-		Refusal{finding.CodeUsageNotSourceDir, "--example is given with a packed package, whose examples are not edited.", nextSampleUnpack},
-		Refusal{finding.CodeDestinationNotEmpty, "--to names a directory that holds entries, and --overwrite is not given.", nextSampleOverwrite},
-		Refusal{finding.CodeDestinationNotDirectory, "--to, or a directory above it, exists and is not a directory.", nextSampleTo},
-		Refusal{finding.CodeDestinationWriteFailed, "A file sample writes is in the way (a link, a directory or a special file), the example already exists, or a write failed.", nextSampleTo},
+		Refusal{Code: finding.CodeUsageBadValue, Cause: "--seed or --items is not a whole number in range, or --example is not a name an example can have.", Next: nextCommandHelp("sample"),
+			match: valueRefused("--seed", "--items", "--example")},
+		Refusal{Code: finding.CodeUsageConflictingFlags, Cause: "--inputs-json - is given twice, and standard input is read once.", Next: nextInputsHelp},
+		Refusal{Code: finding.CodeUsageFlagExcluded, Cause: "--to and --example are both given, or --overwrite is given with --example.", Next: nextCommandHelp("sample")},
+		Refusal{Code: finding.CodeUsageNotSourceDir, Cause: "--example is given with a packed package, whose examples are not edited.", Next: nextSampleUnpack},
+		Refusal{Code: finding.CodeDestinationNotEmpty, Cause: "--to names a directory that holds entries, and --overwrite is not given.", Next: nextSampleOverwrite},
+		Refusal{Code: finding.CodeDestinationNotDirectory, Cause: "--to, or a directory above it, exists and is not a directory.", Next: nextSampleTo},
+		Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A file sample writes is in the way (a link, a directory or a special file), the example already exists, or a write failed.", Next: nextSampleTo},
 	)
 	return &Command{
 		Name: "sample", Group: "Authoring",
