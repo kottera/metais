@@ -113,12 +113,39 @@ func TestFilesRefuse(t *testing.T) {
 		{"a large integer", rows, `[{"n":1e17}]`},
 		{"a record that is not an object", rows, `[1]`},
 		{"an empty one-column record", Input{Name: "one", Schema: "inputs/one.json", Forms: []Form{FormCSV}}, `[{}]`},
+		{"a large integer in JSON", Input{Name: "d", Schema: "inputs/doc.json", Forms: []Form{FormJSON}}, `{"n":[11e17]}`},
 		{"a table with no column", Input{Name: "t", Schema: "inputs/text.json", Forms: []Form{FormCSV}}, `[]`},
 	} {
 		_, err := p.gen(Options{}).Files(tc.in, parse(t, tc.v))
 		var ue *UnwritableError
 		if !errors.As(err, &ue) {
 			t.Errorf("%s: %v", tc.name, err)
+		}
+	}
+}
+
+// TestSuppliedLargeInteger: a supplied integer beyond 2^53−1, which the
+// reader takes when it is spelled with an exponent, is written in YAML so
+// that it reads back, and refused in JSON, whose writer would spell it as
+// the integer literal the reader refuses.
+func TestSuppliedLargeInteger(t *testing.T) {
+	testenv.Home(t)
+	p := compile(t, map[string]string{"inputs/doc.json": `{"type":"object","properties":{"n":{"type":"integer"},"s":{"type":"string"}}}`})
+	for _, f := range []Form{FormYAML, FormJSON} {
+		in := Input{Name: "d", Schema: "inputs/doc.json", Forms: []Form{f}, Supplied: parse(t, `{"n":11e17}`)}
+		v, _, fs, err := p.gen(Options{}).Generate(in)
+		if err != nil || fs != nil || text(member(v, "n")) != "1100000000000000000" {
+			t.Fatalf("%s: %s %v%s", f, text(v), err, describe(fs))
+		}
+		written, err := p.gen(Options{}).Files(in, v)
+		var ue *UnwritableError
+		switch {
+		case f == FormJSON && !errors.As(err, &ue):
+			t.Errorf("json: %v", err)
+		case f == FormYAML && err != nil:
+			t.Errorf("yaml: %v", err)
+		case f == FormYAML && !value.Equal(readBack(t, p, in, written), v):
+			t.Errorf("yaml: %q does not read back", written)
 		}
 	}
 }

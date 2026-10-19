@@ -1377,7 +1377,10 @@ directory.
     breaks are normalized, and an integral number of magnitude above
     2^53−1, which the JSON writer and a CSV field write as an integer
     literal ADR-003 D8 item 5 refuses. The numeric range is held within
-    ±(2^53−1), and a range wholly outside it is `range`;
+    ±(2^53−1), and a range wholly outside it is `range`. A supplied value
+    is taken as given (item 2), so `Files` refuses one holding such a
+    number in JSON or CSV rather than write a file its reader refuses;
+    YAML spells it with an exponent, which reads back;
   - the generator's work is held to `input-size`, the limit the data it
     makes is held to (item 22): a schema asking for more is
     `limit.exceeded` about the input, before the work is done.
