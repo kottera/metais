@@ -117,12 +117,10 @@ func (o *opening) hasDir(dir, rel string) bool {
 // D4 item 1). Each finding is at the field's manifest pointer and line,
 // its column within the expression given as a parameter.
 //
-// The dialect is internal/liquid's standard catalog, Core(): METAIS's own
-// filters and tags join it with internal/template, and until then a name
-// only they define is refused as unknown.
+// The dialect is Dialect(), the one a package's templates are parsed in.
 func (o *opening) expressions(p *Package) []finding.Finding {
-	d := liquid.Core()
-	lim := liquid.ParseLimits{Nesting: int(o.lim.Value(limits.TemplateNesting)), Size: int(o.lim.Value(limits.TemplateSize))}
+	d := Dialect()
+	lim := ParseLimits(o.lim)
 	var out []finding.Finding
 	report := func(ptr string, e *liquid.Error) {
 		out = append(out, o.templateFinding(ptr, e))
