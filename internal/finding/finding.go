@@ -189,6 +189,18 @@ func (l Location) WithPath(p *Path) Location {
 	return l
 }
 
+// Path returns l's pointer as a Path: nil for the root, and for a location
+// with no pointer.
+func (l Location) Path() *Path {
+	switch {
+	case !l.HasPointer:
+		return nil
+	case l.path != nil:
+		return l.path
+	}
+	return parsePath(l.Pointer)
+}
+
 // pointer returns l's pointer in its JSON-string form.
 func (l Location) pointer() string {
 	if l.path != nil {
@@ -306,12 +318,28 @@ func (f Finding) Related() []Related {
 }
 
 // Location returns the finding's location, and false when it has none.
+// Its pointer is written out as Pointer, which costs the pointer's length.
 func (f Finding) Location() (Location, bool) {
 	if f.location == nil {
 		return Location{}, false
 	}
 	return f.location.written(), true
 }
+
+// At returns the finding's location as Location does, with its pointer
+// held as a Path, which Location.Path reads, and Pointer empty. It costs
+// nothing for the pointer's length, so a caller that remakes many
+// findings under one long pointer reads them by At.
+func (f Finding) At() (Location, bool) {
+	if f.location == nil {
+		return Location{}, false
+	}
+	return *f.location, true
+}
+
+// RelatedAt returns the finding's related locations as Related does, with
+// their pointers held as At holds them.
+func (f Finding) RelatedAt() []Related { return slices.Clone(f.related) }
 
 // Schema returns the schema keyword the finding reports, and false when it
 // has none.

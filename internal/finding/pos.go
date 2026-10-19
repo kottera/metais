@@ -64,7 +64,7 @@ func pointerTokens(ptr string) []string {
 // token, never the whole pointer. The nil *Path is the root, "".
 type Path struct {
 	parent *Path
-	token  string
+	token  Token
 	depth  int
 	id     [sha256.Size]byte // the SHA-256 of the parent's id and the token's digest
 }
@@ -92,7 +92,7 @@ func (p *Path) Child(token string) *Path { return p.ChildToken(NewToken(token)) 
 // ChildToken returns the path to the member or element t of the value at
 // p.
 func (p *Path) ChildToken(t Token) *Path {
-	c := &Path{parent: p, token: t.text, depth: p.Depth() + 1}
+	c := &Path{parent: p, token: t, depth: p.Depth() + 1}
 	h := sha256.New()
 	id := p.digest()
 	h.Write(id[:])
@@ -110,12 +110,43 @@ func (p *Path) Depth() int {
 }
 
 // String returns p in its JSON-string form, as Pointer does.
-func (p *Path) String() string {
+func (p *Path) String() string { return Pointer(p.Tokens()...) }
+
+// Tokens returns p's decoded tokens, the root's child first.
+func (p *Path) Tokens() []string {
 	tokens := make([]string, p.Depth())
 	for q := p; q != nil; q = q.parent {
-		tokens[q.depth-1] = q.token
+		tokens[q.depth-1] = q.token.text
 	}
-	return Pointer(tokens...)
+	return tokens
+}
+
+// Under returns the path of p's tokens after prefix's: p, for a document
+// placed at prefix. It costs p's depth, not its length.
+func (p *Path) Under(prefix *Path) *Path {
+	for _, n := range p.chain() {
+		prefix = prefix.ChildToken(n.token)
+	}
+	return prefix
+}
+
+// Below returns p without its first n tokens: p within the value at its
+// first n tokens. It costs p's depth, not its length.
+func (p *Path) Below(n int) *Path {
+	var q *Path
+	for _, c := range p.chain()[min(n, p.Depth()):] {
+		q = q.ChildToken(c.token)
+	}
+	return q
+}
+
+// ParsePath returns the path ptr names, and false when ptr is not an RFC
+// 6901 pointer in its JSON-string form.
+func ParsePath(ptr string) (*Path, bool) {
+	if !validPointer(ptr) {
+		return nil, false
+	}
+	return parsePath(validUTF8(ptr)), true
 }
 
 // digest identifies p's token sequence: two paths have the same digest
@@ -147,7 +178,7 @@ func comparePaths(a, b *Path) int {
 	ca, cb := a.chain(), b.chain()
 	for i := 0; i < len(ca) && i < len(cb); i++ {
 		if ca[i].id != cb[i].id {
-			return compareTokens(ca[i].token, cb[i].token)
+			return compareTokens(ca[i].token.text, cb[i].token.text)
 		}
 	}
 	return cmp.Compare(len(ca), len(cb))

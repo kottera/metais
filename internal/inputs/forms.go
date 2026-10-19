@@ -276,8 +276,8 @@ func (r *reader) csv(text []byte, loc finding.Location, prefix string, at []sche
 	for _, f := range fs {
 		switch f.Code() {
 		case codeCSVFieldCount, codeCSVBareQuote, codeCSVAfterQuote:
-			if l, ok := f.Location(); ok && l.HasPointer {
-				if row, ok := arrayIndex(firstToken(l.Pointer)); ok {
+			if l, ok := f.At(); ok && l.HasPointer {
+				if row, ok := arrayIndex(firstToken(l.Path())); ok {
 					rejected[row] = true
 					continue
 				}
@@ -433,11 +433,12 @@ func (r *reader) markdown(text []byte, loc finding.Location, prefix string) pars
 	return parsed{value: obj}
 }
 
-// firstToken is the first reference token of ptr, decoded.
-func firstToken(ptr string) string {
-	toks := pointerTokens(ptr)
-	if len(toks) == 0 {
+// firstToken is the first reference token of p, decoded, and "" for the
+// root. It is read from the path, which costs nothing for the pointer's
+// length.
+func firstToken(p *finding.Path) string {
+	if p.Depth() == 0 {
 		return ""
 	}
-	return toks[0]
+	return p.Tokens()[0]
 }
