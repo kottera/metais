@@ -32,6 +32,7 @@ import (
 	"github.com/kottera/metais/internal/inputs/csv"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/liquid/value"
+	"github.com/kottera/metais/internal/regexprofile"
 	"github.com/kottera/metais/internal/schema"
 )
 
@@ -167,6 +168,8 @@ type Generator struct {
 	// (spend), and over is the finding for its breach.
 	size int64
 	over []finding.Finding
+	// patterns are the patterns compiled so far, by their text.
+	patterns map[string]*regexprofile.Regexp
 }
 
 // New returns the generator over c, the package's compiled schemas, with

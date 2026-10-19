@@ -256,3 +256,13 @@ func TestSupplied(t *testing.T) {
 		t.Errorf("absent members were not generated: %s", text(v))
 	}
 }
+
+// TestSuppliedOpen is item 2 under a schema that declares no type: a
+// supplied object is filled around, not replaced.
+func TestSuppliedOpen(t *testing.T) {
+	p := compile(t, map[string]string{entry: `{"properties":{"a":{"type":"string"},"b":{"const":2}}}`})
+	v, _, fs, err := p.gen(Options{}).Generate(Input{Name: "data", Schema: entry, Forms: []Form{FormJSON}, Supplied: parse(t, `{"a":"given"}`)})
+	if err != nil || fs != nil || text(v) != `{"a":"given","b":2}` {
+		t.Errorf("%s %v%s", text(v), err, describe(fs))
+	}
+}

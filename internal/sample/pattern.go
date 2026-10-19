@@ -6,8 +6,6 @@ package sample
 import (
 	"regexp/syntax"
 	"strings"
-
-	"github.com/kottera/metais/internal/regexprofile"
 )
 
 // maxPatternAttempts is how many strings a pattern is walked for before
@@ -34,7 +32,7 @@ var preferred = [][2]rune{{'a', 'z'}, {'A', 'Z'}, {'0', '9'}, {' ', ' '}, {' ', 
 // whose repetitions are raised. ok is false for a pattern with a
 // construct the walk does not support, a word-boundary assertion.
 func (s *Generator) patternText(pattern string, st *SplitMix64, k int, minLength int64) (string, bool) {
-	re, err := regexprofile.Compile(pattern, s.lim, nil)
+	re, err := s.pattern(pattern)
 	if err != nil {
 		// The compiler accepted every pattern of the package.
 		return "", false

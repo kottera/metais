@@ -228,6 +228,7 @@ func (s *Generator) fromC(loc *place, c *conj) (value.Value, bool) {
 	case "null":
 		return value.Null{}, true
 	case "boolean":
+		// true when the value stream's first draw is even.
 		return value.Bool(s.stream(loc.ptr, loc.valuePurpose()).Next()%2 == 0), true
 	case "object":
 		return s.object(loc, c)
@@ -362,8 +363,10 @@ func (s *Generator) writable(loc *place, v value.Value) bool {
 
 // chooseType chooses the type of the value at loc (item 14): from C's
 // type set, or the type inferred when no schema of C declares one, the
-// first in the order written, except that the optional mode decides null.
-// A CSV field holds no null, array or object.
+// first in the order written, except that the optional mode decides null:
+// All never chooses it, None always does, and Mixed chooses it when the
+// type stream's first draw is odd. A CSV field holds no null, array or
+// object.
 func (s *Generator) chooseType(loc *place, c *conj) (string, bool) {
 	types, declared := c.types()
 	if !declared {
@@ -372,10 +375,9 @@ func (s *Generator) chooseType(loc *place, c *conj) (string, bool) {
 	if loc.cell {
 		types = slices.DeleteFunc(slices.Clone(types), func(t string) bool { return t == "null" || t == "array" || t == "object" })
 	}
-	if _, ok := loc.fixed.(value.Object); ok {
-		if slices.Contains(types, "object") {
-			return "object", true
-		}
+	if _, ok := loc.fixed.(value.Object); ok && (!declared || slices.Contains(types, "object")) {
+		// A supplied object is filled around (item 2).
+		return "object", true
 	}
 	if len(types) == 0 {
 		return "", false
@@ -500,11 +502,27 @@ func (s *Generator) propStarts(c *conj, name string) []node {
 // matches reports whether name holds a match of pattern, a pattern the
 // compiler has accepted.
 func (s *Generator) matches(pattern, name string) bool {
-	re, err := regexprofile.Compile(pattern, s.lim, nil)
+	re, err := s.pattern(pattern)
 	if err != nil {
 		return false
 	}
 	return re.MatchString(name)
+}
+
+// pattern is pattern compiled by the package profile, once.
+func (s *Generator) pattern(pattern string) (*regexprofile.Regexp, error) {
+	if re, ok := s.patterns[pattern]; ok {
+		return re, nil
+	}
+	re, err := regexprofile.Compile(pattern, s.lim, nil)
+	if err != nil {
+		return nil, err
+	}
+	if s.patterns == nil {
+		s.patterns = map[string]*regexprofile.Regexp{}
+	}
+	s.patterns[pattern] = re
+	return re, nil
 }
 
 // forbidden reports whether any schema of starts is false.
