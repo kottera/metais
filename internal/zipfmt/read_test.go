@@ -91,14 +91,33 @@ func zip64Locator() []byte {
 // of ADR-001 D8 steps 1 to 5 (W2-4.5): each case breaks the profile in one
 // place and expects exactly the findings of the step that sees it.
 func TestOpenRefuses(t *testing.T) {
+	for _, c := range refusals(t) {
+		lim := c.lim
+		a, found := open(t, c.zip, lim)
+		got := codes(found)
+		want := slices.Sorted(slices.Values(c.want))
+		if !slices.Equal(got, want) {
+			t.Errorf("%s: found %q, want %q", c.name, got, want)
+		}
+		if len(want) == 0 && a == nil {
+			t.Errorf("%s: refused", c.name)
+		}
+	}
+}
+
+// refusal is one hostile case: a zip, the limits it is opened under, and
+// the findings it gives.
+type refusal struct {
+	name string
+	zip  []byte
+	lim  limits.Set
+	want []string
+}
+
+func refusals(t testing.TB) []refusal {
 	def := limits.Defaults()
 	signature := []byte("PK\x05\x06")
-	cases := []struct {
-		name string
-		zip  []byte
-		lim  limits.Set
-		want []string
-	}{
+	return []refusal{
 		// Step 1.
 		{"empty file", nil, def, []string{"package.container.not_zip"}},
 		{"shorter than an end record", []byte("PK\x05\x06"), def, []string{"package.container.not_zip"}},
@@ -209,18 +228,6 @@ func TestOpenRefuses(t *testing.T) {
 		{"invalid stream", rawZip{entries: with(two(), 0, func(e *rawEntry) { e.data = []byte{0xff, 0xff, 0xff, 0xff} })}.bytes(), def, []string{"package.container.deflate_stream:invalid"}},
 		{"truncated stream", rawZip{entries: with(two(), 0, func(e *rawEntry) { e.data = deflated(e.content)[:10] })}.bytes(), def, []string{"package.container.deflate_stream:truncated"}},
 		{"bytes after the stream", rawZip{entries: with(two(), 0, func(e *rawEntry) { e.data = append(deflated(e.content), "hidden"...) })}.bytes(), def, []string{"package.container.deflate_stream:trailing_bytes"}},
-	}
-	for _, c := range cases {
-		lim := c.lim
-		a, found := open(t, c.zip, lim)
-		got := codes(found)
-		want := slices.Sorted(slices.Values(c.want))
-		if !slices.Equal(got, want) {
-			t.Errorf("%s: found %q, want %q", c.name, got, want)
-		}
-		if len(want) == 0 && a == nil {
-			t.Errorf("%s: refused", c.name)
-		}
 	}
 }
 
