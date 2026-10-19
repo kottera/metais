@@ -169,8 +169,8 @@ func TestSourceRefusesAManifestLink(t *testing.T) {
 func TestSourceLayoutRefusals(t *testing.T) {
 	root := dir(t)
 	files(t, root, map[string]string{
-		"templates/a.liquid":            "a",
-		".compiled/manifest.json":       "{}",
+		"templates/a.liquid":             "a",
+		".compiled/manifest.json":        "{}",
 		"examples/one/inputs/list/.keep": "",
 	})
 	for _, d := range []string{"assets/empty", "references", "examples/one/inputs/empty"} {
