@@ -397,6 +397,49 @@ func TestRemoveCreatedRemovesOnlyItsOwn(t *testing.T) {
 	}
 }
 
+// A file system that reuses inode numbers (ext4 does) gives a file created
+// right after a deletion the number the deleted file had, so a newcomer at
+// a name the render created can carry the very device and inode the render
+// recorded. The collision is constructed here, whatever the host's file
+// system does, by giving the render's records the newcomers' identities:
+// removal still leaves them, a file and a directory alike.
+func TestRemoveCreatedLeavesANewcomerWithTheRecordedIdentity(t *testing.T) {
+	root := dir(t)
+	w := openWriter(t, root)
+	create(t, w, "file", "MINE")
+	if err := w.Mkdir("dir"); err != nil {
+		t.Fatal(err)
+	}
+	// Someone else deletes the render's entries and makes their own.
+	for _, name := range []string{"file", "dir"} {
+		if err := os.Remove(filepath.Join(root, name)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	files(t, root, map[string]string{"file": "THEIRS"})
+	if err := os.Mkdir(filepath.Join(root, "dir"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for i, m := range w.rec.made {
+		info, err := os.Lstat(filepath.Join(root, filepath.FromSlash(m.name)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		w.rec.made[i].info = info
+	}
+
+	if err := w.RemoveCreated(); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"dir/", "file"}
+	if got := tree(t, root); !slices.Equal(got, want) {
+		t.Fatalf("after RemoveCreated: %q, want %q", got, want)
+	}
+	if got := readHost(t, filepath.Join(root, "file")); got != "THEIRS" {
+		t.Errorf("a newcomer with the recorded identity now holds %q", got)
+	}
+}
+
 func TestOpenNearest(t *testing.T) {
 	parent := dir(t)
 	files(t, parent, map[string]string{"f": ""})
