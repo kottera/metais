@@ -23,8 +23,8 @@
 #   touched <pkg> <why> a package the change touches directly
 #   test <pkg>          a package to test: touched, or importing one
 #   blind <pkg>         a package to test whose tests build or list the module
-#                       with the go command, so the test cache cannot see its
-#                       inputs; gate.sh runs it with -count=1
+#                       with the go command, so no import edge shows what
+#                       they read, and the test cache cannot see it
 #
 # A path reaches packages by these rules:
 #
@@ -35,11 +35,12 @@
 #     touches every package whose Go files name its top-level entry as a path
 #     literal ("spec/...", "../../spec", "NOTICE"), because those are the
 #     tests that read it as data.
-#   - Any path inside a package's directory, and go.mod or go.sum, also
-#     touches the blind packages: they build the binary or list the module,
-#     which no import edge records.
 #   - A package is tested when it, or any package in its test binary's
 #     closure (`go list -test`'s Deps), is touched.
+#   - Any path inside a package's directory, and go.mod or go.sum, also
+#     has the blind packages tested: their tests build the binary or list
+#     the module, which no import edge records. Their importers are not
+#     tested for it, since the blind package's own code did not change.
 #
 # Exit 0 with the facts on stdout, 2 when the change cannot be measured.
 
@@ -122,6 +123,7 @@ done <"$work/dirs"
 # Touched packages, with the path that touched each.
 : >"$work/touched"
 : >"$work/code"
+: >"$work/blindhit"
 while IFS= read -r p; do
 	best=""
 	bestdir=""
@@ -138,12 +140,13 @@ while IFS= read -r p; do
 	if [ -n "$best" ]; then
 		printf '%s\t%s\n' "$best" "$p" >>"$work/touched"
 		echo "code $p" >>"$work/code"
-		sed "s|\$|	$p (the module's code)|" "$work/blind" >>"$work/touched"
+		sed "s|\$|	$p (the module's code; its tests are blind to it)|" "$work/blind" >>"$work/blindhit"
 		continue
 	fi
 	case "$p" in
 	go.mod | go.sum)
 		echo "code $p" >>"$work/code"
+		sed "s|\$|	$p|" "$work/blind" >>"$work/blindhit"
 		cut -f1 "$work/dirs" | sed "s|\$|	$p|" >>"$work/touched"
 		continue
 		;;
@@ -158,7 +161,7 @@ while IFS= read -r p; do
 	done <"$work/dirs"
 done <"$work/changed"
 cat "$work/code"
-sort -u -t$'\t' -k1,1 "$work/touched" | sed 's/^/touched /; s/\t/ /'
+sort -u -t$'\t' -k1,1 "$work/touched" "$work/blindhit" | sed 's/^/touched /; s/\t/ /'
 cut -f1 "$work/touched" | sort -u >"$work/touched.set"
 
 # Tested packages: those with tests whose test closure meets a touched one.
@@ -176,7 +179,7 @@ go list -test -f '{{.ImportPath}} {{join .Deps " "}}' ./... |
 			}
 			if (hit) print pkg
 		}' "$work/touched.set" - |
-	sort -u >"$work/test" || exit 2
+	cat - "$work/blindhit" | cut -f1 | sort -u >"$work/test" || exit 2
 # A test binary's Deps name test variants as "pkg [x.test]"; the field split
 # above sees "pkg" and "[x.test]" as two words, which is what is wanted.
 

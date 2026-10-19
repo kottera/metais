@@ -42,7 +42,7 @@
 # GOMAXPROCS, and the packages whose parallel tests wait on child processes
 # (internal/conformance) need the slots. Measured, -parallel 3 took
 # internal/conformance from 252 s to its ten-minute timeout (ADR-010
-# Amendment A5 item 6).
+# Amendment A5 item 7).
 #
 # Exit 0 when every item passes, 1 when any fails, 2 when it cannot start.
 
@@ -290,42 +290,29 @@ tripwire() {
 	return $rc
 }
 
-# test_packages runs `go test -race` over the packages in $1 (one per line)
+# test_packages runs `go test -race -count=1` over the packages listed in $1
 # and records one verdict per package from go test's own summary lines.
-# Packages whose tests run the go command (gate-select.sh's "blind" ones)
-# run with -count=1, because the test cache cannot see the binary or module
-# listing they build; the rest use the cache, in the scoped tier only.
+# Neither tier takes a verdict from Go's test cache: the cache cannot see the
+# binary or the module listing that the blind packages' tests build, and
+# --resume reuses what is still true, by gate-select.sh's rules.
 test_packages() {
-	local list=$1 blind=$2 count=$3 out rc=0 pkgs line st pkg
-	pkgs=$(grep -vxF -f "$blind" "$list")
-	if [ -n "$pkgs" ]; then
-		echo "--- go test -race $count -p $p -parallel $parallel ($(echo "$pkgs" | wc -l | tr -d ' ') package(s))"
-		# shellcheck disable=SC2086
-		go test -race $count -p "$p" -parallel "$parallel" $pkgs 2>&1 | tee "$state/$run.out" || rc=1
-		record_packages "$state/$run.out"
-	fi
-	pkgs=$(grep -xF -f "$blind" "$list")
-	if [ -n "$pkgs" ]; then
-		echo "--- go test -race -count=1 -p $p -parallel $parallel ($(echo "$pkgs" | wc -l | tr -d ' ') package(s) the test cache cannot see)"
-		# shellcheck disable=SC2086
-		go test -race -count=1 -p "$p" -parallel "$parallel" $pkgs 2>&1 | tee "$state/$run.out" || rc=1
-		record_packages "$state/$run.out"
-	fi
-	rm -f "$state/$run.out"
-	return $rc
-}
-
-record_packages() {
-	awk '/^ok  	/ {print "PASS\t" $2} /^FAIL	[^ ]/ {print "FAIL\t" $2} /^\?   	/ {print "PASS\t" $2}' "$1" |
+	local pkgs
+	pkgs=$(cat "$1")
+	echo "--- go test -race -count=1 -p $p -parallel $parallel ($(echo "$pkgs" | wc -l | tr -d ' ') package(s))"
+	# shellcheck disable=SC2086
+	go test -race -count=1 -p "$p" -parallel "$parallel" $pkgs 2>&1 | tee "$state/$run.out"
+	awk '/^ok  	/ {print "PASS\t" $2} /^FAIL	[^ ]/ {print "FAIL\t" $2} /^\?   	/ {print "PASS\t" $2}' "$state/$run.out" |
 		while IFS=$'\t' read -r st pkg; do
 			verdict "$st" "test $pkg"
 		done
+	rm -f "$state/$run.out"
 }
 
-# tests runs the tier's packages, reusing what --resume allows, and reports
-# the step's verdict from the packages' own.
+# tests runs the tier's packages, reusing what --resume allows. The step
+# passes only when every package it ran has a PASS of its own: a package
+# whose binary was killed before it reported has no verdict, and fails it.
 tests() {
-	local want=$1 blind=$2 count=$3 pkg todo="$state/$run.todo" rc=0 prior
+	local want=$1 pkg todo="$state/$run.todo" rc=0 prior st
 	: >"$todo"
 	while IFS= read -r pkg; do
 		[ -n "$pkg" ] || continue
@@ -336,33 +323,27 @@ tests() {
 			echo "$pkg" >>"$todo"
 		fi
 	done <"$want"
-	if [ -s "$todo" ]; then
-		test_packages "$todo" "$blind" "$count" || rc=1
-	fi
-	# A package that never reported (its binary was killed) has no verdict.
+	[ -s "$todo" ] && test_packages "$todo"
 	while IFS= read -r pkg; do
-		awk -F'\t' -v k="test $pkg" '$2 == k {f = 1} END {exit !f}' "$record" || {
-			echo "no verdict for $pkg"
-			rc=1
-		}
+		st=$(awk -F'\t' -v k="test $pkg" -v r="$run" '$2 == k && $4 == r {s = $1} END {print s}' "$record")
+		case "$st" in
+		PASS) ;;
+		FAIL) echo "FAIL: $pkg"; rc=1 ;;
+		*) echo "NO VERDICT: $pkg (it never reported)"; verdict FAIL "test $pkg"; rc=1 ;;
+		esac
 	done <"$todo"
 	rm -f "$todo"
 	return $rc
 }
 
 want="$state/$run.want"
-blind="$state/$run.blind"
 if [ "$tier" = wave ]; then
 	go list ./... >"$want" || exit 2
-	# The wave tier runs every package with -count=1: it certifies the tree
-	# from nothing, so no package needs to be told apart as blind.
-	: >"$blind"
-	count=-count=1
 	step build go build ./...
 	step vet go vet ./...
 	echo "=== STEP test"
 	start=$(date +%s)
-	if tests "$want" "$blind" "$count"; then
+	if tests "$want"; then
 		echo "=== PASS test ($(($(date +%s) - start))s)"
 	else
 		echo "=== FAIL test ($(($(date +%s) - start))s)"
@@ -390,8 +371,6 @@ else
 		echo github.com/kottera/metais/internal/finding
 		echo github.com/kottera/metais/internal/specdata
 	} | sort -u >"$want"
-	grep '^blind ' "$sel" | cut -d' ' -f2 >"$blind"
-	count=""
 	step build go build ./...
 	step vet go vet ./...
 	step gofmt gofmt_clean
@@ -400,7 +379,7 @@ else
 	step cross cross
 	echo "=== STEP test"
 	start=$(date +%s)
-	if tests "$want" "$blind" "$count"; then
+	if tests "$want"; then
 		echo "=== PASS test ($(($(date +%s) - start))s)"
 	else
 		echo "=== FAIL test ($(($(date +%s) - start))s)"
@@ -416,7 +395,15 @@ else
 	step specdata specdata_fresh
 fi
 
-rm -f "$want" "$blind" "$state/$run".diff.* "$state/$run".reach.*
+rm -f "$want" "$state/$run".diff.* "$state/$run".reach.*
+
+# A tree that changed while the run was live leaves verdicts that describe no
+# one tree. They stand for this run's report, but --resume never reuses them.
+if [ "$(snapshot)" != "$tree" ]; then
+	echo "WARNING: the working tree changed while this run was live; --resume will not reuse its verdicts"
+	awk -F'\t' -v OFS='\t' -v r="$run" '$4 == r {$3 = "moved-" $3} {print}' "$record" >"$record.tmp" &&
+		mv "$record.tmp" "$record"
+fi
 echo "=== SUMMARY"
 grep -E '^=== (PASS|FAIL|REUSED|COVERED) ' "$log" | grep -v '^=== REUSED test '
 echo "packages: $(grep -c '^PASS	test ' "$record") passed, $(grep -c '^FAIL	test ' "$record") failed ($(grep -c '^=== REUSED test ' "$log") reused)"
