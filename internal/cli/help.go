@@ -205,6 +205,8 @@ type family struct {
 	codes []finding.Code
 	gist  string
 	next  Next
+	// cause is the first code's own cause, which a family of one gives.
+	cause string
 }
 
 // pattern is the codes' longest common prefix of whole segments, followed
@@ -243,7 +245,7 @@ func families(rs []Refusal) []family {
 			return first == fam && f.gist == r.gist && f.next == r.Next
 		})
 		if i < 0 {
-			out = append(out, family{gist: r.gist, next: r.Next})
+			out = append(out, family{gist: r.gist, next: r.Next, cause: r.Cause})
 			i = len(out) - 1
 		}
 		out[i].codes = append(out[i].codes, r.Code)
@@ -519,8 +521,7 @@ func commandText(c *Command) []byte {
 		for i, f := range fs {
 			cause := f.gist
 			if len(f.codes) == 1 {
-				// A family of one code gives the code's own cause.
-				cause = c.Refusals[slices.IndexFunc(c.Refusals, func(r Refusal) bool { return r.Code == f.codes[0] && r.gist == f.gist })].Cause
+				cause = f.cause
 			}
 			b.item(names[i], width, cause)
 			b.join("Next: "+f.next.Run, width)
