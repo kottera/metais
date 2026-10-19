@@ -41,6 +41,11 @@ func CaselessKey(s string) string {
 	return norm.NFD.String(cases.Fold().String(norm.NFD.String(s)))
 }
 
+// Fold returns s under full Unicode case folding, statuses C and F, with
+// no normalization: the fold CommonMark matches link labels by (ADR-010
+// D9, A2).
+func Fold(s string) string { return cases.Fold().String(s) }
+
 // IsPathChar reports whether r is U+0020 or a code point of the general
 // categories L, M, N, P or S. Every category table holds only assigned code
 // points, so an unassigned code point or a noncharacter (Cn), a control

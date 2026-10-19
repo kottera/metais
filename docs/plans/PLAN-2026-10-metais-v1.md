@@ -625,7 +625,7 @@ wave's.
     CommonMark 0.31.2 on what decides a heading;
   - goldmark leaves the module.
 
-  ADR-010 Amendment A2, proposed, records the change to D3 and D9 item 2,
+  ADR-010 Amendment A3, proposed, records the change to D3 and D9 item 2,
   superseding R2-156's library choice. Ed ratifies it at the train's close,
   with A1.
 

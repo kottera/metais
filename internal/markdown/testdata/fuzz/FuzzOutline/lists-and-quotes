@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("- a\n  - # b\n\n    c\n> 1. d\n>    ===\n2) e\n")

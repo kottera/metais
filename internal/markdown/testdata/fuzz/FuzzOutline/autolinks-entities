@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("# <http://a.b> <a@b.c> &amp; &#35; &#x0; &notit; \\# \\\n")

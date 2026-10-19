@@ -1,0 +1,5 @@
+# Examples of CommonMark 0.31.2 that TestSpecHeadings does not compare:
+# "<example number> <reason>". Each reason says why the example decides
+# nothing about which lines are headings or what their text is.
+96 its first three lines, "---", "Foo", "---", are a frontmatter block by ADR-003 D13 item 2, which outline skips (ADR-008 D5): METAIS's rule, not CommonMark's, decides them
+-39 as a heading: "&#10;" is a reference to LF, which Outline keeps as the character it stands for; the expected HTML holds the same LF, which cannot be told from a line ending, so stripping its tags makes the LF a space
