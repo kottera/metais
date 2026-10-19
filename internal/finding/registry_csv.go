@@ -1,0 +1,96 @@
+// Copyright 2026 Kottera
+// SPDX-License-Identifier: Apache-2.0
+
+package finding
+
+// csvCodes are the csv family's registry entries, in code order.
+var csvCodes = []Entry{
+	{
+		Code:       "csv.after_quote",
+		Severity:   SeverityError,
+		Class:      ClassContent,
+		Subject:    SubjectInput,
+		Message:    "The input {input} has text after the closing quote of a CSV field.",
+		Hint:       "End a quoted field at its closing quote, followed by the delimiter or the end of the line, and write a quote inside it as two quotes; the rest of this record was not read. The input's schema was not checked; validate again after the fix, which may report more.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-SUP-008"},
+	},
+	{
+		Code:       "csv.bare_quote",
+		Severity:   SeverityError,
+		Class:      ClassContent,
+		Subject:    SubjectInput,
+		Message:    "The input {input} has a quote inside a CSV field that does not begin with one.",
+		Hint:       "Enclose the whole field in quotes and write each quote inside it as two quotes; the rest of this record was not read. The input's schema was not checked; validate again after the fix, which may report more.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-SUP-008"},
+	},
+	{
+		Code:     "csv.field_count",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectInput,
+		Params: []ParamSpec{
+			{Name: "expected", Type: TypeNumber, Meaning: "The number of fields in the file's header record.", Always: true},
+			{Name: "found", Type: TypeNumber, Meaning: "The number of fields in this record.", Always: true},
+		},
+		Message:    "A record of the input {input} has {found} fields where its CSV header has {expected}.",
+		Hint:       "Give every record one field per header name; leave a field empty, rather than out, when it has no value. The input's schema was not checked; validate again after the fix, which may report more.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-SUP-008"},
+	},
+	{
+		Code:     "csv.header_duplicate",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectInput,
+		Params: []ParamSpec{
+			{Name: "ordinal", Type: TypeNumber, Meaning: "The 1-based position of this field in the header record.", Always: true},
+			{Name: "first", Type: TypeNumber, Meaning: "The 1-based position in the header record of the field that first has the same name.", Always: true},
+		},
+		Message:    "Field {ordinal} of the CSV header of the input {input} repeats the name of field {first}.",
+		Hint:       "Give each column its own name; names are compared exactly, with no trimming or case folding. The input's schema was not checked; validate again after the fix, which may report more.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-SUP-008"},
+	},
+	{
+		Code:     "csv.header_empty",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectInput,
+		Params: []ParamSpec{
+			{Name: "ordinal", Type: TypeNumber, Meaning: "The 1-based position of the empty field in the header record.", Always: true},
+		},
+		Message:    "The CSV header of the input {input} has an empty name in field {ordinal}.",
+		Hint:       "Name every column in the first record of the file. The input's schema was not checked; validate again after the fix, which may report more.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-SUP-008"},
+	},
+	{
+		Code:       "csv.header_missing",
+		Severity:   SeverityError,
+		Class:      ClassContent,
+		Subject:    SubjectInput,
+		Message:    "The input {input} is a CSV file with no header record.",
+		Hint:       "Begin the file with a record naming each column, separated by the input's delimiter. The input's schema was not checked; validate again after the fix, which may report more.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-SUP-008"},
+	},
+	{
+		Code:       "csv.unterminated_quote",
+		Severity:   SeverityError,
+		Class:      ClassContent,
+		Subject:    SubjectInput,
+		Message:    "The input {input} has a quoted CSV field that is never closed.",
+		Hint:       "Close the field with a quote; the rest of the file was read as part of this field, so nothing after it was checked. The input's schema was not checked; validate again after the fix, which may report more.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-SUP-008"},
+	},
+}

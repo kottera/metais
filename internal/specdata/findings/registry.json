@@ -2267,9 +2267,9 @@
         {
           "name": "types",
           "type": "array",
+          "items": "string",
           "meaning": "The declared type set of the schema a file of the input holds (the input's, or a collection's item schema), each type's name in the order null, boolean, object, array, number, string, integer; empty when no type is declared.",
-          "always": true,
-          "items": "string"
+          "always": true
         }
       ],
       "message": "The input declares the form {form}, which its schema's declared type cannot take.",
@@ -5925,9 +5925,9 @@
         {
           "name": "steps",
           "type": "array",
+          "items": "string",
           "meaning": "The steps of check that did not run because their input could not be made, each by its name in chapter 13, in their order.",
-          "always": true,
-          "items": "string"
+          "always": true
         }
       ],
       "message": "Some steps of check did not run, because what they read could not be made: {steps}.",

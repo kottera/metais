@@ -1275,6 +1275,37 @@ changes the exit status and nothing in the report.
    released, so these codes leave a draft. The registry that 1.0 publishes
    lists only codes the 1.0 tool can emit.
 
+### A2 — The registry file is generated from the tool's table
+
+**Status:** Accepted on merge. It records Ed Funnekotter's ruling B4 of
+2026-10-19 (PLAN-2026-10-metais-v1 Wave 5b, W5b-3): adding a finding code
+edits one hand-written place, plus regeneration.
+**Amends:** D13 item 4 (the registry's one source), and how D3 item 3's
+file is produced.
+
+1. **The one hand-written form of the registry is the tool's table** in
+   `internal/finding`, one file per family (`registry_<family>.go`), with
+   the JSON Schema keyword codes expanded from one table per family.
+2. **`spec/findings/registry.json` is generated from that table** by
+   `go generate ./internal/finding`, and committed. It stays part of the
+   specification, as D3 item 3 says, with the form and schema D3 item 3
+   gives it: what it states is unchanged, and only how it is produced
+   changes. A second implementation reads the file, never the table.
+3. **The test D13 item 4 names now pins the file to the table byte for
+   byte.** A drift test regenerates the file and fails on any difference
+   from the committed file or from the copy the binary embeds, so a hand
+   edit of the file fails, as a hand edit of the catalog does. The
+   member-for-member test of the table against the file stays.
+4. **ADR-011 D3 item 9 stands as written.** The catalog in
+   `12-findings.md` is generated from `spec/findings/registry.json`, which
+   is the one source of the catalog. The chain is table, then registry
+   file, then catalog, and each step is regenerated and pinned by its own
+   drift test.
+5. **The tool and the specification still cannot disagree unseen.** A
+   change to the table that changes what a code means changes the
+   generated registry file in the same change. That is a change to the
+   specification, and it is reviewed as one.
+
 ## Implementation log
 
 - **2026-10-19, PLAN-2026-10-metais-v1 W2-11.** D6 and D7 item 4 landed as
