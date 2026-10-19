@@ -1,0 +1,35 @@
+[
+  {
+    "path": "a.txt",
+    "output": "a",
+    "item": null,
+    "source": "template",
+    "kind": "text",
+    "size": 6,
+    "digest": "sha256:10fbdce5d5e2ba7e0249a4a8921faede362fda69bae3c5bb8a59bb1b9407ad5e",
+    "executable": false,
+    "status": "create"
+  },
+  {
+    "path": "bin/tool.sh",
+    "output": "tool",
+    "item": null,
+    "source": "asset",
+    "kind": null,
+    "size": 20,
+    "digest": "sha256:bf664cf84f00f6ed76164c8457fdeaf8e4dee547226e9ffcf8274e2d2246fed9",
+    "executable": true,
+    "status": "create"
+  },
+  {
+    "path": "logo.svg",
+    "output": "logo",
+    "item": null,
+    "source": "asset",
+    "kind": null,
+    "size": 42,
+    "digest": "sha256:fb91f9a03c202c5f160eef644da6f2f704b19ac5c5f8b4c124e1b0b485ad57a0",
+    "executable": false,
+    "status": "create"
+  }
+]

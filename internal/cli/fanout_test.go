@@ -47,20 +47,22 @@ func TestNoDeclarationStops(t *testing.T) {
 		decls string
 		files []string
 		extra map[string]string // more files of the package
+		// stream renders to standard output rather than into a directory.
+		stream bool
 	}{
 		{"when", `  - id: w
     template: t.txt.liquid
     when: inputs.pages.size > 1
-`, []string{"t.txt"}, nil},
+`, []string{"t.txt"}, nil, false},
 		{"for_each", `  - id: f
     template: t.txt.liquid
     for_each: inputs.pages
     path: "p/{{ item }}.txt"
-`, []string{"p/a.txt", "p/b.txt", "p/c.txt"}, nil},
+`, []string{"p/a.txt", "p/b.txt", "p/c.txt"}, nil, false},
 		{"Liquid path", `  - id: l
     template: t.txt.liquid
     path: "{{ inputs.pages | join: '-' }}.txt"
-`, []string{"a-b-c.txt"}, nil},
+`, []string{"a-b-c.txt"}, nil, false},
 		{"container", `  - id: box
     path: box.epub
     container:
@@ -72,33 +74,36 @@ func TestNoDeclarationStops(t *testing.T) {
           container:
             entries:
               - template: t.txt.liquid
-`, []string{"box.epub"}, nil},
+`, []string{"box.epub"}, nil, false},
 		{"a file asset", `  - id: logo
     asset: logo.svg
-`, []string{"logo.svg"}, map[string]string{"assets/logo.svg": "<svg/>"}},
+`, []string{"logo.svg"}, map[string]string{"assets/logo.svg": "<svg/>"}, false},
 		{"a directory asset", `  - id: static
     asset: static
     path: .
-`, []string{"a.css", "js/b.js"}, map[string]string{"assets/static/a.css": "a", "assets/static/js/b.js": "b"}},
+`, []string{"a.css", "js/b.js"}, map[string]string{"assets/static/a.css": "a", "assets/static/js/b.js": "b"}, false},
 		{"a mirror", `  - id: site
     mirror: site
-`, []string{"site/index.html"}, map[string]string{"templates/site/index.html.liquid": "{{ output.path }}"}},
+`, []string{"site/index.html"}, map[string]string{"templates/site/index.html.liquid": "{{ output.path }}"}, false},
 		{"newline: crlf", `  - id: n
     template: t.txt.liquid
     path: n.txt
     newline: crlf
-`, []string{"n.txt"}, nil},
+`, []string{"n.txt"}, nil, false},
 		{"validate", `  - id: v
     template: t.txt.liquid
     path: "1"
     kind: json
     validate: references/number.json
-`, []string{"1"}, nil},
+`, []string{"1"}, nil, false},
 		{"escape: html", `  - id: h
     template: t.txt.liquid
     path: h.html
     escape: html
-`, []string{"h.html"}, nil},
+`, []string{"h.html"}, nil, false},
+		{"--out -", `  - id: s
+    template: t.txt.liquid
+`, []string{"t.txt"}, nil, true},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			pkg, data := declarationPackage(t, c.decls)
@@ -112,6 +117,9 @@ func TestNoDeclarationStops(t *testing.T) {
 				}
 			}
 			out := filepath.Join(filepath.Dir(pkg), "out")
+			if c.stream {
+				out = "-"
+			}
 			r := runTool(t, "render", pkg, "--data", data, "--out", out, "--json")
 			if r.status != 0 || slices.Contains(r.codes(), "internal.error") {
 				t.Fatalf("status %d, codes %q", r.status, r.codes())

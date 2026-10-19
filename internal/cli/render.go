@@ -8,6 +8,7 @@ import (
 	"cmp"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"io"
 	pathpkg "path"
 	"slices"
@@ -23,6 +24,7 @@ import (
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/pkgtree"
 	"github.com/kottera/metais/internal/schema"
+	"github.com/kottera/metais/internal/tarw"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/unitext"
 	"github.com/kottera/metais/internal/version"
@@ -43,14 +45,18 @@ var (
 		Why: "Shows the package's outputs; a template's defect is the package's, for its author to fix."}
 	nextRenderDest = Next{Run: "metais render <package> --out <dir>",
 		Why: "Renders into a directory that does not exist yet, which metais creates."}
+	nextRenderArchive = Next{Run: "metais render <package> --out - --only <path>",
+		Why: "Writes one file's bytes, which may go to a terminal; or redirect standard output to a file for the archive."}
+	nextRenderDryRun = Next{Run: "metais render <package> --out <dir> --dry-run",
+		Why: "Lists every file the render writes, by the path --only takes, and writes nothing."}
 )
 
 // renderDeclaration is metais render (ADR-008 D8).
 func renderDeclaration() *Command {
 	return &Command{
 		Name: "render", Group: "Supplying and rendering",
-		Synopsis:    "render <package> --out <dir> [supply flags] [--now <time>] [--json]",
-		Description: "Render the package's outputs from the inputs supplied, into a new directory.",
+		Synopsis:    "render <package> --out <dir|-> [supply flags] [--only <path>] [--dry-run] [--now <time>] [--json]",
+		Description: "Render the package's outputs from the inputs supplied, into a new directory or to standard output.",
 		Detail: "The package is opened and verified whole, and the inputs are supplied and validated, as " +
 			"metais inspect and metais validate do; an input that fails ends the render with every finding of " +
 			"the inputs. Then every output is planned, an asset or a mirror as each file it writes, its " +
@@ -67,6 +73,18 @@ func renderDeclaration() *Command {
 			"then renamed to it in one step that never replaces anything: the directory either does not " +
 			"exist or holds every output. Its missing parents are created. An --out that exists is refused " +
 			"before anything is written.\n\n" +
+			"--out - writes every file to standard output as one pax archive instead, in path order, each " +
+			"entry with mode 0644, or 0755 for an executable output, owner 0 and the time " +
+			"1980-01-01T00:00:00Z; with --json the document then goes to standard error, after the archive. " +
+			"Standard output carries the archive and nothing else, and nothing at all when the render is " +
+			"refused. An archive is not written to a terminal.\n\n" +
+			"--only <path> selects one file by the path --dry-run lists. The whole render still runs and is " +
+			"checked, so --only never makes a refused render succeed; it chooses what is written: with " +
+			"--out -, the file's bytes alone, which may go to a terminal, and with --out <dir>, that file " +
+			"alone.\n\n" +
+			"--dry-run renders everything and checks --out as a render would, writes nothing anywhere, and " +
+			"lists every file the render would write with its size and digest. It is refused exactly when " +
+			"the render would be.\n\n" +
 			"A template sees the inputs as inputs, the package's identity as package, where each input " +
 			"came from as sources, the output being rendered as output, and the render time as now, which " +
 			"is --now normalized to UTC, or nil without it. Nothing of the host — no environment variable, " +
@@ -77,16 +95,22 @@ func renderDeclaration() *Command {
 		Role:     finding.RoleConsumer,
 		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file, or a source directory; - is refused, since a package is read with random access."}},
 		Flags: []args.Flag{
-			{Name: "out", Value: "<dir>", Description: "The directory to render into, which must not exist; required."},
+			{Name: "out", Value: "<dir|->", Description: "The directory to render into, which must not exist, or - for an archive on standard output; required."},
 			dataFlag, setFlag, setJSONFlag, inputsJSONFlag,
+			{Name: "only", Value: "<path>", Description: "Write only the file at this path, as --dry-run lists it: its bytes alone with --out -."},
+			{Name: "dry-run", Description: "List every file the render would write, with its size and digest, and write nothing."},
 			{Name: "now", Value: "<date-time>", Description: "The render time, an RFC 3339 date-time with an offset, which templates see as now; without it there is no time."},
 			limitFlag, failOnFlag,
 		},
 		Format: "metais.render/1",
-		Prints: "One line per file written, in path order: its size, its digest and its path, separated by tabs; a container's entries are indented beneath it, in its order.",
+		Prints: "One line per file written, in path order: its size, its digest and its path, separated by tabs; " +
+			"a container's entries are indented beneath it, in its order. On a dry run the lines are headed would write. " +
+			"With --out -, standard output is the archive, or the one file's bytes.",
 		Refusals: append(packageRefusals("render"),
 			Refusal{finding.CodeUsageMissingFlag, "--out is not given.", nextRenderOut},
 			Refusal{finding.CodeUsageBadValue, "--now is not an RFC 3339 date-time with an offset.", nextRenderNow},
+			Refusal{finding.CodeUsageArchiveToTerminal, "--out - is given without --only, and standard output is a terminal.", nextRenderArchive},
+			Refusal{finding.CodeUsageUnknownOutput, "--only names no file the render writes.", nextRenderDryRun},
 			Refusal{finding.CodeUsageDataDirUnreadable, "The data directory given to --data does not exist, is not a directory, or cannot be read.", nextRenderData},
 			Refusal{finding.CodeUsageConflictingFlags, "--inputs-json - is given twice, and standard input is read once.", nextInputsHelp},
 			Refusal{finding.CodeDestinationNotDirectory, "--out, or a directory above it, exists and is not a directory.", nextRenderDest},
@@ -99,6 +123,8 @@ func renderDeclaration() *Command {
 			{"metais render report-1.0.0.metais --data data --out out", "Renders the package's outputs from the data directory data into the new directory out."},
 			{"metais render report.metais --data data --set /vendor/name=Acme --out out", "Renders with one value set over the data directory's."},
 			{"metais render . --data data --out out --now 2026-10-19T09:30:00+02:00 --json", "Renders the source directory in the working directory with a render time, and prints the files as one metais.render/1 document."},
+			{"metais render report.metais --data data --out out --dry-run", "Lists every file the render would write into out, with its size and digest, and writes nothing."},
+			{"metais render report.metais --data data --out - --only report.md", "Renders the whole package and writes the bytes of report.md alone to standard output."},
 		},
 		run: runRender,
 	}
@@ -158,7 +184,8 @@ type renderFile struct {
 	Size       int64   `json:"size"`
 	Digest     string  `json:"digest"`
 	Executable bool    `json:"executable"`
-	Status     string  `json:"status"`
+	// Status is set only when --out is a directory (ADR-005 D16 item 2).
+	Status string `json:"status,omitempty"`
 	// Entries are a container's, in its order (ADR-005 D16 item 2).
 	Entries []renderEntry `json:"entries,omitempty"`
 }
@@ -270,8 +297,8 @@ func joinIn(in, p string) string {
 }
 
 // runRender is metais render, of template outputs, assets, mirrors and
-// containers into a directory that does not exist (ADR-008 D8, ADR-005
-// D13 and D14 item 1).
+// containers into a directory that does not exist, or to standard output,
+// or as a dry run (ADR-008 D8, ADR-005 D13, D14 item 1 and D16 to D18).
 func runRender(s *session, p args.Parsed) outcome {
 	operand := p.Operands[0]
 	if operand == "-" {
@@ -284,21 +311,22 @@ func runRender(s *session, p args.Parsed) outcome {
 		return s.refuseWith(finding.New(finding.CodeUsageMissingFlag, invocation, nil,
 			finding.Params{"command": finding.String("render"), "flag": finding.String("--out")}))
 	}
-	if out == "-" {
-		panic("cli: render to standard output is not part of this version of metais")
+	// --out - writes bytes to standard output, which then carries them
+	// and nothing else (ADR-008 D11 item 2, emit's streamsBytes); a dry
+	// run writes none.
+	toStream, dryRun := out == "-", p.Has("dry-run")
+	only, hasOnly := p.Value("only")
+	if toStream && !dryRun {
+		if !hasOnly && isTerminal(s.inv.Stdout) {
+			return s.refuseWith(finding.New(finding.CodeUsageArchiveToTerminal, invocation, nil,
+				finding.Params{"argument": s.flagValueArg(p, "out")}))
+		}
 	}
 	now, hasNow := p.Value("now")
 	if hasNow {
 		if _, err := dates.ParseNow(now); err != nil {
-			// The value's own position: the flag's, written --now=value, or
-			// the one after it.
-			i, _ := p.Arg("now")
-			at := s.line.at[i] + 1
-			if !strings.Contains(s.inv.Args[s.line.at[i]], "=") {
-				at++
-			}
 			return s.refuseWith(finding.New(finding.CodeUsageBadValue, invocation, nil, finding.Params{
-				"argument": finding.Int(int64(at)),
+				"argument": s.flagValueArg(p, "now"),
 				"flag":     finding.String("--now"),
 				"reason":   finding.String("value_not_allowed"),
 			}))
@@ -315,7 +343,14 @@ func runRender(s *session, p args.Parsed) outcome {
 	if pkg == nil {
 		return outcome{findings: fs, next: s.nextSteps(fs)}
 	}
-	defer pkg.Close()
+	// A stream reads the package as emit writes it, after runRender has
+	// returned, so the package is closed by the stream when there is one.
+	streaming := false
+	defer func() {
+		if !streaming {
+			pkg.Close()
+		}
+	}()
 
 	// Phase 0: the inputs (ADR-005 D13 item 0).
 	dataDir, _ := p.Value(dataFlag.Name)
@@ -337,9 +372,11 @@ func runRender(s *session, p args.Parsed) outcome {
 	// Phases 1 and 2: plan and verify paths.
 	plan, pfs := planOutputs(pkg, lim, s, r)
 	fs = append(fs, pfs...)
-	// Phase 3: the destination, every refusal reported with the others
-	// (ADR-005 D15 item 8).
-	fs = append(fs, checkDestination(out)...)
+	// Phase 3: the destination, when it is a directory, every refusal
+	// reported with the others (ADR-005 D15 item 8).
+	if !toStream {
+		fs = append(fs, checkDestination(out)...)
+	}
 	// The output validation schemas, compiled before any output is
 	// rendered (ADR-005 D11 item 3).
 	schemas, sfs := outputSchemas(pkg, lim)
@@ -352,27 +389,174 @@ func runRender(s *session, p args.Parsed) outcome {
 	if s.fails(fs) {
 		return outcome{findings: fs, next: s.nextSteps(fs), dataDir: dataDir}
 	}
-	// Phase 5: commit (ADR-005 D14 item 1).
 	slices.SortFunc(plan, func(a, b *planned) int { return strings.Compare(a.path, b.path) })
-	if f, ok := commit(out, plan, s); !ok {
-		fs = append(fs, f)
-		return outcome{findings: fs, next: s.nextSteps(fs)}
+	// --only chooses what is written from the whole render, which has
+	// run and been verified (ADR-005 D18 items 1, 2 and 4).
+	written := plan
+	if hasOnly {
+		i := slices.IndexFunc(plan, func(pf *planned) bool { return pf.path == only })
+		if i < 0 {
+			fs = append(fs, s.unknownOutput(p, plan))
+			return outcome{findings: fs, next: s.nextSteps(fs), dataDir: dataDir}
+		}
+		written = plan[i : i+1]
 	}
-	result := &renderResult{Out: "directory", Files: []renderFile{}}
+	result := &renderResult{Out: "directory", DryRun: dryRun, Files: []renderFile{}}
+	if toStream {
+		result.Out = "stdout"
+	}
+	if hasOnly {
+		result.Only = &only
+	}
+	// Phase 5: emit (ADR-005 D13 item 5), in exactly one of a dry run,
+	// which writes nothing (D16), the archive (D17), one file's bytes
+	// (D18 item 1), and the directory commit of every file, or of the
+	// one selected (D14 item 1, D18 item 3).
+	var stream func(io.Writer)
+	switch {
+	case dryRun:
+	case toStream && hasOnly:
+		stream = func(w io.Writer) { writeContent(w, written[0]) }
+	case toStream:
+		stream = func(w io.Writer) { writeArchive(w, written) }
+	default:
+		if f, ok := commit(out, written, s); !ok {
+			fs = append(fs, f)
+			return outcome{findings: fs, next: s.nextSteps(fs)}
+		}
+	}
+	// An asset's digest is taken as it is first read; a dry run, the
+	// archive and --only read it after the records are made, or never,
+	// so it is read for its digest here (ADR-005 D16 item 2).
+	for _, pf := range written {
+		if pf.asset != "" && pf.digest == "" {
+			r, done := content(pf)
+			_, err := io.Copy(io.Discard, r)
+			if derr := done(err); err != nil || derr != nil {
+				panic("cli: reading an asset the plan found: " + errors.Join(err, derr).Error())
+			}
+		}
+	}
+	if stream != nil {
+		streaming = true
+		emit := stream
+		stream = func(w io.Writer) {
+			defer pkg.Close()
+			emit(w)
+		}
+	}
 	var human strings.Builder
-	for _, pf := range plan {
+	if dryRun {
+		human.WriteString("would write\n")
+	}
+	for _, pf := range written {
 		size, d := pf.measured()
 		var entries strings.Builder
 		rf := renderFile{
 			Path: pf.path, Output: pf.decl.ID, Item: pf.item(), Source: pf.source(), Size: size, Digest: d,
-			Executable: pf.decl.Executable, Status: "create", Entries: entryRecords(pf, &entries, 1), Kind: pf.kind(),
+			Executable: pf.decl.Executable, Entries: entryRecords(pf, &entries, 1), Kind: pf.kind(),
+		}
+		if !toStream {
+			rf.Status = "create"
 		}
 		result.Files = append(result.Files, rf)
 		human.WriteString(strconv.FormatInt(size, 10) + "\t" + d + "\t")
 		human.Write(finding.AppendText(nil, pf.path))
 		human.WriteString("\n" + entries.String())
 	}
-	return outcome{findings: fs, result: result, human: []byte(human.String()), dataDir: dataDir}
+	o := outcome{findings: fs, result: result, dataDir: dataDir, stream: stream}
+	if stream == nil {
+		// With --out -, standard output is the bytes, and the listing is
+		// in the document alone (ADR-008 D8 item 9).
+		o.human = []byte(human.String())
+	}
+	return o
+}
+
+// maxOutputsListed is how many paths usage.unknown_output lists, as many
+// as ADR-006 D6 lists of an enum's allowed values.
+const maxOutputsListed = 20
+
+// unknownOutput is usage.unknown_output for --only's value, which no file
+// of plan, in path order, has (ADR-005 D18 item 4).
+func (s *session) unknownOutput(p args.Parsed, plan []*planned) finding.Finding {
+	var paths []string
+	for _, pf := range plan[:min(len(plan), maxOutputsListed)] {
+		paths = append(paths, pf.path)
+	}
+	return finding.New(finding.CodeUsageUnknownOutput, invocation, nil, finding.Params{
+		"argument":   s.flagValueArg(p, "only"),
+		"paths":      stringList(paths),
+		"path_count": finding.Int(int64(len(plan))),
+	})
+}
+
+// flagValueArg is the 1-based position on the whole line of the value of
+// the flag called name, which was given: the flag's own, written
+// --name=value, or the one after it.
+func (s *session) flagValueArg(p args.Parsed, name string) finding.Value {
+	i, _ := p.Arg(name)
+	at := s.line.at[i] + 1
+	if !strings.Contains(s.inv.Args[s.line.at[i]], "=") {
+		at++
+	}
+	return finding.Int(int64(at))
+}
+
+// writeArchive writes plan, in path order, to w as ADR-005 D17's archive,
+// built from the rendered bytes and never from disk (item 6). A failed
+// write to w ends it unreported, as every write to standard output is
+// (ADR-006 D12 item 5); any other error is a defect.
+func writeArchive(w io.Writer, plan []*planned) {
+	ew := &stickyWriter{w: w}
+	tw := tarw.NewWriter(ew)
+	for _, pf := range plan {
+		size, _ := pf.measured()
+		r, done := content(pf)
+		err := tw.Add(pf.path, pf.decl.Executable, size, r)
+		if derr := done(err); err == nil && derr != nil {
+			panic("cli: a measured container does not write: " + derr.Error())
+		}
+		if err != nil {
+			if ew.err != nil {
+				return
+			}
+			panic("cli: " + err.Error())
+		}
+	}
+	if err := tw.Close(); err != nil && ew.err == nil {
+		panic("cli: " + err.Error())
+	}
+}
+
+// writeContent writes pf's bytes alone to w (ADR-005 D18 item 1): an
+// asset's as the package holds them, and a container's zip as it is
+// assembled. A failed write ends it unreported.
+func writeContent(w io.Writer, pf *planned) {
+	ew := &stickyWriter{w: w}
+	r, done := content(pf)
+	_, err := io.Copy(ew, r)
+	if derr := done(err); err == nil && derr != nil {
+		panic("cli: a measured container does not write: " + derr.Error())
+	}
+	if err != nil && ew.err == nil {
+		panic("cli: " + err.Error())
+	}
+}
+
+// stickyWriter is w that keeps the first error a write returns.
+type stickyWriter struct {
+	w   io.Writer
+	err error
+}
+
+func (sw *stickyWriter) Write(b []byte) (int, error) {
+	if sw.err != nil {
+		return 0, sw.err
+	}
+	n, err := sw.w.Write(b)
+	sw.err = err
+	return n, err
 }
 
 // measured is pf's size and digest: a container's zip's, an asset's

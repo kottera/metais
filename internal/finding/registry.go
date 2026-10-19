@@ -79,6 +79,8 @@ const (
 	CodeUsageNoMatch           Code = "usage.no_match"
 	CodeUsageNotText           Code = "usage.not_text"
 	CodeUsageUnknownInput      Code = "usage.unknown_input"
+	CodeUsageUnknownOutput     Code = "usage.unknown_output"
+	CodeUsageArchiveToTerminal Code = "usage.archive_to_terminal"
 )
 
 // registry is the tool's table of codes, in code order. It is the Go form
@@ -3065,6 +3067,20 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{"MTS-AUT-017"},
 	},
 	{
+		Code:     CodeUsageArchiveToTerminal,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of --out's value, -, among the arguments after metais.", Always: true},
+		},
+		Message:    "Argument {argument} writes the render's archive to standard output, which is a terminal, and an archive is not written to a terminal.",
+		Hint:       "Redirect standard output to a file or a pipe, or select one file with --only <path>, whose bytes may go to a terminal.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
 		Code:     CodeUsageBadGlob,
 		Severity: SeverityError,
 		Class:    ClassUsage,
@@ -3401,7 +3417,23 @@ var registry = withSchemaEntries([]Entry{
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},
+	}, {
+		Code:     CodeUsageUnknownOutput,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of --only's value among the arguments after metais.", Always: true},
+			{Name: "paths", Type: TypeArray, Items: TypeString, Meaning: "The first 20 paths of the files the render writes, in byte order.", Always: true},
+			{Name: "path_count", Type: TypeNumber, Meaning: "How many files the render writes.", Always: true},
+		},
+		Message:    "Argument {argument} names no file the render writes; {path_count} files are written.",
+		Hint:       "Give --only one of the paths the finding lists; `metais render <package> --out <dir> --dry-run` lists every file with its path.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
 	},
+
 	{
 		Code:     CodeUsageUnknownTopic,
 		Severity: SeverityError,

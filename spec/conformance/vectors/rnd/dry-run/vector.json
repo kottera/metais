@@ -1,0 +1,115 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/dry-run",
+  "title": "A dry run renders and verifies everything, lists every top-level file with its record, a fan-out's with its item and a status only for a directory, writes nothing anywhere, and is refused exactly when the render is",
+  "statements": [
+    "MTS-RND-008",
+    "MTS-RND-009"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "directory",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "dry_run": true
+          },
+          "expect": {
+            "ok": true,
+            "listing": "expected/directory.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "stream",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "stream": "archive",
+            "dry_run": true
+          },
+          "expect": {
+            "ok": true,
+            "listing": "expected/stream.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "not-empty",
+      "setup": {
+        "copy": "setup"
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "dry_run": true
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-empty.json"
+          }
+        },
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-empty.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "refused",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "dry_run": true,
+            "limits": {
+              "outputs": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/refused.json"
+          }
+        },
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "outputs": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/refused.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -68,3 +68,9 @@ const ReadExisting Set = 1 << 5
 // must catch a write that removes a name it did not create, which ADR-005
 // D15 item 7 and Amendment A1 item 6 forbid. Its seam is internal/hostfs.
 const RemoveForeign Set = 1 << 6
+
+// StdoutNotice makes a render that writes bytes to standard output write a
+// notice line there before them, on a refusal too (ADR-008 D16 item 5):
+// the standard-output purity test must catch a standard output that holds
+// anything but the bytes. Its seam is internal/cli.
+const StdoutNotice Set = 1 << 7

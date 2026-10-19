@@ -1,0 +1,56 @@
+[
+  {
+    "path": "a.txt",
+    "output": "a",
+    "item": null,
+    "source": "template",
+    "kind": "text",
+    "size": 6,
+    "digest": "sha256:10fbdce5d5e2ba7e0249a4a8921faede362fda69bae3c5bb8a59bb1b9407ad5e",
+    "executable": false,
+    "status": "create"
+  },
+  {
+    "path": "box.zip",
+    "output": "box",
+    "item": null,
+    "source": "container",
+    "kind": null,
+    "size": 334,
+    "digest": "sha256:33fd08b20095375bd3f86bbed801ec152065791de9510580cd75de03010abae2",
+    "executable": false,
+    "status": "create",
+    "entries": [
+      {
+        "path": "pages/1.txt",
+        "output": "page",
+        "item": 0,
+        "source": "template",
+        "kind": "text",
+        "method": "stored",
+        "size": 12,
+        "digest": "sha256:ffbca2bc9a9b2f5c056f21a3e8aefd7e08ac544ffb08f6b35e0a1388f2100d79"
+      },
+      {
+        "path": "pages/2.txt",
+        "output": "page",
+        "item": 1,
+        "source": "template",
+        "kind": "text",
+        "method": "stored",
+        "size": 12,
+        "digest": "sha256:44139e67c370d8f4bbc48b04f4dd04772eb877225b63be2f5cc691139d004d0f"
+      },
+      {
+        "path": "z.txt",
+        "output": null,
+        "item": null,
+        "source": "template",
+        "kind": "text",
+        "method": "stored",
+        "size": 6,
+        "digest": "sha256:a8104adec86281c8ad23cfdc88c763558d0c28c132de997f398094038d737cb1"
+      }
+    ]
+  }
+]

@@ -1627,3 +1627,29 @@ they write into an existing directory too.
     the `schema.*` findings ADR-003 gives it, compiled before any output
     renders; `check` compiles the same schemas (D11 item 5) and reports
     the same findings.
+- **PLAN-2026-10-metais-v1 W5-9 — the dry run, the archive and `--only`.**
+  D16, D17 and D18 landed for template outputs, stated as MTS-RND-008 to
+  MTS-RND-012 with the vectors `rnd/dry-run`, `rnd/archive` and `rnd/only`.
+  The archive is written by `internal/tarw` from the rendered bytes,
+  straight to standard output once phases 1 to 4 succeed; a failed write
+  to standard output ends it unreported (ADR-006 D12 item 5). The readings
+  taken:
+  - **A dry run with `--out <dir>` lists `status` `create`**, every file
+    being new to a directory that does not exist; `replace` is W5-8's, and
+    its meeting with this item is W5-8's vector.
+  - **D18 item 4's listing is bounded at 20 paths**, with the count beside
+    it (ADR-008's log).
+  - **What a statement cannot carry:** an unknown `--only` path and an
+    archive to a terminal are usage refusals, which no vector can produce
+    (ADR-011 D8), so chapter 11 states them as informative text and
+    `internal/cli`'s tests prove them.
+  - **An asset's digest in a record** is taken by reading the asset when
+    the run has not read it yet (a dry run, the archive, `--only`), so it
+    is the digest of the package's bytes; a read of the package in place,
+    and no write.
+  - **A stream reads the package as it is written**, in emission, so the
+    package stays open until the archive or the selected file is written.
+  W5-9 merged after W5-5 and W5-6, so their meetings with it are its
+  vectors: `rnd/stream-asset` and `rnd/stream-container`. Standard-output
+  purity "with warnings present" is a render that warns
+  `output.container.space`.

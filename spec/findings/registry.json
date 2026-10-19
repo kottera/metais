@@ -7572,6 +7572,25 @@
       ]
     },
     {
+      "code": "usage.archive_to_terminal",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of --out's value, -, among the arguments after metais.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} writes the render's archive to standard output, which is a terminal, and an archive is not written to a terminal.",
+      "hint": "Redirect standard output to a file or a pipe, or select one file with --only <path>, whose bytes may go to a terminal.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "usage.bad_glob",
       "severity": "error",
       "class": "usage",
@@ -8124,6 +8143,38 @@
       ],
       "message": "Argument {argument} names no input of the package.",
       "hint": "Give one of the inputs the finding lists; `metais inspect <package>` shows each with what it means.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.unknown_output",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of --only's value among the arguments after metais.",
+          "always": true
+        },
+        {
+          "name": "paths",
+          "type": "array",
+          "items": "string",
+          "meaning": "The first 20 paths of the files the render writes, in byte order.",
+          "always": true
+        },
+        {
+          "name": "path_count",
+          "type": "number",
+          "meaning": "How many files the render writes.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} names no file the render writes; {path_count} files are written.",
+      "hint": "Give --only one of the paths the finding lists; `metais render <package> --out <dir> --dry-run` lists every file with its path.",
       "location": "none",
       "since": "1.0",
       "statements": []

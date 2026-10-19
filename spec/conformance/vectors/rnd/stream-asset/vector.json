@@ -1,0 +1,72 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/stream-asset",
+  "title": "An asset copy is listed by a dry run with source asset, no kind and the digest of the package's bytes, is one archive entry holding those bytes, executable when declared so, and is selected by its path",
+  "statements": [
+    "MTS-RND-009",
+    "MTS-RND-010",
+    "MTS-RND-012"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "The meeting of W5-9 with W5-5.",
+  "cases": [
+    {
+      "name": "dry-run",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "dry_run": true
+          },
+          "expect": {
+            "ok": true,
+            "listing": "expected/listing.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "archive",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "stream": "archive"
+          },
+          "expect": {
+            "ok": true,
+            "stream": {
+              "equals": "expected/stream.tar"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "only",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "stream": {
+              "only": "logo.svg"
+            }
+          },
+          "expect": {
+            "ok": true,
+            "stream": {
+              "equals": "expected/logo.svg"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

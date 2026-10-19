@@ -1,0 +1,19 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: page
+    template: t.txt.liquid
+    for_each: (1..3)
+    path: "pages/{{ item }}.txt"
+  - id: run
+    template: t.txt.liquid
+    path: run.sh
+    executable: true
+  - id: long
+    template: t.txt.liquid
+    path: "üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü.txt"

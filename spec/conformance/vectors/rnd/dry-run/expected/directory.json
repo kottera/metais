@@ -1,0 +1,57 @@
+[
+  {
+    "path": "pages/1.txt",
+    "output": "page",
+    "item": 0,
+    "source": "template",
+    "kind": "text",
+    "size": 12,
+    "digest": "sha256:ffbca2bc9a9b2f5c056f21a3e8aefd7e08ac544ffb08f6b35e0a1388f2100d79",
+    "executable": false,
+    "status": "create"
+  },
+  {
+    "path": "pages/2.txt",
+    "output": "page",
+    "item": 1,
+    "source": "template",
+    "kind": "text",
+    "size": 12,
+    "digest": "sha256:44139e67c370d8f4bbc48b04f4dd04772eb877225b63be2f5cc691139d004d0f",
+    "executable": false,
+    "status": "create"
+  },
+  {
+    "path": "pages/3.txt",
+    "output": "page",
+    "item": 2,
+    "source": "template",
+    "kind": "text",
+    "size": 12,
+    "digest": "sha256:b5fdfd56c0b093a73849c9cc747cf7e8b8f5cb5bd61283d52b23047f071f85a8",
+    "executable": false,
+    "status": "create"
+  },
+  {
+    "path": "run.sh",
+    "output": "run",
+    "item": null,
+    "source": "template",
+    "kind": "hash",
+    "size": 7,
+    "digest": "sha256:d59ba0a2b107f8970465e8223b2b02b88a5ecce74dcb71f90425a3a06d00436b",
+    "executable": true,
+    "status": "create"
+  },
+  {
+    "path": "üüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüüü.txt",
+    "output": "long",
+    "item": null,
+    "source": "template",
+    "kind": "text",
+    "size": 125,
+    "digest": "sha256:eb8439ca9bfc2f41f606c59efa47918aae03b15fc107ca4c12b61e8b5bd5fc8d",
+    "executable": false,
+    "status": "create"
+  }
+]

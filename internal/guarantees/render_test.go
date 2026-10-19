@@ -35,6 +35,8 @@ type renderStep struct {
 	args             renderArgs
 	ok               bool
 	trees            []expectedTree
+	// stream is the vector file the step's stream equals, or "".
+	stream string
 }
 
 type renderArgs struct {
@@ -49,6 +51,30 @@ type renderArgs struct {
 	// argument's JSON text.
 	InputsJSON string `json:"inputs_json"`
 	FailOn     string `json:"fail_on"`
+	// Stream is "archive", or {"only": <path>}: the render writes to
+	// standard output.
+	Stream json.RawMessage `json:"stream"`
+	Only   json.RawMessage `json:"only"`
+	DryRun bool            `json:"dry_run"`
+}
+
+// streams reports whether the step writes bytes to standard output.
+func (a renderArgs) streams() bool {
+	return len(a.Stream) > 0 && !a.DryRun
+}
+
+// only is every path the step's only argument selects.
+func (a renderArgs) only() []string {
+	if len(a.Only) == 0 {
+		return nil
+	}
+	var one string
+	if json.Unmarshal(a.Only, &one) == nil {
+		return []string{one}
+	}
+	var many []string
+	_ = json.Unmarshal(a.Only, &many)
+	return many
 }
 
 type expectedTree struct {
@@ -60,8 +86,9 @@ type expectedTree struct {
 }
 
 // renderSteps returns every render step of the suite whose case is its
-// first step, the steps that render into a directory with no stream,
-// dry run or overwrite, which are the renders this wave has.
+// first step: into a directory or to standard output, as a dry run or
+// not, of one file or of all, and with no overwrite or sample, which are
+// the renders the tool has.
 func renderSteps(t *testing.T) []renderStep {
 	t.Helper()
 	root := filepath.Join(moduleRootAbs(t), "spec", "conformance", "vectors")
@@ -91,8 +118,11 @@ func renderSteps(t *testing.T) []renderStep {
 					Op     string          `json:"op"`
 					Args   json.RawMessage `json:"args"`
 					Expect struct {
-						OK    bool           `json:"ok"`
-						Trees []expectedTree `json:"trees"`
+						OK     bool           `json:"ok"`
+						Trees  []expectedTree `json:"trees"`
+						Stream *struct {
+							Equals string `json:"equals"`
+						} `json:"stream"`
 					} `json:"expect"`
 				} `json:"steps"`
 			} `json:"cases"`
@@ -105,6 +135,9 @@ func renderSteps(t *testing.T) []renderStep {
 				continue
 			}
 			st := renderStep{id: v.ID + "/" + c.Name, dir: filepath.Dir(f), tags: v.Tags, ok: c.Steps[0].Expect.OK, trees: c.Steps[0].Expect.Trees}
+			if e := c.Steps[0].Expect.Stream; e != nil {
+				st.stream = e.Equals
+			}
 			if c.Setup != nil {
 				if len(c.Setup.Symlinks) > 0 || len(c.Setup.Fifos) > 0 {
 					t.Fatalf("%s: a setup with links or pipes, which this detector does not replay", st.id)
@@ -121,7 +154,7 @@ func renderSteps(t *testing.T) []renderStep {
 			if err := json.Unmarshal(c.Steps[0].Args, &st.args); err != nil {
 				t.Fatal(err)
 			}
-			for _, k := range []string{"stream", "only", "overwrite", "dry_run", "sample"} {
+			for _, k := range []string{"overwrite", "sample"} {
 				if _, ok := all[k]; ok {
 					t.Fatalf("%s: a render step with %s, which this detector does not replay", st.id, k)
 				}
@@ -178,7 +211,24 @@ func (st renderStep) prepare(t *testing.T, base string) string {
 // inputs_json file's text given as --inputs-json's value.
 func (st renderStep) argv(work string) []string {
 	abs := func(p string) string { return filepath.Join(work, filepath.FromSlash(p)) }
-	a := []string{"render", "--json", abs(st.args.Package), "--out", abs(st.args.Out)}
+	a := []string{"render", "--json", abs(st.args.Package)}
+	if len(st.args.Stream) > 0 {
+		a = append(a, "--out", "-")
+		var o struct {
+			Only string `json:"only"`
+		}
+		if json.Unmarshal(st.args.Stream, &o) == nil && o.Only != "" {
+			a = append(a, "--only", o.Only)
+		}
+	} else {
+		a = append(a, "--out", abs(st.args.Out))
+	}
+	for _, o := range st.args.only() {
+		a = append(a, "--only", o)
+	}
+	if st.args.DryRun {
+		a = append(a, "--dry-run")
+	}
 	if st.args.Data != "" {
 		a = append(a, "--data", abs(st.args.Data))
 	}
@@ -213,21 +263,26 @@ func (st renderStep) argv(work string) []string {
 }
 
 // run renders st in-process in work under faults and reports whether it
-// succeeded.
-func (st renderStep) run(t *testing.T, work string, faults fault.Set) bool {
+// succeeded, and the bytes it wrote to standard output when it streams,
+// whose document is then on standard error (ADR-008 D11 item 2).
+func (st renderStep) run(t *testing.T, work string, faults fault.Set) (bool, []byte) {
 	t.Helper()
 	var stdout, stderr bytes.Buffer
 	cli.Run(context.Background(), cli.Invocation{
 		Args: st.argv(work), Stdin: strings.NewReader(""), Stdout: &stdout, Stderr: &stderr,
 		Options: cli.Options{Faults: faults},
 	})
-	var doc struct {
+	doc, stream := &stdout, []byte(nil)
+	if st.args.streams() {
+		doc, stream = &stderr, stdout.Bytes()
+	}
+	var d struct {
 		OK bool `json:"ok"`
 	}
-	if err := json.Unmarshal(stdout.Bytes(), &doc); err != nil {
-		t.Fatalf("%s: %v: %q", st.id, err, stdout.String())
+	if err := json.Unmarshal(doc.Bytes(), &d); err != nil {
+		t.Fatalf("%s: %v: %q", st.id, err, doc.String())
 	}
-	return doc.OK
+	return d.OK, stream
 }
 
 // snapEntry is one path of a snapshot: its type and, for a file, its digest.

@@ -1368,3 +1368,37 @@ document.
   - Each reading command takes `--fail-on`, through W4-1's mechanism, as a
     command that reports findings. A usage line longer than 80 columns is
     wrapped in help between its bracketed groups.
+
+- **PLAN-2026-10-metais-v1 W5-9 — `render --dry-run`, `--out -` and
+  `--only`.** D8 items 2, 4, 5, 6 and 9 and D11 items 2 and 4 landed for
+  template outputs, with D16 item 5's purity test pinned red first against
+  `fault.StdoutNotice` (bit `1 << 7`, seam `internal/cli`). The readings
+  taken:
+  - **Codes registered:** `usage.archive_to_terminal`, whose `argument` is
+    the position of `--out`'s `-`, and `usage.unknown_output`, with
+    `argument` (`--only`'s value), `paths` (the first 20 paths the render
+    writes, in byte order, as many as ADR-006 D6 lists of an enum's
+    allowed values) and `path_count`.
+  - **When standard output carries bytes is read from the line**:
+    `render` with `--out -` and no `--dry-run`. Every document and every
+    human result of such a line goes to standard error, a refusal of the
+    line itself and an `internal.error` included, so a refused render's
+    standard output is empty whatever refused it.
+  - **A dry run writes no stream**, so with `--out -` its document, or its
+    human listing, is on standard output as any other command's.
+  - **`usage.unknown_output` is decided after phases 1 to 4 succeed.** A
+    render refused for another reason reports that refusal alone, since its
+    plan is not the whole set of paths and a path missing from it proves
+    nothing.
+  - **With `--only`, `files` holds the selected file alone**, the file the
+    run writes, or would; `only` names it.
+  - **`status` is omitted, not null, with `--out -`** (ADR-005 D16 item 2:
+    "only when `--out` is a directory"); the render schema no longer
+    requires it.
+  - **A dry run's human listing is headed `would write`**, a line of its
+    own, above the lines a render prints; with `--out -` it is the same
+    listing.
+  - **The pseudo-terminal proof** of the terminal refusal is through
+    `isTerminal`'s seam: the dispatch sandbox lets `/dev/ptmx` open but
+    refuses the opening of its `/dev/ttys*` side, so no pseudo-terminal is
+    offered there (plan §5).

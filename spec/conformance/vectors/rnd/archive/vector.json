@@ -1,0 +1,56 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/archive",
+  "title": "Rendering to standard output writes every top-level file as one pax archive in path order, with the fixed header fields, a pax path record for a path ustar cannot hold, and two zero blocks; a refused render writes nothing there",
+  "statements": [
+    "MTS-RND-010",
+    "MTS-RND-011"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "archive",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "stream": "archive"
+          },
+          "expect": {
+            "ok": true,
+            "stream": {
+              "equals": "expected/stream.tar"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "refused",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "stream": "archive",
+            "limits": {
+              "outputs": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/refused.json",
+            "stream": {
+              "equals": "expected/nothing"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
