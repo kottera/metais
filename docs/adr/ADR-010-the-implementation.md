@@ -10,7 +10,10 @@ accepted by Ed Funnekotter; the passages it changes are marked *(A2)*.
 [Amendment A3](#amendments) (the Markdown outline is METAIS's own CommonMark
 reading, and goldmark leaves the module) is proposed by PLAN-2026-10-metais-v1
 Wave 2 and awaits Ed Funnekotter's ratification; the passages it changes are
-marked *(A3, proposed)*.
+marked *(A3, proposed)*. [Amendment A4](#amendments) (`Core()`'s filter list
+names `escape`'s alias `h`) is proposed by PLAN-2026-10-metais-v1 Wave 3 and
+awaits Ed Funnekotter's ratification; the passage it changes is marked
+*(A4, proposed)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R18 item 1 (one static binary, the supported targets,
@@ -512,7 +515,7 @@ engine of the dialect ADR-004 pins.**
      url_decode url_encode where` — with ADR-004's semantics where it pins
      one (stable sorting, the `date` filter's format directives over a value
      with an explicit offset, number rendering). No other filter exists in
-     `Core()`. METAIS's own filters and tags are registered by
+     `Core()`. *(A4, proposed)* METAIS's own filters and tags are registered by
      `internal/template` through the engine's extension API, which is
      internal Go code, never a package's.
    - **Value model** (`internal/liquid/value`): nil, boolean, integer (int64;
@@ -1612,6 +1615,26 @@ R2-156 (RULINGS-v1); R2-156's own frontmatter split stands.
    `THIRD-PARTY-NOTICES.txt`. Its `os.Stdout` reference, which
    `TestNoHostFacts`' dependency scan flagged, leaves with it, and no
    allow-list entry is added.
+
+### A4 — `Core()`'s filter list names `escape`'s alias `h`
+
+**Status:** Proposed 2026-10-19 by PLAN-2026-10-metais-v1 Wave 3 (W3-NB1,
+from Wave 3's verification of W3-4); awaiting ratification by Ed Funnekotter
+at the train's close, with A1 and A3.
+**Amends:** D4 item 2 (the filter list and its "No other filter exists in
+`Core()`").
+
+1. **The list of `standardfilters.rb`'s filters at v5.14.0 also names:
+   `h`.** `standardfilters.rb` defines `h` as an alias of `escape`, and
+   ADR-004's Context lists it, so it is a filter of that file and D4 item
+   2's rule puts it in `Core()`. The list D4 item 2 spells out leaves it
+   out, which made "No other filter exists in `Core()`" false of a
+   `Core()` that follows the rule. With `h` named, that sentence holds:
+   `Core()`'s filters are the list with `h`, without `date` (plan §8).
+2. **Nothing else changes.** `h` is `escape` under a second name, with
+   `escape`'s semantics and charges. `TestCoreIsADR004Catalog` reads the
+   list from D4 item 2 and this item's addition from item 1, and holds
+   their union to ADR-004's.
 
 ## Implementation log
 

@@ -74,6 +74,12 @@ const rows = `{"type": "object", "properties": {
 	"obj": {"type": "object", "properties": {"k": {}}}
 }}`
 
+// pair is a tuple whose elements declare different properties, so the
+// element first gives and the ones last gives can be told apart.
+const pair = `{"type": "object", "properties": {
+	"pair": {"type": "array", "prefixItems": [{"type": "object", "properties": {"a": {}}}, {"type": "object", "properties": {"b": {}}}], "items": false}
+}}`
+
 // TestFilters holds each kind of analysis signature to ADR-007 D3 item 10.
 func TestFilters(t *testing.T) {
 	runCases(t, []xcase{
@@ -95,6 +101,10 @@ func TestFilters(t *testing.T) {
 		{"concat", rows, `{% assign c = inputs.metrics.rows | concat: inputs.metrics.more %}{{ c[0].value }}{{ c[1].extra }}{{ c.first.nope }}`, []string{unknownField}},
 		// first and last give the element.
 		{"first and last", rows, `{{ inputs.metrics.rows | first | map: "value" }}{% assign l = inputs.metrics.rows | last %}{{ l.name }}{{ l.nope }}`, []string{unknownField}},
+		// Of a tuple, first is [0], its first element alone, and last is
+		// [-1], which may be any of them (ADR-007 D3 item 6).
+		{"first of a tuple", pair, `{% assign f = inputs.metrics.pair | first %}{{ f.a }}{{ f.b }}`, []string{unknownField}},
+		{"last of a tuple", pair, `{% assign l = inputs.metrics.pair | last %}{{ l.a }}{{ l.b }}`, nil},
 		{"first of a string", rows, `{% assign f = inputs.metrics.text | first %}{{ f.size }}{{ f.x }}`, []string{notAnObject}},
 		// map projects a property.
 		{"map projects", rows, `{% assign tags = inputs.metrics.rows | map: "tags" %}{{ tags[0][0].t }}{{ tags[0][0].nope }}`, []string{unknownField}},

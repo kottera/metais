@@ -196,6 +196,19 @@ func TestDeclaredFindingNames(t *testing.T) {
 	)
 }
 
+// TestDeclaredSuggestsTheCaseFold holds the suggestion to ADR-006 D9 item
+// 7's first step: a declared name equal to the name read under case
+// folding is suggested before any name within edit distance 2, however
+// far apart the two are by edit distance. TITLES is one edit from TITLE;
+// title is five.
+func TestDeclaredSuggestsTheCaseFold(t *testing.T) {
+	s := `{"type": "object", "properties": {"title": {}, "TITLES": {}}}`
+	r := one(s, `{{ inputs.metrics.TITLE }}`).run(t)
+	expect(t, r,
+		`template.xref.unknown_field templates/report.md.liquid:1:18 declared=["TITLES","title"] declared_count=2 input="metrics" output="report" property="TITLE" suggestion="title" related=inputs/metrics.json#`,
+	)
+}
+
 // TestDeclaredBoundsTheNames: unknown_field lists at most 20 declared
 // names, and counts them all.
 func TestDeclaredBoundsTheNames(t *testing.T) {

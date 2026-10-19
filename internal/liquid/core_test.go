@@ -86,7 +86,7 @@ func readDoc(t *testing.T, path string) string {
 // STANDARD_TAGS without include, and the liquid tag; the filters are
 // standardfilters.rb's, escape's alias h with them, without date (plan
 // §8). It reads the lists from the ADR's own text, and holds ADR-010 D4
-// item 2's filter list to the same set.
+// item 2's filter list, with what its Amendment A4 adds, to the same set.
 func TestCoreIsADR004Catalog(t *testing.T) {
 	testenv.Home(t)
 	adr004 := readDoc(t, "docs/adr/ADR-004-the-template-environment.md")
@@ -118,10 +118,14 @@ func TestCoreIsADR004Catalog(t *testing.T) {
 		t.Fatalf("ADR-010 has no %q", from)
 	}
 	list, _, _ := strings.Cut(adr010[i+len(from):], "`")
-	d4 := append(strings.Fields(list), "h")
+	a4 := adrList(t, adr010, "The list of `standardfilters.rb`'s filters at v5.14.0 also names:", "** `standardfilters.rb` defines")
+	if len(a4) == 0 {
+		t.Fatalf("ADR-010 A4 item 1 names no filter")
+	}
+	d4 := append(strings.Fields(list), a4...)
 	slices.Sort(d4)
 	if !slices.Equal(d4, filters) {
-		t.Errorf("ADR-010 D4 item 2's filters with h are %q, ADR-004's are %q", d4, filters)
+		t.Errorf("ADR-010 D4 item 2's filters with A4's %q are %q, ADR-004's are %q", a4, d4, filters)
 	}
 	for _, n := range []string{"date", "include", "json", "safe", "slug"} {
 		if _, ok := Core().Filter(n); ok {
@@ -236,5 +240,60 @@ func TestFiltersReadNothingElse(t *testing.T) {
 	}
 	if seen < 4 {
 		t.Fatalf("found %d catalog files; the glob is stale", seen)
+	}
+}
+
+// TestEngineReadsNothingElse holds the whole engine to what
+// TestFiltersReadNothingElse holds the catalog to: every non-test file of
+// internal/liquid/..., on every platform, the parser, the renderer, the
+// evaluator and the meter among them, imports only packages that compute.
+// None reaches the clock, randomness, the host or another goroutine's
+// state, so a render's output and the work it is charged follow from its
+// template and its inputs alone, and the meter counts work, never time
+// (W3-3.3). The list is of what is allowed, so a new file or a new import
+// is held to it unread.
+func TestEngineReadsNothingElse(t *testing.T) {
+	testenv.Home(t)
+	allowed := []string{
+		"cmp", "encoding/base64", "errors", "fmt", "io", "iter", "maps", "math", "math/big", "math/bits",
+		"regexp", "slices", "sort", "strconv", "strings", "unicode", "unicode/utf8",
+		// A recovered panic's stack, for CodeInternal's detail alone.
+		"runtime/debug",
+		"github.com/kottera/metais/internal/liquid/ast", "github.com/kottera/metais/internal/liquid/value",
+	}
+	var seen []string
+	err := filepath.WalkDir(".", func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			if d.Name() == "testdata" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		seen = append(seen, filepath.ToSlash(path))
+		af, err := goparser.ParseFile(token.NewFileSet(), path, nil, goparser.ImportsOnly)
+		if err != nil {
+			return err
+		}
+		for _, imp := range af.Imports {
+			p, _ := strconv.Unquote(imp.Path.Value)
+			if !slices.Contains(allowed, p) {
+				t.Errorf("%s imports %s; the engine reads only its template, its inputs and its context", path, p)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"meter.go", "render.go", "eval.go", "parse.go", "ast/ast.go", "value/value.go"} {
+		if !slices.Contains(seen, want) {
+			t.Errorf("%s was not checked; the walk is stale (saw %q)", want, seen)
+		}
 	}
 }

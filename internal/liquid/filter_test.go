@@ -548,6 +548,9 @@ func TestFilterCharges(t *testing.T) {
 		{"size", `[1, 2, 3]`, ``, 4, 0},
 		// 3 for the input; 3 comparisons ⌈log2 3⌉ = 2 deep, so 6; 3 for the result.
 		{"sort", `[3, 1, 2]`, ``, 12, 0},
+		// 3 for the input; 3 comparisons 2 deep, and the keys' 3 bytes 2
+		// deep, so 12; 3 for the result.
+		{"sort", `["c", "a", "b"]`, ``, 18, 0},
 		// 2 + 1; 2 flattened from the nested array; the built "1,2,3": 5 units, 5 bytes.
 		{"join", `[[1, 2], 3]`, `[","]`, 10, 5},
 		// 1 + 1 for the operands, 1 for the result.
@@ -563,6 +566,56 @@ func TestFilterCharges(t *testing.T) {
 		if m.Used(WorkUnits) != c.units || m.Used(WorkHeldBytes) != c.held {
 			t.Errorf("%s | %s: %s charged %d units, %d held bytes; want %d, %d", c.in, c.filter, c.args,
 				m.Used(WorkUnits), m.Used(WorkHeldBytes), c.units, c.held)
+		}
+	}
+}
+
+// chargeLog is a testMeter that keeps every charge it is asked for, in
+// order, refused or not.
+type chargeLog struct {
+	*testMeter
+	charges []charge
+}
+
+type charge struct {
+	w Work
+	n int64
+}
+
+func (m *chargeLog) Charge(w Work, n int64) *Error {
+	m.charges = append(m.charges, charge{w, n})
+	return m.testMeter.Charge(w, n)
+}
+
+func (m *chargeLog) Meter() Meter { return m }
+
+// TestFilterChargesOperandsFirst pins the order of the stdFilter's
+// charges: before a filter does any of its work, Apply charges the
+// shallow sizes of its input and of its arguments, so a filter given
+// operands larger than the meter allows is refused having done nothing.
+// Every filter of the catalog is applied to its sample, and its first
+// charge must be that one.
+func TestFilterChargesOperandsFirst(t *testing.T) {
+	testenv.Home(t)
+	for _, name := range Core().FilterNames() {
+		s, ok := sample[name]
+		if !ok {
+			t.Errorf("%s has no sample", name)
+			continue
+		}
+		def, _ := Core().Filter(name)
+		in, args := jv(t, s.in), sampleArgs(t, s.args)
+		want := shallow(in)
+		for _, a := range args {
+			want += shallow(a.Value)
+		}
+		m := &chargeLog{testMeter: newTestMeter(nil)}
+		if _, err := def.Apply(m, in, args); err != nil {
+			t.Errorf("%s: %v", name, err)
+			continue
+		}
+		if len(m.charges) == 0 || m.charges[0] != (charge{WorkUnits, want}) {
+			t.Errorf("%s | %s: %s charged %v first; want %d units for its operands", s.in, name, s.args, m.charges, want)
 		}
 	}
 }

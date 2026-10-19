@@ -187,6 +187,14 @@ func TestPartialsInheritTheRootBindings(t *testing.T) {
 	if len(got) != 0 {
 		t.Errorf("a partial rebinding the prefix: got %v", got)
 	}
+	// A partial's root rebinding the prefix stops the inheritance for the
+	// partials it renders too: they inherit its binding, not the one above
+	// it.
+	mid := `<w:p xmlns:w="` + nsOther + `">{% render 'cell.xml' %}</w:p>`
+	got = scanAll(Template{"document.xml", []byte(root)}, Template{"row.xml", []byte(mid)}, Template{"cell.xml", []byte(fragment)})
+	if len(got) != 0 {
+		t.Errorf("a partial rendered from a partial rebinding the prefix: got %v", got)
+	}
 	// A partial rendered from two templates binding its prefix
 	// differently is scanned under both.
 	sheet := `<x:worksheet xmlns:x="` + nsS + `" xmlns:w="` + nsOther + `">{% render 'row.xml' %}</x:worksheet>`
@@ -362,6 +370,20 @@ func TestFindingDetail(t *testing.T) {
 	if len(fs) == 1 {
 		if loc, _ := fs[0].Location(); loc.Line != 3 || loc.Column != 2 {
 			t.Errorf("delimiter location %d:%d, want 3:2", loc.Line, loc.Column)
+		}
+	}
+}
+
+// A construct's text is read with every reference XML 1.0 predefines,
+// and character references in decimal and in hexadecimal of either case,
+// decoded: the visible text of ADR-007 D4 item 6.
+func TestReferencesDecoded(t *testing.T) {
+	testenv.Home(t)
+	fs := scan(t, word("<w:p><w:r><w:t>{{ a | append: &quot;&lt;&gt;&amp;&apos;</w:t></w:r><w:r><w:t>&#62;&#x3E;&#x3e;&quot; | b }}</w:t></w:r></w:p>"))
+	want(t, fs, CodeSplitConstruct)
+	if len(fs) == 1 {
+		if s := str(t, fs[0], "text"); s != `{{ a | append: "<>&'>>>" | b }}` {
+			t.Errorf("text %q", s)
 		}
 	}
 }
