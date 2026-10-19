@@ -45,6 +45,7 @@ root=$(git rev-parse --show-toplevel 2>/dev/null) || {
 	exit 2
 }
 cd "$root" || exit 2
+"$here/merge-setup.sh" >&2
 export GOTOOLCHAIN=auto
 
 pat=""

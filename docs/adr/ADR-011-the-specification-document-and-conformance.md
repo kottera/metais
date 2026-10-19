@@ -1551,6 +1551,38 @@ D9 item 6 (the closed set of requirements), and the vector schema
    value within its major version (`spec/conformance/README.md`), and no
    released vector changes.
 
+### A5 — Generated files merge themselves, so the duplicate check serializes identifier allocation
+
+**Status:** Accepted on merge. It records Ed Funnekotter's ruling B1 of
+2026-10-19 (PLAN-2026-10-metais-v1 Wave 5b, W5b-7), given by guidance; it
+is not a ruling made by the train and needs no ratification.
+**Amends:** D3 item 7 (what serializes identifier allocation).
+
+1. **A merge keeps one side of `spec/statements.json`.** `.gitattributes`
+   gives every committed generated file a merge driver that keeps one
+   side's copy, this file and D3 item 9's code catalog among them; the
+   catalog keeps one side only between its markers, and the rest of
+   `12-findings.md` gets git's three-way merge. The regenerate step then
+   rewrites each file from the merged chapters, and its tripwire fails
+   until it has run. So two changes that both take `MTS-OUT-013` no longer
+   conflict in git: the rebase resolves the file, and regenerating it
+   lists `MTS-OUT-013` twice.
+2. **What serializes identifier allocation** is then two things:
+   - `TestStatementsWellFormed`'s duplicate check, run on the regenerated
+     tree, which names both places an identifier is used;
+   - the statement-number blocks a plan's wave orchestrator allots each
+     item at breakdown, in each area it adds to, so two items in flight
+     never take the same number.
+
+   Committing the file still gives a second implementation its
+   machine-readable list; D3 item 7's reason for the conflict in git is
+   the part this replaces.
+3. **Why.** A generated file conflicts whenever two changes regenerate
+   neighbouring lines, which every change that adds a statement does, and
+   resolving it by hand is work the generator does better. The conflict
+   caught only the one case of two changes taking the same number; the
+   duplicate check catches that case wherever the two statements sit.
+
 ## Implementation log
 
 Each work item writes its entry as a file of its own, in

@@ -1,6 +1,6 @@
 ---
 name: verification-gate
-description: The pre-merge gate for metais, in two tiers (ADR-010 Amendment A5) — the scoped tier every change passes, and the wave tier, AGENTS.md's full list, once per wave and for a shared seam. Read this BEFORE running the gate, BEFORE publishing a test run as evidence in a pull request, and ALWAYS when a step goes red. Covers when to run it (once, last, after directed tests, self-review and rebase), how to run it (gate.sh in the background, watched with gate-wait.sh, resumed with --resume), what each tier runs and what a change reaches (gate-select.sh), why it caps `go test -p` on a shared host, what to re-run after a fix and after a rebase onto a sibling, how to tell whether a red is yours by reading its mechanism (gate-why.sh, then root-cause), and what a green gate cannot settle.
+description: The pre-merge gate for metais, in two tiers (ADR-010 Amendment A5) — the scoped tier every change passes, and the wave tier, AGENTS.md's full list, once per wave and for a shared seam. Read this BEFORE running the gate, BEFORE publishing a test run as evidence in a pull request, and ALWAYS when a step goes red. Covers when to run it (once, last, after directed tests, self-review and rebase), how to run it (gate.sh in the background, watched with gate-wait.sh, resumed with --resume), what each tier runs and what a change reaches (gate-select.sh), why it caps `go test -p` on a shared host, what to re-run after a fix and after a rebase onto a sibling, the generated files' merge drivers (merge-setup.sh before the first rebase in a fresh clone) and regenerate.sh after every rebase, how to tell whether a red is yours by reading its mechanism (gate-why.sh, then root-cause), and what a green gate cannot settle.
 ---
 
 # The verification gate
@@ -65,6 +65,62 @@ these rules:
   module's code has them tested, because no import edge shows what they
   read.
 
+## Generated files: the merge drivers, and regenerate.sh
+
+A committed generated file is never merged by hand (ADR-011 A5).
+`.gitattributes` names a merge driver for each one, and
+`merge-generated.sh` beside this file is the driver:
+
+- **`metais-generated`, for a file generated whole**, keeps one side's
+  copy and reports a clean merge. These are `spec/statements.json`,
+  `spec/findings/registry.json`, the specdata copies, the help, scaffold,
+  tar, YAML-writer and vector-package goldens, and
+  `THIRD-PARTY-NOTICES.txt`.
+- **`metais-generated-region`, for `spec/12-findings.md`**, gives the
+  chapter's prose git's own three-way merge, conflicts included, and keeps
+  one side only between the code catalog's markers. When the markers are
+  not one well-formed pair, it merges the whole chapter as text. It never
+  takes one side of hand-written text.
+
+Every merge a driver resolves prints a `merge-generated:` line naming the
+file. The side it kept is stale until you regenerate:
+
+```bash
+.claude/skills/verification-gate/regenerate.sh
+```
+
+It rewrites every committed generated file from the merged sources, in the
+finding chain's order: `go generate ./internal/finding ./internal/specdata
+./internal/guarantees`, then each golden test's `-update`, then the
+notices. It ends by listing the generated files that changed. Commit them.
+On an unchanged tree it changes nothing. Each file's drift test fails until
+it has run, so a forgotten regeneration is a red, not a silent stale file.
+
+**Git reads drivers only from the clone's configuration, never from the
+repository.** A clone without them falls back to an ordinary text merge
+of generated files, and says nothing. So:
+
+- **In a fresh clone, run `merge-setup.sh` before your first rebase or
+  merge.** It installs the drivers in `.git/config`. `gate.sh`,
+  `gate-select.sh`, `gate-why.sh` and `regenerate.sh` all run it first.
+  If the drivers were missing, it prints
+  `merge-setup: NOTE: installed the merge driver(s) …`, and `gate.sh` puts
+  that line in its log. If you see it after a rebase, that rebase merged
+  generated files as text. `regenerate.sh` makes them right either way.
+- **`merge-setup.sh --check`** installs nothing, and exits 1 when a driver
+  is missing.
+- **A conflict that remains is in hand-written text**, the prose of
+  `spec/12-findings.md` included. Resolve it, then regenerate.
+- **A file one side deleted** is a modify/delete conflict, which git never
+  hands to a driver. Take either side, then regenerate. The help, scaffold
+  and vector-package tests fail on a golden file nothing writes.
+
+**`merge-check.sh` proves the drivers** on a fresh clone of HEAD, so commit
+first. It runs a scripted conflicting rebase of each kind, then
+regeneration, then the drift tests. Run it after changing `.gitattributes`,
+a generator or a driver. A new generated file needs a line in
+`.gitattributes` and a step in `regenerate.sh`, in the change that adds it.
+
 ## When to run it: once, last, right before merge
 
 The scoped tier takes minutes, and most of them go to the packages your
@@ -74,9 +130,10 @@ change reaches. So it runs once, on the finished tree:
    new tests and the packages you edited. A red here costs seconds; in the
    gate it costs a run.
 2. **Review your own change and fix what the review finds.**
-3. **Rebase onto `origin/main`**, regenerate every generated file (your
-   brief names them), and push. Rebasing before the gate means the gate
-   certifies the head you merge.
+3. **Rebase onto `origin/main`**, run `regenerate.sh`, commit what it
+   changed, and push. In a fresh clone, run `merge-setup.sh` before the
+   rebase (below). Rebasing before the gate means the gate certifies the
+   head you merge.
 4. **Run the scoped tier** (below). If the change touches a shared seam,
    run the wave tier too.
 5. **On a red, read it before re-running anything** (the ladder below). Fix
@@ -160,8 +217,7 @@ verdicts show as `=== REUSED` in the log.
 A sibling merged while you worked, and you rebased onto it. Re-run what the
 rebase changed, not the whole gate:
 
-1. **Regenerate the generated files** (the specdata tree, the help goldens
-   and anything else your brief names), and commit what changed.
+1. **Run `regenerate.sh`**, and commit what changed.
 2. **`gate.sh --resume`.** The rebase changed paths from the sibling's
    change and from the regeneration. Resume re-runs the packages those
    paths reach, every tripwire, the drift step, and the build steps when
@@ -174,7 +230,8 @@ or yours touches a shared seam.
 Rebase reds are deterministic, and they are yours. A statement number a
 sibling took first, a regenerated golden, or conflict markers in a chapter
 all reproduce every time. Fix them as the brief says: renumber your unmerged
-statements, and regenerate generated files rather than merging them by hand.
+statements (a duplicate is `TestStatementsWellFormed`'s `is already used`),
+and run `regenerate.sh` rather than merging a generated file by hand.
 
 ## The shared-host cap, and the test cache
 
