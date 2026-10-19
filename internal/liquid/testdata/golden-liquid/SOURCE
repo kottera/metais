@@ -1,0 +1,7 @@
+Repository: https://github.com/jg-rp/golden-liquid
+Commit:     65c2f76ea64ef20647c295b000df5fcd9fc471cd
+Files:      golden_liquid.json, LICENSE (MIT), copied byte for byte from that
+            commit (git blob 0af8353af601e67f7e8aa03c34138c85f73b60c1 and
+            738458d887cf10cc5a8bd8652fe2c71323e8f150).
+Used by:    internal/liquid's TestGoldenLiquidParse (ADR-010 D4 item 7,
+            D14 item 4).
