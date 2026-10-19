@@ -1,0 +1,26 @@
+[
+  {
+    "code": "output.destination.not_empty",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "entries": [
+        "a.txt"
+      ],
+      "more": false
+    }
+  },
+  {
+    "code": "output.destination.not_regular_file",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "path": "a.txt",
+      "reason": "not_regular_file"
+    }
+  }
+]

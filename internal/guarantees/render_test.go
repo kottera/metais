@@ -30,8 +30,11 @@ type renderStep struct {
 	tags  []string
 	setup string // the vector tree copied into the work directory, or ""
 	// dirs and unwritable are the setup's directories, the second made
-	// unwritable once everything else is in place (ADR-011 D9 item 4).
+	// unwritable once everything else is in place (ADR-011 D9 item 4);
+	// symlinks and fifos are its links and named pipes.
 	dirs, unwritable []string
+	symlinks         []setupLink
+	fifos            []string
 	args             renderArgs
 	ok               bool
 	trees            []expectedTree
@@ -39,14 +42,21 @@ type renderStep struct {
 	stream string
 }
 
+// setupLink is a link a vector's setup makes: at path, to target.
+type setupLink struct {
+	Path   string `json:"path"`
+	Target string `json:"target"`
+}
+
 type renderArgs struct {
-	Package string         `json:"package"`
-	Data    string         `json:"data"`
-	Out     string         `json:"out"`
-	Now     string         `json:"now"`
-	Set     []string       `json:"set"`
-	SetJSON []string       `json:"set_json"`
-	Limits  map[string]any `json:"limits"`
+	Package   string         `json:"package"`
+	Overwrite bool           `json:"overwrite"`
+	Data      string         `json:"data"`
+	Out       string         `json:"out"`
+	Now       string         `json:"now"`
+	Set       []string       `json:"set"`
+	SetJSON   []string       `json:"set_json"`
+	Limits    map[string]any `json:"limits"`
 	// InputsJSON names a file of the vector holding an --inputs-json
 	// argument's JSON text.
 	InputsJSON string `json:"inputs_json"`
@@ -93,8 +103,9 @@ type expectedTree struct {
 
 // renderSteps returns every render step of the suite whose case is its
 // first step: into a directory or to standard output, as a dry run or
-// not, of one file or of all, and with no overwrite or sample, which are
-// the renders the tool has.
+// not, of one file or of all, into a new directory or an existing one with
+// or without --overwrite, from data or from samples: every render the tool
+// has.
 func renderSteps(t *testing.T) []renderStep {
 	t.Helper()
 	root := filepath.Join(moduleRootAbs(t), "spec", "conformance", "vectors")
@@ -114,11 +125,11 @@ func renderSteps(t *testing.T) []renderStep {
 			Cases []struct {
 				Name  string `json:"name"`
 				Setup *struct {
-					Copy       *string  `json:"copy"`
-					Dirs       []string `json:"dirs"`
-					Unwritable []string `json:"unwritable"`
-					Symlinks   []any    `json:"symlinks"`
-					Fifos      []string `json:"fifos"`
+					Copy       *string     `json:"copy"`
+					Dirs       []string    `json:"dirs"`
+					Unwritable []string    `json:"unwritable"`
+					Symlinks   []setupLink `json:"symlinks"`
+					Fifos      []string    `json:"fifos"`
 				} `json:"setup"`
 				Steps []struct {
 					Op     string          `json:"op"`
@@ -145,25 +156,14 @@ func renderSteps(t *testing.T) []renderStep {
 				st.stream = e.Equals
 			}
 			if c.Setup != nil {
-				if len(c.Setup.Symlinks) > 0 || len(c.Setup.Fifos) > 0 {
-					t.Fatalf("%s: a setup with links or pipes, which this detector does not replay", st.id)
-				}
 				if c.Setup.Copy != nil {
 					st.setup = *c.Setup.Copy
 				}
 				st.dirs, st.unwritable = c.Setup.Dirs, c.Setup.Unwritable
-			}
-			var all map[string]any
-			if err := json.Unmarshal(c.Steps[0].Args, &all); err != nil {
-				t.Fatal(err)
+				st.symlinks, st.fifos = c.Setup.Symlinks, c.Setup.Fifos
 			}
 			if err := json.Unmarshal(c.Steps[0].Args, &st.args); err != nil {
 				t.Fatal(err)
-			}
-			for _, k := range []string{"overwrite"} {
-				if _, ok := all[k]; ok {
-					t.Fatalf("%s: a render step with %s, which this detector does not replay", st.id, k)
-				}
 			}
 			out = append(out, st)
 		}
@@ -177,8 +177,8 @@ func renderSteps(t *testing.T) []renderStep {
 // prepare makes the work directory of st below base: <base>/parent, with
 // the vector's setup tree and the package and data trees the step names,
 // and returns it; or "" when this host cannot make a directory the setup
-// names unwritable, as root cannot, and the step cannot be replayed, as
-// the runner's unwritable-dirs probe skips it.
+// names unwritable, as root cannot, or a link or a named pipe it names,
+// and the step cannot be replayed, as the runner's probes skip it.
 func (st renderStep) prepare(t *testing.T, base string) string {
 	t.Helper()
 	work := filepath.Join(base, "parent")
@@ -191,6 +191,24 @@ func (st renderStep) prepare(t *testing.T, base string) string {
 	for _, d := range append(slices.Clone(st.dirs), st.unwritable...) {
 		if err := os.MkdirAll(filepath.Join(work, filepath.FromSlash(d)), 0o755); err != nil {
 			t.Fatal(err)
+		}
+	}
+	for _, l := range st.symlinks {
+		p := filepath.Join(work, filepath.FromSlash(l.Path))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Symlink(filepath.FromSlash(l.Target), p); err != nil {
+			return ""
+		}
+	}
+	for _, f := range st.fifos {
+		p := filepath.Join(work, filepath.FromSlash(f))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := mkfifo(p); err != nil {
+			return ""
 		}
 	}
 	for _, p := range []string{st.args.Package, st.args.Data} {
@@ -237,6 +255,9 @@ func (st renderStep) argv(work string) []string {
 	}
 	if st.args.Data != "" {
 		a = append(a, "--data", abs(st.args.Data))
+	}
+	if st.args.Overwrite {
+		a = append(a, "--overwrite")
 	}
 	if st.args.Now != "" {
 		a = append(a, "--now", st.args.Now)

@@ -1653,3 +1653,61 @@ they write into an existing directory too.
   vectors: `rnd/stream-asset` and `rnd/stream-container`. Standard-output
   purity "with warnings present" is a render that warns
   `output.container.space`.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-8.** `render --out <dir>` follows
+  D15 items 1 to 3. An absent `<dir>` is D14 item 1, unchanged. An existing
+  directory is D14 item 2, as A1 amends it, through W5-0's
+  `hostfs.Existing`. It is entered with no `--overwrite` when it holds no
+  entry at all, which is the one answer for an existing empty destination
+  that the Wave 5 brief settles (Wave 4's X1). When it holds any entry it
+  needs `--overwrite`. Render's interim `write_failed`, reason `exists`, for
+  an empty `--out` is gone. Chapter 11's §11.3, MTS-RND-013 to MTS-RND-022,
+  states D14 item 2, D15 and A1. `internal/hostfs` gains only
+  `Existing.Lstat`, by which phase 3 finds a leftover `.metais-staging` by
+  name. The readings this item took:
+  - **The per-file codes** are in the `output.destination` family, as this
+    ADR's interfaces and ADR-009's table of codes name them:
+    `output.destination.link`, `output.destination.case_variant`, and
+    `output.destination.not_regular_file`, whose `reason` is `is_directory`
+    or `not_regular_file`. Each names the planned `path`, relative to the
+    destination. A file where a directory must be is
+    `output.destination.not_directory`, which gains an optional `path`.
+    ADR-009 D8 item 3 writes the link code `output.link`, and so does the
+    W5-8 task; the family's name governs, and ADR-009's implementation log
+    says so.
+  - **Every check is a phase 3 finding** (D15 item 8), with or without
+    `--overwrite`. A directory that holds entries without `--overwrite`
+    reports `not_empty` beside each path the checks refuse. A leftover
+    `.metais-staging` is found by `Lstat` before anything is written and
+    refuses with `write_failed`, reason `exists` (A1 item 1). Without
+    `--overwrite` it is also an entry for `not_empty`. Another device, a
+    first segment matching the staging name, and an error that stopped a
+    check are each `write_failed` with their reason. A path that already
+    breaks D12 is not checked in the destination, since its own finding
+    refuses it.
+  - **A commit failure** is `output.destination.commit_failed`, with
+    `reason` and `committed`, the paths whose units were renamed, in byte
+    order. A `CommitError` that lists no path changed nothing, and is
+    `write_failed`. `rnd/overwrite-commit-failed` makes both happen with an
+    unwritable directory (ADR-011 A2): a rename into `out/locked` fails
+    after `a/x.txt` was committed, and an unwritable `out` refuses the
+    staging directory itself.
+  - **The result's `status`** is each file's check, `create` or `replace`.
+    It is `create` throughout for a directory that did not exist.
+  - `--overwrite` with an absent `--out` is D14 item 1, with nothing to
+    replace.
+
+  Every `go test` runs `render --overwrite` through
+  `TestExistingDestinationDetector`. The confinement and determinism
+  detectors replay `overwrite` steps and setups with links and named
+  pipes. A setup the host cannot make skips the step, as the runner's
+  probes do.
+
+  W5-9 merged first, so W5-8 adds the meeting with it (D16 item 2, D18 item 3,
+  ADR-008 D8 item 4). `rnd/overwrite-dry-run-only` proves that a dry run into an
+  existing directory lists each file's status, `create` or `replace`, and writes
+  nothing, and that `--only` into an existing directory, whether empty or
+  holding entries, writes the selected file alone by A1's commit. MTS-RND-012's
+  "by the rules of §11.1" now also names §11.3 for an existing directory.
+  `--overwrite` with `--out -` is `usage.flag_excluded`, the code W5-10
+  registers, with `other` set to `--out -`. `internal/cli`'s tests prove it,
+  as they prove every usage code.

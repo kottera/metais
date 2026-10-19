@@ -1,0 +1,12 @@
+[
+  {
+    "code": "output.destination.link",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "path": "a.txt"
+    }
+  }
+]

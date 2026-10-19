@@ -26,10 +26,10 @@ only, never an entry for a directory. Within an entry's template,
 leads from the entry back to the container's root.
 
 <a id="mts-trn-002"></a>**MTS-TRN-002** A container MUST be its own tree for
-§11.2's portable-path rules: a processor MUST hold each entry's path to them
+§11.4's portable-path rules: a processor MUST hold each entry's path to them
 within its container, MUST look for collisions and file–directory conflicts
 among the container's entries only, and MUST report each with the code
-§11.2 gives it, located at the entry's declaration. Entry ids MUST be
+§11.4 gives it, located at the entry's declaration. Entry ids MUST be
 unique within their container, and an entry MUST NOT declare `executable`,
 since a container records no file mode; a processor refuses both as it
 refuses any other manifest that breaks its rules ([chapter 3](03-manifest.md)).

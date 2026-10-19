@@ -1,0 +1,24 @@
+[
+  {
+    "path": "a.txt",
+    "output": "a",
+    "item": null,
+    "source": "template",
+    "kind": "text",
+    "size": 6,
+    "digest": "sha256:77981ea7ac834d42c8597b6879cf9e934679a54e817b2cd2ef461160026d7714",
+    "executable": false,
+    "status": "replace"
+  },
+  {
+    "path": "sub/b.txt",
+    "output": "b",
+    "item": null,
+    "source": "template",
+    "kind": "text",
+    "size": 6,
+    "digest": "sha256:ab1a29c10ccb9ceec5a9e4453f1aaf261b81869eaadbf3426e378a99347b08af",
+    "executable": false,
+    "status": "create"
+  }
+]

@@ -5,6 +5,7 @@ package guarantees
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -15,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kottera/metais/internal/cli"
 	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/testenv"
@@ -41,6 +43,11 @@ var existingWrites = []existingWrite{
 		name:  "hostfs.Existing",
 		files: hostfsFiles,
 		run:   runHostfsExisting,
+	},
+	{
+		name:  "metais render --overwrite",
+		files: hostfsFiles,
+		run:   runRenderOverwrite,
 	},
 }
 
@@ -76,6 +83,37 @@ func runHostfsExisting(t *testing.T, out string, faults fault.Set) error {
 		}
 	}
 	return o.Commit()
+}
+
+// runRenderOverwrite renders, with metais render --overwrite, a package
+// whose outputs are hostfsFiles into out, each output holding its own
+// path (ADR-005 D15 item 3).
+func runRenderOverwrite(t *testing.T, out string, faults fault.Set) error {
+	t.Helper()
+	pkg := filepath.Join(testenv.Dir(t), "pkg")
+	manifest := "metais: \"1.0\"\nname: example\nversion: 1.0.0\ntitle: Example\n" +
+		"description: An example package.\nguide: Supply the inputs and render.\ninputs: []\noutputs:\n"
+	for i, f := range hostfsFiles {
+		manifest += fmt.Sprintf("  - id: f%d\n    template: f.txt.liquid\n    path: %s\n", i, f)
+	}
+	if err := os.MkdirAll(filepath.Join(pkg, "templates"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for name, body := range map[string]string{"metais.yaml": manifest, "templates/f.txt.liquid": "new {{ output.path }}"} {
+		if err := os.WriteFile(filepath.Join(pkg, filepath.FromSlash(name)), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var stdout, stderr bytes.Buffer
+	status := cli.Run(context.Background(), cli.Invocation{
+		Args:  []string{"render", pkg, "--out", out, "--overwrite", "--json"},
+		Stdin: strings.NewReader(""), Stdout: &stdout, Stderr: &stderr,
+		Options: cli.Options{Faults: faults},
+	})
+	if status != 0 {
+		return fmt.Errorf("metais render --overwrite: status %d: %s", status, stdout.String())
+	}
+	return nil
 }
 
 // oldTime is the access time the detector gives every file it seeds, and

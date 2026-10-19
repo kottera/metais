@@ -1,0 +1,22 @@
+[
+  {
+    "code": "output.destination.case_variant",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "path": "README.md"
+    }
+  },
+  {
+    "code": "output.destination.case_variant",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "path": "sub/b.txt"
+    }
+  }
+]

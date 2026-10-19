@@ -80,8 +80,7 @@ func TestRenderRefusals(t *testing.T) {
 	pkg, data := renderPackage(t, root)
 	file := filepath.Join(root, "file")
 	full := filepath.Join(root, "full")
-	empty := filepath.Join(root, "empty")
-	for _, d := range []string{full, empty} {
+	for _, d := range []string{full} {
 		if err := os.Mkdir(d, 0o755); err != nil {
 			t.Fatal(err)
 		}
@@ -99,11 +98,11 @@ func TestRenderRefusals(t *testing.T) {
 		{[]string{"render", pkg, "--json"}, 3, "usage.missing_flag"},
 		{[]string{"render", "-", "--out", "o", "--json"}, 3, "usage.package_from_stdin"},
 		{[]string{"render", pkg, "--out", "o", "--now", "2026-10-19", "--json"}, 3, "usage.bad_value"},
+		{[]string{"render", pkg, "--out", "-", "--overwrite", "--json"}, 3, "usage.flag_excluded"},
 		{[]string{"render", pkg, "--out", "o", "--data", filepath.Join(root, "absent"), "--json"}, 3, "usage.data_dir_unreadable"},
 		{[]string{"render", pkg, "--data", data, "--out", file, "--json"}, 5, "output.destination.not_directory"},
 		{[]string{"render", pkg, "--data", data, "--out", filepath.Join(file, "o"), "--json"}, 5, "output.destination.not_directory"},
 		{[]string{"render", pkg, "--data", data, "--out", full, "--json"}, 5, "output.destination.not_empty"},
-		{[]string{"render", pkg, "--data", data, "--out", empty, "--json"}, 5, "output.destination.write_failed"},
 		{[]string{"render", pkg, "--out", filepath.Join(root, "o"), "--json"}, 1, "input.missing"},
 	} {
 		before := snapshotNames(t, root)
@@ -194,7 +193,7 @@ func TestRenderCommitAbortsAFailedWrite(t *testing.T) {
 		{path: "a.txt", bytes: []byte("A")},
 		{path: "a.txt/b.txt", bytes: []byte("B")},
 	}
-	f, ok := commit(filepath.Join(parent, "x", "out"), plan, &session{})
+	f, ok := commit(filepath.Join(parent, "x", "out"), nil, plan, &session{})
 	if ok {
 		t.Fatal("the commit succeeded")
 	}
@@ -211,5 +210,98 @@ func TestRenderCommitAbortsAFailedWrite(t *testing.T) {
 	}
 	if len(left) != 0 {
 		t.Errorf("the failed render left %q", left)
+	}
+}
+
+// TestRenderOverwriteKeepsHardLinks is ADR-005 D15 item 6: replacing never
+// writes into an existing file. The file a render replaces has a second
+// hard link outside the output directory, which keeps the old bytes, while
+// the output's path holds the new; the record's status is replace, and a
+// file the render does not write is left as it was (D15 item 7).
+func TestRenderOverwriteKeepsHardLinks(t *testing.T) {
+	root := testenv.Dir(t)
+	pkg, data := renderPackage(t, root)
+	out := filepath.Join(root, "out")
+	if err := os.Mkdir(out, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	target, link, keep := filepath.Join(out, "greeting.md"), filepath.Join(root, "link"), filepath.Join(out, "keep.txt")
+	for p, b := range map[string]string{target: "old\n", keep: "keep\n"} {
+		if err := os.WriteFile(p, []byte(b), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.Link(target, link); err != nil {
+		t.Skipf("cannot make a hard link here: %v", err)
+	}
+	r := runTool(t, "render", pkg, "--data", data, "--out", out, "--overwrite", "--json")
+	if r.status != 0 || len(r.doc.Findings) != 0 {
+		t.Fatalf("metais render --overwrite: status %d, %s", r.status, r.stdout)
+	}
+	if res := readRender(t, r); len(res.Files) != 1 || res.Files[0].Status != "replace" {
+		t.Errorf("files %+v, want greeting.md replaced", res.Files)
+	}
+	want, _ := os.ReadFile(filepath.Join(pkg, "examples", "basic", "expected", "greeting.md"))
+	for p, b := range map[string]string{target: string(want), link: "old\n", keep: "keep\n"} {
+		if got, err := os.ReadFile(p); err != nil || string(got) != b {
+			t.Errorf("%s holds %q, %v; want %q", p, got, err, b)
+		}
+	}
+	if entries, _ := os.ReadDir(out); len(entries) != 2 {
+		t.Errorf("out holds %v, want greeting.md and keep.txt", entries)
+	}
+}
+
+// TestRenderIntoLinkedOut is ADR-005 D15 item 1: --out may be a symbolic
+// link to a directory, which the caller named, and the render writes into
+// the directory it names.
+func TestRenderIntoLinkedOut(t *testing.T) {
+	root := testenv.Dir(t)
+	pkg, data := renderPackage(t, root)
+	real := filepath.Join(root, "real")
+	if err := os.Mkdir(real, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink("real", filepath.Join(root, "out")); err != nil {
+		t.Skipf("cannot make a symbolic link here: %v", err)
+	}
+	r := runTool(t, "render", pkg, "--data", data, "--out", filepath.Join(root, "out"), "--json")
+	if r.status != 0 || len(r.doc.Findings) != 0 {
+		t.Fatalf("metais render: status %d, %s", r.status, r.stdout)
+	}
+	if _, err := os.Stat(filepath.Join(real, "greeting.md")); err != nil {
+		t.Errorf("greeting.md is not in the linked directory: %v", err)
+	}
+}
+
+// TestPathRefusal is the finding of each reason ADR-005 D15 item 4's
+// checks refuse a planned path with, as Amendment A1 items 4 and 5 extend
+// them. Another device is io_error and names nothing of the device (A1
+// item 4): no vector can mount a file system, so this test, with
+// internal/hostfs's own device tests, is its proof.
+func TestPathRefusal(t *testing.T) {
+	for _, c := range []struct {
+		reason hostfs.Reason
+		code   finding.Code
+		path   bool   // the finding names the path
+		why    string // its reason parameter, or ""
+	}{
+		{hostfs.Link, finding.CodeDestinationLink, true, ""},
+		{hostfs.NotDirectory, finding.CodeDestinationNotDirectory, true, ""},
+		{hostfs.CaseVariant, finding.CodeDestinationCaseVariant, true, ""},
+		{hostfs.IsDirectory, finding.CodeDestinationNotRegularFile, true, "is_directory"},
+		{hostfs.NotRegularFile, finding.CodeDestinationNotRegularFile, true, "not_regular_file"},
+		{hostfs.IOError, finding.CodeDestinationWriteFailed, false, "io_error"},
+		{hostfs.Exists, finding.CodeDestinationWriteFailed, false, "exists"},
+		{hostfs.PermissionDenied, finding.CodeDestinationWriteFailed, false, "permission_denied"},
+	} {
+		f := pathRefusal("a/b.txt", &hostfs.Error{Op: "check", Reason: c.reason})
+		p, hasPath := f.Param("path")
+		ps, _ := p.Str()
+		w, _ := f.Param("reason")
+		why, _ := w.Str()
+		if f.Code() != c.code || hasPath != c.path || hasPath && ps != "a/b.txt" || why != c.why {
+			t.Errorf("%s: %s, path %q (%v), reason %q; want %s, path %v, reason %q", c.reason, f.Code(), ps, hasPath, why, c.code, c.path, c.why)
+		}
 	}
 }

@@ -1,0 +1,127 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/overwrite-link",
+  "title": "A symbolic link at an output path, or in a directory above one, in an existing output directory refuses the render, with or without the request to replace files, and nothing is written through it",
+  "statements": [
+    "MTS-RND-015"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [
+    "symlinks"
+  ],
+  "notes": "The link at a.txt points inside the output directory and is refused all the same; the link at sub points out of it, into outside, where nothing may be written.",
+  "cases": [
+    {
+      "name": "at-path",
+      "setup": {
+        "copy": "setup",
+        "symlinks": [
+          {
+            "path": "out/a.txt",
+            "target": "target.txt"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "overwrite": true
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/at-path.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "at-path-without-overwrite",
+      "setup": {
+        "copy": "setup",
+        "symlinks": [
+          {
+            "path": "out/a.txt",
+            "target": "target.txt"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/at-path-without-overwrite.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "in-parent",
+      "setup": {
+        "copy": "setup",
+        "dirs": [
+          "outside"
+        ],
+        "symlinks": [
+          {
+            "path": "out/sub",
+            "target": "../outside"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "overwrite": true
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/in-parent.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "in-parent-without-overwrite",
+      "setup": {
+        "copy": "setup",
+        "dirs": [
+          "outside"
+        ],
+        "symlinks": [
+          {
+            "path": "out/sub",
+            "target": "../outside"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/in-parent-without-overwrite.json"
+          }
+        }
+      ]
+    }
+  ]
+}

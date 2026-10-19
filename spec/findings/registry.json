@@ -3484,18 +3484,96 @@
       ]
     },
     {
+      "code": "output.destination.case_variant",
+      "severity": "error",
+      "class": "destination",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The output's path, relative to the destination, that the check refused.",
+          "always": true
+        }
+      ],
+      "message": "In the destination, an entry's name differs from a name of the path {path} only in case or normalization, and what a case-insensitive file system would do with the two is not portable.",
+      "hint": "Rename or remove the entry, or render into a directory that does not exist yet. Nothing was written.",
+      "location": "none",
+      "since": "1.0",
+      "statements": [
+        "MTS-RND-017"
+      ]
+    },
+    {
+      "code": "output.destination.commit_failed",
+      "severity": "error",
+      "class": "destination",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the commit stopped: not_found, permission_denied, is_directory, not_regular_file or io_error, as ADR-006 D9 item 8 maps an operating-system error; or exists, when something appeared at a name being moved into place.",
+          "always": true
+        },
+        {
+          "name": "committed",
+          "type": "array",
+          "items": "string",
+          "meaning": "Every output path already moved into place, relative to the destination, in byte order. Each holds its new bytes, whole.",
+          "always": true
+        }
+      ],
+      "message": "Moving the outputs into the destination stopped part way ({reason}); the outputs listed hold their new bytes, and every other file holds its old.",
+      "hint": "Fix the cause, and render again with --overwrite, which replaces the outputs already moved. Nothing else was written, and nothing was removed.",
+      "location": "none",
+      "since": "1.0",
+      "statements": [
+        "MTS-RND-022"
+      ]
+    },
+    {
+      "code": "output.destination.link",
+      "severity": "error",
+      "class": "destination",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The output's path, relative to the destination, that the check refused.",
+          "always": true
+        }
+      ],
+      "message": "In the destination, the path {path} runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed or replaced.",
+      "hint": "Remove the link, or render into a directory that does not exist yet. Nothing was written.",
+      "location": "none",
+      "since": "1.0",
+      "statements": [
+        "MTS-RND-015"
+      ]
+    },
+    {
       "code": "output.destination.not_directory",
       "severity": "error",
       "class": "destination",
       "subject": "invocation",
-      "params": [],
-      "message": "The destination, or a directory above it, exists and is not a directory.",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "When the file is inside the destination, the output's path, relative to it, that needs a directory where the file is.",
+          "always": false
+        }
+      ],
+      "message": "The destination, a directory above it, or a directory an output's path needs inside it, exists and is not a directory.",
       "hint": "Name a directory, or a path that does not exist yet beneath directories only. Nothing was written.",
       "location": "none",
       "since": "1.0",
       "statements": [
         "MTS-AUT-028",
         "MTS-RND-003",
+        "MTS-RND-016",
         "MTS-SMP-006"
       ]
     },
@@ -3530,6 +3608,33 @@
       ]
     },
     {
+      "code": "output.destination.not_regular_file",
+      "severity": "error",
+      "class": "destination",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The output's path, relative to the destination, that the check refused.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "What stands at the path: is_directory for a directory, not_regular_file for a named pipe, a socket, a device or anything else that is not a regular file.",
+          "always": true
+        }
+      ],
+      "message": "In the destination, the path {path} names something that is not a regular file ({reason}), which is never replaced.",
+      "hint": "Remove what stands at the path, or render into a directory that does not exist yet. Nothing was written.",
+      "location": "none",
+      "since": "1.0",
+      "statements": [
+        "MTS-RND-016"
+      ]
+    },
+    {
       "code": "output.destination.write_failed",
       "severity": "error",
       "class": "destination",
@@ -3557,6 +3662,10 @@
         "MTS-AUT-026",
         "MTS-AUT-027",
         "MTS-RND-006",
+        "MTS-RND-014",
+        "MTS-RND-018",
+        "MTS-RND-019",
+        "MTS-RND-022",
         "MTS-SMP-008"
       ]
     },

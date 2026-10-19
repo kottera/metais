@@ -129,7 +129,7 @@ func TestAssetBytesStreamed(t *testing.T) {
 			t.Errorf("planning and rendering opened %s %d times", name, c.opened[name])
 		}
 	}
-	if f, ok := commit(filepath.Join(root, "out"), plan, s); !ok {
+	if f, ok := commit(filepath.Join(root, "out"), nil, plan, s); !ok {
 		t.Fatalf("the commit failed: %v", f.Code())
 	}
 	for _, name := range []string{"assets/big.bin", "assets/static/a.css", "assets/static/b/c.js"} {

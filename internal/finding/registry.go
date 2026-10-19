@@ -44,9 +44,13 @@ const (
 	CodeLimitExceededOutput   Code = "limit.exceeded.output"
 	CodeLimitExceededTemplate Code = "limit.exceeded.template"
 
-	CodeDestinationNotDirectory Code = "output.destination.not_directory"
-	CodeDestinationNotEmpty     Code = "output.destination.not_empty"
-	CodeDestinationWriteFailed  Code = "output.destination.write_failed"
+	CodeDestinationCaseVariant    Code = "output.destination.case_variant"
+	CodeDestinationCommitFailed   Code = "output.destination.commit_failed"
+	CodeDestinationLink           Code = "output.destination.link"
+	CodeDestinationNotDirectory   Code = "output.destination.not_directory"
+	CodeDestinationNotEmpty       Code = "output.destination.not_empty"
+	CodeDestinationNotRegularFile Code = "output.destination.not_regular_file"
+	CodeDestinationWriteFailed    Code = "output.destination.write_failed"
 
 	CodeSampleInvalid Code = "schema.sample_invalid"
 
@@ -72,6 +76,7 @@ const (
 	CodeUsageUnknownCommand    Code = "usage.unknown_command"
 	CodeUsageUnknownFlag       Code = "usage.unknown_flag"
 	CodeUsageUnknownTopic      Code = "usage.unknown_topic"
+	CodeUsageFlagExcluded      Code = "usage.flag_excluded"
 	CodeUsageBadGlob           Code = "usage.bad_glob"
 	CodeUsageBadPattern        Code = "usage.bad_pattern"
 	CodeUsageBinaryToTerminal  Code = "usage.binary_to_terminal"
@@ -85,7 +90,6 @@ const (
 	CodeUsageArchiveToTerminal Code = "usage.archive_to_terminal"
 	CodeUsageNotSourceDir      Code = "usage.not_a_source_directory"
 	CodeUsageFlagRequires      Code = "usage.flag_requires"
-	CodeUsageFlagExcluded      Code = "usage.flag_excluded"
 )
 
 // registry is the tool's table of codes, in code order. It is the Go form
@@ -1207,15 +1211,61 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{"MTS-OUT-018"},
 	},
 	{
-		Code:       "output.destination.not_directory",
-		Severity:   SeverityError,
-		Class:      ClassDestination,
-		Subject:    SubjectInvocation,
-		Message:    "The destination, or a directory above it, exists and is not a directory.",
+		Code:     "output.destination.case_variant",
+		Severity: SeverityError,
+		Class:    ClassDestination,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "path", Type: TypeString, Meaning: "The output's path, relative to the destination, that the check refused.", Always: true},
+		},
+		Message:    "In the destination, an entry's name differs from a name of the path {path} only in case or normalization, and what a case-insensitive file system would do with the two is not portable.",
+		Hint:       "Rename or remove the entry, or render into a directory that does not exist yet. Nothing was written.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{"MTS-RND-017"},
+	},
+	{
+		Code:     "output.destination.commit_failed",
+		Severity: SeverityError,
+		Class:    ClassDestination,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "reason", Type: TypeString, Meaning: "Why the commit stopped: not_found, permission_denied, is_directory, not_regular_file or io_error, as ADR-006 D9 item 8 maps an operating-system error; or exists, when something appeared at a name being moved into place.", Always: true},
+			{Name: "committed", Type: TypeArray, Items: TypeString, Meaning: "Every output path already moved into place, relative to the destination, in byte order. Each holds its new bytes, whole.", Always: true},
+		},
+		Message:    "Moving the outputs into the destination stopped part way ({reason}); the outputs listed hold their new bytes, and every other file holds its old.",
+		Hint:       "Fix the cause, and render again with --overwrite, which replaces the outputs already moved. Nothing else was written, and nothing was removed.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{"MTS-RND-022"},
+	},
+	{
+		Code:     "output.destination.link",
+		Severity: SeverityError,
+		Class:    ClassDestination,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "path", Type: TypeString, Meaning: "The output's path, relative to the destination, that the check refused.", Always: true},
+		},
+		Message:    "In the destination, the path {path} runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed or replaced.",
+		Hint:       "Remove the link, or render into a directory that does not exist yet. Nothing was written.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{"MTS-RND-015"},
+	},
+	{
+		Code:     "output.destination.not_directory",
+		Severity: SeverityError,
+		Class:    ClassDestination,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "path", Type: TypeString, Meaning: "When the file is inside the destination, the output's path, relative to it, that needs a directory where the file is."},
+		},
+		Message:    "The destination, a directory above it, or a directory an output's path needs inside it, exists and is not a directory.",
 		Hint:       "Name a directory, or a path that does not exist yet beneath directories only. Nothing was written.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-028", "MTS-RND-003", "MTS-SMP-006"},
+		Statements: []string{"MTS-AUT-028", "MTS-RND-003", "MTS-RND-016", "MTS-SMP-006"},
 	},
 	{
 		Code:     "output.destination.not_empty",
@@ -1233,6 +1283,21 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{"MTS-AUT-028", "MTS-RND-004", "MTS-SMP-006"},
 	},
 	{
+		Code:     "output.destination.not_regular_file",
+		Severity: SeverityError,
+		Class:    ClassDestination,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "path", Type: TypeString, Meaning: "The output's path, relative to the destination, that the check refused.", Always: true},
+			{Name: "reason", Type: TypeString, Meaning: "What stands at the path: is_directory for a directory, not_regular_file for a named pipe, a socket, a device or anything else that is not a regular file.", Always: true},
+		},
+		Message:    "In the destination, the path {path} names something that is not a regular file ({reason}), which is never replaced.",
+		Hint:       "Remove what stands at the path, or render into a directory that does not exist yet. Nothing was written.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{"MTS-RND-016"},
+	},
+	{
 		Code:     "output.destination.write_failed",
 		Severity: SeverityError,
 		Class:    ClassDestination,
@@ -1245,7 +1310,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Fix the cause, and run the command again into an empty directory; remove what was written first if you do not want it.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-026", "MTS-AUT-027", "MTS-RND-006", "MTS-SMP-008"},
+		Statements: []string{"MTS-AUT-026", "MTS-AUT-027", "MTS-RND-006", "MTS-RND-014", "MTS-RND-018", "MTS-RND-019", "MTS-RND-022", "MTS-SMP-008"},
 	},
 	{
 		Code:     "output.expression.for_each_type",

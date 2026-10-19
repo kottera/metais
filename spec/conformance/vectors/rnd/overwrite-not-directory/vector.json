@@ -1,0 +1,38 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/overwrite-not-directory",
+  "title": "In an existing output directory, a directory at an output path, and a file where an output path needs a directory, each refuse the render",
+  "statements": [
+    "MTS-RND-016"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "in-the-way",
+      "setup": {
+        "copy": "setup",
+        "dirs": [
+          "out/a.txt"
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "overwrite": true
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/in-the-way.json"
+          }
+        }
+      ]
+    }
+  ]
+}
