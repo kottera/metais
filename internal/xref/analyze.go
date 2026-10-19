@@ -64,9 +64,12 @@ type analyzer struct {
 }
 
 func newAnalyzer(p *Package) (*analyzer, error) {
-	w, err := schema.NewWalker(p.Schema, schema.CombinedURI)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrPackage, err)
+	var w *schema.Walker
+	if !p.NoSchemas {
+		var err error
+		if w, err = schema.NewWalker(p.Schema, schema.CombinedURI); err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrPackage, err)
+		}
 	}
 	a := &analyzer{
 		pkg:       p,
@@ -87,6 +90,11 @@ func newAnalyzer(p *Package) (*analyzer, error) {
 		stack:     map[string]bool{},
 	}
 	for i, in := range p.Manifest.Inputs {
+		if w == nil {
+			a.inputs[in.Name] = input{index: i}
+			a.inputNames = append(a.inputNames, in.Name)
+			continue
+		}
 		root, ok, err := w.Reference("/properties/"+escape(in.Name), "$ref")
 		if err != nil || !ok {
 			return nil, fmt.Errorf("%w: the combined schema has no schema for the input %q", ErrPackage, in.Name)
@@ -129,7 +137,11 @@ func (a *analyzer) globals() {
 	in := map[string]set{}
 	src := map[string]set{}
 	for _, decl := range a.pkg.Manifest.Inputs {
-		in[decl.Name] = of(schemaAlt(decl.Name, a.inputs[decl.Name].root))
+		if a.walker == nil {
+			in[decl.Name] = of(unknownAlt)
+		} else {
+			in[decl.Name] = of(schemaAlt(decl.Name, a.inputs[decl.Name].root))
+		}
 		if decl.Collection {
 			item := a.record(map[string]set{"name": str, "stem": str, "form": str}, false)
 			src[decl.Name] = array(union(of(recordAlt(item)), null))
