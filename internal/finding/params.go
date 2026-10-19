@@ -5,6 +5,7 @@ package finding
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -53,6 +54,57 @@ func Int(n int64) Value {
 		panic(fmt.Sprintf("finding: %d has no exact canonical JSON number form", n))
 	}
 	return Value{typ: TypeNumber, text: strconv.FormatInt(n, 10)}
+}
+
+var jsonNumber = regexp.MustCompile(`^-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?$`)
+
+// Num is the number a JSON number literal writes, in its canonical form
+// (ADR-002 D9 item 1, RFC 8785 §3.2.2.3): the shortest text that reads back
+// as the same double. It refuses text that is not a JSON number, and a
+// literal beyond the doubles' range.
+func Num(literal string) (Value, error) {
+	if !jsonNumber.MatchString(literal) {
+		return Value{}, fmt.Errorf("finding: %q is not a JSON number", literal)
+	}
+	f, err := strconv.ParseFloat(literal, 64)
+	if err != nil {
+		return Value{}, fmt.Errorf("finding: %s has no double", literal)
+	}
+	return Value{typ: TypeNumber, text: canonicalNumber(f)}, nil
+}
+
+// canonicalNumber is f as ECMAScript's Number.prototype.toString writes
+// it, which RFC 8785 adopts.
+func canonicalNumber(f float64) string {
+	if f == 0 {
+		return "0"
+	}
+	sign := ""
+	if f < 0 {
+		sign, f = "-", -f
+	}
+	// e is d.ddde±x, the shortest digits that read back as f.
+	e := strconv.FormatFloat(f, 'e', -1, 64)
+	mant, exp, _ := strings.Cut(e, "e")
+	digits := strings.Replace(mant, ".", "", 1)
+	x, _ := strconv.Atoi(exp)
+	k, n := len(digits), x+1
+	switch {
+	case k <= n && n <= 21:
+		return sign + digits + strings.Repeat("0", n-k)
+	case 0 < n && n <= 21:
+		return sign + digits[:n] + "." + digits[n:]
+	case -6 < n && n <= 0:
+		return sign + "0." + strings.Repeat("0", -n) + digits
+	}
+	out := sign + digits[:1]
+	if k > 1 {
+		out += "." + digits[1:]
+	}
+	if n-1 < 0 {
+		return out + "e-" + strconv.Itoa(1-n)
+	}
+	return out + "e+" + strconv.Itoa(n-1)
 }
 
 // String is the string s. A string from a supplied input is never a

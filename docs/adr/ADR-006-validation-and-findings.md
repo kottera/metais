@@ -1241,4 +1241,14 @@ changes the exit status and nothing in the report.
 
 ## Implementation log
 
-Nothing implemented.
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-11.** D6 and D7 item 4 landed as
+  `schemafail.Map`, in `internal/schemafail` beside the tree it reads. The
+  keyword fields an adapter writes in a failure's `Data` are listed in
+  `internal/schemafail/data.go`; a false schema the instance reached is a
+  failure of its own, keyword `false`, named by the applicator its pointer
+  shows. The keyword codes are registered in each of D6 item 1's three
+  families, with `input.validation.partial`; the content vocabulary has no
+  code, since ADR-003 D3 item 4 never asserts it. `contains` is reported,
+  and its subschema's failures beneath it, as D6 items 4 and 5 both say.
+  D13 item 5's echo test is `TestNoEcho`, with its control beside it;
+  `TestChildOrder` permutes every node's children.

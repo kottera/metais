@@ -26,7 +26,7 @@ func wcag() Finding {
 func TestJSONEncoding(t *testing.T) {
 	withTestCodes(t)
 	got := string(AppendJSON(nil, wcag()))
-	want := `[{"code":"input.min_length","severity":"error",` +
+	want := `[{"code":"input.fixture_min_length","severity":"error",` +
 		`"message":"Remarks must be at least 10 characters long; it has 4.",` +
 		`"hint":"Write at least 10 characters.",` +
 		`"subject":{"kind":"input","name":"wcag_criteria","title":"WCAG 2.2 criteria"},` +
@@ -54,7 +54,7 @@ func TestJSONEncodingMembers(t *testing.T) {
 		WithField(Field{}),
 	)
 	got := string(AppendJSON(nil, f))
-	want := `[{"code":"input.type","severity":"error","message":"the input ` + "`v`" + ` must be object, null; it is array.","hint":"Write a value of type object, null.",` +
+	want := `[{"code":"input.fixture_type","severity":"error","message":"the input ` + "`v`" + ` must be object, null; it is array.","hint":"Write a value of type object, null.",` +
 		`"subject":{"kind":"input","name":"v","title":"V"},` +
 		`"location":{"origin":"inputs_json","argument":1,"pointer":""},` +
 		`"params":{"expected":["object","null"],"actual":"array"},` +
@@ -102,7 +102,7 @@ func TestNeutralisation(t *testing.T) {
 func TestHumanRendering(t *testing.T) {
 	withTestCodes(t)
 	got := string(AppendHuman(nil, false, wcag()))
-	want := "wcag_criteria.csv:7:41: error: Remarks must be at least 10 characters long; it has 4. [input.min_length]\n" +
+	want := "wcag_criteria.csv:7:41: error: Remarks must be at least 10 characters long; it has 4. [input.fixture_min_length]\n" +
 		"  at /wcag_criteria/5/remarks (input wcag_criteria: WCAG 2.2 criteria)\n" +
 		"  field: Remarks — How the product meets, partly meets or fails the criterion, with the evidence.\n" +
 		"  rule: minLength at /items/properties/remarks in inputs/wcag_criteria.schema.json\n" +
@@ -146,11 +146,11 @@ func TestHumanAlternatives(t *testing.T) {
 	f := New(codeInputType, input("v"), &loc, Params{"expected": List(String("object")), "actual": String("array")},
 		WithAlternatives(Alternative{Branch: 0, Title: "A card", Findings: []Finding{branch}}, Alternative{Branch: 1, Omitted: 3}))
 	got := string(AppendHuman(nil, false, f))
-	want := "v.json:1:1: error: the input `v` must be object; it is array. [input.type]\n" +
+	want := "v.json:1:1: error: the input `v` must be object; it is array. [input.fixture_type]\n" +
 		"  at /v (input v: V)\n" +
 		"  hint: Write a value of type object.\n" +
 		"  option 1: A card\n" +
-		"    v.json:2:3: error: `/kind` must be string; it is number. [input.type]\n" +
+		"    v.json:2:3: error: `/kind` must be string; it is number. [input.fixture_type]\n" +
 		"      at /v/kind (input v: V)\n" +
 		"      hint: Write a value of type string.\n" +
 		"  option 2\n" +

@@ -118,6 +118,131 @@
       "statements": []
     },
     {
+      "code": "input.additional_item",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The item's 0-based index in the array.",
+          "always": true
+        },
+        {
+          "name": "prefix_count",
+          "type": "number",
+          "meaning": "How many items the schema's prefixItems describes.",
+          "always": true
+        }
+      ],
+      "message": "{field} is beyond the {prefix_count} items the schema allows.",
+      "hint": "Remove the items after the first {prefix_count}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.additional_property",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The member's name, as the supplier wrote it or as the schema declares it.",
+          "always": true
+        },
+        {
+          "name": "suggestion",
+          "type": "string",
+          "meaning": "The declared member name closest to this one, by ADR-006 D9 item 7's rule; present when one is close enough.",
+          "always": false
+        }
+      ],
+      "message": "The member `{property}` is not one the schema allows.",
+      "hint": "Remove `{property}`, or rename it to a member the schema declares.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.any_of",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "branch_count",
+          "type": "number",
+          "meaning": "How many alternatives the schema gives.",
+          "always": true
+        }
+      ],
+      "message": "{field} matches none of the {branch_count} alternatives the schema allows.",
+      "hint": "Change the value to match one alternative; each alternative's findings are listed under it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.const",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "expected",
+          "type": "string",
+          "meaning": "The value the schema requires, as its canonical JSON text.",
+          "always": true
+        }
+      ],
+      "message": "{field} must be {expected}.",
+      "hint": "Write {expected}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.contains",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "{field} has no item the schema's contains accepts.",
+      "hint": "Add an item that the contains subschema accepts.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.dependent_required",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The missing member's name.",
+          "always": true
+        },
+        {
+          "name": "because",
+          "type": "string",
+          "meaning": "The present member that requires it.",
+          "always": true
+        }
+      ],
+      "message": "{field} is required when `{because}` is present.",
+      "hint": "Add the member `{property}`, or remove `{because}`.",
+      "location": "parent",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "input.encoding_invalid",
       "severity": "error",
       "class": "content",
@@ -143,6 +268,413 @@
       "statements": []
     },
     {
+      "code": "input.enum",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "allowed",
+          "type": "array",
+          "items": "string",
+          "meaning": "The first 20 values the schema allows, in its order, each as its canonical JSON text.",
+          "always": true
+        },
+        {
+          "name": "allowed_count",
+          "type": "number",
+          "meaning": "How many values the schema allows.",
+          "always": true
+        },
+        {
+          "name": "suggestion",
+          "type": "string",
+          "meaning": "The allowed string closest to the value, by ADR-006 D9 item 7's rule; present when one is close enough and the value is a string.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be one of the {allowed_count} values the schema allows.",
+      "hint": "Write one of the allowed values: {allowed}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.exclusive_maximum",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be less than {limit}.",
+      "hint": "Write a number less than {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.exclusive_minimum",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be greater than {limit}.",
+      "hint": "Write a number greater than {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.forbidden",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The member's name, when the schema forbids it under properties.",
+          "always": false
+        }
+      ],
+      "message": "{field} is not allowed here.",
+      "hint": "Remove the value.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.format",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "format",
+          "type": "string",
+          "meaning": "The format the schema requires.",
+          "always": true
+        }
+      ],
+      "message": "{field} is not in the {format} format.",
+      "hint": "Write a value in the {format} format.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.max_contains",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many items the contains subschema accepts.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at most {limit} items the schema's contains accepts; it has {count}.",
+      "hint": "Remove items the contains subschema accepts until there are at most {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.max_items",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many items the array has.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at most {limit} items; it has {count}.",
+      "hint": "Remove items until there are at most {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.max_length",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "length",
+          "type": "number",
+          "meaning": "The string's length in code points, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be at most {limit} characters long.",
+      "hint": "Write at most {limit} characters.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.max_properties",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many members the object has.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at most {limit} members; it has {count}.",
+      "hint": "Remove members until there are at most {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.maximum",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be at most {limit}.",
+      "hint": "Write a number of at most {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.min_contains",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many items the contains subschema accepts.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at least {limit} items the schema's contains accepts; it has {count}.",
+      "hint": "Add items the contains subschema accepts until there are at least {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.min_items",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many items the array has.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at least {limit} items; it has {count}.",
+      "hint": "Add items until there are at least {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.min_length",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "length",
+          "type": "number",
+          "meaning": "The string's length in code points, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be at least {limit} characters long.",
+      "hint": "Write at least {limit} characters.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.min_properties",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many members the object has.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at least {limit} members; it has {count}.",
+      "hint": "Add members until there are at least {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.minimum",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be at least {limit}.",
+      "hint": "Write a number of at least {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.multiple_of",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "divisor",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be a multiple of {divisor}.",
+      "hint": "Write a multiple of {divisor}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.not",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "{field} matches a schema it must not match.",
+      "hint": "Change the value so that the not subschema no longer accepts it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "input.number_out_of_range",
       "severity": "error",
       "class": "content",
@@ -157,6 +689,222 @@
       ],
       "message": "{field} is a number the data model cannot hold exactly ({reason}).",
       "hint": "Supply it as a string, or as a number of magnitude at most 9007199254740991. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.one_of",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "branch_count",
+          "type": "number",
+          "meaning": "How many alternatives the schema gives.",
+          "always": true
+        }
+      ],
+      "message": "{field} matches none of the {branch_count} alternatives the schema allows exactly one of.",
+      "hint": "Change the value to match one alternative; each alternative's findings are listed under it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.one_of.ambiguous",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "branches",
+          "type": "array",
+          "items": "number",
+          "meaning": "The 0-based indexes of two alternatives the value matches.",
+          "always": true
+        }
+      ],
+      "message": "{field} matches alternatives {branches} where the schema allows exactly one.",
+      "hint": "Change the value so that only one alternative accepts it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.pattern",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "pattern",
+          "type": "string",
+          "meaning": "The regular expression the schema requires the string to match.",
+          "always": true
+        }
+      ],
+      "message": "{field} does not match the pattern the schema requires.",
+      "hint": "Write a value that matches the pattern {pattern}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.property_name",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The member's name, as the supplier wrote it or as the schema declares it.",
+          "always": true
+        }
+      ],
+      "message": "The member name `{property}` breaks the schema's rule for member names.",
+      "hint": "Rename `{property}` to a name the schema's propertyNames allows.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.required",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The missing member's name.",
+          "always": true
+        }
+      ],
+      "message": "{field} is required.",
+      "hint": "Add the member `{property}`.",
+      "location": "parent",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.type",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "expected",
+          "type": "array",
+          "items": "string",
+          "meaning": "The type names the schema allows.",
+          "always": true
+        },
+        {
+          "name": "actual",
+          "type": "string",
+          "meaning": "The value's JSON type: null, boolean, object, array, number or string.",
+          "always": true
+        }
+      ],
+      "message": "{field} must be of type {expected}; it is of type {actual}.",
+      "hint": "Write a value of type {expected}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.unevaluated_item",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The item's 0-based index in the array.",
+          "always": true
+        }
+      ],
+      "message": "{field} is an item the schema does not allow.",
+      "hint": "Remove the item.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.unevaluated_property",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The member's name, as the supplier wrote it or as the schema declares it.",
+          "always": true
+        },
+        {
+          "name": "suggestion",
+          "type": "string",
+          "meaning": "The declared member name closest to this one, by ADR-006 D9 item 7's rule; present when one is close enough.",
+          "always": false
+        }
+      ],
+      "message": "The member `{property}` is not one the schema allows.",
+      "hint": "Remove `{property}`, or rename it to a member the schema declares.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.unique_items",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The later item's 0-based index in the array.",
+          "always": true
+        },
+        {
+          "name": "duplicate_of",
+          "type": "number",
+          "meaning": "The 0-based index of the earlier item it repeats.",
+          "always": true
+        }
+      ],
+      "message": "{field} repeats item {duplicate_of} of the array, whose items must be unique.",
+      "hint": "Remove the repeated item, or change it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.validation.partial",
+      "severity": "info",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "unparsed",
+          "type": "number",
+          "meaning": "How many items of the array did not parse, and were left out of its validation.",
+          "always": true
+        },
+        {
+          "name": "suppressed",
+          "type": "number",
+          "meaning": "How many findings were not reported because removing the items changes what they measure: those about the array itself, and those through prefixItems or unevaluatedItems applied to it.",
+          "always": true
+        }
+      ],
+      "message": "The input {input} was validated without the {unparsed} items that did not parse, and {suppressed} findings about the array as a whole were left out.",
+      "hint": "Fix the items that did not parse and validate again, which may report more.",
       "location": "value",
       "since": "1.0",
       "statements": []
@@ -379,6 +1127,1452 @@
       ],
       "message": "The package exceeds the {limit} limit of {bound}.",
       "hint": "Make the package smaller than the limit; run `metais limits` to see every limit, which can be lowered and never raised.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.additional_item",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The item's 0-based index in the array.",
+          "always": true
+        },
+        {
+          "name": "prefix_count",
+          "type": "number",
+          "meaning": "How many items the schema's prefixItems describes.",
+          "always": true
+        }
+      ],
+      "message": "{field} is beyond the {prefix_count} items the schema allows.",
+      "hint": "Remove the items after the first {prefix_count}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.additional_property",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The member's name, as the supplier wrote it or as the schema declares it.",
+          "always": true
+        },
+        {
+          "name": "suggestion",
+          "type": "string",
+          "meaning": "The declared member name closest to this one, by ADR-006 D9 item 7's rule; present when one is close enough.",
+          "always": false
+        }
+      ],
+      "message": "The member `{property}` is not one the schema allows.",
+      "hint": "Remove `{property}`, or rename it to a member the schema declares.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.any_of",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "branch_count",
+          "type": "number",
+          "meaning": "How many alternatives the schema gives.",
+          "always": true
+        }
+      ],
+      "message": "{field} matches none of the {branch_count} alternatives the schema allows.",
+      "hint": "Change the value to match one alternative; each alternative's findings are listed under it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.const",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "expected",
+          "type": "string",
+          "meaning": "The value the schema requires, as its canonical JSON text.",
+          "always": true
+        }
+      ],
+      "message": "{field} must be {expected}.",
+      "hint": "Write {expected}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.contains",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "{field} has no item the schema's contains accepts.",
+      "hint": "Add an item that the contains subschema accepts.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.dependent_required",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The missing member's name.",
+          "always": true
+        },
+        {
+          "name": "because",
+          "type": "string",
+          "meaning": "The present member that requires it.",
+          "always": true
+        }
+      ],
+      "message": "{field} is required when `{because}` is present.",
+      "hint": "Add the member `{property}`, or remove `{because}`.",
+      "location": "parent",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.enum",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "allowed",
+          "type": "array",
+          "items": "string",
+          "meaning": "The first 20 values the schema allows, in its order, each as its canonical JSON text.",
+          "always": true
+        },
+        {
+          "name": "allowed_count",
+          "type": "number",
+          "meaning": "How many values the schema allows.",
+          "always": true
+        },
+        {
+          "name": "suggestion",
+          "type": "string",
+          "meaning": "The allowed string closest to the value, by ADR-006 D9 item 7's rule; present when one is close enough and the value is a string.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be one of the {allowed_count} values the schema allows.",
+      "hint": "Write one of the allowed values: {allowed}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.exclusive_maximum",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be less than {limit}.",
+      "hint": "Write a number less than {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.exclusive_minimum",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be greater than {limit}.",
+      "hint": "Write a number greater than {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.forbidden",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The member's name, when the schema forbids it under properties.",
+          "always": false
+        }
+      ],
+      "message": "{field} is not allowed here.",
+      "hint": "Remove the value.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.format",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "format",
+          "type": "string",
+          "meaning": "The format the schema requires.",
+          "always": true
+        }
+      ],
+      "message": "{field} is not in the {format} format.",
+      "hint": "Write a value in the {format} format.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.max_contains",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many items the contains subschema accepts.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at most {limit} items the schema's contains accepts; it has {count}.",
+      "hint": "Remove items the contains subschema accepts until there are at most {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.max_items",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many items the array has.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at most {limit} items; it has {count}.",
+      "hint": "Remove items until there are at most {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.max_length",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "length",
+          "type": "number",
+          "meaning": "The string's length in code points, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be at most {limit} characters long.",
+      "hint": "Write at most {limit} characters.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.max_properties",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many members the object has.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at most {limit} members; it has {count}.",
+      "hint": "Remove members until there are at most {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.maximum",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be at most {limit}.",
+      "hint": "Write a number of at most {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.min_contains",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many items the contains subschema accepts.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at least {limit} items the schema's contains accepts; it has {count}.",
+      "hint": "Add items the contains subschema accepts until there are at least {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.min_items",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many items the array has.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at least {limit} items; it has {count}.",
+      "hint": "Add items until there are at least {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.min_length",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "length",
+          "type": "number",
+          "meaning": "The string's length in code points, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be at least {limit} characters long.",
+      "hint": "Write at least {limit} characters.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.min_properties",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many members the object has.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at least {limit} members; it has {count}.",
+      "hint": "Add members until there are at least {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.minimum",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be at least {limit}.",
+      "hint": "Write a number of at least {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.multiple_of",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "divisor",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be a multiple of {divisor}.",
+      "hint": "Write a multiple of {divisor}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.not",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "{field} matches a schema it must not match.",
+      "hint": "Change the value so that the not subschema no longer accepts it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.one_of",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "branch_count",
+          "type": "number",
+          "meaning": "How many alternatives the schema gives.",
+          "always": true
+        }
+      ],
+      "message": "{field} matches none of the {branch_count} alternatives the schema allows exactly one of.",
+      "hint": "Change the value to match one alternative; each alternative's findings are listed under it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.one_of.ambiguous",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "branches",
+          "type": "array",
+          "items": "number",
+          "meaning": "The 0-based indexes of two alternatives the value matches.",
+          "always": true
+        }
+      ],
+      "message": "{field} matches alternatives {branches} where the schema allows exactly one.",
+      "hint": "Change the value so that only one alternative accepts it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.pattern",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "pattern",
+          "type": "string",
+          "meaning": "The regular expression the schema requires the string to match.",
+          "always": true
+        }
+      ],
+      "message": "{field} does not match the pattern the schema requires.",
+      "hint": "Write a value that matches the pattern {pattern}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.property_name",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The member's name, as the supplier wrote it or as the schema declares it.",
+          "always": true
+        }
+      ],
+      "message": "The member name `{property}` breaks the schema's rule for member names.",
+      "hint": "Rename `{property}` to a name the schema's propertyNames allows.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.required",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The missing member's name.",
+          "always": true
+        }
+      ],
+      "message": "{field} is required.",
+      "hint": "Add the member `{property}`.",
+      "location": "parent",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.type",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "expected",
+          "type": "array",
+          "items": "string",
+          "meaning": "The type names the schema allows.",
+          "always": true
+        },
+        {
+          "name": "actual",
+          "type": "string",
+          "meaning": "The value's JSON type: null, boolean, object, array, number or string.",
+          "always": true
+        }
+      ],
+      "message": "{field} must be of type {expected}; it is of type {actual}.",
+      "hint": "Write a value of type {expected}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.unevaluated_item",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The item's 0-based index in the array.",
+          "always": true
+        }
+      ],
+      "message": "{field} is an item the schema does not allow.",
+      "hint": "Remove the item.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.unevaluated_property",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The member's name, as the supplier wrote it or as the schema declares it.",
+          "always": true
+        },
+        {
+          "name": "suggestion",
+          "type": "string",
+          "meaning": "The declared member name closest to this one, by ADR-006 D9 item 7's rule; present when one is close enough.",
+          "always": false
+        }
+      ],
+      "message": "The member `{property}` is not one the schema allows.",
+      "hint": "Remove `{property}`, or rename it to a member the schema declares.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.unique_items",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The later item's 0-based index in the array.",
+          "always": true
+        },
+        {
+          "name": "duplicate_of",
+          "type": "number",
+          "meaning": "The 0-based index of the earlier item it repeats.",
+          "always": true
+        }
+      ],
+      "message": "{field} repeats item {duplicate_of} of the array, whose items must be unique.",
+      "hint": "Remove the repeated item, or change it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.additional_item",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The item's 0-based index in the array.",
+          "always": true
+        },
+        {
+          "name": "prefix_count",
+          "type": "number",
+          "meaning": "How many items the schema's prefixItems describes.",
+          "always": true
+        }
+      ],
+      "message": "{field} is beyond the {prefix_count} items the schema allows.",
+      "hint": "Remove the items after the first {prefix_count}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.additional_property",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The member's name, as the supplier wrote it or as the schema declares it.",
+          "always": true
+        },
+        {
+          "name": "suggestion",
+          "type": "string",
+          "meaning": "The declared member name closest to this one, by ADR-006 D9 item 7's rule; present when one is close enough.",
+          "always": false
+        }
+      ],
+      "message": "The member `{property}` is not one the schema allows.",
+      "hint": "Remove `{property}`, or rename it to a member the schema declares.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.any_of",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "branch_count",
+          "type": "number",
+          "meaning": "How many alternatives the schema gives.",
+          "always": true
+        }
+      ],
+      "message": "{field} matches none of the {branch_count} alternatives the schema allows.",
+      "hint": "Change the value to match one alternative; each alternative's findings are listed under it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.const",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "expected",
+          "type": "string",
+          "meaning": "The value the schema requires, as its canonical JSON text.",
+          "always": true
+        }
+      ],
+      "message": "{field} must be {expected}.",
+      "hint": "Write {expected}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.contains",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [],
+      "message": "{field} has no item the schema's contains accepts.",
+      "hint": "Add an item that the contains subschema accepts.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.dependent_required",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The missing member's name.",
+          "always": true
+        },
+        {
+          "name": "because",
+          "type": "string",
+          "meaning": "The present member that requires it.",
+          "always": true
+        }
+      ],
+      "message": "{field} is required when `{because}` is present.",
+      "hint": "Add the member `{property}`, or remove `{because}`.",
+      "location": "parent",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.enum",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "allowed",
+          "type": "array",
+          "items": "string",
+          "meaning": "The first 20 values the schema allows, in its order, each as its canonical JSON text.",
+          "always": true
+        },
+        {
+          "name": "allowed_count",
+          "type": "number",
+          "meaning": "How many values the schema allows.",
+          "always": true
+        },
+        {
+          "name": "suggestion",
+          "type": "string",
+          "meaning": "The allowed string closest to the value, by ADR-006 D9 item 7's rule; present when one is close enough and the value is a string.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be one of the {allowed_count} values the schema allows.",
+      "hint": "Write one of the allowed values: {allowed}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.exclusive_maximum",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be less than {limit}.",
+      "hint": "Write a number less than {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.exclusive_minimum",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be greater than {limit}.",
+      "hint": "Write a number greater than {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.forbidden",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The member's name, when the schema forbids it under properties.",
+          "always": false
+        }
+      ],
+      "message": "{field} is not allowed here.",
+      "hint": "Remove the value.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.format",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "format",
+          "type": "string",
+          "meaning": "The format the schema requires.",
+          "always": true
+        }
+      ],
+      "message": "{field} is not in the {format} format.",
+      "hint": "Write a value in the {format} format.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.max_contains",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many items the contains subschema accepts.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at most {limit} items the schema's contains accepts; it has {count}.",
+      "hint": "Remove items the contains subschema accepts until there are at most {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.max_items",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many items the array has.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at most {limit} items; it has {count}.",
+      "hint": "Remove items until there are at most {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.max_length",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "length",
+          "type": "number",
+          "meaning": "The string's length in code points, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be at most {limit} characters long.",
+      "hint": "Write at most {limit} characters.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.max_properties",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many members the object has.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at most {limit} members; it has {count}.",
+      "hint": "Remove members until there are at most {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.maximum",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be at most {limit}.",
+      "hint": "Write a number of at most {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.min_contains",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many items the contains subschema accepts.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at least {limit} items the schema's contains accepts; it has {count}.",
+      "hint": "Add items the contains subschema accepts until there are at least {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.min_items",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many items the array has.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at least {limit} items; it has {count}.",
+      "hint": "Add items until there are at least {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.min_length",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "length",
+          "type": "number",
+          "meaning": "The string's length in code points, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be at least {limit} characters long.",
+      "hint": "Write at least {limit} characters.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.min_properties",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "count",
+          "type": "number",
+          "meaning": "How many members the object has.",
+          "always": true
+        }
+      ],
+      "message": "{field} must have at least {limit} members; it has {count}.",
+      "hint": "Add members until there are at least {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.minimum",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be at least {limit}.",
+      "hint": "Write a number of at least {limit}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.multiple_of",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "divisor",
+          "type": "number",
+          "meaning": "The keyword's value in the schema.",
+          "always": true
+        },
+        {
+          "name": "value",
+          "type": "number",
+          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
+          "always": false
+        }
+      ],
+      "message": "{field} must be a multiple of {divisor}.",
+      "hint": "Write a multiple of {divisor}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.not",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [],
+      "message": "{field} matches a schema it must not match.",
+      "hint": "Change the value so that the not subschema no longer accepts it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.one_of",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "branch_count",
+          "type": "number",
+          "meaning": "How many alternatives the schema gives.",
+          "always": true
+        }
+      ],
+      "message": "{field} matches none of the {branch_count} alternatives the schema allows exactly one of.",
+      "hint": "Change the value to match one alternative; each alternative's findings are listed under it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.one_of.ambiguous",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "branches",
+          "type": "array",
+          "items": "number",
+          "meaning": "The 0-based indexes of two alternatives the value matches.",
+          "always": true
+        }
+      ],
+      "message": "{field} matches alternatives {branches} where the schema allows exactly one.",
+      "hint": "Change the value so that only one alternative accepts it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.pattern",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "pattern",
+          "type": "string",
+          "meaning": "The regular expression the schema requires the string to match.",
+          "always": true
+        }
+      ],
+      "message": "{field} does not match the pattern the schema requires.",
+      "hint": "Write a value that matches the pattern {pattern}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.property_name",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The member's name, as the supplier wrote it or as the schema declares it.",
+          "always": true
+        }
+      ],
+      "message": "The member name `{property}` breaks the schema's rule for member names.",
+      "hint": "Rename `{property}` to a name the schema's propertyNames allows.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.required",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The missing member's name.",
+          "always": true
+        }
+      ],
+      "message": "{field} is required.",
+      "hint": "Add the member `{property}`.",
+      "location": "parent",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.type",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "expected",
+          "type": "array",
+          "items": "string",
+          "meaning": "The type names the schema allows.",
+          "always": true
+        },
+        {
+          "name": "actual",
+          "type": "string",
+          "meaning": "The value's JSON type: null, boolean, object, array, number or string.",
+          "always": true
+        }
+      ],
+      "message": "{field} must be of type {expected}; it is of type {actual}.",
+      "hint": "Write a value of type {expected}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.unevaluated_item",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The item's 0-based index in the array.",
+          "always": true
+        }
+      ],
+      "message": "{field} is an item the schema does not allow.",
+      "hint": "Remove the item.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.unevaluated_property",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "property",
+          "type": "string",
+          "meaning": "The member's name, as the supplier wrote it or as the schema declares it.",
+          "always": true
+        },
+        {
+          "name": "suggestion",
+          "type": "string",
+          "meaning": "The declared member name closest to this one, by ADR-006 D9 item 7's rule; present when one is close enough.",
+          "always": false
+        }
+      ],
+      "message": "The member `{property}` is not one the schema allows.",
+      "hint": "Remove `{property}`, or rename it to a member the schema declares.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "output.unique_items",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The later item's 0-based index in the array.",
+          "always": true
+        },
+        {
+          "name": "duplicate_of",
+          "type": "number",
+          "meaning": "The 0-based index of the earlier item it repeats.",
+          "always": true
+        }
+      ],
+      "message": "{field} repeats item {duplicate_of} of the array, whose items must be unique.",
+      "hint": "Remove the repeated item, or change it.",
       "location": "value",
       "since": "1.0",
       "statements": []

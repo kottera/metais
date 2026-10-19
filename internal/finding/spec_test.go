@@ -277,8 +277,10 @@ func TestRegistryEntries(t *testing.T) {
 
 // TestEmittedCodes pins the registry to the codes this module emits: the
 // report's own, internal/limits', internal/cli's, internal/zipfmt's
-// container and entry-name refusals, and internal/inputs/csv's refusals of
-// a CSV input. A code a later change emits is registered by that change.
+// container and entry-name refusals, internal/inputs/csv's refusals of a
+// CSV input, and internal/schemafail's mapping of JSON Schema failures in
+// each of its three families (ADR-006 D6 item 1). A code a later change
+// emits is registered by that change.
 func TestEmittedCodes(t *testing.T) {
 	var got []Code
 	for _, e := range registry {
@@ -306,6 +308,18 @@ func TestEmittedCodes(t *testing.T) {
 	} {
 		want = append(want, Code("package.name."+c))
 	}
+	for _, family := range []string{"input", "manifest", "output"} {
+		for _, c := range []string{
+			"additional_item", "additional_property", "any_of", "const", "contains", "dependent_required", "enum",
+			"exclusive_maximum", "exclusive_minimum", "forbidden", "format", "max_contains", "max_items", "max_length",
+			"max_properties", "maximum", "min_contains", "min_items", "min_length", "min_properties", "minimum",
+			"multiple_of", "not", "one_of", "one_of.ambiguous", "pattern", "property_name", "required", "type",
+			"unevaluated_item", "unevaluated_property", "unique_items",
+		} {
+			want = append(want, Code(family+"."+c))
+		}
+	}
+	want = append(want, CodeInputValidationPartial)
 	slices.Sort(want)
 	if !slices.Equal(got, want) {
 		t.Errorf("registered %q, want %q", got, want)
