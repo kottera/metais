@@ -93,9 +93,14 @@ When Wave 6 is done:
   wave adds the full hostile corpus. Keep the default run within ADR-011
   D11 item 9's 60 seconds, and report its time in every PR that adds
   cases.
-- **Write the squash message explicitly.** Three squash commits on `main`
-  carry `Co-Authored-By` trailers, which AGENTS.md forbids. Merge with an
-  explicit subject and body, and check the result before you report.
+- **Write the squash message explicitly, under the account's own identity.**
+  36 commits on `main` carry `Co-authored-by` trailers, which AGENTS.md
+  forbids. GitHub adds one to the default squash body whenever a commit's
+  local author identity differs from the account that merges: a
+  machine-local address such as `user@host.local` is enough. So:
+  - commit under the GitHub account's noreply address;
+  - merge with `gh pr merge --squash --subject ... --body-file ...`;
+  - check the merged commit's message before you report.
 - **Name every caller of a shared code before filing,** and settle meeting
   owners at breakdown.
 - **What the plan's §5 leaves to §6's matrix act**, which this wave
