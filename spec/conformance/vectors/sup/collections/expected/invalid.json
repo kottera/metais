@@ -1,0 +1,174 @@
+[
+  {
+    "code": "collection.directory_name",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "gone",
+      "title": "Gone"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "gone.d"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.validation.partial",
+    "severity": "info",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items",
+      "pointer": ""
+    },
+    "params": {
+      "unparsed": 6,
+      "suppressed": 1
+    }
+  },
+  {
+    "code": "input.extension_not_accepted",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/four.txt"
+    },
+    "params": {
+      "accepted": [
+        ".json",
+        ".yaml",
+        ".yml",
+        ".md",
+        ".markdown"
+      ]
+    }
+  },
+  {
+    "code": "input.extension_not_accepted",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/noext"
+    },
+    "params": {
+      "accepted": [
+        ".json",
+        ".yaml",
+        ".yml",
+        ".md",
+        ".markdown"
+      ]
+    }
+  },
+  {
+    "code": "collection.stem_duplicate",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/one.json"
+    },
+    "params": {
+      "case": true
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "items/One.yaml",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "collection.subdirectory",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/sub"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.extension_not_accepted",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/three.csv"
+    },
+    "params": {
+      "accepted": [
+        ".json",
+        ".yaml",
+        ".yml",
+        ".md",
+        ".markdown"
+      ]
+    }
+  },
+  {
+    "code": "collection.stem_duplicate",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/two.md"
+    },
+    "params": {
+      "case": false
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "items/two.json",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "collection.as_file",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "none",
+      "title": "None"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "none.json"
+    },
+    "params": {}
+  }
+]

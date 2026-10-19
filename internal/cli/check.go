@@ -56,7 +56,7 @@ func checkDeclaration() *Command {
 // each pointing back at check.
 func checkRefusals() []Refusal {
 	var out []Refusal
-	for _, r := range packageRefusals() {
+	for _, r := range packageRefusals("check") {
 		if r.Code == finding.CodeUsageMissingOperand {
 			continue
 		}

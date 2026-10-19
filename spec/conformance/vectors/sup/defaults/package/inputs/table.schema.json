@@ -1,0 +1,25 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "a": {
+        "type": "string"
+      },
+      "b": {
+        "type": "integer",
+        "default": 5
+      }
+    }
+  },
+  "const": [
+    {
+      "a": "x",
+      "b": 5
+    },
+    {
+      "a": "",
+      "b": 6
+    }
+  ]
+}

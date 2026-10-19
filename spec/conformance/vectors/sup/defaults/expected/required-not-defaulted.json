@@ -1,0 +1,78 @@
+[
+  {
+    "code": "input.const",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "conf",
+      "title": "Conf"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "conf.yaml",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/conf.schema.json",
+      "pointer": "/allOf/1/const",
+      "keyword": "const"
+    },
+    "field": {
+      "title": "Conf"
+    },
+    "params": {
+      "expected": "{\"kept\":null,\"made\":{\"inner\":7},\"need\":\"given\",\"opt\":\"opt-default\",\"rows\":[{\"v\":\"x\"},{\"v\":\"cell-default\"}],\"viaref\":\"from-ref\"}"
+    }
+  },
+  {
+    "code": "input.required",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "conf",
+      "title": "Conf"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "conf.yaml",
+      "line": 1,
+      "column": 1,
+      "pointer": "/need"
+    },
+    "schema": {
+      "entry": "inputs/conf.schema.json",
+      "pointer": "/required",
+      "keyword": "required"
+    },
+    "params": {
+      "property": "need"
+    }
+  },
+  {
+    "code": "input.const",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "table",
+      "title": "Table"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "table.csv",
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/table.schema.json",
+      "pointer": "/const",
+      "keyword": "const"
+    },
+    "field": {
+      "title": "Table"
+    },
+    "params": {
+      "expected": "[{\"a\":\"x\",\"b\":5},{\"a\":\"\",\"b\":6}]"
+    }
+  }
+]

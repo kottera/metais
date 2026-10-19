@@ -1,0 +1,35 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/csv-form",
+  "title": "A CSV input is a header and records, read with its declared delimiter, an unquoted empty field absent and a quoted one the empty string",
+  "statements": [
+    "MTS-SUP-009",
+    "MTS-SUP-010",
+    "MTS-SUP-002",
+    "MTS-SUP-008",
+    "MTS-SUP-014",
+    "MTS-SUP-013"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/valid"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "n": {
+      "type": "integer",
+      "const": 1
+    },
+    "m": {
+      "enum": [
+        2
+      ]
+    }
+  }
+}

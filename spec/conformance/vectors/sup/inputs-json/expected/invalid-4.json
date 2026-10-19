@@ -1,0 +1,18 @@
+[
+  {
+    "code": "input.json_arg_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "location": {
+      "origin": "inputs_json",
+      "argument": 1,
+      "line": 1,
+      "column": 30
+    },
+    "params": {
+      "problem": "json.trailing_content"
+    }
+  }
+]

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/inputs-json",
+  "title": "An --inputs-json argument is a JSON object whose members are declared inputs, each replacing its input whole",
+  "statements": [
+    "MTS-SUP-020",
+    "MTS-SUP-023",
+    "MTS-SUP-019"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "replaces-whole",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/replaces-whole",
+            "inputs_json": "args/replaces-whole.json"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/replaces-whole.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set": [
+              "/vendor/name=Acme"
+            ],
+            "inputs_json": "args/invalid-1.json"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/invalid-1.json"
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "inputs_json": "args/invalid-2.json"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/invalid-2.json"
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "inputs_json": "args/invalid-3.json"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/invalid-3.json"
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "inputs_json": "args/invalid-4.json"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/invalid-4.json"
+          }
+        }
+      ]
+    }
+  ]
+}

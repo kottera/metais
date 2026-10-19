@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "size": {
+      "type": "integer"
+    },
+    "rate": {
+      "type": "number"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "code": {
+      "type": "string"
+    },
+    "list": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "address": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string"
+        },
+        "zip": {
+          "type": "string"
+        }
+      }
+    },
+    "note": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "any": {}
+  },
+  "required": [
+    "name"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "dat/required-input-missing",
+  "title": "A required input that nothing supplies is reported missing, and an optional one is absent",
+  "statements": [
+    "MTS-DAT-010",
+    "MTS-SUP-027"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "The probe vector of the path canary (ADR-009 D16 item 2): a missing required input, with a data directory given.",
+  "cases": [
+    {
+      "name": "empty-data-directory",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/empty-data-directory"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/empty-data-directory.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "no-supply-flag",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/no-supply-flag.json"
+          }
+        }
+      ]
+    }
+  ]
+}

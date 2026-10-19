@@ -14,8 +14,8 @@ package carries for all of its inputs.
 A package's inputs are declared in the manifest's `inputs` member, an ordered
 list of named slots, each naming the package path of its schema under
 `inputs/`. This section states what a processor checks of the schemas when it
-opens a package; the rest of the data specification arrives with the
-operations that supply and validate inputs.
+opens a package; §5.2 states how supplied inputs are validated against them,
+and [chapter 6](06-supplying-inputs.md) how inputs are supplied.
 
 <a id="mts-dat-001"></a>**MTS-DAT-001** Every `.json`, `.yaml` and `.yml` file
 under `inputs/` is a schema file, whether or not an input names it, and a
@@ -84,3 +84,36 @@ the manifest declares one; and `$defs` embedding every schema file under
 and `$schema` set, a YAML file as the JSON of its value and a boolean schema
 as `{}` or `{"not": {}}`. No reference inside an embedded resource is
 rewritten.
+
+## 5.2 Validating supplied inputs
+
+The inputs a supplier gives are assembled into one inputs object, a member per
+input that has a value ([chapter 6](06-supplying-inputs.md)), and that object
+is validated against the combined schema of §5.1.1, which names every input,
+says which are required, and holds the input constraints. A failure is
+reported by the finding [chapter 12](12-findings.md) maps its keyword to.
+
+<a id="mts-dat-010"></a>**MTS-DAT-010** A processor MUST validate the inputs
+object against the combined schema, reporting a required input that nothing
+supplied with `input.missing` and every failure of an input's value against
+its schema by its keyword's finding, and MUST report every failure the
+validation meets, not only the first.
+
+<a id="mts-dat-011"></a>**MTS-DAT-011** A processor MUST assert each `format`
+of §5.1 on the strings of the inputs, by the definition JSON Schema's
+validation §7.3 cites for it, and MUST report a string that is not of its
+format with `input.format`; a value that is not a string passes. Where those
+definitions leave a choice: `date-time`'s `T` and `Z`, and `time`'s `Z`, may be
+lower case; a leap second, second 60, is valid only where the time, moved to
+UTC by its offset, is 23:59:60; an `email` is RFC 5321's `Mailbox`, a quoted
+local part and an IPv4 or `IPv6:` address literal included; a `hostname` has no
+trailing dot; an `ipv4` octet has no leading zero; an `ipv6` address has no
+zone; a `uuid` is the 8-4-4-4-12 form of hexadecimal digits of either case; and
+a `duration` is RFC 3339 Appendix A's, its units in order with none skipped.
+
+<a id="mts-dat-012"></a>**MTS-DAT-012** A processor MUST evaluate the input
+constraints over the whole inputs object, reporting a failure inside one
+input's value about that input, with the conditional that selected it, a
+required input the constraints require with `input.missing`, and a failure of a
+rule over the inputs object as a whole, which names no one input, with
+`input.constraints_failed` about the invocation, naming the keyword.

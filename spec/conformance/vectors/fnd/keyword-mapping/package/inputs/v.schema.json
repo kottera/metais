@@ -1,0 +1,155 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "type": "integer"
+    },
+    "enum": {
+      "enum": [
+        "red",
+        "green"
+      ]
+    },
+    "const": {
+      "const": "fixed"
+    },
+    "multiple_of": {
+      "multipleOf": 5
+    },
+    "maximum": {
+      "maximum": 10
+    },
+    "exclusive_maximum": {
+      "exclusiveMaximum": 10
+    },
+    "minimum": {
+      "minimum": 10
+    },
+    "exclusive_minimum": {
+      "exclusiveMinimum": 10
+    },
+    "max_length": {
+      "maxLength": 3
+    },
+    "min_length": {
+      "minLength": 3
+    },
+    "pattern": {
+      "pattern": "^[a-z]+$"
+    },
+    "format": {
+      "format": "date"
+    },
+    "max_items": {
+      "maxItems": 1
+    },
+    "min_items": {
+      "minItems": 3
+    },
+    "unique_items": {
+      "uniqueItems": true
+    },
+    "contains": {
+      "contains": {
+        "const": 1
+      }
+    },
+    "min_contains": {
+      "contains": {
+        "const": 1
+      },
+      "minContains": 2
+    },
+    "max_contains": {
+      "contains": {
+        "const": 1
+      },
+      "maxContains": 1
+    },
+    "max_properties": {
+      "maxProperties": 1
+    },
+    "min_properties": {
+      "minProperties": 2
+    },
+    "required": {
+      "required": [
+        "a",
+        "b"
+      ]
+    },
+    "dependent_required": {
+      "dependentRequired": {
+        "a": [
+          "b"
+        ]
+      }
+    },
+    "additional_item": {
+      "prefixItems": [
+        {
+          "type": "integer"
+        }
+      ],
+      "items": false
+    },
+    "unevaluated_property": {
+      "properties": {
+        "a": {}
+      },
+      "unevaluatedProperties": false
+    },
+    "unevaluated_item": {
+      "prefixItems": [
+        {}
+      ],
+      "unevaluatedItems": false
+    },
+    "property_name": {
+      "propertyNames": {
+        "pattern": "^[a-z]+$"
+      }
+    },
+    "forbidden": {
+      "properties": {
+        "gone": false
+      }
+    },
+    "not": {
+      "not": {
+        "type": "string"
+      }
+    },
+    "any_of": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "one_of": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "one_of_ambiguous": {
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "integer"
+        }
+      ]
+    }
+  }
+}

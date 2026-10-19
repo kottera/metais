@@ -1,0 +1,48 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/defaults",
+  "title": "Defaults fill absent optional members through properties, never a required member, a present value or a missing parent",
+  "statements": [
+    "MTS-SUP-025",
+    "MTS-SUP-026",
+    "MTS-SUP-027"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "applied",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/applied"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "required-not-defaulted",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/required-not-defaulted"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/required-not-defaulted.json"
+          }
+        }
+      ]
+    }
+  ]
+}

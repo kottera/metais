@@ -1,0 +1,38 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "fnd/positions-and-order",
+  "title": "Findings carry the code-point line and column of the value in every form, an escaped pointer, and come in one order, each once",
+  "statements": [
+    "MTS-FND-008",
+    "MTS-FND-003",
+    "MTS-SUP-019"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "located",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/located",
+            "set": [
+              "/s/n=x",
+              "/s/w=long"
+            ],
+            "inputs_json": "args/located.json"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/located.json"
+          }
+        }
+      ]
+    }
+  ]
+}

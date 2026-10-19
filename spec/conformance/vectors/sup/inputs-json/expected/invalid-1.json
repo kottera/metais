@@ -1,0 +1,18 @@
+[
+  {
+    "code": "input.json_arg_not_object",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "location": {
+      "origin": "inputs_json",
+      "argument": 1,
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "actual": "array"
+    }
+  }
+]

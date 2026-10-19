@@ -1,0 +1,345 @@
+[
+  {
+    "code": "input.max_length",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "c",
+      "title": "C"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "c.csv",
+      "line": 2,
+      "column": 3,
+      "pointer": "/0/note"
+    },
+    "schema": {
+      "entry": "inputs/c.schema.json",
+      "pointer": "/items/properties/note/maxLength",
+      "keyword": "maxLength"
+    },
+    "params": {
+      "limit": 2,
+      "length": 9
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "c",
+      "title": "C"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "c.csv",
+      "line": 4,
+      "column": 1,
+      "pointer": "/1/n"
+    },
+    "schema": {
+      "entry": "inputs/c.schema.json",
+      "pointer": "/items/properties/n/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "cr",
+      "title": "Cr"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "cr.csv",
+      "line": 3,
+      "column": 1,
+      "pointer": "/1/n"
+    },
+    "schema": {
+      "entry": "inputs/cr.schema.json",
+      "pointer": "/items/properties/n/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "crlf",
+      "title": "Crlf"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "crlf.csv",
+      "line": 3,
+      "column": 1,
+      "pointer": "/1/n"
+    },
+    "schema": {
+      "entry": "inputs/crlf.schema.json",
+      "pointer": "/items/properties/n/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "j",
+      "title": "J"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "j.json",
+      "line": 2,
+      "column": 8,
+      "pointer": "/é"
+    },
+    "schema": {
+      "entry": "inputs/j.schema.json",
+      "pointer": "/properties/é/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "j",
+      "title": "J"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "j.json",
+      "line": 3,
+      "column": 11,
+      "pointer": "/a~1b~0c"
+    },
+    "schema": {
+      "entry": "inputs/j.schema.json",
+      "pointer": "/properties/a~1b~0c/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "j",
+      "title": "J"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "j.json",
+      "line": 4,
+      "column": 39,
+      "pointer": "/list/9"
+    },
+    "schema": {
+      "entry": "inputs/j.schema.json",
+      "pointer": "/properties/list/items/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "j",
+      "title": "J"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "j.json",
+      "line": 4,
+      "column": 44,
+      "pointer": "/list/10"
+    },
+    "schema": {
+      "entry": "inputs/j.schema.json",
+      "pointer": "/properties/list/items/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "k",
+      "title": "K"
+    },
+    "location": {
+      "origin": "inputs_json",
+      "argument": 1,
+      "line": 3,
+      "column": 10,
+      "pointer": "/n"
+    },
+    "schema": {
+      "entry": "inputs/k.schema.json",
+      "pointer": "/properties/n/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "m",
+      "title": "M"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "m.md",
+      "line": 2,
+      "column": 4,
+      "pointer": "/n"
+    },
+    "schema": {
+      "entry": "inputs/m.schema.json",
+      "pointer": "/properties/n/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "s",
+      "title": "S"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 1,
+      "pointer": "/n"
+    },
+    "schema": {
+      "entry": "inputs/s.schema.json",
+      "pointer": "/properties/n/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.max_length",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "s",
+      "title": "S"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 2,
+      "pointer": "/w"
+    },
+    "schema": {
+      "entry": "inputs/s.schema.json",
+      "pointer": "/$defs/short/maxLength",
+      "keyword": "maxLength"
+    },
+    "params": {
+      "limit": 2,
+      "length": 4
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "y",
+      "title": "Y"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "y.yaml",
+      "line": 2,
+      "column": 6,
+      "pointer": "/n"
+    },
+    "schema": {
+      "entry": "inputs/y.schema.json",
+      "pointer": "/properties/n/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  }
+]

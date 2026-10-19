@@ -123,10 +123,14 @@ func jsonTopic(h *helpText, t []*Command) {
 		"and read an unknown value as other.", "")
 	h.blank()
 	h.line("The formats:")
+	width := len("  "+usageFormat) + 2
 	for _, c := range t {
-		h.item("  "+c.Format, 20, "metais "+c.Name)
+		width = max(width, len("  "+c.Format)+2)
 	}
-	h.item("  "+usageFormat, 20, "a line that names no command")
+	for _, c := range t {
+		h.item("  "+c.Format, width, "metais "+c.Name)
+	}
+	h.item("  "+usageFormat, width, "a line that names no command")
 }
 
 func exitCodesTopic(h *helpText, _ []*Command) {

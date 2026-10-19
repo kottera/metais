@@ -1,0 +1,209 @@
+[
+  {
+    "code": "csv.header_missing",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "a",
+      "title": "A"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "a.csv",
+      "line": 1,
+      "column": 1
+    },
+    "params": {}
+  },
+  {
+    "code": "csv.header_empty",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "b",
+      "title": "B"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "b.csv",
+      "line": 1,
+      "column": 4
+    },
+    "params": {
+      "ordinal": 2
+    }
+  },
+  {
+    "code": "csv.header_duplicate",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "c",
+      "title": "C"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "c.csv",
+      "line": 1,
+      "column": 9
+    },
+    "params": {
+      "ordinal": 3,
+      "first": 1
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "c.csv",
+        "line": 1,
+        "column": 1,
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "input.validation.partial",
+    "severity": "info",
+    "subject": {
+      "kind": "input",
+      "name": "d",
+      "title": "D"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "d.csv",
+      "pointer": ""
+    },
+    "params": {
+      "unparsed": 1,
+      "suppressed": 0
+    }
+  },
+  {
+    "code": "csv.bare_quote",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "d",
+      "title": "D"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "d.csv",
+      "line": 2,
+      "column": 5,
+      "pointer": "/0/name"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.validation.partial",
+    "severity": "info",
+    "subject": {
+      "kind": "input",
+      "name": "e",
+      "title": "E"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "e.csv",
+      "pointer": ""
+    },
+    "params": {
+      "unparsed": 1,
+      "suppressed": 0
+    }
+  },
+  {
+    "code": "csv.after_quote",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "e",
+      "title": "E"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "e.csv",
+      "line": 2,
+      "column": 7,
+      "pointer": "/0/name"
+    },
+    "params": {}
+  },
+  {
+    "code": "csv.unterminated_quote",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "f",
+      "title": "F"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "f.csv",
+      "line": 2,
+      "column": 3,
+      "pointer": "/0/name"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.validation.partial",
+    "severity": "info",
+    "subject": {
+      "kind": "input",
+      "name": "g",
+      "title": "G"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "g.csv",
+      "pointer": ""
+    },
+    "params": {
+      "unparsed": 2,
+      "suppressed": 0
+    }
+  },
+  {
+    "code": "csv.field_count",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "g",
+      "title": "G"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "g.csv",
+      "line": 2,
+      "column": 1,
+      "pointer": "/0"
+    },
+    "params": {
+      "expected": 2,
+      "found": 1
+    }
+  },
+  {
+    "code": "csv.field_count",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "g",
+      "title": "G"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "g.csv",
+      "line": 3,
+      "column": 1,
+      "pointer": "/1"
+    },
+    "params": {
+      "expected": 2,
+      "found": 3
+    }
+  }
+]

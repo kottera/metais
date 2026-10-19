@@ -1,0 +1,178 @@
+[
+  {
+    "code": "input.set_pointer_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 1
+    },
+    "params": {
+      "reason": "no_value"
+    }
+  },
+  {
+    "code": "input.set_pointer_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 2
+    },
+    "params": {
+      "reason": "not_a_pointer"
+    }
+  },
+  {
+    "code": "input.set_pointer_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 3
+    },
+    "params": {
+      "reason": "unknown_input"
+    }
+  },
+  {
+    "code": "input.set_pointer_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 4
+    },
+    "params": {
+      "reason": "malformed"
+    }
+  },
+  {
+    "code": "json.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "other",
+      "title": "Other"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 10,
+      "line": 1,
+      "column": 2,
+      "pointer": "/a"
+    },
+    "params": {
+      "expected": "member name",
+      "found": "end of input"
+    }
+  },
+  {
+    "code": "json.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "other",
+      "title": "Other"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 11,
+      "line": 1,
+      "column": 6,
+      "pointer": "/b"
+    },
+    "params": {
+      "expected": "',' or ']'",
+      "found": "end of input"
+    }
+  },
+  {
+    "code": "input.set_traversal",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 5
+    },
+    "params": {
+      "reason": "index_out_of_range"
+    }
+  },
+  {
+    "code": "input.set_traversal",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 6
+    },
+    "params": {
+      "reason": "index_invalid"
+    }
+  },
+  {
+    "code": "input.set_traversal",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 7
+    },
+    "params": {
+      "reason": "dash_not_last"
+    }
+  },
+  {
+    "code": "input.set_traversal",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 8
+    },
+    "params": {
+      "reason": "scalar"
+    }
+  },
+  {
+    "code": "input.set_traversal",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 9
+    },
+    "params": {
+      "reason": "index_invalid"
+    }
+  }
+]

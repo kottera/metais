@@ -1,0 +1,32 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/text-and-markdown",
+  "title": "A text input is the whole file less one final line feed, and a Markdown input its frontmatter fields and body",
+  "statements": [
+    "MTS-SUP-011",
+    "MTS-SUP-012",
+    "MTS-SUP-002"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/valid"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    }
+  ]
+}

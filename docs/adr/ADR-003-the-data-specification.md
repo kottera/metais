@@ -1193,3 +1193,24 @@ unambiguous; `--inputs-json` remains the whole-array route.
     not), `input.json_arg_unknown`, `input.json_arg_invalid` and
     `input.constraints_failed`. `input.raw_unavailable` is a render's
     refusal and is Wave 4's to register.
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-1.** `metais validate` wires the
+  inputs layer, and the specification states what it makes observable:
+  §5.2 (D4's formats on supplied strings, D6's constraints, D22's
+  validation) and chapter 6 (D8 to D20 and D22). Every row of the
+  *Conformance* list has a vector under `spec/conformance/vectors/sup/` or
+  `dat/` but these:
+  - an item name in NFD, which the suite cannot carry: ADR-011 D9 item 8
+    holds every file name of the suite to the portable-path predicate, so
+    the NFC half is a vector and the NFD half is `internal/inputs`'
+    `TestCollectionItems`;
+  - D21's input record, whose raw form and digest are what a render is
+    given: `input.raw_unavailable` and the digests are the render's to
+    observe;
+  - the data directory given as a link, which a vector cannot name (its
+    data path must be a tree of the vector): `internal/inputs`'
+    `TestDataDirLinksNotFollowed` and `internal/cli`'s
+    `TestValidateLinkedDataDirectory` prove D16 item 6's last sentence.
+  - `collection.item_name` and `input.not_readable` are listed W7 in
+    `unwired.txt`, with the codes no vector can produce: the first needs an
+    item name the suite's portable-path rule refuses, the second a file the
+    runner cannot make unreadable or take away between listing and reading.

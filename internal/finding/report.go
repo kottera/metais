@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+
+	"github.com/kottera/metais/internal/fault"
 )
 
 // Report gathers one command's findings (ADR-006 D8): it removes
@@ -34,6 +36,9 @@ type Report struct {
 	spill  itemHeap // past the cap, tying with listed's first on the prefix; the first in order first
 	sum    counts
 	lost   bool // a finding has gone past the cap
+	// firstOnly is fault.FirstFinding: every error after the first is
+	// dropped, as a report that stops at its first error would.
+	firstOnly bool
 }
 
 // group is one distinct finding: every finding with one duplicate key.
@@ -114,6 +119,16 @@ func NewReport(maxFindings int) *Report {
 	}
 }
 
+// NewReportFaults returns NewReport(maxFindings) under faults. It is the
+// seam of fault.FirstFinding (ADR-010 D13 item 2): with that fault the
+// report drops every error after the first it is given, so the SC8
+// detector can be shown to catch a report that stops at one.
+func NewReportFaults(maxFindings int, faults fault.Set) *Report {
+	r := NewReport(maxFindings)
+	r.firstOnly = faults.Has(fault.FirstFinding)
+	return r
+}
+
 // Add adds f to the report. A duplicate of a finding already added
 // (ADR-006 D8 item 3) is counted once; of the two, the report keeps the
 // one whose schema.keyword_location sorts first, and of two with the same
@@ -142,6 +157,9 @@ func NewReport(maxFindings int) *Report {
 func (r *Report) Add(f Finding) {
 	if f.entry == nil {
 		panic("finding: Report.Add of a Finding New did not build")
+	}
+	if r.firstOnly && f.entry.Severity == SeverityError && r.sum.errors > 0 {
+		return
 	}
 	key := f.duplicateKey()
 	kl := f.keywordLocation()

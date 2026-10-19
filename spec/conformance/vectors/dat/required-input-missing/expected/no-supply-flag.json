@@ -1,0 +1,22 @@
+[
+  {
+    "code": "input.missing",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.missing",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "params": {}
+  }
+]

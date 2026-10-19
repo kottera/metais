@@ -1,0 +1,60 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/precedence",
+  "title": "The data directory, then every --inputs-json, then every path set in command-line order, the later of one kind winning",
+  "statements": [
+    "MTS-SUP-023",
+    "MTS-SUP-024"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "order",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/order",
+            "set": [
+              "/vendor/name=First",
+              "/vendor/name=Last"
+            ],
+            "set_json": [
+              "/vendor/size=2",
+              "/vendor/size=3"
+            ],
+            "inputs_json": "args/order.json"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "unparsed-file",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/unparsed-file",
+            "set": [
+              "/vendor/name=Last"
+            ],
+            "inputs_json": "args/unparsed-file.json"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/unparsed-file.json"
+          }
+        }
+      ]
+    }
+  ]
+}

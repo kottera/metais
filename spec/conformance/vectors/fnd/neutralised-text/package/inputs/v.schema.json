@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "title": "Name\u001b[31m",
+      "description": "Line one\nline two ‮evil⁦",
+      "type": "string"
+    }
+  }
+}

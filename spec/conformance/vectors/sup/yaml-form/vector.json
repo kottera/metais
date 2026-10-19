@@ -1,0 +1,48 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/yaml-form",
+  "title": "A YAML input is read by the manifest's YAML profile, with its plain scalars resolved by that profile's table",
+  "statements": [
+    "MTS-SUP-006",
+    "MTS-SUP-007",
+    "MTS-SUP-005"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/valid"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/invalid"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/invalid.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/path-sets",
+  "title": "A path set addresses one value by an inputs pointer, a text set coerced by the schema and a JSON set placed as it is",
+  "statements": [
+    "MTS-SUP-021",
+    "MTS-SUP-022",
+    "MTS-SUP-014",
+    "MTS-SUP-013",
+    "MTS-SUP-019"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/valid",
+            "set": [
+              "/vendor/size=42",
+              "/vendor/rate=1.5e2",
+              "/vendor/ok=False",
+              "/vendor/code=007",
+              "/vendor/list/-=3",
+              "/vendor/list/0=9",
+              "/vendor/address/city=Paris",
+              "/vendor/name=a=b",
+              "/other/new/deep=x",
+              "/vendor/any="
+            ],
+            "set_json": [
+              "/vendor/note=null"
+            ]
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "coerced-text-kept",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set": [
+              "/vendor/name=Acme",
+              "/vendor/size= 42",
+              "/vendor/rate=1,5",
+              "/vendor/ok=yes"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/coerced-text-kept.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/invalid",
+            "set": [
+              "/vendor/name",
+              "vendor/name=x",
+              "/vendr/name=x",
+              "/vendor/a~2b=x",
+              "/vendor/list/2=3",
+              "/vendor/list/01=3",
+              "/vendor/list/-/0=3",
+              "/vendor/code/x=1",
+              "/vendor/list/x=1"
+            ],
+            "set_json": [
+              "/other/a={",
+              "/other/b=[1, 2"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/invalid.json"
+          }
+        }
+      ]
+    }
+  ]
+}

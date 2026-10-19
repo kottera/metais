@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "default": {
+    "w": 1
+  },
+  "const": {
+    "w": 1
+  }
+}

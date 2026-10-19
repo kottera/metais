@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.validate.1.json",
+  "title": "metais.validate/1",
+  "description": "What metais validate prints with --json: every finding about the inputs supplied, and for every declared input whether it was supplied and where its value came from; with --resolved, the inputs as templates would see them (ADR-008 D7). A refused package or command line gives a null result.",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.validate/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "inputs"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "inputs": {
+          "description": "One entry per declared input, in manifest order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/input"
+          }
+        },
+        "data": {
+          "description": "Present with --resolved: an object holding each input that has a value, after coercion and defaults, absent members absent, in canonical key order (ADR-002 D9).",
+          "type": "object"
+        }
+      }
+    },
+    "input": {
+      "type": "object",
+      "required": [
+        "name",
+        "supplied",
+        "from"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supplied": {
+          "description": "Whether the data directory or a supply flag gave the input any of its value; false for an input absent or given only by a default.",
+          "type": "boolean"
+        },
+        "from": {
+          "description": "Every source the value came from, in the order each was applied: empty for an absent input.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/from"
+          }
+        }
+      }
+    },
+    "from": {
+      "type": "object",
+      "required": [
+        "source"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "description": "data_dir for a file or collection directory of the data directory, inputs_json, set and set_json for those flags, default for a schema default.",
+          "enum": [
+            "data_dir",
+            "inputs_json",
+            "set",
+            "set_json",
+            "default"
+          ]
+        },
+        "file": {
+          "description": "For data_dir: the path relative to the data directory, /-separated.",
+          "type": "string",
+          "minLength": 1
+        },
+        "argument": {
+          "description": "For inputs_json, the flag's 1-based ordinal among the --inputs-json flags; for set and set_json, among the --set and --set-json flags together, as a finding's location numbers it.",
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "data_dir"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "file"
+            ],
+            "not": {
+              "required": [
+                "argument"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "enum": [
+                  "inputs_json",
+                  "set",
+                  "set_json"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "argument"
+            ],
+            "not": {
+              "required": [
+                "file"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "default"
+              }
+            }
+          },
+          "then": {
+            "maxProperties": 1
+          }
+        }
+      ]
+    }
+  }
+}

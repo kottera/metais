@@ -1,0 +1,37 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/every-finding-one-pass",
+  "title": "Every finding of a supply is reported in one pass: parse findings across files together with the schema findings of what parsed",
+  "statements": [
+    "MTS-SUP-028",
+    "MTS-SUP-029",
+    "MTS-DAT-010",
+    "MTS-FND-003"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "planted",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/planted",
+            "set": [
+              "/edition=2.3"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/planted.json"
+          }
+        }
+      ]
+    }
+  ]
+}

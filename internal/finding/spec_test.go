@@ -301,7 +301,7 @@ func TestEmittedCodes(t *testing.T) {
 		"schema.dialect", "schema.format_unsupported", "schema.id_duplicate", "schema.invalid",
 		"schema.keyword_unknown", "schema.pattern_unsupported", "schema.ref_by_path",
 		"schema.ref_escapes", "schema.ref_unresolved", "schema.sample_unsatisfiable",
-		CodeUsageBadValue, CodeUsageMissingCommand, CodeUsageRepeatedFlag, CodeUsageUnexpectedOperand,
+		CodeUsageBadValue, CodeUsageConflictingFlags, CodeUsageDataDirUnreadable, CodeUsageMissingCommand, CodeUsageRepeatedFlag, CodeUsageUnexpectedOperand,
 		CodeUsageUnknownCommand, CodeUsageUnknownFlag, CodeUsageUnknownTopic,
 		CodeUsageNameInvalid, CodeUsageNameRequired,
 		CodeDestinationNotDirectory, CodeDestinationNotEmpty, CodeDestinationWriteFailed,

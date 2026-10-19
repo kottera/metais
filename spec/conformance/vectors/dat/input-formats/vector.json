@@ -1,0 +1,31 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "dat/input-formats",
+  "title": "Every asserted format is checked on the strings of an input, with the grammar the specification gives it",
+  "statements": [
+    "MTS-DAT-011"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "every-format",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/every-format"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/every-format.json"
+          }
+        }
+      ]
+    }
+  ]
+}

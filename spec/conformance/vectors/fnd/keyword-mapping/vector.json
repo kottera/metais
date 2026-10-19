@@ -1,0 +1,33 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "fnd/keyword-mapping",
+  "title": "Every failing keyword is reported by its own code, required once per member at the absent member, an extra member at its name",
+  "statements": [
+    "MTS-FND-004",
+    "MTS-FND-005",
+    "MTS-DAT-010"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "every-keyword",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/every-keyword"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/every-keyword.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "edition": {
+            "const": "2.1"
+          }
+        },
+        "required": [
+          "edition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "criteria": {
+            "items": {
+              "properties": {
+                "id": {
+                  "enum": [
+                    "1.1.1",
+                    "1.2.1"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "edition": {
+            "const": "2.2"
+          }
+        },
+        "required": [
+          "edition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "criteria": {
+            "items": {
+              "properties": {
+                "id": {
+                  "enum": [
+                    "1.1.1",
+                    "1.2.1",
+                    "2.4.11"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "stage": {
+            "const": "final"
+          }
+        },
+        "required": [
+          "stage"
+        ]
+      },
+      "then": {
+        "required": [
+          "signoff"
+        ],
+        "properties": {
+          "report": {
+            "required": [
+              "conclusion"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "not": {
+        "required": [
+          "signoff",
+          "waiver"
+        ]
+      }
+    }
+  ]
+}

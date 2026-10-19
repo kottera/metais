@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "a": {
+      "const": "$HOME"
+    },
+    "b": {
+      "const": "${HOME}"
+    },
+    "c": {
+      "const": "%PATH%"
+    },
+    "d": {
+      "const": "~/x"
+    },
+    "e": {
+      "const": "@metais.yaml"
+    },
+    "f": {
+      "const": "$(id)"
+    },
+    "g": {
+      "const": "`id`"
+    }
+  }
+}

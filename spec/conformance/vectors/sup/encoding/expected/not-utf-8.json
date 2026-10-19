@@ -1,0 +1,115 @@
+[
+  {
+    "code": "input.encoding_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "c",
+      "title": "C"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "c.csv",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "utf16",
+      "offset": 0
+    }
+  },
+  {
+    "code": "input.encoding_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "j",
+      "title": "J"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "j.json",
+      "line": 1,
+      "column": 8
+    },
+    "params": {
+      "reason": "invalid_utf8",
+      "offset": 7
+    }
+  },
+  {
+    "code": "input.encoding_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "m",
+      "title": "M"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "m.md",
+      "line": 4,
+      "column": 2
+    },
+    "params": {
+      "reason": "invalid_utf8",
+      "offset": 18
+    }
+  },
+  {
+    "code": "input.noncharacter",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "n",
+      "title": "N"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "n.txt",
+      "line": 1,
+      "column": 2
+    },
+    "params": {
+      "codepoint": "U+FFFF"
+    }
+  },
+  {
+    "code": "input.encoding_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "t",
+      "title": "T"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "t.txt",
+      "line": 1,
+      "column": 3
+    },
+    "params": {
+      "reason": "invalid_utf8",
+      "offset": 2
+    }
+  },
+  {
+    "code": "input.encoding_invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "y",
+      "title": "Y"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "y.yaml",
+      "line": 1,
+      "column": 4
+    },
+    "params": {
+      "reason": "invalid_utf8",
+      "offset": 3
+    }
+  }
+]

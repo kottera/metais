@@ -1,0 +1,77 @@
+[
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 2,
+      "pointer": "/size"
+    },
+    "schema": {
+      "entry": "inputs/vendor.schema.json",
+      "pointer": "/properties/size/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 3,
+      "pointer": "/rate"
+    },
+    "schema": {
+      "entry": "inputs/vendor.schema.json",
+      "pointer": "/properties/rate/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "number"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 4,
+      "pointer": "/ok"
+    },
+    "schema": {
+      "entry": "inputs/vendor.schema.json",
+      "pointer": "/properties/ok/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "boolean"
+      ],
+      "actual": "string"
+    }
+  }
+]

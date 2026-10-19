@@ -1,0 +1,91 @@
+{
+  "type": "object",
+  "required": [
+    "need"
+  ],
+  "$defs": {
+    "shared": {
+      "type": "string",
+      "default": "from-ref"
+    }
+  },
+  "properties": {
+    "need": {
+      "type": "string",
+      "default": "never-used"
+    },
+    "opt": {
+      "type": "string",
+      "default": "opt-default"
+    },
+    "viaref": {
+      "$ref": "#/$defs/shared"
+    },
+    "kept": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "default": "not-applied"
+    },
+    "parent": {
+      "type": "object",
+      "properties": {
+        "child": {
+          "type": "string",
+          "default": "child-default"
+        }
+      }
+    },
+    "made": {
+      "type": "object",
+      "default": {},
+      "properties": {
+        "inner": {
+          "type": "integer",
+          "default": 7
+        }
+      }
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "v": {
+            "type": "string",
+            "default": "cell-default"
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "underallof": {
+          "default": "not-applied"
+        }
+      }
+    },
+    {
+      "const": {
+        "need": "given",
+        "opt": "opt-default",
+        "viaref": "from-ref",
+        "kept": null,
+        "made": {
+          "inner": 7
+        },
+        "rows": [
+          {
+            "v": "x"
+          },
+          {
+            "v": "cell-default"
+          }
+        ]
+      }
+    }
+  ]
+}

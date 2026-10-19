@@ -1,0 +1,47 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/encoding",
+  "title": "A leading byte order mark is removed in every form, and text that is not UTF-8, or holds a noncharacter, is refused",
+  "statements": [
+    "MTS-SUP-001",
+    "MTS-SUP-004"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "bom",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/bom"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "not-utf-8",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/not-utf-8"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-utf-8.json"
+          }
+        }
+      ]
+    }
+  ]
+}

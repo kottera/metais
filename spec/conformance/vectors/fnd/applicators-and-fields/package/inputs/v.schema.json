@@ -1,0 +1,148 @@
+{
+  "$defs": {
+    "money": {
+      "title": "Money",
+      "type": "number",
+      "minimum": 0
+    },
+    "named": {
+      "title": "Named thing",
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 2
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "properties": {
+        "size": {
+          "type": "integer"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "shape": {
+      "title": "Shape",
+      "oneOf": [
+        {
+          "title": "Circle",
+          "type": "object",
+          "required": [
+            "kind",
+            "radius"
+          ],
+          "properties": {
+            "kind": {
+              "const": "circle"
+            },
+            "radius": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "title": "Square",
+          "type": "object",
+          "required": [
+            "kind",
+            "side"
+          ],
+          "properties": {
+            "kind": {
+              "const": "square"
+            },
+            "side": {
+              "type": "number"
+            }
+          }
+        }
+      ]
+    },
+    "either": {
+      "title": "Either",
+      "anyOf": [
+        {
+          "title": "A number",
+          "type": "number"
+        },
+        {
+          "title": "A list",
+          "type": "array",
+          "minItems": 2
+        }
+      ]
+    },
+    "mode": {
+      "type": "string"
+    },
+    "detail": {
+      "type": "object"
+    },
+    "price": {
+      "title": "Price beside the reference",
+      "description": "What it costs.",
+      "$ref": "#/$defs/money"
+    },
+    "cost": {
+      "$ref": "#/$defs/money"
+    },
+    "thing": {
+      "title": "Thing",
+      "allOf": [
+        {
+          "$ref": "#/$defs/named"
+        }
+      ]
+    },
+    "parent": {
+      "title": "Parent",
+      "type": "object",
+      "properties": {
+        "child": {
+          "type": "integer"
+        }
+      }
+    },
+    "shared": {
+      "$ref": "shared.schema.json#/$defs/code"
+    },
+    "tree": {
+      "$ref": "#/$defs/node"
+    },
+    "list": {
+      "$ref": "list.schema.json"
+    }
+  },
+  "if": {
+    "title": "Detailed mode",
+    "properties": {
+      "mode": {
+        "const": "detailed"
+      }
+    },
+    "required": [
+      "mode"
+    ]
+  },
+  "then": {
+    "properties": {
+      "detail": {
+        "required": [
+          "level"
+        ]
+      }
+    }
+  }
+}

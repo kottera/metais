@@ -1,0 +1,49 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "n": {
+        "type": "integer"
+      },
+      "x": {
+        "type": [
+          "string",
+          "number"
+        ]
+      },
+      "b": {
+        "type": [
+          "boolean",
+          "string"
+        ]
+      },
+      "q": {
+        "type": "string"
+      },
+      "u": {
+        "type": "string"
+      }
+    }
+  },
+  "const": [
+    {
+      "id": "r1",
+      "n": 1,
+      "x": 2.5,
+      "b": true,
+      "q": "",
+      "u": " padded "
+    },
+    {
+      "id": "r2",
+      "n": -3,
+      "x": "abc",
+      "b": "yes",
+      "q": "a, \"b\"\nc"
+    }
+  ]
+}

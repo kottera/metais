@@ -345,3 +345,102 @@ token, an array index comparing as a number and a prefix before its
 extensions; the code; the schema's entry, then its pointer; and the canonical
 JSON of the parameters. Of two findings equal in code, subject, origin, file,
 argument, pointer and parameters, it MUST report one.
+
+## 12.3 A schema failure
+
+A failure of a value against its schema is reported by the code of the
+keyword that failed, in the family of what the schema validates: `input.` for a
+supplied input, `manifest.` for the manifest, `output.` for an output. The
+codes of the `input.` family:
+
+| Keyword | Code |
+|---|---|
+| `type` | `input.type` |
+| `enum` | `input.enum` |
+| `const` | `input.const` |
+| `multipleOf` | `input.multiple_of` |
+| `maximum`, `exclusiveMaximum` | `input.maximum`, `input.exclusive_maximum` |
+| `minimum`, `exclusiveMinimum` | `input.minimum`, `input.exclusive_minimum` |
+| `maxLength`, `minLength` | `input.max_length`, `input.min_length` |
+| `pattern` | `input.pattern` |
+| `format` | `input.format` |
+| `maxItems`, `minItems` | `input.max_items`, `input.min_items` |
+| `uniqueItems` | `input.unique_items` |
+| `contains`, `minContains`, `maxContains` | `input.contains`, `input.min_contains`, `input.max_contains` |
+| `maxProperties`, `minProperties` | `input.max_properties`, `input.min_properties` |
+| `required` | `input.required` |
+| `dependentRequired` | `input.dependent_required` |
+| `additionalProperties` | `input.additional_property` |
+| `items` after `prefixItems` | `input.additional_item` |
+| `unevaluatedProperties` | `input.unevaluated_property` |
+| `unevaluatedItems` | `input.unevaluated_item` |
+| `propertyNames` | `input.property_name` |
+| a `false` schema | `input.forbidden` |
+| `not` | `input.not` |
+| `anyOf` | `input.any_of` |
+| `oneOf`, no branch accepting | `input.one_of` |
+| `oneOf`, several branches accepting | `input.one_of.ambiguous` |
+
+<a id="mts-fnd-004"></a>**MTS-FND-004** A processor MUST report each failing
+keyword by its code in the table above: `required`, `dependentRequired` and
+`additionalProperties` once per member they concern, a missing member at the
+pointer of the absent member with the line and column of its parent, an extra
+or misnamed member at its name, an item at its index, and each other keyword
+at the value it fails.
+
+<a id="mts-fnd-005"></a>**MTS-FND-005** A processor MUST report a schema
+failure with its `schema` member: the package entry of the schema file the
+failing keyword is written in, the JSON Pointer of the keyword within that
+file, and the keyword, followed through every `$ref` to where the keyword is
+authored.
+
+<a id="mts-fnd-006"></a>**MTS-FND-006** Of an `anyOf` or `oneOf` no branch of
+which accepts the value, a processor MUST report the failures of the one branch
+that its value's type and its `const` and `enum` members do not reject, with a
+`via` entry naming the keyword and the branch, and when every branch is so
+rejected MUST report one `input.any_of` or `input.one_of` whose `alternatives`
+list each branch's failures; and a failure under a `then` or `else` MUST carry a
+`via` entry naming the `if` that selected it, with that schema's title.
+
+<a id="mts-fnd-007"></a>**MTS-FND-007** A processor MUST give a finding's
+`field` the `title` and, independently, the `description` of the first schema,
+walking the evaluation path from the failed keyword back toward the root, whose
+instance location is the finding's; for an absent member, of the `properties`
+subschema naming it, following its `$ref` chain when it has neither. A schema
+at another instance location never supplies a field, so that a parent's title
+is never a child's.
+
+## 12.4 Where a finding is
+
+<a id="mts-fnd-008"></a>**MTS-FND-008** A processor MUST locate a finding about
+a value at the line and column where the value starts, columns counted in
+Unicode code points from 1, a tab one column, a line ended by LF, CRLF or a
+lone CR; in a CSV file, the line where the record or the quoted field starts;
+on the command line, the line and column within an `--inputs-json` argument
+and no line for a path set; and at the value's JSON Pointer within its input,
+each `~` and `/` of a member name written `~0` and `~1`.
+
+## 12.5 The report
+
+<a id="mts-fnd-009"></a>**MTS-FND-009** A processor MUST count every finding
+of an operation, after removing duplicates, whether it lists it or not.
+
+<a id="mts-fnd-010"></a>**MTS-FND-010** A processor MUST list at most the
+`findings` limit of [chapter 14](14-security.md) of an operation's findings,
+the first in the order of §12.2, and when it omits any MUST list after them
+one `report.truncated`, about the report, giving how many it listed and how
+many it omitted.
+
+## 12.6 What a finding may say
+
+<a id="mts-fnd-011"></a>**MTS-FND-011** No member of a finding MUST hold a
+string value, or part of one, taken from a supplied input: a string is
+described by its type and length, numbers, booleans and `null` may be given,
+but not a value, its length or a suggestion where its schema is `writeOnly`,
+and a `suggestion` names only a value or member name the package declares.
+
+<a id="mts-fnd-012"></a>**MTS-FND-012** A processor MUST carry text from the
+package, a title or a description, into a finding exactly as the package
+writes it, and MUST write each C0 control, DEL, C1 control and bidirectional
+control in it, U+202A to U+202E and U+2066 to U+2069, as `\u` and four
+lowercase hexadecimal digits wherever it writes a finding as JSON.

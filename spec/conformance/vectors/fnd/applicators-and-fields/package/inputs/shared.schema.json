@@ -1,0 +1,9 @@
+{
+  "$defs": {
+    "code": {
+      "title": "Shared code",
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    }
+  }
+}

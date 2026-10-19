@@ -1,0 +1,31 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "fnd/no-echo",
+  "title": "No finding repeats a string from the inputs: a writeOnly number is not echoed and a suggestion is package content",
+  "statements": [
+    "MTS-FND-011"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "sentinels",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/sentinels"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/sentinels.json"
+          }
+        }
+      ]
+    }
+  ]
+}

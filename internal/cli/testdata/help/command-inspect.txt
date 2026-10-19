@@ -30,6 +30,10 @@ Flags:
       Lower one resource limit for this run, to a whole number no higher than
       its default (a size may end in KiB, MiB or GiB). metais limits lists them.
       May be given more than once.
+  --fail-on <severity>
+      With warning, a warning fails the command with exit status 1 as an error
+      does; no finding's severity changes. Values: error, warning. Default:
+      error.
   --json
       Print the result as one JSON document on standard output.
   --color <when>

@@ -1,0 +1,72 @@
+{
+  "type": "one",
+  "enum": "blue",
+  "const": "moving",
+  "multiple_of": 7,
+  "maximum": 11,
+  "exclusive_maximum": 10,
+  "minimum": 9,
+  "exclusive_minimum": 10,
+  "max_length": "four",
+  "min_length": "ab",
+  "pattern": "ABC",
+  "format": "2026-13-01",
+  "max_items": [
+    1,
+    2
+  ],
+  "min_items": [
+    1
+  ],
+  "unique_items": [
+    1,
+    2,
+    1
+  ],
+  "contains": [
+    2,
+    3
+  ],
+  "min_contains": [
+    1,
+    2
+  ],
+  "max_contains": [
+    1,
+    1
+  ],
+  "max_properties": {
+    "a": 1,
+    "b": 2
+  },
+  "min_properties": {
+    "a": 1
+  },
+  "required": {},
+  "dependent_required": {
+    "a": 1
+  },
+  "additional_item": [
+    1,
+    2
+  ],
+  "unevaluated_property": {
+    "a": 1,
+    "z": 2
+  },
+  "unevaluated_item": [
+    1,
+    2
+  ],
+  "property_name": {
+    "Upper": 1
+  },
+  "forbidden": {
+    "gone": 1
+  },
+  "not": "text",
+  "any_of": "text",
+  "one_of": "text",
+  "one_of_ambiguous": 3,
+  "extra_member": 1
+}

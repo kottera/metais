@@ -19,6 +19,7 @@ import (
 	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostenv"
+	"github.com/kottera/metais/internal/limits"
 )
 
 // Options is what an invocation carries besides its arguments and streams.
@@ -58,6 +59,9 @@ type session struct {
 	inv   Invocation
 	table []*Command
 	line  line
+	// lim is the command's limits once --limit has been read, nil before
+	// and on a line that gives none a command reads.
+	lim *limits.Set
 }
 
 // Run dispatches inv to the command its arguments name and returns the

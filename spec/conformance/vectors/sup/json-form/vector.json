@@ -1,0 +1,48 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/json-form",
+  "title": "A JSON input is one RFC 8259 text with unique member names, scalar-value strings and binary64 numbers, and 1 equals 1.0",
+  "statements": [
+    "MTS-SUP-003",
+    "MTS-SUP-004",
+    "MTS-SUP-005"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/valid"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/invalid"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/invalid.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -14,6 +14,7 @@ package finding
 
 import (
 	"fmt"
+	"math"
 	"slices"
 	"strings"
 	"unicode/utf8"
@@ -529,43 +530,146 @@ func (f Finding) mustRender(tmpl string) string {
 	return s
 }
 
+// maxText is the most code points a message or a hint has (ADR-006 D9
+// items 1 and 2).
+const maxText = 240
+
+// segment is one piece of a rendered template: literal text, or a
+// placeholder's value, which may be shortened to fit maxText.
+type segment struct {
+	text  string
+	value bool // a placeholder's value
+	tail  bool // shortened by keeping its end: {field}'s pointer
+}
+
 // render expands a message or hint template (ADR-006 D3 item 7): {name}
 // is a parameter or one of the built-ins field, input, output and
 // package; {{ and }} are literal braces. Unless write is set it only
-// checks tmpl, and returns "".
+// checks tmpl, and returns "". The text it writes is at most maxText code
+// points: a value that would carry it past them is shortened, and the
+// finding's members keep the whole of it.
 func (f Finding) render(tmpl string, write bool) (string, error) {
-	var b strings.Builder
+	var segs []segment
+	var lit strings.Builder
+	flush := func() {
+		if lit.Len() > 0 {
+			segs = append(segs, segment{text: lit.String()})
+			lit.Reset()
+		}
+	}
 	for i := 0; i < len(tmpl); {
 		c := tmpl[i]
 		switch {
 		case c == '{' && strings.HasPrefix(tmpl[i:], "{{"):
-			b.WriteByte('{')
+			lit.WriteByte('{')
 			i += 2
 		case c == '}' && strings.HasPrefix(tmpl[i:], "}}"):
-			b.WriteByte('}')
+			lit.WriteByte('}')
 			i += 2
 		case c == '{':
 			end := strings.IndexByte(tmpl[i:], '}')
 			if end < 0 {
 				return "", fmt.Errorf("unclosed placeholder at byte %d", i)
 			}
-			s, err := f.placeholder(tmpl[i+1:i+end], write)
+			name := tmpl[i+1 : i+end]
+			s, err := f.placeholder(name, write)
 			if err != nil {
 				return "", err
 			}
-			b.WriteString(s)
+			flush()
+			segs = append(segs, segment{text: s, value: true, tail: name == "field" && f.fieldIsPointer()})
 			i += end + 1
 		case c == '}':
 			return "", fmt.Errorf("unpaired } at byte %d", i)
 		default:
-			b.WriteByte(c)
+			lit.WriteByte(c)
 			i++
 		}
 	}
+	flush()
 	if !write {
 		return "", nil
 	}
-	return b.String(), nil
+	return joinWithin(segs, maxText), nil
+}
+
+// joinWithin joins segs, shortening the placeholders' values so that the
+// whole is at most max code points when the literal text allows it. Every
+// value gets an equal share of what the literal text leaves, and a value
+// shorter than its share gives the rest to the others; a value cut to its
+// share ends, or for a tail value begins, with an ellipsis.
+func joinWithin(segs []segment, max int) string {
+	total, literal := 0, 0
+	var lens []int
+	for _, sg := range segs {
+		n := utf8.RuneCountInString(sg.text)
+		total += n
+		if sg.value {
+			lens = append(lens, n)
+		} else {
+			literal += n
+		}
+	}
+	var b strings.Builder
+	if total <= max {
+		for _, sg := range segs {
+			b.WriteString(sg.text)
+		}
+		return b.String()
+	}
+	share := fairShare(lens, max-literal)
+	for _, sg := range segs {
+		if sg.value {
+			b.WriteString(shorten(sg.text, share, sg.tail))
+		} else {
+			b.WriteString(sg.text)
+		}
+	}
+	return b.String()
+}
+
+// fairShare is the largest share s, at least 0, for which the values of
+// lens, each cut to s, sum to at most budget.
+func fairShare(lens []int, budget int) int {
+	sorted := slices.Clone(lens)
+	slices.Sort(sorted)
+	for i, n := range sorted {
+		rest := len(sorted) - i
+		if n*rest > budget {
+			return max(budget/rest, 0)
+		}
+		budget -= n
+	}
+	return math.MaxInt
+}
+
+// shorten cuts s to at most n code points, marking the cut with an
+// ellipsis: at the end, or, for a tail value, at the start, keeping a
+// pointer's last tokens and its backticks.
+func shorten(s string, n int, tail bool) string {
+	if utf8.RuneCountInString(s) <= n {
+		return s
+	}
+	rs := []rune(s)
+	if !tail {
+		if n == 0 {
+			return ""
+		}
+		return string(rs[:n-1]) + "…"
+	}
+	// A pointer in backticks: `…` and as much of its end as fits.
+	if n < 3 {
+		return strings.Repeat("…", min(n, 1))
+	}
+	keep := rs[len(rs)-1-(n-3) : len(rs)-1]
+	return "`…" + string(keep) + "`"
+}
+
+// fieldIsPointer reports whether {field} is the location's pointer in
+// backticks, which is shortened by keeping its end.
+func (f Finding) fieldIsPointer() bool {
+	return (f.field == nil || f.field.Title == "") && f.location != nil && f.location.HasPointer &&
+		(f.location.path != nil || f.location.Pointer != "")
 }
 
 func (f Finding) placeholder(name string, write bool) (string, error) {

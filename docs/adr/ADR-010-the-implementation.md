@@ -1852,3 +1852,10 @@ at the train's close, with A1 and A3.
   hostile packages store every entry, so few of their bytes depend on the
   pinned encoder. `THIRD-PARTY-NOTICES.txt` now lists jcs, yaml.v3,
   jsonschema/v6 and x/text, which `./cmd/metais` links.
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-1.** D13's `FirstFinding`
+  (`1 << 1`) has its seam in `internal/finding`: `NewReportFaults` builds a
+  report that, under the fault, keeps the first error it is given and
+  drops every later one. `internal/cli` builds every command's report
+  with it from the invocation's faults, and `internal/guarantees`'
+  `TestOnePassDetector` is the SC8 detector, with the fault as its
+  control in the same run.

@@ -47,6 +47,8 @@ const (
 
 	CodeInternalError          Code = "internal.error"
 	CodeUsageBadValue          Code = "usage.bad_value"
+	CodeUsageConflictingFlags  Code = "usage.conflicting_flags"
+	CodeUsageDataDirUnreadable Code = "usage.data_dir_unreadable"
 	CodeUsageMissingCommand    Code = "usage.missing_command"
 	CodeUsageMissingOperand    Code = "usage.missing_operand"
 	CodeUsagePackageFromStdin  Code = "usage.package_from_stdin"
@@ -73,7 +75,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Make a directory named after the input and put one file in it per item; the file was not read.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-015"},
 	},
 	{
 		Code:       "collection.directory_name",
@@ -84,7 +86,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Name the collection's directory after the input alone, with no extension; it was not read.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-015"},
 	},
 	{
 		Code:     "collection.item_name",
@@ -112,7 +114,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Rename one of them: the stem is the item's identity, and a case-insensitive file system cannot hold both. The later item was not read.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-016"},
 	},
 	{
 		Code:       "collection.subdirectory",
@@ -123,7 +125,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Move the files up into the collection's directory, or remove the subdirectory; it was not read.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-015"},
 	},
 	{
 		Code:       "csv.after_quote",
@@ -134,7 +136,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "End a quoted field at its closing quote, followed by the delimiter or the end of the line, and write a quote inside it as two quotes; the rest of this record was not read. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-008"},
 	},
 	{
 		Code:       "csv.bare_quote",
@@ -145,7 +147,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Enclose the whole field in quotes and write each quote inside it as two quotes; the rest of this record was not read. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-008"},
 	},
 	{
 		Code:     "csv.field_count",
@@ -160,7 +162,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Give every record one field per header name; leave a field empty, rather than out, when it has no value. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-008"},
 	},
 	{
 		Code:     "csv.header_duplicate",
@@ -175,7 +177,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Give each column its own name; names are compared exactly, with no trimming or case folding. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-008"},
 	},
 	{
 		Code:     "csv.header_empty",
@@ -189,7 +191,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Name every column in the first record of the file. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-008"},
 	},
 	{
 		Code:       "csv.header_missing",
@@ -200,7 +202,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Begin the file with a record naming each column, separated by the input's delimiter. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-008"},
 	},
 	{
 		Code:       "csv.unterminated_quote",
@@ -211,7 +213,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Close the field with a quote; the rest of the file was read as part of this field, so nothing after it was checked. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-008"},
 	},
 	{
 		Code:     "example.layout",
@@ -239,7 +241,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Read the rule at the schema location this finding names; it relates the inputs to each other rather than constraining one of them.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-DAT-012"},
 	},
 	{
 		Code:       "input.constraints_not_evaluated",
@@ -250,7 +252,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Fix the inputs that did not parse and validate again, which evaluates the constraints and may report more.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-029"},
 	},
 	{
 		Code:     "input.encoding_invalid",
@@ -265,7 +267,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Save the file as UTF-8, with or without a byte order mark. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-001"},
 	},
 	{
 		Code:     "input.extension_not_accepted",
@@ -279,7 +281,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Name the file with one of these extensions: {accepted}. The file was not read.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-015", "MTS-SUP-018"},
 	},
 	{
 		Code:       "input.file_duplicate",
@@ -290,7 +292,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Keep one file or directory for the input and remove the others; none of them was read.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-018"},
 	},
 	{
 		Code:       "input.file_unknown",
@@ -301,7 +303,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Rename the entry after a declared input, or remove it. Run `metais inspect {package}` to see every input.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-018"},
 	},
 	{
 		Code:     "input.json_arg_invalid",
@@ -316,7 +318,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Correct the argument's JSON and give it again; none of the inputs it holds was read.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-020"},
 	},
 	{
 		Code:     "input.json_arg_not_object",
@@ -330,7 +332,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Give an object whose members are input names, each holding that input's whole value.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-020"},
 	},
 	{
 		Code:       "input.json_arg_unknown",
@@ -341,7 +343,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Name a declared input, or remove the member. Run `metais inspect {package}` to see every input.",
 		Span:       SpanKey,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-020"},
 	},
 	{
 		Code:       "input.link",
@@ -352,7 +354,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Copy the file into the data directory in place of the link.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SEC-006"},
 	},
 	{
 		Code:       "input.missing",
@@ -363,7 +365,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Supply it as a file named after it in the data directory, as an --inputs-json member, or with --set. Run `metais inspect {package}` to see every input.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-DAT-010", "MTS-DAT-012"},
 	},
 	{
 		Code:     "input.noncharacter",
@@ -377,7 +379,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Remove the noncharacter. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-004"},
 	},
 	{
 		Code:     "input.not_readable",
@@ -405,7 +407,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Supply the input as a regular file; only a collection input is a directory. The entry was not read.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SEC-006", "MTS-SUP-018"},
 	},
 	{
 		Code:     "input.number_out_of_range",
@@ -419,7 +421,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Supply it as a string, or as a number of magnitude at most 9007199254740991. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-005"},
 	},
 	{
 		Code:       "input.set_into_unparsed",
@@ -430,7 +432,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Fix what refused the input's file or argument, then validate again, which applies the set.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-024"},
 	},
 	{
 		Code:     "input.set_pointer_invalid",
@@ -444,7 +446,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Write the set as /<input>/<member>=<value>, beginning with a declared input's name. Run `metais inspect {package}` to see every input.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-021"},
 	},
 	{
 		Code:     "input.set_traversal",
@@ -458,7 +460,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Set an existing member or element, append with - as the last token, or replace the whole parent with --set-json.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-022"},
 	},
 	{
 		Code:     CodeInternalError,
@@ -487,7 +489,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Keep one member with this name and remove the others. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanKey,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-003"},
 	},
 	{
 		Code:       "json.lone_surrogate",
@@ -498,7 +500,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Write the character it was meant to be, or a surrogate pair of a high and a low surrogate escape. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-004"},
 	},
 	{
 		Code:       "json.noncharacter",
@@ -509,7 +511,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Remove the noncharacter (U+FDD0 to U+FDEF, or a code point ending in FFFE or FFFF) from the string. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-004"},
 	},
 	{
 		Code:     "json.syntax",
@@ -524,7 +526,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Correct the JSON at this line and column; a JSON file holds one value, with no comments and no trailing commas. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-003"},
 	},
 	{
 		Code:       "json.trailing_content",
@@ -535,7 +537,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Remove what follows the value, or enclose several values in one array. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-003"},
 	},
 	{
 		Code:     CodeLimitExceeded,
@@ -552,7 +554,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Supply a smaller or shallower input; a limit can be lowered with --limit but never raised. Run `metais limits` to see every limit.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SEC-005"},
 	},
 	{
 		Code:     CodeLimitInvalid,
@@ -984,7 +986,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Rename the field. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanKey,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-012"},
 	},
 	{
 		Code:     "markdown.frontmatter_not_mapping",
@@ -998,7 +1000,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Write the frontmatter as key: value lines, or leave it empty. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-012"},
 	},
 	{
 		Code:       "markdown.frontmatter_unclosed",
@@ -1009,7 +1011,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "End the frontmatter with a line that is exactly ---; a file meant to begin with a thematic break begins with *** instead. The input's schema was not checked; validate again after the fix, which may report more.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-012"},
 	},
 	{
 		Code:     "output.declaration.validate_kind",
@@ -1756,7 +1758,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Fix the findings listed and run the command again, or read the summary's totals by code.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-FND-010"},
 	},
 	{
 		Code:     "schema.dialect",
@@ -2375,6 +2377,36 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{},
 	},
 	{
+		Code:     CodeUsageConflictingFlags,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position, among the arguments after metais, of the flag that conflicts with an earlier one.", Always: true},
+			{Name: "flag", Type: TypeString, Meaning: "The flag, written with its leading --.", Always: true},
+		},
+		Message:    "{flag} at argument {argument} reads standard input, which an earlier {flag} already reads.",
+		Hint:       "Read standard input once: give - to one {flag}, and the other inputs inline or in the data directory.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageDataDirUnreadable,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position, among the arguments after metais, of the --data flag.", Always: true},
+			{Name: "reason", Type: TypeString, Meaning: "Why the data directory cannot be read: not_found, permission_denied, not_regular_file (it is not a directory), too_large (it holds more entries than the collection-items limit) or io_error.", Always: true},
+		},
+		Message:    "The data directory given at argument {argument} cannot be read ({reason}).",
+		Hint:       "Give --data a directory that exists and that you can read, holding one file per input; run `metais inspect {package}` to see each input's file names.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
 		Code:       CodeUsageMissingCommand,
 		Severity:   SeverityError,
 		Class:      ClassUsage,
@@ -2525,7 +2557,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Replace the `*` alias with the value it names, written out. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 	{
 		Code:       "yaml.anchor",
@@ -2536,7 +2568,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Remove the `&` anchor and write the value out where it is used. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 	{
 		Code:       "yaml.bom",
@@ -2547,7 +2579,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Remove the byte order mark. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 	{
 		Code:     "yaml.character",
@@ -2562,7 +2594,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Write the character as a double-quoted escape, such as \\u2028, or remove it. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 	{
 		Code:       "yaml.directive",
@@ -2573,7 +2605,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Remove the `%YAML` or `%TAG` line. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 	{
 		Code:       "yaml.duplicate_key",
@@ -2584,7 +2616,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Keep one member of that name in the mapping. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanKey,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 	{
 		Code:       "yaml.key_empty",
@@ -2595,7 +2627,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Give the key a name, or quote it as `\"\"` if an empty name is meant. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanKey,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 	{
 		Code:       "yaml.key_not_scalar",
@@ -2606,7 +2638,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Write the key as plain or quoted text. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanKey,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 	{
 		Code:       "yaml.merge_key",
@@ -2617,7 +2649,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Write the merged members out in the mapping, or quote `\"<<\"` if it is an ordinary key. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanKey,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 	{
 		Code:       "yaml.multi_document",
@@ -2628,7 +2660,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Remove everything after the first document, or put each document in a file of its own. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 	{
 		Code:     "yaml.scalar_refused",
@@ -2642,7 +2674,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Write `null`, `true` or `false`, or the number as JSON writes it; quote the scalar if it is text. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 	{
 		Code:       "yaml.syntax",
@@ -2653,7 +2685,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Correct the YAML near this line. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 	{
 		Code:       "yaml.tag",
@@ -2664,7 +2696,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Remove the tag; quote the value if it is text. The input's schema was not checked; fix the file and run the command again.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-006"},
 	},
 })
 

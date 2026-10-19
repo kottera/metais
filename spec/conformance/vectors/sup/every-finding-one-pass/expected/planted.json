@@ -1,0 +1,356 @@
+[
+  {
+    "code": "input.constraints_not_evaluated",
+    "severity": "info",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.validation.partial",
+    "severity": "info",
+    "subject": {
+      "kind": "input",
+      "name": "articles",
+      "title": "Articles"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "articles",
+      "pointer": ""
+    },
+    "params": {
+      "unparsed": 1,
+      "suppressed": 0
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "articles",
+      "title": "Articles"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "articles/one.md",
+      "line": 3,
+      "column": 8,
+      "pointer": "/0/words"
+    },
+    "schema": {
+      "entry": "inputs/articles.schema.json",
+      "pointer": "/items/properties/words/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "yaml.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "articles",
+      "title": "Articles"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "articles/three.md",
+      "line": 3
+    },
+    "params": {}
+  },
+  {
+    "code": "input.required",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "articles",
+      "title": "Articles"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "articles/two.md",
+      "line": 1,
+      "column": 1,
+      "pointer": "/2/title"
+    },
+    "schema": {
+      "entry": "inputs/articles.schema.json",
+      "pointer": "/items/required",
+      "keyword": "required"
+    },
+    "params": {
+      "property": "title"
+    }
+  },
+  {
+    "code": "input.validation.partial",
+    "severity": "info",
+    "subject": {
+      "kind": "input",
+      "name": "criteria",
+      "title": "Criteria"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "criteria.csv",
+      "pointer": ""
+    },
+    "params": {
+      "unparsed": 1,
+      "suppressed": 0
+    }
+  },
+  {
+    "code": "input.pattern",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "criteria",
+      "title": "Criteria"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "criteria.csv",
+      "line": 3,
+      "column": 1,
+      "pointer": "/1/id"
+    },
+    "schema": {
+      "entry": "inputs/criteria.schema.json",
+      "pointer": "/items/properties/id/pattern",
+      "keyword": "pattern"
+    },
+    "params": {
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    }
+  },
+  {
+    "code": "input.min_length",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "criteria",
+      "title": "Criteria"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "criteria.csv",
+      "line": 3,
+      "column": 8,
+      "pointer": "/1/remarks"
+    },
+    "schema": {
+      "entry": "inputs/criteria.schema.json",
+      "pointer": "/items/properties/remarks/minLength",
+      "keyword": "minLength"
+    },
+    "params": {
+      "limit": 3,
+      "length": 2
+    }
+  },
+  {
+    "code": "input.enum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "criteria",
+      "title": "Criteria"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "criteria.csv",
+      "line": 4,
+      "column": 7,
+      "pointer": "/2/level"
+    },
+    "schema": {
+      "entry": "inputs/criteria.schema.json",
+      "pointer": "/items/properties/level/enum",
+      "keyword": "enum"
+    },
+    "params": {
+      "allowed": [
+        "\"A\"",
+        "\"AA\""
+      ],
+      "allowed_count": 2,
+      "suggestion": "AA"
+    }
+  },
+  {
+    "code": "csv.field_count",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "criteria",
+      "title": "Criteria"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "criteria.csv",
+      "line": 5,
+      "column": 1,
+      "pointer": "/3"
+    },
+    "params": {
+      "expected": 3,
+      "found": 4
+    }
+  },
+  {
+    "code": "input.enum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "edition",
+      "title": "Edition"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/edition.schema.json",
+      "pointer": "/enum",
+      "keyword": "enum"
+    },
+    "field": {
+      "title": "Edition"
+    },
+    "params": {
+      "allowed": [
+        "\"2.1\"",
+        "\"2.2\""
+      ],
+      "allowed_count": 2,
+      "suggestion": "2.1"
+    }
+  },
+  {
+    "code": "input.min_length",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "product",
+      "title": "Product"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "product.json",
+      "line": 2,
+      "column": 11,
+      "pointer": "/name"
+    },
+    "schema": {
+      "entry": "inputs/product.schema.json",
+      "pointer": "/properties/name/minLength",
+      "keyword": "minLength"
+    },
+    "field": {
+      "title": "Product name"
+    },
+    "params": {
+      "limit": 2,
+      "length": 1
+    }
+  },
+  {
+    "code": "input.minimum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "product",
+      "title": "Product"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "product.json",
+      "line": 3,
+      "column": 12,
+      "pointer": "/price"
+    },
+    "schema": {
+      "entry": "inputs/product.schema.json",
+      "pointer": "/properties/price/minimum",
+      "keyword": "minimum"
+    },
+    "params": {
+      "limit": 0,
+      "value": -1
+    }
+  },
+  {
+    "code": "input.file_unknown",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "stray"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "stray.json"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.max_length",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "summary",
+      "title": "Summary"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "summary.txt",
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/summary.schema.json",
+      "pointer": "/maxLength",
+      "keyword": "maxLength"
+    },
+    "field": {
+      "title": "Summary"
+    },
+    "params": {
+      "limit": 20,
+      "length": 38
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "vendor.yaml",
+      "line": 2,
+      "column": 8,
+      "pointer": "/email"
+    },
+    "schema": {
+      "entry": "inputs/vendor.schema.json",
+      "pointer": "/properties/email/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "email"
+    }
+  }
+]

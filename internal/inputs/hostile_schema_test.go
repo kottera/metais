@@ -111,7 +111,10 @@ func encodeReport(r *finding.Report) []byte {
 // default limits and with the findings limit lowered, byte for byte as
 // the code before W3-9F wrote it: the same codes, parameters, locations,
 // related locations, order (ADR-006 D8) and totals. The digests were
-// taken from that code's encodeReport output.
+// taken from that code's encodeReport output, with its messages bounded
+// to 240 code points as W4-1 bounds them (ADR-006 D9 item 1): the bound
+// changed the text of the messages that named the long pointer, and
+// nothing else.
 func TestHostileFailuresReportUnchanged(t *testing.T) {
 	testenv.Home(t)
 	for _, tt := range []struct {
@@ -120,12 +123,12 @@ func TestHostileFailuresReportUnchanged(t *testing.T) {
 		digests []string
 	}{
 		{"default limits", limits.Defaults(), []string{
-			"3a3bbe0be229d1ee2d377d8a1e65b7d42544fac2aef53ce4c0a1ceb8cdc360b7",
-			"65eaf5896933be5cc4d3e0637e3b2d3a18bf5e04ba4632c62aaf553b5636ae31",
+			"913560b488dab63d853f73c692a6bcf0a21d1a757f9fdfec313dfc0d9f62bc09",
+			"9cf6f7c27b72c5fc0dac946279f6e1bb401ca2890d254c84cfcb4354ba06fb83",
 		}},
 		{"findings=7", lowered(t, "findings=7"), []string{
-			"bf58a8c9e308589a5402c9ecc587ee858f12751d8fdb0e9703f25462ae582fde",
-			"fd07a3bf119d4a508dd07d28b2e11aa9bbf0e87be82d5d282e59b5dc8526413e",
+			"955aca680d0001f2a1aff2248a7896daa76294db0cecda2ac7c5b23648dfed7b",
+			"a9a61384fe2c26b2115889a4d7a3752875b757dc0fd1b70b385a8ade44f7b010",
 		}},
 	} {
 		t.Run(tt.name, func(t *testing.T) {

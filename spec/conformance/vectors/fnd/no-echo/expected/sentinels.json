@@ -1,0 +1,214 @@
+[
+  {
+    "code": "input.max_length",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "login",
+      "title": "Login"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "login.json",
+      "line": 2,
+      "column": 11,
+      "pointer": "/user"
+    },
+    "schema": {
+      "entry": "inputs/login.schema.json",
+      "pointer": "/properties/user/maxLength",
+      "keyword": "maxLength"
+    },
+    "params": {
+      "limit": 3,
+      "length": 16
+    }
+  },
+  {
+    "code": "input.maximum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "login",
+      "title": "Login"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "login.json",
+      "line": 3,
+      "column": 10,
+      "pointer": "/pin"
+    },
+    "schema": {
+      "entry": "inputs/login.schema.json",
+      "pointer": "/properties/pin/maximum",
+      "keyword": "maximum"
+    },
+    "params": {
+      "limit": 9999
+    }
+  },
+  {
+    "code": "input.enum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "login",
+      "title": "Login"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "login.json",
+      "line": 4,
+      "column": 13,
+      "pointer": "/colour"
+    },
+    "schema": {
+      "entry": "inputs/login.schema.json",
+      "pointer": "/properties/colour/enum",
+      "keyword": "enum"
+    },
+    "params": {
+      "allowed": [
+        "\"red\"",
+        "\"green\""
+      ],
+      "allowed_count": 2,
+      "suggestion": "red"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "login",
+      "title": "Login"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "login.json",
+      "line": 5,
+      "column": 11,
+      "pointer": "/code"
+    },
+    "schema": {
+      "entry": "inputs/login.schema.json",
+      "pointer": "/properties/code/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.const",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "login",
+      "title": "Login"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "login.json",
+      "line": 6,
+      "column": 11,
+      "pointer": "/word"
+    },
+    "schema": {
+      "entry": "inputs/login.schema.json",
+      "pointer": "/properties/word/const",
+      "keyword": "const"
+    },
+    "params": {
+      "expected": "\"fixed\""
+    }
+  },
+  {
+    "code": "input.pattern",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "login",
+      "title": "Login"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "login.json",
+      "line": 7,
+      "column": 9,
+      "pointer": "/id"
+    },
+    "schema": {
+      "entry": "inputs/login.schema.json",
+      "pointer": "/properties/id/pattern",
+      "keyword": "pattern"
+    },
+    "params": {
+      "pattern": "^[0-9]+$"
+    }
+  },
+  {
+    "code": "input.format",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "login",
+      "title": "Login"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "login.json",
+      "line": 8,
+      "column": 11,
+      "pointer": "/when"
+    },
+    "schema": {
+      "entry": "inputs/login.schema.json",
+      "pointer": "/properties/when/format",
+      "keyword": "format"
+    },
+    "params": {
+      "format": "date"
+    }
+  },
+  {
+    "code": "input.unique_items",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "login",
+      "title": "Login"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "login.json",
+      "line": 11,
+      "column": 5,
+      "pointer": "/tags/1"
+    },
+    "schema": {
+      "entry": "inputs/login.schema.json",
+      "pointer": "/properties/tags/uniqueItems",
+      "keyword": "uniqueItems"
+    },
+    "params": {
+      "index": 1,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "login.json",
+        "line": 10,
+        "column": 5,
+        "pointer": "/tags/0",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]
