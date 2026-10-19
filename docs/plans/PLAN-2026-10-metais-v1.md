@@ -141,7 +141,7 @@ another harness's type to get past a capacity wait.** Park on
 | 3 | **Opening a package, and the composed libraries**: the package loader and `inspect`, with the container, manifest and version chapters and their vectors; the inputs layer; the Liquid renderer; the standard filter catalog; the sample-value generator; the cross-reference analysis; the OOXML split-run scanner; `init` | 2 | **complete** — [verdict](#9-wave-3--opening-a-package-and-the-composed-libraries) |
 | 4 | **Validate, read, the first render, check and unpack**: `validate`; `ls`, `read`, `outline`, `grep`, `schema` and `extract`; `render` of template outputs into a new directory with the template environment; `check`; `unpack`; the Liquid closure | 3 | **complete** — [verdict](#10-wave-4--validate-read-the-first-render-check-and-unpack) |
 | 5 | **The render's capabilities, and the rest of authoring**: the METAIS filters and `date`; escaping; `embed` and `provenance`; fan-out, conditions and path templates; assets and the mirror; zip containers and their profiles; CRLF and output validation; existing destinations; dry run, the standard-output archive and `--only`; `sample`; `render --sample`; `test` | 4 | **complete** — [verdict](#11-wave-5--the-renders-capabilities-and-the-rest-of-authoring) |
-| 5b | **The gate's cost and merge friction** (inserted by Ed, 2026-10-19): the two-tier gate and its scripts; the shared-host cap; the skills; the `hostfs` limit tests; self-merging generated files; per-item ADR logs; one edit per finding code; help refusals by family; `render.go` split by phase | 5 | not started |
+| 5b | **The gate's cost and merge friction** (inserted by Ed, 2026-10-19): the two-tier gate and its scripts; the shared-host cap; the skills; the `hostfs` limit tests; self-merging generated files; per-item ADR logs; one edit per finding code; help refusals by family; `render.go` split by phase | 5 | **complete** — [verdict](#11b-wave-5b--the-gates-cost-and-merge-friction-inserted-by-ed-2026-10-19) |
 | 6 | **Pack, and hardening**: `pack` with the example-package harness; `test`'s container comparison; the hostile corpus in full; the SC7 harness's full reach; limit calibration; benchmark budgets; the release builder | 5b | not started |
 | 7 | **The example packages and the close-out**: the packages of PRD §4.1 to §4.5; the worked package of `B-worked-package.md`; the specification's 1.0 text complete; the README, documentation and ADR implementation logs | 6 | not started |
 | — | **The out-of-band acts**: §6 | — | — |
@@ -1306,6 +1306,57 @@ close.
   is never assigned, so none of that is broken. Within each item, numbers
   are still taken in order of addition. No contiguity check is added.
   Ed's guidance reserved the question to him only if the item forbade gaps.
+
+**Verdict (2026-10-19): complete.** Every one of Ed's rulings for this wave
+landed, in seven items (#108 to #116):
+
+- the two-tier gate, by ADR-010 Amendment A5, with `gate.sh` and its scoped
+  tier, `--resume`, the selector, and the `go test -p` and `-parallel` cap;
+- the skills, matching the gate, with no flake register;
+- the `hostfs` limit tests: `StageNew_abort` was slow, not hung, and their
+  cost floor is recorded;
+- one hand-edited place per finding code;
+- `render.go` split by phase;
+- help refusals grouped by family, by ADR-008 Amendment A1, with the JSON
+  help goldens pretty-printed;
+- per-item ADR log files;
+- generated files that merge themselves, with ADR-011 D3 item 7 amended to
+  match.
+
+W5-NB3 (#112) brought `TestConformance` back well within its 60 s budget.
+The verification round ran the wave tier on a fresh clone, green on all 42
+packages. It found one blocking defect in help's family lines, fixed in #117
+and not re-verified.
+
+Brief and closeout:
+[brief-plan-2026-10-metais-v1-wave5b.md](../briefs/brief-plan-2026-10-metais-v1-wave5b.md)
+(brief [#105](https://github.com/kottera/metais/pull/105), ruling
+[#106](https://github.com/kottera/metais/pull/106), closeout
+[#119](https://github.com/kottera/metais/pull/119)).
+
+Weaker than it reads:
+
+- **W5b-1's `--resume` and selector were inspected, not mutated**, and so
+  were W5b-4 and W5b-6. The scoped tier now decides what each item tests,
+  so the selector's guards are tested by their producer alone.
+- **The merge drivers have run on linux only.**
+
+What changes later waves:
+
+- **Items run `gate.sh`'s scoped tier**, and the wave tier when they touch a
+  shared seam. Sessions run `merge-setup.sh` before their first rebase and
+  `regenerate.sh` after every rebase.
+- **The liquid-spec run after Wave 5 passed cleanly.** W5-A1
+  (`01a155c2-5c85-7762-a3d8-2541e178e29c`) ran at `cdce4d9` in both locales:
+  liquid-spec exited 0, with "1845 pass, 549 departures fail as listed, 0
+  fail otherwise, 0 departures pass".
+- **For Ed: `278c96a` (W5b-1) carries four `Co-Authored-By` trailers**,
+  against AGENTS.md. So do `30929d5` and W2-2F's squash. Removing them means
+  rewriting `main`'s history, which is Ed's decision. Later squash messages
+  are written explicitly.
+- **Still running when the wave closed:** W5b-NB1
+  (`01a1566a-4184-7367-92dc-49ee5d5dcc56`) and W5b-NB2
+  (`01a1566a-70f6-73a5-b93a-d57fae90a1a0`).
 
 ## 12. Wave 6 — pack, and hardening
 
