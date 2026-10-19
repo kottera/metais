@@ -84,6 +84,24 @@ const (
 	CodeInvalidUTF8 Code = "invalid_utf8"
 )
 
+// The codes of the filters a dialect adds to Core(): METAIS's own and
+// date (ADR-004 D10, D11), which internal/template and internal/dates
+// define. The engine never reports them itself; each carries Args
+// "filter" like the codes above.
+const (
+	// CodeDateInput is a date input ADR-004 D11 item 1 does not accept.
+	// Args "type" names the kind found; "now" is "true" for the strings
+	// "now" and "today", for which the finding names the now global.
+	CodeDateInput Code = "date_input"
+	// CodeDateFormat is a date format outside ADR-004 D11 item 3's closed
+	// set, or an empty one. Args "directive" is the first directive
+	// outside the set, as the format writes it, and absent for an empty
+	// format.
+	CodeDateFormat Code = "date_format"
+	// CodeSlugEmpty is a slug whose result is empty (ADR-004 D10 item 6).
+	CodeSlugEmpty Code = "slug_empty"
+)
+
 // The render error codes (ADR-004 D4 to D6, D16 item 1). A render stops at
 // its first error.
 const (

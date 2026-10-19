@@ -6,8 +6,6 @@ filters, base64 decode, not a string	ADR-004 D16 item 1: filter_input depends on
 filters, base64 url safe decode, not a string	ADR-004 D16 item 1: filter_input depends on the input's value, found at render
 filters, concat, non array-like argument is an error	ADR-004 D16 item 1: filter_argument depends on the argument's value, found at render
 filters, concat, undefined argument is an error	ADR-004 D6 item 8: an undefined variable is found when evaluated
-filters, date, missing argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, date, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, divided by, undefined argument	ADR-004 D6 item 8: an undefined variable is found when evaluated
 filters, has, array of ints, string argument, default value	ADR-004 D16 item 1: filter_input depends on the input's value, found at render
 filters, map, array containing a non object	ADR-004 D16 item 1: filter_input depends on the input's value, found at render

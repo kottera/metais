@@ -1,0 +1,33 @@
+{
+  "rows": [
+    {
+      "name": "Ann",
+      "n": 1,
+      "note": "a, \"b\"\r\nc",
+      "flag": true
+    },
+    {
+      "name": "Bo;b",
+      "n": 2.5,
+      "note": null
+    },
+    {
+      "name": "Cy",
+      "n": -3
+    }
+  ],
+  "none": [],
+  "sparse": [
+    {
+      "b": "x"
+    },
+    {
+      "a": "y"
+    },
+    {}
+  ],
+  "h": [
+    "Name",
+    "Count, total"
+  ]
+}

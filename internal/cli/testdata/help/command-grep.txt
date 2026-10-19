@@ -420,6 +420,9 @@ Refusals:
   schema.syntax
       An input schema is refused (syntax).
       Next: metais inspect <package>
+  template.date_format
+      An output's path, when or for_each does not parse (date format).
+      Next: metais inspect <package>
   template.division_by_zero
       An output's path, when or for_each does not parse (division by zero).
       Next: metais inspect <package>

@@ -847,6 +847,12 @@ Refusals:
   template.comparison
       A template is refused (comparison).
       Next: metais inspect <package>
+  template.date_format
+      An output's path, when or for_each does not parse (date format).
+      Next: metais inspect <package>
+  template.date_input
+      A template is refused (date input).
+      Next: metais inspect <package>
   template.division_by_zero
       An output's path, when or for_each does not parse (division by zero).
       Next: metais inspect <package>
@@ -897,6 +903,9 @@ Refusals:
       Next: metais inspect <package>
   template.safe_position
       An output's path, when or for_each does not parse (safe position).
+      Next: metais inspect <package>
+  template.slug_empty
+      A template is refused (slug empty).
       Next: metais inspect <package>
   template.syntax
       An output's path, when or for_each does not parse (syntax).

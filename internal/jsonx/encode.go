@@ -284,3 +284,71 @@ func literal(b *strings.Builder, v value.Value) {
 		panic(fmt.Sprintf("jsonx: %T is not a value of the data model", v))
 	}
 }
+
+// EncodedLen is the byte length of Encode(v, indent), counted without
+// writing it, so a caller can charge the text before it is built (ADR-009
+// D11 item 2). indent is from 0 to MaxIndent, as Encode takes it.
+func EncodedLen(v value.Value, indent int) int64 {
+	return encodedLen(v, int64(indent), 0)
+}
+
+func encodedLen(v value.Value, indent, depth int64) int64 {
+	// newline is what Encode writes before a line at depth d.
+	newline := func(d int64) int64 {
+		if indent == 0 {
+			return 0
+		}
+		return 1 + d*indent
+	}
+	switch v := v.(type) {
+	case value.Null:
+		return 4
+	case value.Bool:
+		if v {
+			return 4
+		}
+		return 5
+	case value.Number:
+		return int64(len(FormatNumber(v.Float64())))
+	case value.String:
+		return stringLen(v.Text())
+	case value.Array:
+		if v.Len() == 0 {
+			return 2
+		}
+		n := int64(2) + int64(v.Len()-1) + newline(depth)
+		for _, el := range v.All() {
+			n += newline(depth+1) + encodedLen(el, indent, depth+1)
+		}
+		return n
+	case value.Object:
+		if v.Len() == 0 {
+			return 2
+		}
+		n := int64(2) + int64(v.Len()-1) + newline(depth)
+		for name, m := range v.All() {
+			n += newline(depth+1) + stringLen(name) + 1 + encodedLen(m, indent, depth+1)
+			if indent > 0 {
+				n++
+			}
+		}
+		return n
+	}
+	panic(fmt.Sprintf("jsonx: %T is not a value of the data model", v))
+}
+
+// stringLen is the byte length writeString writes for s.
+func stringLen(s string) int64 {
+	n := int64(2)
+	for i := 0; i < len(s); i++ {
+		switch c := s[i]; {
+		case c == '"', c == '\\', c == '\b', c == '\t', c == '\n', c == '\f', c == '\r':
+			n += 2
+		case c < 0x20:
+			n += 6
+		default:
+			n++
+		}
+	}
+	return n
+}

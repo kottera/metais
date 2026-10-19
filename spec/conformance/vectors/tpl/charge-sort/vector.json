@@ -1,0 +1,62 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/charge-sort",
+  "title": "sort is charged n·⌈log2 n⌉ comparisons of its n keys, and each string key's bytes ⌈log2 n⌉ times",
+  "statements": [
+    "MTS-TPL-063"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "16 for the output; for sort, 16, 5 for the input's shallow size, 15 for 5·⌈log2 5⌉ comparisons, 27 for its 9 bytes of string keys 3 times, and 5 for the result; for join, 16, 5 for its input, 0 for the empty glue, and 9 for the text it builds.",
+  "cases": [
+    {
+      "name": "at-the-bound",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data",
+            "limits": {
+              "render-work": 114
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/at-the-bound-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "one-below",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data",
+            "limits": {
+              "render-work": 113
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/one-below.json"
+          }
+        }
+      ]
+    }
+  ]
+}

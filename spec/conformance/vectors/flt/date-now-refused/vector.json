@@ -1,0 +1,50 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "flt/date-now-refused",
+  "title": "date refuses \"now\" and \"today\", whether or not --now gives a render time, and names the now global",
+  "statements": [
+    "MTS-FLT-011"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "The probe vector of ADR-009 D16 item 2's clock canary: {{ \"now\" | date: \"%s\" }} without --now is refused.",
+  "cases": [
+    {
+      "name": "without-now",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/without-now.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "with-now",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "now": "2026-10-19T09:30:00+02:00"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/with-now.json"
+          }
+        }
+      ]
+    }
+  ]
+}

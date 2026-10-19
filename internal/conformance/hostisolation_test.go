@@ -29,20 +29,28 @@ type canary struct {
 // and 5): env binds the environment as env, cwd reads a partial the
 // package lacks from the working directory, path (W4-1's) prints the data
 // directory's absolute path in every finding, pid (W5-3's) records the
-// process id in every provenance line, and home (W5-5's) reads an asset
-// the package lacks from the home directory. The probes but pid's are
-// refused by the release build: tpl/no-env reads env.HOME,
-// tpl/partial-not-from-host renders a partial named for the working
-// directory's decoy, dat/required-input-missing lacks a required input,
-// and tag/asset-not-from-host writes the contents of an asset named for
-// the home directory's decoy; tag/provenance renders provenance lines, the
-// same bytes in both environments.
+// process id in every provenance line, home (W5-5's) reads an asset the
+// package lacks from the home directory, tz formats date in the host's
+// zone, and clock reads "now" in date from the host's clock. The probes
+// but pid's and tz's are refused by the release build: tpl/no-env reads
+// env.HOME, tpl/partial-not-from-host renders a partial named for the
+// working directory's decoy, dat/required-input-missing lacks a required
+// input, tag/asset-not-from-host writes the contents of an asset named for
+// the home directory's decoy, and flt/date-now-refused refuses "now",
+// which the clock canary renders as a time that differs between
+// environment A and environment B, started at least two seconds after it;
+// tag/provenance renders provenance lines, the same bytes in both
+// environments, and flt/date-own-offset renders
+// {{ 0 | date: "%H:%M %z" }} as 00:00 +0000, which environment A's
+// TZ=Pacific/Chatham moves under the tz canary.
 var canaries = []canary{
 	{"env", "tpl/no-env", []string{"HOME", "USER", "HOSTNAME", "TERM", "NO_COLOR", "METAIS_SENTINEL", "TMPDIR", "PATH"}, checkSentinel},
 	{"cwd", "tpl/partial-not-from-host", []string{"a working-directory decoy"}, checkSentinel},
 	{"path", "dat/required-input-missing", []string{"the sandbox path"}, checkSentinel},
 	{"pid", "tag/provenance", nil, checkAB},
 	{"home", "tag/asset-not-from-host", []string{"HOME"}, checkSentinel},
+	{"tz", "flt/date-own-offset", nil, checkAB},
+	{"clock", "flt/date-now-refused", nil, checkAB},
 }
 
 // hostRunner is a runner over the suite in this module for the tool at

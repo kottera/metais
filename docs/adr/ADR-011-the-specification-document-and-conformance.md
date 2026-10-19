@@ -1703,3 +1703,21 @@ D9 item 6 (the closed set of requirements), and the vector schema
   member, as D9's versioning allows. With `fail_on: warning`, a step that
   fails with warnings and no error is explained by them, and its exit is 1
   (ADR-006's exit table). `out/mirror-empty` proves MTS-RND-007 through it.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-1.** With `date` registered,
+  the server holds no case out, and `TestDelegatedRun`'s counts line has
+  no held-out count: `<n> pass, <d> departures fail as listed, <f> fail
+  otherwise, <p> departures pass`. The 103 cases held out before were run
+  through liquid-spec itself at the pinned commit, not emulated: 44 pass
+  and 59 fail, each a departure added to `liquid-spec.json` naming its
+  statement, 57 under chapter 8's MTS-FLT-011 or MTS-FLT-013 and two
+  under MTS-TPL-027. The counts line went from `1801 pass, 490 departures
+  fail as listed, 103 held out for applying date, 0 fail otherwise, 0
+  departures pass` to `1845 pass, 549 departures fail as listed, 0 fail
+  otherwise, 0 departures pass`, and liquid-spec exited 0, in the C locale
+  and in `en_US.UTF-8`, on darwin/arm64 with Ruby 4.0.7. That host could
+  not reach rubygems.org, so the run differed from the README in two ways
+  only, both outside this repository: the liquid gem was its Gemfile's
+  `v5.13.0` tag cloned from GitHub and put on `RUBYLIB` instead of
+  installed by Bundler, and two `/tmp` paths in liquid-spec's runner were
+  pointed at `TMPDIR`, which that host's sandbox requires. The §6 act on
+  a fresh clone, run exactly as the README says, remains due.

@@ -143,3 +143,52 @@ func quote(s string) string {
 	b.WriteByte('"')
 	return b.String()
 }
+
+// WrittenLen is the byte length of Write(v), counted without building the
+// document, so a caller can charge the text before it is written (ADR-009
+// D11 item 2). Each scalar's text is made once, as Write makes it; the
+// lines, and the indentation every level of nesting adds, are counted.
+func WrittenLen(v value.Value) int64 {
+	if s, ok := inline(v); ok {
+		return int64(len(s))
+	}
+	lines, n := blockLen(v)
+	return n + lines - 1
+}
+
+// blockLen is the number of lines block(v) gives, and their bytes.
+func blockLen(v value.Value) (lines, n int64) {
+	// nested adds a block written two spaces in, after its first line's
+	// prefix.
+	nested := func(m value.Value) {
+		l, b := blockLen(m)
+		lines += l
+		n += b + 2*l
+	}
+	switch v := v.(type) {
+	case value.Object:
+		for name, m := range v.All() {
+			key := int64(len(quote(name))) + 1
+			if s, ok := inline(m); ok {
+				lines++
+				n += key + 1 + int64(len(s))
+				continue
+			}
+			lines++
+			n += key
+			nested(m)
+		}
+	case value.Array:
+		for _, e := range v.All() {
+			if s, ok := inline(e); ok {
+				lines++
+				n += 2 + int64(len(s))
+				continue
+			}
+			// "- " before the first line and "  " before the rest: two
+			// bytes on each.
+			nested(e)
+		}
+	}
+	return lines, n
+}

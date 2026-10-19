@@ -1,0 +1,7 @@
+<pre>{{ inputs.v.doc | json }}</pre>
+<pre>{{ inputs.v.doc | yaml }}</pre>
+<pre>{{ inputs.v.rows | csv }}</pre>
+{{ inputs.v.rows | markdown_table }}
+<a href="/{{ inputs.v.doc.title | slug }}">{{ inputs.v.when | date: '%b %-d <%Y>' }}</a>
+<script type="application/json">{{ inputs.v.doc | json | safe }}</script>
+<p>{{ inputs.v.rows | csv | safe }}</p>

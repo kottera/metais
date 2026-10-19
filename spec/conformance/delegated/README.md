@@ -67,7 +67,7 @@ GOTOOLCHAIN=auto go test -count=1 ./internal/liquidspec -run '^TestDelegatedRun$
 form:
 
 ```
-<n> pass, <d> departures fail as listed, <h> held out for applying date, <f> fail otherwise, <p> departures pass
+<n> pass, <d> departures fail as listed, <f> fail otherwise, <p> departures pass
 ```
 
 The run passes when `TestDelegatedRun` passes. That holds exactly when all
@@ -77,18 +77,10 @@ of these hold:
 - no departure passes. A departure that passes fails the run, because the
   dialect and the pin have stopped agreeing. liquid-spec fails it too, as a
   stale known failure;
-- every other case passes, except those the server holds out: a case whose
-  template applies `date`, which the dialect registers in Wave 5. Each one
-  fails with the server's `held out of the run` parse error. liquid-spec
-  counts these among its failures, so it exits 1 until `date` is
-  registered. Then the hold-out goes, and so does the exception: from then
-  on, liquid-spec's own exit status of 0 is the pass;
+- every other case passes;
 - every departure is reached by the run.
 
-When `liquid-spec.json` was written, an emulation of liquid-spec's
-selection and comparison predicted this result: 2,394 cases run, 1,801
-passing, 490 departures failing as listed, and 103 held out for applying
-`date`. Only the run itself proves the result.
+liquid-spec's own exit status is 0 exactly when the first three hold.
 
 Report back:
 

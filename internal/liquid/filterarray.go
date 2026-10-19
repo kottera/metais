@@ -5,7 +5,6 @@ package liquid
 
 import (
 	"math"
-	"math/bits"
 	"slices"
 	"strconv"
 	"strings"
@@ -383,14 +382,9 @@ func sortFilter(natural bool) func(*call, value.Value) (value.Value, *Error) {
 	}
 }
 
-// sortCharge charges sorting n keys whose strings hold strBytes bytes:
-// n·⌈log2 n⌉ comparisons, and each byte ⌈log2 n⌉ times.
+// sortCharge charges sorting n keys whose strings hold strBytes bytes.
 func (c *call) sortCharge(n int, strBytes int64) *Error {
-	if n < 2 {
-		return nil
-	}
-	lg := int64(bits.Len(uint(n - 1)))
-	return c.units(int64(n)*lg + strBytes*lg)
+	return c.units(SortWork(n, strBytes))
 }
 
 // valueOrder returns sort's comparison of keys, refusing keys it cannot

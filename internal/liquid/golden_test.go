@@ -6,7 +6,6 @@ package liquid
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"maps"
 	"os"
 	"path/filepath"
@@ -157,18 +156,14 @@ func parseGolden(d *Dialect, c goldenCase) []*Error {
 //     line is found. A listed valid case that parses is excluded at
 //     render, where TestGoldenLiquidRender holds it to failing.
 //
-// No case may recover an internal error, listed or not. A case that
-// applies date is selected out (goldenDateSelector), and counted.
+// No case may recover an internal error, listed or not. Every case runs
+// under goldenCore(), date's among them.
 func TestGoldenLiquidParse(t *testing.T) {
 	testenv.Home(t)
 	cases := loadGolden(t)
 	excluded := readList(t, "exclusions.txt")
 	renderTime := readList(t, "render-time.txt")
-	d := Core()
-	appliesDate, err := goldenDateSelector(d)
-	if err != nil {
-		t.Fatal(err)
-	}
+	d := goldenCore(t)
 
 	names := map[string]goldenCase{}
 	for _, c := range cases {
@@ -202,12 +197,8 @@ func TestGoldenLiquidParse(t *testing.T) {
 		}
 	}
 
-	var passed, refusedAtParse, atRender, skipped, selectedOut int
+	var passed, refusedAtParse, atRender, skipped int
 	for _, c := range cases {
-		if appliesDate(c) {
-			selectedOut++
-			continue
-		}
 		errs := parseGolden(d, c)
 		for _, e := range errs {
 			if e.Code == CodeInternal {
@@ -250,48 +241,6 @@ func TestGoldenLiquidParse(t *testing.T) {
 			refusedAtParse++
 		}
 	}
-	t.Logf("%d cases: %d pass (%d invalid refused at parse, %d invalid parsed for render), %d excluded, %d selected out for applying date",
-		len(cases), passed, refusedAtParse, atRender, skipped, selectedOut)
-}
-
-// goldenDateSelector returns the selector every Golden Liquid run under d
-// applies: a case is out of the run exactly when its template or one of
-// its partials applies date, which is Wave 5's (plan §8 and §9). The
-// selection is mechanical: each source is parsed under d with a stub date
-// added, and its tree walked for an application of date. It names no case
-// and needs no list.
-//
-// It refuses a dialect that has date: once date is registered, its cases
-// are in scope, and the selector must go rather than keep them out.
-func goldenDateSelector(d *Dialect) (func(goldenCase) bool, error) {
-	if _, ok := d.Filter("date"); ok {
-		return nil, errors.New("the dialect registers date, so Golden Liquid's date cases are in scope: remove goldenDateSelector")
-	}
-	probe, err := d.Extend(Spec{Filters: []FilterDef{stubFilter("date")}})
-	if err != nil {
-		return nil, err
-	}
-	return func(c goldenCase) bool {
-		srcs := []string{c.Template}
-		for _, name := range slices.Sorted(maps.Keys(c.Templates)) {
-			srcs = append(srcs, c.Templates[name])
-		}
-		for _, src := range srcs {
-			tpl, _ := Parse(probe, Source{Text: []byte(src)}, ParseLimits{})
-			if tpl == nil {
-				continue
-			}
-			found := false
-			ast.Walk(tpl.Root, func(n ast.Node) bool {
-				if f, ok := n.(*ast.Filter); ok && f.Name == "date" {
-					found = true
-				}
-				return !found
-			})
-			if found {
-				return true
-			}
-		}
-		return false
-	}, nil
+	t.Logf("%d cases: %d pass (%d invalid refused at parse, %d invalid parsed for render), %d excluded",
+		len(cases), passed, refusedAtParse, atRender, skipped)
 }

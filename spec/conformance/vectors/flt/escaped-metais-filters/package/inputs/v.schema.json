@@ -1,0 +1,8 @@
+{
+  "type": "object",
+  "properties": {
+    "doc": {"type": "object", "properties": {"title": {"type": "string"}}},
+    "rows": {"type": "array"},
+    "when": {"type": "string"}
+  }
+}

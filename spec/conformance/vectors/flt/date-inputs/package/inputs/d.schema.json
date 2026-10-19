@@ -1,0 +1,12 @@
+{
+  "type": "object",
+  "properties": {
+    "full": {},
+    "dt": {},
+    "secs": {},
+    "neg": {},
+    "low": {},
+    "frac": {},
+    "absent": {}
+  }
+}

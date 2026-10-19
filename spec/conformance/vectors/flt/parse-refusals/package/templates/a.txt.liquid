@@ -1,0 +1,11 @@
+{{ 1 | json: indent: 0 }}
+{{ 1 | json: 2 }}
+{{ 1 | yaml: pretty: true }}
+{{ x | csv: delimiter: '"' }}
+{{ x | csv: "a", 2 }}
+{{ x | csv: header: "no" }}
+{{ x | markdown_table: delimiter: ";" }}
+{{ x | markdown_table: headers: h }}
+{{ "a" | slug: "-" }}
+{{ 0 | date }}
+{{ 0 | date: "%Y", "%m" }}

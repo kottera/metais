@@ -483,3 +483,54 @@ file of a mirror, and each template entry of a container by its own
 > URL. `json_script` is the filter for data placed in a `<script>` element,
 > and `url_encode` the one for a URL component; the dialect offers nothing
 > else for those contexts.
+
+## 7.11 Render work
+
+A render's template work is counted in units and bounded by the
+`render-work` limit ([chapter 14](14-security.md#mts-sec-008)): 16 units for
+each node evaluated — an output, a tag, a filter application, an operator —
+and, for each filter application and operator, units for the sizes of its
+input, its arguments and its result. A value's *shallow size* is a string's
+byte length, an array's element count, an object's member count, and 1 for
+anything else; its *deep size* is its shallow size and the deep sizes of
+every element and member value beneath it.
+
+<a id="mts-tpl-063"></a>**MTS-TPL-063** A processor MUST charge each filter
+application 16 units and then, once its argument count and keywords are ones
+the filter takes, the shallow sizes of its input and of each of its
+arguments; then the units the table below adds, before the work they count;
+and then its result: the shallow size of the result, or, where the table
+says *built*, the byte length of the string it builds. A charge that would
+take the render beyond `render-work` refuses the render at the filter's
+token, and nothing of the work it counts is done. In the table, *text work*
+is the deep size of an array whose text the filter takes, and nothing for
+any other value; *flattening* is, for an array, the element count of every
+array nested in it, at every depth; *sorting n keys* is n·⌈log₂ n⌉ units and
+each byte of a string key ⌈log₂ n⌉ times, nothing for fewer than two keys;
+and *beyond the shallow size* is a value's deep size less its shallow size.
+
+| Filter | Units before the work | Result |
+|---|---|---|
+| `abs`, `ceil`, `floor`, `round`, `plus`, `minus`, `times`, `divided_by`, `modulo`, `at_least`, `at_most`, `size`, `first`, `last`, `default`, `slice` | — | shallow size |
+| `sum`, `reverse`, `map`, `compact`, `concat` | flattening the input | shallow size |
+| `uniq` | flattening the input, and the deep size of each key: each element or, with a property, its value of it | shallow size |
+| `sort` | flattening the input, and sorting its keys: the elements or, with a property, their values of it | shallow size |
+| `sort_natural` | flattening the input, the text work of each key that is not nil, and sorting the keys, a key's bytes being those of its text | shallow size |
+| `where`, `reject`, `has`, `find`, `find_index` | flattening the input, and, when it has elements and the value sought is an array or an object, that value's deep size once for each element | shallow size |
+| `join` | flattening the input, and the glue's text work | built |
+| `append`, `prepend`, `upcase`, `downcase`, `capitalize`, `strip_newlines`, `newline_to_br`, `strip_html`, `base64_encode`, `base64_url_safe_encode`, `base64_decode`, `base64_url_safe_decode` | the text work of the input and of each argument | built |
+| `escape`, `h`, `escape_once`, `squish`, `url_encode`, `url_decode` | the input's text work; nothing for nil, which is the result | built; for nil, shallow size |
+| `truncate`, `truncatewords` | the text work of the input and of the ellipsis; nothing for nil, which is the result | built when the text is cut; shallow size otherwise |
+| `remove`, `replace`, `remove_first`, `replace_first`, `remove_last`, `replace_last` | the text work of the input and of each argument | built; shallow size for a `_first` or `_last` filter that finds nothing |
+| `strip`, `lstrip`, `rstrip` | the input's text work | shallow size |
+| `split` | the text work of the input and of the pattern | shallow size |
+| `json`, `yaml` | the input's deep size beyond its shallow size | built, counted before it is written |
+| `csv`, `markdown_table` | the input's deep size beyond its shallow size, and, with no column named, sorting the rows' member names, each name once for each row that has it | built, counted before it is written |
+| `safe` | — | shallow size |
+| `json_script` | the input's deep size beyond its shallow size | built |
+| `slug`, `date` | — | built |
+
+> **Note.** `json`, `yaml`, `csv` and `markdown_table` can write many times
+> their input's size, so each counts its result's length before it writes a
+> byte, and a render whose work would exceed `render-work` is refused before
+> the text is built.

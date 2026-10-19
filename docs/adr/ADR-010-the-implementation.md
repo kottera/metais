@@ -1922,3 +1922,14 @@ at the train's close, with A1 and A3.
   rendered it: the test process's `version.String()` for a render in
   process, and the built binary's `metais version` for the fresh process,
   whose versions differ.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-1.** `date` is registered, so
+  `goldenDateSelector`, the liquid-spec hold-out (`heldout.go`) and
+  `TestDateNotRegistered` are gone. Golden Liquid's runs need `date`, which
+  `internal/liquid` cannot import: `golden_date_test.go`, a file of the
+  external test package linked into the same test binary, registers
+  `dates.Filter()` through `RegisterGoldenFilter`, a hook defined in an
+  internal test file, and every run renders in `Core()` with it, failing
+  if it is absent. No release file of `internal/liquid` imports anything
+  new. Of 1,098 cases, all run at render: 911 pass and 187 are excluded,
+  the seven new exclusions being `dialect` lines (ADR-004's log). The
+  server renders every liquid-spec case; ADR-011's log has the run.

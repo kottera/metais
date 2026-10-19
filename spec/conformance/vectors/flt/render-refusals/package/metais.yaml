@@ -1,0 +1,42 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: r
+    title: R
+    schema: inputs/r.schema.json
+    required: false
+outputs:
+  - id: missing_column
+    template: missing-column.txt.liquid
+  - id: array_cell
+    template: array-cell.txt.liquid
+  - id: not_array
+    template: not-array.txt.liquid
+  - id: element
+    template: element.txt.liquid
+  - id: headers_count
+    template: headers-count.txt.liquid
+  - id: headers_kind
+    template: headers-kind.txt.liquid
+  - id: slug_empty
+    template: slug-empty.txt.liquid
+  - id: slug_number
+    template: slug-number.txt.liquid
+  - id: date_text
+    template: date-text.txt.liquid
+  - id: date_digits
+    template: date-digits.txt.liquid
+  - id: date_float
+    template: date-float.txt.liquid
+  - id: date_array
+    template: date-array.txt.liquid
+  - id: date_second_60
+    template: date-second-60.txt.liquid
+  - id: date_format
+    template: date-format.txt.liquid
+  - id: json_indent
+    template: json-indent.txt.liquid

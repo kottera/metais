@@ -1,0 +1,42 @@
+[
+  {
+    "code": "template.date_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/a.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/a.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "global": "now",
+      "column": 1,
+      "output_path": "a.txt"
+    }
+  },
+  {
+    "code": "template.date_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/b.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/b.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "global": "now",
+      "column": 1,
+      "output_path": "b.txt"
+    }
+  }
+]

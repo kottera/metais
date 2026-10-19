@@ -1,0 +1,8 @@
+{{ inputs.d.full | date: '%F %T %Z' }}
+{{ inputs.d.dt | date: '%F %T %Z' }}
+{{ inputs.d.secs | date: '%F %T %Z' }}
+{{ inputs.d.neg | date: '%F %T %s' }}
+{{ inputs.d.low | date: '%F %T.%L %Z' }}
+{{ inputs.d.frac | date: '%F %s' }}
+{{ 253402300799 | date: '%F %T' }}
+[{{ inputs.d.absent | date: '%F' }}][{{ nil | date: '%F' }}]

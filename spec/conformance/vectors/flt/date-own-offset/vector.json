@@ -1,0 +1,39 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "flt/date-own-offset",
+  "title": "date writes a value in its own offset, never in the host's zone",
+  "statements": [
+    "MTS-FLT-012"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "determinism"
+  ],
+  "requires": [],
+  "notes": "The probe vector of ADR-009 D16 item 2's tz canary: {{ 0 | date: \"%H:%M %z\" }} gives 00:00 +0000.",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

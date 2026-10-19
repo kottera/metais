@@ -62,3 +62,8 @@ func IsPathChar(r rune) bool {
 // refused when it is not NFC, never normalized (ADR-005 D12 item 1). s must
 // be valid UTF-8.
 func NFC(s string) string { return norm.NFC.String(s) }
+
+// NFKD returns s in Unicode Normalization Form KD, the decomposition the
+// slug filter folds a string to ASCII through (ADR-004 D10 item 6). s must
+// be valid UTF-8.
+func NFKD(s string) string { return norm.NFKD.String(s) }

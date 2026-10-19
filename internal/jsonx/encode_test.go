@@ -260,3 +260,27 @@ func TestEncodeInput(t *testing.T) {
 		t.Errorf("EncodeInput(indent 9): %v, want ErrIndent", err)
 	}
 }
+
+// TestEncodedLen: EncodedLen is the length Encode writes, at every indent,
+// for every escape, number form, nesting and empty container.
+func TestEncodedLen(t *testing.T) {
+	var docs []value.Value
+	for _, src := range []string{
+		`null`, `true`, `false`, `0`, `-0.5`, `1e21`, `1e-7`, `""`, `"\u0000\u001f\b\t\n\f\r\"\\/é😀"`,
+		`[]`, `{}`, `[[]]`, `{"": {}}`, `[1, [2, [3, []]], {"a": [true, null]}]`,
+		`{"b": [1, {"c": [], "d": "\u0001\t\"é"}, 2.50], "a": {}, "e": null, "f": [true], "\n": "x"}`,
+	} {
+		docs = append(docs, mustParse(t, src).Value)
+	}
+	for _, v := range docs {
+		for indent := 0; indent <= MaxIndent; indent++ {
+			b, err := Encode(v, indent)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n := EncodedLen(v, indent); n != int64(len(b)) {
+				t.Errorf("EncodedLen(%s, %d) = %d, Encode writes %d bytes", Canonical(v), indent, n, len(b))
+			}
+		}
+	}
+}

@@ -224,10 +224,9 @@ type runEntry struct {
 
 // verdict judges a run of the pinned selection against its departures
 // (ADR-011 D17 item 2): every departure fails, and one that passes fails
-// the run; every other case passes, but for those the server held out
-// (HeldOut); and a departure the run did not reach fails the run, since
-// the selection and the file have stopped agreeing. It returns the run's
-// counts and every problem.
+// the run; every other case passes; and a departure the run did not reach
+// fails the run, since the selection and the file have stopped agreeing.
+// It returns the run's counts and every problem.
 func verdict(r runResult, deps []departure) (counts string, problems []string) {
 	listed := map[string]bool{}
 	for _, x := range deps {
@@ -244,15 +243,10 @@ func verdict(r runResult, deps []departure) (counts string, problems []string) {
 			problems = append(problems, fmt.Sprintf("%s: liquid-spec counts a known failure the file does not list", e.Name))
 		}
 	}
-	held := 0
 	for _, e := range r.Failures {
 		text := fmt.Sprint(e.Actual)
 		if e.Error != nil {
 			text += " " + e.Error.Message
-		}
-		if strings.Contains(text, HeldOut) {
-			held++
-			continue
 		}
 		problems = append(problems, fmt.Sprintf("%s: fails, and is no departure: %s", e.Name, strings.TrimSpace(text)))
 	}
@@ -261,8 +255,8 @@ func verdict(r runResult, deps []departure) (counts string, problems []string) {
 			problems = append(problems, fmt.Sprintf("%s: a departure the run did not reach", x.Spec))
 		}
 	}
-	return fmt.Sprintf("%d pass, %d departures fail as listed, %d held out for applying date, %d fail otherwise, %d departures pass",
-		r.Totals.Passed, len(r.KnownFailures), held, len(r.Failures)-held, len(r.KnownFixed)), problems
+	return fmt.Sprintf("%d pass, %d departures fail as listed, %d fail otherwise, %d departures pass",
+		r.Totals.Passed, len(r.KnownFailures), len(r.Failures), len(r.KnownFixed)), problems
 }
 
 // TestDelegatedRun is the verdict on the delegated run, the out-of-band
@@ -312,9 +306,8 @@ func TestVerdictControl(t *testing.T) {
 	var ok runResult
 	ok.Totals.Passed = 7
 	ok.KnownFailures = []runEntry{entry("a", "x", ""), entry("b", "", "y"), entry("c", "", "")}
-	ok.Failures = []runEntry{entry("d", "", "Liquid syntax error: "+HeldOut), entry("e", "LiquidSyntaxError: "+HeldOut, "")}
 	counts, problems := verdict(ok, deps)
-	if len(problems) != 0 || counts != "7 pass, 3 departures fail as listed, 2 held out for applying date, 0 fail otherwise, 0 departures pass" {
+	if len(problems) != 0 || counts != "7 pass, 3 departures fail as listed, 0 fail otherwise, 0 departures pass" {
 		t.Errorf("an agreeing run: %s, %q", counts, problems)
 	}
 	bad := ok

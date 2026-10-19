@@ -46,7 +46,7 @@ func newDialect(r *Renderer) *liquid.Dialect {
 }
 
 // Dialect is the dialect a package's templates are parsed and rendered in:
-// the standard catalog of internal/liquid, the METAIS filters
+// the standard catalog of internal/liquid, the METAIS filters and date
 // (internal/template/filters), METAIS's embed, asset and provenance tags,
-// and the globals' names reserved (ADR-004 D1, D7 item 8, D10, D12 to D14).
+// and the globals' names reserved (ADR-004 D1, D7 item 8, D10 to D14).
 func Dialect() *liquid.Dialect { return dialect }

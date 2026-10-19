@@ -1,0 +1,14 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: named
+    template: page.md.liquid
+    path: "{{ 'A Title' | slug }}-{{ 0 | date: '%Y' }}.md"
+  - id: dated
+    template: page.md.liquid
+    path: "{{ 0 | date: '%Y-%Q' }}.md"

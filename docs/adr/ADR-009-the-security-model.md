@@ -1577,3 +1577,53 @@ checks before the library sees a schema). No dependency changes.
   file work/out/page.txt holds the sentinel from HOME`, beside its
   nothing-else-changes, `ok`, findings and A/B failures; the release
   build's `TestHostIsolation` gives the probe no hit.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-1. The `tz` and `clock`
+  canaries, red first, and render work's per-filter charges.** D16 item
+  2's `tz` canary is `internal/dates/canary_tz.go`, under
+  `metais_canary_tz`: every instant `date` formats is moved into the zone
+  `TZ` named when the process started, loaded before `Isolate` sets
+  `time.Local` to UTC. Its probe vector is `flt/date-own-offset`, whose
+  first line is `{{ 0 | date: "%H:%M %z" }}`, `00:00 +0000`. The `clock`
+  canary is `canary_clock.go`, under `metais_canary_clock`: `date` reads
+  `"now"` and `"today"` from the clock instead of refusing them. Its probe
+  vector is `flt/date-now-refused`, `{{ "now" | date: "%s" }}` without
+  `--now`, which the release build refuses with `template.date_input`.
+  `TestHostIsolationCanaries` catches both on check 3, the A/B
+  differential, since neither a zone nor a time holds a sentinel. Pinned
+  red first, the `tz` canary was not caught on the first host it ran on:
+  that host's sandbox lets no process read `/usr/share/zoneinfo`, and a
+  `-trimpath` binary has no GOROOT zone file to fall back on, so Go reads
+  `TZ=Pacific/Chatham` as UTC and the canary leaked nothing; the harness
+  reported only `[tree]: a.txt differs` in both environments alike. The
+  canary build now embeds the zone database (`time/tzdata`, imported by
+  `canary_tz.go` alone), so it leaks `TZ` on every host. The red runs, at
+  commit `7902ffa0d200ed0d0570769461ab44ff987a6ba2`, each through the
+  conformance runner with the canary build as its tool:
+  - `go build -trimpath -tags metais_canary_tz -o metais-tz ./cmd/metais`,
+    then `go test ./internal/conformance -run
+    'TestConformance/flt/date-own-offset$' -args
+    -conformance.tool=metais-tz`: `conformance failure [tree]: step 1:
+    tree out: a.txt differs` (`00:00 +0000` written `12:45 +1245`, and
+    `09:30 -0330 -03:30 -03:30` written `02:45 +1345 +13:45 +13:45`),
+    beside `conformance failure [A/B]: step 1: the written file out/a.txt
+    differs between the runs`.
+  - the same with `metais_canary_clock` and `flt/date-now-refused$`, for
+    each of its two cases: `conformance failure [ok]: step 1 (render): ok
+    is true, expected false`, `[findings]: step 1 (render): expected 2
+    findings, got 0`, `[nothing-else-changes]: step 1: work/out/a.txt was
+    created outside a declared tree`, and `conformance failure [A/B]:
+    step 1 (render): standard output differs between the runs`.
+  The release build gives both probes no hit (`TestHostIsolation`).
+  D11 item 2's table of every filter's charge is chapter 7's MTS-TPL-063,
+  with the vectors `tpl/charge-json`, `tpl/charge-csv`,
+  `tpl/charge-date`, `tpl/charge-slug` and `tpl/charge-sort`, each
+  rendering at its exact bound and refused one unit below it. `json`,
+  `yaml`, `csv` and `markdown_table` count their result's length before
+  they write it, since `json: indent: 8` of a deep value is many times its
+  size. Found and not changed here: the engine charges every string a
+  filter builds against `assign-bytes`, as it does `assign` and `capture`,
+  so `{{ "ab" | append: "c" }}` under `--limit assign-bytes=2` is refused,
+  where this ADR's table and chapter 14 bound only what `assign` and
+  `capture` store. The tool is stricter than the text; the METAIS filters
+  follow the engine's `FilterDef` contract, and the disagreement is the
+  engine's, for its own change.

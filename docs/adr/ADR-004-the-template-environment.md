@@ -1258,3 +1258,41 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
   encodes, then its result's byte length as units and as held bytes, as a
   string-building filter charges. D10 item 5's replacements are written
   here as the `\u` escapes they are; the mapping is unchanged.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-1.** D10's `json`, `yaml`,
+  `csv`, `markdown_table` and `slug` are `internal/template/filters`, and
+  D11's `date` is `internal/dates`'s `Filter`, which that package
+  registers with them. `internal/loader`'s dialect is `Core()` with all
+  six, and `internal/template`'s is that with D7 item 8's names reserved,
+  so a template and a manifest expression are parsed in one dialect (D16
+  item 5): a path may apply `slug`, and a literal `date` format outside
+  item 3's set is `template.date_format` when the manifest is parsed.
+  Chapter 8 states them as MTS-FLT-004 to MTS-FLT-014. Where this ADR is
+  silent, these readings were chosen:
+  - `csv` and `markdown_table` without named columns write a row that
+    lacks one of the union's names as an empty cell, as nil is written;
+    only a named column a row lacks is `template.undefined_property`, and
+    its `path` is the column's name, since the filter cannot see the
+    expression its input came from. With no column at all, `csv` writes
+    the empty string, as item 4 says `markdown_table` does.
+  - `headers:` replaces the header text of named columns only: given with
+    none named, or with a count other than theirs, it is
+    `template.filter_argument`. `header:` is a boolean; `delimiter:` is one
+    code point.
+  - An element of the input that is not an object, and a cell that is an
+    array or an object, are `template.filter_input` naming the element's
+    or cell's kind, not the input's.
+  - `slug` takes a string or nil and refuses every other kind, a number
+    among them, as D10's preamble refuses an input of the wrong type.
+  - `date` takes exactly one positional argument, a string, and no
+    keyword. Its integer input is D4 item 2's integer: the literal `0.0`
+    is a float and `template.date_input`. That finding's `type` names the
+    kind, and its `global`, `now`, is present for `"now"` and `"today"`
+    (item 1's naming of `now`); `template.date_format`'s `directive` is
+    the directive from its `%` to the character that put it outside the
+    set, and absent for an empty format.
+  - D10 item 2's writer keeps W3-5's two readings, now stated in
+    MTS-FLT-006: U+FFFE and U+FFFF are escaped, and an integral number of
+    magnitude above 2^53−1 and below 1e21 is written in exponent notation.
+  Golden Liquid's ten `date` cases run again (ADR-010's log): three pass,
+  and seven are `dialect` lines under D11 item 1 (five) and D6 item 1
+  (two).

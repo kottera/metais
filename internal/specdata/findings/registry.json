@@ -6250,6 +6250,79 @@
       ]
     },
     {
+      "code": "template.date_format",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "directive",
+          "type": "string",
+          "meaning": "The first directive of the format outside the closed set, from its % to the character that put it outside it; absent for an empty format.",
+          "always": false
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The date filter is given a format outside the set it formats.",
+      "hint": "Use the strftime directives the specification lists, with the flags -, _, 0 and ^; %Z writes UTC or the offset, and a literal % is written %%.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-FLT-013",
+        "MTS-MAN-018"
+      ]
+    },
+    {
+      "code": "template.date_input",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "type",
+          "type": "string",
+          "meaning": "The kind of value the filter was given: nil, boolean, integer, float, string, array or object.",
+          "always": true
+        },
+        {
+          "name": "global",
+          "type": "string",
+          "meaning": "now, when the string is \"now\" or \"today\": the render time is the global named, never the clock.",
+          "always": false
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The date filter is given a {type} that is not an RFC 3339 date or date-time, or an integer of seconds.",
+      "hint": "Supply the date as RFC 3339 text, such as 2026-10-18 or 2026-10-18T09:30:00+02:00, or as Unix seconds; for the render time, use the now global, which --now sets.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-FLT-011"
+      ]
+    },
+    {
       "code": "template.division_by_zero",
       "severity": "error",
       "class": "content",
@@ -6403,6 +6476,7 @@
       "location": "value",
       "since": "1.0",
       "statements": [
+        "MTS-FLT-004",
         "MTS-MAN-018",
         "MTS-TPL-052"
       ]
@@ -6443,6 +6517,8 @@
       "location": "value",
       "since": "1.0",
       "statements": [
+        "MTS-FLT-004",
+        "MTS-FLT-009",
         "MTS-TPL-052"
       ]
     },
@@ -6871,6 +6947,33 @@
       ]
     },
     {
+      "code": "template.slug_empty",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The slug filter makes nothing of its text: no letter or digit of it has an ASCII form.",
+      "hint": "Supply the slug as data beside the text it names.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-FLT-010"
+      ]
+    },
+    {
       "code": "template.syntax",
       "severity": "error",
       "class": "content",
@@ -7004,6 +7107,7 @@
       "location": "value",
       "since": "1.0",
       "statements": [
+        "MTS-FLT-009",
         "MTS-TPL-029",
         "MTS-TPL-031",
         "MTS-TPL-032"

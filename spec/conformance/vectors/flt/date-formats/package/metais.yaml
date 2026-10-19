@@ -1,0 +1,18 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: names
+    template: names.txt.liquid
+  - id: numbers
+    template: numbers.txt.liquid
+  - id: composites
+    template: composites.txt.liquid
+  - id: flags
+    template: flags.txt.liquid
+  - id: text
+    template: text.txt.liquid
