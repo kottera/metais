@@ -83,13 +83,13 @@ func testDialect(t testing.TB) *Dialect {
 				if len(args) != 1 || composite(in) || composite(args[0].Value) {
 					return nil, argErr
 				}
-				return stringValue(scalarText(in) + scalarText(args[0].Value)), nil
+				return newString(scalarText(in) + scalarText(args[0].Value)), nil
 			}},
 			fnFilter{"pair", func(_ FilterContext, in value.Value, _ []Arg) (value.Value, *Error) {
-				return mustArray([]value.Value{in, in}), nil
+				return newArray([]value.Value{in, in}), nil
 			}},
 			fnFilter{"object", func(_ FilterContext, in value.Value, _ []Arg) (value.Value, *Error) {
-				return mustObject([]value.Member{{Name: "a", Value: in}}), nil
+				return newObject([]value.Member{{Name: "a", Value: in}}), nil
 			}},
 			fnFilter{"fail", func(FilterContext, value.Value, []Arg) (value.Value, *Error) {
 				return nil, &Error{Code: "filter_input", Args: map[string]string{"filter": "fail"}}
@@ -102,7 +102,7 @@ func testDialect(t testing.TB) *Dialect {
 			}}},
 			fnFilter{"grow", func(_ FilterContext, _ value.Value, args []Arg) (value.Value, *Error) {
 				n, _ := templateInt(args[0].Value.(value.Number))
-				return stringValue(strings.Repeat("x", int(n))), nil
+				return newString(strings.Repeat("x", int(n))), nil
 			}},
 		},
 		Tags: []TagDef{panicTag{}, echoTag{}},
@@ -113,9 +113,10 @@ func testDialect(t testing.TB) *Dialect {
 	return d
 }
 
-// fuzzDialect is testDialect without the definitions that are defective
-// on purpose, or that trust their arguments: what FuzzLiquidRender
-// renders with, where any panic is the engine's.
+// fuzzDialect is Core() with testDialect's definitions but those that
+// are defective on purpose, or that trust their arguments: what
+// FuzzLiquidRender renders with, where any panic is the engine's or the
+// catalog's.
 func fuzzDialect(t testing.TB) *Dialect {
 	t.Helper()
 	td := testDialect(t)
@@ -124,7 +125,7 @@ func fuzzDialect(t testing.TB) *Dialect {
 		f, _ := td.Filter(name)
 		fs = append(fs, f)
 	}
-	d, err := NewDialect(Spec{Filters: fs, Tags: []TagDef{echoTag{}}})
+	d, err := Core().Extend(Spec{Filters: fs, Tags: []TagDef{echoTag{}}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,6 +165,9 @@ func partials(srcs map[string]string) option {
 		e.Partials = m
 	}
 }
+
+// withDialect renders with d.
+func withDialect(d *Dialect) option { return func(_ testing.TB, e *Env) { e.Dialect = d } }
 
 // meter renders with m.
 func meter(m Meter) option { return func(_ testing.TB, e *Env) { e.Meter = m } }

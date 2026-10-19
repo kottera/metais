@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{{ s | split: '' | join: s | size }}{% for i in (1..10) %}{% assign s = s | append: s %}{% endfor %}{{ s }}")

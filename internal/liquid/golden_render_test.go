@@ -9,31 +9,13 @@ import (
 	"fmt"
 	"io"
 	"maps"
-	"os"
 	"slices"
+	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/liquid/ast"
 	"github.com/kottera/metais/internal/liquid/value"
 	"github.com/kottera/metais/internal/testenv"
 )
-
-// goldenRenderCase is one case of golden_liquid.json as rendering reads
-// it: goldenCase, with its data and its expected result.
-type goldenRenderCase struct {
-	goldenCase
-	Data   json.RawMessage `json:"data"`
-	Result *string         `json:"result"`
-}
-
-func loadGoldenRender(t *testing.T) []goldenRenderCase {
-	t.Helper()
-	var doc struct {
-		Tests []goldenRenderCase `json:"tests"`
-	}
-	readJSON(t, goldenDir+"/golden_liquid.json", &doc)
-	return doc.Tests
-}
 
 // jsonValue reads a JSON document as a value of the data model, its
 // numbers kept as written. Empty input, and JSON's null, are null.
@@ -159,127 +141,136 @@ func renderGolden(t *testing.T, d *Dialect, c goldenRenderCase) (out string, par
 	return b.String(), true, err
 }
 
-// appliesFilter reports whether a case's template, or a partial it
-// carries, applies a filter.
-func appliesFilter(d *Dialect, c goldenRenderCase) bool {
-	texts := []string{c.Template}
-	for _, name := range slices.Sorted(maps.Keys(c.Templates)) {
-		texts = append(texts, c.Templates[name])
-	}
-	for _, s := range texts {
-		tpl, errs := Parse(d, Source{Text: []byte(s)}, ParseLimits{})
-		if len(errs) > 0 {
-			continue
-		}
-		found := false
-		ast.Walk(tpl.Root, func(n ast.Node) bool {
-			if _, ok := n.(*ast.Filter); ok {
-				found = true
-			}
-			return !found
-		})
-		if found {
-			return true
-		}
-	}
-	return false
-}
-
 // TestGoldenLiquidRender is ADR-010 D4 item 7's breadth check, at render,
-// over every valid case of Golden Liquid whose template and partials
-// apply no filter: each renders its expected result exactly, or is listed
-// in exclusions.txt with a dialect line naming the ADR-004 item it
-// follows instead, and then must not render that result, so a stale line
-// is found. A listed case that the parse refuses is the parse test's;
-// every other listed case must be one this run renders, so no line is
-// left unchecked. Each case of render-time.txt that applies no filter is
-// refused at render, the renderer's refusal its line names. No case may
-// recover an internal error.
+// and the meeting of the renderer with the standard catalog: every case
+// of Golden Liquid runs under Core(), filters included, apart from those
+// that apply date, which goldenDateSelector takes out (date is Wave 5's).
+//
+//   - a valid case renders its expected result exactly;
+//   - an invalid case that render-time.txt lists parses, and is refused
+//     at render with the code its line names;
+//   - every other invalid case is refused at parse, among them the arity
+//     cases that left render-time.txt because the catalog's Check refuses
+//     them there;
+//   - a case that does none of these is listed in exclusions.txt, or in
+//     the catalog's filter-exclusions.txt, with a dialect line naming the
+//     ADR-004 item it follows instead, and must still fail, so a stale
+//     line is found.
+//
+// No case may recover an internal error. The run reports what it ran,
+// passed, excluded — each line — and selected out.
 func TestGoldenLiquidRender(t *testing.T) {
 	testenv.Home(t)
 	excluded := readList(t, "exclusions.txt")
+	filterExcluded := readList(t, "filter-exclusions.txt")
 	renderTime := readList(t, "render-time.txt")
-	d := goldenDialect(t)
-	var run, passed, skipped, filtered, invalid, refused int
+	d := Core()
+	appliesDate, err := goldenDateSelector(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var run, passed, selectedOut, rendered, refusedAtRender, refusedAtParse, byCheck int
+	var lines []string
 	for _, c := range loadGoldenRender(t) {
-		if c.Invalid {
-			if _, ok := renderTime[c.Name]; ok && !appliesFilter(d, c) {
-				// render-time.txt's lines whose refusal is the renderer's.
-				out, parsed, err := renderGolden(t, d, c)
-				switch {
-				case !parsed:
-					t.Errorf("%q is in render-time.txt and refused at parse: %v", c.Name, err)
-				case err == nil:
-					t.Errorf("%q is invalid and renders %q", c.Name, out)
-				case err.Code == CodeInternal:
-					t.Errorf("%q: internal error: %v", c.Name, err)
-				default:
-					refused++
-				}
-				continue
-			}
-			invalid++
+		if appliesDate(c.goldenCase) {
+			selectedOut++
 			continue
 		}
-		if appliesFilter(d, c) {
-			filtered++
-			if x, ok := excluded[c.Name]; ok {
-				if _, parsed, _ := renderGolden(t, d, c); parsed {
-					t.Errorf("exclusions.txt:%d: %q parses and applies a filter, so no run checks its line", x.line, c.Name)
-				}
-			}
-			continue
-		}
+		run++
 		out, parsed, err := renderGolden(t, d, c)
 		if err != nil && err.Code == CodeInternal {
 			t.Errorf("%q: internal error: %v", c.Name, err)
 			continue
 		}
-		x, isExcluded := excluded[c.Name]
-		if !parsed {
-			if !isExcluded {
-				t.Errorf("%q does not parse and is not excluded: %v", c.Name, err)
-			}
-			continue
+		_, deferred := renderTime[c.Name]
+		var ok bool
+		var why string
+		switch {
+		case !c.Invalid && !parsed:
+			why = fmt.Sprintf("is valid and refused at parse: %v", err)
+		case !c.Invalid && err != nil:
+			why = fmt.Sprintf("is valid and refused: %v", err)
+		case !c.Invalid:
+			ok = c.Result != nil && out == *c.Result
+			why = fmt.Sprintf("renders %q, want %s", out, quoted(c.Result))
+		case deferred && !parsed:
+			why = fmt.Sprintf("is in render-time.txt and refused at parse: %v", err)
+		case deferred && err == nil:
+			why = fmt.Sprintf("is in render-time.txt and renders %q", out)
+		case deferred:
+			want := renderTimeCode(renderTime[c.Name].reason)
+			ok = err.Code == want
+			why = fmt.Sprintf("is refused with %v; its render-time.txt line names %s", err, want)
+		default:
+			ok = !parsed
+			why = fmt.Sprintf("is invalid and parses, rendering %q, %v", out, err)
 		}
-		run++
-		ok := err == nil && c.Result != nil && out == *c.Result
+		x, isExcluded := excluded[c.Name]
+		file := "exclusions.txt"
+		if !isExcluded {
+			x, isExcluded = filterExcluded[c.Name]
+			file = "filter-exclusions.txt"
+		}
 		if isExcluded {
 			if ok {
-				t.Errorf("exclusions.txt:%d: %q renders its result; remove the line", x.line, c.Name)
+				t.Errorf("%s:%d: %q passes; remove the line", file, x.line, c.Name)
 			}
-			skipped++
+			lines = append(lines, fmt.Sprintf("%s:%d\t%s\t%s\t%s", file, x.line, c.Name, x.reason, x.note))
 			continue
 		}
 		if !ok {
-			want := "<none>"
-			if c.Result != nil {
-				want = fmt.Sprintf("%q", *c.Result)
-			}
-			if err != nil {
-				t.Errorf("%q: %v\ntemplate: %q\nwant: %s", c.Name, err, c.Template, want)
-			} else {
-				t.Errorf("%q: got %q, want %s\ntemplate: %q", c.Name, out, want, c.Template)
-			}
+			t.Errorf("%q %s\ntemplate: %q", c.Name, why, c.Template)
 			continue
 		}
 		passed++
+		switch {
+		case !c.Invalid:
+			rendered++
+		case deferred:
+			refusedAtRender++
+		default:
+			refusedAtParse++
+			if err.Code == CodeFilterArgument || err.Code == CodeDivisionByZero {
+				byCheck++
+			}
+		}
 	}
-	t.Logf("valid cases without filters: %d rendered, %d pass, %d excluded; render-time.txt cases without filters: %d refused; "+
-		"%d valid cases apply a filter and %d other invalid cases, not run here", run, passed, skipped, refused, filtered, invalid)
-	if run == 0 {
-		t.Fatal("no case rendered")
+	t.Logf("%d cases run: %d pass (%d valid render their result, %d of render-time.txt refused at render, "+
+		"%d invalid refused at parse, %d of them by the catalog's Check), %d excluded; %d selected out for applying date",
+		run, passed, rendered, refusedAtRender, refusedAtParse, byCheck, len(lines), selectedOut)
+	for _, l := range lines {
+		t.Logf("excluded: %s", l)
+	}
+	if run+selectedOut != len(loadGoldenRender(t)) || run < 1000 {
+		t.Errorf("%d cases run and %d selected out of %d", run, selectedOut, len(loadGoldenRender(t)))
 	}
 }
 
-// readJSON reads a JSON file into v.
-func readJSON(t *testing.T, file string, v any) {
-	t.Helper()
-	b, err := os.ReadFile(file)
-	if err != nil {
-		t.Fatal(err)
+// renderTimeCode is the code a render-time.txt line's reason names.
+func renderTimeCode(reason string) Code {
+	for _, c := range []struct {
+		says string
+		code Code
+	}{
+		{"filter_input", CodeFilterInput},
+		{"filter_argument", CodeFilterArgument},
+		{"an undefined variable", CodeUndefinedVariable},
+		{"a comparison", CodeComparison},
+		{"a loop modifier", CodeArgument},
+		{"a range's bounds", CodeArgument},
+		{"division by zero", CodeDivisionByZero},
+	} {
+		if strings.Contains(reason, c.says) {
+			return c.code
+		}
 	}
-	if err := json.Unmarshal(b, v); err != nil {
-		t.Fatal(err)
+	return "unnamed"
+}
+
+// quoted writes an expected result, or that there is none.
+func quoted(s *string) string {
+	if s == nil {
+		return "<none>"
 	}
+	return fmt.Sprintf("%q", *s)
 }

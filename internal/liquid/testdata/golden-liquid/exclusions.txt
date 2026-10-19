@@ -6,6 +6,22 @@
 # not render its expected result.
 blank and empty, undefined is equal to blank	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
 blank and empty, undefined is not equal to empty	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+filters, compact, array of objects with key property	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, find index, array of hashes, with a nil	dialect	ADR-004 D6 item 5: a property of nil is template.nil_property; this case is lax mode's, rendering it as nothing
+filters, find, array of hashes, with a nil	dialect	ADR-004 D6 item 5: a property of nil is template.nil_property; this case is lax mode's, rendering it as nothing
+filters, find, hash input, explicit nil, match	dialect	ADR-004 D6 item 5: a property of nil is template.nil_property; this case is lax mode's, rendering it as nothing
+filters, map, undefined argument	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+filters, reject, first argument is undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+filters, reject, input is a hash, default value, nil match	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, reject, input is a hash, default value, no match	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, reject, input is a hash, explicit nil match	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, reject, input is a hash, int value, no match	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, reject, input is undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+filters, reject, second argument is undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+filters, sort natural, argument is undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+filters, uniq, array of objects with key property	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, uniq, array of objects with missing key property	dialect	ADR-004 D4 item 5: an object is iterated in canonical order, by the UTF-16 code units of its member names, not in the order its members were written
+filters, where, second argument is undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
 identifiers, allowed symbols	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
 identifiers, allowed symbols, parens	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
 identifiers, capture only digits	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
@@ -15,6 +31,7 @@ identifiers, true followed by variable segments is not a reserved word	dialect	A
 output, access an undefined variable by index	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
 output, render an undefined property	dialect	ADR-004 D6 item 4: a property an object neither declares nor holds is template.undefined_property; this case is lax mode's, rendering it as nothing
 output, render an undefined variable	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+range, slice uses range string representation	dialect	ADR-004 D4 item 1: a range is an array of its integers, since every value is one of D4 item 1's kinds; Shopify's Range has a string form, which slice reads
 special, last of a object	dialect	ADR-004 D4 item 7: last applies to an object, its last [name, value] pair, where Ruby's Hash has no last
 special, size of undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
 tags, case, 'when' expression using an out of scope identifier	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing

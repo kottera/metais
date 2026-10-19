@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{{ xs | join: '#' }}{{ s | upcase | append: s }}{{ o | map: 'a' }}")

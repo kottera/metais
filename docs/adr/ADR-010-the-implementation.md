@@ -1781,19 +1781,22 @@ R2-156 (RULINGS-v1); R2-156's own frontmatter split stands.
   template, and `Limits`, the per-value bounds a `Meter`'s running counts
   do not hold; `Meter` is Wave 2's interface, and `NewMeter(MeterLimits)`
   its counting implementation, which names `render-work`, `output-size`,
-  `assign-bytes` and `loop-iterations` and reads no clock. A template
-  number is an integer when its literal is written as one and its value
-  is within ±(2⁵³ − 1), so literals keep their spelling, and `Data` spells
-  every data number by its value before it is bound (ADR-004 D4 item 2).
-  Object iteration — `for`, `tablerow` and `render … for` over an object,
-  and the `first` and `last` shorthands — goes through one method, the
-  seam Amendment A2 names; `TestNoMapIteration` type-checks the engine and
-  finds no range over a map, so `Dialect.Extend` copies with `maps.Copy`.
-  `value.Object` gained `At`, so every step reads its member in constant
-  time. ADR-009 D11 item 2's table is charged as written; beside it a
+  `assign-bytes` and `loop-iterations` and reads no clock. A render error
+  inside a partial carries its chain of render calls in `Error.Chain`.
+  `Data` spells every data number by its value before it is bound, so a
+  template number's kind is the catalog's `numberKind` everywhere
+  (ADR-004 D4 item 2). Object iteration — `for`, `tablerow` and
+  `render … for` over an object, and the `first` and `last` shorthands —
+  goes through one method, the seam Amendment A2 names;
+  `TestNoMapIteration` type-checks the engine and finds no range over a
+  map, so `Dialect.Extend` and the catalog's `filterErr` copy with
+  `maps.Copy`. `value.Object` gained `At`, so every step reads its member
+  in constant time. The renderer charges ADR-009 D11 item 2's 16 units
+  per node, a filter application's among them, and each operator's
+  shallow sizes, and a definition charges its own; beside the table, a
   range made a value costs a unit per element, writing an array a unit
-  per element, and a string's `size` a unit per byte, so no step does work
-  the meter does not see. A range literal's span is charged to
+  per element, and a string's `size` a unit per byte, so no step does
+  work the meter does not see. A range literal's span is charged to
   `loop-iterations` before its first iteration, and other loops their
   visited items. Where ADR-004 is silent the renderer follows Shopify:
   `contains` with `nil` or `false` on either side is false, a boolean on
@@ -1803,8 +1806,12 @@ R2-156 (RULINGS-v1); R2-156's own frontmatter split stands.
   bound even to `nil`, where Shopify leaves it unbound. A loop modifier, a
   `tablerow` attribute or a range bound of the wrong type is the engine's
   `argument` code, which ADR-004 D16 does not name; `internal/template`
-  maps it. Golden Liquid's render run covers every valid case that applies
-  no filter: 400 render, 358 pass, and 42 carry a `dialect` line, each
-  naming ADR-004 D4 item 5 or 7 or D6 item 1, 4 or 5; the 5 cases of
-  `render-time.txt` that apply no filter are refused. `FuzzLiquidRender`
-  renders at small limits with the input as its own partial.
+  maps it. Golden Liquid's render run is the meeting with W3-4: every
+  case runs under `Core()` but the 10 that apply `date`, which
+  `goldenDateSelector` takes out; of 1,088, 913 pass and 175 carry
+  `dialect` lines, 59 of them added here under ADR-004 D4 items 1, 5 and
+  7 and D6 items 1, 4 and 5. The 22 lines left in `render-time.txt` that
+  do not apply `date` are each refused at render with the code the line
+  names, and the 73 that left it are refused at parse by the catalog's
+  `Check`. `FuzzLiquidRender` renders under `Core()` at small limits, the
+  input its own partial.

@@ -34,11 +34,12 @@ type filterContext struct{ m Meter }
 
 func (c filterContext) Meter() Meter { return c.m }
 
-// filter applies one filter through its definition. The application costs
-// nodeCost units and the shallow size of its input, of each argument and
-// of its result (ADR-009 D11 item 2); all but the result's are charged
-// before the filter runs. A string result is held to value-size and an
-// array result to array-size.
+// filter applies one filter through its definition. The renderer charges
+// the application's node, nodeCost units, before the filter runs; the
+// definition charges the rest of ADR-009 D11 item 2's table — the shallow
+// sizes of its input, arguments and result, and any excess — as
+// FilterDef's contract says. A string result is held to value-size and
+// an array result to array-size.
 func (r *renderer) filter(f *ast.Filter, in value.Value) (value.Value, bool, *Error) {
 	def, ok := r.dialect.Filter(f.Name)
 	if !ok {
@@ -46,16 +47,14 @@ func (r *renderer) filter(f *ast.Filter, in value.Value) (value.Value, bool, *Er
 			fmt.Sprintf("the render's dialect has no filter %q", f.Name))
 	}
 	args := make([]Arg, len(f.Args))
-	cost := saturatingAdd(nodeCost, shallowSize(in))
 	for i, a := range f.Args {
 		v, _, err := r.primary(a.Value)
 		if err != nil {
 			return nil, false, err
 		}
 		args[i] = Arg{Name: a.Name, Value: v}
-		cost = saturatingAdd(cost, shallowSize(v))
 	}
-	if err := r.charge(WorkUnits, cost, f); err != nil {
+	if err := r.charge(WorkUnits, nodeCost, f); err != nil {
 		return nil, false, err
 	}
 	out, ferr := def.Apply(filterContext{r.meter}, in, args)
@@ -73,9 +72,6 @@ func (r *renderer) filter(f *ast.Filter, in value.Value) (value.Value, bool, *Er
 		if err := r.checkArray(int64(o.Len()), f); err != nil {
 			return nil, false, err
 		}
-	}
-	if err := r.charge(WorkUnits, shallowSize(out), f); err != nil {
-		return nil, false, err
 	}
 	sf, isSafe := def.(SafeFilter)
 	return out, isSafe && sf.MarksSafe(), nil
@@ -122,7 +118,7 @@ func (r *renderer) rangeValue(p *ast.Range) (value.Value, *Error) {
 	for i := range elems {
 		elems[i] = intValue(from + int64(i))
 	}
-	return mustArray(elems), nil
+	return newArray(elems), nil
 }
 
 // rangeBounds evaluates a range's bounds as Shopify does (ADR-004 D2).
@@ -160,11 +156,7 @@ func (r *renderer) literalToI(l *ast.Literal, at ast.Node) (int64, *Error) {
 		}
 		return int64(f), nil
 	case value.String:
-		i, ok := rubyToI(v.Text())
-		if !ok {
-			return 0, r.fail(at, CodeNumberRange, nil, "a range bound beyond ±(2^53-1)")
-		}
-		return i, nil
+		return r.stringToI(v, at)
 	case value.Null:
 		return 0, nil
 	case nil:
@@ -187,11 +179,7 @@ func (r *renderer) rangeBound(p ast.Primary, at ast.Node) (int64, *Error) {
 	case value.Null:
 		return 0, nil
 	case value.String:
-		i, ok := rubyToI(v.Text())
-		if !ok {
-			return 0, r.fail(at, CodeNumberRange, nil, "a range bound beyond ±(2^53-1)")
-		}
-		return i, nil
+		return r.stringToI(v, at)
 	}
 	return 0, r.rangeErr(v, at)
 }
@@ -250,7 +238,7 @@ func (r *renderer) path(p *ast.Path) (value.Value, bool, *Error) {
 	for i, s := range segs {
 		var key value.Value
 		if s.Index == nil {
-			key = stringValue(s.Name)
+			key = newString(s.Name)
 		} else {
 			k, _, err := r.primary(s.Index)
 			if err != nil {
@@ -345,13 +333,13 @@ func (r *renderer) shorthand(v value.Value, name string, at ast.Node) (value.Val
 				return value.Null{}, true, nil
 			}
 			_, n := utf8.DecodeRuneInString(s)
-			return stringValue(s[:n]), true, nil
+			return newString(s[:n]), true, nil
 		default:
 			if s == "" {
 				return value.Null{}, true, nil
 			}
 			_, n := utf8.DecodeLastRuneInString(s)
-			return stringValue(s[len(s)-n:]), true, nil
+			return newString(s[len(s)-n:]), true, nil
 		}
 	case value.Array:
 		switch {
@@ -376,7 +364,7 @@ func (r *renderer) shorthand(v value.Value, name string, at ast.Node) (value.Val
 			i = v.Len() - 1
 		}
 		m := r.member(v, i)
-		return mustArray([]value.Value{stringValue(m.Name), m.Value}), true, nil
+		return newArray([]value.Value{newString(m.Name), m.Value}), true, nil
 	}
 	return nil, false, nil
 }
@@ -491,7 +479,7 @@ func (r *renderer) compare(op ast.CompareOp, l, rt operand, at ast.Node) (bool, 
 	if (op != ast.OpLt && op != ast.OpGt && op != ast.OpLe && op != ast.OpGe) && composite(l.v) && composite(rt.v) {
 		cost = saturatingAdd(deepSize(l.v), deepSize(rt.v))
 	} else {
-		cost = saturatingAdd(shallowSize(l.v), shallowSize(rt.v))
+		cost = saturatingAdd(shallow(l.v), shallow(rt.v))
 	}
 	if err := r.charge(WorkUnits, saturatingAdd(operatorCost, cost), at); err != nil {
 		return false, err

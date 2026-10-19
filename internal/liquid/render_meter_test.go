@@ -67,8 +67,9 @@ func renderCounted(t *testing.T, src string, opts ...option) Meter {
 }
 
 // TestRenderCharges holds the renderer to ADR-009 D11 item 2's table:
-// each node evaluated costs 16 units; a filter application and an
-// operator add the shallow size of their input, arguments and result;
+// each node evaluated costs 16 units, a filter application among them,
+// whose definition charges the rest; an operator adds the shallow size of
+// its operands and result;
 // an equality of two arrays costs their deep sizes; writing an array, and
 // a string's size, cost what they read. The counts are exact,
 // and the meter reads no clock: the same template costs the same on
@@ -81,7 +82,9 @@ func TestRenderCharges(t *testing.T) {
 	}{
 		{`hello`, 0},
 		{`{{ x }}`, 16},
-		{`{{ "ab" | suffix: "cd" }}`, 16 + (16 + 2 + 2) + 4},
+		// A filter application's node is the renderer's; the test filter
+		// charges nothing of its own.
+		{`{{ "ab" | suffix: "cd" }}`, 16 + 16},
 		{`{% if 1 == 1 %}{% endif %}`, 16 + (16 + 1 + 1 + 1)},
 		{`{% if true and false %}{% endif %}`, 16 + (16 + 1 + 1 + 1)},
 		{`{% if true and false or true %}{% endif %}`, 16 + 19 + 19},
@@ -104,6 +107,12 @@ func TestRenderCharges(t *testing.T) {
 		if again := renderCounted(t, c.src, d).Used(WorkUnits); again != c.units {
 			t.Errorf("%s: %d units on a second run, want %d", c.src, again, c.units)
 		}
+	}
+	// Through Core(), a filter application is charged once: its node by
+	// the renderer, and append's input, argument and result (2 + 2 + 4)
+	// by the catalog.
+	if m := renderCounted(t, `{{ "ab" | append: "cd" }}`, withDialect(Core())); m.Used(WorkUnits) != 16+16+8 {
+		t.Errorf("append through the renderer: %d units, want %d", m.Used(WorkUnits), 16+16+8)
 	}
 	m := renderCounted(t, `ab{{ x }}{% capture c %}de{% endcapture %}{% assign s = "fgh" %}{% assign n = 1 %}`, data(`{"x": "abc"}`))
 	if out, held := m.Used(WorkOutputBytes), m.Used(WorkHeldBytes); out != 5 || held != 5 {
@@ -174,7 +183,7 @@ func TestEval(t *testing.T) {
 		return e
 	}
 	v, err := Eval(parse(`a.b | suffix: "!"`), env)
-	if err != nil || !value.Equal(v, stringValue("x!")) {
+	if err != nil || !value.Equal(v, newString("x!")) {
 		t.Errorf("Eval = %v, %v; want x!", v, err)
 	}
 	v, err = Eval(parse(`(1..n)`), env)

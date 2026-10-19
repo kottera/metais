@@ -565,7 +565,7 @@ func (r *renderer) valueSeq(v value.Value) seq {
 	case value.Object:
 		return seq{n: int64(v.Len()), at: func(i int64) value.Value {
 			m := r.member(v, int(i))
-			return mustArray([]value.Value{stringValue(m.Name), m.Value})
+			return newArray([]value.Value{newString(m.Name), m.Value})
 		}}
 	case value.String:
 		if v.Text() == "" {
@@ -642,7 +642,7 @@ func (r *renderer) forTag(n *ast.For) (ctl, *Error) {
 			return ctlNone, err
 		}
 		if _, isNil := lv.(value.Null); !isNil {
-			l, err := r.toInteger(lv, "for", "limit", n)
+			l, err := r.loopInt(lv, "for", "limit", n)
 			if err != nil {
 				return ctlNone, err
 			}
@@ -689,13 +689,13 @@ func (r *renderer) forTag(n *ast.For) (ctl, *Error) {
 
 // forloop is the forloop object of iteration k of count (ADR-004 D2).
 func forloop(name string, count, k int64, parent value.Value) value.Object {
-	return mustObject([]value.Member{
+	return newObject([]value.Member{
 		{Name: "first", Value: value.Bool(k == 0)},
 		{Name: "index", Value: intValue(k + 1)},
 		{Name: "index0", Value: intValue(k)},
 		{Name: "last", Value: value.Bool(k == count-1)},
 		{Name: "length", Value: intValue(count)},
-		{Name: "name", Value: stringValue(name)},
+		{Name: "name", Value: newString(name)},
 		{Name: "parentloop", Value: parent},
 		{Name: "rindex", Value: intValue(count - k)},
 		{Name: "rindex0", Value: intValue(count - k - 1)},
@@ -712,24 +712,33 @@ func (r *renderer) loopInteger(p ast.Primary, tag, arg string, at ast.Node) (int
 	if _, isNil := v.(value.Null); isNil {
 		return 0, nil
 	}
-	return r.toInteger(v, tag, arg, at)
+	return r.loopInt(v, tag, arg, at)
 }
 
-// toInteger is Shopify's Utils.to_integer, which for loops apply to their
-// limit and offset: an integer is itself, a string must be one written in
-// decimal, and anything else — a float, a boolean, an array — is refused.
-func (r *renderer) toInteger(v value.Value, tag, arg string, at ast.Node) (int64, *Error) {
-	switch v := v.(type) {
-	case value.Number:
-		if i, ok := templateInt(v); ok {
-			return i, nil
-		}
-	case value.String:
-		if i, ok := rubyInteger(v.Text()); ok {
-			return i, nil
-		}
+// loopInt is Shopify's Utils.to_integer, which for loops apply to their
+// limit and offset, as the catalog's toInteger reads a count: an integer
+// is itself, a string must be one written in decimal, and anything else
+// — a float, a boolean, an array — is refused.
+func (r *renderer) loopInt(v value.Value, tag, arg string, at ast.Node) (int64, *Error) {
+	i, err := toInteger(tag, arg, v)
+	switch {
+	case err == nil:
+		return i, nil
+	case err.Code == CodeNumberRange:
+		return 0, r.fail(at, CodeNumberRange, nil, err.Detail)
 	}
 	return 0, r.argErr(tag, arg, v, at)
+}
+
+// stringToI reads a string as Ruby's String#to_i does, as the catalog's
+// leadingInteger reads it: 0 when it has no leading digits, and
+// CodeNumberRange beyond ±(2^53−1).
+func (r *renderer) stringToI(s value.String, at ast.Node) (int64, *Error) {
+	n, err := leadingInteger("", s.Text())
+	if err != nil {
+		return 0, r.fail(at, CodeNumberRange, nil, err.Detail)
+	}
+	return n.i, nil
 }
 
 // argErr refuses a core tag's argument of the wrong type.
@@ -755,11 +764,7 @@ func (r *renderer) toI(v value.Value, arg string, at ast.Node) (int64, *Error) {
 		}
 		return int64(f), nil
 	case value.String:
-		i, ok := rubyToI(v.Text())
-		if !ok {
-			return 0, r.fail(at, CodeNumberRange, nil, "a string read as an integer beyond ±(2^53-1)")
-		}
-		return i, nil
+		return r.stringToI(v, at)
 	}
 	return 0, r.argErr("tablerow", arg, v, at)
 }
@@ -826,7 +831,7 @@ func (r *renderer) tablerow(n *ast.Tablerow) (ctl, *Error) {
 		last := k == count-1
 		colLast := col0+1 == cols
 		scope[n.Var] = binding{v: s.at(lo + k)}
-		scope["tablerowloop"] = binding{v: mustObject([]value.Member{
+		scope["tablerowloop"] = binding{v: newObject([]value.Member{
 			{Name: "col", Value: intValue(col0 + 1)},
 			{Name: "col0", Value: intValue(col0)},
 			{Name: "col_first", Value: value.Bool(col0 == 0)},

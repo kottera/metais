@@ -120,6 +120,8 @@ func FuzzFilterApply(f *testing.F) {
 				t.Fatalf("%s under a small meter: %v", name, err)
 			}
 		}
+	})
+}
 
 // fuzzGlobals is FuzzLiquidRender's data: a value of every kind, nested.
 const fuzzGlobals = `{"a": 1, "b": 2.5, "s": "<x&y>", "e": "", "n": null, "t": true, "f": false,
@@ -141,9 +143,10 @@ var (
 // meter never passes a limit and the output never passes output-size;
 // and a second render gives the same bytes, the same error and the same
 // counts. The template may render itself, as the partial "self", so
-// recursion reaches partial-depth. Its seed corpus, under
-// testdata/fuzz/FuzzLiquidRender, holds a valid Golden Liquid template
-// for each of the corpus's tag groups and the renderer's own edges, and
+// recursion reaches partial-depth; its dialect is Core() and the test
+// definitions. Its seed corpus, under testdata/fuzz/FuzzLiquidRender,
+// holds a valid Golden Liquid template for each of the corpus's tag
+// groups, the renderer's own edges and filter chains under Core(), and
 // runs in every go test.
 func FuzzLiquidRender(f *testing.F) {
 	d := fuzzDialect(f)

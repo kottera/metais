@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("{% assign y = xs | compact | sort | reverse %}{% for i in y %}{{ i }}{% endfor %}")

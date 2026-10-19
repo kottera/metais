@@ -4,6 +4,7 @@
 package liquid
 
 import (
+	"maps"
 	"math"
 	"math/big"
 	"strconv"
@@ -387,9 +388,7 @@ func kindName(v value.Value) string {
 // name beside args.
 func filterErr(filter string, code Code, args map[string]string, detail string) *Error {
 	a := map[string]string{"filter": filter}
-	for k, v := range args {
-		a[k] = v
-	}
+	maps.Copy(a, args)
 	return &Error{Code: code, Args: a, Detail: detail}
 }
 
