@@ -73,6 +73,12 @@
       "reason": "ADR-010 D10 item 2, ADR-007 D9 item 18: regexprofile translates and parses every pattern, and the sample generator walks the tree regexprofile parsed, which is the tree the validator matches with, never a parse of its own"
     },
     {
+      "rule": "only-importers",
+      "imports": "github.com/kottera/metais/internal/author",
+      "importers": ["github.com/kottera/metais/internal/cli"],
+      "reason": "ADR-010 D2, ADR-008 D9: the authoring commands' work is reached only through their declarations in the command table, so init, check, test, pack and unpack each have one entry from the command line"
+    },
+    {
       "rule": "only-referrers",
       "symbols": ["os.Args", "os.Stdin", "os.Stdout", "os.Stderr", "os.Exit"],
       "packages": ["github.com/kottera/metais/cmd/metais"],
