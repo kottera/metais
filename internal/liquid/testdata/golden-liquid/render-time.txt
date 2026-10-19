@@ -2,97 +2,24 @@
 # at parse (D6 item 8), one per line: <case name><TAB><ADR-004 item>.
 # TestGoldenLiquidParse holds each to parsing; Wave 3's render run proves
 # each is refused.
-filters, abs, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, append, missing argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, append, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, at least, missing arg	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, at least, too many args	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, at most, missing arg	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, at most, too many args	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, base64 decode, not a string	ADR-004 D16 item 1: filter_input depends on the input's value, found at render
-filters, base64 decode, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, base64 encode, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, base64 url safe decode, not a string	ADR-004 D16 item 1: filter_input depends on the input's value, found at render
-filters, base64 url safe decode, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, base64 url safe encode, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, capitalize, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, ceil, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, compact, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, concat, missing argument is an error	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, concat, non array-like argument is an error	ADR-004 D16 item 1: filter_argument depends on the argument's value, found at render
 filters, concat, undefined argument is an error	ADR-004 D6 item 8: an undefined variable is found when evaluated
 filters, date, missing argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, date, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, default, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, divided by, arg string not a number	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, divided by, divied by zero	ADR-004 D4 item 3: division by zero depends on the divisor's value
-filters, divided by, too many args	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, divided by, undefined argument	ADR-004 D6 item 8: an undefined variable is found when evaluated
-filters, downcase, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, escape once, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, escape, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, floor, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, has, array of ints, string argument, default value	ADR-004 D16 item 1: filter_input depends on the input's value, found at render
-filters, join, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, lstrip, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, map, array containing a non object	ADR-004 D16 item 1: filter_input depends on the input's value, found at render
 filters, map, left value not an array	ADR-004 D16 item 1: filter_input depends on the input's value, found at render
-filters, minus, too many args	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, modulo, arg string not a number	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, modulo, too many args	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, modulo, undefined argument	ADR-004 D6 item 8: an undefined variable is found when evaluated
-filters, newline to br, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, plus, too many args	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, prepend, missing argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, prepend, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, reject, array containing an int, default value	ADR-004 D16 item 1: filter_input depends on the input's value, found at render
-filters, reject, missing argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, reject, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, remove first, missing argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, remove first, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, remove last, missing argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, remove last, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, remove, missing argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, remove, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, replace first, missing arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, replace first, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, replace last, missing argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, replace last, missing arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, replace last, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, replace, missing arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, replace, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, reverse, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, round, too many args	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, rstrip, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, size, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, slice, first argument is a float	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, slice, first argument not an integer	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, slice, missing arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, slice, second argument is a float	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, slice, second argument not an integer	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, slice, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, slice, undefined first argument	ADR-004 D6 item 8: an undefined variable is found when evaluated
 filters, sort, incompatible types	ADR-004 D16 item 1: filter_input depends on the input's value, found at render
-filters, sort, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, split, missing argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, split, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, strip html, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, strip newlines, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, strip, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, sum, properties arguments with non-hash items	ADR-004 D16 item 1: filter_input depends on the input's value, found at render
-filters, times, missing arg	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, times, too many args	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, truncate, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, truncate, undefined first argument	ADR-004 D6 item 8: an undefined variable is found when evaluated
-filters, truncatewords, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, truncatewords, undefined first argument	ADR-004 D6 item 8: an undefined variable is found when evaluated
-filters, uniq, too many arguments	ADR-004 D6 item 8: an undefined variable is found when evaluated
-filters, upcase, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, url decode, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, url encode, unexpected argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 filters, where, left value is not an array	ADR-004 D16 item 1: filter_input depends on the input's value, found at render
-filters, where, missing argument	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
-filters, where, too many arguments	ADR-004 D16 item 1: filter_argument, found at render or by the catalog's Check at parse
 range, float from a variable is an error	ADR-004 D2: a range's bounds are integers, a property of the values
 tags, for, limit is a non-number string	ADR-004 D16 item 1: a loop modifier of the wrong type is refused at render
 tags, for, limit is not a string or number	ADR-004 D16 item 1: a loop modifier of the wrong type is refused at render

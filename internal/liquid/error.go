@@ -51,6 +51,31 @@ const (
 	CodeInternal Code = "internal"
 )
 
+// The filter error codes (ADR-004 D16 item 1). A filter's Apply reports
+// them at render, and its Check at parse when the arguments that decide
+// them are literals. Each carries Args "filter", the filter's name.
+// CodeNumberRange is reported by a filter too, for a result beyond what a
+// template number holds (ADR-004 D4 item 3).
+const (
+	// CodeFilterInput is a filter's input of a kind the filter refuses.
+	// Args "type" names the kind found, never the value.
+	CodeFilterInput Code = "filter_input"
+	// CodeFilterArgument is a filter applied with an argument count it
+	// never takes, a keyword it does not know, or an argument of a kind it
+	// refuses. Args "argument" names the argument: its 1-based position,
+	// or its keyword.
+	CodeFilterArgument Code = "filter_argument"
+	// CodeDivisionByZero is divided_by or modulo by zero (ADR-004 D4
+	// item 3).
+	CodeDivisionByZero Code = "division_by_zero"
+	// CodeObjectOutput is the text of an object, which no value has
+	// (ADR-004 D4 item 4); Args "use" is "json", the filter to use.
+	CodeObjectOutput Code = "object_output"
+	// CodeInvalidUTF8 is a decoding filter's result that is not a sequence
+	// of Unicode scalar values (ADR-004 D4 item 1).
+	CodeInvalidUTF8 Code = "invalid_utf8"
+)
+
 // Error is an error the engine reports.
 //
 // Line and Col are 1-based, Col counted in code points (ADR-006 D5 item

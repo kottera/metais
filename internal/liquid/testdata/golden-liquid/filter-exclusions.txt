@@ -1,0 +1,90 @@
+# Golden Liquid filter cases excluded from TestGoldenLiquidFilters, one
+# per line: <case name><TAB>dialect<TAB><ADR-004 item>. Each is a case
+# whose Shopify behaviour ADR-004 pins differently.
+filters, abs, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, append, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, append, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, at least, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, at least, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, at most, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, at most, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, base64 decode, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, base64 encode, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, base64 url safe decode, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, base64 url safe encode, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, capitalize, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, ceil, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, compact, left value is undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, concat, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, default, empty	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, default, false	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, default, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, divided by, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, downcase, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, escape once, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, escape, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, first, left value is undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, floor, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, has, array of ints, default value	dialect	ADR-004 D6 item 6: a number has no property, where Shopify indexes an integer's bits
+filters, join, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, join, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, last, array of things	dialect	ADR-004 D4 item 4: an object has no text and is template.object_output, where Shopify writes Ruby's inspect
+filters, last, last of a hash	dialect	ADR-004 D4 item 5: last iterates an object in canonical order and gives its last member, where Ruby's Hash has no last
+filters, last, left value is undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, lstrip, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, minus, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, minus, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, modulo, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, newline to br, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, plus, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, plus, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, prepend, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, prepend, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, remove first, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, remove first, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, remove last, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, remove last, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, remove, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, remove, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, replace first, undefined first argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, replace first, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, replace first, undefined second argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, replace last, undefined first argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, replace last, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, replace last, undefined second argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, replace, left value is an object	dialect	ADR-004 D4 item 4: an object has no text and is template.object_output, where Shopify writes Ruby's inspect
+filters, replace, undefined first argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, replace, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, replace, undefined second argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, reverse, array of things	dialect	ADR-004 D4 item 4: an object has no text and is template.object_output, where Shopify writes Ruby's inspect
+filters, reverse, left value is undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, round, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, round, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, rstrip, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, size, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, slice, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, slice, undefined second argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, sort natural, incompatible types	dialect	ADR-004 D4 item 4: an object has no text and is template.object_output, where Shopify writes Ruby's inspect
+filters, sort natural, left value is undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, sort, argument is undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, sort, left value is undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, split, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, split, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, squish, left is undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, strip html, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, strip newlines, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, strip, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, times, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, times, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, truncate, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, truncate, undefined second argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, truncatewords, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, truncatewords, undefined second argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, uniq, left value is undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, uniq, unhashable items	dialect	ADR-004 D4 item 4: an object has no text and is template.object_output, where Shopify writes Ruby's inspect
+filters, upcase, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, url decode, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, url encode, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, where, both arguments are undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, where, first argument is undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, where, left value is undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil

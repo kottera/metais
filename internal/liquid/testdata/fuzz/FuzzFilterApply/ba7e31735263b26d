@@ -1,0 +1,4 @@
+go test fuzz v1
+string("\"\u01c6 stra\u00dfe \u0131\"")
+string("")
+string("")

@@ -1,0 +1,4 @@
+go test fuzz v1
+string("{\"b\": 1, \"a\": [true, false]}")
+string("\"a\"")
+string("")

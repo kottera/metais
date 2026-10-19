@@ -1,0 +1,4 @@
+go test fuzz v1
+string("\"\u65e5\u672c\u8a9e\u30c6\u30ad\u30b9\u30c8\"")
+string("4")
+string("\"\u2026\"")
