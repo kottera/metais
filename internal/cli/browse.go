@@ -233,7 +233,9 @@ func readingDeclarations() []*Command {
 			Refusal{Code: finding.CodeDestinationLink, Cause: "In <dir>, an entry's path runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed.", Next: nextExtractInTheWay},
 			Refusal{Code: finding.CodeDestinationCaseVariant, Cause: "In <dir>, an entry's name differs only in case or normalization from a name an entry's path holds.", Next: nextExtractInTheWay},
 			Refusal{Code: finding.CodeDestinationNotRegularFile, Cause: "In <dir>, a directory, a named pipe, a socket or a device stands at an entry's path.", Next: nextExtractInTheWay},
-			Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A write failed: into a new <dir> the files already written are listed and left in place; into an existing one, which also refuses a staging directory left in it, another file system mounted inside it and an entry beneath the staging name, nothing is left.", Next: nextExtractTo},
+			Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A write into a new <dir> failed after creating it; the files already written are listed and left in place.", Next: nextExtractTo},
+			Refusal{Code: finding.CodeDestinationNothingWritten, Cause: "A write failed and nothing was left: <dir> could not be created, or, in an existing one, a write failed before the commit, another file system is mounted inside it, or an entry lies beneath the staging name.", Next: nextExtractTo},
+			Refusal{Code: finding.CodeDestinationStagingExists, Cause: "An existing <dir> holds .metais-staging, left by a killed write or in use by another; nothing is written.", Next: nextExtractTo},
 			Refusal{Code: finding.CodeDestinationCommitFailed, Cause: "Moving the files into an existing <dir> failed part way; the files already moved are listed, and nothing else was changed.", Next: nextExtractTo},
 		),
 	}
@@ -814,6 +816,10 @@ func (s *session) extractFailed(err error) outcome {
 			o.human = listing("Found in the directory:", de.Entries, de.More)
 		}
 		return o
+	case errors.As(err, &we) && we.Staging:
+		return s.refuseWith(stagingExists())
+	case errors.As(err, &we) && !we.Left && len(we.Written) == 0:
+		return s.refuseWith(nothingWritten(hostfs.Reason(we.Reason)))
 	case errors.As(err, &we):
 		written := we.Written
 		if written == nil {

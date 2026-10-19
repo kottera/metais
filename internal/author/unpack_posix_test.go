@@ -207,10 +207,10 @@ func writable(t *testing.T) bool {
 	return err == nil
 }
 
-// TestUnpackIntoAnUnwritableDirectory is output.destination.write_failed's
+// TestUnpackIntoAnUnwritableDirectory is output.destination.nothing_written's
 // permission_denied: an unpack into an empty directory this process may
 // not write, and a staged unpack beneath one, each stop at their first
-// write with nothing written, and nothing is left.
+// write with nothing written, and nothing is left, which the error says.
 func TestUnpackIntoAnUnwritableDirectory(t *testing.T) {
 	if writable(t) {
 		t.Skip("a directory of mode 0555 is writable to this process, as to root")
@@ -230,7 +230,7 @@ func TestUnpackIntoAnUnwritableDirectory(t *testing.T) {
 			t.Cleanup(func() { os.Chmod(locked, 0o755) })
 			files, err := Unpack(packedTree(t), c.to(locked), 0)
 			var we *WriteError
-			if !errors.As(err, &we) || we.Reason != hostfs.PermissionDenied || len(we.Written) != 0 || len(files) != 0 {
+			if !errors.As(err, &we) || we.Reason != hostfs.PermissionDenied || len(we.Written) != 0 || we.Left || len(files) != 0 {
 				t.Fatalf("Unpack: %v, %#v, %q", err, we, files)
 			}
 			if got := tree(t, locked); len(got) != 0 {

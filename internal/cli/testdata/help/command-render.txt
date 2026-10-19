@@ -634,10 +634,14 @@ Refusals:
       In --out, a directory, a named pipe, a socket or a device stands at an
       output's path.
       Next: metais render <package> --out <dir>
-  output.destination.write_failed
-      A write failed, another file system is mounted on an output's path, a
-      staging directory is left in --out, or an output's path begins with its
-      name; whatever was written is removed.
+  output.destination.nothing_written
+      A write failed, another file system is mounted on an output's path, or an
+      output's path begins with the staging directory's name; whatever was
+      written is removed.
+      Next: metais render <package> --out <dir>
+  output.destination.staging_exists
+      --out holds .metais-staging, left by a killed render or in use by another;
+      nothing is written.
       Next: metais render <package> --out <dir>
   output.enum
       An output fails its validation (enum).

@@ -45,8 +45,8 @@ byte order, before it writes anything.
 
 <a id="mts-rnd-006"></a>**MTS-RND-006** When a write of a render fails — into
 a directory the processor may not write, on a full disk — the processor MUST
-refuse the render with `output.destination.write_failed`, naming the reason,
-and MUST remove what the render created, so that no output directory and no
+refuse the render with `output.destination.nothing_written`, naming the
+reason, and MUST remove what the render created, so that no output directory and no
 staging directory is left.
 
 <a id="mts-rnd-005"></a>**MTS-RND-005** A render's outputs MUST be the same
@@ -146,8 +146,8 @@ directory and an output whose path is absent MUST be renamed with a rename
 that refuses an existing target. The processor MUST then remove the staging
 directory. When `.metais-staging` already exists in the output directory —
 left by a render that did not finish, or made by a concurrent one — the
-processor MUST refuse the render with `output.destination.write_failed`,
-reason `exists`, before it writes anything.
+processor MUST refuse the render with `output.destination.staging_exists`
+before it writes anything.
 
 <a id="mts-rnd-015"></a>**MTS-RND-015** Rendering into an existing output
 directory, a processor MUST examine each existing component of every output
@@ -178,14 +178,14 @@ file system does with the two names is not portable.
 
 <a id="mts-rnd-018"></a>**MTS-RND-018** Rendering into an existing output
 directory, a processor MUST refuse the render with
-`output.destination.write_failed`, reason `exists`, when an output path's
+`output.destination.nothing_written`, reason `exists`, when an output path's
 first segment is an ASCII-case-insensitive match for `.metais-staging`.
 Rendering into a directory that does not exist, it MUST NOT refuse such a
 path for that reason.
 
 <a id="mts-rnd-019"></a>**MTS-RND-019** *(not observable)* Rendering into an
 existing output directory, a processor MUST refuse the render with
-`output.destination.write_failed`, reason `io_error`, when the deepest
+`output.destination.nothing_written`, reason `io_error`, when the deepest
 existing directory of an output path is on a different file system from the
 output directory, such as a mount point inside it, so that every rename of
 the commit stays on one file system. It MUST NOT report the device it
@@ -216,7 +216,8 @@ stop, MUST remove the staging directory and everything still in it, and MUST
 refuse the render with `output.destination.commit_failed`, naming the
 reason and listing, in byte order, every output path whose unit was
 committed. A failure before the first unit is renamed changes nothing in the
-output directory and MUST be reported with `output.destination.write_failed`.
+output directory and MUST be reported with
+`output.destination.nothing_written`.
 
 ## 11.4 Portable paths
 

@@ -83,7 +83,7 @@ func Unpack(tree pkgtree.Tree, to string, faults fault.Set) ([]string, error) {
 		if errors.As(err, &ne) {
 			return nil, err
 		}
-		return nil, writeError(err, nil)
+		return nil, writeError(err, nil, false)
 	}
 	for _, e := range UnpackedEntries(tree) {
 		if err = unpackEntry(tree, out, e); err != nil {
@@ -104,7 +104,7 @@ func Unpack(tree pkgtree.Tree, to string, faults fault.Set) ([]string, error) {
 	if !staged {
 		written = out.Written()
 	}
-	return written, writeError(err, written)
+	return written, writeError(err, written, !staged && out.Wrote())
 }
 
 // unpackEntry writes the entry e of tree beneath out, creating its parent
@@ -139,7 +139,7 @@ func unpackEntry(tree pkgtree.Tree, out *hostfs.Output, e string) error {
 func UnpackDryRun(tree pkgtree.Tree, to string) ([]string, error) {
 	w, rest, err := hostfs.OpenNearest(to)
 	if err != nil {
-		return nil, writeError(err, nil)
+		return nil, writeError(err, nil, false)
 	}
 	defer w.Close()
 	if rest == "." {
@@ -150,7 +150,7 @@ func UnpackDryRun(tree pkgtree.Tree, to string) ([]string, error) {
 			if errors.As(err, &ne) {
 				return nil, err
 			}
-			return nil, writeError(err, nil)
+			return nil, writeError(err, nil, false)
 		}
 		return UnpackedEntries(tree), nil
 	}
@@ -160,9 +160,9 @@ func UnpackDryRun(tree pkgtree.Tree, to string) ([]string, error) {
 	staging := path.Join(dir, hostfs.StagingName(base))
 	switch _, err := w.Lstat(staging); {
 	case err == nil:
-		return nil, writeError(&hostfs.Error{Op: "mkdir", Reason: hostfs.Exists}, nil)
+		return nil, writeError(&hostfs.Error{Op: "mkdir", Reason: hostfs.Exists}, nil, false)
 	case !errors.Is(err, fs.ErrNotExist):
-		return nil, writeError(err, nil)
+		return nil, writeError(err, nil, false)
 	}
 	return UnpackedEntries(tree), nil
 }

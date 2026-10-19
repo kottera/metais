@@ -442,7 +442,7 @@ func TestExtractStopsAndRemovesNothing(t *testing.T) {
 	// The tree changes beneath Extract: its second entry cannot be read.
 	_, err := Extract(failing{tr, "b/c.txt"}, []string{"a.txt", "b/c.txt"}, to, ExtractOptions{}, 0)
 	var we *WriteError
-	if !errors.As(err, &we) || !slices.Equal(we.Written, []string{"a.txt"}) || we.Reason != string(hostfs.IOError) {
+	if !errors.As(err, &we) || !slices.Equal(we.Written, []string{"a.txt"}) || we.Reason != string(hostfs.IOError) || !we.Left || we.Staging {
 		t.Fatalf("a failed read: %#v", err)
 	}
 	if b, err := os.ReadFile(filepath.Join(to, "a.txt")); err != nil || string(b) != "a" {

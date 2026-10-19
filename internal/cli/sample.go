@@ -75,7 +75,8 @@ func sampleDeclaration() *Command {
 		Refusal{Code: finding.CodeDestinationLink, Cause: "In <dir>, a path sample writes runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed.", Next: nextSampleInTheWay},
 		Refusal{Code: finding.CodeDestinationCaseVariant, Cause: "In <dir>, an entry's name differs only in case or normalization from a name a path sample writes holds.", Next: nextSampleInTheWay},
 		Refusal{Code: finding.CodeDestinationNotRegularFile, Cause: "In <dir>, a directory, a named pipe, a socket or a device stands where sample writes a file.", Next: nextSampleInTheWay},
-		Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A write failed, another file system is mounted on a path sample writes, a staging directory is left in <dir>, or the example already exists; nothing is left written.", Next: nextSampleTo},
+		Refusal{Code: finding.CodeDestinationNothingWritten, Cause: "A write failed, another file system is mounted on a path sample writes, or the example already exists; nothing is left written.", Next: nextSampleTo},
+		Refusal{Code: finding.CodeDestinationStagingExists, Cause: "<dir> holds .metais-staging, left by a killed write or in use by another; nothing is written.", Next: nextSampleTo},
 		Refusal{Code: finding.CodeDestinationCommitFailed, Cause: "Moving the files into an existing <dir> failed part way; the files already moved are listed, and nothing else was changed.", Next: nextSampleTo},
 	)
 	return &Command{
@@ -494,18 +495,18 @@ func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool)
 		for _, f := range files {
 			if err := writeFile(o, f); err != nil {
 				o.Abort()
-				return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+				return []finding.Finding{nothingWritten(hostfs.ReasonOf(err))}
 			}
 		}
 		if err := o.Commit(); err != nil {
-			return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+			return []finding.Finding{nothingWritten(hostfs.ReasonOf(err))}
 		}
 		return nil
 	}
 	entries, err := w.List(".", maxListed+1)
 	w.Close()
 	if err != nil && hostfs.ReasonOf(err) != hostfs.TooLarge {
-		return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+		return []finding.Finding{nothingWritten(hostfs.ReasonOf(err))}
 	}
 	if len(entries) > 0 && !overwrite {
 		var names []string
@@ -525,9 +526,9 @@ func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool)
 	defer x.Close()
 	var fs []finding.Finding
 	if _, err := x.Lstat(hostfs.StagingDir); err == nil {
-		fs = append(fs, writeFailed(hostfs.Exists))
+		fs = append(fs, stagingExists())
 	} else if r := hostfs.ReasonOf(err); r != hostfs.NotFound {
-		fs = append(fs, writeFailed(r))
+		fs = append(fs, nothingWritten(r))
 	}
 	paths := make([]string, len(files))
 	for i, f := range files {
@@ -544,7 +545,7 @@ func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool)
 	}
 	o, err := x.Stage(checks)
 	if err != nil {
-		return []finding.Finding{destinationRefusal(err)}
+		return []finding.Finding{stageFailed(err)}
 	}
 	for _, f := range files {
 		var err error
@@ -555,7 +556,7 @@ func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool)
 		}
 		if err != nil {
 			o.Abort()
-			return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+			return []finding.Finding{nothingWritten(hostfs.ReasonOf(err))}
 		}
 	}
 	err = o.Commit()
@@ -569,7 +570,7 @@ func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool)
 			"committed": stringList(ce.Committed),
 		})}
 	}
-	return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+	return []finding.Finding{nothingWritten(hostfs.ReasonOf(err))}
 }
 
 // writeExample writes files as the new example directory dest, which must
@@ -583,7 +584,7 @@ func (s *session) writeExample(dest string, files []inputs.File, dry bool) []fin
 	}
 	w.Close()
 	if rest == "." {
-		return []finding.Finding{writeFailed(hostfs.Exists)}
+		return []finding.Finding{nothingWritten(hostfs.Exists)}
 	}
 	if dry {
 		return nil
@@ -595,11 +596,11 @@ func (s *session) writeExample(dest string, files []inputs.File, dry bool) []fin
 	for _, f := range files {
 		if err := writeFile(o, f); err != nil {
 			o.Abort()
-			return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+			return []finding.Finding{nothingWritten(hostfs.ReasonOf(err))}
 		}
 	}
 	if err := o.Commit(); err != nil {
-		return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+		return []finding.Finding{nothingWritten(hostfs.ReasonOf(err))}
 	}
 	return nil
 }
@@ -623,7 +624,7 @@ func destinationRefusal(err error) finding.Finding {
 	if hostfs.ReasonOf(err) == hostfs.NotDirectory {
 		return finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil)
 	}
-	return writeFailed(hostfs.ReasonOf(err))
+	return nothingWritten(hostfs.ReasonOf(err))
 }
 
 // sampleRefusals adds to sample's declared refusals the codes a supply

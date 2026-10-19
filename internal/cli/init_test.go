@@ -193,7 +193,10 @@ func TestInitRefusals(t *testing.T) {
 		if e.Class == finding.ClassUsage && strings.HasPrefix(string(rf.Code), "usage.name_") && !seen[rf.Code] {
 			t.Errorf("no line triggers %s", rf.Code)
 		}
-		if e.Class == finding.ClassDestination && rf.Code != finding.CodeDestinationWriteFailed && !seen[rf.Code] {
+		// A failed write needs a host that refuses it: TestInitWriteFailed and
+		// TestInitFailedListing prove the two.
+		failed := rf.Code == finding.CodeDestinationWriteFailed || rf.Code == finding.CodeDestinationNothingWritten
+		if e.Class == finding.ClassDestination && !failed && !seen[rf.Code] {
 			t.Errorf("no line triggers %s", rf.Code)
 		}
 	}
@@ -308,9 +311,9 @@ func TestInitFailedListing(t *testing.T) {
 	}
 }
 
-// TestInitWriteFailed is output.destination.write_failed through the
-// command line: a directory init may not write into stops it, with
-// status 5, nothing written and nothing removed. It needs a host that
+// TestInitWriteFailed is output.destination.nothing_written through the
+// command line: a directory init may not write into stops it before it
+// creates anything, with status 5, nothing written and nothing removed. It needs a host that
 // refuses the write; one that does not (an administrator, a platform
 // without POSIX modes) is reported as skipped by its probe.
 func TestInitWriteFailed(t *testing.T) {
@@ -325,10 +328,10 @@ func TestInitWriteFailed(t *testing.T) {
 		t.Skip("requires a directory this process may not write into; this host lets it write")
 	}
 	r := runTool(t, "init", filepath.Join(locked, "pkg"), "--json")
-	if r.status != finding.ExitDestination || !slices.Equal(r.codes(), []string{string(finding.CodeDestinationWriteFailed)}) {
+	if r.status != finding.ExitDestination || !slices.Equal(r.codes(), []string{string(finding.CodeDestinationNothingWritten)}) {
 		t.Fatalf("status %d, %s", r.status, r.stdout)
 	}
-	if p := r.doc.Findings[0].Params; p["reason"] != "permission_denied" || len(p["written"].([]any)) != 0 {
+	if p := r.doc.Findings[0].Params; p["reason"] != "permission_denied" || len(p) != 1 {
 		t.Errorf("params %v", p)
 	}
 }

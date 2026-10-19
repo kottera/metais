@@ -593,10 +593,13 @@ Refusals:
       In <dir>, a directory, a named pipe, a socket or a device stands where
       sample writes a file.
       Next: metais sample <package> --to <dir>
-  output.destination.write_failed
-      A write failed, another file system is mounted on a path sample writes, a
-      staging directory is left in <dir>, or the example already exists; nothing
-      is left written.
+  output.destination.nothing_written
+      A write failed, another file system is mounted on a path sample writes, or
+      the example already exists; nothing is left written.
+      Next: metais sample <package> --to <dir>
+  output.destination.staging_exists
+      <dir> holds .metais-staging, left by a killed write or in use by another;
+      nothing is written.
       Next: metais sample <package> --to <dir>
   package.compiled.mismatch
       The package is refused (compiled: mismatch).

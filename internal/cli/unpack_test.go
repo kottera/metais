@@ -217,6 +217,7 @@ func TestUnpackRefusalsTriggered(t *testing.T) {
 		finding.CodeUsageMissingOperand: true, finding.CodeUsagePackageFromStdin: true, finding.CodeUsageBadValue: true,
 		finding.CodeUsageNotPackedPackage: true, finding.CodeDestinationNotEmpty: true,
 		finding.CodeDestinationNotDirectory: true, finding.CodeDestinationWriteFailed: true,
+		finding.CodeDestinationNothingWritten: true,
 	}
 	inspect := lookup(table, "inspect").Refusals
 	for _, rf := range lookup(table, "unpack").Refusals {

@@ -14,6 +14,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kottera/metais/internal/browse"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostenv"
 	"github.com/kottera/metais/internal/loader"
@@ -177,8 +178,13 @@ func TestReadingRefusalsTriggered(t *testing.T) {
 	}
 	if os.Geteuid() == 0 || runtime.GOOS == "windows" {
 		// A read-only directory refuses no one here.
-		seen["extract"][string(finding.CodeDestinationWriteFailed)] = true
+		seen["extract"][string(finding.CodeDestinationNothingWritten)] = true
 	}
+	// A write into a new <dir> that fails after creating it needs a tree
+	// that fails beneath Extract, which no command line makes:
+	// TestExtractFailedFindings and internal/browse's
+	// TestExtractStopsAndRemovesNothing prove it.
+	seen["extract"][string(finding.CodeDestinationWriteFailed)] = true
 	pkg2 := browsePackage(t)
 	for _, c := range extractDestinationCases() {
 		if c.runsHere() {
@@ -237,7 +243,8 @@ func TestReadingRefusalsTriggered(t *testing.T) {
 		for _, rf := range lookup(table, name).Refusals {
 			code := string(rf.Code)
 			if !seen[name][code] && (!unwired[code] || rf.Code == finding.CodeDestinationNotEmpty ||
-				rf.Code == finding.CodeDestinationNotDirectory || rf.Code == finding.CodeDestinationWriteFailed) &&
+				rf.Code == finding.CodeDestinationNotDirectory || rf.Code == finding.CodeDestinationWriteFailed ||
+				rf.Code == finding.CodeDestinationNothingWritten || rf.Code == finding.CodeDestinationStagingExists) &&
 				!slices.Contains(lineCodes, rf.Code) && code != "package.not_found" && code != "package.not_readable" {
 				t.Errorf("%s declares %s, which nothing triggers", name, code)
 			}
@@ -703,6 +710,43 @@ func TestExtractOverwrite(t *testing.T) {
 	}
 }
 
+// TestExtractFailedFindings is each failed write of extract as its
+// finding: a staging directory left in an existing <dir> is
+// staging_exists; a failure that left nothing, nothing_written; and one
+// that left what it created, write_failed, listing the files written, an
+// empty list included when only <dir> itself was created.
+func TestExtractFailedFindings(t *testing.T) {
+	s := &session{table: table, line: line{cmd: lookup(table, "extract")}}
+	for _, c := range []struct {
+		err  *browse.WriteError
+		want string
+	}{
+		{&browse.WriteError{Reason: "exists", Staging: true}, `output.destination.staging_exists {}`},
+		{&browse.WriteError{Reason: "permission_denied"}, `output.destination.nothing_written {"reason":"permission_denied"}`},
+		{&browse.WriteError{Reason: "io_error", Left: true}, `output.destination.write_failed {"reason":"io_error","written":[]}`},
+		{&browse.WriteError{Reason: "io_error", Written: []string{"a.txt"}, Left: true}, `output.destination.write_failed {"reason":"io_error","written":["a.txt"]}`},
+	} {
+		o := s.extractFailed(c.err)
+		if len(o.findings) != 1 || len(o.next) == 0 {
+			t.Fatalf("%+v: findings %v, next %v", c.err, o.findings, o.next)
+		}
+		var doc []struct {
+			Code   string
+			Params json.RawMessage
+		}
+		if err := json.Unmarshal(finding.AppendJSON(nil, o.findings[0]), &doc); err != nil {
+			t.Fatal(err)
+		}
+		params := string(doc[0].Params)
+		if params == "" {
+			params = "{}"
+		}
+		if got := doc[0].Code + " " + params; got != c.want {
+			t.Errorf("%+v: %s, want %s", c.err, got, c.want)
+		}
+	}
+}
+
 // extractDestinationCase is one existing --to that extract --overwrite
 // refuses: the host beneath it, made by setup, and the findings it
 // reports, in order, each as its code and parameters.
@@ -755,7 +799,7 @@ func extractDestinationCases() []extractDestinationCase {
 		}},
 		{"a staging directory left", false, func(t *testing.T, to string) {
 			mk(t, to, ".metais-staging/")
-		}, []string{`output.destination.write_failed {"reason":"exists","written":[]}`}},
+		}, []string{`output.destination.staging_exists {}`}},
 		{"a link", true, func(t *testing.T, to string) {
 			mk(t, to, "target.txt")
 			if err := os.Symlink("target.txt", filepath.Join(to, "metais.yaml")); err != nil {

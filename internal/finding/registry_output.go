@@ -11,6 +11,8 @@ const (
 	CodeDestinationNotDirectory   Code = "output.destination.not_directory"
 	CodeDestinationNotEmpty       Code = "output.destination.not_empty"
 	CodeDestinationNotRegularFile Code = "output.destination.not_regular_file"
+	CodeDestinationNothingWritten Code = "output.destination.nothing_written"
+	CodeDestinationStagingExists  Code = "output.destination.staging_exists"
 	CodeDestinationWriteFailed    Code = "output.destination.write_failed"
 	CodeContainerMissingEntry     Code = "output.container.missing_entry"
 	CodeContainerNonASCII         Code = "output.container.non_ascii"
@@ -225,6 +227,31 @@ var outputCodes = []Entry{
 		Statements: []string{"MTS-RND-016"},
 	},
 	{
+		Code:     "output.destination.nothing_written",
+		Severity: SeverityError,
+		Class:    ClassDestination,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "reason", Type: TypeString, Meaning: "Why the write failed: not_found, permission_denied, is_directory, not_regular_file or io_error, as ADR-006 D9 item 8 maps an operating-system error; or exists, when something stands at a name the write needs, which is never overwritten.", Always: true},
+		},
+		Message:    "Writing to the destination failed ({reason}), and nothing was written: the destination is as it was.",
+		Hint:       "Fix the cause, and run the command again; there is nothing to remove first.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{"MTS-AUT-026", "MTS-AUT-027", "MTS-RND-006", "MTS-RND-018", "MTS-RND-019", "MTS-RND-022", "MTS-SMP-008"},
+	},
+	{
+		Code:       "output.destination.staging_exists",
+		Severity:   SeverityError,
+		Class:      ClassDestination,
+		Subject:    SubjectInvocation,
+		Message:    "The destination holds .metais-staging, the staging directory a write into it uses, so nothing was written.",
+		Hint:       "A write that was killed left it, or another write into the same destination is still using it. Once nothing is writing there, remove .metais-staging and run the command again.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{"MTS-RND-014"},
+	},
+	{
 		Code:     "output.destination.write_failed",
 		Severity: SeverityError,
 		Class:    ClassDestination,
@@ -237,7 +264,7 @@ var outputCodes = []Entry{
 		Hint:       "Fix the cause, and run the command again into an empty directory; remove what was written first if you do not want it.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-026", "MTS-AUT-027", "MTS-RND-006", "MTS-RND-014", "MTS-RND-018", "MTS-RND-019", "MTS-RND-022", "MTS-SMP-008"},
+		Statements: []string{"MTS-AUT-027"},
 	},
 	{
 		Code:     "output.expression.for_each_type",

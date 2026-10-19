@@ -230,7 +230,8 @@ func declarations() []*Command {
 				{Code: finding.CodeUsageNameInvalid, Cause: "The name, from --name or from <dir>, does not satisfy the package name rule.", Next: nextInitValidName},
 				{Code: finding.CodeDestinationNotEmpty, Cause: "<dir> holds an entry other than the quiet ones.", Next: nextInitEmpty},
 				{Code: finding.CodeDestinationNotDirectory, Cause: "<dir>, or a directory above it, exists and is not a directory.", Next: nextInitEmpty},
-				{Code: finding.CodeDestinationWriteFailed, Cause: "A write failed; the files already written are listed and left in place.", Next: nextInitAgain},
+				{Code: finding.CodeDestinationWriteFailed, Cause: "A write failed after init had created something; the files already written are listed and left in place.", Next: nextInitAgain},
+				{Code: finding.CodeDestinationNothingWritten, Cause: "A write failed before init had created anything; nothing was written.", Next: nextInitAgain},
 			},
 			Examples: []Example{
 				{"metais init acme-report", "Writes the scaffold of a package called acme-report into the directory acme-report."},

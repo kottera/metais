@@ -54,8 +54,12 @@ Refusals:
   output.destination.not_empty
       <dir> holds an entry other than the quiet ones.
       Next: metais init <dir>
+  output.destination.nothing_written
+      A write failed before init had created anything; nothing was written.
+      Next: metais init <dir>
   output.destination.write_failed
-      A write failed; the files already written are listed and left in place.
+      A write failed after init had created something; the files already written
+      are listed and left in place.
       Next: metais init <dir>
   usage.bad_value
       A flag's value is missing, or is not one the flag accepts, or a flag that

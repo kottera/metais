@@ -1,13 +1,10 @@
 [
   {
-    "code": "output.destination.write_failed",
+    "code": "output.destination.staging_exists",
     "severity": "error",
     "subject": {
       "kind": "invocation"
     },
-    "params": {
-      "reason": "exists",
-      "written": []
-    }
+    "params": {}
   }
 ]

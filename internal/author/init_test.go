@@ -222,6 +222,24 @@ func TestInitNotDirectory(t *testing.T) {
 	}
 }
 
+// TestInitFailedWriteLeavesNothing is a write into an existing empty
+// directory whose first create fails: Init has created nothing, and its
+// error says so, which the command line reports as nothing written.
+func TestInitFailedWriteLeavesNothing(t *testing.T) {
+	dir := testenv.Dir(t)
+	beforeCreate = func(p string) {
+		if p == scaffoldOrder[0] {
+			plant(t, dir, p)
+		}
+	}
+	t.Cleanup(func() { beforeCreate = nil })
+	_, err := Init(dir, goldenName, false)
+	var we *WriteError
+	if !errors.As(err, &we) || we.Reason != hostfs.Exists || len(we.Written) != 0 || we.Left {
+		t.Fatalf("Init = %#v, want a write error that left nothing", err)
+	}
+}
+
 // TestInitFailedWrite is W3-8.5 (ADR-007 D1 item 6): a write that fails
 // part way stops Init, which reports the files already written, in order,
 // and removes nothing, neither the files nor the directories it made.
@@ -238,8 +256,10 @@ func TestInitFailedWrite(t *testing.T) {
 		written, err := Init(dir, goldenName, false)
 		beforeCreate = nil
 		var we *WriteError
-		if !errors.As(err, &we) || we.Reason != hostfs.Exists {
-			t.Fatalf("a failed create of %s: Init = %v, want a write error", stop, err)
+		if !errors.As(err, &we) || we.Reason != hostfs.Exists || !we.Left {
+			// Init created dir, so the failure leaves something, a
+			// file or not.
+			t.Fatalf("a failed create of %s: Init = %#v, want a write error that left what it made", stop, err)
 		}
 		if want := scaffoldOrder[:i]; !slices.Equal(we.Written, want) || !slices.Equal(written, want) {
 			t.Errorf("a failed create of %s reports %q written, want %q", stop, we.Written, want)

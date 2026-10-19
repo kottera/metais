@@ -138,7 +138,9 @@ func testRefusals() []Refusal {
 		Refusal{Code: finding.CodeUsageNotSourceDir, Cause: "--update is given with a packed package, which is not edited.", Next: nextTestSource},
 		Refusal{Code: finding.CodeUsageMissingFlag, Cause: "--dry-run is given without --update.", Next: nextTestDryRun},
 		Refusal{Code: finding.CodeDestinationNotDirectory, Cause: "An example's expected/, or a directory in it, is not a directory where --update writes.", Next: nextTestWrite},
-		Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "--update's write into, or removal from, an example's expected/ failed; what it wrote and removed is listed.", Next: nextTestWrite},
+		Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "--update's write into, or removal from, an example's expected/ failed after it had written or removed a file; what it wrote and removed is listed.", Next: nextTestWrite},
+		Refusal{Code: finding.CodeDestinationNothingWritten, Cause: "--update's first write into, or removal from, an example's expected/ failed; nothing was written or removed.", Next: nextTestWrite},
+		Refusal{Code: finding.CodeDestinationStagingExists, Cause: "An example's expected/ holds .metais-staging, left by a killed write or in use by another, before --update had written or removed anything.", Next: nextTestWrite},
 	)
 	have := map[finding.Code]bool{}
 	for _, r := range out {
@@ -964,10 +966,14 @@ func writeExpected(dir string, e *exampleRun, writes []string, faults fault.Set)
 }
 
 // updateFailed is the finding of an --update write or removal that failed,
-// listing what was written and removed before it.
+// listing what was written and removed before it. A failure before the
+// first write or removal changed nothing.
 func updateFailed(err error, u *testUpdate) finding.Finding {
-	if hostfs.ReasonOf(err) == hostfs.NotDirectory {
+	switch {
+	case hostfs.ReasonOf(err) == hostfs.NotDirectory:
 		return finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil)
+	case len(u.Written) == 0 && len(u.Removed) == 0:
+		return stageFailed(err)
 	}
 	return finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
 		"reason":  finding.String(writeReason(hostfs.ReasonOf(err))),

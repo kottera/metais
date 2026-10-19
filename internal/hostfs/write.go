@@ -605,6 +605,13 @@ func (r *record) release(w *Writer, from string, renamed bool) {
 	r.made = kept
 }
 
+// Created reports whether anything is recorded as created through w or a
+// Writer Sub opened beneath it, a file or a directory. A Writer that pins
+// nothing records nothing, and reports false.
+func (w *Writer) Created() bool {
+	return len(w.rec.made) > 0
+}
+
 // RemoveCreated removes what this render created and has not committed —
 // its staging directory, its temporary files, and the directories it
 // created that are empty — newest first, and nothing else (ADR-005 D14

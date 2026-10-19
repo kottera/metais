@@ -275,15 +275,17 @@ unpack MUST create it with its missing parent directories, by writing the
 entries into a staging directory it creates beside it, and renaming the
 staging directory to the target, so that the target never holds part of
 the package. A write that fails MUST leave nothing of the unpack behind, and MUST
-be reported as `output.destination.write_failed` with an empty `written`.
+be reported as `output.destination.nothing_written`.
 
 <a id="mts-aut-027"></a>**MTS-AUT-027** When the target is an existing
 directory that is empty, apart from top-level names beginning with `.` other
 than `.compiled` and regular files whose names end `.metais`, unpack MUST
 write the entries into it in place, and MUST leave every such name as it
-was. A write that fails MUST stop the unpack, MUST remove nothing it wrote,
-and MUST be reported as `output.destination.write_failed`, whose `written`
-lists the files already written, in the order written.
+was. A write that fails MUST stop the unpack and MUST remove nothing it
+wrote. When it has created a file or a directory in the target, it MUST be
+reported as `output.destination.write_failed`, whose `written` lists the
+files already written, in the order written; when it has created nothing,
+as `output.destination.nothing_written`.
 
 <a id="mts-aut-028"></a>**MTS-AUT-028** Unpack MUST refuse a target
 directory that holds any other entry with `output.destination.not_empty`,
@@ -360,8 +362,8 @@ source directory, beside an `examples/<name>/example.yaml`
 
 <a id="mts-smp-008"></a>**MTS-SMP-008** With `example`, the sample
 operation MUST refuse when `examples/<name>/` exists at all, with
-`output.destination.write_failed` whose `reason` is `exists` and whose
-`written` is empty, and MUST write nothing: an example is never merged into
+`output.destination.nothing_written` whose `reason` is `exists`, and MUST
+write nothing: an example is never merged into
 or replaced.
 
 <a id="mts-smp-009"></a>**MTS-SMP-009** A render with `sample` MUST render

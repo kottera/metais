@@ -47,7 +47,8 @@ func unpackDeclaration() *Command {
 		Refusal{Code: finding.CodeUsageNotPackedPackage, Cause: "The package operand is a source directory, which is already what unpack writes.", Next: nextUnpackPacked},
 		Refusal{Code: finding.CodeDestinationNotEmpty, Cause: "<dir> holds an entry other than the quiet ones.", Next: nextUnpackEmpty},
 		Refusal{Code: finding.CodeDestinationNotDirectory, Cause: "<dir>, or a directory above it, exists and is not a directory.", Next: nextUnpackEmpty},
-		Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A write failed: into a new directory nothing is left; into an existing one the files already written are listed and left in place.", Next: nextUnpackAgain},
+		Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A write into an existing directory failed after it had created something there; the files already written are listed and left in place.", Next: nextUnpackAgain},
+		Refusal{Code: finding.CodeDestinationNothingWritten, Cause: "A write failed and nothing was left: into a new directory, at any point; into an existing one, before it created anything.", Next: nextUnpackAgain},
 	)
 	return &Command{
 		Name: "unpack", Group: "Authoring",
@@ -169,6 +170,8 @@ func (s *session) unpackFailed(err error) outcome {
 		return o
 	case errors.As(err, &we) && we.Op == "open" && we.Reason == hostfs.NotDirectory:
 		return s.refuseWith(finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil))
+	case errors.As(err, &we) && !we.Left && len(we.Written) == 0:
+		return s.refuseWith(nothingWritten(we.Reason))
 	case errors.As(err, &we):
 		o := s.refuseWith(finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
 			"reason":  finding.String(writeReason(we.Reason)),

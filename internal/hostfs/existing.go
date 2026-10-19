@@ -25,6 +25,12 @@ import (
 // is found by the exclusive create that makes it.
 const StagingDir = ".metais-staging"
 
+// ErrStagingExists is Stage's refusal of a StagingDir already in the
+// output directory, a killed write's leftover or a concurrent write's
+// (ADR-005 A1 item 1). Its reason is Exists; errors.Is tells it apart from
+// every other Exists, which a command reports differently.
+var ErrStagingExists error = &Error{Op: "mkdir", Reason: Exists}
+
 // Status is what a write into an existing directory does to one planned
 // path (ADR-005 D15 item 4, D16 item 2).
 type Status string
@@ -456,7 +462,7 @@ func (p *plan) isCommitted(name string) bool {
 // which Check admitted (ADR-005 A1 item 1): it creates StagingDir inside
 // the output directory, exclusively, and holds it open until the write
 // ends. An existing one, a killed write's leftover or a concurrent write's,
-// is refused with Exists, and nothing is written. A check that refused its
+// is refused with ErrStagingExists, and nothing is written. A check that refused its
 // path is refused with that check's reason.
 //
 // The Output it returns writes only the planned paths, each beneath the
@@ -477,6 +483,9 @@ func (x *Existing) Stage(checks []PathCheck) (*Output, error) {
 		}
 	}
 	if err := x.w.Mkdir(StagingDir); err != nil {
+		if ReasonOf(err) == Exists {
+			return nil, ErrStagingExists
+		}
 		return nil, err
 	}
 	sw, err := x.w.Sub(StagingDir)
