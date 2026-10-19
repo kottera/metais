@@ -30,6 +30,8 @@ type layerRule struct {
 
 	// single-entry-point: Package's non-test files refer to Imports only
 	// inside its top-level function Function.
+	// test-only: no package but Package imports Package in its non-test
+	// files; tests may.
 	Package  string `json:"package,omitempty"`
 	Function string `json:"function,omitempty"`
 
@@ -69,6 +71,8 @@ func readLayers(path string) ([]layerRule, error) {
 			ok = json.Unmarshal(r.Packages, &p) == nil && p != "" && r.Package == "" && r.Imports == "" && r.Importers == nil && r.Symbols == nil
 		case "single-entry-point":
 			ok = r.Package != "" && r.Imports != "" && r.Function != "" && r.Packages == nil && r.Importers == nil && r.Symbols == nil
+		case "test-only":
+			ok = r.Package != "" && r.Packages == nil && r.Imports == "" && r.Function == "" && r.Importers == nil && r.Symbols == nil
 		case "only-importers":
 			ok = r.Imports != "" && len(r.Importers) > 0 && r.Packages == nil && r.Package == "" && r.Symbols == nil
 		case "only-referrers":
@@ -123,6 +127,15 @@ func layerViolations(rules []layerRule, pkgs []*listedPackage, files []*sourceFi
 					if matchPattern(r.Imports, imp) {
 						bad = append(bad, fmt.Sprintf("%s imports %s, which only %s may (%s)", p.ImportPath, imp, strings.Join(r.Importers, ", "), r.Reason))
 					}
+				}
+			}
+		case "test-only":
+			for _, p := range pkgs {
+				if p.Standard || p.Module == nil || !p.Module.Main || p.ImportPath == r.Package {
+					continue
+				}
+				if slices.Contains(p.Imports, r.Package) {
+					bad = append(bad, fmt.Sprintf("%s imports %s outside its tests (%s)", p.ImportPath, r.Package, r.Reason))
 				}
 			}
 		case "only-referrers":
@@ -224,6 +237,7 @@ func TestLayersControl(t *testing.T) {
 		"github.com/kottera/metais/internal/liquid/value depends on golang.org/x/sys/unix, outside the standard library",
 		"github.com/kottera/metais/internal/liquid/value depends on golang.org/x/term, outside the standard library",
 		"github.com/kottera/metais/internal/liquid/value imports golang.org/x/term, which only github.com/kottera/metais/internal/hostenv may",
+		"github.com/kottera/metais/internal/render imports github.com/kottera/metais/internal/pkgtree/pkgtreetest outside its tests",
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("the layering rules over testdata/layers reported\n\t%s\nwant\n\t%s", strings.Join(got, "\n\t"), strings.Join(want, "\n\t"))
@@ -232,13 +246,14 @@ func TestLayersControl(t *testing.T) {
 
 func TestReadLayersRefusesMalformedRules(t *testing.T) {
 	for name, table := range map[string]string{
-		"no rules":      `{"rules": []}`,
-		"unknown kind":  `{"rules": [{"rule": "no-cycles", "reason": "r"}]}`,
-		"unknown field": `{"rules": [{"rule": "only-importers", "imports": "a", "importers": ["b"], "reason": "r", "except": "c"}]}`,
-		"no reason":     `{"rules": [{"rule": "only-importers", "imports": "a", "importers": ["b"]}]}`,
-		"missing field": `{"rules": [{"rule": "single-entry-point", "package": "a", "imports": "b", "reason": "r"}]}`,
-		"mixed fields":  `{"rules": [{"rule": "only-importers", "imports": "a", "importers": ["b"], "symbols": ["os.Args"], "reason": "r"}]}`,
-		"wrong shape":   `{"rules": [{"rule": "standard-library-only", "packages": ["a"], "reason": "r"}]}`,
+		"no rules":               `{"rules": []}`,
+		"unknown kind":           `{"rules": [{"rule": "no-cycles", "reason": "r"}]}`,
+		"unknown field":          `{"rules": [{"rule": "only-importers", "imports": "a", "importers": ["b"], "reason": "r", "except": "c"}]}`,
+		"no reason":              `{"rules": [{"rule": "only-importers", "imports": "a", "importers": ["b"]}]}`,
+		"missing field":          `{"rules": [{"rule": "single-entry-point", "package": "a", "imports": "b", "reason": "r"}]}`,
+		"mixed fields":           `{"rules": [{"rule": "only-importers", "imports": "a", "importers": ["b"], "symbols": ["os.Args"], "reason": "r"}]}`,
+		"wrong shape":            `{"rules": [{"rule": "standard-library-only", "packages": ["a"], "reason": "r"}]}`,
+		"test-only with imports": `{"rules": [{"rule": "test-only", "package": "a", "imports": "b", "reason": "r"}]}`,
 	} {
 		path := filepath.Join(testenv.Dir(t), "layers.json")
 		if err := os.WriteFile(path, []byte(table), 0o644); err != nil {

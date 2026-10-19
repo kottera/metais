@@ -120,6 +120,8 @@ func TestNumberPredicates(t *testing.T) {
 		{"12345678901234567890", true, false, true, 0},
 		{"9007199254740992.0", true, false, false, 0},
 		{"1e300", true, false, false, 0},
+		{"1E300", true, false, false, 0},
+		{"42E0", true, true, false, 42},
 		{"1e-300", false, false, false, 0},
 	} {
 		n := mustNumber(t, c.lit)
