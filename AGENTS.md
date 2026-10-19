@@ -61,13 +61,32 @@ say so, and split the prerequisite into its own work item.
 
 The module is `github.com/kottera/metais`. Its `go.mod` `toolchain` line
 names the exact toolchain every build and test uses, fetched under the
-default `GOTOOLCHAIN=auto` (ADR-010 D1). The gate every change passes before
-merge is (ADR-010 D15 item 3):
+default `GOTOOLCHAIN=auto` (ADR-010 D1). There is no CI. The gate is two
+tiers (ADR-010 D15 item 3, as Amendment A5 divides it), and
+`.claude/skills/verification-gate/gate.sh` runs either one:
+
+- **The scoped tier, before every change merges:** `gate.sh`. It runs
+  build, vet and gofmt over the whole module, `go mod tidy -diff`, the
+  static build and the six-target cross vet and build. It runs
+  `go test -race -count=1` over the packages the change touches and every
+  package that imports them. On every run it also runs the spec and
+  generated-data tripwires:
+  - `internal/finding` and `internal/specdata`;
+  - `internal/conformance`'s well-formedness tests;
+  - the help goldens;
+  - the specification's own text tests;
+  - the specdata drift.
+
+  `gate-select.sh` prints what a change reaches.
+- **The wave tier:** `gate.sh wave`, the full list below. It runs once per
+  wave, at the wave's verification, on a fresh clone of the merged tree.
+  It also runs before merging any change to a shared seam: `go.mod`,
+  `go.sum`, `internal/fault`, `internal/testenv`, or the gate's own scripts.
 
 ```bash
 go build ./...
 go vet ./...
-go test -race ./...
+go test -race -count=1 ./...
 go mod tidy -diff    # go.mod and go.sum stay tidy
 gofmt -l .           # prints nothing
 CGO_ENABLED=0 go build -trimpath ./cmd/metais
@@ -78,16 +97,23 @@ done
 go generate ./internal/specdata && git diff --exit-code internal/specdata
 ```
 
-There is no CI; this list is the gate. The conformance vectors run as part
-of `go test`. The race detector needs cgo, so `go test -race` runs with it
-enabled; the static build is the separate check of a cgo-free binary.
+Run either tier in the background, and watch it with `gate-wait.sh` until
+it says `DONE`. After a fix, or after a rebase onto a sibling,
+`gate.sh --resume` re-runs only what the change since the last run reaches.
+`go test -p` is capped at a third of the host's cores, the share a fuzzer
+gets, because the host is shared; `METAIS_GATE_P` overrides it. The
+conformance vectors run as part of `go test`. The race detector needs cgo,
+so `go test -race` runs with it enabled; the static build is the separate
+check of a cgo-free binary.
 
-Two skills under `.claude/skills/` carry the procedure behind this list.
+Two skills under `.claude/skills/` carry the procedure behind the tiers.
 Agents that do not load skills read them as plain files:
 
-- **`verification-gate`**: read it before you run the gate, before you
-  publish a test run as evidence, and whenever a step goes red. Its `gate.sh`
-  runs the list above, and `gate-wait.sh` watches the run.
+- **`verification-gate`**: read it before you run either tier, before you
+  publish a test run as evidence, and whenever a step goes red. It covers
+  `gate.sh`, `gate-wait.sh`, `gate-select.sh` and `gate-why.sh`, which
+  re-runs one test alone. It also covers resuming, what to re-run after a
+  rebase, and how to tell from a red's mechanism whether it is yours.
 - **`root-cause`**: read it the moment something fails and you do not yet
   know why, before re-running anything.
 
