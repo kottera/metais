@@ -22,6 +22,7 @@ import (
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/pkgtree"
+	"github.com/kottera/metais/internal/schema"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/unitext"
 	"github.com/kottera/metais/internal/version"
@@ -55,8 +56,10 @@ func renderDeclaration() *Command {
 			"the inputs. Then every output is planned, an asset or a mirror as each file it writes, its " +
 			"path checked by the portable-path rules, and rendered in memory: every output is attempted, " +
 			"and each reports its first error. An asset is copied as it is, never rendered: its size counts " +
-			"against the output limits, and its bytes are read from the package as it is written. If any " +
-			"finding is an error, nothing is written anywhere. A container output is one zip of its entries, " +
+			"against the output limits, and its bytes are read from the package as it is written. An output " +
+			"declaring newline: crlf then has its line endings made CR LF, and one naming a validate schema " +
+			"is parsed and validated against it, every finding of every output reported. If any finding is " +
+			"an error, nothing is written anywhere. A container output is one zip of its entries, " +
 			"each rendered as an output is, in the order its profile and its first entries give; its zip is " +
 			"written as it is assembled.\n\n" +
 			"--out is required, and names a directory that does not exist yet. The outputs are written " +
@@ -124,6 +127,11 @@ func renderRefusals(c *Command) {
 		case strings.HasPrefix(string(e.Code), "limit.exceeded."), strings.HasPrefix(string(e.Code), "output.path."),
 			strings.HasPrefix(string(e.Code), "output.expression."), strings.HasPrefix(string(e.Code), "output.container."):
 			r = Refusal{e.Code, "An output is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextRenderTemplates}
+		case family == "output" && e.Subject == finding.SubjectOutput:
+			// An output's text its kind's reader refuses, or its schema
+			// does, and a validate a rendered path's kind cannot take
+			// (ADR-005 D11 items 2 and 4).
+			r = Refusal{e.Code, "An output fails its validation (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextRenderTemplates}
 		default:
 			continue
 		}
@@ -332,8 +340,13 @@ func runRender(s *session, p args.Parsed) outcome {
 	// Phase 3: the destination, every refusal reported with the others
 	// (ADR-005 D15 item 8).
 	fs = append(fs, checkDestination(out)...)
-	// Phase 4: render every output, each to its first error.
-	fs = append(fs, renderPlan(pkg, plan, ts, r, lim)...)
+	// The output validation schemas, compiled before any output is
+	// rendered (ADR-005 D11 item 3).
+	schemas, sfs := outputSchemas(pkg, lim)
+	fs = append(fs, sfs...)
+	// Phase 4: render every output, each to its first error, and
+	// transform and validate each file that rendered (ADR-005 D13 item 4).
+	fs = append(fs, renderPlan(pkg, plan, ts, r, lim, schemas)...)
 	// A warning that --fail-on warning makes a failure fails the render
 	// before it writes anything (ADR-006 D2 item 5).
 	if s.fails(fs) {
@@ -469,8 +482,8 @@ func (p *planner) tree(decls []manifest.Output, owner, in string, depth int, fan
 	var tree []*planned
 	for _, d := range decls {
 		switch {
-		case d.Escape == "html", d.Newline == "crlf", d.Validate != "":
-			panic("cli: escape, newline and validate are not part of this version of metais")
+		case d.Escape == "html":
+			panic("cli: escape is not part of this version of metais")
 		}
 		id := cmp.Or(d.ID, owner)
 		x, xfs := template.ParseExprs(d, id, p.at, p.lim)
@@ -953,7 +966,7 @@ func writeFailed(r hostfs.Reason) finding.Finding {
 // tag renders through the plan's placement map (D5 item 6). Then each
 // container whose entries all rendered is measured, and held to
 // output-size.
-func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r *template.Renderer, lim limits.Set) []finding.Finding {
+func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r *template.Renderer, lim limits.Set, schemas map[string]*schema.Compiler) []finding.Finding {
 	var fs []finding.Finding
 	reported := map[string]bool{}
 	ready := map[string]bool{}
@@ -1057,6 +1070,7 @@ func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r 
 				continue
 			}
 			pf.bytes = out
+			fs = append(fs, transform(pkg, pf, schemas, lim)...)
 		}
 	}
 	render(plan)

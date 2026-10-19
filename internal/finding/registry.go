@@ -1255,6 +1255,21 @@ var registry = withSchemaEntries([]Entry{
 		Statements: []string{"MTS-OUT-007"},
 	},
 	{
+		Code:     "output.parse",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectOutput,
+		Params: []ParamSpec{
+			{Name: "form", Type: TypeString, Meaning: "The form the output is parsed in, by its kind: json or yaml.", Always: true},
+			{Name: "rule", Type: TypeString, Meaning: "The code an input file breaking the same rule of the form is reported with, such as json.syntax or yaml.alias.", Always: true},
+		},
+		Message:    "The output {output} is not {form} the specification reads: it breaks the rule {rule} reports for an input.",
+		Hint:       "Correct the template so that it writes valid {form} at this place; the output was not validated against its schema.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-TRN-014", "MTS-TRN-015"},
+	},
+	{
 		Code:     "output.path.case_collision",
 		Severity: SeverityError,
 		Class:    ClassContent,

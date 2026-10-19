@@ -1,0 +1,6 @@
+LF line
+CRLF line
+lone CRnote: one
+two
+three
+end

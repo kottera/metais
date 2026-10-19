@@ -1,0 +1,106 @@
+[
+  {
+    "code": "output.parse",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "alias"
+    },
+    "location": {
+      "origin": "output",
+      "file": "alias.yaml",
+      "line": 1,
+      "column": 4,
+      "pointer": "/a"
+    },
+    "params": {
+      "form": "yaml",
+      "rule": "yaml.anchor"
+    }
+  },
+  {
+    "code": "output.parse",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "alias"
+    },
+    "location": {
+      "origin": "output",
+      "file": "alias.yaml",
+      "line": 2,
+      "column": 4,
+      "pointer": "/b"
+    },
+    "params": {
+      "form": "yaml",
+      "rule": "yaml.alias"
+    }
+  },
+  {
+    "code": "output.declaration.validate_kind",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "table"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 25,
+      "column": 15,
+      "pointer": "/outputs/3/validate"
+    },
+    "params": {
+      "kind": "csv"
+    }
+  },
+  {
+    "code": "output.parse",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "trailing"
+    },
+    "location": {
+      "origin": "output",
+      "file": "trailing.json",
+      "line": 1,
+      "column": 9,
+      "pointer": ""
+    },
+    "params": {
+      "form": "json",
+      "rule": "json.syntax"
+    }
+  },
+  {
+    "code": "output.parse",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "twice"
+    },
+    "location": {
+      "origin": "output",
+      "file": "twice.json",
+      "line": 1,
+      "column": 10,
+      "pointer": "/a"
+    },
+    "params": {
+      "form": "json",
+      "rule": "json.duplicate_name"
+    },
+    "related": [
+      {
+        "origin": "output",
+        "file": "twice.json",
+        "line": 1,
+        "column": 2,
+        "pointer": "/a",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]

@@ -120,7 +120,7 @@ func TestAssetBytesStreamed(t *testing.T) {
 	}
 	r := template.NewRenderer(ts, b, lim, 0)
 	plan, fs := planOutputs(pkg, lim, s, r)
-	fs = append(fs, renderPlan(pkg, plan, ts, r, lim)...)
+	fs = append(fs, renderPlan(pkg, plan, ts, r, lim, nil)...)
 	if len(fs) != 0 || len(plan) != 3 {
 		t.Fatalf("plan %d files, findings %v", len(plan), fs)
 	}

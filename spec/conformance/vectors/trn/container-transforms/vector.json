@@ -1,0 +1,56 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/container-transforms",
+  "title": "A container's template entry, at any depth, is converted to CRLF and validated against its schema before its container is assembled, so the zip holds the converted bytes; an entry its schema refuses refuses the render, located by the container's path and its own, and nothing is written",
+  "statements": [
+    "MTS-TRN-013",
+    "MTS-TRN-014",
+    "MTS-TRN-015"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "determinism"
+  ],
+  "requires": [],
+  "notes": "The meeting of W5-6's containers and W5-7's CRLF conversion and output validation.",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "invalid",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/invalid.json"
+          }
+        }
+      ]
+    }
+  ]
+}

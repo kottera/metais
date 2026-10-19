@@ -25,14 +25,7 @@ import (
 // IsSchemaFile reports whether entry is a schema file: a JSON or YAML file
 // under InputsDir (ADR-003 D3 item 1).
 func IsSchemaFile(entry string) bool {
-	if !strings.HasPrefix(entry, InputsDir) {
-		return false
-	}
-	switch path.Ext(entry) {
-	case ".json", ".yaml", ".yml":
-		return true
-	}
-	return false
+	return strings.HasPrefix(entry, InputsDir) && schemaExtension(entry)
 }
 
 // Decode reads the bytes of a schema file into the data model by the
@@ -44,6 +37,7 @@ type Decode func(entry string, src []byte) (value.Value, []finding.Finding)
 type Compiler struct {
 	lib     *jsonschema.Compiler
 	lim     limits.Set
+	scope   string // the directory every reference stays beneath, with a slash
 	meter   *regexprofile.Meter
 	schemas map[string]*Schema     // by entry
 	docs    map[string]value.Value // each file as authored, by entry
@@ -77,7 +71,8 @@ type file struct {
 }
 
 // NewCompiler compiles every schema file of tree (ADR-003 D3 item 1) under
-// lim. It is the one call site of jsonschema.NewCompiler in the module
+// lim, or, given output, the output validation schemas NewOutputCompiler
+// names. It is the one call site of jsonschema.NewCompiler in the module
 // (ADR-010 D5 item 1), and configures the library closed:
 //
 //   - the draft is 2020-12;
@@ -95,31 +90,28 @@ type file struct {
 // package, escapes InputsDir, names a file by its path where it has an $id, or
 // resolves to nothing; and two resources with one URI. Every finding of
 // every file is reported at once. When there is any, the compiler is nil.
-func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode) (*Compiler, []finding.Finding) {
-	c := &Compiler{
-		lim:     lim,
-		meter:   regexprofile.NewMeter(lim.Value(limits.RegexWork)),
-		schemas: map[string]*Schema{},
-		docs:    map[string]value.Value{},
-		roots:   map[string]root{},
-		anchors: map[string]root{},
-		refs:    map[root]string{},
-		dynRefs: map[root]string{},
-		subs:    map[root]*Schema{},
-	}
+func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode, output ...outputScope) (*Compiler, []finding.Finding) {
+	var c *Compiler
 	var files []*file
 	var findings []finding.Finding
-	for _, entry := range tree.List() {
-		if !IsSchemaFile(entry) {
-			continue
-		}
-		f, fs := c.read(tree, entry, decode)
-		findings = append(findings, fs...)
-		if f != nil {
-			files = append(files, f)
+	if len(output) > 0 {
+		o := output[0]
+		c = newCompiler(lim, o.scope, o.meter)
+		files, findings = c.reached(tree, o.roots, decode)
+	} else {
+		c = newCompiler(lim, InputsDir, nil)
+		for _, entry := range tree.List() {
+			if !IsSchemaFile(entry) {
+				continue
+			}
+			f, fs := c.read(tree, entry, decode)
+			findings = append(findings, fs...)
+			if f != nil {
+				files = append(files, f)
+			}
 		}
 	}
-	findings = append(findings, checkResources(files)...)
+	findings = append(findings, c.checkResources(files)...)
 	if len(findings) > 0 {
 		return nil, findings
 	}
@@ -162,6 +154,112 @@ func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode) (*Compiler, [
 		return nil, findings
 	}
 	return c, nil
+}
+
+// outputScope is what NewOutputCompiler compiles: its roots, beneath
+// scope, charged to meter.
+type outputScope struct {
+	scope string
+	roots []string
+	meter *regexprofile.Meter
+}
+
+// NewOutputCompiler compiles the output validation schemas roots (ADR-005
+// D11), each a schema file of tree beneath scope, the top-level directory
+// that holds them, with a slash; "" is the package root. It is
+// NewCompiler with "inputs/" read as scope (ADR-003 D5 item 5), and with
+// the files it loads being roots and every JSON or YAML file of tree beneath
+// scope that their references reach by path, transitively, since
+// a directory other than inputs/ may hold files that are not schemas. A
+// reference into .compiled/ escapes the package's content. Its patterns
+// are charged to meter, the command's matching budget, or to a meter of
+// its own when meter is nil.
+func NewOutputCompiler(tree pkgtree.Tree, scope string, roots []string, lim limits.Set, decode Decode, meter *regexprofile.Meter) (*Compiler, []finding.Finding) {
+	return NewCompiler(tree, lim, decode, outputScope{scope: scope, roots: roots, meter: meter})
+}
+
+// reached reads roots and every JSON or YAML file of tree beneath the
+// compiler's scope that their references reach by path, transitively, in
+// byte order of their entries.
+func (c *Compiler) reached(tree pkgtree.Tree, roots []string, decode Decode) ([]*file, []finding.Finding) {
+	var files []*file
+	var findings []finding.Finding
+	queue := slices.Clone(roots)
+	slices.Sort(queue)
+	queue = slices.Compact(queue)
+	seen := map[string]bool{}
+	for _, e := range queue {
+		seen[e] = true
+	}
+	for len(queue) > 0 {
+		entry := queue[0]
+		queue = queue[1:]
+		f, fs := c.read(tree, entry, decode)
+		findings = append(findings, fs...)
+		if f == nil {
+			continue
+		}
+		files = append(files, f)
+		var next []string
+		for _, r := range f.walk.refs {
+			u, err := url.Parse(r.text)
+			if err != nil {
+				continue
+			}
+			t := r.base.ResolveReference(u)
+			e, ok := strings.CutPrefix(t.Path, "/")
+			if t.Scheme != "metais" || !ok || seen[e] || !c.inScope(t.Path) || !schemaExtension(e) {
+				continue
+			}
+			if _, err := tree.Stat(e); err != nil {
+				continue
+			}
+			seen[e] = true
+			next = append(next, e)
+		}
+		slices.Sort(next)
+		queue = append(queue, next...)
+	}
+	slices.SortFunc(files, func(a, b *file) int { return strings.Compare(a.entry, b.entry) })
+	return files, findings
+}
+
+// newCompiler is a compiler with nothing compiled, whose references stay
+// beneath scope.
+func newCompiler(lim limits.Set, scope string, meter *regexprofile.Meter) *Compiler {
+	if meter == nil {
+		meter = regexprofile.NewMeter(lim.Value(limits.RegexWork))
+	}
+	return &Compiler{
+		lim:     lim,
+		scope:   scope,
+		meter:   meter,
+		schemas: map[string]*Schema{},
+		docs:    map[string]value.Value{},
+		roots:   map[string]root{},
+		anchors: map[string]root{},
+		refs:    map[root]string{},
+		dynRefs: map[root]string{},
+		subs:    map[root]*Schema{},
+	}
+}
+
+// Meter is the matching budget the compiler's patterns are charged to.
+func (c *Compiler) Meter() *regexprofile.Meter { return c.meter }
+
+// inScope reports whether the path of a metais: URI lies beneath the
+// compiler's scope, and outside .compiled/.
+func (c *Compiler) inScope(p string) bool {
+	return strings.HasPrefix(p, "/"+c.scope) && !strings.HasPrefix(p, "/.compiled/")
+}
+
+// schemaExtension reports whether entry is named as a JSON or YAML file.
+func schemaExtension(entry string) bool {
+	switch path.Ext(entry) {
+	case ".json", ".yaml", ".yml":
+		return true
+	}
+	return false
 }
 
 // read checks schema-size, decodes entry and walks it.
@@ -214,7 +312,7 @@ func builtIn(uri string) bool {
 
 // checkResources is the pre-check across files: two resources with one
 // URI (ADR-003 D5 item 6), and every reference's target (D5 items 3 to 5).
-func checkResources(files []*file) []finding.Finding {
+func (c *Compiler) checkResources(files []*file) []finding.Finding {
 	var findings []finding.Finding
 	byRetrieval := map[string]*file{}
 	for _, f := range files {
@@ -249,7 +347,7 @@ func checkResources(files []*file) []finding.Finding {
 	}
 	for _, f := range files {
 		for _, r := range f.walk.refs {
-			if code, p := checkRef(r, known, byRetrieval); code != "" {
+			if code, p := c.checkRef(r, known, byRetrieval); code != "" {
 				p["reference"] = fstr(r.text)
 				findings = append(findings, report(code, f.entry, r.ptr, p))
 			}
@@ -260,7 +358,7 @@ func checkResources(files []*file) []finding.Finding {
 
 // checkRef returns the finding's code and parameters for a reference that
 // does not resolve inside the package, or "" for one that does.
-func checkRef(r reference, known map[string]owner, byRetrieval map[string]*file) (finding.Code, finding.Params) {
+func (c *Compiler) checkRef(r reference, known map[string]owner, byRetrieval map[string]*file) (finding.Code, finding.Params) {
 	u, err := url.Parse(r.text)
 	if err != nil {
 		return CodeRefUnresolved, finding.Params{}
@@ -272,7 +370,7 @@ func checkRef(r reference, known map[string]owner, byRetrieval map[string]*file)
 	t.Fragment, t.RawFragment = "", ""
 	target := t.String()
 	if _, ok := known[target]; ok {
-		if t.Scheme == "metais" && !strings.HasPrefix(t.Path, "/"+InputsDir) {
+		if t.Scheme == "metais" && !c.inScope(t.Path) {
 			return CodeRefEscapes, finding.Params{}
 		}
 		return "", nil
@@ -281,7 +379,7 @@ func checkRef(r reference, known map[string]owner, byRetrieval map[string]*file)
 		return "", nil
 	}
 	if t.Scheme == "metais" {
-		if !strings.HasPrefix(t.Path, "/"+InputsDir) {
+		if !c.inScope(t.Path) {
 			return CodeRefEscapes, finding.Params{}
 		}
 		if f, ok := byRetrieval[target]; ok && f.hasID {

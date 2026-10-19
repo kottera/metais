@@ -50,8 +50,14 @@ func (p *path) pointer() *finding.Path {
 }
 
 func (p *parser) document() (value.Value, *node) {
-	if n := int64(len(p.src)); n > p.lim.Value(limits.InputSize) {
-		p.limitExceeded(limits.InputSize, 0, nil, false, n)
+	// A rendered output's text is bounded by output-size, an input's by
+	// input-size.
+	size := limits.InputSize
+	if p.from.Output {
+		size = limits.OutputSize
+	}
+	if n := int64(len(p.src)); n > p.lim.Value(size) {
+		p.limitExceeded(size, 0, nil, false, n)
 		return nil, nil
 	}
 	if !p.encoding() {

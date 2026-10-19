@@ -114,3 +114,61 @@ of the author's whose path is `mimetype` with
 `META-INF/container.xml` with `output.container.missing_entry`; and it MUST
 report `output.container.space`, a warning, for each entry whose path holds
 U+0020.
+
+## 10.3 CRLF conversion
+
+The transforms run on an output's bytes in memory, after the output renders
+and before anything is written: conversion of line endings first, then
+validation, so that a schema judges exactly the bytes that will be written.
+
+A template is best kept with LF line endings, since a checkout that converts
+them would change the package; an output a platform needs with CR LF gets
+them from the declaration instead.
+
+<a id="mts-trn-013"></a>**MTS-TRN-013** When a template output, a mirror,
+or a container's template entry declares `newline: crlf`, a processor MUST
+convert the bytes of its file after it renders and before it is validated
+(§10.4), and before a container holding it is assembled: every LF (U+000A)
+not immediately preceded by CR (U+000D) becomes CR LF, and a CR LF and a lone
+CR are left as they are, so the conversion is idempotent and a template
+written with CR LF converts to the same bytes. The conversion applies to the
+whole file, the bytes a value or a tag placed in it included. Under `newline:
+as-written`, the default, a processor MUST write the bytes the template
+produced.
+
+## 10.4 Output validation
+
+An output may name a schema its file must satisfy, so that a package whose
+output feeds another program can promise that the data it writes is valid,
+and a supplier whose data would make it invalid hears so before anything is
+written.
+
+<a id="mts-trn-014"></a>**MTS-TRN-014** When a template output, or a
+container's template entry, names a schema with `validate`, a processor MUST
+parse the final bytes of each of its files, after §10.3, by its kind
+([chapter 9](09-outputs.md)): a `json` file by the rules of a JSON input file
+and a `yaml` file by those of a YAML input file ([chapter
+6](06-supplying-inputs.md)), after a single leading byte order mark is
+removed; and MUST validate the value against the schema by the dialect,
+keywords, formats and reference rules of [chapter
+5](05-data-specification.md), with `inputs/` read as the top-level directory
+that holds the `validate` file. The schema files compiled with it are the
+`validate` file and each JSON or YAML file beneath that directory that its
+references reach by path, transitively; beneath `inputs/`, every schema file
+there. A reference into `.compiled/` escapes the package's content. A schema
+that does not compile MUST refuse the render with the findings chapter 5
+gives it, and an output whose kind is neither `json` nor `yaml` with
+`output.declaration.validate_kind`, located at its `validate`.
+
+<a id="mts-trn-015"></a>**MTS-TRN-015** An output whose text does not parse
+by its kind's rules, or whose value fails its schema, MUST refuse the render,
+and the processor MUST write nothing. It MUST report every finding of every
+validated file: a rule of the form the text breaks as `output.parse`, whose
+`rule` names the code an input file breaking the same rule gets; a limit the
+text breaches as `limit.exceeded.output`; and each failure of the schema by
+the `output.` family of §12.3. Each is about the output, named by its `id`
+(an entry without one by the nearest enclosing declaration's), and located
+with origin `output`, its file the output's path (for a container's entry,
+the container's path and the entry's, joined by `/`), its pointer the JSON
+Pointer into the output's value, and its line and column where the parser
+gives them.

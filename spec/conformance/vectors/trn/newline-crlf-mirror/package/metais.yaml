@@ -1,0 +1,15 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: A package whose mirrored templates are written with CRLF line endings.
+guide: Render it.
+inputs: []
+outputs:
+  - id: site
+    mirror: site
+    path: site
+    newline: crlf
+  - id: plain
+    mirror: site
+    path: plain

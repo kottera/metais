@@ -1,0 +1,18 @@
+metais: "1.0"
+name: org.example.validated
+version: 1.0.0
+title: Validated
+description: A package whose outputs are validated.
+guide: Supply a label.
+inputs:
+  - name: label
+    title: Label
+    schema: inputs/label.schema.json
+outputs:
+  - id: json
+    template: report.json.liquid
+    validate: references/report.schema.json
+  - id: yaml
+    template: report.yaml.liquid
+    validate: references/report.schema.json
+    newline: crlf

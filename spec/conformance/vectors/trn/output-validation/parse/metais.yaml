@@ -1,0 +1,28 @@
+metais: "1.0"
+name: org.example.validated
+version: 1.0.0
+title: Validated
+description: A package whose outputs are validated.
+guide: Supply a label.
+inputs:
+  - name: label
+    title: Label
+    schema: inputs/label.schema.json
+outputs:
+  - id: trailing
+    template: trailing.json.liquid
+    validate: references/s.json
+  - id: twice
+    template: twice.json.liquid
+    validate: references/s.json
+  - id: alias
+    template: alias.yaml.liquid
+    validate: references/s.json
+  - id: table
+    template: fine.json.liquid
+    kind: csv
+    path: table.csv
+    validate: references/s.json
+  - id: fine
+    template: fine.json.liquid
+    validate: references/s.json

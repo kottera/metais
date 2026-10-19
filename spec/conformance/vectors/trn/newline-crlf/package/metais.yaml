@@ -1,0 +1,21 @@
+metais: "1.0"
+name: org.example.crlf
+version: 1.0.0
+title: CRLF
+description: A package whose outputs convert their line endings.
+guide: Supply a note.
+inputs:
+  - name: note
+    title: Note
+    schema: inputs/note.schema.json
+outputs:
+  - id: converted
+    template: notes.txt.liquid
+    newline: crlf
+  - id: as_written
+    template: notes.txt.liquid
+    path: as-written.txt
+  - id: declared
+    template: notes.txt.liquid
+    path: declared.txt
+    newline: as-written

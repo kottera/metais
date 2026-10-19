@@ -1,0 +1,38 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/newline-crlf-embed",
+  "title": "newline: crlf converts the bytes embed placed with the rest of the file, leaving the input's CR LF and lone CR as they are; without it the embedded bytes are written as supplied",
+  "statements": [
+    "MTS-TRN-013",
+    "MTS-TAG-001"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "The meeting of W5-3's embed and W5-7's CRLF conversion (ADR-005 D10 item 3).",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

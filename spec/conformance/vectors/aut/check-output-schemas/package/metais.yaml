@@ -1,0 +1,22 @@
+metais: "1.0"
+name: org.example.schemas
+version: 1.0.0
+title: Schemas
+description: A package whose output schemas do not compile.
+guide: Supply a label.
+inputs:
+  - name: label
+    title: Label
+    schema: inputs/label.schema.json
+outputs:
+  - id: misspelt
+    template: data.json.liquid
+    validate: references/misspelt.json
+  - id: escapes
+    template: data.json.liquid
+    path: escapes.json
+    validate: assets/schemas/escapes.json
+  - id: reached
+    template: data.json.liquid
+    path: reached.json
+    validate: references/reached.json

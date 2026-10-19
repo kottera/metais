@@ -1,0 +1,54 @@
+[
+  {
+    "code": "output.type",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "bundle"
+    },
+    "location": {
+      "origin": "output",
+      "file": "bundle.zip/data.json",
+      "line": 2,
+      "column": 8,
+      "pointer": "/n"
+    },
+    "schema": {
+      "entry": "references/data.schema.json",
+      "pointer": "/properties/n/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "output.type",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "inner"
+    },
+    "location": {
+      "origin": "output",
+      "file": "bundle.zip/inner.zip/deep.json",
+      "line": 2,
+      "column": 8,
+      "pointer": "/n"
+    },
+    "schema": {
+      "entry": "references/data.schema.json",
+      "pointer": "/properties/n/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  }
+]
