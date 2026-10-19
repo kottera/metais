@@ -4,7 +4,9 @@
 [Amendment A1](#amendments) (`golang.org/x/sys` and `golang.org/x/term` on
 unix only) is proposed by PLAN-2026-10-metais-v1 Wave 1 and awaits Ed
 Funnekotter's ratification; the passages it changes are marked *(A1,
-proposed)*.
+proposed)*. [Amendment A2](#amendments) (the `MapOrder` fault is named by
+`internal/template` and carried into the engine by a plain option) is
+accepted by Ed Funnekotter; the passages it changes are marked *(A2)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R18 item 1 (one static binary, the supported targets,
@@ -511,7 +513,9 @@ engine of the dialect ADR-004 pins.**
      bytes (an `embed`ded input's raw bytes, rendered unchanged), array,
      **ordered object** (keys in a defined order, ADR-004's), lazy range, and
      the `forloop`/`tablerowloop` drops. **No Go map is ever iterated by the
-     engine**; objects iterate their key slice.
+     engine**; objects iterate their key slice. The one exception is the
+     path `Env.UnorderedObjects` selects, which only D13's `MapOrder` fault
+     sets. *(A2)*
    - **Renderer**: one goroutine, a scope stack, the `break`/`continue`
      interrupts, the partial loader, an escaper hook for ADR-004's per-output
      `escape: html`, and **the meter** (item 4).
@@ -537,6 +541,7 @@ engine of the dialect ADR-004 pins.**
        Partials Partials
        Escape   func(dst []byte, s string) []byte // nil = no escaping
        Meter    *Meter
+       UnorderedObjects bool // test-only: object iteration follows a Go map (D13's MapOrder, A2)
    }
    func Render(w io.Writer, t *Template, env *Env) *Error
    func Eval(e *ast.Expr, env *Env) (value.Value, *Error)
@@ -939,7 +944,7 @@ the detector must fail on, and both run in every `go test`.**
    | confinement (R12 item 1, SC6) | `SkipConfine`: the output path check returns success | `internal/hostfs` |
    | digests verified (R1 item 5) | `SkipDigest`: verification returns success | `internal/pkgtree` |
    | read in place (R2 item 1) | `UnpackToTemp`: browse extracts the entry to a temporary file and reads it back | `internal/browse` |
-   | determinism (R10 items 2–3) | `MapOrder`: object iteration follows a Go map | `internal/liquid/value` |
+   | determinism (R10 items 2–3) | `MapOrder`: object iteration follows a Go map | `internal/template`, which sets the engine's `Env.UnorderedObjects` *(A2)* |
    | every finding at once (R6 item 1, SC8) | `FirstFinding`: the report keeps only the first error | `internal/finding` |
 
 3. **The harness runs the tool in-process.** `internal/cli.Run(ctx,
@@ -1475,6 +1480,50 @@ D16 item 3.
 
 Both modules stay in `go.mod` at D3's versions, since the darwin and linux
 builds need them.
+
+### A2 — `internal/template` names the `MapOrder` fault; the engine takes a plain option
+
+**Status:** Accepted 2026-10-19 by Ed Funnekotter, in PLAN-2026-10-metais-v1's
+design session W1-F3 (from W1-4's finding, confirmed by Wave 1's
+verification).
+**Amends:** D4 item 2 (the value model's "no Go map" sentence), D4 item 3
+(the `Env` sketch) and D13 item 2 (the `MapOrder` row's seam column, and the
+tripwire). D2 item 2 is unchanged: `internal/liquid/...` imports nothing
+outside the standard library.
+
+1. **`fault.MapOrder` is named in `internal/template`, and nowhere under
+   `internal/liquid/`.** D13 item 2 placed the seam in `internal/liquid/value`,
+   but naming a fault constant there needs an import of `internal/fault`,
+   which D2 item 2 refuses. `internal/template` builds the engine's `Env`, and
+   sets `Env.UnorderedObjects` exactly when its options'
+   `Faults.Has(fault.MapOrder)`. It is the `MapOrder` seam of D13 item 2's
+   table and of the tripwire's seam table.
+2. **The mechanism is the engine's own option, `Env.UnorderedObjects bool`.**
+   When it is true, the engine's object iteration (`for` over an object,
+   `first`, `last`, `map`) visits members in the order of a Go map built from
+   them, rather than the object's key slice. It is a plain boolean with no
+   METAIS concept in it, so the engine stays testable against Golden Liquid
+   alone. It is D4 item 2's one Go-map iteration, and no zero-fault run takes
+   it.
+3. **The seam cannot sit in `internal/liquid/value` or in the conversion into
+   it.** A `value.Object` holds its members in canonical order and has no
+   options to consult, and every conversion into the value model goes
+   through `NewObject`, which sorts. A fault at either place could not make
+   iteration follow a map without bypassing the value model's own ordering.
+   Admitting `internal/fault` into `internal/liquid/...` would work, but
+   would weaken D2 item 2's property for the sake of one test switch.
+4. **The tripwire grows one rule.** Beside D13 item 2's fault rule, no
+   non-test file outside `internal/template` sets `Env.UnorderedObjects`
+   (an assignment to the field, a composite literal keyed by it, or its
+   address taken). `internal/cli` therefore cannot reach the option either,
+   and the property D13 item 2 states for the fault field holds for the
+   option it drives.
+5. **The determinism detector's control is unchanged.** D13 item 4's
+   `MapOrder` over a vector iterating a 20-member object exercises the
+   engine's `for`, the path item 2 changes. METAIS's serializers, which also
+   iterate objects (ADR-004 D4 item 5), live in `internal/template` and
+   iterate through `value.Object.All`; the fault does not reach them, and
+   the detector does not need it to.
 
 ## Implementation log
 

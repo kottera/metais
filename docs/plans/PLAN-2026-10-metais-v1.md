@@ -402,8 +402,12 @@ What changes later waves:
   [#16](https://github.com/kottera/metais/pull/16) and awaiting Ed's
   ratification. Until then the stricter rule governs. Wave 2's windows
   no-replace rename uses the standard library.
-- **The MapOrder seam's home is open** (design session W1-F3), and Wave 4's
-  determinism detector needs it settled.
+- **The MapOrder fault is named by `internal/template`**, which sets the
+  engine's own test-only option `Env.UnorderedObjects` from it, so
+  `internal/liquid/...` stays standard-library-only. ADR-010 Amendment A2
+  records the ruling (design session W1-F3). Wave 4's determinism item
+  builds the option, the map-ordered iteration behind it and the tripwire
+  that only `internal/template` sets it.
 - **The credential act was ended without its probe being run.** The
   evidence came from the items instead: they fetched go1.26.9, ran `-race`
   with cgo, and pushed and merged their PRs. That evidence comes from
