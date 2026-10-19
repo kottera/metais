@@ -1,6 +1,123 @@
 {
   "codes": [
     {
+      "code": "csv.after_quote",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} has text after the closing quote of a CSV field.",
+      "hint": "End a quoted field at its closing quote, followed by the delimiter or the end of the line, and write a quote inside it as two quotes; the rest of this record was not read. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "csv.bare_quote",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} has a quote inside a CSV field that does not begin with one.",
+      "hint": "Enclose the whole field in quotes and write each quote inside it as two quotes; the rest of this record was not read. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "csv.field_count",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "expected",
+          "type": "number",
+          "meaning": "The number of fields in the file's header record.",
+          "always": true
+        },
+        {
+          "name": "found",
+          "type": "number",
+          "meaning": "The number of fields in this record.",
+          "always": true
+        }
+      ],
+      "message": "A record of the input {input} has {found} fields where its CSV header has {expected}.",
+      "hint": "Give every record one field per header name; leave a field empty, rather than out, when it has no value. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "csv.header_duplicate",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "ordinal",
+          "type": "number",
+          "meaning": "The 1-based position of this field in the header record.",
+          "always": true
+        },
+        {
+          "name": "first",
+          "type": "number",
+          "meaning": "The 1-based position in the header record of the field that first has the same name.",
+          "always": true
+        }
+      ],
+      "message": "Field {ordinal} of the CSV header of the input {input} repeats the name of field {first}.",
+      "hint": "Give each column its own name; names are compared exactly, with no trimming or case folding. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "csv.header_empty",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "ordinal",
+          "type": "number",
+          "meaning": "The 1-based position of the empty field in the header record.",
+          "always": true
+        }
+      ],
+      "message": "The CSV header of the input {input} has an empty name in field {ordinal}.",
+      "hint": "Name every column in the first record of the file. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "csv.header_missing",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} is a CSV file with no header record.",
+      "hint": "Begin the file with a record naming each column, separated by the input's delimiter. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "csv.unterminated_quote",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} has a quoted CSV field that is never closed.",
+      "hint": "Close the field with a quote; the rest of the file was read as part of this field, so nothing after it was checked. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "internal.error",
       "severity": "error",
       "class": "internal",
@@ -22,6 +139,43 @@
       "message": "metais {tool_version} met a defect in itself ({phase}); neither the command line nor the package caused it.",
       "hint": "Report the command you ran to the metais project; running it again will meet the same defect.",
       "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "limit.exceeded",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "limit",
+          "type": "string",
+          "meaning": "The limit's name, as metais limits lists it.",
+          "always": true
+        },
+        {
+          "name": "bound",
+          "type": "number",
+          "meaning": "The limit's value in this command, its default or the lower value given with --limit.",
+          "always": true
+        },
+        {
+          "name": "lowered",
+          "type": "boolean",
+          "meaning": "Whether the bound was lowered with --limit rather than being the default.",
+          "always": true
+        },
+        {
+          "name": "observed",
+          "type": "number",
+          "meaning": "The value found, when the reading measured it; absent when the reading stopped at the bound.",
+          "always": false
+        }
+      ],
+      "message": "The input {input} breaches the {limit} limit of {bound}.",
+      "hint": "Supply a smaller or shallower input; a limit can be lowered with --limit but never raised. Run `metais limits` to see every limit.",
+      "location": "value",
       "since": "1.0",
       "statements": []
     },

@@ -17,7 +17,15 @@ it, and the statements it reports.
 <!-- The code catalog below is generated from findings/registry.json by go generate ./internal/guarantees. Do not edit it by hand. -->
 | Code | Severity | Class | Subject | Parameters | Since | Statements |
 |---|---|---|---|---|---|---|
+| `csv.after_quote` | error | content | input | — | 1.0 | — |
+| `csv.bare_quote` | error | content | input | — | 1.0 | — |
+| `csv.field_count` | error | content | input | `expected`, `found` | 1.0 | — |
+| `csv.header_duplicate` | error | content | input | `ordinal`, `first` | 1.0 | — |
+| `csv.header_empty` | error | content | input | `ordinal` | 1.0 | — |
+| `csv.header_missing` | error | content | input | — | 1.0 | — |
+| `csv.unterminated_quote` | error | content | input | — | 1.0 | — |
 | `internal.error` | error | internal | invocation | `tool_version`, `phase` | 1.0 | — |
+| `limit.exceeded` | error | content | input | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | — |
 | `limit.invalid` | error | usage | invocation | `reason`; optional: `name`, `default`, `unit`, `value` | 1.0 | — |
 | `limit.package` | error | refused | package | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | — |
 | `package.container.archive_comment` | error | refused | package | `offset`, `length` | 1.0 | — |

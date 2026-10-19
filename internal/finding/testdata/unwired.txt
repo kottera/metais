@@ -10,6 +10,14 @@
 # internal, which internal/cli's tests prove instead. The list is empty by
 # Wave 7's close.
 
+csv.after_quote W3
+csv.bare_quote W3
+csv.field_count W3
+csv.header_duplicate W3
+csv.header_empty W3
+csv.header_missing W3
+csv.unterminated_quote W3
+limit.exceeded W3
 limit.package W3
 package.container.archive_comment W3
 package.container.crc_mismatch W3
