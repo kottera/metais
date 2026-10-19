@@ -165,8 +165,13 @@ func (k *checker) run() []finding.Finding {
 		k.add(k.guideLinks()...)
 	}
 
-	// Step 5: every schema file compiled, then each statically.
+	// Step 5: every schema file compiled, then each statically; and every
+	// output validation schema compiled, without data (ADR-005 D11 item
+	// 5).
 	k.add(c.SchemaFindings...)
+	if !noManifest {
+		k.add(k.outputSchemas()...)
+	}
 	if c.Schemas != nil {
 		k.add(k.schemaStatics()...)
 	}
@@ -468,6 +473,18 @@ func typeNames(t schema.TypeSet) finding.Value {
 		}
 	}
 	return finding.List(vs...)
+}
+
+// outputSchemas compiles every schema an output's validate names, at
+// every depth of a container (ADR-005 D11 item 5), and reports what
+// refuses any of them.
+func (k *checker) outputSchemas() []finding.Finding {
+	var meter *regexprofile.Meter
+	if k.c.Schemas != nil {
+		meter = k.c.Schemas.Meter()
+	}
+	_, fs := loader.OutputSchemas(k.c.Tree, k.c.Manifest.Outputs, k.lim, meter)
+	return fs
 }
 
 // validateKinds is ADR-005 D11 item 2 for outs, at every depth of a
