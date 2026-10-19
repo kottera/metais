@@ -31,6 +31,8 @@ const (
 	SchemaSize
 	CombinedSchemaSize
 	SchemaDepth
+	SchemaSubschemas
+	SchemaLocationLength
 	RefDepth
 	PatternLength
 	RegexProgram
@@ -132,7 +134,8 @@ type Limit struct {
 	Class   Class
 }
 
-// table is ADR-009 D3's table, exact (D3 item 2), indexed by ID.
+// table is ADR-009 D3's table, exact (D3 item 2), as Amendment A1 amends
+// it, indexed by ID.
 var table = [count]Limit{
 	{PackageSize, "package-size", 256 * mib, Bytes, ClassPackage},
 	{PackageUncompressed, "package-uncompressed", 512 * mib, Bytes, ClassPackage},
@@ -145,6 +148,8 @@ var table = [count]Limit{
 	{SchemaSize, "schema-size", 4 * mib, Bytes, ClassPackage},
 	{CombinedSchemaSize, "combined-schema-size", 16 * mib, Bytes, ClassPackage},
 	{SchemaDepth, "schema-depth", 64, Count, ClassPackage},
+	{SchemaSubschemas, "schema-subschemas", 20_000, Count, ClassPackage},
+	{SchemaLocationLength, "schema-location-length", 512, Bytes, ClassPackage},
 	{RefDepth, "ref-depth", 32, Count, ClassPackage},
 	{PatternLength, "pattern-length", 4_096, Bytes, ClassPackage},
 	{RegexProgram, "regex-program", 4_096, Count, ClassPackage},
