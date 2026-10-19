@@ -1,0 +1,27 @@
+metais help json — The JSON document every command prints with --json.
+
+With --json, a run prints exactly one JSON document on standard output: compact
+UTF-8 with no byte order mark, one line ending in one LF, HTML escaping off, and
+standard error empty. Its members are always present, in this order:
+
+  format    The document's name and major version, metais.<command>/<major>.
+  ok        True when the command completed and no finding is an error.
+  findings  The findings, in the specification's order; [] when there are none.
+            A usage error is a finding too.
+  summary   The exact counts of errors, warnings and info, how many findings are
+            listed and omitted, and the count of each code.
+  result    The command's result, or null when it was refused before producing
+            one.
+  next      The commands to run next, each {"run", "why"}; [] when there is
+            nothing to suggest, and never empty after a refusal.
+
+The exit status is the same with and without --json, and --json is honoured even
+on a command line that does not parse. Within a major version a format only
+gains members and enumeration values: ignore a member you do not know, and read
+an unknown value as other.
+
+The formats:
+  metais.version/1  metais version
+  metais.limits/1   metais limits
+  metais.help/1     metais help
+  metais.usage/1    a line that names no command

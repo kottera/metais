@@ -274,14 +274,19 @@ func TestRegistryEntries(t *testing.T) {
 }
 
 // TestEmittedCodes pins the registry to the codes this module emits: the
-// report's own and internal/limits'. A code a later change emits is
-// registered by that change.
+// report's own, internal/limits' and internal/cli's. A code a later change
+// emits is registered by that change.
 func TestEmittedCodes(t *testing.T) {
 	var got []Code
 	for _, e := range registry {
 		got = append(got, e.Code)
 	}
-	if want := []Code{CodeLimitInvalid, CodeReportTruncated}; !slices.Equal(got, want) {
+	want := []Code{
+		CodeInternalError, CodeLimitInvalid, CodeReportTruncated,
+		CodeUsageBadValue, CodeUsageMissingCommand, CodeUsageRepeatedFlag, CodeUsageUnexpectedOperand,
+		CodeUsageUnknownCommand, CodeUsageUnknownFlag, CodeUsageUnknownTopic,
+	}
+	if !slices.Equal(got, want) {
 		t.Errorf("registered %q, want %q", got, want)
 	}
 }

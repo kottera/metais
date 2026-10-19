@@ -1,0 +1,47 @@
+metais reads, validates and renders METAIS packages, and helps author them.
+
+Usage:
+  metais <command> [operands] [flags]
+
+Commands:
+  The tool:
+    version  Print the tool's version and the specification versions it
+             implements.
+    limits   List every resource limit, with its default, unit and class.
+    help     Print the overview, a command's help, or a topic.
+
+Global flags:
+  --json
+      Print the result as one JSON document on standard output.
+  --color <when>
+      Colour human output: auto colours a stream that is a terminal when
+      NO_COLOR is unset or empty; always and never override NO_COLOR. Values:
+      auto, always, never. Default: auto.
+  -h, --help
+      Print help to standard output and exit 0; nothing else runs.
+  --version
+      Run metais version.
+
+Topics (metais help <topic>):
+  inputs      Supplying a package's inputs, and which source wins.
+  globs       The patterns that select a package's entries.
+  json        The JSON document every command prints with --json.
+  exit-codes  What each exit status means.
+
+Exit codes:
+  0  Success, warnings included; help, version and limits.
+  1  An error in content: invalid inputs, a failing check or test, an output
+     refused by its schema or its path, a package's own defect under an
+     authoring command, or a warning under --fail-on warning.
+  2  A defect in metais itself (internal.error), or the Go runtime's status
+     after a crash.
+  3  The command line is wrong: an unknown command or flag, a missing or extra
+     operand, a malformed or repeated flag, or no command at all.
+  4  The package is refused: not found, unreadable, out of specification, a
+     digest mismatch, an unsupported specification version or a package limit;
+     or a package's own defect under a consuming command.
+  5  The destination is refused: not empty without --overwrite, a link or
+     special file in the way, or a failed write.
+
+Run 'metais help <command>' or 'metais <command> --help' for a command's
+operands, flags, refusals and examples.

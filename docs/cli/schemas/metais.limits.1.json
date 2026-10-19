@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.limits.1.json",
+  "title": "metais.limits/1",
+  "description": "What metais limits prints with --json: every resource limit of ADR-009 D3's table, in its order, with its default, unit and class (ADR-009 D4 item 3).",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.limits/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "limits"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "limits": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "default",
+              "unit",
+              "class"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "description": "The limit's name, as a limit finding names it.",
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+              },
+              "default": {
+                "description": "The limit's default, a whole number in its unit.",
+                "type": "integer",
+                "minimum": 0
+              },
+              "unit": {
+                "description": "What the limit counts.",
+                "enum": [
+                  "bytes",
+                  "count",
+                  "ratio"
+                ]
+              },
+              "class": {
+                "description": "Which of ADR-009 D3's tables the limit is in: what a package may use, what one command's inputs may be, or what one command may compute and write.",
+                "enum": [
+                  "package",
+                  "data",
+                  "work"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

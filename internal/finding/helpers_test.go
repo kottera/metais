@@ -20,10 +20,10 @@ const (
 	codeOutputPath     Code = "output.path.traversal"
 	codePackageName    Code = "package.name.shape"
 	codeTemplateParse  Code = "template.parse"
-	codeUsageFlag      Code = "usage.unknown_flag"
+	codeUsageFlag      Code = "usage.test_flag"
 	codeWarnUnused     Code = "template.xref.unused_input"
 	codeDestNonEmpty   Code = "output.destination.not_empty"
-	codeInternalError  Code = "internal.error"
+	codeInternalError  Code = "internal.test_error"
 )
 
 var testEntries = []Entry{

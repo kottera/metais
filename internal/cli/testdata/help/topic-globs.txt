@@ -1,0 +1,17 @@
+metais help globs — The patterns that select a package's entries.
+
+A glob selects a package's entries by path. It is matched against the whole
+entry path, segment by segment, with / as the separator, and is case-sensitive.
+
+  *       matches any run of characters within one segment.
+  ?       matches one character other than /.
+  [...]   matches one character in a class; lo-hi is a range.
+  [^...]  matches one character not in a class.
+  \       makes the next character literal.
+  **      standing alone as a segment, matches zero or more whole segments; **
+          anywhere else is a usage error.
+
+There are no braces. *, ?, [...] and ** never match a segment that begins with a
+dot; a pattern segment that itself begins with a dot matches one. So **/*.md
+does not reach into .compiled/, and .compiled/** does. A pattern with no
+wildcard that names a directory selects every entry beneath it.
