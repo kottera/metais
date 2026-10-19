@@ -1,0 +1,19 @@
+[
+  {
+    "code": "input.raw_unavailable",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "style"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/page.txt.liquid",
+      "line": 1,
+      "column": 15
+    },
+    "params": {
+      "column": 15
+    }
+  }
+]

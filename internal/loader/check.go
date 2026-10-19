@@ -14,6 +14,7 @@ import (
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/liquid"
+	"github.com/kottera/metais/internal/liquid/ast"
 	"github.com/kottera/metais/internal/liquid/value"
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/pkgtree"
@@ -22,12 +23,32 @@ import (
 	"github.com/kottera/metais/internal/zipfmt"
 )
 
-// Dialect is the dialect a package's templates and manifest expressions
-// are parsed in: the one parse check and the render share (ADR-007 D2
-// step 6, ADR-004 D16). It is internal/liquid's standard catalog, Core();
-// METAIS's own filters and tags join it with internal/template, and until
-// then a name only they define is refused as unknown.
-func Dialect() *liquid.Dialect { return liquid.Core() }
+// Dialect is the dialect a package's manifest expressions are parsed in
+// when the package is opened (ADR-004 D16 item 5): internal/liquid's
+// standard catalog, Core(), with METAIS's embed and provenance tags known
+// by name, so that a path holding one is template.tag_context rather than
+// an unknown tag. A template is parsed in internal/template's dialect,
+// which defines them; METAIS's own filters join it there too.
+func Dialect() *liquid.Dialect { return dialect }
+
+var dialect = func() *liquid.Dialect {
+	d, err := liquid.Core().Extend(liquid.Spec{Tags: []liquid.TagDef{namedTag("embed"), namedTag("provenance")}})
+	if err != nil {
+		panic("loader: " + err.Error())
+	}
+	return d
+}()
+
+// namedTag is a tag a manifest expression knows only by its name: no
+// expression may hold it, so it accepts any arguments and is never
+// rendered.
+type namedTag string
+
+func (t namedTag) Name() string               { return string(t) }
+func (namedTag) Check(*ast.Tag) *liquid.Error { return nil }
+func (t namedTag) Render(liquid.TagContext, *ast.Tag) *liquid.Error {
+	return &liquid.Error{Code: liquid.CodeInternal, Detail: "a manifest expression rendered the " + string(t) + " tag"}
+}
 
 // ParseLimits are the bounds a package's templates are parsed under:
 // ADR-009's template-nesting and template-size, from lim.

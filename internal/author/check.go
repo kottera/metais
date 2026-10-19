@@ -836,6 +836,11 @@ func (k *checker) templates() []template {
 		// The one parse render makes of the same template (W4-3.12).
 		root, fs := templates.ParseEntry(t.entry, t.src, k.lim, scanned[i])
 		k.add(fs...)
+		if root != nil && k.c.Manifest != nil {
+			// The embed tags' index: as the declarations decide it; a name
+			// no input has is the cross-reference's (ADR-007 D3 item 12).
+			k.add(templates.EmbedFindings(t.entry, root, k.c.Manifest.Inputs)...)
+		}
 		t.root = root
 	}
 	return ts

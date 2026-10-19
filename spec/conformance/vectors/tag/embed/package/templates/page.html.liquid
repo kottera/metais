@@ -1,0 +1,8 @@
+<style>{% embed "style" %}</style>
+<p>{% embed "snippets", index: 0 %}</p>
+{% assign last = inputs.snippets.size | minus: 1 -%}
+<p>{% embed "snippets", index: last %}</p>
+<p>{% embed "extra" %}{% embed "more", index: 7 %}</p>
+{% liquid
+  embed "snippets", index: 0
+%}

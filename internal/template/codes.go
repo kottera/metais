@@ -4,6 +4,8 @@
 package template
 
 import (
+	"strconv"
+
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/liquid"
@@ -30,14 +32,25 @@ const (
 	CodeTagArgument       finding.Code = "template.tag_argument"
 	CodeDivisionByZero    finding.Code = "template.division_by_zero"
 	CodeInvalidUTF8       finding.Code = "template.invalid_utf8"
+
+	CodeEmbedUnknownInput  finding.Code = "template.embed_unknown_input"
+	CodeEmbedIndex         finding.Code = "template.embed_index"
+	CodeProvenanceArgument finding.Code = "template.provenance_argument"
+	CodeProvenanceStyle    finding.Code = "template.provenance_style"
 )
+
+// CodeRawUnavailable is ADR-003's finding for an embed of a raw form that
+// does not exist (ADR-004 D12 item 3, ADR-003 D21 item 2): class content,
+// about the input, located at the embed tag.
+const CodeRawUnavailable finding.Code = "input.raw_unavailable"
 
 // ParseCodes are the codes ParseEntry reports, beside limit.package: the
 // codes of a template's parse (ADR-004 D16 item 1), which every command
 // that parses a template declares.
 func ParseCodes() []finding.Code {
 	return []finding.Code{CodeSyntax, CodeNotUTF8, CodeInclude, CodeUnknownFilter, CodeReservedName, CodePartialName,
-		CodeNumberRange, CodeFilterArgument, CodeFilterInput, CodeDivisionByZero}
+		CodeNumberRange, CodeFilterArgument, CodeFilterInput, CodeDivisionByZero,
+		CodeEmbedUnknownInput, CodeEmbedIndex, CodeProvenanceArgument, CodeProvenanceStyle}
 }
 
 // subject is the template whose entry is entry.
@@ -81,6 +94,18 @@ func parseFinding(e *liquid.Error, lim limits.Set, cause string) finding.Finding
 		code, p["filter"], p["type"] = CodeFilterInput, finding.String(e.Args["filter"]), finding.String(e.Args["type"])
 	case liquid.CodeDivisionByZero:
 		code, p["filter"] = CodeDivisionByZero, finding.String(e.Args["filter"])
+	case codeEmbedUnknownInput:
+		code = CodeEmbedUnknownInput
+		copyArgs(p, e, "name")
+	case codeEmbedIndex:
+		code = CodeEmbedIndex
+		copyArgs(p, e, "input", "reason")
+	case codeProvenanceArgument:
+		code = CodeProvenanceArgument
+		copyArgs(p, e, "reason", "argument")
+	case codeProvenanceStyle:
+		code = CodeProvenanceStyle
+		copyArgs(p, e, "reason", "style", "type")
 	case liquid.CodeLimit:
 		id := limits.TemplateNesting
 		if e.Args["limit"] == limits.Get(limits.TemplateSize).Name {
@@ -147,11 +172,46 @@ func evalFinding(e *liquid.Error, subj finding.Subject, loc finding.Location, ou
 			p["filter"] = finding.String(f)
 		}
 	case liquid.CodeInvalidUTF8:
-		code, p["filter"] = CodeInvalidUTF8, finding.String(e.Args["filter"])
+		code = CodeInvalidUTF8
+		copyArgs(p, e, "filter", "tag")
+	case codeEmbedIndex:
+		code = CodeEmbedIndex
+		copyArgs(p, e, "input", "reason", "type")
+		copyInts(p, e, "index", "items")
+	case codeRawUnavailable:
+		copyInts(p, e, "index")
+		return finding.New(CodeRawUnavailable, finding.Subject{Kind: finding.SubjectInput, Name: e.Args["input"]}, &loc, p,
+			finding.WithRelated(chain(e)...))
+	case codeProvenanceStyle:
+		code = CodeProvenanceStyle
+		copyArgs(p, e, "reason", "kind", "style", "type")
 	default:
 		panic("template: the Liquid renderer met a defect: " + e.Error())
 	}
 	return finding.New(code, subj, &loc, p, finding.WithRelated(chain(e)...))
+}
+
+// copyArgs sets each of names that e's Args hold as a string parameter.
+func copyArgs(p finding.Params, e *liquid.Error, names ...string) {
+	for _, n := range names {
+		if v, ok := e.Args[n]; ok {
+			p[n] = finding.String(v)
+		}
+	}
+}
+
+// copyInts sets each of names that e's Args hold, decimal integers, as a
+// number parameter.
+func copyInts(p finding.Params, e *liquid.Error, names ...string) {
+	for _, n := range names {
+		if v, ok := e.Args[n]; ok {
+			i, err := strconv.ParseInt(v, 10, 64)
+			if err != nil {
+				panic("template: an argument " + n + " that is not an integer: " + v)
+			}
+			p[n] = finding.Int(i)
+		}
+	}
 }
 
 // noteRenderedFrom is the note of each render tag on the way to a partial.

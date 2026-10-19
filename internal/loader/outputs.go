@@ -114,11 +114,12 @@ func (o *opening) hasDir(dir, rel string) bool {
 // expressions parses every output declaration's path as a Liquid
 // template, its when as a condition and its for_each as a value expression
 // (ADR-005 D3 and D4, ADR-004 D16 item 5), in the dialect's grammar. A path
-// computes text only, so render in a path is template.tag_context (ADR-005
-// D4 item 1). Each finding is at the field's manifest pointer and line,
-// its column within the expression given as a parameter.
+// computes text only, so render, embed and provenance in a path are
+// template.tag_context (ADR-005 D4 item 1, ADR-004 D16 item 5). Each
+// finding is at the field's manifest pointer and line, its column within
+// the expression given as a parameter.
 //
-// The dialect is Dialect(), the one a package's templates are parsed in.
+// The dialect is Dialect().
 func (o *opening) expressions(p *Package) []finding.Finding {
 	d := Dialect()
 	lim := ParseLimits(o.lim)
@@ -137,11 +138,19 @@ func (o *opening) expressions(p *Package) []finding.Finding {
 				}
 				if t != nil {
 					ast.Walk(t.Root, func(n ast.Node) bool {
-						if r, ok := n.(*ast.Render); ok {
-							out = append(out, finding.New(CodeTemplateTagContext, templateSubject, o.at(ptr), finding.Params{
-								"tag": finding.String("render"), "column": finding.Int(int64(r.Span.Col)),
-							}))
+						var tag string
+						var col int
+						switch n := n.(type) {
+						case *ast.Render:
+							tag, col = "render", n.Span.Col
+						case *ast.Tag:
+							tag, col = n.Name, n.Span.Col
+						default:
+							return true
 						}
+						out = append(out, finding.New(CodeTemplateTagContext, templateSubject, o.at(ptr), finding.Params{
+							"tag": finding.String(tag), "column": finding.Int(int64(col)),
+						}))
 						return true
 					})
 				}

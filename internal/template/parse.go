@@ -12,6 +12,7 @@ import (
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/liquid"
 	"github.com/kottera/metais/internal/liquid/ast"
+	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/pkgtree"
 )
 
@@ -26,6 +27,7 @@ const Dir = "templates/"
 type Templates struct {
 	tree   pkgtree.Tree
 	lim    limits.Set
+	inputs []manifest.Input
 	parsed map[string]*parsed
 }
 
@@ -37,9 +39,10 @@ type parsed struct {
 }
 
 // NewTemplates returns the templates of tree, parsed under lim's
-// template-size and template-nesting.
-func NewTemplates(tree pkgtree.Tree, lim limits.Set) *Templates {
-	return &Templates{tree: tree, lim: lim, parsed: map[string]*parsed{}}
+// template-size and template-nesting, their embed tags checked against
+// the inputs the manifest declares (ADR-004 D12 item 1).
+func NewTemplates(tree pkgtree.Tree, lim limits.Set, inputs []manifest.Input) *Templates {
+	return &Templates{tree: tree, lim: lim, inputs: inputs, parsed: map[string]*parsed{}}
 }
 
 // Has reports whether name is a template of the package.
@@ -75,8 +78,11 @@ func canaryHas(name string) bool {
 // (ADR-004 D16 items 1 and 4): at most one template.syntax, since a parse
 // stops there, and every other parse-time finding before it. Every render
 // tag must name a partial the package has (D8 item 2): one that does not is
-// template.partial_not_found, found here, with no data. The findings are
-// the same each time it is asked.
+// template.partial_not_found, found here, with no data. Every embed tag of
+// a template that parsed must name a declared input, with index: exactly
+// when it is a collection (D12 item 1): template.embed_unknown_input and
+// template.embed_index, found here too. The findings are the same each
+// time it is asked.
 func (ts *Templates) Parse(name string) (*liquid.Template, []finding.Finding) {
 	if p, ok := ts.parsed[name]; ok {
 		return p.t, p.findings
@@ -109,6 +115,9 @@ func (ts *Templates) parse(name string) *parsed {
 		all = append(all, located{r.span.Start, finding.New(CodePartialNotFound, subject(entry), &loc, finding.Params{
 			"partial": finding.String(r.name), "column": finding.Int(int64(r.span.Col)),
 		})})
+	}
+	if t != nil {
+		all = append(all, embedChecks(entry, t, ts.inputs, true)...)
 	}
 	if len(all) == 0 {
 		return &parsed{t: t}

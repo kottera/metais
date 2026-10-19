@@ -1515,3 +1515,21 @@ checks before the library sees a schema). No dependency changes.
   element, and `outputs` every evaluation's file; a breach the data makes
   is `limit.exceeded.output` (D19), and so is a path template's path beyond
   `path-length` or `path-depth`.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-3. The `pid` canary, red
+  first.** D16 item 2's `pid` canary is `internal/template/canary_pid.go`,
+  under `metais_canary_pid`: every provenance line gains `pid=` and the
+  process id, read at start. Its probe vector is `tag/provenance`, which
+  the release build renders to the same bytes in both environments. No
+  sentinel can be planted in a process id, so its row in
+  `TestHostIsolationCanaries` names the check that catches it, check 3,
+  the differential; the earlier rows name check 1. At commit `599a5b1`,
+  `go test ./internal/conformance -run 'TestHostIsolationCanaries/pid'
+  -count=1 -v` showed the canary build red on its channel: `the pid
+  canary: conformance failure [A/B]: step 1: the written file
+  out/page.html differs between the runs` (and the same for
+  `out/data.json`, `out/order.txt` and `out/styles.txt`, and `step 1
+  (render): standard output differs between the runs`), beside its tree
+  failures, `tree out: page.html differs` and the rest, in both cases.
+  `TestHostIsolation` runs the probe on the release build and finds
+  nothing. In process, `internal/template`'s
+  `TestProvenanceWritesNothingOfTheHost` fails when built with the tag.

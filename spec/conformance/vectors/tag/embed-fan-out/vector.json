@@ -1,0 +1,58 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tag/embed-fan-out",
+  "title": "In a fan-out over a collection, embed with index: fan_out.index0 writes each item's raw form into that item's file, and an item a --set-json touched is input.raw_unavailable when its file renders",
+  "statements": [
+    "MTS-TAG-003",
+    "MTS-TAG-004"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "set-json",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out",
+            "set_json": [
+              "/snippets/1=\"z\""
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/set-json.json"
+          }
+        }
+      ]
+    }
+  ]
+}

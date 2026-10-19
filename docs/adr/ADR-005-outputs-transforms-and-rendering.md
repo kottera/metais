@@ -1454,3 +1454,14 @@ they write into an existing directory too.
     template's defects.
   `when` on an asset or a mirror, and `for_each` and `when` on a container
   are W5-5's and W5-6's meetings with this item.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-3.** Chapter 9's MTS-OUT-012
+  states D7: the `kind` field for every file of its declaration, else the
+  table by final extension ASCII-case-insensitively, then by whole file
+  name, else `text`. The file names are matched exactly, so `makefile` is
+  `text`: "ASCII-case-insensitively" qualifies the extension. A render
+  hands each output's kind to the template environment, where provenance
+  chooses its style from it (ADR-004 D14 item 5), and
+  `out/output-kind` reaches every extension and file name of the table,
+  and the `kind` field, through that style. The table's `.go` row is
+  written `f.GO` there: a `.go` file in the suite would be a Go package of
+  this module.

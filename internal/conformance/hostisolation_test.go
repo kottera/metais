@@ -15,26 +15,31 @@ import (
 )
 
 // canary is one of ADR-009 D16 item 2's canary builds: the leak its build
-// tag inserts, the vector that probes it, and the sentinel sources a hit
-// on its channel names.
+// tag inserts, the vector that probes it, and how the harness sees it: by
+// the sentinel scan, a hit naming one of sources, or, with no sources, by
+// the differential of check, a host fact no sentinel can be planted in.
 type canary struct {
 	channel string
 	probe   string
 	sources []string
+	check   string
 }
 
-// canaries are the canaries this wave builds (PLAN-2026-10-metais-v1
-// Wave 4): env binds the environment as env, cwd reads a partial the
-// package lacks from the working directory, and path (W4-1's) prints the
-// data directory's absolute path in every finding. Each probe is refused
+// canaries are the canaries built so far (PLAN-2026-10-metais-v1 Waves 4
+// and 5): env binds the environment as env, cwd reads a partial the
+// package lacks from the working directory, path (W4-1's) prints the data
+// directory's absolute path in every finding, and pid (W5-3's) records the
+// process id in every provenance line. The first three probes are refused
 // by the release build: tpl/no-env reads env.HOME,
 // tpl/partial-not-from-host renders a partial named for the working
 // directory's decoy, and dat/required-input-missing lacks a required
-// input.
+// input; tag/provenance renders provenance lines, the same bytes in both
+// environments.
 var canaries = []canary{
-	{"env", "tpl/no-env", []string{"HOME", "USER", "HOSTNAME", "TERM", "NO_COLOR", "METAIS_SENTINEL", "TMPDIR", "PATH"}},
-	{"cwd", "tpl/partial-not-from-host", []string{"a working-directory decoy"}},
-	{"path", "dat/required-input-missing", []string{"the sandbox path"}},
+	{"env", "tpl/no-env", []string{"HOME", "USER", "HOSTNAME", "TERM", "NO_COLOR", "METAIS_SENTINEL", "TMPDIR", "PATH"}, checkSentinel},
+	{"cwd", "tpl/partial-not-from-host", []string{"a working-directory decoy"}, checkSentinel},
+	{"path", "dat/required-input-missing", []string{"the sandbox path"}, checkSentinel},
+	{"pid", "tag/provenance", nil, checkAB},
 }
 
 // hostRunner is a runner over the suite in this module for the tool at
@@ -73,7 +78,8 @@ func TestHostIsolation(t *testing.T) {
 
 // TestHostIsolationCanaries is ADR-009 D16 item 2: each canary build, made
 // with its metais_canary_<channel> tag, must be caught by the harness on
-// its own channel, so a harness gone blind to a channel fails here. The
+// its own channel, by the check its row names, so a harness gone blind to
+// a channel fails here. The
 // release build's half is TestHostIsolation.
 func TestHostIsolationCanaries(t *testing.T) {
 	if builtTool == "" {
@@ -85,7 +91,10 @@ func TestHostIsolationCanaries(t *testing.T) {
 			r, suite := hostRunner(t, bin)
 			ps := runVector(r, suite, c.probe, testenv.Dir(t))
 			caught := slices.ContainsFunc(ps, func(p problem) bool {
-				return p.check == checkSentinel && slices.ContainsFunc(c.sources, func(s string) bool {
+				if p.check != c.check {
+					return false
+				}
+				return c.sources == nil || slices.ContainsFunc(c.sources, func(s string) bool {
 					return strings.HasSuffix(p.msg, "holds the sentinel from "+s)
 				})
 			})

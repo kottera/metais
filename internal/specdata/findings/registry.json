@@ -1231,13 +1231,21 @@
           "type": "number",
           "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
           "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output, for an embed whose index is computed.",
+          "always": false
         }
       ],
       "message": "The input {input} has no raw form to embed: a value given on the command line replaced or changed it.",
       "hint": "Supply the input as a file in the data directory, with no --set, --set-json or --inputs-json touching it, or render its value with a filter rather than embedding its bytes.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-TAG-004"
+      ]
     },
     {
       "code": "input.required",
@@ -5812,6 +5820,90 @@
       ]
     },
     {
+      "code": "template.embed_index",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "input",
+          "type": "string",
+          "meaning": "The input the embed tag names.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the index is refused: missing (the input is a collection and the tag has no index:), not_a_collection (the input is not a collection and the tag has index:), not_an_integer (the index's value is not an integer) or out_of_range (no item of the collection is at the index).",
+          "always": true
+        },
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The index's value; present for out_of_range.",
+          "always": false
+        },
+        {
+          "name": "items",
+          "type": "number",
+          "meaning": "The number of items in the collection; present for out_of_range.",
+          "always": false
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "meaning": "The kind of value the index was given: nil, boolean, float, string, array or object; present for not_an_integer.",
+          "always": false
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The embed tag's index: is refused ({reason}).",
+      "hint": "Give index: to an embed of a collection input, as an integer from 0 to one less than its number of items, and no index: to an embed of an input that is not a collection.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TAG-002"
+      ]
+    },
+    {
+      "code": "template.embed_unknown_input",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "meaning": "The input name the embed tag gives; absent when its first argument is not a string literal.",
+          "always": false
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The embed tag does not name an input the manifest declares.",
+      "hint": "Write the name of a declared input as the tag's first argument, a quoted string, exactly as the manifest declares it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TAG-001"
+      ]
+    },
+    {
       "code": "template.filter_argument",
       "severity": "error",
       "class": "content",
@@ -5921,8 +6013,14 @@
         {
           "name": "filter",
           "type": "string",
-          "meaning": "The filter's name.",
-          "always": true
+          "meaning": "The filter's name; present when a filter decoded the bytes.",
+          "always": false
+        },
+        {
+          "name": "tag",
+          "type": "string",
+          "meaning": "The tag's name, embed; present when a tag wrote the bytes.",
+          "always": false
         },
         {
           "name": "column",
@@ -5937,11 +6035,12 @@
           "always": false
         }
       ],
-      "message": "The filter {filter} decodes bytes that are not UTF-8 text.",
-      "hint": "Decode only what was encoded from text; a template's values are text.",
+      "message": "A filter or tag here gives bytes that are not UTF-8 text.",
+      "hint": "Decode only what was encoded from text, and embed only what was supplied as text; a template's values are text.",
       "location": "value",
       "since": "1.0",
       "statements": [
+        "MTS-TAG-003",
         "MTS-TPL-052"
       ]
     },
@@ -6176,6 +6275,90 @@
       ]
     },
     {
+      "code": "template.provenance_argument",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "What is refused: unknown (a word outside the closed set, or a keyword other than style:), repeated (a part named twice, all counting as every part) or missing (no part).",
+          "always": true
+        },
+        {
+          "name": "argument",
+          "type": "string",
+          "meaning": "The word or keyword refused; absent for missing, and for an argument that is not a bare word.",
+          "always": false
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The provenance tag's arguments are refused ({reason}).",
+      "hint": "Name one or more of package, version, package_digest, inputs, tool and time, each once, as bare words, or all alone; style: is the one keyword the tag takes.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TAG-005"
+      ]
+    },
+    {
+      "code": "template.provenance_style",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why no style is chosen: no_comments (a csv file, whose format has no comments), style_required (a text file, whose comment syntax only style: can name) or unknown_style (style: names no style).",
+          "always": true
+        },
+        {
+          "name": "kind",
+          "type": "string",
+          "meaning": "The kind of the file being rendered; present for no_comments and style_required.",
+          "always": false
+        },
+        {
+          "name": "style",
+          "type": "string",
+          "meaning": "The style style: gives; present for unknown_style when it is a string.",
+          "always": false
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "meaning": "The kind of value style: gives, when it is not a string: nil, boolean, integer, float, array or object.",
+          "always": false
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The provenance tag has no comment style to write in ({reason}).",
+      "hint": "A csv file has no comments, so a provenance line has no place in one; in a text file, name the comment syntax with style:, as in style: \"hash\"; style: takes html, hash, slash, block, dash, percent, semicolon or json.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TAG-010"
+      ]
+    },
+    {
       "code": "template.reserved_name",
       "severity": "error",
       "class": "content",
@@ -6302,7 +6485,8 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-MAN-018"
+        "MTS-MAN-018",
+        "MTS-TAG-011"
       ]
     },
     {
@@ -6731,7 +6915,9 @@
       "hint": "Name an input the manifest declares, exactly as it is declared.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-030"
+      ]
     },
     {
       "code": "template.xref.unknown_variable",

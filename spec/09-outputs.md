@@ -101,3 +101,35 @@ declaration plans. When the first file beyond it is a fan-out's, the
 processor MUST refuse the render with `limit.exceeded.output`, naming that
 declaration and located at it, and need evaluate no further element of any
 `for_each`; `observed` is then given only when every file was counted.
+## 9.4 The output kind
+
+Every file a template renders has a kind, which says what syntax the file is
+written in: it chooses the comment syntax `provenance` writes
+([chapter 8](08-filters-and-tags.md)). The kind is not escaping, which an
+output chooses on its own.
+
+<a id="mts-out-012"></a>**MTS-OUT-012** A processor MUST give every file a
+template output renders the kind its declaration's `kind` names when the
+declaration has one, for every file the declaration renders, and otherwise
+the kind this table gives for the file's rendered path, matching the path's
+final extension without regard to ASCII case, then the whole file name, and
+giving `text` to a path neither matches. A later minor may add rows and
+never changes one.
+
+| Kind | Extensions | File names |
+|---|---|---|
+| `html` | `.html` `.htm` | |
+| `xml` | `.xml` `.xhtml` `.svg` `.rels` `.opf` `.ncx` `.xsd` `.xsl` `.xslt` `.plist` | |
+| `markdown` | `.md` `.markdown` | |
+| `json` | `.json` `.geojson` `.webmanifest` | |
+| `yaml` | `.yaml` `.yml` | |
+| `csv` | `.csv` | |
+| `css` | `.css` `.scss` `.less` | |
+| `hash` | `.sh` `.bash` `.zsh` `.py` `.rb` `.pl` `.r` `.toml` `.ps1` `.properties` `.tf` | `Makefile` `Dockerfile` `Containerfile` `.gitignore` `.gitattributes` `.dockerignore` `.env` |
+| `slash` | `.js` `.mjs` `.cjs` `.ts` `.tsx` `.jsx` `.go` `.c` `.h` `.cc` `.cpp` `.hpp` `.java` `.kt` `.kts` `.swift` `.rs` `.cs` `.scala` `.dart` `.jsonc` `.proto` `.groovy` `.gradle` | |
+| `sql` | `.sql` | |
+| `text` | anything else | |
+
+> **Note.** `[Content_Types].xml`, the part list of an Office Open XML
+> document, is `xml` by its extension. A file name is matched exactly:
+> `makefile` is `text`.

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tag/provenance",
+  "title": "provenance writes the fields of the parts named in their fixed order whatever the order written, each input's digest of its value after defaults or absent, the tool, and the time only with --now, in every style, chosen by style: or by the output's kind, with no line feed; html writes a - after a - as %2D",
+  "statements": [
+    "MTS-TAG-005",
+    "MTS-TAG-006",
+    "MTS-TAG-007",
+    "MTS-TAG-008",
+    "MTS-TAG-009"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "determinism"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "with-now",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out",
+            "now": "2026-10-19T09:30:00+02:00"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/with-now-out",
+                "substitute": [
+                  "data.json",
+                  "order.txt",
+                  "page.html"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "without-now",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/without-now-out",
+                "substitute": [
+                  "data.json",
+                  "order.txt",
+                  "page.html"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

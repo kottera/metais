@@ -1419,3 +1419,11 @@ directory.
   by item 4.6. `aut/check-xref-bracketed-shorthands` proves it under
   MTS-AUT-013, and `TestShorthandAgreement` holds render and check to the
   same outcome for each form on an array, a string and an object.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-3.** D3 item 12 is reachable:
+  with `embed` in the dialect, the cross-reference reports an undeclared
+  name as `template.xref.unknown_input`, with the nearest declared name,
+  and counts an `embed` of an input as a use (item 11). Chapter 13's
+  MTS-AUT-030 states it, and `aut/check-xref-embed` proves it. Check also
+  reports `template.embed_index` for an `index:` given to an input that is
+  not a collection or missing for one, from the function render uses
+  after the one parse (ADR-004's log).

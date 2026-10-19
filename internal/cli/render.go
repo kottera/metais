@@ -21,6 +21,7 @@ import (
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/unitext"
+	"github.com/kottera/metais/internal/version"
 )
 
 // The steps render's refusals point to.
@@ -218,10 +219,10 @@ func runRender(s *session, p args.Parsed) outcome {
 	if res == nil || s.fails(fs) {
 		return outcome{findings: fs, next: s.nextSteps(fs), dataDir: dataDir}
 	}
-	ts := template.NewTemplates(pkg.Tree, lim)
+	ts := template.NewTemplates(pkg.Tree, lim, pkg.Manifest.Inputs)
 	b, err := template.NewBindings(template.Package{
 		Tree: pkg.Tree, Manifest: pkg.Manifest, ManifestValue: pkg.ManifestValue,
-		Digest: pkg.Digest, Combined: pkg.CombinedValue,
+		Digest: pkg.Digest, Combined: pkg.CombinedValue, Tool: toolName + "/" + version.String(),
 	}, res.Inputs, now, lim)
 	if err != nil {
 		panic("cli: " + err.Error())
@@ -553,10 +554,12 @@ func writeFailed(r hostfs.Reason) finding.Finding {
 
 // renderPlan is ADR-005 D13's phase 4 for template outputs: every template
 // a template output reaches is parsed, each once, and every parse finding
-// is reported, whether or not the output plans a file; then every planned
-// file whose templates parsed is rendered with r, each to its first error
-// (ADR-004 D16 item 4). The bytes of each file that rendered are held in
-// its planned file.
+// is reported, whether or not the output plans a file; then every embed
+// of a raw form that does not exist, whose input and item are known, is
+// reported before anything renders (ADR-004 D12 item 3); then every
+// planned file whose templates parsed and need no such raw form is
+// rendered with r, each to its first error (ADR-004 D16 item 4). The bytes
+// of each file that rendered are held in its planned file.
 func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r *template.Renderer) []finding.Finding {
 	var fs []finding.Finding
 	reported := map[string]bool{}
@@ -577,11 +580,27 @@ func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r 
 			}
 		}
 	}
+	unavailable := map[string]bool{}
+	for _, d := range pkg.Manifest.Outputs {
+		if !ready[d.Source] {
+			continue
+		}
+		for _, name := range ts.Reach(d.Source) {
+			if _, seen := unavailable[name]; !seen {
+				ufs := r.Unavailable(name)
+				unavailable[name] = len(ufs) > 0
+				fs = append(fs, ufs...)
+			}
+			if unavailable[name] {
+				ready[d.Source] = false
+			}
+		}
+	}
 	for _, pf := range plan {
 		if !ready[pf.decl.Source] {
 			continue
 		}
-		out, f := r.Render(template.Output{ID: pf.decl.ID, Template: pf.decl.Source, Path: pf.path, Fan: pf.fan})
+		out, f := r.Render(template.Output{ID: pf.decl.ID, Template: pf.decl.Source, Path: pf.path, Fan: pf.fan, Kind: kindOf(pf.path, pf.decl.Kind)})
 		if f != nil {
 			fs = append(fs, *f)
 			continue

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tag/embed-refusals",
+  "title": "embed's name is a string literal naming a declared input, and index: is given exactly for a collection, when the template is parsed; any other argument is a syntax error; an index that is not an integer or names no item is refused when rendered; every output reports its first error and nothing is written",
+  "statements": [
+    "MTS-TAG-001",
+    "MTS-TAG-002",
+    "MTS-RND-001"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -451,6 +451,12 @@ Refusals:
   template.division_by_zero
       An output's path, when or for_each does not parse (division by zero).
       Next: metais check <package>
+  template.embed_index
+      A template does not parse (embed index), an error.
+      Next: metais check <package>
+  template.embed_unknown_input
+      A template does not parse (embed unknown input), an error.
+      Next: metais check <package>
   template.filter_argument
       An output's path, when or for_each does not parse (filter argument).
       Next: metais check <package>
@@ -474,6 +480,12 @@ Refusals:
       Next: metais check <package>
   template.partial_name
       A template does not parse (partial name), an error.
+      Next: metais check <package>
+  template.provenance_argument
+      A template does not parse (provenance argument), an error.
+      Next: metais check <package>
+  template.provenance_style
+      A template does not parse (provenance style), an error.
       Next: metais check <package>
   template.reserved_name
       A template does not parse (reserved name), an error.

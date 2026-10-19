@@ -28,13 +28,17 @@ type specificationVersion struct {
 	Implements []string `json:"implements"`
 }
 
+// toolName is the tool's name, as metais version prints it and the
+// provenance tag records it (ADR-004 D14 item 2).
+const toolName = "metais"
+
 // runVersion is metais version: the tool's version, from internal/version,
 // and every specification version it implements.
 func runVersion(*session, args.Parsed) outcome {
 	v, impl := version.String(), version.Implements()
-	human := "metais " + v + "\nspecification " + strings.Join(impl, ", ") + "\n"
+	human := toolName + " " + v + "\nspecification " + strings.Join(impl, ", ") + "\n"
 	return outcome{
-		result: &versionResult{toolVersion{"metais", v}, specificationVersion{impl}},
+		result: &versionResult{toolVersion{toolName, v}, specificationVersion{impl}},
 		human:  []byte(human),
 	}
 }

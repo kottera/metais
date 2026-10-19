@@ -1150,3 +1150,52 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
   D16 item 5's expressions are evaluated with the dialect templates are
   rendered in, so a path's `assign` of a reserved name is
   `template.reserved_name` there too.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-3.** D12 and D14 are
+  `internal/template`'s `embed` and `provenance`, chapter 8's MTS-TAG-001
+  to MTS-TAG-010. The tags are in the one dialect check and render parse
+  in; each `Renderer` renders through its own copy, whose tags read its
+  inputs, identity and output kind. Readings the decisions leave open:
+  - **`embed`.** A first argument that is not a string literal is
+    `template.embed_unknown_input` with no `name`; an argument other than
+    the name and `index:` is `template.syntax`. What the declarations
+    decide — the name, and `index:` given or missing — is found once the
+    template has parsed, since the engine returns no tree beside an error.
+    A render reports an undeclared name as `template.embed_unknown_input`;
+    check leaves it to its cross-reference's `template.xref.unknown_input`
+    (ADR-007 D3 item 12) and reports `template.embed_index` from the same
+    function render uses. An index that is not an integer is
+    `template.embed_index`, reason `not_an_integer`, naming the kind it
+    found. An input not supplied writes nothing, and its `index:` is not
+    evaluated.
+  - **Item 3's "before anything renders".** Every literal `embed` of every
+    template an output reaches is checked after the parse and before the
+    first output renders, each template once; an output any of whose
+    templates needs a raw form that does not exist is not rendered, the
+    finding being its. `input.raw_unavailable` met at render, for a
+    computed index, carries `output_path`, which the registry adds.
+  - **`template.invalid_utf8`** gains a `tag` parameter, and `filter` is
+    present only for a filter. Every form of ADR-003 refuses text that is
+    not UTF-8, so through a supply `embed`'s refusal cannot be reached in
+    1.0; `internal/template`'s tests prove it.
+  - **`provenance`.** A part is a bare word; a quoted word, a path with
+    segments and a keyword other than `style:` are
+    `template.provenance_argument`, reason `unknown`. `all` beside any
+    other part names that part twice (reason `repeated`). A `style:`
+    naming no style is `template.provenance_style`, reason `unknown_style`,
+    at parse for a literal and at render otherwise; csv is reason
+    `no_comments` and text `style_required`, each naming the kind. An
+    input "not supplied" is one whose record has no digest: an optional
+    input given its schema's default is supplied by it and records its
+    digest. In the `html` style, each `-` the value holds right after a
+    `-` is written `%2D`, so `1.0.0-rc--1` is `1.0.0-rc-%2D1`. In 1.0 only a
+    package version can hold `--`, and no value a conforming package or
+    `metais` gives holds a byte item 3 encodes as `%XX`.
+  - **Item 5's "no file being rendered".** That is a path template, and D16
+    item 5 refuses `provenance` there as `template.tag_context` when the
+    manifest is read, which is W5-4's. The stricter refusal stands, and
+    `template.provenance_style` has no reason for it.
+  - **D15 item 3 and ADR-011 D10 item 3.** A vector's expected provenance
+    writes the tool as `@@TOOL_NAME@@/@@TOOL_VERSION@@` and the package
+    digest literally: D10 item 3 says no other token exists, the digest
+    being defined over content. The work order's text asked for a token
+    for the digest too; the ADR governs.

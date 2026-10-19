@@ -1,0 +1,109 @@
+[
+  {
+    "code": "template.xref.unused_input",
+    "severity": "warning",
+    "subject": {
+      "kind": "input",
+      "name": "more",
+      "title": "More"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 5,
+      "pointer": "/inputs/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "template.xref.unused_input",
+    "severity": "warning",
+    "subject": {
+      "kind": "input",
+      "name": "style",
+      "title": "Style"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 8,
+      "column": 5,
+      "pointer": "/inputs/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "template.xref.unknown_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/page.html.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/page.html.liquid",
+      "line": 1,
+      "column": 8
+    },
+    "params": {
+      "name": "styel",
+      "suggestion": "style"
+    }
+  },
+  {
+    "code": "template.embed_index",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/page.html.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/page.html.liquid",
+      "line": 2,
+      "column": 1
+    },
+    "params": {
+      "input": "snippets",
+      "reason": "missing",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.embed_index",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/page.html.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/page.html.liquid",
+      "line": 3,
+      "column": 1
+    },
+    "params": {
+      "input": "extra",
+      "reason": "not_a_collection",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.xref.unknown_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/page.html.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/page.html.liquid",
+      "line": 5,
+      "column": 1
+    },
+    "params": {
+      "name": "nothing_like_it"
+    }
+  }
+]

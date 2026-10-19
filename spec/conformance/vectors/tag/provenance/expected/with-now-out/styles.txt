@@ -1,0 +1,9 @@
+<!-- metais-provenance package=org.example.provenance version=1.0.0-rc-%2D1 -->
+# metais-provenance package=org.example.provenance version=1.0.0-rc--1
+// metais-provenance package=org.example.provenance version=1.0.0-rc--1
+/* metais-provenance package=org.example.provenance version=1.0.0-rc--1 */
+-- metais-provenance package=org.example.provenance version=1.0.0-rc--1
+% metais-provenance package=org.example.provenance version=1.0.0-rc--1
+; metais-provenance package=org.example.provenance version=1.0.0-rc--1
+{"package":"org.example.provenance","version":"1.0.0-rc--1"}
+-- metais-provenance version=1.0.0-rc--1|

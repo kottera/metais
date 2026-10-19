@@ -1,0 +1,32 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-xref-embed",
+  "title": "check reports an embed naming no declared input as template.xref.unknown_input with the nearest name, counts an embed of an input as a use of it, and reports index: given or missing against the input's declaration as template.embed_index",
+  "statements": [
+    "MTS-AUT-030",
+    "MTS-AUT-017",
+    "MTS-TAG-002"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}
