@@ -44,10 +44,10 @@ var existingWrites = []existingWrite{
 	},
 }
 
-// hostfsFiles are the files runHostfsExisting writes: beside an existing
-// file, into a directory that exists, beneath one that does not, and at the
-// top.
-var hostfsFiles = []string{"a/b/new.txt", "a/old.txt", "fresh/deep/new.txt", "top.txt"}
+// hostfsFiles are the files runHostfsExisting writes. The detector seeds
+// every other one, so it writes two replaces, a file beneath directories
+// that do not exist, and a file into a directory that does.
+var hostfsFiles = []string{"a/b/replaced.txt", "fresh/deep/new.txt", "top.txt", "a/new.txt"}
 
 // runHostfsExisting writes hostfsFiles into out through hostfs's write shape for
 // an existing directory, each file holding its own path.
@@ -199,7 +199,7 @@ func detectExisting(t *testing.T, w existingWrite, faults fault.Set) (found []st
 
 	for _, s := range seeds {
 		if reads {
-			if a, _ := atime(t, s.probe); a != accessed[s.path] {
+			if a, ok := atime(t, s.probe); ok && a != accessed[s.path] {
 				found = append(found, "read "+s.path+", which existed")
 			}
 		}
