@@ -92,6 +92,13 @@ enabled; the static build is the separate check of a cgo-free binary.
   by widening its assertion.
 - **Bounded work is measured.** A test that holds work to a time measures
   CPU time, not wall time alone.
+- **A fuzz target is proved by its seed corpus.** The corpus under
+  `testdata/fuzz/` runs in every `go test`, and that is the proof a change
+  gives. A Work Order never runs `go test -fuzz`: Go starts a fuzz worker on
+  every core, and the runner host is shared with other Work Orders, so two
+  minutes of it stalls everything else on the machine. Fuzzing by hand runs
+  one target for a minute at most, on a third of the cores:
+  `go test -run '^$' -fuzz '^FuzzX$' -fuzztime 60s -parallel $(( $(getconf _NPROCESSORS_ONLN) / 3 )) ./internal/x`.
 - **Isolate tests with `HOME` and temporary directories**, through
   `internal/testenv`, never with the developer's real configuration.
 - **Dependencies are few and justified.** A new module dependency is named
