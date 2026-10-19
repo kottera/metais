@@ -15,10 +15,10 @@ import (
 	"github.com/kottera/metais/internal/testenv"
 )
 
-// writePackage writes a source directory below root holding one input, x,
+// transformPackage writes a source directory below root holding one input, x,
 // a string, the manifest's outputs outputs (YAML, indented as the list's
 // items) and files, each by its package path, and returns its path.
-func writePackage(t *testing.T, root, outputs string, files map[string]string) string {
+func transformPackage(t *testing.T, root, outputs string, files map[string]string) string {
 	t.Helper()
 	pkg := filepath.Join(root, "pkg")
 	all := map[string]string{
@@ -73,7 +73,7 @@ func TestCRLF(t *testing.T) {
 // the size and digest reported are of the converted bytes.
 func TestRenderCRLF(t *testing.T) {
 	root := testenv.Dir(t)
-	pkg := writePackage(t, root,
+	pkg := transformPackage(t, root,
 		"  - id: notes\n    template: notes.txt.liquid\n    newline: crlf\n  - id: plain\n    template: notes.txt.liquid\n    path: plain.txt\n",
 		map[string]string{"templates/notes.txt.liquid": "one\r\ntwo\n{{ inputs.x }}\r"})
 	out := filepath.Join(root, "out")
@@ -101,7 +101,7 @@ func TestRenderCRLF(t *testing.T) {
 // written either.
 func TestRenderValidationRefuses(t *testing.T) {
 	root := testenv.Dir(t)
-	pkg := writePackage(t, root,
+	pkg := transformPackage(t, root,
 		"  - id: json\n    template: data.json.liquid\n    validate: references/s.json\n"+
 			"  - id: yaml\n    template: data.yaml.liquid\n    validate: references/s.json\n    newline: crlf\n"+
 			"  - id: broken\n    template: broken.json.liquid\n    validate: references/s.json\n"+

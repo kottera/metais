@@ -1,0 +1,26 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: A package whose container's entries are transformed.
+guide: Render it.
+inputs: []
+outputs:
+  - id: bundle
+    path: bundle.zip
+    container:
+      entries:
+        - template: notes.txt.liquid
+          path: notes.txt
+          newline: crlf
+        - template: data.json.liquid
+          path: data.json
+          validate: references/data.schema.json
+        - id: inner
+          path: inner.zip
+          container:
+            entries:
+              - template: data.json.liquid
+                path: deep.json
+                newline: crlf
+                validate: references/data.schema.json

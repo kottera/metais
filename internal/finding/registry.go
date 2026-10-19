@@ -1267,7 +1267,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Correct the template so that it writes valid {form} at this place; the output was not validated against its schema.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-TRN-002", "MTS-TRN-003"},
+		Statements: []string{"MTS-TRN-014", "MTS-TRN-015"},
 	},
 	{
 		Code:     "output.path.case_collision",

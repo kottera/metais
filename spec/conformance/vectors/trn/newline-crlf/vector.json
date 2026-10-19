@@ -3,7 +3,7 @@
   "id": "trn/newline-crlf",
   "title": "newline: crlf makes every LF not preceded by CR a CR LF in the whole file, a value's line endings included, and leaves a CR LF and a lone CR; as-written, declared or by default, writes the bytes the template produced",
   "statements": [
-    "MTS-TRN-001"
+    "MTS-TRN-013"
   ],
   "since": "1.0",
   "class": "processor",

@@ -3,7 +3,7 @@
   "id": "trn/newline-crlf-embed",
   "title": "newline: crlf converts the bytes embed placed with the rest of the file, leaving the input's CR LF and lone CR as they are; without it the embedded bytes are written as supplied",
   "statements": [
-    "MTS-TRN-001",
+    "MTS-TRN-013",
     "MTS-TAG-001"
   ],
   "since": "1.0",

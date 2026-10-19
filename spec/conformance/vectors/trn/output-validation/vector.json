@@ -3,8 +3,8 @@
   "id": "trn/output-validation",
   "title": "A json or yaml output naming validate is parsed after CRLF conversion and validated against its schema, whose references stay beneath its top-level directory; a failing keyword is reported by its output. code and a text its reader refuses as output.parse, every finding of every output located in it, and nothing is written",
   "statements": [
-    "MTS-TRN-002",
-    "MTS-TRN-003",
+    "MTS-TRN-014",
+    "MTS-TRN-015",
     "MTS-DAT-011",
     "MTS-FND-004",
     "MTS-FND-006"

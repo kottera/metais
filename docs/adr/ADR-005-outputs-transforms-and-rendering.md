@@ -1592,10 +1592,13 @@ they write into an existing directory too.
   `newline: crlf` still stop with `internal.error` until W5-2 and W5-7
   implement those fields.
 - **2026-10-19, PLAN-2026-10-metais-v1 W5-7.** D10 and D11 run in render's
-  phase 4, after every output renders: each rendered file that declares
-  `newline: crlf` is converted, then each that names `validate` is parsed
-  by its kind and validated, and every finding of every file is reported
-  before anything is written. Four readings where this ADR is silent:
+  phase 4 on each file as it renders, a container's entries before the
+  container is measured, so a zip holds the converted bytes: a file that
+  declares `newline: crlf` is converted, then one that names `validate` is
+  parsed by its kind and validated, and every finding of every file is
+  reported before anything is written. An entry's findings name its
+  owner, as W5-6's do, and are located by the container's path and its
+  own. Four readings where this ADR is silent:
   - **Which files an output schema loads.** D11 item 3 reads ADR-003 D5
     item 5 with `inputs/` as the `validate` file's top-level directory.
     ADR-003 D3 item 1's "every file is loaded" is not carried over, since
