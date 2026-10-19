@@ -1275,3 +1275,15 @@ the render.
   where the file system refuses the flag, and `RenameReplace` D14 item
   2.2's. A rename that succeeds takes what it moved out of the record, so
   a committed output is never the render's to remove.
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-5F.** D14 item 5's "only what
+  this render created" is proved by a held handle, not by a recorded device
+  and inode: a file system may give a deleted file's inode number to the
+  next file created (ext4 does), so a newcomer at a created name compared
+  the same as the render's entry. `Writer` now holds each entry it creates
+  open until the entry is removed or committed or the Writer closes, and
+  `RemoveCreated` compares the name with the held entry's own `Stat`. A
+  render therefore holds one handle per entry it has created and not
+  committed, which ADR-009's `outputs` limit bounds and the host's
+  open-file limit may refuse first. On windows the handles beneath a
+  directory are released before it is renamed, and those records fall back
+  to the NTFS file id, whose sequence number is never reused.
