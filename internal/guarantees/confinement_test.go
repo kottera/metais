@@ -19,6 +19,9 @@ func confine(t *testing.T, st renderStep, faults fault.Set) []string {
 	t.Helper()
 	base := testenv.Dir(t)
 	work := st.prepare(t, base)
+	if work == "" {
+		return nil
+	}
 	before := renderSnapshot(t, base)
 	st.run(t, work, faults)
 	var bad []string

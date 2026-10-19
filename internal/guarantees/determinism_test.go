@@ -89,6 +89,9 @@ func differs(want, got map[string]string) string {
 func renderIn(t *testing.T, st renderStep, faults fault.Set) map[string]string {
 	t.Helper()
 	work := st.prepare(t, testenv.Dir(t))
+	if work == "" {
+		t.Fatalf("%s writes, and needs a directory this host cannot make unwritable", st.id)
+	}
 	if !st.run(t, work, faults) {
 		t.Fatalf("%s was refused", st.id)
 	}

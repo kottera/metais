@@ -29,9 +29,12 @@ type renderStep struct {
 	dir   string // the vector's directory
 	tags  []string
 	setup string // the vector tree copied into the work directory, or ""
-	args  renderArgs
-	ok    bool
-	trees []expectedTree
+	// dirs and unwritable are the setup's directories, the second made
+	// unwritable once everything else is in place (ADR-011 D9 item 4).
+	dirs, unwritable []string
+	args             renderArgs
+	ok               bool
+	trees            []expectedTree
 }
 
 type renderArgs struct {
@@ -71,7 +74,11 @@ func renderSteps(t *testing.T) []renderStep {
 			Cases []struct {
 				Name  string `json:"name"`
 				Setup *struct {
-					Copy *string `json:"copy"`
+					Copy       *string  `json:"copy"`
+					Dirs       []string `json:"dirs"`
+					Unwritable []string `json:"unwritable"`
+					Symlinks   []any    `json:"symlinks"`
+					Fifos      []string `json:"fifos"`
 				} `json:"setup"`
 				Steps []struct {
 					Op     string          `json:"op"`
@@ -91,8 +98,14 @@ func renderSteps(t *testing.T) []renderStep {
 				continue
 			}
 			st := renderStep{id: v.ID + "/" + c.Name, dir: filepath.Dir(f), tags: v.Tags, ok: c.Steps[0].Expect.OK, trees: c.Steps[0].Expect.Trees}
-			if c.Setup != nil && c.Setup.Copy != nil {
-				st.setup = *c.Setup.Copy
+			if c.Setup != nil {
+				if len(c.Setup.Symlinks) > 0 || len(c.Setup.Fifos) > 0 {
+					t.Fatalf("%s: a setup with links or pipes, which this detector does not replay", st.id)
+				}
+				if c.Setup.Copy != nil {
+					st.setup = *c.Setup.Copy
+				}
+				st.dirs, st.unwritable = c.Setup.Dirs, c.Setup.Unwritable
 			}
 			var all map[string]any
 			if err := json.Unmarshal(c.Steps[0].Args, &all); err != nil {
@@ -117,7 +130,9 @@ func renderSteps(t *testing.T) []renderStep {
 
 // prepare makes the work directory of st below base: <base>/parent, with
 // the vector's setup tree and the package and data trees the step names,
-// and returns it.
+// and returns it; or "" when this host cannot make a directory the setup
+// names unwritable, as root cannot, and the step cannot be replayed, as
+// the runner's unwritable-dirs probe skips it.
 func (st renderStep) prepare(t *testing.T, base string) string {
 	t.Helper()
 	work := filepath.Join(base, "parent")
@@ -127,9 +142,26 @@ func (st renderStep) prepare(t *testing.T, base string) string {
 	if st.setup != "" {
 		copyTree(t, filepath.Join(st.dir, filepath.FromSlash(st.setup)), work)
 	}
+	for _, d := range append(slices.Clone(st.dirs), st.unwritable...) {
+		if err := os.MkdirAll(filepath.Join(work, filepath.FromSlash(d)), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
 	for _, p := range []string{st.args.Package, st.args.Data} {
 		if p != "" {
 			copyTree(t, filepath.Join(st.dir, filepath.FromSlash(p)), filepath.Join(work, filepath.FromSlash(p)))
+		}
+	}
+	for _, d := range st.unwritable {
+		p := filepath.Join(work, filepath.FromSlash(d))
+		if err := os.Chmod(p, 0o555); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { os.Chmod(p, 0o755) })
+		if f, err := os.Create(filepath.Join(p, "probe")); err == nil {
+			f.Close()
+			os.Remove(f.Name())
+			return ""
 		}
 	}
 	return work
