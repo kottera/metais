@@ -22,15 +22,26 @@ package_digest, are sha256: and 64 zeros, and the provenance tool is test, so an
 expected output records nothing that changes with the package or the tool.
 
 When expected/ exists, its files are compared with the render's by path, byte
-for byte; directories are ignored. A file the render did not write is
-example.output_missing, one it wrote that expected/ lacks is
+for byte but for a container; directories are ignored. A file the render did not
+write is example.output_missing, one it wrote that expected/ lacks is
 example.output_unexpected, and different content is example.output_differs: for
 text, a unified diff, of at most 40 lines here and 16 KiB in --json; for a
 binary file, the first differing byte and both sizes and digests. Its cause
 names the first likely explanation that applies: line endings, one final
-newline, a byte order mark, or trailing whitespace. A container output's zip is
-compared byte for byte as any file is; its comparison by entries is not yet part
-of metais. An example without expected/ is rendered and not compared.
+newline, a byte order mark, or trailing whitespace.
+
+A container output is compared by its entries, not its zip's bytes: their names
+in order, each entry's uncompressed content, and the method of each entry
+declared stored: true and of a profile's mimetype; any other entry's method is
+the encoder's choice and is not compared. The expected container is read as a
+packed package is, with its bounds and profile, but in its entries' own order,
+and one that does not read is example.expected_unreadable. An entry expected and
+not written is example.entry_missing, one written and not expected
+example.entry_unexpected, entries in another order example.entry_order, at the
+first index where they differ, a stored entry the expected container deflates
+example.entry_method, and different content example.output_differs, located at
+<output>!<entry>; a container entry is compared by its own entries. An example
+without expected/ is rendered and not compared.
 
 --update, on a source directory only, makes each selected example's expected/
 exactly its render: every file that is missing or differs is written, through a
@@ -139,7 +150,7 @@ Refusals:
                         Next: metais test <package>
   csv.* (7)             An example's inputs are refused.
                         Next: metais test <package>
-  example.* (4)         An example fails. Next: metais test <package>
+  example.* (9)         An example fails. Next: metais test <package>
   input.* (52)          An example's inputs are refused.
                         Next: metais test <package>
   json.* (5)            An example's inputs are refused.

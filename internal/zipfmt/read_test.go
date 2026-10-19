@@ -524,6 +524,15 @@ func TestOpenContainer(t *testing.T) {
 	if !bytes.Equal(got["META-INF/container.xml"], text) {
 		t.Errorf("the sink received %q", got["META-INF/container.xml"])
 	}
+	// An entry that is a stored zip holds an end-record signature, which
+	// Open refuses and OpenContainer does not.
+	nested := write(t, []Entry{{Name: "inner.zip", Content: b, Method: Store}, {Name: "a.txt", Content: nil, Method: Auto}})
+	if _, fs, _ := Open(bytes.NewReader(nested), int64(len(nested)), limits.Defaults()); len(fs) == 0 || fs[0].Code() != CodeSecondEndRecord {
+		t.Errorf("Open of a zip holding a stored zip: %v", fs)
+	}
+	if _, fs, err := OpenContainer(bytes.NewReader(nested), int64(len(nested)), limits.Defaults(), nil); err != nil || len(fs) > 0 {
+		t.Errorf("OpenContainer of a zip holding a stored zip: %v, %v", fs, err)
+	}
 	// Every other rule holds: a bound, and a refusal of the profile.
 	low := limits.Defaults()
 	if _, ok := low.Lower("entries=2"); !ok {
