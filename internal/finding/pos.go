@@ -6,7 +6,6 @@ package finding
 import (
 	"cmp"
 	"crypto/sha256"
-	"encoding/binary"
 	"strings"
 )
 
@@ -67,22 +66,37 @@ type Path struct {
 	parent *Path
 	token  string
 	depth  int
-	id     [sha256.Size]byte // the SHA-256 of the parent's id, then the token's length and bytes
+	id     [sha256.Size]byte // the SHA-256 of the parent's id and the token's digest
+}
+
+// Token is one reference token of a Path with its digest, which is read
+// from the token once. A reader that names one long token under many
+// parents, such as a long column name in every record, makes it once and
+// gives it to ChildToken, so each child costs nothing for its length.
+type Token struct {
+	text   string
+	digest [sha256.Size]byte
+}
+
+// NewToken returns token as a Token. An invalid UTF-8 byte in token is
+// replaced with U+FFFD (ADR-006 D9 item 9).
+func NewToken(token string) Token {
+	token = validUTF8(token)
+	return Token{text: token, digest: sha256.Sum256([]byte(token))}
 }
 
 // Child returns the path to the member or element token of the value at
-// p. An invalid UTF-8 byte in token is replaced with U+FFFD (ADR-006 D9
-// item 9).
-func (p *Path) Child(token string) *Path {
-	token = validUTF8(token)
-	c := &Path{parent: p, token: token, depth: p.Depth() + 1}
+// p, as ChildToken(NewToken(token)) does.
+func (p *Path) Child(token string) *Path { return p.ChildToken(NewToken(token)) }
+
+// ChildToken returns the path to the member or element t of the value at
+// p.
+func (p *Path) ChildToken(t Token) *Path {
+	c := &Path{parent: p, token: t.text, depth: p.Depth() + 1}
 	h := sha256.New()
 	id := p.digest()
 	h.Write(id[:])
-	var n [8]byte
-	binary.BigEndian.PutUint64(n[:], uint64(len(token)))
-	h.Write(n[:])
-	h.Write([]byte(token))
+	h.Write(t.digest[:])
 	h.Sum(c.id[:0])
 	return c
 }

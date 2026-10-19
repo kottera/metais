@@ -56,6 +56,10 @@ type reader struct {
 	table     Table
 	hasHeader bool // the header record was read without a quote finding
 	findings  []finding.Finding
+
+	columns     []*finding.Token // each header name's pointer token, once a finding needs it
+	recordPath  *finding.Path    // the pointer of the record at recordIndex, once a finding needs it
+	recordIndex int
 }
 
 // next moves past the byte at off.
@@ -238,25 +242,35 @@ func (r *reader) checkHeader() {
 }
 
 // recordPointer is the JSON Pointer of the index'th data record in the
-// file's value, and nil for the header.
-func (r *reader) recordPointer(index int) *string {
+// file's value, and nil for the header. The last record's is kept, for
+// the next finding about it.
+func (r *reader) recordPointer(index int) *finding.Path {
 	if index < 0 {
 		return nil
 	}
-	p := finding.Pointer(strconv.Itoa(index))
-	return &p
+	if r.recordPath == nil || r.recordIndex != index {
+		r.recordPath, r.recordIndex = (*finding.Path)(nil).Child(strconv.Itoa(index)), index
+	}
+	return r.recordPath
 }
 
 // fieldPointer is the JSON Pointer of the column'th field of the index'th
 // data record: the member its header name names, or the record when the
-// header names no column there.
-func (r *reader) fieldPointer(index, column int) *string {
+// header names no column there. Each header name's token is made once, so
+// a finding in every record under a long name costs none of its length.
+func (r *reader) fieldPointer(index, column int) *finding.Path {
 	if index < 0 {
 		return nil
 	}
 	if !r.hasHeader || column >= len(r.table.Header) {
 		return r.recordPointer(index)
 	}
-	p := finding.Pointer(strconv.Itoa(index), r.table.Header[column].Text)
-	return &p
+	if r.columns == nil {
+		r.columns = make([]*finding.Token, len(r.table.Header))
+	}
+	if r.columns[column] == nil {
+		t := finding.NewToken(r.table.Header[column].Text)
+		r.columns[column] = &t
+	}
+	return r.recordPointer(index).ChildToken(*r.columns[column])
 }
