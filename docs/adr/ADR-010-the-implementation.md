@@ -1560,3 +1560,35 @@ outside the standard library.
   1 requires, since an empty line is no record. `FuzzCSVRead` holds the
   write-then-read round trip of fields and quotedness. `TestNoEncodingCSV`
   holds item 1 over every target.
+
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-10.** D5 landed as
+  `internal/schema` and D10 item 2 as `internal/regexprofile`.
+  `schema.NewCompiler(tree pkgtree.Tree, lim limits.Set, decode
+  schema.Decode)` takes a third argument, the reader of a schema file's
+  bytes into the data model: the compiler is a leaf of Wave 2, and the
+  JSON and YAML readers are its siblings', so the loader supplies them
+  (Wave 3). It compiles every `.json`, `.yaml` and `.yml` entry under
+  `inputs/`, reports every finding of every file at once, and returns no
+  compiler beside a finding. `regexprofile.Compile(pattern, lim, meter)`
+  returns a `*regexprofile.Regexp`, which satisfies `jsonschema.Regexp`
+  without the profile importing the library; the meter is `regex-work`'s,
+  and a `Validate` whose matching it refused returns a `regex-work` limit
+  error and no failures. A schema that fails the 2020-12 meta-schema is
+  `schema.invalid`, naming the meta-schema's keyword at the failing value,
+  a code in ADR-006 D3's `schema` family ("does not compile"); the
+  schema-file codes are about the package entry, since a file is compiled
+  once whichever inputs use it. A reference to an embedded `$id` from
+  another file resolves: each embedded resource is also added to the
+  library under its own URI. The JSON-Schema-Test-Suite is vendored at
+  `55719286c33ae0d1823bfb65fea10338a19bc37c` and its runner also runs the
+  optional format tests of every asserted format; its exclusions name the
+  outcome METAIS gives instead, which the runner holds it to. Two
+  exclusions follow ADR-003 D4 item 1's grammars where the suite goes
+  further: `hostname` is RFC 1123 §2.1 and checks no A-label against IDNA,
+  and `uri-template`'s literals are RFC 6570 §2.1's, which exclude the
+  apostrophe. `schema-work` is not yet counted: the library has no hook
+  for a subschema evaluation. When the compiler is linked into the binary,
+  TestNoHostFacts' dependency scan will find `time.Parse` in the library's
+  `format.go`, `os.Open` and `runtime.GOOS` in its `loader.go`, and
+  `runtime.GOOS` and `filepath.Abs` in its `util.go`, which R2-143's
+  allow-list does not name.

@@ -187,8 +187,11 @@ func (c *Compiler) read(tree pkgtree.Tree, entry string, decode Decode) (*file, 
 		panic(err)
 	}
 	doc, fs := decode(entry, src)
-	if len(fs) > 0 || doc == nil {
+	if len(fs) > 0 {
 		return nil, fs
+	}
+	if doc == nil {
+		panic("schema: Decode gave no value and no finding for " + entry)
 	}
 	f := &file{entry: entry, retrieval: RetrievalURI(entry), doc: doc}
 	base, _ := url.Parse(f.retrieval)
@@ -395,6 +398,13 @@ func (c *Compiler) compileFindings(entry string, err error) ([]finding.Finding, 
 		dupID *jsonschema.DuplicateIDError
 		dupA  *jsonschema.DuplicateAnchorError
 		re    *jsonschema.InvalidRegexError
+		pid   *jsonschema.ParseIDError
+		panc  *jsonschema.ParseAnchorError
+		vocab *jsonschema.UnsupportedVocabularyError
+		draft *jsonschema.UnsupportedDraftError
+		cycle *jsonschema.MetaSchemaCycleError
+		mism  *jsonschema.MetaSchemaMismatchError
+		murl  *jsonschema.InvalidMetaSchemaURLError
 	)
 	switch {
 	case errors.As(err, &sve):
@@ -430,6 +440,16 @@ func (c *Compiler) compileFindings(entry string, err error) ([]finding.Finding, 
 	case errors.As(err, &dupA):
 		e, base := where(dupA.URL)
 		return []finding.Finding{report(CodeIDDuplicate, e, base+dupA.Ptr2, finding.Params{"id": str("#" + dupA.Anchor), "other": str(e)})}, nil
+	case errors.As(err, &pid):
+		e, p := where(pid.URL)
+		return []finding.Finding{report(CodeInvalid, e, p+"/$id", finding.Params{"keyword": str("$id")})}, nil
+	case errors.As(err, &panc):
+		e, p := where(panc.URL)
+		return []finding.Finding{report(CodeInvalid, e, p+"/$anchor", finding.Params{"keyword": str("$anchor")})}, nil
+	case errors.As(err, &vocab), errors.As(err, &draft), errors.As(err, &cycle), errors.As(err, &mism), errors.As(err, &murl):
+		// The pre-check refuses every $schema but 2020-12's, and every
+		// $vocabulary, so none of these is reached.
+		return []finding.Finding{report(CodeDialect, entry, "", finding.Params{"reason": str(dialectSchema)})}, nil
 	case errors.As(err, &re):
 		e, p := where(re.URL)
 		if f, ok := regexFinding(re.Err, e, p, c.lim); ok {

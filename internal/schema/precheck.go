@@ -127,7 +127,9 @@ func (w *walker) walk(v value.Value, ptr string, base *url.URL, depth int) {
 	}
 	if id, ok := o.Get("$id"); ok {
 		if s, ok := id.(value.String); ok {
-			if u, err := url.Parse(s.Text()); err == nil {
+			// An $id with a fragment is the meta-schema's to refuse; it
+			// declares no resource.
+			if u, err := url.Parse(s.Text()); err == nil && u.Fragment == "" {
 				abs := base.ResolveReference(u)
 				abs.Fragment, abs.RawFragment = "", ""
 				base = abs

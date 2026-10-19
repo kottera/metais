@@ -290,6 +290,34 @@ func TestReferences(t *testing.T) {
 	}
 }
 
+// TestUnresolvedFragments refuses a reference to an anchor or a pointer a
+// resource does not have, and an $id or anchor the library cannot parse.
+func TestUnresolvedFragments(t *testing.T) {
+	cases := []struct {
+		schema string
+		code   finding.Code
+	}{
+		{`{"$ref": "#nope"}`, CodeRefUnresolved},
+		{`{"$ref": "#/$defs/nope"}`, CodeRefUnresolved},
+		{`{"$ref": "metais:///inputs/s.json#/$defs/nope"}`, CodeRefUnresolved},
+		{`{"$defs": {"a": {"$id": "#foo"}}}`, CodeInvalid},
+		{`{"$id": "https://example.com/a#foo"}`, CodeInvalid},
+		{`{"$anchor": "1bad"}`, CodeInvalid},
+		{`{"$defs": {"a": {"$anchor": "x"}, "b": {"$anchor": "x"}}}`, CodeIDDuplicate},
+	}
+	for _, c := range cases {
+		_, fs := compileFiles(t, limits.Defaults(), map[string]string{"inputs/s.json": c.schema})
+		if len(fs) == 0 || codes(fs)[0] != string(c.code) || len(codes(fs)) != 1 {
+			t.Errorf("%s: got\n%s\nwant %s", c.schema, describe(fs), c.code)
+		}
+		for _, f := range fs {
+			if l, _ := f.Location(); l.File != "inputs/s.json" {
+				t.Errorf("%s: located in %q", c.schema, l.File)
+			}
+		}
+	}
+}
+
 // TestCrossFileReferences validates through references between files: by
 // canonical $id, by the retrieval URI of a file with none, and to an
 // embedded resource of another file.
