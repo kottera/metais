@@ -1596,8 +1596,10 @@ outside the standard library.
   further: `hostname` is RFC 1123 §2.1 and checks no A-label against IDNA,
   and `uri-template`'s literals are RFC 6570 §2.1's, which exclude the
   apostrophe. `schema-work` is not yet counted: the library has no hook
-  for a subschema evaluation. When the compiler is linked into the binary,
-  TestNoHostFacts' dependency scan will find `time.Parse` in the library's
-  `format.go`, `os.Open` and `runtime.GOOS` in its `loader.go`, and
-  `runtime.GOOS` and `filepath.Abs` in its `util.go`, which R2-143's
-  allow-list does not name.
+  for a subschema evaluation. TestNoHostFacts' dependency scan, which W2-6
+  widened to every package's closure, finds `time.Parse` in the library's
+  `format.go`, `os.Open` and `runtime.GOOS` in its `loader.go`,
+  `filepath.Abs` and `runtime.GOOS` in its `util.go`, and `os.Stdout` in
+  `golang.org/x/text/message`; each has its allow-list entry, by the W2
+  orchestrator's ruling under ADR-009 D16 item 3 and Wave 1 ruling (b), and
+  each reason resting on NewCompiler's configuration has its test.
