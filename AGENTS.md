@@ -107,14 +107,41 @@ conformance vectors run as part of `go test`. The race detector needs cgo,
 so `go test -race` runs with it enabled; the static build is the separate
 check of a cgo-free binary.
 
+**Generated files are regenerated, never merged by hand** (ADR-011 A5).
+`.gitattributes` gives each committed generated file a merge driver that
+keeps one side's copy. For the code catalog in `spec/12-findings.md`, only
+the generated region keeps one side, and the chapter's prose gets an
+ordinary three-way merge. Git reads drivers only from a clone's own
+configuration, so:
+
+- **In a fresh clone, before the first rebase or merge,** run
+  `.claude/skills/verification-gate/merge-setup.sh`. Every gate script also
+  runs it, and says `NOTE` when the drivers were missing. A clone without
+  them merges generated files as text.
+- **After every rebase or merge,** run
+  `.claude/skills/verification-gate/regenerate.sh` and commit what it
+  changes. It rewrites every committed generated file from its sources:
+  - `spec/findings/registry.json`, the specdata copies,
+    `spec/statements.json` and the code catalog, by `go generate`;
+  - the help, scaffold, tar, YAML-writer and vector-package goldens, by
+    their tests' `-update`;
+  - `THIRD-PARTY-NOTICES.txt`.
+
+  Each file's drift test fails until it has run.
+
+A new generated file gets a line in `.gitattributes` and a step in
+`regenerate.sh` in the change that adds it. `merge-check.sh` proves the
+drivers on a fresh clone, so run it after changing either file.
+
 Two skills under `.claude/skills/` carry the procedure behind the tiers.
 Agents that do not load skills read them as plain files:
 
 - **`verification-gate`**: read it before you run either tier, before you
   publish a test run as evidence, and whenever a step goes red. It covers
   `gate.sh`, `gate-wait.sh`, `gate-select.sh` and `gate-why.sh`, which
-  re-runs one test alone. It also covers resuming, what to re-run after a
-  rebase, and how to tell from a red's mechanism whether it is yours.
+  re-runs one test alone. It also covers the generated files' merge
+  drivers and `regenerate.sh`, resuming, what to re-run after a rebase, and
+  how to tell from a red's mechanism whether it is yours.
 - **`root-cause`**: read it the moment something fails and you do not yet
   know why, before re-running anything.
 
