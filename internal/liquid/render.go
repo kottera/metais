@@ -543,6 +543,9 @@ type seq struct {
 	// isRange is set for a range literal, whose span loop-iterations is
 	// charged before its first iteration (ADR-009 D11 item 1).
 	isRange bool
+	// isString is set for a string, which Shopify's loops visit once
+	// whatever their offset and limit (Utils.slice_collection).
+	isString bool
 }
 
 // sequence returns what a for, tablerow or render … for iterates over p:
@@ -584,7 +587,7 @@ func (r *renderer) valueSeq(v value.Value) seq {
 		if v.Text() == "" {
 			return seq{}
 		}
-		return seq{n: 1, at: func(int64) value.Value { return v }}
+		return seq{n: 1, isString: true, at: func(int64) value.Value { return v }}
 	}
 	return seq{}
 }
@@ -619,10 +622,14 @@ func unorderedMembers(o value.Object) []int {
 	return order
 }
 
-// window is the part of n items a loop visits, from offset from to before
-// to (when hasTo), as Shopify slices a collection: item i is visited when
-// from <= i and, with a limit, i < to.
-func window(n, from int64, to int64, hasTo bool) (lo, hi int64) {
+// window is the part of s a loop visits, from offset from to before to
+// (when hasTo), as Shopify slices a collection: item i is visited when
+// from <= i and, with a limit, i < to. A string is visited whole.
+func window(s seq, from int64, to int64, hasTo bool) (lo, hi int64) {
+	if s.isString {
+		return 0, s.n
+	}
+	n := s.n
 	lo, hi = max(from, 0), n
 	if hasTo {
 		hi = min(hi, to)
@@ -680,7 +687,7 @@ func (r *renderer) forTag(n *ast.For) (ctl, *Error) {
 			to, hasTo = l+from, true
 		}
 	}
-	lo, hi := window(s.n, from, to, hasTo)
+	lo, hi := window(s, from, to, hasTo)
 	count := hi - lo
 	r.fr.offsets[n.Name] = from + count
 	if count == 0 {
@@ -832,7 +839,7 @@ func (r *renderer) tablerow(n *ast.Tablerow) (ctl, *Error) {
 	if err != nil {
 		return ctlNone, err
 	}
-	lo, hi := window(s.n, from, from+limit, hasTo)
+	lo, hi := window(s, from, from+limit, hasTo)
 	count := hi - lo
 	cols, hasCols, err := attr(n.Cols, "cols")
 	if err != nil {

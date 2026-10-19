@@ -29,8 +29,13 @@ identifiers, only digits	dialect	ADR-004 D1 item 2: strict2 binds an identifier 
 identifiers, repeated parens	dialect	ADR-004 D1 item 2: strict2 binds an identifier only, as the corpus's own "identifiers, only digits, self" shows; this case is strict mode's
 identifiers, true followed by variable segments is not a reserved word	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
 output, access an undefined variable by index	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+output, bracketed variable resolves to a string without leading identifier	dialect	ADR-004 D1 items 2 and 5: strict2 refuses a path that begins with an index, which looks a variable up by a computed name; the corpus is 5.12.0's, which accepted it
+output, nested bracketed variable resolving to a string	dialect	ADR-004 D1 items 2 and 5: strict2 refuses a path that begins with an index, which looks a variable up by a computed name; the corpus is 5.12.0's, which accepted it
 output, render an undefined property	dialect	ADR-004 D6 item 4: a property an object neither declares nor holds is template.undefined_property; this case is lax mode's, rendering it as nothing
 output, render an undefined variable	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing
+output, top-level quoted, bracketed variable name with whitespace	dialect	ADR-004 D1 items 2 and 5: strict2 refuses a path that begins with an index, which looks a variable up by a computed name; the corpus is 5.12.0's, which accepted it
+output, top-level quoted, bracketed variable name with whitespace followed by dot notation	dialect	ADR-004 D1 items 2 and 5: strict2 refuses a path that begins with an index, which looks a variable up by a computed name; the corpus is 5.12.0's, which accepted it
+output, whitespace between bracket notation	dialect	ADR-004 D1 items 2 and 5: strict2 refuses a path that begins with an index, which looks a variable up by a computed name; the corpus is 5.12.0's, which accepted it
 range, slice uses range string representation	dialect	ADR-004 D4 item 1: a range is an array of its integers, since every value is one of D4 item 1's kinds; Shopify's Range has a string form, which slice reads
 special, last of a object	dialect	ADR-004 D4 item 7: last applies to an object, its last [name, value] pair, where Ruby's Hash has no last
 special, size of undefined	dialect	ADR-004 D6 item 1: a name bound by nothing is template.undefined_variable; this case is lax mode's, rendering it as nothing

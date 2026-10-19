@@ -2522,7 +2522,7 @@ var registry = withSchemaEntries([]Entry{
 			{Name: "output", Type: TypeString, Meaning: "The id of the output whose context produced the finding. A template, a partial or a manifest expression analysed in the contexts of several outputs is reported once for each context, naming the first output that has it; absent for a template no output renders."},
 		},
 		Message:    "This reference selects a member by a computed name, so the cross-reference cannot check it.",
-		Hint:       "Nothing is wrong unless the computed name is. A computed name into inputs, or a bracketed root, counts every input as used.",
+		Hint:       "Nothing is wrong unless the computed name is. A computed name into inputs counts every input as used.",
 		Span:       SpanValue,
 		Since:      "1.0",
 		Statements: []string{"MTS-AUT-014"},

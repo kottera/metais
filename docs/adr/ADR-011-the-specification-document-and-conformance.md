@@ -1640,3 +1640,19 @@ W3-NB2, option D of the question W3-NB2 raised).
   with its own process. Under the full parallel `go test -race ./...` on a
   16-core darwin host, the slowest clean self-proof process went from
   1.47 s to under 1 s, and three in four had taken over a second.
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-6.** D17 landed as
+  `spec/conformance/delegated/`. `liquid-spec.json` carries item 1's pin,
+  suites, error mode and missing features, which `TestDelegatedFile` reads
+  from this ADR's own text, and 490 departures. Each departure names a
+  statement of chapter 7, which `TestDepartureStatements` holds to the
+  text. They were found by reading the pinned suites. An emulation of
+  liquid-spec's loader, selection and comparison, kept out of the
+  repository, ran every case through the server. Of 2,394 cases selected,
+  it predicts 1,801 passing, 490 departures failing, and 103 held out for
+  applying `date`. `liquid-spec.rb` is the adapter. It refuses any other
+  liquid-spec commit, and hands the departures to liquid-spec as known
+  failures, so a departure that passes fails the run (item 2).
+  `TestDelegatedRun -args -results=<file>` judges a run's `--json` result.
+  It also counts the held-out cases, and fails on a departure the run did
+  not reach. The run itself is the out-of-band act, and its command is in
+  `README.md` there.

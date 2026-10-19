@@ -1,0 +1,33 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/strict2-refusals",
+  "title": "What the strict2 grammar accepts and then ignores or overrides is refused: a trailing comma after a filter's or cycle's last argument, a colon with no argument, a parameter tablerow does not define, a for parameter written twice; and a path that begins with an index, which would look a variable up by a computed name",
+  "statements": [
+    "MTS-TPL-003",
+    "MTS-TPL-005",
+    "MTS-TPL-055"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

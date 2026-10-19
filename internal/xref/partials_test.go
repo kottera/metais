@@ -54,7 +54,7 @@ func TestRenderScope(t *testing.T) {
 		want             []string
 	}{
 		{"a parameter", `{% render "p.liquid", row: inputs.metrics.o.k %}`, `{{ row.x }}{{ row.y }}`, []string{unknownField}},
-		{"with, aliased by default to the name's last segment", `{% render "p.liquid" with inputs.metrics.o.k %}`, `{{ ['p.liquid'].x }}`, []string{dynamicRef}},
+		{"with, aliased by default to the name's last segment, which no path can read", `{% render "p.liquid" with inputs.metrics.o.k %}`, `{{ p.x }}`, []string{"template.xref.partial_parameter_not_passed"}},
 		{"with ... as", `{% render "p.liquid" with inputs.metrics.o.k as row %}`, `{{ row.x }}{{ row.y }}`, []string{unknownField}},
 		{"for ... as binds the element and forloop", `{% render "p.liquid" for inputs.metrics.m as row %}`, `{{ row.c }}{{ forloop.index }}{{ row.zz }}`, []string{unknownField}},
 		{"the globals are visible", `{% render "p.liquid" %}`, `{{ inputs.metrics.s }}{{ package.name }}{{ output.path }}{{ now }}`, nil},

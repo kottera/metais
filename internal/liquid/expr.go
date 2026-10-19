@@ -314,7 +314,9 @@ func (x *exprParser) primary() (ast.Primary, *Error) {
 		x.next()
 		return x.segments(&ast.Path{Span: x.span(t, t), Root: t.text})
 	case etLBracket:
-		return x.segments(&ast.Path{Span: x.span(t, t)})
+		// strict2 refuses a path that begins with an index, which would
+		// look a variable up by a computed name (ADR-004 D1 items 2 and 5).
+		return nil, x.errorf("a path begins with a name, not %q", t.text)
 	case etLParen:
 		if e := x.enter(); e != nil {
 			return nil, e
@@ -399,8 +401,7 @@ func (x *exprParser) number(t etok) *ast.Literal {
 	return lit
 }
 
-// segments parses the ".name" and "[expr]" steps after a path's root, or
-// a path that begins with an index.
+// segments parses the ".name" and "[expr]" steps after a path's root.
 func (x *exprParser) segments(path *ast.Path) (ast.Primary, *Error) {
 	for {
 		t := x.peek()
@@ -428,9 +429,6 @@ func (x *exprParser) segments(path *ast.Path) (ast.Primary, *Error) {
 			x.depth--
 			path.Segments = append(path.Segments, &ast.Segment{Span: x.span(t, x.last()), Index: idx})
 		default:
-			if path.Root == "" && len(path.Segments) == 0 {
-				return nil, x.errorf("expected a value")
-			}
 			path.Span.End = x.last().end
 			return path, nil
 		}

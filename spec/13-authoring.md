@@ -159,9 +159,8 @@ index into a node whose types exclude array as
 `template.xref.not_an_array`, and an index at or beyond `maxItems`, or
 beyond `prefixItems` where `items` is `false`, as
 `template.xref.index_out_of_range`, both errors; and a segment computed
-from an expression that leaves no checkable candidate, a bracketed root,
-or a computed name in `inputs`, as `template.xref.dynamic_reference`, a
-warning.
+from an expression that leaves no checkable candidate, or a computed name
+in `inputs`, as `template.xref.dynamic_reference`, a warning.
 
 <a id="mts-aut-015"></a>**MTS-AUT-015** A check MUST report a `render` of
 a template that does not exist as `template.xref.missing_partial`, an

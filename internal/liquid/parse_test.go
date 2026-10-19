@@ -122,6 +122,8 @@ func TestRefusals(t *testing.T) {
 		{"every unknown filter", `{{ x | a1 }}{{ x | a2 }}`, []Code{CodeUnknownFilter, CodeUnknownFilter}},
 		{"reversed after a named parameter", `{% for x in xs limit: 2 reversed %}{% endfor %}`, []Code{CodeSyntax}},
 		{"a parameter twice", `{% for x in xs limit: 2 limit: 3 %}{% endfor %}`, []Code{CodeSyntax}},
+		{"a path that begins with an index", `{{ ["a b"] }}`, []Code{CodeSyntax}},
+		{"a computed root name", `{% if [k].x %}{% endif %}`, []Code{CodeSyntax}},
 		{"non-literal render name", `{% render name %}`, []Code{CodePartialName}},
 		{"render as without with", `{% render "p" as x %}`, []Code{CodeSyntax}},
 		{"U+0000", "a\x00b", []Code{CodeSyntax}},
