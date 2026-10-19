@@ -4,8 +4,11 @@
 package unitext
 
 import (
+	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/kottera/metais/internal/limits"
 )
 
 // CollisionKind is which of ADR-005 D12 items 6 and 7 two paths break.
@@ -120,4 +123,42 @@ func collisionKind(first, m member) CollisionKind {
 	default:
 		return CaseCollision
 	}
+}
+
+// PathProblems is one path and every rule of ADR-005 D12 items 1 to 5 it
+// breaks.
+type PathProblems struct {
+	Path     string
+	Problems []Problem
+}
+
+// TreeError is a tree's paths refused by the predicate: each path that
+// breaks items 1 to 5, in the order given, and every collision of items 6
+// and 7.
+type TreeError struct {
+	Paths      []PathProblems
+	Collisions []Collision
+}
+
+func (e *TreeError) Error() string {
+	return "unitext: " + strconv.Itoa(len(e.Paths)) + " paths break the portable-path rules, and " +
+		strconv.Itoa(len(e.Collisions)) + " collide"
+}
+
+// CheckTree applies the whole predicate to one tree's paths: CheckPath to
+// each, under lim, and Collisions to them all. It returns nil when every
+// path passes, and otherwise a *TreeError holding every problem at once.
+// It is the rule a reader of a tree of names supplies as ADR-001 D2's,
+// such as a source directory's.
+func CheckTree(paths []string, lim limits.Set) error {
+	e := &TreeError{Collisions: Collisions(paths)}
+	for _, p := range paths {
+		if pr := CheckPath(p, lim); pr != nil {
+			e.Paths = append(e.Paths, PathProblems{Path: p, Problems: pr})
+		}
+	}
+	if len(e.Paths) == 0 && len(e.Collisions) == 0 {
+		return nil
+	}
+	return e
 }

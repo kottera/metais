@@ -4,9 +4,12 @@
 package unitext
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"testing"
+
+	"github.com/kottera/metais/internal/limits"
 )
 
 func collisionText(cs []Collision) []string {
@@ -59,5 +62,22 @@ func TestCollisionsBounded(t *testing.T) {
 	got := Collisions(paths)
 	if len(got) != 1 || got[0].Member != "dir" {
 		t.Errorf("Collisions over 4000 paths in two colliding directories reported %d collisions, want the one directory", len(got))
+	}
+}
+
+// TestCheckTree composes the predicate over a tree: nil for a tree that
+// passes, and every path's problems and every collision at once otherwise.
+func TestCheckTree(t *testing.T) {
+	lim := limits.Defaults()
+	if err := CheckTree([]string{"metais.yaml", "templates/a.md", "templates/b.md"}, lim); err != nil {
+		t.Errorf("a portable tree: %v", err)
+	}
+	err := CheckTree([]string{"CON", "a<b", "x/A", "x/a", "ok"}, lim)
+	var te *TreeError
+	if !errors.As(err, &te) {
+		t.Fatalf("CheckTree = %v, want a *TreeError", err)
+	}
+	if len(te.Paths) != 2 || te.Paths[0].Path != "CON" || te.Paths[1].Path != "a<b" || len(te.Collisions) != 1 {
+		t.Errorf("CheckTree found %+v", te)
 	}
 }
