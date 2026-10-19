@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.check.1.json",
+  "title": "metais.check/1",
+  "description": "What metais check prints with --json: every finding of every step of the check, and as its result the number of findings of each severity (ADR-007 D2, ADR-008 D9). The result is null when any finding is an error.",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.check/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "counts"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "counts": {
+          "description": "The number of findings of each severity, every distinct finding counted whether the report lists it or not.",
+          "type": "object",
+          "required": [
+            "error",
+            "warning",
+            "info"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "error": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "warning": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "info": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}

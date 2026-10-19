@@ -4,6 +4,9 @@
 package cli
 
 import (
+	"slices"
+	"strings"
+
 	"github.com/kottera/metais/internal/author"
 	"github.com/kottera/metais/internal/cli/args"
 	"github.com/kottera/metais/internal/finding"
@@ -47,8 +50,10 @@ func checkDeclaration() *Command {
 	}
 }
 
-// checkRefusals are the refusals of check: the operand's, the limits', and
-// every registered error code a package's own read refuses it with.
+// checkRefusals are the codes check declares (ADR-008 D16 item 2): the
+// operand's and the limits', every code a package's own read refuses it
+// with, and every code its steps report, warnings and notes included,
+// each pointing back at check.
 func checkRefusals() []Refusal {
 	var out []Refusal
 	for _, r := range packageRefusals() {
@@ -60,6 +65,26 @@ func checkRefusals() []Refusal {
 			r.Next = nextCommandHelp("check")
 		}
 		out = append(out, r)
+	}
+	what := map[string]string{
+		"package":  "The package's tree",
+		"manifest": "The manifest",
+		"schema":   "A schema",
+		"template": "A template or a manifest expression",
+		"example":  "An example's layout",
+		"report":   "The report",
+	}
+	for _, e := range finding.Registry() {
+		family, rest, _ := strings.Cut(string(e.Code), ".")
+		declared := slices.ContainsFunc(out, func(r Refusal) bool { return r.Code == e.Code })
+		if declared || e.Code == "schema.sample_unsatisfiable" || e.Code == finding.CodeReportTruncated {
+			continue
+		}
+		if !slices.Contains(author.CheckCodes(), e.Code) && (what[family] == "" || e.Severity == finding.SeverityError) {
+			continue
+		}
+		cause := what[family] + " (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + "), a " + e.Severity.String() + "."
+		out = append(out, Refusal{e.Code, cause, nextCheckAgain})
 	}
 	return out
 }

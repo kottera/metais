@@ -44,6 +44,9 @@ Prints:
   Next: block. With --json, one metais.check/1 document.
 
 Refusals:
+  example.layout
+      An example's layout (layout), a error.
+      Next: metais check <package>
   limit.invalid
       A --limit names no limit, gives a malformed value, or tries to raise one.
       Next: metais check --help
@@ -85,6 +88,9 @@ Refusals:
       Next: metais check <package>
   manifest.format
       The manifest breaks one of its rules (format).
+      Next: metais check <package>
+  manifest.guide_link_missing
+      The manifest (guide link missing), a warning.
       Next: metais check <package>
   manifest.input.duplicate_name
       The manifest breaks one of its rules (input: duplicate name).
@@ -317,6 +323,12 @@ Refusals:
   package.layout.non_regular_file
       The package is refused (layout: non regular file).
       Next: metais check <package>
+  package.layout.not_packed
+      The package's tree (layout: not packed), a warning.
+      Next: metais check <package>
+  package.layout.os_litter
+      The package's tree (layout: os litter), a warning.
+      Next: metais check <package>
   package.layout.unknown_top_level
       The package is refused (layout: unknown top level).
       Next: metais check <package>
@@ -368,6 +380,9 @@ Refusals:
   package.version.unsupported_minor
       The package is refused (version: unsupported minor).
       Next: metais check <package>
+  report.step_skipped
+      The report (step skipped), a info.
+      Next: metais check <package>
   schema.dialect
       An input schema is refused (dialect).
       Next: metais check <package>
@@ -379,6 +394,12 @@ Refusals:
       Next: metais check <package>
   schema.invalid
       An input schema is refused (invalid).
+      Next: metais check <package>
+  schema.invalid_default
+      A schema (invalid default), a error.
+      Next: metais check <package>
+  schema.invalid_example
+      A schema (invalid example), a error.
       Next: metais check <package>
   schema.keyword_unknown
       An input schema is refused (keyword unknown).
@@ -395,11 +416,23 @@ Refusals:
   schema.ref_unresolved
       An input schema is refused (ref unresolved).
       Next: metais check <package>
+  schema.required_not_declared
+      A schema (required not declared), a warning.
+      Next: metais check <package>
   schema.sample_unsatisfiable
       An input schema is refused (sample unsatisfiable).
       Next: metais check <package>
   schema.syntax
       An input schema is refused (syntax).
+      Next: metais check <package>
+  schema.unsatisfiable
+      A schema (unsatisfiable), a error.
+      Next: metais check <package>
+  schema.unusable_enum_member
+      A schema (unusable enum member), a warning.
+      Next: metais check <package>
+  template.crlf
+      A template or a manifest expression (crlf), a warning.
       Next: metais check <package>
   template.division_by_zero
       An output's path, when or for_each does not parse (division by zero).
@@ -413,8 +446,17 @@ Refusals:
   template.include
       An output's path, when or for_each does not parse (include).
       Next: metais check <package>
+  template.not_utf8
+      A template or a manifest expression (not utf8), a error.
+      Next: metais check <package>
   template.number_range
       An output's path, when or for_each does not parse (number range).
+      Next: metais check <package>
+  template.ooxml.split_construct
+      A template or a manifest expression (ooxml: split construct), a error.
+      Next: metais check <package>
+  template.ooxml.split_delimiter
+      A template or a manifest expression (ooxml: split delimiter), a error.
       Next: metais check <package>
   template.syntax
       An output's path, when or for_each does not parse (syntax).
@@ -424,6 +466,49 @@ Refusals:
       Next: metais check <package>
   template.unknown_filter
       An output's path, when or for_each does not parse (unknown filter).
+      Next: metais check <package>
+  template.xref.budget_exhausted
+      A template or a manifest expression (xref: budget exhausted), a warning.
+      Next: metais check <package>
+  template.xref.dynamic_reference
+      A template or a manifest expression (xref: dynamic reference), a warning.
+      Next: metais check <package>
+  template.xref.for_each_not_array
+      A template or a manifest expression (xref: for each not array), a error.
+      Next: metais check <package>
+  template.xref.index_out_of_range
+      A template or a manifest expression (xref: index out of range), a error.
+      Next: metais check <package>
+  template.xref.missing_asset
+      A template or a manifest expression (xref: missing asset), a error.
+      Next: metais check <package>
+  template.xref.missing_partial
+      A template or a manifest expression (xref: missing partial), a error.
+      Next: metais check <package>
+  template.xref.not_an_array
+      A template or a manifest expression (xref: not an array), a error.
+      Next: metais check <package>
+  template.xref.not_an_object
+      A template or a manifest expression (xref: not an object), a error.
+      Next: metais check <package>
+  template.xref.partial_parameter_not_passed
+      A template or a manifest expression (xref: partial parameter not passed),
+      a warning.
+      Next: metais check <package>
+  template.xref.unknown_field
+      A template or a manifest expression (xref: unknown field), a error.
+      Next: metais check <package>
+  template.xref.unknown_input
+      A template or a manifest expression (xref: unknown input), a error.
+      Next: metais check <package>
+  template.xref.unknown_variable
+      A template or a manifest expression (xref: unknown variable), a error.
+      Next: metais check <package>
+  template.xref.unused_input
+      A template or a manifest expression (xref: unused input), a warning.
+      Next: metais check <package>
+  template.xref.unused_template
+      A template or a manifest expression (xref: unused template), a warning.
       Next: metais check <package>
   usage.bad_value
       A flag's value is missing, or is not one the flag accepts, or a flag that
