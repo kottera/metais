@@ -1326,3 +1326,44 @@ document.
   package opens, so a source directory every opening command refuses is
   refused by unpack with the same findings (ADR-011 D16 item 3), and one
   that opens is refused as a source directory, with nothing written.
+
+
+- **PLAN-2026-10-metais-v1 W4-2 — the reading commands.** D5 landed whole
+  for packed packages and source directories alike, but `extract
+  --overwrite`, which Wave 5 carries with existing destinations; it is not
+  declared, so no help text offers it. The work is `internal/browse`, over
+  a `pkgtree.Tree`, and each command's JSON format is under
+  `docs/cli/schemas/`. The readings taken:
+  - **Codes registered beside the Interfaces list:** `usage.bad_glob`, a
+    glob D5's grammar refuses, and `usage.bad_pattern`, a `grep` pattern
+    that is not RE2 syntax or breaches `pattern-length`, `regex-program` or
+    `regex-work`. ADR-009 D19 names `usage.bad_value` for a pattern, whose
+    `flag` is always present; a pattern and a glob are operands, so each
+    has a code of its own, with its argument's position and a `reason`.
+    The stricter rule is kept: every such pattern is refused, with class
+    `usage`.
+  - **`regex-work` in `grep` is `usage.bad_pattern`**, reason `regex_work`,
+    with the limit and its bound. `limit.exceeded`'s one subject is an
+    input, which a search's work is not, and the caller fixes it by
+    changing the pattern or the globs.
+  - **`extract` writes only where `<dir>` does not exist** (the plan's
+    Wave 4 ruling): an existing directory, empty or not, is
+    `output.destination.not_empty`, listing what it holds, and a file in
+    the way `output.destination.not_directory`. A missing `--to` is
+    `usage.missing_operand` with the operand `--to <dir>`.
+  - **D16 item 4 and `.compiled/`.** A packed package's entries include
+    `.compiled/` and a source directory's do not (D2 items 2 and 3), so
+    the packed-and-source agreement compares `ls` outside `.compiled/`;
+    every other command's result is equal byte for byte.
+  - **Result shapes D5 leaves open:** `ls` is `{"entries"}`; `outline` is
+    `{"path", "headings"}`; a `grep` line of context carries
+    `text_truncated` as a match does; `read` of an empty entry reports
+    `lines` as first and last 0. `schema <input>` carries `$schema` beside
+    the slot's members and `$defs`, and no `$id`.
+  - Human notices about a result (a `grep` truncation and its skipped
+    entries, an `outline` with no headings) go to standard error (D11 item
+    3); `ls`, `outline` and `grep` lines neutralise package text with the
+    tab kept, and `read` prints bytes unchanged (ADR-009 D15 item 3).
+  - Each reading command takes `--fail-on`, through W4-1's mechanism, as a
+    command that reports findings. A usage line longer than 80 columns is
+    wrapped in help between its bracketed groups.

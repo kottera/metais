@@ -1859,3 +1859,20 @@ at the train's close, with A1 and A3.
   with it from the invocation's faults, and `internal/guarantees`'
   `TestOnePassDetector` is the SC8 detector, with the fault as its
   control in the same run.
+
+
+- **PLAN-2026-10-metais-v1 W4-2 — `internal/browse` and read in place.**
+  `fault.UnpackToTemp` (`1 << 2`) is consulted at `browse.Content`, the one
+  function through which the reading commands read an entry. Under it the
+  entry is written by `browse.Extract`, which `layers.json` keeps as
+  browse's single entry point to `hostfs`, into a new directory beneath
+  the working directory, read back and left there: the tool reads no
+  `TMPDIR` (ADR-008 D12 item 5), so the working directory is where a
+  temporary file of its own would land. `TestReadInPlaceDetector` runs
+  `ls`, `read`, `outline`, `grep`, `schema` and `extract` over a packed
+  package and its source directory with `TMPDIR`, the working directory
+  and `HOME` snapshotted, and the fault is its control. D15 item 2's
+  `read --lines` budget is counted by `zipfmt.Archive.Decodes`, through a
+  test hook in `internal/cli` that hands a test the package a command
+  opened. A `grep` pattern is compiled by `regexprofile.CompileRE2`, which
+  holds the `regexp/syntax` program count that `regex-program` bounds.

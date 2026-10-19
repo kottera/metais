@@ -97,7 +97,11 @@ type command struct {
 var openingCommands = map[string][]string{
 	"inspect":  {"inspect", "--json", "{package}"},
 	"ls":       {"ls", "--json", "--recursive", "{package}"},
+	"read":     {"read", "--json", "{package}", "metais.yaml"},
+	"outline":  {"outline", "--json", "{package}", "metais.yaml"},
+	"grep":     {"grep", "--json", "{package}", "metais"},
 	"schema":   {"schema", "--json", "{package}"},
+	"extract":  {"extract", "--json", "{package}", "**", "--to", "extracted"},
 	"check":    {"check", "--json", "{package}"},
 	"validate": {"validate", "--json", "{package}"},
 	"render":   {"render", "--json", "{package}", "--out", "out"},
@@ -342,13 +346,21 @@ func (a *cliAdapter) run(r *runner, sb *sandbox, v *vector, st *step) ([]*invoca
 		return nil, []problem{{check: checkHarness, harness: true, msg: err.Error()}}
 	}
 	lim := stepLimits(st.Bounds, a.race(), r.wall)
-	var invs []*invocation
+	// A hostile open step runs every package-opening command, each of
+	// which reads the package and must write nothing (ADR-011 D16 item 3),
+	// so they run at once: the step takes as long as its slowest command
+	// rather than their sum. Every other step runs one command.
+	invs := make([]*invocation, len(cmds))
+	found := make([][]problem, len(cmds))
+	var wg sync.WaitGroup
+	for i, c := range cmds {
+		wg.Go(func() { invs[i], found[i] = a.invoke(sb, c, lim, st.args.DryRun) })
+	}
+	wg.Wait()
 	var ps []problem
-	for _, c := range cmds {
-		inv, cps := a.invoke(sb, c, lim, st.args.DryRun)
-		invs = append(invs, inv)
-		for i := range cps {
-			cps[i].where = inv.label
+	for i, cps := range found {
+		for j := range cps {
+			cps[j].where = invs[i].label
 		}
 		ps = append(ps, cps...)
 	}

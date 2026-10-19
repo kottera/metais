@@ -239,28 +239,19 @@ func (s *session) refuseFilled(f finding.Finding, with map[string]string) outcom
 	return o
 }
 
-// entryPath is an entry path as a next step writes it: the root as ".",
-// and a directory with its trailing /.
-func dirArg(d string) string {
-	if d == "." {
-		return "."
-	}
-	return shellQuote(d)
-}
-
 // lookupRefusal is the refusal of the path operand i, which browse.Lookup
 // or browse.List refused with err.
 func (s *session) lookupRefusal(p args.Parsed, i int, err error) outcome {
 	var nf *browse.NotFoundError
 	if errors.As(err, &nf) {
 		f := finding.New(finding.CodeUsageEntryNotFound, invocation, nil, finding.Params{"argument": s.operandArg(p, i)})
-		return s.refuseFilled(f, map[string]string{"<path>": dirArg(nf.Nearest)})
+		return s.refuseFilled(f, map[string]string{"<path>": shellQuote(nf.Nearest)})
 	}
 	if errors.Is(err, browse.ErrIsDirectory) {
 		f := finding.New(finding.CodeUsageIsADirectory, invocation, nil, finding.Params{
 			"argument": s.operandArg(p, i), "command": finding.String(s.line.cmd.Name),
 		})
-		return s.refuseFilled(f, map[string]string{"<path>": dirArg(browse.Clean(p.Operands[i]) + "/")})
+		return s.refuseFilled(f, map[string]string{"<path>": shellQuote(browse.Clean(p.Operands[i]) + "/")})
 	}
 	panic("cli: a lookup refused with " + err.Error())
 }
@@ -484,7 +475,7 @@ func grepLines(ss []browse.Shown) []grepLine {
 }
 
 // count reads the value of the flag called name, a decimal integer from
-// lo to hi, or def when it is not given; ok is false when it is refused.
+// lo to hi, or def when it is not given, or returns its refusal.
 func (s *session) count(p args.Parsed, name string, def, lo, hi int64) (int64, *outcome) {
 	v, given := p.Value(name)
 	if !given {
