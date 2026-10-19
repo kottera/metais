@@ -36,10 +36,17 @@ var FindingRegistrySchema []byte
 //go:embed schemas/1.0/finding.schema.json
 var FindingSchema []byte
 
+// ManifestSchema10 is spec/schemas/1.0/manifest.schema.json, the schema
+// of a manifest that declares METAIS 1.0 (ADR-002 D10).
+//
+//go:embed schemas/1.0/manifest.schema.json
+var ManifestSchema10 []byte
+
 // files are the embedded copies by their path below spec/, which is the
 // list generate_test.go's specFiles names.
 var files = map[string][]byte{
 	"findings/registry.json":                   FindingRegistry,
 	"schemas/1.0/finding-registry.schema.json": FindingRegistrySchema,
 	"schemas/1.0/finding.schema.json":          FindingSchema,
+	"schemas/1.0/manifest.schema.json":         ManifestSchema10,
 }

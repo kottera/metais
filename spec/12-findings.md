@@ -79,6 +79,8 @@ it, and the statements it reports.
 | `manifest.exclusive_minimum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
 | `manifest.forbidden` | error | content | manifest | optional: `property` | 1.0 | — |
 | `manifest.format` | error | content | manifest | `format` | 1.0 | — |
+| `manifest.input.duplicate_name` | error | content | manifest | `name` | 1.0 | — |
+| `manifest.license.expression` | error | content | manifest | `reason`, `position` | 1.0 | — |
 | `manifest.max_contains` | error | content | manifest | `limit`, `count` | 1.0 | — |
 | `manifest.max_items` | error | content | manifest | `limit`, `count` | 1.0 | — |
 | `manifest.max_length` | error | content | manifest | `limit`; optional: `length` | 1.0 | — |
@@ -94,6 +96,8 @@ it, and the statements it reports.
 | `manifest.number_out_of_range` | error | content | manifest | `reason` | 1.0 | — |
 | `manifest.one_of` | error | content | manifest | `branch_count` | 1.0 | — |
 | `manifest.one_of.ambiguous` | error | content | manifest | `branches` | 1.0 | — |
+| `manifest.output.duplicate_id` | error | content | manifest | `id` | 1.0 | — |
+| `manifest.output.nested_for_each` | error | content | manifest | — | 1.0 | — |
 | `manifest.pattern` | error | content | manifest | `pattern` | 1.0 | — |
 | `manifest.property_name` | error | content | manifest | `property` | 1.0 | — |
 | `manifest.required` | error | content | manifest | `property` | 1.0 | — |
@@ -175,6 +179,11 @@ it, and the statements it reports.
 | `package.name.not_nfc` | error | refused | package | `offset` | 1.0 | — |
 | `package.name.not_portable` | error | refused | package | `offset`, `reason` | 1.0 | — |
 | `package.name.shape` | error | refused | package | `offset`, `reason` | 1.0 | — |
+| `package.version.malformed` | error | refused | package | `implemented` | 1.0 | — |
+| `package.version.missing` | error | refused | package | `implemented` | 1.0 | — |
+| `package.version.not_string` | error | refused | package | `actual`, `implemented`; optional: `written` | 1.0 | — |
+| `package.version.unsupported_major` | error | refused | package | `declared`, `implemented` | 1.0 | — |
+| `package.version.unsupported_minor` | error | refused | package | `declared`, `implemented` | 1.0 | — |
 | `report.truncated` | info | content | report | `listed`, `omitted` | 1.0 | — |
 | `schema.dialect` | error | content | package | `reason` | 1.0 | — |
 | `schema.format_unsupported` | error | content | package | `format` | 1.0 | — |

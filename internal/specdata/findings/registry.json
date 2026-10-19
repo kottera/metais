@@ -1377,6 +1377,50 @@
       "statements": []
     },
     {
+      "code": "manifest.input.duplicate_name",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "meaning": "The input name an earlier input already has.",
+          "always": true
+        }
+      ],
+      "message": "Two inputs are named {name}.",
+      "hint": "Give each input its own name; the related location is the first input with this one.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.license.expression",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the license is not an expression: syntax (a token where the grammar allows none), operator_case (an operator not in upper case), document_ref (a DocumentRef- reference, which names a document outside the package), parentheses (a parenthesis without its pair), or license_ref_plus (a + after a LicenseRef-).",
+          "always": true
+        },
+        {
+          "name": "position",
+          "type": "number",
+          "meaning": "The 1-based position, in characters, of the token where the expression goes wrong.",
+          "always": true
+        }
+      ],
+      "message": "{field} is not an SPDX license expression ({reason}, at character {position}).",
+      "hint": "Write an SPDX license expression such as `MIT` or `Apache-2.0 OR MIT`, with AND, OR and WITH in upper case and every parenthesis paired.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "manifest.max_contains",
       "severity": "error",
       "class": "content",
@@ -1717,6 +1761,37 @@
       ],
       "message": "{field} matches alternatives {branches} where the schema allows exactly one.",
       "hint": "Change the value so that only one alternative accepts it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.output.duplicate_id",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "id",
+          "type": "string",
+          "meaning": "The id an earlier declaration in the same list already has.",
+          "always": true
+        }
+      ],
+      "message": "Two output declarations have the id {id}.",
+      "hint": "Give each declaration its own id: top-level ids are unique in the manifest, and entry ids within their container. The related location is the first with this one.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.output.nested_for_each",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "{field} is inside a container that already has a for_each, and a second would hide its item.",
+      "hint": "Remove this for_each, or move it to the container: at most one for_each applies to any declaration.",
       "location": "value",
       "since": "1.0",
       "statements": []
@@ -3437,6 +3512,130 @@
       ],
       "message": "The entry's name is not a relative path of /-separated segments ({reason}).",
       "hint": "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "package.version.malformed",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [
+        {
+          "name": "implemented",
+          "type": "array",
+          "items": "string",
+          "meaning": "Every specification version this tool implements, ascending by major then minor.",
+          "always": true
+        }
+      ],
+      "message": "The specification version metais is not MAJOR.MINOR, two parts each 0 or a number of at most four digits without a leading zero.",
+      "hint": "Write the version as MAJOR.MINOR, as in `metais: \"1.0\"`; this metais implements {implemented}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "package.version.missing",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [
+        {
+          "name": "implemented",
+          "type": "array",
+          "items": "string",
+          "meaning": "Every specification version this tool implements, ascending by major then minor.",
+          "always": true
+        }
+      ],
+      "message": "The manifest does not name the specification version the package targets.",
+      "hint": "Add `metais: \"1.0\"` to the manifest, naming one of the versions this metais implements: {implemented}.",
+      "location": "parent",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "package.version.not_string",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [
+        {
+          "name": "actual",
+          "type": "string",
+          "meaning": "The JSON type of the value written: number, boolean, null, array or object.",
+          "always": true
+        },
+        {
+          "name": "written",
+          "type": "string",
+          "meaning": "The number as the manifest writes it, when the value is a number; in YAML `metais: 1.10` is the number 1.1, so its value would not say what was meant.",
+          "always": false
+        },
+        {
+          "name": "implemented",
+          "type": "array",
+          "items": "string",
+          "meaning": "Every specification version this tool implements, ascending by major then minor.",
+          "always": true
+        }
+      ],
+      "message": "The specification version metais is a {actual}, not a quoted string.",
+      "hint": "Quote the version, as in `metais: \"1.0\"`; this metais implements {implemented}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "package.version.unsupported_major",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [
+        {
+          "name": "declared",
+          "type": "string",
+          "meaning": "The specification version the package declares.",
+          "always": true
+        },
+        {
+          "name": "implemented",
+          "type": "array",
+          "items": "string",
+          "meaning": "Every specification version this tool implements, ascending by major then minor.",
+          "always": true
+        }
+      ],
+      "message": "This package targets METAIS {declared}; this metais implements {implemented}.",
+      "hint": "Use a metais release that implements METAIS {declared}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "package.version.unsupported_minor",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [
+        {
+          "name": "declared",
+          "type": "string",
+          "meaning": "The specification version the package declares.",
+          "always": true
+        },
+        {
+          "name": "implemented",
+          "type": "array",
+          "items": "string",
+          "meaning": "Every specification version this tool implements, ascending by major then minor.",
+          "always": true
+        }
+      ],
+      "message": "This package targets METAIS {declared}, a minor newer than every version this metais implements: {implemented}.",
+      "hint": "Use a metais release that implements METAIS {declared}; this one does not render a newer minor, since it cannot know what that minor added.",
       "location": "value",
       "since": "1.0",
       "statements": []
