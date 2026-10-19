@@ -98,6 +98,8 @@ var faults = []fault{
 	{"wall", fixRenderTree, checkWall, both},
 	{"driver-malformed", fixRenderTree, checkDriver, []string{"exec"}},
 	{"driver-exit", fixRenderTree, checkDriver, []string{"exec"}},
+	{"panic", fixRenderTree, checkCrash, both},
+	{"fatal", fixRenderTree, checkCrash, both},
 }
 
 // fakeProgram makes the fake for fault below base and returns its path:
@@ -305,7 +307,7 @@ func TestBStartsTwoSecondsAfterA(t *testing.T) {
 // without one fails here.
 func TestSelfProofCoversEveryCheck(t *testing.T) {
 	checks := []string{checkOK, checkExit, checkFindings, checkTree, checkStream, checkListing, checkSnapshot,
-		checkSentinel, checkAB, checkRepeat, checkCPU, checkRSS, checkWall, checkDriver, checkContainer}
+		checkSentinel, checkAB, checkRepeat, checkCPU, checkRSS, checkWall, checkDriver, checkContainer, checkCrash}
 	for _, c := range checks {
 		if !slices.ContainsFunc(faults, func(f fault) bool { return f.check == c }) {
 			t.Errorf("no fault breaks the %s check", c)

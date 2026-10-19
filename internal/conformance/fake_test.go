@@ -12,6 +12,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"slices"
 	"strings"
 	"time"
@@ -97,6 +98,7 @@ func fakeMain(fault string, args []string) int {
 		}
 		return fakeEnvelope(os.Stdout, "metais.help/1", true, []any{}, map[string]any{"commands": cmds}, 0)
 	}
+	crash(fault)
 	call := fakeCall{op: cmd}
 	if cmd == "inspect" || cmd == "ls" || cmd == "schema" {
 		call.op = "open"
@@ -152,6 +154,27 @@ func fakeMain(fault string, args []string) int {
 	return fakeEnvelope(doc, "metais."+cmd+"/1", res.ok, res.findings, result, exit)
 }
 
+// crash ends the fake's operation through a Go panic or a runtime fatal
+// error, for the faults that name one (ADR-009 D18 item 2): panic panics,
+// and fatal overflows a stack it has made small, which the runtime cannot
+// recover from.
+func crash(fault string) {
+	switch fault {
+	case "panic":
+		panic("the fake panics")
+	case "fatal":
+		debug.SetMaxStack(64 << 10)
+		recurse(0)
+	}
+}
+
+// recurse calls itself until the stack is exhausted.
+func recurse(n int) int {
+	var pad [256]byte
+	pad[n%len(pad)] = byte(n)
+	return recurse(n+1) + int(pad[0])
+}
+
 // fakeEnvelope prints ADR-008 D10's envelope and returns exit.
 func fakeEnvelope(w io.Writer, format string, ok bool, findings []any, result any, exit int) int {
 	if findings == nil {
@@ -188,6 +211,7 @@ func fakeDriver(fault string) int {
 		os.Stdout.Write(b)
 		return 0
 	}
+	crash(fault)
 	var a stepArgs
 	if err := json.Unmarshal(req.Args, &a); err != nil {
 		fmt.Fprintln(os.Stderr, err)

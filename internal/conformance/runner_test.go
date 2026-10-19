@@ -39,6 +39,8 @@ const (
 	checkDriver    = "driver"
 	checkHarness   = "harness"
 	checkContainer = "container"
+	checkCrash     = "crash"
+	checkHost      = "host-fact"
 )
 
 // problem is one failure of a step: a conformance failure, or a harness
