@@ -1,0 +1,21 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: |-
+  Supply a report. Read [the notes](references/notes.md) and [the
+  appendix](references/absent.md) in [references](references/), see
+  [the site](https://example.com) and [above](#top), not `[code](nope.md)`.
+
+  ![A figure](assets/missing.png "Figure")
+
+  [defined]: ./references/notes.md#part
+  [gone]: references/gone.md
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid

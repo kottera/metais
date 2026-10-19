@@ -1,0 +1,10 @@
+{{ inptus.report }}
+{{ inputs.report.titel }}
+{{ inputs.report.title.size }}
+{{ inputs.report.count.value }}
+{{ inputs.report.title[0] }}
+{{ inputs.report.rows[5].v }}
+{{ inputs.report.rows[1].v }}
+{% assign k = "report" %}{{ inputs[k].title }}
+{% render "missing.liquid" %}
+{% render "part.liquid", title: inputs.report.title %}

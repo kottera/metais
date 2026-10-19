@@ -5393,7 +5393,9 @@
       "hint": "Nothing was refused. The bound is fixed; a package with fewer partial call contexts or smaller templates is checked whole.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-018"
+      ]
     },
     {
       "code": "template.xref.dynamic_reference",

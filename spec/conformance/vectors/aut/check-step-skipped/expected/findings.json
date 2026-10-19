@@ -1,0 +1,55 @@
+[
+  {
+    "code": "manifest.required",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 1,
+      "column": 1,
+      "pointer": "/title"
+    },
+    "params": {
+      "property": "title"
+    }
+  },
+  {
+    "code": "template.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 1,
+      "column": 3
+    },
+    "params": {
+      "column": 3,
+      "cause": "a construct the dialect's grammar does not allow"
+    }
+  },
+  {
+    "code": "report.step_skipped",
+    "severity": "info",
+    "subject": {
+      "kind": "report"
+    },
+    "params": {
+      "steps": [
+        "limits of the compiled files",
+        "manifest paths",
+        "guide links",
+        "combined schema",
+        "manifest expressions",
+        "cross-reference",
+        "compiled form"
+      ]
+    }
+  }
+]

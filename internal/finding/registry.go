@@ -2122,7 +2122,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Nothing was refused. The bound is fixed; a package with fewer partial call contexts or smaller templates is checked whole.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-AUT-018"},
 	},
 	{
 		Code:     "template.xref.dynamic_reference",

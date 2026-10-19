@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-source-tree",
+  "title": "Operating-system litter beneath a layout tree and a top-level entry outside the layout are each a warning",
+  "statements": [
+    "MTS-AUT-004"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": true,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

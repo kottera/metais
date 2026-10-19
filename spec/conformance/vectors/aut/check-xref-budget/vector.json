@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-xref-budget",
+  "title": "The cross-reference stops at its bound of template-context analyses with one warning, refusing nothing",
+  "statements": [
+    "MTS-AUT-018"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "Each partial renders the next twice, with one more parameter bound to a number and to a string, so the contexts double at each of the 14 levels.",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": true,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

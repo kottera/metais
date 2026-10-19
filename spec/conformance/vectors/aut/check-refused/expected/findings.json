@@ -1,0 +1,12 @@
+[
+  {
+    "code": "package.container.not_zip",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package"
+    }
+  }
+]

@@ -1,0 +1,42 @@
+{
+  "type": "object",
+  "required": [
+    "title",
+    "titel"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "default": 3,
+      "examples": [
+        "ok",
+        4
+      ]
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 1,
+      "const": 0
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "a",
+        2,
+        "b"
+      ]
+    },
+    "extra": {
+      "$ref": "#/$defs/open"
+    }
+  },
+  "$defs": {
+    "open": {
+      "type": "object",
+      "required": [
+        "x"
+      ],
+      "additionalProperties": true
+    }
+  }
+}
