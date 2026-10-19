@@ -333,6 +333,33 @@ func TestNoEcho(t *testing.T) {
 	}
 }
 
+// TestPathPositions: a value and a member name read by their Path are
+// where Value and Key say they are, read once or again, in any order.
+func TestPathPositions(t *testing.T) {
+	doc, fs := parse(t, inputSrc, "éé: ü\nliste:\n  - ä\n  - {ö: 1, \"ß\": [x], \"a/~\": 2}\n")
+	if fs != nil {
+		t.Fatal(describe(fs))
+	}
+	pos := doc.Positions().(finding.PathPositions)
+	ptrs := []string{"/liste/1/ß/0", "", "/éé", "/liste", "/liste/0", "/liste/1", "/liste/1/ö", "/liste/1/ß", "/liste/1/a~1~0", "/nope", "/liste/2", "/éé/x"}
+	for range 2 {
+		for _, ptr := range ptrs {
+			p, ok := finding.ParsePath(ptr)
+			if !ok {
+				t.Fatalf("%q is not a pointer", ptr)
+			}
+			wantV, wantOK := pos.Value(ptr)
+			if v, ok := pos.ValueAt(p); v != wantV || ok != wantOK {
+				t.Errorf("value %q at %+v (%v), want %+v (%v)", ptr, v, ok, wantV, wantOK)
+			}
+			wantK, wantOK := pos.Key(ptr)
+			if k, ok := pos.KeyAt(p); k != wantK || ok != wantOK {
+				t.Errorf("key %q at %+v (%v), want %+v (%v)", ptr, k, ok, wantK, wantOK)
+			}
+		}
+	}
+}
+
 // TestPositions is W2-7.3: every value and every member name keeps its
 // line, and its column in code points, whatever the line endings.
 func TestPositions(t *testing.T) {
