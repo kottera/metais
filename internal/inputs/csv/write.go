@@ -30,6 +30,28 @@ var (
 // delim is one character other than '"', CR and LF; every record has the
 // same number of fields, at least one.
 func Write(records [][]string, delim rune) ([]byte, error) {
+	cells := make([][]Cell, len(records))
+	for i, rec := range records {
+		cells[i] = make([]Cell, len(rec))
+		for j, text := range rec {
+			cells[i][j] = Cell{Text: text, Quoted: len(rec) == 1 && text == ""}
+		}
+	}
+	return WriteCells(cells, delim)
+}
+
+// Cell is one field WriteCells writes: its text, and whether it is quoted
+// whatever its text holds.
+type Cell struct {
+	Text   string
+	Quoted bool
+}
+
+// WriteCells returns records as Write does, except that a cell marked
+// Quoted is quoted too. A file that is read back must tell the empty
+// string, a quoted empty field, from an absent value, an unquoted one
+// (ADR-003 D11 item 5), which the sample generator's CSV writes so.
+func WriteCells(records [][]Cell, delim rune) ([]byte, error) {
 	if delim == '"' || delim == '\r' || delim == '\n' || !utf8.ValidRune(delim) {
 		return nil, ErrDelimiter
 	}
@@ -41,24 +63,19 @@ func Write(records [][]string, delim rune) ([]byte, error) {
 		case len(rec) != len(records[0]):
 			return nil, ErrFieldCount
 		}
-		for i, text := range rec {
+		for i, c := range rec {
 			if i > 0 {
 				b.WriteRune(delim)
 			}
-			if !quoted(text, delim, len(rec)) {
-				b.WriteString(text)
+			if !c.Quoted && !strings.ContainsRune(c.Text, delim) && !strings.ContainsAny(c.Text, "\"\r\n") {
+				b.WriteString(c.Text)
 				continue
 			}
 			b.WriteByte('"')
-			b.WriteString(strings.ReplaceAll(text, `"`, `""`))
+			b.WriteString(strings.ReplaceAll(c.Text, `"`, `""`))
 			b.WriteByte('"')
 		}
 		b.WriteByte('\n')
 	}
 	return []byte(b.String()), nil
-}
-
-// quoted reports whether Write quotes text in a record of width fields.
-func quoted(text string, delim rune, width int) bool {
-	return strings.ContainsRune(text, delim) || strings.ContainsAny(text, "\"\r\n") || (width == 1 && text == "")
 }

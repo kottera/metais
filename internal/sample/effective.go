@@ -344,7 +344,7 @@ func (c *conj) numBounds() (lo, hi *bound) {
 		return cur
 	}
 	for _, kw := range []struct {
-		name         string
+		name        string
 		excl, lower bool
 	}{{"minimum", false, true}, {"exclusiveMinimum", true, true}, {"maximum", false, false}, {"exclusiveMaximum", true, false}} {
 		c.each(kw.name, func(_ node, v value.Value) {
