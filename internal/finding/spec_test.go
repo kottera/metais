@@ -376,7 +376,7 @@ func TestEmittedCodes(t *testing.T) {
 	want = append(want, "report.step_skipped", "package.layout.os_litter", "package.layout.not_packed",
 		"manifest.guide_link_missing", "schema.invalid_default", "schema.invalid_example", "schema.unsatisfiable",
 		"schema.unusable_enum_member", "schema.required_not_declared", "template.not_utf8", "template.crlf",
-		"example.layout")
+		"example.layout", "manifest.input.form_shape", "manifest.input.collection_shape", "output.declaration.validate_kind")
 	slices.Sort(want)
 	if !slices.Equal(got, want) {
 		t.Errorf("registered %q, want %q", got, want)

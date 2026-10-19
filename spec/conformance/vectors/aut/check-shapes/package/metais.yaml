@@ -1,0 +1,34 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply a report.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+  - name: rows
+    title: Rows
+    schema: inputs/object.schema.json
+    forms: [csv]
+  - name: notes
+    title: Notes
+    schema: inputs/object.schema.json
+    forms: [text]
+  - name: doc
+    title: Doc
+    schema: inputs/string.schema.json
+    forms: [markdown, json]
+  - name: items
+    title: Items
+    schema: inputs/object.schema.json
+    collection: true
+  - name: tables
+    title: Tables
+    schema: inputs/tables.schema.json
+    collection: true
+    forms: [csv]
+outputs:
+  - id: report
+    template: report.md.liquid

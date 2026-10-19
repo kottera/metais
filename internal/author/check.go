@@ -59,9 +59,19 @@ const (
 func CheckCodes() []finding.Code {
 	out := []finding.Code{CodeStepSkipped, CodeOSLitter, CodeNotPacked, CodeGuideLinkMissing, CodeInvalidDefault,
 		CodeInvalidExample, CodeUnsatisfiable, CodeUnusableEnumMember, CodeRequiredNotDeclared, CodeTemplateCRLF,
-		CodeExampleLayout, codeTemplateNotUTF8, ooxml.CodeSplitConstruct, ooxml.CodeSplitDelimiter}
+		CodeExampleLayout, CodeFormShape, CodeCollectionShape, CodeValidateKind, codeTemplateNotUTF8, ooxml.CodeSplitConstruct, ooxml.CodeSplitDelimiter}
 	return append(out, xref.Codes()...)
 }
+
+// The codes of ADR-003's and ADR-005's rules that only check can judge,
+// statically: form and shape agreement (ADR-003 D1 item 6), a
+// collection's schema (D15 item 1), and the kind of an output validate
+// names (ADR-005 D11 item 2). Each is an error of class content.
+const (
+	CodeFormShape       finding.Code = "manifest.input.form_shape"
+	CodeCollectionShape finding.Code = "manifest.input.collection_shape"
+	CodeValidateKind    finding.Code = "output.declaration.validate_kind"
+)
 
 // The names of the steps and parts of steps report.step_skipped names
 // (ADR-007 D2 item 2), in the order check runs them.
@@ -141,6 +151,7 @@ func (k *checker) run() []finding.Finding {
 		k.skip(stepManifestPaths)
 		k.skip(stepGuideLinks)
 	} else {
+		k.add(k.validateKinds(c.Manifest.Outputs, "")...)
 		k.add(k.guideLinks()...)
 	}
 
@@ -151,6 +162,8 @@ func (k *checker) run() []finding.Finding {
 	}
 	if noManifest {
 		k.skip(stepCombined)
+	} else if c.Combined != nil {
+		k.add(k.shapes()...)
 	}
 
 	// Step 6: every template, then the manifest's expressions.
@@ -362,6 +375,169 @@ func destination(s string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// shapes is ADR-003 D1 item 6 and D15 item 1, judged on each input's
+// statically declared type set (D14 item 1): a collection's schema
+// declares an array type and an item schema, and each form agrees with
+// the schema of what a file holds — the input's, or a collection's item
+// schema: csv an array whose items include object, text a string,
+// markdown an object; json and yaml anything.
+func (k *checker) shapes() []finding.Finding {
+	w, err := schema.NewWalker(k.c.CombinedValue, schema.CombinedURI)
+	if err != nil {
+		panic(fmt.Sprintf("author: the combined schema, which compiled: %v", err))
+	}
+	walk := func(path ...schema.Step) (schema.Static, bool) {
+		s, ok, err := w.Walk(path)
+		if err != nil {
+			panic(fmt.Sprintf("author: walking the combined schema, which compiled: %v", err))
+		}
+		return s, ok
+	}
+	var out []finding.Finding
+	for _, in := range k.c.Manifest.Inputs {
+		file, ok := walk(schema.Member(in.Name))
+		if !ok {
+			continue
+		}
+		if in.Collection {
+			item, ok := walk(schema.Member(in.Name), schema.Index(maxIndex))
+			if !file.Types.Has(schema.TypeArray) || !ok {
+				out = append(out, finding.New(CodeCollectionShape, manifestSubject, k.manifestAt(in.Pointer+"/schema"), nil))
+				continue
+			}
+			file = item
+		}
+		for i, form := range in.Forms {
+			var good bool
+			switch form {
+			case manifest.FormCSV:
+				row, ok := walk(append(pathTo(in), schema.Index(maxIndex))...)
+				good = file.Types.Has(schema.TypeArray) && ok && row.Types.Has(schema.TypeObject)
+			case manifest.FormText:
+				good = file.Types.Has(schema.TypeString)
+			case manifest.FormMarkdown:
+				good = file.Types.Has(schema.TypeObject)
+			default:
+				good = true
+			}
+			if !good {
+				out = append(out, finding.New(CodeFormShape, manifestSubject, k.manifestAt(in.Pointer+"/forms/"+strconv.Itoa(i)),
+					finding.Params{"form": finding.String(string(form)), "types": typeNames(file.Types)}))
+			}
+		}
+	}
+	return out
+}
+
+// maxIndex is an index beyond any prefixItems a schema may hold within
+// the limits, so that walking it reaches items.
+const maxIndex = 1 << 30
+
+// pathTo is the walk to what one file of the input in holds: the input,
+// or a collection's item.
+func pathTo(in manifest.Input) []schema.Step {
+	if in.Collection {
+		return []schema.Step{schema.Member(in.Name), schema.Index(maxIndex)}
+	}
+	return []schema.Step{schema.Member(in.Name)}
+}
+
+// typeNames is the type set t as a parameter: its names, in the order
+// TypeSet lists them.
+func typeNames(t schema.TypeSet) finding.Value {
+	var vs []finding.Value
+	for _, n := range []struct {
+		t    schema.TypeSet
+		name string
+	}{{schema.TypeNull, "null"}, {schema.TypeBoolean, "boolean"}, {schema.TypeObject, "object"}, {schema.TypeArray, "array"},
+		{schema.TypeNumber, "number"}, {schema.TypeString, "string"}, {schema.TypeInteger, "integer"}} {
+		if t.Has(n.t) {
+			vs = append(vs, finding.String(n.name))
+		}
+	}
+	return finding.List(vs...)
+}
+
+// validateKinds is ADR-005 D11 item 2 for outs, at every depth of a
+// container: an output with validate has kind json or yaml. The kind is
+// the declared one, or the one the output's path gives (D7 item 1) when
+// check can know it: a path omitted, or one whose text after its last
+// Liquid construct holds the file's extension. A kind only the render can
+// know is the render's to judge. owner is the id of the declaration a
+// container entry with no id of its own is part of.
+func (k *checker) validateKinds(outs []manifest.Output, owner string) []finding.Finding {
+	var out []finding.Finding
+	for _, d := range outs {
+		id := d.ID
+		if id == "" {
+			id = owner
+		}
+		if d.Validate != "" {
+			kind, known := d.Kind, d.Kind != ""
+			if !known {
+				kind, known = staticKind(d)
+			}
+			if known && kind != "json" && kind != "yaml" {
+				out = append(out, finding.New(CodeValidateKind, finding.Subject{Kind: finding.SubjectOutput, Name: id},
+					k.manifestAt(d.Pointer+"/validate"), finding.Params{"kind": finding.String(kind)}))
+			}
+		}
+		if d.Container != nil {
+			out = append(out, k.validateKinds(d.Container.Entries, id)...)
+		}
+	}
+	return out
+}
+
+// staticKind is the kind ADR-005 D7's table gives a template output's
+// path, and false when the path's extension is computed.
+func staticKind(d manifest.Output) (string, bool) {
+	p := d.Path
+	if p == "" {
+		if d.Form != manifest.OutputTemplate {
+			return "", false
+		}
+		p = strings.TrimSuffix(d.Source, ".liquid")
+	}
+	if i := max(strings.LastIndex(p, "}}"), strings.LastIndex(p, "%}")); i >= 0 {
+		p = p[i+2:]
+		if !strings.Contains(p, ".") {
+			return "", false
+		}
+	}
+	return outputKind(pathpkg.Base(p)), true
+}
+
+// outputKind is ADR-005 D7 item 1's table: the kind of a file named name,
+// by its final extension, ASCII-case-insensitively, then by its name.
+func outputKind(name string) string {
+	ext := strings.ToLower(pathpkg.Ext(name))
+	for _, row := range kindTable {
+		if slices.Contains(row.exts, ext) || slices.Contains(row.names, name) {
+			return row.kind
+		}
+	}
+	return "text"
+}
+
+var kindTable = []struct {
+	kind        string
+	exts, names []string
+}{
+	{"html", []string{".html", ".htm"}, nil},
+	{"xml", []string{".xml", ".xhtml", ".svg", ".rels", ".opf", ".ncx", ".xsd", ".xsl", ".xslt", ".plist"}, nil},
+	{"markdown", []string{".md", ".markdown"}, nil},
+	{"json", []string{".json", ".geojson", ".webmanifest"}, nil},
+	{"yaml", []string{".yaml", ".yml"}, nil},
+	{"csv", []string{".csv"}, nil},
+	{"css", []string{".css", ".scss", ".less"}, nil},
+	{"hash", []string{".sh", ".bash", ".zsh", ".py", ".rb", ".pl", ".r", ".toml", ".ps1", ".properties", ".tf"},
+		[]string{"Makefile", "Dockerfile", "Containerfile", ".gitignore", ".gitattributes", ".dockerignore", ".env"}},
+	{"slash", []string{".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".go", ".c", ".h", ".cc", ".cpp", ".hpp", ".java", ".kt", ".kts",
+		".swift", ".rs", ".cs", ".scala", ".dart", ".jsonc", ".proto", ".groovy", ".gradle"}, nil},
+	{"sql", []string{".sql"}, nil},
 }
 
 // schemaStatics is ADR-007 D2 step 5's static checks, over every schema

@@ -92,8 +92,14 @@ Refusals:
   manifest.guide_link_missing
       The manifest (guide link missing), a warning.
       Next: metais check <package>
+  manifest.input.collection_shape
+      The manifest (input: collection shape), a error.
+      Next: metais check <package>
   manifest.input.duplicate_name
       The manifest breaks one of its rules (input: duplicate name).
+      Next: metais check <package>
+  manifest.input.form_shape
+      The manifest (input: form shape), a error.
       Next: metais check <package>
   manifest.json.duplicate_name
       The manifest breaks one of its rules (json: duplicate name).
@@ -235,6 +241,9 @@ Refusals:
       Next: metais check <package>
   manifest.yaml.tag
       The manifest breaks one of its rules (yaml: tag).
+      Next: metais check <package>
+  output.declaration.validate_kind
+      (declaration: validate kind), a error.
       Next: metais check <package>
   package.compiled.mismatch
       The package is refused (compiled: mismatch).

@@ -1776,6 +1776,20 @@
       ]
     },
     {
+      "code": "manifest.input.collection_shape",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The collection input's schema declares no array type, or no items schema.",
+      "hint": "Give the collection's schema type: array and an items schema for one item.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-022"
+      ]
+    },
+    {
       "code": "manifest.input.duplicate_name",
       "severity": "error",
       "class": "content",
@@ -1794,6 +1808,34 @@
       "since": "1.0",
       "statements": [
         "MTS-MAN-016"
+      ]
+    },
+    {
+      "code": "manifest.input.form_shape",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "form",
+          "type": "string",
+          "meaning": "The form that disagrees: csv, text or markdown.",
+          "always": true
+        },
+        {
+          "name": "types",
+          "type": "array",
+          "meaning": "The declared type set of the schema a file of the input holds (the input's, or a collection's item schema), each type's name in the order null, boolean, object, array, number, string, integer; empty when no type is declared.",
+          "always": true,
+          "items": "string"
+        }
+      ],
+      "message": "The input declares the form {form}, which its schema's declared type cannot take.",
+      "hint": "Declare type on the schema to agree with the form — csv needs an array of objects, text a string, markdown an object — or remove the form.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-022"
       ]
     },
     {
@@ -2901,6 +2943,27 @@
       "location": "value",
       "since": "1.0",
       "statements": []
+    },
+    {
+      "code": "output.declaration.validate_kind",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "kind",
+          "type": "string",
+          "meaning": "The output's kind, declared or given by its path.",
+          "always": true
+        }
+      ],
+      "message": "The output {output} names a schema to validate it against, and its kind is {kind}: only json and yaml outputs are validated.",
+      "hint": "Remove validate, or declare an output of kind json or yaml.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-023"
+      ]
     },
     {
       "code": "output.dependent_required",

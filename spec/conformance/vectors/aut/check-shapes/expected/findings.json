@@ -1,0 +1,76 @@
+[
+  {
+    "code": "manifest.input.form_shape",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 13,
+      "pointer": "/inputs/1/forms/0"
+    },
+    "params": {
+      "form": "csv",
+      "types": [
+        "object"
+      ]
+    }
+  },
+  {
+    "code": "manifest.input.form_shape",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 13,
+      "pointer": "/inputs/2/forms/0"
+    },
+    "params": {
+      "form": "text",
+      "types": [
+        "object"
+      ]
+    }
+  },
+  {
+    "code": "manifest.input.form_shape",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 13,
+      "pointer": "/inputs/3/forms/0"
+    },
+    "params": {
+      "form": "markdown",
+      "types": [
+        "string"
+      ]
+    }
+  },
+  {
+    "code": "manifest.input.collection_shape",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 25,
+      "column": 13,
+      "pointer": "/inputs/4/schema"
+    }
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "code": "output.declaration.validate_kind",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "report"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 15,
+      "pointer": "/outputs/0/validate"
+    },
+    "params": {
+      "kind": "markdown"
+    }
+  },
+  {
+    "code": "output.declaration.validate_kind",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "table"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 15,
+      "pointer": "/outputs/2/validate"
+    },
+    "params": {
+      "kind": "csv"
+    }
+  }
+]

@@ -21,6 +21,8 @@
     {"id": "MTS-AUT-019", "chapter": "13-authoring.md", "section": "13.3", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-AUT-020", "chapter": "13-authoring.md", "section": "13.4", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-AUT-021", "chapter": "13-authoring.md", "section": "13.4", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-AUT-022", "chapter": "13-authoring.md", "section": "13.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-AUT-023", "chapter": "13-authoring.md", "section": "13.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-DAT-001", "chapter": "05-data-specification.md", "section": "5.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-DAT-002", "chapter": "05-data-specification.md", "section": "5.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-DAT-003", "chapter": "05-data-specification.md", "section": "5.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},

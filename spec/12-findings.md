@@ -103,7 +103,9 @@ it, and the statements it reports.
 | `manifest.forbidden` | error | content | manifest | optional: `property` | 1.0 | — |
 | `manifest.format` | error | content | manifest | `format` | 1.0 | — |
 | `manifest.guide_link_missing` | warning | content | manifest | `target` | 1.0 | [MTS-AUT-006](13-authoring.md#mts-aut-006) |
+| `manifest.input.collection_shape` | error | content | manifest | — | 1.0 | [MTS-AUT-022](13-authoring.md#mts-aut-022) |
 | `manifest.input.duplicate_name` | error | content | manifest | `name` | 1.0 | [MTS-MAN-016](03-manifest.md#mts-man-016) |
+| `manifest.input.form_shape` | error | content | manifest | `form`, `types` | 1.0 | [MTS-AUT-022](13-authoring.md#mts-aut-022) |
 | `manifest.json.duplicate_name` | error | content | manifest | `name` | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
 | `manifest.json.encoding` | error | content | manifest | `reason`, `offset` | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
 | `manifest.json.lone_surrogate` | error | content | manifest | — | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
@@ -159,6 +161,7 @@ it, and the statements it reports.
 | `output.any_of` | error | content | output | `branch_count` | 1.0 | — |
 | `output.const` | error | content | output | `expected` | 1.0 | — |
 | `output.contains` | error | content | output | — | 1.0 | — |
+| `output.declaration.validate_kind` | error | content | output | `kind` | 1.0 | [MTS-AUT-023](13-authoring.md#mts-aut-023) |
 | `output.dependent_required` | error | content | output | `property`, `because` | 1.0 | — |
 | `output.destination.not_directory` | error | destination | invocation | — | 1.0 | — |
 | `output.destination.not_empty` | error | destination | invocation | `entries`, `more` | 1.0 | — |

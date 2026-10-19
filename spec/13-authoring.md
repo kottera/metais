@@ -71,6 +71,14 @@ has no URI scheme and does not begin with `/` or `#`; its query and
 fragment are removed and it is percent-decoded before it is resolved from
 the package root.
 
+<a id="mts-aut-023"></a>**MTS-AUT-023** A check MUST report an output
+that names a `validate` schema and whose kind
+([chapter 9](09-outputs.md)) is neither `json` nor `yaml` as
+`output.declaration.validate_kind`, an error, when the kind is declared or
+its path gives it: a path omitted, or one whose text after its last Liquid
+construct holds the file's extension. A kind only a render can know is
+the render's to judge.
+
 ### Step 5: the schemas
 
 <a id="mts-aut-007"></a>**MTS-AUT-007** For every schema object of every
@@ -88,6 +96,16 @@ warning, each located at the value.
 schema object's `required` that the object does not declare, as §13.2
 defines declared for a property, as `schema.required_not_declared`, a
 warning located at the name.
+
+<a id="mts-aut-022"></a>**MTS-AUT-022** With the combined schema made, a
+check MUST report a collection input whose schema's declared type set
+([chapter 5](05-data-specification.md)) holds no `array`, or that declares
+no item schema, as `manifest.input.collection_shape`; and each form an
+input declares that disagrees with the declared type set of the schema a
+file of it holds — the input's, or a collection's item schema — as
+`manifest.input.form_shape`: `csv` needs `array` with an item schema whose
+set holds `object`, `text` needs `string` and `markdown` needs `object`.
+Both are errors.
 
 ### Step 6: the templates
 

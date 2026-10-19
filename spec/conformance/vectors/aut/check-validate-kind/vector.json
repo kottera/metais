@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-validate-kind",
+  "title": "An output that names a validate schema is an error when check knows its kind and it is neither json nor yaml",
+  "statements": [
+    "MTS-AUT-023"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}
