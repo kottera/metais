@@ -230,3 +230,33 @@ func TestEncodeRefusesIndent(t *testing.T) {
 		}
 	}
 }
+
+// TestEncodeInput: the writer of a JSON input file writes what Encode
+// writes, except that an integral number beyond 2^53−1 and below 1e21 is
+// spelled with an exponent, and every number it writes reads back as
+// itself with no finding. Encode's text for the same value is unchanged.
+func TestEncodeInput(t *testing.T) {
+	v := mustParse(t, `{"a":[11e17,-11e17,9007199254740991,-9007199254740991,9007199254740992e0,1e20,1e21,2.5,1e-7,0],`+
+		`"m":[1.7976931348623157e308,-1.7976931348623157e308]}`).Value
+	const want = `{"a":[1.1e+18,-1.1e+18,9007199254740991,-9007199254740991,9.007199254740992e+15,1e+20,1e+21,2.5,1e-7,0],` +
+		`"m":[1.7976931348623157e+308,-1.7976931348623157e+308]}`
+	got, err := EncodeInput(v, 0)
+	if err != nil || string(got) != want {
+		t.Fatalf("EncodeInput\ngot  %s (%v)\nwant %s", got, err, want)
+	}
+	if back := mustParse(t, string(got)).Value; !value.Equal(back, v) {
+		t.Errorf("%s reads back as %v", got, back)
+	}
+	const filter = `{"a":[1100000000000000000,-1100000000000000000,9007199254740991,-9007199254740991,9007199254740992,100000000000000000000,1e+21,2.5,1e-7,0],` +
+		`"m":[1.7976931348623157e+308,-1.7976931348623157e+308]}`
+	if got, _ := Encode(v, 0); string(got) != filter {
+		t.Errorf("Encode\ngot  %s\nwant %s", got, filter)
+	}
+	pretty, _ := EncodeInput(mustParse(t, `[11e17]`).Value, 2)
+	if string(pretty) != "[\n  1.1e+18\n]" {
+		t.Errorf("EncodeInput(indent 2) = %q", pretty)
+	}
+	if _, err := EncodeInput(value.Null{}, 9); !errors.Is(err, ErrIndent) {
+		t.Errorf("EncodeInput(indent 9): %v, want ErrIndent", err)
+	}
+}

@@ -4,7 +4,6 @@
 package yamlx
 
 import (
-	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -17,8 +16,8 @@ import (
 // 1.2 block document with no `---` and no trailing line feed, members in
 // canonical order, and no anchor, alias, tag, block scalar or flow
 // collection but `{}` and `[]`, so a value has one text. A number is
-// written as the `json` filter writes it, by jsonx.FormatNumber, except
-// where that text is one the reader refuses (number). Every byte is METAIS
+// written by jsonx.FormatInputNumber: as the `json` filter writes it,
+// except where that text is one the reader refuses. Every byte is METAIS
 // code (ADR-010 D3 item 2); no library serializes it. What Write writes,
 // Parse reads back as the same value, wherever the profile it reads under
 // holds that value at all.
@@ -45,7 +44,7 @@ func inline(v value.Value) (string, bool) {
 	case value.Bool:
 		return strconv.FormatBool(bool(v)), true
 	case value.Number:
-		return number(v.Float64()), true
+		return jsonx.FormatInputNumber(v.Float64()), true
 	case value.String:
 		return quote(v.Text()), true
 	case value.Array:
@@ -93,20 +92,6 @@ func block(v value.Value) []string {
 		}
 	}
 	return lines
-}
-
-// number is f as the `json` filter writes it, except for an integral f of
-// magnitude above 2^53−1 and below 1e21. ECMAScript writes that in fixed
-// notation, as an integer literal, which ADR-003 D8 item 5 refuses for an
-// input; so it is written in the exponent notation ECMAScript uses from
-// 1e21, the shortest digits that round-trip, a point after the first, and
-// e+ with the exponent, 15 to 20.
-func number(f float64) string {
-	s := jsonx.FormatNumber(f)
-	if math.Abs(f) <= value.MaxSafeInteger || strings.ContainsAny(s, ".e") {
-		return s
-	}
-	return strconv.FormatFloat(f, 'e', -1, 64)
 }
 
 // plainText is the form a string or name is written plain in; any other

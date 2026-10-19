@@ -16,8 +16,9 @@ var (
 	ratHundreth = big.NewRat(1, 100)
 	ratMillion  = big.NewRat(1, 1_000_000)
 	// safeMax is 2^53−1. The generator makes no integral number beyond
-	// ±safeMax: written as an integer literal, which the JSON writer and a
-	// CSV field write it as, ADR-003 D8 item 5 refuses it.
+	// ±safeMax: a CSV field has no text an integer column reads back as
+	// one, since written as an integer literal ADR-003 D8 item 5 refuses
+	// it.
 	safeMax = new(big.Rat).SetInt64(value.MaxSafeInteger)
 )
 

@@ -81,9 +81,11 @@ func (e *UnwritableError) Error() string {
 // reader reads back as v; a value it cannot write so is refused with an
 // *UnwritableError: a CR where line breaks are normalized, an array,
 // object or null in a CSV field, a value of the wrong kind for the form,
-// and an integral number of magnitude above 2^53−1 in JSON or CSV, which
-// both write as an integer literal ADR-003 D8 item 5 refuses. The YAML
-// writer spells that number with an exponent, which reads back.
+// and an integral number of magnitude above 2^53−1 in a CSV field, which
+// has no text an integer column reads back as it. The JSON and YAML
+// writers spell that number with an exponent, the shortest that
+// round-trips, which reads back; ADR-003 D8 item 5 refuses the integer
+// literal the json filter writes for it.
 func (s *Generator) Files(in Input, v value.Value) ([]File, error) {
 	s.input = in
 	form, ext := in.form(), Extension(in.form())
@@ -194,14 +196,11 @@ func (s *Generator) encode(in Input, form Form, v value.Value, ptr string, n nod
 	bad := func(at, reason string) error { return &UnwritableError{in.Name, ptr + at, reason} }
 	switch form {
 	case FormJSON:
-		if at, ok := largeInteger(v, ""); ok {
-			// A supplied value can hold one (item 2): ADR-003 D8 item 5
-			// refuses an integer literal by its spelling, so 11e17 is read
-			// while 1100000000000000000, the text the JSON writer writes for
-			// it, is refused.
-			return nil, bad(at, "the JSON writer writes an integer beyond 2^53−1 as an integer literal, which the reader refuses")
-		}
-		b, err := jsonx.Encode(v, 2)
+		// A supplied value can hold an integral number beyond 2^53−1 (item
+		// 2). ADR-003 D8 item 5 refuses an integer literal by its spelling,
+		// so 11e17 is read while 1100000000000000000 is refused: the
+		// writer spells it with an exponent.
+		b, err := jsonx.EncodeInput(v, 2)
 		if err != nil {
 			return nil, err
 		}
@@ -372,28 +371,6 @@ func field(m value.Value, t schema.TypeSet) (csv.Cell, string) {
 		return c, "the column's declared type reads the field as another value"
 	}
 	return c, ""
-}
-
-// largeInteger returns the place, below at, of the first integral number
-// in v of magnitude above 2^53−1, and whether there is one.
-func largeInteger(v value.Value, at string) (string, bool) {
-	switch v := v.(type) {
-	case value.Number:
-		return at, v.Integral() && math.Abs(v.Float64()) > value.MaxSafeInteger
-	case value.Array:
-		for i, e := range v.All() {
-			if p, ok := largeInteger(e, at+"/"+itoa(i)); ok {
-				return p, true
-			}
-		}
-	case value.Object:
-		for name, e := range v.All() {
-			if p, ok := largeInteger(e, at+"/"+escape(name)); ok {
-				return p, true
-			}
-		}
-	}
-	return "", false
 }
 
 // escape is name as a JSON Pointer token.

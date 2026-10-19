@@ -877,7 +877,9 @@ result is the result the author's `pack` saw.
 21. **Serialising.** Each input is written in the first form its declaration
     lists (ADR-003), with the file extension ADR-003 assigns:
     - JSON: two-space indentation, keys in declaration order, LF, a final
-      newline;
+      newline; an integral number of magnitude above 2⁵³ − 1 spelled with
+      an exponent, the shortest text that round-trips (`1.1e+18`), since
+      ADR-003 D8 item 5 refuses its integer literal as input;
     - YAML: block style, keys in declaration order, every string
       double-quoted (so no value is retyped by YAML's implicit typing), LF;
     - CSV: a header row of the item schema's properties in declaration order,
@@ -1347,6 +1349,14 @@ directory.
   `max(1, ⌊n/3⌋)` would refuse for the worked resolution's `vaule`. Every
   `template.xref.*` code is registered, of class `content`, and listed
   unwired for Wave 4. Both bounds are reached by tests that count.
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-5F.** Item 21's JSON writer
+  spells an integral number beyond ±(2^53−1) with an exponent, as the
+  plan's §9 ruling B′ says: `jsonx.EncodeInput` writes what `jsonx.Encode`
+  writes with each number by `jsonx.FormatInputNumber`, which the YAML
+  writer shares, so `Files` refuses such a supplied number only in a CSV
+  field. The generator still makes none, as W3-5 reads it. `jsonx.Encode`,
+  the `json` filter's text, and `jsonx.Canonical` are unchanged, and so is
+  every reader.
 - **2026-10-19, PLAN-2026-10-metais-v1 W3-5.** D9 items 2 and 4 to 23
   landed as `internal/sample`, a library ahead of the commands that reach
   it (item 1, Wave 5). `Generate` makes one input's value from the
