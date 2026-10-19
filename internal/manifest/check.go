@@ -34,7 +34,9 @@ func Check(root value.Value, src Source) []finding.Finding {
 	c := checker{src: src}
 	obj, _ := root.(value.Object)
 	if v, ok := obj.Get("license"); ok {
-		if s, ok := v.(value.String); ok {
+		// An empty license is the schema's minLength to report, not a
+		// second finding here.
+		if s, ok := v.(value.String); ok && s.Text() != "" {
 			if err := checkLicense(s.Text()); err != nil {
 				c.add(CodeLicenseExpression, finding.Pointer("license"), finding.Params{
 					"reason":   finding.String(err.reason),
