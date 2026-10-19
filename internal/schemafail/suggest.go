@@ -48,15 +48,21 @@ func suggest(s string, candidates []string, bounded bool) (string, bool) {
 	if found {
 		return best, true
 	}
-	rs := []rune(s)
+	// The value may be long, and the candidates are short: it is read as
+	// code points only for a candidate it could be close to.
+	n := utf8.RuneCountInString(s)
+	var rs []rune
 	bestDist := 0
 	for _, c := range candidates {
-		cr := []rune(c)
-		bound := max(1, len(cr)/3)
-		if c == s || abs(len(rs)-len(cr)) > bound {
+		cn := utf8.RuneCountInString(c)
+		bound := max(1, cn/3)
+		if c == s || abs(n-cn) > bound {
 			continue
 		}
-		d := levenshtein(rs, cr)
+		if rs == nil {
+			rs = []rune(s)
+		}
+		d := levenshtein(rs, []rune(c))
 		if d > bound {
 			continue
 		}
