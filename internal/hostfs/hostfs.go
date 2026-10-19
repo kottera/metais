@@ -97,7 +97,7 @@ func (r Reason) IsOS() bool {
 // give (ADR-006 D9 item 8, ADR-009 D15).
 type Error struct {
 	// Op is the operation: "open", "read", "list", "stat", "create",
-	// "mkdir", "rename" or "remove".
+	// "mkdir", "rename", "remove" or "close".
 	Op string
 
 	// Reason is why it failed.
