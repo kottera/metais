@@ -50,9 +50,12 @@ what its render writes (ADR-007 D5 item 5, RULINGS R1-006):
   render. Its `differences` are what the update changed, and its comparison
   findings are not reported.
 - A write or a removal that fails stops `--update`. It is refused as
-  `output.destination.write_failed`, or `output.destination.not_directory`
-  when a file stands where a directory of `expected/` must be; what was
-  already written and removed is listed and left as it is.
+  `output.destination.write_failed` once a file has been written or
+  removed, listing what was and leaving it as it is;
+  `output.destination.nothing_written` or, for a staging directory left
+  in `expected/`, `output.destination.staging_exists` before then; or
+  `output.destination.not_directory` when a file stands where a directory
+  of `expected/` must be.
 
 `--dry-run`, given with `--update`, runs everything but the writes and the
 removals: it prints `Would write <path>` and `Would remove <path>`, and with

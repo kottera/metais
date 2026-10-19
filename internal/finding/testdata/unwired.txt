@@ -36,5 +36,6 @@ manifest.property_name W7
 manifest.unevaluated_item W7
 manifest.unevaluated_property W7
 manifest.unique_items W6
+output.destination.write_failed W7
 package.not_found W7
 package.not_readable W7

@@ -21,7 +21,7 @@ operation can express, so they live here and in `metais help sample` and
   where a file goes, `output.destination.not_directory` for a file where a
   directory goes, and `output.destination.case_variant` for a name that
   differs only in case or normalization. A staging directory left in
-  `<dir>` is `output.destination.write_failed` with reason `exists`, and a
+  `<dir>` is `output.destination.staging_exists`, and a
   commit that stops after moving a file is
   `output.destination.commit_failed`, listing what it moved. Without
   `--overwrite`, a directory that holds any entry is
