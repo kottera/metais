@@ -129,8 +129,9 @@ var coreTags = []string{
 // asset and provenance (ADR-004 D12 to D14), which internal/template
 // defines. An added tag is never a block: it has no body and no end tag.
 // Its markup is an argument list, positional arguments before keyword
-// arguments, each a Primary, separated by commas: "{% asset "logo.svg",
-// as: "path" %}". The parser builds an *ast.Tag of it.
+// arguments, each a Primary, with optional commas between them and no
+// keyword given twice: "{% asset "logo.svg", as: "path" %}". The parser
+// builds an *ast.Tag of it.
 //
 // The contract, for both sides:
 //
