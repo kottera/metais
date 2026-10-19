@@ -61,6 +61,25 @@ func TestText(t *testing.T) {
 	}
 }
 
+// TestNeutralise is RULINGS R2-145: C0 and C1 controls, DEL and the
+// bidirectional formatting characters U+202A–U+202E and U+2066–U+2069 are
+// written as \u and four lowercase hex digits; a tab and the characters
+// either side of each range are kept.
+func TestNeutralise(t *testing.T) {
+	for _, c := range []struct{ in, want string }{
+		{"plain\ttab é", "plain\ttab é"},
+		{"\x00\x1b\x7f\u0080\u009f", `\u0000\u001b\u007f\u0080\u009f`},
+		{"\u202a\u202b\u202c\u202d\u202e", `\u202a\u202b\u202c\u202d\u202e`},
+		{"\u2066\u2067\u2068\u2069", `\u2066\u2067\u2068\u2069`},
+		{"a\u2066b\u2069c", `a\u2066b\u2069c`},
+		{"\u00a0\u2029\u202f\u2065\u206a", "\u00a0\u2029\u202f\u2065\u206a"},
+	} {
+		if got := Neutralise(c.in); got != c.want {
+			t.Errorf("Neutralise(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+
 // TestReadLines is ADR-008 D16 item 8's table for read --lines: N, N-M and
 // N-, a start beyond the end, a clamped end, CRLF, no final LF and an empty
 // entry, and the ranges refused as malformed.

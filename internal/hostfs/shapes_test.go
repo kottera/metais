@@ -510,3 +510,23 @@ func TestStageNewAbortRemovesOnlyTheKindItCreated(t *testing.T) {
 		t.Errorf("the newcomer at a created directory's name now holds %q", got)
 	}
 }
+
+// CreateNew refuses with Exists a target that appears after OpenNearest
+// found it absent and before the directory is created (ADR-008 D5), and
+// writes nothing into it.
+func TestCreateNewRefusesARacingTarget(t *testing.T) {
+	parent := dir(t)
+	beforeCreateNew = func(rest string) {
+		files(t, parent, map[string]string{"a/out/theirs": "THEIRS"})
+	}
+	t.Cleanup(func() { beforeCreateNew = nil })
+	_, err := CreateNew(filepath.Join(parent, "a", "out"), WriteOptions{})
+	wantReason(t, err, Exists, parent)
+	want := []string{"a/", "a/out/", "a/out/theirs"}
+	if got := tree(t, parent); !slices.Equal(got, want) {
+		t.Fatalf("after the refused open: %q, want %q", got, want)
+	}
+	if got := readHost(t, filepath.Join(parent, "a", "out", "theirs")); got != "THEIRS" {
+		t.Errorf("the racing directory now holds %q", got)
+	}
+}

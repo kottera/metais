@@ -1,0 +1,2 @@
+{% for m in inputs.r.first %}{{ m[0] }}:{% if m[1] == nil %}nil{% else %}set{% endif %} {% endfor %}
+label: {% if inputs.r.first.label == nil %}nil{% else %}set{% endif %}

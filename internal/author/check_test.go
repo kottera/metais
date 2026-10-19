@@ -308,6 +308,33 @@ func TestSchemaStatics(t *testing.T) {
 	}
 }
 
+// TestSchemaStaticsBeneathArrayApplicators is step 5 beneath each keyword
+// whose value is an array of schemas: a default that fails the object
+// holding it is found beneath allOf, anyOf, oneOf and prefixItems.
+func TestSchemaStaticsBeneathArrayApplicators(t *testing.T) {
+	files := checkFiles()
+	files["inputs/report.schema.json"] = `{
+	  "type": "object",
+	  "properties": {
+	    "pair": {"type": "array", "prefixItems": [{"type": "integer", "default": "p"}]}
+	  },
+	  "allOf": [{"properties": {"a": {"type": "integer"}}}, {"type": "object", "default": "a"}],
+	  "anyOf": [{"type": "object", "default": "b"}, {}],
+	  "oneOf": [{"type": "object", "default": "c"}]
+	}`
+	got := lines(t, runCheck(t, files))
+	want := []string{
+		"schema.invalid_default inputs/report.schema.json#/allOf/1/default",
+		"schema.invalid_default inputs/report.schema.json#/anyOf/0/default",
+		"schema.invalid_default inputs/report.schema.json#/oneOf/0/default",
+		"schema.invalid_default inputs/report.schema.json#/properties/pair/prefixItems/0/default",
+	}
+	slices.Sort(got)
+	if !slices.Equal(got, want) {
+		t.Errorf("findings\n\t%s\nwant\n\t%s", strings.Join(got, "\n\t"), strings.Join(want, "\n\t"))
+	}
+}
+
 // TestParseHintCauses is ADR-007 D2 item 4: each cause, and the order of
 // preference among them.
 func TestParseHintCauses(t *testing.T) {
