@@ -1,0 +1,182 @@
+[
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "w/q?.txt",
+      "item": 5,
+      "code_point": 63
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "w/CON",
+      "item": 2,
+      "reason": "reserved_name"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "w/nul.tar.gz",
+      "item": 3,
+      "reason": "reserved_name"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "w/trail.",
+      "item": 6,
+      "reason": "segment_end"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "w/space ",
+      "item": 7,
+      "reason": "segment_end"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "w/C:\\Windows\\evil.txt",
+      "item": 0,
+      "reason": "backslash"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "w/C:\\Windows\\evil.txt",
+      "item": 0,
+      "reason": "colon"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "w/\\\\server\\share\\x.txt",
+      "item": 1,
+      "reason": "backslash"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "w/a:b.txt",
+      "item": 4,
+      "reason": "colon"
+    }
+  }
+]

@@ -1,0 +1,101 @@
+[
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "../escape.txt",
+      "item": 0,
+      "reason": "dot_segment"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "a/../../up.txt",
+      "item": 1,
+      "reason": "dot_segment"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "/abs.txt",
+      "item": 2,
+      "reason": "leading_slash"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "../../.ssh/authorized_keys",
+      "item": 4,
+      "reason": "dot_segment"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "placed"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 11,
+      "pointer": "/outputs/1/path"
+    },
+    "params": {
+      "path": "../../outside/x.txt",
+      "reason": "dot_segment"
+    }
+  }
+]

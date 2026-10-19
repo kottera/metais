@@ -1,0 +1,124 @@
+[
+  {
+    "code": "output.path.case_collision",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "README.md",
+      "item": 1,
+      "member": "README.md",
+      "other": "Readme.md"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 15,
+        "column": 11,
+        "pointer": "/outputs/0/path",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "output.path.case_collision",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "Docs/b.md",
+      "item": 3,
+      "member": "Docs",
+      "other": "docs"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 15,
+        "column": 11,
+        "pointer": "/outputs/0/path",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "output.path.case_collision",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "straße.txt",
+      "item": 7,
+      "member": "straße.txt",
+      "other": "STRASSE.txt"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 15,
+        "column": 11,
+        "pointer": "/outputs/0/path",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "output.path.duplicate",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "same.txt",
+      "item": 5
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 15,
+        "column": 11,
+        "pointer": "/outputs/0/path",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]

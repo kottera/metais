@@ -1,0 +1,50 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: flags
+    title: Flags
+    schema: inputs/flags.schema.json
+  - name: opt
+    title: Opt
+    schema: inputs/opt.schema.json
+    required: false
+outputs:
+  - id: always
+    template: t.txt.liquid
+    path: always.txt
+  - id: on
+    template: t.txt.liquid
+    when: inputs.flags.on
+    path: on.txt
+  - id: off
+    template: t.txt.liquid
+    when: inputs.flags.off
+    path: off.txt
+  - id: absent
+    template: t.txt.liquid
+    when: inputs.opt
+    path: absent.txt
+  - id: compared
+    template: t.txt.liquid
+    when: inputs.flags.count > 2 and inputs.flags.on
+    path: compared.txt
+  - id: zero
+    template: t.txt.liquid
+    when: "0"
+    path: zero.txt
+  - id: empty
+    template: t.txt.liquid
+    when: "''"
+    path: empty.txt
+  - id: contains
+    template: t.txt.liquid
+    when: "'abc' contains 'b'"
+    path: contains.txt
+  - id: nil_literal
+    template: t.txt.liquid
+    when: nil or false
+    path: nil.txt

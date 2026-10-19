@@ -89,7 +89,8 @@ func renderDeclaration() *Command {
 
 // renderRefusals adds, to every command line's refusals, the codes of the
 // families a supply and a render report (ADR-008 D16 item 2): the input
-// families, every template and limit code, and the output path codes.
+// families, every template and limit code, and the output path and
+// expression codes.
 func renderRefusals(c *Command) {
 	have := map[finding.Code]bool{}
 	for _, r := range c.Refusals {
@@ -106,7 +107,8 @@ func renderRefusals(c *Command) {
 			r = Refusal{e.Code, "An input is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextRenderInputs}
 		case family == "template" && e.Severity == finding.SeverityError && !strings.HasPrefix(rest, "xref.") && !strings.HasPrefix(rest, "ooxml."):
 			r = Refusal{e.Code, "A template is refused (" + strings.ReplaceAll(rest, "_", " ") + ").", nextRenderTemplates}
-		case strings.HasPrefix(string(e.Code), "limit.exceeded."), strings.HasPrefix(string(e.Code), "output.path."):
+		case strings.HasPrefix(string(e.Code), "limit.exceeded."), strings.HasPrefix(string(e.Code), "output.path."),
+			strings.HasPrefix(string(e.Code), "output.expression."):
 			r = Refusal{e.Code, "An output is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextRenderTemplates}
 		default:
 			continue

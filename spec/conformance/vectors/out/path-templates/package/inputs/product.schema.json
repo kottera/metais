@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "dir": {
+      "type": "string"
+    },
+    "count": {
+      "type": "integer"
+    }
+  }
+}

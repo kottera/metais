@@ -1,0 +1,28 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: list
+    title: List
+    schema: inputs/list.schema.json
+  - name: zero
+    title: Zero
+    schema: inputs/zero.schema.json
+outputs:
+  - id: strict
+    template: t.txt.liquid
+    when: inputs.list and inputs.nothing
+    path: strict.txt
+  - id: divided
+    template: t.txt.liquid
+    path: "{{ 1 | divided_by: inputs.zero }}.txt"
+  - id: per_item
+    template: t.txt.liquid
+    for_each: inputs.list
+    path: "p/{{ item | append: inputs.missing }}.txt"
+  - id: fine
+    template: t.txt.liquid
+    path: fine.txt

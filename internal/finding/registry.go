@@ -600,7 +600,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Supply less data, or render fewer or smaller files; a limit can be lowered with --limit and never raised. Run `metais limits` to see every limit.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-012", "MTS-PTH-009", "MTS-SEC-010"},
+		Statements: []string{"MTS-OUT-011", "MTS-PTH-009", "MTS-SEC-010"},
 	},
 	{
 		Code:     "limit.exceeded.template",
@@ -617,7 +617,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Render less: fewer iterations, partials nested less deeply, smaller strings and arrays; a limit can be lowered with --limit and never raised. Run `metais limits` to see every limit.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-011", "MTS-SEC-008", "MTS-SEC-009", "MTS-TPL-046"},
+		Statements: []string{"MTS-OUT-010", "MTS-SEC-008", "MTS-SEC-009", "MTS-TPL-046"},
 	},
 	{
 		Code:     CodeLimitInvalid,
@@ -1143,7 +1143,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Give for_each an expression whose value is an array, such as a collection input or a property its schema declares an array.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-008"},
+		Statements: []string{"MTS-OUT-007"},
 	},
 	{
 		Code:     "output.path.case_collision",
@@ -1160,7 +1160,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Give the outputs paths that differ in more than letter case or normalization.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-010", "MTS-PTH-006", "MTS-PTH-008"},
+		Statements: []string{"MTS-OUT-009", "MTS-PTH-006", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.character",
@@ -1176,7 +1176,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-010", "MTS-PTH-004", "MTS-PTH-008"},
+		Statements: []string{"MTS-OUT-009", "MTS-PTH-004", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.duplicate",
@@ -1191,7 +1191,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Give each output its own path.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-010", "MTS-PTH-006", "MTS-PTH-008"},
+		Statements: []string{"MTS-OUT-009", "MTS-PTH-006", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.encoding",
@@ -1207,7 +1207,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-010", "MTS-PTH-001", "MTS-PTH-008"},
+		Statements: []string{"MTS-OUT-009", "MTS-PTH-001", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.file_directory_conflict",
@@ -1224,7 +1224,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Give the outputs paths in which no file's path is a directory of another's.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-010", "MTS-PTH-006", "MTS-PTH-008"},
+		Statements: []string{"MTS-OUT-009", "MTS-PTH-006", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.not_nfc",
@@ -1239,7 +1239,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-010", "MTS-PTH-002", "MTS-PTH-008"},
+		Statements: []string{"MTS-OUT-009", "MTS-PTH-002", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.not_portable",
@@ -1255,7 +1255,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-010", "MTS-PTH-005", "MTS-PTH-008"},
+		Statements: []string{"MTS-OUT-009", "MTS-PTH-005", "MTS-PTH-008"},
 	},
 	{
 		Code:     "output.path.shape",
@@ -1271,7 +1271,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-010", "MTS-PTH-003", "MTS-PTH-008"},
+		Statements: []string{"MTS-OUT-009", "MTS-PTH-003", "MTS-PTH-008"},
 	},
 	{
 		Code:       "package.compiled.mismatch",
@@ -2471,7 +2471,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Remove the tag; in a path, use output expressions, filters, if, unless, case, assign and capture.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-MAN-018", "MTS-OUT-004"},
+		Statements: []string{"MTS-MAN-018"},
 	},
 	{
 		Code:     "template.undefined_property",
@@ -2503,7 +2503,7 @@ var registry = withSchemaEntries([]Entry{
 		Hint:       "Read a global — inputs, package, now, sources or output — a name the template binds, or a loop's variable inside its loop; an undefined name is refused, never rendered as nothing.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-005", "MTS-TPL-003", "MTS-TPL-027", "MTS-TPL-033", "MTS-TPL-034", "MTS-TPL-058"},
+		Statements: []string{"MTS-OUT-004", "MTS-TPL-003", "MTS-TPL-027", "MTS-TPL-033", "MTS-TPL-034", "MTS-TPL-058"},
 	},
 	{
 		Code:     "template.unknown_filter",

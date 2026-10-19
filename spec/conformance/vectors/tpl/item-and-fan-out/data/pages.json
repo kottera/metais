@@ -1,0 +1,20 @@
+[
+  {
+    "slug": "a",
+    "title": "A"
+  },
+  {
+    "slug": "b",
+    "title": "B",
+    "draft": true
+  },
+  {
+    "slug": "c",
+    "title": "C"
+  },
+  {
+    "slug": "d",
+    "title": "D",
+    "draft": true
+  }
+]

@@ -1,0 +1,21 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: pages
+    title: Pages
+    schema: inputs/pages.schema.json
+outputs:
+  - id: page
+    template: page.txt.liquid
+    for_each: inputs.pages
+    when: item.draft != true
+    path: "{{ fan_out.index }}-{{ item.slug }}.txt"
+  - id: ends
+    template: end.txt.liquid
+    for_each: inputs.pages
+    when: fan_out.first or fan_out.last
+    path: "ends/{{ fan_out.rindex0 }}-{{ item.slug }}.txt"

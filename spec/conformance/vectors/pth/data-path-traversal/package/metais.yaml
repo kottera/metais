@@ -1,0 +1,21 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: names
+    title: Names
+    schema: inputs/names.schema.json
+  - name: dir
+    title: Dir
+    schema: inputs/dir.schema.json
+outputs:
+  - id: each
+    template: t.txt.liquid
+    for_each: inputs.names
+    path: "{{ item }}"
+  - id: placed
+    template: t.txt.liquid
+    path: "{{ inputs.dir }}/x.txt"

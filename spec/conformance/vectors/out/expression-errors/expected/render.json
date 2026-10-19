@@ -1,0 +1,59 @@
+[
+  {
+    "code": "template.undefined_property",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 11,
+      "pointer": "/outputs/0/when"
+    },
+    "params": {
+      "path": "inputs.nothing",
+      "column": 17
+    }
+  },
+  {
+    "code": "template.division_by_zero",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 11,
+      "pointer": "/outputs/1/path"
+    },
+    "params": {
+      "filter": "divided_by",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.undefined_property",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 25,
+      "column": 11,
+      "pointer": "/outputs/2/path"
+    },
+    "params": {
+      "path": "inputs.missing",
+      "column": 3
+    }
+  }
+]

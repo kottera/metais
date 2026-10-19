@@ -1,0 +1,5 @@
+item C
+index 3 index0 2 rindex 2 rindex0 1
+first false last false length 4
+previous b next d
+the partial sees c at 2 of 4

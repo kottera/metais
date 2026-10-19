@@ -1,0 +1,60 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "out/for-each-loop-iterations",
+  "title": "Every for_each element is an iteration of loop-iterations, and a for_each whose array takes the render beyond it is refused before its first evaluation",
+  "statements": [
+    "MTS-OUT-010"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "at-the-limit",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "loop-iterations": 9
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/at-the-limit-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-limit",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "loop-iterations": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beyond-the-limit.json"
+          }
+        }
+      ]
+    }
+  ]
+}

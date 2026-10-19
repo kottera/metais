@@ -1,0 +1,12 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: each
+    template: t.txt.liquid
+    for_each: (1..3)
+    path: "{{ item }}.txt"

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "out/for-each-type",
+  "title": "A for_each whose value is a string, a number, a boolean or an object is refused naming the declaration and the type, and nothing is written",
+  "statements": [
+    "MTS-OUT-007"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/render.json"
+          }
+        }
+      ]
+    }
+  ]
+}

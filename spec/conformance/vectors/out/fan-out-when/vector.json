@@ -1,0 +1,37 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "out/fan-out-when",
+  "title": "The when of a for_each output is evaluated once per element with item bound, and an element whose when is false writes no file",
+  "statements": [
+    "MTS-OUT-008"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/render-out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

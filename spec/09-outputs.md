@@ -40,18 +40,15 @@ rendered string MUST be the path exactly, neither trimmed nor normalized
 nor rewritten, and is then held to the portable-path rules
 ([chapter 11](11-rendering.md)).
 
-<a id="mts-out-004"></a>**MTS-OUT-004** A processor MUST refuse a `render`
-tag in a `path` with `template.tag_context` when it renders, as it does
-when it opens the package (MTS-MAN-018): a path computes text and reads
-nothing else.
-
-<a id="mts-out-005"></a>**MTS-OUT-005** An error in a declaration's
-`path`, `when` or `for_each` — one MTS-MAN-018 names, or one a template
-would meet rendering it, such as `template.undefined_variable` — MUST be
+<a id="mts-out-004"></a>**MTS-OUT-004** An error a declaration's `path`,
+`when` or `for_each` meets when it is evaluated — an undefined variable or
+property, a filter given an input it refuses, a division by zero, as a
+template meets them ([chapter 7](07-template-environment.md)) — MUST be
 refused with the code a template's error has, located at the field's
 manifest pointer and giving the column within the expression; that
 declaration MUST plan no file, and every other declaration MUST still be
-planned, so that every such finding is reported in one render.
+planned, so that every such finding is reported in one render. An error of
+their parse is the package's (MTS-MAN-018).
 
 ## 9.3 Conditions and fan-out
 
@@ -61,44 +58,44 @@ evaluation, with the element bound to `item` and its position to `fan_out`
 ([chapter 7](07-template-environment.md)): its `when` decides whether that
 element writes a file, and its `path` names the file.
 
-<a id="mts-out-006"></a>**MTS-OUT-006** A declaration's `when` MUST be a
+<a id="mts-out-005"></a>**MTS-OUT-005** A declaration's `when` MUST be a
 Liquid condition: exactly what may follow `if` in `{% if … %}`, true unless
 its value is nil or `false`. A processor MUST write no file for a
 declaration whose `when` is false, and MUST treat a declaration without
 `when` as always holding.
 
-<a id="mts-out-007"></a>**MTS-OUT-007** A declaration's `for_each` MUST be
+<a id="mts-out-006"></a>**MTS-OUT-006** A declaration's `for_each` MUST be
 a Liquid value expression: exactly what may appear inside `{{ … }}`, a
 lookup or a literal followed by any filters. When its value is an array, a
 processor MUST evaluate the declaration once per element, in array order,
 with the element bound to `item`; when it is nil, as an optional input that
 is absent is, it MUST evaluate the declaration no time and report nothing.
 
-<a id="mts-out-008"></a>**MTS-OUT-008** A processor MUST refuse a
+<a id="mts-out-007"></a>**MTS-OUT-007** A processor MUST refuse a
 `for_each` whose value is a string, a number, a boolean or an object with
 `output.expression.for_each_type`, naming the declaration and the type
 found, and plan no file of that declaration.
 
-<a id="mts-out-009"></a>**MTS-OUT-009** A processor MUST evaluate the
+<a id="mts-out-008"></a>**MTS-OUT-008** A processor MUST evaluate the
 `when` of a `for_each` declaration once per element, with that element's
 `item` and `fan_out` bound, and write no file for an element whose `when`
 is false; so an author drops elements either in the `for_each` expression
 or in `when`.
 
-<a id="mts-out-010"></a>**MTS-OUT-010** A path from a fan-out that
+<a id="mts-out-009"></a>**MTS-OUT-009** A path from a fan-out that
 breaks the portable-path rules ([chapter 11](11-rendering.md)) MUST be
 refused with its `output.path.*` code naming the declaration, the
 rendered path and, as `item`, the 0-based index of the evaluation that
 rendered it.
 
-<a id="mts-out-011"></a>**MTS-OUT-011** Every element of a `for_each`
+<a id="mts-out-010"></a>**MTS-OUT-010** Every element of a `for_each`
 array MUST count as one iteration of `loop-iterations`
 ([chapter 14](14-security.md)), with every `for`, `tablerow` and
 `render … for` of the render; a `for_each` whose array takes the render
 beyond it MUST be refused with `limit.exceeded.template` before its first
 evaluation, located at the `for_each`.
 
-<a id="mts-out-012"></a>**MTS-OUT-012** `outputs`
+<a id="mts-out-011"></a>**MTS-OUT-011** `outputs`
 ([chapter 14](14-security.md)) MUST count every file every evaluation of a
 declaration plans. When the first file beyond it is a fan-out's, the
 processor MUST refuse the render with `limit.exceeded.output`, naming that

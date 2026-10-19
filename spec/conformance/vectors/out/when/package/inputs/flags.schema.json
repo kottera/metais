@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "on": {
+      "type": "boolean"
+    },
+    "off": {
+      "type": "boolean"
+    },
+    "count": {
+      "type": "integer"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: pages
+    title: Pages
+    schema: inputs/pages.schema.json
+outputs:
+  - id: each_item
+    template: t.txt.liquid
+    for_each: item
+    path: "a/{{ item }}.txt"
+  - id: each_fan
+    template: t.txt.liquid
+    for_each: fan_out.length
+    path: "b/{{ item }}.txt"
+  - id: each_output
+    template: t.txt.liquid
+    for_each: output.path
+    path: "c/{{ item }}.txt"
+  - id: path_output
+    template: t.txt.liquid
+    path: "{{ output.path }}.txt"
+  - id: when_output
+    template: t.txt.liquid
+    when: output
+    path: when-output.txt
+  - id: when_item
+    template: t.txt.liquid
+    when: item
+    path: when-item.txt
+  - id: path_fan
+    template: t.txt.liquid
+    path: "{{ fan_out.index }}.txt"
+  - id: fan_path_output
+    template: t.txt.liquid
+    for_each: inputs.pages
+    path: "{{ item.slug }}/{{ output.root }}.txt"
+  - id: fine
+    template: t.txt.liquid
+    for_each: inputs.pages
+    when: inputs.pages.size > 0 and fan_out.index > 0
+    path: "fine/{{ item.slug }}-{{ package.name }}-{{ sources.pages.origin }}.txt"

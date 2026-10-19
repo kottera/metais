@@ -1,0 +1,5 @@
+item A
+index 1 index0 0 rindex 4 rindex0 3
+first true last false length 4
+previous nil next b
+the partial sees a at 0 of 4

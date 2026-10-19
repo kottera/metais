@@ -1,0 +1,42 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: rows
+    title: Rows
+    schema: inputs/rows.schema.json
+  - name: opt
+    title: Opt
+    schema: inputs/opt.schema.json
+    required: false
+  - name: none
+    title: None
+    schema: inputs/none.schema.json
+outputs:
+  - id: raw
+    template: row.txt.liquid
+    for_each: inputs.rows
+    path: "raw/{{ fan_out.index0 }}-{{ item.n }}.txt"
+  - id: sorted
+    template: row.txt.liquid
+    for_each: "inputs.rows | sort: 'id'"
+    path: "sorted/{{ fan_out.index0 }}-{{ item.n }}.txt"
+  - id: range
+    template: scalar.txt.liquid
+    for_each: (1..3)
+    path: "range/{{ item }}.txt"
+  - id: split
+    template: scalar.txt.liquid
+    for_each: "'x,y' | split: ','"
+    path: "split/{{ item }}.txt"
+  - id: absent
+    template: scalar.txt.liquid
+    for_each: inputs.opt
+    path: "absent/{{ item }}.txt"
+  - id: empty
+    template: scalar.txt.liquid
+    for_each: inputs.none
+    path: "empty/{{ item }}.txt"

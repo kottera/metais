@@ -1,0 +1,22 @@
+[
+  {
+    "code": "limit.exceeded.output",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "fan"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 11,
+      "column": 5,
+      "pointer": "/outputs/1"
+    },
+    "params": {
+      "limit": "outputs",
+      "bound": 2,
+      "lowered": true
+    }
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": ".git/hooks/pre-commit",
+      "item": 0,
+      "reason": "git"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "x/.GIT/config",
+      "item": 1,
+      "reason": "git"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "sub/.Git",
+      "item": 2,
+      "reason": "git"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "GIT~1/config",
+      "item": 3,
+      "reason": "git"
+    }
+  }
+]
