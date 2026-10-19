@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -135,7 +136,21 @@ func newRunner(t testing.TB, suite string, a adapter) *runner {
 		short:   testing.Short(),
 		wall:    defaultWall,
 		base:    t.TempDir(),
+		slots:   make(chan struct{}, testParallel()),
 	}
+}
+
+// testParallel is -test.parallel, which bounds the runner's environments
+// as it bounds parallel tests.
+func testParallel() int {
+	if f := flag.Lookup("test.parallel"); f != nil {
+		if g, ok := f.Value.(flag.Getter); ok {
+			if n, ok := g.Get().(int); ok && n > 0 {
+				return n
+			}
+		}
+	}
+	return max(1, runtime.GOMAXPROCS(0))
 }
 
 // newAdapter makes the adapter of kind for program, reading the registry
