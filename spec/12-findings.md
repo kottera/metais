@@ -163,6 +163,11 @@ it, and the statements it reports.
 | `output.additional_property` | error | content | output | `property`; optional: `suggestion` | 1.0 | — |
 | `output.any_of` | error | content | output | `branch_count` | 1.0 | — |
 | `output.const` | error | content | output | `expected` | 1.0 | — |
+| `output.container.missing_entry` | error | content | output | `profile`, `entry` | 1.0 | [MTS-TRN-009](10-transforms.md#mts-trn-009), [MTS-TRN-010](10-transforms.md#mts-trn-010), [MTS-TRN-011](10-transforms.md#mts-trn-011), [MTS-AUT-030](13-authoring.md#mts-aut-030) |
+| `output.container.non_ascii` | error | content | output | `profile`, `path` | 1.0 | [MTS-TRN-009](10-transforms.md#mts-trn-009), [MTS-AUT-030](13-authoring.md#mts-aut-030) |
+| `output.container.reserved_entry` | error | content | output | `profile`, `path` | 1.0 | [MTS-TRN-010](10-transforms.md#mts-trn-010), [MTS-TRN-011](10-transforms.md#mts-trn-011), [MTS-AUT-030](13-authoring.md#mts-aut-030) |
+| `output.container.space` | warning | content | output | `profile`, `path` | 1.0 | [MTS-TRN-011](10-transforms.md#mts-trn-011), [MTS-AUT-030](13-authoring.md#mts-aut-030) |
+| `output.container.too_many_entries` | error | content | output | `count` | 1.0 | [MTS-TRN-007](10-transforms.md#mts-trn-007) |
 | `output.contains` | error | content | output | — | 1.0 | — |
 | `output.declaration.validate_kind` | error | content | output | `kind` | 1.0 | [MTS-AUT-023](13-authoring.md#mts-aut-023) |
 | `output.dependent_required` | error | content | output | `property`, `because` | 1.0 | — |

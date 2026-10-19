@@ -1,0 +1,33 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/container-too-many-entries",
+  "title": "A container that plans 65,535 entries is refused, since a zip without zip64 holds no more, and nothing is written",
+  "statements": [
+    "MTS-TRN-007"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "too-many",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/too-many.json"
+          }
+        }
+      ]
+    }
+  ]
+}

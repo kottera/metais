@@ -16,13 +16,25 @@ import (
 // id, the template's name beneath templates/, the file's path relative to
 // the root of its tree, the evaluation of a fan-out it is, or nil, and its
 // kind (ADR-005 D7), from which the provenance tag chooses its style
-// (ADR-004 D14 item 5).
+// (ADR-004 D14 item 5). For a container's entry, In is the path of the
+// container, itself within its own tree's containers, joined by "/", and
+// Path is the entry's path within the container (ADR-004 D7 item 6).
 type Output struct {
 	ID       string
 	Template string
 	Path     string
 	Fan      *Fan
 	Kind     string
+	In       string
+}
+
+// file is the path a finding about o names: its path, or for a
+// container's entry the container's path and its own (ADR-005 D11 item 4).
+func (o Output) file() string {
+	if o.In == "" {
+		return o.Path
+	}
+	return o.In + "/" + o.Path
 }
 
 // Renderer renders one command's outputs. Their work is counted together,

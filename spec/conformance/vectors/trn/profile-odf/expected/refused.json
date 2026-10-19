@@ -1,0 +1,40 @@
+[
+  {
+    "code": "output.container.missing_entry",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "doc"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 12,
+      "column": 16,
+      "pointer": "/outputs/0/container/profile"
+    },
+    "params": {
+      "profile": "odf",
+      "entry": "META-INF/manifest.xml"
+    }
+  },
+  {
+    "code": "output.container.reserved_entry",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "doc"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 17,
+      "pointer": "/outputs/0/container/entries/1/path"
+    },
+    "params": {
+      "profile": "odf",
+      "path": "mimetype"
+    }
+  }
+]

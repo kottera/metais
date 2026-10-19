@@ -1,0 +1,27 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: box
+    path: box.zip
+    container:
+      entries:
+        - id: one
+          template: a.txt.liquid
+          path: docs/a.txt
+        - id: two
+          template: a.txt.liquid
+          path: Docs
+        - id: up
+          template: a.txt.liquid
+          path: ../escape.txt
+        - id: lower
+          template: a.txt.liquid
+          path: straße.txt
+        - id: upper
+          template: a.txt.liquid
+          path: STRASSE.txt

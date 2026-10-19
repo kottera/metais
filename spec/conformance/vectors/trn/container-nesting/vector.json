@@ -1,0 +1,99 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/container-nesting",
+  "title": "Containers nest to container-depth, deeper is limit.package, a lowered container-depth refuses less, and the outputs limit counts every entry",
+  "statements": [
+    "MTS-TRN-003",
+    "MTS-SEC-011"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "depth-three",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "three",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/three",
+                "containers": [
+                  {
+                    "path": "outer.zip",
+                    "methods": "all"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "depth-four",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "four",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/four.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "lowered",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "three",
+            "out": "out",
+            "limits": {
+              "container-depth": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/lowered.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "entries-counted",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "counted",
+            "out": "out",
+            "limits": {
+              "outputs": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/counted.json"
+          }
+        }
+      ]
+    }
+  ]
+}

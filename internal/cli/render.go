@@ -5,8 +5,10 @@ package cli
 
 import (
 	"bytes"
+	"cmp"
 	"crypto/sha256"
 	"encoding/hex"
+	"io"
 	pathpkg "path"
 	"slices"
 	"strconv"
@@ -22,6 +24,7 @@ import (
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/unitext"
 	"github.com/kottera/metais/internal/version"
+	"github.com/kottera/metais/internal/zipfmt"
 )
 
 // The steps render's refusals point to.
@@ -50,7 +53,9 @@ func renderDeclaration() *Command {
 			"metais inspect and metais validate do; an input that fails ends the render with every finding of " +
 			"the inputs. Then every output is planned, its path checked by the portable-path rules, and " +
 			"rendered in memory: every output is attempted, and each reports its first error. If any " +
-			"finding is an error, nothing is written anywhere.\n\n" +
+			"finding is an error, nothing is written anywhere. A container output is one zip of its entries, " +
+			"each rendered as an output is, in the order its profile and its first entries give; its zip is " +
+			"written as it is assembled.\n\n" +
 			"--out is required, and names a directory that does not exist yet. The outputs are written " +
 			"beneath a staging directory beside it, .metais-staging- followed by 16 hex digits, which is " +
 			"then renamed to it in one step that never replaces anything: the directory either does not " +
@@ -72,7 +77,7 @@ func renderDeclaration() *Command {
 			limitFlag, failOnFlag,
 		},
 		Format: "metais.render/1",
-		Prints: "One line per file written, in path order: its size, its digest and its path, separated by tabs.",
+		Prints: "One line per file written, in path order: its size, its digest and its path, separated by tabs; a container's entries are indented beneath it, in its order.",
 		Refusals: append(packageRefusals("render"),
 			Refusal{finding.CodeUsageMissingFlag, "--out is not given.", nextRenderOut},
 			Refusal{finding.CodeUsageBadValue, "--now is not an RFC 3339 date-time with an offset.", nextRenderNow},
@@ -112,7 +117,7 @@ func renderRefusals(c *Command) {
 		case family == "template" && e.Severity == finding.SeverityError && !strings.HasPrefix(rest, "xref.") && !strings.HasPrefix(rest, "ooxml."):
 			r = Refusal{e.Code, "A template is refused (" + strings.ReplaceAll(rest, "_", " ") + ").", nextRenderTemplates}
 		case strings.HasPrefix(string(e.Code), "limit.exceeded."), strings.HasPrefix(string(e.Code), "output.path."),
-			strings.HasPrefix(string(e.Code), "output.expression."):
+			strings.HasPrefix(string(e.Code), "output.expression."), strings.HasPrefix(string(e.Code), "output.container."):
 			r = Refusal{e.Code, "An output is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextRenderTemplates}
 		default:
 			continue
@@ -132,20 +137,37 @@ type renderResult struct {
 
 // renderFile is one file's record (ADR-005 D16 item 2).
 type renderFile struct {
-	Path       string `json:"path"`
-	Output     string `json:"output"`
-	Item       *int   `json:"item"`
-	Source     string `json:"source"`
-	Kind       string `json:"kind"`
-	Size       int64  `json:"size"`
-	Digest     string `json:"digest"`
-	Executable bool   `json:"executable"`
-	Status     string `json:"status"`
+	Path       string  `json:"path"`
+	Output     string  `json:"output"`
+	Item       *int    `json:"item"`
+	Source     string  `json:"source"`
+	Kind       *string `json:"kind"`
+	Size       int64   `json:"size"`
+	Digest     string  `json:"digest"`
+	Executable bool    `json:"executable"`
+	Status     string  `json:"status"`
+	// Entries are a container's, in its order (ADR-005 D16 item 2).
+	Entries []renderEntry `json:"entries,omitempty"`
+}
+
+// renderEntry is one container entry's record (ADR-005 D16 item 2): its
+// size and digest are its uncompressed content's.
+type renderEntry struct {
+	Path    string        `json:"path"`
+	Output  *string       `json:"output"`
+	Item    *int          `json:"item"`
+	Source  string        `json:"source"`
+	Kind    *string       `json:"kind"`
+	Method  string        `json:"method"`
+	Size    int64         `json:"size"`
+	Digest  string        `json:"digest"`
+	Entries []renderEntry `json:"entries,omitempty"`
 }
 
 // planned is one file a render plans (ADR-005 D13 phase 1): its
-// declaration, its path, where in the manifest the path comes from, the
-// evaluation of a fan-out it is, and its bytes once rendered.
+// declaration, its path within its tree, where in the manifest the path
+// comes from, the evaluation of a fan-out it is, and its bytes once
+// rendered.
 type planned struct {
 	decl manifest.Output
 	path string
@@ -155,6 +177,27 @@ type planned struct {
 	literal bool
 	fan     *template.Fan
 	bytes   []byte
+	// owner is the id findings about the file name: its declaration's,
+	// or, for a container's entry that has none, the nearest enclosing
+	// declaration's.
+	owner string
+	// in is the path of the container the file is an entry of, through
+	// every enclosing container, joined by "/", or "" at the top level.
+	in string
+	// entries are a container's files, in the container's order (ADR-005
+	// D8 item 6).
+	entries []*planned
+	// tool marks the mimetype entry a profile writes itself (ADR-005 D9
+	// item 4).
+	tool bool
+	// failed marks a file that did not render, and a container one of
+	// whose entries did not.
+	failed bool
+	// size and digest are a container's zip's, measured in phase 4, and
+	// deflated is whether its container deflates an entry.
+	size     int64
+	digest   string
+	deflated bool
 }
 
 // item is the 0-based index of the fan-out evaluation pf is, or nil.
@@ -164,6 +207,27 @@ func (pf *planned) item() *int {
 	}
 	i := pf.fan.Index()
 	return &i
+}
+
+// isContainer reports whether pf is a container, whose bytes are its
+// entries' zip.
+func (pf *planned) isContainer() bool { return pf.decl.Form == manifest.OutputContainer && !pf.tool }
+
+// source is the record's source of pf (ADR-005 D16 item 2): its form, or
+// profile for the mimetype entry a profile writes.
+func (pf *planned) source() string {
+	if pf.tool {
+		return "profile"
+	}
+	return string(pf.decl.Form)
+}
+
+// joinIn is the path p within the tree of the container at in.
+func joinIn(in, p string) string {
+	if in == "" {
+		return p
+	}
+	return in + "/" + p
 }
 
 // runRender is metais render, of template outputs into a directory that
@@ -237,7 +301,7 @@ func runRender(s *session, p args.Parsed) outcome {
 	// (ADR-005 D15 item 8).
 	fs = append(fs, checkDestination(out)...)
 	// Phase 4: render every output, each to its first error.
-	fs = append(fs, renderPlan(pkg, plan, ts, r)...)
+	fs = append(fs, renderPlan(pkg, plan, ts, r, lim)...)
 	// A warning that --fail-on warning makes a failure fails the render
 	// before it writes anything (ADR-006 D2 item 5).
 	if s.fails(fs) {
@@ -252,17 +316,63 @@ func runRender(s *session, p args.Parsed) outcome {
 	result := &renderResult{Out: "directory", Files: []renderFile{}}
 	var human strings.Builder
 	for _, pf := range plan {
-		sum := sha256.Sum256(pf.bytes)
-		d := "sha256:" + hex.EncodeToString(sum[:])
-		result.Files = append(result.Files, renderFile{
-			Path: pf.path, Output: pf.decl.ID, Item: pf.item(), Source: "template", Kind: kindOf(pf.path, pf.decl.Kind),
-			Size: int64(len(pf.bytes)), Digest: d, Executable: pf.decl.Executable, Status: "create",
-		})
-		human.WriteString(strconv.Itoa(len(pf.bytes)) + "\t" + d + "\t")
+		size, d := pf.measured()
+		var entries strings.Builder
+		rf := renderFile{
+			Path: pf.path, Output: pf.decl.ID, Item: pf.item(), Source: pf.source(), Size: size, Digest: d,
+			Executable: pf.decl.Executable, Status: "create", Entries: entryRecords(pf, &entries, 1),
+		}
+		if !pf.isContainer() {
+			k := kindOf(pf.path, pf.decl.Kind)
+			rf.Kind = &k
+		}
+		result.Files = append(result.Files, rf)
+		human.WriteString(strconv.FormatInt(size, 10) + "\t" + d + "\t")
 		human.Write(finding.AppendText(nil, pf.path))
-		human.WriteString("\n")
+		human.WriteString("\n" + entries.String())
 	}
 	return outcome{findings: fs, result: result, human: []byte(human.String()), dataDir: dataDir}
+}
+
+// measured is pf's size and digest: a container's zip's, or its bytes'.
+func (pf *planned) measured() (int64, string) {
+	if pf.isContainer() {
+		return pf.size, pf.digest
+	}
+	sum := sha256.Sum256(pf.bytes)
+	return int64(len(pf.bytes)), "sha256:" + hex.EncodeToString(sum[:])
+}
+
+// entryRecords is the records of pf's entries, when pf is a container,
+// and their human lines, each indented depth levels, written to human.
+func entryRecords(pf *planned, human *strings.Builder, depth int) []renderEntry {
+	if !pf.isContainer() {
+		return nil
+	}
+	var lines strings.Builder
+	out := make([]renderEntry, 0, len(pf.entries))
+	for _, e := range pf.entries {
+		size, d := e.measured()
+		r := renderEntry{Path: e.path, Item: e.item(), Source: e.source(), Method: "stored", Size: size, Digest: d}
+		if e.decl.ID != "" && !e.tool {
+			id := e.decl.ID
+			r.Output = &id
+		}
+		if e.decl.Form == manifest.OutputTemplate && !e.tool {
+			k := kindOf(e.path, e.decl.Kind)
+			r.Kind = &k
+		}
+		if e.deflated {
+			r.Method = "deflated"
+		}
+		lines.WriteString(strings.Repeat("  ", depth) + strconv.FormatInt(size, 10) + "\t" + d + "\t")
+		lines.Write(finding.AppendText(nil, e.path))
+		lines.WriteString("\n")
+		r.Entries = entryRecords(e, &lines, depth+1)
+		out = append(out, r)
+	}
+	human.WriteString(lines.String())
+	return out
 }
 
 // fails reports whether any of fs fails the command: an error, or under
@@ -278,99 +388,226 @@ func (s *session) fails(fs []finding.Finding) bool {
 // evaluation's when decides whether it writes a file, and its path is
 // rendered, or defaulted (D3, D4); a declaration whose expressions fail
 // contributes their finding and no file, and planning goes on with the
-// next. Every path is held to the portable-path predicate, each alone and
-// every path of the tree together (D12), and the count of planned files,
-// every evaluation's, to the outputs limit (ADR-009 D3).
+// next. A container is planned as a tree of its own, its entries in each
+// of its evaluations, to container-depth, and held to its profile (D8,
+// D9). Every path is held to the portable-path predicate, each alone and
+// every path of its tree together (D12), and the count of planned files,
+// every evaluation's and every container entry's, to the outputs limit
+// (ADR-009 D3).
 func planOutputs(pkg *loader.Package, lim limits.Set, s *session, r *template.Renderer) ([]*planned, []finding.Finding) {
-	var plan []*planned
-	var fs []finding.Finding
-	at := func(ptr string) finding.Location { return manifestAt(pkg, ptr) }
-	bound := lim.Value(limits.Outputs)
+	p := &planner{pkg: pkg, lim: lim, s: s, r: r, counted: true}
+	plan := p.tree(pkg.Manifest.Outputs, "", "", 0, nil)
+	if n, bound := int64(len(p.all)), lim.Value(limits.Outputs); n > bound {
+		over := p.all[bound]
+		if over.fan != nil {
+			// The files the data fans out to take the plan beyond the
+			// bound: the render's, not the package's (ADR-009 D19).
+			subj := finding.Subject{Kind: finding.SubjectOutput, Name: over.owner}
+			p.fs = append(p.fs, lim.ExceededOutput(limits.Outputs, subj, p.at(over.decl.Pointer), n, p.counted))
+		} else {
+			p.fs = append(p.fs, lim.Breached(limits.Outputs, p.at(over.decl.Pointer), n, p.counted))
+		}
+	}
+	return plan, p.fs
+}
+
+// planner is one render's phases 1 and 2.
+type planner struct {
+	pkg *loader.Package
+	lim limits.Set
+	s   *session
+	r   *template.Renderer
+	fs  []finding.Finding
+	all []*planned // every planned file, at every depth, in planning order
 	// counted is cleared when a fan-out is left unevaluated because the
 	// plan is already beyond outputs.
-	counted := true
-	for _, d := range pkg.Manifest.Outputs {
+	counted bool
+}
+
+// at is the location of the manifest's value at ptr.
+func (p *planner) at(ptr string) finding.Location { return manifestAt(p.pkg, ptr) }
+
+// beyond reports whether the plan already holds more files than outputs.
+func (p *planner) beyond() bool { return int64(len(p.all)) > p.lim.Value(limits.Outputs) }
+
+// tree plans decls, the declarations of one tree: the output directory's,
+// or the entries of the container at in, which depth containers enclose,
+// in the enclosing container's evaluation fan. owner is the id an entry
+// with none of its own is named by. The output directory's paths are
+// held to D12 together here, and a container's by container.
+func (p *planner) tree(decls []manifest.Output, owner, in string, depth int, fan *template.Fan) []*planned {
+	var tree []*planned
+	for _, d := range decls {
 		switch {
-		case d.Form != manifest.OutputTemplate:
+		case d.Form != manifest.OutputTemplate && d.Form != manifest.OutputContainer:
 			panic("cli: an output of form " + string(d.Form) + " is not part of this version of metais")
 		case d.Escape == "html", d.Newline == "crlf", d.Validate != "":
 			panic("cli: escape, newline and validate are not part of this version of metais")
 		}
-		x, xfs := template.ParseExprs(d, d.ID, at, lim)
+		id := cmp.Or(d.ID, owner)
+		x, xfs := template.ParseExprs(d, id, p.at, p.lim)
 		if len(xfs) > 0 {
-			fs = append(fs, xfs...)
+			p.fs = append(p.fs, xfs...)
 			continue
 		}
-		if x.ForEach != nil && int64(len(plan)) > bound {
-			counted = false
+		if x.ForEach != nil && p.beyond() {
+			p.counted = false
 			continue
 		}
-		files, f := planDeclaration(d, x, r, func(n int) bool {
-			if int64(len(plan)+n) > bound {
-				counted = false
-				return false
-			}
-			return true
-		})
-		if f != nil {
-			fs = append(fs, *f)
+		if d.Form == manifest.OutputContainer && int64(depth) >= p.lim.Value(limits.ContainerDepth) {
+			// D8 item 4: a container nested deeper than container-depth
+			// is the package's own breach (ADR-009 D19), and plans
+			// nothing.
+			loc := p.at(d.Pointer + "/container")
+			p.fs = append(p.fs, p.lim.Breached(limits.ContainerDepth, loc, int64(depth)+1, true))
 			continue
 		}
-		plan = append(plan, files...)
+		tree = append(tree, p.declaration(d, x, id, in, depth, fan)...)
 	}
-	fs = append(fs, hostfs.CheckPaths(hostfs.WithFaults(s.inv.Options.Faults), func() []finding.Finding {
-		return checkPaths(plan, lim, func(pf *planned) *finding.Location {
-			l := at(pf.ptr)
-			return &l
-		})
-	})...)
-	if n := int64(len(plan)); n > bound {
-		over := plan[bound]
-		if over.fan != nil {
-			// The files the data fans out to take the plan beyond the
-			// bound: the render's, not the package's (ADR-009 D19).
-			subj := finding.Subject{Kind: finding.SubjectOutput, Name: over.decl.ID}
-			fs = append(fs, lim.ExceededOutput(limits.Outputs, subj, at(over.decl.Pointer), n, counted))
-		} else {
-			fs = append(fs, lim.Breached(limits.Outputs, at(over.decl.Pointer), n, counted))
-		}
+	if in == "" {
+		p.checkPaths(tree)
 	}
-	return plan, fs
+	return tree
 }
 
-// planDeclaration is the files of the declaration d, whose expressions
-// are x: one per evaluation whose when holds, in the order of the
-// for_each array, each with its path rendered, or the default path when
-// d gives none (ADR-005 D3, D4). more is asked before each evaluation but
-// the first, with the files planned so far, and stops the fan-out when it
-// answers false. The first error of an expression is the declaration's
-// finding, and it plans no file.
-func planDeclaration(d manifest.Output, x *template.Exprs, r *template.Renderer, more func(n int) bool) ([]*planned, *finding.Finding) {
-	fans, f := r.Fans(x)
-	if f != nil {
-		return nil, f
+// declaration plans the files of the declaration d, whose expressions are
+// x: one per evaluation whose when holds, in the order of the for_each
+// array, or in the enclosing container's evaluation fan, each with its
+// path rendered, or the default path when d gives none (ADR-005 D3, D4),
+// and each container's entries. Before each evaluation but the first, a
+// plan already beyond outputs stops the fan-out. The first error of an
+// expression is the declaration's finding, and it plans no file.
+func (p *planner) declaration(d manifest.Output, x *template.Exprs, owner, in string, depth int, fan *template.Fan) []*planned {
+	fans := []*template.Fan{fan}
+	if x.ForEach != nil {
+		var f *finding.Finding
+		if fans, f = p.r.Fans(x); f != nil {
+			p.fs = append(p.fs, *f)
+			return nil
+		}
 	}
+	mark, marks := len(p.all), len(p.fs)
 	var files []*planned
 	for i, fan := range fans {
-		if i > 0 && !more(len(files)) {
+		if i > 0 && p.beyond() {
+			p.counted = false
 			break
 		}
-		ok, f := r.When(x, fan)
+		ok, f := p.r.When(x, fan)
+		if f == nil && ok {
+			pf := &planned{decl: d, fan: fan, ptr: d.Pointer + "/path", literal: x.Literal, owner: owner, in: in}
+			if x.Path == nil {
+				pf.path, pf.ptr, pf.literal = strings.TrimSuffix(d.Source, ".liquid"), d.Pointer+"/template", true
+			} else {
+				pf.path, f = p.r.Path(x, fan)
+			}
+			if f == nil {
+				p.all = append(p.all, pf)
+				if d.Form == manifest.OutputContainer {
+					pf.entries = p.container(pf, depth+1)
+				}
+				files = append(files, pf)
+			}
+		}
 		if f != nil {
-			return nil, f
+			// The declaration plans nothing: not the files of its earlier
+			// evaluations, nor what their containers found.
+			p.all, p.fs = p.all[:mark], append(p.fs[:marks], *f)
+			return nil
 		}
-		if !ok {
-			continue
-		}
-		pf := &planned{decl: d, fan: fan, ptr: d.Pointer + "/path", literal: x.Literal}
-		if x.Path == nil {
-			pf.path, pf.ptr, pf.literal = strings.TrimSuffix(d.Source, ".liquid"), d.Pointer+"/template", true
-		} else if pf.path, f = r.Path(x, fan); f != nil {
-			return nil, f
-		}
-		files = append(files, pf)
 	}
-	return files, nil
+	return files
+}
+
+// container plans the entries of the container pf, the depth-th
+// container on its chain, in pf's evaluation: one tree, held to D12
+// within it and to its profile (D8 items 3 and 8, D9), in the container's
+// order (D8 item 6).
+func (p *planner) container(pf *planned, depth int) []*planned {
+	c := pf.decl.Container
+	in := joinIn(pf.in, pf.path)
+	var entries []*planned
+	if m, ok := c.ToolMimetype(); ok {
+		// D9 items 2 to 4: the profile's own mimetype entry, which takes
+		// its place in the tree like any other.
+		tool := &planned{decl: pf.decl, path: manifest.MimetypeEntry, ptr: pf.decl.Pointer + "/container/profile",
+			literal: true, fan: pf.fan, owner: pf.owner, in: in, bytes: []byte(m), tool: true}
+		p.all = append(p.all, tool)
+		entries = append(entries, tool)
+	}
+	for _, e := range p.tree(c.Entries, pf.owner, in, depth, pf.fan) {
+		subj := finding.Subject{Kind: finding.SubjectOutput, Name: e.owner}
+		params := pathParams(e)
+		params["profile"] = finding.String(c.Profile)
+		switch c.CheckEntry(e.path) {
+		case manifest.EntryReserved:
+			p.fs = append(p.fs, finding.New(finding.CodeContainerReservedEntry, subj, ptrTo(p.at(e.ptr)), params))
+			continue
+		case manifest.EntryNonASCII:
+			p.fs = append(p.fs, finding.New(finding.CodeContainerNonASCII, subj, ptrTo(p.at(e.ptr)), params))
+		case manifest.EntrySpace:
+			p.fs = append(p.fs, finding.New(finding.CodeContainerSpace, subj, ptrTo(p.at(e.ptr)), params))
+		}
+		entries = append(entries, e)
+	}
+	p.checkPaths(entries)
+	subj := finding.Subject{Kind: finding.SubjectOutput, Name: pf.owner}
+	if req := c.RequiredEntry(); req != "" && !slices.ContainsFunc(entries, func(e *planned) bool { return e.path == req }) {
+		params := finding.Params{"entry": finding.String(req), "profile": finding.String(c.Profile)}
+		if i := pf.item(); i != nil {
+			params["item"] = finding.Int(int64(*i))
+		}
+		p.fs = append(p.fs, finding.New(finding.CodeContainerMissingEntry, subj, ptrTo(p.at(pf.decl.Pointer+"/container/profile")), params))
+	}
+	if len(entries) > zipfmt.MaxEntries {
+		p.fs = append(p.fs, finding.New(finding.CodeContainerTooManyEntries, subj,
+			ptrTo(p.at(pf.decl.Pointer+"/container/entries")), finding.Params{"count": finding.Int(int64(len(entries)))}))
+	}
+	return containerOrder(c, entries)
+}
+
+// ptrTo is a pointer to a copy of l.
+func ptrTo(l finding.Location) *finding.Location { return &l }
+
+// containerOrder is ADR-005 D8 item 6's order of a container's entries:
+// the profile's first entries, the profile's own mimetype before the
+// author's [Content_Types].xml; then the files of every first: true
+// declaration, in declaration order, each declaration's in byte order of
+// their paths; then every other file in byte order. A file appears once,
+// at its earliest place.
+func containerOrder(c *manifest.Container, entries []*planned) []*planned {
+	sorted := slices.SortedFunc(slices.Values(entries), func(a, b *planned) int { return strings.Compare(a.path, b.path) })
+	out := make([]*planned, 0, len(entries))
+	placed := map[*planned]bool{}
+	place := func(keep func(e *planned) bool) {
+		for _, e := range sorted {
+			if !placed[e] && keep(e) {
+				placed[e] = true
+				out = append(out, e)
+			}
+		}
+	}
+	place(func(e *planned) bool { return e.tool })
+	if first := c.FirstEntry(); first != "" {
+		place(func(e *planned) bool { return e.path == first })
+	}
+	for _, d := range c.Entries {
+		if d.First {
+			place(func(e *planned) bool { return !e.tool && e.decl.Pointer == d.Pointer })
+		}
+	}
+	place(func(*planned) bool { return true })
+	return out
+}
+
+// checkPaths applies the portable-path predicate to the paths of one
+// tree (ADR-005 D12): each path alone, and every path of the tree
+// together.
+func (p *planner) checkPaths(tree []*planned) {
+	at := func(pf *planned) *finding.Location { return ptrTo(p.at(pf.ptr)) }
+	p.fs = append(p.fs, hostfs.CheckPaths(hostfs.WithFaults(p.s.inv.Options.Faults), func() []finding.Finding {
+		return checkPaths(tree, p.lim, at)
+	})...)
 }
 
 // manifestAt is the location of the manifest value at ptr, with its line
@@ -445,7 +682,7 @@ const (
 // for path-length and path-depth, since a manifest's path is the
 // package's own content (ADR-009 D19).
 func pathFinding(pf *planned, loc *finding.Location, pr unitext.Problem, lim limits.Set) finding.Finding {
-	subj := finding.Subject{Kind: finding.SubjectOutput, Name: pf.decl.ID}
+	subj := finding.Subject{Kind: finding.SubjectOutput, Name: pf.owner}
 	p := pathParams(pf)
 	var code finding.Code
 	switch pr.Kind {
@@ -489,7 +726,7 @@ func pathParams(pf *planned) finding.Params {
 // collisionFinding is the finding of c, ADR-005 D12 item 6 or 7, about the
 // planned file pf at loc, which collides with the one at other.
 func collisionFinding(pf *planned, loc *finding.Location, c unitext.Collision, other *finding.Location) finding.Finding {
-	subj := finding.Subject{Kind: finding.SubjectOutput, Name: pf.decl.ID}
+	subj := finding.Subject{Kind: finding.SubjectOutput, Name: pf.owner}
 	p := pathParams(pf)
 	switch c.Kind {
 	case unitext.Duplicate:
@@ -552,62 +789,179 @@ func writeFailed(r hostfs.Reason) finding.Finding {
 	})
 }
 
-// renderPlan is ADR-005 D13's phase 4 for template outputs: every template
-// a template output reaches is parsed, each once, and every parse finding
-// is reported, whether or not the output plans a file; then every embed
-// of a raw form that does not exist, whose input and item are known, is
-// reported before anything renders (ADR-004 D12 item 3); then every
-// planned file whose templates parsed and need no such raw form is
+// renderPlan is ADR-005 D13's phase 4: every template a template output
+// reaches, at any depth of containers, is parsed, each once, and every
+// parse finding is reported, whether or not the output plans a file; then
+// every embed of a raw form that does not exist, whose input and item are
+// known, is reported before anything renders (ADR-004 D12 item 3); then
+// every planned file whose templates parsed and need no such raw form is
 // rendered with r, each to its first error (ADR-004 D16 item 4). The bytes
-// of each file that rendered are held in its planned file.
-func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r *template.Renderer) []finding.Finding {
+// of each file that rendered are held in its planned file. Then each
+// container whose entries all rendered is measured, and held to
+// output-size.
+func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r *template.Renderer, lim limits.Set) []finding.Finding {
 	var fs []finding.Finding
 	reported := map[string]bool{}
 	ready := map[string]bool{}
-	for _, d := range pkg.Manifest.Outputs {
-		if _, seen := ready[d.Source]; seen || d.Form != manifest.OutputTemplate {
-			continue
-		}
-		ready[d.Source] = true
-		for _, name := range ts.Reach(d.Source) {
-			_, pfs := ts.Parse(name)
-			if len(pfs) > 0 {
-				ready[d.Source] = false
+	var sources []string // ready's keys, in manifest order
+	var parse func(decls []manifest.Output)
+	parse = func(decls []manifest.Output) {
+		for _, d := range decls {
+			if d.Container != nil {
+				parse(d.Container.Entries)
 			}
-			if !reported[name] {
-				reported[name] = true
-				fs = append(fs, pfs...)
+			if _, seen := ready[d.Source]; seen || d.Form != manifest.OutputTemplate {
+				continue
+			}
+			ready[d.Source] = true
+			sources = append(sources, d.Source)
+			for _, name := range ts.Reach(d.Source) {
+				_, pfs := ts.Parse(name)
+				if len(pfs) > 0 {
+					ready[d.Source] = false
+				}
+				if !reported[name] {
+					reported[name] = true
+					fs = append(fs, pfs...)
+				}
 			}
 		}
 	}
+	parse(pkg.Manifest.Outputs)
 	unavailable := map[string]bool{}
-	for _, d := range pkg.Manifest.Outputs {
-		if !ready[d.Source] {
+	for _, source := range sources {
+		if !ready[source] {
 			continue
 		}
-		for _, name := range ts.Reach(d.Source) {
+		for _, name := range ts.Reach(source) {
 			if _, seen := unavailable[name]; !seen {
 				ufs := r.Unavailable(name)
 				unavailable[name] = len(ufs) > 0
 				fs = append(fs, ufs...)
 			}
 			if unavailable[name] {
-				ready[d.Source] = false
+				ready[source] = false
 			}
 		}
 	}
+	var render func(tree []*planned)
+	render = func(tree []*planned) {
+		for _, pf := range tree {
+			switch {
+			case pf.isContainer():
+				render(pf.entries)
+				continue
+			case pf.tool:
+				continue
+			case !ready[pf.decl.Source]:
+				pf.failed = true
+				continue
+			}
+			out, f := r.Render(template.Output{ID: pf.owner, Template: pf.decl.Source, Path: pf.path, Fan: pf.fan, Kind: kindOf(pf.path, pf.decl.Kind), In: pf.in})
+			if f != nil {
+				fs = append(fs, *f)
+				pf.failed = true
+				continue
+			}
+			pf.bytes = out
+		}
+	}
+	render(plan)
 	for _, pf := range plan {
-		if !ready[pf.decl.Source] {
+		if !pf.isContainer() || !measure(pf) {
 			continue
 		}
-		out, f := r.Render(template.Output{ID: pf.decl.ID, Template: pf.decl.Source, Path: pf.path, Fan: pf.fan, Kind: kindOf(pf.path, pf.decl.Kind)})
-		if f != nil {
-			fs = append(fs, *f)
-			continue
+		if pf.size > lim.Value(limits.OutputSize) {
+			loc := finding.Location{Origin: finding.OriginOutput, File: pf.path}
+			fs = append(fs, lim.ExceededOutput(limits.OutputSize, finding.Subject{Kind: finding.SubjectOutput, Name: pf.owner}, loc, pf.size, true))
 		}
-		pf.bytes = out
 	}
 	return fs
+}
+
+// measure measures the container pf, and every container among its
+// entries, when every entry rendered: the size and digest of the zip it
+// writes, and which of its entries it deflates. It writes the zip to
+// nothing but a hash, so no container is held whole in memory.
+func measure(pf *planned) bool {
+	if len(pf.entries) > zipfmt.MaxEntries {
+		// Refused in planning (D8 item 8); a zip cannot hold them.
+		pf.failed = true
+		return false
+	}
+	for _, e := range pf.entries {
+		if e.failed || e.isContainer() && !measure(e) {
+			pf.failed = true
+			return false
+		}
+	}
+	h := sha256.New()
+	n := &byteCount{}
+	written, err := writeContainer(io.MultiWriter(h, n), pf)
+	if err != nil {
+		panic("cli: a planned container does not write: " + err.Error())
+	}
+	for i, w := range written {
+		pf.entries[i].deflated = w.Deflated
+	}
+	pf.size, pf.digest = n.n, "sha256:"+hex.EncodeToString(h.Sum(nil))
+	return true
+}
+
+// byteCount counts the bytes written to it.
+type byteCount struct{ n int64 }
+
+func (c *byteCount) Write(b []byte) (int, error) {
+	c.n += int64(len(b))
+	return len(b), nil
+}
+
+// writeContainer writes the zip of the container pf to w, assembling it as
+// it is written (ADR-005 D8, D13 item 5): each entry's content is its
+// rendered bytes, or the zip of a container entry, itself written as it
+// is written. stored: true and a profile's mimetype are stored; every
+// other entry is ADR-001 D4's auto (D8 item 7).
+func writeContainer(w io.Writer, pf *planned) ([]zipfmt.Written, error) {
+	parts := make([]zipfmt.Part, len(pf.entries))
+	for i, e := range pf.entries {
+		method := zipfmt.Auto
+		if e.tool || e.decl.Stored {
+			method = zipfmt.Store
+		}
+		parts[i] = zipfmt.Part{Name: e.path, Method: method, Content: func(w io.Writer) error {
+			if e.isContainer() {
+				_, err := writeContainer(w, e)
+				return err
+			}
+			_, err := w.Write(e.bytes)
+			return err
+		}}
+	}
+	return zipfmt.WriteParts(w, parts)
+}
+
+// content is the reader of pf's bytes as the commit writes them: a
+// container's zip is written into a pipe as it is read, and done reports
+// the error of its writing, once the reader is finished with.
+func content(pf *planned) (r io.Reader, done func(read error) error) {
+	if !pf.isContainer() {
+		return bytes.NewReader(pf.bytes), func(error) error { return nil }
+	}
+	pr, pw := io.Pipe()
+	errc := make(chan error, 1)
+	go func() {
+		_, err := writeContainer(pw, pf)
+		pw.CloseWithError(err)
+		errc <- err
+	}()
+	return pr, func(read error) error {
+		// A reader that stopped early unblocks the writer.
+		pr.CloseWithError(read)
+		if err := <-errc; err != nil && read == nil {
+			return err
+		}
+		return nil
+	}
 }
 
 // commit writes plan, in path order, beneath a staging directory beside
@@ -625,7 +979,11 @@ func commit(out string, plan []*planned, s *session) (finding.Finding, bool) {
 	for _, pf := range plan {
 		err := o.MkdirAll(pathpkg.Dir(pf.path))
 		if err == nil {
-			err = o.Create(pf.path, pf.decl.Executable, bytes.NewReader(pf.bytes))
+			r, done := content(pf)
+			err = o.Create(pf.path, pf.decl.Executable, r)
+			if derr := done(err); err == nil && derr != nil {
+				panic("cli: a measured container does not write: " + derr.Error())
+			}
 		}
 		if err != nil {
 			o.Abort()

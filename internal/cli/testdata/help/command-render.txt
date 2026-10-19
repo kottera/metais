@@ -9,7 +9,9 @@ validated, as metais inspect and metais validate do; an input that fails ends
 the render with every finding of the inputs. Then every output is planned, its
 path checked by the portable-path rules, and rendered in memory: every output is
 attempted, and each reports its first error. If any finding is an error, nothing
-is written anywhere.
+is written anywhere. A container output is one zip of its entries, each rendered
+as an output is, in the order its profile and its first entries give; its zip is
+written as it is assembled.
 
 --out is required, and names a directory that does not exist yet. The outputs
 are written beneath a staging directory beside it, .metais-staging- followed by
@@ -75,7 +77,8 @@ Flags:
 
 Prints:
   One line per file written, in path order: its size, its digest and its path,
-  separated by tabs. With --json, one metais.render/1 document.
+  separated by tabs; a container's entries are indented beneath it, in its
+  order. With --json, one metais.render/1 document.
 
 Refusals:
   collection.as_file
@@ -488,6 +491,21 @@ Refusals:
       Next: metais inspect <package>
   markdown.frontmatter_unclosed
       An input is refused (frontmatter unclosed).
+      Next: metais inspect <package>
+  output.container.missing_entry
+      An output is refused (container: missing entry).
+      Next: metais inspect <package>
+  output.container.non_ascii
+      An output is refused (container: non ascii).
+      Next: metais inspect <package>
+  output.container.reserved_entry
+      An output is refused (container: reserved entry).
+      Next: metais inspect <package>
+  output.container.space
+      An output is refused (container: space).
+      Next: metais inspect <package>
+  output.container.too_many_entries
+      An output is refused (container: too many entries).
       Next: metais inspect <package>
   output.destination.not_directory
       --out, or a directory above it, exists and is not a directory.

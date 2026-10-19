@@ -1465,3 +1465,47 @@ they write into an existing directory too.
   and the `kind` field, through that style. The table's `.go` row is
   written `f.GO` there: a `.go` file in the suite would be a Go package of
   this module.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-6.** Containers render (D8) with
+  the three profiles (D9), and `check` verifies the profiles statically
+  (D9 item 6). The planner recurses into each container as its own tree,
+  holds its entry paths to D12 among its entries only, and refuses a
+  container nested beyond `container-depth` with `limit.package` at its
+  `container` member, planning nothing beneath it. The zip is written by
+  `zipfmt.WriteParts`, which measures each entry by writing its content
+  once — CRC, size and, for `auto`, the deflated size — and writes it
+  again behind its local header, so no entry and no container, nested or
+  not, is ever held whole (D13 item 5) and no data descriptor is needed.
+  Phase 4 measures each container the same way into a hash, which gives
+  the record's size and digest and holds the zip to `output-size` before
+  anything is written; the commit streams it again into the file. Readings
+  where the ADR is silent: the profile codes are
+  `output.container.missing_entry` (located at the container's `profile`),
+  `output.container.non_ascii`, `output.container.reserved_entry`,
+  `output.container.space` (a warning) and
+  `output.container.too_many_entries` (D8 item 8), each but the first at
+  the entry's declaration; the profile's own `mimetype` entry takes part in
+  D12's collisions within its container, so `MIMETYPE` beside it is
+  `output.path.case_collision`, while the author's exact `mimetype` is only
+  `reserved_entry`; a finding about a container entry names the nearest
+  declaration with an id, and a finding located in a rendered entry names
+  the file `<container path>/<entry path>`, through every enclosing
+  container (D11 item 4); the result record of the profile's `mimetype`
+  entry has `source: profile`, and a container's `kind` is null. `check`
+  judges a path it can know — written without Liquid markup, or a
+  template's default — and reports a missing required entry only when no
+  entry's path is one only a render can know (a path template, an asset or
+  a mirror), as MTS-AUT-023 leaves a kind it cannot know to the render. A
+  container that lists itself can only be written with a YAML anchor and
+  alias, which the manifest refuses (`manifest.yaml.anchor`,
+  `manifest.yaml.alias`); `trn/container-tree` holds that hostile member of
+  ADR-009 D17 item 8, and a container entry path that climbs out, refused
+  with `output.path.shape`. An `executable` entry is refused by the
+  manifest schema's `oneOf` (`manifest.one_of`, still unwired, since it
+  names no statement yet), which `internal/cli`'s tests prove. A container with `for_each` (W5-4)
+  plans its entries once per evaluation, in that evaluation's fan, so every
+  entry's `when`, path and template see its `item` and `fan_out`; a
+  finding about the container's entries carries the evaluation's `item`.
+  `trn/container-too-many-entries` reaches 65,535 entries through an
+  entry's `for_each`. The zip writer resets one deflater per zip rather
+  than making one per entry: level 9's state is large, and a container of
+  tens of thousands of entries spent most of its time allocating it.

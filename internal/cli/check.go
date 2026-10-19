@@ -86,10 +86,15 @@ func checkRefusals() []Refusal {
 		if declared || e.Code == "schema.sample_unsatisfiable" || e.Code == finding.CodeReportTruncated {
 			continue
 		}
-		if !slices.Contains(author.CheckCodes(), e.Code) && (what[family] == "" || e.Severity == finding.SeverityError) {
+		profile := slices.Contains(author.ContainerCodes(), e.Code)
+		if !slices.Contains(author.CheckCodes(), e.Code) && !profile && (what[family] == "" || e.Severity == finding.SeverityError) {
 			continue
 		}
-		cause := what[family] + " (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + "), a " + e.Severity.String() + "."
+		subject := what[family]
+		if profile {
+			subject = "A container's profile"
+		}
+		cause := subject + " (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + "), a " + e.Severity.String() + "."
 		out = append(out, Refusal{e.Code, cause, nextCheckAgain})
 	}
 	return out

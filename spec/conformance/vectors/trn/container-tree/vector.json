@@ -1,0 +1,94 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/container-tree",
+  "title": "A container is its own tree: its entry paths are held to the portable-path rules among its entries only, one climbing out is refused, a container listing itself is refused, and an entry id repeated is refused, each with nothing written",
+  "statements": [
+    "MTS-TRN-002",
+    "MTS-MAN-005"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "portable-paths"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "apart",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "apart",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/apart",
+                "containers": [
+                  {
+                    "path": "box.zip",
+                    "methods": []
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "refused",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "refused",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/refused.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "declared",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "declared",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/declared.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "lists-itself",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "self",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/self.json"
+          }
+        }
+      ]
+    }
+  ]
+}

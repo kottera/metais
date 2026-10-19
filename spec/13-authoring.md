@@ -79,6 +79,16 @@ its path gives it: a path omitted, or one whose text after its last Liquid
 construct holds the file's extension. A kind only a render can know is
 the render's to judge.
 
+<a id="mts-aut-030"></a>**MTS-AUT-030** A check MUST verify each container
+profile ([chapter 10](10-transforms.md)) as far as it can without data, and
+report what it finds with the code a render gives it: a container nested
+deeper than `container-depth`; and, for each entry whose path is written
+without Liquid markup, or is a template's default, the profile's refusals
+and its warning on that path. It MUST report `output.container.missing_entry`
+for a container whose profile requires an entry when no entry has that path
+so, and no entry's path is one only a render can know — a path template, an
+asset or a mirror.
+
 ### Step 5: the schemas
 
 <a id="mts-aut-007"></a>**MTS-AUT-007** For every schema object of every

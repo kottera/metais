@@ -1,0 +1,48 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: doc
+    path: report.docx
+    container:
+      profile: ooxml
+      entries:
+        - template: part.xml.liquid
+          path: word/média.xml
+  - id: sheet
+    path: "{{ package.name }}.odt"
+    container:
+      profile: odf
+      mimetype: application/vnd.oasis.opendocument.text
+      entries:
+        - template: part.xml.liquid
+          path: mimetype
+        - template: part.xml.liquid
+          path: META-INF/manifest.xml
+  - id: book
+    path: book.epub
+    container:
+      profile: epub
+      entries:
+        - template: part.xml.liquid
+          path: "{{ package.name }}/container.xml"
+        - template: part.xml.liquid
+          path: OEBPS/a page.xhtml
+  - id: deep
+    path: deep.zip
+    container:
+      entries:
+        - path: b.zip
+          container:
+            entries:
+              - path: c.zip
+                container:
+                  entries:
+                    - path: d.zip
+                      container:
+                        entries:
+                          - template: part.xml.liquid

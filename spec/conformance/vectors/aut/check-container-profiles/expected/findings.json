@@ -1,0 +1,98 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 47,
+      "column": 25,
+      "pointer": "/outputs/3/container/entries/0/container/entries/0/container/entries/0/container"
+    },
+    "params": {
+      "limit": "container-depth",
+      "bound": 3,
+      "lowered": false,
+      "observed": 4
+    }
+  },
+  {
+    "code": "output.container.space",
+    "severity": "warning",
+    "subject": {
+      "kind": "output",
+      "name": "book"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 34,
+      "column": 17,
+      "pointer": "/outputs/2/container/entries/1/path"
+    },
+    "params": {
+      "profile": "epub",
+      "path": "OEBPS/a page.xhtml"
+    }
+  },
+  {
+    "code": "output.container.missing_entry",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "doc"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 12,
+      "column": 16,
+      "pointer": "/outputs/0/container/profile"
+    },
+    "params": {
+      "profile": "ooxml",
+      "entry": "[Content_Types].xml"
+    }
+  },
+  {
+    "code": "output.container.non_ascii",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "doc"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 17,
+      "pointer": "/outputs/0/container/entries/0/path"
+    },
+    "params": {
+      "profile": "ooxml",
+      "path": "word/média.xml"
+    }
+  },
+  {
+    "code": "output.container.reserved_entry",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "sheet"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 23,
+      "column": 17,
+      "pointer": "/outputs/1/container/entries/0/path"
+    },
+    "params": {
+      "profile": "odf",
+      "path": "mimetype"
+    }
+  }
+]

@@ -1,0 +1,17 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: book
+    path: book.epub
+    container:
+      profile: epub
+      entries:
+        - template: page.xhtml.liquid
+          path: OEBPS/page.xhtml
+        - template: mimetype.liquid
+          path: mimetype

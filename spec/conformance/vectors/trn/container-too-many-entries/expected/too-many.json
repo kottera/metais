@@ -1,0 +1,20 @@
+[
+  {
+    "code": "output.container.too_many_entries",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "box"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 13,
+      "column": 9,
+      "pointer": "/outputs/0/container/entries"
+    },
+    "params": {
+      "count": 65535
+    }
+  }
+]

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/profile-ooxml",
+  "title": "The ooxml profile places [Content_Types].xml first, ahead of a first: true entry, and refuses a container without it and an entry path outside ASCII",
+  "statements": [
+    "MTS-TRN-009",
+    "MTS-TRN-004"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out",
+                "containers": [
+                  {
+                    "path": "report.docx",
+                    "methods": []
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "refused",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "refused",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/refused.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/profile-epub",
+  "title": "The epub profile writes the mimetype entry itself, first and stored, warns on an entry path with a space and renders, and refuses the author's own mimetype entry and a container without META-INF/container.xml",
+  "statements": [
+    "MTS-TRN-011",
+    "MTS-TRN-006"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "findings": "expected/warning.json",
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out",
+                "containers": [
+                  {
+                    "path": "book.epub",
+                    "methods": [
+                      "mimetype"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "refused",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "refused",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/refused.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/container-fan-out",
+  "title": "A container with for_each writes one zip per evaluation its when keeps, and every entry's when, path and template see that evaluation's item and fan_out; a second for_each on the chain is refused",
+  "statements": [
+    "MTS-TRN-012",
+    "MTS-MAN-016"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out",
+                "containers": [
+                  {
+                    "path": "book-1.zip",
+                    "methods": []
+                  },
+                  {
+                    "path": "book-3.zip",
+                    "methods": []
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "nested-for-each",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "nested",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/nested.json"
+          }
+        }
+      ]
+    }
+  ]
+}

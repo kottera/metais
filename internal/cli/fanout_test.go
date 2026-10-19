@@ -59,6 +59,18 @@ func TestNoDeclarationStops(t *testing.T) {
     template: t.txt.liquid
     path: "{{ inputs.pages | join: '-' }}.txt"
 `, []string{"a-b-c.txt"}},
+		{"container", `  - id: box
+    path: box.epub
+    container:
+      profile: epub
+      entries:
+        - template: t.txt.liquid
+          path: META-INF/container.xml
+        - path: inner.zip
+          container:
+            entries:
+              - template: t.txt.liquid
+`, []string{"box.epub"}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			pkg, data := declarationPackage(t, c.decls)

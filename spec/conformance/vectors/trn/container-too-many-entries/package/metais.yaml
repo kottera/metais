@@ -1,0 +1,15 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: box
+    path: box.zip
+    container:
+      entries:
+        - template: e.txt.liquid
+          for_each: (1..65535)
+          path: "{{ item }}"

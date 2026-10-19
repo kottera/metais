@@ -397,6 +397,9 @@ func TestEmittedCodes(t *testing.T) {
 	// The embed and provenance tags (W5-3).
 	want = append(want, "template.embed_index", "template.embed_unknown_input", "template.provenance_argument",
 		"template.provenance_style")
+	// Containers' (W5-6).
+	want = append(want, CodeContainerMissingEntry, CodeContainerNonASCII, CodeContainerReservedEntry, CodeContainerSpace,
+		CodeContainerTooManyEntries)
 	// The reading commands' (W4-2).
 	want = append(want, CodeUsageBadGlob, CodeUsageBadPattern, CodeUsageBinaryToTerminal, CodeUsageEntryNotFound,
 		CodeUsageIsADirectory, CodeUsageLineOutOfRange, CodeUsageNoMatch, CodeUsageNotText, CodeUsageUnknownInput)

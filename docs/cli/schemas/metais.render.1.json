@@ -134,7 +134,7 @@
           ]
         },
         "kind": {
-          "description": "The file's kind, for a template file (ADR-005 D7).",
+          "description": "The file's kind, for a template file (ADR-005 D7), and null for a container.",
           "enum": [
             "html",
             "xml",
@@ -146,7 +146,8 @@
             "hash",
             "slash",
             "sql",
-            "text"
+            "text",
+            null
           ]
         },
         "size": {
@@ -169,6 +170,100 @@
             "create",
             "replace"
           ]
+        },
+        "entries": {
+          "description": "A container's entries, in the container's order (ADR-005 D8 item 6); absent for any other file.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "required": [
+        "path",
+        "output",
+        "item",
+        "source",
+        "kind",
+        "method",
+        "size",
+        "digest"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "The entry's path within its container, /-separated.",
+          "type": "string",
+          "minLength": 1
+        },
+        "output": {
+          "description": "The entry declaration's id, or null when it has none or the profile wrote the entry.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "item": {
+          "description": "The 0-based index of the for_each element it was rendered for, or null.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "source": {
+          "description": "What wrote it: template, asset or container, or profile for the mimetype entry a profile writes.",
+          "enum": [
+            "template",
+            "asset",
+            "container",
+            "profile"
+          ]
+        },
+        "kind": {
+          "description": "The entry's kind, for a template file (ADR-005 D7), and null for any other.",
+          "enum": [
+            "html",
+            "xml",
+            "markdown",
+            "json",
+            "yaml",
+            "csv",
+            "css",
+            "hash",
+            "slash",
+            "sql",
+            "text",
+            null
+          ]
+        },
+        "method": {
+          "description": "How the container holds it: stored or deflated.",
+          "enum": [
+            "stored",
+            "deflated"
+          ]
+        },
+        "size": {
+          "description": "The entry's uncompressed size in bytes.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "digest": {
+          "description": "sha256: and the lowercase hex SHA-256 of the entry's uncompressed bytes.",
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "entries": {
+          "description": "A container entry's own entries, in its order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
         }
       }
     }

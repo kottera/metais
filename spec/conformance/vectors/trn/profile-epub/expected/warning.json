@@ -1,0 +1,21 @@
+[
+  {
+    "code": "output.container.space",
+    "severity": "warning",
+    "subject": {
+      "kind": "output",
+      "name": "book"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 17,
+      "pointer": "/outputs/0/container/entries/1/path"
+    },
+    "params": {
+      "profile": "epub",
+      "path": "OEBPS/first page.xhtml"
+    }
+  }
+]

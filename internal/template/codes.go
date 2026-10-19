@@ -128,7 +128,8 @@ func (r *Renderer) renderFinding(o Output, e *liquid.Error) finding.Finding {
 	if e.Code == liquid.CodeLimit {
 		return r.limitFinding(o, e, errorAt(e))
 	}
-	return evalFinding(e, subject(e.Source), errorAt(e), &o.Path)
+	file := o.file()
+	return evalFinding(e, subject(e.Source), errorAt(e), &file)
 }
 
 // evalFinding maps an error of evaluation e, other than a limit's breach,
@@ -240,8 +241,8 @@ func (r *Renderer) limitFinding(o Output, e *liquid.Error, loc finding.Location)
 		panic("template: the renderer breached an unknown limit " + e.Args["limit"])
 	}
 	if l.ID == limits.OutputSize || l.ID == limits.OutputTotal {
-		out := finding.Location{Origin: finding.OriginOutput, File: o.Path}
+		out := finding.Location{Origin: finding.OriginOutput, File: o.file()}
 		return r.lim.ExceededOutput(l.ID, finding.Subject{Kind: finding.SubjectOutput, Name: o.ID}, out, 0, false)
 	}
-	return r.lim.ExceededTemplate(l.ID, subject(e.Source), loc, o.Path, finding.WithRelated(chain(e)...))
+	return r.lim.ExceededTemplate(l.ID, subject(e.Source), loc, o.file(), finding.WithRelated(chain(e)...))
 }
