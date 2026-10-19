@@ -135,24 +135,27 @@ func renderDeclaration() *Command {
 			"a container's entries are indented beneath it, in its order. On a dry run the lines are headed would write. " +
 			"With --out -, standard output is the archive, or the one file's bytes.",
 		Refusals: append(packageRefusals("render"),
-			Refusal{finding.CodeUsageMissingFlag, "--out is not given.", nextRenderOut},
-			Refusal{finding.CodeUsageArchiveToTerminal, "--out - is given without --only, and standard output is a terminal.", nextRenderArchive},
-			Refusal{finding.CodeUsageUnknownOutput, "--only names no file the render writes.", nextRenderDryRun},
-			Refusal{finding.CodeUsageBadValue, "--now is not an RFC 3339 date-time with an offset, or --seed or --items is not a whole number in range.", nextRenderNow},
-			Refusal{finding.CodeUsageFlagExcluded, "--data is given with --sample, whose generated data takes the data directory's place.", nextRenderSample},
-			Refusal{finding.CodeUsageFlagRequires, "--optional, --seed or --items is given without --sample.", nextRenderSample},
-			Refusal{finding.CodeUsageDataDirUnreadable, "The data directory given to --data does not exist, is not a directory, or cannot be read.", nextRenderData},
-			Refusal{finding.CodeUsageConflictingFlags, "--inputs-json - is given twice, and standard input is read once.", nextInputsHelp},
-			Refusal{finding.CodeDestinationNotDirectory, "--out, or a directory above it, exists and is not a directory; or, in --out, a file stands where an output's path needs a directory.", nextRenderInTheWay},
-			Refusal{finding.CodeDestinationNotEmpty, "--out is a directory that holds entries, and --overwrite is not given.", nextRenderOverwrite},
-			Refusal{finding.CodeDestinationLink, "In --out, an output's path runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed.", nextRenderInTheWay},
-			Refusal{finding.CodeDestinationCaseVariant, "In --out, an entry's name differs only in case or normalization from a name an output's path holds.", nextRenderInTheWay},
-			Refusal{finding.CodeDestinationNotRegularFile, "In --out, a directory, a named pipe, a socket or a device stands at an output's path.", nextRenderInTheWay},
-			Refusal{finding.CodeDestinationWriteFailed, "A write failed, another file system is mounted on an output's path, a staging directory is left in --out, or an output's path begins with its name; whatever was written is removed.", nextRenderDest},
-			Refusal{finding.CodeDestinationCommitFailed, "Moving the outputs into an existing --out failed part way; the files already moved are listed, and nothing else was changed.", nextRenderDest},
-			Refusal{finding.CodeUsageFlagExcluded, "--overwrite is given with --out -, and an archive on standard output replaces nothing.", nextRenderOverwrite},
-			Refusal{codeMirrorEmptyName, "A mirror would write a template whose file name is exactly .liquid with an empty name.", nextRenderTemplates},
-			Refusal{codeMirrorEmpty, "A mirror renders no file, and --fail-on warning makes its warning fail the render.", nextRenderTemplates},
+			Refusal{Code: finding.CodeUsageMissingFlag, Cause: "--out is not given.", Next: nextRenderOut},
+			Refusal{Code: finding.CodeUsageArchiveToTerminal, Cause: "--out - is given without --only, and standard output is a terminal.", Next: nextRenderArchive},
+			Refusal{Code: finding.CodeUsageUnknownOutput, Cause: "--only names no file the render writes.", Next: nextRenderDryRun},
+			Refusal{Code: finding.CodeUsageBadValue, Cause: "--now is not an RFC 3339 date-time with an offset, or --seed or --items is not a whole number in range.", Next: nextRenderNow,
+				match: valueRefused("--now", "--seed", "--items")},
+			Refusal{Code: finding.CodeUsageFlagExcluded, Cause: "--data is given with --sample, whose generated data takes the data directory's place.", Next: nextRenderSample,
+				match: flagGiven("--data")},
+			Refusal{Code: finding.CodeUsageFlagRequires, Cause: "--optional, --seed or --items is given without --sample.", Next: nextRenderSample},
+			Refusal{Code: finding.CodeUsageDataDirUnreadable, Cause: "The data directory given to --data does not exist, is not a directory, or cannot be read.", Next: nextRenderData},
+			Refusal{Code: finding.CodeUsageConflictingFlags, Cause: "--inputs-json - is given twice, and standard input is read once.", Next: nextInputsHelp},
+			Refusal{Code: finding.CodeDestinationNotDirectory, Cause: "--out, or a directory above it, exists and is not a directory; or, in --out, a file stands where an output's path needs a directory.", Next: nextRenderInTheWay},
+			Refusal{Code: finding.CodeDestinationNotEmpty, Cause: "--out is a directory that holds entries, and --overwrite is not given.", Next: nextRenderOverwrite},
+			Refusal{Code: finding.CodeDestinationLink, Cause: "In --out, an output's path runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed.", Next: nextRenderInTheWay},
+			Refusal{Code: finding.CodeDestinationCaseVariant, Cause: "In --out, an entry's name differs only in case or normalization from a name an output's path holds.", Next: nextRenderInTheWay},
+			Refusal{Code: finding.CodeDestinationNotRegularFile, Cause: "In --out, a directory, a named pipe, a socket or a device stands at an output's path.", Next: nextRenderInTheWay},
+			Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A write failed, another file system is mounted on an output's path, a staging directory is left in --out, or an output's path begins with its name; whatever was written is removed.", Next: nextRenderDest},
+			Refusal{Code: finding.CodeDestinationCommitFailed, Cause: "Moving the outputs into an existing --out failed part way; the files already moved are listed, and nothing else was changed.", Next: nextRenderDest},
+			Refusal{Code: finding.CodeUsageFlagExcluded, Cause: "--overwrite is given with --out -, and an archive on standard output replaces nothing.", Next: nextRenderOverwrite,
+				match: flagGiven("--overwrite")},
+			Refusal{Code: codeMirrorEmptyName, Cause: "A mirror would write a template whose file name is exactly .liquid with an empty name.", Next: nextRenderTemplates},
+			Refusal{Code: codeMirrorEmpty, Cause: "A mirror renders no file, and --fail-on warning makes its warning fail the render.", Next: nextRenderTemplates},
 		),
 		Examples: []Example{
 			{"metais render report-1.0.0.metais --data data --out out", "Renders the package's outputs from the data directory data into the new directory out."},
@@ -184,19 +187,19 @@ func renderRefusals(c *Command) {
 		case have[e.Code]:
 			continue
 		case inputFamily(e.Code):
-			r = Refusal{e.Code, "An input is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextRenderInputs}
+			r = Refusal{Code: e.Code, Cause: "An input is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", Next: nextRenderInputs}
 		case e.Code == sample.CodeUnsatisfiable || e.Code == finding.CodeSampleInvalid:
-			r = Refusal{e.Code, "With --sample, the generated data cannot be made or does not validate (" + strings.ReplaceAll(rest, "_", " ") + ").", nextSampleSchema}
+			r = Refusal{Code: e.Code, Cause: "With --sample, the generated data cannot be made or does not validate (" + strings.ReplaceAll(rest, "_", " ") + ").", Next: nextSampleSchema}
 		case family == "template" && e.Severity == finding.SeverityError && !strings.HasPrefix(rest, "xref.") && !strings.HasPrefix(rest, "ooxml."):
-			r = Refusal{e.Code, "A template is refused (" + strings.ReplaceAll(rest, "_", " ") + ").", nextRenderTemplates}
+			r = Refusal{Code: e.Code, Cause: "A template is refused (" + strings.ReplaceAll(rest, "_", " ") + ").", Next: nextRenderTemplates}
 		case strings.HasPrefix(string(e.Code), "limit.exceeded."), strings.HasPrefix(string(e.Code), "output.path."),
 			strings.HasPrefix(string(e.Code), "output.expression."), strings.HasPrefix(string(e.Code), "output.container."):
-			r = Refusal{e.Code, "An output is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextRenderTemplates}
+			r = Refusal{Code: e.Code, Cause: "An output is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", Next: nextRenderTemplates}
 		case family == "output" && e.Subject == finding.SubjectOutput:
 			// An output's text its kind's reader refuses, or its schema
 			// does, and a validate a rendered path's kind cannot take
 			// (ADR-005 D11 items 2 and 4).
-			r = Refusal{e.Code, "An output fails its validation (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextRenderTemplates}
+			r = Refusal{Code: e.Code, Cause: "An output fails its validation (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", Next: nextRenderTemplates}
 		default:
 			continue
 		}
@@ -224,9 +227,9 @@ func sampleRefusals(c *Command) {
 		switch {
 		case have[e.Code]:
 		case inputFamily(e.Code):
-			c.Refusals = append(c.Refusals, Refusal{e.Code, "A value given with --set, --set-json or --inputs-json is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextSampleInputs})
+			c.Refusals = append(c.Refusals, Refusal{Code: e.Code, Cause: "A value given with --set, --set-json or --inputs-json is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", Next: nextSampleInputs})
 		case e.Code == sample.CodeUnsatisfiable || e.Code == finding.CodeSampleInvalid:
-			c.Refusals = append(c.Refusals, Refusal{e.Code, "The generated data cannot be made or does not validate (" + strings.ReplaceAll(rest, "_", " ") + ").", nextSampleSchema})
+			c.Refusals = append(c.Refusals, Refusal{Code: e.Code, Cause: "The generated data cannot be made or does not validate (" + strings.ReplaceAll(rest, "_", " ") + ").", Next: nextSampleSchema})
 		}
 	}
 }

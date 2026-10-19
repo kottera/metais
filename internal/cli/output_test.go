@@ -499,11 +499,17 @@ func TestRefusalNextPerCause(t *testing.T) {
 	}
 	for _, c := range table {
 		for _, r := range c.Refusals {
-			n := 0
+			n, unmatched := 0, 0
 			for _, o := range c.Refusals {
 				if o.Code == r.Code {
 					n++
+					if o.match == nil {
+						unmatched++
+					}
 				}
+			}
+			if unmatched > 1 {
+				t.Errorf("metais %s declares %s for %d causes with no match, and only one can take the code's other findings", c.Name, r.Code, unmatched)
 			}
 			if n > 1 && !covered[c.Name+" "+string(r.Code)+" "+r.Cause] {
 				t.Errorf("metais %s declares %s %d times, and no line here triggers its cause %q", c.Name, r.Code, n, r.Cause)

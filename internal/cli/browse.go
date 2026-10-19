@@ -56,8 +56,8 @@ var packageOperand = args.Operand{Name: "<package>", Required: true,
 func readingDeclarations() []*Command {
 	pathRefusals := func(cmd string) []Refusal {
 		return []Refusal{
-			{finding.CodeUsageEntryNotFound, "The path names no entry and no directory of the package.", nextLsNearest},
-			{finding.CodeUsageIsADirectory, "The path names a directory, and metais " + cmd + " reads one entry.", nextLsDir},
+			{Code: finding.CodeUsageEntryNotFound, Cause: "The path names no entry and no directory of the package.", Next: nextLsNearest},
+			{Code: finding.CodeUsageIsADirectory, Cause: "The path names a directory, and metais " + cmd + " reads one entry.", Next: nextLsDir},
 		}
 	}
 	textFact := "An entry is text when it is valid UTF-8 and holds no NUL byte, and binary otherwise. " +
@@ -84,7 +84,7 @@ func readingDeclarations() []*Command {
 				{"metais ls report-1.0.0.metais --json", "Prints the listing as one metais.ls/1 document."},
 			},
 			run: runLs,
-		}, Refusal{finding.CodeUsageEntryNotFound, "The path names no entry and no directory of the package.", nextLsNearest}),
+		}, Refusal{Code: finding.CodeUsageEntryNotFound, Cause: "The path names no entry and no directory of the package.", Next: nextLsNearest}),
 		readingCommand(&Command{
 			Name: "read", Synopsis: "read <package> <path> [--lines <range>] [--number] [--limit <name>=<value>]... [--json]",
 			Description: "Print an entry of a package, or a range of its lines.",
@@ -110,9 +110,9 @@ func readingDeclarations() []*Command {
 			},
 			run: runRead,
 		}, append(pathRefusals("read"),
-			Refusal{finding.CodeUsageNotText, "--lines or --number is given for a binary entry.", nextExtract},
-			Refusal{finding.CodeUsageLineOutOfRange, "The range of --lines starts beyond the entry's last line.", nextReadLines},
-			Refusal{finding.CodeUsageBinaryToTerminal, "The entry is binary and standard output is a terminal.", nextExtract},
+			Refusal{Code: finding.CodeUsageNotText, Cause: "--lines or --number is given for a binary entry.", Next: nextExtract},
+			Refusal{Code: finding.CodeUsageLineOutOfRange, Cause: "The range of --lines starts beyond the entry's last line.", Next: nextReadLines},
+			Refusal{Code: finding.CodeUsageBinaryToTerminal, Cause: "The entry is binary and standard output is a terminal.", Next: nextExtract},
 		)...),
 		readingCommand(&Command{
 			Name: "outline", Synopsis: "outline <package> <path> [--limit <name>=<value>]... [--json]",
@@ -133,7 +133,7 @@ func readingDeclarations() []*Command {
 			},
 			run: runOutline,
 		}, append(pathRefusals("outline"),
-			Refusal{finding.CodeUsageNotText, "The entry is binary.", nextExtract},
+			Refusal{Code: finding.CodeUsageNotText, Cause: "The entry is binary.", Next: nextExtract},
 		)...),
 		readingCommand(&Command{
 			Name:        "grep",
@@ -168,8 +168,8 @@ func readingDeclarations() []*Command {
 			},
 			run: runGrep,
 		},
-			Refusal{finding.CodeUsageBadGlob, "A glob does not satisfy the glob grammar.", nextGlobs},
-			Refusal{finding.CodeUsageBadPattern, "The pattern is not RE2 syntax, or breaches pattern-length, regex-program or regex-work.", nextPattern},
+			Refusal{Code: finding.CodeUsageBadGlob, Cause: "A glob does not satisfy the glob grammar.", Next: nextGlobs},
+			Refusal{Code: finding.CodeUsageBadPattern, Cause: "The pattern is not RE2 syntax, or breaches pattern-length, regex-program or regex-work.", Next: nextPattern},
 		),
 		readingCommand(&Command{
 			Name: "schema", Synopsis: "schema <package> [<input>] [--limit <name>=<value>]... [--json]",
@@ -190,7 +190,7 @@ func readingDeclarations() []*Command {
 				{"metais schema report-1.0.0.metais product --json", "Prints it as one metais.schema/1 document."},
 			},
 			run: runSchema,
-		}, Refusal{finding.CodeUsageUnknownInput, "The operand names no input of the package; the finding lists them.", nextInspect}),
+		}, Refusal{Code: finding.CodeUsageUnknownInput, Cause: "The operand names no input of the package; the finding lists them.", Next: nextInspect}),
 		readingCommand(&Command{
 			Name: "extract", Synopsis: "extract <package> <glob>... --to <dir> [--overwrite] [--dry-run] [--limit <name>=<value>]... [--json]",
 			Description: "Write the entries the globs select to a directory.",
@@ -226,15 +226,15 @@ func readingDeclarations() []*Command {
 			},
 			run: runExtract,
 		},
-			Refusal{finding.CodeUsageBadGlob, "A glob does not satisfy the glob grammar.", nextGlobs},
-			Refusal{finding.CodeUsageNoMatch, "A glob selects no entry; nothing is written.", nextLsAll},
-			Refusal{finding.CodeDestinationNotEmpty, "<dir> holds entries, and --overwrite is not given.", nextExtractOverwrite},
-			Refusal{finding.CodeDestinationNotDirectory, "<dir>, or a directory above it, exists and is not a directory; or, in <dir>, a file stands where an entry's path needs a directory.", nextExtractInTheWay},
-			Refusal{finding.CodeDestinationLink, "In <dir>, an entry's path runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed.", nextExtractInTheWay},
-			Refusal{finding.CodeDestinationCaseVariant, "In <dir>, an entry's name differs only in case or normalization from a name an entry's path holds.", nextExtractInTheWay},
-			Refusal{finding.CodeDestinationNotRegularFile, "In <dir>, a directory, a named pipe, a socket or a device stands at an entry's path.", nextExtractInTheWay},
-			Refusal{finding.CodeDestinationWriteFailed, "A write failed: into a new <dir> the files already written are listed and left in place; into an existing one, which also refuses a staging directory left in it, another file system mounted inside it and an entry beneath the staging name, nothing is left.", nextExtractTo},
-			Refusal{finding.CodeDestinationCommitFailed, "Moving the files into an existing <dir> failed part way; the files already moved are listed, and nothing else was changed.", nextExtractTo},
+			Refusal{Code: finding.CodeUsageBadGlob, Cause: "A glob does not satisfy the glob grammar.", Next: nextGlobs},
+			Refusal{Code: finding.CodeUsageNoMatch, Cause: "A glob selects no entry; nothing is written.", Next: nextLsAll},
+			Refusal{Code: finding.CodeDestinationNotEmpty, Cause: "<dir> holds entries, and --overwrite is not given.", Next: nextExtractOverwrite},
+			Refusal{Code: finding.CodeDestinationNotDirectory, Cause: "<dir>, or a directory above it, exists and is not a directory; or, in <dir>, a file stands where an entry's path needs a directory.", Next: nextExtractInTheWay},
+			Refusal{Code: finding.CodeDestinationLink, Cause: "In <dir>, an entry's path runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed.", Next: nextExtractInTheWay},
+			Refusal{Code: finding.CodeDestinationCaseVariant, Cause: "In <dir>, an entry's name differs only in case or normalization from a name an entry's path holds.", Next: nextExtractInTheWay},
+			Refusal{Code: finding.CodeDestinationNotRegularFile, Cause: "In <dir>, a directory, a named pipe, a socket or a device stands at an entry's path.", Next: nextExtractInTheWay},
+			Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A write failed: into a new <dir> the files already written are listed and left in place; into an existing one, which also refuses a staging directory left in it, another file system mounted inside it and an entry beneath the staging name, nothing is left.", Next: nextExtractTo},
+			Refusal{Code: finding.CodeDestinationCommitFailed, Cause: "Moving the files into an existing <dir> failed part way; the files already moved are listed, and nothing else was changed.", Next: nextExtractTo},
 		),
 	}
 }

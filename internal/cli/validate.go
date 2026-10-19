@@ -73,8 +73,8 @@ func validateDeclaration() *Command {
 		FindingsAreResult: true,
 		Prints:            "Every finding, then the summary line; with --resolved, the inputs as indented JSON.",
 		Refusals: append(packageRefusals("validate"),
-			Refusal{finding.CodeUsageDataDirUnreadable, "The data directory given to --data does not exist, is not a directory, or cannot be read.", nextInputsHelp},
-			Refusal{finding.CodeUsageConflictingFlags, "--inputs-json - is given twice, and standard input is read once.", nextInputsHelp},
+			Refusal{Code: finding.CodeUsageDataDirUnreadable, Cause: "The data directory given to --data does not exist, is not a directory, or cannot be read.", Next: nextInputsHelp},
+			Refusal{Code: finding.CodeUsageConflictingFlags, Cause: "--inputs-json - is given twice, and standard input is read once.", Next: nextInputsHelp},
 		),
 		Examples: []Example{
 			{"metais validate report-1.0.0.metais --data data", "Validates the inputs in the directory data."},

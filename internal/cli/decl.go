@@ -68,6 +68,34 @@ type Refusal struct {
 	Code  finding.Code
 	Cause string
 	Next  Next
+	// match picks out the findings of this cause, where the command
+	// declares Code for more than one: a finding of Code takes the next
+	// step of the row whose match it satisfies, or else of the row of
+	// Code with no match.
+	match func(f finding.Finding) bool
+}
+
+// valueRefused matches usage.bad_value for a value one of flags refuses
+// once read, as the command reads it: never a value missing, nor one
+// written to a flag that takes none.
+func valueRefused(flags ...string) func(finding.Finding) bool {
+	return func(f finding.Finding) bool {
+		reason, _ := f.Param("reason")
+		r, _ := reason.Str()
+		return r == "value_not_allowed" && flagIn(f, flags)
+	}
+}
+
+// flagGiven matches a finding whose flag is one of flags.
+func flagGiven(flags ...string) func(finding.Finding) bool {
+	return func(f finding.Finding) bool { return flagIn(f, flags) }
+}
+
+// flagIn reports whether f's flag parameter is one of flags.
+func flagIn(f finding.Finding, flags []string) bool {
+	v, _ := f.Param("flag")
+	flag, ok := v.Str()
+	return ok && slices.Contains(flags, flag)
 }
 
 // Example is one command line of a command's help, and what it does.
@@ -119,20 +147,20 @@ func nextCommandHelp(name string) Next {
 func lineRefusals(name string) []Refusal {
 	n := nextCommandHelp(name)
 	return []Refusal{
-		{finding.CodeUsageBadValue, "A flag's value is missing, or is not one the flag accepts, or a flag that takes no value is given one.", n},
-		{finding.CodeUsageRepeatedFlag, "A flag that may be given once is given again.", n},
-		{finding.CodeUsageUnexpectedOperand, "An operand the command does not take.", n},
-		{finding.CodeUsageUnknownFlag, "An argument that is not a flag the command accepts, an abbreviated flag, or one-letter aliases written together.", n},
+		{Code: finding.CodeUsageBadValue, Cause: "A flag's value is missing, or is not one the flag accepts, or a flag that takes no value is given one.", Next: n},
+		{Code: finding.CodeUsageRepeatedFlag, Cause: "A flag that may be given once is given again.", Next: n},
+		{Code: finding.CodeUsageUnexpectedOperand, Cause: "An operand the command does not take.", Next: n},
+		{Code: finding.CodeUsageUnknownFlag, Cause: "An argument that is not a flag the command accepts, an abbreviated flag, or one-letter aliases written together.", Next: n},
 	}
 }
 
 // toolRefusals are the refusals of a line before it names a command.
 var toolRefusals = []Refusal{
-	{finding.CodeUsageBadValue, "A global flag's value is missing or is not one it accepts, or a flag that takes no value is given one.", nextHelp},
-	{finding.CodeUsageMissingCommand, "No command is named.", nextHelp},
-	{finding.CodeUsageRepeatedFlag, "A global flag is given twice.", nextHelp},
-	{finding.CodeUsageUnknownCommand, "The command's name is not one metais has.", nextHelp},
-	{finding.CodeUsageUnknownFlag, "A flag before the command's name that is not a global flag.", nextHelp},
+	{Code: finding.CodeUsageBadValue, Cause: "A global flag's value is missing or is not one it accepts, or a flag that takes no value is given one.", Next: nextHelp},
+	{Code: finding.CodeUsageMissingCommand, Cause: "No command is named.", Next: nextHelp},
+	{Code: finding.CodeUsageRepeatedFlag, Cause: "A global flag is given twice.", Next: nextHelp},
+	{Code: finding.CodeUsageUnknownCommand, Cause: "The command's name is not one metais has.", Next: nextHelp},
+	{Code: finding.CodeUsageUnknownFlag, Cause: "A flag before the command's name that is not a global flag.", Next: nextHelp},
 }
 
 // path is one golden path (ADR-008 D15 item 2), shown once every command
@@ -198,11 +226,11 @@ func declarations() []*Command {
 			Format: "metais.init/1",
 			Prints: "The files written, relative to <dir>, in the order written, then what to edit.",
 			Refusals: []Refusal{
-				{finding.CodeUsageNameRequired, "<dir> is omitted or ends in . or .., and --name is not given.", nextInitName},
-				{finding.CodeUsageNameInvalid, "The name, from --name or from <dir>, does not satisfy the package name rule.", nextInitValidName},
-				{finding.CodeDestinationNotEmpty, "<dir> holds an entry other than the quiet ones.", nextInitEmpty},
-				{finding.CodeDestinationNotDirectory, "<dir>, or a directory above it, exists and is not a directory.", nextInitEmpty},
-				{finding.CodeDestinationWriteFailed, "A write failed; the files already written are listed and left in place.", nextInitAgain},
+				{Code: finding.CodeUsageNameRequired, Cause: "<dir> is omitted or ends in . or .., and --name is not given.", Next: nextInitName},
+				{Code: finding.CodeUsageNameInvalid, Cause: "The name, from --name or from <dir>, does not satisfy the package name rule.", Next: nextInitValidName},
+				{Code: finding.CodeDestinationNotEmpty, Cause: "<dir> holds an entry other than the quiet ones.", Next: nextInitEmpty},
+				{Code: finding.CodeDestinationNotDirectory, Cause: "<dir>, or a directory above it, exists and is not a directory.", Next: nextInitEmpty},
+				{Code: finding.CodeDestinationWriteFailed, Cause: "A write failed; the files already written are listed and left in place.", Next: nextInitAgain},
 			},
 			Examples: []Example{
 				{"metais init acme-report", "Writes the scaffold of a package called acme-report into the directory acme-report."},
@@ -264,7 +292,7 @@ func declarations() []*Command {
 			Operands: []args.Operand{{Name: "<command> | <topic>", Description: "A command's name, or one of the topics inputs, globs, json and exit-codes."}},
 			Format:   "metais.help/1",
 			Prints:   "The help asked for, wrapped at 80 columns, never coloured.",
-			Refusals: []Refusal{{finding.CodeUsageUnknownTopic, "The operand names no command and no topic.", nextHelp}},
+			Refusals: []Refusal{{Code: finding.CodeUsageUnknownTopic, Cause: "The operand names no command and no topic.", Next: nextHelp}},
 			Examples: []Example{
 				{"metais help", "Prints the overview."},
 				{"metais help limits", "Prints the help of metais limits."},
