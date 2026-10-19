@@ -239,6 +239,7 @@ func TestLayersControl(t *testing.T) {
 		"github.com/kottera/metais/internal/liquid/value imports golang.org/x/term, which only github.com/kottera/metais/internal/hostenv may",
 		"github.com/kottera/metais/internal/render imports archive/zip, which only github.com/kottera/metais/internal/zipfmt may",
 		"github.com/kottera/metais/internal/render imports github.com/kottera/metais/internal/pkgtree/pkgtreetest outside its tests",
+		"github.com/kottera/metais/internal/render imports go.yaml.in/yaml/v3, which only github.com/kottera/metais/internal/yamlx may",
 		"github.com/kottera/metais/internal/render imports golang.org/x/text/cases, which only github.com/kottera/metais/internal/unitext may",
 	}
 	if !slices.Equal(got, want) {

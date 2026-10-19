@@ -689,6 +689,11 @@ func dependencyViolations(hits []dependencyHit, list []dependencyAllowance) []st
 // module is in the windows closure (TestWindowsLinksNoXModules). A change
 // to what the module calls in either re-reads these reasons.
 var dependencyAllowList = []dependencyAllowance{
+	{"go.yaml.in/yaml/v3", "resolve.go", "time.Parse",
+		"parseTimestamp, the library's YAML 1.1 timestamp guess, run while it builds a node; its result " +
+			"exists only to choose Node.Tag, and internal/yamlx never reads Node.Tag and never decodes into " +
+			"values (ADR-010 D6 item 2), so the parsed time is discarded and cannot reach a template, an " +
+			"output or a message; hostenv.Isolate has set time.Local to UTC before any parse"},
 	{"golang.org/x/sys/unix", "env_unix.go", "syscall.Clearenv", reasonUnixEnv},
 	{"golang.org/x/sys/unix", "env_unix.go", "syscall.Environ", reasonUnixEnv},
 	{"golang.org/x/sys/unix", "env_unix.go", "syscall.Getenv", reasonUnixEnv},

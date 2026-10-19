@@ -1664,6 +1664,25 @@
       "statements": []
     },
     {
+      "code": "manifest.number_out_of_range",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the number cannot be held: overflow (it rounds to an infinity as a binary64) or unsafe_integer (its value is an integer of magnitude above 2^53-1, which a binary64 cannot hold exactly).",
+          "always": true
+        }
+      ],
+      "message": "The manifest holds a number ({reason}) that cannot be held exactly.",
+      "hint": "Write the number as a string, or within binary64's range. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "manifest.one_of",
       "severity": "error",
       "class": "content",
@@ -1850,6 +1869,219 @@
       ],
       "message": "{field} repeats item {duplicate_of} of the array, whose items must be unique.",
       "hint": "Remove the repeated item, or change it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.alias",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest uses a YAML alias; anchors and aliases are refused.",
+      "hint": "Replace the `*` alias with the value it names, written out. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.anchor",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest defines a YAML anchor; anchors and aliases are refused.",
+      "hint": "Remove the `&` anchor and write the value out where it is used. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.bom",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest begins with a byte order mark.",
+      "hint": "Remove the byte order mark. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.character",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "codepoint",
+          "type": "string",
+          "meaning": "The character, as U+ and four to six uppercase hexadecimal digits.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Which rule the character breaks: forbidden (YAML does not allow it in a stream) or line_separator (U+0085, U+2028 or U+2029, which YAML 1.2 reads as text and some parsers as a line break).",
+          "always": true
+        }
+      ],
+      "message": "The manifest holds the character {codepoint}, which its YAML may not hold ({reason}).",
+      "hint": "Write the character as a double-quoted escape, such as \\u2028, or remove it. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.directive",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest has a YAML directive; directives are refused.",
+      "hint": "Remove the `%YAML` or `%TAG` line. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.duplicate_key",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest repeats a mapping key in one mapping.",
+      "hint": "Keep one member of that name in the mapping. The manifest was not read further; fix this and run the command again.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.encoding",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the file is not UTF-8: invalid_utf8 (a byte that begins no UTF-8 character, or ends one early) or utf16 (the file begins with a UTF-16 byte order mark).",
+          "always": true
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "meaning": "The 0-based byte offset of the first byte that is not UTF-8, from the start of the file.",
+          "always": true
+        }
+      ],
+      "message": "The manifest is not UTF-8 ({reason}) at byte {offset}.",
+      "hint": "Save `metais.yaml` as UTF-8, with no byte order mark. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.key_empty",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest has a mapping key with no text.",
+      "hint": "Give the key a name, or quote it as `\"\"` if an empty name is meant. The manifest was not read further; fix this and run the command again.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.key_not_scalar",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest has a mapping key that is a mapping or a sequence; a key is a string.",
+      "hint": "Write the key as plain or quoted text. The manifest was not read further; fix this and run the command again.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.merge_key",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest uses the merge key `<<`, which is refused.",
+      "hint": "Write the merged members out in the mapping, or quote `\"<<\"` if it is an ordinary key. The manifest was not read further; fix this and run the command again.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.multi_document",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest holds a second YAML document; one is allowed.",
+      "hint": "Remove everything after the first document, or put each document in a file of its own. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.root_not_mapping",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest's YAML is not a mapping.",
+      "hint": "Write the manifest as `name: value` members; `metais init` writes one to start from.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.scalar_refused",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [
+        {
+          "name": "form",
+          "type": "string",
+          "meaning": "What the plain scalar looks like: null (a spelling of null other than `null`), boolean (a spelling of true or false other than `true` and `false`), or number (a YAML 1.2 Core Schema number that is not written as JSON writes numbers).",
+          "always": true
+        }
+      ],
+      "message": "The manifest has a plain scalar ({form}) that METAIS's YAML profile refuses rather than guess at.",
+      "hint": "Write `null`, `true` or `false`, or the number as JSON writes it; quote the scalar if it is text. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.syntax",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest is not well-formed YAML; reading stopped at this line.",
+      "hint": "Correct the YAML near this line. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "manifest.yaml.tag",
+      "severity": "error",
+      "class": "content",
+      "subject": "manifest",
+      "params": [],
+      "message": "The manifest has an explicit YAML tag; tags are refused.",
+      "hint": "Remove the tag; quote the value if it is text. The manifest was not read further; fix this and run the command again.",
       "location": "value",
       "since": "1.0",
       "statements": []
@@ -3406,6 +3638,182 @@
       "message": "Argument {argument} names no command or help topic.",
       "hint": "Run `metais help` for the commands and the topics.",
       "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.alias",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} uses a YAML alias; anchors and aliases are refused.",
+      "hint": "Replace the `*` alias with the value it names, written out. The input's schema was not checked; fix the file and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.anchor",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} defines a YAML anchor; anchors and aliases are refused.",
+      "hint": "Remove the `&` anchor and write the value out where it is used. The input's schema was not checked; fix the file and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.bom",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} begins with a byte order mark.",
+      "hint": "Remove the byte order mark. The input's schema was not checked; fix the file and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.character",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "codepoint",
+          "type": "string",
+          "meaning": "The character, as U+ and four to six uppercase hexadecimal digits.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Which rule the character breaks: forbidden (YAML does not allow it in a stream), line_separator (U+0085, U+2028 or U+2029, which YAML 1.2 reads as text and some parsers as a line break), or noncharacter (a Unicode noncharacter, which the data model refuses).",
+          "always": true
+        }
+      ],
+      "message": "The input {input} holds the character {codepoint}, which its YAML may not hold ({reason}).",
+      "hint": "Write the character as a double-quoted escape, such as \\u2028, or remove it. The input's schema was not checked; fix the file and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.directive",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} has a YAML directive; directives are refused.",
+      "hint": "Remove the `%YAML` or `%TAG` line. The input's schema was not checked; fix the file and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.duplicate_key",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} repeats a mapping key in one mapping.",
+      "hint": "Keep one member of that name in the mapping. The input's schema was not checked; fix the file and run the command again.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.key_empty",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} has a mapping key with no text.",
+      "hint": "Give the key a name, or quote it as `\"\"` if an empty name is meant. The input's schema was not checked; fix the file and run the command again.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.key_not_scalar",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} has a mapping key that is a mapping or a sequence; a key is a string.",
+      "hint": "Write the key as plain or quoted text. The input's schema was not checked; fix the file and run the command again.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.merge_key",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} uses the merge key `<<`, which is refused.",
+      "hint": "Write the merged members out in the mapping, or quote `\"<<\"` if it is an ordinary key. The input's schema was not checked; fix the file and run the command again.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.multi_document",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} holds a second YAML document; one is allowed.",
+      "hint": "Remove everything after the first document, or put each document in a file of its own. The input's schema was not checked; fix the file and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.scalar_refused",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "form",
+          "type": "string",
+          "meaning": "What the plain scalar looks like: null (a spelling of null other than `null`), boolean (a spelling of true or false other than `true` and `false`), or number (a YAML 1.2 Core Schema number that is not written as JSON writes numbers).",
+          "always": true
+        }
+      ],
+      "message": "The input {input} has a plain scalar ({form}) that METAIS's YAML profile refuses rather than guess at.",
+      "hint": "Write `null`, `true` or `false`, or the number as JSON writes it; quote the scalar if it is text. The input's schema was not checked; fix the file and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.syntax",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} is not well-formed YAML; reading stopped at this line.",
+      "hint": "Correct the YAML near this line. The input's schema was not checked; fix the file and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "yaml.tag",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} has an explicit YAML tag; tags are refused.",
+      "hint": "Remove the tag; quote the value if it is text. The input's schema was not checked; fix the file and run the command again.",
+      "location": "value",
       "since": "1.0",
       "statements": []
     }

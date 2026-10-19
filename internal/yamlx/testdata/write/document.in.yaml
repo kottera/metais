@@ -1,0 +1,27 @@
+# The input TestWriteGolden writes; document.yaml is what it writes.
+name: status-widget
+version: "1.2.0"
+title: Status widget
+description: >-
+  Renders a status page
+  from a list of checks.
+guide: |
+  # Guide
+
+  Supply `checks`.
+authors:
+  - name: Ada Lovelace
+    email: "ada@example.org"
+  - {name: "Grace \"Amazing\" Hopper"}
+inputs:
+  - name: checks
+    required: true
+    limits: [1, 2.50, -0.0, 1e21, 0.0000001, 123456789]
+    empty: {}
+    none: []
+    nothing: null
+    nested: [[a, [b]], {"z": 1, "a": 2, "é": 3, "🙂": 4, "｡": 5}]
+outputs: []
+"yes": on
+"<<": merge
+"": empty

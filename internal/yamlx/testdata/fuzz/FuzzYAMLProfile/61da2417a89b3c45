@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("%YAML 1.2\n---\na: 1\n")

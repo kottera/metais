@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("a: 123456789\nb: 1.2345678\n")

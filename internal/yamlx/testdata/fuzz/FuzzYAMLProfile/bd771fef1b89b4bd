@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("a: ~\nb: 0777\nc: 2026-01-02\nd: True\ne: .inf\nf: 0x1F\ng: +1\nh: 1.\n")

@@ -384,3 +384,50 @@ func paramText(v finding.Value) string {
 	}
 	return "?"
 }
+
+// TestBreachFindings holds Breached and Exceeded alike to ADR-009 D2 item 5: the
+// limit's name, its bound in the Set, whether it was lowered, and the
+// observed value only when there is one.
+func TestBreachFindings(t *testing.T) {
+	s := Defaults()
+	if f, ok := s.Lower("value-depth=8"); !ok {
+		t.Fatal(f.Message())
+	}
+	loc := finding.Location{Origin: finding.OriginPackage, File: "metais.yaml", Line: 3, Column: 5}
+	input := finding.Subject{Kind: finding.SubjectInput, Name: "vendor"}
+	for _, tc := range []struct {
+		f           finding.Finding
+		code        finding.Code
+		subj        finding.SubjectKind
+		name        string
+		bound       int64
+		lowered     bool
+		observed    int64
+		hasObserved bool
+	}{
+		{s.Breached(ValueDepth, loc, 9, true), finding.CodeLimitPackage, finding.SubjectPackage, "value-depth", 8, true, 9, true},
+		{s.Breached(ManifestSize, loc, 0, false), finding.CodeLimitPackage, finding.SubjectPackage, "manifest-size", 1 << 20, false, 0, false},
+		{s.Exceeded(InputSize, input, loc, 1<<26, true), finding.CodeLimitExceeded, finding.SubjectInput, "input-size", 32 << 20, false, 1 << 26, true},
+		{s.Exceeded(ValueDepth, input, loc, 0, false), finding.CodeLimitExceeded, finding.SubjectInput, "value-depth", 8, true, 0, false},
+	} {
+		if tc.f.Code() != tc.code || tc.f.Subject().Kind != tc.subj {
+			t.Errorf("%s: code %s about a %s, want %s about a %s", tc.name, tc.f.Code(), tc.f.Subject().Kind, tc.code, tc.subj)
+		}
+		if v, _ := tc.f.Param("limit"); !reflect.DeepEqual(v, finding.String(tc.name)) {
+			t.Errorf("%s: limit %v", tc.name, v)
+		}
+		if v, _ := tc.f.Param("bound"); !reflect.DeepEqual(v, finding.Int(tc.bound)) {
+			t.Errorf("%s: bound %v, want %d", tc.name, v, tc.bound)
+		}
+		if v, _ := tc.f.Param("lowered"); !reflect.DeepEqual(v, finding.Bool(tc.lowered)) {
+			t.Errorf("%s: lowered %v, want %v", tc.name, v, tc.lowered)
+		}
+		v, ok := tc.f.Param("observed")
+		if ok != tc.hasObserved || (ok && !reflect.DeepEqual(v, finding.Int(tc.observed))) {
+			t.Errorf("%s: observed %v %v, want %d %v", tc.name, v, ok, tc.observed, tc.hasObserved)
+		}
+		if l, ok := tc.f.Location(); !ok || l.Line != 3 || l.File != "metais.yaml" {
+			t.Errorf("%s: location %+v", tc.name, l)
+		}
+	}
+}

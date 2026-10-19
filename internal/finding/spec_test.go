@@ -289,7 +289,7 @@ func TestEmittedCodes(t *testing.T) {
 	want := []Code{
 		"csv.after_quote", "csv.bare_quote", "csv.field_count", "csv.header_duplicate",
 		"csv.header_empty", "csv.header_missing", "csv.unterminated_quote",
-		CodeInternalError, "limit.exceeded", CodeLimitInvalid, CodeLimitPackage, CodeReportTruncated,
+		CodeInternalError, CodeLimitExceeded, CodeLimitInvalid, CodeLimitPackage, CodeReportTruncated,
 		"input.encoding_invalid", "input.number_out_of_range",
 		"json.duplicate_name", "json.lone_surrogate", "json.noncharacter", "json.syntax", "json.trailing_content",
 		CodeUsageBadValue, CodeUsageMissingCommand, CodeUsageRepeatedFlag, CodeUsageUnexpectedOperand,
@@ -320,6 +320,13 @@ func TestEmittedCodes(t *testing.T) {
 		}
 	}
 	want = append(want, CodeInputValidationPartial)
+	for _, c := range []string{
+		"alias", "anchor", "bom", "character", "directive", "duplicate_key", "key_empty", "key_not_scalar",
+		"merge_key", "multi_document", "scalar_refused", "syntax", "tag",
+	} {
+		want = append(want, Code("manifest.yaml."+c), Code("yaml."+c))
+	}
+	want = append(want, "manifest.number_out_of_range", "manifest.yaml.encoding", "manifest.yaml.root_not_mapping")
 	slices.Sort(want)
 	if !slices.Equal(got, want) {
 		t.Errorf("registered %q, want %q", got, want)
