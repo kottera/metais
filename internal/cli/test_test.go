@@ -293,15 +293,25 @@ func TestTestUpdateWriteFailed(t *testing.T) {
 func removedOutsideExpected(t *testing.T, faults fault.Set) []string {
 	t.Helper()
 	src := copyTree(t, filepath.Join(vectorsDir, "aut/test-now/package"))
-	stale := filepath.Join(src, "examples/with/expected/stale.md")
+	// The stale file is alone in a directory of expected/, so its removal
+	// empties that directory, which --update removes too (R-W5-11).
+	stale := filepath.Join(src, "examples/with/expected/sub/stale.md")
+	if err := os.MkdirAll(filepath.Dir(stale), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.WriteFile(stale, []byte("stale\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	before := treeState(t, src)
 	runIn(t, hostenv.Display{NoColor: true}, failingReader{t}, faults, "test", src, "--update", "--json")
 	after := treeState(t, src)
-	if _, ok := after["examples/with/expected/stale.md"]; ok {
-		t.Fatal("--update left the stale file in expected/")
+	for _, p := range []string{"examples/with/expected/sub/stale.md", "examples/with/expected/sub/"} {
+		if _, ok := after[p]; ok {
+			t.Fatalf("--update left %s in expected/", p)
+		}
+	}
+	if _, ok := after["examples/with/expected/"]; !ok {
+		t.Fatal("--update removed expected/ itself")
 	}
 	var gone []string
 	for p := range before {
@@ -317,7 +327,9 @@ func removedOutsideExpected(t *testing.T, faults fault.Set) []string {
 // nothing outside examples/<name>/expected/. Its control, in the same run,
 // is the fault at internal/cli's seam, UpdateBeyondExpected, under which
 // --update reckons its removals over the whole example; the detector must
-// see the example's own files go, so a detector gone blind fails here.
+// see the example's own files go, and the directory it empties outside
+// expected/, so a detector gone blind fails here. Directories are watched
+// as files are: removedOutsideExpected lists each with a trailing "/".
 func TestUpdateConfinement(t *testing.T) {
 	testenv.Home(t)
 	if gone := removedOutsideExpected(t, 0); len(gone) > 0 {
@@ -325,7 +337,8 @@ func TestUpdateConfinement(t *testing.T) {
 	}
 	t.Run("UpdateBeyondExpected", func(t *testing.T) {
 		gone := removedOutsideExpected(t, fault.UpdateBeyondExpected)
-		if !slices.Contains(gone, "examples/with/example.yaml") || !slices.Contains(gone, "examples/with/inputs/report.json") {
+		if !slices.Contains(gone, "examples/with/example.yaml") || !slices.Contains(gone, "examples/with/inputs/report.json") ||
+			!slices.Contains(gone, "examples/with/inputs/") {
 			t.Errorf("UpdateBeyondExpected went undetected: %q", gone)
 		}
 	})

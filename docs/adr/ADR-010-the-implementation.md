@@ -1953,7 +1953,7 @@ at the train's close, with A1 and A3.
   `fault.UpdateBeyondExpected`, bit `1 << 8`, at `internal/cli`'s seam: it
   makes `test --update` reckon its removals over the whole example rather
   than its `expected/`, and `TestUpdateConfinement` must see the example's
-  inputs and `example.yaml` go. `internal/hostfs` gains `RemoveEmptyDir`,
+  inputs and `example.yaml` go. `internal/hostfs` gains `RemoveEmptyDir` (ruling R-W5-11),
   beside `RemoveFile`: confined by a root, refusing a link at any segment,
   and removing with a call that refuses anything but an empty directory
   (`unlinkat` with `AT_REMOVEDIR` on linux and darwin, `RemoveDirectoryW`

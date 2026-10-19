@@ -1562,6 +1562,24 @@ checks before the library sees a schema). No dependency changes.
   file that is not regular at any segment, and removes with a call made
   relative to a handle on the file's directory that refuses a directory
   (`unlinkat` with no flag, `DeleteFileW`).
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-11.** Beside `RemoveFile`,
+  `hostfs.RemoveEmptyDir` is `test --update`'s removal of a directory of
+  `expected/` that its own removals emptied, since a source directory may
+  hold no empty directory (ADR-001 D2 item 6). It is the wave
+  orchestrator's ruling R-W5-11: `--update` calls it only beneath
+  `examples/<name>/expected/`, never on `expected/` itself or above it,
+  and the A1 write shape and every other command never call it. It is
+  confined as `RemoveFile` is: a root on the directory the caller names,
+  `Lstat` on every segment, a link, a junction or other reparse point
+  refused at any segment. It removes with a call made relative to a handle
+  on the parent that refuses anything but an empty directory (`unlinkat`
+  with `AT_REMOVEDIR`, `RemoveDirectoryW`), and leaves alone a directory
+  that holds any entry. R1-006's proof is `internal/cli`'s
+  `TestUpdateConfinement`, on fault bit `1 << 8` (`UpdateBeyondExpected`):
+  an `--update` that empties a directory of `expected/` removes it, and
+  removes no file or directory outside `expected/`. Under the fault it
+  removes the example's `inputs/` directory with its files, which the
+  detector reports.
 - **2026-10-19, PLAN-2026-10-metais-v1 W5-5.** The `home` canary of D16
   item 2 is `internal/template/canary_home.go`, under `metais_canary_home`:
   an asset the package lacks is read from `$HOME`, read when the process

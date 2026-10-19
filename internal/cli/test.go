@@ -855,6 +855,8 @@ func (s *session) update(source string, examples []*exampleRun, dryRun bool) (*t
 			}
 			u.Removed = append(u.Removed, prefix+n)
 		}
+		// Ruling R-W5-11: the directories removed are only those beneath
+		// expected/, never expected/ itself, that its own removals emptied.
 		for _, d := range emptied(stale, within) {
 			if err := hostfs.RemoveEmptyDir(base, d); err != nil {
 				return u, updateFailed(err, u), false
