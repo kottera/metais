@@ -482,3 +482,61 @@ func TestArchiveDetectsChange(t *testing.T) {
 		t.Errorf("Read of the restored entry: %v", err)
 	}
 }
+
+// TestOpenContainer is ADR-005 D8 item 8: a container's zip is read under
+// the package profile and every bound, but in the order its entries are
+// written, which Open refuses as package.container.entry_order; each
+// entry says whether it is deflated.
+func TestOpenContainer(t *testing.T) {
+	text := []byte(strings.Repeat("a part that deflates\n", 40))
+	b := write(t, []Entry{
+		{Name: "mimetype", Content: []byte("application/epub+zip"), Method: Store},
+		{Name: "META-INF/container.xml", Content: text, Method: Auto},
+		{Name: "a.txt", Content: nil, Method: Auto},
+	})
+	if _, fs, err := Open(bytes.NewReader(b), int64(len(b)), limits.Defaults()); err != nil || !slices.ContainsFunc(fs, func(f finding.Finding) bool { return f.Code() == CodeEntryOrder }) {
+		t.Fatalf("Open of an unsorted zip: %v, %v", fs, err)
+	}
+	got := map[string][]byte{}
+	a, fs, err := OpenContainer(bytes.NewReader(b), int64(len(b)), limits.Defaults(), func(name string) io.Writer {
+		var buf bytes.Buffer
+		got[name] = nil
+		return writerFunc(func(p []byte) (int, error) {
+			buf.Write(p)
+			got[name] = buf.Bytes()
+			return len(p), nil
+		})
+	})
+	if err != nil || len(fs) > 0 {
+		t.Fatalf("OpenContainer: %v, %v", fs, err)
+	}
+	var names []string
+	var deflated []bool
+	for _, e := range a.Entries() {
+		names, deflated = append(names, e.Name), append(deflated, e.Deflated)
+	}
+	if want := []string{"mimetype", "META-INF/container.xml", "a.txt"}; !slices.Equal(names, want) || !slices.Equal(a.List(), want) {
+		t.Errorf("entries %q, want %q in the file's order", names, want)
+	}
+	if !slices.Equal(deflated, []bool{false, true, false}) {
+		t.Errorf("deflated %v", deflated)
+	}
+	if !bytes.Equal(got["META-INF/container.xml"], text) {
+		t.Errorf("the sink received %q", got["META-INF/container.xml"])
+	}
+	// Every other rule holds: a bound, and a refusal of the profile.
+	low := limits.Defaults()
+	if _, ok := low.Lower("entries=2"); !ok {
+		t.Fatal("entries=2 is refused")
+	}
+	if _, fs, _ := OpenContainer(bytes.NewReader(b), int64(len(b)), low, nil); len(fs) == 0 || fs[0].Code() != finding.CodeLimitPackage {
+		t.Errorf("OpenContainer within entries=2: %v", fs)
+	}
+	if _, fs, _ := OpenContainer(bytes.NewReader(b[1:]), int64(len(b)-1), limits.Defaults(), nil); len(fs) == 0 {
+		t.Error("OpenContainer opened a zip with a byte cut from its start")
+	}
+}
+
+type writerFunc func([]byte) (int, error)
+
+func (f writerFunc) Write(p []byte) (int, error) { return f(p) }
