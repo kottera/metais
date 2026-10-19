@@ -214,9 +214,11 @@ func registryDiff(file, table []Entry) string {
 // either side is caught.
 func TestRegistryDiffCatchesChanges(t *testing.T) {
 	file := fromRegistryFile(t, specdata.FindingRegistry)
+	// two is the first entry with two parameters.
+	two := slices.IndexFunc(file, func(e Entry) bool { return len(e.Params) >= 2 })
 	changes := []func([]Entry) []Entry{
 		func(e []Entry) []Entry { e[0].Hint += "."; return e },
-		func(e []Entry) []Entry { e[0].Params[1].Always = !e[0].Params[1].Always; return e },
+		func(e []Entry) []Entry { e[two].Params[1].Always = !e[two].Params[1].Always; return e },
 		func(e []Entry) []Entry { e[1].Severity = SeverityWarning; return e },
 		func(e []Entry) []Entry { e[0].Statements = append(e[0].Statements, "MTS-SEC-001"); return e },
 		func(e []Entry) []Entry { return e[:1] },
@@ -274,16 +276,18 @@ func TestRegistryEntries(t *testing.T) {
 }
 
 // TestEmittedCodes pins the registry to the codes this module emits: the
-// report's own, internal/limits', internal/cli's, and internal/zipfmt's
-// container and entry-name refusals. A code a later change emits is
-// registered by that change.
+// report's own, internal/limits', internal/cli's, internal/zipfmt's
+// container and entry-name refusals, and internal/inputs/csv's refusals of
+// a CSV input. A code a later change emits is registered by that change.
 func TestEmittedCodes(t *testing.T) {
 	var got []Code
 	for _, e := range registry {
 		got = append(got, e.Code)
 	}
 	want := []Code{
-		CodeInternalError, CodeLimitInvalid, CodeLimitPackage, CodeReportTruncated,
+		"csv.after_quote", "csv.bare_quote", "csv.field_count", "csv.header_duplicate",
+		"csv.header_empty", "csv.header_missing", "csv.unterminated_quote",
+		CodeInternalError, "limit.exceeded", CodeLimitInvalid, CodeLimitPackage, CodeReportTruncated,
 		CodeUsageBadValue, CodeUsageMissingCommand, CodeUsageRepeatedFlag, CodeUsageUnexpectedOperand,
 		CodeUsageUnknownCommand, CodeUsageUnknownFlag, CodeUsageUnknownTopic,
 	}

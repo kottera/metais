@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("a,b\x0a1,x\x22y\x0a2,3\x0a")
