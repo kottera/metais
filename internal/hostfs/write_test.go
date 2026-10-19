@@ -4,6 +4,7 @@
 package hostfs
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"slices"
@@ -437,6 +438,85 @@ func TestRemoveCreatedLeavesANewcomerWithTheRecordedIdentity(t *testing.T) {
 	}
 	if got := readHost(t, filepath.Join(root, "file")); got != "THEIRS" {
 		t.Errorf("a newcomer with the recorded identity now holds %q", got)
+	}
+}
+
+// Every entry's pin is held until the entry is committed or removed, or the
+// Writer is closed, and then released: a render holds a handle only for
+// what it may still remove.
+func TestPinsAreReleased(t *testing.T) {
+	pins := func(w *Writer) map[string]*os.File {
+		got := map[string]*os.File{}
+		for _, m := range w.rec.made {
+			got[m.name] = m.pin
+		}
+		return got
+	}
+	closed := func(f *os.File) bool {
+		_, err := f.Stat()
+		return errors.Is(err, os.ErrClosed)
+	}
+
+	root := dir(t)
+	w := openWriter(t, root)
+	staging := StagingName("out")
+	if err := w.Mkdir(staging); err != nil {
+		t.Fatal(err)
+	}
+	s, err := w.Sub(staging)
+	if err != nil {
+		t.Fatal(err)
+	}
+	create(t, s, "a", "A")
+	if err := s.MkdirAll("b/c"); err != nil {
+		t.Fatal(err)
+	}
+	create(t, s, "b/c/d", "D")
+	create(t, w, "kept.tmp", "K")
+	create(t, w, "removed", "R")
+	held := pins(w)
+	if len(held) != 7 {
+		t.Fatalf("records %v, want 7", held)
+	}
+	for name, f := range held {
+		if f == nil || closed(f) {
+			t.Fatalf("%s is not held after it was created", name)
+		}
+	}
+
+	if err := w.RenameNoReplace(staging, "out"); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.RenameNoReplace("kept.tmp", "kept"); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{staging, "a", "b", "b/c", "b/c/d", "kept.tmp"} {
+		if !closed(held[name]) {
+			t.Errorf("%s is still held after it was committed", name)
+		}
+	}
+	if got := pins(w); len(got) != 1 || got["removed"] != held["removed"] || closed(got["removed"]) {
+		t.Fatalf("after the commits: %v", got)
+	}
+	if err := w.RemoveCreated(); err != nil {
+		t.Fatal(err)
+	}
+	if !closed(held["removed"]) {
+		t.Error("removed is still held after RemoveCreated")
+	}
+
+	// Close releases what neither a commit nor a removal did.
+	create(t, w, "left", "L")
+	left := pins(w)["left"]
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if !closed(left) {
+		t.Error("left is still held after Close")
+	}
+	want := []string{"kept", "left", "out/", "out/a", "out/b/", "out/b/c/", "out/b/c/d"}
+	if got := tree(t, root); !slices.Equal(got, want) {
+		t.Errorf("after Close: %q, want %q", got, want)
 	}
 }
 
