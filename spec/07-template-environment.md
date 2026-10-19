@@ -473,9 +473,11 @@ output being rendered is: a partial rendered into an output whose `escape` is
 `none` is not.
 
 <a id="mts-tpl-062"></a>**MTS-TPL-062** A processor MUST write the text of a
-`raw` block, and what `embed` and `provenance` write
+`raw` block, and what `embed`, `asset` and `provenance` write
 ([chapter 8](08-filters-and-tags.md)), unchanged in every output, whatever
-its `escape`.
+its `escape`. An output's `escape` applies to every file it renders: each
+file of a mirror, and each template entry of a container by its own
+`escape`.
 
 > **Note.** Escaping does not make output safe inside JavaScript, CSS or a
 > URL. `json_script` is the filter for data placed in a `<script>` element,
