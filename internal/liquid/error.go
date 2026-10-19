@@ -42,9 +42,12 @@ const (
 	// holds: an integer of magnitude above 2^53−1, or a float beyond
 	// binary64 (ADR-004 D4 items 2 and 3).
 	CodeNumberRange Code = "number_range"
-	// CodeLimit is a bound of ParseLimits exceeded by the template's own
-	// text. Args "limit" names it, as ADR-009 does: "template-nesting" or
-	// "template-size". The parse stops there.
+	// CodeLimit is a bound exceeded. Args "limit" names it, as ADR-009
+	// does. At parse it is "template-nesting" or "template-size", breached
+	// by the template's own text, and the parse stops there. At render it
+	// is "partial-depth", "value-size" or "array-size", or the limit of a
+	// Meter's kind of work: "render-work", "output-size", "assign-bytes"
+	// or "loop-iterations".
 	CodeLimit Code = "limit"
 	// CodeInternal is a defect of the engine, recovered from a panic
 	// (ADR-010 D4 item 6). Every one is a bug.
@@ -76,6 +79,46 @@ const (
 	CodeInvalidUTF8 Code = "invalid_utf8"
 )
 
+// The render error codes (ADR-004 D4 to D6, D16 item 1). A render stops at
+// its first error.
+const (
+	// CodeUndefinedVariable is a top-level name bound by nothing in scope
+	// (ADR-004 D6 item 1). Args "name" names it.
+	CodeUndefinedVariable Code = "undefined_variable"
+	// CodeUndefinedProperty is a property of an object that neither
+	// declares nor holds it, a property a string, number, boolean or array
+	// does not have, or an index of the wrong type (ADR-004 D6 items 4, 6
+	// and 7). Args "path" is the expression up to and including the
+	// failing step, as the template writes it.
+	CodeUndefinedProperty Code = "undefined_property"
+	// CodeNilProperty is a property of nil (ADR-004 D6 item 5). Args
+	// "path" is the expression up to and including the failing step.
+	CodeNilProperty Code = "nil_property"
+	// CodeComparison is an ordering comparison, or a contains, between
+	// values Shopify does not order or search: a string with a number, or
+	// an array or object (ADR-004 D4 item 6). Args "op" is the operator,
+	// "left" and "right" the kinds of its operands.
+	CodeComparison Code = "comparison"
+	// CodeArgument is an argument of a core tag of the wrong type: a for
+	// loop's limit or offset that is not an integer, a tablerow's cols,
+	// limit or offset that has no integer value, or a range bound that is
+	// not one (ADR-004 D2). Args "tag" names the tag ("for" or
+	// "tablerow"; absent for a range bound), "argument" the argument
+	// ("limit", "offset", "cols", or "range" for a bound), and "kind" the
+	// kind of value it was given.
+	CodeArgument Code = "argument"
+	// CodeWrite is the writer refusing the render's output. Detail holds
+	// the writer's error. It is no finding of the template's.
+	CodeWrite Code = "write"
+)
+
+// Site is one render call: where in which template it is written.
+type Site struct {
+	Source    string
+	Line, Col int
+	Offset    int
+}
+
 // Error is an error the engine reports.
 //
 // Line and Col are 1-based, Col counted in code points (ADR-006 D5 item
@@ -83,7 +126,10 @@ const (
 // template, they name the "{{" or "{%" that opens the failing token, or,
 // inside a liquid tag, the first non-blank character of the failing line
 // (ADR-004 D16 item 2). For ParseValue and ParseCondition, they name the
-// failing token within the expression.
+// failing token within the expression. For Render, they name the token of
+// the statement that failed, in the template or partial Source names; for
+// Eval and EvalCondition, the node of the expression that failed, and
+// Source is empty.
 //
 // Args carries the error's parameters, each named by the code's
 // documentation. Detail is the engine's own description, for a developer
@@ -97,6 +143,11 @@ type Error struct {
 	Code      Code
 	Args      map[string]string
 	Detail    string
+	// Chain is the render calls that led to a render error inside a
+	// partial, outermost first: the output's template's render tag, then
+	// each partial's, up to the one that rendered Source (ADR-004 D16
+	// item 2). It is empty for an error in the template rendered.
+	Chain []Site
 }
 
 // Error describes the error for a developer.
@@ -105,6 +156,9 @@ func (e *Error) Error() string {
 	fmt.Fprintf(&b, "%s:%d:%d: %s", e.Source, e.Line, e.Col, e.Code)
 	for _, k := range slices.Sorted(maps.Keys(e.Args)) {
 		fmt.Fprintf(&b, " %s=%q", k, e.Args[k])
+	}
+	for _, c := range e.Chain {
+		fmt.Fprintf(&b, " (rendered from %s:%d:%d)", c.Source, c.Line, c.Col)
 	}
 	if e.Detail != "" {
 		b.WriteString(": ")
