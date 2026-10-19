@@ -42,8 +42,12 @@ type Command struct {
 	// NextToStdout puts the human Next: block on standard output, after
 	// the result, rather than on standard error (ADR-008 D11 item 3).
 	NextToStdout bool
-	Refusals     []Refusal
-	Examples     []Example
+	// FindingsAreResult puts the human findings, the result and the Next:
+	// block on standard output, unless the command is refused: check's
+	// and test's findings are what they report (ADR-008 D11 item 3).
+	FindingsAreResult bool
+	Refusals          []Refusal
+	Examples          []Example
 
 	run func(s *session, p args.Parsed) outcome
 }
@@ -205,6 +209,7 @@ func declarations() []*Command {
 			},
 			run: runInit,
 		},
+		checkDeclaration(),
 		{
 			Name: "version", Group: "The tool", Synopsis: "version [--json]",
 			Description: "Print the tool's version and the specification versions it implements.",

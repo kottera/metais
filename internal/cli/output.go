@@ -76,6 +76,11 @@ func (s *session) emit(o outcome) int {
 	// next steps go to standard error and nothing to standard output;
 	// otherwise the result goes to standard output, and any finding and
 	// the Next: block to standard error.
+	if s.line.cmd != nil && s.line.cmd.FindingsAreResult && !refusal(fs) {
+		b := finding.AppendHuman(nil, s.colour(s.inv.Stdout), fs...)
+		write(s.inv.Stdout, appendNext(append(b, o.human...), next))
+		return status
+	}
 	b := finding.AppendHuman(nil, s.colour(s.inv.Stderr), fs...)
 	if sum.Errors > 0 {
 		b = append(b, o.human...)
@@ -90,6 +95,12 @@ func (s *session) emit(o outcome) int {
 	write(s.inv.Stdout, o.human)
 	write(s.inv.Stderr, appendNext(b, next))
 	return status
+}
+
+// refusal reports whether fs refuse the command rather than report on its
+// package: a finding of class usage, refused, destination or internal.
+func refusal(fs []finding.Finding) bool {
+	return slices.ContainsFunc(fs, func(f finding.Finding) bool { return f.Class() != finding.ClassContent })
 }
 
 // refuse is the outcome of a line refused before any command ran: its
