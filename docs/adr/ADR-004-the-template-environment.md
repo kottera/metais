@@ -527,7 +527,7 @@ Liquid's `name: value` form.
    Markdown stays Markdown. An empty array with columns writes the header and
    delimiter lines; with no columns, the empty string.
 5. **`json_script`** — `json` (compact) with `<`, `>`, `&`, U+2028 and U+2029
-   further written as `<`, `>`, `&`, ` `, ` `. The
+   further written as `\u003c`, `\u003e`, `\u0026`, `\u2028`, `\u2029`. The
    result cannot close a `<script>` element or open an HTML comment, and is
    safe (D9). It writes the JSON only; the author writes the element
    (`<script type="application/json" id="d">{{ x | json_script }}</script>`).
@@ -1233,3 +1233,28 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
   knows `asset` by name beside `embed` and `provenance`, so an `asset` in a
   path is `template.tag_context` (D16 item 5) under MTS-TAG-011, rather
   than an unknown tag.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-2.** D9 is bound to the output
+  declaration: an output whose `escape` is `html` renders with the
+  engine's `Env.Escape` set to D9 item 1's mapping, for its template and
+  every partial it renders (D8 item 5), and chapter 7's §7.10 states it.
+  `escape`, its alias `h`, and `escape_once` mark their result safe, the
+  alias read as the filter it names. `safe` may be the last filter of a
+  `{{ }}` or `echo` expression only; an `assign`, a manifest expression
+  (`liquid.ParseValue`) or a place before another filter is
+  `template.safe_position`, found at parse with the template's other parse
+  findings and located at the token, as `template.unknown_filter` is. The
+  engine knows the rule as a `LastFilter`, so it holds no METAIS name.
+  The METAIS filters are defined in `internal/template/filters`, a leaf
+  the loader imports, and both the loader's dialect — the one a manifest's
+  `path`, `when` and `for_each` and check's cross-reference parse with —
+  and `internal/template`'s extend `Core()` with them: a template and an
+  expression know one set of filters (D16 item 5), and `safe` in a
+  `for_each` is `template.safe_position` rather than
+  `template.unknown_filter`.
+  `safe` and `json_script` take no argument (`template.filter_argument`).
+  Their render-work charges, until the per-filter charge table states
+  them: `safe` the shallow size of its input, twice, for the input and the
+  identical result; `json_script` the deep size of its input before it
+  encodes, then its result's byte length as units and as held bytes, as a
+  string-building filter charges. D10 item 5's replacements are written
+  here as the `\u` escapes they are; the mapping is unchanged.

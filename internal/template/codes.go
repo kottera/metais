@@ -21,6 +21,7 @@ const (
 	CodeReservedName      finding.Code = "template.reserved_name"
 	CodePartialName       finding.Code = "template.partial_name"
 	CodePartialNotFound   finding.Code = "template.partial_not_found"
+	CodeSafePosition      finding.Code = "template.safe_position"
 	CodeNumberRange       finding.Code = "template.number_range"
 	CodeUndefinedVariable finding.Code = "template.undefined_variable"
 	CodeUndefinedProperty finding.Code = "template.undefined_property"
@@ -55,7 +56,7 @@ const CodeRawUnavailable finding.Code = "input.raw_unavailable"
 // that parses a template declares.
 func ParseCodes() []finding.Code {
 	return []finding.Code{CodeSyntax, CodeNotUTF8, CodeInclude, CodeUnknownFilter, CodeReservedName, CodePartialName,
-		CodeNumberRange, CodeFilterArgument, CodeFilterInput, CodeDivisionByZero,
+		CodeSafePosition, CodeNumberRange, CodeFilterArgument, CodeFilterInput, CodeDivisionByZero,
 		CodeEmbedUnknownInput, CodeEmbedIndex, CodeProvenanceArgument, CodeProvenanceStyle}
 }
 
@@ -92,6 +93,8 @@ func parseFinding(e *liquid.Error, lim limits.Set, cause string) finding.Finding
 		code, p["name"] = CodeReservedName, finding.String(e.Args["name"])
 	case liquid.CodePartialName:
 		code = CodePartialName
+	case liquid.CodeSafePosition:
+		code = CodeSafePosition
 	case liquid.CodeNumberRange:
 		code = CodeNumberRange
 	case liquid.CodeFilterArgument:

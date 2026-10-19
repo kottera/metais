@@ -1,0 +1,5 @@
+a{{ "x" | safe | upcase }}
+{% if false %}{% assign y = "x" | safe %}{% endif %}
+{% liquid
+  echo "x" | safe | safe
+%}

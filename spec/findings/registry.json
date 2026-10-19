@@ -6850,6 +6850,27 @@
       ]
     },
     {
+      "code": "template.safe_position",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The safe filter is applied other than as the last filter of an output expression.",
+      "hint": "Apply safe only as the last filter of an output tag or an echo tag, as in x | escape | newline_to_br | safe; anywhere else it marks nothing.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-FLT-002"
+      ]
+    },
+    {
       "code": "template.syntax",
       "severity": "error",
       "class": "content",

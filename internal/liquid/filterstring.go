@@ -36,9 +36,9 @@ func stringFilters() []*stdFilter {
 		{name: "upcase", sig: none, fn: caseMap(unicode.ToUpper)},
 		{name: "downcase", sig: none, fn: caseMap(unicode.ToLower)},
 		{name: "capitalize", sig: none, fn: capitalize},
-		{name: "escape", sig: none, fn: escape},
-		{name: "h", sig: none, fn: escape},
-		{name: "escape_once", sig: none, fn: escapeOnce},
+		{name: "escape", sig: none, fn: escape, safe: true},
+		{name: "h", sig: none, fn: escape, safe: true},
+		{name: "escape_once", sig: none, fn: escapeOnce, safe: true},
 		{name: "strip", sig: none, fn: trim(true, true)},
 		{name: "lstrip", sig: none, fn: trim(true, false)},
 		{name: "rstrip", sig: none, fn: trim(false, true)},
@@ -165,6 +165,19 @@ func htmlEntity(c byte) string {
 		return "&#39;"
 	}
 	return ""
+}
+
+// EscapeHTML appends s to dst through ADR-004 D9 item 1's escape mapping:
+// the Escape of an output whose escape is html.
+func EscapeHTML(dst []byte, s string) []byte {
+	for i := 0; i < len(s); i++ {
+		if e := htmlEntity(s[i]); e != "" {
+			dst = append(dst, e...)
+		} else {
+			dst = append(dst, s[i])
+		}
+	}
+	return dst
 }
 
 // escape is ADR-004 D9's escape mapping over the input's text. nil stays

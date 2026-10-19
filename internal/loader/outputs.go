@@ -24,6 +24,7 @@ const (
 	CodeTemplateFilterArg     finding.Code = "template.filter_argument"
 	CodeTemplateFilterInput   finding.Code = "template.filter_input"
 	CodeTemplateDivision      finding.Code = "template.division_by_zero"
+	CodeTemplateSafePosition  finding.Code = "template.safe_position"
 )
 
 // The top-level directories a manifest path is resolved in.
@@ -222,6 +223,8 @@ func TemplateFinding(e *liquid.Error, subj finding.Subject, at finding.Location,
 		return finding.New(CodeTemplateDivision, subj, &at, finding.Params{"filter": finding.String(e.Args["filter"]), "column": column})
 	case liquid.CodeNumberRange:
 		return finding.New(CodeTemplateNumberRange, subj, &at, finding.Params{"column": column})
+	case liquid.CodeSafePosition:
+		return finding.New(CodeTemplateSafePosition, subj, &at, finding.Params{"column": column})
 	case liquid.CodePartialName:
 		return finding.New(CodeTemplateTagContext, subj, &at, finding.Params{"tag": finding.String("render"), "column": column})
 	case liquid.CodeNotUTF8:

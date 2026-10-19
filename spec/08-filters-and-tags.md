@@ -8,6 +8,42 @@ This chapter specifies the filter catalog, and the `embed`, `asset` and
 `provenance` tags, with the comment syntax `provenance` writes for each kind
 of output.
 
+## 8.1 Filters
+
+Every filter of this section is defined in every output; how its result is
+written depends on the output's escaping ([§7.10](07-template-environment.md#mts-tpl-059)).
+
+### 8.1.1 `escape` and `escape_once`
+
+<a id="mts-flt-001"></a>**MTS-FLT-001** `escape`, and its alias `h`, MUST
+write the text of its input with each `&`, `<`, `>`, `"` and `'` replaced as
+MTS-TPL-059 states, and `escape_once` MUST do the same except to an `&` that
+already opens a character reference: one or more ASCII letters, or `#` and
+one or more ASCII digits, followed by `;`. Each MUST give nil for nil, and
+its result MUST be safe (MTS-TPL-060), so that it is not escaped twice in an
+output whose `escape` is `html`.
+
+### 8.1.2 `safe`
+
+<a id="mts-flt-002"></a>**MTS-FLT-002** `safe` MUST give its input
+unchanged, marked safe (MTS-TPL-060), and takes no argument. A processor MUST
+refuse `safe` applied other than as the last filter of a `{{ }}` or `echo`
+expression — before another filter, in an `assign`, or in a manifest
+expression — with `template.safe_position` when the template is parsed,
+whether or not the expression would ever be evaluated. In an output whose
+`escape` is `none`, `safe` changes nothing.
+
+### 8.1.3 `json_script`
+
+<a id="mts-flt-003"></a>**MTS-FLT-003** `json_script` MUST give the
+canonical form of its input (MTS-MAN-021), with each `<` further written as
+`\u003c`, each `>` as `\u003e`, each `&` as `\u0026`, each U+2028 as
+`\u2028` and each U+2029 as `\u2029`; it takes no argument, and its result
+MUST be safe (MTS-TPL-060). Its text can neither close a `<script>` element
+nor open an HTML comment, and is the JSON only: the template writes the
+element around it, as in
+`<script type="application/json" id="data">{{ x | json_script }}</script>`.
+
 ## 8.2 `embed`
 
 `embed` writes the bytes of one input exactly as they were supplied: a

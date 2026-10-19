@@ -1,0 +1,20 @@
+text: <b class="t">&lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt;</b>
+echo: &lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt;
+cycle: &lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt;
+raw: <r a='1'>&{{ inputs.v.s }}</r>
+escape: &lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt;
+h: &lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt;
+escape_once: &amp; &#39; &amp; &x; &amp;#x41;
+escape, then append: &amp;lt;a href=&amp;quot;x&amp;quot; title=&amp;#39;y&amp;#39;&amp;gt;Tom &amp;amp; Jerry&amp;lt;/a&amp;gt;
+lines: a&amp;lt;b&lt;br /&gt;
+c&amp;gt;d
+lines, safe: a&lt;b<br />
+c&gt;d
+safe: <a href="x" title='y'>Tom & Jerry</a>
+echo safe: <a href="x" title='y'>Tom & Jerry</a>
+capture: <em>&lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt;</em>
+capture, assigned: <em>&lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt;</em>
+capture, then append: &lt;em&gt;&amp;lt;a href=&amp;quot;x&amp;quot; title=&amp;#39;y&amp;#39;&amp;gt;Tom &amp;amp; Jerry&amp;lt;/a&amp;gt;&lt;/em&gt;
+json_script: <script type="application/json" id="d">{"a":"\u0026 \u2028 \u2029 é","z":"\u003c/script\u003e\u003c!-- --\u003e"}</script>
+json_script, then append: {&quot;a&quot;:&quot;\u0026 \u2028 \u2029 é&quot;,&quot;z&quot;:&quot;\u003c/script\u003e\u003c!-- --\u003e&quot;}
+partial: <i>&lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt;</i> &lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt; <a href="x" title='y'>Tom & Jerry</a>

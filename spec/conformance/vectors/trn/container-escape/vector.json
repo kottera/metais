@@ -1,0 +1,45 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/container-escape",
+  "title": "A container's template entry is escaped as its own escape says: the same template is escaped in an escape: html entry, where safe still writes as it is, and not in an entry with the default none",
+  "statements": [
+    "MTS-TRN-001",
+    "MTS-TPL-059",
+    "MTS-TPL-060",
+    "MTS-TPL-062"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out",
+                "containers": [
+                  {
+                    "path": "box.zip",
+                    "methods": []
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

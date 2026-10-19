@@ -38,6 +38,11 @@ const (
 	// CodePartialName is a render whose partial name is not a string
 	// literal (ADR-004 D8 item 1).
 	CodePartialName Code = "partial_name"
+	// CodeSafePosition is a LastFilter applied other than as the last
+	// filter of an output expression: before another filter, or in an
+	// assign or a manifest expression (ADR-004 D9 item 3). Args "filter"
+	// names it.
+	CodeSafePosition Code = "safe_position"
 	// CodeNumberRange is a numeric literal beyond what a template number
 	// holds: an integer of magnitude above 2^53−1, or a float beyond
 	// binary64 (ADR-004 D4 items 2 and 3).

@@ -18,6 +18,7 @@ package template
 
 import (
 	"github.com/kottera/metais/internal/liquid"
+	"github.com/kottera/metais/internal/template/filters"
 )
 
 // The globals of ADR-004 D7, and the loop objects Liquid binds, which no
@@ -34,6 +35,7 @@ var dialect = newDialect(nil)
 // through r, or render nothing when r is nil, which only a parse uses.
 func newDialect(r *Renderer) *liquid.Dialect {
 	d, err := liquid.Core().Extend(liquid.Spec{
+		Filters:  filters.All(),
 		Tags:     []liquid.TagDef{embedTag{r}, assetTag{r}, provenanceTag{r}},
 		Reserved: reserved,
 	})
@@ -44,7 +46,7 @@ func newDialect(r *Renderer) *liquid.Dialect {
 }
 
 // Dialect is the dialect a package's templates are parsed and rendered in:
-// the standard catalog of internal/liquid, METAIS's embed, asset and
-// provenance tags, and the globals' names reserved (ADR-004 D1, D7 item 8,
-// D12 to D14).
+// the standard catalog of internal/liquid, the METAIS filters
+// (internal/template/filters), METAIS's embed, asset and provenance tags,
+// and the globals' names reserved (ADR-004 D1, D7 item 8, D10, D12 to D14).
 func Dialect() *liquid.Dialect { return dialect }

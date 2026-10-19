@@ -895,6 +895,9 @@ Refusals:
   template.reserved_name
       A template is refused (reserved name).
       Next: metais inspect <package>
+  template.safe_position
+      An output's path, when or for_each does not parse (safe position).
+      Next: metais inspect <package>
   template.syntax
       An output's path, when or for_each does not parse (syntax).
       Next: metais inspect <package>

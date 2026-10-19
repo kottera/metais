@@ -21,7 +21,7 @@ import (
 // (ADR-007 D3 item 12).
 var parseCodes = []string{
 	"template.syntax", "template.not_utf8", "template.include", "template.unknown_filter",
-	"template.reserved_name", "template.partial_name", "template.number_range",
+	"template.reserved_name", "template.partial_name", "template.safe_position", "template.number_range",
 	"template.filter_argument", "template.filter_input", "template.division_by_zero", "limit.package",
 	"template.embed_index", "template.provenance_argument", "template.provenance_style",
 }

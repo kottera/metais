@@ -87,6 +87,14 @@ type SafeFilter interface {
 	MarksSafe() bool
 }
 
+// LastFilter is a FilterDef that may be applied only as the last filter of
+// an output expression, "{{ }}" or echo: METAIS's safe (ADR-004 D9 item
+// 3). The parser refuses one applied anywhere else with CodeSafePosition.
+type LastFilter interface {
+	FilterDef
+	OnlyLast() bool
+}
+
 // Render renders t to w (ADR-004 D2 to D6, D8). It stops at the first
 // error and returns it, located at the "{{" or "{%" of the statement that
 // failed, in the template or partial it is written in, with the render

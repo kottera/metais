@@ -378,6 +378,8 @@ func TestEmittedCodes(t *testing.T) {
 	} {
 		want = append(want, Code("template."+c))
 	}
+	// Escaping (W5-2).
+	want = append(want, "template.safe_position")
 	for _, c := range []string{
 		"case_collision", "character", "duplicate", "encoding", "file_directory_conflict", "not_nfc",
 		"not_portable", "shape",

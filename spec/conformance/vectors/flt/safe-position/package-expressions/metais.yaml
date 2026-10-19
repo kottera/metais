@@ -1,0 +1,21 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: v
+    title: V
+    schema: inputs/v.schema.json
+outputs:
+  - id: last
+    template: page.txt.liquid
+    path: "{{ 'a' | upcase | safe }}.txt"
+  - id: before
+    template: page.txt.liquid
+    path: "{{ 'a' | safe | upcase }}.txt"
+  - id: each
+    template: page.txt.liquid
+    path: "each.txt"
+    for_each: "inputs.v.xs | safe"

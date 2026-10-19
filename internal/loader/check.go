@@ -19,20 +19,27 @@ import (
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/pkgtree"
 	"github.com/kottera/metais/internal/schema"
+	"github.com/kottera/metais/internal/template/filters"
 	"github.com/kottera/metais/internal/unitext"
 	"github.com/kottera/metais/internal/zipfmt"
 )
 
 // Dialect is the dialect a package's manifest expressions are parsed in
-// when the package is opened (ADR-004 D16 item 5): internal/liquid's
-// standard catalog, Core(), with METAIS's embed, asset and provenance
-// tags known by name, so that a path holding one is template.tag_context rather than
-// an unknown tag. A template is parsed in internal/template's dialect,
-// which defines them; METAIS's own filters join it there too.
+// when the package is opened (ADR-004 D16 item 5), and check's
+// cross-reference parses them with: internal/liquid's standard catalog,
+// Core(), with METAIS's own filters (internal/template/filters), so that a
+// template and an expression know one set of filters, and METAIS's embed,
+// asset and provenance tags known by name, so that a path holding one is
+// template.tag_context rather than an unknown tag. A template is parsed in
+// internal/template's dialect, which defines the tags and reserves the
+// globals' names.
 func Dialect() *liquid.Dialect { return dialect }
 
 var dialect = func() *liquid.Dialect {
-	d, err := liquid.Core().Extend(liquid.Spec{Tags: []liquid.TagDef{namedTag("embed"), namedTag("asset"), namedTag("provenance")}})
+	d, err := liquid.Core().Extend(liquid.Spec{
+		Filters: filters.All(),
+		Tags:    []liquid.TagDef{namedTag("embed"), namedTag("asset"), namedTag("provenance")},
+	})
 	if err != nil {
 		panic("loader: " + err.Error())
 	}

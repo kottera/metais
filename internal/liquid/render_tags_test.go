@@ -377,6 +377,22 @@ func TestRenderEscape(t *testing.T) {
 	renders(t, `{% capture c %}{{ s }}{% endcapture %}{{ c }}{% assign e = c %}{{ e }}`, esc+esc, d, escapeHTML)
 	renders(t, `{{ c.size }}`, "1", data(`{"c": "<"}`), escapeHTML)
 	renders(t, `{{ s }}`, "<a&'\">", d)
+	// The core catalog's escape, its alias h and escape_once mark their
+	// result safe, so it is not escaped twice; a later filter drops it.
+	core := withDialect(Core())
+	renders(t, `{{ s | escape }}|{{ s | h }}|{{ "&amp;<" | escape_once }}|{{ s | escape | append: "" }}`,
+		esc+"|"+esc+"|&amp;&lt;|"+"&amp;lt;a&amp;amp;&amp;#39;&amp;quot;&amp;gt;", d, core, escapeHTML)
+	renders(t, `{{ s | escape }}`, esc, d, core)
 	renders(t, `{% tablerow x in xs %}{{ x }}{% endtablerow %}`, "<tr class=\"row1\">\n<td class=\"col1\">&lt;</td></tr>\n",
 		data(`{"xs": ["<"]}`), escapeHTML)
+}
+
+// TestEscapeHTML: EscapeHTML is ADR-004 D9 item 1's mapping, each of its
+// five characters and nothing else, appended to what dst holds.
+func TestEscapeHTML(t *testing.T) {
+	testenv.Home(t)
+	got := string(EscapeHTML([]byte("x:"), "a&b<c>d\"e'f é "))
+	if want := "x:a&amp;b&lt;c&gt;d&quot;e&#39;f é "; got != want {
+		t.Errorf("EscapeHTML = %q, want %q", got, want)
+	}
 }

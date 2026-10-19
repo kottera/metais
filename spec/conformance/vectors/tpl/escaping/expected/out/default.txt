@@ -1,0 +1,20 @@
+text: <b class="t"><a href="x" title='y'>Tom & Jerry</a></b>
+echo: <a href="x" title='y'>Tom & Jerry</a>
+cycle: <a href="x" title='y'>Tom & Jerry</a>
+raw: <r a='1'>&{{ inputs.v.s }}</r>
+escape: &lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt;
+h: &lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt;
+escape_once: &amp; &#39; &amp; &x; &amp;#x41;
+escape, then append: &lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt;
+lines: a&lt;b<br />
+c&gt;d
+lines, safe: a&lt;b<br />
+c&gt;d
+safe: <a href="x" title='y'>Tom & Jerry</a>
+echo safe: <a href="x" title='y'>Tom & Jerry</a>
+capture: <em><a href="x" title='y'>Tom & Jerry</a></em>
+capture, assigned: <em><a href="x" title='y'>Tom & Jerry</a></em>
+capture, then append: <em><a href="x" title='y'>Tom & Jerry</a></em>
+json_script: <script type="application/json" id="d">{"a":"\u0026 \u2028 \u2029 é","z":"\u003c/script\u003e\u003c!-- --\u003e"}</script>
+json_script, then append: {"a":"\u0026 \u2028 \u2029 é","z":"\u003c/script\u003e\u003c!-- --\u003e"}
+partial: <i><a href="x" title='y'>Tom & Jerry</a></i> &lt;a href=&quot;x&quot; title=&#39;y&#39;&gt;Tom &amp; Jerry&lt;/a&gt; <a href="x" title='y'>Tom & Jerry</a>

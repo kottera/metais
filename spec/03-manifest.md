@@ -197,10 +197,12 @@ A processor MUST refuse each that does not parse with `template.syntax`, an
 with `template.unknown_filter`, a filter given literal arguments it never
 takes with `template.filter_argument`, a division by a literal zero with
 `template.division_by_zero`, a number literal beyond what a template number
-holds with `template.number_range`, and a `render` in a `path` with
-`template.tag_context`, each located at the field's manifest pointer and
-giving the column within the expression; and it MUST know every standard
-filter there.
+holds with `template.number_range`, `safe` other than as the last filter of
+a `path`'s output expression with `template.safe_position`, and a `render`
+in a `path` with `template.tag_context`, each located at the field's manifest
+pointer and giving the column within the expression; and it MUST know every
+standard filter there, and every filter of
+[chapter 8](08-filters-and-tags.md).
 
 ## 3.5 The manifest schema
 

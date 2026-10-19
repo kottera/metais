@@ -502,6 +502,9 @@ Refusals:
   template.reserved_name
       A template does not parse (reserved name), an error.
       Next: metais check <package>
+  template.safe_position
+      An output's path, when or for_each does not parse (safe position).
+      Next: metais check <package>
   template.syntax
       An output's path, when or for_each does not parse (syntax).
       Next: metais check <package>

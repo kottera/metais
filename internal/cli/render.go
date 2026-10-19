@@ -481,10 +481,6 @@ func (p *planner) beyond() bool { return int64(len(p.all)) > p.lim.Value(limits.
 func (p *planner) tree(decls []manifest.Output, owner, in string, depth int, fan *template.Fan) []*planned {
 	var tree []*planned
 	for _, d := range decls {
-		switch {
-		case d.Escape == "html":
-			panic("cli: escape is not part of this version of metais")
-		}
 		id := cmp.Or(d.ID, owner)
 		x, xfs := template.ParseExprs(d, id, p.at, p.lim)
 		if len(xfs) > 0 {
@@ -1063,7 +1059,7 @@ func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r 
 				pf.failed = true
 				continue
 			}
-			out, f := r.Render(template.Output{ID: pf.owner, Template: pf.template, Path: pf.path, Fan: pf.fan, Kind: kindOf(pf.path, pf.decl.Kind), In: pf.in})
+			out, f := r.Render(template.Output{ID: pf.owner, Template: pf.template, Path: pf.path, Fan: pf.fan, Kind: kindOf(pf.path, pf.decl.Kind), In: pf.in, HTML: pf.decl.Escape == "html"})
 			if f != nil {
 				fs = append(fs, *f)
 				pf.failed = true
