@@ -63,8 +63,11 @@ type Decode func(entry string, src []byte) (value.Value, []finding.Finding)
 type Compiler struct {
 	lim     limits.Set
 	meter   *regexprofile.Meter
-	schemas map[string]*Schema // by entry
-	roots   map[string]root    // by the library's root URL
+	schemas map[string]*Schema     // by entry
+	docs    map[string]value.Value // each file as authored, by entry
+	roots   map[string]root        // by the library's root URL
+	anchors map[string]root        // by the anchor's URI
+	refs    map[root]string        // each $ref's resolved URI, by the schema object holding it
 }
 
 // root is where a resource the library holds as a root document is in the
@@ -113,7 +116,10 @@ func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode) (*Compiler, [
 		lim:     lim,
 		meter:   regexprofile.NewMeter(lim.Value(limits.RegexWork)),
 		schemas: map[string]*Schema{},
+		docs:    map[string]value.Value{},
 		roots:   map[string]root{},
+		anchors: map[string]root{},
+		refs:    map[root]string{},
 	}
 	var files []*file
 	var findings []finding.Finding
@@ -143,6 +149,15 @@ func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode) (*Compiler, [
 		return regexprofile.Compile(p, lim, c.meter)
 	})
 	for _, f := range files {
+		c.docs[f.entry] = f.doc
+		for _, a := range f.walk.anchors {
+			c.anchors[a.uri] = root{f.entry, a.ptr}
+		}
+		for _, r := range f.walk.refs {
+			if u, err := url.Parse(r.text); err == nil && strings.HasSuffix(r.ptr, "/$ref") {
+				c.refs[root{f.entry, strings.TrimSuffix(r.ptr, "/$ref")}] = r.base.ResolveReference(u).String()
+			}
+		}
 		if err := c.add(lib, f); err != nil {
 			// The pre-check refused every URI the library could not take.
 			panic(err)

@@ -6,6 +6,7 @@ package schema
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/big"
 	"reflect"
 	"slices"
@@ -43,16 +44,17 @@ const rootURL = "metais:///inputs/s.json"
 
 // TestAdapterReadsNoText holds ADR-010 D5 item 5's first property: the
 // adapter builds its tree without rendering any of the library's text.
-// Every kind in the tree, and every error a kind holds, fails the test if
-// its text is rendered, so the property is red against an adapter that
-// reads a message.
+// The tree's format failure holds an error that panics when its text is
+// read, which rendering the failure does, so the property is red against
+// an adapter that reads a message: the control renders it. A kind the
+// adapter does not know is refused with an error, unread.
 func TestAdapterReadsNoText(t *testing.T) {
 	c := compiled(t)
 	ve := &jsonschema.ValidationError{
 		SchemaURL: rootURL, ErrorKind: &kind.Schema{Location: rootURL},
 		Causes: []*jsonschema.ValidationError{
 			{SchemaURL: rootURL + "#/properties/a", InstanceLocation: []string{"a"},
-				ErrorKind: &loud{Limit: 3, Detail: "structured", Err: loudErr{}}},
+				ErrorKind: &kind.MinLength{Got: 1, Want: 3}},
 			{SchemaURL: rootURL + "#/properties/b", InstanceLocation: []string{"b"},
 				ErrorKind: &kind.Format{Got: "x", Want: "date", Err: loudErr{}}},
 		},
@@ -65,18 +67,15 @@ func TestAdapterReadsNoText(t *testing.T) {
 		t.Fatalf("got %d failures, want 2", len(fails))
 	}
 	a := fails[0]
-	if a.Keyword != "maxLength" || a.Entry != "inputs/s.json" || a.SchemaPointer != "/properties/a/maxLength" ||
-		a.KeywordLocation != "/properties/a/maxLength" || a.Instance() != "/a" {
+	if a.Keyword != "minLength" || a.Entry != "inputs/s.json" || a.SchemaPointer != "/properties/a/minLength" ||
+		a.KeywordLocation != "/properties/a/minLength" || a.Instance() != "/a" {
 		t.Errorf("got %+v", a)
 	}
-	if !reflect.DeepEqual(a.Data, schemafail.Data{"limit": 3, "detail": "structured"}) {
-		t.Errorf("data %v: an error field was carried, or a field was lost", a.Data)
-	}
-	if !reflect.DeepEqual(fails[1].Data, schemafail.Data{"got": "x", "want": "date"}) {
+	if !reflect.DeepEqual(fails[1].Data, schemafail.Data{"format": "date"}) {
 		t.Errorf("format data %v", fails[1].Data)
 	}
 	// The control: rendering the tree as the library does reads the
-	// text, which panics.
+	// error's text, which panics.
 	func() {
 		defer func() {
 			if recover() == nil {
@@ -85,6 +84,11 @@ func TestAdapterReadsNoText(t *testing.T) {
 		}()
 		_ = ve.Error()
 	}()
+	unknown := &jsonschema.ValidationError{SchemaURL: rootURL, ErrorKind: &kind.Schema{Location: rootURL},
+		Causes: []*jsonschema.ValidationError{{SchemaURL: rootURL, ErrorKind: &loud{Err: loudErr{}}}}}
+	if _, err := adaptQuietly(t, c, unknown); err == nil {
+		t.Error("a kind the adapter does not know was adapted")
+	}
 }
 
 // adaptQuietly adapts ve, reporting a panic, which a loud kind or error
@@ -216,34 +220,95 @@ func TestAdapterRepeatable(t *testing.T) {
 	}
 }
 
-// TestAdapterData carries each kind's structured fields, and numbers as
-// their exact decimal text.
+// TestAdapterData holds the adapter to schemafail's Data contract
+// (schemafail/data.go) on the library's own failures, kind by kind, and to
+// the shapes the contract asks for: one false failure per member refused,
+// a then or else node over a conditional's failures, and a oneOf with two
+// branches matching that has no children.
 func TestAdapterData(t *testing.T) {
 	s := mustCompile(t, map[string]string{"inputs/s.json": `{"properties": {
-		"a": {"type": ["string", "null"]}, "b": {"minimum": 0.1}, "c": {"multipleOf": 0.25},
-		"d": {"required": ["x"]}, "e": {"maxLength": 2}}}`}, "inputs/s.json")
-	fails, err := s.Validate(mustValue(t, `{"a": 1, "b": 0.05, "c": 1e-1, "d": {}, "e": "abc"}`))
+		"type": {"type": ["string", "null"]},
+		"enum": {"enum": [{"b": 1, "a": [true, null]}, "x", 1.50]},
+		"const": {"const": {"z": "q", "a": 2}},
+		"required": {"required": ["y", "x"]},
+		"dependentRequired": {"dependentRequired": {"a": ["c", "b"]}},
+		"minProperties": {"minProperties": 2},
+		"maxItems": {"maxItems": 1},
+		"minContains": {"contains": {"type": "string"}, "minContains": 2},
+		"maxLength": {"maxLength": 2},
+		"pattern": {"pattern": "^a"},
+		"format": {"format": "date"},
+		"uniqueItems": {"uniqueItems": true},
+		"minimum": {"minimum": 0.1},
+		"exclusiveMaximum": {"exclusiveMaximum": 1e2},
+		"multipleOf": {"multipleOf": 0.25},
+		"anyOf": {"anyOf": [{"type": "string"}, {"type": "boolean"}, false]},
+		"oneOf": {"oneOf": [{}, true, {"type": "number"}]},
+		"not": {"not": {"type": "number"}},
+		"propertyNames": {"propertyNames": {"maxLength": 1}},
+		"additionalProperties": {"properties": {"k": {}}, "additionalProperties": false},
+		"items": {"prefixItems": [{}, {}], "items": false},
+		"conditional": {"if": {"type": "object"}, "then": {"required": ["t"]}, "else": {"maxLength": 0}}
+	}}`}, "inputs/s.json")
+	fails, err := s.Validate(mustValue(t, `{
+		"type": 1, "enum": "y", "const": 0, "required": {}, "dependentRequired": {"a": 1},
+		"minProperties": {}, "maxItems": [1, 2], "minContains": ["a", 1], "maxLength": "abc",
+		"pattern": "b", "format": "nope", "uniqueItems": [1, 2, 1], "minimum": 0.05,
+		"exclusiveMaximum": 100, "multipleOf": 1e-1, "anyOf": 1, "oneOf": 5, "not": 3,
+		"propertyNames": {"ab": 1}, "additionalProperties": {"k": 1, "zz": 2, "aa": 3},
+		"items": [1, 2, 3, 4], "conditional": {}
+	}`))
 	if err != nil {
 		t.Fatal(err)
 	}
-	got := map[string]schemafail.Data{}
+	var got []string
 	for _, f := range fails {
-		got[f.Keyword] = f.Data
+		f.Walk(func(path []*schemafail.Failure, n *schemafail.Failure) bool {
+			got = append(got, fmt.Sprintf("%s%s %s %v", strings.Repeat("  ", len(path)), n.KeywordLocation, n.Instance(), n.Data))
+			return true
+		})
 	}
-	want := map[string]schemafail.Data{
-		"type":       {"got": "number", "want": []string{"null", "string"}},
-		"minimum":    {"got": schemafail.Number("0.05"), "want": schemafail.Number("0.1")},
-		"multipleOf": {"got": schemafail.Number("0.1"), "want": schemafail.Number("0.25")},
-		"required":   {"missing": []string{"x"}},
-		"maxLength":  {"got": 3, "want": 2},
+	want := []string{
+		"/properties/additionalProperties/additionalProperties /additionalProperties/aa map[]",
+		"/properties/additionalProperties/additionalProperties /additionalProperties/zz map[]",
+		"/properties/anyOf/anyOf /anyOf map[branch_count:3]",
+		"  /properties/anyOf/anyOf/0/type /anyOf map[got:number want:[string]]",
+		"  /properties/anyOf/anyOf/1/type /anyOf map[got:number want:[boolean]]",
+		"  /properties/anyOf/anyOf/2 /anyOf map[]",
+		"/properties/conditional/then /conditional map[]",
+		"  /properties/conditional/then/required /conditional map[missing:[t]]",
+		"/properties/const/const /const map[expected:{\"a\":2,\"z\":\"q\"}]",
+		"/properties/dependentRequired/dependentRequired /dependentRequired map[because:a missing:[b c]]",
+		"/properties/enum/enum /enum map[allowed:[{\"a\":[true,null],\"b\":1} \"x\" 1.5] got:y]",
+		"/properties/exclusiveMaximum/exclusiveMaximum /exclusiveMaximum map[limit:100 value:100]",
+		"/properties/format/format /format map[format:date]",
+		"/properties/items/items /items/2 map[prefix_count:2]",
+		"/properties/items/items /items/3 map[prefix_count:2]",
+		"/properties/maxItems/maxItems /maxItems map[count:2 limit:1]",
+		"/properties/maxLength/maxLength /maxLength map[length:3 limit:2]",
+		"/properties/minContains/minContains /minContains map[count:1 limit:2]",
+		"/properties/minProperties/minProperties /minProperties map[count:0 limit:2]",
+		"/properties/minimum/minimum /minimum map[limit:0.1 value:0.05]",
+		"/properties/multipleOf/multipleOf /multipleOf map[divisor:0.25 value:0.1]",
+		"/properties/not/not /not map[]",
+		"/properties/oneOf/oneOf /oneOf map[branch_count:3 matched:[0 1]]",
+		"/properties/pattern/pattern /pattern map[pattern:^a]",
+		"/properties/propertyNames/propertyNames /propertyNames map[property:ab]",
+		"/properties/required/required /required map[missing:[x y]]",
+		"/properties/type/type /type map[got:number want:[null string]]",
+		"/properties/uniqueItems/uniqueItems /uniqueItems map[duplicates:[0 2]]",
 	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %v\nwant %v", got, want)
+	if !slices.Equal(got, want) {
+		t.Errorf("got\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
 	}
 	for i := range fails {
 		if err := fails[i].Check(); err != nil {
 			t.Error(err)
 		}
+	}
+	// schemafail.Map reads every node as its contract says.
+	if _, err := schemafail.Map(target(s.c), fails...); err != nil {
+		t.Errorf("schemafail.Map refuses the adapter's tree: %v", err)
 	}
 }
 

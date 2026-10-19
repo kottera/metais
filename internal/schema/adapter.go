@@ -9,49 +9,31 @@ import (
 	"fmt"
 	"math/big"
 	"net/url"
-	"reflect"
 	"slices"
+	"strconv"
 	"strings"
-	"unicode"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 
+	"github.com/kottera/metais/internal/jsonx"
+	"github.com/kottera/metais/internal/liquid/value"
 	"github.com/kottera/metais/internal/schemafail"
 )
 
 // The adapter turns the library's *jsonschema.ValidationError tree into
-// ADR-006's schemafail tree (ADR-010 D5 item 5) from its structure alone:
-// the SchemaURL, the InstanceLocation, the ErrorKind's type, KeywordPath
-// and exported fields, and the Causes. It never reads the library's
-// message text, so a library update cannot change a finding's wording:
-// it never calls Error, LocalizedString or any other method that renders
-// text, and it reads no field of type error. And it never relies on the
-// library's order, which follows map iteration: every list it builds is
-// sorted by the failure's own content.
-//
-// reflect is used here, to read a kind's fields, and nowhere else in the
-// module (ADR-010 D11 item 9).
-
-// unnamed are the kinds whose KeywordPath is empty, and the keyword each
-// is a failure of.
-var unnamed = map[reflect.Type]string{
-	reflect.TypeFor[*kind.Not]():         "not",
-	reflect.TypeFor[*kind.FalseSchema](): "false",
-	reflect.TypeFor[*kind.RefCycle]():    "$ref",
-}
-
-// transparent are the kinds that stand for a schema, not a keyword: the
-// root of a validation, and a subschema that failed in several ways.
-// Their causes take their place.
-var transparent = map[reflect.Type]bool{
-	reflect.TypeFor[*kind.Schema](): true,
-	reflect.TypeFor[*kind.Group]():  true,
-}
+// ADR-006's schemafail tree (ADR-010 D5 item 5), meeting the Data contract
+// schemafail.Map reads, from the tree's structure alone: the SchemaURL,
+// the InstanceLocation, the ErrorKind's type and typed fields, and the
+// Causes. It never reads the library's message text, so a library update
+// cannot change a finding's wording: it calls no method that renders text
+// and reads no field of type error. And it never relies on the library's
+// order, which follows map iteration: every list it builds is sorted by
+// the failure's own content, and so is every list of names a kind holds.
 
 // adapter carries what one conversion needs: the compiler, to place a
-// schema URL in the package, and whether the schema is a package file at
-// all (a meta-schema is not).
+// schema URL in the package and read a schema file as authored, and
+// whether the schema is a package file at all (a meta-schema is not).
 type adapter struct {
 	c    *Compiler
 	meta bool
@@ -59,91 +41,273 @@ type adapter struct {
 
 // adapt converts the error of a validation against a package schema.
 func (c *Compiler) adapt(ve *jsonschema.ValidationError) ([]schemafail.Failure, error) {
-	return adapter{c: c}.convert(ve, "", ve.SchemaURL)
+	return adapter{c: c}.convert(ve, "", ve.SchemaURL, nil)
 }
 
 // adaptMeta converts the error of a schema file's validation against the
-// 2020-12 meta-schema, whose keywords are no package entry's: the
-// failures carry the meta-schema's keywords and the instance pointers into
-// the schema file.
+// 2020-12 meta-schema, whose keywords are no package entry's: the failures
+// carry the meta-schema's keywords and the instance pointers into the
+// schema file.
 func (c *Compiler) adaptMeta(ve *jsonschema.ValidationError) ([]schemafail.Failure, error) {
-	return adapter{c: c, meta: true}.convert(ve, "", ve.SchemaURL)
+	return adapter{c: c, meta: true}.convert(ve, "", ve.SchemaURL, nil)
 }
 
-// convert returns the failures ve stands for: itself, or, for a
-// transparent kind, its causes. kwLoc is the evaluation path to the
-// schema at parentURL, which ve's SchemaURL extends.
-func (a adapter) convert(ve *jsonschema.ValidationError, kwLoc, parentURL string) ([]schemafail.Failure, error) {
+// convert returns the failures ve stands for: itself, its causes for a
+// kind that stands for a schema rather than a keyword, or one failure per
+// member for additionalProperties: false. kwLoc is the evaluation path to
+// the schema at parentURL, which ve's SchemaURL extends.
+func (a adapter) convert(ve *jsonschema.ValidationError, kwLoc, parentURL string, inst []string) ([]schemafail.Failure, error) {
 	if ve == nil || ve.ErrorKind == nil {
 		return nil, fmt.Errorf("schema: the library gave a failure with no kind")
 	}
-	t := reflect.TypeOf(ve.ErrorKind)
+	parentLoc := kwLoc
 	if strings.HasPrefix(ve.SchemaURL, parentURL) {
 		kwLoc += unescapePointer(strings.TrimPrefix(ve.SchemaURL[len(parentURL):], "#"))
 	}
-	if transparent[t] {
-		return a.children(ve.Causes, kwLoc, ve.SchemaURL)
+	switch ve.ErrorKind.(type) {
+	case *kind.Schema, *kind.Group:
+		// The root of a validation, or a subschema that failed in several
+		// ways: its causes take its place.
+		return a.children(ve.Causes, kwLoc, ve.SchemaURL, ve.InstanceLocation)
 	}
-	f := schemafail.Failure{InstancePointer: slices.Clone(ve.InstanceLocation)}
+	f := schemafail.Failure{InstancePointer: slices.Clone(ve.InstanceLocation), KeywordLocation: kwLoc}
 	if f.InstancePointer == nil {
 		f.InstancePointer = []string{}
 	}
-	if !a.meta {
-		entry, ptr, ok := a.c.locate(ve.SchemaURL)
-		if !ok {
-			base, frag, _ := strings.Cut(ve.SchemaURL, "#")
-			if !metaSchemas[base] {
-				return nil, fmt.Errorf("schema: a failure is in no schema file of the package")
-			}
-			// A keyword of a 2020-12 meta-schema a package schema refers
-			// to: no entry holds it.
-			ptr = unescapePointer(frag)
-		}
-		f.Entry, f.SchemaPointer = entry, ptr
+	if err := a.place(&f, ve.SchemaURL); err != nil {
+		return nil, err
 	}
-	childURL := ve.SchemaURL
-	if ref, ok := ve.ErrorKind.(*kind.Reference); ok {
-		f.Keyword = ref.Keyword
-		f.SchemaPointer += "/" + escapeToken(ref.Keyword)
-		kwLoc += "/" + escapeToken(ref.Keyword)
-		f.KeywordLocation = kwLoc
-		childURL = ref.URL
-		kids, err := a.children(ve.Causes, kwLoc, childURL)
+	// keyword makes f the failure of keyword kw of the schema it is in.
+	keyword := func(kw string) {
+		f.Keyword = kw
+		f.SchemaPointer += "/" + escapeToken(kw)
+		f.KeywordLocation += "/" + escapeToken(kw)
+	}
+	childURL, keepChildren := ve.SchemaURL, true
+	switch k := ve.ErrorKind.(type) {
+	case *kind.Reference:
+		keyword(k.Keyword)
+		childURL, kwLoc = k.URL, f.KeywordLocation
+	case *kind.FalseSchema:
+		f.Keyword = schemafail.KeywordFalse
+		if a.isItems(f.SchemaPointer) {
+			f.Data = schemafail.Data{"prefix_count": a.length(f.Entry, strings.TrimSuffix(f.SchemaPointer, "/items")+"/prefixItems")}
+		}
+	case *kind.AdditionalProperties:
+		var out []schemafail.Failure
+		for _, p := range slices.Sorted(slices.Values(k.Properties)) {
+			out = append(out, schemafail.Failure{
+				Keyword: schemafail.KeywordFalse, KeywordLocation: f.KeywordLocation + "/additionalProperties",
+				Entry: f.Entry, SchemaPointer: f.SchemaPointer + "/additionalProperties",
+				InstancePointer: append(slices.Clone(f.InstancePointer), p),
+			})
+		}
+		return out, nil
+	case *kind.PropertyNames:
+		// The library's SchemaURL is the propertyNames subschema itself,
+		// and its InstanceLocation shares a slice later validations write
+		// to: the instance is the one the path from the parent reaches.
+		f.Keyword = "propertyNames"
+		f.Data = schemafail.Data{"property": k.Property}
+		if in, ok := instanceAlong(inst, pointerTokens(strings.TrimPrefix(kwLoc, parentLoc))); ok && strings.HasPrefix(kwLoc, parentLoc) {
+			f.InstancePointer = in
+		}
+		keepChildren = false
+	case *kind.Not:
+		keyword("not")
+		keepChildren = false
+	case *kind.AllOf:
+		keyword("allOf")
+	case *kind.AnyOf:
+		keyword("anyOf")
+		f.Data = schemafail.Data{"branch_count": a.length(f.Entry, f.SchemaPointer)}
+	case *kind.OneOf:
+		keyword("oneOf")
+		f.Data = schemafail.Data{"branch_count": a.length(f.Entry, f.SchemaPointer)}
+		if len(k.Subschemas) > 0 {
+			f.Data["matched"] = slices.Sorted(slices.Values(k.Subschemas))
+			keepChildren = false
+		}
+	case *kind.Contains:
+		keyword("contains")
+		keepChildren = false
+	case *kind.RefCycle:
+		keyword("$ref")
+		keepChildren = false
+	default:
+		kw, data, err := leaf(ve.ErrorKind)
+		if err != nil {
+			return nil, err
+		}
+		keyword(kw)
+		f.Data = data
+		// minContains' and maxContains' causes are the items contains
+		// refused, a yes-or-no context (ADR-003 D3 item 7).
+		keepChildren = false
+	}
+	if keepChildren && len(ve.Causes) > 0 {
+		kids, err := a.children(ve.Causes, kwLoc, childURL, ve.InstanceLocation)
 		if err != nil {
 			return nil, err
 		}
 		f.Children = kids
-		return []schemafail.Failure{f}, nil
 	}
-	path := ve.ErrorKind.KeywordPath()
-	if len(path) == 0 {
-		name, ok := unnamed[t]
-		if !ok {
-			return nil, fmt.Errorf("schema: the library gave a failure of kind %v with no keyword", t)
-		}
-		path = []string{name}
-		if name == "false" {
-			// A false schema is the schema itself, not a keyword in it.
-			path = nil
-		}
-		f.Keyword = name
-	} else {
-		f.Keyword = path[0]
+	if n, ok := f.Data["branch_count"]; ok && n == 0 {
+		// An anyOf or oneOf of no package file, a meta-schema's: with no
+		// branch matching, every branch failed and is a child, so the
+		// highest branch is the last.
+		f.Data["branch_count"] = branches(f)
 	}
-	// The keyword's own path ends its location; its causes' schema URLs
-	// extend the schema's, which already name the keyword.
-	f.KeywordLocation = kwLoc
-	for _, p := range path {
-		f.SchemaPointer += "/" + escapeToken(p)
-		f.KeywordLocation += "/" + escapeToken(p)
-	}
-	f.Data = fields(ve.ErrorKind)
-	kids, err := a.children(ve.Causes, kwLoc, childURL)
-	if err != nil {
-		return nil, err
-	}
-	f.Children = kids
 	return []schemafail.Failure{f}, nil
+}
+
+// leaf returns the keyword and Data of a kind that has no subschema.
+func leaf(k jsonschema.ErrorKind) (string, schemafail.Data, error) {
+	count := func(limit, n int) schemafail.Data { return schemafail.Data{"limit": limit, "count": n} }
+	switch k := k.(type) {
+	case *kind.Type:
+		return "type", schemafail.Data{"want": slices.Sorted(slices.Values(k.Want)), "got": k.Got}, nil
+	case *kind.Enum:
+		allowed := make([]string, len(k.Want))
+		for i, w := range k.Want {
+			allowed[i] = canonical(w)
+		}
+		d := schemafail.Data{"allowed": allowed}
+		if s, ok := k.Got.(string); ok {
+			d["got"] = s
+		}
+		return "enum", d, nil
+	case *kind.Const:
+		return "const", schemafail.Data{"expected": canonical(k.Want)}, nil
+	case *kind.Required:
+		return "required", schemafail.Data{"missing": slices.Sorted(slices.Values(k.Missing))}, nil
+	case *kind.DependentRequired:
+		return "dependentRequired", schemafail.Data{"missing": slices.Sorted(slices.Values(k.Missing)), "because": k.Prop}, nil
+	case *kind.MinProperties:
+		return "minProperties", count(k.Want, k.Got), nil
+	case *kind.MaxProperties:
+		return "maxProperties", count(k.Want, k.Got), nil
+	case *kind.MinItems:
+		return "minItems", count(k.Want, k.Got), nil
+	case *kind.MaxItems:
+		return "maxItems", count(k.Want, k.Got), nil
+	case *kind.MinContains:
+		return "minContains", count(k.Want, len(k.Got)), nil
+	case *kind.MaxContains:
+		return "maxContains", count(k.Want, len(k.Got)), nil
+	case *kind.MinLength:
+		return "minLength", schemafail.Data{"limit": k.Want, "length": k.Got}, nil
+	case *kind.MaxLength:
+		return "maxLength", schemafail.Data{"limit": k.Want, "length": k.Got}, nil
+	case *kind.Pattern:
+		return "pattern", schemafail.Data{"pattern": k.Want}, nil
+	case *kind.Format:
+		return "format", schemafail.Data{"format": k.Want}, nil
+	case *kind.UniqueItems:
+		d := []int{k.Duplicates[0], k.Duplicates[1]}
+		slices.Sort(d)
+		return "uniqueItems", schemafail.Data{"duplicates": d}, nil
+	case *kind.Minimum:
+		return bound("minimum", "limit", k.Want, k.Got)
+	case *kind.Maximum:
+		return bound("maximum", "limit", k.Want, k.Got)
+	case *kind.ExclusiveMinimum:
+		return bound("exclusiveMinimum", "limit", k.Want, k.Got)
+	case *kind.ExclusiveMaximum:
+		return bound("exclusiveMaximum", "limit", k.Want, k.Got)
+	case *kind.MultipleOf:
+		return bound("multipleOf", "divisor", k.Want, k.Got)
+	}
+	// The content keywords are never asserted (ADR-003 D3 item 4), and the
+	// rest are earlier drafts'.
+	return "", nil, fmt.Errorf("schema: the library gave a failure of kind %T, which the adapter does not know", k)
+}
+
+// bound is the Data of a numeric keyword: the schema's number under name,
+// and the instance's under value.
+func bound(kw, name string, limit, got *big.Rat) (string, schemafail.Data, error) {
+	l, ok1 := decimal(limit)
+	v, ok2 := decimal(got)
+	if !ok1 || !ok2 {
+		return "", nil, fmt.Errorf("schema: a %s failure holds a number with no decimal form", kw)
+	}
+	return kw, schemafail.Data{name: l, "value": v}, nil
+}
+
+// canonical is a value as the library holds it, in RFC 8785's text.
+func canonical(v any) string {
+	return string(jsonx.Canonical(fromLibrary(v)))
+}
+
+// fromLibrary converts a value the library holds, which toLibrary or the
+// library's own reading of a schema made, back to the data model.
+func fromLibrary(v any) value.Value {
+	switch v := v.(type) {
+	case nil:
+		return value.Null{}
+	case bool:
+		return value.Bool(v)
+	case json.Number:
+		if n, err := value.ParseNumber(string(v)); err == nil {
+			return n
+		}
+	case string:
+		if s, err := value.NewString(v); err == nil {
+			return s
+		}
+	case []any:
+		elems := make([]value.Value, len(v))
+		for i, e := range v {
+			elems[i] = fromLibrary(e)
+		}
+		if a, err := value.NewArray(elems...); err == nil {
+			return a
+		}
+	case map[string]any:
+		members := make([]value.Member, 0, len(v))
+		for k, e := range v {
+			members = append(members, value.Member{Name: k, Value: fromLibrary(e)})
+		}
+		if o, err := value.NewObject(members...); err == nil {
+			return o
+		}
+	}
+	panic(fmt.Sprintf("schema: the library holds a %T that is no value of the data model", v))
+}
+
+// place sets f's entry and schema pointer from the library's URL for the
+// schema f is in.
+func (a adapter) place(f *schemafail.Failure, schemaURL string) error {
+	if a.meta {
+		return nil
+	}
+	entry, ptr, ok := a.c.locate(schemaURL)
+	if !ok {
+		base, frag, _ := strings.Cut(schemaURL, "#")
+		if !metaSchemas[base] {
+			return fmt.Errorf("schema: a failure is in no schema file of the package")
+		}
+		// A keyword of a 2020-12 meta-schema a package schema refers to:
+		// no entry holds it.
+		ptr = unescapePointer(frag)
+	}
+	f.Entry, f.SchemaPointer = entry, ptr
+	return nil
+}
+
+// length returns the length of the array at ptr in entry, or 0.
+func (a adapter) length(entry, ptr string) int {
+	if arr, ok := a.c.lookup(entry, ptr).(value.Array); ok {
+		return arr.Len()
+	}
+	return 0
+}
+
+// isItems reports whether the schema at ptr is the value of an items
+// keyword, rather than, say, a property named items.
+func (a adapter) isItems(ptr string) bool {
+	toks := pointerTokens(ptr)
+	return len(toks) > 0 && toks[len(toks)-1] == "items" && schemaPath(toks[:len(toks)-1])
 }
 
 // unescapePointer decodes the percent-encoding the library writes each
@@ -158,18 +322,194 @@ func unescapePointer(p string) string {
 	return strings.Join(toks, "/")
 }
 
-// children converts causes and sorts them.
-func (a adapter) children(causes []*jsonschema.ValidationError, kwLoc, parentURL string) ([]schemafail.Failure, error) {
+// pointerTokens decodes an RFC 6901 pointer.
+func pointerTokens(p string) []string {
+	if p == "" {
+		return nil
+	}
+	toks := strings.Split(strings.TrimPrefix(p, "/"), "/")
+	for i, t := range toks {
+		toks[i] = strings.NewReplacer("~1", "/", "~0", "~").Replace(t)
+	}
+	return toks
+}
+
+// schemaPath reports whether toks, read from a schema, end at a schema.
+func schemaPath(toks []string) bool {
+	return walkShape(toks, func(string) bool { return false }) == len(toks)
+}
+
+// conditional returns the index of the first then or else keyword along
+// toks, read from a schema, or -1 when the path reaches none while it is
+// among schemas.
+func conditional(toks []string) int {
+	i := walkShape(toks, func(t string) bool { return t == "then" || t == "else" })
+	if i < len(toks) && (toks[i] == "then" || toks[i] == "else") {
+		return i
+	}
+	return -1
+}
+
+// walkShape reads toks from a schema, keyword by keyword, each entered by
+// its shape in the keywords table, and returns the index of the keyword
+// at which stop held or the path left the schemas for a keyword's value,
+// or len(toks) when it ends at a schema.
+func walkShape(toks []string, stop func(string) bool) int {
+	inSchema := true
+	for i, t := range toks {
+		if !inSchema {
+			// An array index or a member name, which names a subschema.
+			inSchema = true
+			continue
+		}
+		if stop(t) {
+			return i
+		}
+		switch keywords[t] {
+		case shapeSchema:
+		case shapeSchemaArray, shapeSchemaMap:
+			inSchema = false
+		default:
+			return i
+		}
+	}
+	if !inSchema {
+		return len(toks) - 1
+	}
+	return len(toks)
+}
+
+// branches returns one more than the highest branch index among f's
+// children and their matched branches.
+func branches(f schemafail.Failure) int {
+	n := 0
+	if m, ok := f.Data["matched"].([]int); ok {
+		for _, i := range m {
+			n = max(n, i+1)
+		}
+	}
+	for _, c := range f.Children {
+		toks := pointerTokens(strings.TrimPrefix(c.KeywordLocation, f.KeywordLocation))
+		if len(toks) > 0 {
+			if i, err := strconv.Atoi(toks[0]); err == nil {
+				n = max(n, i+1)
+			}
+		}
+	}
+	return n
+}
+
+// instanceAlong returns inst extended by the instance tokens the schema
+// path toks enters, read from a schema: a properties member's name. It
+// returns false when the path enters a member or item it does not name.
+func instanceAlong(inst, toks []string) ([]string, bool) {
+	out := append([]string{}, inst...)
+	for i := 0; i < len(toks); i++ {
+		switch t := toks[i]; {
+		case t == "properties":
+			if i+1 < len(toks) {
+				out = append(out, toks[i+1])
+				i++
+			}
+		case consumes[t]:
+			return nil, false
+		case keywords[t] == shapeSchemaArray || keywords[t] == shapeSchemaMap:
+			i++
+		case keywords[t] == shapeValue:
+			return out, true
+		}
+	}
+	return out, true
+}
+
+// entered counts the instance tokens the schema path toks enters.
+func entered(toks []string) int {
+	n := 0
+	for i := 0; i < len(toks); i++ {
+		switch t := toks[i]; {
+		case t == "properties" || consumes[t]:
+			n++
+			if keywords[t] != shapeSchema {
+				i++
+			}
+		case keywords[t] == shapeSchemaArray || keywords[t] == shapeSchemaMap:
+			i++
+		case keywords[t] == shapeValue:
+			return n
+		}
+	}
+	return n
+}
+
+// consumes are the keywords, besides properties, whose subschemas apply to
+// a member or an item of the instance.
+var consumes = map[string]bool{
+	"patternProperties": true, "additionalProperties": true, "unevaluatedProperties": true,
+	"prefixItems": true, "items": true, "unevaluatedItems": true, "contains": true,
+}
+
+// children converts causes, sets each conditional's failures beneath a
+// then or else node, which the library does not make and schemafail.Map
+// needs, and sorts them. kwLoc is the evaluation path to the schema the
+// causes are in, at the instance location inst.
+func (a adapter) children(causes []*jsonschema.ValidationError, kwLoc, parentURL string, inst []string) ([]schemafail.Failure, error) {
 	var out []schemafail.Failure
 	for _, c := range causes {
-		fs, err := a.convert(c, kwLoc, parentURL)
+		fs, err := a.convert(c, kwLoc, parentURL, inst)
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, fs...)
 	}
+	return nest(out, kwLoc, inst), nil
+}
+
+// nest puts each failure of fs whose evaluation path from loc passes a
+// then or else beneath a node for it, and sorts every level.
+func nest(fs []schemafail.Failure, loc string, inst []string) []schemafail.Failure {
+	var out []schemafail.Failure
+	nodes := map[string]int{}
+	for _, f := range fs {
+		toks := pointerTokens(strings.TrimPrefix(f.KeywordLocation, loc))
+		j := conditional(toks)
+		// A failure of the then or else schema itself, a false one, is the
+		// node's child too.
+		if !strings.HasPrefix(f.KeywordLocation, loc) || j < 0 || (j == len(toks)-1 && f.Keyword == toks[j]) {
+			out = append(out, f)
+			continue
+		}
+		var rel, rest strings.Builder
+		for _, t := range toks[:j+1] {
+			rel.WriteString("/" + escapeToken(t))
+		}
+		for _, t := range toks[j+1:] {
+			rest.WriteString("/" + escapeToken(t))
+		}
+		nodeLoc := loc + rel.String()
+		i, ok := nodes[nodeLoc]
+		if !ok {
+			// The conditional validates the instance its schema does: the
+			// one the path reaches from loc, or else the child's, less what
+			// the child's own path entered.
+			at, known := instanceAlong(inst, toks[:j])
+			if n := len(f.InstancePointer) - entered(toks[j+1:]); !known && n >= 0 {
+				at = slices.Clone(f.InstancePointer[:n])
+			}
+			i = len(out)
+			nodes[nodeLoc] = i
+			out = append(out, schemafail.Failure{
+				Keyword: toks[j], KeywordLocation: nodeLoc, Entry: f.Entry,
+				SchemaPointer:   strings.TrimSuffix(f.SchemaPointer, rest.String()),
+				InstancePointer: at,
+			})
+		}
+		out[i].Children = append(out[i].Children, f)
+	}
+	for _, i := range nodes {
+		out[i].Children = nest(out[i].Children, out[i].KeywordLocation, out[i].InstancePointer)
+	}
 	slices.SortFunc(out, compareFailures)
-	return out, nil
+	return out
 }
 
 // compareFailures orders failures by their own content: where they are
@@ -211,142 +551,13 @@ func dataKey(d schemafail.Data) string {
 	return b.String()
 }
 
-// fields reads a kind's exported fields into Data, each under its name in
-// snake case: strings, booleans, integers, exact numbers and slices of
-// them. A field of another type is left out; none of them is text the
-// library wrote, and an error's text is never read.
-func fields(k jsonschema.ErrorKind) schemafail.Data {
-	v := reflect.ValueOf(k)
-	for v.Kind() == reflect.Pointer || v.Kind() == reflect.Interface {
-		if v.IsNil() {
-			return nil
-		}
-		v = v.Elem()
-	}
-	if v.Kind() != reflect.Struct {
-		return nil
-	}
-	d := schemafail.Data{}
-	for i := 0; i < v.NumField(); i++ {
-		sf := v.Type().Field(i)
-		if !sf.IsExported() {
-			continue
-		}
-		if x, ok := datum(v.Field(i)); ok {
-			d[snake(sf.Name)] = x
-		}
-	}
-	if len(d) == 0 {
-		return nil
-	}
-	return d
-}
-
-var (
-	errorType = reflect.TypeFor[error]()
-	ratType   = reflect.TypeFor[*big.Rat]()
-)
-
-// datum converts one field's value to a type schemafail.Data carries.
-func datum(v reflect.Value) (any, bool) {
-	if v.Type() == errorType || v.Type().Implements(errorType) && v.Kind() != reflect.Struct {
-		return nil, false
-	}
-	if v.Type() == ratType {
-		if v.IsNil() {
-			return nil, false
-		}
-		n, ok := decimal(v.Interface().(*big.Rat))
-		return n, ok
-	}
-	switch v.Kind() {
-	case reflect.String:
-		return v.String(), true
-	case reflect.Bool:
-		return v.Bool(), true
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return int(v.Int()), true
-	case reflect.Interface:
-		if v.IsNil() {
-			return nil, false
-		}
-		return scalar(v.Elem().Interface())
-	case reflect.Slice, reflect.Array:
-		if v.Type().Elem().Kind() == reflect.Uint8 {
-			// Bytes are content the library decoded, not a field.
-			return nil, false
-		}
-		return list(v)
-	}
-	return nil, false
-}
-
-// scalar converts a value the library holds as any: a JSON scalar of the
-// instance or the schema.
-func scalar(x any) (any, bool) {
-	switch x := x.(type) {
-	case string:
-		return x, true
-	case bool:
-		return x, true
-	case json.Number:
-		// The literal text toLibrary gave the library.
-		return schemafail.Number(x), true
-	}
-	return nil, false
-}
-
-// list converts a slice or array whose elements all convert to one type.
-func list(v reflect.Value) (any, bool) {
-	var strs []string
-	var bools []bool
-	var ints []int
-	var nums []schemafail.Number
-	for i := 0; i < v.Len(); i++ {
-		x, ok := datum(v.Index(i))
-		if !ok {
-			return nil, false
-		}
-		switch x := x.(type) {
-		case string:
-			strs = append(strs, x)
-		case bool:
-			bools = append(bools, x)
-		case int:
-			ints = append(ints, x)
-		case schemafail.Number:
-			nums = append(nums, x)
-		default:
-			return nil, false
-		}
-	}
-	switch n := v.Len(); {
-	case len(strs) == n:
-		// Names in the library's order, which may follow a map's: sorted,
-		// they owe it nothing.
-		slices.Sort(strs)
-		return nonNil(strs), true
-	case len(bools) == n:
-		return bools, true
-	case len(ints) == n:
-		return ints, true
-	case len(nums) == n:
-		return nums, true
-	}
-	return nil, false
-}
-
-func nonNil(s []string) []string {
-	if s == nil {
-		return []string{}
-	}
-	return s
-}
-
 // decimal writes r exactly as a JSON number. Every number the library
 // builds a big.Rat from is a decimal, whose denominator has no prime
-// factor but 2 and 5; any other has no exact decimal form and is left out.
+// factor but 2 and 5; any other has no exact decimal form.
 func decimal(r *big.Rat) (schemafail.Number, bool) {
+	if r == nil {
+		return "", false
+	}
 	den := new(big.Int).Set(r.Denom())
 	places := 0
 	for _, p := range []int64{2, 5} {
@@ -371,20 +582,4 @@ func decimal(r *big.Rat) (schemafail.Number, bool) {
 		s = "0"
 	}
 	return schemafail.Number(s), true
-}
-
-// snake converts a Go field name to snake case: Got is got, KeywordLocation1
-// is keyword_location1.
-func snake(name string) string {
-	var b strings.Builder
-	for i, r := range name {
-		if unicode.IsUpper(r) {
-			if i > 0 && !unicode.IsUpper(rune(name[i-1])) {
-				b.WriteByte('_')
-			}
-			r = unicode.ToLower(r)
-		}
-		b.WriteRune(r)
-	}
-	return b.String()
 }

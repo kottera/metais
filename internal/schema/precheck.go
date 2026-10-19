@@ -102,7 +102,8 @@ type walker struct {
 	findings  []finding.Finding
 	resources []resource
 	refs      []reference
-	deep      bool // schema-depth has been reported
+	anchors   []resource // each $anchor and $dynamicAnchor, by its URI
+	deep      bool       // schema-depth has been reported
 }
 
 func escapeToken(t string) string {
@@ -169,6 +170,10 @@ func (w *walker) walk(v value.Value, ptr string, base *url.URL, depth int) {
 				for key := range po.All() {
 					w.pattern(key, at+"/"+escapeToken(key))
 				}
+			}
+		case "$anchor", "$dynamicAnchor":
+			if isString {
+				w.anchors = append(w.anchors, resource{uri: base.String() + "#" + s.Text(), ptr: ptr})
 			}
 		case "$ref", "$dynamicRef":
 			if isString {

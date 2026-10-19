@@ -15,6 +15,7 @@ import (
 	"testing"
 
 	"github.com/kottera/metais/internal/limits"
+	"github.com/kottera/metais/internal/schemafail"
 	"github.com/kottera/metais/internal/testenv"
 )
 
@@ -105,7 +106,8 @@ func find(ex []*exclusion, file, kase, test string) *exclusion {
 // TestJSONSchemaTestSuite runs the suite over the configured compiler:
 // each case's schema is the one schema file of a package, compiled by
 // NewCompiler, and each test's data is validated against it. A test
-// passes when METAIS agrees with the suite. Where an exclusion names the
+// passes when METAIS agrees with the suite, and every failure tree it
+// gives is one schemafail.Map maps. Where an exclusion names the
 // case, METAIS must give exactly the exclusion's outcome instead, so an
 // exclusion records what METAIS does and is not a skip. Every exclusion
 // must be used.
@@ -143,6 +145,10 @@ func TestJSONSchemaTestSuite(t *testing.T) {
 						if err := fails[i].Check(); err != nil {
 							t.Errorf("%s: the adapter built a malformed tree: %v", name, err)
 						}
+					}
+					// Every tree is one schemafail.Map reads (ADR-006 D6).
+					if _, err := schemafail.Map(target(comp), fails...); len(fails) > 0 && err != nil {
+						t.Errorf("%s: schemafail.Map refuses the adapter's tree: %v", name, err)
 					}
 				}
 				want := "invalid"
