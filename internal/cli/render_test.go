@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/kottera/metais/internal/author"
+	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/testenv"
 )
@@ -177,5 +178,38 @@ func TestRenderLeavesWhatIsNotItsOwn(t *testing.T) {
 	}
 	if b, err := os.ReadFile(filepath.Join(staging, "theirs.txt")); err != nil || string(b) != "not the render's\n" {
 		t.Errorf("the staging directory's file is %q, %v", b, err)
+	}
+}
+
+// A render whose write fails part way, after the staging directory exists
+// and a file is written beneath it, aborts: neither the staging directory,
+// nor the output directory, nor an ancestor the render created is left
+// (ADR-005 D14 item 1.5). The second planned path runs through the first,
+// a file, which no plan that passed the path checks holds, so the create
+// fails beneath the staging directory.
+func TestRenderCommitAbortsAFailedWrite(t *testing.T) {
+	testenv.Home(t)
+	parent := testenv.Dir(t)
+	plan := []*planned{
+		{path: "a.txt", bytes: []byte("A")},
+		{path: "a.txt/b.txt", bytes: []byte("B")},
+	}
+	f, ok := commit(filepath.Join(parent, "x", "out"), plan, &session{})
+	if ok {
+		t.Fatal("the commit succeeded")
+	}
+	if f.Code() != finding.CodeDestinationWriteFailed {
+		t.Errorf("finding %s, want %s", f.Code(), finding.CodeDestinationWriteFailed)
+	}
+	entries, err := os.ReadDir(parent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var left []string
+	for _, e := range entries {
+		left = append(left, e.Name())
+	}
+	if len(left) != 0 {
+		t.Errorf("the failed render left %q", left)
 	}
 }
