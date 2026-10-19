@@ -346,7 +346,7 @@ func TestDeclarationsOpeningSet(t *testing.T) {
 		}
 	}
 	consumers := []string{"inspect", "ls", "read", "outline", "grep", "schema", "extract", "validate", "render"}
-	authoring := []string{"check", "test", "sample", "unpack"}
+	authoring := []string{"check", "sample", "test", "unpack"}
 	if got, want := OpeningCommands(), slices.Concat(consumers, authoring); !slices.Equal(got, want) {
 		t.Errorf("OpeningCommands() = %q, want %q", got, want)
 	}
