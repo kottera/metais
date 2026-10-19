@@ -164,6 +164,12 @@ func WriteInPlace(path string, opt WriteOptions) (*Output, error) {
 	return &Output{parent: w, w: w}, nil
 }
 
+// beforeCreateNew, when set, runs in CreateNew after OpenNearest and the
+// parents, before the directory itself is created, with its name relative
+// to the nearest existing ancestor. Only this package's tests set it, to
+// put a target in place in that window.
+var beforeCreateNew func(rest string)
+
 // CreateNew begins a write of the directory at path, the caller's own
 // name for it, which must not exist, in place (ADR-008 D5): its missing
 // parents and then the directory itself are created, the directory
@@ -184,6 +190,9 @@ func CreateNew(path string, opt WriteOptions) (*Output, error) {
 	}
 	dir, _ := split(rest)
 	err = w.MkdirAll(dir)
+	if err == nil && beforeCreateNew != nil {
+		beforeCreateNew(rest)
+	}
 	if err == nil {
 		err = w.Mkdir(rest)
 	}
