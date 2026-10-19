@@ -189,7 +189,10 @@ no_markers() { ! grep -qE '^(<<<<<<<|>>>>>>>)' "$1"; }
 case=control
 echo
 echo "=== $case: no drivers configured"
-if "$skills/merge-setup.sh" --check 2>&1 | sed 's/^/    | /'; then bad "merge-setup.sh --check passes in a clone without the drivers"; else ok "merge-setup.sh --check says the drivers are missing"; fi
+"$skills/merge-setup.sh" --check >"$work/setup.out" 2>&1
+rc=$?
+sed 's/^/    | /' "$work/setup.out"
+if [ "$rc" -eq 0 ]; then bad "merge-setup.sh --check passes in a clone without the drivers"; else ok "merge-setup.sh --check says the drivers are missing"; fi
 fresh
 branch one a043_end
 branch two a044_136
