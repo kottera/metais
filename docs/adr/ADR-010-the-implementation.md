@@ -1051,7 +1051,7 @@ the detector must fail on, and both run in every `go test`.**
    (D15). The tool has no concurrency of its own (D2 item 3), so `-race`
    chiefly guards the test harness.
 
-### D15 — Benchmarks and the gate
+### D15 — Benchmarks and the gate *(A5)*
 
 1. **Benchmarks** (`Benchmark…` with `b.ReportAllocs()`) exist for: Liquid
    parse and render over fixtures in `internal/liquid/testdata/bench/` (a
@@ -1636,6 +1636,207 @@ at the train's close, with A1 and A3.
    `escape`'s semantics and charges. `TestCoreIsADR004Catalog` reads the
    list from D4 item 2 and this item's addition from item 1, and holds
    their union to ADR-004's.
+
+### A5 — The gate has two tiers: a scoped tier for each change, and the full list once per wave
+
+**Status:** Accepted on merge. It records Ed Funnekotter's ruling of
+2026-10-19 (Wave 5b's brief, ruling A1), given by guidance; it is not a
+ruling made by the train and needs no ratification.
+**Amends:** D15 item 3 (the gate), and D14 item 8's "the gate's
+`go test -race ./...`", which is now the wave tier's.
+
+1. **The gate is two tiers.** Every change passes the **scoped tier**
+   before it merges. The **wave tier** is D15 item 3's whole list, run
+   once per wave at the wave's verification on a fresh clone of the merged
+   tree, and before merging any change that touches a shared seam (item 4).
+   `.claude/skills/verification-gate/gate.sh` runs either tier
+   (`gate.sh` for the scoped tier, `gate.sh wave` for the wave tier), and
+   AGENTS.md's Development section says how. Both tiers use the `go.mod`
+   toolchain under `GOTOOLCHAIN=auto` (D1).
+
+2. **The scoped tier** runs, on every run:
+   - `go build ./...`, `go vet ./...` and `gofmt -l .` over the whole
+     module;
+   - `go mod tidy -diff`, the static build
+     (`CGO_ENABLED=0 go build -trimpath ./cmd/metais`) and the six-target
+     cross vet and build (items 5 and 6 say why they are here);
+   - `go test -race -count=1` over every package the change reaches
+     (item 3);
+   - the spec and generated-data tripwires, whether or not the change
+     reaches them: `internal/finding` and `internal/specdata` whole;
+     `internal/conformance`'s well-formedness tests (`TestVectorsWellFormed`
+     and `TestNoSentinelInSuite`, each with its control); the help goldens
+     (`internal/cli`'s `TestHelpGolden`, `TestHelpCoverage` and
+     `TestHelpForm`); `internal/guarantees`' tests of the specification's
+     own text (statements, keywords, proof notes, coverage, citations, the
+     finding catalog, examples, released files, changelog and published
+     schemas, each with its control); and the specdata drift
+     (`go generate ./internal/specdata && git diff --exit-code internal/specdata`).
+     A tripwire is run by its exact test names, and a run that does not
+     report every name fails, so a renamed test cannot drop out of the tier
+     silently. A tripwire whose package the change reaches is run whole
+     with that package instead.
+
+3. **What a change reaches.** `gate-select.sh` beside `gate.sh` computes
+   it with `go list`, by these rules:
+   - **The change** is every path that differs between the base and the
+     working tree: committed, staged, unstaged and untracked-but-not-ignored
+     work, deletions included, renames as a deletion and an addition. The
+     base is the merge base of `HEAD` with `origin/main`, so the change is
+     the branch's own whatever `main` has gained since; `--base` names
+     another.
+   - **A path inside a package's directory** (its Go files, its `testdata/`,
+     its embedded files) touches that package: the one whose directory is
+     the longest prefix of the path.
+   - **A path in no package's directory** (`spec/`, `docs/`, a file at the
+     root) is data, and only tests read it: the binary never reads the
+     repository, and `//go:embed` cannot reach outside a package's
+     directory. It touches every package whose test files name its
+     top-level entry as a path literal (`"spec/…"`, `"../../spec"`,
+     `"NOTICE"`). A change under `spec/` therefore touches, at this writing,
+     `internal/cli`, `conformance`, `finding`, `guarantees`, `liquidspec`,
+     `loader`, `specdata`, `template` and `vectorgen`.
+   - **A generated file** is a path like any other. The specdata tree lies
+     in `internal/specdata`'s directory, and the help goldens in
+     `internal/cli`'s, so a change to one touches its package; `spec/`'s
+     generated files touch `spec/`'s readers. The drift step and the
+     tripwires then check every generated file against its source on every
+     run, whatever the change.
+   - **A package's tests can be blind to an import edge.** A package whose
+     tests run the `go` command (`internal/conformance` and
+     `internal/version` build `./cmd/metais`; `internal/guarantees` builds
+     it and lists the whole module; `internal/pkgtree` lists packages) is
+     touched by every path inside any package's directory, and by `go.mod`
+     and `go.sum`. Go's test cache cannot see the binary or listing such a
+     test builds: it keys on the test binary, which does not link the tool.
+     Measured on `main` at `c3620dd`: after an edit to a file of
+     `internal/cli`, `go test -race ./internal/conformance ./internal/version`
+     reported both `(cached)`. Both tiers therefore run every package they
+     test with `-count=1` and take no verdict from the test cache. A package
+     the change reaches has a new test binary anyway, and item 9's resume is
+     the gate's own reuse, which sees the reach the cache cannot. D15 item 3's single `go test -race ./...` could certify a
+     change to the tool on a conformance verdict about the tool before it.
+   - **A package is tested** when it, or any package in its test binary's
+     closure (`go list -test`'s `Deps`), is touched: the touched packages
+     and every package that imports one, through tests included.
+
+4. **The shared seams.** A change to one of these runs the wave tier
+   before it merges, as well as the scoped tier:
+   - **`go.mod` and `go.sum`.** They change the dependency set or the
+     toolchain every package compiles against on every target. Every
+     package is reached anyway, and only the wave tier tests each of them
+     afresh rather than reusing a cached verdict reached under the old set.
+   - **`internal/fault`.** Its bits are the controls of every detector
+     (D13). A change to it changes what each detector proves, and most of
+     those proofs run in the blind packages and in the binary they build,
+     where an import edge does not show the reach.
+   - **`internal/testenv`.** Every test's isolation goes through it. A
+     defect there shows as tests that read each other's files or the
+     host's configuration, which only appears when every package runs at
+     once on one host. It already reaches 31 of the module's 40 test
+     binaries.
+   - **The gate itself, `.claude/skills/verification-gate/`.** A change to
+     the selector or the tiers changes what every later scoped run tests,
+     so it is proved against the full list.
+
+   `gate-select.sh` names a touched seam, and the scoped run says that the
+   change also needs the wave tier.
+
+5. **Measured: the scoped tier's fixed cost.** On an Apple M-series host
+   with 16 cores (darwin/arm64, go1.26.9), in CPU time (user plus system,
+   `/usr/bin/time -p`, children included) with the build cache warm:
+   `go build ./...` 30.4 s; `go vet ./...` 22.8 s; `go mod tidy -diff` 2.9 s;
+   `gofmt -l .` 0.8 s; the static build 1.7 s; the specdata generation
+   3.7 s. For scale, the whole module's `go test -race -count=1 ./...` at
+   `-p 8` took 1,397 s of CPU time (1,041 s user, 355 s system) and 287 s
+   of wall time. `go mod tidy -diff` reads every file's imports, and the
+   static build is what proves the shipped binary links without cgo, which
+   any change's new import can break. Each costs a few seconds, so both
+   stay in the scoped tier.
+
+6. **The six-target cross vet and build stays in the scoped tier.**
+   Measured on the same host, in CPU time, over all six targets with one
+   build cache:
+
+   | Cache state | CPU (user + system) | Wall |
+   |---|---|---|
+   | warm, nothing changed | 22.5 s (5.9 + 16.6) | 30.5 s |
+   | after adding a function to `internal/cli` | 39.5 s (17.6 + 21.9) | 54.4 s |
+   | after adding a function to `internal/finding` | 89.3 s (59.3 + 30.1) | 51.4 s |
+   | cold (an empty `GOCACHE`) | 310 s (246 + 64) | 67.7 s |
+
+   An edit costs from 3 % to 6 % of the whole suite's CPU time. That is
+   less than the tests of the packages the same edit reaches: an edit to
+   `internal/finding` reaches 27 of the 40 test binaries. A dispatch that
+   starts with an empty cache pays the cold figure once, beside a cold race
+   build of every package it tests. The cross step is also the only check
+   that a change compiles and vets on the targets the host is not. The
+   scoped tier runs every test on the host's own GOOS only, and the
+   module's build-tagged files (`internal/hostfs`, `internal/hostenv`) can
+   break the other targets' builds. In the wave tier, such a break would
+   surface on the merged tree, as a sibling's red, after the change that
+   caused it had merged.
+
+7. **The shared-host cap.** The hosts that run the gate run about three
+   sessions at once, the reasoning AGENTS.md applies to fuzzing. So the
+   gate's share is a third of the host's cores, at least 2, in both tiers,
+   and `METAIS_GATE_P` sets it as the gate's one override. The share is
+   passed twice:
+   - **`go test -p`** bounds the package binaries at once;
+   - **`-parallel`** bounds the parallel tests at once in one binary. Since
+     W5-NB3 it also bounds the tool processes `internal/conformance` runs:
+     its runner's slots are `-test.parallel`.
+
+   Measured on `main` at `1896cb8` (16 cores, darwin/arm64, go1.26.9, CPU
+   as user plus system):
+
+   | Run | Wall | CPU |
+   |---|---|---|
+   | `go test -race -count=1 ./internal/conformance`, `-parallel 16` | 165.3 s | 631 s (443 + 188) |
+   | the same, `-parallel 5` | 185.4 s | 571 s (406 + 166) |
+   | `go test -race -count=1 -p 5 -parallel 5 ./...` | 199.4 s | 1,219 s (862 + 357) |
+
+   At the share, the whole suite averages 6.1 of the host's 16 cores, about
+   a third. **A test must not hold a parallel slot while it waits.** Before
+   W5-NB3, `internal/conformance` held one through a two-second wait per
+   case, and `-parallel 3` ran the package into its ten-minute timeout
+   (601.9 s wall, 463 s CPU, against 252 s at the default). That is a
+   timeout the gate causes, and the fix belongs in the test, not in a
+   higher cap.
+
+8. **What the scoped tier cannot catch, and why the wave tier does.**
+   - **Data read by a path the selector cannot see.** A test that builds a
+     path to module data without naming its top-level entry as a literal,
+     or whose inputs reach it through a child process or a tool other than
+     `go`, is not found as a reader, and a change to that data does not
+     select it. The wave tier runs every package.
+   - **Interference between packages.** The scoped tier runs fewer
+     packages at once. Shared temporary space, the host's open-file and
+     process limits, and timing under the whole suite's load are exercised
+     only when every package runs together. The wave tier runs them
+     together.
+   - **The combination of siblings.** Each change passes its scoped tier
+     on its own branch. Two changes that each pass can fail together once
+     both are on `main`, and the scoped tier of a later change reaches only
+     what that change touches. The wave tier runs on the merged tree, after
+     the wave's changes have all landed.
+
+   None of these is a reason to skip the scoped tier's own checks. The
+   scoped tier is the whole of what a change can reach by the rules above,
+   and the wave tier is the whole list.
+
+9. **Resuming, and a run that is cut off.** `gate.sh` writes one record
+   per run: each step's verdict, and each package's, with the git tree id
+   of the working tree it was reached on. `gate.sh --resume` reuses a pass
+   from the tier's last run only when the paths that differ between that
+   tree and the current one do not reach the step or package, by item 3's
+   rules. A failure, a step the run never reached, and a pass the change
+   reaches all run again. A resumed run hands on the verdicts it reused
+   with the trees they were reached on, so a chain of resumes never
+   carries a stale pass forward. A run whose tree changed while it was
+   live has verdicts that describe no single tree, and none of them is
+   reused. The cheap steps (gofmt, tidiness, the specdata drift) run again
+   whenever the tree changed at all.
 
 ## Implementation log
 

@@ -1,50 +1,86 @@
 ---
 name: verification-gate
-description: The pre-merge gate for metais — AGENTS.md's Development list, run by this skill's gate.sh. Read this BEFORE running the gate, BEFORE publishing a test run as evidence in a pull request, and ALWAYS when a step goes red. Covers when to run it (once, last, after directed tests, self-review and rebase), how to run it (in the background, watched with gate-wait.sh), why it caps `go test -p` on a shared host, why the gate never passes -count=1, what to re-run after a fix or a rebase, how to tell whether a red is yours, and what a green gate cannot settle.
+description: The pre-merge gate for metais, in two tiers (ADR-010 Amendment A5) — the scoped tier every change passes, and the wave tier, AGENTS.md's full list, once per wave and for a shared seam. Read this BEFORE running the gate, BEFORE publishing a test run as evidence in a pull request, and ALWAYS when a step goes red. Covers when to run it (once, last, after directed tests, self-review and rebase), how to run it (gate.sh in the background, watched with gate-wait.sh, resumed with --resume), what each tier runs and what a change reaches (gate-select.sh), why it caps `go test -p` on a shared host, what to re-run after a fix and after a rebase onto a sibling, how to tell whether a red is yours by reading its mechanism (gate-why.sh, then root-cause), and what a green gate cannot settle.
 ---
 
 # The verification gate
 
-The gate is the list under "Development" in `AGENTS.md`: build, vet,
-`go test -race ./...`, tidiness, gofmt, the static build, the six-target
-cross vet and build, and spec-data drift. `gate.sh` beside this file runs
-exactly that list. Every step runs even when an earlier one goes red, so one
+The gate has two tiers (ADR-010 Amendment A5). `gate.sh` beside this file
+runs either one. Every step runs even when an earlier one goes red, so one
 run reports everything that is wrong, and the run ends with a summary of
 every step's verdict.
 
-Run the gate through `gate.sh`, not a hand-written copy of the list. A
-hand-written copy drifts from AGENTS.md, polls with blind `sleep`s, and
+| Tier | Command | When |
+|---|---|---|
+| **Scoped** | `gate.sh` | Every change, before it merges |
+| **Wave** | `gate.sh wave` | Once per wave, at the wave's verification, on a fresh clone of the merged tree; and before merging a change to a shared seam |
+
+- **The scoped tier** runs build, vet and gofmt over the whole module,
+  `go mod tidy -diff`, the static build, and the six-target cross vet and
+  build. It runs `go test -race` over every package your change reaches,
+  and the spec and generated-data tripwires on every run:
+  - `internal/finding` and `internal/specdata`, whole;
+  - `internal/conformance`'s well-formedness tests;
+  - the help goldens;
+  - `internal/guarantees`' tests of the specification's text;
+  - the specdata drift.
+- **The wave tier** is AGENTS.md's full list: every package under
+  `go test -race`, and every other step.
+- **The shared seams** are `go.mod`, `go.sum`, `internal/fault`,
+  `internal/testenv` and this skill's scripts. A change to one needs both
+  tiers. The scoped run says so in its log, with a `NOTE`.
+
+Run the gate through `gate.sh`, not a hand-written copy of either list. A
+hand-written copy drifts from the amendment, polls with blind `sleep`s, and
 reports a different shape in every pull request.
+
+## What your change reaches
+
+`gate-select.sh` prints what the scoped tier will test, and why. Run it
+before the gate to see the cost coming:
+
+```bash
+.claude/skills/verification-gate/gate-select.sh          # since the merge base with origin/main
+.claude/skills/verification-gate/gate-select.sh --base <ref>
+```
+
+The change is everything that differs from the merge base with
+`origin/main`: commits, staged and unstaged edits, and untracked files.
+Fetch `origin` first, or the base is stale. A path reaches packages by
+these rules:
+
+- **A path in a package's directory** (Go files, `testdata/`, embedded
+  files) touches that package. Every package that imports it, tests
+  included, is tested.
+- **A path outside every package** (`spec/`, `docs/`, a root file) is data.
+  It touches the packages whose test files name it as a path literal
+  (`"spec/…"`, `"../../spec"`). A change under `spec/` reaches the spec
+  readers: `cli`, `conformance`, `finding`, `guarantees`, `liquidspec`,
+  `loader`, `specdata`, `template` and `vectorgen`.
+- **A generated file is a path like any other.** The tripwires and the
+  drift step check every generated file on every run anyway.
+- **The blind packages** (`blind` in the output) are the ones whose tests
+  build the binary or list the module with the `go` command: `conformance`,
+  `guarantees`, `version`, `pkgtree` and `cmd/metais`. Any change to the
+  module's code has them tested, because no import edge shows what they
+  read.
 
 ## When to run it: once, last, right before merge
 
-The gate takes many minutes, and on a shared host much longer. Most of that
-time goes to packages your change does not reach. So it runs once, on the
-finished tree:
+The scoped tier takes minutes, and most of them go to the packages your
+change reaches. So it runs once, on the finished tree:
 
-1. **Make the change, and prove it with directed tests.** These are your new
-   tests, the packages you edited, and the packages that import them:
-
-   ```bash
-   pkg=github.com/kottera/metais/internal/hostfs   # what you changed
-   go list -f '{{.ImportPath}} {{join .Imports " "}} {{join .TestImports " "}} {{join .XTestImports " "}}' ./... |
-     awk -v p="$pkg" '{for (i = 2; i <= NF; i++) if ($i == p) { print $1; break }}'
-   ```
-
-   A change under `spec/`, to a finding code, or to a command's flags also
-   reaches the spec tripwires. Run them directly:
-   `go test ./internal/guarantees -run 'TestStatementsWellFormed|TestCoverage|TestCitationsResolve'`,
-   `go test ./internal/conformance -run 'TestVectorsWellFormed|TestConformance'`
-   and `go test ./internal/cli -run TestHelp`. A red here costs seconds; in the
+1. **Make the change, and prove it with directed tests.** These are your
+   new tests and the packages you edited. A red here costs seconds; in the
    gate it costs a run.
 2. **Review your own change and fix what the review finds.**
-3. **Rebase onto `origin/main`**, regenerate every generated file (your brief
-   names them), and push. Rebasing before the gate means the gate certifies
-   the head you merge.
-4. **Run the gate** (below).
+3. **Rebase onto `origin/main`**, regenerate every generated file (your
+   brief names them), and push. Rebasing before the gate means the gate
+   certifies the head you merge.
+4. **Run the scoped tier** (below). If the change touches a shared seam,
+   run the wave tier too.
 5. **On a red, read it before re-running anything** (the ladder below). Fix
-   what is yours, re-run the failing tests and the packages your fix edited
-   directly, then run `gate.sh` once more for the head you merge.
+   what is yours, then `gate.sh --resume`.
 6. **Merge.**
 
 The expensive mistake is running the gate as a development loop: a full run,
@@ -60,7 +96,8 @@ outlast it, so the gate runs in the background and you watch its log:
    `run_in_background: true`):
 
    ```bash
-   .claude/skills/verification-gate/gate.sh
+   .claude/skills/verification-gate/gate.sh            # scoped tier
+   .claude/skills/verification-gate/gate.sh wave       # wave tier
    ```
 
    If the harness has no background option, run
@@ -80,7 +117,7 @@ soon as there is something to act on. Its first line is one word:
 | `DONE` | 0 / 1 | The run finished. The summary and every failure line follow. | Green: merge. Red: the ladder below. |
 | `NEW-FAILURE` | 3 | A failure appeared, and the run goes on. Each failure is shown once. | Read it. Do not edit the tree. Call `gate-wait.sh` again. |
 | `RUNNING` | 2 | Nothing new in this window. | Call `gate-wait.sh` again. |
-| `DIED` | 4 | The run is gone and never finished. Its log's tail follows. | Find out why from the tail, then start a new run. |
+| `DIED` | 4 | The run is gone and never finished. Its log's tail follows. | Find out why from the tail, then `gate.sh --resume`. |
 
 These rules make the background run work:
 
@@ -88,62 +125,133 @@ These rules make the background run work:
   turn: ending it kills the session, and the background gate with it.
 - **Do not edit the tree while a run is live.** `go test` builds packages as
   it reaches them, so an edit mid-run gives later packages a tree you never
-  meant to test. If a `NEW-FAILURE` is plainly yours, let the run finish (the
-  other steps' verdicts are still worth having), then fix it.
+  meant to test. A run whose tree moved says so at its end, and
+  `--resume` will not reuse its verdicts.
 - **One run per checkout.** `gate.sh` refuses to start beside a live run.
 - **Do not wrap it in a shell `timeout`.** The hang bound is `go test`'s own
   `-timeout` (ten minutes per package binary), which panics with a goroutine
   dump that names the stuck test. A shell kill throws that dump away.
-- **The logs are under `.local/gate/`** (git-ignored); `latest.log` is the
-  newest run.
+- **The files are under `.local/gate/`** (git-ignored). `latest.log` is the
+  newest run's log. `<run>.record` holds one verdict per step and per
+  package, each with the tree it was reached on.
 
-## Why the gate caps `go test -p`, and never passes `-count=1`
+## Resuming: re-run only what is still unverified
 
-The hosts that run this gate run several sessions at once, each with its own
-gate. `go test` starts as many package binaries at once as the host has
-cores, and every binary runs its own parallel tests, so three gates on one
-host ask for many times the cores it has. The long packages (`hostfs`, `cli`,
-`guarantees`, `finding`, `conformance`) then stretch from a few minutes to past
-the ten-minute timeout. That is a wrong verdict caused by the gate itself,
-not by the code. `gate.sh` passes `-p` at half the host's cores by default;
-`METAIS_GATE_P` overrides it. **Never raise `-timeout` to get past a
-timeout.** A test that times out has a mechanism to find (`root-cause`).
+`gate.sh --resume` (or `gate.sh wave --resume`) starts a run that reuses a
+PASS from the tier's last run when nothing since that verdict reaches it.
+The paths that differ between the verdict's tree and yours are judged by
+`gate-select.sh`'s rules. These all run again:
 
-The gate leaves Go's test cache on. A package whose inputs did not change
-since its last pass is not run again, which is what makes the second run
-after a small fix cheap. Use `-count=1` for a directed re-run of one test you
-are investigating, never for the gate.
+- a failure;
+- a step or package the last run never reached, because it died, was
+  killed, or was cut off with your session;
+- a PASS your edit since then reaches;
+- the cheap steps (gofmt, tidiness, the specdata drift), whenever the
+  tree changed at all.
 
-## Is this red mine? The ladder
+It is the run to start after you fix a red, and the first run to start
+when a resumed session finds a gate that died with its predecessor. A
+resume of a resume carries every verdict forward with the tree it was
+reached on, so a chain of resumes never carries a stale PASS. Reused
+verdicts show as `=== REUSED` in the log.
 
-Every red is a defect with a mechanism. "Flaky" is not a verdict, and a green
-re-run closes nothing. A red that does not reproduce on its own tells you the
-failure depends on timing, or on what ran beside it. That is a lead, not an
-acquittal.
+## After a rebase onto a sibling
 
-1. **Read the failure, and the lines around it.** A `-timeout` panic names
-   the test that was running and dumps every goroutine. A spec-tripwire
-   failure names the file, the line and the statement number.
-2. **Does your diff reach it?** Compare `git diff --name-only origin/main...HEAD`
-   with the failing package and what it depends on:
-   `go list -deps -test ./internal/<pkg> | grep kottera/metais`. A spec file,
-   vector or generated file you changed reaches every test that reads it.
-3. **Run it on its own:**
-   `go test -race -count=1 -run '^TestName$' ./internal/<pkg>`.
-4. **Find the mechanism** with the `root-cause` skill. It applies whether or
-   not the red is yours.
-5. **If it is yours, fix it.** If it is not, do not merge over it and do not
-   call it flaky. Report it to whoever owns your work: in a Work Order, ask
-   the orchestrator that filed it. Include the failure output and what you
-   established about the mechanism. They decide whether it blocks you.
+A sibling merged while you worked, and you rebased onto it. Re-run what the
+rebase changed, not the whole gate:
+
+1. **Regenerate the generated files** (the specdata tree, the help goldens
+   and anything else your brief names), and commit what changed.
+2. **`gate.sh --resume`.** The rebase changed paths from the sibling's
+   change and from the regeneration. Resume re-runs the packages those
+   paths reach, every tripwire, the drift step, and the build steps when
+   code changed. It reuses the rest of your last run.
+
+If your last run is gone, a plain `gate.sh` does the same work from
+scratch. Run the wave tier after a rebase only when the sibling's change
+or yours touches a shared seam.
 
 Rebase reds are deterministic, and they are yours. A statement number a
 sibling took first, a regenerated golden, or conflict markers in a chapter
 all reproduce every time. Fix them as the brief says: renumber your unmerged
 statements, and regenerate generated files rather than merging them by hand.
 
+## The shared-host cap, and the test cache
+
+The hosts that run this gate run several sessions at once. `go test` starts
+as many package binaries at once as the host has cores, and three gates on
+one host then ask for many times the cores it has. A time-bound test
+stretches past its bound under that load: a wrong verdict caused by the
+gate, not by the code.
+
+- **The gate's share is a third of the host's cores** (at least 2), the
+  share AGENTS.md gives a fuzzer. `gate.sh` passes it as `-p`, the package
+  binaries at once, and as `-parallel`, the parallel tests at once in one
+  binary. `-parallel` also bounds the tool processes `internal/conformance`
+  runs. `METAIS_GATE_P` sets the share (Amendment A5 item 7).
+- **A test must not hold a parallel slot while it waits.** One that does
+  turns a lower `-parallel` into a timeout the gate caused. Fix the test,
+  not the cap.
+- **Never raise `-timeout` to get past a timeout.** A test that times out
+  has a mechanism to find (`root-cause`).
+- **Both tiers pass `-count=1`.** Go's test cache keys on the test binary,
+  and the blind packages' binaries do not link the tool they build. So an
+  edit to the tool left `internal/conformance` reporting `(cached)` over a
+  binary it never ran. `--resume` is the gate's own reuse, and it can see
+  that reach.
+
+## Is this red mine? The ladder
+
+Every red is a defect with a mechanism. A red is answered by reading that
+mechanism, never by matching it against a list of known failures. There is
+no such list, and none is kept. "It passed alone" closes nothing, and
+neither does a green re-run. A red that does not reproduce on its own tells
+you the failure depends on timing, or on what ran beside it: a lead, not an
+acquittal.
+
+1. **Read the failure, and the lines around it.** A `-timeout` panic names
+   the test that was running and dumps every goroutine. A spec-tripwire
+   failure names the file, the line and the statement number.
+2. **Does your change reach it?** `gate-select.sh` says which packages your
+   change reaches, and through which path. A spec file, vector or generated
+   file you changed reaches every test that reads it.
+3. **Re-run it alone, and read its times:**
+
+   ```bash
+   .claude/skills/verification-gate/gate-why.sh TestName ./internal/<pkg>
+   .claude/skills/verification-gate/gate-why.sh 'TestName/subtest' ./internal/<pkg>
+   ```
+
+   It runs the one test with `-race -count=1 -v`, every level of the name
+   anchored. It says whether your change reaches the package, and prints the
+   run's wall time beside its CPU time. CPU far below wall means the test
+   waits (a sleep, a lock, a child process). CPU near wall times the cores
+   means it is bound by work.
+4. **Find the mechanism** with the `root-cause` skill. It applies whether or
+   not the red is yours. These are the usual mechanisms of a red that
+   appears only under load or only beside other tests:
+   - a timing assumption;
+   - an unbounded wait;
+   - a test that charges wall time where it means CPU time;
+   - a gate that oversubscribes the host.
+
+   Each one is a defect, and you fix the mechanism. Never widen an
+   assertion, raise a timeout or add a skip to make the red go away.
+5. **If it is yours, fix it**, then `gate.sh --resume`. If it is not, do not
+   merge over it. Report it to whoever owns your work, with the failure
+   output and the mechanism you found: in a Work Order, the orchestrator
+   that filed it. They decide whether it blocks you.
+
 ## What a green gate cannot settle
 
+- **What only the wave tier sees.** The scoped tier misses three kinds of
+  failure:
+  - a test that reads module data by a path the selector cannot see;
+  - interference between packages that run together;
+  - two siblings that each pass alone and fail together.
+
+  The wave tier, on the merged tree, is what catches them (Amendment A5
+  item 8).
 - **Other operating systems' branches.** The cross step compiles and vets
   them; it runs none of their tests. Claim only what ran on your host, and
   name GOOS/GOARCH in the pull request.
@@ -156,6 +264,11 @@ statements, and regenerate generated files rather than merging them by hand.
 
 ## Publishing the evidence
 
-In the pull request, record `go version` and GOOS/GOARCH, the gate's
-`=== SUMMARY` lines, and anything your brief asks for. Quote the commands
-you ran, as you ran them. Claim nothing you did not run.
+In the pull request, record:
+
+- `go version` and GOOS/GOARCH;
+- the tier you ran, and its `=== SUMMARY` lines, the `REUSED` ones
+  included;
+- anything your brief asks for.
+
+Quote the commands you ran, as you ran them. Claim nothing you did not run.

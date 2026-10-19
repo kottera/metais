@@ -2,8 +2,9 @@
 # Copyright 2026 Kottera
 # SPDX-License-Identifier: Apache-2.0
 #
-# gate-wait.sh watches the newest gate.sh run. It blocks for up to 570
-# seconds (METAIS_GATE_WAIT overrides) and returns as soon as there is
+# gate-wait.sh watches the newest gate.sh run, of either tier. It blocks for
+# up to 570 seconds (METAIS_GATE_WAIT overrides), so one call fits inside a
+# foreground shell call's ten-minute bound, and returns as soon as there is
 # something to act on. Its first line is one word:
 #
 #   DONE         the run finished; its summary follows (exit 0 green, 1 red)
@@ -65,7 +66,7 @@ while :; do
 	fi
 	if [ "$(date +%s)" -ge "$deadline" ]; then
 		echo RUNNING
-		grep -E '^=== (STEP|PASS|FAIL) ' "$log" | tail -4
+		grep -E '^=== (STEP|PASS|FAIL|REUSED|COVERED) ' "$log" | tail -4
 		exit 2
 	fi
 	sleep 5
