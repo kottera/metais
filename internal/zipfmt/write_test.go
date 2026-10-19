@@ -183,3 +183,22 @@ func TestPackedTreeContract(t *testing.T) {
 		t.Error("Check passed the packed tree against content it does not hold")
 	}
 }
+
+// TestLimitsWithinCeilings holds ADR-009's defaults below ADR-001 D3's
+// ceilings, so no package within the limits needs zip64 (D3 item 2).
+func TestLimitsWithinCeilings(t *testing.T) {
+	lim := limits.Defaults()
+	for _, c := range []struct {
+		id      limits.ID
+		ceiling int64
+	}{
+		{limits.PackageSize, maxSize},
+		{limits.PackageUncompressed, maxSize},
+		{limits.EntrySize, maxSize},
+		{limits.Entries, maxEntries},
+	} {
+		if v := lim.Value(c.id); v > c.ceiling {
+			t.Errorf("%s defaults to %d, above the ceiling %d", limits.Get(c.id).Name, v, c.ceiling)
+		}
+	}
+}

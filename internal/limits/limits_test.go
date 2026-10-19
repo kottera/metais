@@ -5,6 +5,7 @@ package limits
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -331,4 +332,55 @@ func TestBadUse(t *testing.T) {
 			f()
 		}()
 	}
+}
+
+// TestBreached holds limit.package to ADR-009 D2 item 5: the limit's name,
+// its bound in this command, whether it was lowered, and the value found
+// when there is one.
+func TestBreached(t *testing.T) {
+	s := Defaults()
+	loc := finding.Location{Origin: finding.OriginPackage, File: "assets/big.bin"}
+	f := s.Breached(EntrySize, loc, 70<<20, true)
+	if f.Code() != finding.CodeLimitPackage || f.Class() != finding.ClassRefused || f.Subject().Kind != finding.SubjectPackage {
+		t.Errorf("Breached gave %s, class %s, about a %s", f.Code(), f.Class(), f.Subject().Kind)
+	}
+	want := map[string]string{"limit": "entry-size", "bound": "67108864", "lowered": "false", "observed": "73400320"}
+	for name, w := range want {
+		v, ok := f.Param(name)
+		if got := paramText(v); !ok || got != w {
+			t.Errorf("%s = %q, want %q", name, got, w)
+		}
+	}
+	if l, _ := f.Location(); l != loc {
+		t.Errorf("location %+v, want %+v", l, loc)
+	}
+
+	if _, ok := s.Lower("entries=3"); !ok {
+		t.Fatal("Lower(entries=3) refused")
+	}
+	f = s.Breached(Entries, finding.Location{Origin: finding.OriginPackage}, 0, false)
+	if v, _ := f.Param("lowered"); paramText(v) != "true" {
+		t.Error("a lowered limit is not reported as lowered")
+	}
+	if v, _ := f.Param("bound"); paramText(v) != "3" {
+		t.Error("the bound is not the lowered value")
+	}
+	if _, ok := f.Param("observed"); ok {
+		t.Error("a reading that stopped at the bound reports an observed value")
+	}
+}
+
+func paramText(v finding.Value) string {
+	if n, ok := v.Int(); ok {
+		return strconv.FormatInt(n, 10)
+	}
+	if s, ok := v.Str(); ok {
+		return s
+	}
+	for _, b := range []bool{false, true} {
+		if reflect.DeepEqual(v, finding.Bool(b)) {
+			return strconv.FormatBool(b)
+		}
+	}
+	return "?"
 }
