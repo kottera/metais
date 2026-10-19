@@ -158,6 +158,9 @@ type renderer struct {
 	// blank memoizes the blank-body rule per block tag (ADR-004 D3 item
 	// 3), so a tag's subtree is examined once per render.
 	blank map[ast.Node]bool
+	// cycleKeys memoizes each group-less cycle's literal key; "" for a
+	// cycle that has none.
+	cycleKeys map[*ast.Cycle]string
 	// scratch is reused for escaping.
 	scratch []byte
 }
@@ -174,7 +177,8 @@ func newRenderer(env *Env) (*renderer, *Error) {
 	if lim.PartialDepth <= 0 {
 		lim.PartialDepth = DefaultPartialDepth
 	}
-	return &renderer{env: env, dialect: d, meter: env.Meter, lim: lim, blank: map[ast.Node]bool{}}, nil
+	return &renderer{env: env, dialect: d, meter: env.Meter, lim: lim,
+		blank: map[ast.Node]bool{}, cycleKeys: map[*ast.Cycle]string{}}, nil
 }
 
 // binding is a bound name's value, and whether it is safe from escaping.
@@ -323,10 +327,15 @@ func (r *renderer) writeString(s string, at ast.Node) *Error {
 
 // writeValue writes v's text (ADR-004 D4 item 4), escaped when the render
 // escapes and v is not safe (ADR-004 D9). An array writes its elements'
-// texts in turn; an object is refused.
+// texts in turn, and costs a unit per element; an object is refused.
 func (r *renderer) writeValue(v value.Value, safe bool, at ast.Node) *Error {
 	switch v := v.(type) {
 	case value.Array:
+		// Writing an array visits each element: one unit each, beside the
+		// output bytes its texts are charged.
+		if err := r.charge(WorkUnits, int64(v.Len()), at); err != nil {
+			return err
+		}
 		for _, e := range v.All() {
 			if err := r.writeValue(e, safe, at); err != nil {
 				return err
@@ -554,9 +563,9 @@ func (r *renderer) valueSeq(v value.Value) seq {
 	case value.Array:
 		return seq{n: int64(v.Len()), at: func(i int64) value.Value { return v.At(int(i)) }}
 	case value.Object:
-		ms := r.members(v)
-		return seq{n: int64(len(ms)), at: func(i int64) value.Value {
-			return mustArray([]value.Value{stringValue(ms[i].Name), ms[i].Value})
+		return seq{n: int64(v.Len()), at: func(i int64) value.Value {
+			m := r.member(v, int(i))
+			return mustArray([]value.Value{stringValue(m.Name), m.Value})
 		}}
 	case value.String:
 		if v.Text() == "" {
@@ -567,19 +576,16 @@ func (r *renderer) valueSeq(v value.Value) seq {
 	return seq{}
 }
 
-// members returns an object's members in the order every template
+// member returns an object's i-th member in the order every template
 // iteration visits them: canonical order, ascending by the UTF-16 code
 // units of the name (ADR-004 D4 item 5). It is the one place the engine
-// iterates an object for a template — for over an object, and render …
-// for — and it reads the object's own ordered members, never a Go map.
-// It is the seam ADR-010 Amendment A2 names: Env.UnorderedObjects, when
-// Wave 4 builds it, changes this function and nothing else.
-func (r *renderer) members(o value.Object) []value.Member {
-	ms := make([]value.Member, 0, o.Len())
-	for name, v := range o.All() {
-		ms = append(ms, value.Member{Name: name, Value: v})
-	}
-	return ms
+// orders an object's members for a template — for and tablerow over an
+// object, render … for, and the first and last shorthands — and it reads
+// the object's own ordered members, never a Go map. It is the seam
+// ADR-010 Amendment A2 names: Env.UnorderedObjects, when Wave 4 builds
+// it, changes this function and nothing else.
+func (r *renderer) member(o value.Object, i int) value.Member {
+	return o.At(i)
 }
 
 // window is the part of n items a loop visits, from offset from to before
@@ -942,7 +948,7 @@ func (r *renderer) cycle(n *ast.Cycle) *Error {
 			key = cycleKey{kind: kindName(g), text: scalarText(g)}
 		}
 		// An array or object group keeps the cycle's own position.
-	} else if lits, ok := literalKey(n.Values); ok {
+	} else if lits, ok := r.literalKey(n); ok {
 		key = lits
 	}
 	i := r.fr.cycles[key]
@@ -962,12 +968,17 @@ func (r *renderer) cycle(n *ast.Cycle) *Error {
 }
 
 // literalKey is the key of a group-less cycle whose values are all
-// literals: their kinds and texts.
-func literalKey(vs []ast.Primary) (string, bool) {
+// literals: their kinds and texts. It is made once per render, so a cycle
+// in a loop costs no more per iteration than its value.
+func (r *renderer) literalKey(n *ast.Cycle) (string, bool) {
+	if k, ok := r.cycleKeys[n]; ok {
+		return k, k != ""
+	}
 	var b []byte
-	for _, v := range vs {
+	for _, v := range n.Values {
 		l, ok := v.(*ast.Literal)
 		if !ok {
+			r.cycleKeys[n] = ""
 			return "", false
 		}
 		b = strconv.AppendInt(b, int64(l.Kind), 10)
@@ -975,6 +986,7 @@ func literalKey(vs []ast.Primary) (string, bool) {
 		b = strconv.AppendQuote(b, l.Text)
 		b = append(b, ',')
 	}
+	r.cycleKeys[n] = string(b)
 	return string(b), true
 }
 
@@ -1056,23 +1068,21 @@ func (r *renderer) render(n *ast.Render) *Error {
 			return err
 		}
 	}
+	item := map[string]binding{}
 	for k := int64(0); k < s.n; k++ {
-		sc := make(map[string]binding, len(scope)+2)
-		for _, p := range n.Params {
-			sc[p.Name] = scope[p.Name]
-		}
-		sc["forloop"] = binding{v: forloop(n.Name, s.n, k, value.Null{})}
-		sc[n.Alias] = binding{v: s.at(k)}
-		if err := r.callPartial(n, tpl, sc); err != nil {
+		item["forloop"] = binding{v: forloop(n.Name, s.n, k, value.Null{})}
+		item[n.Alias] = binding{v: s.at(k)}
+		if err := r.callPartial(n, tpl, scope, item); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// callPartial renders tpl in a frame of its own, with scope as its
-// partial-scoped bindings. An error inside it carries this call's site.
-func (r *renderer) callPartial(n *ast.Render, tpl *Template, scope map[string]binding) *Error {
+// callPartial renders tpl in a frame of its own, with scopes as its
+// partial-scoped bindings, innermost last. An error inside it carries
+// this call's site.
+func (r *renderer) callPartial(n *ast.Render, tpl *Template, scopes ...map[string]binding) *Error {
 	r.at(n)
 	if err := r.charge(WorkPartials, 1, n); err != nil {
 		return err
@@ -1080,7 +1090,7 @@ func (r *renderer) callPartial(n *ast.Render, tpl *Template, scope map[string]bi
 	site := Site{Source: r.fr.source, Line: n.Span.Line, Col: n.Span.Col, Offset: n.Span.Start}
 	caller := r.fr
 	r.fr = newRenderFrame(tpl.Name)
-	r.fr.scopes = []map[string]binding{scope}
+	r.fr.scopes = scopes
 	r.depth++
 	_, err := r.block(tpl.Root, false)
 	r.depth--

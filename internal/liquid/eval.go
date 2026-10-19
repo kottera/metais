@@ -285,8 +285,8 @@ func (r *renderer) property(base, key value.Value, p *ast.Path, upto int) (value
 		if v, ok := b.Get(ks.Text()); ok {
 			return v, nil
 		}
-		if v, ok := shorthand(b, ks.Text()); ok {
-			return v, nil
+		if v, ok, err := r.shorthand(b, ks.Text(), p); ok || err != nil {
+			return v, err
 		}
 		return nil, undefined()
 	case value.Array:
@@ -304,15 +304,15 @@ func (r *renderer) property(base, key value.Value, p *ast.Path, upto int) (value
 			return b.At(int(i)), nil
 		}
 		if isString {
-			if v, ok := shorthand(b, ks.Text()); ok {
-				return v, nil
+			if v, ok, err := r.shorthand(b, ks.Text(), p); ok || err != nil {
+				return v, err
 			}
 		}
 		return nil, undefined()
 	case value.String:
 		if isString {
-			if v, ok := shorthand(b, ks.Text()); ok {
-				return v, nil
+			if v, ok, err := r.shorthand(b, ks.Text(), p); ok || err != nil {
+				return v, err
 			}
 		}
 	}
@@ -322,59 +322,63 @@ func (r *renderer) property(base, key value.Value, p *ast.Path, upto int) (value
 // shorthand is a string's, array's or object's size, first or last
 // (ADR-004 D4 item 7); an object's own member of that name is looked up
 // before it. first and last of an empty value are nil; of an object, they
-// are its first and last [name, value] pairs in canonical order.
-func shorthand(v value.Value, name string) (value.Value, bool) {
+// are its first and last [name, value] pairs in canonical order. A
+// string's size counts its characters, and costs a unit per byte it
+// reads; every other shorthand reads one place.
+func (r *renderer) shorthand(v value.Value, name string, at ast.Node) (value.Value, bool, *Error) {
 	switch name {
 	case "size", "first", "last":
 	default:
-		return nil, false
+		return nil, false, nil
 	}
 	switch v := v.(type) {
 	case value.String:
 		s := v.Text()
 		switch name {
 		case "size":
-			return intValue(int64(utf8.RuneCountInString(s))), true
+			if err := r.charge(WorkUnits, int64(len(s)), at); err != nil {
+				return nil, false, err
+			}
+			return intValue(int64(utf8.RuneCountInString(s))), true, nil
 		case "first":
 			if s == "" {
-				return value.Null{}, true
+				return value.Null{}, true, nil
 			}
 			_, n := utf8.DecodeRuneInString(s)
-			return stringValue(s[:n]), true
+			return stringValue(s[:n]), true, nil
 		default:
 			if s == "" {
-				return value.Null{}, true
+				return value.Null{}, true, nil
 			}
 			_, n := utf8.DecodeLastRuneInString(s)
-			return stringValue(s[len(s)-n:]), true
+			return stringValue(s[len(s)-n:]), true, nil
 		}
 	case value.Array:
 		switch {
 		case name == "size":
-			return intValue(int64(v.Len())), true
+			return intValue(int64(v.Len())), true, nil
 		case v.Len() == 0:
-			return value.Null{}, true
+			return value.Null{}, true, nil
 		case name == "first":
-			return v.At(0), true
+			return v.At(0), true, nil
 		default:
-			return v.At(v.Len() - 1), true
+			return v.At(v.Len() - 1), true, nil
 		}
 	case value.Object:
 		if name == "size" {
-			return intValue(int64(v.Len())), true
+			return intValue(int64(v.Len())), true, nil
 		}
 		if v.Len() == 0 {
-			return value.Null{}, true
+			return value.Null{}, true, nil
 		}
-		names := v.Names()
-		k := names[0]
+		i := 0
 		if name == "last" {
-			k = names[len(names)-1]
+			i = v.Len() - 1
 		}
-		m, _ := v.Get(k)
-		return mustArray([]value.Value{stringValue(k), m}), true
+		m := r.member(v, i)
+		return mustArray([]value.Value{stringValue(m.Name), m.Value}), true, nil
 	}
-	return nil, false
+	return nil, false, nil
 }
 
 // pathText writes p's root and its first upto segments as the template

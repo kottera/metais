@@ -69,7 +69,8 @@ func renderCounted(t *testing.T, src string, opts ...option) Meter {
 // TestRenderCharges holds the renderer to ADR-009 D11 item 2's table:
 // each node evaluated costs 16 units; a filter application and an
 // operator add the shallow size of their input, arguments and result;
-// an equality of two arrays costs their deep sizes. The counts are exact,
+// an equality of two arrays costs their deep sizes; writing an array, and
+// a string's size, cost what they read. The counts are exact,
 // and the meter reads no clock: the same template costs the same on
 // every run.
 func TestRenderCharges(t *testing.T) {
@@ -90,6 +91,10 @@ func TestRenderCharges(t *testing.T) {
 		{`{% assign r = (1..5) %}`, 16 + (16 + 2 + 5)},
 		{`{% for i in (1..3) %}{{ i }}{% endfor %}`, 16 + 3*16},
 		{`{% comment %}x{% endcomment %}{% raw %}y{% endraw %}`, 32},
+		// Writing an array costs a unit per element; a string's size, a
+		// unit per byte.
+		{`{{ xs }}`, 16 + 2 + 2},
+		{`{{ x.size }}{{ xs.size }}{{ x.first }}`, 16 + 3 + 16 + 16},
 	} {
 		d := data(`{"x": "abc", "xs": [1, [2, 3]], "ys": [1, [2, 3]]}`)
 		m := renderCounted(t, c.src, d)
