@@ -25,7 +25,8 @@ type toolID struct {
 
 // invocation is one process an adapter ran for a step, and what it gave.
 type invocation struct {
-	label    string // the command, or the driver's op
+	label    string   // the command, or the driver's op
+	args     []string // the command line, when the adapter ran one
 	stdout   []byte
 	stderr   []byte
 	stream   []byte // the stream, or nil when the step streams nothing
@@ -117,8 +118,9 @@ var openingCommands = map[string][]string{
 // openPlan returns the command lines a hostile open step runs: one for
 // every command the tool declares as opening a package. A declared
 // command the adapter has no command line for is an error, so the step
-// cannot quietly skip it.
-func openPlan(set []string, pkg string) ([]command, error) {
+// cannot quietly skip it. pkg is the package's path, and dir gives the
+// path of each directory or file a command writes to (sandbox.path).
+func openPlan(set []string, pkg string, dir func(string) string) ([]command, error) {
 	if len(set) == 0 {
 		return nil, fmt.Errorf("the tool declares no command that opens a package, so a hostile open step cannot run")
 	}
@@ -130,8 +132,11 @@ func openPlan(set []string, pkg string) ([]command, error) {
 		}
 		args := slices.Clone(tmpl)
 		for i, a := range args {
-			if a == "{package}" {
+			switch {
+			case a == "{package}":
 				args[i] = pkg
+			case i > 0 && (args[i-1] == "--out" || args[i-1] == "--to"):
+				args[i] = dir(a)
 			}
 		}
 		plan = append(plan, command{args: args, authoring: name == "unpack" || name == "check" || name == "sample" || name == "test" || name == "pack"})
@@ -156,7 +161,7 @@ func (a *cliAdapter) commands(v *vector, sb *sandbox, st *step) ([]command, erro
 	x := st.args
 	supply := func(args []string) ([]string, []byte, error) {
 		if x.Data != "" {
-			args = append(args, "--data", x.Data)
+			args = append(args, "--data", sb.path(x.Data))
 		}
 		for _, s := range x.Set {
 			args = append(args, "--set", s)
@@ -199,21 +204,21 @@ func (a *cliAdapter) commands(v *vector, sb *sandbox, st *step) ([]command, erro
 			if err != nil {
 				return nil, err
 			}
-			plan, err := openPlan(set, x.Package)
+			plan, err := openPlan(set, sb.path(x.Package), sb.path)
 			for i := range plan {
 				plan[i].args = limitFlags(plan[i].args)
 			}
 			return plan, err
 		}
-		return []command{{args: limitFlags([]string{"inspect", "--json", x.Package})}}, nil
+		return []command{{args: limitFlags([]string{"inspect", "--json", sb.path(x.Package)})}}, nil
 	case "validate":
-		args, stdin, err := supply([]string{"validate", "--json", x.Package})
+		args, stdin, err := supply([]string{"validate", "--json", sb.path(x.Package)})
 		if err != nil {
 			return nil, err
 		}
 		return []command{{args: limitFlags(args), stdin: stdin}}, nil
 	case "render":
-		args := []string{"render", "--json", x.Package}
+		args := []string{"render", "--json", sb.path(x.Package)}
 		archive, only, streaming := x.stream()
 		switch {
 		case archive:
@@ -221,7 +226,7 @@ func (a *cliAdapter) commands(v *vector, sb *sandbox, st *step) ([]command, erro
 		case streaming:
 			args = append(args, "--out", "-", "--only", only)
 		default:
-			args = append(args, "--out", x.Out)
+			args = append(args, "--out", sb.path(x.Out))
 		}
 		for _, o := range x.Only {
 			args = append(args, "--only", o)
@@ -250,23 +255,23 @@ func (a *cliAdapter) commands(v *vector, sb *sandbox, st *step) ([]command, erro
 		return []command{{args: limitFlags(args), stdin: stdin, streaming: streaming && !x.DryRun, authoring: x.Sample != nil,
 			failOnWarning: x.FailOn == "warning"}}, nil
 	case "check":
-		return []command{{args: limitFlags([]string{"check", "--json", x.Source}), authoring: true}}, nil
+		return []command{{args: limitFlags([]string{"check", "--json", sb.path(x.Source)}), authoring: true}}, nil
 	case "test":
-		args := []string{"test", "--json", x.Source}
+		args := []string{"test", "--json", sb.path(x.Source)}
 		for _, e := range x.Examples {
 			args = append(args, "--example", e)
 		}
 		return []command{{args: limitFlags(args), authoring: true}}, nil
 	case "pack":
-		return []command{{args: []string{"pack", "--json", x.Source, "--out", x.To}, authoring: true}}, nil
+		return []command{{args: []string{"pack", "--json", sb.path(x.Source), "--out", sb.path(x.To)}, authoring: true}}, nil
 	case "unpack":
-		return []command{{args: []string{"unpack", "--json", x.Package, "--to", x.To}, authoring: true}}, nil
+		return []command{{args: []string{"unpack", "--json", sb.path(x.Package), "--to", sb.path(x.To)}, authoring: true}}, nil
 	case "sample":
-		args := []string{"sample", "--json", x.Source}
+		args := []string{"sample", "--json", sb.path(x.Source)}
 		if x.Example != "" {
 			args = append(args, "--example", x.Example)
 		} else {
-			args = append(args, "--to", x.To)
+			args = append(args, "--to", sb.path(x.To))
 		}
 		args = sampleFlags(args, x.Optional, x.Seed, x.Items)
 		args, stdin, err := supply(args)
@@ -382,7 +387,7 @@ func (a *cliAdapter) run(r *runner, sb *sandbox, v *vector, st *step) ([]*invoca
 // invoke runs one command line and reads ADR-008's envelope from it.
 func (a *cliAdapter) invoke(sb *sandbox, c command, lim limits, dryRun bool) (*invocation, []problem) {
 	inv := &invocation{label: c.args[0]}
-	p, err := runProc(a.path, c.args, sb.work, sb.environ(), c.stdin, lim.wall)
+	p, err := runProc(a.path, c.args, sb.cwd, sb.environ(), c.stdin, lim.wall)
 	if err != nil {
 		return inv, []problem{{check: checkHarness, harness: true, msg: err.Error()}}
 	}
@@ -566,7 +571,7 @@ func (a *execAdapter) call(sb *sandbox, req driverRequest, lim limits) (*proc, *
 	if err != nil {
 		return nil, nil, []problem{{check: checkHarness, harness: true, msg: err.Error()}}
 	}
-	p, err := runProc(a.path, nil, sb.work, sb.environ(), body, lim.wall)
+	p, err := runProc(a.path, nil, sb.cwd, sb.environ(), body, lim.wall)
 	if err != nil {
 		return nil, nil, []problem{{check: checkHarness, harness: true, msg: err.Error()}}
 	}

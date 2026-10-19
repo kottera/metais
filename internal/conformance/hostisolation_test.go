@@ -23,6 +23,7 @@ type canary struct {
 	probe   string
 	sources []string
 	check   string
+	also    string // another check the leak must turn red, or ""
 }
 
 // canaries are the canaries built so far (PLAN-2026-10-metais-v1 Waves 4
@@ -44,17 +45,19 @@ type canary struct {
 // {{ 0 | date: "%H:%M %z" }} as 00:00 +0000, which environment A's
 // TZ=Pacific/Chatham moves under the tz canary.
 var canaries = []canary{
-	{"env", "tpl/no-env", []string{"HOME", "USER", "HOSTNAME", "TERM", "NO_COLOR", "METAIS_SENTINEL", "TMPDIR", "PATH"}, checkSentinel},
-	{"cwd", "tpl/partial-not-from-host", []string{"a working-directory decoy"}, checkSentinel},
-	{"path", "dat/required-input-missing", []string{"the sandbox path"}, checkSentinel},
-	{"pid", "tag/provenance", nil, checkAB},
-	{"home", "tag/asset-not-from-host", []string{"HOME"}, checkSentinel},
-	{"tz", "flt/date-own-offset", nil, checkAB},
-	{"clock", "flt/date-now-refused", nil, checkAB},
+	{"env", "tpl/no-env", []string{"HOME", "USER", "HOSTNAME", "TERM", "NO_COLOR", "METAIS_SENTINEL", "TMPDIR", "PATH"}, checkSentinel, ""},
+	{"cwd", "tpl/partial-not-from-host", []string{"a working-directory decoy"}, checkSentinel, ""},
+	{"path", "dat/required-input-missing", []string{"the sandbox path"}, checkSentinel, checkHost},
+	{"pid", "tag/provenance", nil, checkAB, ""},
+	{"home", "tag/asset-not-from-host", []string{"HOME"}, checkSentinel, ""},
+	{"tz", "flt/date-own-offset", nil, checkAB, ""},
+	{"clock", "flt/date-now-refused", nil, checkAB, ""},
 }
 
 // hostRunner is a runner over the suite in this module for the tool at
-// program, with both environments.
+// program, with both environments and the whole SC7 harness: check 2's
+// host facts, and the harness's environment, decoys, path modes and
+// commands (ADR-009 D16 item 1).
 func hostRunner(t *testing.T, program string) (*runner, string) {
 	t.Helper()
 	suite := defaultSuite()
@@ -64,27 +67,38 @@ func hostRunner(t *testing.T, program string) (*runner, string) {
 	}
 	r := newRunner(t, suite, a)
 	r.short = false
+	r.sc7 = true
+	vocab, err := toolVocabulary(program, testenv.Dir(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	reg, err := os.ReadFile(filepath.Join(suite, "..", "findings", "registry.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.facts = newHostFacts(append(vocab, reg)...)
 	return r, suite
 }
 
-// TestHostIsolation is ADR-009 D16 item 1's harness, to the reach this
-// wave's canaries need: the release build runs each canary's probe vector
-// in the sentinel and the plain environment, and must give no hit on any
-// channel — check 1, the sentinel scan of every stream and of every file
-// the step wrote anywhere in its sandbox; check 3, the differential; and
-// check 4, nothing written outside. Every vector of the suite gets the same
-// checks from TestConformance; the harness's every-command reach, its
-// further environment and decoys, and check 2 are Wave 6's.
+// TestHostIsolation is ADR-009 D16 item 1's harness: the release build
+// runs every vector of the suite under the SC7 harness, in the sentinel
+// and the plain environment and in both path modes, every case followed
+// by every command over each package it names, and must give no hit on
+// any channel — check 1, the sentinel scan of every stream and of every
+// file the step wrote anywhere in its sandbox; check 2, the host's real
+// facts; check 3, the differential; and check 4, nothing written outside —
+// and no crash (D18 item 2). Each vector's own expectations hold in both
+// path modes too.
+//
+// TestConformance runs ADR-011 D12's environments alone, so its default
+// run stays within ADR-011 D11 item 9's budget; this test carries the
+// harness's reach.
 func TestHostIsolation(t *testing.T) {
 	if builtTool == "" {
-		t.Skip("runs the binary built from ./cmd/metais")
+		t.Skip("runs the release build of ./cmd/metais, which -conformance.tool replaces")
 	}
-	r, suite := hostRunner(t, builtTool)
-	for _, c := range canaries {
-		for _, p := range runVector(r, suite, c.probe, testenv.Dir(t)) {
-			t.Errorf("%s: %s", c.probe, p)
-		}
-	}
+	r, _ := hostRunner(t, releaseBuild(t))
+	runSuite(t, r)
 }
 
 // TestHostIsolationCanaries is ADR-009 D16 item 2: each canary build, made
@@ -98,6 +112,7 @@ func TestHostIsolationCanaries(t *testing.T) {
 	}
 	for _, c := range canaries {
 		t.Run(c.channel, func(t *testing.T) {
+			t.Parallel()
 			bin := buildCanary(t, c.channel)
 			r, suite := hostRunner(t, bin)
 			ps := runVector(r, suite, c.probe, testenv.Dir(t))
@@ -115,6 +130,9 @@ func TestHostIsolationCanaries(t *testing.T) {
 			if !caught {
 				t.Errorf("the %s canary is not caught on its channel by %s; the harness reported %q", c.channel, c.probe, ps)
 			}
+			if c.also != "" && !slices.ContainsFunc(ps, func(p problem) bool { return p.check == c.also }) {
+				t.Errorf("the %s canary is not caught by the %s check too; the harness reported %q", c.channel, c.also, ps)
+			}
 		})
 	}
 }
@@ -123,15 +141,88 @@ func TestHostIsolationCanaries(t *testing.T) {
 // release build is built otherwise, and returns its path.
 func buildCanary(t *testing.T, channel string) string {
 	t.Helper()
-	dir := filepath.Join(testenv.Dir(t), "canary-"+channel)
+	return build(t, "canary-"+channel, "-tags", "metais_canary_"+channel)
+}
+
+// releaseBuild builds ./cmd/metais as a release is built, with -trimpath
+// and release tags and without the race detector, whatever this test
+// binary is built with, and returns its path.
+func releaseBuild(t *testing.T) string {
+	t.Helper()
+	return build(t, "release")
+}
+
+// build builds ./cmd/metais with -trimpath and flags into a directory
+// named name, and returns the binary's path.
+func build(t *testing.T, name string, flags ...string) string {
+	t.Helper()
+	dir := filepath.Join(testenv.Dir(t), name)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	bin := filepath.Join(dir, toolName)
-	cmd := exec.Command("go", "build", "-trimpath", "-tags", "metais_canary_"+channel, "-o", bin, "./cmd/metais")
+	args := append(append([]string{"build", "-trimpath"}, flags...), "-o", bin, "./cmd/metais")
+	cmd := exec.Command("go", args...)
 	cmd.Dir = moduleRoot
 	if b, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("building the %s canary: %v\n%s", channel, err, b)
+		t.Fatalf("building %s: %v\n%s", name, err, b)
 	}
 	return bin
+}
+
+// TestHarnessReach pins the harness's reach (ADR-009 D16 item 1): a case
+// run under it, in each path mode, ends with one more step that runs
+// every command over the package in both forms, in both environments,
+// and the absolute-path mode gives the implementation only absolute paths
+// into the work directory, from a working directory outside it.
+func TestHarnessReach(t *testing.T) {
+	if builtTool == "" {
+		t.Skip("runs the binary built from ./cmd/metais")
+	}
+	t.Parallel()
+	r, suite := hostRunner(t, builtTool)
+	v, err := readVector(filepath.Join(suite, "vectors", "rnd", "archive"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	c := &v.Cases[0]
+	entries := packageEntries(filepath.Join(v.dir, "package"))
+	if len(entries) < 2 {
+		t.Fatalf("rnd/archive's package has %d entries", len(entries))
+	}
+	for _, mode := range []pathMode{relPaths, absPaths} {
+		res := r.runCaseIn(v, c, testenv.Dir(t), mode)
+		for _, p := range res.problems {
+			t.Errorf("mode %d: %s", mode, p)
+		}
+		for _, e := range []env{envA, envB} {
+			run := res.runs[e]
+			if run == nil || len(run.steps) != len(c.Steps)+1 {
+				t.Fatalf("mode %d, environment %s: no reach step", mode, e)
+			}
+			reach := run.steps[len(c.Steps)]
+			counts := map[string]int{}
+			for _, inv := range reach.invs {
+				cmd, _, _ := strings.Cut(strings.TrimPrefix(inv.label, "reach: "), " ")
+				counts[cmd]++
+				for _, a := range inv.args {
+					if mode == absPaths && (a == "package" || strings.HasPrefix(a, reachPrefix)) {
+						t.Errorf("mode %d: %s gives a relative path %q", mode, inv.label, a)
+					}
+				}
+			}
+			want := map[string]int{"ls": 2, "read": 2 * len(entries), "grep": 2, "schema": 2, "extract": 2, "render": 4}
+			for cmd, n := range want {
+				if counts[cmd] != n {
+					t.Errorf("mode %d, environment %s: %d %s commands, want %d (%v)", mode, e, counts[cmd], cmd, n, counts)
+				}
+			}
+			if len(reach.trees) != 2 {
+				t.Errorf("mode %d, environment %s: the reach read %d extract trees, want 2", mode, e, len(reach.trees))
+			}
+			if mode == absPaths && run.sb.cwd == run.sb.work {
+				t.Errorf("mode %d: the working directory is the work directory", mode)
+			}
+		}
+	}
 }
