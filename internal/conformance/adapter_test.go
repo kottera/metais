@@ -391,6 +391,9 @@ func (a *cliAdapter) invoke(sb *sandbox, c command, lim limits, dryRun bool) (*i
 	if p.killed {
 		return inv, ps
 	}
+	if h := crashed(p.stderr); h != "" {
+		return inv, append(ps, crashProblem(h))
+	}
 	switch p.exit {
 	case 2:
 		return inv, append(ps, problem{check: checkHarness, harness: true,
@@ -570,6 +573,9 @@ func (a *execAdapter) call(sb *sandbox, req driverRequest, lim limits) (*proc, *
 	ps := boundProblems(p, lim)
 	if p.killed {
 		return p, nil, ps
+	}
+	if h := crashed(p.stderr); h != "" {
+		return p, nil, append(ps, crashProblem(h))
 	}
 	if p.exit != 0 {
 		return p, nil, append(ps, problem{check: checkDriver, harness: true,

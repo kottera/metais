@@ -301,3 +301,45 @@ func TestZipFixedFields(t *testing.T) {
 		}
 	}
 }
+
+// TestCrashed holds crashed to what the Go runtime writes when a process
+// exits through a panic or a fatal error (ADR-009 D18 item 2), and to
+// nothing else: a recovered panic's internal error, and text that merely
+// begins like a traceback, are not crashes.
+func TestCrashed(t *testing.T) {
+	for _, c := range []struct {
+		name, stderr, want string
+	}{
+		{"a panic", "panic: boom\n\ngoroutine 1 [running]:\nmain.main()\n\t/x.go:3 +0x1\nexit status 2\n", "panic: boom"},
+		{"a panic with the runtime's goroutine detail",
+			"panic: boom [recovered]\n\tpanic: again\n\ngoroutine 7 gp=0x1400 m=0 mp=0x1028 [running]:\nmain.f()\n", "panic: boom [recovered]"},
+		{"a fatal error", "runtime: goroutine stack exceeds 65536-byte limit\nfatal error: stack overflow\n\nruntime stack:\nruntime.throw()\n\ngoroutine 1 gp=0x14 m=0 mp=0x10 [running]:\n", "fatal error: stack overflow"},
+		{"an internal error the tool reported", "error internal.panic: the command stopped on an internal error\n", ""},
+		{"a message that begins like a panic", "panic: is a word a package may print\n", ""},
+		{"a goroutine line alone", "goroutine 1 [running]:\n", ""},
+		{"nothing", "", ""},
+	} {
+		if got := crashed([]byte(c.stderr)); got != c.want {
+			t.Errorf("%s: crashed is %q, want %q", c.name, got, c.want)
+		}
+	}
+}
+
+// TestRefDriverForwardsCrash runs the reference driver over a fake that
+// panics: the driver's own exit says only that it failed, and the runner
+// must still read the crash from the traceback it forwards.
+func TestRefDriverForwardsCrash(t *testing.T) {
+	t.Parallel()
+	suite := writeFixture(t, testenv.Dir(t))
+	fake := fakeProgram(t, testenv.Dir(t), "panic")
+	a, err := newAdapter("exec", refDriver(t, filepath.Dir(fake), ""), suite)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := newRunner(t, suite, a)
+	r.short = true
+	ps := runVector(r, suite, fixRenderTree, testenv.Dir(t))
+	if !slices.ContainsFunc(ps, func(p problem) bool { return p.check == checkCrash }) {
+		t.Errorf("the reference driver over a fake that panics gave no crash; the runner reported %q", ps)
+	}
+}
