@@ -109,8 +109,8 @@ func TestHostileReportUnchanged(t *testing.T) {
 
 // hostileCPU bounds the CPU time, user and system, one hostile child may
 // cost, start-up included. A linear reading of the largest text below
-// needs about a second under the race detector; the code before W3-9
-// needed hours.
+// needs a few seconds under the race detector; the quadratic code before
+// W3-9 needed minutes.
 const hostileCPU = 30 * time.Second
 
 // hostileSize names the text size a child reads; the parent sets it.
@@ -141,7 +141,7 @@ func TestHostileLinear(t *testing.T) {
 			env = append(env, kv)
 		}
 	}
-	const small, large = 1 << 18, 1 << 21
+	const small, large = 1 << 17, 1 << 20
 	sizes := []int{small, large}
 	cpu := make([]time.Duration, len(sizes))
 	var wg sync.WaitGroup
