@@ -1,0 +1,94 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/overwrite-dry-run-only",
+  "title": "Into an existing directory, a dry run lists each file's status, create or replace, and writes nothing, and --only writes the one file selected, by the same rules, leaving every other",
+  "statements": [
+    "MTS-RND-009",
+    "MTS-RND-012",
+    "MTS-RND-013",
+    "MTS-RND-014",
+    "MTS-RND-020",
+    "MTS-RND-021"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "The meeting of W5-8 and W5-9 (ADR-005 D16 item 2, D18 item 3). a.txt exists and is replaced, sub/b.txt is created into the existing sub, and keep.txt is not the render's.",
+  "cases": [
+    {
+      "name": "dry-run",
+      "setup": {
+        "copy": "setup"
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "overwrite": true,
+            "dry_run": true
+          },
+          "expect": {
+            "ok": true,
+            "listing": "expected/dry-run.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "only",
+      "setup": {
+        "copy": "setup"
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "overwrite": true,
+            "only": "sub/b.txt"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/only"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "only-empty",
+      "setup": {
+        "dirs": [
+          "empty"
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "empty",
+            "only": "a.txt"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "empty",
+                "equals": "expected/only-empty"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

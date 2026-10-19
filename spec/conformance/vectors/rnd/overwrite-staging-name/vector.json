@@ -1,0 +1,57 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/overwrite-staging-name",
+  "title": "An output path whose first segment is the staging directory's name, in any ASCII case, refuses a render into an existing directory, and is written into a new one",
+  "statements": [
+    "MTS-RND-018"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "existing",
+      "setup": {
+        "dirs": [
+          "out"
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/existing.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "new",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

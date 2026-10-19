@@ -1627,3 +1627,16 @@ checks before the library sees a schema). No dependency changes.
   `capture` store. The tool is stricter than the text; the METAIS filters
   follow the engine's `FilterDef` contract, and the disagreement is the
   engine's, for its own change.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-8.** D17 item 8's destination
+  cases are vectors, each refused with nothing written:
+  `rnd/overwrite-link` puts a symbolic link at an output path, pointing
+  inside the output directory, and one at a parent directory, pointing out
+  of it. Each runs with and without `--overwrite`. `rnd/overwrite-fifo`
+  puts a named pipe at an output path. Their setups make the links and the
+  pipe, and their only skips are the `symlinks` and `fifos` probes. D8 item
+  3's refusal is `output.destination.link`, the name this ADR's table of
+  codes and ADR-005's interfaces give it, in the destination family beside
+  `output.destination.not_regular_file`. Item 3's own text writes
+  `output.link`, and the family's name governs that difference
+  (ADR-005's implementation log). Item 4 holds for `render --overwrite`,
+  which `TestExistingDestinationDetector` runs in every `go test`.

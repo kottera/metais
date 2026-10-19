@@ -1,0 +1,62 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/overwrite-fifo",
+  "title": "A named pipe at an output path in an existing output directory refuses the render, and is never opened",
+  "statements": [
+    "MTS-RND-016"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [
+    "fifos"
+  ],
+  "notes": "",
+  "cases": [
+    {
+      "name": "with-overwrite",
+      "setup": {
+        "fifos": [
+          "out/a.txt"
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "overwrite": true
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/with-overwrite.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "without-overwrite",
+      "setup": {
+        "fifos": [
+          "out/a.txt"
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/without-overwrite.json"
+          }
+        }
+      ]
+    }
+  ]
+}

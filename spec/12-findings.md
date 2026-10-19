@@ -173,9 +173,13 @@ it, and the statements it reports.
 | `output.declaration.empty_name` | error | content | output | `template` | 1.0 | [MTS-OUT-018](09-outputs.md#mts-out-018) |
 | `output.declaration.validate_kind` | error | content | output | `kind` | 1.0 | [MTS-AUT-023](13-authoring.md#mts-aut-023) |
 | `output.dependent_required` | error | content | output | `property`, `because` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
-| `output.destination.not_directory` | error | destination | invocation | — | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028), [MTS-RND-003](11-rendering.md#mts-rnd-003), [MTS-SMP-006](13-authoring.md#mts-smp-006) |
+| `output.destination.case_variant` | error | destination | invocation | `path` | 1.0 | [MTS-RND-017](11-rendering.md#mts-rnd-017) |
+| `output.destination.commit_failed` | error | destination | invocation | `reason`, `committed` | 1.0 | [MTS-RND-022](11-rendering.md#mts-rnd-022) |
+| `output.destination.link` | error | destination | invocation | `path` | 1.0 | [MTS-RND-015](11-rendering.md#mts-rnd-015) |
+| `output.destination.not_directory` | error | destination | invocation | optional: `path` | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028), [MTS-RND-003](11-rendering.md#mts-rnd-003), [MTS-RND-016](11-rendering.md#mts-rnd-016), [MTS-SMP-006](13-authoring.md#mts-smp-006) |
 | `output.destination.not_empty` | error | destination | invocation | `entries`, `more` | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028), [MTS-RND-004](11-rendering.md#mts-rnd-004), [MTS-SMP-006](13-authoring.md#mts-smp-006) |
-| `output.destination.write_failed` | error | destination | invocation | `reason`, `written` | 1.0 | [MTS-AUT-026](13-authoring.md#mts-aut-026), [MTS-AUT-027](13-authoring.md#mts-aut-027), [MTS-RND-006](11-rendering.md#mts-rnd-006), [MTS-SMP-008](13-authoring.md#mts-smp-008) |
+| `output.destination.not_regular_file` | error | destination | invocation | `path`, `reason` | 1.0 | [MTS-RND-016](11-rendering.md#mts-rnd-016) |
+| `output.destination.write_failed` | error | destination | invocation | `reason`, `written` | 1.0 | [MTS-AUT-026](13-authoring.md#mts-aut-026), [MTS-AUT-027](13-authoring.md#mts-aut-027), [MTS-RND-006](11-rendering.md#mts-rnd-006), [MTS-RND-014](11-rendering.md#mts-rnd-014), [MTS-RND-018](11-rendering.md#mts-rnd-018), [MTS-RND-019](11-rendering.md#mts-rnd-019), [MTS-RND-022](11-rendering.md#mts-rnd-022), [MTS-SMP-008](13-authoring.md#mts-smp-008) |
 | `output.enum` | error | content | output | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `output.exclusive_maximum` | error | content | output | `limit`; optional: `value` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `output.exclusive_minimum` | error | content | output | `limit`; optional: `value` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |

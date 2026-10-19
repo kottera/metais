@@ -1,0 +1,26 @@
+[
+  {
+    "code": "output.destination.not_empty",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "entries": [
+        ".metais-staging"
+      ],
+      "more": false
+    }
+  },
+  {
+    "code": "output.destination.write_failed",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "reason": "exists",
+      "written": []
+    }
+  }
+]

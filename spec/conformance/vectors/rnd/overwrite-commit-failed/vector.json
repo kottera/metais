@@ -1,0 +1,69 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/overwrite-commit-failed",
+  "title": "A commit into an existing output directory that fails part way lists the outputs already committed; one that fails before the first leaves the directory as it was",
+  "statements": [
+    "MTS-RND-022"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [
+    "unwritable-dirs"
+  ],
+  "notes": "a/x.txt is committed first, in byte order of the paths, and locked/y.txt cannot be renamed into the unwritable locked.",
+  "cases": [
+    {
+      "name": "part-way",
+      "setup": {
+        "copy": "setup",
+        "unwritable": [
+          "out/locked"
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "overwrite": true
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/part-way.json",
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "before-the-first",
+      "setup": {
+        "copy": "setup",
+        "unwritable": [
+          "out"
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "overwrite": true
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/before-the-first.json"
+          }
+        }
+      ]
+    }
+  ]
+}

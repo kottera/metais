@@ -1,0 +1,59 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/overwrite-staging-leftover",
+  "title": "A staging directory left inside an existing output directory refuses the render, and nothing is written",
+  "statements": [
+    "MTS-RND-014"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "with-overwrite",
+      "setup": {
+        "copy": "setup",
+        "dirs": [
+          "out/.metais-staging"
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "overwrite": true
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/with-overwrite.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "only-entry",
+      "setup": {
+        "dirs": [
+          "alone/.metais-staging"
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "alone"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/only-entry.json"
+          }
+        }
+      ]
+    }
+  ]
+}

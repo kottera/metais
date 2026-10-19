@@ -1,0 +1,23 @@
+[
+  {
+    "code": "output.destination.not_directory",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "path": "sub/b.txt"
+    }
+  },
+  {
+    "code": "output.destination.not_regular_file",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "path": "a.txt",
+      "reason": "is_directory"
+    }
+  }
+]

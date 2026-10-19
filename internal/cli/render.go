@@ -17,6 +17,7 @@ import (
 
 	"github.com/kottera/metais/internal/cli/args"
 	"github.com/kottera/metais/internal/dates"
+	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/inputs"
@@ -36,7 +37,7 @@ import (
 // The steps render's refusals point to.
 var (
 	nextRenderOut = Next{Run: "metais render <package> --out <dir>",
-		Why: "Names the directory to render into, which must not exist yet."}
+		Why: "Names the directory to render into: a new one, or an empty one; --overwrite renders into one that holds entries."}
 	nextRenderNow = Next{Run: "metais render <package> --out <dir> --now 2026-01-31T09:00:00Z",
 		Why: "Gives the render time as an RFC 3339 date-time with an offset."}
 	nextRenderData = Next{Run: "metais render <package> --data <dir> --out <dir>",
@@ -53,14 +54,18 @@ var (
 		Why: "Lists every file the render writes, by the path --only takes, and writes nothing."}
 	nextRenderSample = Next{Run: "metais render <package> --sample --out <dir>",
 		Why: "Renders from sample data in place of a data directory; --optional, --seed and --items tune the generator."}
+	nextRenderOverwrite = Next{Run: "metais render <package> --out <dir> --overwrite",
+		Why: "Replaces the files the render writes in the directory, and leaves every other file in it alone."}
+	nextRenderInTheWay = Next{Run: "metais render <package> --out <dir>",
+		Why: "Renders into a new directory; or remove, from the existing one, what stands at the path the finding names."}
 )
 
 // renderDeclaration is metais render (ADR-008 D8).
 func renderDeclaration() *Command {
 	return &Command{
 		Name: "render", Group: "Supplying and rendering",
-		Synopsis:    "render <package> --out <dir|-> [supply flags] [--only <path>] [--dry-run] [--now <time>] [--sample [--optional <mode>] [--seed <n>] [--items <n>]] [--json]",
-		Description: "Render the package's outputs from the inputs supplied, into a new directory or to standard output.",
+		Synopsis:    "render <package> --out <dir|-> [supply flags] [--only <path>] [--overwrite] [--dry-run] [--now <time>] [--sample [--optional <mode>] [--seed <n>] [--items <n>]] [--json]",
+		Description: "Render the package's outputs from the inputs supplied, into a directory or to standard output.",
 		Detail: "The package is opened and verified whole, and the inputs are supplied and validated, as " +
 			"metais inspect and metais validate do; an input that fails ends the render with every finding of " +
 			"the inputs. Then every output is planned, an asset or a mirror as each file it writes, its " +
@@ -72,11 +77,21 @@ func renderDeclaration() *Command {
 			"an error, nothing is written anywhere. A container output is one zip of its entries, " +
 			"each rendered as an output is, in the order its profile and its first entries give; its zip is " +
 			"written as it is assembled.\n\n" +
-			"--out is required, and names a directory that does not exist yet. The outputs are written " +
-			"beneath a staging directory beside it, .metais-staging- followed by 16 hex digits, which is " +
-			"then renamed to it in one step that never replaces anything: the directory either does not " +
-			"exist or holds every output. Its missing parents are created. An --out that exists is refused " +
-			"before anything is written.\n\n" +
+			"--out is required, and names a directory. When it does not exist yet — the way to render — " +
+			"the outputs are written beneath a staging directory beside it, .metais-staging- followed by 16 " +
+			"hex digits, which is then renamed to it in one step that never replaces anything: the directory " +
+			"either does not exist or holds every output. Its missing parents are created.\n\n" +
+			"An --out that exists must be a directory. One with no entry at all is rendered into as it is; " +
+			"one that holds any entry, a hidden one included, is refused unless --overwrite is given. The " +
+			"outputs are then written beneath one staging directory inside it, .metais-staging, and moved " +
+			"into place one by one, in path order: a file whose path exists replaces it, by a rename that " +
+			"never writes into it or reads it, and a directory the render needs is moved in whole. Every " +
+			"other file in the directory is left alone. Each file is whole, its old bytes or its new, and a " +
+			"failure part way through lists the files already moved. Before anything is written, every " +
+			"output's path is checked in the directory: a symbolic link or junction on it, a file where a " +
+			"directory must be, a name that differs only in case from an existing one, a directory or a " +
+			"special file at it, another file system mounted on it, or a first segment that is the staging " +
+			"directory's name refuses the render, as a staging directory left by an earlier render does.\n\n" +
 			"--out - writes every file to standard output as one pax archive instead, in path order, each " +
 			"entry with mode 0644, or 0755 for an executable output, owner 0 and the time " +
 			"1980-01-01T00:00:00Z; with --json the document then goes to standard error, after the archive. " +
@@ -87,8 +102,8 @@ func renderDeclaration() *Command {
 			"--out -, the file's bytes alone, which may go to a terminal, and with --out <dir>, that file " +
 			"alone.\n\n" +
 			"--dry-run renders everything and checks --out as a render would, writes nothing anywhere, and " +
-			"lists every file the render would write with its size and digest. It is refused exactly when " +
-			"the render would be.\n\n" +
+			"lists every file the render would write with its size and digest, and, into a directory, " +
+			"whether it would create the file or replace it. It is refused exactly when the render would be.\n\n" +
 			"A template sees the inputs as inputs, the package's identity as package, where each input " +
 			"came from as sources, the output being rendered as output, and the render time as now, which " +
 			"is --now normalized to UTC, or nil without it. Nothing of the host — no environment variable, " +
@@ -106,8 +121,9 @@ func renderDeclaration() *Command {
 		Role:     finding.RoleConsumer,
 		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file, or a source directory; - is refused, since a package is read with random access."}},
 		Flags: []args.Flag{
-			{Name: "out", Value: "<dir|->", Description: "The directory to render into, which must not exist, or - for an archive on standard output; required."},
+			{Name: "out", Value: "<dir|->", Description: "The directory to render into — a new one, an empty one, or with --overwrite one that holds entries — or - for an archive on standard output; required."},
 			dataFlag, setFlag, setJSONFlag, inputsJSONFlag,
+			{Name: "overwrite", Description: "Renders into an existing directory that holds entries, replacing each file the render writes; nothing else in it is touched. Not with --out -."},
 			{Name: "only", Value: "<path>", Description: "Write only the file at this path, as --dry-run lists it: its bytes alone with --out -."},
 			{Name: "dry-run", Description: "List every file the render would write, with its size and digest, and write nothing."},
 			{Name: "now", Value: "<date-time>", Description: "The render time, an RFC 3339 date-time with an offset, which templates see as now; without it there is no time."},
@@ -127,9 +143,14 @@ func renderDeclaration() *Command {
 			Refusal{finding.CodeUsageFlagRequires, "--optional, --seed or --items is given without --sample.", nextRenderSample},
 			Refusal{finding.CodeUsageDataDirUnreadable, "The data directory given to --data does not exist, is not a directory, or cannot be read.", nextRenderData},
 			Refusal{finding.CodeUsageConflictingFlags, "--inputs-json - is given twice, and standard input is read once.", nextInputsHelp},
-			Refusal{finding.CodeDestinationNotDirectory, "--out, or a directory above it, exists and is not a directory.", nextRenderDest},
-			Refusal{finding.CodeDestinationNotEmpty, "--out is a directory that holds entries.", nextRenderDest},
-			Refusal{finding.CodeDestinationWriteFailed, "--out exists, or a write failed; whatever was written is removed.", nextRenderDest},
+			Refusal{finding.CodeDestinationNotDirectory, "--out, or a directory above it, exists and is not a directory; or, in --out, a file stands where an output's path needs a directory.", nextRenderInTheWay},
+			Refusal{finding.CodeDestinationNotEmpty, "--out is a directory that holds entries, and --overwrite is not given.", nextRenderOverwrite},
+			Refusal{finding.CodeDestinationLink, "In --out, an output's path runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed.", nextRenderInTheWay},
+			Refusal{finding.CodeDestinationCaseVariant, "In --out, an entry's name differs only in case or normalization from a name an output's path holds.", nextRenderInTheWay},
+			Refusal{finding.CodeDestinationNotRegularFile, "In --out, a directory, a named pipe, a socket or a device stands at an output's path.", nextRenderInTheWay},
+			Refusal{finding.CodeDestinationWriteFailed, "A write failed, another file system is mounted on an output's path, a staging directory is left in --out, or an output's path begins with its name; whatever was written is removed.", nextRenderDest},
+			Refusal{finding.CodeDestinationCommitFailed, "Moving the outputs into an existing --out failed part way; the files already moved are listed, and nothing else was changed.", nextRenderDest},
+			Refusal{finding.CodeUsageFlagExcluded, "--overwrite is given with --out -, and an archive on standard output replaces nothing.", nextRenderOverwrite},
 			Refusal{codeMirrorEmptyName, "A mirror would write a template whose file name is exactly .liquid with an empty name.", nextRenderTemplates},
 			Refusal{codeMirrorEmpty, "A mirror renders no file, and --fail-on warning makes its warning fail the render.", nextRenderTemplates},
 		),
@@ -141,6 +162,7 @@ func renderDeclaration() *Command {
 			{"metais render report.metais --data data --out - --only report.md", "Renders the whole package and writes the bytes of report.md alone to standard output."},
 			{"metais render . --sample --out preview", "Previews the source directory's outputs from sample data."},
 			{"metais render . --sample --set /incident/stage=final --seed 7 --out preview", "Previews them with one value pinned and other generated values."},
+			{"metais render report.metais --data data --out site --overwrite", "Renders into the existing directory site, replacing the files the render writes there and leaving every other one."},
 		},
 		run: runRender,
 	}
@@ -349,8 +371,9 @@ func joinIn(in, p string) string {
 }
 
 // runRender is metais render, of template outputs, assets, mirrors and
-// containers into a directory that does not exist, or to standard output,
-// or as a dry run (ADR-008 D8, ADR-005 D13, D14 item 1 and D16 to D18).
+// containers into a directory — one that does not exist, or an existing
+// one, which --overwrite needs when it holds entries — or to standard
+// output, or as a dry run (ADR-008 D8, ADR-005 D13 to D18).
 func runRender(s *session, p args.Parsed) outcome {
 	operand := p.Operands[0]
 	if operand == "-" {
@@ -368,6 +391,15 @@ func runRender(s *session, p args.Parsed) outcome {
 	// run writes none.
 	toStream, dryRun := out == "-", p.Has("dry-run")
 	only, hasOnly := p.Value("only")
+	if i, ok := p.Arg("overwrite"); ok && toStream {
+		// An archive replaces nothing (ADR-008 D8 item 4).
+		return s.refuseWith(finding.New(finding.CodeUsageFlagExcluded, invocation, nil, finding.Params{
+			"argument": finding.Int(int64(s.line.at[i] + 1)),
+			"command":  finding.String("render"),
+			"flag":     finding.String("--overwrite"),
+			"other":    finding.String("--out -"),
+		}))
+	}
 	if toStream && !dryRun {
 		if !hasOnly && isTerminal(s.inv.Stdout) {
 			return s.refuseWith(finding.New(finding.CodeUsageArchiveToTerminal, invocation, nil,
@@ -456,8 +488,12 @@ func runRender(s *session, p args.Parsed) outcome {
 	fs = append(fs, pfs...)
 	// Phase 3: the destination, when it is a directory, every refusal
 	// reported with the others (ADR-005 D15 item 8).
+	var dest *destination
 	if !toStream {
-		fs = append(fs, checkDestination(out)...)
+		var dfs []finding.Finding
+		dest, dfs = checkDestination(out, p.Has("overwrite"), plan, lim, s.inv.Options.Faults)
+		defer dest.close()
+		fs = append(fs, dfs...)
 	}
 	// The output validation schemas, compiled before any output is
 	// rendered (ADR-005 D11 item 3).
@@ -505,7 +541,7 @@ func runRender(s *session, p args.Parsed) outcome {
 	case toStream:
 		stream = func(w io.Writer) { writeArchive(w, written) }
 	default:
-		if f, ok := commit(out, written, s); !ok {
+		if f, ok := commit(out, dest, written, s); !ok {
 			fs = append(fs, f)
 			return outcome{findings: fs, next: s.nextSteps(fs)}
 		}
@@ -542,7 +578,10 @@ func runRender(s *session, p args.Parsed) outcome {
 			Executable: pf.decl.Executable, Entries: entryRecords(pf, &entries, 1), Kind: pf.kind(),
 		}
 		if !toStream {
-			rf.Status = "create"
+			rf.Status = string(hostfs.Create)
+			if dest != nil {
+				rf.Status = string(dest.status[pf.path])
+			}
 		}
 		result.Files = append(result.Files, rf)
 		human.WriteString(strconv.FormatInt(size, 10) + "\t" + d + "\t")
@@ -1171,39 +1210,132 @@ func collisionFinding(pf *planned, loc *finding.Location, c unitext.Collision, o
 		finding.WithRelated(finding.Related{Location: *other, Note: "collides with"}))
 }
 
-// checkDestination is ADR-005 D13's phase 3 for a render into the new
-// directory out (D14 item 1): an out that exists, or that lies beneath a
-// file, is refused before anything is written. A directory with entries
-// is not empty, and lists them; any other existing out is a write the
-// render cannot make, since it never writes into an existing name.
-func checkDestination(out string) []finding.Finding {
+// destination is ADR-005 D13's phase 3 for an --out that exists: the
+// directory, opened, and D15 item 4's check of each top-level planned
+// path, as Amendment A1 items 4 and 5 extend it, by path. A render into a
+// directory that does not exist has none.
+type destination struct {
+	x      *hostfs.Existing
+	checks []hostfs.PathCheck
+	status map[string]hostfs.Status
+}
+
+// close releases the directory, unless a commit already has.
+func (d *destination) close() {
+	if d != nil {
+		d.x.Close()
+	}
+}
+
+// checkDestination is ADR-005 D13's phase 3, D15, for out and the
+// top-level files of plan, every refusal a finding reported with the
+// others before anything is written (D15 item 8). An out that does not
+// exist is D14 item 1's, and has no destination. An out that is, or lies
+// beneath, a file is refused. An existing directory is D14 item 2's, as
+// Amendment A1 amends it: one with no entry at all is written into as it
+// is (D15 item 3); one that holds any entry, a hidden one included, is
+// refused unless overwrite; a leftover staging directory in it refuses the
+// render (A1 item 1); and each planned path that passed the path checks
+// is checked through the directory (D15 item 4), so a link, a file where
+// a directory must be, a case variant, a directory or non-regular target,
+// another device, or the staging name refuses it. Nothing in the
+// directory is read: only names and Lstat.
+func checkDestination(out string, overwrite bool, plan []*planned, lim limits.Set, faults fault.Set) (*destination, []finding.Finding) {
 	w, rest, err := hostfs.OpenNearest(out)
 	if err != nil {
 		if hostfs.ReasonOf(err) == hostfs.NotDirectory {
-			return []finding.Finding{finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil)}
+			return nil, []finding.Finding{finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil)}
 		}
-		return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+		return nil, []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
 	}
-	defer w.Close()
+	w.Close()
 	if rest != "." {
-		return nil
+		return nil, nil
 	}
-	entries, err := w.List(".", maxListed+1)
-	if err != nil && hostfs.ReasonOf(err) != hostfs.TooLarge {
-		return []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+	x, err := hostfs.OpenExisting(out, hostfs.WithFaults(faults))
+	if err != nil {
+		if hostfs.ReasonOf(err) == hostfs.NotDirectory {
+			return nil, []finding.Finding{finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil)}
+		}
+		return nil, []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
 	}
-	if len(entries) == 0 {
-		return []finding.Finding{writeFailed(hostfs.Exists)}
+	d := &destination{x: x, status: map[string]hostfs.Status{}}
+	var fs []finding.Finding
+	if !overwrite {
+		entries, err := x.List(maxListed + 1)
+		if err != nil && hostfs.ReasonOf(err) != hostfs.TooLarge {
+			d.close()
+			return nil, []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+		}
+		if len(entries) > 0 {
+			var names []string
+			for _, e := range entries[:min(len(entries), maxListed)] {
+				names = append(names, e.Name)
+			}
+			slices.Sort(names)
+			fs = append(fs, finding.New(finding.CodeDestinationNotEmpty, invocation, nil, finding.Params{
+				"entries": stringList(names),
+				"more":    finding.Bool(len(entries) > maxListed),
+			}))
+		}
 	}
-	var names []string
-	for _, e := range entries[:min(len(entries), maxListed)] {
-		names = append(names, e.Name)
+	if _, err := x.Lstat(hostfs.StagingDir); err == nil {
+		fs = append(fs, writeFailed(hostfs.Exists))
+	} else if r := hostfs.ReasonOf(err); r != hostfs.NotFound {
+		fs = append(fs, writeFailed(r))
 	}
-	slices.Sort(names)
-	return []finding.Finding{finding.New(finding.CodeDestinationNotEmpty, invocation, nil, finding.Params{
-		"entries": stringList(names),
-		"more":    finding.Bool(len(entries) > maxListed),
-	})}
+	// A path that breaks D12 has its own finding, and is not checked here;
+	// the output path check's seam (hostfs.CheckPaths) decides which.
+	bad := map[string]bool{}
+	for _, p := range hostfs.CheckPaths(hostfs.WithFaults(faults), func() []string {
+		var bad []string
+		for _, pf := range plan {
+			if len(unitext.CheckPath(pf.path, lim)) > 0 {
+				bad = append(bad, pf.path)
+			}
+		}
+		return bad
+	}) {
+		bad[p] = true
+	}
+	var paths []string
+	for _, pf := range plan {
+		if !bad[pf.path] {
+			paths = append(paths, pf.path)
+		}
+	}
+	d.checks = x.Check(paths)
+	for _, c := range d.checks {
+		if c.Err != nil {
+			fs = append(fs, pathRefusal(c.Path, c.Err))
+			continue
+		}
+		d.status[c.Path] = c.Status
+	}
+	return d, fs
+}
+
+// pathRefusal is the finding of err, the refusal of ADR-005 D15 item 4's
+// checks of the planned path p, as Amendment A1 items 4 and 5 extend them:
+// a link anywhere on the path (ADR-009 D8 item 3), a file where a directory
+// must be, a case variant, and a directory or non-regular target, each
+// with its own code naming p; another device, the staging name, and an
+// error that stopped the check, output.destination.write_failed.
+func pathRefusal(p string, err error) finding.Finding {
+	params := finding.Params{"path": finding.String(p)}
+	switch r := hostfs.ReasonOf(err); r {
+	case hostfs.Link:
+		return finding.New(finding.CodeDestinationLink, invocation, nil, params)
+	case hostfs.NotDirectory:
+		return finding.New(finding.CodeDestinationNotDirectory, invocation, nil, params)
+	case hostfs.CaseVariant:
+		return finding.New(finding.CodeDestinationCaseVariant, invocation, nil, params)
+	case hostfs.IsDirectory, hostfs.NotRegularFile:
+		params["reason"] = finding.String(string(r))
+		return finding.New(finding.CodeDestinationNotRegularFile, invocation, nil, params)
+	default:
+		return writeFailed(r)
+	}
 }
 
 // maxListed is how many entries a not_empty finding lists.
@@ -1452,11 +1584,15 @@ func content(pf *planned) (r io.Reader, done func(read error) error) {
 	}
 }
 
-// commit writes plan, in path order, beneath a staging directory beside
-// out, and renames it to out (ADR-005 D14 item 1). A failure removes what
-// the render created and reports output.destination.write_failed, with
-// nothing written.
-func commit(out string, plan []*planned, s *session) (finding.Finding, bool) {
+// commit writes plan, in path order, to out (ADR-005 D14): into dest,
+// the existing directory phase 3 checked, by commitExisting; otherwise
+// beneath a staging directory beside out, renamed to out (item 1). A
+// failure removes what the render created and reports
+// output.destination.write_failed, with nothing written.
+func commit(out string, dest *destination, plan []*planned, s *session) (finding.Finding, bool) {
+	if dest != nil {
+		return commitExisting(dest, plan)
+	}
 	o, err := hostfs.StageNew(out, hostfs.WithFaults(s.inv.Options.Faults))
 	if err != nil {
 		if hostfs.ReasonOf(err) == hostfs.NotDirectory {
@@ -1464,6 +1600,62 @@ func commit(out string, plan []*planned, s *session) (finding.Finding, bool) {
 		}
 		return writeFailed(hostfs.ReasonOf(err)), false
 	}
+	if f, ok := prepare(o, plan); !ok {
+		return f, false
+	}
+	if err := o.Commit(); err != nil {
+		return writeFailed(hostfs.ReasonOf(err)), false
+	}
+	return finding.Finding{}, true
+}
+
+// commitExisting writes plan into dest under ADR-005 D14 item 2, as
+// Amendment A1 amends it: every file is prepared beneath the one staging
+// directory inside it (item 1), which a leftover refuses with reason
+// exists, and is committed by unit (item 2), every check made again
+// first. A failure before the first unit is renamed leaves the directory
+// as it was, and is output.destination.write_failed; one after is
+// output.destination.commit_failed, listing the paths already committed
+// (item 3).
+func commitExisting(dest *destination, plan []*planned) (finding.Finding, bool) {
+	defer dest.close()
+	// --only writes the one file selected, by the same rules (ADR-005 D18
+	// item 3); every planned path was checked all the same, so a selected
+	// render is refused exactly when the whole one is (item 2).
+	write := map[string]bool{}
+	for _, pf := range plan {
+		write[pf.path] = true
+	}
+	var checks []hostfs.PathCheck
+	for _, c := range dest.checks {
+		if write[c.Path] {
+			checks = append(checks, c)
+		}
+	}
+	o, err := dest.x.Stage(checks)
+	if err != nil {
+		return writeFailed(hostfs.ReasonOf(err)), false
+	}
+	if f, ok := prepare(o, plan); !ok {
+		return f, false
+	}
+	err = o.Commit()
+	if err == nil {
+		return finding.Finding{}, true
+	}
+	var ce *hostfs.CommitError
+	if !errors.As(err, &ce) || len(ce.Committed) == 0 {
+		return writeFailed(hostfs.ReasonOf(err)), false
+	}
+	return finding.New(finding.CodeDestinationCommitFailed, invocation, nil, finding.Params{
+		"reason":    finding.String(writeReason(hostfs.ReasonOf(err))),
+		"committed": stringList(ce.Committed),
+	}), false
+}
+
+// prepare writes every file of plan through o, in path order, with every
+// directory it needs. A failure aborts o, which removes what it wrote.
+func prepare(o *hostfs.Output, plan []*planned) (finding.Finding, bool) {
 	for _, pf := range plan {
 		err := o.MkdirAll(pathpkg.Dir(pf.path))
 		if err == nil {
@@ -1477,9 +1669,6 @@ func commit(out string, plan []*planned, s *session) (finding.Finding, bool) {
 			o.Abort()
 			return writeFailed(hostfs.ReasonOf(err)), false
 		}
-	}
-	if err := o.Commit(); err != nil {
-		return writeFailed(hostfs.ReasonOf(err)), false
 	}
 	return finding.Finding{}, true
 }

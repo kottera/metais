@@ -116,6 +116,13 @@ func (x *Existing) List(max int) ([]Entry, error) {
 	return x.w.List(".", max)
 }
 
+// Lstat describes the entry name of the output directory, as Writer.Lstat
+// does, without following it and without opening it: a caller finds a
+// leftover StagingDir by it before anything is written.
+func (x *Existing) Lstat(name string) (Entry, error) {
+	return x.w.Lstat(name)
+}
+
 // Close releases the output directory. After Stage it does nothing: the
 // Output it returned ends the write.
 func (x *Existing) Close() error {

@@ -1,9 +1,9 @@
 metais render — Render the package's outputs from the inputs supplied, into a
-new directory or to standard output.
+directory or to standard output.
 
 Usage:
   metais render <package> --out <dir|-> [supply flags] [--only <path>]
-                [--dry-run] [--now <time>]
+                [--overwrite] [--dry-run] [--now <time>]
                 [--sample [--optional <mode>] [--seed <n>] [--items <n>]]
                 [--json]
 
@@ -21,11 +21,25 @@ anywhere. A container output is one zip of its entries, each rendered as an
 output is, in the order its profile and its first entries give; its zip is
 written as it is assembled.
 
---out is required, and names a directory that does not exist yet. The outputs
-are written beneath a staging directory beside it, .metais-staging- followed by
-16 hex digits, which is then renamed to it in one step that never replaces
-anything: the directory either does not exist or holds every output. Its missing
-parents are created. An --out that exists is refused before anything is written.
+--out is required, and names a directory. When it does not exist yet — the way
+to render — the outputs are written beneath a staging directory beside it,
+.metais-staging- followed by 16 hex digits, which is then renamed to it in one
+step that never replaces anything: the directory either does not exist or holds
+every output. Its missing parents are created.
+
+An --out that exists must be a directory. One with no entry at all is rendered
+into as it is; one that holds any entry, a hidden one included, is refused
+unless --overwrite is given. The outputs are then written beneath one staging
+directory inside it, .metais-staging, and moved into place one by one, in path
+order: a file whose path exists replaces it, by a rename that never writes into
+it or reads it, and a directory the render needs is moved in whole. Every other
+file in the directory is left alone. Each file is whole, its old bytes or its
+new, and a failure part way through lists the files already moved. Before
+anything is written, every output's path is checked in the directory: a symbolic
+link or junction on it, a file where a directory must be, a name that differs
+only in case from an existing one, a directory or a special file at it, another
+file system mounted on it, or a first segment that is the staging directory's
+name refuses the render, as a staging directory left by an earlier render does.
 
 --out - writes every file to standard output as one pax archive instead, in path
 order, each entry with mode 0644, or 0755 for an executable output, owner 0 and
@@ -40,8 +54,9 @@ chooses what is written: with --out -, the file's bytes alone, which may go to a
 terminal, and with --out <dir>, that file alone.
 
 --dry-run renders everything and checks --out as a render would, writes nothing
-anywhere, and lists every file the render would write with its size and digest.
-It is refused exactly when the render would be.
+anywhere, and lists every file the render would write with its size and digest,
+and, into a directory, whether it would create the file or replace it. It is
+refused exactly when the render would be.
 
 A template sees the inputs as inputs, the package's identity as package, where
 each input came from as sources, the output being rendered as output, and the
@@ -70,8 +85,9 @@ Operands:
 
 Flags:
   --out <dir|->
-      The directory to render into, which must not exist, or - for an archive on
-      standard output; required.
+      The directory to render into — a new one, an empty one, or with
+      --overwrite one that holds entries — or - for an archive on standard
+      output; required.
   --data <dir>
       The data directory: one file per input named <input>.<ext>, and one
       directory per collection input. metais inspect lists each input's file
@@ -89,6 +105,9 @@ Flags:
       A JSON object whose members are inputs, each replacing that input's whole
       value; - reads it from standard input, once. Applied after --data, in
       command-line order. May be given more than once.
+  --overwrite
+      Renders into an existing directory that holds entries, replacing each file
+      the render writes; nothing else in it is touched. Not with --out -.
   --only <path>
       Write only the file at this path, as --dry-run lists it: its bytes alone
       with --out -.
@@ -592,14 +611,33 @@ Refusals:
   output.dependent_required
       An output fails its validation (dependent required).
       Next: metais inspect <package>
+  output.destination.case_variant
+      In --out, an entry's name differs only in case or normalization from a
+      name an output's path holds.
+      Next: metais render <package> --out <dir>
+  output.destination.commit_failed
+      Moving the outputs into an existing --out failed part way; the files
+      already moved are listed, and nothing else was changed.
+      Next: metais render <package> --out <dir>
+  output.destination.link
+      In --out, an output's path runs through, or ends at, a symbolic link, a
+      junction or another reparse point, which is never followed.
+      Next: metais render <package> --out <dir>
   output.destination.not_directory
-      --out, or a directory above it, exists and is not a directory.
+      --out, or a directory above it, exists and is not a directory; or, in
+      --out, a file stands where an output's path needs a directory.
       Next: metais render <package> --out <dir>
   output.destination.not_empty
-      --out is a directory that holds entries.
+      --out is a directory that holds entries, and --overwrite is not given.
+      Next: metais render <package> --out <dir> --overwrite
+  output.destination.not_regular_file
+      In --out, a directory, a named pipe, a socket or a device stands at an
+      output's path.
       Next: metais render <package> --out <dir>
   output.destination.write_failed
-      --out exists, or a write failed; whatever was written is removed.
+      A write failed, another file system is mounted on an output's path, a
+      staging directory is left in --out, or an output's path begins with its
+      name; whatever was written is removed.
       Next: metais render <package> --out <dir>
   output.enum
       An output fails its validation (enum).
@@ -1003,6 +1041,10 @@ Refusals:
       --data is given with --sample, whose generated data takes the data
       directory's place.
       Next: metais render <package> --sample --out <dir>
+  usage.flag_excluded
+      --overwrite is given with --out -, and an archive on standard output
+      replaces nothing.
+      Next: metais render <package> --out <dir> --overwrite
   usage.flag_requires
       --optional, --seed or --items is given without --sample.
       Next: metais render <package> --sample --out <dir>
@@ -1087,3 +1129,6 @@ Examples:
       Previews the source directory's outputs from sample data.
   metais render . --sample --set /incident/stage=final --seed 7 --out preview
       Previews them with one value pinned and other generated values.
+  metais render report.metais --data data --out site --overwrite
+      Renders into the existing directory site, replacing the files the render
+      writes there and leaving every other one.

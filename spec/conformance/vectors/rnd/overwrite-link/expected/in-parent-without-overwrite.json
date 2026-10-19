@@ -1,0 +1,26 @@
+[
+  {
+    "code": "output.destination.link",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "path": "sub/b.txt"
+    }
+  },
+  {
+    "code": "output.destination.not_empty",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "entries": [
+        "sub",
+        "target.txt"
+      ],
+      "more": false
+    }
+  }
+]

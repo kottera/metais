@@ -1,0 +1,37 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/overwrite-case-variant",
+  "title": "In an existing output directory, an entry whose name differs only in case from a segment of an output path refuses the render, on every file system",
+  "statements": [
+    "MTS-RND-017"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "portable-paths"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "case-variant",
+      "setup": {
+        "copy": "setup"
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "overwrite": true
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/case-variant.json"
+          }
+        }
+      ]
+    }
+  ]
+}

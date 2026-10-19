@@ -306,6 +306,7 @@ func TestEmittedCodes(t *testing.T) {
 		CodeUsageNameInvalid, CodeUsageNameRequired,
 		CodeUsageFlagExcluded, CodeUsageFlagRequires, CodeUsageNotSourceDir, CodeSampleInvalid,
 		CodeDestinationNotDirectory, CodeDestinationNotEmpty, CodeDestinationWriteFailed,
+		CodeDestinationCaseVariant, CodeDestinationCommitFailed, CodeDestinationLink, CodeDestinationNotRegularFile,
 	}
 	for _, c := range []string{
 		"archive_comment", "crc_mismatch", "data_descriptor", "deflate_stream", "encrypted", "entry_order",

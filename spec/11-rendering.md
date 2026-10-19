@@ -109,14 +109,116 @@ entry is not selectable, and its container is. The whole render MUST still
 run and be verified, so that a selected render is refused exactly when the
 full render is. Rendering to standard output, the processor MUST then write
 the selected file's bytes alone, as the render would write them; rendering
-into a directory, it MUST write that file alone, by the rules of 11.1.
+into a directory, it MUST write that file alone, by the rules of §11.1, and
+into an existing directory by those of §11.3.
 
 A selection of a path that names no file of the render, and an archive
 written to a terminal, are refused as errors of the invocation before
 anything is written; the command line that reports them is the
 implementation's.
 
-## 11.3 Portable paths
+## 11.3 Writing into an existing directory
+
+An output directory that exists is written into file by file. Each file is
+whole at every instant, its old bytes or its new, and the set is whole
+against every failure but the processor's own process ending during the
+commit. An existing directory with no entry at all is written into this way
+with no request to replace files. One that holds any entry is written into
+only when the caller asks for files to be replaced (MTS-RND-004). A caller
+who needs the render to appear all at once renders into a directory that
+does not exist yet (MTS-RND-002).
+
+<a id="mts-rnd-013"></a>**MTS-RND-013** A processor MUST render into an
+existing output directory that holds no entry at all as MTS-RND-014 to
+MTS-RND-022 state, whether or not the caller asked for files to be
+replaced, and MUST NOT refuse it because it exists.
+
+<a id="mts-rnd-014"></a>**MTS-RND-014** Rendering into an existing output
+directory, a processor MUST create one staging directory inside it, named
+`.metais-staging`, with an exclusive create, MUST write every output beneath
+it at the output's own path, and MUST create nothing else in the output
+directory until the commit. It MUST then commit each output's unit, in byte
+order of the paths, by renaming it from the staging directory into place.
+An output's unit is its shallowest path component that did not exist when
+the directory was checked: a missing directory, renamed whole with every
+output beneath it, or the output itself when its parent exists. A missing
+directory and an output whose path is absent MUST be renamed with a rename
+that refuses an existing target. The processor MUST then remove the staging
+directory. When `.metais-staging` already exists in the output directory —
+left by a render that did not finish, or made by a concurrent one — the
+processor MUST refuse the render with `output.destination.write_failed`,
+reason `exists`, before it writes anything.
+
+<a id="mts-rnd-015"></a>**MTS-RND-015** Rendering into an existing output
+directory, a processor MUST examine each existing component of every output
+path beneath it without following it, and MUST refuse the render with
+`output.destination.link`, naming the path, when a component is a symbolic
+link, a Windows junction or any other reparse point, even one that points
+inside the output directory, whether or not the caller asked for files to be
+replaced. It MUST NOT write through, or replace, such a component. The
+output directory itself MAY be a symbolic link to a directory, since the
+caller named it.
+
+<a id="mts-rnd-016"></a>**MTS-RND-016** Rendering into an existing output
+directory, a processor MUST refuse the render with
+`output.destination.not_directory`, naming the path, when a component of an
+output path that must be a directory exists and is not one, and with
+`output.destination.not_regular_file`, naming the path and the reason
+`is_directory` or `not_regular_file`, when an output path names a directory,
+a named pipe, a socket, a device or anything else that is not a regular
+file.
+
+<a id="mts-rnd-017"></a>**MTS-RND-017** Rendering into an existing output
+directory, a processor MUST refuse the render with
+`output.destination.case_variant`, naming the path, when a directory on an
+output path holds an entry that is a canonical caseless match for the
+path's component there ([MTS-PTH-006](11-rendering.md#mts-pth-006)) and is not byte-equal to it,
+such as `Readme.md` where `README.md` is written: what a case-insensitive
+file system does with the two names is not portable.
+
+<a id="mts-rnd-018"></a>**MTS-RND-018** Rendering into an existing output
+directory, a processor MUST refuse the render with
+`output.destination.write_failed`, reason `exists`, when an output path's
+first segment is an ASCII-case-insensitive match for `.metais-staging`.
+Rendering into a directory that does not exist, it MUST NOT refuse such a
+path for that reason.
+
+<a id="mts-rnd-019"></a>**MTS-RND-019** *(not observable)* Rendering into an
+existing output directory, a processor MUST refuse the render with
+`output.destination.write_failed`, reason `io_error`, when the deepest
+existing directory of an output path is on a different file system from the
+output directory, such as a mount point inside it, so that every rename of
+the commit stays on one file system. It MUST NOT report the device it
+compared.
+
+> **Note.** A vector cannot mount a file system without privilege. `metais`
+> is proved to meet this by `internal/hostfs`'s unit tests, which put a
+> directory on another device by replacing the device the checks read, and
+> examine a real mount point where the host has one, and by `internal/cli`'s
+> `TestPathRefusal`, which maps that refusal to `io_error` with nothing of
+> the device in the finding.
+
+<a id="mts-rnd-020"></a>**MTS-RND-020** Rendering into an existing output
+directory, a processor MUST NOT open, read or write an existing file there.
+It MUST replace every output whose path is an existing regular file, even
+when the bytes would not change, by renaming the staged file over its
+directory entry. A file with another hard link therefore keeps that link,
+which keeps the old bytes. Every refusal of MTS-RND-014 to MTS-RND-019 MUST
+be reported with every other finding of the render, before anything is
+written.
+
+<a id="mts-rnd-021"></a>**MTS-RND-021** A processor MUST NOT remove, change
+or report a file in the output directory that the render does not write.
+
+<a id="mts-rnd-022"></a>**MTS-RND-022** When a commit into an existing output
+directory fails after a unit was renamed into place, the processor MUST
+stop, MUST remove the staging directory and everything still in it, and MUST
+refuse the render with `output.destination.commit_failed`, naming the
+reason and listing, in byte order, every output path whose unit was
+committed. A failure before the first unit is renamed changes nothing in the
+output directory and MUST be reported with `output.destination.write_failed`.
+
+## 11.4 Portable paths
 
 Every path a render writes is held to one predicate, which is also the rule
 for a package's entry names ([chapter 2](02-container.md)): a path that

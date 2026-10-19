@@ -1,0 +1,15 @@
+[
+  {
+    "code": "output.destination.commit_failed",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "reason": "permission_denied",
+      "committed": [
+        "a/x.txt"
+      ]
+    }
+  }
+]

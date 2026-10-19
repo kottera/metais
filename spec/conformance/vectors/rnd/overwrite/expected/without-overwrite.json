@@ -1,0 +1,19 @@
+[
+  {
+    "code": "output.destination.not_empty",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "entries": [
+        ".DS_Store",
+        "a.txt",
+        "keep.txt",
+        "same.txt",
+        "sub"
+      ],
+      "more": false
+    }
+  }
+]
