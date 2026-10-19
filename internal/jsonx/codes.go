@@ -79,11 +79,11 @@ const (
 const noteFirst = "first occurrence"
 
 // at returns the location of the byte at off, pointing at ptr when hasPtr.
-func (p *parser) at(off int, ptr string, hasPtr bool) *finding.Location {
+func (p *parser) at(off int, ptr *finding.Path, hasPtr bool) *finding.Location {
 	l := p.from.At.At(p.lines.pos(off))
 	l.Pointer, l.HasPointer = "", false
 	if hasPtr {
-		l = l.WithPointer(ptr)
+		l = l.WithPath(ptr)
 	}
 	return &l
 }
@@ -104,7 +104,7 @@ func (p *parser) report(code finding.Code, loc *finding.Location, params finding
 
 // syntaxError reports json.syntax at off, inside the value at ptr, and
 // stops the reading.
-func (p *parser) syntaxError(off int, ptr, expected, found string) {
+func (p *parser) syntaxError(off int, ptr *finding.Path, expected, found string) {
 	p.report(CodeSyntax, p.at(off, ptr, true), finding.Params{
 		"expected": finding.String(expected),
 		"found":    finding.String(found),
@@ -114,7 +114,7 @@ func (p *parser) syntaxError(off int, ptr, expected, found string) {
 
 // limitExceeded reports limit.exceeded for id, at off and the value at ptr,
 // with the observed value when it is known (ADR-009 D2 item 5).
-func (p *parser) limitExceeded(id limits.ID, off int, ptr string, hasPtr bool, observed int64) {
+func (p *parser) limitExceeded(id limits.ID, off int, ptr *finding.Path, hasPtr bool, observed int64) {
 	params := finding.Params{
 		"limit":   finding.String(limits.Get(id).Name),
 		"bound":   finding.Int(p.lim.Value(id)),

@@ -36,10 +36,9 @@ type Report struct {
 
 // group is one distinct finding: every finding with one duplicate key.
 type group struct {
-	keywordLocation string            // the kept finding's, which sorts first
-	digest          [sha256.Size]byte // the kept finding's encoding, which breaks a tie
-	line, column    int               // every duplicate's
-	it              *item             // the kept finding while it is held; nil once it cannot be listed
+	keywordLocation string // the kept finding's, which sorts first
+	line, column    int    // every duplicate's
+	it              *item  // the kept finding while it is held; nil once it cannot be listed
 }
 
 type item struct {
@@ -47,6 +46,19 @@ type item struct {
 	g       *group
 	index   int // in listed, or in spill
 	spilled bool
+	digest  *[sha256.Size]byte // f's encoding's, once a tie has needed it
+}
+
+// encodingDigest returns the SHA-256 digest of the item's JSON encoding,
+// which breaks a tie between duplicates. It is computed only when a tie
+// needs it, since the encoding holds the pointer, which can be as long as
+// the input.
+func (it *item) encodingDigest() [sha256.Size]byte {
+	if it.digest == nil {
+		d := sha256.Sum256(AppendJSON(nil, it.f))
+		it.digest = &d
+	}
+	return *it.digest
 }
 
 type counts struct {
@@ -81,6 +93,11 @@ func NewReport(maxFindings int) *Report {
 // Add panics when f was not built by New, or when f is a duplicate at
 // another line or column: a value's position is fixed by its file and
 // pointer, so that is a defect in whatever positioned it.
+//
+// Add costs a finding nothing for the length of its pointer: the pointer
+// is de-duplicated by its path's digest, compared only against findings at
+// the same place, and encoded only to break a tie between duplicates that
+// are both held.
 func (r *Report) Add(f Finding) {
 	if f.entry == nil {
 		panic("finding: Report.Add of a Finding New did not build")
@@ -89,27 +106,32 @@ func (r *Report) Add(f Finding) {
 	kl := f.keywordLocation()
 	l := f.locationOrZero()
 	g, seen := r.groups[key]
+	it := &item{f: f}
 	if !seen {
-		g = &group{keywordLocation: kl, digest: sha256.Sum256(AppendJSON(nil, f)), line: l.Line, column: l.Column}
+		g = &group{keywordLocation: kl, line: l.Line, column: l.Column}
 		r.groups[key] = g
 		r.count(f)
 	} else {
 		if l.Line != g.line || l.Column != g.column {
-			panic(fmt.Sprintf("finding: duplicates of %s at %s are at %d:%d and %d:%d", f.entry.Code, l.Pointer, g.line, g.column, l.Line, l.Column))
+			panic(fmt.Sprintf("finding: duplicates of %s at %s are at %d:%d and %d:%d", f.entry.Code, l.pointer(), g.line, g.column, l.Line, l.Column))
 		}
-		if kl > g.keywordLocation {
+		// A group the cap has let go was past the last listed finding on
+		// the members before schema, which every duplicate shares and the
+		// last listed finding only ever moves back from, so no duplicate
+		// of it can be listed either.
+		if g.it == nil || kl > g.keywordLocation {
 			return
 		}
-		d := sha256.Sum256(AppendJSON(nil, f))
-		if kl == g.keywordLocation && bytes.Compare(d[:], g.digest[:]) >= 0 {
-			return
+		if kl == g.keywordLocation {
+			d, kept := it.encodingDigest(), g.it.encodingDigest()
+			if bytes.Compare(d[:], kept[:]) >= 0 {
+				return
+			}
 		}
-		g.keywordLocation, g.digest = kl, d
-		if g.it != nil {
-			r.remove(g.it)
-		}
+		g.keywordLocation = kl
+		r.remove(g.it)
 	}
-	it := &item{f: f, g: g}
+	it.g = g
 	g.it = it
 	r.insert(it)
 }

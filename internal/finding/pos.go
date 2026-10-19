@@ -3,7 +3,12 @@
 
 package finding
 
-import "strings"
+import (
+	"cmp"
+	"crypto/sha256"
+	"encoding/binary"
+	"strings"
+)
 
 // Pos is a position in a file or an argument's text (ADR-006 D5 item 3):
 // a 1-based line, and a 1-based column counted in Unicode code points.
@@ -51,4 +56,94 @@ func pointerTokens(ptr string) []string {
 		parts[i] = tokenUnescaper.Replace(p)
 	}
 	return parts
+}
+
+// Path is an RFC 6901 JSON Pointer held as its decoded tokens, each node
+// sharing its parent. A reader that reports many values under one long
+// pointer builds the parent once and each child from it, so building,
+// de-duplicating and ordering their findings costs each finding its own
+// token, never the whole pointer. The nil *Path is the root, "".
+type Path struct {
+	parent *Path
+	token  string
+	depth  int
+	id     [sha256.Size]byte // the SHA-256 of the parent's id, then the token's length and bytes
+}
+
+// Child returns the path to the member or element token of the value at
+// p. An invalid UTF-8 byte in token is replaced with U+FFFD (ADR-006 D9
+// item 9).
+func (p *Path) Child(token string) *Path {
+	token = validUTF8(token)
+	c := &Path{parent: p, token: token, depth: p.Depth() + 1}
+	h := sha256.New()
+	id := p.digest()
+	h.Write(id[:])
+	var n [8]byte
+	binary.BigEndian.PutUint64(n[:], uint64(len(token)))
+	h.Write(n[:])
+	h.Write([]byte(token))
+	h.Sum(c.id[:0])
+	return c
+}
+
+// Depth is how many tokens p has.
+func (p *Path) Depth() int {
+	if p == nil {
+		return 0
+	}
+	return p.depth
+}
+
+// String returns p in its JSON-string form, as Pointer does.
+func (p *Path) String() string {
+	tokens := make([]string, p.Depth())
+	for q := p; q != nil; q = q.parent {
+		tokens[q.depth-1] = q.token
+	}
+	return Pointer(tokens...)
+}
+
+// digest identifies p's token sequence: two paths have the same digest
+// exactly when they have the same tokens. The root's is all zeros.
+func (p *Path) digest() [sha256.Size]byte {
+	if p == nil {
+		return [sha256.Size]byte{}
+	}
+	return p.id
+}
+
+// parsePath returns the path ptr, an RFC 6901 pointer, names.
+func parsePath(ptr string) *Path {
+	var p *Path
+	for _, t := range pointerTokens(ptr) {
+		p = p.Child(t)
+	}
+	return p
+}
+
+// comparePaths compares two paths token by token (ADR-006 D8 item 1.6):
+// at the first token from the root at which they differ, else the shorter
+// first. Shared or equal prefixes are passed over by their digests, so
+// only the tokens that differ are read.
+func comparePaths(a, b *Path) int {
+	if a == b || a.digest() == b.digest() {
+		return 0
+	}
+	ca, cb := a.chain(), b.chain()
+	for i := 0; i < len(ca) && i < len(cb); i++ {
+		if ca[i].id != cb[i].id {
+			return compareTokens(ca[i].token, cb[i].token)
+		}
+	}
+	return cmp.Compare(len(ca), len(cb))
+}
+
+// chain returns p's nodes, the root's child first.
+func (p *Path) chain() []*Path {
+	c := make([]*Path, p.Depth())
+	for q := p; q != nil; q = q.parent {
+		c[q.depth-1] = q
+	}
+	return c
 }

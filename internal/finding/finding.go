@@ -156,7 +156,9 @@ type Subject struct {
 // File is relative to its origin's root and empty when absent; Argument is
 // the 1-based ordinal of a command-line argument, zero when absent; Line
 // and Column are 1-based, zero when unknown. Pointer is an RFC 6901 JSON
-// Pointer, present when HasPointer is set: "" is the root.
+// Pointer, present when HasPointer is set: "" is the root. WithPath gives
+// the pointer as a Path instead, which a Location a finding returns has
+// written out as Pointer.
 type Location struct {
 	Origin     Origin
 	File       string
@@ -165,6 +167,8 @@ type Location struct {
 	Column     int
 	Pointer    string
 	HasPointer bool
+
+	path *Path // the pointer, when it was given as a Path or once New has taken it
 }
 
 // At returns l with its line and column set from p.
@@ -175,7 +179,37 @@ func (l Location) At(p Pos) Location {
 
 // WithPointer returns l pointing at ptr.
 func (l Location) WithPointer(ptr string) Location {
-	l.Pointer, l.HasPointer = ptr, true
+	l.Pointer, l.path, l.HasPointer = ptr, nil, true
+	return l
+}
+
+// WithPath returns l pointing at p, nil for the root.
+func (l Location) WithPath(p *Path) Location {
+	l.Pointer, l.path, l.HasPointer = "", p, true
+	return l
+}
+
+// pointer returns l's pointer in its JSON-string form.
+func (l Location) pointer() string {
+	if l.path != nil {
+		return l.path.String()
+	}
+	return l.Pointer
+}
+
+// withPath returns l with its pointer held as a Path, so a finding orders
+// and de-duplicates it by its tokens.
+func (l Location) withPath() Location {
+	if l.HasPointer && l.path == nil {
+		l.path, l.Pointer = parsePath(l.Pointer), ""
+	}
+	return l
+}
+
+// written returns l with its pointer written out as Pointer, as a caller
+// outside the package reads it.
+func (l Location) written() Location {
+	l.Pointer, l.path = l.pointer(), nil
 	return l
 }
 
@@ -244,8 +278,7 @@ type Finding struct {
 	alternatives []Alternative
 	related      []Related
 
-	ptrTokens []string // the location's pointer, decoded, for Compare
-	paramsKey string   // the canonical form of params, for Compare and the duplicate key
+	paramsKey string // the canonical form of params, for Compare and the duplicate key
 }
 
 func (f Finding) Code() Code                  { return f.entry.Code }
@@ -256,14 +289,22 @@ func (f Finding) Hint() string                { return f.hint }
 func (f Finding) Subject() Subject            { return f.subject }
 func (f Finding) Via() []Via                  { return slices.Clone(f.via) }
 func (f Finding) Alternatives() []Alternative { return slices.Clone(f.alternatives) }
-func (f Finding) Related() []Related          { return slices.Clone(f.related) }
+
+// Related returns the other locations the finding concerns.
+func (f Finding) Related() []Related {
+	out := slices.Clone(f.related)
+	for i := range out {
+		out[i].Location = out[i].Location.written()
+	}
+	return out
+}
 
 // Location returns the finding's location, and false when it has none.
 func (f Finding) Location() (Location, bool) {
 	if f.location == nil {
 		return Location{}, false
 	}
-	return *f.location, true
+	return f.location.written(), true
 }
 
 // Schema returns the schema keyword the finding reports, and false when it
@@ -358,8 +399,12 @@ func New(code Code, subj Subject, loc *Location, p Params, opts ...Option) Findi
 	if err := f.checkPointers(); err != nil {
 		panic(fmt.Sprintf("finding: %s: %v", code, err))
 	}
-	if f.location != nil && f.location.HasPointer {
-		f.ptrTokens = pointerTokens(f.location.Pointer)
+	if f.location != nil {
+		l := f.location.withPath()
+		f.location = &l
+	}
+	for i := range f.related {
+		f.related[i].Location = f.related[i].Location.withPath()
 	}
 	f.paramsKey = canonicalForm(f.params)
 	var err error
@@ -393,7 +438,7 @@ func checkSubject(s Subject) error {
 
 // checkPointers reports the first pointer of f that is not an RFC 6901
 // pointer: its location's and its related locations', and every schema
-// pointer it names.
+// pointer it names. A pointer given as a Path is one by construction.
 func (f Finding) checkPointers() error {
 	var ptrs []string
 	locs := []*Location{f.location}
@@ -401,7 +446,7 @@ func (f Finding) checkPointers() error {
 		locs = append(locs, &f.related[i].Location)
 	}
 	for _, l := range locs {
-		if l != nil && l.HasPointer {
+		if l != nil && l.HasPointer && l.path == nil {
 			ptrs = append(ptrs, l.Pointer)
 		}
 	}
@@ -504,8 +549,8 @@ func (f Finding) fieldText() string {
 	if f.field != nil && f.field.Title != "" {
 		return f.field.Title
 	}
-	if f.location != nil && f.location.HasPointer && f.location.Pointer != "" {
-		return "`" + f.location.Pointer + "`"
+	if f.location != nil && f.location.HasPointer && (f.location.path != nil || f.location.Pointer != "") {
+		return "`" + f.location.pointer() + "`"
 	}
 	if f.subject.Name != "" {
 		return "the " + f.subject.Kind.String() + " `" + f.subject.Name + "`"

@@ -218,7 +218,7 @@ func appendLocation(b []byte, l Location, note string) []byte {
 	o.numIf("line", l.Line)
 	o.numIf("column", l.Column)
 	if l.HasPointer {
-		o.str("pointer", l.Pointer)
+		o.str("pointer", l.pointer())
 	}
 	o.strIf("note", note)
 	return o.close()
@@ -287,9 +287,9 @@ func (f Finding) appendHuman(b []byte, colour bool, indent string) []byte {
 		b = append(b, '\n')
 	}
 	if l := f.location; l != nil && l.HasPointer {
-		at := l.Pointer
+		at := l.pointer()
 		if f.subject.Kind == SubjectInput {
-			at = Pointer(f.subject.Name) + l.Pointer
+			at = Pointer(f.subject.Name) + at
 		} else if at == "" {
 			at = `""`
 		}
