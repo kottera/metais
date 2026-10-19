@@ -405,6 +405,9 @@ func TestEmittedCodes(t *testing.T) {
 		CodeUsageIsADirectory, CodeUsageLineOutOfRange, CodeUsageNoMatch, CodeUsageNotText, CodeUsageUnknownInput)
 	// render's fan-out (W5-4).
 	want = append(want, "output.expression.for_each_type")
+	// Assets, the mirror and the asset tag (W5-5).
+	want = append(want, "output.declaration.empty_mirror", "output.declaration.empty_name", "template.asset_ambiguous",
+		"template.asset_not_found", "template.asset_not_text", "template.asset_not_written", "template.asset_tree")
 	slices.Sort(want)
 	if !slices.Equal(got, want) {
 		t.Errorf("registered %q, want %q", got, want)

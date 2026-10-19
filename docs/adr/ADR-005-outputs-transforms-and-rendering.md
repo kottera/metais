@@ -1558,3 +1558,36 @@ they write into an existing directory too.
   `TestExistingDestinationDetector`; its faults are `fault.ReadExisting`
   and `fault.RemoveForeign` at this package's seam. `StageNew`,
   `WriteInPlace` and `CreateNew` are unchanged.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-5.** `metais render` plans asset
+  copies (D5) and mirrors (D6) beside template outputs, every planned file
+  joining one plan whose paths D12 checks together, so a mirrored file
+  collides as any other does (D6 item 7). A destination and a relative path
+  are joined as written, never cleaned (D4 item 2). An asset's bytes are
+  not read before the commit: planning takes each file's size from the
+  package's directory, phase 4 counts it against `output-size` and
+  `output-total` with the bytes of every template file, in plan order, and
+  the commit streams it from the package as it writes it, taking its digest
+  on the way (D13 items 4 and 5). D5 item 3's empty directory cannot reach
+  a render: a source directory holding one is refused with
+  `package.layout.empty_directory`, and a packed package records no
+  directory entry (ADR-001 D2), so a directory asset writes exactly the
+  files beneath it. D6's two findings, which D6 names without codes, are
+  registered in the `output.declaration` family this ADR's interfaces
+  give: `output.declaration.empty_name`, an error, for a template named
+  exactly `.liquid` (item 5), and `output.declaration.empty_mirror`, a
+  warning, for a mirror that yields no file (item 6), each located at the
+  declaration's `mirror`. A name matching nothing is the loader's
+  `manifest.path_not_found` (D5 item 1). The render's file record (D16 item
+  2) carries `source` `asset` and a null `kind` for an asset (D7 item 3),
+  which `metais.render/1`'s schema now allows. `inspect` lists a mirror's
+  templates without those a `template` field names (D6 item 3), as render
+  renders them. An asset and a mirror are container entries as any
+  declaration is (D8 item 3): their files join the container's tree, and
+  an asset entry's bytes are streamed into the container's zip when it is
+  measured and when it is written, never held. An asset's or a mirror's
+  `when` and path are W5-4's
+  expressions: each evaluation whose `when` holds expands the asset or the
+  mirror beneath the directory its path renders, and the mirror's
+  findings are its evaluation's. Mirrors with `escape: html` or
+  `newline: crlf` still stop with `internal.error` until W5-2 and W5-7
+  implement those fields.

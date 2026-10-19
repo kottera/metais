@@ -1697,3 +1697,9 @@ D9 item 6 (the closed set of requirements), and the vector schema
   It also counts the held-out cases, and fails on a departure the run did
   not reach. The run itself is the out-of-band act, and its command is in
   `README.md` there.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-5.** A render step takes
+  `fail_on` (`error` or `warning`), the caller's ADR-006 D2 item 5 choice,
+  which the `cli` adapter passes as `--fail-on`; the suite only adds the
+  member, as D9's versioning allows. With `fail_on: warning`, a step that
+  fails with warnings and no error is explained by them, and its exit is 1
+  (ADR-006's exit table). `out/mirror-empty` proves MTS-RND-007 through it.

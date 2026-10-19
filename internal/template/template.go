@@ -30,11 +30,11 @@ var reserved = []string{
 // parsed in it and rendered in its Renderer's.
 var dialect = newDialect(nil)
 
-// newDialect is the dialect whose embed and provenance tags render through
-// r, or render nothing when r is nil, which only a parse uses.
+// newDialect is the dialect whose embed, asset and provenance tags render
+// through r, or render nothing when r is nil, which only a parse uses.
 func newDialect(r *Renderer) *liquid.Dialect {
 	d, err := liquid.Core().Extend(liquid.Spec{
-		Tags:     []liquid.TagDef{embedTag{r}, provenanceTag{r}},
+		Tags:     []liquid.TagDef{embedTag{r}, assetTag{r}, provenanceTag{r}},
 		Reserved: reserved,
 	})
 	if err != nil {
@@ -44,6 +44,7 @@ func newDialect(r *Renderer) *liquid.Dialect {
 }
 
 // Dialect is the dialect a package's templates are parsed and rendered in:
-// the standard catalog of internal/liquid, METAIS's embed and provenance
-// tags, and the globals' names reserved (ADR-004 D1, D7 item 8, D12, D14).
+// the standard catalog of internal/liquid, METAIS's embed, asset and
+// provenance tags, and the globals' names reserved (ADR-004 D1, D7 item 8,
+// D12 to D14).
 func Dialect() *liquid.Dialect { return dialect }

@@ -1562,3 +1562,18 @@ checks before the library sees a schema). No dependency changes.
   file that is not regular at any segment, and removes with a call made
   relative to a handle on the file's directory that refuses a directory
   (`unlinkat` with no flag, `DeleteFileW`).
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-5.** The `home` canary of D16
+  item 2 is `internal/template/canary_home.go`, under `metais_canary_home`:
+  an asset the package lacks is read from `$HOME`, read when the process
+  starts, before `Isolate`, so an `asset` tag naming it is found at parse
+  and its contents written. Its probe is `tag/asset-not-from-host`, whose
+  template writes the contents of `SENTINEL.txt`, the name of the decoy
+  environment A plants in the home and working directories; the release
+  build refuses it with `template.asset_not_found`, an asset being read
+  only from the package's `assets/` (D9). Its red run, at commit
+  `c76817b3cb86250eec19cc6c4bb740f0e33b343f`, by
+  `go test ./internal/conformance -run 'TestHostIsolationCanaries/home|TestHostIsolation$' -v`,
+  is `the home canary: conformance failure [sentinel]: step 1: the written
+  file work/out/page.txt holds the sentinel from HOME`, beside its
+  nothing-else-changes, `ok`, findings and A/B failures; the release
+  build's `TestHostIsolation` gives the probe no hit.

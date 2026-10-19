@@ -1,0 +1,19 @@
+[
+  {
+    "code": "limit.exceeded.output",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "big"
+    },
+    "location": {
+      "origin": "output",
+      "file": "big.bin"
+    },
+    "params": {
+      "limit": "output-size",
+      "bound": 20,
+      "lowered": true
+    }
+  }
+]

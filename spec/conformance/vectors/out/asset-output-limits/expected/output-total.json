@@ -1,0 +1,19 @@
+[
+  {
+    "code": "limit.exceeded.output",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "page"
+    },
+    "location": {
+      "origin": "output",
+      "file": "page.txt"
+    },
+    "params": {
+      "limit": "output-total",
+      "bound": 40,
+      "lowered": true
+    }
+  }
+]

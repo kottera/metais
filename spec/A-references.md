@@ -36,6 +36,9 @@ background only.
 - <a id="rfc3986"></a>**[RFC3986]** Berners-Lee, T., Fielding, R., and L.
   Masinter, *Uniform Resource Identifier (URI): Generic Syntax*, STD 66,
   RFC 3986, January 2005 — https://www.rfc-editor.org/rfc/rfc3986
+- <a id="rfc4648"></a>**[RFC4648]** Josefsson, S., *The Base16, Base32, and
+  Base64 Data Encodings*, RFC 4648, October 2006 —
+  https://www.rfc-editor.org/rfc/rfc4648
 - <a id="rfc7493"></a>**[RFC7493]** Bray, T., Ed., *The I-JSON Message
   Format*, RFC 7493, March 2015 — https://www.rfc-editor.org/rfc/rfc7493
 - <a id="rfc8785"></a>**[RFC8785]** Rundgren, A., Jordan, B., and S. Erdtman,

@@ -48,6 +48,7 @@ type renderArgs struct {
 	// InputsJSON names a file of the vector holding an --inputs-json
 	// argument's JSON text.
 	InputsJSON string `json:"inputs_json"`
+	FailOn     string `json:"fail_on"`
 }
 
 type expectedTree struct {
@@ -183,6 +184,9 @@ func (st renderStep) argv(work string) []string {
 	}
 	if st.args.Now != "" {
 		a = append(a, "--now", st.args.Now)
+	}
+	if st.args.FailOn != "" {
+		a = append(a, "--fail-on", st.args.FailOn)
 	}
 	for _, s := range st.args.Set {
 		a = append(a, "--set", s)

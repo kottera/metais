@@ -1,0 +1,23 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: logo
+    asset: logo.svg
+    when: package.name == "example"
+  - id: hidden
+    asset: static
+    when: package.name == "other"
+  - id: placed
+    asset: static
+    path: "{{ package.name | upcase }}/static"
+  - id: docs
+    mirror: docs
+    when: package.version contains "1."
+  - id: none
+    mirror: site
+    when: package.version contains "2."

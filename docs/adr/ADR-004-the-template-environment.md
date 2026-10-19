@@ -1206,3 +1206,30 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
     digest literally: D10 item 3 says no other token exists, the digest
     being defined over content. The work order's text asked for a token
     for the digest too; the ADR governs.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-5.** D13's `asset` tag is a tag
+  the dialect adds. Its arguments are checked at parse: anything but a
+  string literal path given first, then at most `as:` with the literal
+  `path`, `contents` or `base64`, is `template.syntax`, since D16 names no
+  code for the tag's grammar. A path that names no file beneath `assets/`
+  — not confined as D8 item 2 confines a partial, a directory, or no entry
+  matched byte for byte — is `template.asset_not_found`, found at parse
+  with the template's other parse findings, from its constructs when the
+  parse stopped earlier, as `template.partial_not_found` is; `check`
+  reports the same tag as ADR-007's `template.xref.missing_asset`. The
+  render resolves path mode through ADR-005 D5 item 6's placement map,
+  which render builds from its plan, keyed by the asset's path beneath
+  `assets/`, with the tree each file is written in: one placement in the
+  output's tree is written relative to the output's directory, more than
+  one is `template.asset_ambiguous`, none there but some in another tree
+  `template.asset_tree`, and none at all `template.asset_not_written`, each
+  carrying `asset` and `output_path`. A tree is the output
+  directory, or one container, as W5-6's render names it: an entry's tree
+  is its container's path, and its path is the entry's within it.
+  `contents` drops a leading byte order mark and refuses bytes that are not
+  UTF-8 with `template.asset_not_text`; `base64` is RFC 4648 section 4,
+  padded, unbroken. What the tag writes goes through the engine's tag
+  writer, which never escapes (D9 item 4), and counts against the output's
+  limits. The loader's dialect, which a manifest expression is parsed in,
+  knows `asset` by name beside `embed` and `provenance`, so an `asset` in a
+  path is `template.tag_context` (D16 item 5) under MTS-TAG-011, rather
+  than an unknown tag.

@@ -98,22 +98,25 @@ func TestExitFor(t *testing.T) {
 		ok        bool
 		findings  []any
 		authoring bool
+		failOn    bool
 		want      int
 		err       string
 	}{
-		{"ok", true, []any{f("input.unused", "input")}, false, 0, ""},
-		{"content", false, []any{f("input.invalid", "input")}, false, 1, ""},
-		{"destination", false, []any{f("output.exists", "output")}, false, 5, ""},
-		{"content before destination", false, []any{f("output.exists", "output"), f("input.invalid", "input")}, false, 1, ""},
-		{"refused before content", false, []any{f("input.invalid", "input"), f("package.refused", "package")}, false, 4, ""},
-		{"usage before refused", false, []any{f("package.refused", "package"), f("usage.flag", "invocation")}, false, 3, ""},
-		{"internal first", false, []any{f("usage.flag", "invocation"), f("internal.error", "invocation")}, false, 2, ""},
-		{"a package's content error under a consumer command", false, []any{f("template.broken", "template")}, false, 4, ""},
-		{"a package's content error under an authoring command", false, []any{f("template.broken", "template")}, true, 1, ""},
-		{"a warning explains nothing", false, []any{f("input.unused", "input")}, false, 0, "no error finding"},
-		{"an unregistered code", false, []any{f("input.unknown", "input")}, false, 0, "not in the registry"},
+		{"ok", true, []any{f("input.unused", "input")}, false, false, 0, ""},
+		{"content", false, []any{f("input.invalid", "input")}, false, false, 1, ""},
+		{"destination", false, []any{f("output.exists", "output")}, false, false, 5, ""},
+		{"content before destination", false, []any{f("output.exists", "output"), f("input.invalid", "input")}, false, false, 1, ""},
+		{"refused before content", false, []any{f("input.invalid", "input"), f("package.refused", "package")}, false, false, 4, ""},
+		{"usage before refused", false, []any{f("package.refused", "package"), f("usage.flag", "invocation")}, false, false, 3, ""},
+		{"internal first", false, []any{f("usage.flag", "invocation"), f("internal.error", "invocation")}, false, false, 2, ""},
+		{"a package's content error under a consumer command", false, []any{f("template.broken", "template")}, false, false, 4, ""},
+		{"a package's content error under an authoring command", false, []any{f("template.broken", "template")}, true, false, 1, ""},
+		{"a warning explains nothing", false, []any{f("input.unused", "input")}, false, false, 0, "no error finding"},
+		{"a warning under --fail-on warning", false, []any{f("input.unused", "input")}, false, true, 1, ""},
+		{"an error before a warning under --fail-on warning", false, []any{f("input.unused", "input"), f("output.exists", "output")}, false, true, 5, ""},
+		{"an unregistered code", false, []any{f("input.unknown", "input")}, false, false, 0, "not in the registry"},
 	} {
-		got, err := exitFor(reg, c.ok, c.findings, c.authoring)
+		got, err := exitFor(reg, c.ok, c.findings, c.authoring, c.failOn)
 		switch {
 		case c.err != "" && (err == nil || !strings.Contains(err.Error(), c.err)):
 			t.Errorf("%s: %d, %v; want an error saying %q", c.name, got, err, c.err)

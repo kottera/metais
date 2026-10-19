@@ -1,0 +1,36 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tag/asset-path",
+  "title": "An asset tag's path mode writes where the render copies the asset, relative to the directory of the file being rendered",
+  "statements": [
+    "MTS-TAG-014"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

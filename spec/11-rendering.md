@@ -19,6 +19,11 @@ output directory in one step that replaces nothing.
 error, a processor MUST write nothing anywhere: no output, no directory and
 no staging directory.
 
+<a id="mts-rnd-007"></a>**MTS-RND-007** When the caller asked that warnings
+fail a render, a processor MUST fail a render any finding of which is a
+warning, reporting the warning with its severity unchanged, and MUST write
+nothing anywhere, as for an error.
+
 <a id="mts-rnd-002"></a>**MTS-RND-002** Rendering into an output directory
 that does not exist, a processor MUST create its missing parents, MUST write
 every output beneath a staging directory in the same parent, named

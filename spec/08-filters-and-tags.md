@@ -56,7 +56,53 @@ and, for an item, its `index`: before anything renders, for every `embed`
 whose name and index are literals — whether or not its branch would run —
 and when the tag is rendered, for an `embed` whose index is computed.
 
-## 8.3 `provenance`
+## 8.3 `asset`
+
+`{% asset "<path>" %}` writes where the render copies an asset, relative to
+the file being rendered, so a page links to a stylesheet or an image the
+same render writes; `as: "contents"` writes the asset's text, and
+`as: "base64"` its bytes in base64, for a `data:` URI. Its path is an entry
+beneath `assets/`, named as a partial is named beneath `templates/`. What
+it writes is never escaped.
+
+<a id="mts-tag-012"></a>**MTS-TAG-012** The `asset` tag MUST take, first,
+the asset's path as a string literal, and then at most the keyword
+argument `as:` with one of the string literals `"path"`, `"contents"` and
+`"base64"`, `"path"` when it is not given; a processor MUST refuse any
+other `asset` tag with `template.syntax` when the template is parsed.
+
+<a id="mts-tag-013"></a>**MTS-TAG-013** A processor MUST refuse an `asset`
+tag whose path is not the path of a file beneath `assets/` — empty, with a
+leading `/`, a `\`, a `.` or `..` segment or an empty segment, or naming
+no entry, matched byte for byte — with `template.asset_not_found` when the
+template is parsed, rendering nothing, and MUST NOT read an asset from
+anywhere but the package.
+
+<a id="mts-tag-014"></a>**MTS-TAG-014** An `asset` tag with `as: "path"`
+MUST write the path of the one file the render writes from that asset in
+the tree of the file being rendered, relative to the directory of the file
+being rendered: `../` for each of its directories that the asset's path
+does not share, in order from the root, followed by the rest of the
+asset's path, with `/` separators.
+
+<a id="mts-tag-015"></a>**MTS-TAG-015** A processor MUST refuse an `asset`
+tag with `as: "path"` whose asset the render writes to no file with
+`template.asset_not_written`; one whose asset it writes to more than one
+file of the tree of the file being rendered — the output directory, or the
+one container the file is an entry of — with `template.asset_ambiguous`;
+and one whose asset it writes only in another tree with
+`template.asset_tree`.
+
+<a id="mts-tag-016"></a>**MTS-TAG-016** An `asset` tag with
+`as: "contents"` MUST write the asset's bytes unchanged but for a leading
+byte order mark, which it removes; a processor MUST refuse one whose bytes
+are not UTF-8 with `template.asset_not_text`.
+
+<a id="mts-tag-017"></a>**MTS-TAG-017** An `asset` tag with `as: "base64"`
+MUST write the asset's bytes in the base64 encoding of
+[RFC 4648](A-references.md#rfc4648) section 4, padded, with no line break.
+
+## 8.4 `provenance`
 
 `provenance` writes one line recording where an output came from, in the
 comment syntax of the file it is written into, holding only the fields the
@@ -126,14 +172,15 @@ the tag is rendered.
 > stands: after an XML declaration, a shebang or a front-matter block that
 > must come first, if the author puts it there.
 
-## 8.4 Where the tags may stand
+## 8.5 Where the tags may stand
 
-`embed` and `provenance` write into the file a template renders. A `path`
-([chapter 9](09-outputs.md)) computes a file's name, and neither has a place
-in one.
+`embed`, `asset` and `provenance` write into the file a template renders. A
+`path` ([chapter 9](09-outputs.md)) computes a file's name, and none of them
+has a place in one.
 
 <a id="mts-tag-011"></a>**MTS-TAG-011** An output declaration's `path` MUST
-NOT hold an `embed` or a `provenance` tag, and a processor MUST refuse one
-there, whatever its arguments, with `template.tag_context` naming the tag,
-located at the field's manifest pointer and giving the column within the
-expression.
+NOT hold an `embed`, an `asset` or a `provenance` tag, and a processor MUST
+refuse one there, whatever its arguments, with `template.tag_context` naming
+the tag, located at the field's manifest pointer and giving the column
+within the expression.
+

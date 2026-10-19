@@ -1,0 +1,27 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: logo
+    asset: logo.png
+  - id: brand
+    asset: logo.png
+    path: img/brand.png
+  - id: static
+    asset: static
+  - id: public
+    asset: static
+    path: public
+  - id: notes
+    asset: notes
+    path: .
+  - id: everything
+    asset: .
+    path: all
+  - id: tool
+    asset: bin/run.sh
+    executable: true

@@ -85,6 +85,7 @@ type stepArgs struct {
 	Only       stringList                 `json:"only"`
 	Overwrite  bool                       `json:"overwrite"`
 	DryRun     bool                       `json:"dry_run"`
+	FailOn     string                     `json:"fail_on"`
 	Now        string                     `json:"now"`
 	Sample     *sampleArgs                `json:"sample"`
 	Examples   []string                   `json:"examples"`

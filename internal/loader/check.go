@@ -25,14 +25,14 @@ import (
 
 // Dialect is the dialect a package's manifest expressions are parsed in
 // when the package is opened (ADR-004 D16 item 5): internal/liquid's
-// standard catalog, Core(), with METAIS's embed and provenance tags known
-// by name, so that a path holding one is template.tag_context rather than
+// standard catalog, Core(), with METAIS's embed, asset and provenance
+// tags known by name, so that a path holding one is template.tag_context rather than
 // an unknown tag. A template is parsed in internal/template's dialect,
 // which defines them; METAIS's own filters join it there too.
 func Dialect() *liquid.Dialect { return dialect }
 
 var dialect = func() *liquid.Dialect {
-	d, err := liquid.Core().Extend(liquid.Spec{Tags: []liquid.TagDef{namedTag("embed"), namedTag("provenance")}})
+	d, err := liquid.Core().Extend(liquid.Spec{Tags: []liquid.TagDef{namedTag("embed"), namedTag("asset"), namedTag("provenance")}})
 	if err != nil {
 		panic("loader: " + err.Error())
 	}

@@ -133,3 +133,70 @@ never changes one.
 > **Note.** `[Content_Types].xml`, the part list of an Office Open XML
 > document, is `xml` by its extension. A file name is matched exactly:
 > `makefile` is `text`.
+
+## 9.5 Asset copies
+
+An asset declaration copies files from `assets/` into the output tree as they
+are, byte for byte: assets are the way binary files reach the output. Its
+`asset` names a file or a directory beneath `assets/`, `.` naming `assets/`
+itself; a name that matches nothing is refused when the package is opened
+([MTS-MAN-017](03-manifest.md#mts-man-017)). Directories are not entries:
+an asset directory writes its files, and a package holds no empty directory
+([chapter 2](02-container.md)).
+
+<a id="mts-out-013"></a>**MTS-OUT-013** A processor MUST write an asset
+declaration whose `asset` names a file beneath `assets/` to the path its
+`path` gives and, when it omits `path`, to the asset's path relative to
+`assets/`; and MUST write it with exactly the bytes of the asset's entry,
+never rendering, escaping or converting them, whatever they hold. Every
+file an asset declaration writes MUST have the mode
+[MTS-OUT-002](#mts-out-002) gives a template output with the declaration's
+`executable`.
+
+<a id="mts-out-014"></a>**MTS-OUT-014** A processor MUST write an asset
+declaration whose `asset` names a directory beneath `assets/`, or `.`, by
+writing every file beneath that directory, at any depth, at its path
+relative to the directory beneath the destination directory its `path`
+gives, `.` being the root of the output tree, and, when it omits `path`,
+beneath the directory's own path relative to `assets/`; each file with
+exactly the bytes of its entry.
+
+<a id="mts-out-015"></a>**MTS-OUT-015** A processor MUST count the size of
+every file an asset declaration writes, with the bytes of every other file
+the render writes, against the `output-size` and `output-total` limits
+before it writes anything, and MUST refuse a render in which one breaches
+either with `limit.exceeded.output`, located at the file's path.
+
+## 9.6 The mirror
+
+A mirror renders a directory of templates into the output tree, each
+template to a file of the same relative path, so a tree of templates needs
+no declaration per file. A template whose name, or the name of a directory
+above it beneath the mirror's root, begins with `_` is a partial and is not
+mirrored; a template a `template` field names is rendered by that output
+alone. File names are not templates: a name derived from the inputs needs a
+template output.
+
+<a id="mts-out-016"></a>**MTS-OUT-016** A processor MUST render a mirror by
+rendering every template beneath `templates/<dir>`, `<dir>` being its
+`mirror` and `.` naming `templates/` itself, to its path relative to
+`templates/<dir>`, with a final `.liquid` removed from its file name,
+beneath the destination directory its `path` gives, `.` being the root of
+the output tree, and, when it omits `path`, beneath `<dir>`.
+
+<a id="mts-out-017"></a>**MTS-OUT-017** A processor MUST NOT mirror a
+template whose file name, or the name of any directory between the
+mirror's directory and it, begins with `_`, nor a template that a
+`template` field of any declaration of the manifest names.
+
+<a id="mts-out-018"></a>**MTS-OUT-018** A processor MUST refuse a mirror
+that would render a template whose file name is exactly `.liquid` with
+`output.declaration.empty_name`.
+
+<a id="mts-out-019"></a>**MTS-OUT-019** A processor MUST report a mirror
+that renders no file as `output.declaration.empty_mirror`, a warning.
+
+<a id="mts-out-020"></a>**MTS-OUT-020** A processor MUST hold every file a
+mirror renders to the path rules of [chapter 11](11-rendering.md) with
+every other file of the output tree, refusing two files at the same path
+with `output.path.duplicate` whichever declarations write them.

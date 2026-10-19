@@ -21,6 +21,7 @@ import (
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
+	"github.com/kottera/metais/internal/pkgtree"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/unitext"
 	"github.com/kottera/metais/internal/version"
@@ -51,8 +52,10 @@ func renderDeclaration() *Command {
 		Description: "Render the package's outputs from the inputs supplied, into a new directory.",
 		Detail: "The package is opened and verified whole, and the inputs are supplied and validated, as " +
 			"metais inspect and metais validate do; an input that fails ends the render with every finding of " +
-			"the inputs. Then every output is planned, its path checked by the portable-path rules, and " +
-			"rendered in memory: every output is attempted, and each reports its first error. If any " +
+			"the inputs. Then every output is planned, an asset or a mirror as each file it writes, its " +
+			"path checked by the portable-path rules, and rendered in memory: every output is attempted, " +
+			"and each reports its first error. An asset is copied as it is, never rendered: its size counts " +
+			"against the output limits, and its bytes are read from the package as it is written. If any " +
 			"finding is an error, nothing is written anywhere. A container output is one zip of its entries, " +
 			"each rendered as an output is, in the order its profile and its first entries give; its zip is " +
 			"written as it is assembled.\n\n" +
@@ -86,6 +89,8 @@ func renderDeclaration() *Command {
 			Refusal{finding.CodeDestinationNotDirectory, "--out, or a directory above it, exists and is not a directory.", nextRenderDest},
 			Refusal{finding.CodeDestinationNotEmpty, "--out is a directory that holds entries.", nextRenderDest},
 			Refusal{finding.CodeDestinationWriteFailed, "--out exists, or a write failed; whatever was written is removed.", nextRenderDest},
+			Refusal{codeMirrorEmptyName, "A mirror would write a template whose file name is exactly .liquid with an empty name.", nextRenderTemplates},
+			Refusal{codeMirrorEmpty, "A mirror renders no file, and --fail-on warning makes its warning fail the render.", nextRenderTemplates},
 		),
 		Examples: []Example{
 			{"metais render report-1.0.0.metais --data data --out out", "Renders the package's outputs from the data directory data into the new directory out."},
@@ -166,12 +171,21 @@ type renderEntry struct {
 
 // planned is one file a render plans (ADR-005 D13 phase 1): its
 // declaration, its path within its tree, where in the manifest the path
-// comes from, the evaluation of a fan-out it is, and its bytes once
-// rendered.
+// comes from, the evaluation of a fan-out it is, what it is written from,
+// and its bytes once rendered. A file copied from an asset holds no
+// bytes: they are streamed from the package as they are written (D13 item
+// 4).
 type planned struct {
 	decl manifest.Output
 	path string
 	ptr  string
+	// template is the template a template output or a mirror renders the
+	// file from, beneath templates/.
+	template string
+	// asset is the entry an asset declaration copies the file from, and
+	// tree the package's tree it is read from.
+	asset string
+	tree  pkgtree.Tree
 	// literal is set for a path the manifest writes, or defaults, rather
 	// than one a path template rendered.
 	literal bool
@@ -193,8 +207,9 @@ type planned struct {
 	// failed marks a file that did not render, and a container one of
 	// whose entries did not.
 	failed bool
-	// size and digest are a container's zip's, measured in phase 4, and
-	// deflated is whether its container deflates an entry.
+	// size and digest are a container's zip's, measured in phase 4, or an
+	// asset's entry's, its digest taken as it is first read; deflated is
+	// whether its container deflates an entry.
 	size     int64
 	digest   string
 	deflated bool
@@ -213,13 +228,29 @@ func (pf *planned) item() *int {
 // entries' zip.
 func (pf *planned) isContainer() bool { return pf.decl.Form == manifest.OutputContainer && !pf.tool }
 
-// source is the record's source of pf (ADR-005 D16 item 2): its form, or
+// source is the record's source of pf (ADR-005 D16 item 2): template for
+// a file a template output or a mirror renders, asset, container, or
 // profile for the mimetype entry a profile writes.
 func (pf *planned) source() string {
-	if pf.tool {
+	switch {
+	case pf.tool:
 		return "profile"
+	case pf.asset != "":
+		return "asset"
+	case pf.isContainer():
+		return "container"
 	}
-	return string(pf.decl.Form)
+	return "template"
+}
+
+// kind is the kind of pf (ADR-005 D7), or nil for an asset, a container
+// and a profile's mimetype, which have none (D7 item 3).
+func (pf *planned) kind() *string {
+	if pf.asset != "" || pf.isContainer() || pf.tool {
+		return nil
+	}
+	k := kindOf(pf.path, pf.decl.Kind)
+	return &k
 }
 
 // joinIn is the path p within the tree of the container at in.
@@ -230,8 +261,9 @@ func joinIn(in, p string) string {
 	return in + "/" + p
 }
 
-// runRender is metais render, of template outputs into a directory that
-// does not exist (ADR-008 D8, ADR-005 D13 and D14 item 1).
+// runRender is metais render, of template outputs, assets, mirrors and
+// containers into a directory that does not exist (ADR-008 D8, ADR-005
+// D13 and D14 item 1).
 func runRender(s *session, p args.Parsed) outcome {
 	operand := p.Operands[0]
 	if operand == "-" {
@@ -320,11 +352,7 @@ func runRender(s *session, p args.Parsed) outcome {
 		var entries strings.Builder
 		rf := renderFile{
 			Path: pf.path, Output: pf.decl.ID, Item: pf.item(), Source: pf.source(), Size: size, Digest: d,
-			Executable: pf.decl.Executable, Status: "create", Entries: entryRecords(pf, &entries, 1),
-		}
-		if !pf.isContainer() {
-			k := kindOf(pf.path, pf.decl.Kind)
-			rf.Kind = &k
+			Executable: pf.decl.Executable, Status: "create", Entries: entryRecords(pf, &entries, 1), Kind: pf.kind(),
 		}
 		result.Files = append(result.Files, rf)
 		human.WriteString(strconv.FormatInt(size, 10) + "\t" + d + "\t")
@@ -334,9 +362,10 @@ func runRender(s *session, p args.Parsed) outcome {
 	return outcome{findings: fs, result: result, human: []byte(human.String()), dataDir: dataDir}
 }
 
-// measured is pf's size and digest: a container's zip's, or its bytes'.
+// measured is pf's size and digest: a container's zip's, an asset's
+// entry's, or its bytes'.
 func (pf *planned) measured() (int64, string) {
-	if pf.isContainer() {
+	if pf.isContainer() || pf.asset != "" {
 		return pf.size, pf.digest
 	}
 	sum := sha256.Sum256(pf.bytes)
@@ -353,14 +382,10 @@ func entryRecords(pf *planned, human *strings.Builder, depth int) []renderEntry 
 	out := make([]renderEntry, 0, len(pf.entries))
 	for _, e := range pf.entries {
 		size, d := e.measured()
-		r := renderEntry{Path: e.path, Item: e.item(), Source: e.source(), Method: "stored", Size: size, Digest: d}
+		r := renderEntry{Path: e.path, Item: e.item(), Source: e.source(), Kind: e.kind(), Method: "stored", Size: size, Digest: d}
 		if e.decl.ID != "" && !e.tool {
 			id := e.decl.ID
 			r.Output = &id
-		}
-		if e.decl.Form == manifest.OutputTemplate && !e.tool {
-			k := kindOf(e.path, e.decl.Kind)
-			r.Kind = &k
 		}
 		if e.deflated {
 			r.Method = "deflated"
@@ -395,7 +420,8 @@ func (s *session) fails(fs []finding.Finding) bool {
 // every evaluation's and every container entry's, to the outputs limit
 // (ADR-009 D3).
 func planOutputs(pkg *loader.Package, lim limits.Set, s *session, r *template.Renderer) ([]*planned, []finding.Finding) {
-	p := &planner{pkg: pkg, lim: lim, s: s, r: r, counted: true}
+	p := &planner{pkg: pkg, lim: lim, s: s, r: r, counted: true,
+		entries: pkg.Tree.List(), explicit: explicitTemplates(pkg.Manifest.Outputs)}
 	plan := p.tree(pkg.Manifest.Outputs, "", "", 0, nil)
 	if n, bound := int64(len(p.all)), lim.Value(limits.Outputs); n > bound {
 		over := p.all[bound]
@@ -422,6 +448,10 @@ type planner struct {
 	// counted is cleared when a fan-out is left unevaluated because the
 	// plan is already beyond outputs.
 	counted bool
+	// entries are the package's, and explicit the templates a template
+	// output names, which no mirror renders (ADR-005 D6 item 3).
+	entries  []string
+	explicit map[string]bool
 }
 
 // at is the location of the manifest's value at ptr.
@@ -439,8 +469,6 @@ func (p *planner) tree(decls []manifest.Output, owner, in string, depth int, fan
 	var tree []*planned
 	for _, d := range decls {
 		switch {
-		case d.Form != manifest.OutputTemplate && d.Form != manifest.OutputContainer:
-			panic("cli: an output of form " + string(d.Form) + " is not part of this version of metais")
 		case d.Escape == "html", d.Newline == "crlf", d.Validate != "":
 			panic("cli: escape, newline and validate are not part of this version of metais")
 		}
@@ -474,7 +502,8 @@ func (p *planner) tree(decls []manifest.Output, owner, in string, depth int, fan
 // x: one per evaluation whose when holds, in the order of the for_each
 // array, or in the enclosing container's evaluation fan, each with its
 // path rendered, or the default path when d gives none (ADR-005 D3, D4),
-// and each container's entries. Before each evaluation but the first, a
+// and each container's entries; an asset's or a mirror's path names the
+// destination of the files it expands into (D5, D6). Before each evaluation but the first, a
 // plan already beyond outputs stops the fan-out. The first error of an
 // expression is the declaration's finding, and it plans no file.
 func (p *planner) declaration(d manifest.Output, x *template.Exprs, owner, in string, depth int, fan *template.Fan) []*planned {
@@ -495,18 +524,30 @@ func (p *planner) declaration(d manifest.Output, x *template.Exprs, owner, in st
 		}
 		ok, f := p.r.When(x, fan)
 		if f == nil && ok {
-			pf := &planned{decl: d, fan: fan, ptr: d.Pointer + "/path", literal: x.Literal, owner: owner, in: in}
+			pf := &planned{decl: d, fan: fan, ptr: d.Pointer + "/path", literal: x.Literal, owner: owner, in: in, template: d.Source}
 			if x.Path == nil {
-				pf.path, pf.ptr, pf.literal = strings.TrimSuffix(d.Source, ".liquid"), d.Pointer+"/template", true
+				pf.path, pf.ptr, pf.literal = d.Source, d.Pointer+"/"+string(d.Form), true
+				if d.Form == manifest.OutputTemplate {
+					pf.path = strings.TrimSuffix(d.Source, ".liquid")
+				}
 			} else {
 				pf.path, f = p.r.Path(x, fan)
 			}
 			if f == nil {
-				p.all = append(p.all, pf)
-				if d.Form == manifest.OutputContainer {
-					pf.entries = p.container(pf, depth+1)
+				switch d.Form {
+				case manifest.OutputAsset:
+					expanded := p.asset(pf)
+					p.all, files = append(p.all, expanded...), append(files, expanded...)
+				case manifest.OutputMirror:
+					expanded := p.mirror(pf)
+					p.all, files = append(p.all, expanded...), append(files, expanded...)
+				default:
+					p.all = append(p.all, pf)
+					if d.Form == manifest.OutputContainer {
+						pf.entries = p.container(pf, depth+1)
+					}
+					files = append(files, pf)
 				}
-				files = append(files, pf)
 			}
 		}
 		if f != nil {
@@ -517,6 +558,116 @@ func (p *planner) declaration(d manifest.Output, x *template.Exprs, owner, in st
 		}
 	}
 	return files
+}
+
+// asset is the files of the asset declaration's evaluation at, whose path
+// names their destination (ADR-005 D5): the file assets/<path>, copied to
+// the path; or every file beneath the directory assets/<path>, "."
+// naming assets/ itself, each at its path relative to that directory
+// beneath the destination, "." being the root of the tree. Each file's
+// size is the entry's, and its bytes are not read. The loader has refused
+// an asset that names no entry.
+func (p *planner) asset(at *planned) []*planned {
+	src := at.decl.Source
+	file := func(entry, path string) *planned {
+		info, err := p.pkg.Tree.Stat(entry)
+		if err != nil {
+			panic("cli: an entry the plan names has no Stat: " + entry)
+		}
+		pf := *at
+		pf.path, pf.template, pf.asset, pf.tree, pf.size = path, "", entry, p.pkg.Tree, info.Size
+		return &pf
+	}
+	if _, err := p.pkg.Tree.Stat(template.AssetDir + src); err == nil {
+		return []*planned{file(template.AssetDir+src, at.path)}
+	}
+	var out []*planned
+	for _, e := range p.entries {
+		if rel, ok := strings.CutPrefix(e, treePrefix(template.AssetDir, src)); ok {
+			out = append(out, file(e, beneath(at.path, rel)))
+		}
+	}
+	return out
+}
+
+// mirror is the files of the mirror's evaluation at, whose path names
+// their destination (ADR-005 D6): every template beneath templates/<dir>,
+// "." naming templates/ itself, in byte order, but one with a name
+// beginning with _ at any depth beneath the mirror's root and one a
+// template field names anywhere in the manifest, each rendered to its path
+// relative to the mirror's root, with a final .liquid removed, beneath the
+// destination. A template named exactly .liquid would be written with an
+// empty name, and is refused; a mirror that yields no file is a warning.
+func (p *planner) mirror(at *planned) []*planned {
+	d := at.decl
+	var out []*planned
+	refused := false
+	subj := finding.Subject{Kind: finding.SubjectOutput, Name: at.owner}
+	loc := p.at(d.Pointer + "/mirror")
+	for _, e := range p.entries {
+		rel, ok := strings.CutPrefix(e, treePrefix(template.Dir, d.Source))
+		name := strings.TrimPrefix(e, template.Dir)
+		if !ok || p.explicit[name] || slices.ContainsFunc(strings.Split(rel, "/"), func(seg string) bool { return strings.HasPrefix(seg, "_") }) {
+			continue
+		}
+		if pathpkg.Base(rel) == ".liquid" {
+			refused = true
+			p.fs = append(p.fs, finding.New(codeMirrorEmptyName, subj, &loc, finding.Params{"template": finding.String(name)}))
+			continue
+		}
+		pf := *at
+		pf.path, pf.template = beneath(at.path, strings.TrimSuffix(rel, ".liquid")), name
+		out = append(out, &pf)
+	}
+	if len(out) == 0 && !refused {
+		p.fs = append(p.fs, finding.New(codeMirrorEmpty, subj, &loc, finding.Params{"directory": finding.String(d.Source)}))
+	}
+	return out
+}
+
+// The codes of an output declaration a render reports (ADR-005's
+// interfaces name the family output.declaration).
+const (
+	codeMirrorEmptyName finding.Code = "output.declaration.empty_name"
+	codeMirrorEmpty     finding.Code = "output.declaration.empty_mirror"
+)
+
+// treePrefix is the prefix of every entry beneath the directory rel of the
+// layout directory dir, "." naming dir itself.
+func treePrefix(dir, rel string) string {
+	if rel == "." {
+		return dir
+	}
+	return dir + rel + "/"
+}
+
+// beneath is the path rel beneath the destination directory dest, "."
+// being the root of the tree. The paths are joined as written, never
+// cleaned: a path is exactly what the manifest gives (ADR-005 D4 item 2).
+func beneath(dest, rel string) string {
+	if dest == "." {
+		return rel
+	}
+	return dest + "/" + rel
+}
+
+// explicitTemplates is every template a template output names, at any
+// depth of a container: no mirror renders one (ADR-005 D6 item 3).
+func explicitTemplates(decls []manifest.Output) map[string]bool {
+	out := map[string]bool{}
+	var walk func([]manifest.Output)
+	walk = func(ds []manifest.Output) {
+		for _, d := range ds {
+			switch d.Form {
+			case manifest.OutputTemplate:
+				out[d.Source] = true
+			case manifest.OutputContainer:
+				walk(d.Container.Entries)
+			}
+		}
+	}
+	walk(decls)
+	return out
 }
 
 // container plans the entries of the container pf, the depth-th
@@ -796,7 +947,10 @@ func writeFailed(r hostfs.Reason) finding.Finding {
 // known, is reported before anything renders (ADR-004 D12 item 3); then
 // every planned file whose templates parsed and need no such raw form is
 // rendered with r, each to its first error (ADR-004 D16 item 4). The bytes
-// of each file that rendered are held in its planned file. Then each
+// of each file that rendered are held in its planned file; a file copied
+// from an asset is not read, its size counted against the output limits
+// with the bytes of every other file (ADR-005 D13 item 4), and the asset
+// tag renders through the plan's placement map (D5 item 6). Then each
 // container whose entries all rendered is measured, and held to
 // output-size.
 func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r *template.Renderer, lim limits.Set) []finding.Finding {
@@ -828,6 +982,38 @@ func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r 
 		}
 	}
 	parse(pkg.Manifest.Outputs)
+	// A mirror's templates, and the placement map, from the plan.
+	placed := map[string][]template.Placement{}
+	var walk func(tree []*planned)
+	walk = func(tree []*planned) {
+		for _, pf := range tree {
+			switch {
+			case pf.isContainer():
+				walk(pf.entries)
+			case pf.asset != "":
+				name := strings.TrimPrefix(pf.asset, template.AssetDir)
+				placed[name] = append(placed[name], template.Placement{Tree: pf.in, Path: pf.path})
+			case pf.decl.Form == manifest.OutputMirror:
+				if _, seen := ready[pf.template]; seen {
+					continue
+				}
+				ready[pf.template] = true
+				sources = append(sources, pf.template)
+				for _, name := range ts.Reach(pf.template) {
+					_, pfs := ts.Parse(name)
+					if len(pfs) > 0 {
+						ready[pf.template] = false
+					}
+					if !reported[name] {
+						reported[name] = true
+						fs = append(fs, pfs...)
+					}
+				}
+			}
+		}
+	}
+	walk(plan)
+	r.PlaceAssets(placed)
 	unavailable := map[string]bool{}
 	for _, source := range sources {
 		if !ready[source] {
@@ -853,11 +1039,18 @@ func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r 
 				continue
 			case pf.tool:
 				continue
-			case !ready[pf.decl.Source]:
+			case pf.asset != "":
+				o := template.Output{ID: pf.owner, Path: pf.path, In: pf.in}
+				if f := r.ChargeAsset(o, pf.size); f != nil {
+					fs = append(fs, *f)
+					pf.failed = true
+				}
+				continue
+			case !ready[pf.template]:
 				pf.failed = true
 				continue
 			}
-			out, f := r.Render(template.Output{ID: pf.owner, Template: pf.decl.Source, Path: pf.path, Fan: pf.fan, Kind: kindOf(pf.path, pf.decl.Kind), In: pf.in})
+			out, f := r.Render(template.Output{ID: pf.owner, Template: pf.template, Path: pf.path, Fan: pf.fan, Kind: kindOf(pf.path, pf.decl.Kind), In: pf.in})
 			if f != nil {
 				fs = append(fs, *f)
 				pf.failed = true
@@ -933,17 +1126,33 @@ func writeContainer(w io.Writer, pf *planned) ([]zipfmt.Written, error) {
 				_, err := writeContainer(w, e)
 				return err
 			}
-			_, err := w.Write(e.bytes)
-			return err
+			r, done := content(e)
+			_, err := io.Copy(w, r)
+			return done(err)
 		}}
 	}
 	return zipfmt.WriteParts(w, parts)
 }
 
-// content is the reader of pf's bytes as the commit writes them: a
-// container's zip is written into a pipe as it is read, and done reports
+// content is the reader of pf's bytes as they are written: an asset's are
+// streamed from the package, its digest taken on the first whole read; a
+// container's zip is written into a pipe as it is read; and done reports
 // the error of its writing, once the reader is finished with.
 func content(pf *planned) (r io.Reader, done func(read error) error) {
+	if pf.asset != "" {
+		rc, err := pf.tree.Open(pf.asset)
+		if err != nil {
+			panic("cli: opening " + pf.asset + ", which the plan found: " + err.Error())
+		}
+		h := sha256.New()
+		return io.TeeReader(rc, h), func(read error) error {
+			rc.Close()
+			if read == nil && pf.digest == "" {
+				pf.digest = "sha256:" + hex.EncodeToString(h.Sum(nil))
+			}
+			return nil
+		}
+	}
 	if !pf.isContainer() {
 		return bytes.NewReader(pf.bytes), func(error) error { return nil }
 	}

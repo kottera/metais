@@ -71,4 +71,3 @@ output.unique_items W5
 package.not_found W7
 package.not_readable W7
 schema.sample_unsatisfiable W5
-template.xref.missing_asset W5

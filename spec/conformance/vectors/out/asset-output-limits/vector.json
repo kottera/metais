@@ -1,0 +1,78 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "out/asset-output-limits",
+  "title": "Every file an asset writes counts against output-size and output-total with every other file, before anything is written",
+  "statements": [
+    "MTS-OUT-015"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "output-size",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "output-size": 20
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/output-size.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "output-total",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "output-total": 40
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/output-total.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "within",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "output-size": 30,
+              "output-total": 42
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

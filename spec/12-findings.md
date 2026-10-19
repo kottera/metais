@@ -169,6 +169,8 @@ it, and the statements it reports.
 | `output.container.space` | warning | content | output | `profile`, `path` | 1.0 | [MTS-TRN-011](10-transforms.md#mts-trn-011), [MTS-AUT-031](13-authoring.md#mts-aut-031) |
 | `output.container.too_many_entries` | error | content | output | `count` | 1.0 | [MTS-TRN-007](10-transforms.md#mts-trn-007) |
 | `output.contains` | error | content | output | — | 1.0 | — |
+| `output.declaration.empty_mirror` | warning | content | output | `directory` | 1.0 | [MTS-OUT-019](09-outputs.md#mts-out-019) |
+| `output.declaration.empty_name` | error | content | output | `template` | 1.0 | [MTS-OUT-018](09-outputs.md#mts-out-018) |
 | `output.declaration.validate_kind` | error | content | output | `kind` | 1.0 | [MTS-AUT-023](13-authoring.md#mts-aut-023) |
 | `output.dependent_required` | error | content | output | `property`, `because` | 1.0 | — |
 | `output.destination.not_directory` | error | destination | invocation | — | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028), [MTS-RND-003](11-rendering.md#mts-rnd-003) |
@@ -275,6 +277,11 @@ it, and the statements it reports.
 | `schema.syntax` | error | content | package | `form`, `rule` | 1.0 | [MTS-DAT-002](05-data-specification.md#mts-dat-002) |
 | `schema.unsatisfiable` | error | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
 | `schema.unusable_enum_member` | warning | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
+| `template.asset_ambiguous` | error | content | template | `asset`, `column`, `output_path` | 1.0 | [MTS-TAG-015](08-filters-and-tags.md#mts-tag-015) |
+| `template.asset_not_found` | error | content | template | `asset`, `column` | 1.0 | [MTS-TAG-013](08-filters-and-tags.md#mts-tag-013) |
+| `template.asset_not_text` | error | content | template | `asset`, `column`, `output_path` | 1.0 | [MTS-TAG-016](08-filters-and-tags.md#mts-tag-016) |
+| `template.asset_not_written` | error | content | template | `asset`, `column`, `output_path` | 1.0 | [MTS-TAG-015](08-filters-and-tags.md#mts-tag-015) |
+| `template.asset_tree` | error | content | template | `asset`, `column`, `output_path` | 1.0 | [MTS-TAG-015](08-filters-and-tags.md#mts-tag-015) |
 | `template.comparison` | error | content | template | `operator`, `left`, `right`, `column`; optional: `output_path` | 1.0 | [MTS-TPL-023](07-template-environment.md#mts-tpl-023) |
 | `template.crlf` | warning | content | template | — | 1.0 | [MTS-AUT-010](13-authoring.md#mts-aut-010) |
 | `template.division_by_zero` | error | content | template | `filter`, `column`; optional: `output_path` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-019](07-template-environment.md#mts-tpl-019) |
@@ -305,7 +312,7 @@ it, and the statements it reports.
 | `template.xref.dynamic_reference` | warning | content | template | optional: `output` | 1.0 | [MTS-AUT-014](13-authoring.md#mts-aut-014) |
 | `template.xref.for_each_not_array` | error | content | output | `types` | 1.0 | [MTS-AUT-016](13-authoring.md#mts-aut-016) |
 | `template.xref.index_out_of_range` | error | content | template | `index`; optional: `input`, `output` | 1.0 | [MTS-AUT-014](13-authoring.md#mts-aut-014) |
-| `template.xref.missing_asset` | error | content | template | `asset` | 1.0 | — |
+| `template.xref.missing_asset` | error | content | template | `asset` | 1.0 | [MTS-AUT-032](13-authoring.md#mts-aut-032) |
 | `template.xref.missing_partial` | error | content | template | `partial`; optional: `output` | 1.0 | [MTS-AUT-015](13-authoring.md#mts-aut-015) |
 | `template.xref.not_an_array` | error | content | template | `types`; optional: `input`, `output` | 1.0 | [MTS-AUT-014](13-authoring.md#mts-aut-014) |
 | `template.xref.not_an_object` | error | content | template | `property`, `types`; optional: `input`, `output` | 1.0 | [MTS-AUT-013](13-authoring.md#mts-aut-013) |

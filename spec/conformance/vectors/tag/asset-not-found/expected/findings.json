@@ -1,0 +1,164 @@
+[
+  {
+    "code": "template.asset_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/a.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/a.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "asset": "missing.css",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.asset_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/a.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/a.txt.liquid",
+      "line": 2,
+      "column": 1
+    },
+    "params": {
+      "asset": "static",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.asset_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/a.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/a.txt.liquid",
+      "line": 3,
+      "column": 1
+    },
+    "params": {
+      "asset": "../templates/a.txt.liquid",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.asset_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/a.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/a.txt.liquid",
+      "line": 4,
+      "column": 1
+    },
+    "params": {
+      "asset": "/static/site.css",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.asset_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/a.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/a.txt.liquid",
+      "line": 5,
+      "column": 1
+    },
+    "params": {
+      "asset": "static//site.css",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.asset_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/a.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/a.txt.liquid",
+      "line": 6,
+      "column": 1
+    },
+    "params": {
+      "asset": "./static/site.css",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.asset_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/a.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/a.txt.liquid",
+      "line": 7,
+      "column": 1
+    },
+    "params": {
+      "asset": "Static/site.css",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.asset_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/a.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/a.txt.liquid",
+      "line": 8,
+      "column": 1
+    },
+    "params": {
+      "asset": "static\\site.css",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.asset_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/a.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/a.txt.liquid",
+      "line": 9,
+      "column": 1
+    },
+    "params": {
+      "asset": "",
+      "column": 1
+    }
+  }
+]

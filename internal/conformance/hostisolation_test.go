@@ -28,18 +28,21 @@ type canary struct {
 // canaries are the canaries built so far (PLAN-2026-10-metais-v1 Waves 4
 // and 5): env binds the environment as env, cwd reads a partial the
 // package lacks from the working directory, path (W4-1's) prints the data
-// directory's absolute path in every finding, and pid (W5-3's) records the
-// process id in every provenance line. The first three probes are refused
-// by the release build: tpl/no-env reads env.HOME,
+// directory's absolute path in every finding, pid (W5-3's) records the
+// process id in every provenance line, and home (W5-5's) reads an asset
+// the package lacks from the home directory. The probes but pid's are
+// refused by the release build: tpl/no-env reads env.HOME,
 // tpl/partial-not-from-host renders a partial named for the working
-// directory's decoy, and dat/required-input-missing lacks a required
-// input; tag/provenance renders provenance lines, the same bytes in both
-// environments.
+// directory's decoy, dat/required-input-missing lacks a required input,
+// and tag/asset-not-from-host writes the contents of an asset named for
+// the home directory's decoy; tag/provenance renders provenance lines, the
+// same bytes in both environments.
 var canaries = []canary{
 	{"env", "tpl/no-env", []string{"HOME", "USER", "HOSTNAME", "TERM", "NO_COLOR", "METAIS_SENTINEL", "TMPDIR", "PATH"}, checkSentinel},
 	{"cwd", "tpl/partial-not-from-host", []string{"a working-directory decoy"}, checkSentinel},
 	{"path", "dat/required-input-missing", []string{"the sandbox path"}, checkSentinel},
 	{"pid", "tag/provenance", nil, checkAB},
+	{"home", "tag/asset-not-from-host", []string{"HOME"}, checkSentinel},
 }
 
 // hostRunner is a runner over the suite in this module for the tool at

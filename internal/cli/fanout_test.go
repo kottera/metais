@@ -45,20 +45,21 @@ func TestNoDeclarationStops(t *testing.T) {
 		name  string
 		decls string
 		files []string
+		extra map[string]string // more files of the package
 	}{
 		{"when", `  - id: w
     template: t.txt.liquid
     when: inputs.pages.size > 1
-`, []string{"t.txt"}},
+`, []string{"t.txt"}, nil},
 		{"for_each", `  - id: f
     template: t.txt.liquid
     for_each: inputs.pages
     path: "p/{{ item }}.txt"
-`, []string{"p/a.txt", "p/b.txt", "p/c.txt"}},
+`, []string{"p/a.txt", "p/b.txt", "p/c.txt"}, nil},
 		{"Liquid path", `  - id: l
     template: t.txt.liquid
     path: "{{ inputs.pages | join: '-' }}.txt"
-`, []string{"a-b-c.txt"}},
+`, []string{"a-b-c.txt"}, nil},
 		{"container", `  - id: box
     path: box.epub
     container:
@@ -70,10 +71,29 @@ func TestNoDeclarationStops(t *testing.T) {
           container:
             entries:
               - template: t.txt.liquid
-`, []string{"box.epub"}},
+`, []string{"box.epub"}, nil},
+		{"a file asset", `  - id: logo
+    asset: logo.svg
+`, []string{"logo.svg"}, map[string]string{"assets/logo.svg": "<svg/>"}},
+		{"a directory asset", `  - id: static
+    asset: static
+    path: .
+`, []string{"a.css", "js/b.js"}, map[string]string{"assets/static/a.css": "a", "assets/static/js/b.js": "b"}},
+		{"a mirror", `  - id: site
+    mirror: site
+`, []string{"site/index.html"}, map[string]string{"templates/site/index.html.liquid": "{{ output.path }}"}},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			pkg, data := declarationPackage(t, c.decls)
+			for name, body := range c.extra {
+				p := filepath.Join(pkg, filepath.FromSlash(name))
+				if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
 			out := filepath.Join(filepath.Dir(pkg), "out")
 			r := runTool(t, "render", pkg, "--data", data, "--out", out, "--json")
 			if r.status != 0 || slices.Contains(r.codes(), "internal.error") {

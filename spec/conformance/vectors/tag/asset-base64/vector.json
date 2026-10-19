@@ -1,0 +1,36 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tag/asset-base64",
+  "title": "An asset tag's base64 mode writes RFC 4648 base64 of the asset's bytes, padded, with no line break",
+  "statements": [
+    "MTS-TAG-017"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

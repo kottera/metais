@@ -19,6 +19,8 @@ import (
 // (ADR-004 D14 item 5). For a container's entry, In is the path of the
 // container, itself within its own tree's containers, joined by "/", and
 // Path is the entry's path within the container (ADR-004 D7 item 6).
+// In is also the tree the file is written in, as a Placement names it:
+// "" for the output directory.
 type Output struct {
 	ID       string
 	Template string
@@ -50,6 +52,9 @@ type Renderer struct {
 	// rendering through this renderer. out is the output being rendered.
 	dialect *liquid.Dialect
 	out     Output
+	// assets is where the render writes each asset, by its name beneath
+	// assets/ (ADR-005 D5 item 6).
+	assets map[string][]Placement
 }
 
 // NewRenderer returns the renderer of one command, over the package's
@@ -73,6 +78,28 @@ func NewRenderer(ts *Templates, b *Bindings, lim limits.Set, faults fault.Set) *
 	}
 	r.dialect = newDialect(r)
 	return r
+}
+
+// PlaceAssets gives the render the asset placement map (ADR-005 D5 item
+// 6): every file the render writes from an asset, by the asset's name
+// beneath assets/. An asset tag's path mode resolves through it (ADR-004
+// D13 item 2); a render that writes no asset gives none.
+func (r *Renderer) PlaceAssets(m map[string][]Placement) { r.assets = m }
+
+// ChargeAsset counts the size of a file the render copies from an asset,
+// the output o, against output-size and output-total with the bytes of
+// every other output (ADR-005 D13 item 4, ADR-009 D3), and returns the
+// finding of the limit it breaches, if any. The asset's bytes are not
+// read.
+func (r *Renderer) ChargeAsset(o Output, size int64) *finding.Finding {
+	r.meter.out = 0
+	if e := r.meter.Charge(liquid.WorkOutputBytes, size); e != nil {
+		l, _ := limits.Lookup(e.Args["limit"])
+		f := r.lim.ExceededOutput(l.ID, finding.Subject{Kind: finding.SubjectOutput, Name: o.ID},
+			finding.Location{Origin: finding.OriginOutput, File: o.Path}, 0, false)
+		return &f
+	}
+	return nil
 }
 
 // Render renders o's template, every template it reaches having parsed
