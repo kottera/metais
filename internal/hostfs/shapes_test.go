@@ -471,3 +471,42 @@ func TestOutputEndsOnce(t *testing.T) {
 		}
 	}
 }
+
+// Beneath the staging directory, Abort removes a name the write created
+// only while it still holds the kind created, and a directory only when it
+// is empty: a created file whose name now holds a directory, and a created
+// directory whose name now holds a file, are left, and so then is the
+// staging directory.
+func TestStageNewAbortRemovesOnlyTheKindItCreated(t *testing.T) {
+	parent := dir(t)
+	o, err := StageNew(filepath.Join(parent, "out"), WriteOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	put(t, o, "f", "MINE")
+	if err := o.MkdirAll("d"); err != nil {
+		t.Fatal(err)
+	}
+	put(t, o, "kept/g", "MINE")
+	staging := filepath.Join(parent, StagingName("out"))
+	for _, name := range []string{"f", "d"} {
+		if err := os.Remove(filepath.Join(staging, name)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.Mkdir(filepath.Join(staging, "f"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	files(t, staging, map[string]string{"d": "THEIRS"})
+	if err := o.Abort(); err != nil {
+		t.Fatal(err)
+	}
+	s := StagingName("out") + "/"
+	want := []string{s, s + "d", s + "f/"}
+	if got := tree(t, parent); !slices.Equal(got, want) {
+		t.Errorf("after Abort: %q, want %q", got, want)
+	}
+	if got := readHost(t, filepath.Join(staging, "d")); got != "THEIRS" {
+		t.Errorf("the newcomer at a created directory's name now holds %q", got)
+	}
+}

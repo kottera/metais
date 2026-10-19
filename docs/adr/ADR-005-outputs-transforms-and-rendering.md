@@ -1301,4 +1301,8 @@ the render.
   kept under a umask that withholds an owner bit: `os.Root` reaches a name
   by opening the directories above it for reading, so a directory created
   without the owner's bits gets them for the write and its own mode back
-  at the end.
+  at the end. Beneath `StageNew`'s staging directory nothing is pinned:
+  by the Wave 4 wave orchestrator's ruling, following item 1.5, the
+  staging directory is the ownership boundary, and `Abort` removes beneath
+  it only names the write created, while each holds the kind created. A
+  foreign file swapped in at such a name is removed; that gap is declared.

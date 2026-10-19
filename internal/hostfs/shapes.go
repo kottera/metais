@@ -86,7 +86,11 @@ type entry struct {
 //  4. Commit renames the staging directory to path with RenameNoReplace;
 //  5. a target that appeared meanwhile, or any failure before the rename,
 //     ends in Abort, which removes the staging directory and the ancestors
-//     created in step 1.
+//     created in step 1. The staging directory and the ancestors are pinned
+//     and removed only while their names still hold them; beneath the
+//     staging directory, the staging directory is the ownership boundary
+//     (removeStaged), which leaves one gap: a foreign file swapped in at a
+//     name the write created there is removed.
 //
 // At every instant the directory at path either does not exist or holds
 // every entry written. An existing path is refused with Exists.
@@ -305,12 +309,19 @@ func (o *Output) Abort() error {
 }
 
 // removeStaged removes, newest first, every entry this write created
-// beneath the staging directory, through the root on it. The staging
-// directory is the write's own: it was created exclusively under a fixed
-// name, and the root is a handle on it, so nothing this removes lies
-// outside it, even after the staging directory's name is taken by another.
-// Beneath it, a name whose entry is no longer of the kind this write
-// created is left, and a directory is removed only when it is empty.
+// beneath the staging directory, through the root on it.
+//
+// The ownership boundary is the staging directory (ADR-005 D14 item 1.5,
+// as ruled for Wave 4 by its wave orchestrator): it was created
+// exclusively under its fixed name, and the root is a handle on it, so
+// nothing this removes lies outside it, even after the staging directory's
+// name is taken by another. Beneath it no entry is pinned, so that a write
+// holds a bounded number of handles, and ownership rests on the name:
+// only a name this write created is removed, only while it still holds
+// the kind created, and a directory only when it is empty. An entry at a
+// name the write did not create is left, and so then is the staging
+// directory. The residual gap: a foreign file swapped in at a name the
+// write created inside the staging directory is removed.
 func (o *Output) removeStaged() error {
 	var first error
 	for _, e := range slices.Backward(o.made) {
