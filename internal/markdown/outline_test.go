@@ -77,6 +77,7 @@ func TestOutline(t *testing.T) {
 		{"CRLF", "a\r\n\r\n# b\r\n", []Heading{{1, "b", 3}}},
 		{"lone CR is a line ending, not a line", "a\r# b\r", []Heading{{1, "b", 1}}},
 		{"no final LF", "x\n\n# end", []Heading{{1, "end", 3}}},
+		{"NUL is U+FFFD", "# a\x00 `b\x00`\n", []Heading{{1, "a\uFFFD b\uFFFD", 1}}},
 		{"empty", "", nil},
 		{"no headings", "just text\n\nmore text\n", nil},
 	} {

@@ -94,7 +94,9 @@ func flatten(s []byte, refs map[string]bool) string {
 			b.WriteString(p.text)
 		}
 	}
-	return b.String()
+	// U+0000 is replaced by U+FFFD wherever it is (§2.3), a code span
+	// included.
+	return strings.ReplaceAll(b.String(), "\x00", "\uFFFD")
 }
 
 func (in *inline) flush() {
@@ -170,9 +172,6 @@ func (in *inline) read() {
 				in.buf = append(in.buf, '<')
 				i++
 			}
-		case 0:
-			in.buf = append(in.buf, "�"...)
-			i++
 		default:
 			in.buf = append(in.buf, c)
 			i++
