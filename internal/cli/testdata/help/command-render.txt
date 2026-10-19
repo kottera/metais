@@ -23,6 +23,11 @@ render time as now, which is --now normalized to UTC, or nil without it. Nothing
 of the host — no environment variable, directory, user or clock — reaches a
 template.
 
+Each output's path is a Liquid template too. An output with for_each is rendered
+once for each element of its array, which its when, its path and its template
+see as item, with its position as fan_out; an output, or an element, whose when
+is false writes no file.
+
 Operands:
   <package>
       A packed package file, or a source directory; - is refused, since a
@@ -493,6 +498,9 @@ Refusals:
   output.destination.write_failed
       --out exists, or a write failed; whatever was written is removed.
       Next: metais render <package> --out <dir>
+  output.expression.for_each_type
+      An output is refused (expression: for each type).
+      Next: metais inspect <package>
   output.path.case_collision
       An output is refused (path: case collision).
       Next: metais inspect <package>
@@ -746,12 +754,12 @@ Refusals:
       An output's path, when or for_each does not parse (unknown filter).
       Next: metais inspect <package>
   usage.bad_value
-      --now is not an RFC 3339 date-time with an offset.
-      Next: metais render <package> --out <dir> --now 2026-01-31T09:00:00Z
-  usage.bad_value
       A flag's value is missing, or is not one the flag accepts, or a flag that
       takes no value is given one.
       Next: metais render --help
+  usage.bad_value
+      --now is not an RFC 3339 date-time with an offset.
+      Next: metais render <package> --out <dir> --now 2026-01-31T09:00:00Z
   usage.conflicting_flags
       --inputs-json - is given twice, and standard input is read once.
       Next: metais help inputs

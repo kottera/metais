@@ -89,8 +89,8 @@ it, and the statements it reports.
 | `json.syntax` | error | content | input | `expected`, `found` | 1.0 | [MTS-SUP-003](06-supplying-inputs.md#mts-sup-003) |
 | `json.trailing_content` | error | content | input | — | 1.0 | [MTS-SUP-003](06-supplying-inputs.md#mts-sup-003) |
 | `limit.exceeded` | error | content | input | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-SEC-005](14-security.md#mts-sec-005) |
-| `limit.exceeded.output` | error | content | output | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-SEC-010](14-security.md#mts-sec-010) |
-| `limit.exceeded.template` | error | content | template | `limit`, `bound`, `lowered`; optional: `output_path` | 1.0 | [MTS-SEC-008](14-security.md#mts-sec-008), [MTS-SEC-009](14-security.md#mts-sec-009), [MTS-TPL-046](07-template-environment.md#mts-tpl-046) |
+| `limit.exceeded.output` | error | content | output | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-OUT-011](09-outputs.md#mts-out-011), [MTS-PTH-009](11-rendering.md#mts-pth-009), [MTS-SEC-010](14-security.md#mts-sec-010) |
+| `limit.exceeded.template` | error | content | template | `limit`, `bound`, `lowered`; optional: `output_path` | 1.0 | [MTS-OUT-010](09-outputs.md#mts-out-010), [MTS-SEC-008](14-security.md#mts-sec-008), [MTS-SEC-009](14-security.md#mts-sec-009), [MTS-TPL-046](07-template-environment.md#mts-tpl-046) |
 | `limit.invalid` | error | usage | invocation | `reason`; optional: `name`, `default`, `unit`, `value` | 1.0 | — |
 | `limit.package` | error | refused | package | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-PTH-007](11-rendering.md#mts-pth-007), [MTS-SEC-001](14-security.md#mts-sec-001), [MTS-SEC-011](14-security.md#mts-sec-011) |
 | `manifest.additional_item` | error | content | manifest | `index`, `prefix_count` | 1.0 | — |
@@ -172,6 +172,7 @@ it, and the statements it reports.
 | `output.enum` | error | content | output | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | — |
 | `output.exclusive_maximum` | error | content | output | `limit`; optional: `value` | 1.0 | — |
 | `output.exclusive_minimum` | error | content | output | `limit`; optional: `value` | 1.0 | — |
+| `output.expression.for_each_type` | error | content | output | `type` | 1.0 | [MTS-OUT-007](09-outputs.md#mts-out-007) |
 | `output.forbidden` | error | content | output | optional: `property` | 1.0 | — |
 | `output.format` | error | content | output | `format` | 1.0 | — |
 | `output.max_contains` | error | content | output | `limit`, `count` | 1.0 | — |
@@ -188,14 +189,14 @@ it, and the statements it reports.
 | `output.not` | error | content | output | — | 1.0 | — |
 | `output.one_of` | error | content | output | `branch_count` | 1.0 | — |
 | `output.one_of.ambiguous` | error | content | output | `branches` | 1.0 | — |
-| `output.path.case_collision` | error | content | output | `path`, `member`, `other` | 1.0 | [MTS-PTH-006](11-rendering.md#mts-pth-006) |
-| `output.path.character` | error | content | output | `path`, `code_point` | 1.0 | [MTS-PTH-004](11-rendering.md#mts-pth-004) |
-| `output.path.duplicate` | error | content | output | `path` | 1.0 | [MTS-PTH-006](11-rendering.md#mts-pth-006) |
-| `output.path.encoding` | error | content | output | `path`, `reason` | 1.0 | [MTS-PTH-001](11-rendering.md#mts-pth-001) |
-| `output.path.file_directory_conflict` | error | content | output | `path`, `member`, `other` | 1.0 | [MTS-PTH-006](11-rendering.md#mts-pth-006) |
-| `output.path.not_nfc` | error | content | output | `path` | 1.0 | [MTS-PTH-002](11-rendering.md#mts-pth-002) |
-| `output.path.not_portable` | error | content | output | `path`, `reason` | 1.0 | [MTS-PTH-005](11-rendering.md#mts-pth-005) |
-| `output.path.shape` | error | content | output | `path`, `reason` | 1.0 | [MTS-PTH-003](11-rendering.md#mts-pth-003) |
+| `output.path.case_collision` | error | content | output | `path`, `member`, `other`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-006](11-rendering.md#mts-pth-006), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
+| `output.path.character` | error | content | output | `path`, `code_point`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-004](11-rendering.md#mts-pth-004), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
+| `output.path.duplicate` | error | content | output | `path`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-006](11-rendering.md#mts-pth-006), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
+| `output.path.encoding` | error | content | output | `path`, `reason`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-001](11-rendering.md#mts-pth-001), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
+| `output.path.file_directory_conflict` | error | content | output | `path`, `member`, `other`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-006](11-rendering.md#mts-pth-006), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
+| `output.path.not_nfc` | error | content | output | `path`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-002](11-rendering.md#mts-pth-002), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
+| `output.path.not_portable` | error | content | output | `path`, `reason`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-005](11-rendering.md#mts-pth-005), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
+| `output.path.shape` | error | content | output | `path`, `reason`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-003](11-rendering.md#mts-pth-003), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
 | `output.pattern` | error | content | output | `pattern` | 1.0 | — |
 | `output.property_name` | error | content | output | `property` | 1.0 | — |
 | `output.required` | error | content | output | `property` | 1.0 | — |
@@ -289,7 +290,7 @@ it, and the statements it reports.
 | `template.tag_argument` | error | content | template | `argument`, `type`, `column`; optional: `tag`, `output_path` | 1.0 | [MTS-TPL-013](07-template-environment.md#mts-tpl-013) |
 | `template.tag_context` | error | content | template | `tag`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
 | `template.undefined_property` | error | content | template | `path`, `column`; optional: `output_path` | 1.0 | [MTS-TPL-029](07-template-environment.md#mts-tpl-029), [MTS-TPL-031](07-template-environment.md#mts-tpl-031), [MTS-TPL-032](07-template-environment.md#mts-tpl-032) |
-| `template.undefined_variable` | error | content | template | `name`, `column`; optional: `output_path` | 1.0 | [MTS-TPL-003](07-template-environment.md#mts-tpl-003), [MTS-TPL-027](07-template-environment.md#mts-tpl-027), [MTS-TPL-033](07-template-environment.md#mts-tpl-033), [MTS-TPL-034](07-template-environment.md#mts-tpl-034) |
+| `template.undefined_variable` | error | content | template | `name`, `column`; optional: `output_path` | 1.0 | [MTS-OUT-004](09-outputs.md#mts-out-004), [MTS-TPL-003](07-template-environment.md#mts-tpl-003), [MTS-TPL-027](07-template-environment.md#mts-tpl-027), [MTS-TPL-033](07-template-environment.md#mts-tpl-033), [MTS-TPL-034](07-template-environment.md#mts-tpl-034), [MTS-TPL-058](07-template-environment.md#mts-tpl-058) |
 | `template.unknown_filter` | error | content | template | `filter`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-004](07-template-environment.md#mts-tpl-004) |
 | `template.xref.budget_exhausted` | warning | content | package | `bound`, `limit` | 1.0 | [MTS-AUT-018](13-authoring.md#mts-aut-018) |
 | `template.xref.dynamic_reference` | warning | content | template | optional: `output` | 1.0 | [MTS-AUT-014](13-authoring.md#mts-aut-014) |

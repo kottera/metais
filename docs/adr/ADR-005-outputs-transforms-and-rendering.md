@@ -1421,3 +1421,36 @@ they write into an existing directory too.
   `rnd/destination-unwritable` — is `output.destination.write_failed`
   with nothing left: the staging directory is never made, or `Abort`
   removes it.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-4.** `render` plans `for_each`,
+  `when` and path templates for template outputs (D3, D4, D13 phase 1),
+  and their `internal.error` stops are gone. Every `path` is rendered as a
+  Liquid template with the template environment's dialect and no escaping;
+  a path with no markup renders as itself. The readings this item took:
+  - **A wrong `for_each` type** is `output.expression.for_each_type`, in
+    the `output.expression` family this ADR's interfaces name, with the
+    type found (`string`, `number`, `boolean` or `object`) as `type`.
+    Every other error of a `when`, a `for_each` or a path is the template
+    family's code a template body's error has (ADR-004 D16 item 5), at the
+    field's pointer with the column within the expression. Their parse
+    errors are refused when the package is opened, as MTS-MAN-018 states,
+    so render meets only evaluation errors there.
+  - **D4 item 2's "the evaluation (`item` index)"** is an optional `item`
+    parameter, the 0-based index, on every `output.path.*` code.
+  - **A path template's path beyond `path-length` or `path-depth`** is
+    `limit.exceeded.output`, not `limit.package`: it is the render's, not
+    the manifest's own text (ADR-009 D19). A path's bytes are held to
+    `path-length` as they are rendered, so a path template cannot build an
+    unbounded name; that breach has no `observed`.
+  - **`outputs` counts every evaluation's file** (ADR-009 D3). A fan-out
+    stops being evaluated once the plan holds one file beyond the bound;
+    when that file is a fan-out's the breach is `limit.exceeded.output`
+    about its declaration, and otherwise `limit.package` as before, with
+    `observed` only when every file was counted.
+  - **Each `for_each` element is one `loop-iterations` iteration**, as
+    ADR-009 D3's table says, charged before the first evaluation; the
+    manifest's expressions and the templates share one meter.
+  - Every template a template output names is parsed whether or not the
+    output plans a file, so a `for_each` over nothing still reports its
+    template's defects.
+  `when` on an asset or a mirror, and `for_each` and `when` on a container
+  are W5-5's and W5-6's meetings with this item.

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pth/data-path-limits",
+  "title": "A path a template renders beyond path-length or path-depth is refused with limit.exceeded.output, its render stopped at path-length",
+  "statements": [
+    "MTS-PTH-009"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "within",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data",
+            "limits": {
+              "path-length": 40,
+              "path-depth": 4
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/within-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data",
+            "limits": {
+              "path-length": 24,
+              "path-depth": 3
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beyond.json"
+          }
+        }
+      ]
+    }
+  ]
+}

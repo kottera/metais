@@ -1,0 +1,79 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "out/fan-out-outputs",
+  "title": "outputs counts every file of every evaluation, and a fan-out that takes the plan beyond it is refused with limit.exceeded.output",
+  "statements": [
+    "MTS-OUT-011"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "at-the-limit",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "outputs": 5
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/at-the-limit-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-in-the-fan-out",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "outputs": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beyond-in-the-fan-out.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-after-the-fan-out",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "outputs": 4
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beyond-after-the-fan-out.json"
+          }
+        }
+      ]
+    }
+  ]
+}

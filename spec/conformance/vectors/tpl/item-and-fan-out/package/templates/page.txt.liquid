@@ -1,0 +1,5 @@
+item {{ item.title }}
+index {{ fan_out.index }} index0 {{ fan_out.index0 }} rindex {{ fan_out.rindex }} rindex0 {{ fan_out.rindex0 }}
+first {{ fan_out.first }} last {{ fan_out.last }} length {{ fan_out.length }}
+previous {% if fan_out.previous %}{{ fan_out.previous.slug }}{% else %}nil{% endif %} next {% if fan_out.next %}{{ fan_out.next.slug }}{% else %}nil{% endif %}
+{% render "_card.txt.liquid" %}

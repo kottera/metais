@@ -1,0 +1,26 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: long
+    title: Long
+    schema: inputs/long.schema.json
+  - name: deep
+    title: Deep
+    schema: inputs/deep.schema.json
+outputs:
+  - id: long
+    template: t.txt.liquid
+    path: "{{ inputs.long }}"
+  - id: deep
+    template: t.txt.liquid
+    path: "{{ inputs.deep }}"
+  - id: looped
+    template: t.txt.liquid
+    path: "{% for i in (1..25) %}x{% endfor %}"
+  - id: literal
+    template: t.txt.liquid
+    path: a/b.txt

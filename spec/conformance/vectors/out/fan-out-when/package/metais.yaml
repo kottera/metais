@@ -1,0 +1,16 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: rows
+    title: Rows
+    schema: inputs/rows.schema.json
+outputs:
+  - id: kept
+    template: row.txt.liquid
+    for_each: inputs.rows
+    when: item.n != 'b' and item.id < 4
+    path: "{{ item.n }}.txt"

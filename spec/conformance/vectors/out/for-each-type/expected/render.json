@@ -1,0 +1,74 @@
+[
+  {
+    "code": "output.expression.for_each_type",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "boolean"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 15,
+      "pointer": "/outputs/2/for_each"
+    },
+    "params": {
+      "type": "boolean"
+    }
+  },
+  {
+    "code": "output.expression.for_each_type",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "number"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 15,
+      "pointer": "/outputs/1/for_each"
+    },
+    "params": {
+      "type": "number"
+    }
+  },
+  {
+    "code": "output.expression.for_each_type",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "object"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 26,
+      "column": 15,
+      "pointer": "/outputs/3/for_each"
+    },
+    "params": {
+      "type": "object"
+    }
+  },
+  {
+    "code": "output.expression.for_each_type",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "text"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 15,
+      "pointer": "/outputs/0/for_each"
+    },
+    "params": {
+      "type": "string"
+    }
+  }
+]

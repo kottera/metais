@@ -1,0 +1,33 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/global-contexts",
+  "title": "Each manifest expression sees only the globals its context binds: item and fan_out are unbound in a for_each and outside a fan-out, and output in a path, a when and a for_each",
+  "statements": [
+    "MTS-TPL-058",
+    "MTS-OUT-004"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/render.json"
+          }
+        }
+      ]
+    }
+  ]
+}

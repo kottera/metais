@@ -13,12 +13,13 @@ import (
 )
 
 // Output is one file a render writes from a template: the declaration's
-// id, the template's name beneath templates/, and the file's path relative
-// to the root of its tree.
+// id, the template's name beneath templates/, the file's path relative to
+// the root of its tree, and the evaluation of a fan-out it is, or nil.
 type Output struct {
 	ID       string
 	Template string
 	Path     string
+	Fan      *Fan
 }
 
 // Renderer renders one command's outputs. Their work is counted together,
@@ -65,7 +66,7 @@ func (r *Renderer) Render(o Output) ([]byte, *finding.Finding) {
 	r.meter.out = 0
 	env := &liquid.Env{
 		Dialect:  dialect,
-		Globals:  r.b.globals(o.Path),
+		Globals:  r.b.scope(o.Fan, &o.Path),
 		Partials: partials{r.ts},
 		Meter:    r.meter,
 		Limits: liquid.RenderLimits{

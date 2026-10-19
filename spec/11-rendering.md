@@ -96,3 +96,18 @@ declaration as a related location.
 `path-length` and `path-depth` limits ([chapter 14](14-security.md)), and a
 processor MUST refuse a path the manifest writes that breaches one with
 `limit.package`, naming the limit.
+
+<a id="mts-pth-008"></a>**MTS-PTH-008** A path a path template renders
+([chapter 9](09-outputs.md)) MUST be held to MTS-PTH-001 to MTS-PTH-006 as a
+path the manifest writes is, on every platform, whatever inputs it was
+rendered from: a processor MUST refuse one that climbs out of the output
+directory, is absolute, holds a character Windows refuses, names `.git` in
+any spelling Git treats as `.git`, or collides by case with another
+evaluation's path, before it writes anything, and MUST NOT clean or
+rewrite it.
+
+<a id="mts-pth-009"></a>**MTS-PTH-009** A processor MUST refuse a path a
+path template renders beyond `path-length` or `path-depth` with
+`limit.exceeded.output`, naming the declaration and the limit: the path
+is the render's, not the manifest's own text (MTS-PTH-007). It MUST stop rendering such a path once its bytes exceed
+`path-length`, and then gives no `observed`.

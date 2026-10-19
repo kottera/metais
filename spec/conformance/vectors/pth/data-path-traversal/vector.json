@@ -1,0 +1,37 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pth/data-path-traversal",
+  "title": "A path a template renders from input data that climbs out of the output directory or is absolute is refused, naming the fan-out item, and nothing is written anywhere",
+  "statements": [
+    "MTS-PTH-008",
+    "MTS-OUT-009",
+    "MTS-SEC-012"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "portable-paths"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/render.json"
+          }
+        }
+      ]
+    }
+  ]
+}

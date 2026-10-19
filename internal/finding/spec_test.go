@@ -397,6 +397,8 @@ func TestEmittedCodes(t *testing.T) {
 	// The reading commands' (W4-2).
 	want = append(want, CodeUsageBadGlob, CodeUsageBadPattern, CodeUsageBinaryToTerminal, CodeUsageEntryNotFound,
 		CodeUsageIsADirectory, CodeUsageLineOutOfRange, CodeUsageNoMatch, CodeUsageNotText, CodeUsageUnknownInput)
+	// render's fan-out (W5-4).
+	want = append(want, "output.expression.for_each_type")
 	slices.Sort(want)
 	if !slices.Equal(got, want) {
 		t.Errorf("registered %q, want %q", got, want)

@@ -1,0 +1,30 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: obj
+    title: Obj
+    schema: inputs/obj.schema.json
+outputs:
+  - id: text
+    template: t.txt.liquid
+    for_each: "'text'"
+    path: "s/{{ item }}.txt"
+  - id: number
+    template: t.txt.liquid
+    for_each: "3"
+    path: "n/{{ item }}.txt"
+  - id: boolean
+    template: t.txt.liquid
+    for_each: "true"
+    path: "b/{{ item }}.txt"
+  - id: object
+    template: t.txt.liquid
+    for_each: inputs.obj
+    path: "o/{{ item }}.txt"
+  - id: fine
+    template: t.txt.liquid
+    path: fine.txt

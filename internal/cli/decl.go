@@ -285,7 +285,7 @@ func init() {
 			renderRefusals(c)
 		}
 		c.Refusals = append(lineRefusals(c.Name), c.Refusals...)
-		slices.SortFunc(c.Refusals, func(a, b Refusal) int { return strings.Compare(string(a.Code), string(b.Code)) })
+		slices.SortStableFunc(c.Refusals, func(a, b Refusal) int { return strings.Compare(string(a.Code), string(b.Code)) })
 	}
 }
 

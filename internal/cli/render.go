@@ -16,7 +16,6 @@ import (
 	"github.com/kottera/metais/internal/dates"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/inputs"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
@@ -59,7 +58,10 @@ func renderDeclaration() *Command {
 			"A template sees the inputs as inputs, the package's identity as package, where each input " +
 			"came from as sources, the output being rendered as output, and the render time as now, which " +
 			"is --now normalized to UTC, or nil without it. Nothing of the host — no environment variable, " +
-			"directory, user or clock — reaches a template.",
+			"directory, user or clock — reaches a template.\n\n" +
+			"Each output's path is a Liquid template too. An output with for_each is rendered once for each " +
+			"element of its array, which its when, its path and its template see as item, with its position " +
+			"as fan_out; an output, or an element, whose when is false writes no file.",
 		Role:     finding.RoleConsumer,
 		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file, or a source directory; - is refused, since a package is read with random access."}},
 		Flags: []args.Flag{
@@ -90,7 +92,8 @@ func renderDeclaration() *Command {
 
 // renderRefusals adds, to every command line's refusals, the codes of the
 // families a supply and a render report (ADR-008 D16 item 2): the input
-// families, every template and limit code, and the output path codes.
+// families, every template and limit code, and the output path and
+// expression codes.
 func renderRefusals(c *Command) {
 	have := map[finding.Code]bool{}
 	for _, r := range c.Refusals {
@@ -107,7 +110,8 @@ func renderRefusals(c *Command) {
 			r = Refusal{e.Code, "An input is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextRenderInputs}
 		case family == "template" && e.Severity == finding.SeverityError && !strings.HasPrefix(rest, "xref.") && !strings.HasPrefix(rest, "ooxml."):
 			r = Refusal{e.Code, "A template is refused (" + strings.ReplaceAll(rest, "_", " ") + ").", nextRenderTemplates}
-		case strings.HasPrefix(string(e.Code), "limit.exceeded."), strings.HasPrefix(string(e.Code), "output.path."):
+		case strings.HasPrefix(string(e.Code), "limit.exceeded."), strings.HasPrefix(string(e.Code), "output.path."),
+			strings.HasPrefix(string(e.Code), "output.expression."):
 			r = Refusal{e.Code, "An output is refused (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ").", nextRenderTemplates}
 		default:
 			continue
@@ -139,13 +143,26 @@ type renderFile struct {
 }
 
 // planned is one file a render plans (ADR-005 D13 phase 1): its
-// declaration, its path, where in the manifest the path comes from, and
-// its bytes once rendered.
+// declaration, its path, where in the manifest the path comes from, the
+// evaluation of a fan-out it is, and its bytes once rendered.
 type planned struct {
-	decl  manifest.Output
-	path  string
-	ptr   string
-	bytes []byte
+	decl manifest.Output
+	path string
+	ptr  string
+	// literal is set for a path the manifest writes, or defaults, rather
+	// than one a path template rendered.
+	literal bool
+	fan     *template.Fan
+	bytes   []byte
+}
+
+// item is the 0-based index of the fan-out evaluation pf is, or nil.
+func (pf *planned) item() *int {
+	if pf.fan == nil {
+		return nil
+	}
+	i := pf.fan.Index()
+	return &i
 }
 
 // runRender is metais render, of template outputs into a directory that
@@ -201,15 +218,25 @@ func runRender(s *session, p args.Parsed) outcome {
 	if res == nil || s.fails(fs) {
 		return outcome{findings: fs, next: s.nextSteps(fs), dataDir: dataDir}
 	}
-	records := res.Inputs
+	ts := template.NewTemplates(pkg.Tree, lim)
+	b, err := template.NewBindings(template.Package{
+		Tree: pkg.Tree, Manifest: pkg.Manifest, ManifestValue: pkg.ManifestValue,
+		Digest: pkg.Digest, Combined: pkg.CombinedValue,
+	}, res.Inputs, now, lim)
+	if err != nil {
+		panic("cli: " + err.Error())
+	}
+	// One renderer, whose work the manifest's expressions and the
+	// templates share (ADR-009 D11).
+	r := template.NewRenderer(ts, b, lim, s.inv.Options.Faults)
 	// Phases 1 and 2: plan and verify paths.
-	plan, pfs := planOutputs(pkg, lim, s)
+	plan, pfs := planOutputs(pkg, lim, s, r)
 	fs = append(fs, pfs...)
 	// Phase 3: the destination, every refusal reported with the others
 	// (ADR-005 D15 item 8).
 	fs = append(fs, checkDestination(out)...)
 	// Phase 4: render every output, each to its first error.
-	fs = append(fs, renderPlan(pkg, plan, records, now, lim, s)...)
+	fs = append(fs, renderPlan(pkg, plan, ts, r)...)
 	// A warning that --fail-on warning makes a failure fails the render
 	// before it writes anything (ADR-006 D2 item 5).
 	if s.fails(fs) {
@@ -227,7 +254,7 @@ func runRender(s *session, p args.Parsed) outcome {
 		sum := sha256.Sum256(pf.bytes)
 		d := "sha256:" + hex.EncodeToString(sum[:])
 		result.Files = append(result.Files, renderFile{
-			Path: pf.path, Output: pf.decl.ID, Source: "template", Kind: kindOf(pf.path, pf.decl.Kind),
+			Path: pf.path, Output: pf.decl.ID, Item: pf.item(), Source: "template", Kind: kindOf(pf.path, pf.decl.Kind),
 			Size: int64(len(pf.bytes)), Digest: d, Executable: pf.decl.Executable, Status: "create",
 		})
 		human.WriteString(strconv.Itoa(len(pf.bytes)) + "\t" + d + "\t")
@@ -246,50 +273,115 @@ func (s *session) fails(fs []finding.Finding) bool {
 }
 
 // planOutputs is ADR-005 D13's phases 1 and 2 for the package's
-// declarations: each template output's path, given or defaulted (D4 item
-// 4), held to the portable-path predicate, each path alone and every path
-// of the tree together (D12), and the count of planned files to the
-// outputs limit (ADR-009 D3).
-func planOutputs(pkg *loader.Package, lim limits.Set, s *session) ([]*planned, []finding.Finding) {
+// declarations. Each declaration's for_each gives its evaluations, each
+// evaluation's when decides whether it writes a file, and its path is
+// rendered, or defaulted (D3, D4); a declaration whose expressions fail
+// contributes their finding and no file, and planning goes on with the
+// next. Every path is held to the portable-path predicate, each alone and
+// every path of the tree together (D12), and the count of planned files,
+// every evaluation's, to the outputs limit (ADR-009 D3).
+func planOutputs(pkg *loader.Package, lim limits.Set, s *session, r *template.Renderer) ([]*planned, []finding.Finding) {
 	var plan []*planned
+	var fs []finding.Finding
+	at := func(ptr string) finding.Location { return manifestAt(pkg, ptr) }
+	bound := lim.Value(limits.Outputs)
+	// counted is cleared when a fan-out is left unevaluated because the
+	// plan is already beyond outputs.
+	counted := true
 	for _, d := range pkg.Manifest.Outputs {
 		switch {
 		case d.Form != manifest.OutputTemplate:
 			panic("cli: an output of form " + string(d.Form) + " is not part of this version of metais")
-		case d.When != "", d.ForEach != "", d.Escape == "html", d.Newline == "crlf", d.Validate != "",
-			strings.Contains(d.Path, "{{"), strings.Contains(d.Path, "{%"):
-			panic("cli: when, for_each, escape, newline, validate and path templates are not part of this version of metais")
+		case d.Escape == "html", d.Newline == "crlf", d.Validate != "":
+			panic("cli: escape, newline and validate are not part of this version of metais")
 		}
-		pf := &planned{decl: d, path: d.Path, ptr: d.Pointer + "/path"}
-		if d.Path == "" {
-			pf.path, pf.ptr = strings.TrimSuffix(d.Source, ".liquid"), d.Pointer+"/template"
+		x, xfs := template.ParseExprs(d, d.ID, at, lim)
+		if len(xfs) > 0 {
+			fs = append(fs, xfs...)
+			continue
 		}
-		plan = append(plan, pf)
-	}
-	var fs []finding.Finding
-	at := func(pf *planned) *finding.Location {
-		l := finding.Location{Origin: finding.OriginPackage, File: manifest.ManifestFile}.WithPointer(pf.ptr)
-		if pkg.Positions != nil {
-			if pos, ok := pkg.Positions.Value(pf.ptr); ok {
-				l = l.At(pos)
+		if x.ForEach != nil && int64(len(plan)) > bound {
+			counted = false
+			continue
+		}
+		files, f := planDeclaration(d, x, r, func(n int) bool {
+			if int64(len(plan)+n) > bound {
+				counted = false
+				return false
 			}
+			return true
+		})
+		if f != nil {
+			fs = append(fs, *f)
+			continue
 		}
-		return &l
+		plan = append(plan, files...)
 	}
-	fs = hostfs.CheckPaths(hostfs.WithFaults(s.inv.Options.Faults), func() []finding.Finding {
-		return checkPaths(plan, lim, at)
-	})
-	if n := int64(len(plan)); n > lim.Value(limits.Outputs) {
-		over := plan[lim.Value(limits.Outputs)]
-		l := finding.Location{Origin: finding.OriginPackage, File: manifest.ManifestFile}.WithPointer(over.decl.Pointer)
-		if pkg.Positions != nil {
-			if pos, ok := pkg.Positions.Value(over.decl.Pointer); ok {
-				l = l.At(pos)
-			}
+	fs = append(fs, hostfs.CheckPaths(hostfs.WithFaults(s.inv.Options.Faults), func() []finding.Finding {
+		return checkPaths(plan, lim, func(pf *planned) *finding.Location {
+			l := at(pf.ptr)
+			return &l
+		})
+	})...)
+	if n := int64(len(plan)); n > bound {
+		over := plan[bound]
+		if over.fan != nil {
+			// The files the data fans out to take the plan beyond the
+			// bound: the render's, not the package's (ADR-009 D19).
+			subj := finding.Subject{Kind: finding.SubjectOutput, Name: over.decl.ID}
+			fs = append(fs, lim.ExceededOutput(limits.Outputs, subj, at(over.decl.Pointer), n, counted))
+		} else {
+			fs = append(fs, lim.Breached(limits.Outputs, at(over.decl.Pointer), n, counted))
 		}
-		fs = append(fs, lim.Breached(limits.Outputs, l, n, true))
 	}
 	return plan, fs
+}
+
+// planDeclaration is the files of the declaration d, whose expressions
+// are x: one per evaluation whose when holds, in the order of the
+// for_each array, each with its path rendered, or the default path when
+// d gives none (ADR-005 D3, D4). more is asked before each evaluation but
+// the first, with the files planned so far, and stops the fan-out when it
+// answers false. The first error of an expression is the declaration's
+// finding, and it plans no file.
+func planDeclaration(d manifest.Output, x *template.Exprs, r *template.Renderer, more func(n int) bool) ([]*planned, *finding.Finding) {
+	fans, f := r.Fans(x)
+	if f != nil {
+		return nil, f
+	}
+	var files []*planned
+	for i, fan := range fans {
+		if i > 0 && !more(len(files)) {
+			break
+		}
+		ok, f := r.When(x, fan)
+		if f != nil {
+			return nil, f
+		}
+		if !ok {
+			continue
+		}
+		pf := &planned{decl: d, fan: fan, ptr: d.Pointer + "/path", literal: x.Literal}
+		if x.Path == nil {
+			pf.path, pf.ptr, pf.literal = strings.TrimSuffix(d.Source, ".liquid"), d.Pointer+"/template", true
+		} else if pf.path, f = r.Path(x, fan); f != nil {
+			return nil, f
+		}
+		files = append(files, pf)
+	}
+	return files, nil
+}
+
+// manifestAt is the location of the manifest value at ptr, with its line
+// and column when the manifest has them.
+func manifestAt(pkg *loader.Package, ptr string) finding.Location {
+	l := finding.Location{Origin: finding.OriginPackage, File: manifest.ManifestFile}.WithPointer(ptr)
+	if pkg.Positions != nil {
+		if pos, ok := pkg.Positions.Value(ptr); ok {
+			l = l.At(pos)
+		}
+	}
+	return l
 }
 
 // checkPaths applies the portable-path predicate to the paths of plan
@@ -353,7 +445,7 @@ const (
 // package's own content (ADR-009 D19).
 func pathFinding(pf *planned, loc *finding.Location, pr unitext.Problem, lim limits.Set) finding.Finding {
 	subj := finding.Subject{Kind: finding.SubjectOutput, Name: pf.decl.ID}
-	p := finding.Params{"path": finding.String(pf.path)}
+	p := pathParams(pf)
 	var code finding.Code
 	switch pr.Kind {
 	case unitext.Encoding:
@@ -366,21 +458,38 @@ func pathFinding(pf *planned, loc *finding.Location, pr unitext.Problem, lim lim
 		code, p["code_point"] = codePathCharacter, finding.Int(int64(pr.CodePoint))
 	case unitext.NotPortable:
 		code, p["reason"] = codePathNotPortable, finding.String(pr.Reason)
-	case unitext.Length:
-		return lim.Breached(limits.PathLength, *loc, pr.Observed, true)
-	case unitext.Depth:
-		return lim.Breached(limits.PathDepth, *loc, pr.Observed, true)
+	case unitext.Length, unitext.Depth:
+		id := limits.PathLength
+		if pr.Kind == unitext.Depth {
+			id = limits.PathDepth
+		}
+		if !pf.literal {
+			// A path template's path is the render's (ADR-009 D19).
+			return lim.ExceededOutput(id, subj, *loc, pr.Observed, true)
+		}
+		return lim.Breached(id, *loc, pr.Observed, true)
 	default:
 		panic("cli: an unknown path problem")
 	}
 	return finding.New(code, subj, loc, p)
 }
 
+// pathParams is the parameters every output path finding about pf has:
+// the path as rendered, and the index of the fan-out evaluation that
+// rendered it (ADR-005 D4 item 2).
+func pathParams(pf *planned) finding.Params {
+	p := finding.Params{"path": finding.String(pf.path)}
+	if i := pf.item(); i != nil {
+		p["item"] = finding.Int(int64(*i))
+	}
+	return p
+}
+
 // collisionFinding is the finding of c, ADR-005 D12 item 6 or 7, about the
 // planned file pf at loc, which collides with the one at other.
 func collisionFinding(pf *planned, loc *finding.Location, c unitext.Collision, other *finding.Location) finding.Finding {
 	subj := finding.Subject{Kind: finding.SubjectOutput, Name: pf.decl.ID}
-	p := finding.Params{"path": finding.String(pf.path)}
+	p := pathParams(pf)
 	switch c.Kind {
 	case unitext.Duplicate:
 		return finding.New(codePathDuplicate, subj, loc, p,
@@ -443,21 +552,24 @@ func writeFailed(r hostfs.Reason) finding.Finding {
 }
 
 // renderPlan is ADR-005 D13's phase 4 for template outputs: every template
-// an output reaches is parsed, each once, and every parse finding is
-// reported; then every output whose templates parsed is rendered, each to
-// its first error (ADR-004 D16 item 4). The bytes of each output that
-// rendered are held in its planned file.
-func renderPlan(pkg *loader.Package, plan []*planned, records []inputs.Record, now string, lim limits.Set, s *session) []finding.Finding {
-	ts := template.NewTemplates(pkg.Tree, lim)
+// a template output reaches is parsed, each once, and every parse finding
+// is reported, whether or not the output plans a file; then every planned
+// file whose templates parsed is rendered with r, each to its first error
+// (ADR-004 D16 item 4). The bytes of each file that rendered are held in
+// its planned file.
+func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r *template.Renderer) []finding.Finding {
 	var fs []finding.Finding
 	reported := map[string]bool{}
-	ready := make([]bool, len(plan))
-	for i, pf := range plan {
-		ready[i] = true
-		for _, name := range ts.Reach(pf.decl.Source) {
+	ready := map[string]bool{}
+	for _, d := range pkg.Manifest.Outputs {
+		if _, seen := ready[d.Source]; seen || d.Form != manifest.OutputTemplate {
+			continue
+		}
+		ready[d.Source] = true
+		for _, name := range ts.Reach(d.Source) {
 			_, pfs := ts.Parse(name)
 			if len(pfs) > 0 {
-				ready[i] = false
+				ready[d.Source] = false
 			}
 			if !reported[name] {
 				reported[name] = true
@@ -465,19 +577,11 @@ func renderPlan(pkg *loader.Package, plan []*planned, records []inputs.Record, n
 			}
 		}
 	}
-	b, err := template.NewBindings(template.Package{
-		Tree: pkg.Tree, Manifest: pkg.Manifest, ManifestValue: pkg.ManifestValue,
-		Digest: pkg.Digest, Combined: pkg.CombinedValue,
-	}, records, now, lim)
-	if err != nil {
-		panic("cli: " + err.Error())
-	}
-	r := template.NewRenderer(ts, b, lim, s.inv.Options.Faults)
-	for i, pf := range plan {
-		if !ready[i] {
+	for _, pf := range plan {
+		if !ready[pf.decl.Source] {
 			continue
 		}
-		out, f := r.Render(template.Output{ID: pf.decl.ID, Template: pf.decl.Source, Path: pf.path})
+		out, f := r.Render(template.Output{ID: pf.decl.ID, Template: pf.decl.Source, Path: pf.path, Fan: pf.fan})
 		if f != nil {
 			fs = append(fs, *f)
 			continue

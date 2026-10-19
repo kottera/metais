@@ -100,9 +100,22 @@ func parseFinding(e *liquid.Error, lim limits.Set, cause string) finding.Finding
 // the template (ADR-009 D11) and limit.exceeded.output for the bytes of
 // the output.
 func (r *Renderer) renderFinding(o Output, e *liquid.Error) finding.Finding {
-	loc := errorAt(e)
+	if e.Code == liquid.CodeLimit {
+		return r.limitFinding(o, e, errorAt(e))
+	}
+	return evalFinding(e, subject(e.Source), errorAt(e), &o.Path)
+}
+
+// evalFinding maps an error of evaluation e, other than a limit's breach,
+// to its code of the template family, about subj at loc, with the path of
+// the output being rendered when outputPath is not nil, and the render
+// tags that led to a partial as related locations.
+func evalFinding(e *liquid.Error, subj finding.Subject, loc finding.Location, outputPath *string) finding.Finding {
 	column := finding.Int(int64(max(e.Col, 1)))
-	p := finding.Params{"column": column, "output_path": finding.String(o.Path)}
+	p := finding.Params{"column": column}
+	if outputPath != nil {
+		p["output_path"] = finding.String(*outputPath)
+	}
 	var code finding.Code
 	switch e.Code {
 	case liquid.CodeUndefinedVariable:
@@ -135,12 +148,10 @@ func (r *Renderer) renderFinding(o Output, e *liquid.Error) finding.Finding {
 		}
 	case liquid.CodeInvalidUTF8:
 		code, p["filter"] = CodeInvalidUTF8, finding.String(e.Args["filter"])
-	case liquid.CodeLimit:
-		return r.limitFinding(o, e, loc)
 	default:
 		panic("template: the Liquid renderer met a defect: " + e.Error())
 	}
-	return finding.New(code, subject(e.Source), &loc, p, finding.WithRelated(chain(e)...))
+	return finding.New(code, subj, &loc, p, finding.WithRelated(chain(e)...))
 }
 
 // noteRenderedFrom is the note of each render tag on the way to a partial.

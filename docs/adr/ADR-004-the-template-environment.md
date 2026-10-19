@@ -1140,3 +1140,13 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
   the array of its integers), MTS-TPL-054 (`size` of a number is 0), and
   MTS-TPL-055 (what `strict2` accepts and then ignores or overrides is
   refused, under D1 item 2).
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-4.** D7 items 4, 5 and 10 are
+  implemented and stated in chapter 7 (MTS-TPL-056 to MTS-TPL-058). One
+  binding function builds every context of item 10's table: `inputs`,
+  `package`, `now` and `sources` always; `item` and `fan_out` in a fan-out's
+  evaluation; and `output` only for a template body. `fan_out`'s positions
+  are those of the `for_each` array, so a `when` that drops an element
+  leaves the others' `length`, `last`, `previous` and `next` unchanged.
+  D16 item 5's expressions are evaluated with the dialect templates are
+  rendered in, so a path's `assign` of a reserved name is
+  `template.reserved_name` there too.

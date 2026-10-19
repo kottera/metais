@@ -1,0 +1,32 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: product
+    title: Product
+    schema: inputs/product.schema.json
+outputs:
+  - id: named
+    template: t.txt.liquid
+    path: "{{ inputs.product.name }}.txt"
+  - id: nested
+    template: t.txt.liquid
+    path: "{{ inputs.product.dir }}/{{ 'index' | upcase }}.md"
+  - id: spaced
+    template: t.txt.liquid
+    path: "{{ ' ' }}lead {{ inputs.product.name | size }}.txt"
+  - id: literal
+    template: t.txt.liquid
+    path: plain{b}.txt
+  - id: control
+    template: t.txt.liquid
+    path: "{% if inputs.product.name contains '&' %}amp{% else %}none{% endif %}/x.txt"
+  - id: assigned
+    template: t.txt.liquid
+    path: "{% assign base = 'a' %}{% capture ext %}.txt{% endcapture %}{{ base }}{{ ext }}"
+  - id: number
+    template: t.txt.liquid
+    path: "n/{{ 1.5 | times: 2 }}-{{ inputs.product.count }}.txt"

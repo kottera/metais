@@ -1,0 +1,22 @@
+[
+  {
+    "code": "limit.exceeded.template",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 11,
+      "column": 15,
+      "pointer": "/outputs/0/for_each"
+    },
+    "params": {
+      "limit": "loop-iterations",
+      "bound": 2,
+      "lowered": true
+    }
+  }
+]

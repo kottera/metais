@@ -1,0 +1,154 @@
+[
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 15,
+      "pointer": "/outputs/0/for_each"
+    },
+    "params": {
+      "name": "item",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 15,
+      "pointer": "/outputs/1/for_each"
+    },
+    "params": {
+      "name": "fan_out",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 15,
+      "pointer": "/outputs/2/for_each"
+    },
+    "params": {
+      "name": "output",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 26,
+      "column": 11,
+      "pointer": "/outputs/3/path"
+    },
+    "params": {
+      "name": "output",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 29,
+      "column": 11,
+      "pointer": "/outputs/4/when"
+    },
+    "params": {
+      "name": "output",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 33,
+      "column": 11,
+      "pointer": "/outputs/5/when"
+    },
+    "params": {
+      "name": "item",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 37,
+      "column": 11,
+      "pointer": "/outputs/6/path"
+    },
+    "params": {
+      "name": "fan_out",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 41,
+      "column": 11,
+      "pointer": "/outputs/7/path"
+    },
+    "params": {
+      "name": "output",
+      "column": 17
+    }
+  }
+]

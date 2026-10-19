@@ -1,0 +1,17 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: articles
+    title: Articles
+    schema: inputs/articles.schema.json
+    collection: true
+outputs:
+  - id: article
+    template: article.md.liquid
+    for_each: inputs.articles
+    when: item.draft != true
+    path: "articles/{{ sources.articles[fan_out.index0].stem }}.md"

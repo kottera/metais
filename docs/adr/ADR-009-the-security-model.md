@@ -1501,3 +1501,17 @@ checks before the library sees a schema). No dependency changes.
   parent. Under A1, `hostfs` proves ownership by the staging directory it
   holds, not by a handle per entry, so the host's open-file limit does not
   refuse a render within D3's limits.
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-4.** D8 item 2 holds for paths
+  from data: a path a path template renders from the inputs is checked by
+  the same predicate, before anything is staged, as a path the manifest
+  writes. D17 item 8's data-derived cases are vectors, tagged `security`
+  and `portable-paths`, with no `requires` probe:
+  `pth/data-path-traversal`, `pth/data-path-windows-invalid`,
+  `pth/data-path-git` and `pth/data-path-case-collision`. Their red run, at
+  4742b13 with planning patched to hold only literal paths to the
+  predicate (`go test ./internal/conformance -run
+  'TestConformance/pth/data-path'`), failed every one of them; with the
+  predicate whole they pass. D3's `loop-iterations` counts each `for_each`
+  element, and `outputs` every evaluation's file; a breach the data makes
+  is `limit.exceeded.output` (D19), and so is a path template's path beyond
+  `path-length` or `path-depth`.

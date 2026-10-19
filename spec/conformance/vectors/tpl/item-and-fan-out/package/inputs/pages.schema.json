@@ -1,0 +1,21 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "slug": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      },
+      "draft": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "slug",
+      "title"
+    ]
+  }
+}
