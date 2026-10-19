@@ -25,14 +25,16 @@ import (
 
 // failingPackage returns the minimal package whose schema, about n bytes,
 // fails its meta-schema many times under one long pointer: a property
-// named by a long name, about half the schema, whose `required` lists
-// many numbers where member names belong. Each schema.invalid finding it
-// gives has a pointer as long as half the schema.
+// named by a long name, about half the schema or as long as
+// schema-location-length's default lets the property's location be,
+// whichever is shorter, whose `required` lists many numbers where member
+// names belong. Each schema.invalid finding it gives has that long
+// pointer.
 //
 // The manifest gives no such case: its schema closes every object, so a
 // long member name is one finding and nothing beneath it is validated.
 func failingPackage(n int) map[string][]byte {
-	long := strings.Repeat("~/é", max(n/2, 4)/4)
+	long := strings.Repeat("~/é", min(max(n/2, 4)/4, failingNameMax))
 	var b bytes.Buffer
 	b.WriteString(`{"type": "object", "properties": {"` + long + `": {"required": [`)
 	for i := 0; b.Len() < n; i++ {
@@ -43,6 +45,12 @@ func failingPackage(n int) map[string][]byte {
 	files["inputs/report.schema.json"] = b.Bytes()
 	return files
 }
+
+// failingNameMax is how many times "~/é", which a pointer escapes as
+// "~0~1é", six bytes, can name the property of failingPackage's schema
+// within schema-location-length's default (ADR-009 Amendment A1 item 2).
+var failingNameMax = (int(limits.Get(limits.SchemaLocationLength).Default) -
+	len(schema.RetrievalURI("inputs/report.schema.json")+"#/properties/")) / len("~0~1é")
 
 // failingOpen opens failingPackage(n) as a source directory, as inspect
 // does, and puts its findings into a report capped at lim's findings
@@ -75,7 +83,8 @@ func encodeReport(r *finding.Report) []byte {
 // default limits and with the findings limit lowered, byte for byte as
 // the code before W3-9F wrote it: the same codes, parameters, locations,
 // order (ADR-006 D8) and totals. The digests were taken from that code's
-// encodeReport output.
+// encodeReport output, at e135f00, for the package as schema-location-length
+// bounds its long name.
 func TestFailingSchemaReportUnchanged(t *testing.T) {
 	testenv.Home(t)
 	lowered := limits.Defaults()
@@ -87,8 +96,8 @@ func TestFailingSchemaReportUnchanged(t *testing.T) {
 		lim    limits.Set
 		digest string
 	}{
-		{"default limits", limits.Defaults(), "62bb787e303f1b8443e1d2abcbd9a6c726feb2b62faadedc23b54013605f8a00"},
-		{"findings=7", lowered, "3d15c306600b5d46d4355bbca6e50d9db6a35ec575255c161daf887df7c3c249"},
+		{"default limits", limits.Defaults(), "8df0c8a932e4aae658c69c52e45237ed2b9b941c4bb32d1d5889f91dd91334c5"},
+		{"findings=7", lowered, "d5353370a9e30c5c32e88a2402294150871943a5a8c7057900c28da90c16759c"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
 			out := encodeReport(failingOpen(t, 1024, tt.lim))
@@ -125,13 +134,14 @@ func TestFailingSchemaPlaced(t *testing.T) {
 const failingOpenSize = "METAIS_LOADER_FAILING_SIZE"
 
 // TestFailingSchemaLinear is ADR-009 D10 and D18 for the meta-schema's
-// failures: the loader's open path, which inspect runs, from parsing to
-// the report, on a package whose schema fails its meta-schema many times
-// under one long pointer, costs CPU time linear in its size. The packages
-// are within every default limit and none is raised or bypassed. Each
-// size runs in its own process, re-executing this test binary, so its
-// cost is that process's CPU time (ADR-010 D14 item 7); packages eight
-// times as large may cost at most three times as much per byte.
+// failures: the loader's open path, which inspect runs, from parsing to the
+// report, on a package whose schema fails its meta-schema many times under
+// one long pointer, costs CPU time linear in its size. The packages are
+// within every default limit, schema-location-length's included, and none
+// is raised or bypassed. Each size runs in its own process, re-executing
+// this test binary, so its cost is that process's CPU time (ADR-010 D14
+// item 7); packages eight times as large may cost at most three times as
+// much per byte.
 func TestFailingSchemaLinear(t *testing.T) {
 	if n := os.Getenv(failingOpenSize); n != "" {
 		runFailingOpen(t, n)
