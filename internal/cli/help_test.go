@@ -359,6 +359,55 @@ func TestFamilyPattern(t *testing.T) {
 	}
 }
 
+// TestFamiliesGroupByNextStep holds families to its grouping key: two
+// refusals of one code family and one gist that name different next steps
+// are two family lines, each with its own next step, because one line names
+// one next step (ADR-008 D15 item 3, as amended by A1).
+func TestFamiliesGroupByNextStep(t *testing.T) {
+	again := Next{Run: "metais check <package>", Why: "again"}
+	other := Next{Run: "metais inspect <package>", Why: "other"}
+	got := families([]Refusal{
+		{Code: "json.bom", Cause: "bom", Next: again, gist: "A file."},
+		{Code: "json.syntax", Cause: "syntax", Next: other, gist: "A file."},
+		{Code: "json.depth", Cause: "depth", Next: again, gist: "A file."},
+		{Code: "yaml.syntax", Cause: "yaml", Next: again, gist: "A file."},
+		{Code: "json.hand", Cause: "hand", Next: again},
+	})
+	want := []family{
+		{codes: []finding.Code{"json.bom", "json.depth"}, gist: "A file.", next: again, cause: "bom"},
+		{codes: []finding.Code{"json.syntax"}, gist: "A file.", next: other, cause: "syntax"},
+		{codes: []finding.Code{"yaml.syntax"}, gist: "A file.", next: again, cause: "yaml"},
+	}
+	if !slices.EqualFunc(got, want, func(a, b family) bool {
+		return slices.Equal(a.codes, b.codes) && a.gist == b.gist && a.next == b.next && a.cause == b.cause
+	}) {
+		t.Errorf("families = %+v, want %+v", got, want)
+	}
+}
+
+// TestCauseArticle holds every command's refusal causes to an indefinite
+// article that agrees with the severity after it.
+func TestCauseArticle(t *testing.T) {
+	for _, c := range []struct{ word, want string }{
+		{"error", "an error"}, {"warning", "a warning"}, {"info", "an info"},
+	} {
+		if got := withArticle(c.word); got != c.want {
+			t.Errorf("withArticle(%q) = %q, want %q", c.word, got, c.want)
+		}
+	}
+	for _, c := range table {
+		for _, r := range c.Refusals {
+			for _, wrong := range []string{"a error", "a info", "an warning"} {
+				for _, text := range []string{r.Cause, r.gist} {
+					if strings.Contains(text, " "+wrong+".") {
+						t.Errorf("metais %s: the refusal %s's cause %q reads %q", c.Name, r.Code, text, wrong)
+					}
+				}
+			}
+		}
+	}
+}
+
 // TestParsesAsLineControl holds the line check to failing what it must.
 func TestParsesAsLineControl(t *testing.T) {
 	for _, l := range []string{"metais", "metais versio", "metais version --jsn", "metais help nope", "metais help limits render", "metais help refusals nope", "metais version extra", "grep x", "metais inspect <nothing>", "metais inspect 'unclosed", "metais nope <package> x", ""} {

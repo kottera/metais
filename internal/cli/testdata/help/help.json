@@ -12696,7 +12696,7 @@
         "refusals": [
           {
             "code": "example.layout",
-            "cause": "An example's layout (layout), a error.",
+            "cause": "An example's layout (layout), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -12824,7 +12824,7 @@
           },
           {
             "code": "manifest.input.collection_shape",
-            "cause": "The manifest (input: collection shape), a error.",
+            "cause": "The manifest (input: collection shape), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -12840,7 +12840,7 @@
           },
           {
             "code": "manifest.input.form_shape",
-            "cause": "The manifest (input: form shape), a error.",
+            "cause": "The manifest (input: form shape), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13224,7 +13224,7 @@
           },
           {
             "code": "output.container.missing_entry",
-            "cause": "A container's profile (container: missing entry), a error.",
+            "cause": "A container's profile (container: missing entry), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13232,7 +13232,7 @@
           },
           {
             "code": "output.container.non_ascii",
-            "cause": "A container's profile (container: non ascii), a error.",
+            "cause": "A container's profile (container: non ascii), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13240,7 +13240,7 @@
           },
           {
             "code": "output.container.reserved_entry",
-            "cause": "A container's profile (container: reserved entry), a error.",
+            "cause": "A container's profile (container: reserved entry), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13256,7 +13256,7 @@
           },
           {
             "code": "output.declaration.validate_kind",
-            "cause": "An output's declaration (declaration: validate kind), a error.",
+            "cause": "An output's declaration (declaration: validate kind), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13648,7 +13648,7 @@
           },
           {
             "code": "report.step_skipped",
-            "cause": "The report (step skipped), a info.",
+            "cause": "The report (step skipped), an info.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13688,7 +13688,7 @@
           },
           {
             "code": "schema.invalid_default",
-            "cause": "A schema (invalid default), a error.",
+            "cause": "A schema (invalid default), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13696,7 +13696,7 @@
           },
           {
             "code": "schema.invalid_example",
-            "cause": "A schema (invalid example), a error.",
+            "cause": "A schema (invalid example), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13760,7 +13760,7 @@
           },
           {
             "code": "schema.unsatisfiable",
-            "cause": "A schema (unsatisfiable), a error.",
+            "cause": "A schema (unsatisfiable), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13856,7 +13856,7 @@
           },
           {
             "code": "template.ooxml.split_construct",
-            "cause": "A template or a manifest expression (ooxml: split construct), a error.",
+            "cause": "A template or a manifest expression (ooxml: split construct), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13864,7 +13864,7 @@
           },
           {
             "code": "template.ooxml.split_delimiter",
-            "cause": "A template or a manifest expression (ooxml: split delimiter), a error.",
+            "cause": "A template or a manifest expression (ooxml: split delimiter), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13952,7 +13952,7 @@
           },
           {
             "code": "template.xref.for_each_not_array",
-            "cause": "A template or a manifest expression (xref: for each not array), a error.",
+            "cause": "A template or a manifest expression (xref: for each not array), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13960,7 +13960,7 @@
           },
           {
             "code": "template.xref.index_out_of_range",
-            "cause": "A template or a manifest expression (xref: index out of range), a error.",
+            "cause": "A template or a manifest expression (xref: index out of range), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13968,7 +13968,7 @@
           },
           {
             "code": "template.xref.missing_asset",
-            "cause": "A template or a manifest expression (xref: missing asset), a error.",
+            "cause": "A template or a manifest expression (xref: missing asset), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13976,7 +13976,7 @@
           },
           {
             "code": "template.xref.missing_partial",
-            "cause": "A template or a manifest expression (xref: missing partial), a error.",
+            "cause": "A template or a manifest expression (xref: missing partial), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13984,7 +13984,7 @@
           },
           {
             "code": "template.xref.not_an_array",
-            "cause": "A template or a manifest expression (xref: not an array), a error.",
+            "cause": "A template or a manifest expression (xref: not an array), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13992,7 +13992,7 @@
           },
           {
             "code": "template.xref.not_an_object",
-            "cause": "A template or a manifest expression (xref: not an object), a error.",
+            "cause": "A template or a manifest expression (xref: not an object), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -14008,7 +14008,7 @@
           },
           {
             "code": "template.xref.unknown_field",
-            "cause": "A template or a manifest expression (xref: unknown field), a error.",
+            "cause": "A template or a manifest expression (xref: unknown field), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -14016,7 +14016,7 @@
           },
           {
             "code": "template.xref.unknown_input",
-            "cause": "A template or a manifest expression (xref: unknown input), a error.",
+            "cause": "A template or a manifest expression (xref: unknown input), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -14024,7 +14024,7 @@
           },
           {
             "code": "template.xref.unknown_variable",
-            "cause": "A template or a manifest expression (xref: unknown variable), a error.",
+            "cause": "A template or a manifest expression (xref: unknown variable), an error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."

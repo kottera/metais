@@ -100,10 +100,20 @@ func checkRefusals() []Refusal {
 		if profile {
 			subject = "A container's profile"
 		}
-		cause := subject + " (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + "), a " + e.Severity.String() + "."
-		out = append(out, Refusal{Code: e.Code, Cause: cause, Next: nextCheckAgain, gist: subject + ", a " + e.Severity.String() + "."})
+		severity := withArticle(e.Severity.String())
+		cause := subject + " (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + "), " + severity + "."
+		out = append(out, Refusal{Code: e.Code, Cause: cause, Next: nextCheckAgain, gist: subject + ", " + severity + "."})
 	}
 	return out
+}
+
+// withArticle is word after the indefinite article that agrees with it:
+// "an error", "a warning".
+func withArticle(word string) string {
+	if word != "" && strings.ContainsRune("aeiou", rune(word[0])) {
+		return "an " + word
+	}
+	return "a " + word
 }
 
 // checkResult is metais.check/1's result: the number of findings of each
