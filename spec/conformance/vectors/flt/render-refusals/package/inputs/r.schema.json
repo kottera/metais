@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {}
+        }
+      }
+    },
+    "nested": {},
+    "mixed": {},
+    "name": {},
+    "one": {},
+    "nums": {},
+    "fmt": {},
+    "indent": {},
+    "f": {}
+  }
+}

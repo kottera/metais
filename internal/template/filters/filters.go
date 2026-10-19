@@ -1,122 +1,312 @@
 // Copyright 2026 Kottera
 // SPDX-License-Identifier: Apache-2.0
 
-// Package filters is METAIS's own filters (ADR-004 D9, D10), which
-// internal/template registers in the dialect a package's templates are
-// parsed and rendered in, through the engine's Extend (ADR-010 D4 item 2),
-// and which the loader parses a manifest's expressions with too, so that a
-// template and an expression know one set of filters (ADR-004 D16 item 5).
-// It holds definitions only, and reads nothing but a filter's input and
-// arguments (ADR-004 D7 item 1).
+// Package filters holds METAIS's own filters, json, yaml, csv,
+// markdown_table and slug (ADR-004 D10), safe and json_script (D9, D10
+// item 5), and registers date with them, which internal/dates defines
+// (ADR-004 D11). They are what a package's
+// templates and manifest expressions are parsed and rendered with beyond
+// internal/liquid's standard catalog: internal/loader adds them to Core()
+// through Extend, so one dialect parses a template and a path template
+// alike (ADR-004 D16 item 5).
+//
+// Each filter refuses an input or argument of a kind it does not take
+// with CodeFilterInput or CodeFilterArgument, a literal argument when the
+// template is parsed, and reads nothing but its input, its arguments and
+// the meter (ADR-004 D7 item 1). Each charges ADR-009 D11 item 2's table
+// to the meter before the work it charges for: the shallow sizes of its
+// input and arguments first; then, for a filter that writes a value's
+// text, the input's deep size; and the result's byte length, as work units
+// and held bytes, before the result is returned. json, yaml, csv and
+// markdown_table count that length before they write a byte of it, since
+// their text can be many times their input's size; slug's is no larger
+// than a few bytes for each of its input's.
 package filters
 
 import (
-	"strings"
+	"fmt"
+	"slices"
+	"strconv"
 
+	"github.com/kottera/metais/internal/dates"
 	"github.com/kottera/metais/internal/jsonx"
 	"github.com/kottera/metais/internal/liquid"
 	"github.com/kottera/metais/internal/liquid/ast"
 	"github.com/kottera/metais/internal/liquid/value"
+	"github.com/kottera/metais/internal/yamlx"
 )
 
-// All returns every METAIS filter.
+// All returns METAIS's filters and date, the filters a dialect adds to
+// Core().
 func All() []liquid.FilterDef {
-	return []liquid.FilterDef{safeFilter{}, jsonScriptFilter{}}
-}
-
-// noArgs refuses an application of name that has an argument, naming the
-// first by its keyword, or by its position, 1, when it has none.
-func noArgs(name, keyword string) *liquid.Error {
-	if keyword == "" {
-		keyword = "1"
+	return []liquid.FilterDef{
+		jsonFilter, yamlFilter, csvFilter, markdownTableFilter, slugFilter,
+		safeFilter{}, jsonScriptFilter{},
+		dates.Filter(),
 	}
-	return &liquid.Error{Code: liquid.CodeFilterArgument, Args: map[string]string{"filter": name, "argument": keyword},
-		Detail: name + " takes no argument"}
 }
 
-// checkNoArgs is noArgs of an application at parse.
-func checkNoArgs(name string, f *ast.Filter) *liquid.Error {
-	if len(f.Args) == 0 {
+// filter is one of METAIS's filters. Its applications take from min to
+// max positional arguments (max -1 for any number), each checked by
+// positional when it is a literal, and the keywords it knows, each at
+// most once and checked by keyword when it is a literal; shapeCheck, when
+// set, refuses a combination of them. apply is its semantics, given the
+// arguments, after the shallow sizes are charged.
+type filter struct {
+	name       string
+	min, max   int
+	positional func(name, arg string, v value.Value) *liquid.Error
+	keywords   map[string]func(name string, v value.Value) *liquid.Error
+	shapeCheck func(name string, pos int, keywords []string) *liquid.Error
+	apply      func(c *call, in value.Value) (value.Value, *liquid.Error)
+}
+
+func (f *filter) Name() string { return f.name }
+
+// Check refuses an application that is wrong whatever the data: an
+// argument count it never takes, a keyword it does not know or given
+// twice, and a literal argument of a kind it refuses.
+func (f *filter) Check(app *ast.Filter) *liquid.Error {
+	var pos int
+	var keywords []string
+	for _, a := range app.Args {
+		if a.Name == "" {
+			pos++
+		} else {
+			keywords = append(keywords, a.Name)
+		}
+	}
+	if err := f.shape(pos, keywords); err != nil {
+		return err
+	}
+	pos = 0
+	for _, a := range app.Args {
+		if a.Name == "" {
+			pos++
+		}
+		lit, ok := a.Value.(*ast.Literal)
+		if !ok {
+			continue
+		}
+		v := lit.Value
+		if lit.Kind == ast.LitEmpty || lit.Kind == ast.LitBlank {
+			// As a value outside a comparison, each is "" (ADR-004 D5
+			// item 2).
+			v = value.String{}
+		}
+		if v == nil {
+			continue
+		}
+		if err := f.check(pos, a.Name, v); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// check refuses argument v, positional argument pos when keyword is empty.
+func (f *filter) check(pos int, keyword string, v value.Value) *liquid.Error {
+	if keyword != "" {
+		return f.keywords[keyword](f.name, v)
+	}
+	if f.positional == nil {
 		return nil
 	}
-	return noArgs(name, f.Args[0].Name)
+	return f.positional(f.name, strconv.Itoa(pos), v)
 }
 
-// applyNoArgs is noArgs of an application at render.
-func applyNoArgs(name string, args []liquid.Arg) *liquid.Error {
-	if len(args) == 0 {
+// shape refuses pos positional arguments and keywords the filter does
+// not take.
+func (f *filter) shape(pos int, keywords []string) *liquid.Error {
+	seen := map[string]bool{}
+	for _, k := range keywords {
+		if _, ok := f.keywords[k]; !ok {
+			return argErr(f.name, k, fmt.Sprintf("%s takes no keyword %q", f.name, k))
+		}
+		if seen[k] {
+			return argErr(f.name, k, fmt.Sprintf("keyword %q given twice", k))
+		}
+		seen[k] = true
+	}
+	switch {
+	case pos < f.min:
+		return argErr(f.name, strconv.Itoa(pos+1), fmt.Sprintf("%s takes at least %d arguments, not %d", f.name, f.min, pos))
+	case f.max == 0 && pos > 0:
+		return argErr(f.name, strconv.Itoa(pos), fmt.Sprintf("%s takes no positional argument, not %d", f.name, pos))
+	case f.max >= 0 && pos > f.max:
+		return argErr(f.name, strconv.Itoa(pos), fmt.Sprintf("%s takes at most %d arguments, not %d", f.name, f.max, pos))
+	}
+	if f.shapeCheck != nil {
+		return f.shapeCheck(f.name, pos, keywords)
+	}
+	return nil
+}
+
+// Apply applies the filter to in with args: it refuses an application
+// Check would refuse, charges the shallow sizes of the input and of every
+// argument, checks every argument, and then applies the filter, which
+// charges the rest of its work before doing it.
+func (f *filter) Apply(c liquid.FilterContext, in value.Value, args []liquid.Arg) (value.Value, *liquid.Error) {
+	cl := &call{name: f.name, m: c.Meter(), kw: map[string]value.Value{}}
+	var keywords []string
+	work := liquid.Shallow(in)
+	for _, a := range args {
+		work += liquid.Shallow(a.Value)
+		if a.Name == "" {
+			cl.pos = append(cl.pos, a.Value)
+			continue
+		}
+		keywords = append(keywords, a.Name)
+		cl.kw[a.Name] = a.Value
+	}
+	if err := f.shape(len(cl.pos), keywords); err != nil {
+		return nil, err
+	}
+	if err := cl.units(work); err != nil {
+		return nil, err
+	}
+	pos := 0
+	for _, a := range args {
+		if a.Name == "" {
+			pos++
+		}
+		if err := f.check(pos, a.Name, a.Value); err != nil {
+			return nil, err
+		}
+	}
+	return f.apply(cl, in)
+}
+
+// call is one application of a filter, as its apply sees it.
+type call struct {
+	name string
+	m    liquid.Meter
+	pos  []value.Value
+	kw   map[string]value.Value
+}
+
+// units charges n work units.
+func (c *call) units(n int64) *liquid.Error {
+	if n <= 0 {
 		return nil
 	}
-	return noArgs(name, args[0].Name)
+	return c.m.Charge(liquid.WorkUnits, n)
 }
 
-// safeFilter is safe (ADR-004 D9 item 3): its input, unchanged and marked
-// safe from escaping. It may be only the last filter of an output
-// expression, which the parser holds it to. In an output whose escape is
-// none nothing is escaped, so it does nothing there.
-type safeFilter struct{}
-
-func (safeFilter) Name() string                      { return "safe" }
-func (safeFilter) Check(f *ast.Filter) *liquid.Error { return checkNoArgs("safe", f) }
-func (safeFilter) MarksSafe() bool                   { return true }
-func (safeFilter) OnlyLast() bool                    { return true }
-
-// Apply charges the shallow size of the input, which is the result too
-// (ADR-009 D11 item 2).
-func (safeFilter) Apply(c liquid.FilterContext, in value.Value, args []liquid.Arg) (value.Value, *liquid.Error) {
-	if err := applyNoArgs("safe", args); err != nil {
+// text charges a string result of n bytes before it is built — n work
+// units and n held bytes — then builds it with build and returns it.
+func (c *call) text(n int64, build func() string) (value.Value, *liquid.Error) {
+	if err := c.units(n); err != nil {
 		return nil, err
 	}
-	if err := c.Meter().Charge(liquid.WorkUnits, 2*liquid.Shallow(in)); err != nil {
-		return nil, err
+	if n > 0 {
+		if err := c.m.Charge(liquid.WorkHeldBytes, n); err != nil {
+			return nil, err
+		}
 	}
-	return in, nil
-}
-
-// jsonScriptFilter is json_script (ADR-004 D10 item 5): the json filter's
-// compact RFC 8785 text, with "<", ">", "&", U+2028 and U+2029 written as
-// \u003c, \u003e, \u0026, \u2028 and \u2029, so that the text can neither
-// close a <script> element nor open an HTML comment. Its result is safe
-// (D9 item 2).
-type jsonScriptFilter struct{}
-
-func (jsonScriptFilter) Name() string                      { return "json_script" }
-func (jsonScriptFilter) Check(f *ast.Filter) *liquid.Error { return checkNoArgs("json_script", f) }
-func (jsonScriptFilter) MarksSafe() bool                   { return true }
-
-// Apply charges the deep size of the input, which encoding visits whole,
-// before encoding it, then the result's bytes as a string it builds:
-// work units and held bytes (ADR-009 D11 item 2).
-func (jsonScriptFilter) Apply(c liquid.FilterContext, in value.Value, args []liquid.Arg) (value.Value, *liquid.Error) {
-	if err := applyNoArgs("json_script", args); err != nil {
-		return nil, err
+	s := build()
+	if int64(len(s)) != n {
+		return nil, &liquid.Error{Code: liquid.CodeInternal, Detail: fmt.Sprintf("%s counted %d bytes and wrote %d", c.name, n, len(s))}
 	}
-	m := c.Meter()
-	if err := m.Charge(liquid.WorkUnits, liquid.DeepSize(in)); err != nil {
-		return nil, err
-	}
-	b, err := jsonx.Encode(in, 0)
+	v, err := value.NewString(s)
 	if err != nil {
-		return nil, &liquid.Error{Code: liquid.CodeInternal, Detail: "json_script: " + err.Error()}
-	}
-	s := scriptSafe.Replace(string(b))
-	n := int64(len(s))
-	if err := m.Charge(liquid.WorkUnits, n); err != nil {
-		return nil, err
-	}
-	if err := m.Charge(liquid.WorkHeldBytes, n); err != nil {
-		return nil, err
-	}
-	v, verr := value.NewString(s)
-	if verr != nil {
-		return nil, &liquid.Error{Code: liquid.CodeInternal, Detail: "json_script: " + verr.Error()}
+		return nil, &liquid.Error{Code: liquid.CodeInternal, Detail: err.Error()}
 	}
 	return v, nil
 }
 
-// scriptSafe is json_script's further escaping. Each character it replaces
-// can stand in RFC 8785's text only inside a string, where \u is its
-// escape.
-var scriptSafe = strings.NewReplacer(
-	"<", `\u003c`, ">", `\u003e`, "&", `\u0026`, "\u2028", `\u2028`, "\u2029", `\u2029`,
-)
+// beyondShallow charges v's deep size beyond its shallow size, which the
+// application has charged already: the work of visiting every value
+// beneath v.
+func (c *call) beyondShallow(v value.Value) *liquid.Error {
+	return c.units(liquid.DeepSize(v) - liquid.Shallow(v))
+}
+
+func argErr(filter, arg, detail string) *liquid.Error {
+	return liquid.FilterError(filter, liquid.CodeFilterArgument, map[string]string{"argument": arg}, detail)
+}
+
+func inputErr(filter string, v value.Value, detail string) *liquid.Error {
+	return liquid.FilterError(filter, liquid.CodeFilterInput, map[string]string{"type": liquid.KindName(v)}, detail)
+}
+
+// jsonFilter is ADR-004 D10 item 1: the value as RFC 8785 JSON, or
+// pretty-printed with indent: n, from 1 to 8. Every value has a JSON text,
+// so it refuses no input.
+var jsonFilter = &filter{
+	name: "json",
+	keywords: map[string]func(string, value.Value) *liquid.Error{
+		"indent": func(name string, v value.Value) *liquid.Error {
+			if _, ok := indent(v); !ok {
+				return argErr(name, "indent", "indent is an integer from 1 to 8, not this "+liquid.KindName(v))
+			}
+			return nil
+		},
+	},
+	apply: func(c *call, in value.Value) (value.Value, *liquid.Error) {
+		n := 0
+		if v, ok := c.kw["indent"]; ok {
+			n, _ = indent(v)
+		}
+		if err := c.beyondShallow(in); err != nil {
+			return nil, err
+		}
+		return c.text(jsonx.EncodedLen(in, n), func() string {
+			b, err := jsonx.Encode(in, n)
+			if err != nil {
+				panic(err) // indent is checked to be from 1 to 8
+			}
+			return string(b)
+		})
+	},
+}
+
+// indent is json's indent: an integer from 1 to jsonx.MaxIndent.
+func indent(v value.Value) (int, bool) {
+	n, ok := v.(value.Number)
+	if !ok {
+		return 0, false
+	}
+	i, ok := liquid.Integer(n)
+	if !ok || i < 1 || i > jsonx.MaxIndent {
+		return 0, false
+	}
+	return int(i), true
+}
+
+// yamlFilter is ADR-004 D10 item 2: the value as a YAML 1.2 block
+// document, as yamlx.Write writes it. Every value has one, so it refuses
+// no input.
+var yamlFilter = &filter{
+	name: "yaml",
+	apply: func(c *call, in value.Value) (value.Value, *liquid.Error) {
+		if err := c.beyondShallow(in); err != nil {
+			return nil, err
+		}
+		return c.text(yamlx.WrittenLen(in), func() string { return string(yamlx.Write(in)) })
+	},
+}
+
+// stringArg refuses a positional argument that is not a string.
+func stringArg(name, arg string, v value.Value) *liquid.Error {
+	if _, ok := v.(value.String); !ok {
+		return argErr(name, arg, "a column is named by a string, not this "+liquid.KindName(v))
+	}
+	return nil
+}
+
+// keywordsOf returns a filter's keyword checks, by name.
+func keywordsOf(names ...string) map[string]func(string, value.Value) *liquid.Error {
+	m := map[string]func(string, value.Value) *liquid.Error{}
+	for _, n := range names {
+		m[n] = tableKeywords[n]
+	}
+	return m
+}
+
+// sortedUnique returns names sorted in canonical order (RFC 8785's, by
+// UTF-16 code units), each once.
+func sortedUnique(names []string) []string {
+	slices.SortFunc(names, value.CompareNames)
+	return slices.Compact(names)
+}

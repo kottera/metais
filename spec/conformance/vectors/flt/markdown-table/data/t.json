@@ -1,0 +1,19 @@
+{
+  "rows": [
+    {
+      "name": "A|B",
+      "text": "line 1\r\nline 2\rline 3\nline 4 *kept* <b>",
+      "n": 1.5
+    },
+    {
+      "name": "C",
+      "text": null,
+      "n": 0
+    }
+  ],
+  "none": [],
+  "h": [
+    "Name",
+    "Text | more"
+  ]
+}

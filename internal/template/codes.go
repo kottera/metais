@@ -44,6 +44,9 @@ const (
 	CodeAssetAmbiguous  finding.Code = "template.asset_ambiguous"
 	CodeAssetTree       finding.Code = "template.asset_tree"
 	CodeAssetNotText    finding.Code = "template.asset_not_text"
+	CodeDateInput       finding.Code = "template.date_input"
+	CodeDateFormat      finding.Code = "template.date_format"
+	CodeSlugEmpty       finding.Code = "template.slug_empty"
 )
 
 // CodeRawUnavailable is ADR-003's finding for an embed of a raw form that
@@ -57,7 +60,7 @@ const CodeRawUnavailable finding.Code = "input.raw_unavailable"
 func ParseCodes() []finding.Code {
 	return []finding.Code{CodeSyntax, CodeNotUTF8, CodeInclude, CodeUnknownFilter, CodeReservedName, CodePartialName,
 		CodeSafePosition, CodeNumberRange, CodeFilterArgument, CodeFilterInput, CodeDivisionByZero,
-		CodeEmbedUnknownInput, CodeEmbedIndex, CodeProvenanceArgument, CodeProvenanceStyle}
+		CodeEmbedUnknownInput, CodeEmbedIndex, CodeProvenanceArgument, CodeProvenanceStyle, CodeDateFormat}
 }
 
 // subject is the template whose entry is entry.
@@ -115,6 +118,9 @@ func parseFinding(e *liquid.Error, lim limits.Set, cause string) finding.Finding
 	case codeProvenanceStyle:
 		code = CodeProvenanceStyle
 		copyArgs(p, e, "reason", "style", "type")
+	case liquid.CodeDateFormat:
+		code = CodeDateFormat
+		copyArgs(p, e, "directive")
 	case liquid.CodeLimit:
 		id := limits.TemplateNesting
 		if e.Args["limit"] == limits.Get(limits.TemplateSize).Name {
@@ -197,6 +203,16 @@ func evalFinding(e *liquid.Error, subj finding.Subject, loc finding.Location, ou
 		copyArgs(p, e, "reason", "kind", "style", "type")
 	case codeAssetNotWritten, codeAssetAmbiguous, codeAssetTree, codeAssetNotText:
 		code, p["asset"] = assetCodes[e.Code], finding.String(e.Args["asset"])
+	case liquid.CodeDateInput:
+		code, p["type"] = CodeDateInput, finding.String(e.Args["type"])
+		if e.Args["now"] == "true" {
+			p["global"] = finding.String("now")
+		}
+	case liquid.CodeDateFormat:
+		code = CodeDateFormat
+		copyArgs(p, e, "directive")
+	case liquid.CodeSlugEmpty:
+		code = CodeSlugEmpty
 	default:
 		panic("template: the Liquid renderer met a defect: " + e.Error())
 	}

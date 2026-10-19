@@ -1,0 +1,62 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/charge-json",
+  "title": "json is charged its input's deep size and its result's length, before it writes it",
+  "statements": [
+    "MTS-TPL-063"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "16 for the output, 16 for the filter, 2 for the input's shallow size, 1 for indent, 5 for the deep size beyond it ([1, 2], its two elements, and \"x\"), and 34 for the result's bytes.",
+  "cases": [
+    {
+      "name": "at-the-bound",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data",
+            "limits": {
+              "render-work": 74
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/at-the-bound-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "one-below",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data",
+            "limits": {
+              "render-work": 73
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/one-below.json"
+          }
+        }
+      ]
+    }
+  ]
+}

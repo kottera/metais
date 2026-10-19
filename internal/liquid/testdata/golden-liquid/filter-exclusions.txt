@@ -16,6 +16,13 @@ filters, capitalize, undefined left value	dialect	ADR-004 D6 item 1: a name that
 filters, ceil, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
 filters, compact, left value is undefined	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
 filters, concat, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, date, literal percent	dialect	ADR-004 D11 item 1: date takes an RFC 3339 full-date or date-time, or an integer of seconds; any other text is template.date_input, where Shopify parses it with Ruby's Time.parse
+filters, date, negative timestamp string	dialect	ADR-004 D11 item 1: date takes an RFC 3339 full-date or date-time, or an integer of seconds; any other text is template.date_input, where Shopify writes text it cannot parse as it is
+filters, date, seconds since epoch format directive	dialect	ADR-004 D11 item 1: date takes an RFC 3339 full-date or date-time, or an integer of seconds; any other text is template.date_input, where Shopify parses it with Ruby's Time.parse
+filters, date, timestamp string	dialect	ADR-004 D11 item 1: date takes an RFC 3339 full-date or date-time, or an integer of seconds; a string of digits is template.date_input, where Shopify reads it as Unix seconds
+filters, date, undefined argument	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, date, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
+filters, date, well formed string	dialect	ADR-004 D11 item 1: date takes an RFC 3339 full-date or date-time, or an integer of seconds; any other text is template.date_input, where Shopify parses it with Ruby's Time.parse
 filters, default, empty	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
 filters, default, false	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil
 filters, default, undefined left value	dialect	ADR-004 D6 item 1: a name that is neither bound nor a global is template.undefined_variable, where Shopify's lax variables read it as nil

@@ -10,7 +10,6 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -110,8 +109,9 @@ const (
 // strictness: just enough evaluation to run the catalog through its
 // FilterDefs against the corpus. It is not the renderer, which is W3-3's.
 type outputEval struct {
-	data value.Object
-	ctx  testContext
+	dialect *Dialect
+	data    value.Object
+	ctx     testContext
 }
 
 // supported reports whether the template is text and output expressions
@@ -161,7 +161,7 @@ func (e *outputEval) expr(x *ast.Expr) (value.Value, *Error) {
 		return nil, err
 	}
 	for _, f := range x.Filters {
-		def, _ := Core().Filter(f.Name)
+		def, _ := e.dialect.Filter(f.Name)
 		var args []Arg
 		for _, a := range f.Args {
 			av, err := e.primary(a.Value)
@@ -280,8 +280,8 @@ func segment(cur, key value.Value, dotted bool) (value.Value, *Error) {
 // TestGoldenLiquidFilters runs the catalog through its FilterDefs against
 // every case of Golden Liquid's filters group that outputEval can
 // evaluate: a template of text and output expressions only that applies a
-// filter, and does not apply date (goldenDateSelector). Each case is parsed under Core() and rendered
-// with its data:
+// filter. Each case is parsed under goldenCore(), Core() with date, and
+// rendered with its data:
 //
 //   - a valid case renders its result;
 //   - an invalid case is refused, at parse or at render;
@@ -290,15 +290,12 @@ func segment(cur, key value.Value, dotted bool) (value.Value, *Error) {
 //     Shopify's differs from, and must still fail, so a stale line is
 //     found.
 //
-// The run reports what it ran, passed, excluded and selected out. The
-// render run over the whole corpus is the renderer's.
+// The run reports what it ran, passed and excluded. The render run over
+// the whole corpus is the renderer's.
 func TestGoldenLiquidFilters(t *testing.T) {
 	testenv.Home(t)
 	excluded := readList(t, "filter-exclusions.txt")
-	appliesDate, err := goldenDateSelector(Core())
-	if err != nil {
-		t.Fatal(err)
-	}
+	d := goldenCore(t)
 	cases := loadGoldenRender(t)
 	names := map[string]bool{}
 	for _, c := range cases {
@@ -313,17 +310,13 @@ func TestGoldenLiquidFilters(t *testing.T) {
 		}
 	}
 	ran := map[string]bool{}
-	var passed, skipped, selectedOut int
+	var passed, skipped int
 	for _, c := range cases {
 		if !strings.HasPrefix(c.Name, "filters, ") || len(c.Templates) > 0 {
 			continue
 		}
-		tpl, _ := Parse(Core(), Source{Name: "template", Text: []byte(c.Template)}, ParseLimits{})
+		tpl, _ := Parse(d, Source{Name: "template", Text: []byte(c.Template)}, ParseLimits{})
 		if tpl != nil && !supported(tpl.Root) {
-			continue
-		}
-		if appliesDate(c.goldenCase) {
-			selectedOut++
 			continue
 		}
 		if tpl == nil {
@@ -339,7 +332,7 @@ func TestGoldenLiquidFilters(t *testing.T) {
 			}
 			data = v.(value.Object)
 		}
-		ev := &outputEval{data: data, ctx: testContext{newTestMeter(nil)}}
+		ev := &outputEval{dialect: d, data: data, ctx: testContext{newTestMeter(nil)}}
 		got, rerr := ev.render(tpl.Root)
 		if rerr != nil && rerr.Code == CodeInternal {
 			t.Errorf("%q: internal error: %v", c.Name, rerr)
@@ -376,49 +369,8 @@ func TestGoldenLiquidFilters(t *testing.T) {
 			t.Errorf("filter-exclusions.txt:%d: %q is not a case this run evaluates", l.line, l.name)
 		}
 	}
-	t.Logf("%d filter cases ran: %d pass, %d excluded; %d selected out for applying date", len(ran), passed, skipped, selectedOut)
+	t.Logf("%d filter cases ran: %d pass, %d excluded", len(ran), passed, skipped)
 	if len(ran) < 300 {
 		t.Errorf("only %d cases ran; the selection is broken", len(ran))
-	}
-}
-
-// TestGoldenDateSelector pins the selector's two halves: it takes out
-// exactly the cases that apply date, among them the two render-time.txt
-// keeps for Wave 5; and it fails the moment date is registered in the
-// dialect a run uses, so the cases come back in scope.
-func TestGoldenDateSelector(t *testing.T) {
-	testenv.Home(t)
-	appliesDate, err := goldenDateSelector(Core())
-	if err != nil {
-		t.Fatal(err)
-	}
-	var out []string
-	for _, c := range loadGolden(t) {
-		if appliesDate(c) {
-			out = append(out, c.Name)
-			if !strings.Contains(c.Template, "date") {
-				t.Errorf("%q is selected out and its template names no date", c.Name)
-			}
-		}
-	}
-	for _, n := range []string{"filters, date, missing argument", "filters, date, too many arguments"} {
-		if !slices.Contains(out, n) {
-			t.Errorf("%q is not selected out", n)
-		}
-	}
-	t.Logf("%d cases apply date: %q", len(out), out)
-	if appliesDate(goldenCase{Template: `{{ "date" }}{% assign date = 1 %}{{ date | plus: 1 }}`}) {
-		t.Errorf("a template that names date without applying it is selected out")
-	}
-	if !appliesDate(goldenCase{Template: `x`, Templates: map[string]string{"p": `{{ x | date: "%Y" }}`}}) {
-		t.Errorf("a partial that applies date is not selected out")
-	}
-
-	withDate, err := Core().Extend(Spec{Filters: []FilterDef{stubFilter("date")}})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := goldenDateSelector(withDate); err == nil {
-		t.Errorf("the selector accepts a dialect that registers date")
 	}
 }

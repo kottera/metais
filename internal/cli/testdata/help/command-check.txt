@@ -460,6 +460,9 @@ Refusals:
   template.crlf
       A template or a manifest expression (crlf), a warning.
       Next: metais check <package>
+  template.date_format
+      An output's path, when or for_each does not parse (date format).
+      Next: metais check <package>
   template.division_by_zero
       An output's path, when or for_each does not parse (division by zero).
       Next: metais check <package>

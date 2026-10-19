@@ -76,16 +76,11 @@ type server struct {
 	templates map[string]*compiled
 	next      int
 	quit      bool
-	probe     *liquid.Dialect // the dialect with a stub date (heldout.go)
 }
 
-// newServer returns a connection's state, or errDateRegistered.
-func newServer() (*server, error) {
-	probe, err := dateProbe()
-	if err != nil {
-		return nil, err
-	}
-	return &server{templates: map[string]*compiled{}, probe: probe}, nil
+// newServer returns a connection's state.
+func newServer() *server {
+	return &server{templates: map[string]*compiled{}}
 }
 
 // compiled is a template that parsed: its package of templates, and the
@@ -102,10 +97,7 @@ func serve(r io.Reader, w io.Writer) error {
 	sc := bufio.NewScanner(r)
 	sc.Buffer(make([]byte, 0, 64<<10), maxLine)
 	bw := bufio.NewWriter(w)
-	s, err := newServer()
-	if err != nil {
-		return err
-	}
+	s := newServer()
 	for sc.Scan() {
 		line := bytes.TrimSpace(sc.Bytes())
 		if len(line) == 0 {
@@ -255,9 +247,6 @@ func (s *server) compile(params json.RawMessage) (any, *rpcError) {
 	}
 	if p.Options != nil && p.Options.ErrorMode != nil && *p.Options.ErrorMode != "strict2" {
 		return nil, invalidParams("options.error_mode", "the dialect parses only as strict2 (ADR-004 D1), not %q", *p.Options.ErrorMode)
-	}
-	if appliesDate(s.probe, p.Filesystem, *p.Template) {
-		return compileResult{Error: &liquidError{Type: "parse_error", Message: HeldOut}}, nil
 	}
 	tree, name := newTree(p.Filesystem, *p.Template)
 	ts := template.NewTemplates(tree, limits.Defaults(), nil)

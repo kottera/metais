@@ -143,8 +143,8 @@ func renderGolden(t *testing.T, d *Dialect, c goldenRenderCase) (out string, par
 
 // TestGoldenLiquidRender is ADR-010 D4 item 7's breadth check, at render,
 // and the meeting of the renderer with the standard catalog: every case
-// of Golden Liquid runs under Core(), filters included, apart from those
-// that apply date, which goldenDateSelector takes out (date is Wave 5's).
+// of Golden Liquid runs under goldenCore(), Core() with date, filters
+// included.
 //
 //   - a valid case renders its expected result exactly;
 //   - an invalid case that render-time.txt lists parses, and is refused
@@ -158,24 +158,16 @@ func renderGolden(t *testing.T, d *Dialect, c goldenRenderCase) (out string, par
 //     line is found.
 //
 // No case may recover an internal error. The run reports what it ran,
-// passed, excluded — each line — and selected out.
+// passed and excluded, each line.
 func TestGoldenLiquidRender(t *testing.T) {
 	testenv.Home(t)
 	excluded := readList(t, "exclusions.txt")
 	filterExcluded := readList(t, "filter-exclusions.txt")
 	renderTime := readList(t, "render-time.txt")
-	d := Core()
-	appliesDate, err := goldenDateSelector(d)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var run, passed, selectedOut, rendered, refusedAtRender, refusedAtParse, byCheck int
+	d := goldenCore(t)
+	var run, passed, rendered, refusedAtRender, refusedAtParse, byCheck int
 	var lines []string
 	for _, c := range loadGoldenRender(t) {
-		if appliesDate(c.goldenCase) {
-			selectedOut++
-			continue
-		}
 		run++
 		out, parsed, err := renderGolden(t, d, c)
 		if err != nil && err.Code == CodeInternal {
@@ -236,13 +228,13 @@ func TestGoldenLiquidRender(t *testing.T) {
 		}
 	}
 	t.Logf("%d cases run: %d pass (%d valid render their result, %d of render-time.txt refused at render, "+
-		"%d invalid refused at parse, %d of them by the catalog's Check), %d excluded; %d selected out for applying date",
-		run, passed, rendered, refusedAtRender, refusedAtParse, byCheck, len(lines), selectedOut)
+		"%d invalid refused at parse, %d of them by the catalog's Check), %d excluded",
+		run, passed, rendered, refusedAtRender, refusedAtParse, byCheck, len(lines))
 	for _, l := range lines {
 		t.Logf("excluded: %s", l)
 	}
-	if run+selectedOut != len(loadGoldenRender(t)) || run < 1000 {
-		t.Errorf("%d cases run and %d selected out of %d", run, selectedOut, len(loadGoldenRender(t)))
+	if run != len(loadGoldenRender(t)) || run < 1000 {
+		t.Errorf("%d cases run of %d", run, len(loadGoldenRender(t)))
 	}
 }
 

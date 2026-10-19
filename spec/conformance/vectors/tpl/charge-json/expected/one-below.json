@@ -1,0 +1,22 @@
+[
+  {
+    "code": "limit.exceeded.template",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/a.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/a.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "limit": "render-work",
+      "bound": 73,
+      "lowered": true,
+      "output_path": "a.txt"
+    }
+  }
+]

@@ -271,36 +271,28 @@ func TestTemplateIDs(t *testing.T) {
 	}
 }
 
-// TestHeldOut: a template that applies date, or whose file system holds
-// one that does, is held out of the run with HeldOut as its parse error;
-// one that names date in text is not, and nor is one that does not parse
-// even with date, which its parse refuses.
-func TestHeldOut(t *testing.T) {
+// TestDate: the server renders date as the dialect registers it (ADR-004
+// D11), in a template and in a partial, and refuses "now" whatever the
+// render's registers say the time is, since date never reads the clock.
+func TestDate(t *testing.T) {
 	testenv.Home(t)
 	for _, c := range []struct {
 		src  string
 		fs   map[string]string
-		held bool
+		want string
 	}{
-		{`{{ "now" | date: "%Y" }}`, nil, true},
-		{`{% if %}{{ t | date: "%Y" }}`, nil, false},
-		{`{% render "p.liquid" %}`, map[string]string{"p.liquid": `{{ t | date: "%Y" }}`}, true},
-		{`date {{ "date" }} {% assign date = 1 %}{{ date }}`, nil, false},
+		{`{{ 1152098955 | date: "%m/%d/%Y" }}`, nil, "07/05/2006"},
+		{`{{ "2026-10-18T09:30:00+02:00" | date: "%H:%M %Z" }}`, nil, "09:30 +02:00"},
+		{`{% render "p.liquid" %}`, map[string]string{"p.liquid": `{{ 0 | date: "%Y" }}`}, "1970"},
 	} {
 		r := compileRender(t, c.src, c.fs, map[string]any{})
-		e, _ := r.Result["error"].(map[string]any)
-		if held := e != nil && e["message"] == HeldOut; held != c.held {
-			t.Errorf("%q: %+v, held out %v, want %v", c.src, r, held, c.held)
+		if r.Result["output"] != c.want {
+			t.Errorf("%q: %+v, want %q", c.src, r, c.want)
 		}
 	}
-}
-
-// TestDateNotRegistered fails by design once date is registered: its
-// cases are then in scope, and the hold-out must go (heldout.go).
-func TestDateNotRegistered(t *testing.T) {
-	testenv.Home(t)
-	if _, err := newServer(); err != nil {
-		t.Fatal(err)
+	r := compileRender(t, `{{ "now" | date: "%Y" }}`, nil, map[string]any{})
+	if r.Error == nil {
+		t.Errorf(`"now": %+v, want a render error`, r)
 	}
 }
 

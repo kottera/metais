@@ -1,0 +1,38 @@
+escapes: "q\"\\\b\t\n\u007f\u0085 \u2028\ufeff"
+list:
+  - x: 1
+    "y": 2
+  - []
+  - {}
+  - s
+nested:
+  a: null
+  b:
+    c:
+      - 1
+      - d: []
+        e: {}
+      - - 2
+        - - 3
+  f: false
+numbers:
+  - 3
+  - 2.5
+  - 1e+21
+  - 1e+16
+  - -0.5
+  - 1e-7
+plain: a plain/text_1.0
+words:
+  - "true"
+  - "No"
+  - "on"
+  - "Y"
+  - "null"
+  - nulls
+  - "-x"
+  - "a: b"
+  - ""
+  - " lead"
+  - "x#y"
+"Ünïcode key": "é"

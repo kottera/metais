@@ -1,0 +1,15 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: posts
+    title: Posts
+    schema: inputs/posts.schema.json
+outputs:
+  - id: post
+    template: post.md.liquid
+    for_each: inputs.posts
+    path: "posts/{{ item.title | slug }}.md"

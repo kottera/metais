@@ -1,0 +1,293 @@
+[
+  {
+    "code": "template.filter_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/array-cell.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/array-cell.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "markdown_table",
+      "type": "array",
+      "column": 1,
+      "output_path": "array-cell.txt"
+    }
+  },
+  {
+    "code": "template.date_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/date-array.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/date-array.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "array",
+      "column": 1,
+      "output_path": "date-array.txt"
+    }
+  },
+  {
+    "code": "template.date_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/date-digits.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/date-digits.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "column": 1,
+      "output_path": "date-digits.txt"
+    }
+  },
+  {
+    "code": "template.date_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/date-float.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/date-float.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "float",
+      "column": 1,
+      "output_path": "date-float.txt"
+    }
+  },
+  {
+    "code": "template.date_format",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/date-format.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/date-format.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "directive": "%E",
+      "column": 1,
+      "output_path": "date-format.txt"
+    }
+  },
+  {
+    "code": "template.date_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/date-second-60.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/date-second-60.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "column": 1,
+      "output_path": "date-second-60.txt"
+    }
+  },
+  {
+    "code": "template.date_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/date-text.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/date-text.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "column": 1,
+      "output_path": "date-text.txt"
+    }
+  },
+  {
+    "code": "template.filter_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/element.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/element.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "markdown_table",
+      "type": "integer",
+      "column": 1,
+      "output_path": "element.txt"
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/headers-count.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/headers-count.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "csv",
+      "argument": "headers",
+      "column": 1,
+      "output_path": "headers-count.txt"
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/headers-kind.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/headers-kind.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "csv",
+      "argument": "headers",
+      "column": 1,
+      "output_path": "headers-kind.txt"
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/json-indent.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/json-indent.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "json",
+      "argument": "indent",
+      "column": 1,
+      "output_path": "json-indent.txt"
+    }
+  },
+  {
+    "code": "template.undefined_property",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/missing-column.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/missing-column.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "path": "age",
+      "column": 1,
+      "output_path": "missing-column.txt"
+    }
+  },
+  {
+    "code": "template.filter_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/not-array.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/not-array.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "csv",
+      "type": "string",
+      "column": 1,
+      "output_path": "not-array.txt"
+    }
+  },
+  {
+    "code": "template.slug_empty",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/slug-empty.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/slug-empty.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "column": 1,
+      "output_path": "slug-empty.txt"
+    }
+  },
+  {
+    "code": "template.filter_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/slug-number.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/slug-number.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "slug",
+      "type": "integer",
+      "column": 1,
+      "output_path": "slug-number.txt"
+    }
+  }
+]

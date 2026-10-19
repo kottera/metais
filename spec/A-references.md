@@ -47,6 +47,14 @@ background only.
 - <a id="rfc4180"></a>**[RFC4180]** Shafranovich, Y., *Common Format and MIME
   Type for Comma-Separated Values (CSV) Files*, RFC 4180, October 2005 —
   https://www.rfc-editor.org/rfc/rfc4180
+- <a id="rfc3339"></a>**[RFC3339]** Klyne, G., and C. Newman, *Date and Time
+  on the Internet: Timestamps*, RFC 3339, July 2002 —
+  https://www.rfc-editor.org/rfc/rfc3339
+- <a id="ecma262"></a>**[ECMA-262]** Ecma International, *ECMAScript Language
+  Specification*, `Number::toString` (§6.1.6.1.20) —
+  https://tc39.es/ecma262/
+- <a id="gfm"></a>**[GFM]** GitHub, *GitHub Flavored Markdown Spec*, version
+  0.29-gfm, the tables extension — https://github.github.com/gfm/#tables-extension-
 - <a id="unicode"></a>**[Unicode]** The Unicode Consortium, *The Unicode
   Standard, Version 15.0.0*, with its Character Database, including
   `CaseFolding.txt` — https://www.unicode.org/versions/Unicode15.0.0/

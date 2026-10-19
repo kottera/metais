@@ -190,14 +190,16 @@ entry beneath `templates/`, `.` naming `templates/` itself; and its
 
 <a id="mts-man-018"></a>**MTS-MAN-018** Every output declaration's `path`
 MUST parse as a Liquid template of the dialect of
-[chapter 7](07-template-environment.md), its `when` as a condition and its
+[chapter 7](07-template-environment.md) and
+[chapter 8](08-filters-and-tags.md), its `when` as a condition and its
 `for_each` as a value expression, and a `path` MUST NOT hold a `render` tag.
 A processor MUST refuse each that does not parse with `template.syntax`, an
 `include` tag with `template.include`, a filter the dialect does not define
 with `template.unknown_filter`, a filter given literal arguments it never
 takes with `template.filter_argument`, a division by a literal zero with
 `template.division_by_zero`, a number literal beyond what a template number
-holds with `template.number_range`, `safe` other than as the last filter of
+holds with `template.number_range`, a literal `date` format outside its set
+with `template.date_format`, `safe` other than as the last filter of
 a `path`'s output expression with `template.safe_position`, and a `render`
 in a `path` with `template.tag_context`, each located at the field's manifest
 pointer and giving the column within the expression; and it MUST know every

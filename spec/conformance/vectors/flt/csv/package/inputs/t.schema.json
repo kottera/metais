@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {},
+          "n": {},
+          "note": {},
+          "flag": {}
+        }
+      }
+    },
+    "none": {},
+    "sparse": {},
+    "h": {}
+  }
+}

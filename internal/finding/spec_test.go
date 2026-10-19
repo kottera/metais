@@ -380,6 +380,8 @@ func TestEmittedCodes(t *testing.T) {
 	}
 	// Escaping (W5-2).
 	want = append(want, "template.safe_position")
+	// The METAIS filters and date (W5-1).
+	want = append(want, "template.date_format", "template.date_input", "template.slug_empty")
 	for _, c := range []string{
 		"case_collision", "character", "duplicate", "encoding", "file_directory_conflict", "not_nfc",
 		"not_portable", "shape",

@@ -114,6 +114,9 @@ func TestWrite(t *testing.T) {
 		if got := string(Write(tc.v)); got != tc.want {
 			t.Errorf("%s: got\n%s\nwant\n%s", tc.name, got, tc.want)
 		}
+		if n := WrittenLen(tc.v); n != int64(len(tc.want)) {
+			t.Errorf("%s: WrittenLen %d, Write writes %d bytes", tc.name, n, len(tc.want))
+		}
 	}
 }
 
@@ -130,6 +133,9 @@ func TestWriteGolden(t *testing.T) {
 		t.Fatal(describe(fs))
 	}
 	got := Write(doc.Value)
+	if n := WrittenLen(doc.Value); n != int64(len(got)) {
+		t.Errorf("WrittenLen %d, Write writes %d bytes", n, len(got))
+	}
 	golden := filepath.Join("testdata", "write", "document.yaml")
 	if *update {
 		if err := os.WriteFile(golden, got, 0o644); err != nil {

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/charge-slug",
+  "title": "slug is charged its input's shallow size and its result's length",
+  "statements": [
+    "MTS-TPL-063"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "16 for the output, 16 for the filter, 7 for the input's bytes, and 5 for the result's.",
+  "cases": [
+    {
+      "name": "at-the-bound",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "render-work": 44
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/at-the-bound-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "one-below",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "render-work": 43
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/one-below.json"
+          }
+        }
+      ]
+    }
+  ]
+}

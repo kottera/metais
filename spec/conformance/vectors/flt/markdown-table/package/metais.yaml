@@ -1,0 +1,18 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: t
+    title: T
+    schema: inputs/t.schema.json
+    required: false
+outputs:
+  - id: union
+    template: union.md.liquid
+  - id: named
+    template: named.md.liquid
+  - id: empty
+    template: empty.txt.liquid
