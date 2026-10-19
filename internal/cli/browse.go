@@ -41,7 +41,7 @@ var (
 func readingCommand(c *Command, refusals ...Refusal) *Command {
 	c.Group, c.Role = "Reading a package", finding.RoleConsumer
 	c.Refusals = append(packageRefusals(c.Name), refusals...)
-	c.Flags = append(c.Flags, limitFlag)
+	c.Flags = append(c.Flags, limitFlag, failOnFlag)
 	c.Operands = append([]args.Operand{packageOperand}, c.Operands...)
 	return c
 }

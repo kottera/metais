@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.ls.1.json",
+  "title": "metais.ls/1",
+  "description": "What metais ls prints with --json: the entries under a path of a package, packed or source alike (ADR-008 D5, ls).",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.ls/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "entries"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "description": "The entries listed, in ascending byte order of their paths as written here.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entry"
+          }
+        }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "required": [
+        "path",
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "The entry path, relative to the package's root with / as the separator; a directory's ends in /.",
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "description": "file, or dir for a directory, which entry paths imply.",
+          "enum": [
+            "file",
+            "dir"
+          ]
+        },
+        "size": {
+          "description": "A file's uncompressed size in bytes.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "files": {
+          "description": "The number of files beneath a directory, at any depth.",
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "type": {
+              "const": "file"
+            }
+          },
+          "required": [
+            "size"
+          ],
+          "not": {
+            "required": [
+              "files"
+            ]
+          }
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "dir"
+            },
+            "path": {
+              "pattern": "/$"
+            }
+          },
+          "required": [
+            "files"
+          ],
+          "not": {
+            "required": [
+              "size"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

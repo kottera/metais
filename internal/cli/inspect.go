@@ -232,8 +232,16 @@ func (s *session) open(p args.Parsed) (*loader.Package, outcome) {
 	if pkg == nil {
 		return nil, outcome{findings: fs, next: s.nextSteps(fs)}
 	}
+	if opened != nil {
+		opened(pkg)
+	}
 	return pkg, outcome{}
 }
+
+// opened, when set, is given every package a command opens. Only this
+// package's tests set it, to count what a command reads of a package
+// after it is verified (ADR-010 D15 item 2).
+var opened func(*loader.Package)
 
 // operandArg is the 1-based position on the whole line of the operand i,
 // a finding's argument parameter.

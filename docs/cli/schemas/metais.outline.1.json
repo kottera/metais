@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.outline.1.json",
+  "title": "metais.outline/1",
+  "description": "What metais outline prints with --json: a text entry's headings, read as CommonMark 0.31.2, each with the lines of its section (ADR-008 D5, outline).",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.outline/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "path",
+        "headings"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "The entry's path.",
+          "type": "string",
+          "minLength": 1
+        },
+        "headings": {
+          "description": "The ATX and setext headings, in document order; [] when there are none.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/heading"
+          }
+        }
+      }
+    },
+    "heading": {
+      "type": "object",
+      "required": [
+        "level",
+        "text",
+        "line",
+        "end_line"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        },
+        "text": {
+          "description": "The heading's inline content as plain text: text and code-span contents, markup removed, a setext heading's line breaks as single spaces.",
+          "type": "string"
+        },
+        "line": {
+          "description": "The heading's first line.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "end_line": {
+          "description": "The last line of its section: the line before the next heading of the same or a higher level, or the entry's last line.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

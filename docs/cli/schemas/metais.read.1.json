@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.read.1.json",
+  "title": "metais.read/1",
+  "description": "What metais read prints with --json: an entry of a package, or a range of its lines (ADR-008 D5, read).",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.read/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "path",
+        "size",
+        "binary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "The entry's path.",
+          "type": "string",
+          "minLength": 1
+        },
+        "size": {
+          "description": "The entry's size in bytes.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "binary": {
+          "description": "Whether the entry is binary: not valid UTF-8, or holding a NUL byte.",
+          "type": "boolean"
+        },
+        "content": {
+          "description": "A text entry's lines read, with their own line endings: the whole entry without --lines.",
+          "type": "string"
+        },
+        "lines": {
+          "description": "The lines read and the entry's line count. An empty entry has no lines, and first and last are 0.",
+          "type": "object",
+          "required": [
+            "first",
+            "last",
+            "total"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "first": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "last": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "content_base64": {
+          "description": "A binary entry's bytes, in base64 with padding (RFC 4648 section 4).",
+          "type": "string",
+          "contentEncoding": "base64"
+        }
+      },
+      "if": {
+        "properties": {
+          "binary": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "content_base64"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "content"
+              ]
+            },
+            {
+              "required": [
+                "lines"
+              ]
+            }
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "content",
+          "lines"
+        ],
+        "not": {
+          "required": [
+            "content_base64"
+          ]
+        }
+      }
+    }
+  }
+}

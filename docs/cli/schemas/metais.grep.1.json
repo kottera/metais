@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.grep.1.json",
+  "title": "metais.grep/1",
+  "description": "What metais grep prints with --json: the matching lines of the entries searched, each with its context (ADR-008 D5, grep). No match is an empty result, not a refusal.",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.grep/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "pattern",
+        "globs",
+        "matches",
+        "matching_lines",
+        "truncated",
+        "skipped"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "pattern": {
+          "description": "The pattern, as given.",
+          "type": "string"
+        },
+        "globs": {
+          "description": "The globs, as given; [] when every entry but those beneath a dot segment was searched.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "matches": {
+          "description": "The matching lines reported, at most --max-results, in entry path order and line order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/match"
+          }
+        },
+        "matching_lines": {
+          "description": "Every matching line found, reported or not; a line with several matches counts once.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "truncated": {
+          "description": "Whether matching lines were found beyond those reported.",
+          "type": "boolean"
+        },
+        "skipped": {
+          "description": "The binary entries among those searched, in path order.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "match": {
+      "type": "object",
+      "required": [
+        "path",
+        "line",
+        "text",
+        "text_truncated",
+        "before",
+        "after"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "The entry's path.",
+          "type": "string",
+          "minLength": 1
+        },
+        "line": {
+          "description": "The line's number, 1-based.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "text": {
+          "description": "The line without its line ending, cut at the last UTF-8 boundary within 1024 bytes when it is longer.",
+          "type": "string"
+        },
+        "text_truncated": {
+          "description": "Whether text was cut; read --lines gives the whole line.",
+          "type": "boolean"
+        },
+        "before": {
+          "description": "The lines of context before, in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/line"
+          }
+        },
+        "after": {
+          "description": "The lines of context after, in order.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/line"
+          }
+        }
+      }
+    },
+    "line": {
+      "type": "object",
+      "required": [
+        "line",
+        "text",
+        "text_truncated"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "line": {
+          "description": "The line's number, 1-based.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "text": {
+          "description": "The line without its line ending, cut at the last UTF-8 boundary within 1024 bytes when it is longer.",
+          "type": "string"
+        },
+        "text_truncated": {
+          "description": "Whether text was cut; read --lines gives the whole line.",
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
