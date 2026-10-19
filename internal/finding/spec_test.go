@@ -288,6 +288,8 @@ func TestEmittedCodes(t *testing.T) {
 		"csv.after_quote", "csv.bare_quote", "csv.field_count", "csv.header_duplicate",
 		"csv.header_empty", "csv.header_missing", "csv.unterminated_quote",
 		CodeInternalError, "limit.exceeded", CodeLimitInvalid, CodeLimitPackage, CodeReportTruncated,
+		"input.encoding_invalid", "input.number_out_of_range",
+		"json.duplicate_name", "json.lone_surrogate", "json.noncharacter", "json.syntax", "json.trailing_content",
 		CodeUsageBadValue, CodeUsageMissingCommand, CodeUsageRepeatedFlag, CodeUsageUnexpectedOperand,
 		CodeUsageUnknownCommand, CodeUsageUnknownFlag, CodeUsageUnknownTopic,
 	}

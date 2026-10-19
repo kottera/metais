@@ -17,6 +17,13 @@ csv.header_duplicate W3
 csv.header_empty W3
 csv.header_missing W3
 csv.unterminated_quote W3
+input.encoding_invalid W3
+input.number_out_of_range W3
+json.duplicate_name W3
+json.lone_surrogate W3
+json.noncharacter W3
+json.syntax W3
+json.trailing_content W3
 limit.exceeded W3
 limit.package W3
 package.container.archive_comment W3

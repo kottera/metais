@@ -24,7 +24,14 @@ it, and the statements it reports.
 | `csv.header_empty` | error | content | input | `ordinal` | 1.0 | — |
 | `csv.header_missing` | error | content | input | — | 1.0 | — |
 | `csv.unterminated_quote` | error | content | input | — | 1.0 | — |
+| `input.encoding_invalid` | error | content | input | `reason`, `offset` | 1.0 | — |
+| `input.number_out_of_range` | error | content | input | `reason` | 1.0 | — |
 | `internal.error` | error | internal | invocation | `tool_version`, `phase` | 1.0 | — |
+| `json.duplicate_name` | error | content | input | `name` | 1.0 | — |
+| `json.lone_surrogate` | error | content | input | — | 1.0 | — |
+| `json.noncharacter` | error | content | input | — | 1.0 | — |
+| `json.syntax` | error | content | input | `expected`, `found` | 1.0 | — |
+| `json.trailing_content` | error | content | input | — | 1.0 | — |
 | `limit.exceeded` | error | content | input | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | — |
 | `limit.invalid` | error | usage | invocation | `reason`; optional: `name`, `default`, `unit`, `value` | 1.0 | — |
 | `limit.package` | error | refused | package | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | — |

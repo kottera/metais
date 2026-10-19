@@ -118,6 +118,50 @@
       "statements": []
     },
     {
+      "code": "input.encoding_invalid",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the file is not UTF-8: invalid_utf8 (a byte that begins no UTF-8 character, or ends one early) or utf16 (the file begins with a UTF-16 byte order mark).",
+          "always": true
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "meaning": "The 0-based byte offset of the first byte that is not UTF-8, from the start of the file or argument.",
+          "always": true
+        }
+      ],
+      "message": "The input {input} is not UTF-8 ({reason}) at byte {offset}.",
+      "hint": "Save the file as UTF-8, with or without a byte order mark. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.number_out_of_range",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the number cannot be held: overflow (it rounds to an infinity as a binary64) or unsafe_integer (it is written without a fraction or exponent and its magnitude is above 2^53-1, so it would change silently).",
+          "always": true
+        }
+      ],
+      "message": "{field} is a number the data model cannot hold exactly ({reason}).",
+      "hint": "Supply it as a string, or as a number of magnitude at most 9007199254740991. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "internal.error",
       "severity": "error",
       "class": "internal",
@@ -139,6 +183,86 @@
       "message": "metais {tool_version} met a defect in itself ({phase}); neither the command line nor the package caused it.",
       "hint": "Report the command you ran to the metais project; running it again will meet the same defect.",
       "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "json.duplicate_name",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "meaning": "The member name that appears more than once in one object, after escapes are decoded.",
+          "always": true
+        }
+      ],
+      "message": "The member name {name} appears more than once in one object.",
+      "hint": "Keep one member with this name and remove the others. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "json.lone_surrogate",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "{field} is a string with an escaped UTF-16 surrogate that has no partner, which is no character.",
+      "hint": "Write the character it was meant to be, or a surrogate pair of a high and a low surrogate escape. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "json.noncharacter",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "{field} is a string holding a Unicode noncharacter, which I-JSON does not allow.",
+      "hint": "Remove the noncharacter (U+FDD0 to U+FDEF, or a code point ending in FFFE or FFFF) from the string. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "json.syntax",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "expected",
+          "type": "string",
+          "meaning": "What the JSON grammar allows at this place: a value, a member name, a colon, a comma or the closing bracket, a digit, four hexadecimal digits, or a closing quote.",
+          "always": true
+        },
+        {
+          "name": "found",
+          "type": "string",
+          "meaning": "What is there instead, by its class: end of input, a control character, an invalid escape, a leading zero, or an unexpected character.",
+          "always": true
+        }
+      ],
+      "message": "The input {input} is not valid JSON here: expected {expected}, found {found}.",
+      "hint": "Correct the JSON at this line and column; a JSON file holds one value, with no comments and no trailing commas. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "json.trailing_content",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The input {input} has text after its one JSON value.",
+      "hint": "Remove what follows the value, or enclose several values in one array. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
       "since": "1.0",
       "statements": []
     },
