@@ -322,9 +322,9 @@ func (s *Generator) candidate(loc *place, c *conj) (value.Value, bool) {
 // writable reports whether v can be written in the input's form so that
 // its reader reads back the same value. No reader holds a noncharacter in
 // a string (ADR-003 D8 item 4), and a form that normalizes line breaks
-// holds no CR. An integral number of magnitude above 2^53−1 is written by
-// the JSON writer and in a CSV field as an integer literal, which ADR-003
-// D8 item 5 refuses, so the generator keeps none.
+// holds no CR. An integral number of magnitude above 2^53−1 has no CSV
+// field an integer column reads back as it, since ADR-003 D8 item 5
+// refuses the integer literal, so the generator keeps none in any form.
 func (s *Generator) writable(loc *place, v value.Value) bool {
 	switch v := v.(type) {
 	case value.Null:

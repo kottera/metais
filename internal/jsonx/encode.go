@@ -37,7 +37,22 @@ func Encode(v value.Value, indent int) ([]byte, error) {
 	if indent < 0 || indent > MaxIndent {
 		return nil, fmt.Errorf("%w: %d", ErrIndent, indent)
 	}
-	e := encoder{indent: indent}
+	e := encoder{indent: indent, number: FormatNumber}
+	e.value(v, 0)
+	return []byte(e.b.String()), nil
+}
+
+// EncodeInput writes v as Encode does, with every number written by
+// FormatInputNumber: text the JSON reader reads back as v. Encode writes
+// an integral number of magnitude above 2^53−1 and below 1e21 as an
+// integer literal, which ADR-003 D8 item 5 refuses as input; EncodeInput
+// spells it with an exponent. It is the writer of a JSON input file, such
+// as the sample generator's, not the json filter's.
+func EncodeInput(v value.Value, indent int) ([]byte, error) {
+	if indent < 0 || indent > MaxIndent {
+		return nil, fmt.Errorf("%w: %d", ErrIndent, indent)
+	}
+	e := encoder{indent: indent, number: FormatInputNumber}
 	e.value(v, 0)
 	return []byte(e.b.String()), nil
 }
@@ -45,6 +60,7 @@ func Encode(v value.Value, indent int) ([]byte, error) {
 type encoder struct {
 	b      strings.Builder
 	indent int
+	number func(float64) string
 }
 
 func (e *encoder) newline(depth int) {
@@ -64,7 +80,7 @@ func (e *encoder) value(v value.Value, depth int) {
 	case value.Bool:
 		e.b.WriteString(strconv.FormatBool(bool(v)))
 	case value.Number:
-		e.b.WriteString(FormatNumber(v.Float64()))
+		e.b.WriteString(e.number(v.Float64()))
 	case value.String:
 		writeString(&e.b, v.Text())
 	case value.Array:
@@ -195,6 +211,21 @@ func FormatNumber(f float64) string {
 		b.WriteString(strconv.Itoa(n - 1))
 	}
 	return b.String()
+}
+
+// FormatInputNumber is f as FormatNumber writes it, except for an
+// integral f of magnitude above 2^53−1 and below 1e21. ECMAScript writes
+// that in fixed notation, as an integer literal, which ADR-003 D8 item 5
+// refuses for an input; so it is written in the exponent notation
+// ECMAScript uses from 1e21, the shortest digits that round-trip, a point
+// after the first, and e+ with the exponent, 15 to 20. Every reader of
+// an input reads the result back as f.
+func FormatInputNumber(f float64) string {
+	s := FormatNumber(f)
+	if math.Abs(f) <= value.MaxSafeInteger || strings.ContainsAny(s, ".e") {
+		return s
+	}
+	return strconv.FormatFloat(f, 'e', -1, 64)
 }
 
 // Canonical returns v's canonical form (ADR-002 D9): the RFC 8785

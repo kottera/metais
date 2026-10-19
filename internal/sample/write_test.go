@@ -113,7 +113,6 @@ func TestFilesRefuse(t *testing.T) {
 		{"a large integer", rows, `[{"n":1e17}]`},
 		{"a record that is not an object", rows, `[1]`},
 		{"an empty one-column record", Input{Name: "one", Schema: "inputs/one.json", Forms: []Form{FormCSV}}, `[{}]`},
-		{"a large integer in JSON", Input{Name: "d", Schema: "inputs/doc.json", Forms: []Form{FormJSON}}, `{"n":[11e17]}`},
 		{"a table with no column", Input{Name: "t", Schema: "inputs/text.json", Forms: []Form{FormCSV}}, `[]`},
 	} {
 		_, err := p.gen(Options{}).Files(tc.in, parse(t, tc.v))
@@ -124,29 +123,55 @@ func TestFilesRefuse(t *testing.T) {
 	}
 }
 
-// TestSuppliedLargeInteger: a supplied integer beyond 2^53−1, which the
-// reader takes when it is spelled with an exponent, is written in YAML so
-// that it reads back, and refused in JSON, whose writer would spell it as
-// the integer literal the reader refuses.
+// TestSuppliedLargeInteger is W3-5F: a supplied integral number beyond
+// 2^53−1, which the reader takes when it is spelled with an exponent, is
+// written in JSON and YAML with an exponent, the shortest text that
+// round-trips, and reads back to the same value with no finding. A CSV
+// integer column still has no field for it, and refuses it.
 func TestSuppliedLargeInteger(t *testing.T) {
 	testenv.Home(t)
-	p := compile(t, map[string]string{"inputs/doc.json": `{"type":"object","properties":{"n":{"type":"integer"},"s":{"type":"string"}}}`})
-	for _, f := range []Form{FormYAML, FormJSON} {
-		in := Input{Name: "d", Schema: "inputs/doc.json", Forms: []Form{f}, Supplied: parse(t, `{"n":11e17}`)}
-		v, _, fs, err := p.gen(Options{}).Generate(in)
-		if err != nil || fs != nil || text(member(v, "n")) != "1100000000000000000" {
-			t.Fatalf("%s: %s %v%s", f, text(v), err, describe(fs))
+	p := compile(t, map[string]string{
+		"inputs/doc.json":  `{"type":"object","properties":{"n":{"type":"integer"},"x":{"type":"number"},"s":{"type":"string"}}}`,
+		"inputs/rows.json": `{"type":"array","items":{"type":"object","properties":{"n":{"type":"integer"}}}}`,
+	})
+	for _, tc := range []struct {
+		supplied, json string
+	}{
+		{`{"n":11e17}`, "{\n  \"n\": 1.1e+18\n}\n"},
+		{`{"n":-11e17}`, "{\n  \"n\": -1.1e+18\n}\n"},
+		{`{"n":9007199254740992e0}`, "{\n  \"n\": 9.007199254740992e+15\n}\n"},
+		{`{"n":1e20}`, "{\n  \"n\": 1e+20\n}\n"},
+		{`{"n":1e21}`, "{\n  \"n\": 1e+21\n}\n"},
+		// The largest and the smallest finite binary64, each integral.
+		{`{"n":1.7976931348623157e308,"x":[-1.7976931348623157e308,9007199254740991]}`,
+			"{\n  \"n\": 1.7976931348623157e+308,\n  \"x\": [\n    -1.7976931348623157e+308,\n    9007199254740991\n  ]\n}\n"},
+	} {
+		for _, f := range []Form{FormJSON, FormYAML} {
+			in := Input{Name: "d", Schema: "inputs/doc.json", Forms: []Form{f}, Supplied: parse(t, tc.supplied)}
+			v, _, fs, err := p.gen(Options{Optional: None}).Generate(in)
+			if err != nil || fs != nil || !value.Equal(v, parse(t, tc.supplied)) {
+				t.Fatalf("%s %s: %s %v%s", f, tc.supplied, text(v), err, describe(fs))
+			}
+			written, err := p.gen(Options{}).Files(in, v)
+			if err != nil {
+				t.Errorf("%s %s: %v", f, tc.supplied, err)
+				continue
+			}
+			if f == FormJSON && string(written[0].Data) != tc.json {
+				t.Errorf("json %s: wrote %q, want %q", tc.supplied, written[0].Data, tc.json)
+			}
+			// readBack fails on any finding.
+			if back := readBack(t, p, in, written); !value.Equal(back, v) {
+				t.Errorf("%s %s: %q reads back as %s", f, tc.supplied, written[0].Data, text(back))
+			}
 		}
-		written, err := p.gen(Options{}).Files(in, v)
-		var ue *UnwritableError
-		switch {
-		case f == FormJSON && !errors.As(err, &ue):
-			t.Errorf("json: %v", err)
-		case f == FormYAML && err != nil:
-			t.Errorf("yaml: %v", err)
-		case f == FormYAML && !value.Equal(readBack(t, p, in, written), v):
-			t.Errorf("yaml: %q does not read back", written)
-		}
+	}
+	rows := Input{Name: "rows", Schema: "inputs/rows.json", Forms: []Form{FormCSV}, Supplied: parse(t, `[{"n":11e17}]`)}
+	v, _, _, _ := p.gen(Options{}).Generate(rows)
+	_, err := p.gen(Options{}).Files(rows, v)
+	var ue *UnwritableError
+	if !errors.As(err, &ue) || ue.Pointer != "/0/n" {
+		t.Errorf("csv: %v", err)
 	}
 }
 
