@@ -1,0 +1,215 @@
+# The METAIS conformance suite
+
+This directory holds the conformance suite of the METAIS specification: the
+vectors that prove every observable statement, and this description of how
+they are run. The suite is informative about how it is run and normative only
+through the statements its vectors cite. Chapter 15 says what a conformance
+claim names and when it is satisfied.
+
+## Layout
+
+```
+vectors/<area>/<slug>/
+  vector.json        the vector's manifest
+  package/           a source directory, or
+  package.metais     a packed package, as committed bytes
+  data/ …            any trees or files the steps' arguments name
+  setup/             a tree copied into the work directory before a case runs
+  expected/          expected trees, findings, streams and listings
+```
+
+`<area>` is the lower-cased area of the vector's first statement, and
+`<slug>` is lower-case letters and digits in hyphen-separated runs, at most
+64 characters. A vector's `id` is `<area>/<slug>`, its path. Every file of a
+vector is named by its `vector.json` or lies in a tree it names, and
+`expected/` is never copied where an implementation could read it.
+
+The schemas live beside the specification's other published schemas, under
+[`../schemas/conformance/1/`](../schemas/conformance/1/):
+
+| Schema | Describes |
+|---|---|
+| `vector.schema.json` | `vector.json` |
+| `findings.schema.json` | an expected findings file |
+| `driver-request.schema.json` | the request a driver reads |
+| `driver-response.schema.json` | the response a driver prints |
+| `record.schema.json` | the cross-platform record |
+
+The suite's format is versioned apart from the specification: within its
+major version it only adds members.
+
+## How a vector runs
+
+A vector runs one or more cases. Each case runs in a fresh sandbox holding
+`home/`, `tmp/`, `bin/` (empty) and `work/`; `work/` is the working directory
+of every step, and every path a step passes is relative to it. Before the
+first step the case's setup is applied: the `copy` tree's contents, the
+empty `dirs`, the `symlinks` and the `fifos`, then the package and every tree
+or file the steps' arguments name, each at the same relative path. Steps of
+a case share the work directory, in order; cases never share one.
+
+A case that `requires` something the file system does not offer (`symlinks`,
+`fifos`, `case-sensitive-fs`) is skipped with the reason. A skip is
+reported, and is never counted as a pass.
+
+Every case runs twice, in two environments, and every byte observed in one
+must equal the byte observed in the other:
+
+- **Environment A** plants a sentinel token in everything the
+  implementation could read from its host: the sandbox's path, `HOME`,
+  `TMPDIR`, `PATH`, `USER`, `LOGNAME`, `HOSTNAME`, the XDG directories,
+  `NO_COLOR`, `TERM` and `METAIS_SENTINEL`, and decoy files in the working
+  directory and the home directory named like the files of the data trees.
+  It also sets `TZ=Pacific/Chatham`, `LANG` and `LC_ALL` to `tr_TR.UTF-8`, and
+  `GODEBUG=zipinsecurepath=1,tarinsecurepath=1`. Nothing else is inherited.
+  Standard output, standard error, every written file, every zip entry
+  inflated to a depth of three, every member of a tar stream and a driver's
+  response are scanned for the token, case-insensitively; a hit fails the
+  step and names where the token was planted.
+- **Environment B** has only `HOME`, `TMPDIR` and `PATH` as plain sandbox
+  directories, `TZ=UTC` and `LC_ALL=C`, and starts at least two seconds after
+  A, in other processes.
+
+## What a step is compared on
+
+- `ok` is compared exactly.
+- **Findings**: `expect.findings` names a file holding the expected findings,
+  in order; absent, the step gives none. Each expected member equals the
+  actual finding's member of the same name, recursively. Only the stable
+  members appear: `code`, `severity`, `subject`, `location`, `schema`
+  (`entry`, `pointer`, `keyword`), `field`, `params`, `via`, `alternatives`
+  and `related`. A message, a hint and a schema keyword location are the
+  implementation's own and are never compared.
+- **Trees**: each of `expect.trees` holds exactly the regular files of its
+  expected tree, byte for byte, and nothing else: no extra file, no link, no
+  empty directory. A file listed in `containers` is compared as a zip by its
+  entries: names, order, content, the fixed header fields, and the
+  compression method of the entries `methods` lists. A file listed in
+  `executable` has its owner-execute bit set and every other file's is
+  clear. In a file listed in `substitute`, the tokens `@@TOOL_NAME@@` and
+  `@@TOOL_VERSION@@` are replaced by the implementation's name and version
+  before comparison.
+- **Nothing else changes**: the sandbox's `home/`, `tmp/` and `work/` are
+  recorded before and after each step, and any file created, changed or
+  removed outside a declared tree fails it. A step with no trees writes
+  nothing anywhere.
+- **Streams**: an archive stream is compared by its tar members (order,
+  path, typeflag, mode, owner, group, modification time, size and content); a
+  single output byte for byte, or by entries when it is a container.
+- **Listings**: `expect.listing` names the file holding a dry run's expected
+  listing, alone or as `{"equals": <file>, "containers": [<path>, …]}`. The
+  listing is compared exactly, except that only the path of a listed
+  container is.
+- **Repeatable steps**, whose bytes the implementation chooses, name in their
+  trees the files that must exist instead of an expected tree; only a
+  repeatable step's trees do. The case runs a second time and every observed
+  byte must match.
+
+Every process runs under 10 seconds of CPU time, 1024 MiB of peak resident
+memory and 120 seconds of wall clock, which a step's `bounds` can lower. CPU
+time and memory are read from the process's own resource usage. For a
+race-built program the CPU bound is multiplied by 20 and the memory bound
+by 10.
+
+## Running the suite
+
+The reference runner is `TestConformance` in `internal/conformance` of this
+repository. By default it builds `./cmd/metais` and drives it through its
+command line:
+
+```
+go test ./internal/conformance
+go test ./internal/conformance -run 'TestConformance/out/'
+```
+
+Its flags follow `-args`:
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `-conformance.adapter` | `cli` | `cli` drives a `metais`-compatible command line; `exec` drives a driver |
+| `-conformance.tool` | the binary built from source | the command-line tool for `cli` |
+| `-conformance.driver` | none | the driver executable for `exec` |
+| `-conformance.suite` | this directory | the suite directory |
+| `-conformance.version` | the front page's `Version` | the highest revision claimed; later vectors are skipped |
+| `-conformance.classes` | `processor,authoring` | which classes to run |
+| `-conformance.tags`, `-conformance.skip-tags` | all, none | tag selection |
+| `-conformance.record` | none | write the cross-platform record to this file |
+| `-conformance.compare` | none | compare records, comma-separated, instead of running vectors |
+| `-conformance.keep` | none | keep each failing case's sandbox under this directory |
+
+With `go test -short`, only environment A runs.
+
+## The driver protocol
+
+Another implementation runs the suite through a driver: a program that
+performs one operation with its implementation and answers in JSON. Run it
+with `-conformance.adapter=exec -conformance.driver=<program>`.
+
+For each step the runner starts the driver once, with no arguments, in the
+step's work directory and environment, exactly as a tool would be started,
+and writes one request to its standard input
+([`driver-request.schema.json`](../schemas/conformance/1/driver-request.schema.json)):
+
+```json
+{"protocol": "metais.conformance-driver/1", "op": "render",
+ "args": {"package": "package", "data": "data", "stream": "archive"},
+ "stream_file": ".stream"}
+```
+
+- `op` is one of chapter 15's operations: `open`, `validate`, `render`,
+  `check`, `test`, `pack`, `unpack` and `sample`; or `version`, which asks
+  for the implementation's identity.
+- `args` are the step's arguments exactly as the vector wrote them. Paths
+  are relative to the working directory. `inputs_json` names a file holding
+  the inputs object.
+- `stream_file` is where the driver writes the stream's bytes when the step
+  streams (`"stream"` in `args`). It is relative to the working directory and
+  is excluded from the check that nothing else changes.
+
+The driver performs the operation and prints one JSON response on standard
+output, then exits 0
+([`driver-response.schema.json`](../schemas/conformance/1/driver-response.schema.json)):
+
+```json
+{"ok": true, "findings": [], "listing": null,
+ "tool": {"name": "othertool", "version": "0.3.0"}}
+```
+
+- `ok` is true when the operation completed and no finding is of error
+  severity.
+- `findings` are the finding objects, in the specification's order.
+- `listing` is a dry run's listing of `path`, `size` and `digest`, and null
+  otherwise.
+- `tool` names the implementation. For `version` the response holds `tool`
+  alone; it is what replaces the substitution tokens and what the
+  cross-platform record names.
+
+A driver that exits with another status or prints a response that does not
+parse against its schema has made a harness error, which the runner reports
+apart from conformance failures. The driver's standard output and standard
+error are scanned for the sentinel token like a tool's, and every byte it
+writes is compared between the two environments, so a driver passes on
+nothing from its own host. Members a runner does not know are ignored, so
+a later revision of the protocol only adds them.
+
+`TestDriverProtocol` runs the suite through the reference driver, which
+wraps the `metais` binary, so the protocol is exercised on every change.
+
+## The cross-platform record
+
+`-conformance.record=<file>` writes, after a passing run, the record of
+[`record.schema.json`](../schemas/conformance/1/record.schema.json): the
+tool's name and version, the target, the SHA-256 of the suite tree, and for
+every invocation of every step of every case in both environments, `ok` and
+the SHA-256 and length of standard output, standard error, the stream and the
+listing, and every file of every declared tree with its path, size, SHA-256
+and execute bit. It also lists the cases skipped for an unmet requirement,
+with the reason. No sandbox path appears in it.
+
+`-conformance.compare=a.json,b.json,…` compares records instead of running
+vectors. It refuses records of different tools, tool versions or suites,
+and otherwise fails on any field that differs between any two, the target
+aside. A case one record skipped is compared in neither, since a target
+whose file system folds case cannot run what another can. Records taken from one build on different targets agree byte for
+byte, which proves what no committed expectation can: a container's deflate
+bytes, human messages, and the bytes of repeatable results.

@@ -1427,3 +1427,38 @@ project has; when CI exists it runs the same commands.
     and an erratum's `Files:` lines use the same paths;
   - a fenced block with a `path=` attribute outside an example is refused,
     since nothing would check it.
+- **2026-10-19, PLAN-2026-10-metais-v1 W2-2.** D9 to D13, D15 and D18
+  landed as `internal/conformance`, with D7 item 3's schemas under
+  `spec/schemas/conformance/1/` and the driver protocol in
+  `spec/conformance/README.md`. The runner is test code throughout: it
+  starts processes, sets their environment and walks the file system,
+  which ADR-009 D16 item 3 refuses to every non-test file outside its
+  allow-list. Its test closure links no package of the module but
+  `internal/testenv` (`TestBlackBox`). D18's fake is the test binary
+  re-executed as `metais` in a directory named `metais-fake-<fault>`; the
+  reference driver is the test binary re-executed as `metais-refdriver`,
+  running the `metais` beside it with the `cli` adapter's command lines.
+  Choices the decisions leave open:
+  - D16 item 3's opening set is read from `metais help --json`: each
+    `result.commands[]` member whose `opens_package` is true, which is
+    what the declarations mark (`internal/cli`'s
+    `TestOpeningSetAsTheRunnerReadsIt`).
+  - The runner reads and writes zips with its own code over
+    `compress/flate`: it links no part of the implementation, and
+    `layers.json` gives `archive/zip` to `internal/zipfmt` alone.
+  - D15 item 3's record also names each step's `invocation`, because a
+    hostile open step runs several commands, and lists the cases skipped
+    for an unmet `requires`. D15 item 4 compares a pair of records on the
+    cases both ran: darwin's default volume folds case, so a
+    `case-sensitive-fs` case runs on linux only. The suite's digest is the
+    SHA-256 of `<path> <sha256>` lines, one per file, sorted
+    (`record.schema.json` states it).
+  - D10 item 6's containers, for a dry-run listing, are listed beside it:
+    `expect.listing` is the listing's file, or `{"equals", "containers"}`.
+  - D10 item 7's `files` are allowed in a repeatable step's trees only; any
+    other step's tree names the tree it `equals`.
+  - D13's wall clock is the runner's, as D13 item 1 gives vectors only
+    `cpu_ms` and `rss_mib`; the self-proof lowers it to catch its fault in
+    seconds.
+  - The `cli` adapter's exit check reads each code's class from
+    `spec/findings/registry.json`, the one source of codes.

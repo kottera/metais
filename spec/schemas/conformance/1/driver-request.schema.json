@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/schemas/conformance/1/driver-request.schema.json",
+  "title": "METAIS conformance driver request",
+  "description": "The one request the runner writes to a driver's standard input for each step: the operation and its arguments as the vector wrote them, and where to write the stream bytes.",
+  "type": "object",
+  "required": ["protocol", "op", "args"],
+  "additionalProperties": false,
+  "properties": {
+    "protocol": {
+      "title": "Protocol",
+      "description": "The protocol and its major version.",
+      "const": "metais.conformance-driver/1"
+    },
+    "op": {
+      "title": "Operation",
+      "description": "An abstract operation of chapter 15, or version for the implementation's identity.",
+      "enum": ["open", "validate", "render", "check", "test", "pack", "unpack", "sample", "version"]
+    },
+    "args": {
+      "title": "Arguments",
+      "description": "The step's arguments exactly as the vector wrote them; paths are relative to the working directory. Empty for version.",
+      "type": "object"
+    },
+    "stream_file": {
+      "title": "Stream file",
+      "description": "The file, relative to the working directory, that receives the stream's bytes when the step streams.",
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

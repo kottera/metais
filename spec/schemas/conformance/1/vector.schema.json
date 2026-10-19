@@ -1,0 +1,379 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "title": "METAIS conformance vector",
+  "description": "A vector's manifest, vector.json: the statements it proves and the cases it runs, each an ordered list of steps against the abstract operations of chapter 15. Every path is relative to the vector's directory, or, in a step's arguments, to the case's work directory.",
+  "type": "object",
+  "required": ["$schema", "id", "title", "statements", "since", "class", "tags", "requires", "notes", "cases"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "title": "Schema",
+      "description": "This schema's identifier.",
+      "const": "https://metais.org/schemas/conformance/1/vector.schema.json"
+    },
+    "id": {
+      "title": "Identifier",
+      "description": "<area>/<slug>, equal to the vector's path below vectors/: the lower-cased area of its first statement, then a slug of at most 64 characters.",
+      "type": "string",
+      "maxLength": 68,
+      "pattern": "^[a-z]{3}/[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "title": {
+      "title": "Title",
+      "description": "One sentence saying what the vector proves.",
+      "type": "string",
+      "minLength": 1
+    },
+    "statements": {
+      "title": "Statements",
+      "description": "The identifiers of the active statements the vector proves; the first gives its area.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/statement" }
+    },
+    "since": {
+      "title": "Since",
+      "description": "The highest since of its statements: the first revision the vector applies to.",
+      "$ref": "#/$defs/revision"
+    },
+    "class": {
+      "title": "Conformance class",
+      "description": "The class of program the vector is run against.",
+      "enum": ["processor", "authoring"]
+    },
+    "tags": {
+      "title": "Tags",
+      "description": "Tags from the closed registry of ADR-011 D9 item 5.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": ["security", "determinism", "portable-paths", "container", "byte-level", "limits", "regression"]
+      }
+    },
+    "requires": {
+      "title": "Requires",
+      "description": "What the work directory's file system must offer; a case whose requirement is absent is skipped and reported, never counted as a pass.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["symlinks", "fifos", "case-sensitive-fs"] }
+    },
+    "notes": {
+      "title": "Notes",
+      "description": "Free text; names the program that produced a committed package.metais, if one did.",
+      "type": "string"
+    },
+    "cases": {
+      "title": "Cases",
+      "description": "The cases, each run in its own fresh work directory.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/case" }
+    }
+  },
+  "$defs": {
+    "statement": {
+      "title": "Statement identifier",
+      "description": "MTS-<AREA>-<NNN>.",
+      "type": "string",
+      "pattern": "^MTS-[A-Z]{3}-[0-9]{3,}$"
+    },
+    "revision": {
+      "title": "Revision",
+      "description": "MAJOR.MINOR.",
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "slug": {
+      "title": "Slug",
+      "description": "Lower-case letters and digits in hyphen-separated runs.",
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "path": {
+      "title": "Relative path",
+      "description": "A relative, slash-separated path that stays inside its directory.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^/\\\\]",
+      "not": { "pattern": "(^|/)\\.\\.?(/|$)|\\\\|//|/$" }
+    },
+    "paths": {
+      "title": "Relative paths",
+      "description": "A list of distinct relative paths.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/path" }
+    },
+    "case": {
+      "title": "Case",
+      "description": "A setup and an ordered list of steps sharing one work directory.",
+      "type": "object",
+      "required": ["name", "steps"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "description": "Unique within the vector.",
+          "$ref": "#/$defs/slug"
+        },
+        "setup": { "$ref": "#/$defs/setup" },
+        "steps": {
+          "title": "Steps",
+          "description": "The operations, run in order.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/step" }
+        }
+      }
+    },
+    "setup": {
+      "title": "Setup",
+      "description": "What the work directory holds before the first step, beyond the package and the trees the steps name: what git cannot hold.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "copy": {
+          "title": "Copy",
+          "description": "A vector tree whose contents are copied into the work directory's root.",
+          "oneOf": [{ "$ref": "#/$defs/path" }, { "type": "null" }]
+        },
+        "dirs": {
+          "title": "Directories",
+          "description": "Empty directories to create.",
+          "$ref": "#/$defs/paths"
+        },
+        "symlinks": {
+          "title": "Links",
+          "description": "Symbolic links to create.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "target"],
+            "additionalProperties": false,
+            "properties": {
+              "path": { "$ref": "#/$defs/path" },
+              "target": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "fifos": {
+          "title": "Named pipes",
+          "description": "Named pipes to create.",
+          "$ref": "#/$defs/paths"
+        }
+      }
+    },
+    "step": {
+      "title": "Step",
+      "description": "One operation, its arguments and what it must give.",
+      "type": "object",
+      "required": ["op", "args", "expect"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "title": "Operation",
+          "description": "An abstract operation of chapter 15.",
+          "enum": ["open", "validate", "render", "check", "test", "pack", "unpack", "sample"]
+        },
+        "args": { "$ref": "#/$defs/args" },
+        "expect": { "$ref": "#/$defs/expect" },
+        "bounds": {
+          "title": "Bounds",
+          "description": "Lowered resource bounds for this step; the defaults are 10 s of CPU and 1024 MiB of memory.",
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "cpu_ms": { "type": "integer", "minimum": 1, "maximum": 10000 },
+            "rss_mib": { "type": "integer", "minimum": 1, "maximum": 1024 }
+          }
+        },
+        "repeatable": {
+          "title": "Repeatable",
+          "description": "The bytes are the implementation's: the case runs twice and every observed byte must match between the runs, and the step's trees name files rather than equals.",
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "op": { "enum": ["open", "validate", "render", "unpack"] } } },
+          "then": { "properties": { "args": { "required": ["package"] } } }
+        },
+        {
+          "if": { "properties": { "op": { "enum": ["check", "test", "pack", "sample"] } } },
+          "then": { "properties": { "args": { "required": ["source"] } } }
+        },
+        {
+          "if": { "properties": { "op": { "enum": ["pack", "unpack"] } } },
+          "then": { "properties": { "args": { "required": ["to"] } } }
+        },
+        {
+          "if": { "properties": { "op": { "const": "render" } } },
+          "then": { "properties": { "args": { "oneOf": [{ "required": ["out"] }, { "required": ["stream"] }] } } }
+        },
+        {
+          "if": { "properties": { "op": { "const": "sample" } } },
+          "then": { "properties": { "args": { "oneOf": [{ "required": ["to"] }, { "required": ["example"] }] } } }
+        },
+        {
+          "if": { "not": { "required": ["repeatable"], "properties": { "repeatable": { "const": true } } } },
+          "then": { "properties": { "expect": { "properties": { "trees": { "items": { "required": ["equals"] } } } } } }
+        }
+      ]
+    },
+    "args": {
+      "title": "Arguments",
+      "description": "The operation's arguments, as its owning chapter defines them; paths are relative to the work directory.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "package": { "$ref": "#/$defs/path" },
+        "source": { "$ref": "#/$defs/path" },
+        "data": { "$ref": "#/$defs/path" },
+        "set": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "set_json": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "inputs_json": { "$ref": "#/$defs/path" },
+        "limits": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [{ "type": "integer", "minimum": 0 }, { "type": "string", "minLength": 1 }]
+          }
+        },
+        "out": { "$ref": "#/$defs/path" },
+        "stream": {
+          "oneOf": [
+            { "const": "archive" },
+            {
+              "type": "object",
+              "required": ["only"],
+              "additionalProperties": false,
+              "properties": { "only": { "$ref": "#/$defs/path" } }
+            }
+          ]
+        },
+        "only": {
+          "oneOf": [{ "$ref": "#/$defs/path" }, { "$ref": "#/$defs/paths" }]
+        },
+        "overwrite": { "type": "boolean" },
+        "dry_run": { "type": "boolean" },
+        "now": { "type": "string", "minLength": 1 },
+        "sample": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "optional": { "type": ["string", "boolean"] },
+            "seed": { "type": "integer", "minimum": 0 },
+            "items": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "examples": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "to": { "$ref": "#/$defs/path" },
+        "example": { "type": "string", "minLength": 1 },
+        "optional": { "type": ["string", "boolean"] },
+        "seed": { "type": "integer", "minimum": 0 },
+        "items": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "expect": {
+      "title": "Expectations",
+      "description": "What the step must give. Absent findings means no findings at all; absent trees means the step writes nothing anywhere.",
+      "type": "object",
+      "required": ["ok"],
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "title": "OK", "type": "boolean" },
+        "findings": {
+          "title": "Findings",
+          "description": "A vector file holding the expected findings (findings.schema.json).",
+          "$ref": "#/$defs/path"
+        },
+        "trees": {
+          "title": "Trees",
+          "description": "The trees the step writes, each compared exactly.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/tree" }
+        },
+        "stream": {
+          "title": "Stream",
+          "description": "The bytes the step streams: an archive compared by entries, a container output compared by entries, or anything else byte for byte.",
+          "type": "object",
+          "required": ["equals"],
+          "additionalProperties": false,
+          "properties": {
+            "equals": { "$ref": "#/$defs/path" },
+            "container": {
+              "type": "object",
+              "required": ["methods"],
+              "additionalProperties": false,
+              "properties": { "methods": { "$ref": "#/$defs/methods" } }
+            }
+          }
+        },
+        "listing": {
+          "title": "Listing",
+          "description": "The dry run's expected listing, an array of path, size and digest in a vector file: named alone, or with the outputs that are containers, of which only the path is compared.",
+          "oneOf": [
+            { "$ref": "#/$defs/path" },
+            {
+              "type": "object",
+              "required": ["equals"],
+              "additionalProperties": false,
+              "properties": {
+                "equals": { "$ref": "#/$defs/path" },
+                "containers": { "$ref": "#/$defs/paths" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tree": {
+      "title": "Tree",
+      "description": "A tree at path in the work directory: exactly the regular files of equals, byte for byte, or, only for a repeatable step, at least the files listed.",
+      "type": "object",
+      "required": ["path"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "$ref": "#/$defs/path" },
+        "equals": { "$ref": "#/$defs/path" },
+        "files": { "$ref": "#/$defs/paths" },
+        "containers": {
+          "title": "Containers",
+          "description": "Files compared as zips by entries, with the compression method compared for the entries listed.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "methods"],
+            "additionalProperties": false,
+            "properties": {
+              "path": { "$ref": "#/$defs/path" },
+              "methods": { "$ref": "#/$defs/methods" }
+            }
+          }
+        },
+        "executable": {
+          "title": "Executable",
+          "description": "The files whose owner-execute bit is set; every other file's is clear.",
+          "$ref": "#/$defs/paths"
+        },
+        "substitute": {
+          "title": "Substitute",
+          "description": "Files in which the tool's name and version tokens are replaced before comparison.",
+          "$ref": "#/$defs/paths"
+        }
+      },
+      "oneOf": [
+        { "required": ["equals"], "not": { "required": ["files"] } },
+        { "required": ["files"], "not": { "required": ["equals"] } }
+      ]
+    },
+    "methods": {
+      "title": "Methods",
+      "description": "The entries whose compression method is compared, or all of them.",
+      "oneOf": [{ "const": "all" }, { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }]
+    }
+  }
+}
