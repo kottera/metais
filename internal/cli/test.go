@@ -274,8 +274,15 @@ func runTest(s *session, p args.Parsed) outcome {
 				for j, e := range all {
 					listed[j] = e.name
 				}
+				// The value's own position: the flag's, written
+				// --example=name, or the one after it.
+				flag := s.line.at[p.ArgsOf("example")[i]]
+				at := flag + 1
+				if !strings.Contains(s.inv.Args[flag], "=") {
+					at++
+				}
 				return s.refuseWith(finding.New(finding.CodeUsageUnknownExample, invocation, nil, finding.Params{
-					"argument": finding.Int(int64(s.line.at[p.ArgsOf("example")[i]] + 2)),
+					"argument": finding.Int(int64(at)),
 					"examples": stringList(listed),
 				}))
 			}

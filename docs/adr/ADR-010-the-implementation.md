@@ -1948,3 +1948,13 @@ at the train's close, with A1 and A3.
   ASCII, non-ASCII, the cut `PaxHeaders.0` name), six size classes and
   both modes. D17 item 5's claim is therefore a proved equivalence rather
   than a call. No module is added.
+
+- **2026-10-19, PLAN-2026-10-metais-v1 W5-11.** D13 item 2's table gains
+  `fault.UpdateBeyondExpected`, bit `1 << 8`, at `internal/cli`'s seam: it
+  makes `test --update` reckon its removals over the whole example rather
+  than its `expected/`, and `TestUpdateConfinement` must see the example's
+  inputs and `example.yaml` go. `internal/hostfs` gains `RemoveEmptyDir`,
+  beside `RemoveFile`: confined by a root, refusing a link at any segment,
+  and removing with a call that refuses anything but an empty directory
+  (`unlinkat` with `AT_REMOVEDIR` on linux and darwin, `RemoveDirectoryW`
+  on windows).

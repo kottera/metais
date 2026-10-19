@@ -134,6 +134,8 @@ func TestTestRefusals(t *testing.T) {
 			map[string]any{"argument": float64(6), "examples": []any{"equal", "mixed"}}},
 		{"update on a packed package", []string{"test", packed, "--update"}, finding.CodeUsageNotSourceDirectory, finding.ExitUsage,
 			map[string]any{"argument": float64(2)}},
+		{"unknown example, written with =", []string{"test", src, "--example=nope"}, finding.CodeUsageUnknownExample, finding.ExitUsage,
+			map[string]any{"argument": float64(3)}},
 		{"dry run without update", []string{"test", src, "--dry-run"}, finding.CodeUsageMissingFlag, finding.ExitUsage,
 			map[string]any{"command": "test", "flag": "--update"}},
 		{"standard input", []string{"test", "-"}, finding.CodeUsagePackageFromStdin, finding.ExitUsage, nil},
