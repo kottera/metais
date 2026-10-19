@@ -68,34 +68,6 @@ func TestCRLF(t *testing.T) {
 	}
 }
 
-// TestNoDeclarationStops is Wave 5's proof that a declaration Wave 4's
-// render stopped on with internal.error renders: one fixture per formerly
-// stopped declaration.
-func TestNoDeclarationStops(t *testing.T) {
-	for _, tc := range []struct {
-		name    string
-		outputs string
-		files   map[string]string
-	}{
-		{"newline: crlf", "  - id: notes\n    template: notes.txt.liquid\n    newline: crlf\n",
-			map[string]string{"templates/notes.txt.liquid": "one\ntwo {{ inputs.x }}\n"}},
-		{"validate", "  - id: data\n    template: data.json.liquid\n    validate: references/data.schema.json\n",
-			map[string]string{
-				"templates/data.json.liquid":  `{"x": "{{ inputs.x }}"}`,
-				"references/data.schema.json": `{"type": "object", "required": ["x"]}`,
-			}},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			root := testenv.Dir(t)
-			pkg := writePackage(t, root, tc.outputs, tc.files)
-			r := runTool(t, "render", pkg, "--set", "/x=a", "--out", filepath.Join(root, "out"), "--json")
-			if slices.Contains(r.codes(), "internal.error") || r.status != 0 {
-				t.Fatalf("metais render: status %d, %s", r.status, r.stdout)
-			}
-		})
-	}
-}
-
 // TestRenderCRLF is ADR-005 D10 on a written output: the whole file's line
 // endings, the template's own and those a value placed, are CR LF, and
 // the size and digest reported are of the converted bytes.

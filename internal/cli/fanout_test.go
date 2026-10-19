@@ -31,6 +31,7 @@ outputs:
 ` + decls,
 		"pkg/inputs/pages.schema.json": `{"type": "array", "items": {"type": "string"}}`,
 		"pkg/templates/t.txt.liquid":   "{{ output.path }}\n",
+		"pkg/references/number.json":   `{"type": "number"}`,
 		"data/pages.json":              `["a", "b", "c"]`,
 	})
 	return filepath.Join(dir, "pkg"), filepath.Join(dir, "data")
@@ -82,6 +83,17 @@ func TestNoDeclarationStops(t *testing.T) {
 		{"a mirror", `  - id: site
     mirror: site
 `, []string{"site/index.html"}, map[string]string{"templates/site/index.html.liquid": "{{ output.path }}"}},
+		{"newline: crlf", `  - id: n
+    template: t.txt.liquid
+    path: n.txt
+    newline: crlf
+`, []string{"n.txt"}, nil},
+		{"validate", `  - id: v
+    template: t.txt.liquid
+    path: "1"
+    kind: json
+    validate: references/number.json
+`, []string{"1"}, nil},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			pkg, data := declarationPackage(t, c.decls)
