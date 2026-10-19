@@ -415,6 +415,7 @@ func purityProblems(t *testing.T, faults fault.Set) []string {
     path: "{{ inputs.pages | nope }}.txt"
 `)
 	archive := string(wantArchive(t, files))
+	warns, wdata, warnArchive := warningPackage(t)
 	var bad []string
 	for _, c := range []struct {
 		name   string
@@ -424,6 +425,8 @@ func purityProblems(t *testing.T, faults fault.Set) []string {
 		{"the archive, with --json", []string{"render", pkg, "--data", data, "--out", "-", "--json"}, archive},
 		{"the archive", []string{"render", pkg, "--data", data, "--out", "-"}, archive},
 		{"one file, with --json", []string{"render", pkg, "--data", data, "--out", "-", "--only", "run.sh", "--json"}, "run.sh\n"},
+		{"the archive with warnings present, with --json", []string{"render", warns, "--data", wdata, "--out", "-", "--json"}, warnArchive},
+		{"the archive with warnings present", []string{"render", warns, "--data", wdata, "--out", "-"}, warnArchive},
 		{"a refused render, with --json", []string{"render", broken, "--data", bdata, "--out", "-", "--json"}, ""},
 		{"a refused render", []string{"render", broken, "--data", bdata, "--out", "-"}, ""},
 		{"a refused --only, with --json", []string{"render", pkg, "--data", data, "--out", "-", "--only", "x", "--json"}, ""},
@@ -445,14 +448,14 @@ func firstBytes(s string) string {
 // TestStdoutPurity is ADR-008 D16 item 5's standard-output purity: every
 // case of the detector is clean on the tool, and every one is caught on a
 // build that writes a notice to standard output (fault.StdoutNotice).
-// Render emits no warning yet, so "with warnings present" is the case the
-// first warning render emits adds (W5-5, W5-6).
+// "With warnings present" is a render that warns output.container.space
+// (W5-6).
 func TestStdoutPurity(t *testing.T) {
 	for _, p := range purityProblems(t, 0) {
 		t.Error(p)
 	}
-	if n := len(purityProblems(t, fault.StdoutNotice)); n != 7 {
-		t.Errorf("with StdoutNotice, the detector caught %d of 7 cases", n)
+	if n := len(purityProblems(t, fault.StdoutNotice)); n != 9 {
+		t.Errorf("with StdoutNotice, the detector caught %d of 9 cases", n)
 	}
 }
 
@@ -516,4 +519,45 @@ func TestRenderContainerStreams(t *testing.T) {
 	if r.status != 0 || r.stdout != string(zip) {
 		t.Errorf("--only box.zip: status %d, %d bytes, want the zip's %d", r.status, len(r.stdout), len(zip))
 	}
+}
+
+// warningPackage is a package whose render warns, output.container.space
+// for an EPUB entry whose path has a space, its data directory, and the
+// archive its render writes: built here from the files a render into a
+// directory writes, after checking that the render warns.
+func warningPackage(t *testing.T) (pkg, data, archive string) {
+	t.Helper()
+	pkg, data = declarationPackage(t, `  - id: book
+    path: book.epub
+    container:
+      profile: epub
+      entries:
+        - template: t.txt.liquid
+          path: META-INF/container.xml
+        - template: t.txt.liquid
+          path: OEBPS/first page.xhtml
+  - id: note
+    template: t.txt.liquid
+    path: note.txt
+`)
+	out := filepath.Join(filepath.Dir(pkg), "warned")
+	r := runTool(t, "render", pkg, "--data", data, "--out", out, "--json")
+	if r.status != 0 || !slices.Equal(r.codes(), []string{"output.container.space"}) {
+		t.Fatalf("the warning package: status %d, codes %q", r.status, r.codes())
+	}
+	var b bytes.Buffer
+	w := tarw.NewWriter(&b)
+	for _, name := range []string{"book.epub", "note.txt"} {
+		body, err := os.ReadFile(filepath.Join(out, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := w.Add(name, false, int64(len(body)), bytes.NewReader(body)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return pkg, data, b.String()
 }
