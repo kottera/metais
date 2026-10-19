@@ -32,3 +32,16 @@ func TestHas(t *testing.T) {
 		})
 	}
 }
+
+// Each fault's bit is the one the plan assigns it, so that no two faults
+// share a bit.
+func TestFaultBits(t *testing.T) {
+	for name, tt := range map[string]struct{ got, want Set }{
+		"SkipDigest":  {SkipDigest, 1 << 0},
+		"SkipConfine": {SkipConfine, 1 << 3},
+	} {
+		if tt.got != tt.want {
+			t.Errorf("%s = %#x, want %#x", name, uint64(tt.got), uint64(tt.want))
+		}
+	}
+}

@@ -28,3 +28,10 @@ func (s Set) Has(f Set) bool {
 // package whose entries are not those its digest file names. Its seam is
 // internal/pkgtree.
 const SkipDigest Set = 1 << 0
+
+// SkipConfine makes the output path check return success (ADR-010 D13
+// item 2): a write goes to its name joined onto the output directory's host
+// path, through no root, so a name that climbs out of the directory or
+// through a link lands where it points. The confinement detector must catch
+// a write outside the output directory. Its seam is internal/hostfs.
+const SkipConfine Set = 1 << 3
