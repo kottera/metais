@@ -1,0 +1,61 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/unpack-refused",
+  "title": "Unpack refuses a target that holds anything but quiet entries, .compiled among them, and one that is not a directory or lies beneath a file, writing nothing",
+  "statements": [
+    "MTS-AUT-028"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "byte-level"
+  ],
+  "requires": [],
+  "notes": "Its package.metais is written by internal/vectorgen (go test ./internal/vectorgen -run TestPackages -args -update), whose test reproduces the committed bytes. It is packed from the source directory aut/unpack/expected/src.",
+  "cases": [
+    {
+      "name": "not-empty",
+      "setup": { "copy": "setup/full" },
+      "steps": [
+        {
+          "op": "unpack",
+          "args": { "package": "package.metais", "to": "src" },
+          "expect": { "ok": false, "findings": "expected/not-empty.json" }
+        }
+      ]
+    },
+    {
+      "name": "compiled",
+      "setup": { "dirs": ["src/.compiled"] },
+      "steps": [
+        {
+          "op": "unpack",
+          "args": { "package": "package.metais", "to": "src" },
+          "expect": { "ok": false, "findings": "expected/compiled.json" }
+        }
+      ]
+    },
+    {
+      "name": "file",
+      "setup": { "copy": "setup/file" },
+      "steps": [
+        {
+          "op": "unpack",
+          "args": { "package": "package.metais", "to": "src" },
+          "expect": { "ok": false, "findings": "expected/not-directory.json" }
+        }
+      ]
+    },
+    {
+      "name": "beneath-a-file",
+      "setup": { "copy": "setup/file" },
+      "steps": [
+        {
+          "op": "unpack",
+          "args": { "package": "package.metais", "to": "src/sub" },
+          "expect": { "ok": false, "findings": "expected/not-directory.json" }
+        }
+      ]
+    }
+  ]
+}

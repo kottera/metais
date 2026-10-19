@@ -1,0 +1,68 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/unpack",
+  "title": "Unpack writes every entry but .compiled/, into a new directory, beneath missing parents, or into an empty one, and what it writes opens as the package's source directory",
+  "statements": [
+    "MTS-AUT-024",
+    "MTS-AUT-025",
+    "MTS-AUT-026",
+    "MTS-AUT-027",
+    "MTS-AUT-029"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "byte-level"
+  ],
+  "requires": [],
+  "notes": "Its package.metais is written by internal/vectorgen (go test ./internal/vectorgen -run TestPackages -args -update), whose test reproduces the committed bytes. It is packed from the source directory aut/unpack/expected/src. Its template reads inputs.report.author, which the report's schema does not declare, so the package's check reports an error and unpack writes it all the same. The manifest's comment and references/notes.md's CRLF are written back byte for byte.",
+  "cases": [
+    {
+      "name": "new",
+      "steps": [
+        {
+          "op": "unpack",
+          "args": { "package": "package.metais", "to": "src" },
+          "expect": { "ok": true, "trees": [ { "path": "src", "equals": "expected/src", "executable": [] } ] }
+        },
+        {
+          "op": "open",
+          "args": { "package": "src" },
+          "expect": { "ok": true }
+        }
+      ]
+    },
+    {
+      "name": "nested",
+      "steps": [
+        {
+          "op": "unpack",
+          "args": { "package": "package.metais", "to": "a/b/src" },
+          "expect": { "ok": true, "trees": [ { "path": "a", "equals": "expected/nested" } ] }
+        }
+      ]
+    },
+    {
+      "name": "empty",
+      "setup": { "dirs": ["src"] },
+      "steps": [
+        {
+          "op": "unpack",
+          "args": { "package": "package.metais", "to": "src" },
+          "expect": { "ok": true, "trees": [ { "path": "src", "equals": "expected/src" } ] }
+        }
+      ]
+    },
+    {
+      "name": "quiet",
+      "setup": { "copy": "setup/quiet" },
+      "steps": [
+        {
+          "op": "unpack",
+          "args": { "package": "package.metais", "to": "src" },
+          "expect": { "ok": true, "trees": [ { "path": "src", "equals": "expected/quiet/src" } ] }
+        }
+      ]
+    }
+  ]
+}

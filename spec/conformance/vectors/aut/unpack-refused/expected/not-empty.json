@@ -1,0 +1,13 @@
+[
+  {
+    "code": "output.destination.not_empty",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "entries": ["notes.txt"],
+      "more": false
+    }
+  }
+]

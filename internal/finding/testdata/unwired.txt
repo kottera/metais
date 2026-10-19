@@ -42,9 +42,6 @@ output.any_of W5
 output.const W5
 output.contains W5
 output.dependent_required W5
-output.destination.not_directory W4
-output.destination.not_empty W4
-output.destination.write_failed W4
 output.enum W5
 output.exclusive_maximum W5
 output.exclusive_minimum W5

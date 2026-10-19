@@ -1,0 +1,13 @@
+[
+  {
+    "code": "output.destination.write_failed",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "reason": "permission_denied",
+      "written": []
+    }
+  }
+]

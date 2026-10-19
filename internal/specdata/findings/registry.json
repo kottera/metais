@@ -3178,7 +3178,9 @@
       "hint": "Name a directory, or a path that does not exist yet beneath directories only. Nothing was written.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-028"
+      ]
     },
     {
       "code": "output.destination.not_empty",
@@ -3204,7 +3206,9 @@
       "hint": "Choose an empty directory, or one that does not exist yet. Nothing was written.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-028"
+      ]
     },
     {
       "code": "output.destination.write_failed",
@@ -3230,7 +3234,10 @@
       "hint": "Fix the cause, and run the command again into an empty directory; remove what was written first if you do not want it.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-026",
+        "MTS-AUT-027"
+      ]
     },
     {
       "code": "output.enum",

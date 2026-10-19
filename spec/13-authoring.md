@@ -213,3 +213,54 @@ breaks the rule for an input's name (`reason` `name`, once per example).
 form ([chapter 2](02-container.md)) of a package whose manifest passed,
 and report a failure to compute any part of it; on a packed package, the
 stored compiled files MUST equal what is computed.
+
+## 13.5 Unpacking a package
+
+Unpacking turns a packed package back into the source directory an author
+edits. It writes what the author wrote and nothing derived: `.compiled/` is
+a function of the other entries (§2.5), stale after the first edit, and
+packing writes it again. It never writes into a directory that holds
+anything of its own, because a file left from an earlier tree would join
+the unpacked source and be packed with it.
+
+<a id="mts-aut-024"></a>**MTS-AUT-024** An authoring tool's unpack MUST
+take a packed package and a target directory, and MUST verify the package
+as every operation that opens one does ([chapter 2](02-container.md)),
+before it writes anything: a package that is refused MUST be refused with
+the findings every such operation reports, and nothing written. It MUST
+NOT run the check of §13.1: a package whose check reports errors is
+unpacked as any other.
+
+<a id="mts-aut-025"></a>**MTS-AUT-025** Unpack MUST write every entry of
+the package but those beneath `.compiled/`, each at its path beneath the
+target, holding the entry's bytes, and nothing else. It MUST write each
+file with mode 0644 and each directory with mode 0755, less the process's
+umask, whatever the package's zip records for the entry; no file it writes
+is executable.
+
+<a id="mts-aut-026"></a>**MTS-AUT-026** When the target does not exist,
+unpack MUST create it with its missing parent directories, by writing the
+entries into a staging directory it creates beside it, and renaming the
+staging directory to the target, so that the target never holds part of
+the package. A write that fails MUST leave nothing of the unpack behind, and MUST
+be reported as `output.destination.write_failed` with an empty `written`.
+
+<a id="mts-aut-027"></a>**MTS-AUT-027** When the target is an existing
+directory that is empty, apart from top-level names beginning with `.` other
+than `.compiled` and regular files whose names end `.metais`, unpack MUST
+write the entries into it in place, and MUST leave every such name as it
+was. A write that fails MUST stop the unpack, MUST remove nothing it wrote,
+and MUST be reported as `output.destination.write_failed`, whose `written`
+lists the files already written, in the order written.
+
+<a id="mts-aut-028"></a>**MTS-AUT-028** Unpack MUST refuse a target
+directory that holds any other entry with `output.destination.not_empty`,
+listing up to ten of those entries in byte order, and a target that exists
+and is not a directory, or lies beneath a file, with
+`output.destination.not_directory`; in either case it MUST write nothing.
+It has no way to overwrite.
+
+<a id="mts-aut-029"></a>**MTS-AUT-029** The source directory an unpack
+writes MUST open as a source directory, and MUST hold the same package:
+its entries are the packed package's outside `.compiled/`, and its package
+digest is the packed package's (§2.6).
