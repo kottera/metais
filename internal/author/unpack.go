@@ -61,9 +61,16 @@ func Unpack(tree pkgtree.Tree, to string, faults fault.Set) ([]string, error) {
 	staged := true
 	out, err := hostfs.StageNew(to, opt)
 	if hostfs.ReasonOf(err) == hostfs.Exists {
+		// The target exists, or the staging directory beside it does: a
+		// killed unpack's leftover, or a concurrent one's, which refuses
+		// this one with exists as it is.
 		staged = false
+		exists := err
 		out, err = hostfs.WriteInPlace(to, opt)
-		if err == nil {
+		switch {
+		case hostfs.ReasonOf(err) == hostfs.NotFound:
+			err = exists
+		case err == nil:
 			err = unpackEmpty(out)
 		}
 	}

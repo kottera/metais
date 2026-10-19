@@ -286,3 +286,22 @@ func TestUnpackRefusesANameThatAppears(t *testing.T) {
 		t.Errorf("metais.yaml holds %q", b)
 	}
 }
+
+// TestUnpackRefusesAStagingLeftover is a target that does not exist
+// beside the staging directory a killed unpack of it left: the unpack is
+// refused with exists, writes nothing, and leaves the leftover alone.
+func TestUnpackRefusesAStagingLeftover(t *testing.T) {
+	root := testenv.Dir(t)
+	leftover := filepath.Join(root, hostfs.StagingName("src"))
+	if err := os.Mkdir(leftover, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	files, err := Unpack(packedTree(t), filepath.Join(root, "src"), 0)
+	var we *WriteError
+	if !errors.As(err, &we) || we.Reason != hostfs.Exists || len(we.Written) != 0 || files != nil {
+		t.Fatalf("Unpack: %v, %#v, %q", err, we, files)
+	}
+	if got := tree(t, root); !slices.Equal(got, []string{hostfs.StagingName("src") + "/"}) {
+		t.Errorf("after the refusal: %q", got)
+	}
+}

@@ -134,6 +134,8 @@ func TestUnpackRefusals(t *testing.T) {
 	}{
 		{"no --to", []string{"unpack", "--json", pkg}, finding.CodeUsageMissingOperand, finding.ExitUsage,
 			`{"command":"unpack","operand":"--to <dir>"}`},
+		{"an empty --to", []string{"unpack", "--json", pkg, "--to="}, finding.CodeUsageBadValue, finding.ExitUsage,
+			`{"argument":4,"flag":"--to","reason":"value_not_allowed"}`},
 		{"standard input", []string{"unpack", "--json", "-", "--to", "x"}, finding.CodeUsagePackageFromStdin, finding.ExitUsage,
 			`{"argument":3}`},
 		{"a source directory", []string{"unpack", "--json", filepath.Join(vectorsDir, "pkg/opens-source/package"), "--to", filepath.Join(root, "x")},
@@ -210,7 +212,7 @@ func snapshot(t *testing.T, root string) []string {
 // yet. The line's and the open's are proved by inspect's test.
 func TestUnpackRefusalsTriggered(t *testing.T) {
 	own := map[finding.Code]bool{
-		finding.CodeUsageMissingOperand: true, finding.CodeUsagePackageFromStdin: true,
+		finding.CodeUsageMissingOperand: true, finding.CodeUsagePackageFromStdin: true, finding.CodeUsageBadValue: true,
 		finding.CodeUsageNotPackedPackage: true, finding.CodeDestinationNotEmpty: true,
 		finding.CodeDestinationNotDirectory: true, finding.CodeDestinationWriteFailed: true,
 	}

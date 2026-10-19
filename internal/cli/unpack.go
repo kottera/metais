@@ -92,6 +92,17 @@ func runUnpack(s *session, p args.Parsed) outcome {
 		return s.refuseWith(finding.New(finding.CodeUsagePackageFromStdin, invocation, nil,
 			finding.Params{"argument": finding.Int(int64(s.line.at[p.OperandArgs[0]] + 1))}))
 	}
+	to, _ := p.Value("to")
+	if to == "" {
+		// An empty name names no directory; it is never read as the
+		// working directory.
+		i, _ := p.Arg("to")
+		return s.refuseWith(finding.New(finding.CodeUsageBadValue, invocation, nil, finding.Params{
+			"argument": finding.Int(int64(s.line.at[i] + 1)),
+			"flag":     finding.String("--to"),
+			"reason":   finding.String("value_not_allowed"),
+		}))
+	}
 	lim, fs := s.limits(p)
 	if len(fs) > 0 {
 		return outcome{findings: fs, next: s.nextSteps(fs)}
@@ -107,7 +118,6 @@ func runUnpack(s *session, p args.Parsed) outcome {
 		return s.refuseWith(finding.New(finding.CodeUsageNotPackedPackage, invocation, nil,
 			finding.Params{"argument": finding.Int(int64(s.line.at[p.OperandArgs[0]] + 1))}))
 	}
-	to, _ := p.Value("to")
 	files, err := author.Unpack(pkg.Tree, to, s.inv.Options.Faults)
 	if err != nil {
 		return s.unpackFailed(err)
