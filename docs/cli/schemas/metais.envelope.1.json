@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.envelope.1.json",
+  "title": "The metais JSON envelope, version 1",
+  "description": "The shared members of every document metais prints with --json (ADR-008 D10). Every member is always present, and the members are written in this order: format, ok, findings, summary, result, next. summary, immediately after findings, carries ADR-006 D10 item 4's exact totals, which every envelope carries beside findings; ADR-008 D10 item 1's member list omits it, and this schema reconciles the two. A document is compact UTF-8 on one line ending in one LF. Within major version 1 a format only gains members and enumeration values, and this schema gains them with it.",
+  "type": "object",
+  "required": [
+    "format",
+    "ok",
+    "findings",
+    "summary",
+    "result",
+    "next"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "description": "The document's format: metais.<command>/1, or metais.usage/1 for a line that names no command.",
+      "type": "string",
+      "pattern": "^metais\\.[a-z][a-z0-9-]*/1$"
+    },
+    "ok": {
+      "description": "True when the command completed and no finding is of error severity.",
+      "type": "boolean"
+    },
+    "findings": {
+      "description": "The findings, in ADR-006 D8's order; usage errors are findings too.",
+      "type": "array",
+      "items": {
+        "$ref": "https://metais.org/schemas/1.0/finding.schema.json"
+      }
+    },
+    "summary": {
+      "description": "The report's exact totals (ADR-006 D10 item 3).",
+      "$ref": "https://metais.org/schemas/1.0/finding.schema.json#/$defs/summary"
+    },
+    "result": {
+      "description": "The command's result, or null when the command was refused before producing one. Each format's schema states its shape."
+    },
+    "next": {
+      "description": "The commands to run next (ADR-008 D14); never empty when ok is false.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/next"
+      }
+    }
+  },
+  "if": {
+    "properties": {
+      "ok": {
+        "const": false
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "findings": {
+        "minItems": 1
+      },
+      "next": {
+        "minItems": 1
+      }
+    }
+  },
+  "else": {
+    "properties": {
+      "result": {
+        "not": {
+          "type": "null"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "next": {
+      "title": "A next step",
+      "type": "object",
+      "required": [
+        "run",
+        "why"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "run": {
+          "description": "A complete metais command line; a value the tool cannot know or must not echo is a placeholder in angle brackets.",
+          "type": "string",
+          "pattern": "^metais( |$)"
+        },
+        "why": {
+          "description": "One sentence saying what running it does.",
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

@@ -119,14 +119,14 @@ type line struct {
 }
 
 // format is the name of the document the line prints (ADR-008 D10 item 1):
-// the command's, or metais.help/1 for metais --help, or metais.usage/1
-// when the line names no command.
+// metais.help/1 for a line whose --help runs (D4 item 2), else the
+// command's, or metais.usage/1 when the line names no command.
 func (l line) format() string {
 	switch {
+	case l.help && len(l.findings) == 0:
+		return "metais.help/1"
 	case l.cmd != nil:
 		return l.cmd.Format
-	case l.help:
-		return "metais.help/1"
 	}
 	return usageFormat
 }

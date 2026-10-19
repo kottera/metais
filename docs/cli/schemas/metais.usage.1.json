@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.usage.1.json",
+  "title": "metais.usage/1",
+  "description": "What a command line that names no command, or a command metais does not have, prints with --json: its usage findings, no result, and the next step (ADR-008 D10 item 1).",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.usage/1"
+    },
+    "result": {
+      "type": "null"
+    },
+    "ok": {
+      "const": false
+    },
+    "findings": {
+      "minItems": 1
+    },
+    "next": {
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "null"
+    }
+  }
+}
