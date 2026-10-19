@@ -1021,8 +1021,11 @@ func (r *renderer) ifchanged(n *ast.Ifchanged) (ctl, *Error) {
 // render renders a partial (ADR-004 D8): with no value once; with a
 // "with" value once, the value bound to the alias; with a "for" value
 // once per item of an array, an object or a range, the item bound to the
-// alias and forloop bound, and otherwise once with the value bound.
-// Parameters are evaluated once, in the caller's scope.
+// alias and forloop bound, and otherwise once with the value bound. The
+// alias is bound even to nil, as the partial-scoped binding ADR-004 D7
+// item 8 makes it, where Shopify leaves it unbound. Parameters are
+// evaluated once, in the caller's scope, and the alias shadows a
+// parameter of its name.
 func (r *renderer) render(n *ast.Render) *Error {
 	if r.env.Partials == nil {
 		return r.fail(n, CodeInternal, nil, "a render tag with no Partials")
