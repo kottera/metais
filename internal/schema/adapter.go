@@ -329,10 +329,12 @@ func pointerTokens(p string) []string {
 	}
 	toks := strings.Split(strings.TrimPrefix(p, "/"), "/")
 	for i, t := range toks {
-		toks[i] = strings.NewReplacer("~1", "/", "~0", "~").Replace(t)
+		toks[i] = tokenUnescaper.Replace(t)
 	}
 	return toks
 }
+
+var tokenUnescaper = strings.NewReplacer("~1", "/", "~0", "~")
 
 // schemaPath reports whether toks, read from a schema, end at a schema.
 func schemaPath(toks []string) bool {
@@ -523,6 +525,13 @@ func compareFailures(a, b schemafail.Failure) int {
 		strings.Compare(a.SchemaPointer, b.SchemaPointer),
 		slices.Compare(a.InstancePointer, b.InstancePointer),
 		strings.Compare(a.Keyword, b.Keyword),
+	); c != 0 {
+		return c
+	}
+	// The data's text is written only for failures the fields above do
+	// not order, which keeps a sort of many failures from writing it at
+	// every comparison.
+	if c := cmp.Or(
 		strings.Compare(dataKey(a.Data), dataKey(b.Data)),
 		cmp.Compare(len(a.Children), len(b.Children)),
 	); c != 0 {

@@ -469,7 +469,7 @@ func lookup(doc value.Value, ptr string) (value.Value, bool) {
 	}
 	cur := doc
 	for _, tok := range strings.Split(ptr[1:], "/") {
-		tok = strings.NewReplacer("~1", "/", "~0", "~").Replace(tok)
+		tok = tokenUnescaper.Replace(tok)
 		switch c := cur.(type) {
 		case value.Object:
 			v, ok := c.Get(tok)
@@ -491,6 +491,6 @@ func lookup(doc value.Value, ptr string) (value.Value, bool) {
 }
 
 // escapeToken returns name as a JSON Pointer reference token.
-func escapeToken(name string) string {
-	return strings.NewReplacer("~", "~0", "/", "~1").Replace(name)
-}
+func escapeToken(name string) string { return tokenEscaper.Replace(name) }
+
+var tokenEscaper = strings.NewReplacer("~", "~0", "/", "~1")

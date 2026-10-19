@@ -432,9 +432,17 @@ func (c *Compiler) compileFindings(entry string, err error) ([]finding.Finding, 
 		if aerr != nil {
 			return nil, aerr
 		}
+		under, ok := finding.ParsePath(base)
+		if !ok {
+			return nil, fmt.Errorf("schema: %s is located at %q, not a JSON Pointer", sve.URL, base)
+		}
+		// Each failure's path is made from its tokens, each read once, so
+		// many failures under one long member name cost each its depth.
+		var paths finding.TokenCache
 		var out []finding.Finding
 		for _, f := range leaves(fails) {
-			out = append(out, report(CodeInvalid, e, base+f.Instance(), finding.Params{"keyword": fstr(f.Keyword)}))
+			l := finding.Location{Origin: finding.OriginPackage, File: e}.WithPath(paths.Path(under, f.InstancePointer))
+			out = append(out, finding.New(CodeInvalid, pkg, &l, finding.Params{"keyword": fstr(f.Keyword)}))
 		}
 		return out, nil
 	case errors.As(err, &load):
@@ -486,6 +494,6 @@ func leaves(fs []schemafail.Failure) []schemafail.Failure {
 		})
 	}
 	return slices.CompactFunc(out, func(a, b schemafail.Failure) bool {
-		return a.Keyword == b.Keyword && a.Instance() == b.Instance()
+		return a.Keyword == b.Keyword && slices.Equal(a.InstancePointer, b.InstancePointer)
 	})
 }
