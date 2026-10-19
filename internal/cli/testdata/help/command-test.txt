@@ -851,6 +851,12 @@ Refusals:
   template.comparison
       A template is refused (comparison).
       Next: metais test <package>
+  template.date_format
+      An output's path, when or for_each does not parse (date format).
+      Next: metais test <package>
+  template.date_input
+      A template is refused (date input).
+      Next: metais test <package>
   template.division_by_zero
       An output's path, when or for_each does not parse (division by zero).
       Next: metais test <package>
@@ -898,6 +904,12 @@ Refusals:
       Next: metais test <package>
   template.reserved_name
       A template is refused (reserved name).
+      Next: metais test <package>
+  template.safe_position
+      An output's path, when or for_each does not parse (safe position).
+      Next: metais test <package>
+  template.slug_empty
+      A template is refused (slug empty).
       Next: metais test <package>
   template.syntax
       An output's path, when or for_each does not parse (syntax).
