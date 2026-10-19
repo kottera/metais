@@ -1402,3 +1402,35 @@ document.
     `isTerminal`'s seam: the dispatch sandbox lets `/dev/ptmx` open but
     refuses the opening of its `/dev/ttys*` side, so no pseudo-terminal is
     offered there (plan §5).
+- **PLAN-2026-10-metais-v1 W5-10 — `sample` and `render --sample`.** D8
+  item 8 and D9's `sample` landed, with `metais.sample/1` under
+  `docs/cli/schemas/`, and the rules only the command line has in
+  `docs/cli/sample.md`. `sample` opens a package, so every hostile vector
+  is refused through it as through every opening command. The readings
+  taken:
+  - **Codes registered beside the Interfaces list:** `usage.flag_excluded`
+    (two flags that cannot be given together: `--data` with `--sample`,
+    `--to` with `--example`, `--overwrite` with `--example`) and
+    `usage.flag_requires` (`--optional`, `--seed` or `--items` without
+    `--sample`). `usage.conflicting_flags` keeps its one meaning, standard
+    input read twice. `usage.not_a_source_directory`, which W4-5's entry
+    names but did not register, is registered here for `--example` with a
+    packed package. Neither `--to` nor `--example` is
+    `usage.missing_operand` naming `(--to <dir> | --example <name>)`.
+  - **`--seed`** is decimal digits within 2^64 − 1, and **`--items`**
+    digits within 2^31 − 1; the generator's work is held to `input-size`
+    whatever the count. A value outside either is `usage.bad_value`.
+  - **`--dry-run`** (R2-127) generates, validates and lists, and writes
+    nothing; the result carries `dry_run` beside item 5's members, as
+    `render`'s does.
+  - **`sample --to`** writes a directory that does not exist through
+    `hostfs.StageNew`, and an existing one through W5-0's
+    `hostfs.OpenExisting` under ADR-005 A1: an empty one directly, one
+    that holds any entry only with `--overwrite`, else
+    `output.destination.not_empty`. A planned path that `Check` refuses
+    (a link, a directory or a special file in the way, a case variant) is
+    `output.destination.write_failed` with nothing written; W5-8 owns any
+    finer per-file code for render, and `sample` takes it when it lands.
+  - **Render's role.** A render with `--sample` reports as an authoring
+    command (ADR-006 D12 item 2) through a role the run sets on its
+    session, so a defect of the package exits 1, not 4.
