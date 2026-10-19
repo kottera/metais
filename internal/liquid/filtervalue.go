@@ -319,7 +319,6 @@ func leadingInteger(filter string, s string) (tnum, *Error) {
 	return tnum{isInt: true, i: n}, nil
 }
 
-
 // toInteger is the coercion of an argument that counts or indexes, which
 // Shopify makes with Ruby's Integer(): an integer is itself, and a string
 // of optional whitespace, an optional sign and decimal digits, without a

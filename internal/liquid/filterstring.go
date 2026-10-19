@@ -611,7 +611,7 @@ func unhex(b byte) byte {
 	if isDigit(b) {
 		return b - '0'
 	}
-	return b|0x20 - 'a' + 10
+	return b | 0x20 - 'a' + 10
 }
 
 // decoded returns decoded bytes as a string, refusing bytes that are not
