@@ -1320,4 +1320,30 @@ directory.
 
 ## Implementation log
 
-Nothing implemented.
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-6.** D3 landed as
+  `internal/xref`, a library `check` wires in Wave 4. `Analyze` takes the
+  manifest model, every template under `templates/` as an
+  `internal/liquid/ast` tree (nil for one that did not parse), the assets,
+  the combined schema `schema.Bundle` makes and the dialect, and parses
+  only the manifest's `path`, `when` and `for_each`, through
+  `liquid.Parse`, `ParseCondition` and `ParseValue`; a test holds it to
+  reporting every path `ast.Walk` finds. A schema node is a pointer into
+  the combined schema, and its finding names the file and the pointer
+  within it. `schema.Walker` gained `Lookup`, `Reference` (a `$ref`, or a
+  `$dynamicRef` to its static target), `DynamicAnchors` and `References`,
+  from which an input's schema resources are the files its references
+  reach. Besides item 2's five kinds a value may be an array of an element
+  set, which `map`, `concat` and a range give. Only a node reached through
+  `$ref` and `allOf` alone rules an index out by `maxItems` or `items:
+  false`, since an `anyOf`, `oneOf` or conditional branch may not apply.
+  A partial reading `item`, `fan_out`, `output` or a loop object its
+  context does not bind is `unknown_variable`, not an unpassed parameter.
+  A finding repeated by another context is kept once, naming the first
+  output whose context produced it. The signature table names
+  `liquid.Core()`'s filters, `h` among them, and gives `find`,
+  `find_index`, `reject` and `split` unknown; a filter it does not name,
+  `date` and D10's until Wave 5 names them, gives unknown. The suggestion
+  is item 3's "nearest within edit distance 2", which ADR-006 D9 item 7's
+  `max(1, ⌊n/3⌋)` would refuse for the worked resolution's `vaule`. Every
+  `template.xref.*` code is registered, of class `content`, and listed
+  unwired for Wave 4. Both bounds are reached by tests that count.

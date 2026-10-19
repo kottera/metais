@@ -120,6 +120,8 @@ type Walker struct {
 	bases     map[string]*url.URL // schema pointer → its base URI
 	resources map[string]string   // resource URI → pointer
 	anchors   map[string]string   // resource URI "#" anchor → pointer
+	dynamic   map[string][]string // $dynamicAnchor name → pointers
+	refSites  []string            // every schema holding $ref or $dynamicRef
 }
 
 // NewWalker indexes doc, whose retrieval URI is base, for walking: every
@@ -137,6 +139,7 @@ func NewWalker(doc value.Value, base string) (*Walker, error) {
 		bases:     map[string]*url.URL{},
 		resources: map[string]string{},
 		anchors:   map[string]string{},
+		dynamic:   map[string][]string{},
 	}
 	if _, hasID := idOf(doc); !hasID {
 		w.resources[b.String()] = ""
@@ -205,6 +208,14 @@ func (w *Walker) index(s value.Value, ptr string, base *url.URL) error {
 			return fmt.Errorf("%w: %s names both %q and %q", ErrDuplicateURI, key, other, ptr)
 		}
 		w.anchors[key] = ptr
+		if kw == "$dynamicAnchor" {
+			w.dynamic[a.Text()] = append(w.dynamic[a.Text()], ptr)
+		}
+	}
+	if _, ok := o.Get("$ref"); ok {
+		w.refSites = append(w.refSites, ptr)
+	} else if _, ok := o.Get("$dynamicRef"); ok {
+		w.refSites = append(w.refSites, ptr)
 	}
 	for _, kw := range schemaKeywords {
 		if sub, ok := o.Get(kw); ok {
@@ -396,17 +407,24 @@ func typeSet(v value.Value, ptr string) (TypeSet, error) {
 // against ptr's base URI (ADR-003 D5 item 3); ok is false when o has no
 // `$ref`. `$dynamicRef` is not followed (ADR-003 D14 item 1).
 func (w *Walker) ref(o value.Object, ptr string) (node, bool, error) {
-	rv, ok := o.Get("$ref")
+	return w.reference(o, ptr, "$ref")
+}
+
+// reference returns the static target of the reference keyword kw of the
+// schema o at ptr: what ref returns for `$ref`, and for `$dynamicRef` its
+// initial target, resolved as a `$ref` is, with no dynamic scope.
+func (w *Walker) reference(o value.Object, ptr, kw string) (node, bool, error) {
+	rv, ok := o.Get(kw)
 	if !ok {
 		return node{}, false, nil
 	}
 	r, isStr := rv.(value.String)
 	if !isStr {
-		return node{}, false, fmt.Errorf("%w: %s/$ref is a %s, not a string", ErrMalformed, ptr, rv.Kind())
+		return node{}, false, fmt.Errorf("%w: %s/%s is a %s, not a string", ErrMalformed, ptr, kw, rv.Kind())
 	}
 	ref, err := url.Parse(r.Text())
 	if err != nil {
-		return node{}, false, fmt.Errorf("%w: %s/$ref %q is not a URI reference: %v", ErrMalformed, ptr, r.Text(), err)
+		return node{}, false, fmt.Errorf("%w: %s/%s %q is not a URI reference: %v", ErrMalformed, ptr, kw, r.Text(), err)
 	}
 	target := w.baseAt(ptr).ResolveReference(ref)
 	frag := target.Fragment
@@ -422,11 +440,11 @@ func (w *Walker) ref(o value.Object, ptr string) (node, bool, error) {
 		rptr, found = w.anchors[res+"#"+frag]
 	}
 	if !found {
-		return node{}, false, fmt.Errorf("%w: %s/$ref %q", ErrUnresolved, ptr, r.Text())
+		return node{}, false, fmt.Errorf("%w: %s/%s %q", ErrUnresolved, ptr, kw, r.Text())
 	}
 	v, found := lookup(w.doc, rptr)
 	if !found {
-		return node{}, false, fmt.Errorf("%w: %s/$ref %q", ErrUnresolved, ptr, r.Text())
+		return node{}, false, fmt.Errorf("%w: %s/%s %q", ErrUnresolved, ptr, kw, r.Text())
 	}
 	return node{v: v, ptr: rptr}, true, nil
 }
