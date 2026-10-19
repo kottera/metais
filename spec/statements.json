@@ -34,6 +34,7 @@
     {"id": "MTS-MAN-020", "chapter": "03-manifest.md", "section": "3.6", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-MAN-021", "chapter": "03-manifest.md", "section": "3.7", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-MAN-022", "chapter": "03-manifest.md", "section": "3.7", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-MAN-023", "chapter": "03-manifest.md", "section": "3.7", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-PKG-001", "chapter": "02-container.md", "section": "2.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-PKG-002", "chapter": "02-container.md", "section": "2.1", "kind": "recommendation", "since": "1.0", "observable": false, "status": "active"},
     {"id": "MTS-PKG-003", "chapter": "02-container.md", "section": "2.2.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},

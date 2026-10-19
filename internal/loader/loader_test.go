@@ -5,7 +5,9 @@ package loader
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"math/big"
 	"os"
 	"path/filepath"
 	"slices"
@@ -299,13 +301,16 @@ func TestRefStatsAcrossWrites(t *testing.T) {
 	}
 }
 
-// TestCompiledFilesReadable is W3-1.14 over the suite: every compiled file
-// the open derives from a source directory of the conformance suite is
-// text the tool's own JSON reader accepts, and is its own canonical form.
+// TestCompiledFilesReadable is W3-1.14 over the suite, under MTS-MAN-023:
+// every compiled file the open derives from a source directory of the
+// conformance suite is its own canonical form, and is text the tool's own
+// JSON reader accepts unless it holds the canonical text of an integral
+// number beyond ±(2^53−1), each of which, and nothing else, the reader
+// refuses as unsafe_integer.
 func TestCompiledFilesReadable(t *testing.T) {
 	testenv.Home(t)
 	dirs, _ := filepath.Glob(filepath.Join(vectorsDir, "*", "*", "package"))
-	opened := 0
+	opened, large := 0, 0
 	for _, d := range dirs {
 		p, _ := Open(d, defaults, 0)
 		if p == nil {
@@ -313,7 +318,21 @@ func TestCompiledFilesReadable(t *testing.T) {
 		}
 		opened++
 		for _, f := range p.Compiled {
+			unsafe := unsafeIntegers(t, f.Content)
 			doc, fs := jsonx.Parse(f.Content, jsonx.Source{Input: finding.Subject{Kind: finding.SubjectInput, Name: "compiled"}}, limits.Defaults())
+			if unsafe > 0 {
+				large++
+				if len(fs) != unsafe {
+					t.Errorf("%s: %s holds %d integral numbers beyond 2^53-1, and the reader reports %v", d, f.Name, unsafe, codes(fs))
+				}
+				for _, x := range fs {
+					r, _ := x.Param("reason")
+					if reason, _ := r.Str(); x.Code() != jsonx.CodeNumberOutOfRange || reason != "unsafe_integer" {
+						t.Errorf("%s: %s is refused with %s, not only for its large integers", d, f.Name, x.Code())
+					}
+				}
+				continue
+			}
 			if len(fs) > 0 {
 				t.Errorf("%s: %s is not readable: %v", d, f.Name, codes(fs))
 				continue
@@ -327,4 +346,42 @@ func TestCompiledFilesReadable(t *testing.T) {
 	if opened == 0 {
 		t.Fatal("no source directory of the suite opened")
 	}
+	if large == 0 {
+		t.Fatal("no compiled file of the suite holds an integral number beyond 2^53-1, so MTS-MAN-023's exception is not exercised")
+	}
+}
+
+// unsafeIntegers counts the numbers in the JSON text b written without a
+// fraction or exponent whose magnitude is above 2^53−1, read by
+// encoding/json rather than by the reader under test.
+func unsafeIntegers(t *testing.T, b []byte) int {
+	t.Helper()
+	dec := json.NewDecoder(bytes.NewReader(b))
+	dec.UseNumber()
+	var v any
+	if err := dec.Decode(&v); err != nil {
+		t.Fatalf("a compiled file is not JSON: %v", err)
+	}
+	limit := new(big.Int).SetUint64(1<<53 - 1)
+	n := 0
+	var walk func(any)
+	walk = func(v any) {
+		switch v := v.(type) {
+		case json.Number:
+			i, ok := new(big.Int).SetString(string(v), 10)
+			if ok && i.CmpAbs(limit) > 0 {
+				n++
+			}
+		case []any:
+			for _, e := range v {
+				walk(e)
+			}
+		case map[string]any:
+			for _, e := range v {
+				walk(e)
+			}
+		}
+	}
+	walk(v)
+	return n
 }

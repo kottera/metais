@@ -232,6 +232,7 @@ func packageCases() []pkgCase {
 		{"pkg/opens-packed", func(t testing.TB) []byte { return pack(t, sourceFiles(t, "pkg/opens-source")) }},
 		{"dat/combined-schema-packed", func(t testing.TB) []byte { return pack(t, sourceFiles(t, "dat/combined-schema-source")) }},
 		{"man/canonical-form-packed", func(t testing.TB) []byte { return pack(t, sourceFiles(t, "man/canonical-form-source")) }},
+		{"man/large-integer-packed", func(t testing.TB) []byte { return pack(t, sourceFiles(t, "man/large-integer-source")) }},
 
 		// The container (ADR-001 D1, D8 steps 1 to 5).
 		{"pkg/not-zip", func(t testing.TB) []byte { return bytes.Repeat([]byte("not a zip archive\n"), 4) }},
