@@ -1364,6 +1364,62 @@ headers agree with it exactly.
 - *Trojan Source* (bidirectional controls): https://trojansource.codes/
 - NO_COLOR convention: https://no-color.org/
 
+## Amendments
+
+### A1 — A package's schemas are bounded by subschema count and location length
+
+**Status:** Accepted 2026-10-19 by Ed Funnekotter, in design session
+`01a15348-66d1-73ef-bed1-8d62aa3dff0e` (PLAN-2026-10-metais-v1, W3-A2).
+**Amends:** D3 (two package limits), and ADR-010 D5 item 3 (what METAIS
+checks before the library sees a schema). No dependency changes.
+
+1. **`schema-subschemas`**, default 20,000: the subschemas in all of a
+   package's schema files together. A subschema is the root of a file and
+   every value the walk of ADR-010 D5 item 3 enters as a schema (each
+   keyword ADR-003 D3 gives a schema, an array of them or an object of
+   them), booleans included. It is the package's total, not a file's,
+   because one compilation follows `$ref` across files. The combined
+   schema (ADR-003 D7) is counted too, as a whole, and refused like
+   `combined-schema-size`: `limit.package` at `.compiled/schema.json`.
+2. **`schema-location-length`**, default 512 bytes: a subschema's location,
+   which is the URI of its resource (the canonical URI of the nearest
+   enclosing `$id`, or the file's retrieval URI `metais:///<path>`,
+   whichever is longer), then `#`, then its JSON pointer within its file
+   as RFC 6901 escapes it. It is checked in each schema file. In the
+   combined schema a location is longer by `/$defs/` and one package path,
+   which `path-length` bounds, and calibration measures that form.
+3. **Both are refused before the library sees a schema**, in METAIS's
+   pre-check, with `limit.package` at the file and pointer of the subschema
+   that breaks them: the first subschema past the count, or the first
+   location over the length. Like every package limit, `--limit` may lower
+   either one and nothing raises it (D4). No finding code is added.
+4. **Why these two measures.** Compiling a schema with
+   `santhosh-tekuri/jsonschema` v6.0.3 costs time quadratic in the number
+   of subschemas, multiplied by the length of their locations, and memory
+   linear in the subschema count times the location length. Its compile
+   queue finds a schema already queued by comparing locations one by one,
+   its meta-validation rebuilds each subschema's whole location, and every
+   compiled subschema keeps its full location as a string of its own. Byte
+   size does not measure that cost. Measured on darwin/arm64, a 273 KiB
+   schema of 20,000 empty subschemas compiles in 1.4 s, and 5,000 beneath
+   one 10,000-byte member name take 5.8 s in 78 KiB. FHIR R4's 3.3 MB
+   schema, with 15,521 subschemas and a longest pointer of 105 bytes,
+   compiles in 0.26 s and 50 MB. Lowering `schema-size` far enough to bound
+   the hostile shapes would refuse schemas like FHIR's, and these two
+   limits refuse neither FHIR's nor a field glossary of ordinary names.
+5. **The defaults are calibrated.** D18 item 4's suite runs both limits'
+   worst case together: the count at its default with every location at
+   its default length, in a file and in the combined schema. A default that
+   breaks a D18 ceiling on a target is lowered by a further amendment
+   (R1-015).
+6. **The library is not changed.** Two small changes to it remove its
+   quadratic time: a map index beside its compile queue, and a trie of
+   resource pointers in meta-validation. They were prototyped and pass its
+   own suite, but no ruling adopts or offers them. The limits bound the
+   cost whichever version of the library is admitted, and the calibration
+   suite is what shows that they still do after a library update
+   (ADR-010 D3 item 5).
+
 ## Implementation log
 
 - **2026-10-18, PLAN-2026-10-metais-v1 W1-4.** D16 item 3's static tripwire
