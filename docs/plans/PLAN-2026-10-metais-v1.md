@@ -1201,6 +1201,14 @@ specification's 1.0 text is complete and ready for the release act.
   ends.
 - **The worked package**: `B-worked-package.md` built from `gen/` vectors on
   the authoring golden path, with `TestExamplesMatchVectors` green.
+- **The codes no vector could produce** (design session W3-A1):
+  - ADR-006 Amendment A1: the 14 `manifest.*` keyword codes the 1.0
+    manifest schema cannot produce leave the registry, and a tripwire
+    holds every keyword the manifest schema uses to a registered code;
+  - ADR-011 Amendment A4: the setup's `absent` and `unreadable`, the
+    `unreadable-files` requirement, and `open` vectors for
+    `package.not_found` and `package.not_readable`, which stay class
+    `refused`.
 - **The close-out**:
   - `A-references.md` complete; the front page's contents; `CHANGELOG.md`'s
     `1.0` section saying "First revision" and still `unreleased`;

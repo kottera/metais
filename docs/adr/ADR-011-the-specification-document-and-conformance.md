@@ -1510,6 +1510,47 @@ W3-NB2, option D of the question W3-NB2 raised).
    `tmp-refusal` fault writes to `os.TempDir()` on a refusal, and the
    snapshot of the step's `TMPDIR` catches it (D18).
 
+### A4 — An absent and an unreadable path in the setup, behind `unreadable-files`
+
+**Status:** Accepted 2026-10-19 by Ed Funnekotter, in design session
+`01a15348-4ab5-7743-9802-86072e41b5bf` (PLAN-2026-10-metais-v1, W3-A1).
+**Amends:** D9 item 2 (every named path exists), D9 item 4 (the setup),
+D9 item 6 (the closed set of requirements), and the vector schema
+`spec/schemas/conformance/1/vector.schema.json`.
+
+1. **The setup gains `absent`**, a list of paths that must not exist in the
+   work directory when the first step runs. A step's argument may name
+   one. The runner copies nothing for it, and checks that it is absent
+   before the first step. D9 item 2's rule that every path a step names
+   exists in the vector directory does not apply to a path listed here,
+   and a listed path that the vector directory holds, or that no step
+   names, is a harness error.
+2. **The setup gains `unreadable`**, a list of files and directories that
+   the implementation is made unable to read, mode 0000, after everything
+   else D9 item 4 puts in place, A2's `unwritable` directories included.
+   The runner gives each its mode back when the case's steps are done.
+3. **The requirements gain `unreadable-files`.** The runner probes it in
+   the work directory's file system as it probes `unwritable-dirs`: a file
+   below the work directory's base is given mode 0000, and the requirement
+   is met when the runner's own process then cannot open it for reading.
+   It is not met when the process runs as root, nor where a file's mode
+   does not govern reading it, as on Windows. A case whose requirement is
+   not met is skipped with the reason and reported, never counted as a
+   pass. A vector whose setup names an `unreadable` path requires
+   `unreadable-files`, and one that does not is a harness error.
+4. **Why.** `package.not_found` and `package.not_readable` are class
+   `refused`, exit 4 (ADR-006 D3, ADR-008 D2 item 1 and D13). They concern
+   the operand a caller names, which no vector could name until now:
+   every named path had to exist and be readable. With `absent` and
+   `unreadable`, an `open` step proves both, through every opening
+   command, for any implementation. Reclassifying them as `usage` would
+   have changed their exit code and taken them out of the suite.
+   `absent` needs no requirement, because every platform can leave a path
+   out.
+5. **Nothing else moves.** The suite's format only gains members and a
+   value within its major version (`spec/conformance/README.md`), and no
+   released vector changes.
+
 ## Implementation log
 
 - **2026-10-19, PLAN-2026-10-metais-v1 W2-3.** D14's document tripwires
