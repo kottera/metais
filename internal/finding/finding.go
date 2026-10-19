@@ -200,7 +200,10 @@ func (l Location) pointer() string {
 // withPath returns l with its pointer held as a Path, so a finding orders
 // and de-duplicates it by its tokens.
 func (l Location) withPath() Location {
-	if l.HasPointer && l.path == nil {
+	switch {
+	case !l.HasPointer:
+		l.path, l.Pointer = nil, ""
+	case l.path == nil:
 		l.path, l.Pointer = parsePath(l.Pointer), ""
 	}
 	return l

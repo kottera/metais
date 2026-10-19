@@ -237,3 +237,41 @@ func TestPointer(t *testing.T) {
 		}
 	}
 }
+
+// TestWithPathIsWithPointer pins that a location given its pointer as a
+// Path makes the finding a pointer string makes: the same members, the
+// same encodings, the same place in the order and the same duplicate key,
+// with its related locations' pointers written out alike.
+func TestWithPathIsWithPointer(t *testing.T) {
+	withTestCodes(t)
+	subj := Subject{Kind: SubjectInput, Name: "vendor"}
+	at := Location{Origin: OriginDataDir, File: "vendor.json", Line: 3, Column: 9}
+	params := Params{"limit": Int(10), "length": Int(4)}
+	for _, ptr := range []string{"", "/", "/a~1b/0/é", "/~0/" + strings.Repeat("x", 300)} {
+		loc := at.WithPointer(ptr)
+		byString := New(codeInputMinLength, subj, &loc, params, WithRelated(Related{Location: at.WithPointer(ptr), Note: "n"}))
+		loc = at.WithPath(parsePath(ptr))
+		byPath := New(codeInputMinLength, subj, &loc, params, WithRelated(Related{Location: at.WithPath(parsePath(ptr)), Note: "n"}))
+		if a, b := string(AppendJSON(nil, byString)), string(AppendJSON(nil, byPath)); a != b {
+			t.Errorf("%q: JSON\n%s\nand\n%s", ptr, a, b)
+		}
+		if a, b := string(AppendHuman(nil, false, byString)), string(AppendHuman(nil, false, byPath)); a != b {
+			t.Errorf("%q: human\n%s\nand\n%s", ptr, a, b)
+		}
+		if Compare(byString, byPath) != 0 || byString.duplicateKey() != byPath.duplicateKey() {
+			t.Errorf("%q: the two findings order or de-duplicate apart", ptr)
+		}
+		l, _ := byPath.Location()
+		if want := at.WithPointer(ptr); l != want {
+			t.Errorf("%q: Location() = %+v, want %+v", ptr, l, want)
+		}
+		if r := byPath.Related(); len(r) != 1 || r[0].Location != at.WithPointer(ptr) {
+			t.Errorf("%q: Related() = %+v", ptr, r)
+		}
+	}
+	noPtr := at
+	noPtr.path = parsePath("/a")
+	if f := New(codeInputMinLength, subj, &noPtr, params); Compare(f, New(codeInputMinLength, subj, &at, params)) != 0 {
+		t.Error("a path on a location with no pointer is ordered")
+	}
+}
