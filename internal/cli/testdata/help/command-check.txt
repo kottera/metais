@@ -55,9 +55,6 @@ Refusals:
   limit.package
       The package breaches one of its limits.
       Next: metais check <package>
-  output.declaration.validate_kind
-      (declaration: validate kind), a error.
-      Next: metais check <package>
   usage.bad_value
       A flag's value is missing, or is not one the flag accepts, or a flag that
       takes no value is given one.
@@ -93,6 +90,9 @@ Refusals:
   output.container.space (1)
                             A container's profile (container: space), a warning.
                             Next: metais check <package>
+  output.declaration.validate_kind (1)
+                            An output's declaration (declaration: validate
+                            kind), a error. Next: metais check <package>
   package.* (46)            The package is refused. Next: metais check <package>
   package.layout.* (2)      The package's tree, a warning.
                             Next: metais check <package>

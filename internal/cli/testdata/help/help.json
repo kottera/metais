@@ -13256,7 +13256,7 @@
           },
           {
             "code": "output.declaration.validate_kind",
-            "cause": " (declaration: validate kind), a error.",
+            "cause": "An output's declaration (declaration: validate kind), a error.",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."

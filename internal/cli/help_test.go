@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/kottera/metais/internal/finding"
@@ -280,6 +281,54 @@ func matchesFamily(p string, code finding.Code) bool {
 		}
 	}
 	return false
+}
+
+// TestHelpListsNoGeneratedRefusalOnItsOwn holds every command's text help
+// to listing on its own line only a refusal whose cause is hand-written: a
+// cause that carries its code's own words in parentheses is one a loop over
+// the registry built, which belongs on a family line (ADR-008 D15 item 3,
+// as amended by A1, items 2 and 3).
+func TestHelpListsNoGeneratedRefusalOnItsOwn(t *testing.T) {
+	for _, c := range table {
+		text := runTool(t, c.Name, "--help").stdout
+		_, section, ok := strings.Cut(text, "\nRefusals:\n")
+		if !ok {
+			continue
+		}
+		section, _, _ = strings.Cut(section, "\n\n")
+		own := map[finding.Code]string{}
+		var code finding.Code
+		for _, line := range strings.Split(section, "\n") {
+			switch {
+			case strings.HasPrefix(line, "      Next: "):
+			case strings.HasPrefix(line, "      "):
+				own[code] += " " + strings.TrimSpace(line)
+			case strings.HasPrefix(line, "  "):
+				code = finding.Code(strings.TrimPrefix(line, "  "))
+				own[code] = ""
+			}
+		}
+		if len(own) == 0 {
+			t.Errorf("metais %s --help: no refusal is read on its own line", c.Name)
+		}
+		for _, r := range c.Refusals {
+			if r.gist != "" && !strings.ContainsFunc(r.gist[:1], unicode.IsUpper) {
+				t.Errorf("metais %s: the refusal %s's family cause %q names no subject", c.Name, r.Code, r.gist)
+			}
+		}
+		for code, cause := range own {
+			_, rest, _ := strings.Cut(string(code), ".")
+			for _, words := range []string{
+				strings.ReplaceAll(rest, "_", " "),
+				strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": "),
+			} {
+				if strings.Contains(cause, "("+words+")") {
+					t.Errorf("metais %s --help lists %s on its own line with a generated cause:%s", c.Name, code, cause)
+					break
+				}
+			}
+		}
+	}
 }
 
 // TestFamilyPattern holds a family's pattern to its codes' longest common
