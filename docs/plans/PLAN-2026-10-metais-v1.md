@@ -131,7 +131,7 @@ another harness's type to get past a capacity wait.** Park on
 | 1 | **The seams**: the module on Go 1.26.9; `cmd/metais` and the host seams; the finding model and registry; the limits table; the fault, test-environment, version and spec-data packages; the shared interfaces later waves build against; the guarantee tripwires; the `spec/` skeleton | 0 | **complete** — [verdict](#7-wave-1--the-seams) |
 | 2 | **The leaf libraries and the proof harness**: the command-line core with `version`, `limits` and `help`; the conformance runner and its self-proof; the document tripwires; zip, Unicode and the portable-path predicate; host files; JSON; YAML; CSV and Markdown; the JSON Schema compiler with the pattern profile; failure mapping, bundling and the static walk; the tar writer; dates; the Liquid front end; the manifest library | 1 | **complete** — [verdict](#8-wave-2--the-leaf-libraries-and-the-proof-harness) |
 | 3 | **Opening a package, and the composed libraries**: the package loader and `inspect`, with the container, manifest and version chapters and their vectors; the inputs layer; the Liquid renderer; the standard filter catalog; the sample-value generator; the cross-reference analysis; the OOXML split-run scanner; `init` | 2 | **complete** — [verdict](#9-wave-3--opening-a-package-and-the-composed-libraries) |
-| 4 | **Validate, read, the first render, check and unpack**: `validate`; `ls`, `read`, `outline`, `grep`, `schema` and `extract`; `render` of template outputs into a new directory with the template environment; `check`; `unpack`; the Liquid closure | 3 | not started |
+| 4 | **Validate, read, the first render, check and unpack**: `validate`; `ls`, `read`, `outline`, `grep`, `schema` and `extract`; `render` of template outputs into a new directory with the template environment; `check`; `unpack`; the Liquid closure | 3 | **complete** — [verdict](#10-wave-4--validate-read-the-first-render-check-and-unpack) |
 | 5 | **The render's capabilities, and the rest of authoring**: the METAIS filters and `date`; escaping; `embed` and `provenance`; fan-out, conditions and path templates; assets and the mirror; zip containers and their profiles; CRLF and output validation; existing destinations; dry run, the standard-output archive and `--only`; `sample`; `render --sample`; `test` | 4 | not started |
 | 6 | **Pack, and hardening**: `pack` with the example-package harness; `test`'s container comparison; the hostile corpus in full; the SC7 harness's full reach; limit calibration; benchmark budgets; the release builder | 5 | not started |
 | 7 | **The example packages and the close-out**: the packages of PRD §4.1 to §4.5; the worked package of `B-worked-package.md`; the specification's 1.0 text complete; the README, documentation and ADR implementation logs | 6 | not started |
@@ -995,6 +995,70 @@ output (Wave 5); `sample`, `render --sample` and `test` (Wave 5); `pack`
   directory is an existing destination (§10 "Does not touch"), and it rests
   on `hostfs`'s general ownership mechanism, which awaits Ed's design
   session. Wave 4's `extract` writes only where the target does not exist.
+
+**Verdict (2026-10-19): complete.** What Wave 4 delivered:
+
+- `validate`, the reading commands (`ls`, `read`, `outline`, `grep`,
+  `schema` and `extract`), `render --out <new dir>` with chapter 7's
+  template environment, `check`, and `unpack` all landed;
+- so did the Liquid closure: Golden Liquid in full, the liquid-spec JSON-RPC
+  server, and the delegated-run file;
+- the confinement, determinism, read-in-place and one-pass detectors run in
+  every `go test` with their faults, and the `env`, `cwd` and `path`
+  canaries are caught.
+
+That took seven items (#67 to #75). The verification round mutated all
+seven and found one blocking defect: a fixture that `.gitignore` dropped
+was never committed. It was fixed in #77 and not re-verified.
+
+Two results are weaker than they read:
+
+- **The canaries' red runs** are recorded in ADR-009's log, but within each
+  squashed pull request rather than as earlier commits on `main`.
+- **The liquid-spec departures are a prediction,** derived by emulation
+  without Ruby: 490 predicted departures. The §6 act
+  `01a15414-bf58-7436-8dc0-e1df81410d34` measures them, and Wave 5 is not
+  filed until it has ended.
+
+Brief and closeout:
+[brief-plan-2026-10-metais-v1-wave4.md](../briefs/brief-plan-2026-10-metais-v1-wave4.md)
+(brief [#64](https://github.com/kottera/metais/pull/64), rulings
+[#66](https://github.com/kottera/metais/pull/66), closeout
+[#79](https://github.com/kottera/metais/pull/79)). No person was consulted
+during the wave.
+
+What changes later waves:
+
+- **Ed ruled on three design sessions:**
+  - **Existing destinations stage inside the output directory** (ADR-005
+    A1, [#74](https://github.com/kottera/metais/pull/74)). Wave 5's existing
+    destinations, `extract --overwrite` and `sample --to` implement it.
+  - **Schema compile cost is bounded by two new package limits** (ADR-009
+    A1, [#76](https://github.com/kottera/metais/pull/76)). Wave 6 implements
+    and calibrates them.
+  - **The unreachable manifest codes leave the registry, and the package
+    operand codes get vectors** (ADR-006 A1 and ADR-011 A4,
+    [#78](https://github.com/kottera/metais/pull/78)). Wave 7 carries the
+    work. `collection.item_name` and `input.not_readable`, added in this
+    wave, join the same treatment.
+- **Wave 5 carries:**
+  - `extract --overwrite`;
+  - `unpack --dry-run`;
+  - one answer for an existing empty destination across `render` and
+    `extract`;
+  - `input.raw_unavailable` through `embed`;
+  - the two xref codes listed W5;
+  - the chapter 7 and `check` remainders the closeout names.
+- **ADR-011 D11 item 9's 60 seconds binds the default conformance run**
+  (`TestConformance`), as its text says, not the whole package with the
+  tests that re-run the suite.
+- **For Ed to ratify at the train's close:**
+  - ADR-011 A2 (`unwritable-dirs`);
+  - ruling R-W4-0;
+  - the codes and readings in the closeout's question 2.
+- **Still running when the wave closed:** W4-NB1
+  `01a15414-2558-70cb-9443-095630a625eb` and W4-NB2
+  `01a15414-8ee4-71c1-b5ec-15de3abbb36b`.
 
 ## 11. Wave 5 — the render's capabilities, and the rest of authoring
 
