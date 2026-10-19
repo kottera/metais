@@ -1,0 +1,45 @@
+[
+  {
+    "code": "package.layout.not_packed",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "notes.txt"
+    },
+    "params": {}
+  },
+  {
+    "code": "template.xref.unknown_field",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/report.md.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid",
+      "line": 3,
+      "column": 20
+    },
+    "params": {
+      "property": "author",
+      "declared": [
+        "title"
+      ],
+      "declared_count": 1,
+      "input": "report",
+      "output": "report"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "inputs/report.schema.json",
+        "pointer": "",
+        "note": "where the schema declares it"
+      }
+    ]
+  }
+]

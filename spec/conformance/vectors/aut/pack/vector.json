@@ -1,0 +1,73 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/pack",
+  "title": "Pack writes the source directory's entries and .compiled/, in byte order, each byte for byte and stored when deflating does not shorten it, leaving out the quiet top-level names silently and every other one with a warning, into <name>-<version>.metais in an existing directory or into the file named, and the package opens",
+  "statements": [
+    "MTS-AUT-046",
+    "MTS-AUT-047",
+    "MTS-AUT-048",
+    "MTS-PKG-034",
+    "MTS-PKG-035",
+    "MTS-PKG-036",
+    "MTS-PKG-037",
+    "MTS-PKG-038",
+    "MTS-PKG-039"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "determinism",
+    "container"
+  ],
+  "requires": [],
+  "notes": "The expected packages were written by metais pack, and are compared by entries: names, order, content and the fixed header fields. Methods are compared only where they are the encoder's to choose no other way: references/empty.txt is empty and assets/noise.bin is 96 random bytes, so both are stored. The source's references/notes.md carries a byte order mark and CRLF line endings, which are packed as they are; assets/.well-known/security.txt is a dotfile inside a layout tree, which is packed; .hidden and old.metais are quiet top-level names, left out with no finding; notes.txt and drafts/ are left out, each reported as package.layout.not_packed, a warning that does not stop pack. Environments A and B differ in their time zone, locale and clock, and must give the same bytes.",
+  "cases": [
+    {
+      "name": "into-a-directory",
+      "setup": { "dirs": ["out"] },
+      "steps": [
+        {
+          "op": "pack",
+          "args": { "source": "package", "to": "out" },
+          "expect": {
+            "ok": true,
+            "findings": "expected/pack.json",
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out",
+                "containers": [ { "path": "pack-1.0.0.metais", "methods": ["references/empty.txt", "assets/noise.bin"] } ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "open",
+          "args": { "package": "out/pack-1.0.0.metais" },
+          "expect": { "ok": true }
+        }
+      ]
+    },
+    {
+      "name": "into-a-file",
+      "setup": { "dirs": ["out"] },
+      "steps": [
+        {
+          "op": "pack",
+          "args": { "source": "package", "to": "out/named.metais" },
+          "expect": {
+            "ok": true,
+            "findings": "expected/pack.json",
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/named",
+                "containers": [ { "path": "named.metais", "methods": ["references/empty.txt", "assets/noise.bin"] } ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

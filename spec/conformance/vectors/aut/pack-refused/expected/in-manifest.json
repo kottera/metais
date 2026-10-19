@@ -1,0 +1,12 @@
+[
+  {
+    "code": "output.destination.in_package",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "entry": "metais.yaml"
+    }
+  }
+]
