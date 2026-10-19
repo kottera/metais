@@ -1021,7 +1021,9 @@ the detector must fail on, and both run in every `go test`.**
    `FuzzLiquidParse`, `FuzzLiquidRender` (with the meter at small limits),
    `FuzzRegexProfile`, `FuzzPortablePath`. Each asserts no panic and no
    recovered internal error; the parsers also assert that positions are
-   within the input. Longer fuzzing (`go test -fuzz`) is a developer step.
+   within the input. Longer fuzzing (`go test -fuzz`) never runs in a Work
+   Order, and by hand runs a minute per target on a third of the cores
+   (AGENTS.md).
 7. **Bounded-work tests count, they do not time** (AGENTS.md): a test that
    proves a limit holds asserts the meter's counters or the bytes read, never
    wall time; where a duration must be asserted it is the process's CPU time
