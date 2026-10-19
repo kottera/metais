@@ -1627,3 +1627,21 @@ they write into an existing directory too.
     the `schema.*` findings ADR-003 gives it, compiled before any output
     renders; `check` compiles the same schemas (D11 item 5) and reports
     the same findings.
+- **PLAN-2026-10-metais-v1 W5-9 — the dry run, the archive and `--only`.**
+  D16, D17 and D18 landed for template outputs, stated as MTS-RND-008 to
+  MTS-RND-012 with the vectors `rnd/dry-run`, `rnd/archive` and `rnd/only`.
+  The archive is written by `internal/tarw` from the rendered bytes,
+  straight to standard output once phases 1 to 4 succeed; a failed write
+  to standard output ends it unreported (ADR-006 D12 item 5). The readings
+  taken:
+  - **A dry run with `--out <dir>` lists `status` `create`**, every file
+    being new to a directory that does not exist; `replace` is W5-8's, and
+    its meeting with this item is W5-8's vector.
+  - **D18 item 4's listing is bounded at 20 paths**, with the count beside
+    it (ADR-008's log).
+  - **What a statement cannot carry:** an unknown `--only` path and an
+    archive to a terminal are usage refusals, which no vector can produce
+    (ADR-011 D8), so chapter 11 states them as informative text and
+    `internal/cli`'s tests prove them.
+  Assets and containers in the listing and the archive are W5-5's and
+  W5-6's meetings with this item.

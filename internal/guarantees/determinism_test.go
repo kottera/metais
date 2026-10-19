@@ -53,6 +53,13 @@ func outputs(t *testing.T, dir string) map[string]string {
 func (st renderStep) baseline(t *testing.T, version string) map[string]string {
 	t.Helper()
 	out := map[string]string{}
+	if st.stream != "" {
+		b, err := os.ReadFile(filepath.Join(st.dir, filepath.FromSlash(st.stream)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		out[streamKey] = digestHex(b)
+	}
 	for _, tr := range st.trees {
 		dir := filepath.Join(st.dir, filepath.FromSlash(tr.Equals))
 		for p, d := range outputs(t, dir) {
@@ -91,10 +98,17 @@ func toolVersion(t *testing.T, bin string) string {
 	return doc.Result.Tool.Version
 }
 
-// rendered is the digest of every output a render of st wrote in work.
-func (st renderStep) rendered(t *testing.T, work string) map[string]string {
+// streamKey is the key of a step's stream among its outputs' digests.
+const streamKey = "<standard output>"
+
+// rendered is the digest of every output a render of st wrote in work,
+// and of stream when the step streams.
+func (st renderStep) rendered(t *testing.T, work string, stream []byte) map[string]string {
 	t.Helper()
 	out := map[string]string{}
+	if st.stream != "" {
+		out[streamKey] = digestHex(stream)
+	}
 	for _, tr := range st.trees {
 		for p, d := range outputs(t, filepath.Join(work, filepath.FromSlash(tr.Path))) {
 			out[tr.Path+"/"+p] = d
@@ -126,10 +140,11 @@ func renderIn(t *testing.T, st renderStep, faults fault.Set) map[string]string {
 	if work == "" {
 		t.Fatalf("%s writes, and needs a directory this host cannot make unwritable", st.id)
 	}
-	if !st.run(t, work, faults) {
+	ok, stream := st.run(t, work, faults)
+	if !ok {
 		t.Fatalf("%s was refused", st.id)
 	}
-	return st.rendered(t, work)
+	return st.rendered(t, work, stream)
 }
 
 // TestDeterminismDetector is ADR-010 D13 item 4's determinism guarantee
@@ -163,11 +178,12 @@ func TestDeterminismDetector(t *testing.T) {
 			}
 		}
 		work := st.prepare(t, testenv.Dir(t))
-		if err := runHostile(bin, st.argv(work), work); err != nil {
+		stream, err := runHostile(bin, st.argv(work), work)
+		if err != nil {
 			t.Errorf("%s in a fresh process: %v", st.id, err)
 			continue
 		}
-		if d := differs(st.baseline(t, binVersion), st.rendered(t, work)); d != "" {
+		if d := differs(st.baseline(t, binVersion), st.rendered(t, work, stream)); d != "" {
 			t.Errorf("%s in a fresh process under TZ, LC_ALL, umask and GODEBUG: %s", st.id, d)
 		}
 	}
@@ -204,8 +220,8 @@ var hostileEnviron = []string{
 }
 
 // runHostile runs bin with args in dir, under hostileEnviron and a umask
-// of 077, and fails unless it exits 0.
-func runHostile(bin string, args []string, dir string) error {
+// of 077, fails unless it exits 0, and returns its standard output.
+func runHostile(bin string, args []string, dir string) ([]byte, error) {
 	cmd := umaskCommand(bin, args)
 	cmd.Dir = dir
 	cmd.Env = append(slices.Clone(hostileEnviron), "HOME="+dir)
@@ -214,7 +230,13 @@ func runHostile(bin string, args []string, dir string) error {
 	err := cmd.Run()
 	var exit *exec.ExitError
 	if errors.As(err, &exit) {
-		return fmt.Errorf("exited %d: %s", exit.ExitCode(), stdout.Bytes())
+		return nil, fmt.Errorf("exited %d: %s%s", exit.ExitCode(), stdout.Bytes(), stderr.Bytes())
 	}
-	return err
+	return stdout.Bytes(), err
+}
+
+// digestHex is the lowercase hex SHA-256 of b.
+func digestHex(b []byte) string {
+	sum := sha256.Sum256(b)
+	return hex.EncodeToString(sum[:])
 }
