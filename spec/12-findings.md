@@ -19,6 +19,34 @@ it, and the statements it reports.
 |---|---|---|---|---|---|---|
 | `internal.error` | error | internal | invocation | `tool_version`, `phase` | 1.0 | — |
 | `limit.invalid` | error | usage | invocation | `reason`; optional: `name`, `default`, `unit`, `value` | 1.0 | — |
+| `limit.package` | error | refused | package | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | — |
+| `package.container.archive_comment` | error | refused | package | `offset`, `length` | 1.0 | — |
+| `package.container.crc_mismatch` | error | refused | package | `offset` | 1.0 | — |
+| `package.container.data_descriptor` | error | refused | package | `offset` | 1.0 | — |
+| `package.container.deflate_stream` | error | refused | package | `offset`, `reason` | 1.0 | — |
+| `package.container.encrypted` | error | refused | package | `offset` | 1.0 | — |
+| `package.container.entry_order` | error | refused | package | `offset` | 1.0 | — |
+| `package.container.extra_field` | error | refused | package | `offset`, `length` | 1.0 | — |
+| `package.container.field_value` | error | refused | package | `offset`, `record`, `header_field`, `value`, `expected` | 1.0 | — |
+| `package.container.flags` | error | refused | package | `offset`, `value` | 1.0 | — |
+| `package.container.header_mismatch` | error | refused | package | `offset`, `header_field` | 1.0 | — |
+| `package.container.method` | error | refused | package | `offset`, `method` | 1.0 | — |
+| `package.container.not_zip` | error | refused | package | — | 1.0 | — |
+| `package.container.overlap_or_gap` | error | refused | package | `offset`; optional: `declared` | 1.0 | — |
+| `package.container.prepended_data` | error | refused | package | `offset`; optional: `declared` | 1.0 | — |
+| `package.container.second_end_record` | error | refused | package | `offset` | 1.0 | — |
+| `package.container.size_mismatch` | error | refused | package | `offset`, `declared` | 1.0 | — |
+| `package.container.trailing_data` | error | refused | package | `offset` | 1.0 | — |
+| `package.container.zip64` | error | refused | package | `offset` | 1.0 | — |
+| `package.name.case_collision` | error | refused | package | `offset`, `member`, `other` | 1.0 | — |
+| `package.name.character` | error | refused | package | `offset`, `code_point` | 1.0 | — |
+| `package.name.directory_entry` | error | refused | package | `offset` | 1.0 | — |
+| `package.name.duplicate` | error | refused | package | `offset` | 1.0 | — |
+| `package.name.encoding` | error | refused | package | `offset`, `reason` | 1.0 | — |
+| `package.name.file_directory_conflict` | error | refused | package | `offset`, `member`, `other` | 1.0 | — |
+| `package.name.not_nfc` | error | refused | package | `offset` | 1.0 | — |
+| `package.name.not_portable` | error | refused | package | `offset`, `reason` | 1.0 | — |
+| `package.name.shape` | error | refused | package | `offset`, `reason` | 1.0 | — |
 | `report.truncated` | info | content | report | `listed`, `omitted` | 1.0 | — |
 | `usage.bad_value` | error | usage | invocation | `argument`, `flag`, `reason`; optional: `allowed` | 1.0 | — |
 | `usage.missing_command` | error | usage | invocation | — | 1.0 | — |

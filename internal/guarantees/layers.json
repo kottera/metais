@@ -30,6 +30,18 @@
       "reason": "ADR-010 D2 item 2, D11 item 3: hostfs alone uses x/sys, for the no-replace rename"
     },
     {
+      "rule": "only-importers",
+      "imports": "archive/zip",
+      "importers": ["github.com/kottera/metais/internal/zipfmt"],
+      "reason": "ADR-010 D11 item 1, ADR-001 D8 item 6: archive/zip is never used for reading: a package is read by zipfmt's own reader, and only zipfmt's tests import archive/zip, to compare its writer with CreateRaw (zipfmt's TestNoArchiveZip holds its release files to that)"
+    },
+    {
+      "rule": "only-importers",
+      "imports": "golang.org/x/text/...",
+      "importers": ["github.com/kottera/metais/internal/unitext"],
+      "reason": "ADR-010 D11 item 7, RULINGS R1-023: normalization and case folding are unitext's, which holds the one portable-path predicate, so no second one can be built beside it"
+    },
+    {
       "rule": "only-referrers",
       "symbols": ["os.Args", "os.Stdin", "os.Stdout", "os.Stderr", "os.Exit"],
       "packages": ["github.com/kottera/metais/cmd/metais"],

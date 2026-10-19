@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package render breaks test-only: release code imports the test-only
-// helper.
+// helper. It breaks only-importers twice too, in text.go.
 package render
 
 import "github.com/kottera/metais/internal/pkgtree/pkgtreetest"

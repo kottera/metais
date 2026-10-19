@@ -18,7 +18,7 @@ const (
 	codeInputType      Code = "input.type"
 	codeManifestField  Code = "manifest.unknown_member"
 	codeOutputPath     Code = "output.path.traversal"
-	codePackageName    Code = "package.name.shape"
+	codePackageName    Code = "package.fixture.name"
 	codeTemplateParse  Code = "template.parse"
 	codeUsageFlag      Code = "usage.test_flag"
 	codeWarnUnused     Code = "template.xref.unused_input"
@@ -61,6 +61,11 @@ var testEntries = []Entry{
 func withTestCodes(t testing.TB) {
 	t.Helper()
 	saved := registry
+	for _, e := range testEntries {
+		if _, ok := lookup(e.Code); ok {
+			t.Fatalf("test code %s is also a registered code; give the test another", e.Code)
+		}
+	}
 	all := append(slices.Clone(saved), testEntries...)
 	slices.SortFunc(all, func(a, b Entry) int { return strings.Compare(string(a.Code), string(b.Code)) })
 	registry = all

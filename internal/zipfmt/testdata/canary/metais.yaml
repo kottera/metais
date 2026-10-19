@@ -1,0 +1,5 @@
+metais: "1.0"
+name: org.metais.canary
+title: Deflate canary
+description: A fixed tree whose packed bytes pin the toolchain's deflate encoder.
+guide: Pack it and compare the digest.
