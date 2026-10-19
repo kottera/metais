@@ -14,10 +14,12 @@ import (
 	"github.com/kottera/metais/internal/loader"
 )
 
-// unpackResult is metais.unpack/1's result: the files unpack wrote,
-// relative to the directory, in the order written (ADR-008 D9).
+// unpackResult is metais.unpack/1's result: the files unpack wrote, or
+// with --dry-run would write, relative to the directory, in the order
+// written (ADR-008 D9).
 type unpackResult struct {
-	Files []string `json:"files"`
+	DryRun bool     `json:"dry_run"`
+	Files  []string `json:"files"`
 }
 
 // The steps unpack's refusals point to. No path the caller gave is
@@ -29,6 +31,8 @@ var (
 		Why: "Unpacks again, into an empty directory, once the cause is fixed."}
 	nextUnpackPacked = Next{Run: "metais inspect <package>",
 		Why: "Reads the source directory as it is: it is already the editable tree unpack writes."}
+	nextUnpackWrite = Next{Run: "metais unpack <package> --to <dir>",
+		Why: "Writes the files listed; the dry run wrote nothing."}
 )
 
 // unpackDeclaration is metais unpack (ADR-007 D8, ADR-008 D9).
@@ -47,7 +51,7 @@ func unpackDeclaration() *Command {
 	)
 	return &Command{
 		Name: "unpack", Group: "Authoring",
-		Synopsis:    "unpack <package> --to <dir> [--limit <name>=<value>]... [--json]",
+		Synopsis:    "unpack <package> --to <dir> [--dry-run] [--limit <name>=<value>]... [--json]",
 		Description: "Write a packed package's source directory, to edit it.",
 		Detail: "Writes every entry of the packed package into <dir>, as the source directory it was " +
 			"packed from: the manifest as its author wrote it, the inputs, templates, references, " +
@@ -64,20 +68,27 @@ func unpackDeclaration() *Command {
 			"(such as .git) other than .compiled, and files ending .metais; it is written in place, " +
 			"and a failed write stops unpack, which lists the files it wrote and removes none of " +
 			"them. There is no --overwrite: a file left from an earlier tree would join the " +
-			"unpacked source and be packed with it.",
+			"unpacked source and be packed with it.\n\n" +
+			"--dry-run lists the files unpack would write, and writes nothing anywhere. It is " +
+			"refused exactly when unpack would be refused before writing, with the same findings: " +
+			"a package that fails to open, a source directory, a <dir> that is not empty or not a " +
+			"directory, and a staging directory left beside a <dir> that does not exist. What only " +
+			"writing finds out, such as a full disk, it cannot report.",
 		Role:     finding.RoleAuthoring,
 		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file; - is refused, since a package is read with random access."}},
 		Flags: []args.Flag{
 			{Name: "to", Value: "<dir>", Required: true, Description: "The directory to write the source directory into: one that does not exist yet, or an empty one."},
+			{Name: "dry-run", Description: "List the files unpack would write, and write nothing."},
 			limitFlag,
 			failOnFlag,
 		},
 		Format:   "metais.unpack/1",
-		Prints:   "The files written, relative to <dir>, in the order written.",
+		Prints:   "The files written, or with --dry-run that would be, relative to <dir>, in the order written.",
 		Refusals: refusals,
 		Examples: []Example{
 			{"metais unpack report-1.0.0.metais --to report", "Writes the package's source directory into the new directory report."},
 			{"metais unpack report-1.0.0.metais --to . --json", "Writes it into the current directory, which must be empty, and lists the files as one metais.unpack/1 document."},
+			{"metais unpack report-1.0.0.metais --to report --dry-run", "Lists the files it would write into report, and writes nothing."},
 		},
 		run: runUnpack,
 	}
@@ -118,16 +129,28 @@ func runUnpack(s *session, p args.Parsed) outcome {
 		return s.refuseWith(finding.New(finding.CodeUsageNotPackedPackage, invocation, nil,
 			finding.Params{"argument": finding.Int(int64(s.line.at[p.OperandArgs[0]] + 1))}))
 	}
-	files, err := author.Unpack(pkg.Tree, to, s.inv.Options.Faults)
+	dry := p.Has("dry-run")
+	var files []string
+	var err error
+	if dry {
+		files, err = author.UnpackDryRun(pkg.Tree, to)
+	} else {
+		files, err = author.Unpack(pkg.Tree, to, s.inv.Options.Faults)
+	}
 	if err != nil {
 		return s.unpackFailed(err)
 	}
+	head := "Wrote " + strconv.Itoa(len(files)) + " files:"
 	var next []Next
-	if lookup(s.table, "check") != nil {
+	switch {
+	case dry:
+		head = "Would write " + strconv.Itoa(len(files)) + " files; --dry-run wrote nothing:"
+		next = append(next, nextUnpackWrite)
+	case lookup(s.table, "check") != nil:
 		next = append(next, Next{Run: "metais check <dir>", Why: "Checks the unpacked source directory, which you can now edit."})
 	}
-	b := listing("Wrote "+strconv.Itoa(len(files))+" files:", files, false)[1:]
-	return outcome{result: &unpackResult{Files: files}, human: b, next: next}
+	b := listing(head, files, false)[1:]
+	return outcome{result: &unpackResult{DryRun: dry, Files: files}, human: b, next: next}
 }
 
 // unpackFailed is the outcome of err from author.Unpack. The entries found

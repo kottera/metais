@@ -6,6 +6,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -13,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/kottera/metais/internal/finding"
+	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/testenv"
 )
 
@@ -222,4 +224,132 @@ func TestUnpackRefusalsTriggered(t *testing.T) {
 			t.Errorf("unpack declares %s, which neither its own tests nor inspect's trigger", rf.Code)
 		}
 	}
+}
+
+// TestUnpackDryRun is W5-12.3: unpack --dry-run lists the files unpack
+// writes, in the order it writes them, with dry_run true and the next step
+// that writes them, and writes nothing anywhere: the host beneath the
+// test's root is the same before and after, in each mode, into a new
+// directory and into an existing empty one.
+func TestUnpackDryRun(t *testing.T) {
+	testenv.Home(t)
+	pkg := filepath.Join(vectorsDir, "pkg/opens-packed/package.metais")
+	written := runTool(t, "unpack", "--json", pkg, "--to", filepath.Join(testenv.Dir(t), "src"))
+	var want unpackResult
+	if err := json.Unmarshal(written.doc.Result, &want); err != nil || written.status != 0 {
+		t.Fatalf("metais unpack: %v, %s", err, written.stdout)
+	}
+	for _, c := range []struct{ name, to string }{
+		{"a new directory", "a/src"},
+		{"an empty directory", "empty"},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			root := testenv.Dir(t)
+			if err := os.Mkdir(filepath.Join(root, "empty"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			to := filepath.Join(root, filepath.FromSlash(c.to))
+			before := snapshot(t, root)
+			r := runTool(t, "unpack", "--json", pkg, "--to", to, "--dry-run")
+			var res unpackResult
+			if err := json.Unmarshal(r.doc.Result, &res); err != nil || r.status != 0 || !r.doc.OK {
+				t.Fatalf("metais unpack --dry-run: %v, %s", err, r.stdout)
+			}
+			if !res.DryRun || !slices.Equal(res.Files, want.Files) {
+				t.Errorf("dry run %v, files %q; unpack wrote %q", res.DryRun, res.Files, want.Files)
+			}
+			if len(r.doc.Next) != 1 || r.doc.Next[0] != nextUnpackWrite {
+				t.Errorf("next %v", r.doc.Next)
+			}
+			h := runTool(t, "unpack", pkg, "--to", to, "--dry-run")
+			if h.status != 0 || !strings.HasPrefix(h.stdout, "Would write 13 files; --dry-run wrote nothing:\n  assets/static/logo.txt\n") {
+				t.Errorf("human: status %d, stdout %q, stderr %q", h.status, h.stdout, h.stderr)
+			}
+			if after := snapshot(t, root); !slices.Equal(after, before) {
+				t.Errorf("the dry run wrote: %q, was %q", after, before)
+			}
+		})
+	}
+	if res := written.doc.Result; !bytes.Contains(res, []byte(`"dry_run":false`)) {
+		t.Errorf("unpack's result %s does not say it was no dry run", res)
+	}
+}
+
+// TestUnpackDryRunRefusesAsUnpackDoes is W5-12.3's refusals: unpack
+// --dry-run is refused exactly when unpack is, before it writes, with the
+// same findings, parameters and exit status, and writes nothing. Each
+// case is run on two copies of the same host, with and without --dry-run.
+func TestUnpackDryRunRefusesAsUnpackDoes(t *testing.T) {
+	testenv.Home(t)
+	pkg := filepath.Join(vectorsDir, "pkg/opens-packed/package.metais")
+	host := func(t *testing.T) string {
+		t.Helper()
+		root := testenv.Dir(t)
+		for _, f := range []string{"full/.git/HEAD", "full/notes.txt", "file", hostfs.StagingName("left") + "/x"} {
+			p := filepath.Join(root, filepath.FromSlash(f))
+			if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(p, []byte("theirs\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		return root
+	}
+	for _, c := range []struct {
+		name string
+		args func(root string) []string
+	}{
+		{"no --to", func(string) []string { return []string{pkg} }},
+		{"an empty --to", func(string) []string { return []string{pkg, "--to="} }},
+		{"standard input", func(string) []string { return []string{"-", "--to", "x"} }},
+		{"a source directory", func(root string) []string {
+			return []string{filepath.Join(vectorsDir, "pkg/opens-source/package"), "--to", filepath.Join(root, "x")}
+		}},
+		{"a package the open refuses", func(root string) []string {
+			return []string{filepath.Join(vectorsDir, "pkg/digest-mismatch/package.metais"), "--to", filepath.Join(root, "x")}
+		}},
+		{"a source directory the open refuses", func(root string) []string {
+			return []string{filepath.Join(vectorsDir, "dat/schema-ref-escapes/package"), "--to", filepath.Join(root, "x")}
+		}},
+		{"a non-empty directory", func(root string) []string { return []string{pkg, "--to", filepath.Join(root, "full")} }},
+		{"a file", func(root string) []string { return []string{pkg, "--to", filepath.Join(root, "file")} }},
+		{"beneath a file", func(root string) []string { return []string{pkg, "--to", filepath.Join(root, "file", "src")} }},
+		{"a staging leftover", func(root string) []string { return []string{pkg, "--to", filepath.Join(root, "left")} }},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			dry, wet := host(t), host(t)
+			before := snapshot(t, dry)
+			want := runTool(t, append([]string{"unpack", "--json"}, c.args(wet)...)...)
+			got := runTool(t, append([]string{"unpack", "--json", "--dry-run"}, c.args(dry)...)...)
+			if want.status == 0 || got.status != want.status || got.doc.OK {
+				t.Fatalf("unpack: status %d, %s\nunpack --dry-run: status %d, %s", want.status, want.stdout, got.status, got.stdout)
+			}
+			if a, b := findingsOf(t, got, dry), findingsOf(t, want, wet); a != b {
+				t.Errorf("unpack --dry-run refused with\n%s\nand unpack with\n%s", a, b)
+			}
+			if after := snapshot(t, dry); !slices.Equal(after, before) {
+				t.Errorf("the dry run wrote: %q, was %q", after, before)
+			}
+		})
+	}
+}
+
+// findingsOf is r's findings as JSON, with root, the host copy it ran in,
+// replaced by a placeholder and argument positions counted from the end,
+// since --dry-run moves the operands that follow it.
+func findingsOf(t *testing.T, r ran, root string) string {
+	t.Helper()
+	fs := slices.Clone(r.doc.Findings)
+	for i := range fs {
+		if a, ok := fs[i].Params["argument"].(float64); ok {
+			fs[i].Params = maps.Clone(fs[i].Params)
+			fs[i].Params["argument"] = float64(len(r.args)) - a
+		}
+	}
+	b, err := json.Marshal(fs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return strings.ReplaceAll(string(b), root, "<root>")
 }
