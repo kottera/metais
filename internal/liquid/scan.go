@@ -6,7 +6,6 @@ package liquid
 import (
 	"sort"
 	"strings"
-	"unicode/utf8"
 )
 
 // The template lexer finds the boundaries of text, "{{ … }}" and "{% … %}"
@@ -189,33 +188,72 @@ func isWordByte(b byte) bool {
 
 // lineIndex turns byte offsets into lines and columns as ADR-006 D5 item 3
 // counts them: lines end at LF, CR LF or a lone CR, and a column counts
-// code points from the start of its line.
+// code points from the start of its line. A code point is counted at its
+// first byte, so an offset is always counted as the start of the code
+// point it falls in.
+//
+// Every lookup is a binary search and at most one chunk's scan, whatever
+// the line's length: the code points before each chunkSize-byte boundary
+// are counted once, when the index is built.
 type lineIndex struct {
 	src    string
 	starts []int // the offset at which each line begins
+	chunks []int // chunks[k] is the code points in src[:k*chunkSize]
+	// scanned counts the bytes lookups have scanned, so a test holds the
+	// work of a lookup to its bound by a count (ADR-010 D14 item 7).
+	scanned int
 }
 
+const chunkSize = 64
+
 func newLineIndex(src string) *lineIndex {
-	x := &lineIndex{src: src, starts: []int{0}}
+	x := &lineIndex{src: src, starts: []int{0}, chunks: make([]int, 0, len(src)/chunkSize+1)}
+	n := 0
 	for i := 0; i < len(src); i++ {
+		if i%chunkSize == 0 {
+			x.chunks = append(x.chunks, n)
+		}
+		if !isContinuation(src[i]) {
+			n++
+		}
 		switch src[i] {
 		case '\n':
 			x.starts = append(x.starts, i+1)
 		case '\r':
-			if i+1 < len(src) && src[i+1] == '\n' {
-				i++
+			if i+1 >= len(src) || src[i+1] != '\n' {
+				x.starts = append(x.starts, i+1)
 			}
-			x.starts = append(x.starts, i+1)
 		}
 	}
 	return x
 }
 
+// isContinuation reports whether b continues a UTF-8 sequence.
+func isContinuation(b byte) bool { return b&0xC0 == 0x80 }
+
+// codePoints returns the number of code points that begin in src[:off].
+func (x *lineIndex) codePoints(off int) int {
+	k := off / chunkSize
+	if k >= len(x.chunks) {
+		k = len(x.chunks) - 1
+	}
+	if k < 0 {
+		return 0
+	}
+	n := x.chunks[k]
+	x.scanned += off - k*chunkSize
+	for i := k * chunkSize; i < off; i++ {
+		if !isContinuation(x.src[i]) {
+			n++
+		}
+	}
+	return n
+}
+
 // at returns the 1-based line and column of the byte at off, which may be
-// len(src). An offset inside a CR LF pair, or inside a code point, is
-// counted as the start of the code point or line break it belongs to.
+// len(src).
 func (x *lineIndex) at(off int) (line, col int) {
 	off = max(0, min(off, len(x.src)))
 	l := sort.Search(len(x.starts), func(i int) bool { return x.starts[i] > off }) - 1
-	return l + 1, utf8.RuneCountInString(x.src[x.starts[l]:off]) + 1
+	return l + 1, x.codePoints(off) - x.codePoints(x.starts[l]) + 1
 }
