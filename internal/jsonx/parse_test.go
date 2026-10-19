@@ -388,9 +388,13 @@ func TestLimits(t *testing.T) {
 
 	// A breach far below the bound of a hostile depth costs only the
 	// bound: the reading stops at the first level too deep.
-	hostile := strings.Repeat("[", 1<<20)
-	_, fs = parse(t, hostile)
-	checkFindings(t, "[…", fs, at(CodeLimitExceeded, 1, depth+1, ptr))
+	hostile := []byte(strings.Repeat("[", 1<<20))
+	p := &parser{src: hostile, from: vendor, lim: limits.Defaults(), lines: newLineIndex(hostile)}
+	p.document()
+	checkFindings(t, "[…", p.findings, at(CodeLimitExceeded, 1, depth+1, ptr))
+	if p.i != depth {
+		t.Errorf("the reading of %d open brackets stopped after %d bytes, want %d", len(hostile), p.i, depth)
+	}
 
 	lim := lowered(t, "value-depth=2")
 	_, fs = Parse([]byte(`{"a": [[1]]}`), vendor, lim)
