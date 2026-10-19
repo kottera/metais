@@ -962,3 +962,6 @@ it (ADR-002).
   directory `con/` is a Windows device name, which ADR-011 D9 item 8
   refuses, against ADR-011 D9 item 1's lower-cased area. The rename is
   provisional, pending a ruling.
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-1F.** The `PKG` area is ruled in
+  PLAN-2026-10-metais-v1 §9, and ADR-011's Amendment A1, proposed for
+  ratification at the train's close, records it.
