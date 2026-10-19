@@ -32,8 +32,9 @@ import (
 //   - the directive rule: no Go file of the module carries //go:linkname,
 //     imports "C", dot-imports a package or imports unsafe;
 //   - the dependency scan: every hit of the same lists in a non-standard
-//     package of the closure matches an entry of dependencyAllowList, and
-//     every entry matches a hit;
+//     package of the closure, or of the closure of any package of the
+//     module, matches an entry of dependencyAllowList, and every entry
+//     matches a hit;
 //   - the canary rule: only canary_<channel>.go files carry a
 //     metais_canary_<channel> tag, and no release build compiles one.
 //
@@ -573,16 +574,18 @@ type dependencyAllowance struct {
 	importPath, file, symbol, reason string
 }
 
-// dependencyHits runs the dependency scan over the closure of ./cmd/metais
-// for every target: each symbol of hostSymbols referred to, and each
-// package of hostPackages imported, in a release file of a non-standard
-// package outside the module.
+// dependencyHits runs the dependency scan over the closure of ./cmd/metais,
+// and of every package of the module, for every target: each symbol of
+// hostSymbols referred to, and each package of hostPackages imported, in a
+// release file of a non-standard package outside the module. A library
+// built ahead of its wiring is scanned with the modules it links before
+// the binary links them.
 func dependencyHits(t testing.TB, root string) []dependencyHit {
 	t.Helper()
 	seen := map[dependencyHit]bool{}
 	parsed := map[string]bool{}
 	for _, tg := range targets {
-		for _, p := range cachedList(t, root, tg, "./cmd/metais") {
+		for _, p := range slices.Concat(cachedList(t, root, tg, "./cmd/metais"), cachedList(t, root, tg, "./...")) {
 			if p.Standard || p.Module == nil || p.Module.Main {
 				continue
 			}

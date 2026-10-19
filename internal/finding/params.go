@@ -87,6 +87,9 @@ func (v Value) Int() (n int64, ok bool) {
 // Str returns a string's value; ok is false for any other value.
 func (v Value) Str() (s string, ok bool) { return v.text, v.typ == TypeString }
 
+// Bool returns a boolean's value; ok is false for any other value.
+func (v Value) Bool() (b, ok bool) { return v.b, v.typ == TypeBoolean }
+
 // render is v as a message or hint writes it: a number in its canonical
 // form, a string as it is, a boolean as true or false, an array as its
 // elements separated by ", ".
