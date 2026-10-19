@@ -1579,7 +1579,14 @@ outside the standard library.
   schema-file codes are about the package entry, since a file is compiled
   once whichever inputs use it. A reference to an embedded `$id` from
   another file resolves: each embedded resource is also added to the
-  library under its own URI. The JSON-Schema-Test-Suite is vendored at
+  library under its own URI. The adapter writes `schemafail`'s Data
+  contract from each kind's typed fields by a type switch, so it needs no
+  `reflect`; it makes the `then` and `else` nodes the library leaves out,
+  splits `additionalProperties: false` into one failure per member, and
+  takes `propertyNames`' instance from the evaluation path, because the
+  library's `InstanceLocation` for that kind shares a slice later
+  validations overwrite. The compiler is the `schemafail.Schemas` of its
+  package. The JSON-Schema-Test-Suite is vendored at
   `55719286c33ae0d1823bfb65fea10338a19bc37c` and its runner also runs the
   optional format tests of every asserted format; its exclusions name the
   outcome METAIS gives instead, which the runner holds it to. Two
