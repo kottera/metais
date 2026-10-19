@@ -1,0 +1,89 @@
+# The exclusions of the JSON-Schema-Test-Suite (ADR-010 D5 item 7, D14
+# item 4): the cases whose outcome METAIS's own rules change. Each line is
+# five tab-separated fields: the file under draft2020-12, the case's
+# description, the test's description or * for every test of the case,
+# the outcome METAIS gives instead (a finding code NewCompiler reports, or
+# valid or invalid), and the ADR-003 item that rules it.
+# TestJSONSchemaTestSuite holds METAIS to that outcome, so a line records
+# what METAIS does and skips nothing, and it fails on a line no test
+# matches. Updating the suite re-reads these lines.
+#
+# ADR-003 D3 item 2: $vocabulary, and a $schema other than draft 2020-12's,
+# are refused.
+# ADR-003 D3 item 6: a pattern outside ADR-009 D10's profile is refused;
+# \p{Letter} names a general category by a form RE2 cannot express.
+# ADR-003 D4 item 1: every format of the list is asserted, by the grammar
+# that item names. hostname is RFC 1123 section 2.1, which checks no
+# A-label against IDNA, and uri-template's literals are RFC 6570 section
+# 2.1's, which exclude the apostrophe.
+# ADR-003 D4 item 2: idn-email, idn-hostname, iri, iri-reference and regex
+# are refused.
+# ADR-003 D5 item 3: a reference resolves only inside the package; the
+# suite's remotes are never fetched.
+dynamicRef.json	$ref and $dynamicAnchor are independent of order - $defs first	*	schema.ref_unresolved	ADR-003 D5 item 3
+dynamicRef.json	$ref and $dynamicAnchor are independent of order - $ref first	*	schema.ref_unresolved	ADR-003 D5 item 3
+dynamicRef.json	$ref to $dynamicRef finds detached $dynamicAnchor	*	schema.ref_unresolved	ADR-003 D5 item 3
+dynamicRef.json	strict-tree schema, guards against misspelled properties	*	schema.ref_unresolved	ADR-003 D5 item 3
+dynamicRef.json	tests for implementation dynamic anchor and reference link	*	schema.ref_unresolved	ADR-003 D5 item 3
+format.json	date format	invalid date string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	date-time format	invalid date-time string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	duration format	invalid duration string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	email format	invalid email string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	hostname format	invalid hostname string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	idn-email format	*	schema.format_unsupported	ADR-003 D4 item 2
+format.json	idn-hostname format	*	schema.format_unsupported	ADR-003 D4 item 2
+format.json	ipv4 format	invalid ipv4 string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	ipv6 format	invalid ipv6 string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	iri format	*	schema.format_unsupported	ADR-003 D4 item 2
+format.json	iri-reference format	*	schema.format_unsupported	ADR-003 D4 item 2
+format.json	json-pointer format	invalid json-pointer string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	regex format	*	schema.format_unsupported	ADR-003 D4 item 2
+format.json	relative-json-pointer format	invalid relative-json-pointer string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	time format	invalid time string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	uri format	invalid uri string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	uri-reference format	invalid uri-reference string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	uri-template format	invalid uri-template string is only an annotation by default	invalid	ADR-003 D4 item 1
+format.json	uuid format	invalid uuid string is only an annotation by default	invalid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	Arabic-Indic digits mixed with Extended Arabic-Indic digits	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	Begins with a Nonspacing Mark	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	Begins with a Spacing Combining Mark	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	Begins with an Enclosing Mark	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	Exceptions that are DISALLOWED, left-to-right chars	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	Exceptions that are DISALLOWED, right-to-left chars	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	Greek KERAIA not followed by Greek	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	Greek KERAIA not followed by anything	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	Hebrew GERESH not preceded by Hebrew	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	Hebrew GERESH not preceded by anything	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	Hebrew GERSHAYIM not preceded by Hebrew	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	Hebrew GERSHAYIM not preceded by anything	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	KATAKANA MIDDLE DOT with no Hiragana, Katakana, or Han	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	KATAKANA MIDDLE DOT with no other characters	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	MIDDLE DOT with no following 'l'	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	MIDDLE DOT with no preceding 'l'	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	MIDDLE DOT with nothing following	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	MIDDLE DOT with nothing preceding	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	ZERO WIDTH JOINER not preceded by Virama	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	ZERO WIDTH JOINER not preceded by anything	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	contains "--" in the 3rd and 4th position	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	contains illegal char U+302E Hangul single dot tone mark	valid	ADR-003 D4 item 1
+optional/format/hostname.json	validation of A-label (punycode) host names	invalid Punycode	valid	ADR-003 D4 item 1
+optional/format/uri-template.json	format: uri-template	an apostrophe in a literal is valid	invalid	ADR-003 D4 item 1
+pattern.json	pattern with Unicode property escape requires unicode mode	*	schema.pattern_unsupported	ADR-003 D3 item 6
+patternProperties.json	patternProperties with Unicode property escape	*	schema.pattern_unsupported	ADR-003 D3 item 6
+refRemote.json	$ref to $ref finds detached $anchor	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	Location-independent identifier in remote ref	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	anchor within remote ref	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	base URI change	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	base URI change - change folder	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	base URI change - change folder in subschema	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	fragment within remote ref	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	ref within remote ref	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	remote HTTP ref with different $id	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	remote HTTP ref with different URN $id	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	remote HTTP ref with nested absolute ref	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	remote ref	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	remote ref with ref to defs	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	retrieved nested refs resolve relative to their URI not $id	*	schema.ref_unresolved	ADR-003 D5 item 3
+refRemote.json	root ref in remote ref	*	schema.ref_unresolved	ADR-003 D5 item 3
+vocabulary.json	ignore unrecognized optional vocabulary	*	schema.dialect	ADR-003 D3 item 2
+vocabulary.json	schema that uses custom metaschema with with no validation vocabulary	*	schema.dialect	ADR-003 D3 item 2

@@ -680,7 +680,9 @@ func dependencyViolations(hits []dependencyHit, list []dependencyAllowance) []st
 // item 3): one entry per hit, each with the reason it cannot reach a
 // template, an output or a message.
 //
-// The reasons rest on what METAIS calls: internal/hostenv is the one
+// The reasons rest on what METAIS calls: internal/schema is the one
+// importer of santhosh-tekuri/jsonschema/v6 and configures it closed in
+// schema.NewCompiler (ADR-010 D5 item 1); internal/hostenv is the one
 // importer of golang.org/x/term and calls only term.IsTerminal (ADR-010 D2
 // item 2, D11 item 8), and only on unix, where it calls
 // unix.IoctlGetTermios; internal/hostfs is the one importer of
@@ -689,6 +691,14 @@ func dependencyViolations(hits []dependencyHit, list []dependencyAllowance) []st
 // module is in the windows closure (TestWindowsLinksNoXModules). A change
 // to what the module calls in either re-reads these reasons.
 var dependencyAllowList = []dependencyAllowance{
+	{"github.com/santhosh-tekuri/jsonschema/v6", "format.go", "time.Parse",
+		"validateDate, the library's built-in date format; schema.NewCompiler registers METAIS's own " +
+			"validator for every format ADR-003 D4 asserts, date among them, and the pre-check refuses every " +
+			"other format, so the built-in never runs (TestBuiltInFormatsNeverRun)"},
+	{"github.com/santhosh-tekuri/jsonschema/v6", "loader.go", "os.Open", reasonFileLoader},
+	{"github.com/santhosh-tekuri/jsonschema/v6", "loader.go", "runtime.GOOS", reasonFileLoader},
+	{"github.com/santhosh-tekuri/jsonschema/v6", "util.go", "path/filepath.Abs", reasonAbsolute},
+	{"github.com/santhosh-tekuri/jsonschema/v6", "util.go", "runtime.GOOS", reasonAbsolute},
 	{"go.yaml.in/yaml/v3", "resolve.go", "time.Parse",
 		"parseTimestamp, the library's YAML 1.1 timestamp guess, run while it builds a node; its result " +
 			"exists only to choose Node.Tag, and internal/yamlx never reads Node.Tag and never decodes into " +
@@ -708,6 +718,10 @@ var dependencyAllowList = []dependencyAllowance{
 	{"golang.org/x/sys/unix", "sysvshm_linux.go", "runtime.GOARCH",
 		"selects the System V shared-memory layout of the target architecture, a constant of the " +
 			"build, inside unix.SysvShmAttach and its kin, which METAIS never calls"},
+	{"golang.org/x/text/message", "message.go", "os.Stdout",
+		"the bodies of Printer.Print, Println and Printf, which write to standard output; METAIS never " +
+			"calls them, and jsonschema/v6, the one importer of the package, renders its messages with " +
+			"Printer.Sprintf, which internal/schema's adapter never reaches"},
 	{"golang.org/x/term", "terminal.go", "runtime.GOOS",
 		"chooses the line ending inside readPasswordLine, reached only from term.ReadPassword and " +
 			"Terminal.ReadPassword, which METAIS never calls"},
@@ -715,6 +729,13 @@ var dependencyAllowList = []dependencyAllowance{
 
 // Reasons shared by several entries of dependencyAllowList.
 const (
+	reasonFileLoader = "FileLoader.Load and ToFile, the library's default loader; schema.NewCompiler replaces it " +
+		"with UseLoader before anything is loaded, so every load reaches METAIS's refusing loader and no " +
+		"file is opened (TestNoLoadReachesFileLoader)"
+	reasonAbsolute = "absolute(), which reads GOOS, a constant of the build, to recognise a Windows drive, and " +
+		"calls filepath.Abs, under a second GOOS read, only for a relative location; schema.NewCompiler " +
+		"adds and compiles only absolute URIs, and a relative $ref resolves against them, so the relative " +
+		"path is never taken (TestNoRelativeLocation)"
 	reasonUnixEnv = "the bodies of unix.Clearenv, unix.Environ, unix.Getenv, unix.Setenv and unix.Unsetenv, " +
 		"which METAIS never calls, and term.IsTerminal does not; hostenv.Isolate has emptied the " +
 		"environment before any code could"

@@ -1,0 +1,9 @@
+repository: https://github.com/json-schema-org/JSON-Schema-Test-Suite
+commit: 55719286c33ae0d1823bfb65fea10338a19bc37c
+path: tests/draft2020-12
+licence: MIT (LICENSE, copied unchanged from the repository's root)
+taken: 2026-10-19
+
+The draft2020-12 directory is the repository's tests/draft2020-12 tree at
+that commit, copied unchanged. Updating it is a deliberate change that
+re-reads exclusions.txt (ADR-010 D14 item 4).

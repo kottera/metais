@@ -278,9 +278,10 @@ func TestRegistryEntries(t *testing.T) {
 // TestEmittedCodes pins the registry to the codes this module emits: the
 // report's own, internal/limits', internal/cli's, internal/zipfmt's
 // container and entry-name refusals, internal/inputs/csv's refusals of a
-// CSV input, and internal/schemafail's mapping of JSON Schema failures in
-// each of its three families (ADR-006 D6 item 1). A code a later change
-// emits is registered by that change.
+// CSV input, internal/schemafail's mapping of JSON Schema failures in each
+// of its three families (ADR-006 D6 item 1), and internal/schema's refusals
+// of a schema file. A code a later change emits is registered by that
+// change.
 func TestEmittedCodes(t *testing.T) {
 	var got []Code
 	for _, e := range registry {
@@ -292,6 +293,9 @@ func TestEmittedCodes(t *testing.T) {
 		CodeInternalError, CodeLimitExceeded, CodeLimitInvalid, CodeLimitPackage, CodeReportTruncated,
 		"input.encoding_invalid", "input.number_out_of_range",
 		"json.duplicate_name", "json.lone_surrogate", "json.noncharacter", "json.syntax", "json.trailing_content",
+		"schema.dialect", "schema.format_unsupported", "schema.id_duplicate", "schema.invalid",
+		"schema.keyword_unknown", "schema.pattern_unsupported", "schema.ref_by_path",
+		"schema.ref_escapes", "schema.ref_unresolved",
 		CodeUsageBadValue, CodeUsageMissingCommand, CodeUsageRepeatedFlag, CodeUsageUnexpectedOperand,
 		CodeUsageUnknownCommand, CodeUsageUnknownFlag, CodeUsageUnknownTopic,
 	}

@@ -176,6 +176,15 @@ it, and the statements it reports.
 | `package.name.not_portable` | error | refused | package | `offset`, `reason` | 1.0 | — |
 | `package.name.shape` | error | refused | package | `offset`, `reason` | 1.0 | — |
 | `report.truncated` | info | content | report | `listed`, `omitted` | 1.0 | — |
+| `schema.dialect` | error | content | package | `reason` | 1.0 | — |
+| `schema.format_unsupported` | error | content | package | `format` | 1.0 | — |
+| `schema.id_duplicate` | error | content | package | `id`; optional: `other` | 1.0 | — |
+| `schema.invalid` | error | content | package | `keyword` | 1.0 | — |
+| `schema.keyword_unknown` | error | content | package | `keyword` | 1.0 | — |
+| `schema.pattern_unsupported` | error | content | package | `construct` | 1.0 | — |
+| `schema.ref_by_path` | error | content | package | `reference`, `id` | 1.0 | — |
+| `schema.ref_escapes` | error | content | package | `reference` | 1.0 | — |
+| `schema.ref_unresolved` | error | content | package | `reference` | 1.0 | — |
 | `usage.bad_value` | error | usage | invocation | `argument`, `flag`, `reason`; optional: `allowed` | 1.0 | — |
 | `usage.missing_command` | error | usage | invocation | — | 1.0 | — |
 | `usage.repeated_flag` | error | usage | invocation | `argument`, `flag` | 1.0 | — |

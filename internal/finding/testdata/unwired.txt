@@ -167,6 +167,15 @@ package.name.not_nfc W3
 package.name.not_portable W3
 package.name.shape W3
 report.truncated W4
+schema.dialect W3
+schema.format_unsupported W3
+schema.id_duplicate W3
+schema.invalid W3
+schema.keyword_unknown W3
+schema.pattern_unsupported W3
+schema.ref_by_path W3
+schema.ref_escapes W3
+schema.ref_unresolved W3
 yaml.alias W3
 yaml.anchor W3
 yaml.bom W3
