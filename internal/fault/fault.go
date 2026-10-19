@@ -54,3 +54,17 @@ const SkipConfine Set = 1 << 3
 // between renders. Its seam is internal/template, which sets the engine's
 // Env.UnorderedObjects from it.
 const MapOrder Set = 1 << 4
+
+// ReadExisting makes a write into an existing output directory read the
+// content of every file it is about to replace, as it checks it (ADR-010
+// D13 item 2): the existing-destination detector must catch a write that
+// reads what the output directory holds, which ADR-009 D8 item 4 forbids.
+// Its seam is internal/hostfs.
+const ReadExisting Set = 1 << 5
+
+// RemoveForeign makes a write into an existing output directory remove,
+// as it commits, every regular file beside a committed one that the write
+// did not plan (ADR-010 D13 item 2): the existing-destination detector
+// must catch a write that removes a name it did not create, which ADR-005
+// D15 item 7 and Amendment A1 item 6 forbid. Its seam is internal/hostfs.
+const RemoveForeign Set = 1 << 6

@@ -37,11 +37,13 @@ func TestHas(t *testing.T) {
 // share a bit.
 func TestFaultBits(t *testing.T) {
 	for name, tt := range map[string]struct{ got, want Set }{
-		"SkipDigest":   {SkipDigest, 1 << 0},
-		"FirstFinding": {FirstFinding, 1 << 1},
-		"UnpackToTemp": {UnpackToTemp, 1 << 2},
-		"SkipConfine":  {SkipConfine, 1 << 3},
-		"MapOrder":     {MapOrder, 1 << 4},
+		"SkipDigest":    {SkipDigest, 1 << 0},
+		"FirstFinding":  {FirstFinding, 1 << 1},
+		"UnpackToTemp":  {UnpackToTemp, 1 << 2},
+		"SkipConfine":   {SkipConfine, 1 << 3},
+		"MapOrder":      {MapOrder, 1 << 4},
+		"ReadExisting":  {ReadExisting, 1 << 5},
+		"RemoveForeign": {RemoveForeign, 1 << 6},
 	} {
 		if tt.got != tt.want {
 			t.Errorf("%s = %#x, want %#x", name, uint64(tt.got), uint64(tt.want))
