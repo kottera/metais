@@ -11,10 +11,15 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strings"
 	"sync"
+	"testing"
+
+	"github.com/kottera/metais/internal/testenv"
 )
 
 // recordFormat names the record's format, the $id of its schema.
@@ -249,4 +254,160 @@ func readRecord(path string, validate func([]byte) error) (*record, error) {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
 	return &rec, nil
+}
+
+// TestRecordAndCompare writes the cross-platform record with
+// -conformance.record from two runs of the fixture suite against the clean
+// fake, and compares them with -conformance.compare on the host (ADR-011
+// D15, ADR-010 D14 item 3). The records carry the tool the fake's version
+// --json reports, agree, and hold no sandbox path; a record of another
+// tool version or another suite is refused, and one differing in a field
+// fails.
+func TestRecordAndCompare(t *testing.T) {
+	suite := writeFixture(t, testenv.Dir(t))
+	fake := fakeProgram(t, testenv.Dir(t), "clean")
+	dir := testenv.Dir(t)
+	conformance := func(args ...string) ([]byte, error) {
+		cmd := exec.Command(testBinary(t), append([]string{"-test.run=^TestConformance$", "-test.count=1",
+			"-conformance.suite=" + suite}, args...)...)
+		return cmd.CombinedOutput()
+	}
+	recA, recB := filepath.Join(dir, "a.json"), filepath.Join(dir, "b.json")
+	var wg sync.WaitGroup
+	for _, p := range []string{recA, recB} {
+		wg.Go(func() {
+			if out, err := conformance("-conformance.tool="+fake, "-conformance.record="+p); err != nil {
+				t.Errorf("the run recording %s: %v\n%s", filepath.Base(p), err, out)
+			}
+		})
+	}
+	wg.Wait()
+	if t.Failed() {
+		return
+	}
+	set, err := suiteSchemas(suite)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec, err := readRecord(recA, set.validator(recordSchema))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec.Tool != fakeTool {
+		t.Errorf("the record's tool is %+v, want what version --json reports, %+v", rec.Tool, fakeTool)
+	}
+	if want := runtime.GOOS + "/" + runtime.GOARCH; rec.Target != want {
+		t.Errorf("the record's target is %q, want %q", rec.Target, want)
+	}
+	if sum, _ := suiteDigest(suite); rec.Suite != sum {
+		t.Errorf("the record's suite digest is %s, want %s", rec.Suite, sum)
+	}
+	envs := map[string]bool{}
+	for _, s := range rec.Steps {
+		envs[s.Env] = true
+	}
+	if len(rec.Steps) == 0 || !envs["A"] || !envs["B"] {
+		t.Errorf("the record holds %d steps over the environments %v, want steps in A and B", len(rec.Steps), envs)
+	}
+	raw, err := os.ReadFile(recA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if src := sentinelAt(raw); src != "" || bytes.Contains(raw, []byte(dir)) {
+		t.Errorf("the record holds a sandbox path")
+	}
+
+	if out, err := conformance("-conformance.compare=" + recA + "," + recB); err != nil {
+		t.Errorf("two records of one build on one host do not compare equal: %v\n%s", err, out)
+	}
+	for _, c := range []struct {
+		name, want string
+		edit       func(map[string]any)
+	}{
+		{"another tool version", "records refused", func(m map[string]any) { m["tool"].(map[string]any)["version"] = "9.9.9" }},
+		{"another suite", "records refused", func(m map[string]any) { m["suite_sha256"] = strings.Repeat("0", 64) }},
+		{"a field", "differs", func(m map[string]any) {
+			m["steps"].([]any)[0].(map[string]any)["stdout"].(map[string]any)["length"] = 1 << 20
+		}},
+	} {
+		p := filepath.Join(dir, "edited.json")
+		writeEdited(t, raw, p, c.edit)
+		out, err := conformance("-conformance.compare=" + recA + "," + p)
+		if err == nil || !strings.Contains(string(out), c.want) {
+			t.Errorf("%s: the comparison gave %v, want a failure saying %q\n%s", c.name, err, c.want, out)
+		}
+	}
+}
+
+// writeEdited writes the record raw to p with edit applied.
+func writeEdited(t *testing.T, raw []byte, p string, edit func(map[string]any)) {
+	t.Helper()
+	var m map[string]any
+	if err := json.Unmarshal(raw, &m); err != nil {
+		t.Fatal(err)
+	}
+	edit(m)
+	b, err := json.Marshal(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(p, b, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestCompareRecordsEveryField proves the comparison fails on a
+// difference in any field of a step, and on nothing but the target.
+func TestCompareRecordsEveryField(t *testing.T) {
+	b := blob{SHA256: strings.Repeat("a", 64), Length: 3}
+	base := func() *record {
+		return &record{Schema: recordFormat, Tool: fakeTool, Target: "darwin/arm64", Suite: strings.Repeat("b", 64),
+			Steps: []recordRow{{Vector: "fix/v", Case: "c", Step: 1, Invocation: 1, Env: "A", OK: true,
+				Stdout: b, Stderr: b, Stream: &b, Listing: &b,
+				Files: []recordFile{{Path: "out/a.txt", Size: 3, SHA256: b.SHA256}}}}}
+	}
+	names := []string{"darwin/arm64", "linux/amd64"}
+	other := base()
+	other.Target = "linux/amd64"
+	if errs := compareRecords(names, []*record{base(), other}); len(errs) > 0 {
+		t.Errorf("records differing only in their target: %v", errs)
+	}
+	c := blob{SHA256: strings.Repeat("c", 64), Length: 4}
+	for field, edit := range map[string]func(*recordRow){
+		"vector":     func(r *recordRow) { r.Vector = "fix/w" },
+		"case":       func(r *recordRow) { r.Case = "d" },
+		"step":       func(r *recordRow) { r.Step = 2 },
+		"invocation": func(r *recordRow) { r.Invocation = 2 },
+		"env":        func(r *recordRow) { r.Env = "B" },
+		"ok":         func(r *recordRow) { r.OK = false },
+		"stdout":     func(r *recordRow) { r.Stdout = c },
+		"stderr":     func(r *recordRow) { r.Stderr = c },
+		"stream":     func(r *recordRow) { r.Stream = nil },
+		"listing":    func(r *recordRow) { r.Listing = &c },
+		"files":      func(r *recordRow) { r.Files[0].Executable = true },
+	} {
+		other := base()
+		edit(&other.Steps[0])
+		errs := compareRecords(names, []*record{base(), other})
+		if len(errs) != 1 || !strings.Contains(errs[0].Error(), field+" differs") {
+			t.Errorf("records differing in %s: %v", field, errs)
+		}
+	}
+	extra := base()
+	extra.Steps = append(extra.Steps, extra.Steps[0])
+	if errs := compareRecords(names, []*record{base(), extra}); len(errs) == 0 {
+		t.Error("records of different lengths compare equal")
+	}
+	for name, edit := range map[string]func(*record){
+		"tool name":    func(r *record) { r.Tool.Name = "other" },
+		"tool version": func(r *record) { r.Tool.Version = "1.0.0" },
+		"suite":        func(r *record) { r.Suite = strings.Repeat("c", 64) },
+	} {
+		other := base()
+		edit(other)
+		errs := compareRecords(names, []*record{base(), other})
+		if len(errs) == 0 || !errors.Is(errs[0], errRefused) {
+			t.Errorf("records of another %s are not refused: %v", name, errs)
+		}
+	}
 }

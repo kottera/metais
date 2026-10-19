@@ -79,6 +79,12 @@ func writeFixture(t testing.TB, root string) string {
 	}
 	put("README.md", []byte("```\nVersion: 1.0\nStatus: Draft\nLatest release: none\n```\n\n# A fixture specification\n"))
 	putJSON("findings/registry.json", fixtureRegistry)
+	putJSON("statements.json", []any{
+		map[string]any{"id": "MTS-FIX-001", "chapter": "fixture", "section": "fixture", "kind": "requirement",
+			"since": "1.0", "observable": true, "status": "active"},
+		map[string]any{"id": "MTS-OTH-001", "chapter": "fixture", "section": "fixture", "kind": "requirement",
+			"since": "1.0", "observable": true, "status": "active"},
+	})
 	for _, n := range []string{vectorSchema, findingsSchema, driverRequestSchema, driverResponseSchema, recordSchema} {
 		b, err := os.ReadFile(filepath.Join(moduleRoot, "spec", "schemas", "conformance", "1", n))
 		if err != nil {

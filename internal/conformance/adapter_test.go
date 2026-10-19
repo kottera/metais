@@ -72,7 +72,6 @@ type cliAdapter struct {
 	openOnce sync.Once
 	openSet  []string
 	openErr  error
-	openBase string
 }
 
 func (a *cliAdapter) name() string     { return "cli" }
@@ -184,7 +183,7 @@ func (a *cliAdapter) commands(v *vector, sb *sandbox, st *step) ([]command, erro
 	switch st.Op {
 	case "open":
 		if slices.Contains(v.Tags, "security") {
-			set, err := a.opening(sb)
+			set, err := a.opening(filepath.Join(filepath.Dir(sb.root), "opening"))
 			if err != nil {
 				return nil, err
 			}
@@ -258,15 +257,10 @@ func (a *cliAdapter) commands(v *vector, sb *sandbox, st *step) ([]command, erro
 }
 
 // opening reads the set of package-opening commands from the tool's own
-// command declarations, through help --json, once.
-func (a *cliAdapter) opening(sb *sandbox) ([]string, error) {
-	a.openOnce.Do(func() {
-		base := a.openBase
-		if base == "" {
-			base = filepath.Join(filepath.Dir(sb.root), "opening")
-		}
-		a.openSet, a.openErr = a.readOpening(base)
-	})
+// command declarations, through help --json, once, in a plain sandbox
+// below base.
+func (a *cliAdapter) opening(base string) ([]string, error) {
+	a.openOnce.Do(func() { a.openSet, a.openErr = a.readOpening(base) })
 	return a.openSet, a.openErr
 }
 
