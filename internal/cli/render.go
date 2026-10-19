@@ -58,7 +58,10 @@ func renderDeclaration() *Command {
 			"A template sees the inputs as inputs, the package's identity as package, where each input " +
 			"came from as sources, the output being rendered as output, and the render time as now, which " +
 			"is --now normalized to UTC, or nil without it. Nothing of the host — no environment variable, " +
-			"directory, user or clock — reaches a template.",
+			"directory, user or clock — reaches a template.\n\n" +
+			"Each output's path is a Liquid template too. An output with for_each is rendered once for each " +
+			"element of its array, which its when, its path and its template see as item, with its position " +
+			"as fan_out; an output, or an element, whose when is false writes no file.",
 		Role:     finding.RoleConsumer,
 		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file, or a source directory; - is refused, since a package is read with random access."}},
 		Flags: []args.Flag{
