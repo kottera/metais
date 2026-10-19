@@ -275,155 +275,41 @@ func TestRegistryEntries(t *testing.T) {
 	}
 }
 
-// TestEmittedCodes pins the registry to the codes this module emits: the
-// report's own, internal/limits', internal/cli's, internal/zipfmt's
-// container and entry-name refusals, internal/inputs/csv's refusals of a
-// CSV input, internal/markdown's refusal of an unclosed frontmatter block,
-// internal/manifest's version gate and manifest rules,
-// internal/schemafail's mapping of JSON Schema failures in each of its
-// three families (ADR-006 D6 item 1), internal/schema's refusals of a
-// schema file, internal/xref's cross-reference (ADR-007 D3),
-// internal/inputs' refusals of a supplied input, internal/author/ooxml's
-// split runs (ADR-007 D4), and internal/sample's unsatisfiable field
-// (ADR-007 D9), and check's steps (ADR-007 D2). A code a later change emits is registered by that change.
-func TestEmittedCodes(t *testing.T) {
-	var got []Code
-	for _, e := range registry {
-		got = append(got, e.Code)
-	}
-	want := []Code{
-		"csv.after_quote", "csv.bare_quote", "csv.field_count", "csv.header_duplicate",
-		"csv.header_empty", "csv.header_missing", "csv.unterminated_quote",
-		CodeInternalError, CodeLimitExceeded, CodeLimitInvalid, CodeLimitPackage, CodeReportTruncated,
-		"input.encoding_invalid", "input.number_out_of_range",
-		"json.duplicate_name", "json.lone_surrogate", "json.noncharacter", "json.syntax", "json.trailing_content",
-		"markdown.frontmatter_unclosed",
-		"schema.dialect", "schema.format_unsupported", "schema.id_duplicate", "schema.invalid",
-		"schema.keyword_unknown", "schema.pattern_unsupported", "schema.ref_by_path",
-		"schema.ref_escapes", "schema.ref_unresolved", "schema.sample_unsatisfiable",
-		CodeUsageBadValue, CodeUsageConflictingFlags, CodeUsageDataDirUnreadable, CodeUsageMissingCommand, CodeUsageRepeatedFlag, CodeUsageUnexpectedOperand,
-		CodeUsageUnknownCommand, CodeUsageUnknownFlag, CodeUsageUnknownTopic,
-		CodeUsageNameInvalid, CodeUsageNameRequired,
-		CodeUsageFlagExcluded, CodeUsageFlagRequires, CodeUsageNotSourceDir, CodeSampleInvalid,
-		CodeDestinationNotDirectory, CodeDestinationNotEmpty, CodeDestinationWriteFailed,
-		CodeDestinationCaseVariant, CodeDestinationCommitFailed, CodeDestinationLink, CodeDestinationNotRegularFile,
-	}
-	for _, c := range []string{
-		"archive_comment", "crc_mismatch", "data_descriptor", "deflate_stream", "encrypted", "entry_order",
-		"extra_field", "field_value", "flags", "header_mismatch", "method", "not_zip", "overlap_or_gap",
-		"prepended_data", "second_end_record", "size_mismatch", "trailing_data", "zip64",
-	} {
-		want = append(want, Code("package.container."+c))
-	}
-	for _, c := range []string{
-		"case_collision", "character", "directory_entry", "duplicate", "encoding", "file_directory_conflict",
-		"not_nfc", "not_portable", "shape",
-	} {
-		want = append(want, Code("package.name."+c))
-	}
-	for _, c := range []string{"malformed", "missing", "not_string", "unsupported_major", "unsupported_minor"} {
-		want = append(want, Code("package.version."+c))
-	}
-	want = append(want, "manifest.input.duplicate_name", "manifest.license.expression",
-		"manifest.output.duplicate_id", "manifest.output.nested_for_each")
-	for _, family := range []string{"input", "manifest", "output"} {
-		for _, c := range []string{
-			"additional_item", "additional_property", "any_of", "const", "contains", "dependent_required", "enum",
-			"exclusive_maximum", "exclusive_minimum", "forbidden", "format", "max_contains", "max_items", "max_length",
-			"max_properties", "maximum", "min_contains", "min_items", "min_length", "min_properties", "minimum",
-			"multiple_of", "not", "one_of", "one_of.ambiguous", "pattern", "property_name", "required", "type",
-			"unevaluated_item", "unevaluated_property", "unique_items",
-		} {
-			want = append(want, Code(family+"."+c))
+// familyFiles are the registry's families, each by the table its file
+// registry_<family>.go holds.
+var familyFiles = map[string][]Entry{
+	"collection": collectionCodes, "csv": csvCodes, "example": exampleCodes, "input": inputCodes,
+	"internal": internalCodes, "json": jsonCodes, "limit": limitCodes, "manifest": manifestCodes,
+	"markdown": markdownCodes, "output": outputCodes, "package": packageCodes, "report": reportCodes,
+	"schema": schemaCodes, "template": templateCodes, "usage": usageCodes, "yaml": yamlCodes,
+}
+
+// TestRegistryFamilies pins the registry's layout: each family's file
+// holds that family's codes and no other, in code order, and the table is
+// those files and the JSON Schema keyword codes, each entry once. A code
+// is registered by adding it to its family's file; spec/findings/registry.json
+// and the catalog are then regenerated.
+//
+// What the module emits is held elsewhere: New panics on a code the
+// table does not hold; TestFindingCodesCovered, in internal/guarantees,
+// requires a vector for every registered code of class refused, content
+// or destination, or its place on the unwired list; and internal/cli's
+// tests trigger every refusal a command declares (ADR-008 D16 item 2).
+func TestRegistryFamilies(t *testing.T) {
+	n := len(schemaEntries())
+	for family, entries := range familyFiles {
+		n += len(entries)
+		for i, e := range entries {
+			if f, _, _ := strings.Cut(string(e.Code), "."); f != family {
+				t.Errorf("registry_%s.go holds %s, of the family %s", family, e.Code, f)
+			}
+			if i > 0 && entries[i-1].Code >= e.Code {
+				t.Errorf("registry_%s.go: %s is out of order or repeated", family, e.Code)
+			}
 		}
 	}
-	want = append(want, CodeInputValidationPartial)
-	for _, c := range []string{
-		"alias", "anchor", "bom", "character", "directive", "duplicate_key", "key_empty", "key_not_scalar",
-		"merge_key", "multi_document", "scalar_refused", "syntax", "tag",
-	} {
-		want = append(want, Code("manifest.yaml."+c), Code("yaml."+c))
-	}
-	want = append(want, "manifest.number_out_of_range", "manifest.yaml.encoding", "manifest.yaml.root_not_mapping")
-	want = append(want, "template.ooxml.split_construct", "template.ooxml.split_delimiter")
-	for _, c := range []string{
-		"budget_exhausted", "dynamic_reference", "for_each_not_array", "index_out_of_range", "missing_asset",
-		"missing_partial", "not_an_array", "not_an_object", "partial_parameter_not_passed", "unknown_field",
-		"unknown_input", "unknown_variable", "unused_input", "unused_template",
-	} {
-		want = append(want, Code("template.xref."+c))
-	}
-	// internal/inputs, the inputs layer (W3-2).
-	want = append(want, "collection.as_file", "collection.directory_name", "collection.item_name",
-		"collection.stem_duplicate", "collection.subdirectory",
-		"input.constraints_failed", "input.constraints_not_evaluated", "input.extension_not_accepted",
-		"input.file_duplicate", "input.file_unknown", "input.json_arg_invalid", "input.json_arg_not_object",
-		"input.json_arg_unknown", "input.link", "input.missing", "input.noncharacter", "input.not_readable",
-		"input.not_regular_file", "input.set_into_unparsed", "input.set_pointer_invalid", "input.set_traversal",
-		"markdown.frontmatter_body_field", "markdown.frontmatter_not_mapping")
-	// The package loader's and inspect's (W3-1).
-	want = append(want, "package.not_found", "package.not_readable",
-		"package.layout.unknown_top_level", "package.layout.missing_manifest", "package.layout.compiled_in_source",
-		"package.layout.empty_directory", "package.layout.non_regular_file",
-		"package.compiled.missing", "package.compiled.unknown_file", "package.compiled.mismatch",
-		"package.digest.not_canonical", "package.digest.entries_mismatch", "package.digest.mismatch", "package.digest.package_mismatch",
-		"manifest.file.wrong_name", "manifest.path_not_found", "schema.syntax",
-		"template.syntax", "template.include", "template.unknown_filter", "template.number_range", "template.tag_context",
-		"template.filter_argument", "template.filter_input", "template.division_by_zero",
-		CodeUsageMissingOperand, CodeUsagePackageFromStdin)
-	// unpack's (W4-5).
-	want = append(want, CodeUsageNotPackedPackage)
-	// internal/template and render (W4-3).
-	for _, c := range []string{
-		"comparison", "invalid_utf8", "nil_property", "object_output", "partial_name",
-		"partial_not_found", "reserved_name", "tag_argument", "undefined_property", "undefined_variable",
-	} {
-		want = append(want, Code("template."+c))
-	}
-	// Escaping (W5-2).
-	want = append(want, "template.safe_position")
-	// The METAIS filters and date (W5-1).
-	want = append(want, "template.date_format", "template.date_input", "template.slug_empty")
-	for _, c := range []string{
-		"case_collision", "character", "duplicate", "encoding", "file_directory_conflict", "not_nfc",
-		"not_portable", "shape",
-	} {
-		want = append(want, Code("output.path."+c))
-	}
-	want = append(want, CodeLimitExceededOutput, CodeLimitExceededTemplate, CodeUsageMissingFlag,
-		"input.raw_unavailable")
-	for _, c := range []string{"syntax", "trailing_content", "duplicate_name", "lone_surrogate", "noncharacter", "encoding"} {
-		want = append(want, Code("manifest.json."+c))
-	}
-	// check's (W4-4).
-	want = append(want, "report.step_skipped", "package.layout.os_litter", "package.layout.not_packed",
-		"manifest.guide_link_missing", "schema.invalid_default", "schema.invalid_example", "schema.unsatisfiable",
-		"schema.unusable_enum_member", "schema.required_not_declared", "template.not_utf8", "template.crlf",
-		"example.layout", "manifest.input.form_shape", "manifest.input.collection_shape", "output.declaration.validate_kind")
-	// The embed and provenance tags (W5-3).
-	want = append(want, "template.embed_index", "template.embed_unknown_input", "template.provenance_argument",
-		"template.provenance_style")
-	// Containers' (W5-6).
-	want = append(want, CodeContainerMissingEntry, CodeContainerNonASCII, CodeContainerReservedEntry, CodeContainerSpace,
-		CodeContainerTooManyEntries)
-	// Output validation's (W5-7).
-	want = append(want, "output.parse")
-	// The reading commands' (W4-2).
-	want = append(want, CodeUsageBadGlob, CodeUsageBadPattern, CodeUsageBinaryToTerminal, CodeUsageEntryNotFound,
-		CodeUsageIsADirectory, CodeUsageLineOutOfRange, CodeUsageNoMatch, CodeUsageNotText, CodeUsageUnknownInput)
-	// render's fan-out (W5-4).
-	want = append(want, "output.expression.for_each_type")
-	// Assets, the mirror and the asset tag (W5-5).
-	want = append(want, "output.declaration.empty_mirror", "output.declaration.empty_name", "template.asset_ambiguous",
-		"template.asset_not_found", "template.asset_not_text", "template.asset_not_written", "template.asset_tree")
-	// render's dry run, archive and selection (W5-9).
-	want = append(want, CodeUsageArchiveToTerminal, CodeUsageUnknownOutput)
-	// test's (W5-11).
-	want = append(want, "example.metadata", "example.output_differs", "example.output_missing", "example.output_unexpected",
-		CodeUsageUnknownExample)
-	slices.Sort(want)
-	if !slices.Equal(got, want) {
-		t.Errorf("registered %q, want %q", got, want)
+	if n != len(registry) {
+		t.Errorf("the family files and the keyword codes hold %d entries, and the table %d", n, len(registry))
 	}
 }
 

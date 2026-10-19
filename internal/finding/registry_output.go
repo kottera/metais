@@ -96,20 +96,6 @@ var outputCodes = []Entry{
 		Statements: []string{"MTS-TRN-007"},
 	},
 	{
-		Code:     "output.declaration.validate_kind",
-		Severity: SeverityError,
-		Class:    ClassContent,
-		Subject:  SubjectOutput,
-		Params: []ParamSpec{
-			{Name: "kind", Type: TypeString, Meaning: "The output's kind, declared or given by its path.", Always: true},
-		},
-		Message:    "The output {output} names a schema to validate it against, and its kind is {kind}: only json and yaml outputs are validated.",
-		Hint:       "Remove validate, or declare an output of kind json or yaml.",
-		Span:       SpanValue,
-		Since:      "1.0",
-		Statements: []string{"MTS-AUT-023"},
-	},
-	{
 		Code:     "output.declaration.empty_mirror",
 		Severity: SeverityWarning,
 		Class:    ClassContent,
@@ -136,6 +122,20 @@ var outputCodes = []Entry{
 		Span:       SpanValue,
 		Since:      "1.0",
 		Statements: []string{"MTS-OUT-018"},
+	},
+	{
+		Code:     "output.declaration.validate_kind",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectOutput,
+		Params: []ParamSpec{
+			{Name: "kind", Type: TypeString, Meaning: "The output's kind, declared or given by its path.", Always: true},
+		},
+		Message:    "The output {output} names a schema to validate it against, and its kind is {kind}: only json and yaml outputs are validated.",
+		Hint:       "Remove validate, or declare an output of kind json or yaml.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-AUT-023"},
 	},
 	{
 		Code:     "output.destination.case_variant",
