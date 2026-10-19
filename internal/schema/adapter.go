@@ -91,7 +91,13 @@ func (a adapter) convert(ve *jsonschema.ValidationError, kwLoc, parentURL string
 	if !a.meta {
 		entry, ptr, ok := a.c.locate(ve.SchemaURL)
 		if !ok {
-			return nil, fmt.Errorf("schema: a failure is in no schema file of the package")
+			base, frag, _ := strings.Cut(ve.SchemaURL, "#")
+			if !metaSchemas[base] {
+				return nil, fmt.Errorf("schema: a failure is in no schema file of the package")
+			}
+			// A keyword of a 2020-12 meta-schema a package schema refers
+			// to: no entry holds it.
+			ptr = unescapePointer(frag)
 		}
 		f.Entry, f.SchemaPointer = entry, ptr
 	}

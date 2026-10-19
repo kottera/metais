@@ -23,7 +23,8 @@ type Failure struct {
 	// KeywordLocation is the evaluation path from the root schema through
 	// every $ref, in JSON Schema's keywordLocation form.
 	KeywordLocation string
-	// Entry is the package entry the keyword is written in.
+	// Entry is the package entry the keyword is written in, empty for a
+	// keyword of a built-in 2020-12 meta-schema that a schema refers to.
 	Entry string
 	// SchemaPointer is the keyword's RFC 6901 pointer within Entry.
 	SchemaPointer string

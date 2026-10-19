@@ -240,8 +240,9 @@ func isEmail(s string) bool {
 	}
 	if strings.HasPrefix(domain, "[") && strings.HasSuffix(domain, "]") {
 		lit := domain[1 : len(domain)-1]
-		if v6, ok := strings.CutPrefix(lit, "IPv6:"); ok {
-			return isIPv6(v6)
+		// ABNF's quoted strings are case-insensitive (RFC 5234 §2.3).
+		if len(lit) >= 5 && strings.EqualFold(lit[:5], "IPv6:") {
+			return isIPv6(lit[5:])
 		}
 		return isIPv4(lit)
 	}
