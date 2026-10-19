@@ -1215,6 +1215,31 @@
       ]
     },
     {
+      "code": "input.raw_unavailable",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The 0-based index of the collection item embedded; absent for an input that is not a collection.",
+          "always": false
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The input {input} has no raw form to embed: a value given on the command line replaced or changed it.",
+      "hint": "Supply the input as a file in the data directory, with no --set, --set-json or --inputs-json touching it, or render its value with a filter rather than embedding its bytes.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "input.required",
       "severity": "error",
       "class": "content",
@@ -1581,6 +1606,86 @@
       ]
     },
     {
+      "code": "limit.exceeded.output",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "limit",
+          "type": "string",
+          "meaning": "The limit's name, as `metais limits` lists it.",
+          "always": true
+        },
+        {
+          "name": "bound",
+          "type": "number",
+          "meaning": "The limit's bound in this command, in the limit's unit.",
+          "always": true
+        },
+        {
+          "name": "lowered",
+          "type": "boolean",
+          "meaning": "Whether the caller lowered the limit with --limit; false when the bound is the specification's default.",
+          "always": true
+        },
+        {
+          "name": "observed",
+          "type": "number",
+          "meaning": "The value found, in the limit's unit; absent when the render stopped at the bound.",
+          "always": false
+        }
+      ],
+      "message": "The output {output} breaches the {limit} limit of {bound}.",
+      "hint": "Supply less data, or render fewer or smaller files; a limit can be lowered with --limit and never raised. Run `metais limits` to see every limit.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-SEC-010"
+      ]
+    },
+    {
+      "code": "limit.exceeded.template",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "limit",
+          "type": "string",
+          "meaning": "The limit's name, as `metais limits` lists it.",
+          "always": true
+        },
+        {
+          "name": "bound",
+          "type": "number",
+          "meaning": "The limit's bound in this command, in the limit's unit.",
+          "always": true
+        },
+        {
+          "name": "lowered",
+          "type": "boolean",
+          "meaning": "Whether the caller lowered the limit with --limit; false when the bound is the specification's default.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "Rendering the template breaches the {limit} limit of {bound}.",
+      "hint": "Render less: fewer iterations, partials nested less deeply, smaller strings and arrays; a limit can be lowered with --limit and never raised. Run `metais limits` to see every limit.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-SEC-008",
+        "MTS-SEC-009",
+        "MTS-TPL-046"
+      ]
+    },
+    {
       "code": "limit.invalid",
       "severity": "error",
       "class": "usage",
@@ -1659,7 +1764,9 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-SEC-001"
+        "MTS-PTH-007",
+        "MTS-SEC-001",
+        "MTS-SEC-011"
       ]
     },
     {
@@ -3179,7 +3286,8 @@
       "location": "none",
       "since": "1.0",
       "statements": [
-        "MTS-AUT-028"
+        "MTS-AUT-028",
+        "MTS-RND-003"
       ]
     },
     {
@@ -3207,7 +3315,8 @@
       "location": "none",
       "since": "1.0",
       "statements": [
-        "MTS-AUT-028"
+        "MTS-AUT-028",
+        "MTS-RND-004"
       ]
     },
     {
@@ -3236,7 +3345,8 @@
       "since": "1.0",
       "statements": [
         "MTS-AUT-026",
-        "MTS-AUT-027"
+        "MTS-AUT-027",
+        "MTS-RND-006"
       ]
     },
     {
@@ -3684,6 +3794,222 @@
       "location": "value",
       "since": "1.0",
       "statements": []
+    },
+    {
+      "code": "output.path.case_collision",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The output's path, as planned.",
+          "always": true
+        },
+        {
+          "name": "member",
+          "type": "string",
+          "meaning": "The path, or the directory prefix of it, that collides.",
+          "always": true
+        },
+        {
+          "name": "other",
+          "type": "string",
+          "meaning": "The earlier path, or directory prefix, it collides with.",
+          "always": true
+        }
+      ],
+      "message": "The output's path collides with another's when letter case and normalization are set aside, which one file system would merge into one.",
+      "hint": "Give the outputs paths that differ in more than letter case or normalization.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PTH-006"
+      ]
+    },
+    {
+      "code": "output.path.character",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The output's path, as planned.",
+          "always": true
+        },
+        {
+          "name": "code_point",
+          "type": "number",
+          "meaning": "The first code point the rule refuses.",
+          "always": true
+        }
+      ],
+      "message": "The output's path holds a character a portable path may not: a control, format, private-use, unassigned or separator character, or one Windows reserves.",
+      "hint": "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PTH-004"
+      ]
+    },
+    {
+      "code": "output.path.duplicate",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The output's path, as planned.",
+          "always": true
+        }
+      ],
+      "message": "The output's path is the path of an earlier output.",
+      "hint": "Give each output its own path.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PTH-006"
+      ]
+    },
+    {
+      "code": "output.path.encoding",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The output's path, as planned.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why: invalid_utf8, or byte_order_mark (it begins with U+FEFF).",
+          "always": true
+        }
+      ],
+      "message": "The output's path is not UTF-8 without a byte order mark ({reason}).",
+      "hint": "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PTH-001"
+      ]
+    },
+    {
+      "code": "output.path.file_directory_conflict",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The output's path, as planned.",
+          "always": true
+        },
+        {
+          "name": "member",
+          "type": "string",
+          "meaning": "The path, or the directory prefix of it, that is both a file and a directory.",
+          "always": true
+        },
+        {
+          "name": "other",
+          "type": "string",
+          "meaning": "The other path, or directory prefix, it matches.",
+          "always": true
+        }
+      ],
+      "message": "The output's path makes one name both a file and a directory: one output's path is, or matches without regard to case, a directory prefix of another's.",
+      "hint": "Give the outputs paths in which no file's path is a directory of another's.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PTH-006"
+      ]
+    },
+    {
+      "code": "output.path.not_nfc",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The output's path, as planned.",
+          "always": true
+        }
+      ],
+      "message": "The output's path is not in Unicode Normalization Form C.",
+      "hint": "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PTH-002"
+      ]
+    },
+    {
+      "code": "output.path.not_portable",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The output's path, as planned.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why: reserved_name (a Windows device name), git (a spelling of .git), segment_end (a segment ends in . or a space), or segment_length (a segment is longer than 255 bytes).",
+          "always": true
+        }
+      ],
+      "message": "The output's path cannot be written on every platform ({reason}).",
+      "hint": "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PTH-005"
+      ]
+    },
+    {
+      "code": "output.path.shape",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The output's path, as planned.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why: empty, leading_slash, trailing_slash, empty_segment, dot_segment, backslash or colon.",
+          "always": true
+        }
+      ],
+      "message": "The output's path is not a relative path of /-separated segments ({reason}).",
+      "hint": "Correct the declaration's path, or name the template so its default path is portable; every platform must be able to write it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PTH-003"
+      ]
     },
     {
       "code": "output.pattern",
@@ -5305,6 +5631,51 @@
       ]
     },
     {
+      "code": "template.comparison",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "operator",
+          "type": "string",
+          "meaning": "The operator.",
+          "always": true
+        },
+        {
+          "name": "left",
+          "type": "string",
+          "meaning": "The kind of the left operand: nil, boolean, integer, float, string, array or object.",
+          "always": true
+        },
+        {
+          "name": "right",
+          "type": "string",
+          "meaning": "The kind of the right operand, named as left's is.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "{operator} compares a {left} with a {right}, which are not ordered against each other.",
+      "hint": "Compare numbers with numbers and strings with strings; contains takes a string, an array or an object on its left.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TPL-023"
+      ]
+    },
+    {
       "code": "template.crlf",
       "severity": "warning",
       "class": "content",
@@ -5333,8 +5704,14 @@
         {
           "name": "column",
           "type": "number",
-          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
           "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
         }
       ],
       "message": "The filter {filter} divides by zero.",
@@ -5342,7 +5719,8 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-MAN-018"
+        "MTS-MAN-018",
+        "MTS-TPL-019"
       ]
     },
     {
@@ -5366,8 +5744,14 @@
         {
           "name": "column",
           "type": "number",
-          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
           "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
         }
       ],
       "message": "The filter {filter} is given an argument it never takes, or one of a kind it refuses ({argument}).",
@@ -5375,7 +5759,8 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-MAN-018"
+        "MTS-MAN-018",
+        "MTS-TPL-052"
       ]
     },
     {
@@ -5393,21 +5778,29 @@
         {
           "name": "type",
           "type": "string",
-          "meaning": "The kind of value the filter was given: nil, boolean, number, string, array or object.",
+          "meaning": "The kind of value the filter was given: nil, boolean, integer, float, string, array or object.",
           "always": true
         },
         {
           "name": "column",
           "type": "number",
-          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
           "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
         }
       ],
       "message": "The filter {filter} is given a {type}, which it refuses.",
       "hint": "Give the filter a value of a kind it takes.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-TPL-052"
+      ]
     },
     {
       "code": "template.include",
@@ -5418,7 +5811,7 @@
         {
           "name": "column",
           "type": "number",
-          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
           "always": true
         }
       ],
@@ -5427,7 +5820,74 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-MAN-018"
+        "MTS-MAN-018",
+        "MTS-TPL-002"
+      ]
+    },
+    {
+      "code": "template.invalid_utf8",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "filter",
+          "type": "string",
+          "meaning": "The filter's name.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The filter {filter} decodes bytes that are not UTF-8 text.",
+      "hint": "Decode only what was encoded from text; a template's values are text.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TPL-052"
+      ]
+    },
+    {
+      "code": "template.nil_property",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The expression up to and including the step that failed, as the template writes it.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The template reads {path}, a property of nil.",
+      "hint": "Guard the read with an if on the value, or with a and a.b, since and stops at a value that is nil; an omitted optional value is nil, and a filter does not rescue a read of its property.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TPL-030"
       ]
     },
     {
@@ -5441,7 +5901,8 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-AUT-010"
+        "MTS-AUT-010",
+        "MTS-TPL-006"
       ]
     },
     {
@@ -5453,8 +5914,20 @@
         {
           "name": "column",
           "type": "number",
-          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
           "always": true
+        },
+        {
+          "name": "filter",
+          "type": "string",
+          "meaning": "The filter whose result is beyond the range; absent for a number the template writes.",
+          "always": false
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
         }
       ],
       "message": "A number written here cannot be held exactly: an integer beyond 2^53-1, or a number beyond binary64's range.",
@@ -5462,7 +5935,35 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-MAN-018"
+        "MTS-MAN-018",
+        "MTS-TPL-019"
+      ]
+    },
+    {
+      "code": "template.object_output",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The template writes an object, which has no text.",
+      "hint": "Write one of its members, iterate it with for, or serialize it with the json filter.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TPL-021"
       ]
     },
     {
@@ -5538,6 +6039,82 @@
       ]
     },
     {
+      "code": "template.partial_name",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The render tag's partial is not named by a quoted string.",
+      "hint": "Name the partial as a quoted path beneath templates/, with its full file name and extension, such as \"partials/row.md.liquid\".",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TPL-041"
+      ]
+    },
+    {
+      "code": "template.partial_not_found",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "partial",
+          "type": "string",
+          "meaning": "The partial's name, as the render tag writes it.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The render tag names {partial}, which is not a template of the package.",
+      "hint": "Name a template by its path beneath templates/, with its full file name and extension, matched exactly; no leading /, no . or .. segment.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TPL-042",
+        "MTS-TPL-043"
+      ]
+    },
+    {
+      "code": "template.reserved_name",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "meaning": "The reserved name the template binds.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "assign, capture, increment and decrement may not bind {name}, a name the template environment reserves.",
+      "hint": "Choose another name: inputs, package, item, fan_out, output, now, sources, forloop and tablerowloop are reserved; a for variable or a render parameter may shadow one inside its block.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TPL-040"
+      ]
+    },
+    {
       "code": "template.syntax",
       "severity": "error",
       "class": "content",
@@ -5546,7 +6123,7 @@
         {
           "name": "column",
           "type": "number",
-          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
           "always": true
         },
         {
@@ -5563,7 +6140,54 @@
       "statements": [
         "MTS-AUT-010",
         "MTS-AUT-011",
-        "MTS-MAN-018"
+        "MTS-MAN-018",
+        "MTS-TPL-005",
+        "MTS-TPL-006"
+      ]
+    },
+    {
+      "code": "template.tag_argument",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "argument",
+          "type": "string",
+          "meaning": "The argument refused: limit, offset or cols, or range for a range's bound.",
+          "always": true
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "meaning": "The kind of value the argument was given: nil, boolean, integer, float, string, array or object.",
+          "always": true
+        },
+        {
+          "name": "tag",
+          "type": "string",
+          "meaning": "The tag the argument is given to, for or tablerow; absent for a range's bound.",
+          "always": false
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The argument {argument} is given a {type}, which is not an integer.",
+      "hint": "Give limit, offset, cols and a range's bounds integers.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TPL-013"
       ]
     },
     {
@@ -5581,7 +6205,7 @@
         {
           "name": "column",
           "type": "number",
-          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
           "always": true
         }
       ],
@@ -5591,6 +6215,77 @@
       "since": "1.0",
       "statements": [
         "MTS-MAN-018"
+      ]
+    },
+    {
+      "code": "template.undefined_property",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The expression up to and including the step that failed, as the template writes it.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The template reads {path}, which the value it reads from does not have.",
+      "hint": "Read a property the input's schema declares, or one the data holds; a string, number or boolean has only size, first and last, and an array index is an integer.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TPL-029",
+        "MTS-TPL-031",
+        "MTS-TPL-032"
+      ]
+    },
+    {
+      "code": "template.undefined_variable",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "meaning": "The name read.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The template reads {name}, which nothing binds here.",
+      "hint": "Read a global — inputs, package, now, sources or output — a name the template binds, or a loop's variable inside its loop; an undefined name is refused, never rendered as nothing.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TPL-003",
+        "MTS-TPL-027",
+        "MTS-TPL-033",
+        "MTS-TPL-034"
       ]
     },
     {
@@ -5608,7 +6303,7 @@
         {
           "name": "column",
           "type": "number",
-          "meaning": "The 1-based column, in code points, within the expression or path template, of the token where the error is: a finding about a manifest expression is located at the field that holds it.",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
           "always": true
         }
       ],
@@ -5617,7 +6312,8 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-MAN-018"
+        "MTS-MAN-018",
+        "MTS-TPL-004"
       ]
     },
     {
@@ -6254,6 +6950,31 @@
       "params": [],
       "message": "No command was given; metais runs one command, named after any global flags.",
       "hint": "Run `metais help` for the commands, and run one as metais <command>.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.missing_flag",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "command",
+          "type": "string",
+          "meaning": "The command that requires the flag.",
+          "always": true
+        },
+        {
+          "name": "flag",
+          "type": "string",
+          "meaning": "The flag, written with its leading --.",
+          "always": true
+        }
+      ],
+      "message": "metais {command} requires the flag {flag}.",
+      "hint": "Run `metais {command} --help` for the flags it takes.",
       "location": "none",
       "since": "1.0",
       "statements": []

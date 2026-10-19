@@ -6,6 +6,10 @@ package conformance
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -144,6 +148,40 @@ func scanInvocation(inv *invocation, archive bool, trees map[string]*tree) []pro
 				add(fmt.Sprintf("the written path %s holds the sentinel from %s", p, src))
 			}
 			add(scanBytes("the written file "+p, t.files[n].content, zipDepth))
+		}
+	}
+	return ps
+}
+
+// scanWritten scans every regular file a step created or changed anywhere
+// in the sandbox outside its declared trees, which scanInvocation scans:
+// a file the step should not have written may still carry a host fact,
+// and ADR-009 D16 item 1 scans every written file. Paths are relative to
+// the sandbox's root, as snapshot keys them; trees are relative to the
+// work directory.
+func scanWritten(sb *sandbox, before, after map[string]node, trees []string) []problem {
+	var ps []problem
+	for _, p := range sortedKeys(after) {
+		n := after[p]
+		if n.kind != "file" || before[p] == n {
+			continue
+		}
+		if rel, ok := strings.CutPrefix(p, "work/"); ok && slices.ContainsFunc(trees, func(t string) bool {
+			t = path.Clean(t)
+			return t == "." || rel == t || strings.HasPrefix(rel, t+"/")
+		}) {
+			continue
+		}
+		if src := sentinelAt([]byte(p)); src != "" && src != "the sandbox path" {
+			ps = append(ps, problem{check: checkSentinel, msg: fmt.Sprintf("the written path %s holds the sentinel from %s", p, src)})
+		}
+		b, err := os.ReadFile(filepath.Join(sb.root, filepath.FromSlash(p)))
+		if err != nil {
+			ps = append(ps, problem{check: checkHarness, harness: true, msg: err.Error()})
+			continue
+		}
+		if hit := scanBytes("the written file "+p, b, zipDepth); hit != "" {
+			ps = append(ps, problem{check: checkSentinel, msg: hit})
 		}
 	}
 	return ps

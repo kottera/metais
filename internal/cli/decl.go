@@ -170,6 +170,7 @@ var exitCodes = []exitCode{
 func declarations() []*Command {
 	return slices.Concat([]*Command{inspectDeclaration()}, readingDeclarations(), []*Command{
 		validateDeclaration(),
+		renderDeclaration(),
 		{
 			Name: "init", Group: "Authoring", Synopsis: "init [<dir>] [--name <name>] [--dry-run] [--json]",
 			Description: "Write a new package's source directory, with an input, a template and an example.",
@@ -280,6 +281,9 @@ var table = declarations()
 // command's refusals in code order.
 func init() {
 	for _, c := range table {
+		if c.Name == "render" {
+			renderRefusals(c)
+		}
 		c.Refusals = append(lineRefusals(c.Name), c.Refusals...)
 		slices.SortFunc(c.Refusals, func(a, b Refusal) int { return strings.Compare(string(a.Code), string(b.Code)) })
 	}

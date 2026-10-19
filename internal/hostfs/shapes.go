@@ -21,6 +21,26 @@ type WriteOptions struct {
 	Faults fault.Set
 }
 
+// WithFaults returns the write options of an invocation whose fault set is
+// f: the tool's own, which is always zero, passed through unchanged.
+func WithFaults(f fault.Set) WriteOptions { return WriteOptions{Faults: f} }
+
+// CheckPaths is the output path check of a write's names, beside the
+// confinement each write makes on disk: check applies the portable-path
+// predicate to the paths a command will write (ADR-005 D12), whose items 1
+// and 2 confine a path by its text (item 8), and CheckPaths returns what
+// it finds. It is the seam of fault.SkipConfine with the confinement of
+// Output (ADR-010 D13 item 2): with that fault in opt the check is not run
+// and returns success, so a path that climbs out of the output directory
+// reaches the write, which the confinement detector must catch. The tool
+// itself never holds a fault.
+func CheckPaths[F any](opt WriteOptions, check func() []F) []F {
+	if opt.Faults.Has(fault.SkipConfine) {
+		return nil
+	}
+	return check()
+}
+
 // Output is one write of a directory's entries in one of three shapes,
 // each the write of a command that puts a package's or a render's entries
 // on the host:

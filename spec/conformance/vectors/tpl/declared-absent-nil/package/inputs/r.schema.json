@@ -1,0 +1,95 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "vendor": {
+      "$ref": "#/$defs/vendor"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "x": {},
+          "y": {}
+        }
+      }
+    },
+    "pair": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "object",
+          "properties": {
+            "p": {}
+          }
+        }
+      ],
+      "items": {
+        "type": "object",
+        "properties": {
+          "q": {}
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "b": {}
+      }
+    }
+  ],
+  "anyOf": [
+    {
+      "properties": {
+        "c": {}
+      }
+    },
+    {
+      "required": []
+    }
+  ],
+  "if": {
+    "properties": {
+      "d": {}
+    }
+  },
+  "then": {
+    "properties": {
+      "e": {}
+    }
+  },
+  "dependentSchemas": {
+    "name": {
+      "properties": {
+        "f": {}
+      }
+    }
+  },
+  "patternProperties": {
+    "^x-": {
+      "type": "object",
+      "properties": {
+        "g": {}
+      }
+    }
+  },
+  "additionalProperties": {
+    "type": "object",
+    "properties": {
+      "h": {}
+    }
+  },
+  "$defs": {
+    "vendor": {
+      "type": "object",
+      "properties": {
+        "name": {},
+        "logo": {}
+      }
+    }
+  }
+}

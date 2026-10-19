@@ -426,9 +426,6 @@ Refusals:
   template.filter_argument
       An output's path, when or for_each does not parse (filter argument).
       Next: metais unpack <package> --to <dir>
-  template.filter_input
-      An output's path, when or for_each does not parse (filter input).
-      Next: metais unpack <package> --to <dir>
   template.include
       An output's path, when or for_each does not parse (include).
       Next: metais unpack <package> --to <dir>

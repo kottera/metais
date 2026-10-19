@@ -26,6 +26,7 @@ import (
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/regexprofile"
 	"github.com/kottera/metais/internal/schema"
+	templates "github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/xref"
 )
 
@@ -825,29 +826,16 @@ func (k *checker) templates() []template {
 		ots[i] = ooxml.Template{Path: t.path, Text: t.src}
 	}
 	scanned := ooxml.Scanned(ots)
-	d, pl := loader.Dialect(), loader.ParseLimits(k.lim)
 	for i := range ts {
 		t := &ts[i]
 		subj := finding.Subject{Kind: finding.SubjectTemplate, Name: t.entry}
-		if !utf8.Valid(t.src) {
-			off := invalidOffset(t.src)
-			l := at(t.entry, t.src, off)
-			k.add(finding.New(codeTemplateNotUTF8, subj, &l, nil))
-			continue
-		}
-		if off := bytes.Index(t.src, []byte("\r\n")); off >= 0 {
+		if off := bytes.Index(t.src, []byte("\r\n")); off >= 0 && utf8.Valid(t.src) {
 			l := at(t.entry, t.src, off)
 			k.add(finding.New(CodeTemplateCRLF, subj, &l, nil))
 		}
-		root, errs := liquid.Parse(d, liquid.Source{Name: t.entry, Text: t.src}, pl)
-		var cons []liquid.Construct
-		for _, e := range errs {
-			if cons == nil {
-				cons = liquid.Constructs(string(t.src))
-			}
-			l := finding.Location{Origin: finding.OriginPackage, File: t.entry, Line: max(e.Line, 1), Column: max(e.Col, 1)}
-			k.add(loader.TemplateFinding(e, subj, l, k.lim, cause(t.src, cons, e.Offset, scanned[i])))
-		}
+		// The one parse render makes of the same template (W4-3.12).
+		root, fs := templates.ParseEntry(t.entry, t.src, k.lim, scanned[i])
+		k.add(fs...)
 		t.root = root
 	}
 	return ts
@@ -861,19 +849,6 @@ func readEntry(c *loader.Checked, name string) ([]byte, error) {
 	}
 	defer r.Close()
 	return io.ReadAll(r)
-}
-
-// invalidOffset is the offset of src's first byte that does not begin a
-// valid UTF-8 sequence.
-func invalidOffset(src []byte) int {
-	for i := 0; i < len(src); {
-		r, n := utf8.DecodeRune(src[i:])
-		if r == utf8.RuneError && n <= 1 {
-			return i
-		}
-		i += n
-	}
-	return len(src)
 }
 
 // at is the location of byte off of the entry name's source src: its
@@ -893,53 +868,6 @@ func at(name string, src []byte, off int) finding.Location {
 		col++
 	}
 	return finding.Location{Origin: finding.OriginPackage, File: name, Line: line, Column: col}
-}
-
-var markupRE = regexp.MustCompile(`</?[A-Za-z_][A-Za-z0-9_.:-]*[\s/>]`)
-
-// cause is what the parse error at off in src is taken to come from (ADR-007
-// D2 item 4), from the construct holding it: document markup in an
-// Office Open XML template, typographic quotes, an escaped character in
-// an Office Open XML template, and otherwise the grammar.
-func cause(src []byte, cons []liquid.Construct, off int, ooxmlTemplate bool) string {
-	i := slices.IndexFunc(cons, func(c liquid.Construct) bool { return c.Span.Start <= off && off < c.Span.End })
-	if i < 0 {
-		return loader.CauseGrammar
-	}
-	text := string(src[cons[i].Span.Start:cons[i].Span.End])
-	switch {
-	case ooxmlTemplate && markupRE.MatchString(text):
-		return loader.CauseMarkup
-	case strings.ContainsAny(text, "‘’“”"):
-		return loader.CauseQuotes
-	case ooxmlTemplate && escapedOutsideString(text):
-		return loader.CauseEscaped
-	}
-	return loader.CauseGrammar
-}
-
-// escapedOutsideString reports whether text holds &lt;, &gt;, &amp;,
-// &quot; or &apos; outside a Liquid string literal.
-func escapedOutsideString(text string) bool {
-	var quote byte
-	for i := 0; i < len(text); i++ {
-		c := text[i]
-		switch {
-		case quote != 0:
-			if c == quote {
-				quote = 0
-			}
-		case c == '"' || c == '\'':
-			quote = c
-		case c == '&':
-			for _, e := range []string{"&lt;", "&gt;", "&amp;", "&quot;", "&apos;"} {
-				if strings.HasPrefix(text[i:], e) {
-					return true
-				}
-			}
-		}
-	}
-	return false
 }
 
 // xref is ADR-007 D2 step 7 (D3), over every template that parsed and

@@ -1,0 +1,19 @@
+[{% if true %}
+  {% assign a = 1 %}
+{% endif %}]
+[{% unless false %}
+  {% comment %}c{% endcomment %}
+{% endunless %}]
+[{% case 1 %}
+{% when 1 %}
+  {% capture c %}x{% endcapture %}
+{% endcase %}]
+[{% for i in (1..2) %}
+  {% raw %}{% endraw %}
+{% endfor %}]
+[{% if true %}
+  x
+{% endif %}]
+[{% tablerow i in (1..1) %}
+  {% assign a = 1 %}
+{% endtablerow %}]

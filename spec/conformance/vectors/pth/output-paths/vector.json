@@ -1,0 +1,37 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pth/output-paths",
+  "title": "Every output path the manifest gives is held to the portable-path predicate, and every path that breaks it is refused at once, before anything is written",
+  "statements": [
+    "MTS-PTH-001",
+    "MTS-PTH-002",
+    "MTS-PTH-003",
+    "MTS-PTH-004",
+    "MTS-PTH-005"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "portable-paths"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1100,3 +1100,25 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
   not the integer literal the `json` filter writes, which ADR-003 D8 item
   5 refuses for an input. Every other number is written as `json` writes
   it.
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-3.** `internal/template` is this
+  ADR's environment over the engine, reached through `metais render`: the
+  dialect is `Core()` with D7 item 8's names reserved; D6 items 2 and 3's
+  declared-absent `nil`s are materialized by walking the combined schema
+  through the applicators D6 item 2 lists, with a member's location its
+  `properties` entry, each matching `patternProperties` entry and
+  otherwise `additionalProperties`; D7's globals are built once per
+  command, `output` per output; partials come only from the package's
+  `templates/` entries (D8 item 7). A render tag naming no template is
+  `template.partial_not_found` at parse, and in a template whose parse
+  failed for another reason its literal render tags are read from the
+  constructs before the error that stopped the parse, so the finding comes
+  in the same pass (D16 item 4). The engine's `argument` code — a for or
+  tablerow argument, or a range bound, of the wrong kind — is reported as
+  `template.tag_argument`, the one code D16 does not name: none of D16's
+  codes is about a tag's argument, and `template.filter_argument` names a
+  filter. Every template finding met at render carries `output_path`, and
+  a partial's carries its `render` call sites as related locations noted
+  `rendered from` (D16 item 2). D9's escaping, the METAIS filters and
+  tags, `date`, and `item` and `fan_out`'s shape are Wave 5's; chapter 7
+  states that `item` and `fan_out` are unbound outside a fan-out, which
+  this wave proves.

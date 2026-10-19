@@ -68,6 +68,14 @@ type Env struct {
 	Meter Meter
 	// Limits are the render's own bounds.
 	Limits RenderLimits
+	// UnorderedObjects, when set, makes every iteration of an object — for
+	// and tablerow over it, render … for, and the first and last
+	// shorthands — visit its members in the order of a Go map built from
+	// them, which may differ from one iteration to the next, rather than in
+	// canonical order (ADR-004 D4 item 5). It exists so that a determinism
+	// detector can be shown to catch a render whose bytes vary (ADR-010
+	// Amendment A2); no render of the tool sets it.
+	UnorderedObjects bool
 }
 
 // SafeFilter is a FilterDef whose result is safe from escaping: in an
@@ -563,8 +571,13 @@ func (r *renderer) valueSeq(v value.Value) seq {
 	case value.Array:
 		return seq{n: int64(v.Len()), at: func(i int64) value.Value { return v.At(int(i)) }}
 	case value.Object:
+		member := func(i int) value.Member { return v.At(i) }
+		if r.env.UnorderedObjects {
+			order := unorderedMembers(v)
+			member = func(i int) value.Member { return v.At(order[i]) }
+		}
 		return seq{n: int64(v.Len()), at: func(i int64) value.Value {
-			m := r.member(v, int(i))
+			m := member(int(i))
 			return newArray([]value.Value{newString(m.Name), m.Value})
 		}}
 	case value.String:
@@ -581,11 +594,29 @@ func (r *renderer) valueSeq(v value.Value) seq {
 // units of the name (ADR-004 D4 item 5). It is the one place the engine
 // orders an object's members for a template — for and tablerow over an
 // object, render … for, and the first and last shorthands — and it reads
-// the object's own ordered members, never a Go map. It is the seam
-// ADR-010 Amendment A2 names: Env.UnorderedObjects, when Wave 4 builds
-// it, changes this function and nothing else.
+// the object's own ordered members, never a Go map, unless the render's
+// Env sets UnorderedObjects (ADR-010 Amendment A2). A loop takes one
+// order for its whole iteration (valueSeq).
 func (r *renderer) member(o value.Object, i int) value.Member {
+	if r.env.UnorderedObjects {
+		return o.At(unorderedMembers(o)[i])
+	}
 	return o.At(i)
+}
+
+// unorderedMembers is the order of o's members that a Go map built from
+// them iterates in: the engine's one iteration of a Go map, which only
+// Env.UnorderedObjects reaches (ADR-010 D4 item 2, Amendment A2).
+func unorderedMembers(o value.Object) []int {
+	index := make(map[string]int, o.Len())
+	for i := range o.Len() {
+		index[o.At(i).Name] = i
+	}
+	order := make([]int, 0, len(index))
+	for _, i := range index {
+		order = append(order, i)
+	}
+	return order
 }
 
 // window is the part of n items a loop visits, from offset from to before

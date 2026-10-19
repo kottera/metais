@@ -1,0 +1,14 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: logic
+    template: logic.txt.liquid
+  - id: loops
+    template: loops.txt.liquid
+  - id: cycle
+    template: cycle.txt.liquid

@@ -1,0 +1,338 @@
+[
+  {
+    "code": "template.unknown_filter",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/filter.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/filter.txt.liquid",
+      "line": 3,
+      "column": 3
+    },
+    "params": {
+      "filter": "no_such_filter",
+      "column": 3
+    }
+  },
+  {
+    "code": "template.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/grammar.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/grammar.txt.liquid",
+      "line": 3,
+      "column": 1
+    },
+    "params": {
+      "column": 1,
+      "cause": "a construct the dialect's grammar does not allow"
+    }
+  },
+  {
+    "code": "template.include",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/include.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/include.txt.liquid",
+      "line": 2,
+      "column": 1
+    },
+    "params": {
+      "column": 1
+    }
+  },
+  {
+    "code": "template.unknown_filter",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/include.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/include.txt.liquid",
+      "line": 2,
+      "column": 18
+    },
+    "params": {
+      "filter": "nope",
+      "column": 18
+    }
+  },
+  {
+    "code": "template.not_utf8",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/latin1.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/latin1.txt.liquid",
+      "line": 1,
+      "column": 4
+    },
+    "params": {}
+  },
+  {
+    "code": "template.number_range",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/number.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/number.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "column": 1
+    }
+  },
+  {
+    "code": "template.partial_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/partials.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/partials.txt.liquid",
+      "line": 1,
+      "column": 15
+    },
+    "params": {
+      "partial": "missing.liquid",
+      "column": 15
+    }
+  },
+  {
+    "code": "template.partial_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/partials.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/partials.txt.liquid",
+      "line": 2,
+      "column": 1
+    },
+    "params": {
+      "partial": "./ok.txt.liquid",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.partial_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/partials.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/partials.txt.liquid",
+      "line": 2,
+      "column": 31
+    },
+    "params": {
+      "partial": "/ok.txt.liquid",
+      "column": 31
+    }
+  },
+  {
+    "code": "template.partial_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/partials.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/partials.txt.liquid",
+      "line": 2,
+      "column": 60
+    },
+    "params": {
+      "partial": "parts//x",
+      "column": 60
+    }
+  },
+  {
+    "code": "template.partial_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/partials.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/partials.txt.liquid",
+      "line": 2,
+      "column": 83
+    },
+    "params": {
+      "partial": "OK.TXT.LIQUID",
+      "column": 83
+    }
+  },
+  {
+    "code": "template.partial_name",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/partials.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/partials.txt.liquid",
+      "line": 3,
+      "column": 3
+    },
+    "params": {
+      "column": 3
+    }
+  },
+  {
+    "code": "template.reserved_name",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/reserved.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/reserved.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "name": "inputs",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.reserved_name",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/reserved.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/reserved.txt.liquid",
+      "line": 1,
+      "column": 24
+    },
+    "params": {
+      "name": "now",
+      "column": 24
+    }
+  },
+  {
+    "code": "template.reserved_name",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/reserved.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/reserved.txt.liquid",
+      "line": 1,
+      "column": 58
+    },
+    "params": {
+      "name": "output",
+      "column": 58
+    }
+  },
+  {
+    "code": "template.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/reversed.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/reversed.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "column": 1,
+      "cause": "a construct the dialect's grammar does not allow"
+    }
+  },
+  {
+    "code": "template.unknown_filter",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/shared.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/shared.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "nope",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/tag.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/tag.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "column": 1,
+      "cause": "a construct the dialect's grammar does not allow"
+    }
+  },
+  {
+    "code": "template.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/zero-byte.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/zero-byte.txt.liquid",
+      "line": 1,
+      "column": 7
+    },
+    "params": {
+      "column": 7,
+      "cause": "a construct the dialect's grammar does not allow"
+    }
+  }
+]

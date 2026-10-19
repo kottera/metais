@@ -1,0 +1,6 @@
+{% assign xs = "c,a,b" | split: "," | sort %}{% for x in xs %}{{ forloop.index }}:{{ x | upcase }}{% unless forloop.last %}, {% endunless %}{% endfor %}
+{% case xs.size %}{% when 2, 3 %}two or three{% else %}other{% endcase %}
+{% capture c %}{{ "x" | append: "y" }}{% endcapture %}{{ c }} {% increment n %}{% increment n %}{% decrement m %}
+{% raw %}{{ kept }}{% endraw %}{% comment %}{{ dropped }}{% endcomment %}{% # also dropped %}
+{% ifchanged %}a{% endifchanged %}{% ifchanged %}a{% endifchanged %}{% ifchanged %}b{% endifchanged %}
+{% echo "echoed" %}

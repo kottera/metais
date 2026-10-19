@@ -41,6 +41,7 @@ func TestFaultBits(t *testing.T) {
 		"FirstFinding": {FirstFinding, 1 << 1},
 		"UnpackToTemp": {UnpackToTemp, 1 << 2},
 		"SkipConfine":  {SkipConfine, 1 << 3},
+		"MapOrder":     {MapOrder, 1 << 4},
 	} {
 		if tt.got != tt.want {
 			t.Errorf("%s = %#x, want %#x", name, uint64(tt.got), uint64(tt.want))

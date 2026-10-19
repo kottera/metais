@@ -117,63 +117,17 @@ func runValidate(s *session, p args.Parsed) outcome {
 	if len(fs) > 0 {
 		return refuse(fs...)
 	}
-	jsonArgs, jsonAt := p.Values(inputsJSONFlag.Name), p.ArgsOf(inputsJSONFlag.Name)
-	stdin := -1
-	for i, v := range jsonArgs {
-		if v != stdinOperand {
-			continue
-		}
-		if stdin >= 0 {
-			return refuse(finding.New(finding.CodeUsageConflictingFlags, invocation, nil, finding.Params{
-				"argument": finding.Int(int64(s.line.at[jsonAt[i]] + 1)),
-				"flag":     finding.String("--" + inputsJSONFlag.Name),
-			}))
-		}
-		stdin = i
+	if fs := s.stdinOnce(p); len(fs) > 0 {
+		return refuse(fs...)
 	}
 	pkg, fs := loader.Open(p.Operands[0], loader.Options{Limits: lim}, s.inv.Options.Faults)
 	if pkg == nil {
 		return refuse(fs...)
 	}
 	defer pkg.Close()
-	layer, err := inputs.New(inputs.Package{Manifest: pkg.Manifest, Compiler: pkg.Schemas, Combined: pkg.CombinedValue, Schema: pkg.Combined})
-	if err != nil {
-		panic("cli: " + err.Error())
-	}
-	sup := layer.NewSupply(lim)
-	if dir, ok := p.Value(dataFlag.Name); ok {
-		var de *inputs.DataDirError
-		if err := sup.ReadDataDir(dir); errors.As(err, &de) {
-			at, _ := p.Arg(dataFlag.Name)
-			return refuse(finding.New(finding.CodeUsageDataDirUnreadable, invocation, nil, finding.Params{
-				"argument": finding.Int(int64(s.line.at[at] + 1)),
-				"reason":   finding.String(de.Reason),
-			}))
-		} else if err != nil {
-			panic("cli: " + err.Error())
-		}
-	}
-	for i, v := range jsonArgs {
-		text := []byte(v)
-		if i == stdin {
-			text = readStdin(s.inv.Stdin, lim.Value(limits.InputSize))
-		}
-		sup.AddInputsJSON(text)
-	}
-	setVals, setAt := p.Values(setFlag.Name), p.ArgsOf(setFlag.Name)
-	jsonVals, jsonSetAt := p.Values(setJSONFlag.Name), p.ArgsOf(setJSONFlag.Name)
-	for i, j := 0, 0; i < len(setVals) || j < len(jsonVals); {
-		if j == len(jsonVals) || i < len(setVals) && setAt[i] < jsonSetAt[j] {
-			sup.AddSet(setVals[i])
-			i++
-		} else {
-			sup.AddSetJSON(jsonVals[j])
-			j++
-		}
-	}
-	res, err := sup.Validate()
-	if err != nil {
-		panic("cli: " + err.Error())
+	res, fs := s.supply(p, pkg, lim)
+	if res == nil {
+		return refuse(fs...)
 	}
 	out := &validateResult{Inputs: make([]validateInput, 0, len(res.Inputs))}
 	var data []value.Member
@@ -223,6 +177,75 @@ func runValidate(s *session, p args.Parsed) outcome {
 	}
 	dataDir, _ := p.Value(dataFlag.Name)
 	return outcome{findings: res.Findings, result: out, human: human, next: declaredSteps(next, s.table), report: true, dataDir: dataDir}
+}
+
+// stdinOnce refuses a line that gives --inputs-json - more than once:
+// standard input is read once (ADR-008 D7 item 2).
+func (s *session) stdinOnce(p args.Parsed) []finding.Finding {
+	jsonArgs, jsonAt := p.Values(inputsJSONFlag.Name), p.ArgsOf(inputsJSONFlag.Name)
+	seen := false
+	for i, v := range jsonArgs {
+		if v != stdinOperand {
+			continue
+		}
+		if seen {
+			return []finding.Finding{finding.New(finding.CodeUsageConflictingFlags, invocation, nil, finding.Params{
+				"argument": finding.Int(int64(s.line.at[jsonAt[i]] + 1)),
+				"flag":     finding.String("--" + inputsJSONFlag.Name),
+			})}
+		}
+		seen = true
+	}
+	return nil
+}
+
+// supply reads the supply flags of p into pkg's inputs layer under lim —
+// the data directory, then each --inputs-json, then each --set and
+// --set-json, in command-line order (ADR-008 D7, ADR-003 D18) — and
+// validates the result (ADR-003 D22). It is validate's and render's one
+// supply. It returns the result, or no result and the refusal of a data
+// directory that cannot be read.
+func (s *session) supply(p args.Parsed, pkg *loader.Package, lim limits.Set) (*inputs.Result, []finding.Finding) {
+	layer, err := inputs.New(inputs.Package{Manifest: pkg.Manifest, Compiler: pkg.Schemas, Combined: pkg.CombinedValue, Schema: pkg.Combined})
+	if err != nil {
+		panic("cli: " + err.Error())
+	}
+	sup := layer.NewSupply(lim)
+	if dir, ok := p.Value(dataFlag.Name); ok {
+		var de *inputs.DataDirError
+		if err := sup.ReadDataDir(dir); errors.As(err, &de) {
+			at, _ := p.Arg(dataFlag.Name)
+			return nil, []finding.Finding{finding.New(finding.CodeUsageDataDirUnreadable, invocation, nil, finding.Params{
+				"argument": finding.Int(int64(s.line.at[at] + 1)),
+				"reason":   finding.String(de.Reason),
+			})}
+		} else if err != nil {
+			panic("cli: " + err.Error())
+		}
+	}
+	for _, v := range p.Values(inputsJSONFlag.Name) {
+		text := []byte(v)
+		if v == stdinOperand {
+			text = readStdin(s.inv.Stdin, lim.Value(limits.InputSize))
+		}
+		sup.AddInputsJSON(text)
+	}
+	setVals, setAt := p.Values(setFlag.Name), p.ArgsOf(setFlag.Name)
+	jsonVals, jsonSetAt := p.Values(setJSONFlag.Name), p.ArgsOf(setJSONFlag.Name)
+	for i, j := 0, 0; i < len(setVals) || j < len(jsonVals); {
+		if j == len(jsonVals) || i < len(setVals) && setAt[i] < jsonSetAt[j] {
+			sup.AddSet(setVals[i])
+			i++
+		} else {
+			sup.AddSetJSON(jsonVals[j])
+			j++
+		}
+	}
+	res, err := sup.Validate()
+	if err != nil {
+		panic("cli: " + err.Error())
+	}
+	return res, res.Findings
 }
 
 // readStdin reads standard input for --inputs-json -: at most limit bytes

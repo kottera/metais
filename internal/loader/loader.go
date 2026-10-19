@@ -80,6 +80,10 @@ type Package struct {
 	// Manifest is the manifest's model, and ManifestValue its data model.
 	Manifest      *manifest.Manifest
 	ManifestValue value.Value
+	// Positions locates the manifest's values in metais.yaml, so that a
+	// finding about a declaration has a line; nil when the reader kept
+	// none.
+	Positions finding.Positions
 	// Schemas holds every schema file compiled, and Combined the combined
 	// schema, compiled (ADR-003 D7 item 5).
 	Schemas  *schema.Compiler

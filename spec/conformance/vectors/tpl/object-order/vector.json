@@ -1,0 +1,40 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/object-order",
+  "title": "A 20-member object supplied in reverse order is iterated in canonical order, the same on every render",
+  "statements": [
+    "MTS-TPL-022",
+    "MTS-RND-005"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "determinism"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: r
+    title: R
+    schema: inputs/r.schema.json
+    required: false
+  - name: opt
+    title: Opt
+    schema: inputs/opt.schema.json
+    required: false
+outputs:
+  - id: nil
+    template: nil.txt.liquid

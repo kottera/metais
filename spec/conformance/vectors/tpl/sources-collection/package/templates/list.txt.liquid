@@ -1,0 +1,2 @@
+{% for a in inputs.arts %}{% assign s = sources.arts[forloop.index0] %}{{ a.t }}: {% if s %}{{ s.name }} {{ s.stem }} {{ s.form }}{% else %}nil{% endif %}{% if a.u == nil %} (u nil){% endif %}
+{% endfor %}

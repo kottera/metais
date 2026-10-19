@@ -1,0 +1,40 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/sources-collection",
+  "title": "sources gives each collection item its file name, stem and form, and nil for an item supplied on the command line, parallel to the collection",
+  "statements": [
+    "MTS-TPL-038"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data",
+            "set_json": [
+              "/arts/-={\"t\": \"four\"}"
+            ]
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

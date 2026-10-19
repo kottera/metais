@@ -275,6 +275,8 @@ func fakeRun(fault string, call fakeCall) (*fakeResult, error) {
 		fmt.Fprintln(os.Stderr, "home is", os.Getenv("HOME"))
 	case "write-outside":
 		os.WriteFile("stray.txt", []byte("stray\n"), 0o644)
+	case "sentinel-outside":
+		os.WriteFile("stray.txt", []byte(os.Getenv("METAIS_SENTINEL")+"\n"), 0o644)
 	case "tmp-left":
 		os.WriteFile(filepath.Join(os.Getenv("TMPDIR"), "left.txt"), []byte("left\n"), 0o644)
 	case "tmp-refusal":

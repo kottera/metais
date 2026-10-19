@@ -74,6 +74,7 @@ func (o *opening) parse(p *Package) []finding.Finding {
 		root, pos = doc.Value, doc.Positions()
 	}
 	p.ManifestValue = root
+	p.Positions = pos
 	o.doc = manifestDoc{root: root, src: manifest.Source{File: manifest.ManifestFile, Positions: pos}}
 	return nil
 }

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/render-work",
+  "title": "render-work bounds a render's template work, which renders within the default",
+  "statements": [
+    "MTS-SEC-008"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "default",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/default-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "lowered",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "render-work": 16
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/lowered.json"
+          }
+        }
+      ]
+    }
+  ]
+}

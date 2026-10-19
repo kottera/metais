@@ -420,9 +420,6 @@ Refusals:
   template.filter_argument
       An output's path, when or for_each does not parse (filter argument).
       Next: metais inspect <package>
-  template.filter_input
-      An output's path, when or for_each does not parse (filter input).
-      Next: metais inspect <package>
   template.include
       An output's path, when or for_each does not parse (include).
       Next: metais inspect <package>

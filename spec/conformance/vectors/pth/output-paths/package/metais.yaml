@@ -1,0 +1,77 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: p00
+    template: t.txt.liquid
+    path: "\uFEFFbom.md"
+  - id: p01
+    template: t.txt.liquid
+    path: "e\u0301.md"
+  - id: p02
+    template: t.txt.liquid
+    path: "/lead.md"
+  - id: p03
+    template: t.txt.liquid
+    path: trail/
+  - id: p04
+    template: t.txt.liquid
+    path: "a//b.md"
+  - id: p05
+    template: t.txt.liquid
+    path: "../up.md"
+  - id: p06
+    template: t.txt.liquid
+    path: "./dot.md"
+  - id: p07
+    template: t.txt.liquid
+    path: "back\\slash.md"
+  - id: p08
+    template: t.txt.liquid
+    path: "co:lon.md"
+  - id: p09
+    template: t.txt.liquid
+    path: "ctl\x01.md"
+  - id: p10
+    template: t.txt.liquid
+    path: "bidi\u200Eb.md"
+  - id: p11
+    template: t.txt.liquid
+    path: "ast*.md"
+  - id: p12
+    template: t.txt.liquid
+    path: "\uFFF0.md"
+  - id: p13
+    template: t.txt.liquid
+    path: CON.md
+  - id: p14
+    template: t.txt.liquid
+    path: com1.txt
+  - id: p15
+    template: t.txt.liquid
+    path: "Con .md"
+  - id: p16
+    template: t.txt.liquid
+    path: lpt¹.txt
+  - id: p17
+    template: t.txt.liquid
+    path: .git/config
+  - id: p18
+    template: t.txt.liquid
+    path: GIT~1/x
+  - id: p19
+    template: t.txt.liquid
+    path: "dot."
+  - id: p20
+    template: t.txt.liquid
+    path: "space "
+  - id: p21
+    template: t.txt.liquid
+    path: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  - id: p22
+    template: t.txt.liquid
+    path: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"

@@ -1,0 +1,148 @@
+[
+  {
+    "code": "output.path.duplicate",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "b"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 11,
+      "pointer": "/outputs/1/path"
+    },
+    "params": {
+      "path": "same.md"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 11,
+        "column": 11,
+        "pointer": "/outputs/0/path",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "output.path.case_collision",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "d"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 11,
+      "pointer": "/outputs/3/path"
+    },
+    "params": {
+      "path": "STRASSE.md",
+      "member": "STRASSE.md",
+      "other": "straße.md"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 17,
+        "column": 11,
+        "pointer": "/outputs/2/path",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "output.path.case_collision",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "f"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 26,
+      "column": 11,
+      "pointer": "/outputs/5/path"
+    },
+    "params": {
+      "path": "docs/b.md",
+      "member": "docs",
+      "other": "Docs"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 23,
+        "column": 11,
+        "pointer": "/outputs/4/path",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "output.path.file_directory_conflict",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "h"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 32,
+      "column": 11,
+      "pointer": "/outputs/7/path"
+    },
+    "params": {
+      "path": "dir/file.md",
+      "member": "dir",
+      "other": "dir"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 29,
+        "column": 11,
+        "pointer": "/outputs/6/path",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "output.path.duplicate",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "i"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 34,
+      "column": 15,
+      "pointer": "/outputs/8/template"
+    },
+    "params": {
+      "path": "same.md"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 11,
+        "column": 11,
+        "pointer": "/outputs/0/path",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]

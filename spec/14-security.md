@@ -21,8 +21,8 @@ lower a limit for one operation; nothing raises one.
 | `entries` | 10,000 | the entries of a package |
 | `entry-size` | 64 MiB | one entry, uncompressed |
 | `entry-ratio` | 200 | an entry's uncompressed size divided by its compressed size, for an entry larger than 1 MiB uncompressed |
-| `path-length` | 512 bytes | an entry name |
-| `path-depth` | 32 segments | an entry name |
+| `path-length` | 512 bytes | an entry name, and an output path |
+| `path-depth` | 32 segments | an entry name, and an output path |
 | `manifest-size` | 1 MiB | `metais.yaml`, and `.compiled/manifest.json` |
 | `schema-size` | 4 MiB | one schema file |
 | `combined-schema-size` | 16 MiB | the combined schema, stored or derived |
@@ -99,3 +99,55 @@ when it is a link.
 text, a file's content, an `--inputs-json` argument and a path set's value,
 as data: `$VAR`, `${VAR}`, `%VAR%`, `~` and `@path` in it are those characters,
 and nothing in it is looked up in the environment or read from a file.
+
+## 14.5 Work and output limits
+
+What a render computes and writes is bounded by counters, never by a clock,
+so a render is refused at the same point on every host. Each bound is a
+limit with a name and a default, lowered for one operation as a package
+limit is.
+
+| Limit | Default | Bounds |
+|---|---|---|
+| `partial-depth` | 32 | the `render` calls active at once |
+| `render-work` | 2³² units | the template evaluation of one render |
+| `loop-iterations` | 10,000,000 | the iterations of every `for`, `tablerow` and `render … for` of one render, summed |
+| `value-size` | 64 MiB | a string a template builds: a filter's result, a `capture` |
+| `array-size` | 1,000,000 elements | an array a filter or a range builds |
+| `assign-bytes` | 512 MiB | the bytes `assign` and `capture` store in one render, summed |
+| `outputs` | 100,000 | the files one render plans |
+| `output-size` | 256 MiB | one file a render writes |
+| `output-total` | 1 GiB | every byte one render writes |
+
+<a id="mts-sec-008"></a>**MTS-SEC-008** A processor MUST bound a render's
+template work by `render-work`, counted in units — 16 for every node it
+evaluates (an output, a tag, a filter application, an operator), and, for
+every filter application and operator, units for the size of its input, its
+arguments and its result — and MUST refuse a render whose units exceed the
+limit with `limit.exceeded.template`, naming the limit, at the token whose
+evaluation exceeded it.
+
+<a id="mts-sec-009"></a>**MTS-SEC-009** A processor MUST refuse a render whose
+loop iterations, summed over the render, exceed `loop-iterations`, a range
+whose span exceeds what remains refused before its first iteration; a
+string a template builds longer than `value-size`; an array a filter or a
+range builds longer than `array-size`; or bytes stored by `assign` and
+`capture` beyond `assign-bytes`, each with `limit.exceeded.template` naming
+the limit, at the token that exceeded it.
+
+<a id="mts-sec-010"></a>**MTS-SEC-010** A processor MUST refuse an output whose
+bytes exceed `output-size`, and the output whose bytes take a render's total
+beyond `output-total`, with `limit.exceeded.output`, naming the output and the
+limit.
+
+<a id="mts-sec-011"></a>**MTS-SEC-011** A processor MUST refuse a render whose
+manifest plans more files than `outputs` with `limit.package`, located at the
+first declaration beyond the limit.
+
+## 14.6 Output confinement
+
+<a id="mts-sec-012"></a>**MTS-SEC-012** A processor MUST write nothing outside
+a render's output directory: it MUST refuse every output path that could
+name anything outside it ([chapter 11](11-rendering.md)) before it writes
+anything, and MUST make every write beneath the output directory without
+following a symbolic link.

@@ -1,0 +1,21 @@
+[
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/home.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/home.txt.liquid",
+      "line": 1,
+      "column": 7
+    },
+    "params": {
+      "name": "env",
+      "column": 7,
+      "output_path": "home.txt"
+    }
+  }
+]

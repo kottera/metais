@@ -1,0 +1,101 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/bindings",
+  "title": "A template body and its partials see inputs, package, now, sources and output, each with its pinned shape, and nothing else; a loop variable and a render alias shadow a global within their block",
+  "statements": [
+    "MTS-TPL-033",
+    "MTS-TPL-034",
+    "MTS-TPL-035",
+    "MTS-TPL-036",
+    "MTS-TPL-037",
+    "MTS-TPL-038",
+    "MTS-TPL-039",
+    "MTS-TPL-040"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "determinism"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "with-now",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data",
+            "now": "2026-10-19T09:30:00.250+02:00",
+            "set": [
+              "/cl=hello"
+            ]
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/with-now-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "without-now",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data",
+            "set": [
+              "/cl=hello"
+            ]
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/without-now-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fraction",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data",
+            "now": "2026-10-19T23:59:59.000-00:30",
+            "set": [
+              "/cl=hello"
+            ]
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/fraction-out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

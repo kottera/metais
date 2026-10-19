@@ -1,0 +1,40 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/whitespace",
+  "title": "Whitespace control trims the six whitespace characters; nothing else is trimmed; a blank if, unless, case or for writes none of its whitespace, and a tablerow does",
+  "statements": [
+    "MTS-TPL-014",
+    "MTS-TPL-015",
+    "MTS-TPL-016"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "determinism"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

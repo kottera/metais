@@ -1306,3 +1306,31 @@ the render.
   staging directory is the ownership boundary, and `Abort` removes beneath
   it only names the write created, while each holds the kind created. A
   foreign file swapped in at such a name is removed; that gap is declared.
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-3.** `metais render --out
+  <dir>` of template outputs, each path given or defaulted (D4 item 4),
+  runs D13's phases 0 to 5 with every output attempted, and commits a
+  directory that does not exist with `hostfs.StageNew` (D14 item 1). D12's
+  predicate applies to every planned path, each alone and the tree's paths
+  together, through `hostfs.CheckPaths`, so that `fault.SkipConfine`
+  removes both layers of the output path check — the predicate that
+  confines a path by its text (D12 item 8) and the root that confines the
+  write — and the confinement detector can see an escape through a render.
+  A path the manifest writes that breaks it is one of the `output.path.*`
+  codes of this ADR's interfaces; beyond `path-length` or `path-depth` it
+  is `limit.package`, the manifest being the package's own content. Until
+  existing destinations land (D14 item 2, D15, Wave 5), an `--out` that
+  exists is refused before anything is written: a non-directory, or a
+  path beneath one, with `output.destination.not_directory`; a directory
+  with entries with `output.destination.not_empty`, which is D15 item 3's
+  refusal without `--overwrite`; and an empty directory with
+  `output.destination.write_failed`, reason `exists`, nothing written —
+  the no-replace creation of the output directory is the write this
+  render makes, and it cannot be made over an existing name. A declaration
+  this wave does not render — an asset, a mirror or a container, `when`,
+  `for_each`, `escape: html`, `newline: crlf`, `validate`, or a path that
+  holds Liquid markup — and `--out -` end with `internal.error`, since
+  the tool does not yet implement them; Wave 5 does. A write that fails
+  — the runner's unwritable-destination pre-state, W4-5's, meets render in
+  `rnd/destination-unwritable` — is `output.destination.write_failed`
+  with nothing left: the staging directory is never made, or `Abort`
+  removes it.

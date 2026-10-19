@@ -72,6 +72,7 @@ it, and the statements it reports.
 | `input.one_of.ambiguous` | error | content | input | `branches` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.pattern` | error | content | input | `pattern` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.property_name` | error | content | input | `property` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.raw_unavailable` | error | content | input | `column`; optional: `index` | 1.0 | — |
 | `input.required` | error | content | input | `property` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.set_into_unparsed` | error | content | input | — | 1.0 | [MTS-SUP-024](06-supplying-inputs.md#mts-sup-024) |
 | `input.set_pointer_invalid` | error | content | invocation | `reason` | 1.0 | [MTS-SUP-021](06-supplying-inputs.md#mts-sup-021) |
@@ -88,8 +89,10 @@ it, and the statements it reports.
 | `json.syntax` | error | content | input | `expected`, `found` | 1.0 | [MTS-SUP-003](06-supplying-inputs.md#mts-sup-003) |
 | `json.trailing_content` | error | content | input | — | 1.0 | [MTS-SUP-003](06-supplying-inputs.md#mts-sup-003) |
 | `limit.exceeded` | error | content | input | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-SEC-005](14-security.md#mts-sec-005) |
+| `limit.exceeded.output` | error | content | output | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-SEC-010](14-security.md#mts-sec-010) |
+| `limit.exceeded.template` | error | content | template | `limit`, `bound`, `lowered`; optional: `output_path` | 1.0 | [MTS-SEC-008](14-security.md#mts-sec-008), [MTS-SEC-009](14-security.md#mts-sec-009), [MTS-TPL-046](07-template-environment.md#mts-tpl-046) |
 | `limit.invalid` | error | usage | invocation | `reason`; optional: `name`, `default`, `unit`, `value` | 1.0 | — |
-| `limit.package` | error | refused | package | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-SEC-001](14-security.md#mts-sec-001) |
+| `limit.package` | error | refused | package | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-PTH-007](11-rendering.md#mts-pth-007), [MTS-SEC-001](14-security.md#mts-sec-001), [MTS-SEC-011](14-security.md#mts-sec-011) |
 | `manifest.additional_item` | error | content | manifest | `index`, `prefix_count` | 1.0 | — |
 | `manifest.additional_property` | error | content | manifest | `property`; optional: `suggestion` | 1.0 | [MTS-MAN-011](03-manifest.md#mts-man-011), [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.any_of` | error | content | manifest | `branch_count` | 1.0 | — |
@@ -163,9 +166,9 @@ it, and the statements it reports.
 | `output.contains` | error | content | output | — | 1.0 | — |
 | `output.declaration.validate_kind` | error | content | output | `kind` | 1.0 | [MTS-AUT-023](13-authoring.md#mts-aut-023) |
 | `output.dependent_required` | error | content | output | `property`, `because` | 1.0 | — |
-| `output.destination.not_directory` | error | destination | invocation | — | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028) |
-| `output.destination.not_empty` | error | destination | invocation | `entries`, `more` | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028) |
-| `output.destination.write_failed` | error | destination | invocation | `reason`, `written` | 1.0 | [MTS-AUT-026](13-authoring.md#mts-aut-026), [MTS-AUT-027](13-authoring.md#mts-aut-027) |
+| `output.destination.not_directory` | error | destination | invocation | — | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028), [MTS-RND-003](11-rendering.md#mts-rnd-003) |
+| `output.destination.not_empty` | error | destination | invocation | `entries`, `more` | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028), [MTS-RND-004](11-rendering.md#mts-rnd-004) |
+| `output.destination.write_failed` | error | destination | invocation | `reason`, `written` | 1.0 | [MTS-AUT-026](13-authoring.md#mts-aut-026), [MTS-AUT-027](13-authoring.md#mts-aut-027), [MTS-RND-006](11-rendering.md#mts-rnd-006) |
 | `output.enum` | error | content | output | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | — |
 | `output.exclusive_maximum` | error | content | output | `limit`; optional: `value` | 1.0 | — |
 | `output.exclusive_minimum` | error | content | output | `limit`; optional: `value` | 1.0 | — |
@@ -185,6 +188,14 @@ it, and the statements it reports.
 | `output.not` | error | content | output | — | 1.0 | — |
 | `output.one_of` | error | content | output | `branch_count` | 1.0 | — |
 | `output.one_of.ambiguous` | error | content | output | `branches` | 1.0 | — |
+| `output.path.case_collision` | error | content | output | `path`, `member`, `other` | 1.0 | [MTS-PTH-006](11-rendering.md#mts-pth-006) |
+| `output.path.character` | error | content | output | `path`, `code_point` | 1.0 | [MTS-PTH-004](11-rendering.md#mts-pth-004) |
+| `output.path.duplicate` | error | content | output | `path` | 1.0 | [MTS-PTH-006](11-rendering.md#mts-pth-006) |
+| `output.path.encoding` | error | content | output | `path`, `reason` | 1.0 | [MTS-PTH-001](11-rendering.md#mts-pth-001) |
+| `output.path.file_directory_conflict` | error | content | output | `path`, `member`, `other` | 1.0 | [MTS-PTH-006](11-rendering.md#mts-pth-006) |
+| `output.path.not_nfc` | error | content | output | `path` | 1.0 | [MTS-PTH-002](11-rendering.md#mts-pth-002) |
+| `output.path.not_portable` | error | content | output | `path`, `reason` | 1.0 | [MTS-PTH-005](11-rendering.md#mts-pth-005) |
+| `output.path.shape` | error | content | output | `path`, `reason` | 1.0 | [MTS-PTH-003](11-rendering.md#mts-pth-003) |
 | `output.pattern` | error | content | output | `pattern` | 1.0 | — |
 | `output.property_name` | error | content | output | `property` | 1.0 | — |
 | `output.required` | error | content | output | `property` | 1.0 | — |
@@ -258,18 +269,28 @@ it, and the statements it reports.
 | `schema.syntax` | error | content | package | `form`, `rule` | 1.0 | [MTS-DAT-002](05-data-specification.md#mts-dat-002) |
 | `schema.unsatisfiable` | error | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
 | `schema.unusable_enum_member` | warning | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
+| `template.comparison` | error | content | template | `operator`, `left`, `right`, `column`; optional: `output_path` | 1.0 | [MTS-TPL-023](07-template-environment.md#mts-tpl-023) |
 | `template.crlf` | warning | content | template | — | 1.0 | [MTS-AUT-010](13-authoring.md#mts-aut-010) |
-| `template.division_by_zero` | error | content | template | `filter`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
-| `template.filter_argument` | error | content | template | `filter`, `argument`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
-| `template.filter_input` | error | content | template | `filter`, `type`, `column` | 1.0 | — |
-| `template.include` | error | content | template | `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
-| `template.not_utf8` | error | content | template | — | 1.0 | [MTS-AUT-010](13-authoring.md#mts-aut-010) |
-| `template.number_range` | error | content | template | `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
+| `template.division_by_zero` | error | content | template | `filter`, `column`; optional: `output_path` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-019](07-template-environment.md#mts-tpl-019) |
+| `template.filter_argument` | error | content | template | `filter`, `argument`, `column`; optional: `output_path` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-052](07-template-environment.md#mts-tpl-052) |
+| `template.filter_input` | error | content | template | `filter`, `type`, `column`; optional: `output_path` | 1.0 | [MTS-TPL-052](07-template-environment.md#mts-tpl-052) |
+| `template.include` | error | content | template | `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-002](07-template-environment.md#mts-tpl-002) |
+| `template.invalid_utf8` | error | content | template | `filter`, `column`; optional: `output_path` | 1.0 | [MTS-TPL-052](07-template-environment.md#mts-tpl-052) |
+| `template.nil_property` | error | content | template | `path`, `column`; optional: `output_path` | 1.0 | [MTS-TPL-030](07-template-environment.md#mts-tpl-030) |
+| `template.not_utf8` | error | content | template | — | 1.0 | [MTS-AUT-010](13-authoring.md#mts-aut-010), [MTS-TPL-006](07-template-environment.md#mts-tpl-006) |
+| `template.number_range` | error | content | template | `column`; optional: `filter`, `output_path` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-019](07-template-environment.md#mts-tpl-019) |
+| `template.object_output` | error | content | template | `column`; optional: `output_path` | 1.0 | [MTS-TPL-021](07-template-environment.md#mts-tpl-021) |
 | `template.ooxml.split_construct` | error | content | template | `cause`, `text`, `text_elements` | 1.0 | [MTS-AUT-019](13-authoring.md#mts-aut-019) |
 | `template.ooxml.split_delimiter` | error | content | template | `cause`, `delimiter`, `text`, `text_elements` | 1.0 | [MTS-AUT-019](13-authoring.md#mts-aut-019) |
-| `template.syntax` | error | content | template | `column`, `cause` | 1.0 | [MTS-AUT-010](13-authoring.md#mts-aut-010), [MTS-AUT-011](13-authoring.md#mts-aut-011), [MTS-MAN-018](03-manifest.md#mts-man-018) |
+| `template.partial_name` | error | content | template | `column` | 1.0 | [MTS-TPL-041](07-template-environment.md#mts-tpl-041) |
+| `template.partial_not_found` | error | content | template | `partial`, `column` | 1.0 | [MTS-TPL-042](07-template-environment.md#mts-tpl-042), [MTS-TPL-043](07-template-environment.md#mts-tpl-043) |
+| `template.reserved_name` | error | content | template | `name`, `column` | 1.0 | [MTS-TPL-040](07-template-environment.md#mts-tpl-040) |
+| `template.syntax` | error | content | template | `column`, `cause` | 1.0 | [MTS-AUT-010](13-authoring.md#mts-aut-010), [MTS-AUT-011](13-authoring.md#mts-aut-011), [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-005](07-template-environment.md#mts-tpl-005), [MTS-TPL-006](07-template-environment.md#mts-tpl-006) |
+| `template.tag_argument` | error | content | template | `argument`, `type`, `column`; optional: `tag`, `output_path` | 1.0 | [MTS-TPL-013](07-template-environment.md#mts-tpl-013) |
 | `template.tag_context` | error | content | template | `tag`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
-| `template.unknown_filter` | error | content | template | `filter`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
+| `template.undefined_property` | error | content | template | `path`, `column`; optional: `output_path` | 1.0 | [MTS-TPL-029](07-template-environment.md#mts-tpl-029), [MTS-TPL-031](07-template-environment.md#mts-tpl-031), [MTS-TPL-032](07-template-environment.md#mts-tpl-032) |
+| `template.undefined_variable` | error | content | template | `name`, `column`; optional: `output_path` | 1.0 | [MTS-TPL-003](07-template-environment.md#mts-tpl-003), [MTS-TPL-027](07-template-environment.md#mts-tpl-027), [MTS-TPL-033](07-template-environment.md#mts-tpl-033), [MTS-TPL-034](07-template-environment.md#mts-tpl-034) |
+| `template.unknown_filter` | error | content | template | `filter`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-004](07-template-environment.md#mts-tpl-004) |
 | `template.xref.budget_exhausted` | warning | content | package | `bound`, `limit` | 1.0 | [MTS-AUT-018](13-authoring.md#mts-aut-018) |
 | `template.xref.dynamic_reference` | warning | content | template | optional: `output` | 1.0 | [MTS-AUT-014](13-authoring.md#mts-aut-014) |
 | `template.xref.for_each_not_array` | error | content | output | `types` | 1.0 | [MTS-AUT-016](13-authoring.md#mts-aut-016) |
@@ -294,6 +315,7 @@ it, and the statements it reports.
 | `usage.is_a_directory` | error | usage | invocation | `argument`, `command` | 1.0 | — |
 | `usage.line_out_of_range` | error | usage | invocation | `argument`, `total` | 1.0 | — |
 | `usage.missing_command` | error | usage | invocation | — | 1.0 | — |
+| `usage.missing_flag` | error | usage | invocation | `command`, `flag` | 1.0 | — |
 | `usage.missing_operand` | error | usage | invocation | `command`, `operand` | 1.0 | — |
 | `usage.name_invalid` | error | usage | invocation | `argument`, `source`; optional: `suggestion` | 1.0 | — |
 | `usage.name_required` | error | usage | invocation | — | 1.0 | — |

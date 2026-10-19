@@ -1,0 +1,19 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: arts
+    title: Arts
+    schema: inputs/arts.schema.json
+    required: false
+    collection: true
+    forms:
+      - json
+      - yaml
+      - markdown
+outputs:
+  - id: list
+    template: list.txt.liquid

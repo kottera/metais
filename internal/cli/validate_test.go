@@ -117,8 +117,8 @@ func TestValidateSupplyOrder(t *testing.T) {
 	if res.Data == nil || string(*res.Data) != `{"options":{"depth":2,"mode":"lite"},"vendor":{"name":"From file","size":6,"tags":[1]}}` {
 		t.Errorf("data = %s", string(*res.Data))
 	}
-	if len(r.doc.Next) != 0 {
-		t.Errorf("next = %v: validate's step after success is render, which this tool does not declare yet", r.doc.Next)
+	if len(r.doc.Next) != 1 || r.doc.Next[0] != nextRender {
+		t.Errorf("next = %v: validate's step after success is render", r.doc.Next)
 	}
 	// An --inputs-json member replaces the file's whole value, which
 	// then gives none of it; an optional input absent is given its
@@ -176,9 +176,10 @@ func TestValidateHuman(t *testing.T) {
 	if strings.ContainsAny(r.stdout, "\x1b\u202e") {
 		t.Error("a control character reached standard output")
 	}
-	// A clean run prints the summary alone, which is the report.
+	// A clean run prints the summary, which is the report, and the step
+	// after it, render.
 	ok := runTool(t, "validate", pkg, "--set", "/vendor/name=Acme")
-	if ok.status != 0 || ok.stdout != "0 errors, 0 warnings, 0 info\n" || ok.stderr != "" {
+	if ok.status != 0 || ok.stdout != "0 errors, 0 warnings, 0 info\n\nNext:\n  "+nextRender.Run+"  — "+nextRender.Why+"\n" || ok.stderr != "" {
 		t.Errorf("a clean run: exit %d, %q, %q", ok.status, ok.stdout, ok.stderr)
 	}
 }

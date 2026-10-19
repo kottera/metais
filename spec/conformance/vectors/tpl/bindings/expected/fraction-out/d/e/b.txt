@@ -1,0 +1,10 @@
+metais=1.0 name=example version=1.0.0 title=Example license=Apache-2.0 homepage=nil authors=1
+digest=sha256:21b994c71766a689fb2782fdc2b9f6963f14ec722de9db1142c53158aa64429a
+guide=Supply the inputs and render.
+description=An example package.
+now=2026-10-20T00:29:59Z
+output=d/e/b.txt root=[../../]
+inputs=cl,def,opt,who, who=Ada opt=nil def=D
+sources=file default nil command-line
+partial: d/e/b.txt [../../] example Ada 2026-10-20T00:29:59Z file
+12[1]

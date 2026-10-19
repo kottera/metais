@@ -1,0 +1,14 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: v
+    title: V
+    schema: inputs/v.schema.json
+    required: false
+outputs:
+  - id: truth
+    template: truth.txt.liquid

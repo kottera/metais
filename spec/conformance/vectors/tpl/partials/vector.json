@@ -1,0 +1,39 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/partials",
+  "title": "render names a partial by its literal path beneath templates/, in each of its forms; a partial sees its parameters, its own bindings and the globals, changes nothing its caller sees, and may render itself within partial-depth",
+  "statements": [
+    "MTS-TPL-041",
+    "MTS-TPL-044",
+    "MTS-TPL-045",
+    "MTS-TPL-046"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

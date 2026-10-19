@@ -1405,3 +1405,31 @@ headers agree with it exactly.
   differs between the environments (check 3). The canary's row in
   `TestHostIsolationCanaries`, and its red run recorded here before the
   release build is shown to pass it, are W4-3's harness's.
+
+- **2026-10-19, PLAN-2026-10-metais-v1 W4-3. The `env` and `cwd` canaries,
+  red first.** D16 item 2's first canaries are build-tagged files of
+  `internal/template`: `canary_env.go` binds `env`, the process's
+  environment read at start, before `Isolate`; `canary_cwd.go` reads a
+  partial the package lacks from the working directory found at start.
+  Their probe vectors are `tpl/no-env` (`{{ env.HOME }}`) and
+  `tpl/partial-not-from-host` (a partial named `SENTINEL.txt`, the working
+  directory's decoy). The harness, `internal/conformance`'s
+  `TestHostIsolation` and `TestHostIsolationCanaries`, could not first see
+  either leak on its channel: each canary renders its probe and writes the
+  leaked bytes into an output the vector does not declare, since its
+  release behaviour is a refusal, and the runner scanned only declared
+  trees. Run red, each was caught only as an `ok`, findings and
+  nothing-else-changes failure. The runner now scans every file a step
+  writes anywhere in its sandbox (D16 item 1's every written file), and the
+  recorded red run of both canary builds is:
+  `the env canary: [sentinel] the written file work/out/home.txt holds the
+  sentinel from HOME` and `the cwd canary: [sentinel] the written file
+  work/out/page.txt holds the sentinel from a working-directory decoy`,
+  each beside its `ok`, findings, nothing-else-changes and A/B failures.
+  The release build gives neither probe a hit: `env` is refused as an
+  unknown variable (D13 item 1), and a partial is read only from the
+  package's `templates/` (D9). The `path` canary, W4-1's, joins
+  `canaries` with its row here, W4-3 having merged second. Its red run
+  through the harness is `the path canary: [sentinel] step 1 (validate):
+  standard output holds the sentinel from the sandbox path`, beside its
+  A/B failure; the release build gives its probe no hit.

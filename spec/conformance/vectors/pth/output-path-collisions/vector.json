@@ -1,0 +1,33 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pth/output-path-collisions",
+  "title": "Two outputs at one path, at paths that differ only by case folding, or at a path that is also a directory of another are refused, each naming the earlier declaration",
+  "statements": [
+    "MTS-PTH-006"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "portable-paths"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

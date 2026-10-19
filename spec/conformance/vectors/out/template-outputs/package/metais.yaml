@@ -1,0 +1,24 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: readme
+    template: README.md.liquid
+  - id: workflow
+    template: ci/workflow.yml.liquid
+  - id: notes
+    template: notes.txt
+  - id: given
+    template: README.md.liquid
+    path: docs/guide/index.md
+  - id: script
+    template: run.sh.liquid
+    executable: true
+  - id: plain
+    template: run.sh.liquid
+    path: bin/run-plain.sh
+    executable: false

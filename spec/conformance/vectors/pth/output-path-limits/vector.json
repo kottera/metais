@@ -1,0 +1,63 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pth/output-path-limits",
+  "title": "An output path the manifest gives beyond path-length or path-depth is refused with limit.package; one at the limit is written",
+  "statements": [
+    "MTS-PTH-007"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "portable-paths",
+    "limits"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "at-the-limits",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "path-length": 19,
+              "path-depth": 4
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/at-the-limits-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-limits",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "path-length": 18,
+              "path-depth": 3
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beyond-the-limits.json"
+          }
+        }
+      ]
+    }
+  ]
+}

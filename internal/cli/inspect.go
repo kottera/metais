@@ -93,7 +93,7 @@ func packageRefusals(name string) []Refusal {
 	checkOnly := author.CheckCodes()
 	for _, e := range finding.Registry() {
 		family, rest, _ := strings.Cut(string(e.Code), ".")
-		opened := family == "package" || family == "manifest" || family == "schema" || family == "template"
+		opened := family == "package" || family == "manifest" || family == "schema" || openTemplateCodes[e.Code]
 		if !opened || e.Severity != finding.SeverityError || slices.Contains(checkOnly, e.Code) {
 			continue
 		}
@@ -107,6 +107,16 @@ func packageRefusals(name string) []Refusal {
 		out = append(out, Refusal{e.Code, cause, nextInspectAgain})
 	}
 	return out
+}
+
+// openTemplateCodes are the template family's codes an open reports: those
+// of the manifest's own expressions, which the loader parses (ADR-004 D16
+// item 5). A filter's input is not known when an expression is parsed, so
+// template.filter_input is not among them.
+var openTemplateCodes = map[finding.Code]bool{
+	loader.CodeTemplateSyntax: true, loader.CodeTemplateInclude: true, loader.CodeTemplateUnknownFilter: true,
+	loader.CodeTemplateNumberRange: true, loader.CodeTemplateTagContext: true, loader.CodeTemplateFilterArg: true,
+	loader.CodeTemplateDivision: true,
 }
 
 // inspectResult is metais.inspect/1's result (ADR-008 D6). Under --guide,

@@ -1,0 +1,23 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: up
+    template: t.txt.liquid
+    path: ../escape.txt
+  - id: up_two
+    template: t.txt.liquid
+    path: ../../escape-two.txt
+  - id: inner
+    template: t.txt.liquid
+    path: a/../../escape-three.txt
+  - id: absolute
+    template: t.txt.liquid
+    path: /escape-four.txt
+  - id: fine
+    template: t.txt.liquid
+    path: fine.txt

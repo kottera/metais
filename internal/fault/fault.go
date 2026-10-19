@@ -47,3 +47,10 @@ const UnpackToTemp Set = 1 << 2
 // through a link lands where it points. The confinement detector must catch
 // a write outside the output directory. Its seam is internal/hostfs.
 const SkipConfine Set = 1 << 3
+
+// MapOrder makes a render iterate an object's members in the order of a Go
+// map built from them, rather than in canonical order (ADR-010 D13 item 2,
+// Amendment A2): the determinism detector must catch outputs that differ
+// between renders. Its seam is internal/template, which sets the engine's
+// Env.UnorderedObjects from it.
+const MapOrder Set = 1 << 4

@@ -455,13 +455,13 @@ Refusals:
       An output's path, when or for_each does not parse (filter argument).
       Next: metais check <package>
   template.filter_input
-      An output's path, when or for_each does not parse (filter input).
+      A template does not parse (filter input), an error.
       Next: metais check <package>
   template.include
       An output's path, when or for_each does not parse (include).
       Next: metais check <package>
   template.not_utf8
-      A template or a manifest expression (not utf8), a error.
+      A template does not parse (not utf8), an error.
       Next: metais check <package>
   template.number_range
       An output's path, when or for_each does not parse (number range).
@@ -471,6 +471,12 @@ Refusals:
       Next: metais check <package>
   template.ooxml.split_delimiter
       A template or a manifest expression (ooxml: split delimiter), a error.
+      Next: metais check <package>
+  template.partial_name
+      A template does not parse (partial name), an error.
+      Next: metais check <package>
+  template.reserved_name
+      A template does not parse (reserved name), an error.
       Next: metais check <package>
   template.syntax
       An output's path, when or for_each does not parse (syntax).

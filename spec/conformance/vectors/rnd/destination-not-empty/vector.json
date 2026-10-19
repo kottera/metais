@@ -1,0 +1,53 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/destination-not-empty",
+  "title": "A render into an existing directory that holds an entry, a hidden one included, is refused before anything is written, naming the entries",
+  "statements": [
+    "MTS-RND-004"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "not-empty",
+      "setup": {
+        "copy": "setup"
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-empty.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hidden-only",
+      "setup": {
+        "copy": "setup"
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "hidden-only"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/hidden-only.json"
+          }
+        }
+      ]
+    }
+  ]
+}

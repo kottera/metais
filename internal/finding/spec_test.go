@@ -371,6 +371,21 @@ func TestEmittedCodes(t *testing.T) {
 		CodeUsageMissingOperand, CodeUsagePackageFromStdin)
 	// unpack's (W4-5).
 	want = append(want, CodeUsageNotPackedPackage)
+	// internal/template and render (W4-3).
+	for _, c := range []string{
+		"comparison", "invalid_utf8", "nil_property", "object_output", "partial_name",
+		"partial_not_found", "reserved_name", "tag_argument", "undefined_property", "undefined_variable",
+	} {
+		want = append(want, Code("template."+c))
+	}
+	for _, c := range []string{
+		"case_collision", "character", "duplicate", "encoding", "file_directory_conflict", "not_nfc",
+		"not_portable", "shape",
+	} {
+		want = append(want, Code("output.path."+c))
+	}
+	want = append(want, CodeLimitExceededOutput, CodeLimitExceededTemplate, CodeUsageMissingFlag,
+		"input.raw_unavailable")
 	for _, c := range []string{"syntax", "trailing_content", "duplicate_name", "lone_surrogate", "noncharacter", "encoding"} {
 		want = append(want, Code("manifest.json."+c))
 	}

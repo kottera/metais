@@ -1,0 +1,1 @@
+{% assign x = "caller" %}{% render "parts/params.liquid", k: "K", n: 2 %}|{% render "parts/card.liquid" with "W" as k %}|{% render "parts/loop.liquid" for (1..3) as k %}|{% render "parts/tree.liquid", depth: 1 %}|{{ x }}

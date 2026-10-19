@@ -10,6 +10,7 @@ import (
 	"github.com/kottera/metais/internal/author"
 	"github.com/kottera/metais/internal/cli/args"
 	"github.com/kottera/metais/internal/finding"
+	templates "github.com/kottera/metais/internal/template"
 )
 
 var (
@@ -65,6 +66,11 @@ func checkRefusals() []Refusal {
 			r.Next = nextCommandHelp("check")
 		}
 		out = append(out, r)
+	}
+	for _, code := range templates.ParseCodes() {
+		if !slices.ContainsFunc(out, func(r Refusal) bool { return r.Code == code }) {
+			out = append(out, Refusal{code, "A template does not parse (" + strings.ReplaceAll(strings.TrimPrefix(string(code), "template."), "_", " ") + "), an error.", nextCheckAgain})
+		}
 	}
 	what := map[string]string{
 		"package":  "The package's tree",

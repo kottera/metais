@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "s": {},
+    "n": {},
+    "a": {},
+    "o": {},
+    "v": {
+      "type": "object",
+      "properties": {
+        "name": {}
+      }
+    }
+  }
+}

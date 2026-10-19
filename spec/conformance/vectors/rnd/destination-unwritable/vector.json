@@ -1,0 +1,38 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/destination-unwritable",
+  "title": "A render whose output directory lies in a directory it may not write is refused with output.destination.write_failed, and leaves nothing",
+  "statements": [
+    "MTS-RND-006"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [
+    "unwritable-dirs"
+  ],
+  "notes": "",
+  "cases": [
+    {
+      "name": "staged",
+      "setup": {
+        "unwritable": [
+          "locked"
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "locked/out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

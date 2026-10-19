@@ -1,0 +1,78 @@
+[
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "absolute"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 11,
+      "pointer": "/outputs/3/path"
+    },
+    "params": {
+      "path": "/escape-four.txt",
+      "reason": "leading_slash"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "inner"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 11,
+      "pointer": "/outputs/2/path"
+    },
+    "params": {
+      "path": "a/../../escape-three.txt",
+      "reason": "dot_segment"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "up"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 11,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "../escape.txt",
+      "reason": "dot_segment"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "up_two"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 11,
+      "pointer": "/outputs/1/path"
+    },
+    "params": {
+      "path": "../../escape-two.txt",
+      "reason": "dot_segment"
+    }
+  }
+]

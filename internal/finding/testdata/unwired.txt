@@ -12,6 +12,7 @@
 
 collection.item_name W7
 input.not_readable W7
+input.raw_unavailable W5
 manifest.additional_item W7
 manifest.any_of W6
 manifest.const W6
@@ -71,6 +72,5 @@ output.unique_items W5
 package.not_found W7
 package.not_readable W7
 schema.sample_unsatisfiable W5
-template.filter_input W4
 template.xref.missing_asset W5
 template.xref.unknown_input W5
