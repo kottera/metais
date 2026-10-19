@@ -32,6 +32,11 @@
     },
     {
       "rule": "test-only",
+      "package": "github.com/kottera/metais/internal/liquidspec",
+      "reason": "ADR-011 D17 item 3: the liquid-spec JSON-RPC server is a test-only program, its test binary run with -serve, and no release code links it"
+    },
+    {
+      "rule": "test-only",
       "package": "github.com/kottera/metais/internal/vectorgen",
       "reason": "ADR-011 D16 item 5: vectorgen is the program that produces the suite's committed packages, with its reproduction test; it holds no release code, and nothing imports it"
     },

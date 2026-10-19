@@ -33,13 +33,12 @@ func TestRoots(t *testing.T) {
 		{"a for variable outside its for", objectAB, `{% for r in inputs.metrics.b %}{% endfor %}{{ r.v }}`, []string{unknownVar}},
 		{"a block binding shadows a global", objectAB, `{% for inputs in inputs.metrics.b %}{{ inputs.v }}{{ inputs.w }}{% endfor %}`, []string{unknownField}},
 		{"anything else", objectAB, `{{ vendor.name }}{{ inputs.metrics }}`, []string{unknownVar}},
-		{"a bracketed root", objectAB, `{{ ["inputs"].metrics.zzz }}`, []string{dynamicRef}},
 	})
 }
 
 // TestRootFindings: an unknown root names the nearest known name within
-// edit distance 2, and a bracketed root is a dynamic reference that uses
-// every input.
+// edit distance 2, and a computed name in inputs is a dynamic reference
+// that uses every input.
 func TestRootFindings(t *testing.T) {
 	r := one(objectAB, `{{ inptus.metrics.a }}{% assign total = 1 %}{{ totl }}{{ xyzzy }}`).run(t)
 	expect(t, r,
@@ -48,8 +47,6 @@ func TestRootFindings(t *testing.T) {
 		`template.xref.unknown_variable templates/report.md.liquid:1:58 name="xyzzy" output="report"`,
 		`template.xref.unused_input metais.yaml#/inputs/0`,
 	)
-	r = one(objectAB, `{% assign k = "metrics" %}{{ [k].zzz }}`).run(t)
-	expect(t, r, `template.xref.dynamic_reference templates/report.md.liquid:1:30 output="report"`)
 	r = one(objectAB, `{% assign k = "metrics" %}{{ inputs[k].zzz }}`).run(t)
 	expect(t, r, `template.xref.dynamic_reference templates/report.md.liquid:1:36 output="report"`)
 }

@@ -116,17 +116,20 @@ func openDelim(src string, i int) int {
 }
 
 // outputToken splits the well-formed output src[start:end], which begins
-// "{{" and ends "}}".
+// "{{" and ends "}}". As Shopify reads the markers, "{{-" and "-}}" are
+// each found on its own, so the one "-" of "{{-}}" trims both sides.
 func outputToken(src string, start, end int) tok {
 	t := tok{kind: tokOutput, start: start, end: end}
 	in, inEnd := start+2, end-2
 	if in < inEnd && src[in] == '-' {
 		t.trimL = true
-		in++
 	}
 	if in < inEnd && src[inEnd-1] == '-' {
 		t.trimR = true
 		inEnd--
+	}
+	if t.trimL && in < inEnd {
+		in++
 	}
 	t.markup, t.markupAt = src[in:inEnd], in
 	return t

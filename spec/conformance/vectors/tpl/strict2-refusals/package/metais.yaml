@@ -1,0 +1,20 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: comma
+    template: comma.txt.liquid
+  - id: colon
+    template: colon.txt.liquid
+  - id: cycle
+    template: cycle.txt.liquid
+  - id: parameter
+    template: parameter.txt.liquid
+  - id: twice
+    template: twice.txt.liquid
+  - id: bracket
+    template: bracket.txt.liquid

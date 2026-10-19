@@ -6357,7 +6357,7 @@
         }
       ],
       "message": "This reference selects a member by a computed name, so the cross-reference cannot check it.",
-      "hint": "Nothing is wrong unless the computed name is. A computed name into inputs, or a bracketed root, counts every input as used.",
+      "hint": "Nothing is wrong unless the computed name is. A computed name into inputs counts every input as used.",
       "location": "value",
       "since": "1.0",
       "statements": [

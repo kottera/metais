@@ -56,12 +56,13 @@ func TestEmptyBlank(t *testing.T) {
 			`{% if v != blank %}T{% else %}F{% endif %}`, want, data(`{"v": `+c.v+`}`))
 	}
 	renders(t, `[{{ empty }}][{{ blank }}]{% if empty %}T{% endif %}`, "[][]T")
-	renders(t, `{% if empty == empty %}T{% endif %}{% if empty == blank %}F{% endif %}`, "T")
+	// Neither keyword is a value either can test, itself included.
+	renders(t, `{% if empty == empty %}E{% endif %}{% if blank == blank %}B{% endif %}{% if empty == blank %}F{% endif %}{% if blank != blank %}N{% endif %}`, "N")
 }
 
 // TestComparison: Shopify's operators; integers and floats by value,
-// strings by code point, nil ordering false, and the refusals of ADR-004
-// D4 item 6.
+// strings by code point, nil and booleans ordering false, and the
+// refusals of ADR-004 D4 item 6.
 func TestComparison(t *testing.T) {
 	testenv.Home(t)
 	d := data(`{"xs": [1, 2], "ys": [1, 2], "o": {"a": 1}, "n": null, "s": "abc"}`)
@@ -70,7 +71,7 @@ func TestComparison(t *testing.T) {
 		`"a" < "b"`: true, `"B" < "a"`: true, `"é" > "z"`: true, `"ab" <= "ab"`: true,
 		`n < 1`: false, `1 > n`: false, `n <= n`: false, `n == nil`: true, `n == false`: false,
 		`"1" == 1`: false, `true == true`: true, `xs == ys`: true, `xs == o`: false, `o == o`: true,
-		`true < 1`: false, `empty < 1`: false, `1 >= blank`: false,
+		`true < 1`: false, `1 < true`: false, `5 > true`: false, `"a" >= false`: false, `empty < 1`: false, `1 >= blank`: false,
 		`s contains "b"`: true, `s contains "z"`: false, `xs contains 2`: true, `xs contains 2.0`: true,
 		`xs contains "2"`: false, `o contains "a"`: true, `o contains "b"`: false, `o contains 1`: false,
 		`"a1" contains 1`: true, `"true" contains true`: true, `s contains n`: false, `n contains "a"`: false,
@@ -87,7 +88,6 @@ func TestComparison(t *testing.T) {
 		{`1 < "2"`, "<", "integer", "string"},
 		{`xs < 2`, "<", "array", "integer"},
 		{`1 <= o`, "<=", "integer", "object"},
-		{`1 < true`, "<", "integer", "boolean"},
 		{`s contains xs`, "contains", "string", "array"},
 	} {
 		e := renderRefused(t, `x{% if `+c.cond+` %}{% endif %}`, CodeComparison, d)
@@ -108,17 +108,20 @@ func TestStrictNames(t *testing.T) {
 		t.Errorf("undefined variable: %v; want name nope at t.liquid:1:2", e)
 	}
 	for src, path := range map[string]string{
-		`{{ a.nope }}`:    "a.nope",
-		`{{ a["z"] }}`:    `a["z"]`,
-		`{{ a[1] }}`:      "a[1]",
-		`{{ xs[1.5] }}`:   "xs[1.5]",
-		`{{ xs["a"] }}`:   `xs["a"]`,
-		`{{ xs.nope }}`:   "xs.nope",
-		`{{ s.nope }}`:    "s.nope",
-		`{{ s[0] }}`:      "s[0]",
-		`{{ n.size }}`:    "n.size",
-		`{{ t.first }}`:   "t.first",
-		`{{ a[k].nope }}`: "a[k].nope",
+		`{{ a.nope }}`:      "a.nope",
+		`{{ a["z"] }}`:      `a["z"]`,
+		`{{ a[1] }}`:        "a[1]",
+		`{{ xs[1.5] }}`:     "xs[1.5]",
+		`{{ xs["a"] }}`:     `xs["a"]`,
+		`{{ xs.nope }}`:     "xs.nope",
+		`{{ s.nope }}`:      "s.nope",
+		`{{ s[0] }}`:        "s[0]",
+		`{{ n.size }}`:      "n.size",
+		`{{ t.first }}`:     "t.first",
+		`{{ a[k].nope }}`:   "a[k].nope",
+		`{{ xs["first"] }}`: `xs["first"]`,
+		`{{ s["size"] }}`:   `s["size"]`,
+		`{{ p["last"] }}`:   `p["last"]`,
 	} {
 		e := renderRefused(t, src, CodeUndefinedProperty, d)
 		if e.Args["path"] != path {
@@ -130,7 +133,7 @@ func TestStrictNames(t *testing.T) {
 		t.Errorf("nil property: path %q, want a.b.c", e.Args["path"])
 	}
 	renderRefused(t, `{{ a.b | suffix: "" | suffix: a.b.c }}`, CodeNilProperty, d)
-	renders(t, `[{{ a.b }}]{% if a.b and a.b.c %}x{% endif %}{{ a[k] }}{{ ["a b"] }}`, "[]1spaced", d)
+	renders(t, `[{{ a.b }}]{% if a.b and a.b.c %}x{% endif %}{{ a[k] }}{{ o["first"] }}`, "[]1F", d)
 	renders(t, `{{ xs[0] }}{{ xs[-1] }}[{{ xs[5] }}][{{ xs[-9] }}]{{ xs[n] }}`, "13[][]2", d)
 	renders(t, `{{ s.size }}{{ s.first }}{{ s.last }}{{ xs.size }}{{ xs.first }}{{ xs.last }}`, "5ho313", d)
 	renders(t, `{{ o.size }}{{ o.first }}{{ p.size }}{{ p.first }}{{ p.last }}`, "SF2x1y2", d)
@@ -139,6 +142,18 @@ func TestStrictNames(t *testing.T) {
 	// global.
 	renders(t, `{{ x }}{% increment x %}{{ x }}{% assign x = "tpl" %}{{ x }}{% for x in (7..7) %}{{ x }}{% endfor %}{{ x }}`,
 		"global01tpl7tpl", data(`{"x": "global"}`))
+}
+
+// TestShopifyReadings: what the gem does where the grammar reads two
+// ways or a collection is not a list. The one "-" of "{{-}}" trims both
+// sides, and a string is a loop's one item whatever its offset and limit
+// (Utils.slice_collection).
+func TestShopifyReadings(t *testing.T) {
+	testenv.Home(t)
+	d := data(`{"s": "abc"}`)
+	renders(t, "foo {{-}} bar|a {{- -}} b", "foobar|ab", d)
+	renders(t, `{% for c in s limit: 0 %}{{ c }}{% else %}none{% endfor %}|{% for c in s offset: 5 %}{{ c }}{% endfor %}`, "abc|abc", d)
+	renders(t, `{% tablerow c in s limit: 0 %}{{ c }}{% endtablerow %}`, "<tr class=\"row1\">\n<td class=\"col1\">abc</td></tr>\n", d)
 }
 
 // TestObjectOutput: an object written as text is refused, naming json;

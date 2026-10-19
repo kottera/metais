@@ -44,6 +44,13 @@ version may add a filter without changing what any earlier package renders.
 `template.syntax`, and MUST also refuse an element the gem accepts and
 ignores: `reversed` written after a named loop parameter.
 
+<a id="mts-tpl-055"></a>**MTS-TPL-055** A processor MUST also refuse with
+`template.syntax` the other elements the `strict2` grammar accepts and then
+ignores or overrides: a `,` after a filter's last argument or after `cycle`'s
+last value, a `:` after a filter's name with no argument after it, a
+parameter that `for` or `tablerow` does not define, and a parameter of either
+written twice.
+
 <a id="mts-tpl-006"></a>**MTS-TPL-006** A template MUST be UTF-8, and a
 processor MUST refuse one that is not with `template.not_utf8`, and one that
 holds U+0000 with `template.syntax`.
@@ -161,6 +168,11 @@ at least one more digit, `e`, a sign and at least two exponent digits
 (`1.0e+15`, `1.0e-05`), zero being `0.0` and negative zero `-0.0`; for a
 string, itself; and for an array, the texts of its elements, concatenated.
 
+<a id="mts-tpl-053"></a>**MTS-TPL-053** A range `(a..b)` that is not a
+loop's collection MUST be the array of the integers from a to b, empty when b
+is less than a, wherever it is a value — written, assigned, compared or given
+to a filter — so `{{ (1..3) }}` writes `123`, where the gem writes `1..3`.
+
 <a id="mts-tpl-021"></a>**MTS-TPL-021** A processor MUST refuse to write an
 object as text with `template.object_output`. An object has no text; the
 gem's Ruby `inspect` form is not reproduced.
@@ -180,6 +192,9 @@ array or an object on either side.
 <a id="mts-tpl-024"></a>**MTS-TPL-024** The shorthands `size`, `first` and
 `last` MUST apply to strings, arrays and objects as the gem applies them, and
 a member of an object with one of those names MUST be read in their place.
+
+<a id="mts-tpl-054"></a>**MTS-TPL-054** The `size` filter MUST give 0 for a
+number, a boolean and nil, where the gem gives an integer's size in bytes.
 
 ## 7.5 Truthiness, `blank` and `empty`
 

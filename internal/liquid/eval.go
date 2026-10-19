@@ -215,26 +215,12 @@ func (r *renderer) lookup(name string) (binding, bool) {
 func (r *renderer) path(p *ast.Path) (value.Value, bool, *Error) {
 	segs := p.Segments
 	name := p.Root
-	if name == "" {
-		k, _, err := r.primary(segs[0].Index)
-		if err != nil {
-			return nil, false, err
-		}
-		s, ok := k.(value.String)
-		if !ok {
-			return nil, false, r.fail(p, CodeUndefinedVariable, map[string]string{"name": pathText(p, 1)},
-				"a computed root name that is not a string")
-		}
-		name = s.Text()
-		segs = segs[1:]
-	}
 	b, ok := r.lookup(name)
 	if !ok {
 		return nil, false, r.fail(p, CodeUndefinedVariable, map[string]string{"name": name},
 			fmt.Sprintf("%q is not bound", name))
 	}
 	v := b.v
-	done := len(p.Segments) - len(segs)
 	for i, s := range segs {
 		var key value.Value
 		if s.Index == nil {
@@ -247,7 +233,7 @@ func (r *renderer) path(p *ast.Path) (value.Value, bool, *Error) {
 			key = k
 		}
 		var err *Error
-		if v, err = r.property(v, key, p, done+i+1); err != nil {
+		if v, err = r.property(v, key, s.Index == nil, p, i+1); err != nil {
 			return nil, false, err
 		}
 	}
@@ -256,7 +242,10 @@ func (r *renderer) path(p *ast.Path) (value.Value, bool, *Error) {
 
 // property is one step of a path: base's property or element key. upto
 // is how many of p's segments the step completes, for the error's path.
-func (r *renderer) property(base, key value.Value, p *ast.Path, upto int) (value.Value, *Error) {
+// dot is set for a ".name" step, the only one that reads the size, first
+// and last shorthands, as Shopify's command flags are set only for one: a
+// bracketed "first" is an index like any other.
+func (r *renderer) property(base, key value.Value, dot bool, p *ast.Path, upto int) (value.Value, *Error) {
 	undefined := func() *Error {
 		return r.fail(p, CodeUndefinedProperty, map[string]string{"path": pathText(p, upto)},
 			fmt.Sprintf("a %s has no such property", kindName(base)))
@@ -272,6 +261,9 @@ func (r *renderer) property(base, key value.Value, p *ast.Path, upto int) (value
 		}
 		if v, ok := b.Get(ks.Text()); ok {
 			return v, nil
+		}
+		if !dot {
+			return nil, undefined()
 		}
 		if v, ok, err := r.shorthand(b, ks.Text(), p); ok || err != nil {
 			return v, err
@@ -291,14 +283,14 @@ func (r *renderer) property(base, key value.Value, p *ast.Path, upto int) (value
 			}
 			return b.At(int(i)), nil
 		}
-		if isString {
+		if isString && dot {
 			if v, ok, err := r.shorthand(b, ks.Text(), p); ok || err != nil {
 				return v, err
 			}
 		}
 		return nil, undefined()
 	case value.String:
-		if isString {
+		if isString && dot {
 			if v, ok, err := r.shorthand(b, ks.Text(), p); ok || err != nil {
 				return v, err
 			}
@@ -499,11 +491,12 @@ func (r *renderer) compare(op ast.CompareOp, l, rt operand, at ast.Node) (bool, 
 
 // equal is ==: numbers by value, other values as the data model's
 // equality, values of different kinds never; empty and blank as ADR-004
-// D5 item 2 defines them.
+// D5 item 2 defines them, so that neither equals a keyword, itself
+// included, as Shopify's equal_variables finds no value to test.
 func equal(l, r operand) bool {
 	switch {
 	case l.special != 0 && r.special != 0:
-		return l.special == r.special
+		return false
 	case l.special != 0:
 		return matchesSpecial(l.special, r.v)
 	case r.special != 0:
@@ -568,6 +561,11 @@ func (r *renderer) order(op ast.CompareOp, l, rt operand, at ast.Node) (bool, *E
 	}
 	if composite(l.v) || composite(rt.v) {
 		return refuse()
+	}
+	// A boolean has no order: Shopify's comparison is false when either
+	// side does not respond to the operator.
+	if _, ok := rt.v.(value.Bool); ok {
+		return false, nil
 	}
 	var c int
 	switch a := l.v.(type) {

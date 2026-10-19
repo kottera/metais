@@ -205,9 +205,9 @@ type Literal struct {
 	Value value.Value
 }
 
-// Path is a variable lookup: a root name followed by segments. Root is
-// empty when the path begins with an index ("['a b'].c"), and then its
-// first segment is that index.
+// Path is a variable lookup: a root name followed by segments. A path
+// always begins with a name: strict2 refuses one that begins with an
+// index, which would look a variable up by a computed name.
 type Path struct {
 	Span     Span
 	Root     string

@@ -306,22 +306,9 @@ func (u *unit) primary(p ast.Primary) set {
 // segment.
 func (u *unit) path(p *ast.Path) set {
 	segs := p.Segments
-	var cur set
-	if p.Root == "" {
-		// A bracketed root looks a variable up by a computed name.
-		if len(segs) > 0 {
-			u.primary(segs[0].Index)
-			segs = segs[1:]
-		}
-		u.report(CodeDynamicReference, p.Span, nil, true)
+	cur, isInputs := u.root(p)
+	if isInputs && len(segs) == 0 {
 		u.a.useAll(u.ctx)
-		cur = unknown
-	} else {
-		var isInputs bool
-		cur, isInputs = u.root(p)
-		if isInputs && len(segs) == 0 {
-			u.a.useAll(u.ctx)
-		}
 	}
 	for _, s := range segs {
 		if !u.a.spend() {
