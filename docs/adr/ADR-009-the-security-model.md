@@ -505,7 +505,8 @@ a write is confined, for `render`, `unpack`, `extract` and `init` alike.
    names to decide emptiness and collisions; it never opens an existing file
    there, so `--overwrite` cannot leak what it replaces.
 5. **Staging lives beside the output directory, in its parent** (ADR-005
-   D14), never under `$TMPDIR`, with fixed names that read no random source
+   D14; for an existing output directory, inside it, under ADR-005
+   Amendment A1), never under `$TMPDIR`, with fixed names that read no random source
    and no process identity; the rename that makes it the output is the only
    operation on the parent, and nothing staged remains outside the output
    directory once it succeeds or is refused.
@@ -1433,3 +1434,14 @@ headers agree with it exactly.
   through the harness is `the path canary: [sentinel] step 1 (validate):
   standard output holds the sentinel from the sandbox path`, beside its
   A/B failure; the release build gives its probe no hit.
+- **2026-10-19, design session `01a15284-df6e-7668-b799-62f4c380a84f`
+  (PLAN-2026-10-metais-v1 W2-A1).** ADR-005 Amendment A1, accepted by Ed
+  Funnekotter, amends D8 items 1 and 5: a render into an existing output
+  directory is prepared beneath one staging directory inside it,
+  `<out>/.metais-staging`, rather than beside it, and every path a package
+  or an input produced is written through a root on that directory. Item
+  5's rule that nothing staged remains once the render succeeds or is
+  refused holds for it. A render into a new directory still stages in the
+  parent. Under A1, `hostfs` proves ownership by the staging directory it
+  holds, not by a handle per entry, so the host's open-file limit does not
+  refuse a render within D3's limits.

@@ -1038,8 +1038,9 @@ adds the vector where they meet (§2).
 - **Transforms**: `newline: crlf`, and output validation for `json` and
   `yaml` outputs (ADR-005 D10, D11).
 - **Existing destinations**: `--overwrite`, the per-file checks (links,
-  junctions, FIFOs, case variants), temporary names and the commit order.
-  Nothing is read and nothing is deleted.
+  junctions, FIFOs, case variants, and ADR-005 A1's device and staging-name
+  checks), the staging directory inside the output directory and the commit
+  by unit (ADR-005 A1). Nothing is read and nothing is deleted.
 - **Dry run, the archive and `--only`**: the listing with `status`, the pax
   stream compared by entries, the selected file raw, and ADR-008 D16 item 5's
   standard-output purity, pinned red first.
