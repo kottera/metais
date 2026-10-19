@@ -1434,3 +1434,38 @@ document.
   - **Render's role.** A render with `--sample` reports as an authoring
     command (ADR-006 D12 item 2) through a role the run sets on its
     session, so a defect of the package exits 1, not 4.
+
+- **PLAN-2026-10-metais-v1 W5-12 — `extract --overwrite` and `unpack
+  --dry-run`.** D5's `extract` item 3 landed under ADR-005 D15 and
+  Amendment A1, and D9's `unpack --dry-run`. W4-2's interim refusal of an
+  existing `--to`, empty or not, is superseded: an existing directory with
+  no entry at all is written into, as ADR-005 D15 item 3 says, and one
+  that holds any entry, a hidden one included, is written into only with
+  `--overwrite`, and otherwise refused with `output.destination.not_empty`
+  listing what it holds. The readings taken:
+  - **`extract` into an existing directory writes through `hostfs`'s A1
+    shape** (`hostfs.Existing`), empty or not: every file is checked
+    first, and every refusal is reported together; the files are prepared
+    beneath `<dir>/.metais-staging` and committed by unit. A directory
+    that does not exist keeps W4-2's write (`hostfs.CreateNew`), whose
+    failure lists the files written and removes none.
+  - **`extract --dry-run` makes the checks** of the write it stands for,
+    a leftover staging directory included, and writes nothing.
+    `metais.extract/1`'s result is unchanged: D5 item 6 gives a file
+    `path` and `size`, and no `status`.
+  - **`extract --overwrite` runs through the existing-destination
+    detector** (`internal/guarantees`' `TestExistingDestinationDetector`),
+    as a command, in every `go test`.
+  - **`unpack --dry-run` is the tool's contract, not chapter 13's.** ADR-011
+    D8's `unpack` operation takes no `dry_run`, so no vector can reach it,
+    and ADR-011 D3 item 5's `not observable` does not fit a behaviour whose
+    evidence is the program's own output. The rule lives in `unpack`'s help
+    and in `metais.unpack/1`, and is proved by `internal/cli`'s tests,
+    which check the host as well as the result. The dry run makes the
+    checks `unpack` makes before its first write, from names and `Lstat`
+    only, so it is refused exactly when `unpack` is, with the same
+    findings; what only writing finds out, such as a full disk, it cannot
+    report.
+  - **`metais.unpack/1` gains `dry_run`**, required, as
+    `metais.extract/1` and `metais.init/1` carry it. A dry run's next step
+    is the `unpack` that writes the files listed.
