@@ -46,6 +46,7 @@ type Compiler struct {
 	refs    map[root]string        // each $ref's resolved URI, by the schema object holding it
 	dynRefs map[root]string        // each $dynamicRef's resolved URI, by the schema object holding it
 	subs    map[root]*Schema       // each subschema Subschema compiled
+	count   *subschemas            // the subschemas of every file read
 }
 
 // root is where a resource the library holds as a root document is in the
@@ -86,7 +87,9 @@ type file struct {
 // Before the library sees a file, NewCompiler checks schema-size, then
 // decodes it with decode and refuses unknown keywords, formats outside
 // ADR-003 D4, any $schema but 2020-12's and any $vocabulary, patterns
-// outside the profile, schema-depth, and every reference that leaves the
+// outside the profile, schema-depth, schema-location-length, the
+// subschemas of every file together past schema-subschemas (ADR-009
+// Amendment A1), and every reference that leaves the
 // package, escapes InputsDir, names a file by its path where it has an $id, or
 // resolves to nothing; and two resources with one URI. Every finding of
 // every file is reported at once. When there is any, the compiler is nil.
@@ -110,6 +113,9 @@ func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode, output ...out
 				files = append(files, f)
 			}
 		}
+	}
+	if f, ok := c.count.breached(lim); ok {
+		findings = append(findings, f)
 	}
 	findings = append(findings, c.checkResources(files)...)
 	if len(findings) > 0 {
@@ -241,6 +247,7 @@ func newCompiler(lim limits.Set, scope string, meter *regexprofile.Meter) *Compi
 		refs:    map[root]string{},
 		dynRefs: map[root]string{},
 		subs:    map[root]*Schema{},
+		count:   &subschemas{},
 	}
 }
 
@@ -291,7 +298,7 @@ func (c *Compiler) read(tree pkgtree.Tree, entry string, decode Decode) (*file, 
 	}
 	f := &file{entry: entry, retrieval: RetrievalURI(entry), doc: doc}
 	base, _ := url.Parse(f.retrieval)
-	f.walk = &prechecker{entry: entry, lim: c.lim}
+	f.walk = &prechecker{entry: entry, lim: c.lim, count: c.count, retrieval: f.retrieval}
 	f.walk.walk(doc, "", base, 1)
 	f.canonical = f.retrieval
 	if rs := f.walk.resources; len(rs) > 0 && rs[0].ptr == "" {

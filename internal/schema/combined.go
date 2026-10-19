@@ -22,7 +22,8 @@ const CombinedEntry = ".compiled/schema.json"
 // package's schema files and manifest, which validation evaluates exactly
 // (ADR-003 D7 item 5, D22). It refuses a document larger, in its canonical
 // form, than combined-schema-size (ADR-009 D3), with limit.package at
-// CombinedEntry.
+// CombinedEntry, and one of more subschemas than schema-subschemas
+// (Amendment A1 item 1), at CombinedEntry and the first subschema past it.
 //
 // The library compiles it as its own root, under CombinedURI, so each
 // reference in it resolves to the resource it embeds. A failure inside an
@@ -38,8 +39,15 @@ func (c *Compiler) Combined(doc value.Value) (*Schema, []finding.Finding) {
 		panic("schema: the combined schema is compiled twice")
 	}
 	base, _ := url.Parse(CombinedURI)
-	w := &prechecker{entry: CombinedEntry, lim: c.lim}
+	// The combined schema's subschemas are counted as a whole, apart from
+	// the files'; its locations, longer by /$defs/ and a package path, are
+	// bounded by the files' and path-length (ADR-009 Amendment A1 items 1
+	// and 2).
+	w := &prechecker{entry: CombinedEntry, lim: c.lim, count: &subschemas{}}
 	w.walk(doc, "", base, 1)
+	if f, ok := w.count.breached(c.lim); ok {
+		return nil, []finding.Finding{f}
+	}
 	if len(w.findings) > 0 {
 		// Bundle embeds files the pre-check has passed; a refusal here is
 		// a defect in the tool.
