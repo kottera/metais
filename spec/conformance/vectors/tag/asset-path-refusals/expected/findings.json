@@ -1,0 +1,40 @@
+[
+  {
+    "code": "template.asset_ambiguous",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/twice.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/twice.txt.liquid",
+      "line": 1,
+      "column": 37
+    },
+    "params": {
+      "asset": "logo.png",
+      "column": 37,
+      "output_path": "twice.txt"
+    }
+  },
+  {
+    "code": "template.asset_not_written",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/unwritten.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/unwritten.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "asset": "site.css",
+      "column": 1,
+      "output_path": "unwritten.txt"
+    }
+  }
+]

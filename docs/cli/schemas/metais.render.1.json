@@ -134,7 +134,7 @@
           ]
         },
         "kind": {
-          "description": "The file's kind, for a template file (ADR-005 D7), and null for a container.",
+          "description": "The file's kind, for a template file (ADR-005 D7), and null for a container and for a file copied from an asset, which have none.",
           "enum": [
             "html",
             "xml",

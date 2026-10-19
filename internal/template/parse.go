@@ -81,7 +81,8 @@ func canaryHas(name string) bool {
 // template.partial_not_found, found here, with no data. Every embed tag of
 // a template that parsed must name a declared input, with index: exactly
 // when it is a collection (D12 item 1): template.embed_unknown_input and
-// template.embed_index, found here too. The findings are the same each
+// template.embed_index, found here too; and every asset tag an asset (D13
+// item 1), or template.asset_not_found. The findings are the same each
 // time it is asked.
 func (ts *Templates) Parse(name string) (*liquid.Template, []finding.Finding) {
 	if p, ok := ts.parsed[name]; ok {
@@ -118,6 +119,16 @@ func (ts *Templates) parse(name string) *parsed {
 	}
 	if t != nil {
 		all = append(all, embedChecks(entry, t, ts.inputs, true)...)
+	}
+	for _, a := range assetTags(t, text, stop) {
+		if ts.assetExists(a.name) {
+			continue
+		}
+		loc := file
+		loc.Line, loc.Column = a.span.Line, a.span.Col
+		all = append(all, located{a.span.Start, finding.New(CodeAssetNotFound, subject(entry), &loc, finding.Params{
+			"asset": finding.String(a.name), "column": finding.Int(int64(a.span.Col)),
+		})})
 	}
 	if len(all) == 0 {
 		return &parsed{t: t}
@@ -182,13 +193,7 @@ func literalName(markup string) (string, bool) {
 // ".." segment, no empty segment — matched byte for byte to an entry
 // (ADR-004 D8 items 1 and 2).
 func (ts *Templates) partialExists(name string) bool {
-	if name == "" || strings.ContainsRune(name, '\\') {
-		return false
-	}
-	if slices.ContainsFunc(strings.Split(name, "/"), func(s string) bool { return s == "" || s == "." || s == ".." }) {
-		return false
-	}
-	return ts.Has(name)
+	return confined(name) && ts.Has(name)
 }
 
 // readAll reads the entry name of size bytes from tree.

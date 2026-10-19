@@ -1,0 +1,40 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "out/asset-mirror-when",
+  "title": "An asset's and a mirror's when decides whether they write, a mirror whose when is false writing nothing and reporting nothing, and an asset's path template names its destination",
+  "statements": [
+    "MTS-OUT-005",
+    "MTS-OUT-003",
+    "MTS-OUT-013",
+    "MTS-OUT-014",
+    "MTS-OUT-016"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

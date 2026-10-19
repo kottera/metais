@@ -1,0 +1,59 @@
+[
+  {
+    "code": "template.tag_context",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 13,
+      "column": 11,
+      "pointer": "/outputs/1/path"
+    },
+    "params": {
+      "tag": "asset",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.tag_context",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 11,
+      "pointer": "/outputs/2/path"
+    },
+    "params": {
+      "tag": "asset",
+      "column": 20
+    }
+  },
+  {
+    "code": "template.tag_context",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "metais.yaml"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 11,
+      "pointer": "/outputs/2/path"
+    },
+    "params": {
+      "tag": "render",
+      "column": 59
+    }
+  }
+]

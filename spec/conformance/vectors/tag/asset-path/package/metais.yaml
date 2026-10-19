@@ -1,0 +1,25 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: css
+    asset: css
+  - id: logo
+    asset: logo.png
+    path: img/brand/logo.png
+  - id: index
+    template: page.html.liquid
+    path: index.html
+  - id: guide
+    template: page.html.liquid
+    path: docs/guide/page.html
+  - id: print
+    template: page.html.liquid
+    path: css/print.html
+  - id: deep
+    template: page.html.liquid
+    path: img/brand/x/y.html

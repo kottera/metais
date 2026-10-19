@@ -1,0 +1,20 @@
+[
+  {
+    "code": "output.declaration.empty_mirror",
+    "severity": "warning",
+    "subject": {
+      "kind": "output",
+      "name": "parts"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 12,
+      "column": 13,
+      "pointer": "/outputs/1/mirror"
+    },
+    "params": {
+      "directory": "parts"
+    }
+  }
+]

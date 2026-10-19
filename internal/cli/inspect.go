@@ -4,7 +4,6 @@
 package cli
 
 import (
-	pathpkg "path"
 	"slices"
 	"strconv"
 	"strings"
@@ -17,6 +16,7 @@ import (
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
+	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/version"
 )
 
@@ -304,7 +304,7 @@ func inspectOutcome(pkg *loader.Package, guideOnly bool, t []*Command) outcome {
 	for _, in := range m.Inputs {
 		inputs = append(inputs, inputOf(in, examples))
 	}
-	outputs := outputsOf(m.Outputs, entries)
+	outputs := outputsOf(m.Outputs, entries, explicitTemplates(m.Outputs))
 	refs := &inspectReferences{Entries: []inspectReference{}}
 	for _, r := range pkg.References {
 		refs.Count++
@@ -460,7 +460,7 @@ func sortedKeys[V any](m map[string]V) []string {
 // fields as ADR-005 names them, with its path's default where it omits one
 // (ADR-005 D4 item 4), and each mirror expanded into the templates it
 // renders (ADR-005 D6).
-func outputsOf(decls []manifest.Output, entries []string) []inspectOutput {
+func outputsOf(decls []manifest.Output, entries []string, explicit map[string]bool) []inspectOutput {
 	out := make([]inspectOutput, 0, len(decls))
 	for _, d := range decls {
 		o := inspectOutput{Form: string(d.Form), Escape: d.Escape, Newline: d.Newline, Executable: d.Executable, Transforms: []string{}}
@@ -498,10 +498,10 @@ func outputsOf(decls []manifest.Output, entries []string) []inspectOutput {
 		}
 		switch d.Form {
 		case manifest.OutputMirror:
-			ts := mirrorOf(d, entries)
+			ts := mirrorOf(d, entries, explicit)
 			o.Templates = &ts
 		case manifest.OutputContainer:
-			c := &inspectContainer{Format: d.Container.Format, Entries: outputsOf(d.Container.Entries, entries)}
+			c := &inspectContainer{Format: d.Container.Format, Entries: outputsOf(d.Container.Entries, entries, explicit)}
 			if d.Container.Profile != "" {
 				pr := d.Container.Profile
 				c.Profile = &pr
@@ -516,28 +516,22 @@ func outputsOf(decls []manifest.Output, entries []string) []inspectOutput {
 
 // mirrorOf is what a mirror renders (ADR-005 D6): every template beneath
 // templates/<dir>, in byte order, but those with a segment beneath the
-// mirror's root beginning with _, each at the same relative path beneath
-// the declaration's path with a final .liquid removed.
-func mirrorOf(d manifest.Output, entries []string) []inspectMirror {
-	root := "templates/" + d.Source + "/"
-	if d.Source == "." {
-		root = "templates/"
-	}
+// mirror's root beginning with _ and those explicit names, each at the same
+// relative path beneath the declaration's path with a final .liquid
+// removed.
+func mirrorOf(d manifest.Output, entries []string, explicit map[string]bool) []inspectMirror {
 	dest := d.Path
 	if dest == "" {
 		dest = d.Source
 	}
 	out := []inspectMirror{}
 	for _, e := range entries {
-		rel, ok := strings.CutPrefix(e, root)
-		if !ok || slices.ContainsFunc(strings.Split(rel, "/"), func(s string) bool { return strings.HasPrefix(s, "_") }) {
+		rel, ok := strings.CutPrefix(e, treePrefix(template.Dir, d.Source))
+		name := strings.TrimPrefix(e, template.Dir)
+		if !ok || explicit[name] || slices.ContainsFunc(strings.Split(rel, "/"), func(s string) bool { return strings.HasPrefix(s, "_") }) {
 			continue
 		}
-		p := strings.TrimSuffix(rel, ".liquid")
-		if dest != "." {
-			p = pathpkg.Join(dest, p)
-		}
-		out = append(out, inspectMirror{Template: strings.TrimPrefix(e, "templates/"), Path: p})
+		out = append(out, inspectMirror{Template: name, Path: beneath(dest, strings.TrimSuffix(rel, ".liquid"))})
 	}
 	return out
 }

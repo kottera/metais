@@ -1,0 +1,17 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: logo
+    asset: logo.png
+  - id: logo_again
+    asset: logo.png
+    path: img/logo.png
+  - id: unwritten
+    template: unwritten.txt.liquid
+  - id: twice
+    template: twice.txt.liquid

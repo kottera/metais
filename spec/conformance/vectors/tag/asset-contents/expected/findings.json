@@ -1,0 +1,21 @@
+[
+  {
+    "code": "template.asset_not_text",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/page.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/page.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "asset": "logo.png",
+      "column": 1,
+      "output_path": "page.txt"
+    }
+  }
+]

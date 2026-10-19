@@ -1,0 +1,30 @@
+[
+  {
+    "code": "output.path.duplicate",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "docs"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 13,
+      "column": 13,
+      "pointer": "/outputs/1/mirror"
+    },
+    "params": {
+      "path": "docs/a.txt"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 11,
+        "column": 11,
+        "pointer": "/outputs/0/path",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]

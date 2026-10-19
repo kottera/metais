@@ -1,0 +1,40 @@
+[
+  {
+    "code": "template.asset_tree",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/inner.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/inner.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "asset": "site.css",
+      "column": 1,
+      "output_path": "box.zip/inner.txt"
+    }
+  },
+  {
+    "code": "template.asset_tree",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/top.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/top.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "asset": "logo.png",
+      "column": 1,
+      "output_path": "top.txt"
+    }
+  }
+]

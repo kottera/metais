@@ -1,0 +1,20 @@
+[
+  {
+    "code": "output.declaration.empty_name",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "docs"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 10,
+      "column": 13,
+      "pointer": "/outputs/0/mirror"
+    },
+    "params": {
+      "template": "docs/.liquid"
+    }
+  }
+]

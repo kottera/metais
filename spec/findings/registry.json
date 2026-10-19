@@ -3377,6 +3377,48 @@
       "statements": []
     },
     {
+      "code": "output.declaration.empty_mirror",
+      "severity": "warning",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "directory",
+          "type": "string",
+          "meaning": "The directory the mirror names, relative to templates/.",
+          "always": true
+        }
+      ],
+      "message": "The mirror renders no file: every template beneath templates/{directory} is a partial, or is named by a template output.",
+      "hint": "Name the directory that holds the templates to mirror; a template whose name begins with _ is a partial, and one a template field names is rendered by that output alone.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-OUT-019"
+      ]
+    },
+    {
+      "code": "output.declaration.empty_name",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "template",
+          "type": "string",
+          "meaning": "The template's path beneath templates/.",
+          "always": true
+        }
+      ],
+      "message": "The mirror would write the template {template} with an empty name: its file name is exactly .liquid.",
+      "hint": "Give the template a name before .liquid, or begin its name with _ to keep it out of the mirror.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-OUT-018"
+      ]
+    },
+    {
       "code": "output.declaration.validate_kind",
       "severity": "error",
       "class": "content",
@@ -5863,6 +5905,165 @@
       ]
     },
     {
+      "code": "template.asset_ambiguous",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "asset",
+          "type": "string",
+          "meaning": "The path the asset tag names, relative to assets/.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree.",
+          "always": true
+        }
+      ],
+      "message": "The asset tag names {asset}, which the render writes more than once in the tree of the output {output_path}, so its path is ambiguous.",
+      "hint": "Copy the asset to one place in the tree, or write its contents with as: \"contents\" or as: \"base64\".",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TAG-015"
+      ]
+    },
+    {
+      "code": "template.asset_not_found",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "asset",
+          "type": "string",
+          "meaning": "The path the asset tag names, relative to assets/.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        }
+      ],
+      "message": "The asset tag names {asset}, which is not an asset of the package.",
+      "hint": "Name a file under assets/ by its path beneath assets/, matched exactly; no leading /, no . or .. segment.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TAG-013"
+      ]
+    },
+    {
+      "code": "template.asset_not_text",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "asset",
+          "type": "string",
+          "meaning": "The path the asset tag names, relative to assets/.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree.",
+          "always": true
+        }
+      ],
+      "message": "The asset tag writes the contents of {asset}, which are not UTF-8 text.",
+      "hint": "Write a binary asset with as: \"base64\", or copy it with an asset output and write its path.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TAG-016"
+      ]
+    },
+    {
+      "code": "template.asset_not_written",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "asset",
+          "type": "string",
+          "meaning": "The path the asset tag names, relative to assets/.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree.",
+          "always": true
+        }
+      ],
+      "message": "The asset tag writes the path of {asset}, which the render does not copy to the output.",
+      "hint": "Declare an asset output that copies it, or write its contents with as: \"contents\" or as: \"base64\".",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TAG-015"
+      ]
+    },
+    {
+      "code": "template.asset_tree",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "asset",
+          "type": "string",
+          "meaning": "The path the asset tag names, relative to assets/.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree.",
+          "always": true
+        }
+      ],
+      "message": "The asset tag writes the path of {asset}, which the render copies only into another tree than that of the output {output_path}.",
+      "hint": "Copy the asset into the same tree as the output, the output directory or the same container, or write its contents.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-TAG-015"
+      ]
+    },
+    {
       "code": "template.comparison",
       "severity": "error",
       "class": "content",
@@ -6846,7 +7047,9 @@
       "hint": "Name an entry under assets/ by its full path relative to assets/, exactly as the entry is named.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-AUT-032"
+      ]
     },
     {
       "code": "template.xref.missing_partial",

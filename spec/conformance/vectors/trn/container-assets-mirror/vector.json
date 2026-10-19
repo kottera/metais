@@ -1,0 +1,65 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/container-assets-mirror",
+  "title": "An asset and a mirror are container entries like any other, and an asset tag's path is the asset's place in the tree of the file being rendered, or refused when the asset is placed only in another tree",
+  "statements": [
+    "MTS-TRN-001",
+    "MTS-OUT-013",
+    "MTS-OUT-014",
+    "MTS-OUT-016",
+    "MTS-TAG-014",
+    "MTS-TAG-015"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out",
+                "containers": [
+                  {
+                    "path": "box.zip",
+                    "methods": [
+                      "media/logo.png"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "other-tree",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "other-tree",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/other-tree.json"
+          }
+        }
+      ]
+    }
+  ]
+}

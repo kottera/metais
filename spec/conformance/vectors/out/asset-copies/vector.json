@@ -1,0 +1,42 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "out/asset-copies",
+  "title": "An asset declaration copies a file, or every file beneath a directory, byte for byte and unrendered, to its path or its own",
+  "statements": [
+    "MTS-OUT-013",
+    "MTS-OUT-014"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "determinism"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out",
+                "executable": [
+                  "bin/run.sh"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

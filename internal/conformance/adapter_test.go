@@ -90,6 +90,9 @@ type command struct {
 	stdin     []byte
 	streaming bool
 	authoring bool
+	// failOnWarning is a step that asks for warnings to fail it (ADR-006
+	// D2 item 5).
+	failOnWarning bool
 }
 
 // openingCommands are the command lines the adapter gives each
@@ -226,6 +229,9 @@ func (a *cliAdapter) commands(v *vector, sb *sandbox, st *step) ([]command, erro
 		if x.DryRun {
 			args = append(args, "--dry-run")
 		}
+		if x.FailOn != "" {
+			args = append(args, "--fail-on", x.FailOn)
+		}
 		if x.Now != "" {
 			args = append(args, "--now", x.Now)
 		}
@@ -236,7 +242,8 @@ func (a *cliAdapter) commands(v *vector, sb *sandbox, st *step) ([]command, erro
 		if err != nil {
 			return nil, err
 		}
-		return []command{{args: limitFlags(args), stdin: stdin, streaming: streaming, authoring: x.Sample != nil}}, nil
+		return []command{{args: limitFlags(args), stdin: stdin, streaming: streaming, authoring: x.Sample != nil,
+			failOnWarning: x.FailOn == "warning"}}, nil
 	case "check":
 		return []command{{args: limitFlags([]string{"check", "--json", x.Source}), authoring: true}}, nil
 	case "test":
@@ -401,7 +408,7 @@ func (a *cliAdapter) invoke(sb *sandbox, c command, lim limits, dryRun bool) (*i
 	if dryRun {
 		inv.listing = env.files
 	}
-	want, err := exitFor(a.reg, inv.ok, inv.findings, c.authoring)
+	want, err := exitFor(a.reg, inv.ok, inv.findings, c.authoring, c.failOnWarning)
 	switch {
 	case err != nil:
 		ps = append(ps, problem{check: checkExit, msg: err.Error()})
@@ -447,9 +454,10 @@ func parseEnvelope(b []byte) (*envelope, error) {
 // exitFor is the exit code ADR-008 D13 maps a result onto: 0 exactly when
 // ok, and otherwise the first of 2, 3, 4, 1 and 5 that the error findings'
 // classes give, a package's own content error counting as refused under a
-// consumer command and as content under an authoring one (ADR-006 D12).
-// Each code's class is the registry's.
-func exitFor(reg map[string]codeInfo, ok bool, findings []any, authoring bool) (int, error) {
+// consumer command and as content under an authoring one (ADR-006 D12);
+// with no error, 1 for a warning when failOnWarning asked warnings to fail
+// the command (ADR-006 D2 item 5). Each code's class is the registry's.
+func exitFor(reg map[string]codeInfo, ok bool, findings []any, authoring, failOnWarning bool) (int, error) {
 	if ok {
 		return 0, nil
 	}
@@ -460,6 +468,9 @@ func exitFor(reg map[string]codeInfo, ok bool, findings []any, authoring bool) (
 		info, known := reg[code]
 		if !known {
 			return 0, fmt.Errorf("the finding code %q is not in the registry", code)
+		}
+		if info.Severity == "warning" && failOnWarning {
+			classes["warning"] = true
 		}
 		if info.Severity != "error" {
 			continue
@@ -481,7 +492,7 @@ func exitFor(reg map[string]codeInfo, ok bool, findings []any, authoring bool) (
 	for _, c := range []struct {
 		class string
 		code  int
-	}{{"internal", 2}, {"usage", 3}, {"refused", 4}, {"content", 1}, {"destination", 5}} {
+	}{{"internal", 2}, {"usage", 3}, {"refused", 4}, {"content", 1}, {"destination", 5}, {"warning", 1}} {
 		if classes[c.class] {
 			return c.code, nil
 		}

@@ -184,6 +184,10 @@ whose literal names no input the manifest declares as
 within edit distance 2 as its `suggestion`, and MUST count an `embed` of an
 input as a use of it ([MTS-AUT-017](#mts-aut-017)).
 
+<a id="mts-aut-032"></a>**MTS-AUT-032** A check MUST report an `asset` tag
+whose path names no entry beneath `assets/`, matched byte for byte, as
+`template.xref.missing_asset`, an error.
+
 <a id="mts-aut-016"></a>**MTS-AUT-016** A check MUST analyse each output's
 `path`, `when` and `for_each` in that output's context, and MUST report a
 `for_each` whose value cannot be an array as

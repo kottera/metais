@@ -37,6 +37,12 @@ const (
 	CodeEmbedIndex         finding.Code = "template.embed_index"
 	CodeProvenanceArgument finding.Code = "template.provenance_argument"
 	CodeProvenanceStyle    finding.Code = "template.provenance_style"
+
+	CodeAssetNotFound   finding.Code = "template.asset_not_found"
+	CodeAssetNotWritten finding.Code = "template.asset_not_written"
+	CodeAssetAmbiguous  finding.Code = "template.asset_ambiguous"
+	CodeAssetTree       finding.Code = "template.asset_tree"
+	CodeAssetNotText    finding.Code = "template.asset_not_text"
 )
 
 // CodeRawUnavailable is ADR-003's finding for an embed of a raw form that
@@ -186,6 +192,8 @@ func evalFinding(e *liquid.Error, subj finding.Subject, loc finding.Location, ou
 	case codeProvenanceStyle:
 		code = CodeProvenanceStyle
 		copyArgs(p, e, "reason", "kind", "style", "type")
+	case codeAssetNotWritten, codeAssetAmbiguous, codeAssetTree, codeAssetNotText:
+		code, p["asset"] = assetCodes[e.Code], finding.String(e.Args["asset"])
 	default:
 		panic("template: the Liquid renderer met a defect: " + e.Error())
 	}

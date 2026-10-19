@@ -264,6 +264,7 @@
         },
         "overwrite": { "type": "boolean" },
         "dry_run": { "type": "boolean" },
+        "fail_on": { "enum": ["error", "warning"] },
         "now": { "type": "string", "minLength": 1 },
         "sample": {
           "type": "object",

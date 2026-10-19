@@ -6,12 +6,14 @@ Usage:
 
 The package is opened and verified whole, and the inputs are supplied and
 validated, as metais inspect and metais validate do; an input that fails ends
-the render with every finding of the inputs. Then every output is planned, its
-path checked by the portable-path rules, and rendered in memory: every output is
-attempted, and each reports its first error. If any finding is an error, nothing
-is written anywhere. A container output is one zip of its entries, each rendered
-as an output is, in the order its profile and its first entries give; its zip is
-written as it is assembled.
+the render with every finding of the inputs. Then every output is planned, an
+asset or a mirror as each file it writes, its path checked by the portable-path
+rules, and rendered in memory: every output is attempted, and each reports its
+first error. An asset is copied as it is, never rendered: its size counts
+against the output limits, and its bytes are read from the package as it is
+written. If any finding is an error, nothing is written anywhere. A container
+output is one zip of its entries, each rendered as an output is, in the order
+its profile and its first entries give; its zip is written as it is assembled.
 
 --out is required, and names a directory that does not exist yet. The outputs
 are written beneath a staging directory beside it, .metais-staging- followed by
@@ -507,6 +509,14 @@ Refusals:
   output.container.too_many_entries
       An output is refused (container: too many entries).
       Next: metais inspect <package>
+  output.declaration.empty_mirror
+      A mirror renders no file, and --fail-on warning makes its warning fail the
+      render.
+      Next: metais inspect <package>
+  output.declaration.empty_name
+      A mirror would write a template whose file name is exactly .liquid with an
+      empty name.
+      Next: metais inspect <package>
   output.destination.not_directory
       --out, or a directory above it, exists and is not a directory.
       Next: metais render <package> --out <dir>
@@ -713,6 +723,21 @@ Refusals:
       Next: metais inspect <package>
   schema.syntax
       An input schema is refused (syntax).
+      Next: metais inspect <package>
+  template.asset_ambiguous
+      A template is refused (asset ambiguous).
+      Next: metais inspect <package>
+  template.asset_not_found
+      A template is refused (asset not found).
+      Next: metais inspect <package>
+  template.asset_not_text
+      A template is refused (asset not text).
+      Next: metais inspect <package>
+  template.asset_not_written
+      A template is refused (asset not written).
+      Next: metais inspect <package>
+  template.asset_tree
+      A template is refused (asset tree).
       Next: metais inspect <package>
   template.comparison
       A template is refused (comparison).
