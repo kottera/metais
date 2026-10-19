@@ -12,6 +12,8 @@ import (
 	"slices"
 	"strings"
 	"syscall"
+
+	"github.com/kottera/metais/internal/fault"
 )
 
 // The modes ADR-005 D14 item 4 creates with, less the process umask.
@@ -34,12 +36,30 @@ const (
 //
 // A Writer creates every file and directory exclusively and removes only
 // what it created (ADR-005 D14 item 5): there is no method that removes a
-// name the caller chooses. It holds each entry it created open, its pin,
-// until the entry is removed or committed or the Writer is closed, so a
-// render holds one handle per entry it has created and not committed.
+// name the caller chooses. A Writer from OpenWriter or OpenNearest holds
+// each entry it created open, its pin, until the entry is removed or
+// committed or the Writer is closed, so it holds one handle per entry it
+// has created and not committed. The write shapes of shapes.go write the
+// bulk of their entries through a Writer that pins nothing, and so hold a
+// bounded number of handles however many entries they write.
+//
+// No write depends on the process umask granting the owner a permission:
+// a directory the Writer creates whose mode, less the umask, withholds an
+// owner bit is given the owner's bits for the write, and its own mode back
+// when the Writer is closed (grant).
 type Writer struct {
 	root *os.Root
 	rec  *record
+
+	// pins is whether the entries this Writer creates are pinned and
+	// recorded for RemoveCreated. A Writer that does not pin removes
+	// nothing it wrote, but a file whose bytes fail part way, which it
+	// removes while the handle that wrote it is still open.
+	pins bool
+
+	// faults is the test-only fault set of the shape that opened this
+	// Writer (ADR-010 D13 item 2). Only confine consults it.
+	faults fault.Set
 
 	// at is this Writer's directory relative to the record's first
 	// Writer, "." for that Writer itself, so the record can tell which
@@ -55,8 +75,21 @@ type Writer struct {
 // record is what one render created, shared by a Writer and every Writer
 // Sub opens beneath it.
 type record struct {
-	made  []made
-	roots []*os.Root // every root opened, closed by Close
+	made   []made
+	grants []grant
+	roots  []*os.Root // every root opened, closed by Close
+}
+
+// grant is a directory a Writer created whose mode, less the process
+// umask, withheld one of the owner's bits. os.Root reaches every name
+// beneath a directory by opening it for reading, and creates in it by
+// writing and searching it, so the directory is given the owner's bits for
+// the write, and mode, what the umask left, when the Writer is closed
+// (ADR-005 D14 item 4).
+type grant struct {
+	w    *Writer // the Writer that created it
+	name string  // its name relative to w
+	mode fs.FileMode
 }
 
 // made is one file or directory a render created.
@@ -104,7 +137,7 @@ func OpenWriter(path string) (*Writer, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Writer{root: root, rec: &record{roots: []*os.Root{root}}, at: "."}, nil
+	return &Writer{root: root, rec: &record{roots: []*os.Root{root}}, at: ".", pins: true}, nil
 }
 
 // OpenNearest opens for writing the nearest existing ancestor of path,
@@ -150,15 +183,17 @@ func OpenNearest(path string) (*Writer, string, error) {
 	return w, name, nil
 }
 
-// Close releases the directory, every directory Sub opened beneath it and
-// every pin. It removes nothing: a failed render calls RemoveCreated
-// first, and nothing is the render's to remove after Close.
+// Close gives every directory a grant changed its own mode back, and
+// releases the directory, every directory Sub opened beneath it and every
+// pin. It removes nothing: a failed render calls RemoveCreated first, and
+// nothing is the render's to remove after Close.
 func (w *Writer) Close() error {
+	var errs []error
+	errs = append(errs, w.rec.restore())
 	for i := range w.rec.made {
 		w.rec.made[i].release()
 	}
 	w.rec.made = nil
-	var errs []error
 	for _, r := range slices.Backward(w.rec.roots) {
 		errs = append(errs, r.Close())
 	}
@@ -224,6 +259,12 @@ func (w *Writer) Mkdir(name string) error {
 func (w *Writer) mkdir(name, n string) error {
 	if err := w.root.Mkdir(n, dirMode); err != nil {
 		return mapErr("mkdir", err)
+	}
+	if err := w.grant(name, n); err != nil {
+		return err
+	}
+	if !w.pins {
+		return nil
 	}
 	pin, err := w.root.OpenFile(n, os.O_RDONLY|openFlags, 0)
 	if err != nil {
@@ -314,7 +355,7 @@ func (w *Writer) Create(name string, executable bool, r io.Reader) error {
 		_, err = io.Copy(f, r)
 	}
 	var pin *os.File
-	if err == nil {
+	if err == nil && w.pins {
 		pin, err = w.pin(n, info)
 	}
 	if err != nil {
@@ -323,9 +364,16 @@ func (w *Writer) Create(name string, executable bool, r io.Reader) error {
 		return mapErr("create", err)
 	}
 	if err := f.Close(); err != nil {
-		w.removeHeld(n, info)
-		pin.Close()
+		if pin != nil {
+			w.removeHeld(n, info)
+			pin.Close()
+		}
+		// Without a pin nothing now proves the name holds this file, so
+		// it is left.
 		return mapErr("create", err)
+	}
+	if !w.pins {
+		return nil
 	}
 	w.rec.made = append(w.rec.made, made{w: w, name: name, info: info, pin: pin})
 	return nil
@@ -397,7 +445,7 @@ func (w *Writer) Sub(name string) (*Writer, error) {
 		return nil, fail("open", Changed)
 	}
 	w.rec.roots = append(w.rec.roots, root)
-	return &Writer{root: root, rec: w.rec, at: join(w.at, name), beforeRename: w.beforeRename}, nil
+	return &Writer{root: root, rec: w.rec, at: join(w.at, name), pins: w.pins, faults: w.faults, beforeRename: w.beforeRename}, nil
 }
 
 func join(dir, name string) string {
@@ -475,6 +523,7 @@ func (w *Writer) rename(from, to string, replace bool) error {
 		return err
 	}
 	w.rec.release(w, from, true)
+	w.rec.moved(w, from, to)
 	return nil
 }
 
@@ -562,4 +611,62 @@ func (w *Writer) RemoveCreated() error {
 // holds an entry.
 func notEmpty(err error) bool {
 	return errors.Is(err, fs.ErrExist) || errors.Is(err, errNotEmpty)
+}
+
+// grant gives the directory n, just created by w as name, the owner's
+// read, write and search bits when the umask withheld any of them, and
+// records the mode it had so Close can give it back. It reads the mode
+// the umask left from the directory itself, never the umask.
+func (w *Writer) grant(name, n string) error {
+	info, err := w.root.Lstat(n)
+	if err != nil {
+		return mapErr("mkdir", err)
+	}
+	if !info.IsDir() {
+		return fail("mkdir", Changed)
+	}
+	mode := info.Mode().Perm()
+	if mode&0o700 == 0o700 {
+		return nil
+	}
+	if err := w.root.Chmod(n, mode|0o700); err != nil {
+		return mapErr("mkdir", err)
+	}
+	w.rec.grants = append(w.rec.grants, grant{w: w, name: name, mode: mode})
+	return nil
+}
+
+// restore gives every granted directory that is still a directory its own
+// mode back, newest first, so a directory is changed while every directory
+// above it can still be searched. It returns the first error after trying
+// every one.
+func (r *record) restore() error {
+	var first error
+	for _, g := range slices.Backward(r.grants) {
+		n, _ := osName(g.name)
+		info, err := g.w.root.Lstat(n)
+		if err != nil || !info.IsDir() {
+			// Removed, or no longer the directory: nothing to give back.
+			continue
+		}
+		if err := g.w.root.Chmod(n, g.mode); err != nil && first == nil {
+			first = mapErr("close", err)
+		}
+	}
+	r.grants = nil
+	return first
+}
+
+// moved renames, in the grants, what w's rename of from to to moved.
+func (r *record) moved(w *Writer, from, to string) {
+	for i, g := range r.grants {
+		if g.w != w {
+			continue
+		}
+		if g.name == from {
+			r.grants[i].name = to
+		} else if rest, ok := strings.CutPrefix(g.name, from+"/"); ok {
+			r.grants[i].name = to + "/" + rest
+		}
+	}
 }
