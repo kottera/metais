@@ -245,6 +245,9 @@ func TestReadingRefusalExits(t *testing.T) {
 	testenv.Home(t)
 	pkg := browsePackage(t)
 	dest := testenv.Dir(t)
+	if err := os.WriteFile(filepath.Join(dest, "notes.txt"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
 	for _, c := range []struct {
 		argv []string
 		code string
@@ -516,12 +519,19 @@ func TestExtractCommand(t *testing.T) {
 		t.Errorf("an existing destination: %d %q", r.status, r.stderr)
 	}
 	if _, err := os.Stat(filepath.Join(to, "references", "bin.dat")); err == nil {
-		t.Error("extract wrote into an existing directory")
+		t.Error("extract wrote into an existing directory without --overwrite")
+	}
+	if r := runTool(t, "extract", "--json", pkg, "references/bin.dat", "--to", to); !slices.Contains(r.doc.Next, nextExtractOverwrite) {
+		t.Errorf("the refusal does not name --overwrite as its next step: %v", r.doc.Next)
 	}
 	empty := filepath.Join(base, "empty")
 	os.Mkdir(empty, 0o755)
-	if r := runTool(t, "extract", "--json", pkg, "metais.yaml", "--to", empty); !slices.Equal(r.codes(), []string{"output.destination.not_empty"}) {
-		t.Errorf("an existing empty destination: %s", r.stdout)
+	result(t, runTool(t, "extract", "--json", pkg, "metais.yaml", "--to", empty), &res)
+	if res.DryRun || len(res.Files) != 1 {
+		t.Errorf("an existing empty destination: %+v", res)
+	}
+	if _, err := os.Stat(filepath.Join(empty, "metais.yaml")); err != nil {
+		t.Errorf("extract did not write into an existing empty directory: %v", err)
 	}
 	dry := filepath.Join(base, "dry")
 	result(t, runTool(t, "extract", "--json", pkg, "references", "--to", dry, "--dry-run"), &res)
@@ -530,12 +540,6 @@ func TestExtractCommand(t *testing.T) {
 	}
 	if _, err := os.Stat(dry); err == nil {
 		t.Error("a dry run wrote")
-	}
-	if r := runTool(t, "extract", "--json", pkg, "metais.yaml", "--to", filepath.Join(base, "o"), "--overwrite"); !slices.Equal(r.codes(), []string{"usage.unknown_flag"}) {
-		t.Errorf("--overwrite is offered: %s", r.stdout)
-	}
-	if strings.Contains(string(commandText(lookup(table, "extract"))), "overwrite") {
-		t.Error("extract's help promises --overwrite")
 	}
 	if r := runTool(t, "extract", pkg, "metais.yaml", "--to", filepath.Join(base, "h")); !strings.HasPrefix(r.stdout, "Wrote 1 file:\n  metais.yaml\n") || strings.Contains(r.stdout+r.stderr, base) {
 		t.Errorf("extract's human result: %q %q", r.stdout, r.stderr)
@@ -630,5 +634,59 @@ func TestReadLinesDecompressesOnceMore(t *testing.T) {
 		if entries := len(pkg.Tree.List()); atOpen < entries || d.Decodes()-atOpen != 1 {
 			t.Errorf("metais %q decoded %d entries at open, of %d, and %d after; the budget is one", argv, atOpen, entries, d.Decodes()-atOpen)
 		}
+	}
+}
+
+// TestExtractOverwrite is W5-12.1 and W5-12.2 through the command line:
+// with --overwrite, extract writes into a directory that holds entries,
+// replacing the file at a path it writes and leaving every other entry,
+// a hidden one included, as it was; with --dry-run as well it lists the
+// same files and writes nothing.
+func TestExtractOverwrite(t *testing.T) {
+	testenv.Home(t)
+	pkg := browsePackage(t)
+	host := func(t *testing.T) string {
+		t.Helper()
+		to := testenv.Dir(t)
+		for _, f := range []string{".hidden", "metais.yaml", "references/theirs.txt"} {
+			p := filepath.Join(to, filepath.FromSlash(f))
+			os.MkdirAll(filepath.Dir(p), 0o755)
+			if err := os.WriteFile(p, []byte("theirs\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}
+		return to
+	}
+	want, _ := os.ReadFile(filepath.Join(pkg, "metais.yaml"))
+	if len(want) == 0 {
+		t.Fatal("the fixture's manifest is not readable as a file")
+	}
+
+	dry := host(t)
+	before := snapshot(t, dry)
+	var res extractResult
+	result(t, runTool(t, "extract", "--json", pkg, "metais.yaml", "references/*.txt", "--to", dry, "--overwrite", "--dry-run"), &res)
+	if !res.DryRun || len(res.Files) != 6 {
+		t.Errorf("a dry run with --overwrite: %+v", res)
+	}
+	if after := snapshot(t, dry); !slices.Equal(after, before) {
+		t.Errorf("the dry run wrote: %q, was %q", after, before)
+	}
+
+	to := host(t)
+	r := runTool(t, "extract", pkg, "metais.yaml", "references/*.txt", "--to", to, "--overwrite")
+	if r.status != 0 || !strings.HasPrefix(r.stdout, "Wrote 6 files:\n  metais.yaml\n") {
+		t.Fatalf("extract --overwrite: %d %q %q", r.status, r.stdout, r.stderr)
+	}
+	if b, _ := os.ReadFile(filepath.Join(to, "metais.yaml")); !bytes.Equal(b, want) {
+		t.Errorf("metais.yaml holds %q, not the entry's bytes", b)
+	}
+	for _, f := range []string{".hidden", "references/theirs.txt"} {
+		if b, err := os.ReadFile(filepath.Join(to, filepath.FromSlash(f))); err != nil || string(b) != "theirs\n" {
+			t.Errorf("%s, which extract does not write: %q %v", f, b, err)
+		}
+	}
+	if _, err := os.Lstat(filepath.Join(to, ".metais-staging")); err == nil {
+		t.Error("the staging directory was left")
 	}
 }

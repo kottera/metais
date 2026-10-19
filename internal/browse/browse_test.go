@@ -373,8 +373,9 @@ func isLimit(err error, id limits.ID) bool {
 
 // TestExtract is extract's write (ADR-008 D5): every entry selected, at
 // its path beneath a directory that did not exist, created with its
-// missing parents; and an existing destination refused with nothing
-// written, listing what it holds.
+// missing parents, or beneath an existing empty one; and an existing
+// destination that holds entries refused with nothing written, listing
+// what it holds.
 func TestExtract(t *testing.T) {
 	tr := tree(t, map[string]string{"metais.yaml": "m", "inputs/a.json": "{}", "inputs/x/b.json": "{}!"})
 	base := testenv.Dir(t)
@@ -406,11 +407,11 @@ func TestExtract(t *testing.T) {
 	}
 	empty := filepath.Join(base, "empty")
 	os.Mkdir(empty, 0o755)
-	if _, err := Extract(tr, []string{"metais.yaml"}, empty, ExtractOptions{}, 0); !errors.As(err, &de) || len(de.Entries) != 0 {
-		t.Errorf("an existing empty destination: %#v", err)
+	if files, err := Extract(tr, []string{"metais.yaml", "inputs/x/b.json"}, empty, ExtractOptions{}, 0); err != nil || len(files) != 2 {
+		t.Errorf("an existing empty destination: %+v %v", files, err)
 	}
-	if _, err := os.Stat(filepath.Join(empty, "metais.yaml")); err == nil {
-		t.Error("extract wrote into an existing directory")
+	if b, err := os.ReadFile(filepath.Join(empty, "inputs", "x", "b.json")); err != nil || string(b) != "{}!" {
+		t.Errorf("extract into an existing empty directory wrote %q, %v", b, err)
 	}
 	file := filepath.Join(base, "file")
 	os.WriteFile(file, nil, 0o644)
