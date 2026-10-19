@@ -1060,6 +1060,20 @@ What changes later waves:
   `01a15414-2558-70cb-9443-095630a625eb` and W4-NB2
   `01a15414-8ee4-71c1-b5ec-15de3abbb36b`.
 
+**The liquid-spec act (§6), its first run.** W4-A1
+(`01a15414-bf58-7436-8dc0-e1df81410d34`), run by Ed on darwin/arm64 at
+`d4ba3ba`, failed: the committed adapter never loaded the liquid gem, so no
+case ran. Ed's diagnostic run, with that line added, matched the prediction
+exactly. The plan orchestrator filed the fix, W4-A1F
+(`01a15429-00fb-76e9-8cdb-561d4975c696`,
+[#83](https://github.com/kottera/metais/pull/83)). The fix loads the gem,
+sets UTF-8, and adds `TestAdapterSetup` as the guard a dispatch can run.
+The re-run, W4-A1R (`01a15429-2531-762a-aebc-1507b28a76a0`), passed at
+`a88b034` in both the C and a UTF-8 locale: "1801 pass, 490 departures fail
+as listed, 103 held out for applying date, 0 fail otherwise, 0 departures
+pass". The 490 departures are now measured, not predicted. The row's notes
+require another run once Wave 5 registers `date` and writes chapter 8.
+
 ## 11. Wave 5 — the render's capabilities, and the rest of authoring
 
 **Objective.** Everything `render` can do, it does, each capability with its
