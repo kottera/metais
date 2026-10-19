@@ -42,8 +42,8 @@ func TestCheckCommand(t *testing.T) {
 				if err := jsonUnmarshal(r.doc.Result, &res); err != nil || res.Counts != c.counts {
 					t.Errorf("result %s, want counts %+v", r.doc.Result, c.counts)
 				}
-				if len(r.doc.Next) != 0 {
-					t.Errorf("next %+v, want none until metais has test", r.doc.Next)
+				if len(r.doc.Next) != 1 || r.doc.Next[0] != nextTest {
+					t.Errorf("next %+v, want metais test", r.doc.Next)
 				}
 			} else if string(r.doc.Result) != "null" || len(r.doc.Next) != 1 || r.doc.Next[0].Run != c.next {
 				t.Errorf("result %s, next %+v", r.doc.Result, r.doc.Next)

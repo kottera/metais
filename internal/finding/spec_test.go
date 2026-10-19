@@ -418,6 +418,9 @@ func TestEmittedCodes(t *testing.T) {
 		"template.asset_not_found", "template.asset_not_text", "template.asset_not_written", "template.asset_tree")
 	// render's dry run, archive and selection (W5-9).
 	want = append(want, CodeUsageArchiveToTerminal, CodeUsageUnknownOutput)
+	// test's (W5-11).
+	want = append(want, "example.metadata", "example.output_differs", "example.output_missing", "example.output_unexpected",
+		CodeUsageUnknownExample)
 	slices.Sort(want)
 	if !slices.Equal(got, want) {
 		t.Errorf("registered %q, want %q", got, want)

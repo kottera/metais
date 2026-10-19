@@ -235,6 +235,158 @@
       ]
     },
     {
+      "code": "example.metadata",
+      "severity": "error",
+      "class": "content",
+      "subject": "example",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "What breaks the example layout's rule for example.yaml: \"syntax\" when it does not parse as YAML, or as JSON when its first byte other than white space is {; \"not_an_object\" when its root is not a mapping; \"member\" for a member other than title, description and now; \"type\" for a member that is not a string; \"title\" for a title holding a line break; and \"now\" for a now that is not an RFC 3339 date-time with an offset.",
+          "always": true
+        },
+        {
+          "name": "member",
+          "type": "string",
+          "meaning": "The member the reason is about, for every reason but syntax and not_an_object.",
+          "always": false
+        }
+      ],
+      "message": "The example's example.yaml breaks the example layout's rule ({reason}).",
+      "hint": "example.yaml is a mapping of title (one line), description (Markdown) and now (an RFC 3339 date-time with an offset), each optional, and nothing else; the example was not rendered.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-037"
+      ]
+    },
+    {
+      "code": "example.output_differs",
+      "severity": "error",
+      "class": "content",
+      "subject": "example",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The output's path, relative to the example's expected/ and to the output directory.",
+          "always": true
+        },
+        {
+          "name": "binary",
+          "type": "boolean",
+          "meaning": "Whether the difference is between binary files: true unless both files are valid UTF-8 holding no NUL byte.",
+          "always": true
+        },
+        {
+          "name": "cause",
+          "type": "string",
+          "meaning": "The first of the likely causes that applies: \"line_endings\" when the two are equal once every CR LF is LF, \"final_newline\" when they are equal apart from one final LF, \"bom\" when they are equal apart from a leading UTF-8 byte order mark, \"trailing_whitespace\" when they are equal once the spaces and tabs ending each line are removed, and \"none\" otherwise.",
+          "always": true
+        },
+        {
+          "name": "crlf",
+          "type": "string",
+          "meaning": "For the cause line_endings, the side holding CR LF: \"expected\", \"rendered\" or \"both\".",
+          "always": false
+        },
+        {
+          "name": "diff",
+          "type": "string",
+          "meaning": "For text, a unified diff from the expected file to the rendered one, with three lines of context; its hunks are the implementation's own.",
+          "always": false
+        },
+        {
+          "name": "diff_truncated",
+          "type": "boolean",
+          "meaning": "For text, whether the diff was cut at 16 KiB.",
+          "always": false
+        },
+        {
+          "name": "offset",
+          "type": "number",
+          "meaning": "For binary files, the 0-based offset of the first byte that differs, or the shorter file's size when one is a prefix of the other.",
+          "always": false
+        },
+        {
+          "name": "expected_size",
+          "type": "number",
+          "meaning": "For binary files, the expected file's size in bytes.",
+          "always": false
+        },
+        {
+          "name": "rendered_size",
+          "type": "number",
+          "meaning": "For binary files, the rendered file's size in bytes.",
+          "always": false
+        },
+        {
+          "name": "expected_digest",
+          "type": "string",
+          "meaning": "For binary files, sha256: and the lower-case hexadecimal SHA-256 of the expected file.",
+          "always": false
+        },
+        {
+          "name": "rendered_digest",
+          "type": "string",
+          "meaning": "For binary files, sha256: and the lower-case hexadecimal SHA-256 of the rendered file.",
+          "always": false
+        }
+      ],
+      "message": "The render wrote {path} with content that differs from the example's expected file (likely cause: {cause}).",
+      "hint": "Read the difference: line_endings is CR LF on one side, from an output's newline: crlf or from git's line-ending conversion; final_newline is one final line feed; bom a leading byte order mark; trailing_whitespace spaces or tabs at a line's end, often Liquid's whitespace control ({{%- and -%}}). When the render is right, `metais test <package> --update` records it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-038",
+        "MTS-AUT-039",
+        "MTS-AUT-040"
+      ]
+    },
+    {
+      "code": "example.output_missing",
+      "severity": "error",
+      "class": "content",
+      "subject": "example",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The expected output's path, relative to the example's expected/.",
+          "always": true
+        }
+      ],
+      "message": "The example expects the output {path}, which its render did not write.",
+      "hint": "Make the render write it, or remove it from expected/; when the render is right, `metais test <package> --update` makes expected/ what it writes.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-038"
+      ]
+    },
+    {
+      "code": "example.output_unexpected",
+      "severity": "error",
+      "class": "content",
+      "subject": "example",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The rendered output's path, relative to the output directory.",
+          "always": true
+        }
+      ],
+      "message": "The render wrote {path}, which the example's expected/ does not hold.",
+      "hint": "Add the file to expected/ if the render is right, which `metais test <package> --update` does, or stop the render writing it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-038"
+      ]
+    },
+    {
       "code": "input.additional_item",
       "severity": "error",
       "class": "content",
@@ -8310,6 +8462,32 @@
       ],
       "message": "Argument {argument} names no metais command; a command is never abbreviated and has no alias.",
       "hint": "Run `metais help` for the commands.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.unknown_example",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of the example's name among the arguments after metais.",
+          "always": true
+        },
+        {
+          "name": "examples",
+          "type": "array",
+          "items": "string",
+          "meaning": "Every example of the package, in byte order of name.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} names no example of the package.",
+      "hint": "Give one of the examples the finding lists, each a directory under examples/.",
       "location": "none",
       "since": "1.0",
       "statements": []
