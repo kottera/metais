@@ -504,6 +504,18 @@ Refusals:
   markdown.frontmatter_unclosed
       An example's inputs are refused (frontmatter unclosed).
       Next: metais test <package>
+  output.additional_item
+      An example's output fails its validation (additional item).
+      Next: metais test <package>
+  output.additional_property
+      An example's output fails its validation (additional property).
+      Next: metais test <package>
+  output.any_of
+      An example's output fails its validation (any of).
+      Next: metais test <package>
+  output.const
+      An example's output fails its validation (const).
+      Next: metais test <package>
   output.container.missing_entry
       An example's output is refused (container: missing entry).
       Next: metais test <package>
@@ -519,6 +531,21 @@ Refusals:
   output.container.too_many_entries
       An example's output is refused (container: too many entries).
       Next: metais test <package>
+  output.contains
+      An example's output fails its validation (contains).
+      Next: metais test <package>
+  output.declaration.empty_mirror
+      An example's output fails its validation (declaration: empty mirror).
+      Next: metais test <package>
+  output.declaration.empty_name
+      An example's output fails its validation (declaration: empty name).
+      Next: metais test <package>
+  output.declaration.validate_kind
+      An example's output fails its validation (declaration: validate kind).
+      Next: metais test <package>
+  output.dependent_required
+      An example's output fails its validation (dependent required).
+      Next: metais test <package>
   output.destination.not_directory
       An example's expected/, or a directory in it, is not a directory where
       --update writes.
@@ -527,8 +554,68 @@ Refusals:
       --update's write into, or removal from, an example's expected/ failed;
       what it wrote and removed is listed.
       Next: metais test <dir> --update
+  output.enum
+      An example's output fails its validation (enum).
+      Next: metais test <package>
+  output.exclusive_maximum
+      An example's output fails its validation (exclusive maximum).
+      Next: metais test <package>
+  output.exclusive_minimum
+      An example's output fails its validation (exclusive minimum).
+      Next: metais test <package>
   output.expression.for_each_type
       An example's output is refused (expression: for each type).
+      Next: metais test <package>
+  output.forbidden
+      An example's output fails its validation (forbidden).
+      Next: metais test <package>
+  output.format
+      An example's output fails its validation (format).
+      Next: metais test <package>
+  output.max_contains
+      An example's output fails its validation (max contains).
+      Next: metais test <package>
+  output.max_items
+      An example's output fails its validation (max items).
+      Next: metais test <package>
+  output.max_length
+      An example's output fails its validation (max length).
+      Next: metais test <package>
+  output.max_properties
+      An example's output fails its validation (max properties).
+      Next: metais test <package>
+  output.maximum
+      An example's output fails its validation (maximum).
+      Next: metais test <package>
+  output.min_contains
+      An example's output fails its validation (min contains).
+      Next: metais test <package>
+  output.min_items
+      An example's output fails its validation (min items).
+      Next: metais test <package>
+  output.min_length
+      An example's output fails its validation (min length).
+      Next: metais test <package>
+  output.min_properties
+      An example's output fails its validation (min properties).
+      Next: metais test <package>
+  output.minimum
+      An example's output fails its validation (minimum).
+      Next: metais test <package>
+  output.multiple_of
+      An example's output fails its validation (multiple of).
+      Next: metais test <package>
+  output.not
+      An example's output fails its validation (not).
+      Next: metais test <package>
+  output.one_of
+      An example's output fails its validation (one of).
+      Next: metais test <package>
+  output.one_of.ambiguous
+      An example's output fails its validation (one of: ambiguous).
+      Next: metais test <package>
+  output.parse
+      An example's output fails its validation (parse).
       Next: metais test <package>
   output.path.case_collision
       An example's output is refused (path: case collision).
@@ -553,6 +640,27 @@ Refusals:
       Next: metais test <package>
   output.path.shape
       An example's output is refused (path: shape).
+      Next: metais test <package>
+  output.pattern
+      An example's output fails its validation (pattern).
+      Next: metais test <package>
+  output.property_name
+      An example's output fails its validation (property name).
+      Next: metais test <package>
+  output.required
+      An example's output fails its validation (required).
+      Next: metais test <package>
+  output.type
+      An example's output fails its validation (type).
+      Next: metais test <package>
+  output.unevaluated_item
+      An example's output fails its validation (unevaluated item).
+      Next: metais test <package>
+  output.unevaluated_property
+      An example's output fails its validation (unevaluated property).
+      Next: metais test <package>
+  output.unique_items
+      An example's output fails its validation (unique items).
       Next: metais test <package>
   package.compiled.mismatch
       The package is refused (compiled: mismatch).
@@ -724,6 +832,21 @@ Refusals:
       Next: metais test <package>
   schema.syntax
       An input schema is refused (syntax).
+      Next: metais test <package>
+  template.asset_ambiguous
+      A template is refused (asset ambiguous).
+      Next: metais test <package>
+  template.asset_not_found
+      A template is refused (asset not found).
+      Next: metais test <package>
+  template.asset_not_text
+      A template is refused (asset not text).
+      Next: metais test <package>
+  template.asset_not_written
+      A template is refused (asset not written).
+      Next: metais test <package>
+  template.asset_tree
+      A template is refused (asset tree).
       Next: metais test <package>
   template.comparison
       A template is refused (comparison).

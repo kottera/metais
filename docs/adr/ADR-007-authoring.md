@@ -1327,7 +1327,7 @@ directory.
 
 - **2026-10-19, PLAN-2026-10-metais-v1 W5-11.** D5 (without containers' entry
   comparison) and D6 landed as `metais test`, through ADR-011 D8's `test`
-  operation. Chapter 13's §13.6 states it as MTS-AUT-032 to 040, each with an
+  operation. Chapter 13's §13.6 states it as MTS-AUT-034 to 042, each with an
   `aut/test-*` vector; `aut/test-packed` runs `aut/test-compare`'s package
   packed, with the same findings. An example's inputs are read in place by
   `inputs.Supply.ReadPackageDir`, located with ADR-006's `example` origin.

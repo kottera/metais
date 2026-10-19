@@ -3,7 +3,7 @@
 `metais test [<package>] [--example <name>]… [--update [--dry-run]]`
 
 What `metais test` does with a package's examples is specified in chapter 13
-of the specification (§13.6, MTS-AUT-032 to 040), and proved by the
+of the specification (§13.6, MTS-AUT-034 to 042), and proved by the
 conformance suite's `test` operation. This page states the rest: what the
 reference tool's command line adds, which the operation does not take and a
 vector cannot observe (ADR-011 D8). `metais test --help` prints the same.
