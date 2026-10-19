@@ -201,7 +201,7 @@ never reassigned, because statement identifiers carry it.
 | Area | Chapter | Subject |
 |---|---|---|
 | `GEN` | [1. Introduction](01-introduction.md) | scope, conformance classes, terminology, notation, normative language |
-| `CON` | [2. Container](02-container.md) | the zip profile, entry names, the layout, `.compiled/`, digests and their verification |
+| `PKG` | [2. Container](02-container.md) | the zip profile, entry names, the layout, `.compiled/`, digests and their verification |
 | `MAN` | [3. Manifest](03-manifest.md) | the manifest's structure and fields, the YAML and JSON profiles, the canonical form |
 | `VER` | [4. Versions](04-versions.md) | specification and package versions, compatibility, what a tool states |
 | `DAT` | [5. Data specification](05-data-specification.md) | the `inputs` section, the JSON Schema dialect and its asserted keywords and formats, meaning documents, the combined schema |

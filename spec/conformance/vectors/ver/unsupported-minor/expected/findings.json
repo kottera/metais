@@ -1,0 +1,22 @@
+[
+  {
+    "code": "package.version.unsupported_minor",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 1,
+      "column": 9,
+      "pointer": "/metais"
+    },
+    "params": {
+      "declared": "1.99",
+      "implemented": [
+        "1.0"
+      ]
+    }
+  }
+]

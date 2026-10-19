@@ -1,0 +1,16 @@
+[
+  {
+    "code": "manifest.yaml.bom",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 1,
+      "column": 1
+    },
+    "params": {}
+  }
+]

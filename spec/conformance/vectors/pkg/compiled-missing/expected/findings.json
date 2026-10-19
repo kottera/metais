@@ -1,0 +1,14 @@
+[
+  {
+    "code": "package.compiled.missing",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/references.json"
+    },
+    "params": {}
+  }
+]

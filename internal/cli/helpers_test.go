@@ -267,21 +267,23 @@ func runWith(t testing.TB, d hostenv.Display, argv ...string) ran {
 }
 
 // parsesAsLine reports whether line, a metais command line from help or
-// a next step, reads cleanly against the declarations. Each placeholder in
-// angle brackets that ADR-008 D14 item 2 names is substituted as a harness
-// would substitute it.
+// a next step, reads cleanly against the declarations, with each role
+// placeholder in angle brackets substituted as a harness substitutes it
+// (ADR-008 D14 item 2) and each single-quoted word unquoted as a POSIX
+// shell unquotes it.
 func parsesAsLine(line string) error {
-	fields := strings.Fields(line)
+	sub := strings.NewReplacer("<package>", "pkg.metais", "<data dir>", "data", "<dir>", "some-dir", "<name>", "some-name", "<pattern>", "x")
+	fields, err := shellFields(sub.Replace(line))
+	if err != nil {
+		return fmt.Errorf("%q: %v", line, err)
+	}
 	if len(fields) == 0 || fields[0] != "metais" {
 		return fmt.Errorf("%q is not a metais command line", line)
 	}
-	for i, f := range fields {
-		if sub, ok := placeholders[f]; ok {
-			fields[i] = sub
+	for _, f := range fields {
+		if strings.ContainsAny(f, "<>\"") {
+			return fmt.Errorf("%q holds a placeholder or quoting this test cannot substitute", line)
 		}
-	}
-	if strings.ContainsAny(strings.Join(fields, " "), "<>'\"") {
-		return fmt.Errorf("%q holds a placeholder or quoting this test cannot substitute", line)
 	}
 	l := readLine(table, fields[1:])
 	if len(l.findings) > 0 {
@@ -303,11 +305,40 @@ func parsesAsLine(line string) error {
 	return nil
 }
 
-// placeholders are the placeholders a next step may hold, each with a
-// value a harness might substitute for it.
-var placeholders = map[string]string{
-	"<dir>":  "some-dir",
-	"<name>": "some-name",
+// shellFields splits line into words as a POSIX shell does for words of
+// plain characters and single-quoted runs, the only quoting a next step
+// writes.
+func shellFields(line string) ([]string, error) {
+	var out []string
+	var w strings.Builder
+	in, quoted := false, false
+	for i := 0; i < len(line); i++ {
+		c := line[i]
+		switch {
+		case quoted && c == '\'':
+			quoted = false
+		case quoted:
+			w.WriteByte(c)
+		case c == '\'':
+			quoted, in = true, true
+		case c == ' ':
+			if in {
+				out = append(out, w.String())
+				w.Reset()
+				in = false
+			}
+		default:
+			w.WriteByte(c)
+			in = true
+		}
+	}
+	if quoted {
+		return nil, errors.New("an unclosed quote")
+	}
+	if in {
+		out = append(out, w.String())
+	}
+	return out, nil
 }
 
 // allFlags is every flag declared anywhere, the lead's included.

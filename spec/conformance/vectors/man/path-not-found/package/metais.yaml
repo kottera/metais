@@ -1,0 +1,21 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply a report.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+    meaning: inputs/report.md
+  - name: other
+    title: Other
+    schema: inputs/other.schema.json
+outputs:
+  - id: report
+    template: missing.md.liquid
+  - id: logo
+    asset: logo.png
+  - id: site
+    mirror: site

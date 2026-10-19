@@ -1,0 +1,16 @@
+[
+  {
+    "code": "package.digest.not_canonical",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/digests.json"
+    },
+    "params": {
+      "reason": "not_canonical"
+    }
+  }
+]

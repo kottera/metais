@@ -1276,3 +1276,17 @@ document.
   - **A line that does not parse is refused, `--help` included**: help runs
     only on a line every argument of which is accepted, so `metais version
     --help --bogus` exits 3.
+
+- **PLAN-2026-10-metais-v1 W3-1 — `inspect`.** D2 items 1, 4 and 7, D6 and
+  D14 landed for `inspect`, with `metais.inspect/1` under
+  `docs/cli/schemas/`. It takes `--limit` (ADR-009 D4). `usage.missing_operand`
+  and `usage.package_from_stdin` are registered with it; a line with
+  `--help` needs no operand. Its declared refusals are every code of the
+  families an open reports. The human `Next:` block of `inspect` goes to
+  standard output after the summary (D11 item 3). D6 item 8's list names
+  only commands the tool declares, so this wave's `inspect` points at no
+  command that does not yet exist; the reading, supplying and rendering
+  commands join it as they land. D17's references index is
+  `loader.Package.References`, derived by the code that re-derives it at
+  open. A mirror is listed with the templates it renders; the transforms
+  are named `validate`, `crlf` and `zip`.

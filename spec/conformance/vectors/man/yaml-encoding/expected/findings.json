@@ -1,0 +1,19 @@
+[
+  {
+    "code": "manifest.yaml.encoding",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 5,
+      "column": 25
+    },
+    "params": {
+      "reason": "invalid_utf8",
+      "offset": 82
+    }
+  }
+]

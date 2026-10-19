@@ -1,0 +1,49 @@
+# A package with every part a package may have.
+metais: "1.0"
+name: org.example.status-report
+version: 2.1.0
+title: Status report
+description: A weekly status report in Markdown, with a small static site.
+guide: |-
+  # Status report
+
+  Gather the project's facts first, then this week's items.
+  Read `inputs/project.md` for what a good project record holds.
+authors:
+  - name: Example Org
+    email: reports@example.org
+    url: https://example.org/reports
+license: Apache-2.0 OR MIT
+homepage: https://example.org/packages/status-report
+inputs:
+  - name: project
+    title: Project
+    description: |-
+      The project the report covers.
+      Its name and owner.
+    schema: inputs/project.schema.json
+    meaning: inputs/project.md
+  - name: items
+    title: Items
+    schema: inputs/items.schema.yaml
+    forms: [yaml, json, markdown]
+    collection: true
+    required: false
+outputs:
+  - id: report
+    template: report.md.liquid
+  - id: site
+    mirror: site
+    path: site
+    escape: html
+  - id: logo
+    asset: static
+  - id: bundle
+    path: bundle.zip
+    container:
+      entries:
+        - template: report.md.liquid
+          path: report.md
+        - asset: static/logo.txt
+          path: logo.txt
+          stored: true

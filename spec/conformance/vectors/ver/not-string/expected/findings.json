@@ -1,0 +1,23 @@
+[
+  {
+    "code": "package.version.not_string",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 1,
+      "column": 9,
+      "pointer": "/metais"
+    },
+    "params": {
+      "actual": "number",
+      "written": "1.0",
+      "implemented": [
+        "1.0"
+      ]
+    }
+  }
+]

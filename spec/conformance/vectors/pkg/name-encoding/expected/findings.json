@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.name.encoding",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/a�.txt"
+    },
+    "params": {
+      "offset": 2496,
+      "reason": "invalid_utf8"
+    }
+  }
+]

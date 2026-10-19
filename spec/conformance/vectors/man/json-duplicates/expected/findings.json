@@ -1,0 +1,86 @@
+[
+  {
+    "code": "manifest.json.duplicate_name",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 2,
+      "column": 92,
+      "pointer": "/title"
+    },
+    "params": {
+      "name": "title"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 2,
+        "column": 66,
+        "pointer": "/title",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "manifest.json.lone_surrogate",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 2,
+      "column": 101,
+      "pointer": "/title"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.json.noncharacter",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 2,
+      "column": 132,
+      "pointer": "/description"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.json.duplicate_name",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 3,
+      "column": 4,
+      "pointer": "/description"
+    },
+    "params": {
+      "name": "description"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 2,
+        "column": 117,
+        "pointer": "/description",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]

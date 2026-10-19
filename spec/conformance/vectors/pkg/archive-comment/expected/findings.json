@@ -1,0 +1,16 @@
+[
+  {
+    "code": "package.container.archive_comment",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package"
+    },
+    "params": {
+      "offset": 2652,
+      "length": 18
+    }
+  }
+]

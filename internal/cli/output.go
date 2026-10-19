@@ -82,6 +82,11 @@ func (s *session) emit(o outcome) int {
 		write(s.inv.Stderr, appendNext(b, next))
 		return status
 	}
+	if s.line.cmd != nil && s.line.cmd.NextToStdout {
+		write(s.inv.Stdout, appendNext(o.human, next))
+		write(s.inv.Stderr, b)
+		return status
+	}
 	write(s.inv.Stdout, o.human)
 	write(s.inv.Stderr, appendNext(b, next))
 	return status

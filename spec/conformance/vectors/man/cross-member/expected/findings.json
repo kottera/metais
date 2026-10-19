@@ -1,0 +1,71 @@
+[
+  {
+    "code": "manifest.input.duplicate_name",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 11,
+      "column": 11,
+      "pointer": "/inputs/1/name"
+    },
+    "params": {
+      "name": "report"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 8,
+        "column": 11,
+        "pointer": "/inputs/0/name",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "manifest.output.duplicate_id",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 9,
+      "pointer": "/outputs/1/id"
+    },
+    "params": {
+      "id": "report"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 15,
+        "column": 9,
+        "pointer": "/outputs/0/id",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "manifest.output.nested_for_each",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 27,
+      "column": 21,
+      "pointer": "/outputs/2/container/entries/0/for_each"
+    },
+    "params": {}
+  }
+]

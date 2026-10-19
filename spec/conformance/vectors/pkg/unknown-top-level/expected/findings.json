@@ -1,0 +1,14 @@
+[
+  {
+    "code": "package.layout.unknown_top_level",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "README.md"
+    },
+    "params": {}
+  }
+]

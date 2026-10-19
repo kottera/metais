@@ -1,0 +1,651 @@
+// Copyright 2026 Kottera
+// SPDX-License-Identifier: Apache-2.0
+
+package cli
+
+import (
+	pathpkg "path"
+	"slices"
+	"strconv"
+	"strings"
+	"unicode/utf8"
+
+	"github.com/kottera/metais/internal/cli/args"
+	"github.com/kottera/metais/internal/digest"
+	"github.com/kottera/metais/internal/finding"
+	"github.com/kottera/metais/internal/limits"
+	"github.com/kottera/metais/internal/loader"
+	"github.com/kottera/metais/internal/manifest"
+	"github.com/kottera/metais/internal/version"
+)
+
+// The package operand's placeholder in a next step (ADR-008 D14 item 2).
+const packagePlaceholder = "<package>"
+
+// nextInspectAgain is the step after a package's own refusal: there is
+// nothing to do with a refused package but fix or replace it.
+var nextInspectAgain = Next{Run: "metais inspect <package>", Why: "Opens the package again once it is fixed or replaced; nothing of a refused package is used."}
+
+var nextLimits = Next{Run: "metais limits", Why: "Lists every limit with its default; a limit can be lowered and never raised."}
+
+// limitFlag is --limit, which every command that reads a package takes
+// (ADR-009 D4 item 1).
+var limitFlag = args.Flag{
+	Name: "limit", Value: "<name>=<value>", Repeatable: true,
+	Description: "Lower one resource limit for this run, to a whole number no higher than its default (a size may end in KiB, MiB or GiB). metais limits lists them.",
+}
+
+// inspectDeclaration is metais inspect (ADR-008 D6).
+func inspectDeclaration() *Command {
+	return &Command{
+		Name: "inspect", Group: "Reading a package",
+		Synopsis:    "inspect <package> [--guide] [--limit <name>=<value>]... [--json]",
+		Description: "Print what a supplier reads first: the package's identity, its guide, its inputs, outputs, references and examples, and the commands to run next.",
+		Detail: "The package is a packed package file or a source directory. Before it prints anything, " +
+			"inspect verifies the whole package: every entry's name and data, the digest of every entry " +
+			"and of the package, the manifest under the specification version it declares, every schema, " +
+			"and each compiled file against the sources it is derived from. A package that fails any " +
+			"check is refused with every finding of the check, and nothing of it is printed.\n\n" +
+			"The digest of a source directory is the digest of the package metais pack would write from it, " +
+			"computed in memory; nothing is written.\n\n" +
+			"A guide of more than 60 lines or 6144 bytes is cut to its first 40 lines, within 4096 bytes; " +
+			"--guide prints it whole, and nothing else.",
+		Role:     finding.RoleConsumer,
+		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file, or a source directory; - is refused, since a package is read with random access."}},
+		Flags: []args.Flag{
+			{Name: "guide", Description: "Print only the package's identity and its whole guide."},
+			limitFlag,
+		},
+		Format:       "metais.inspect/1",
+		NextToStdout: true,
+		Prints:       "The package's summary: its title, name and version, description, specification version, form and digest, then the sections Guide, Inputs, Outputs, References, Assets, Examples and Read next; with --guide, the guide's Markdown alone.",
+		Refusals:     packageRefusals(),
+		Examples: []Example{
+			{"metais inspect report-1.0.0.metais", "Prints the summary of a packed package."},
+			{"metais inspect .", "Prints the summary of the source directory in the working directory."},
+			{"metais inspect report-1.0.0.metais --guide", "Prints the package's whole guide."},
+			{"metais inspect report-1.0.0.metais --json", "Prints the summary as one metais.inspect/1 document."},
+		},
+		run: runInspect,
+	}
+}
+
+// packageRefusals are the refusals of a command that opens a package: the
+// operand's, the limits', and every registered code of the families the
+// open reports (ADR-008 D16 item 2's declaration of each).
+func packageRefusals() []Refusal {
+	out := []Refusal{
+		{finding.CodeUsageMissingOperand, "The package operand is not given.", nextCommandHelp("inspect")},
+		{finding.CodeUsagePackageFromStdin, "The package operand is -, standard input.", nextCommandHelp("inspect")},
+		{finding.CodeLimitInvalid, "A --limit names no limit, gives a malformed value, or tries to raise one.", nextLimits},
+		{finding.CodeLimitPackage, "The package breaches one of its limits.", nextLimits},
+	}
+	for _, e := range finding.Registry() {
+		family, rest, _ := strings.Cut(string(e.Code), ".")
+		opened := family == "package" || family == "manifest" || family == "schema" || family == "template"
+		if !opened || e.Severity != finding.SeverityError {
+			continue
+		}
+		what := map[string]string{
+			"package":  "The package is refused",
+			"manifest": "The manifest breaks one of its rules",
+			"schema":   "An input schema is refused",
+			"template": "An output's path, when or for_each does not parse",
+		}[family]
+		cause := what + " (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + ")."
+		out = append(out, Refusal{e.Code, cause, nextInspectAgain})
+	}
+	return out
+}
+
+// inspectResult is metais.inspect/1's result (ADR-008 D6). Under --guide,
+// only Package and Guide are present (item 9).
+type inspectResult struct {
+	Package    inspectPackage     `json:"package"`
+	Guide      inspectGuide       `json:"guide"`
+	Inputs     *[]inspectInput    `json:"inputs,omitempty"`
+	Outputs    *[]inspectOutput   `json:"outputs,omitempty"`
+	References *inspectReferences `json:"references,omitempty"`
+	Assets     *inspectAssets     `json:"assets,omitempty"`
+	Examples   *[]inspectExample  `json:"examples,omitempty"`
+}
+
+type inspectPackage struct {
+	Name          string `json:"name"`
+	Version       string `json:"version"`
+	Title         string `json:"title"`
+	Description   string `json:"description"`
+	Specification string `json:"specification"`
+	Implemented   bool   `json:"implemented"`
+	Digest        string `json:"digest"`
+	Source        string `json:"source"`
+}
+
+type inspectGuide struct {
+	Text         string `json:"text"`
+	ExcerptLines int    `json:"excerpt_lines"`
+	TotalLines   int    `json:"total_lines"`
+	Truncated    bool   `json:"truncated"`
+}
+
+type inspectInput struct {
+	Name        string   `json:"name"`
+	Title       string   `json:"title"`
+	Description *string  `json:"description"`
+	Required    bool     `json:"required"`
+	Collection  bool     `json:"collection"`
+	Forms       []string `json:"forms"`
+	Files       []string `json:"files"`
+	Meaning     *string  `json:"meaning"`
+	SchemaEntry string   `json:"schema_entry"`
+	Examples    []string `json:"examples"`
+}
+
+type inspectOutput struct {
+	ID         *string           `json:"id"`
+	Form       string            `json:"form"`
+	Source     *string           `json:"source"`
+	Path       string            `json:"path"`
+	ForEach    *string           `json:"for_each"`
+	When       *string           `json:"when"`
+	Escape     string            `json:"escape"`
+	Newline    string            `json:"newline"`
+	Validate   *string           `json:"validate"`
+	Kind       *string           `json:"kind"`
+	Executable bool              `json:"executable"`
+	Transforms []string          `json:"transforms"`
+	Templates  *[]inspectMirror  `json:"templates,omitempty"`
+	Container  *inspectContainer `json:"container,omitempty"`
+}
+
+type inspectMirror struct {
+	Template string `json:"template"`
+	Path     string `json:"path"`
+}
+
+type inspectContainer struct {
+	Format  string          `json:"format"`
+	Profile *string         `json:"profile"`
+	Entries []inspectOutput `json:"entries"`
+}
+
+type inspectReferences struct {
+	Count   int                `json:"count"`
+	Size    int64              `json:"size"`
+	Entries []inspectReference `json:"entries"`
+}
+
+type inspectReference struct {
+	Path  string  `json:"path"`
+	Title *string `json:"title"`
+	Size  int64   `json:"size"`
+}
+
+type inspectAssets struct {
+	Count int   `json:"count"`
+	Size  int64 `json:"size"`
+}
+
+type inspectExample struct {
+	Name     string   `json:"name"`
+	Inputs   []string `json:"inputs"`
+	Expected bool     `json:"expected"`
+}
+
+// runInspect is metais inspect.
+func runInspect(s *session, p args.Parsed) outcome {
+	operand := p.Operands[0]
+	if operand == "-" {
+		f := finding.New(finding.CodeUsagePackageFromStdin, invocation, nil,
+			finding.Params{"argument": finding.Int(int64(s.line.at[p.OperandArgs[0]] + 1))})
+		return outcome{findings: []finding.Finding{f}, next: s.nextSteps([]finding.Finding{f})}
+	}
+	lim, fs := s.limits(p)
+	if len(fs) > 0 {
+		return outcome{findings: fs, next: s.nextSteps(fs)}
+	}
+	pkg, fs := loader.Open(operand, loader.Options{Limits: lim}, s.inv.Options.Faults)
+	if pkg == nil {
+		return outcome{findings: fs, next: s.nextSteps(fs)}
+	}
+	defer pkg.Close()
+	return inspectOutcome(pkg, p.Has("guide"), s.table)
+}
+
+// limits is the command's limits: the defaults, each lowered by a --limit
+// in the order given (ADR-009 D4 item 1).
+func (s *session) limits(p args.Parsed) (limits.Set, []finding.Finding) {
+	lim := limits.Defaults()
+	var fs []finding.Finding
+	for _, v := range p.Values(limitFlag.Name) {
+		if f, ok := lim.Lower(v); !ok {
+			fs = append(fs, f)
+		}
+	}
+	return lim, fs
+}
+
+// inspectOutcome is the summary of pkg (ADR-008 D6), its next steps the
+// commands of t.
+func inspectOutcome(pkg *loader.Package, guideOnly bool, t []*Command) outcome {
+	m := pkg.Manifest
+	res := &inspectResult{
+		Package: inspectPackage{
+			Name: m.Name, Version: m.Version, Title: m.Title, Description: m.Description,
+			Specification: m.Metais.String(), Implemented: slices.Contains(version.Implements(), m.Metais.String()),
+			Digest: digest.Format(pkg.Digest), Source: pkg.Form.String(),
+		},
+		Guide: guideOf(m.Guide, guideOnly),
+	}
+	if guideOnly {
+		return outcome{result: res, human: []byte(ensureLF(m.Guide))}
+	}
+	entries := pkg.Tree.List()
+	examples := examplesOf(entries)
+	inputs := make([]inspectInput, 0, len(m.Inputs))
+	for _, in := range m.Inputs {
+		inputs = append(inputs, inputOf(in, examples))
+	}
+	outputs := outputsOf(m.Outputs, entries)
+	refs := &inspectReferences{Entries: []inspectReference{}}
+	for _, r := range pkg.References {
+		refs.Count++
+		refs.Size += r.Size
+		refs.Entries = append(refs.Entries, inspectReference{Path: r.Path, Title: r.Title, Size: r.Size})
+	}
+	assets := &inspectAssets{}
+	for _, e := range entries {
+		if strings.HasPrefix(e, "assets/") {
+			info, _ := pkg.Tree.Stat(e)
+			assets.Count++
+			assets.Size += info.Size
+		}
+	}
+	exList := make([]inspectExample, 0, len(examples))
+	for _, ex := range examples {
+		exList = append(exList, *ex)
+	}
+	res.Inputs, res.Outputs, res.References, res.Assets, res.Examples = &inputs, &outputs, refs, assets, &exList
+	return outcome{result: res, human: inspectHuman(res), next: inspectNext(res, t)}
+}
+
+// guideOf is the guide section (ADR-008 D6 item 2): the whole guide when it
+// has at most 60 lines and 6144 bytes, or when whole is set; otherwise its
+// first 40 lines, shortened to end within 4096 bytes.
+func guideOf(g string, whole bool) inspectGuide {
+	lines := strings.Split(g, "\n")
+	out := inspectGuide{Text: g, ExcerptLines: len(lines), TotalLines: len(lines)}
+	if whole || (len(lines) <= 60 && len(g) <= 6144) {
+		return out
+	}
+	keep := lines[:min(40, len(lines))]
+	for len(keep) > 1 && len(strings.Join(keep, "\n")) > 4096 {
+		keep = keep[:len(keep)-1]
+	}
+	text := strings.Join(keep, "\n")
+	if len(text) > 4096 {
+		cut := 4096
+		for cut > 0 && !utf8.RuneStart(text[cut]) {
+			cut--
+		}
+		text = text[:cut]
+	}
+	out.Text, out.ExcerptLines, out.Truncated = text, len(keep), true
+	return out
+}
+
+// inputOf is one input's entry (ADR-008 D6 item 3).
+func inputOf(in manifest.Input, examples map[string]*inspectExample) inspectInput {
+	out := inspectInput{
+		Name: in.Name, Title: in.Title, Required: in.Required, Collection: in.Collection,
+		SchemaEntry: in.Schema, Files: filesOf(in), Examples: []string{},
+	}
+	if in.Description != "" {
+		d := in.Description
+		out.Description = &d
+	}
+	if in.Meaning != "" {
+		mn := in.Meaning
+		out.Meaning = &mn
+	}
+	for _, f := range in.Forms {
+		out.Forms = append(out.Forms, string(f))
+	}
+	for _, name := range sortedKeys(examples) {
+		if slices.Contains(examples[name].Inputs, in.Name) {
+			out.Examples = append(out.Examples, name)
+		}
+	}
+	return out
+}
+
+// filesOf is the names a data directory may hold the input under
+// (ADR-003 D15 item 2, D16 items 1 and 2): <name>/ for a collection, and
+// otherwise <name>.<ext> for each extension of each accepted form, in the
+// forms' order. .md and .markdown are text's only when markdown is not
+// accepted (D15 item 4).
+func filesOf(in manifest.Input) []string {
+	if in.Collection {
+		return []string{in.Name + "/"}
+	}
+	markdown := slices.Contains(in.Forms, manifest.FormMarkdown)
+	var out []string
+	for _, f := range in.Forms {
+		var exts []string
+		switch f {
+		case manifest.FormJSON:
+			exts = []string{".json"}
+		case manifest.FormYAML:
+			exts = []string{".yaml", ".yml"}
+		case manifest.FormCSV:
+			exts = []string{".csv"}
+		case manifest.FormText:
+			exts = []string{".txt"}
+			if !markdown {
+				exts = append(exts, ".md", ".markdown")
+			}
+		case manifest.FormMarkdown:
+			exts = []string{".md", ".markdown"}
+		}
+		for _, e := range exts {
+			out = append(out, in.Name+e)
+		}
+	}
+	return out
+}
+
+// examplesOf is every example of the package (ADR-007), by name: the
+// directories beneath examples/, the inputs each supplies, named by
+// examples/<name>/inputs/'s entries as a data directory names them, and
+// whether it has expected outputs.
+func examplesOf(entries []string) map[string]*inspectExample {
+	out := map[string]*inspectExample{}
+	for _, e := range entries {
+		rest, ok := strings.CutPrefix(e, "examples/")
+		if !ok {
+			continue
+		}
+		name, rest, ok := strings.Cut(rest, "/")
+		if !ok {
+			continue
+		}
+		ex := out[name]
+		if ex == nil {
+			ex = &inspectExample{Name: name, Inputs: []string{}}
+			out[name] = ex
+		}
+		switch {
+		case strings.HasPrefix(rest, "expected/"):
+			ex.Expected = true
+		case strings.HasPrefix(rest, "inputs/"):
+			item := strings.TrimPrefix(rest, "inputs/")
+			input, _, _ := strings.Cut(item, "/")
+			input, _, _ = strings.Cut(input, ".")
+			if !slices.Contains(ex.Inputs, input) {
+				ex.Inputs = append(ex.Inputs, input)
+			}
+		}
+	}
+	return out
+}
+
+func sortedKeys[V any](m map[string]V) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	slices.Sort(out)
+	return out
+}
+
+// outputsOf is the outputs section (ADR-008 D6 item 4): each declaration's
+// fields as ADR-005 names them, with its path's default where it omits one
+// (ADR-005 D4 item 4), and each mirror expanded into the templates it
+// renders (ADR-005 D6).
+func outputsOf(decls []manifest.Output, entries []string) []inspectOutput {
+	out := make([]inspectOutput, 0, len(decls))
+	for _, d := range decls {
+		o := inspectOutput{Form: string(d.Form), Escape: d.Escape, Newline: d.Newline, Executable: d.Executable, Transforms: []string{}}
+		if d.ID != "" {
+			id := d.ID
+			o.ID = &id
+		}
+		if d.Form != manifest.OutputContainer {
+			src := d.Source
+			o.Source = &src
+		}
+		o.Path = d.Path
+		if o.Path == "" {
+			o.Path = strings.TrimSuffix(d.Source, ".liquid")
+		}
+		if d.ForEach != "" {
+			v := d.ForEach
+			o.ForEach = &v
+		}
+		if d.When != "" {
+			v := d.When
+			o.When = &v
+		}
+		if d.Validate != "" {
+			v := d.Validate
+			o.Validate = &v
+			o.Transforms = append(o.Transforms, "validate")
+		}
+		if d.Kind != "" {
+			v := d.Kind
+			o.Kind = &v
+		}
+		if d.Newline == "crlf" {
+			o.Transforms = append(o.Transforms, "crlf")
+		}
+		switch d.Form {
+		case manifest.OutputMirror:
+			ts := mirrorOf(d, entries)
+			o.Templates = &ts
+		case manifest.OutputContainer:
+			c := &inspectContainer{Format: d.Container.Format, Entries: outputsOf(d.Container.Entries, entries)}
+			if d.Container.Profile != "" {
+				pr := d.Container.Profile
+				c.Profile = &pr
+			}
+			o.Container = c
+			o.Transforms = append(o.Transforms, "zip")
+		}
+		out = append(out, o)
+	}
+	return out
+}
+
+// mirrorOf is what a mirror renders (ADR-005 D6): every template beneath
+// templates/<dir>, in byte order, but those with a segment beneath the
+// mirror's root beginning with _, each at the same relative path beneath
+// the declaration's path with a final .liquid removed.
+func mirrorOf(d manifest.Output, entries []string) []inspectMirror {
+	root := "templates/" + d.Source + "/"
+	if d.Source == "." {
+		root = "templates/"
+	}
+	dest := d.Path
+	if dest == "" {
+		dest = d.Source
+	}
+	out := []inspectMirror{}
+	for _, e := range entries {
+		rel, ok := strings.CutPrefix(e, root)
+		if !ok || slices.ContainsFunc(strings.Split(rel, "/"), func(s string) bool { return strings.HasPrefix(s, "_") }) {
+			continue
+		}
+		p := strings.TrimSuffix(rel, ".liquid")
+		if dest != "." {
+			p = pathpkg.Join(dest, p)
+		}
+		out = append(out, inspectMirror{Template: strings.TrimPrefix(e, "templates/"), Path: p})
+	}
+	return out
+}
+
+// inspectNext is the summary's Read next list (ADR-008 D6 item 8), of the
+// commands t declares.
+func inspectNext(res *inspectResult, t []*Command) []Next {
+	var out []Next
+	if res.Guide.Truncated {
+		out = append(out, Next{"metais inspect <package> --guide", "Prints the whole guide; this summary shows its start."})
+	}
+	for _, in := range *res.Inputs {
+		if in.Meaning != nil {
+			out = append(out, Next{"metais read <package> " + shellQuote(*in.Meaning), "Reads what the input " + in.Name + " means and what good data for it looks like."})
+		}
+	}
+	for _, in := range *res.Inputs {
+		out = append(out, Next{"metais schema <package> " + shellQuote(in.Name), "Prints the schema the input " + in.Name + " is validated against."})
+	}
+	if len(*res.Examples) > 0 {
+		first := (*res.Examples)[0].Name
+		out = append(out, Next{"metais ls <package> " + shellQuote("examples/"+first+"/") + " -r", "Lists the first example's inputs and expected outputs."})
+	}
+	if res.References.Count > 0 {
+		out = append(out, Next{"metais grep <package> <pattern> references/", "Searches the package's references."})
+	}
+	out = append(out,
+		Next{"metais validate <package> --data <dir>", "Validates the inputs you gathered in a data directory."},
+		Next{"metais render <package> --data <dir> --out <dir>", "Renders the outputs from the validated inputs into a new directory."},
+	)
+	// A step names a command this tool has, or it is not one a caller can
+	// take: the reading, supplying and rendering commands join the list
+	// as they are declared.
+	return slices.DeleteFunc(out, func(n Next) bool {
+		name, _, _ := strings.Cut(strings.TrimPrefix(n.Run, "metais "), " ")
+		return lookup(t, name) == nil
+	})
+}
+
+// shellQuote quotes s for a POSIX shell when it holds anything outside
+// ADR-008 D14 item 2's safe set.
+func shellQuote(s string) string {
+	safe := s != ""
+	for _, r := range s {
+		if !(r < utf8.RuneSelf && (r >= 'A' && r <= 'Z' || r >= 'a' && r <= 'z' || r >= '0' && r <= '9' || strings.ContainsRune("_./:@%+=,-", r))) {
+			safe = false
+			break
+		}
+	}
+	if safe {
+		return s
+	}
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+func ensureLF(s string) string {
+	if strings.HasSuffix(s, "\n") {
+		return s
+	}
+	return s + "\n"
+}
+
+// inspectHuman is the human summary (ADR-008 D6 item 10).
+func inspectHuman(res *inspectResult) []byte {
+	var b strings.Builder
+	pk := res.Package
+	b.WriteString(pk.Title + " — " + pk.Name + " " + pk.Version + "\n")
+	b.WriteString(pk.Description + "\n")
+	source := "packed"
+	if pk.Source == "directory" {
+		source = "source directory"
+	}
+	b.WriteString("METAIS " + pk.Specification + ", " + source + ", " + pk.Digest + "\n")
+	section := func(title string) { b.WriteString("\n" + title + "\n") }
+	section("Guide")
+	b.WriteString(ensureLF(res.Guide.Text))
+	if res.Guide.Truncated {
+		b.WriteString("… " + strconv.Itoa(res.Guide.TotalLines-res.Guide.ExcerptLines) + " more lines; metais inspect <package> --guide prints the whole guide.\n")
+	}
+	section("Inputs")
+	if len(*res.Inputs) == 0 {
+		b.WriteString("  none\n")
+	}
+	for _, in := range *res.Inputs {
+		req := "optional"
+		if in.Required {
+			req = "required"
+		}
+		b.WriteString("  " + in.Name + " — " + in.Title + " (" + req + "; " + strings.Join(in.Files, ", ") + ")\n")
+		if in.Description != nil {
+			first, _, _ := strings.Cut(*in.Description, "\n")
+			b.WriteString("    " + first + "\n")
+		}
+	}
+	section("Outputs")
+	var outs func([]inspectOutput, string)
+	outs = func(os []inspectOutput, indent string) {
+		for _, o := range os {
+			line := indent + o.Path + " ← " + o.Form
+			if o.Source != nil {
+				line += " " + *o.Source
+			}
+			if o.ForEach != nil {
+				line += ", for each " + *o.ForEach
+			}
+			if o.When != nil {
+				line += ", when " + *o.When
+			}
+			b.WriteString(line + "\n")
+			if o.Container != nil {
+				outs(o.Container.Entries, indent+"  ")
+			}
+		}
+	}
+	outs(*res.Outputs, "  ")
+	if r := res.References; r.Count > 0 {
+		section("References")
+		b.WriteString("  " + plural(r.Count, "entry", "entries") + ", " + humanSize(r.Size) + "\n")
+		for i, e := range r.Entries {
+			if i == 50 {
+				b.WriteString("  … metais ls <package> references/ -r lists the rest\n")
+				break
+			}
+			line := "  " + e.Path + " (" + humanSize(e.Size) + ")"
+			if e.Title != nil {
+				line += " — " + *e.Title
+			}
+			b.WriteString(line + "\n")
+		}
+	}
+	if a := res.Assets; a.Count > 0 {
+		section("Assets")
+		b.WriteString("  " + plural(a.Count, "file", "files") + ", " + humanSize(a.Size) + "\n")
+	}
+	if len(*res.Examples) > 0 {
+		section("Examples")
+		for _, ex := range *res.Examples {
+			line := "  " + ex.Name + ": " + strings.Join(ex.Inputs, ", ")
+			if ex.Expected {
+				line += " (with expected outputs)"
+			}
+			b.WriteString(line + "\n")
+		}
+	}
+	return []byte(b.String())
+}
+
+func plural(n int, one, many string) string {
+	if n == 1 {
+		return "1 " + one
+	}
+	return strconv.Itoa(n) + " " + many
+}
+
+// humanSize is a size in bytes below 1024, and otherwise in KiB, MiB or
+// GiB with one decimal place (ADR-008 D6 item 10).
+func humanSize(n int64) string {
+	if n < 1024 {
+		return strconv.FormatInt(n, 10) + " B"
+	}
+	units := []string{"KiB", "MiB", "GiB"}
+	v := float64(n) / 1024
+	i := 0
+	for v >= 1024 && i < len(units)-1 {
+		v /= 1024
+		i++
+	}
+	return strconv.FormatFloat(v, 'f', 1, 64) + " " + units[i]
+}

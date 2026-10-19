@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.name.character",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/a‮txt.exe"
+    },
+    "params": {
+      "offset": 2589,
+      "code_point": 8238
+    }
+  }
+]

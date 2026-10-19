@@ -1,0 +1,20 @@
+[
+  {
+    "code": "manifest.license.expression",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 4,
+      "column": 10,
+      "pointer": "/license"
+    },
+    "params": {
+      "reason": "operator_case",
+      "position": 5
+    }
+  }
+]

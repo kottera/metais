@@ -1,0 +1,25 @@
+[
+  {
+    "code": "package.name.case_collision",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/straße.txt"
+    },
+    "params": {
+      "offset": 2790,
+      "member": "assets/straße.txt",
+      "other": "assets/STRASSE.txt"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "assets/STRASSE.txt",
+        "note": "collides with"
+      }
+    ]
+  }
+]

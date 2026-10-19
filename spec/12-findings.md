@@ -88,59 +88,67 @@ it, and the statements it reports.
 | `json.trailing_content` | error | content | input | — | 1.0 | — |
 | `limit.exceeded` | error | content | input | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | — |
 | `limit.invalid` | error | usage | invocation | `reason`; optional: `name`, `default`, `unit`, `value` | 1.0 | — |
-| `limit.package` | error | refused | package | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | — |
+| `limit.package` | error | refused | package | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-SEC-001](14-security.md#mts-sec-001) |
 | `manifest.additional_item` | error | content | manifest | `index`, `prefix_count` | 1.0 | — |
-| `manifest.additional_property` | error | content | manifest | `property`; optional: `suggestion` | 1.0 | — |
+| `manifest.additional_property` | error | content | manifest | `property`; optional: `suggestion` | 1.0 | [MTS-MAN-011](03-manifest.md#mts-man-011), [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.any_of` | error | content | manifest | `branch_count` | 1.0 | — |
 | `manifest.const` | error | content | manifest | `expected` | 1.0 | — |
 | `manifest.contains` | error | content | manifest | — | 1.0 | — |
 | `manifest.dependent_required` | error | content | manifest | `property`, `because` | 1.0 | — |
-| `manifest.enum` | error | content | manifest | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | — |
+| `manifest.enum` | error | content | manifest | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.exclusive_maximum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
 | `manifest.exclusive_minimum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
+| `manifest.file.wrong_name` | error | content | manifest | — | 1.0 | [MTS-MAN-002](03-manifest.md#mts-man-002) |
 | `manifest.forbidden` | error | content | manifest | optional: `property` | 1.0 | — |
 | `manifest.format` | error | content | manifest | `format` | 1.0 | — |
-| `manifest.input.duplicate_name` | error | content | manifest | `name` | 1.0 | — |
-| `manifest.license.expression` | error | content | manifest | `reason`, `position` | 1.0 | — |
+| `manifest.input.duplicate_name` | error | content | manifest | `name` | 1.0 | [MTS-MAN-016](03-manifest.md#mts-man-016) |
+| `manifest.json.duplicate_name` | error | content | manifest | `name` | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
+| `manifest.json.encoding` | error | content | manifest | `reason`, `offset` | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
+| `manifest.json.lone_surrogate` | error | content | manifest | — | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
+| `manifest.json.noncharacter` | error | content | manifest | — | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
+| `manifest.json.syntax` | error | content | manifest | `expected`, `found` | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
+| `manifest.json.trailing_content` | error | content | manifest | — | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
+| `manifest.license.expression` | error | content | manifest | `reason`, `position` | 1.0 | [MTS-MAN-013](03-manifest.md#mts-man-013) |
 | `manifest.max_contains` | error | content | manifest | `limit`, `count` | 1.0 | — |
 | `manifest.max_items` | error | content | manifest | `limit`, `count` | 1.0 | — |
-| `manifest.max_length` | error | content | manifest | `limit`; optional: `length` | 1.0 | — |
+| `manifest.max_length` | error | content | manifest | `limit`; optional: `length` | 1.0 | [MTS-MAN-012](03-manifest.md#mts-man-012), [MTS-MAN-014](03-manifest.md#mts-man-014), [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.max_properties` | error | content | manifest | `limit`, `count` | 1.0 | — |
 | `manifest.maximum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
 | `manifest.min_contains` | error | content | manifest | `limit`, `count` | 1.0 | — |
-| `manifest.min_items` | error | content | manifest | `limit`, `count` | 1.0 | — |
+| `manifest.min_items` | error | content | manifest | `limit`, `count` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.min_length` | error | content | manifest | `limit`; optional: `length` | 1.0 | — |
 | `manifest.min_properties` | error | content | manifest | `limit`, `count` | 1.0 | — |
 | `manifest.minimum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
 | `manifest.multiple_of` | error | content | manifest | `divisor`; optional: `value` | 1.0 | — |
-| `manifest.not` | error | content | manifest | — | 1.0 | — |
-| `manifest.number_out_of_range` | error | content | manifest | `reason` | 1.0 | — |
+| `manifest.not` | error | content | manifest | — | 1.0 | [MTS-MAN-014](03-manifest.md#mts-man-014), [MTS-MAN-019](03-manifest.md#mts-man-019) |
+| `manifest.number_out_of_range` | error | content | manifest | `reason` | 1.0 | [MTS-MAN-010](03-manifest.md#mts-man-010) |
 | `manifest.one_of` | error | content | manifest | `branch_count` | 1.0 | — |
 | `manifest.one_of.ambiguous` | error | content | manifest | `branches` | 1.0 | — |
-| `manifest.output.duplicate_id` | error | content | manifest | `id` | 1.0 | — |
-| `manifest.output.nested_for_each` | error | content | manifest | — | 1.0 | — |
-| `manifest.pattern` | error | content | manifest | `pattern` | 1.0 | — |
+| `manifest.output.duplicate_id` | error | content | manifest | `id` | 1.0 | [MTS-MAN-016](03-manifest.md#mts-man-016) |
+| `manifest.output.nested_for_each` | error | content | manifest | — | 1.0 | [MTS-MAN-016](03-manifest.md#mts-man-016) |
+| `manifest.path_not_found` | error | content | manifest | `directory` | 1.0 | [MTS-MAN-017](03-manifest.md#mts-man-017) |
+| `manifest.pattern` | error | content | manifest | `pattern` | 1.0 | [MTS-MAN-012](03-manifest.md#mts-man-012), [MTS-MAN-014](03-manifest.md#mts-man-014), [MTS-MAN-019](03-manifest.md#mts-man-019), [MTS-VER-008](04-versions.md#mts-ver-008) |
 | `manifest.property_name` | error | content | manifest | `property` | 1.0 | — |
-| `manifest.required` | error | content | manifest | `property` | 1.0 | — |
-| `manifest.type` | error | content | manifest | `expected`, `actual` | 1.0 | — |
+| `manifest.required` | error | content | manifest | `property` | 1.0 | [MTS-MAN-011](03-manifest.md#mts-man-011), [MTS-MAN-019](03-manifest.md#mts-man-019) |
+| `manifest.type` | error | content | manifest | `expected`, `actual` | 1.0 | [MTS-MAN-011](03-manifest.md#mts-man-011), [MTS-MAN-019](03-manifest.md#mts-man-019), [MTS-VER-008](04-versions.md#mts-ver-008) |
 | `manifest.unevaluated_item` | error | content | manifest | `index` | 1.0 | — |
 | `manifest.unevaluated_property` | error | content | manifest | `property`; optional: `suggestion` | 1.0 | — |
 | `manifest.unique_items` | error | content | manifest | `index`, `duplicate_of` | 1.0 | — |
-| `manifest.yaml.alias` | error | content | manifest | — | 1.0 | — |
-| `manifest.yaml.anchor` | error | content | manifest | — | 1.0 | — |
-| `manifest.yaml.bom` | error | content | manifest | — | 1.0 | — |
-| `manifest.yaml.character` | error | content | manifest | `codepoint`, `reason` | 1.0 | — |
-| `manifest.yaml.directive` | error | content | manifest | — | 1.0 | — |
-| `manifest.yaml.duplicate_key` | error | content | manifest | — | 1.0 | — |
-| `manifest.yaml.encoding` | error | content | manifest | `reason`, `offset` | 1.0 | — |
-| `manifest.yaml.key_empty` | error | content | manifest | — | 1.0 | — |
-| `manifest.yaml.key_not_scalar` | error | content | manifest | — | 1.0 | — |
-| `manifest.yaml.merge_key` | error | content | manifest | — | 1.0 | — |
-| `manifest.yaml.multi_document` | error | content | manifest | — | 1.0 | — |
-| `manifest.yaml.root_not_mapping` | error | content | manifest | — | 1.0 | — |
-| `manifest.yaml.scalar_refused` | error | content | manifest | `form` | 1.0 | — |
-| `manifest.yaml.syntax` | error | content | manifest | — | 1.0 | — |
-| `manifest.yaml.tag` | error | content | manifest | — | 1.0 | — |
+| `manifest.yaml.alias` | error | content | manifest | — | 1.0 | [MTS-MAN-005](03-manifest.md#mts-man-005) |
+| `manifest.yaml.anchor` | error | content | manifest | — | 1.0 | [MTS-MAN-005](03-manifest.md#mts-man-005) |
+| `manifest.yaml.bom` | error | content | manifest | — | 1.0 | [MTS-MAN-003](03-manifest.md#mts-man-003) |
+| `manifest.yaml.character` | error | content | manifest | `codepoint`, `reason` | 1.0 | [MTS-MAN-003](03-manifest.md#mts-man-003) |
+| `manifest.yaml.directive` | error | content | manifest | — | 1.0 | [MTS-MAN-004](03-manifest.md#mts-man-004) |
+| `manifest.yaml.duplicate_key` | error | content | manifest | — | 1.0 | [MTS-MAN-006](03-manifest.md#mts-man-006) |
+| `manifest.yaml.encoding` | error | content | manifest | `reason`, `offset` | 1.0 | [MTS-MAN-003](03-manifest.md#mts-man-003) |
+| `manifest.yaml.key_empty` | error | content | manifest | — | 1.0 | [MTS-MAN-006](03-manifest.md#mts-man-006) |
+| `manifest.yaml.key_not_scalar` | error | content | manifest | — | 1.0 | [MTS-MAN-006](03-manifest.md#mts-man-006) |
+| `manifest.yaml.merge_key` | error | content | manifest | — | 1.0 | [MTS-MAN-005](03-manifest.md#mts-man-005) |
+| `manifest.yaml.multi_document` | error | content | manifest | — | 1.0 | [MTS-MAN-004](03-manifest.md#mts-man-004) |
+| `manifest.yaml.root_not_mapping` | error | content | manifest | — | 1.0 | [MTS-MAN-004](03-manifest.md#mts-man-004) |
+| `manifest.yaml.scalar_refused` | error | content | manifest | `form` | 1.0 | [MTS-MAN-007](03-manifest.md#mts-man-007) |
+| `manifest.yaml.syntax` | error | content | manifest | — | 1.0 | [MTS-MAN-008](03-manifest.md#mts-man-008) |
+| `manifest.yaml.tag` | error | content | manifest | — | 1.0 | [MTS-MAN-005](03-manifest.md#mts-man-005) |
 | `markdown.frontmatter_body_field` | error | content | input | — | 1.0 | — |
 | `markdown.frontmatter_not_mapping` | error | content | input | `actual` | 1.0 | — |
 | `markdown.frontmatter_unclosed` | error | content | input | — | 1.0 | — |
@@ -179,51 +187,74 @@ it, and the statements it reports.
 | `output.unevaluated_item` | error | content | output | `index` | 1.0 | — |
 | `output.unevaluated_property` | error | content | output | `property`; optional: `suggestion` | 1.0 | — |
 | `output.unique_items` | error | content | output | `index`, `duplicate_of` | 1.0 | — |
-| `package.container.archive_comment` | error | refused | package | `offset`, `length` | 1.0 | — |
-| `package.container.crc_mismatch` | error | refused | package | `offset` | 1.0 | — |
-| `package.container.data_descriptor` | error | refused | package | `offset` | 1.0 | — |
-| `package.container.deflate_stream` | error | refused | package | `offset`, `reason` | 1.0 | — |
-| `package.container.encrypted` | error | refused | package | `offset` | 1.0 | — |
-| `package.container.entry_order` | error | refused | package | `offset` | 1.0 | — |
-| `package.container.extra_field` | error | refused | package | `offset`, `length` | 1.0 | — |
-| `package.container.field_value` | error | refused | package | `offset`, `record`, `header_field`, `value`, `expected` | 1.0 | — |
-| `package.container.flags` | error | refused | package | `offset`, `value` | 1.0 | — |
-| `package.container.header_mismatch` | error | refused | package | `offset`, `header_field` | 1.0 | — |
-| `package.container.method` | error | refused | package | `offset`, `method` | 1.0 | — |
-| `package.container.not_zip` | error | refused | package | — | 1.0 | — |
-| `package.container.overlap_or_gap` | error | refused | package | `offset`; optional: `declared` | 1.0 | — |
-| `package.container.prepended_data` | error | refused | package | `offset`; optional: `declared` | 1.0 | — |
-| `package.container.second_end_record` | error | refused | package | `offset` | 1.0 | — |
-| `package.container.size_mismatch` | error | refused | package | `offset`, `declared` | 1.0 | — |
-| `package.container.trailing_data` | error | refused | package | `offset` | 1.0 | — |
-| `package.container.zip64` | error | refused | package | `offset` | 1.0 | — |
-| `package.name.case_collision` | error | refused | package | `offset`, `member`, `other` | 1.0 | — |
-| `package.name.character` | error | refused | package | `offset`, `code_point` | 1.0 | — |
-| `package.name.directory_entry` | error | refused | package | `offset` | 1.0 | — |
-| `package.name.duplicate` | error | refused | package | `offset` | 1.0 | — |
-| `package.name.encoding` | error | refused | package | `offset`, `reason` | 1.0 | — |
-| `package.name.file_directory_conflict` | error | refused | package | `offset`, `member`, `other` | 1.0 | — |
-| `package.name.not_nfc` | error | refused | package | `offset` | 1.0 | — |
-| `package.name.not_portable` | error | refused | package | `offset`, `reason` | 1.0 | — |
-| `package.name.shape` | error | refused | package | `offset`, `reason` | 1.0 | — |
-| `package.version.malformed` | error | refused | package | `implemented` | 1.0 | — |
-| `package.version.missing` | error | refused | package | `implemented` | 1.0 | — |
-| `package.version.not_string` | error | refused | package | `actual`, `implemented`; optional: `written` | 1.0 | — |
-| `package.version.unsupported_major` | error | refused | package | `declared`, `implemented` | 1.0 | — |
-| `package.version.unsupported_minor` | error | refused | package | `declared`, `implemented` | 1.0 | — |
+| `package.compiled.mismatch` | error | refused | package | — | 1.0 | [MTS-MAN-022](03-manifest.md#mts-man-022), [MTS-PKG-025](02-container.md#mts-pkg-025) |
+| `package.compiled.missing` | error | refused | package | — | 1.0 | [MTS-PKG-024](02-container.md#mts-pkg-024) |
+| `package.compiled.unknown_file` | error | refused | package | — | 1.0 | [MTS-PKG-024](02-container.md#mts-pkg-024) |
+| `package.container.archive_comment` | error | refused | package | `offset`, `length` | 1.0 | [MTS-PKG-003](02-container.md#mts-pkg-003) |
+| `package.container.crc_mismatch` | error | refused | package | `offset` | 1.0 | [MTS-PKG-011](02-container.md#mts-pkg-011) |
+| `package.container.data_descriptor` | error | refused | package | `offset` | 1.0 | [MTS-PKG-007](02-container.md#mts-pkg-007) |
+| `package.container.deflate_stream` | error | refused | package | `offset`, `reason` | 1.0 | [MTS-PKG-011](02-container.md#mts-pkg-011) |
+| `package.container.encrypted` | error | refused | package | `offset` | 1.0 | [MTS-PKG-007](02-container.md#mts-pkg-007) |
+| `package.container.entry_order` | error | refused | package | `offset` | 1.0 | [MTS-PKG-010](02-container.md#mts-pkg-010) |
+| `package.container.extra_field` | error | refused | package | `offset`, `length` | 1.0 | [MTS-PKG-008](02-container.md#mts-pkg-008) |
+| `package.container.field_value` | error | refused | package | `offset`, `record`, `header_field`, `value`, `expected` | 1.0 | [MTS-PKG-006](02-container.md#mts-pkg-006) |
+| `package.container.flags` | error | refused | package | `offset`, `value` | 1.0 | [MTS-PKG-007](02-container.md#mts-pkg-007) |
+| `package.container.header_mismatch` | error | refused | package | `offset`, `header_field` | 1.0 | [MTS-PKG-009](02-container.md#mts-pkg-009) |
+| `package.container.method` | error | refused | package | `offset`, `method` | 1.0 | [MTS-PKG-007](02-container.md#mts-pkg-007) |
+| `package.container.not_zip` | error | refused | package | — | 1.0 | [MTS-PKG-003](02-container.md#mts-pkg-003) |
+| `package.container.overlap_or_gap` | error | refused | package | `offset`; optional: `declared` | 1.0 | [MTS-PKG-003](02-container.md#mts-pkg-003) |
+| `package.container.prepended_data` | error | refused | package | `offset`; optional: `declared` | 1.0 | [MTS-PKG-003](02-container.md#mts-pkg-003) |
+| `package.container.second_end_record` | error | refused | package | `offset` | 1.0 | [MTS-PKG-005](02-container.md#mts-pkg-005) |
+| `package.container.size_mismatch` | error | refused | package | `offset`, `declared` | 1.0 | [MTS-PKG-011](02-container.md#mts-pkg-011) |
+| `package.container.trailing_data` | error | refused | package | `offset` | 1.0 | [MTS-PKG-003](02-container.md#mts-pkg-003) |
+| `package.container.zip64` | error | refused | package | `offset` | 1.0 | [MTS-PKG-004](02-container.md#mts-pkg-004) |
+| `package.digest.entries_mismatch` | error | refused | package | `reason` | 1.0 | [MTS-PKG-028](02-container.md#mts-pkg-028) |
+| `package.digest.mismatch` | error | refused | package | `listed`, `computed` | 1.0 | [MTS-PKG-029](02-container.md#mts-pkg-029) |
+| `package.digest.not_canonical` | error | refused | package | `reason` | 1.0 | [MTS-PKG-027](02-container.md#mts-pkg-027) |
+| `package.digest.package_mismatch` | error | refused | package | `listed`, `computed` | 1.0 | [MTS-PKG-030](02-container.md#mts-pkg-030) |
+| `package.layout.compiled_in_source` | error | refused | package | — | 1.0 | [MTS-PKG-022](02-container.md#mts-pkg-022) |
+| `package.layout.empty_directory` | error | refused | package | — | 1.0 | [MTS-PKG-023](02-container.md#mts-pkg-023) |
+| `package.layout.missing_manifest` | error | refused | package | — | 1.0 | [MTS-PKG-020](02-container.md#mts-pkg-020) |
+| `package.layout.non_regular_file` | error | refused | package | — | 1.0 | [MTS-PKG-023](02-container.md#mts-pkg-023) |
+| `package.layout.unknown_top_level` | error | refused | package | — | 1.0 | [MTS-PKG-019](02-container.md#mts-pkg-019) |
+| `package.name.case_collision` | error | refused | package | `member`, `other`; optional: `offset` | 1.0 | [MTS-PKG-017](02-container.md#mts-pkg-017) |
+| `package.name.character` | error | refused | package | `code_point`; optional: `offset` | 1.0 | [MTS-PKG-015](02-container.md#mts-pkg-015) |
+| `package.name.directory_entry` | error | refused | package | optional: `offset` | 1.0 | [MTS-PKG-018](02-container.md#mts-pkg-018) |
+| `package.name.duplicate` | error | refused | package | optional: `offset` | 1.0 | [MTS-PKG-017](02-container.md#mts-pkg-017) |
+| `package.name.encoding` | error | refused | package | `reason`; optional: `offset` | 1.0 | [MTS-PKG-012](02-container.md#mts-pkg-012) |
+| `package.name.file_directory_conflict` | error | refused | package | `member`, `other`; optional: `offset` | 1.0 | [MTS-PKG-017](02-container.md#mts-pkg-017) |
+| `package.name.not_nfc` | error | refused | package | optional: `offset` | 1.0 | [MTS-PKG-013](02-container.md#mts-pkg-013) |
+| `package.name.not_portable` | error | refused | package | `reason`; optional: `offset` | 1.0 | [MTS-PKG-016](02-container.md#mts-pkg-016) |
+| `package.name.shape` | error | refused | package | `reason`; optional: `offset` | 1.0 | [MTS-PKG-014](02-container.md#mts-pkg-014) |
+| `package.not_found` | error | refused | package | — | 1.0 | — |
+| `package.not_readable` | error | refused | package | `reason` | 1.0 | — |
+| `package.version.malformed` | error | refused | package | `implemented` | 1.0 | [MTS-VER-003](04-versions.md#mts-ver-003) |
+| `package.version.missing` | error | refused | package | `implemented` | 1.0 | [MTS-VER-001](04-versions.md#mts-ver-001) |
+| `package.version.not_string` | error | refused | package | `actual`, `implemented`; optional: `written` | 1.0 | [MTS-VER-002](04-versions.md#mts-ver-002) |
+| `package.version.unsupported_major` | error | refused | package | `declared`, `implemented` | 1.0 | [MTS-VER-004](04-versions.md#mts-ver-004) |
+| `package.version.unsupported_minor` | error | refused | package | `declared`, `implemented` | 1.0 | [MTS-VER-005](04-versions.md#mts-ver-005) |
 | `report.truncated` | info | content | report | `listed`, `omitted` | 1.0 | — |
-| `schema.dialect` | error | content | package | `reason` | 1.0 | — |
-| `schema.format_unsupported` | error | content | package | `format` | 1.0 | — |
-| `schema.id_duplicate` | error | content | package | `id`; optional: `other` | 1.0 | — |
-| `schema.invalid` | error | content | package | `keyword` | 1.0 | — |
-| `schema.keyword_unknown` | error | content | package | `keyword` | 1.0 | — |
-| `schema.pattern_unsupported` | error | content | package | `construct` | 1.0 | — |
-| `schema.ref_by_path` | error | content | package | `reference`, `id` | 1.0 | — |
-| `schema.ref_escapes` | error | content | package | `reference` | 1.0 | — |
-| `schema.ref_unresolved` | error | content | package | `reference` | 1.0 | — |
+| `schema.dialect` | error | content | package | `reason` | 1.0 | [MTS-DAT-003](05-data-specification.md#mts-dat-003) |
+| `schema.format_unsupported` | error | content | package | `format` | 1.0 | [MTS-DAT-005](05-data-specification.md#mts-dat-005) |
+| `schema.id_duplicate` | error | content | package | `id`; optional: `other` | 1.0 | [MTS-DAT-008](05-data-specification.md#mts-dat-008) |
+| `schema.invalid` | error | content | package | `keyword` | 1.0 | [MTS-DAT-003](05-data-specification.md#mts-dat-003) |
+| `schema.keyword_unknown` | error | content | package | `keyword` | 1.0 | [MTS-DAT-004](05-data-specification.md#mts-dat-004) |
+| `schema.pattern_unsupported` | error | content | package | `construct` | 1.0 | [MTS-DAT-006](05-data-specification.md#mts-dat-006) |
+| `schema.ref_by_path` | error | content | package | `reference`, `id` | 1.0 | [MTS-DAT-008](05-data-specification.md#mts-dat-008) |
+| `schema.ref_escapes` | error | content | package | `reference` | 1.0 | [MTS-DAT-007](05-data-specification.md#mts-dat-007) |
+| `schema.ref_unresolved` | error | content | package | `reference` | 1.0 | [MTS-DAT-007](05-data-specification.md#mts-dat-007) |
 | `schema.sample_unsatisfiable` | error | content | input | `instance`, `reason` | 1.0 | — |
+| `schema.syntax` | error | content | package | `form`, `rule` | 1.0 | [MTS-DAT-002](05-data-specification.md#mts-dat-002) |
+| `template.division_by_zero` | error | content | template | `filter`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
+| `template.filter_argument` | error | content | template | `filter`, `argument`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
+| `template.filter_input` | error | content | template | `filter`, `type`, `column` | 1.0 | — |
+| `template.include` | error | content | template | `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
+| `template.number_range` | error | content | template | `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
 | `template.ooxml.split_construct` | error | content | template | `cause`, `text`, `text_elements` | 1.0 | — |
 | `template.ooxml.split_delimiter` | error | content | template | `cause`, `delimiter`, `text`, `text_elements` | 1.0 | — |
+| `template.syntax` | error | content | template | `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
+| `template.tag_context` | error | content | template | `tag`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
+| `template.unknown_filter` | error | content | template | `filter`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018) |
 | `template.xref.budget_exhausted` | warning | content | package | `bound`, `limit` | 1.0 | — |
 | `template.xref.dynamic_reference` | warning | content | template | optional: `output` | 1.0 | — |
 | `template.xref.for_each_not_array` | error | content | output | `types` | 1.0 | — |
@@ -240,8 +271,10 @@ it, and the statements it reports.
 | `template.xref.unused_template` | warning | content | template | — | 1.0 | — |
 | `usage.bad_value` | error | usage | invocation | `argument`, `flag`, `reason`; optional: `allowed` | 1.0 | — |
 | `usage.missing_command` | error | usage | invocation | — | 1.0 | — |
+| `usage.missing_operand` | error | usage | invocation | `command`, `operand` | 1.0 | — |
 | `usage.name_invalid` | error | usage | invocation | `argument`, `source`; optional: `suggestion` | 1.0 | — |
 | `usage.name_required` | error | usage | invocation | — | 1.0 | — |
+| `usage.package_from_stdin` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.repeated_flag` | error | usage | invocation | `argument`, `flag` | 1.0 | — |
 | `usage.unexpected_operand` | error | usage | invocation | `argument`, `command` | 1.0 | — |
 | `usage.unknown_command` | error | usage | invocation | `argument` | 1.0 | — |
@@ -261,3 +294,39 @@ it, and the statements it reports.
 | `yaml.syntax` | error | content | input | — | 1.0 | — |
 | `yaml.tag` | error | content | input | — | 1.0 | — |
 <!-- The end of the generated code catalog. -->
+
+## 12.2 The finding
+
+A finding is one problem an operation reports. Its members are its `code`,
+registered in §12.1; its `severity`, `error`, `warning` or `info`, which the
+registry gives the code; its `subject`, the kind of thing it is about with
+that thing's name where the kind has one; its `location` where the code's
+registry entry gives it a span: the origin of the value or file, the file
+relative to that origin, the 1-based line and column, in Unicode code points,
+where the value starts, and the JSON Pointer of the value; and its `params`,
+which the registry declares by name and type. A message and a hint come with
+every finding; their wording is the implementation's own, and only the
+members above are compared.
+
+<a id="mts-fnd-001"></a>**MTS-FND-001** A processor MUST report each finding
+with a code registered in §12.1, with the severity and the subject kind its
+registry entry gives, with a location exactly when the entry gives the code a
+span, and with the parameters the entry declares, each of its declared type and
+each the entry marks as always present.
+
+<a id="mts-fnd-002"></a>**MTS-FND-002** A processor MUST report that an
+operation failed whenever it reports a finding of severity `error`, and MUST
+then neither use nor print anything of what it was refusing.
+
+<a id="mts-fnd-003"></a>**MTS-FND-003** A processor MUST report an
+operation's findings in one order, compared member by member, strings by their
+UTF-8 bytes: the subject's kind, in the order `invocation`, `package`,
+`manifest`, `schema`, `input`, `template`, `asset`, `reference`, `output`,
+`example`, `report`; its name, an absent name first; the location's origin, in
+the order `package`, `example`, `data_dir`, `inputs_json`, `set`, `default`,
+`sample`, `output`; its file, an absent file first, then its argument; its
+line, then its column, a finding with no line first; its pointer, token by
+token, an array index comparing as a number and a prefix before its
+extensions; the code; the schema's entry, then its pointer; and the canonical
+JSON of the parameters. Of two findings equal in code, subject, origin, file,
+argument, pointer and parameters, it MUST report one.

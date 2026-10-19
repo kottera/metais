@@ -1,0 +1,32 @@
+[
+  {
+    "code": "package.container.overlap_or_gap",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/b.txt"
+    },
+    "params": {
+      "offset": 1857,
+      "declared": 1811
+    }
+  },
+  {
+    "code": "package.container.overlap_or_gap",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json"
+    },
+    "params": {
+      "offset": 1857,
+      "declared": 1903
+    }
+  }
+]

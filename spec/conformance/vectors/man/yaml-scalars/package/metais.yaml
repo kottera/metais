@@ -1,0 +1,13 @@
+metais: "1.0"
+name: example
+version: 012
+title: True
+description: ~
+guide: Supply a report.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid

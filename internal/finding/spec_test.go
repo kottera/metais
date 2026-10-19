@@ -359,6 +359,19 @@ func TestEmittedCodes(t *testing.T) {
 		"input.json_arg_unknown", "input.link", "input.missing", "input.noncharacter", "input.not_readable",
 		"input.not_regular_file", "input.set_into_unparsed", "input.set_pointer_invalid", "input.set_traversal",
 		"markdown.frontmatter_body_field", "markdown.frontmatter_not_mapping")
+	// The package loader's and inspect's (W3-1).
+	want = append(want, "package.not_found", "package.not_readable",
+		"package.layout.unknown_top_level", "package.layout.missing_manifest", "package.layout.compiled_in_source",
+		"package.layout.empty_directory", "package.layout.non_regular_file",
+		"package.compiled.missing", "package.compiled.unknown_file", "package.compiled.mismatch",
+		"package.digest.not_canonical", "package.digest.entries_mismatch", "package.digest.mismatch", "package.digest.package_mismatch",
+		"manifest.file.wrong_name", "manifest.path_not_found", "schema.syntax",
+		"template.syntax", "template.include", "template.unknown_filter", "template.number_range", "template.tag_context",
+		"template.filter_argument", "template.filter_input", "template.division_by_zero",
+		CodeUsageMissingOperand, CodeUsagePackageFromStdin)
+	for _, c := range []string{"syntax", "trailing_content", "duplicate_name", "lone_surrogate", "noncharacter", "encoding"} {
+		want = append(want, Code("manifest.json."+c))
+	}
 	slices.Sort(want)
 	if !slices.Equal(got, want) {
 		t.Errorf("registered %q, want %q", got, want)

@@ -44,6 +44,11 @@ func (a *Archive) Entries() []EntryInfo {
 	return out
 }
 
+// Decodes returns how many times the Archive has decoded an entry: once
+// per entry at open, and once per reader read since. It is how a reader
+// holds itself to ADR-010 D15 item 2's budget.
+func (a *Archive) Decodes() int { return a.decodes }
+
 // List returns every entry path, in ascending byte order.
 func (a *Archive) List() []string {
 	out := make([]string, len(a.entries))

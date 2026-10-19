@@ -1,0 +1,28 @@
+[
+  {
+    "code": "manifest.pattern",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 3,
+      "column": 10,
+      "pointer": "/version"
+    },
+    "schema": {
+      "entry": "https://metais.org/schemas/1.0/manifest.schema.json",
+      "pointer": "/properties/version/pattern",
+      "keyword": "pattern"
+    },
+    "field": {
+      "title": "Package version",
+      "description": "The package's own version, a Semantic Versioning 2.0.0 version such as 1.2.0, written without a leading v and quoted. Pre-release and build metadata are allowed."
+    },
+    "params": {
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*))?(\\+([0-9a-zA-Z-]+(\\.[0-9a-zA-Z-]+)*))?$"
+    }
+  }
+]

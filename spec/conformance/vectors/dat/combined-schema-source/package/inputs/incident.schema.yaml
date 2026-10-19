@@ -1,0 +1,8 @@
+type: object
+properties:
+  root_cause:
+    $ref: "https://example.org/schemas/vendor.json#/properties/name"
+  cost:
+    type: number
+    maximum: 1E3
+    multipleOf: 0.5

@@ -900,3 +900,15 @@ format.
   or `.yml` and its `meaning` ends `.md`, and `csv` requires `delimiter`.
   The nesting depth of containers, a limit a caller may lower, is the
   loader's.
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-1.** D1, D9 and D11 landed in
+  `internal/loader`, composing `yamlx`, `jsonx`, `manifest` and the closed
+  schema compiler. `jsonx` reads a manifest under D3 with the
+  `manifest.json.*` family, and a limit the manifest breaches is
+  `limit.package`. The manifest schema is compiled by `schema.NewCompiler`
+  as the only file of a tree of its own, and its findings name it by its
+  `$id` as `schema.entry`. D1 item 3's other spellings are
+  `manifest.file.wrong_name`. A JSON-content manifest never meets a byte
+  order mark: its first byte is not `{`, so it is read as YAML and refused
+  by `manifest.yaml.bom`. D4 item 9 calls `guide: |` the golden form, but a
+  literal block scalar keeps a final line break, which D4 item 6's prose
+  refuses; chapter 3 notes `guide: |-`.

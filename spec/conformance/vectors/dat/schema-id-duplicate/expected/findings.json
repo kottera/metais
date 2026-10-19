@@ -1,0 +1,18 @@
+[
+  {
+    "code": "schema.id_duplicate",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/b.schema.json",
+      "pointer": "/$id"
+    },
+    "params": {
+      "id": "https://example.org/same.json",
+      "other": "inputs/a.schema.json"
+    }
+  }
+]

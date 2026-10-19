@@ -1,0 +1,18 @@
+[
+  {
+    "code": "package.digest.package_mismatch",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/digests.json",
+      "pointer": "/package"
+    },
+    "params": {
+      "listed": "0000000000000000000000000000000000000000000000000000000000000000",
+      "computed": "e52c1c6fd8e1c0653356d5cd10ce00762a65d90f6da349d4c6728f01953dfef4"
+    }
+  }
+]

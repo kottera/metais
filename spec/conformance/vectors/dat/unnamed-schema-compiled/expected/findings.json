@@ -1,0 +1,17 @@
+[
+  {
+    "code": "schema.keyword_unknown",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/unused.schema.json",
+      "pointer": "/requried"
+    },
+    "params": {
+      "keyword": "requried"
+    }
+  }
+]

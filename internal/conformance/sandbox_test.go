@@ -213,7 +213,10 @@ func (sb *sandbox) applySetup(v *vector, c *vcase) error {
 			continue // written by an earlier step
 		}
 		dst := filepath.Join(sb.work, filepath.FromSlash(rel))
-		if _, err := os.Lstat(dst); err == nil {
+		// The setup may have made part of a tree already — an empty
+		// directory or a link inside the package — and the tree's files
+		// are copied around it; anything else the setup put there stands.
+		if got, err := os.Lstat(dst); err == nil && !(fi.IsDir() && got.IsDir()) {
 			continue
 		}
 		if fi.IsDir() {

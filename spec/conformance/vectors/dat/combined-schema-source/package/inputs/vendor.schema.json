@@ -1,0 +1,12 @@
+{
+  "$id": "https://example.org/schemas/vendor.json",
+  "type": "object",
+  "required": ["name", "stage"],
+  "properties": {
+    "name": {"$ref": "https://example.org/schemas/common/text.json"},
+    "stage": {"enum": ["draft", "final"]},
+    "\ue000": {"description": "A private-use member name, which sorts before U+1F600 by UTF-16 code units and after it by code points"},
+    "\ud83d\ude00": {"description": "A member name above U+FFFF"},
+    "tab\tand\u0000": {"description": "Escapes: \"quote\", \\backslash, \u001f, \u007f, and \u00e9 written as UTF-8"}
+  }
+}

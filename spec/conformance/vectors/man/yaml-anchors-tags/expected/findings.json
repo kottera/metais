@@ -1,0 +1,62 @@
+[
+  {
+    "code": "manifest.yaml.merge_key",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 4,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 5,
+      "column": 8,
+      "pointer": "/title"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 6,
+      "column": 14,
+      "pointer": "/description"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.tag",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 7,
+      "column": 8,
+      "pointer": "/guide"
+    },
+    "params": {}
+  }
+]

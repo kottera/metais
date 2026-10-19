@@ -1,0 +1,27 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply a report.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+  - name: report
+    title: Report again
+    schema: inputs/report.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid
+  - id: report
+    template: report.md.liquid
+    path: other.md
+  - id: bundle
+    path: "bundle-{{ item.title }}.zip"
+    for_each: inputs.report
+    container:
+      entries:
+        - template: report.md.liquid
+          path: "{{ item.title }}.md"
+          for_each: inputs.report

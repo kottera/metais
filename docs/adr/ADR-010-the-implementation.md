@@ -1815,3 +1815,17 @@ R2-156 (RULINGS-v1); R2-156's own frontmatter split stands.
   names, and the 73 that left it are refused at parse by the catalog's
   `Check`. `FuzzLiquidRender` renders under `Core()` at small limits, the
   input its own partial.
+- **2026-10-19, PLAN-2026-10-metais-v1 W3-1.** The package loader is
+  `internal/loader`, a package D2's layout does not name: `pkgtree`, which
+  the layout gives D5 and D8, is the interface every tree implements, and a
+  loader there would import `zipfmt` and `hostfs`, which import it. D13's
+  `SkipDigest` seam stays `internal/pkgtree`, as
+  `pkgtree.VerifyDigests`, generic in its findings so that `pkgtree` still
+  reaches nothing of the host; the loader passes it the invocation's
+  faults, and `internal/guarantees`' `TestDigestDetector` runs the detector
+  and its control. `internal/digest` is D6 of ADR-001. The program that
+  produces the suite's committed packages is `internal/vectorgen`, whose
+  tests are the program (`-update`) and its reproduction test; most
+  hostile packages store every entry, so few of their bytes depend on the
+  pinned encoder. `THIRD-PARTY-NOTICES.txt` now lists jcs, yaml.v3,
+  jsonschema/v6 and x/text, which `./cmd/metais` links.

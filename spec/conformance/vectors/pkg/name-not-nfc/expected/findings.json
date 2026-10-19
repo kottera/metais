@@ -1,0 +1,16 @@
+[
+  {
+    "code": "package.name.not_nfc",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/café.txt"
+    },
+    "params": {
+      "offset": 2587
+    }
+  }
+]

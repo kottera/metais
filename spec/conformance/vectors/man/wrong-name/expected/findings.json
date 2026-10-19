@@ -1,0 +1,14 @@
+[
+  {
+    "code": "manifest.file.wrong_name",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.json"
+    },
+    "params": {}
+  }
+]

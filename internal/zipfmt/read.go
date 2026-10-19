@@ -47,7 +47,20 @@ import (
 // Steps 6 and 7, the digest file and the compiled files, are the loader's
 // (ADR-001 D8), over the Archive's Entries.
 func Open(r io.ReaderAt, size int64, lim limits.Set) (*Archive, []finding.Finding, error) {
-	o := &opener{s: &source{r: r, size: size}, lim: lim}
+	return OpenWith(r, size, lim, nil)
+}
+
+// OpenWith is Open, handing step 5's decoding of each entry to sink as it
+// goes: sink is asked once per entry, in the file's order, for a writer
+// that receives the entry's decoded bytes, and gives nil for an entry it
+// does not want. So a reader that needs some entries' content — the
+// loader's manifest, compiled files and schemas — has it without decoding
+// any entry a second time (ADR-010 D15 item 2). What a writer receives is
+// not yet verified: it is the package's content only when OpenWith
+// returns the Archive, and its digest file has verified it (ADR-001 D8
+// step 6).
+func OpenWith(r io.ReaderAt, size int64, lim limits.Set, sink func(name string) io.Writer) (*Archive, []finding.Finding, error) {
+	o := &opener{s: &source{r: r, size: size}, lim: lim, sink: sink}
 	for _, step := range []func() error{o.size, o.end, o.directory, o.walk, o.decode} {
 		if err := step(); err != nil {
 			return nil, nil, err
@@ -93,6 +106,7 @@ type opener struct {
 	count   int
 	entries []entry
 	decodes int
+	sink    func(name string) io.Writer
 }
 
 func (o *opener) add(f finding.Finding) { o.found = append(o.found, f) }
@@ -386,23 +400,8 @@ func (o *opener) collisions() {
 			seen[c.Path]++
 			off = offsets[c.Path][seen[c.Path]]
 		}
-		related := finding.WithRelated(finding.Related{Location: *at(c.Other), Note: "collides with"})
-		var f finding.Finding
-		switch c.Kind {
-		case unitext.Duplicate:
-			f = finding.New(CodeNameDuplicate, pkg, at(c.Path), finding.Params{"offset": num(off)},
-				finding.WithRelated(finding.Related{Location: *at(c.Other), Note: "first occurrence"}))
-		case unitext.CaseCollision:
-			f = finding.New(CodeNameCaseCollision, pkg, at(c.Path), memberParams(off, c), related)
-		case unitext.FileDirectoryConflict:
-			f = finding.New(CodeNameFileDirectory, pkg, at(c.Path), memberParams(off, c), related)
-		}
-		o.add(f)
+		o.add(collisionFinding(c, off))
 	}
-}
-
-func memberParams(off int64, c unitext.Collision) finding.Params {
-	return finding.Params{"offset": num(off), "member": finding.String(c.Member), "other": finding.String(c.OtherMember)}
 }
 
 // walk is step 4: from offset 0, each local header where the previous
@@ -500,7 +499,13 @@ func (o *opener) decode() error {
 	var total int64
 	for i := range o.entries {
 		e := &o.entries[i]
-		n, err := o.decodeEntry(e, sha256.New(), func(name string, off int64, code finding.Code, p finding.Params) {
+		var h hash.Hash = sha256.New()
+		if o.sink != nil {
+			if w := o.sink(e.name); w != nil {
+				h = teeHash{h, w}
+			}
+		}
+		n, err := o.decodeEntry(e, h, func(name string, off int64, code finding.Code, p finding.Params) {
 			o.add(container(code, name, off, p))
 		})
 		if err != nil {
@@ -512,6 +517,17 @@ func (o *opener) decode() error {
 		o.breached(limits.PackageUncompressed, "", total, true)
 	}
 	return nil
+}
+
+// teeHash is a hash that also writes what it hashes to w.
+type teeHash struct {
+	hash.Hash
+	w io.Writer
+}
+
+func (t teeHash) Write(p []byte) (int, error) {
+	t.w.Write(p)
+	return t.Hash.Write(p)
 }
 
 // decodeEntry decodes e's data into h, reporting through report, and

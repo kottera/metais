@@ -1,0 +1,53 @@
+[
+  {
+    "code": "manifest.yaml.scalar_refused",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 3,
+      "column": 10,
+      "pointer": "/version"
+    },
+    "params": {
+      "form": "number"
+    }
+  },
+  {
+    "code": "manifest.yaml.scalar_refused",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 4,
+      "column": 8,
+      "pointer": "/title"
+    },
+    "params": {
+      "form": "boolean"
+    }
+  },
+  {
+    "code": "manifest.yaml.scalar_refused",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 5,
+      "column": 14,
+      "pointer": "/description"
+    },
+    "params": {
+      "form": "null"
+    }
+  }
+]

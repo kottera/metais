@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.container.flags",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid"
+    },
+    "params": {
+      "offset": 2588,
+      "value": 2050
+    }
+  }
+]

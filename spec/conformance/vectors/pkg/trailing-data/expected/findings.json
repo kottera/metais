@@ -1,0 +1,15 @@
+[
+  {
+    "code": "package.container.trailing_data",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package"
+    },
+    "params": {
+      "offset": 2674
+    }
+  }
+]

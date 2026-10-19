@@ -1,0 +1,16 @@
+[
+  {
+    "code": "package.container.entry_order",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json"
+    },
+    "params": {
+      "offset": 2509
+    }
+  }
+]

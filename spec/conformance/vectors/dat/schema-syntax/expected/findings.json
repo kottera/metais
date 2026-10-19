@@ -1,0 +1,20 @@
+[
+  {
+    "code": "schema.syntax",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "line": 1,
+      "column": 19,
+      "pointer": ""
+    },
+    "params": {
+      "form": "json",
+      "rule": "syntax"
+    }
+  }
+]

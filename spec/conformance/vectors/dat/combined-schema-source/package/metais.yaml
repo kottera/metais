@@ -1,0 +1,19 @@
+metais: "1.0"
+name: combined
+version: 1.0.0
+title: Combined schema
+description: Two inputs, a shared definition by $id, and a cross-input constraint.
+guide: Supply a vendor and, when it is final, an incident.
+input_constraints: inputs/constraints.schema.yaml
+inputs:
+  - name: vendor
+    title: Vendor
+    description: The organisation that makes the product.
+    schema: inputs/vendor.schema.json
+  - name: incident
+    title: Incident
+    schema: inputs/incident.schema.yaml
+    required: false
+outputs:
+  - id: report
+    template: report.md.liquid
