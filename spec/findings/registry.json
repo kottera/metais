@@ -3787,6 +3787,47 @@
       ]
     },
     {
+      "code": "output.destination.nothing_written",
+      "severity": "error",
+      "class": "destination",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the write failed: not_found, permission_denied, is_directory, not_regular_file or io_error, as ADR-006 D9 item 8 maps an operating-system error; or exists, when something stands at a name the write needs, which is never overwritten.",
+          "always": true
+        }
+      ],
+      "message": "Writing to the destination failed ({reason}), and nothing was written: the destination is as it was.",
+      "hint": "Fix the cause, and run the command again; there is nothing to remove first.",
+      "location": "none",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-026",
+        "MTS-AUT-027",
+        "MTS-RND-006",
+        "MTS-RND-018",
+        "MTS-RND-019",
+        "MTS-RND-022",
+        "MTS-SMP-008"
+      ]
+    },
+    {
+      "code": "output.destination.staging_exists",
+      "severity": "error",
+      "class": "destination",
+      "subject": "invocation",
+      "params": [],
+      "message": "The destination holds .metais-staging, the staging directory a write into it uses, so nothing was written.",
+      "hint": "A write that was killed left it, or another write into the same destination is still using it. Once nothing is writing there, remove .metais-staging and run the command again.",
+      "location": "none",
+      "since": "1.0",
+      "statements": [
+        "MTS-RND-014"
+      ]
+    },
+    {
       "code": "output.destination.write_failed",
       "severity": "error",
       "class": "destination",
@@ -3811,14 +3852,7 @@
       "location": "none",
       "since": "1.0",
       "statements": [
-        "MTS-AUT-026",
-        "MTS-AUT-027",
-        "MTS-RND-006",
-        "MTS-RND-014",
-        "MTS-RND-018",
-        "MTS-RND-019",
-        "MTS-RND-022",
-        "MTS-SMP-008"
+        "MTS-AUT-027"
       ]
     },
     {

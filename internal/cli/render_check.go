@@ -4,6 +4,7 @@
 package cli
 
 import (
+	"errors"
 	"slices"
 
 	"github.com/kottera/metais/internal/fault"
@@ -179,7 +180,7 @@ func checkDestination(out string, overwrite bool, plan []*planned, lim limits.Se
 		if hostfs.ReasonOf(err) == hostfs.NotDirectory {
 			return nil, []finding.Finding{finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil)}
 		}
-		return nil, []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+		return nil, []finding.Finding{nothingWritten(hostfs.ReasonOf(err))}
 	}
 	w.Close()
 	if rest != "." {
@@ -190,7 +191,7 @@ func checkDestination(out string, overwrite bool, plan []*planned, lim limits.Se
 		if hostfs.ReasonOf(err) == hostfs.NotDirectory {
 			return nil, []finding.Finding{finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil)}
 		}
-		return nil, []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+		return nil, []finding.Finding{nothingWritten(hostfs.ReasonOf(err))}
 	}
 	d := &destination{x: x, status: map[string]hostfs.Status{}}
 	var fs []finding.Finding
@@ -198,7 +199,7 @@ func checkDestination(out string, overwrite bool, plan []*planned, lim limits.Se
 		entries, err := x.List(maxListed + 1)
 		if err != nil && hostfs.ReasonOf(err) != hostfs.TooLarge {
 			d.close()
-			return nil, []finding.Finding{writeFailed(hostfs.ReasonOf(err))}
+			return nil, []finding.Finding{nothingWritten(hostfs.ReasonOf(err))}
 		}
 		if len(entries) > 0 {
 			var names []string
@@ -213,9 +214,9 @@ func checkDestination(out string, overwrite bool, plan []*planned, lim limits.Se
 		}
 	}
 	if _, err := x.Lstat(hostfs.StagingDir); err == nil {
-		fs = append(fs, writeFailed(hostfs.Exists))
+		fs = append(fs, stagingExists())
 	} else if r := hostfs.ReasonOf(err); r != hostfs.NotFound {
-		fs = append(fs, writeFailed(r))
+		fs = append(fs, nothingWritten(r))
 	}
 	// A path that breaks D12 has its own finding, and is not checked here;
 	// the output path check's seam (hostfs.CheckPaths) decides which.
@@ -267,18 +268,33 @@ func pathRefusal(p string, err error) finding.Finding {
 		params["reason"] = finding.String(string(r))
 		return finding.New(finding.CodeDestinationNotRegularFile, invocation, nil, params)
 	default:
-		return writeFailed(r)
+		return nothingWritten(r)
 	}
 }
 
 // maxListed is how many entries a not_empty finding lists.
 const maxListed = 10
 
-// writeFailed is output.destination.write_failed for r, with nothing left
-// written.
-func writeFailed(r hostfs.Reason) finding.Finding {
-	return finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
-		"reason":  finding.String(writeReason(r)),
-		"written": stringList(nil),
+// nothingWritten is output.destination.nothing_written for r: a write that
+// failed and left the destination as it was.
+func nothingWritten(r hostfs.Reason) finding.Finding {
+	return finding.New(finding.CodeDestinationNothingWritten, invocation, nil, finding.Params{
+		"reason": finding.String(writeReason(r)),
 	})
+}
+
+// stagingExists is output.destination.staging_exists: a .metais-staging
+// left in an existing destination, which refuses the write before anything
+// is written (ADR-005 A1 item 1).
+func stagingExists() finding.Finding {
+	return finding.New(finding.CodeDestinationStagingExists, invocation, nil, nil)
+}
+
+// stageFailed is the finding of err from hostfs.Existing.Stage, which
+// writes nothing: the staging leftover, or a write that failed.
+func stageFailed(err error) finding.Finding {
+	if errors.Is(err, hostfs.ErrStagingExists) {
+		return stagingExists()
+	}
+	return nothingWritten(hostfs.ReasonOf(err))
 }

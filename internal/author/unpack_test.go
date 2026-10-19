@@ -266,6 +266,24 @@ func TestUnpackFailureInPlaceReportsWhatItWrote(t *testing.T) {
 	}
 }
 
+// TestUnpackInPlaceLeavesADirectory is a write in place whose first
+// create fails after the directory it needs was made: no file is written,
+// and the error says the failure left what it made.
+func TestUnpackInPlaceLeavesADirectory(t *testing.T) {
+	to := testenv.Dir(t)
+	beforeCreate = func(p string) {
+		if p == unpackedFiles[0] {
+			os.WriteFile(filepath.Join(to, filepath.FromSlash(p)), []byte("theirs\n"), 0o644)
+		}
+	}
+	t.Cleanup(func() { beforeCreate = nil })
+	_, err := Unpack(packedTree(t), to, 0)
+	var we *WriteError
+	if !errors.As(err, &we) || we.Reason != hostfs.Exists || len(we.Written) != 0 || !we.Left {
+		t.Fatalf("Unpack: %v, %#v", err, we)
+	}
+}
+
 // TestUnpackRefusesANameThatAppears is a target written in place, in which
 // a name the unpack needs appears after the emptiness check: it is
 // refused with exists, never replaced.

@@ -274,11 +274,18 @@ Refusals:
       In <dir>, a directory, a named pipe, a socket or a device stands at an
       entry's path.
       Next: metais extract <package> <glob> --to <dir>
+  output.destination.nothing_written
+      A write failed and nothing was left: <dir> could not be created, or, in an
+      existing one, a write failed before the commit, another file system is
+      mounted inside it, or an entry lies beneath the staging name.
+      Next: metais extract <package> <glob> --to <dir>
+  output.destination.staging_exists
+      An existing <dir> holds .metais-staging, left by a killed write or in use
+      by another; nothing is written.
+      Next: metais extract <package> <glob> --to <dir>
   output.destination.write_failed
-      A write failed: into a new <dir> the files already written are listed and
-      left in place; into an existing one, which also refuses a staging
-      directory left in it, another file system mounted inside it and an entry
-      beneath the staging name, nothing is left.
+      A write into a new <dir> failed after creating it; the files already
+      written are listed and left in place.
       Next: metais extract <package> <glob> --to <dir>
   package.compiled.mismatch
       The package is refused (compiled: mismatch).

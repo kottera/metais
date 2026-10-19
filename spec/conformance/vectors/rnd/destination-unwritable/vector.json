@@ -1,7 +1,7 @@
 {
   "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
   "id": "rnd/destination-unwritable",
-  "title": "A render whose output directory lies in a directory it may not write is refused with output.destination.write_failed, and leaves nothing",
+  "title": "A render whose output directory lies in a directory it may not write is refused with output.destination.nothing_written, and leaves nothing",
   "statements": [
     "MTS-RND-006"
   ],

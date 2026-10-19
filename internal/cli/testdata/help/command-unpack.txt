@@ -254,9 +254,13 @@ Refusals:
   output.destination.not_empty
       <dir> holds an entry other than the quiet ones.
       Next: metais unpack <package> --to <dir>
+  output.destination.nothing_written
+      A write failed and nothing was left: into a new directory, at any point;
+      into an existing one, before it created anything.
+      Next: metais unpack <package> --to <dir>
   output.destination.write_failed
-      A write failed: into a new directory nothing is left; into an existing one
-      the files already written are listed and left in place.
+      A write into an existing directory failed after it had created something
+      there; the files already written are listed and left in place.
       Next: metais unpack <package> --to <dir>
   package.compiled.mismatch
       The package is refused (compiled: mismatch).

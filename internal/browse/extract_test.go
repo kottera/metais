@@ -181,9 +181,9 @@ func TestExtractRefusesTheChecksTogether(t *testing.T) {
 
 // TestExtractRefusesAStagingLeftover is ADR-005 A1 item 1 for extract: a
 // staging directory left in the destination refuses the write with
-// exists, nothing written and the leftover left, in a dry run too; and a
-// file whose first segment is the staging name is refused by the checks
-// (A1 item 5).
+// exists and Staging set, nothing written and the leftover left, in a dry
+// run too; and a file whose first segment is the staging name is refused
+// by the checks (A1 item 5).
 func TestExtractRefusesAStagingLeftover(t *testing.T) {
 	tr := tree(t, extractTree)
 	for _, dry := range []bool{false, true} {
@@ -192,7 +192,7 @@ func TestExtractRefusesAStagingLeftover(t *testing.T) {
 		before := hostTree(t, to)
 		_, err := Extract(tr, extractAll, to, ExtractOptions{DryRun: dry, Overwrite: true}, 0)
 		var we *WriteError
-		if !errors.As(err, &we) || we.Reason != string(hostfs.Exists) || len(we.Written) != 0 {
+		if !errors.As(err, &we) || we.Reason != string(hostfs.Exists) || len(we.Written) != 0 || we.Left || !we.Staging {
 			t.Errorf("dry run %v: %#v", dry, err)
 		}
 		if after := hostTree(t, to); !slices.Equal(after, before) {
@@ -217,7 +217,7 @@ func TestExtractIntoAnExistingDirectoryFailsWhole(t *testing.T) {
 	before := hostTree(t, to)
 	_, err := Extract(failing{tr, "metais.yaml"}, extractAll, to, ExtractOptions{Overwrite: true}, 0)
 	var we *WriteError
-	if !errors.As(err, &we) || we.Reason != string(hostfs.IOError) || len(we.Written) != 0 {
+	if !errors.As(err, &we) || we.Reason != string(hostfs.IOError) || len(we.Written) != 0 || we.Left || we.Staging {
 		t.Fatalf("a failed read: %#v", err)
 	}
 	if after := hostTree(t, to); !slices.Equal(after, before) {

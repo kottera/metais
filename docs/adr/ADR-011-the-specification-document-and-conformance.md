@@ -1476,7 +1476,7 @@ requirements), and the vector schema
    pass and not a skip.
 4. **Why.** A statement that a failed write is reported, and what it
    leaves, has no vector without a destination the implementation cannot
-   write: `output.destination.write_failed` and a render's failed commit
+   write: `output.destination.nothing_written` and a render's failed commit
    among them (PLAN-2026-10-metais-v1 §8, "The unwired list"). git cannot
    hold a directory's mode, and D9 item 4 already gives the setup what git
    cannot hold. A probe, rather than an assumption, keeps a run as root

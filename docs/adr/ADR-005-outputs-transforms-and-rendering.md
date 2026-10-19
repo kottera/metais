@@ -1283,12 +1283,15 @@ they write into an existing directory too.
    creates one staging directory inside it, `<out>/.metais-staging`,
    exclusively, and holds it open for the rest of the render. An existing
    one — a killed render's leftover, or a concurrent render into the same
-   directory — refuses the render with `output.destination.write_failed`,
-   reason `exists`, nothing written. Every planned file is written beneath
-   the staging directory at its own path, with every directory that path
-   needs, through an `os.Root` on it. Nothing is created in the existing
-   tree while preparing. Any failure removes the staging directory and
-   refuses: nothing changed.
+   directory — refuses the render with
+   `output.destination.staging_exists`, nothing written: its own code,
+   whose message names the leftover and says that nothing was written,
+   since what the caller must do is remove a directory, not clean up
+   outputs. Every planned file is written beneath the staging directory
+   at its own path, with every directory that path needs, through an
+   `os.Root` on it. Nothing is created in the existing tree while
+   preparing. Any failure removes the staging directory and refuses with
+   `output.destination.nothing_written`: nothing changed.
 2. **Commit units.** A planned path's commit unit is its shallowest
    component that did not exist in the output directory at the check: a
    missing directory, committed whole with everything planned beneath it,
@@ -1303,14 +1306,15 @@ they write into an existing directory too.
    staging directory and everything still in it are removed, and the
    render is refused with `output.destination.commit_failed`, listing the
    paths already committed. A path is committed when its unit was renamed.
-   A process killed during commit leaves a mix of whole old and whole new
+   A failure before the first unit is renamed has changed nothing, and is
+   `output.destination.nothing_written`. A process killed during commit leaves a mix of whole old and whole new
    files, and the staging directory, which the next render into the same
    directory refuses (item 1).
 4. **One filesystem.** Every rename stays on one filesystem, because D15
    item 4 refuses, before anything is written, a planned file whose
    deepest existing directory is on a different device from the output
    directory — a mount point inside it — with
-   `output.destination.write_failed`, reason `io_error`, nothing written.
+   `output.destination.nothing_written`, reason `io_error`.
    The device is compared and never reported: it decides the refusal and
    reaches no finding, output or message (ADR-009 D12). A conformance
    vector cannot make a mount point without privilege, so this case is a
@@ -1320,7 +1324,7 @@ they write into an existing directory too.
    directory; it reads no random source and no process identity (proposed
    ruling 16). D15 item 4 refuses a planned path whose first segment is an
    ASCII-case-insensitive match for it, with
-   `output.destination.write_failed`, reason `exists`, nothing written. A
+   `output.destination.nothing_written`, reason `exists`. A
    render into a new directory (D14 item 1) stages beside it and reserves
    nothing inside it. D14 item 2 writes no temporary file beside a target.
 6. **One ownership rule** (D14 item 5). The render removes only what lies

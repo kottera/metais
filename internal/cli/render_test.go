@@ -4,6 +4,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"slices"
@@ -169,7 +170,7 @@ func TestRenderLeavesWhatIsNotItsOwn(t *testing.T) {
 	}
 	before := snapshotNames(t, root)
 	r := runTool(t, "render", pkg, "--data", data, "--out", filepath.Join(parent, "out"), "--json")
-	if r.status != 5 || !slices.Equal(r.codes(), []string{"output.destination.write_failed"}) {
+	if r.status != 5 || !slices.Equal(r.codes(), []string{"output.destination.nothing_written"}) {
 		t.Fatalf("status %d, codes %q", r.status, r.codes())
 	}
 	if after := snapshotNames(t, root); !slices.Equal(before, after) {
@@ -177,6 +178,55 @@ func TestRenderLeavesWhatIsNotItsOwn(t *testing.T) {
 	}
 	if b, err := os.ReadFile(filepath.Join(staging, "theirs.txt")); err != nil || string(b) != "not the render's\n" {
 		t.Errorf("the staging directory's file is %q, %v", b, err)
+	}
+}
+
+// TestRenderStagingLeftover is ADR-005 A1 item 1: a .metais-staging left
+// in an existing output directory refuses the render, with or without
+// --dry-run, as output.destination.staging_exists, whose message and hint
+// say that nothing was written and what the leftover is, and never tell
+// the caller to remove files the render wrote. The leftover and the rest
+// of the directory are left as they were.
+func TestRenderStagingLeftover(t *testing.T) {
+	root := testenv.Dir(t)
+	pkg, data := renderPackage(t, root)
+	out := filepath.Join(root, "out")
+	if err := os.MkdirAll(filepath.Join(out, hostfs.StagingDir), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	before := snapshotNames(t, root)
+	for _, dry := range []bool{false, true} {
+		argv := []string{"render", pkg, "--data", data, "--out", out, "--overwrite", "--json"}
+		if dry {
+			argv = append(argv, "--dry-run")
+		}
+		r := runTool(t, argv...)
+		if r.status != 5 || !slices.Equal(r.codes(), []string{"output.destination.staging_exists"}) {
+			t.Fatalf("dry run %v: status %d, codes %q", dry, r.status, r.codes())
+		}
+		var doc struct {
+			Findings []struct {
+				Message, Hint string
+				Params        map[string]any
+			}
+		}
+		if err := json.Unmarshal([]byte(r.stdout), &doc); err != nil {
+			t.Fatal(err)
+		}
+		f := doc.Findings[0]
+		if len(f.Params) != 0 {
+			t.Errorf("dry run %v: params %v, want none", dry, f.Params)
+		}
+		const (
+			message = "The destination holds .metais-staging, the staging directory a write into it uses, so nothing was written."
+			hint    = "A write that was killed left it, or another write into the same destination is still using it. Once nothing is writing there, remove .metais-staging and run the command again."
+		)
+		if f.Message != message || f.Hint != hint {
+			t.Errorf("dry run %v: message %q, hint %q; want %q, %q", dry, f.Message, f.Hint, message, hint)
+		}
+		if after := snapshotNames(t, root); !slices.Equal(before, after) {
+			t.Errorf("dry run %v: the refused render changed the tree: %q, then %q", dry, before, after)
+		}
 	}
 }
 
@@ -197,8 +247,8 @@ func TestRenderCommitAbortsAFailedWrite(t *testing.T) {
 	if ok {
 		t.Fatal("the commit succeeded")
 	}
-	if f.Code() != finding.CodeDestinationWriteFailed {
-		t.Errorf("finding %s, want %s", f.Code(), finding.CodeDestinationWriteFailed)
+	if f.Code() != finding.CodeDestinationNothingWritten {
+		t.Errorf("finding %s, want %s", f.Code(), finding.CodeDestinationNothingWritten)
 	}
 	entries, err := os.ReadDir(parent)
 	if err != nil {
@@ -291,9 +341,9 @@ func TestPathRefusal(t *testing.T) {
 		{hostfs.CaseVariant, finding.CodeDestinationCaseVariant, true, ""},
 		{hostfs.IsDirectory, finding.CodeDestinationNotRegularFile, true, "is_directory"},
 		{hostfs.NotRegularFile, finding.CodeDestinationNotRegularFile, true, "not_regular_file"},
-		{hostfs.IOError, finding.CodeDestinationWriteFailed, false, "io_error"},
-		{hostfs.Exists, finding.CodeDestinationWriteFailed, false, "exists"},
-		{hostfs.PermissionDenied, finding.CodeDestinationWriteFailed, false, "permission_denied"},
+		{hostfs.IOError, finding.CodeDestinationNothingWritten, false, "io_error"},
+		{hostfs.Exists, finding.CodeDestinationNothingWritten, false, "exists"},
+		{hostfs.PermissionDenied, finding.CodeDestinationNothingWritten, false, "permission_denied"},
 	} {
 		f := pathRefusal("a/b.txt", &hostfs.Error{Op: "check", Reason: c.reason})
 		p, hasPath := f.Param("path")

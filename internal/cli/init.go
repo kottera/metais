@@ -134,6 +134,8 @@ func (s *session) initFailed(err error) outcome {
 		return o
 	case errors.As(err, &we) && we.Op == "open" && we.Reason == hostfs.NotDirectory:
 		return s.refuseWith(finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil))
+	case errors.As(err, &we) && !we.Left && len(we.Written) == 0:
+		return s.refuseWith(nothingWritten(we.Reason))
 	case errors.As(err, &we):
 		o := s.refuseWith(finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
 			"reason":  finding.String(writeReason(we.Reason)),

@@ -91,11 +91,14 @@ func (e *NotEmptyError) Error() string { return "author: the directory is not em
 // WriteError is a failure that stopped init or unpack (ADR-007 D1 item 6,
 // D8 item 3). Op and Reason are hostfs's; Written are the files written
 // before it and left in place, in the order written, none of which was
-// removed.
+// removed. Left is whether the failure left anything the write created, a
+// file Written lists or a directory; without it the destination is as it
+// was.
 type WriteError struct {
 	Op      string
 	Reason  hostfs.Reason
 	Written []string
+	Left    bool
 }
 
 func (e *WriteError) Error() string {
@@ -120,7 +123,7 @@ func Init(dir, name string, dryRun bool) ([]string, error) {
 	}
 	w, rest, err := hostfs.OpenNearest(dir)
 	if err != nil {
-		return nil, writeError(err, nil)
+		return nil, writeError(err, nil, false)
 	}
 	defer w.Close()
 	if rest == "." {
@@ -136,29 +139,29 @@ func Init(dir, name string, dryRun bool) ([]string, error) {
 		return paths, nil
 	}
 	if err := w.MkdirAll(rest); err != nil {
-		return nil, writeError(err, nil)
+		return nil, writeError(err, nil, w.Created())
 	}
 	sub, err := w.Sub(rest)
 	if err != nil {
-		return nil, writeError(err, nil)
+		return nil, writeError(err, nil, w.Created())
 	}
 	var written []string
 	for _, f := range files {
 		if parent := path.Dir(f.Path); parent != "." {
 			if err := sub.MkdirAll(parent); err != nil {
-				return written, writeError(err, written)
+				return written, writeError(err, written, w.Created())
 			}
 		}
 		if beforeCreate != nil {
 			beforeCreate(f.Path)
 		}
 		if err := sub.Create(f.Path, false, strings.NewReader(string(f.Data))); err != nil {
-			return written, writeError(err, written)
+			return written, writeError(err, written, w.Created())
 		}
 		written = append(written, f.Path)
 	}
 	if err := w.Close(); err != nil {
-		return written, writeError(err, written)
+		return written, writeError(err, written, w.Created())
 	}
 	return written, nil
 }
@@ -177,7 +180,7 @@ func checkEmpty(w *hostfs.Writer, files []File) error {
 		return &NotEmptyError{More: true}
 	}
 	if err != nil {
-		return writeError(err, nil)
+		return writeError(err, nil, false)
 	}
 	e := &NotEmptyError{}
 	for _, en := range entries {
@@ -216,10 +219,10 @@ func IsQuiet(e hostfs.Entry) bool {
 }
 
 // writeError is err, from hostfs, as a *WriteError after written.
-func writeError(err error, written []string) error {
+func writeError(err error, written []string, left bool) error {
 	var he *hostfs.Error
 	if !errors.As(err, &he) {
 		he = &hostfs.Error{Op: "write", Reason: hostfs.IOError}
 	}
-	return &WriteError{Op: he.Op, Reason: he.Reason, Written: written}
+	return &WriteError{Op: he.Op, Reason: he.Reason, Written: written, Left: left || len(written) > 0}
 }

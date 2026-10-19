@@ -386,7 +386,7 @@ func TestSampleReportsEveryRefusal(t *testing.T) {
 		want := []got{
 			{"output.destination.not_regular_file", "lines.csv", "is_directory"},
 			{"output.destination.not_regular_file", "vendor.json", "is_directory"},
-			{"output.destination.write_failed", "", "exists"},
+			{"output.destination.staging_exists", "", ""},
 		}
 		if r.status != 5 || !slices.Equal(gots, want) {
 			t.Errorf("dry run %v: status %d, findings %+v, want %+v", dry, r.status, gots, want)
@@ -447,7 +447,7 @@ func TestSampleExample(t *testing.T) {
 
 	before := hostTree(t, pkg)
 	r = runTool(t, "sample", pkg, "--example", "preview", "--json")
-	if r.status != 5 || r.doc.Findings[0].Code != "output.destination.write_failed" || r.doc.Findings[0].Params["reason"] != "exists" {
+	if r.status != 5 || r.doc.Findings[0].Code != "output.destination.nothing_written" || r.doc.Findings[0].Params["reason"] != "exists" {
 		t.Errorf("an example that exists: status %d, %s", r.status, r.stdout)
 	}
 	if err := os.MkdirAll(filepath.Join(pkg, "examples", "bare"), 0o755); err != nil {
@@ -513,7 +513,7 @@ func TestSampleDryRun(t *testing.T) {
 	}{
 		{[]string{"sample", pkg, "--to", full, "--dry-run"}, "output.destination.not_empty"},
 		{[]string{"sample", pkg, "--to", full, "--overwrite", "--dry-run"}, "output.destination.not_regular_file"},
-		{[]string{"sample", pkg, "--example", "taken", "--dry-run"}, "output.destination.write_failed"},
+		{[]string{"sample", pkg, "--example", "taken", "--dry-run"}, "output.destination.nothing_written"},
 	} {
 		r := runTool(t, append(tc.line, "--json")...)
 		if r.status != 5 || len(r.codes()) != 1 || r.codes()[0] != tc.code {
@@ -622,7 +622,7 @@ func TestSampleWriteFailed(t *testing.T) {
 		t.Skip("this process writes into a directory of mode 0555")
 	}
 	r := runTool(t, "sample", pkg, "--to", filepath.Join(parent, "data"), "--json")
-	if r.status != 5 || r.codes()[0] != "output.destination.write_failed" {
+	if r.status != 5 || r.codes()[0] != "output.destination.nothing_written" {
 		t.Errorf("status %d, %s", r.status, r.stdout)
 	}
 	if got := hostTree(t, parent); len(got) != 1 {

@@ -550,9 +550,18 @@ Refusals:
       An example's expected/, or a directory in it, is not a directory where
       --update writes.
       Next: metais test <dir> --update
+  output.destination.nothing_written
+      --update's first write into, or removal from, an example's expected/
+      failed; nothing was written or removed.
+      Next: metais test <dir> --update
+  output.destination.staging_exists
+      An example's expected/ holds .metais-staging, left by a killed write or in
+      use by another, before --update had written or removed anything.
+      Next: metais test <dir> --update
   output.destination.write_failed
-      --update's write into, or removal from, an example's expected/ failed;
-      what it wrote and removed is listed.
+      --update's write into, or removal from, an example's expected/ failed
+      after it had written or removed a file; what it wrote and removed is
+      listed.
       Next: metais test <dir> --update
   output.enum
       An example's output fails its validation (enum).

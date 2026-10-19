@@ -1,13 +1,12 @@
 [
   {
-    "code": "output.destination.write_failed",
+    "code": "output.destination.nothing_written",
     "severity": "error",
     "subject": {
       "kind": "invocation"
     },
     "params": {
-      "reason": "exists",
-      "written": []
+      "reason": "exists"
     }
   }
 ]

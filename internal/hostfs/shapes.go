@@ -306,6 +306,14 @@ func (o *Output) Written() []string {
 	return slices.Clone(o.files)
 }
 
+// Wrote reports whether the write created anything beneath its directory,
+// a file or a directory. After a failed WriteInPlace it is whether the
+// failure left anything there; after a failed StageNew or Stage nothing is
+// left whatever it reports.
+func (o *Output) Wrote() bool {
+	return len(o.made) > 0 || len(o.files) > 0
+}
+
 // Commit ends a write that succeeded. For StageNew it renames the staging
 // directory to the output directory with RenameNoReplace (ADR-005 D14 item
 // 1.4); a target that exists by then, or any other failure of the rename,

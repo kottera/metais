@@ -75,12 +75,17 @@ func (e *CheckError) Error() string { return "browse: the destination's checks r
 
 // WriteError is a failure that stopped Extract. Reason is hostfs's
 // reason, as its text; Written are the files written before it, in the
-// order written, none of which was removed. A write into an existing
-// directory leaves nothing it wrote when it fails before its commit, so
-// its Written is empty.
+// order written, none of which was removed. Left is whether the failure
+// left anything Extract created, a file or a directory: a write into a new
+// directory that created it leaves it, and a write into an existing
+// directory leaves nothing when it fails before its commit. Staging is
+// whether the failure is a .metais-staging left in an existing directory
+// (ADR-005 A1 item 1), which refuses the write before anything is written.
 type WriteError struct {
 	Reason  string
 	Written []string
+	Left    bool
+	Staging bool
 }
 
 func (e *WriteError) Error() string { return "browse: extract stopped (" + e.Reason + ")" }
@@ -105,7 +110,8 @@ func (e *CommitError) Error() string { return "browse: extract's commit stopped 
 //   - A to that does not exist is created, with its missing parents, by
 //     hostfs.CreateNew, and every file beneath it is created exclusively. A
 //     failure stops Extract with a *WriteError; Extract removes nothing, so
-//     what it wrote is what the error lists.
+//     what it wrote is what the error lists, and the directory it created
+//     is left.
 //   - A to that is an existing directory is written under ADR-005 D14 item
 //     2 as Amendment A1 amends it, through hostfs.Existing, when it holds
 //     no entry at all, or when it does and opt.Overwrite is given;
@@ -114,8 +120,9 @@ func (e *CommitError) Error() string { return "browse: extract's commit stopped 
 //     *CheckError, with nothing written. An existing file is never opened:
 //     a file at a path Extract writes is replaced by a rename, and nothing
 //     else in the directory is touched. A failure before the commit leaves
-//     the directory as it was, and is a *WriteError listing no file; a
-//     failure during it is a *CommitError listing what was committed.
+//     the directory as it was, and is a *WriteError listing no file, with
+//     Staging set when a .metais-staging left there refused it; a failure
+//     during it is a *CommitError listing what was committed.
 //   - A to that is not a directory, or lies beneath a file, is a
 //     *DestinationError with NotDirectory set.
 //
@@ -203,13 +210,13 @@ func Extract(t pkgtree.Tree, entries []string, to string, opt ExtractOptions, fa
 			// Stage refuses a staging directory left in to; a dry run finds it
 			// by name, as Stage's exclusive create would.
 			if staged() {
-				return nil, &WriteError{Reason: string(hostfs.Exists)}
+				return nil, &WriteError{Reason: string(hostfs.Exists), Staging: true}
 			}
 			return files, nil
 		}
 		out, err := x.Stage(checks)
 		if err != nil {
-			return nil, &WriteError{Reason: reasonOf(err)}
+			return nil, &WriteError{Reason: reasonOf(err), Staging: errors.Is(err, hostfs.ErrStagingExists)}
 		}
 		for _, f := range files {
 			r, err := t.Open(f.Path)
@@ -251,7 +258,7 @@ func Extract(t pkgtree.Tree, entries []string, to string, opt ExtractOptions, fa
 	stop := func(err error) ([]File, error) {
 		written := out.Written()
 		out.Abort()
-		return nil, &WriteError{Reason: reasonOf(err), Written: written}
+		return nil, &WriteError{Reason: reasonOf(err), Written: written, Left: true}
 	}
 	for _, f := range files {
 		if dir := path.Dir(f.Path); dir != "." {
@@ -270,7 +277,7 @@ func Extract(t pkgtree.Tree, entries []string, to string, opt ExtractOptions, fa
 		}
 	}
 	if err := out.Commit(); err != nil {
-		return nil, &WriteError{Reason: reasonOf(err), Written: out.Written()}
+		return nil, &WriteError{Reason: reasonOf(err), Written: out.Written(), Left: true}
 	}
 	if opt.readBack != nil && len(files) > 0 {
 		d, err := hostfs.OpenDir(to)

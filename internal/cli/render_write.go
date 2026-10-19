@@ -141,7 +141,7 @@ func content(pf *planned) (r io.Reader, done func(read error) error) {
 // the existing directory phase 3 checked, by commitExisting; otherwise
 // beneath a staging directory beside out, renamed to out (item 1). A
 // failure removes what the render created and reports
-// output.destination.write_failed, with nothing written.
+// output.destination.nothing_written.
 func commit(out string, dest *destination, plan []*planned, s *session) (finding.Finding, bool) {
 	if dest != nil {
 		return commitExisting(dest, plan)
@@ -151,23 +151,24 @@ func commit(out string, dest *destination, plan []*planned, s *session) (finding
 		if hostfs.ReasonOf(err) == hostfs.NotDirectory {
 			return finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil), false
 		}
-		return writeFailed(hostfs.ReasonOf(err)), false
+		return nothingWritten(hostfs.ReasonOf(err)), false
 	}
 	if f, ok := prepare(o, plan); !ok {
 		return f, false
 	}
 	if err := o.Commit(); err != nil {
-		return writeFailed(hostfs.ReasonOf(err)), false
+		return nothingWritten(hostfs.ReasonOf(err)), false
 	}
 	return finding.Finding{}, true
 }
 
 // commitExisting writes plan into dest under ADR-005 D14 item 2, as
 // Amendment A1 amends it: every file is prepared beneath the one staging
-// directory inside it (item 1), which a leftover refuses with reason
-// exists, and is committed by unit (item 2), every check made again
-// first. A failure before the first unit is renamed leaves the directory
-// as it was, and is output.destination.write_failed; one after is
+// directory inside it (item 1), which a leftover refuses with
+// output.destination.staging_exists, and is committed by unit (item 2),
+// every check made again first. A failure before the first unit is renamed
+// leaves the directory as it was, and is output.destination.nothing_written;
+// one after is
 // output.destination.commit_failed, listing the paths already committed
 // (item 3).
 func commitExisting(dest *destination, plan []*planned) (finding.Finding, bool) {
@@ -187,7 +188,7 @@ func commitExisting(dest *destination, plan []*planned) (finding.Finding, bool) 
 	}
 	o, err := dest.x.Stage(checks)
 	if err != nil {
-		return writeFailed(hostfs.ReasonOf(err)), false
+		return stageFailed(err), false
 	}
 	if f, ok := prepare(o, plan); !ok {
 		return f, false
@@ -198,7 +199,7 @@ func commitExisting(dest *destination, plan []*planned) (finding.Finding, bool) 
 	}
 	var ce *hostfs.CommitError
 	if !errors.As(err, &ce) || len(ce.Committed) == 0 {
-		return writeFailed(hostfs.ReasonOf(err)), false
+		return nothingWritten(hostfs.ReasonOf(err)), false
 	}
 	return finding.New(finding.CodeDestinationCommitFailed, invocation, nil, finding.Params{
 		"reason":    finding.String(writeReason(hostfs.ReasonOf(err))),
@@ -220,7 +221,7 @@ func prepare(o *hostfs.Output, plan []*planned) (finding.Finding, bool) {
 		}
 		if err != nil {
 			o.Abort()
-			return writeFailed(hostfs.ReasonOf(err)), false
+			return nothingWritten(hostfs.ReasonOf(err)), false
 		}
 	}
 	return finding.Finding{}, true
