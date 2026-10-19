@@ -938,6 +938,11 @@ it (ADR-002).
 
 ## Implementation log
 
+Each work item writes its entry as a file of its own, in
+`docs/adr/logs/ADR-001/`, named by the item's address (AGENTS.md, "Writing
+documentation"). The entries below are the ones written in this file
+before that rule, and stay where they were written.
+
 - **2026-10-19, PLAN-2026-10-metais-v1 W3-1.** D5 to D9 landed as
   `internal/loader` over Wave 2's trees, and as `metais inspect`; D6 as
   `internal/digest`. D8 steps 1 to 5 stay `zipfmt.Open`'s; `OpenWith` hands

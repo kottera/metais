@@ -884,6 +884,11 @@ format.
 
 ## Implementation log
 
+Each work item writes its entry as a file of its own, in
+`docs/adr/logs/ADR-002/`, named by the item's address (AGENTS.md, "Writing
+documentation"). The entries below are the ones written in this file
+before that rule, and stay where they were written.
+
 - **2026-10-19, PLAN-2026-10-metais-v1 W2-16.** D10 landed as
   `spec/schemas/1.0/manifest.schema.json`, embedded through
   `internal/specdata`, with `$defs/inputs` per ADR-003 D1 and

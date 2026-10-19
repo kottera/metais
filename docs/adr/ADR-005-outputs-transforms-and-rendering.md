@@ -1351,6 +1351,11 @@ they write into an existing directory too.
 
 ## Implementation log
 
+Each work item writes its entry as a file of its own, in
+`docs/adr/logs/ADR-005/`, named by the item's address (AGENTS.md, "Writing
+documentation"). The entries below are the ones written in this file
+before that rule, and stay where they were written.
+
 - **2026-10-19, PLAN-2026-10-metais-v1 W2-5.** D14 and D15's library half
   landed in `internal/hostfs`, ahead of the renderer that composes it:
   `StagingName` and `TempName` derive D14's fixed names from a SHA-256 of

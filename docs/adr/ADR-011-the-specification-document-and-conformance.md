@@ -1553,6 +1553,11 @@ D9 item 6 (the closed set of requirements), and the vector schema
 
 ## Implementation log
 
+Each work item writes its entry as a file of its own, in
+`docs/adr/logs/ADR-011/`, named by the item's address (AGENTS.md, "Writing
+documentation"). The entries below are the ones written in this file
+before that rule, and stay where they were written.
+
 - **2026-10-19, PLAN-2026-10-metais-v1 W2-3.** D14's document tripwires
   landed in `internal/guarantees` (ADR-010 D2's home for tripwires; no
   package was added): `TestStatementsWellFormed`, `TestStatementIndex`,
