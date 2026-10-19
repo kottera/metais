@@ -54,3 +54,11 @@ func Fold(s string) string { return cases.Fold().String(s) }
 func IsPathChar(r rune) bool {
 	return r == ' ' || unicode.In(r, unicode.L, unicode.M, unicode.N, unicode.P, unicode.S)
 }
+
+// NFC returns s in Unicode Normalization Form C. It is for a name that
+// arrives from the host, such as a collection item's file name, which
+// ADR-003 D15 item 5 normalizes because one name reaches the tool as
+// different bytes from different file systems. A name inside a package is
+// refused when it is not NFC, never normalized (ADR-005 D12 item 1). s must
+// be valid UTF-8.
+func NFC(s string) string { return norm.NFC.String(s) }

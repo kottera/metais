@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("n,s\x0a1,\"a\x0d\x0ab\"\x0a\x0a2,\x0a")

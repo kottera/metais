@@ -282,7 +282,9 @@ func TestRegistryEntries(t *testing.T) {
 // internal/manifest's version gate and manifest rules,
 // internal/schemafail's mapping of JSON Schema failures in each of its
 // three families (ADR-006 D6 item 1), internal/schema's refusals of a
-// schema file, and internal/xref's cross-reference (ADR-007 D3). A code a later change emits is registered by that change.
+// schema file, internal/xref's cross-reference (ADR-007 D3), and
+// internal/inputs' refusals of a supplied input. A code a later change
+// emits is registered by that change.
 func TestEmittedCodes(t *testing.T) {
 	var got []Code
 	for _, e := range registry {
@@ -345,6 +347,14 @@ func TestEmittedCodes(t *testing.T) {
 	} {
 		want = append(want, Code("template.xref."+c))
 	}
+	// internal/inputs, the inputs layer (W3-2).
+	want = append(want, "collection.as_file", "collection.directory_name", "collection.item_name",
+		"collection.stem_duplicate", "collection.subdirectory",
+		"input.constraints_failed", "input.constraints_not_evaluated", "input.extension_not_accepted",
+		"input.file_duplicate", "input.file_unknown", "input.json_arg_invalid", "input.json_arg_not_object",
+		"input.json_arg_unknown", "input.link", "input.missing", "input.noncharacter", "input.not_readable",
+		"input.not_regular_file", "input.set_into_unparsed", "input.set_pointer_invalid", "input.set_traversal",
+		"markdown.frontmatter_body_field", "markdown.frontmatter_not_mapping")
 	slices.Sort(want)
 	if !slices.Equal(got, want) {
 		t.Errorf("registered %q, want %q", got, want)

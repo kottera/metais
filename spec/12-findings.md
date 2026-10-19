@@ -17,6 +17,11 @@ it, and the statements it reports.
 <!-- The code catalog below is generated from findings/registry.json by go generate ./internal/guarantees. Do not edit it by hand. -->
 | Code | Severity | Class | Subject | Parameters | Since | Statements |
 |---|---|---|---|---|---|---|
+| `collection.as_file` | error | content | input | — | 1.0 | — |
+| `collection.directory_name` | error | content | input | — | 1.0 | — |
+| `collection.item_name` | error | content | input | `reason` | 1.0 | — |
+| `collection.stem_duplicate` | error | content | input | `case` | 1.0 | — |
+| `collection.subdirectory` | error | content | input | — | 1.0 | — |
 | `csv.after_quote` | error | content | input | — | 1.0 | — |
 | `csv.bare_quote` | error | content | input | — | 1.0 | — |
 | `csv.field_count` | error | content | input | `expected`, `found` | 1.0 | — |
@@ -28,14 +33,23 @@ it, and the statements it reports.
 | `input.additional_property` | error | content | input | `property`; optional: `suggestion` | 1.0 | — |
 | `input.any_of` | error | content | input | `branch_count` | 1.0 | — |
 | `input.const` | error | content | input | `expected` | 1.0 | — |
+| `input.constraints_failed` | error | content | invocation | `keyword` | 1.0 | — |
+| `input.constraints_not_evaluated` | info | content | invocation | — | 1.0 | — |
 | `input.contains` | error | content | input | — | 1.0 | — |
 | `input.dependent_required` | error | content | input | `property`, `because` | 1.0 | — |
 | `input.encoding_invalid` | error | content | input | `reason`, `offset` | 1.0 | — |
 | `input.enum` | error | content | input | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | — |
 | `input.exclusive_maximum` | error | content | input | `limit`; optional: `value` | 1.0 | — |
 | `input.exclusive_minimum` | error | content | input | `limit`; optional: `value` | 1.0 | — |
+| `input.extension_not_accepted` | error | content | input | `accepted` | 1.0 | — |
+| `input.file_duplicate` | error | content | input | — | 1.0 | — |
+| `input.file_unknown` | error | content | input | — | 1.0 | — |
 | `input.forbidden` | error | content | input | optional: `property` | 1.0 | — |
 | `input.format` | error | content | input | `format` | 1.0 | — |
+| `input.json_arg_invalid` | error | content | invocation | `problem`; optional: `limit` | 1.0 | — |
+| `input.json_arg_not_object` | error | content | invocation | `actual` | 1.0 | — |
+| `input.json_arg_unknown` | error | content | input | — | 1.0 | — |
+| `input.link` | error | content | input | — | 1.0 | — |
 | `input.max_contains` | error | content | input | `limit`, `count` | 1.0 | — |
 | `input.max_items` | error | content | input | `limit`, `count` | 1.0 | — |
 | `input.max_length` | error | content | input | `limit`; optional: `length` | 1.0 | — |
@@ -46,14 +60,21 @@ it, and the statements it reports.
 | `input.min_length` | error | content | input | `limit`; optional: `length` | 1.0 | — |
 | `input.min_properties` | error | content | input | `limit`, `count` | 1.0 | — |
 | `input.minimum` | error | content | input | `limit`; optional: `value` | 1.0 | — |
+| `input.missing` | error | content | input | — | 1.0 | — |
 | `input.multiple_of` | error | content | input | `divisor`; optional: `value` | 1.0 | — |
+| `input.noncharacter` | error | content | input | `codepoint` | 1.0 | — |
 | `input.not` | error | content | input | — | 1.0 | — |
+| `input.not_readable` | error | content | input | `reason` | 1.0 | — |
+| `input.not_regular_file` | error | content | input | `kind` | 1.0 | — |
 | `input.number_out_of_range` | error | content | input | `reason` | 1.0 | — |
 | `input.one_of` | error | content | input | `branch_count` | 1.0 | — |
 | `input.one_of.ambiguous` | error | content | input | `branches` | 1.0 | — |
 | `input.pattern` | error | content | input | `pattern` | 1.0 | — |
 | `input.property_name` | error | content | input | `property` | 1.0 | — |
 | `input.required` | error | content | input | `property` | 1.0 | — |
+| `input.set_into_unparsed` | error | content | input | — | 1.0 | — |
+| `input.set_pointer_invalid` | error | content | invocation | `reason` | 1.0 | — |
+| `input.set_traversal` | error | content | input | `reason` | 1.0 | — |
 | `input.type` | error | content | input | `expected`, `actual` | 1.0 | — |
 | `input.unevaluated_item` | error | content | input | `index` | 1.0 | — |
 | `input.unevaluated_property` | error | content | input | `property`; optional: `suggestion` | 1.0 | — |
@@ -120,6 +141,8 @@ it, and the statements it reports.
 | `manifest.yaml.scalar_refused` | error | content | manifest | `form` | 1.0 | — |
 | `manifest.yaml.syntax` | error | content | manifest | — | 1.0 | — |
 | `manifest.yaml.tag` | error | content | manifest | — | 1.0 | — |
+| `markdown.frontmatter_body_field` | error | content | input | — | 1.0 | — |
+| `markdown.frontmatter_not_mapping` | error | content | input | `actual` | 1.0 | — |
 | `markdown.frontmatter_unclosed` | error | content | input | — | 1.0 | — |
 | `output.additional_item` | error | content | output | `index`, `prefix_count` | 1.0 | — |
 | `output.additional_property` | error | content | output | `property`; optional: `suggestion` | 1.0 | — |

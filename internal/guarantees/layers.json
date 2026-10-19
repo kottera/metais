@@ -13,6 +13,13 @@
       "reason": "ADR-010 D2 item 2, PRD R2 item 1: browse reaches hostfs only through extract's single entry point, so listing, reading and searching cannot write"
     },
     {
+      "rule": "single-entry-point",
+      "package": "github.com/kottera/metais/internal/inputs",
+      "imports": "github.com/kottera/metais/internal/hostfs",
+      "function": "Supply.ReadDataDir",
+      "reason": "ADR-009 D7, ADR-010 D2 item 2: the inputs layer reaches the host only to read the data directory, through hostfs's read side in its single entry point, so no other path of the layer can open a host file or write one"
+    },
+    {
       "rule": "test-only",
       "package": "github.com/kottera/metais/internal/pkgtree/pkgtreetest",
       "reason": "ADR-010 D2 item 2: pkgtreetest is a test-only helper package, an importable package only so that other packages' tests can build a package in memory and hold a Tree to its contract; no release code imports it"

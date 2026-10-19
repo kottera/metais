@@ -1,0 +1,4 @@
+go test fuzz v1
+[]byte("{\"list\": [{\"n\": 1}]}")
+string("/list/01/n=1")
+string("/list/-/n=1")

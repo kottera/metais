@@ -1,6 +1,80 @@
 {
   "codes": [
     {
+      "code": "collection.as_file",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The collection input {input} is supplied as a file, and a collection is a directory.",
+      "hint": "Make a directory named after the input and put one file in it per item; the file was not read.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "collection.directory_name",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The collection {input} is supplied as a directory whose name has an extension.",
+      "hint": "Name the collection's directory after the input alone, with no extension; it was not read.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "collection.item_name",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the name cannot be an item's: encoding (it is not UTF-8) or character (it holds a backslash or a colon, which no file system a package is portable to names).",
+          "always": true
+        }
+      ],
+      "message": "An item of the collection {input} has a file name the tool does not read ({reason}).",
+      "hint": "Rename the file with a UTF-8 name that holds no backslash and no colon; the file was not read.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "collection.stem_duplicate",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "case",
+          "type": "boolean",
+          "meaning": "Whether the two stems differ only in letter case, rather than being equal.",
+          "always": true
+        }
+      ],
+      "message": "Two items of the collection {input} have stems that are equal or differ only in letter case.",
+      "hint": "Rename one of them: the stem is the item's identity, and a case-insensitive file system cannot hold both. The later item was not read.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "collection.subdirectory",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The collection {input} holds a subdirectory, and a collection's items are files.",
+      "hint": "Move the files up into the collection's directory, or remove the subdirectory; it was not read.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "csv.after_quote",
       "severity": "error",
       "class": "content",
@@ -206,6 +280,37 @@
       "statements": []
     },
     {
+      "code": "input.constraints_failed",
+      "severity": "error",
+      "class": "content",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "keyword",
+          "type": "string",
+          "meaning": "The keyword of the input constraints that failed at the root of the inputs object.",
+          "always": true
+        }
+      ],
+      "message": "The supplied inputs together break the package's input constraints at its {keyword} keyword.",
+      "hint": "Read the rule at the schema location this finding names; it relates the inputs to each other rather than constraining one of them.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.constraints_not_evaluated",
+      "severity": "info",
+      "class": "content",
+      "subject": "invocation",
+      "params": [],
+      "message": "The package's input constraints were not evaluated, because a supplied input did not parse in whole.",
+      "hint": "Fix the inputs that did not parse and validate again, which evaluates the constraints and may report more.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "input.contains",
       "severity": "error",
       "class": "content",
@@ -350,6 +455,50 @@
       "statements": []
     },
     {
+      "code": "input.extension_not_accepted",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "accepted",
+          "type": "array",
+          "items": "string",
+          "meaning": "The file extensions the input accepts, from its forms.",
+          "always": true
+        }
+      ],
+      "message": "The input {input} is supplied in a file whose extension it does not accept.",
+      "hint": "Name the file with one of these extensions: {accepted}. The file was not read.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.file_duplicate",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The data directory holds more than one entry for the input {input}.",
+      "hint": "Keep one file or directory for the input and remove the others; none of them was read.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.file_unknown",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The data directory holds an entry for {input}, and the package declares no input of that name.",
+      "hint": "Rename the entry after a declared input, or remove it. Run `metais inspect {package}` to see every input.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "input.forbidden",
       "severity": "error",
       "class": "content",
@@ -383,6 +532,74 @@
       ],
       "message": "{field} is not in the {format} format.",
       "hint": "Write a value in the {format} format.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.json_arg_invalid",
+      "severity": "error",
+      "class": "content",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "problem",
+          "type": "string",
+          "meaning": "The code of what the JSON reader refused outside every member: a syntax error, trailing content, text that is not UTF-8, or a limit.",
+          "always": true
+        },
+        {
+          "name": "limit",
+          "type": "string",
+          "meaning": "The limit's name, when problem is limit.exceeded.",
+          "always": false
+        }
+      ],
+      "message": "An --inputs-json argument is not one well-formed JSON text ({problem}).",
+      "hint": "Correct the argument's JSON and give it again; none of the inputs it holds was read.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.json_arg_not_object",
+      "severity": "error",
+      "class": "content",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "actual",
+          "type": "string",
+          "meaning": "The argument's JSON type: null, boolean, array, number or string.",
+          "always": true
+        }
+      ],
+      "message": "An --inputs-json argument is a JSON {actual}, not an object.",
+      "hint": "Give an object whose members are input names, each holding that input's whole value.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.json_arg_unknown",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "An --inputs-json argument has a member {input}, and the package declares no input of that name.",
+      "hint": "Name a declared input, or remove the member. Run `metais inspect {package}` to see every input.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.link",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The data directory's entry for the input {input} is a symbolic link, which is never followed.",
+      "hint": "Copy the file into the data directory in place of the link.",
       "location": "value",
       "since": "1.0",
       "statements": []
@@ -638,6 +855,18 @@
       "statements": []
     },
     {
+      "code": "input.missing",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The required input {input} was not supplied.",
+      "hint": "Supply it as a file named after it in the data directory, as an --inputs-json member, or with --set. Run `metais inspect {package}` to see every input.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "input.multiple_of",
       "severity": "error",
       "class": "content",
@@ -663,6 +892,25 @@
       "statements": []
     },
     {
+      "code": "input.noncharacter",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "codepoint",
+          "type": "string",
+          "meaning": "The noncharacter, written U+ and its code point in hexadecimal.",
+          "always": true
+        }
+      ],
+      "message": "{field} holds the Unicode noncharacter {codepoint}, which no input string may hold.",
+      "hint": "Remove the noncharacter. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "input.not",
       "severity": "error",
       "class": "content",
@@ -670,6 +918,44 @@
       "params": [],
       "message": "{field} matches a schema it must not match.",
       "hint": "Change the value so that the not subschema no longer accepts it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.not_readable",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the entry could not be read: not_found, permission_denied or io_error.",
+          "always": true
+        }
+      ],
+      "message": "The data directory's entry for the input {input} could not be read ({reason}).",
+      "hint": "Make the entry readable and validate again. The input's schema was not checked.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.not_regular_file",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "kind",
+          "type": "string",
+          "meaning": "What the entry is: directory, for an input that is not a collection, or special, for a FIFO, socket or device.",
+          "always": true
+        }
+      ],
+      "message": "The data directory's entry for the input {input} is not a regular file ({kind}).",
+      "hint": "Supply the input as a regular file; only a collection input is a directory. The entry was not read.",
       "location": "value",
       "since": "1.0",
       "statements": []
@@ -786,6 +1072,56 @@
       "message": "{field} is required.",
       "hint": "Add the member `{property}`.",
       "location": "parent",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.set_into_unparsed",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "A path set into the input {input} was not applied, because the input did not parse in whole.",
+      "hint": "Fix what refused the input's file or argument, then validate again, which applies the set.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.set_pointer_invalid",
+      "severity": "error",
+      "class": "content",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "What is wrong with the set: no_value (it has no =), not_a_pointer (its pointer does not begin with /), malformed (a ~ that begins no ~0 or ~1, or a pointer that is not UTF-8) or unknown_input (its first token names no declared input).",
+          "always": true
+        }
+      ],
+      "message": "A path set is not an inputs pointer followed by = and a value ({reason}).",
+      "hint": "Write the set as /<input>/<member>=<value>, beginning with a declared input's name. Run `metais inspect {package}` to see every input.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "input.set_traversal",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the target cannot be reached: scalar (a token traverses a string, number, boolean or null), index_invalid (a token into an array is not an index), index_out_of_range (no element has that index) or dash_not_last (a - before the last token).",
+          "always": true
+        }
+      ],
+      "message": "A path set into the input {input} cannot reach its target ({reason}), and was not applied.",
+      "hint": "Set an existing member or element, append with - as the last token, or replace the whole parent with --set-json.",
+      "location": "value",
       "since": "1.0",
       "statements": []
     },
@@ -2157,6 +2493,37 @@
       "params": [],
       "message": "The manifest has an explicit YAML tag; tags are refused.",
       "hint": "Remove the tag; quote the value if it is text. The manifest was not read further; fix this and run the command again.",
+      "location": "value",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "markdown.frontmatter_body_field",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [],
+      "message": "The frontmatter of the input {input} has a field named body, which is the text after the frontmatter.",
+      "hint": "Rename the field. The input's schema was not checked; validate again after the fix, which may report more.",
+      "location": "key",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "markdown.frontmatter_not_mapping",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "actual",
+          "type": "string",
+          "meaning": "The frontmatter's YAML type: array, boolean, number or string.",
+          "always": true
+        }
+      ],
+      "message": "The frontmatter of the input {input} is a YAML {actual}, not a mapping.",
+      "hint": "Write the frontmatter as key: value lines, or leave it empty. The input's schema was not checked; validate again after the fix, which may report more.",
       "location": "value",
       "since": "1.0",
       "statements": []

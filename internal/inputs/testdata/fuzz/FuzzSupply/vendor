@@ -1,0 +1,4 @@
+go test fuzz v1
+[]byte("{\"vendor\": {\"name\": \"Acme\"}}")
+string("/vendor/count=4")
+string("/list=[{\"n\": 1}]")

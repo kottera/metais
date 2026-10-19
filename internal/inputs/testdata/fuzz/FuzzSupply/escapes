@@ -1,0 +1,4 @@
+go test fuzz v1
+[]byte("{\"vendor\": {\"a/b\": {}}}")
+string("/vendor/a~1b/c=1")
+string("/vendor/a~2=1")
