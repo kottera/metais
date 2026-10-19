@@ -3,7 +3,7 @@
   "id": "aut/check-output-schemas",
   "title": "Check compiles every output validation schema without data, each with the files its references reach beneath its own top-level directory, and reports every finding of every one as a render refuses with them",
   "statements": [
-    "MTS-AUT-032",
+    "MTS-AUT-033",
     "MTS-TRN-014"
   ],
   "since": "1.0",

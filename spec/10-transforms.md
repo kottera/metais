@@ -125,8 +125,8 @@ A template is best kept with LF line endings, since a checkout that converts
 them would change the package; an output a platform needs with CR LF gets
 them from the declaration instead.
 
-<a id="mts-trn-013"></a>**MTS-TRN-013** When a template output, or a
-container's template entry, declares `newline: crlf`, a processor MUST
+<a id="mts-trn-013"></a>**MTS-TRN-013** When a template output, a mirror,
+or a container's template entry declares `newline: crlf`, a processor MUST
 convert the bytes of its file after it renders and before it is validated
 (§10.4), and before a container holding it is assembled: every LF (U+000A)
 not immediately preceded by CR (U+000D) becomes CR LF, and a CR LF and a lone

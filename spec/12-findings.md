@@ -159,43 +159,44 @@ it, and the statements it reports.
 | `markdown.frontmatter_body_field` | error | content | input | — | 1.0 | [MTS-SUP-012](06-supplying-inputs.md#mts-sup-012) |
 | `markdown.frontmatter_not_mapping` | error | content | input | `actual` | 1.0 | [MTS-SUP-012](06-supplying-inputs.md#mts-sup-012) |
 | `markdown.frontmatter_unclosed` | error | content | input | — | 1.0 | [MTS-SUP-012](06-supplying-inputs.md#mts-sup-012) |
-| `output.additional_item` | error | content | output | `index`, `prefix_count` | 1.0 | — |
-| `output.additional_property` | error | content | output | `property`; optional: `suggestion` | 1.0 | — |
-| `output.any_of` | error | content | output | `branch_count` | 1.0 | — |
-| `output.const` | error | content | output | `expected` | 1.0 | — |
+| `output.additional_item` | error | content | output | `index`, `prefix_count` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.additional_property` | error | content | output | `property`; optional: `suggestion` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.any_of` | error | content | output | `branch_count` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-FND-006](12-findings.md#mts-fnd-006), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.const` | error | content | output | `expected` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `output.container.missing_entry` | error | content | output | `profile`, `entry` | 1.0 | [MTS-TRN-009](10-transforms.md#mts-trn-009), [MTS-TRN-010](10-transforms.md#mts-trn-010), [MTS-TRN-011](10-transforms.md#mts-trn-011), [MTS-AUT-031](13-authoring.md#mts-aut-031) |
 | `output.container.non_ascii` | error | content | output | `profile`, `path` | 1.0 | [MTS-TRN-009](10-transforms.md#mts-trn-009), [MTS-AUT-031](13-authoring.md#mts-aut-031) |
 | `output.container.reserved_entry` | error | content | output | `profile`, `path` | 1.0 | [MTS-TRN-010](10-transforms.md#mts-trn-010), [MTS-TRN-011](10-transforms.md#mts-trn-011), [MTS-AUT-031](13-authoring.md#mts-aut-031) |
 | `output.container.space` | warning | content | output | `profile`, `path` | 1.0 | [MTS-TRN-011](10-transforms.md#mts-trn-011), [MTS-AUT-031](13-authoring.md#mts-aut-031) |
 | `output.container.too_many_entries` | error | content | output | `count` | 1.0 | [MTS-TRN-007](10-transforms.md#mts-trn-007) |
-| `output.contains` | error | content | output | — | 1.0 | — |
+| `output.contains` | error | content | output | — | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `output.declaration.empty_mirror` | warning | content | output | `directory` | 1.0 | [MTS-OUT-019](09-outputs.md#mts-out-019) |
 | `output.declaration.empty_name` | error | content | output | `template` | 1.0 | [MTS-OUT-018](09-outputs.md#mts-out-018) |
 | `output.declaration.validate_kind` | error | content | output | `kind` | 1.0 | [MTS-AUT-023](13-authoring.md#mts-aut-023) |
-| `output.dependent_required` | error | content | output | `property`, `because` | 1.0 | — |
+| `output.dependent_required` | error | content | output | `property`, `because` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `output.destination.not_directory` | error | destination | invocation | — | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028), [MTS-RND-003](11-rendering.md#mts-rnd-003) |
 | `output.destination.not_empty` | error | destination | invocation | `entries`, `more` | 1.0 | [MTS-AUT-028](13-authoring.md#mts-aut-028), [MTS-RND-004](11-rendering.md#mts-rnd-004) |
 | `output.destination.write_failed` | error | destination | invocation | `reason`, `written` | 1.0 | [MTS-AUT-026](13-authoring.md#mts-aut-026), [MTS-AUT-027](13-authoring.md#mts-aut-027), [MTS-RND-006](11-rendering.md#mts-rnd-006) |
-| `output.enum` | error | content | output | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | — |
-| `output.exclusive_maximum` | error | content | output | `limit`; optional: `value` | 1.0 | — |
-| `output.exclusive_minimum` | error | content | output | `limit`; optional: `value` | 1.0 | — |
+| `output.enum` | error | content | output | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.exclusive_maximum` | error | content | output | `limit`; optional: `value` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.exclusive_minimum` | error | content | output | `limit`; optional: `value` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `output.expression.for_each_type` | error | content | output | `type` | 1.0 | [MTS-OUT-007](09-outputs.md#mts-out-007) |
-| `output.forbidden` | error | content | output | optional: `property` | 1.0 | — |
-| `output.format` | error | content | output | `format` | 1.0 | — |
-| `output.max_contains` | error | content | output | `limit`, `count` | 1.0 | — |
-| `output.max_items` | error | content | output | `limit`, `count` | 1.0 | — |
-| `output.max_length` | error | content | output | `limit`; optional: `length` | 1.0 | — |
-| `output.max_properties` | error | content | output | `limit`, `count` | 1.0 | — |
-| `output.maximum` | error | content | output | `limit`; optional: `value` | 1.0 | — |
-| `output.min_contains` | error | content | output | `limit`, `count` | 1.0 | — |
-| `output.min_items` | error | content | output | `limit`, `count` | 1.0 | — |
-| `output.min_length` | error | content | output | `limit`; optional: `length` | 1.0 | — |
-| `output.min_properties` | error | content | output | `limit`, `count` | 1.0 | — |
-| `output.minimum` | error | content | output | `limit`; optional: `value` | 1.0 | — |
-| `output.multiple_of` | error | content | output | `divisor`; optional: `value` | 1.0 | — |
-| `output.not` | error | content | output | — | 1.0 | — |
-| `output.one_of` | error | content | output | `branch_count` | 1.0 | — |
-| `output.one_of.ambiguous` | error | content | output | `branches` | 1.0 | — |
+| `output.forbidden` | error | content | output | optional: `property` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.format` | error | content | output | `format` | 1.0 | [MTS-DAT-011](05-data-specification.md#mts-dat-011), [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.max_contains` | error | content | output | `limit`, `count` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.max_items` | error | content | output | `limit`, `count` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.max_length` | error | content | output | `limit`; optional: `length` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.max_properties` | error | content | output | `limit`, `count` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.maximum` | error | content | output | `limit`; optional: `value` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.min_contains` | error | content | output | `limit`, `count` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.min_items` | error | content | output | `limit`, `count` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.min_length` | error | content | output | `limit`; optional: `length` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.min_properties` | error | content | output | `limit`, `count` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.minimum` | error | content | output | `limit`; optional: `value` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.multiple_of` | error | content | output | `divisor`; optional: `value` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.not` | error | content | output | — | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.one_of` | error | content | output | `branch_count` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-FND-006](12-findings.md#mts-fnd-006), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.one_of.ambiguous` | error | content | output | `branches` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.parse` | error | content | output | `form`, `rule` | 1.0 | [MTS-TRN-014](10-transforms.md#mts-trn-014), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `output.path.case_collision` | error | content | output | `path`, `member`, `other`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-006](11-rendering.md#mts-pth-006), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
 | `output.path.character` | error | content | output | `path`, `code_point`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-004](11-rendering.md#mts-pth-004), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
 | `output.path.duplicate` | error | content | output | `path`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-006](11-rendering.md#mts-pth-006), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
@@ -204,13 +205,13 @@ it, and the statements it reports.
 | `output.path.not_nfc` | error | content | output | `path`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-002](11-rendering.md#mts-pth-002), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
 | `output.path.not_portable` | error | content | output | `path`, `reason`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-005](11-rendering.md#mts-pth-005), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
 | `output.path.shape` | error | content | output | `path`, `reason`; optional: `item` | 1.0 | [MTS-OUT-009](09-outputs.md#mts-out-009), [MTS-PTH-003](11-rendering.md#mts-pth-003), [MTS-PTH-008](11-rendering.md#mts-pth-008) |
-| `output.pattern` | error | content | output | `pattern` | 1.0 | — |
-| `output.property_name` | error | content | output | `property` | 1.0 | — |
-| `output.required` | error | content | output | `property` | 1.0 | — |
-| `output.type` | error | content | output | `expected`, `actual` | 1.0 | — |
-| `output.unevaluated_item` | error | content | output | `index` | 1.0 | — |
-| `output.unevaluated_property` | error | content | output | `property`; optional: `suggestion` | 1.0 | — |
-| `output.unique_items` | error | content | output | `index`, `duplicate_of` | 1.0 | — |
+| `output.pattern` | error | content | output | `pattern` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.property_name` | error | content | output | `property` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.required` | error | content | output | `property` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.type` | error | content | output | `expected`, `actual` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.unevaluated_item` | error | content | output | `index` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.unevaluated_property` | error | content | output | `property`; optional: `suggestion` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.unique_items` | error | content | output | `index`, `duplicate_of` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `package.compiled.mismatch` | error | refused | package | — | 1.0 | [MTS-MAN-022](03-manifest.md#mts-man-022), [MTS-PKG-025](02-container.md#mts-pkg-025) |
 | `package.compiled.missing` | error | refused | package | — | 1.0 | [MTS-PKG-024](02-container.md#mts-pkg-024) |
 | `package.compiled.unknown_file` | error | refused | package | — | 1.0 | [MTS-PKG-024](02-container.md#mts-pkg-024) |

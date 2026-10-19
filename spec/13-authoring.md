@@ -99,7 +99,7 @@ check reports nothing of it.
 
 ### Step 5: the schemas
 
-<a id="mts-aut-032"></a>**MTS-AUT-032** A check MUST compile, without
+<a id="mts-aut-033"></a>**MTS-AUT-033** A check MUST compile, without
 data, the schema every output's `validate` names, at every depth of a
 container, by the rules of [chapter 10](10-transforms.md) §10.4, and MUST
 report every finding of every one of them as a render would.
