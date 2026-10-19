@@ -396,7 +396,7 @@ func (c *call) sortCharge(n int, strBytes int64) *Error {
 // valueOrder returns sort's comparison of keys, refusing keys it cannot
 // order.
 func valueOrder(c *call, keys []value.Value) (func(a, b int) int, *Error) {
-	var nums, strs int
+	var nums, strs, others int
 	var strBytes int64
 	var other value.Value
 	for _, k := range keys {
@@ -408,14 +408,11 @@ func valueOrder(c *call, keys []value.Value) (func(a, b int) int, *Error) {
 			strs++
 			strBytes += int64(len(k.Text()))
 		default:
+			others++
 			other = k
 		}
 	}
-	nonNil := nums + strs
-	if other != nil {
-		nonNil++
-	}
-	if nonNil > 1 && (other != nil || (nums > 0 && strs > 0)) {
+	if nums+strs+others > 1 && (others > 0 || (nums > 0 && strs > 0)) {
 		bad := other
 		if bad == nil {
 			bad = value.String{}

@@ -142,6 +142,12 @@ func floatText(f float64) string {
 // text: CodeObjectOutput. The caller has charged the work; textWork says
 // what it is.
 func text(filter string, v value.Value) (string, *Error) {
+	switch v := v.(type) {
+	case value.String:
+		return v.Text(), nil
+	case value.Null:
+		return "", nil
+	}
 	var b strings.Builder
 	if err := appendText(filter, &b, v); err != nil {
 		return "", err
