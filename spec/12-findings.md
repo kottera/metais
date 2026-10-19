@@ -327,6 +327,7 @@ it, and the statements it reports.
 | `template.xref.unknown_variable` | error | content | template | `name`; optional: `suggestion`, `output` | 1.0 | [MTS-AUT-012](13-authoring.md#mts-aut-012) |
 | `template.xref.unused_input` | warning | content | input | — | 1.0 | [MTS-AUT-017](13-authoring.md#mts-aut-017) |
 | `template.xref.unused_template` | warning | content | template | — | 1.0 | [MTS-AUT-017](13-authoring.md#mts-aut-017) |
+| `usage.archive_to_terminal` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.bad_glob` | error | usage | invocation | `argument`, `reason` | 1.0 | — |
 | `usage.bad_pattern` | error | usage | invocation | `argument`, `reason`; optional: `limit`, `bound` | 1.0 | — |
 | `usage.bad_value` | error | usage | invocation | `argument`, `flag`, `reason`; optional: `allowed` | 1.0 | — |
@@ -350,6 +351,7 @@ it, and the statements it reports.
 | `usage.unknown_command` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.unknown_flag` | error | usage | invocation | `argument`, `reason`; optional: `flag`, `command` | 1.0 | — |
 | `usage.unknown_input` | error | usage | invocation | `argument`, `inputs` | 1.0 | — |
+| `usage.unknown_output` | error | usage | invocation | `argument`, `paths`, `path_count` | 1.0 | — |
 | `usage.unknown_topic` | error | usage | invocation | `argument` | 1.0 | — |
 | `yaml.alias` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |
 | `yaml.anchor` | error | content | input | — | 1.0 | [MTS-SUP-006](06-supplying-inputs.md#mts-sup-006) |

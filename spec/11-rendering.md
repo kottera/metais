@@ -53,7 +53,64 @@ staging directory is left.
 bytes for the same package, inputs and render time on every host, whatever
 its time zone, locale, environment, working directory and clock.
 
-## 11.2 Portable paths
+## 11.2 The dry run, the archive and one selected file
+
+A render can be asked what it would write without writing it, can write its
+files to standard output as one archive instead of into a directory, and can
+write one of its files alone. Each of these is the whole render: every file is
+planned, rendered and verified first, so none of them can make a refused
+render succeed, and none writes anything when the render is refused.
+
+<a id="mts-rnd-008"></a>**MTS-RND-008** A dry run MUST plan, render and verify
+every output as the render would, and MUST check the output directory as the
+render would when the render writes into one. It MUST then be refused exactly
+when the render would be, with the same findings, and MUST write nothing
+anywhere: no output, no directory, no staging directory and no temporary
+file.
+
+<a id="mts-rnd-009"></a>**MTS-RND-009** A dry run MUST list every top-level
+file the render would write, in byte order of its path, one record each:
+`path`; `output`, the declaration's id; `item`, the 0-based index of the
+`for_each` element it was rendered for, or null; `source` (`template`, `asset`
+or `container`); `kind`, for a template file ([chapter 9](09-outputs.md));
+`size` in bytes; `digest`, `sha256:` followed by the lower-case hexadecimal
+SHA-256 of the exact bytes the render would write; `executable`; and, only
+when the render writes into a directory, `status`: `create` for a file written
+where nothing is, `replace` for one written over an existing file.
+
+<a id="mts-rnd-010"></a>**MTS-RND-010** Rendering to standard output, a
+processor MUST write every top-level file of the render as one POSIX pax
+interchange format archive, built from the rendered bytes and never from
+files on disk: one regular-file entry (typeflag `0`) per file, in byte order
+of its path, and no directory entry, link or global extended header. Every
+entry MUST have the path as its name, as a ustar name, or prefix and name
+split at a `/`, when the path is ASCII and fits, and otherwise in a preceding
+extended header (typeflag `x`) that carries exactly one record, `path`; mode
+`0644`, or `0755` for an executable output; uid and gid `0`; empty uname and
+gname; mtime `315532800` (1980-01-01T00:00:00Z); the file's byte count as its
+size; devmajor and devminor `0`; and magic `ustar` followed by NUL, version
+`00`. The archive MUST end with two 512-octet blocks of zeros and no further
+padding.
+
+<a id="mts-rnd-011"></a>**MTS-RND-011** Rendering to standard output, a
+processor MUST write nothing there unless every phase of the render
+succeeds, so that a refused render's standard output is empty, and MUST NOT
+write anything there but the archive or the selected file's bytes.
+
+<a id="mts-rnd-012"></a>**MTS-RND-012** A processor MUST let the caller
+select one top-level file by its path, as the dry run lists it; a container's
+entry is not selectable, and its container is. The whole render MUST still
+run and be verified, so that a selected render is refused exactly when the
+full render is. Rendering to standard output, the processor MUST then write
+the selected file's bytes alone, as the render would write them; rendering
+into a directory, it MUST write that file alone, by the rules of 11.1.
+
+A selection of a path that names no file of the render, and an archive
+written to a terminal, are refused as errors of the invocation before
+anything is written; the command line that reports them is the
+implementation's.
+
+## 11.3 Portable paths
 
 Every path a render writes is held to one predicate, which is also the rule
 for a package's entry names ([chapter 2](02-container.md)): a path that

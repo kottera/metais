@@ -242,7 +242,9 @@ func (a *cliAdapter) commands(v *vector, sb *sandbox, st *step) ([]command, erro
 		if err != nil {
 			return nil, err
 		}
-		return []command{{args: limitFlags(args), stdin: stdin, streaming: streaming, authoring: x.Sample != nil,
+		// A dry run writes no stream, so its document is on standard
+		// output (ADR-008 D11 item 2).
+		return []command{{args: limitFlags(args), stdin: stdin, streaming: streaming && !x.DryRun, authoring: x.Sample != nil,
 			failOnWarning: x.FailOn == "warning"}}, nil
 	case "check":
 		return []command{{args: limitFlags([]string{"check", "--json", x.Source}), authoring: true}}, nil

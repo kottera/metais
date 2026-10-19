@@ -1,0 +1,102 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "rnd/only",
+  "title": "One top-level file selected by its path is written alone, its bytes raw to standard output or the one file into a directory, and the whole render still runs, so a selected render is refused when the full render is",
+  "statements": [
+    "MTS-RND-011",
+    "MTS-RND-012"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "stream",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "stream": {
+              "only": "run.sh"
+            }
+          },
+          "expect": {
+            "ok": true,
+            "stream": {
+              "equals": "expected/run.sh"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "directory",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "only": "pages/2.txt"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/only-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "refused-stream",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "stream": {
+              "only": "run.sh"
+            },
+            "limits": {
+              "outputs": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/refused.json",
+            "stream": {
+              "equals": "expected/nothing"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "refused-directory",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "only": "run.sh",
+            "limits": {
+              "outputs": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/refused.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "code": "limit.exceeded.output",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "page"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 9,
+      "column": 5,
+      "pointer": "/outputs/0"
+    },
+    "params": {
+      "limit": "outputs",
+      "bound": 2,
+      "lowered": true,
+      "observed": 5
+    }
+  }
+]
