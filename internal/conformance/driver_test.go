@@ -156,7 +156,7 @@ func TestDriverProtocol(t *testing.T) {
 		r := newRunner(t, suite, a)
 		r.short = false
 		for _, id := range fixtureIDs {
-			for _, p := range runVector(t, r, suite, id) {
+			for _, p := range runVector(r, suite, id, testenv.Dir(t)) {
 				t.Errorf("%s: %s", id, p)
 			}
 		}

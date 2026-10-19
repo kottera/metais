@@ -124,9 +124,10 @@ type envRun struct {
 	problems []problem
 }
 
-// fatal reports whether a harness error stopped the run.
+// fatal reports whether the run stopped early: on a harness error, or on
+// a process the wall clock killed, whose step has nothing left to compare.
 func (e *envRun) fatal() bool {
-	return slices.ContainsFunc(e.problems, func(p problem) bool { return p.harness })
+	return slices.ContainsFunc(e.problems, func(p problem) bool { return p.harness || p.check == checkWall })
 }
 
 // caseResult is the outcome of one case.

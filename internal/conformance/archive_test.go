@@ -184,6 +184,12 @@ type tarMember struct {
 	content  []byte
 }
 
+// header is every compared field of m but its content.
+func (m tarMember) header() string {
+	return fmt.Sprintf("{name %q, typeflag %q, mode %#o, uid %d, gid %d, uname %q, gname %q, mtime %s, size %d}",
+		m.name, m.typeflag, m.mode, m.uid, m.gid, m.uname, m.gname, m.mtime.Format(time.RFC3339Nano), m.size)
+}
+
 // readTar reads every member of b.
 func readTar(b []byte) ([]tarMember, error) {
 	tr := tar.NewReader(bytes.NewReader(b))
@@ -230,9 +236,8 @@ func compareTars(want, got []byte) string {
 		if !bytes.Equal(w.content, g.content) {
 			return fmt.Sprintf("member %q: other content\n%s", w.name, firstDifference(w.content, g.content))
 		}
-		w.content, g.content = nil, nil
-		if fmt.Sprint(w) != fmt.Sprint(g) {
-			return fmt.Sprintf("member %d: expected %+v, got %+v", i+1, w, g)
+		if d, g := w.header(), g.header(); d != g {
+			return fmt.Sprintf("member %d: expected %s, got %s", i+1, d, g)
 		}
 	}
 	return ""

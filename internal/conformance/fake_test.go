@@ -236,15 +236,19 @@ func fakeRun(fault string, call fakeCall) (*fakeResult, error) {
 	}
 	res.listing = sc.Listing
 
-	switch fault {
-	case "cpu":
+	// The bound faults break environment A's run only, which is where
+	// the runner must catch them; B's run then differs from A's only in
+	// what the bounds measure.
+	inA := os.Getenv("METAIS_SENTINEL") != ""
+	switch {
+	case fault == "cpu" && inA:
 		burnCPU(fakeCPUBound() * 3 / 2)
-	case "rss":
+	case fault == "rss" && inA:
 		holdMemory(fakeRSSBound() * 3 / 2)
-	case "wall":
-		if os.Getenv("METAIS_SENTINEL") != "" {
-			time.Sleep(time.Minute)
-		}
+	case fault == "wall" && inA:
+		time.Sleep(time.Minute)
+	}
+	switch fault {
 	case "finding-order":
 		res.findings[0], res.findings[1] = res.findings[1], res.findings[0]
 	case "finding-member":

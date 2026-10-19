@@ -20,7 +20,7 @@ import (
 
 // fixtureBounds are fix/bounded's lowered bounds, which the fake's cpu
 // and memory faults exceed.
-var fixtureBounds = bounds{CPUms: 100, RSSMiB: 64}
+var fixtureBounds = bounds{CPUms: 50, RSSMiB: 32}
 
 // fixtureRegistry is the fixture tree's finding-code registry.
 var fixtureRegistry = map[string]any{"codes": []any{
