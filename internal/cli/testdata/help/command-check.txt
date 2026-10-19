@@ -49,513 +49,14 @@ Prints:
   Next: block. With --json, one metais.check/1 document.
 
 Refusals:
-  example.layout
-      An example's layout (layout), a error.
-      Next: metais check <package>
   limit.invalid
       A --limit names no limit, gives a malformed value, or tries to raise one.
       Next: metais check --help
   limit.package
       The package breaches one of its limits.
       Next: metais check <package>
-  manifest.additional_item
-      The manifest breaks one of its rules (additional item).
-      Next: metais check <package>
-  manifest.additional_property
-      The manifest breaks one of its rules (additional property).
-      Next: metais check <package>
-  manifest.any_of
-      The manifest breaks one of its rules (any of).
-      Next: metais check <package>
-  manifest.const
-      The manifest breaks one of its rules (const).
-      Next: metais check <package>
-  manifest.contains
-      The manifest breaks one of its rules (contains).
-      Next: metais check <package>
-  manifest.dependent_required
-      The manifest breaks one of its rules (dependent required).
-      Next: metais check <package>
-  manifest.enum
-      The manifest breaks one of its rules (enum).
-      Next: metais check <package>
-  manifest.exclusive_maximum
-      The manifest breaks one of its rules (exclusive maximum).
-      Next: metais check <package>
-  manifest.exclusive_minimum
-      The manifest breaks one of its rules (exclusive minimum).
-      Next: metais check <package>
-  manifest.file.wrong_name
-      The manifest breaks one of its rules (file: wrong name).
-      Next: metais check <package>
-  manifest.forbidden
-      The manifest breaks one of its rules (forbidden).
-      Next: metais check <package>
-  manifest.format
-      The manifest breaks one of its rules (format).
-      Next: metais check <package>
-  manifest.guide_link_missing
-      The manifest (guide link missing), a warning.
-      Next: metais check <package>
-  manifest.input.collection_shape
-      The manifest (input: collection shape), a error.
-      Next: metais check <package>
-  manifest.input.duplicate_name
-      The manifest breaks one of its rules (input: duplicate name).
-      Next: metais check <package>
-  manifest.input.form_shape
-      The manifest (input: form shape), a error.
-      Next: metais check <package>
-  manifest.json.duplicate_name
-      The manifest breaks one of its rules (json: duplicate name).
-      Next: metais check <package>
-  manifest.json.encoding
-      The manifest breaks one of its rules (json: encoding).
-      Next: metais check <package>
-  manifest.json.lone_surrogate
-      The manifest breaks one of its rules (json: lone surrogate).
-      Next: metais check <package>
-  manifest.json.noncharacter
-      The manifest breaks one of its rules (json: noncharacter).
-      Next: metais check <package>
-  manifest.json.syntax
-      The manifest breaks one of its rules (json: syntax).
-      Next: metais check <package>
-  manifest.json.trailing_content
-      The manifest breaks one of its rules (json: trailing content).
-      Next: metais check <package>
-  manifest.license.expression
-      The manifest breaks one of its rules (license: expression).
-      Next: metais check <package>
-  manifest.max_contains
-      The manifest breaks one of its rules (max contains).
-      Next: metais check <package>
-  manifest.max_items
-      The manifest breaks one of its rules (max items).
-      Next: metais check <package>
-  manifest.max_length
-      The manifest breaks one of its rules (max length).
-      Next: metais check <package>
-  manifest.max_properties
-      The manifest breaks one of its rules (max properties).
-      Next: metais check <package>
-  manifest.maximum
-      The manifest breaks one of its rules (maximum).
-      Next: metais check <package>
-  manifest.min_contains
-      The manifest breaks one of its rules (min contains).
-      Next: metais check <package>
-  manifest.min_items
-      The manifest breaks one of its rules (min items).
-      Next: metais check <package>
-  manifest.min_length
-      The manifest breaks one of its rules (min length).
-      Next: metais check <package>
-  manifest.min_properties
-      The manifest breaks one of its rules (min properties).
-      Next: metais check <package>
-  manifest.minimum
-      The manifest breaks one of its rules (minimum).
-      Next: metais check <package>
-  manifest.multiple_of
-      The manifest breaks one of its rules (multiple of).
-      Next: metais check <package>
-  manifest.not
-      The manifest breaks one of its rules (not).
-      Next: metais check <package>
-  manifest.number_out_of_range
-      The manifest breaks one of its rules (number out of range).
-      Next: metais check <package>
-  manifest.one_of
-      The manifest breaks one of its rules (one of).
-      Next: metais check <package>
-  manifest.one_of.ambiguous
-      The manifest breaks one of its rules (one of: ambiguous).
-      Next: metais check <package>
-  manifest.output.duplicate_id
-      The manifest breaks one of its rules (output: duplicate id).
-      Next: metais check <package>
-  manifest.output.nested_for_each
-      The manifest breaks one of its rules (output: nested for each).
-      Next: metais check <package>
-  manifest.path_not_found
-      The manifest breaks one of its rules (path not found).
-      Next: metais check <package>
-  manifest.pattern
-      The manifest breaks one of its rules (pattern).
-      Next: metais check <package>
-  manifest.property_name
-      The manifest breaks one of its rules (property name).
-      Next: metais check <package>
-  manifest.required
-      The manifest breaks one of its rules (required).
-      Next: metais check <package>
-  manifest.type
-      The manifest breaks one of its rules (type).
-      Next: metais check <package>
-  manifest.unevaluated_item
-      The manifest breaks one of its rules (unevaluated item).
-      Next: metais check <package>
-  manifest.unevaluated_property
-      The manifest breaks one of its rules (unevaluated property).
-      Next: metais check <package>
-  manifest.unique_items
-      The manifest breaks one of its rules (unique items).
-      Next: metais check <package>
-  manifest.yaml.alias
-      The manifest breaks one of its rules (yaml: alias).
-      Next: metais check <package>
-  manifest.yaml.anchor
-      The manifest breaks one of its rules (yaml: anchor).
-      Next: metais check <package>
-  manifest.yaml.bom
-      The manifest breaks one of its rules (yaml: bom).
-      Next: metais check <package>
-  manifest.yaml.character
-      The manifest breaks one of its rules (yaml: character).
-      Next: metais check <package>
-  manifest.yaml.directive
-      The manifest breaks one of its rules (yaml: directive).
-      Next: metais check <package>
-  manifest.yaml.duplicate_key
-      The manifest breaks one of its rules (yaml: duplicate key).
-      Next: metais check <package>
-  manifest.yaml.encoding
-      The manifest breaks one of its rules (yaml: encoding).
-      Next: metais check <package>
-  manifest.yaml.key_empty
-      The manifest breaks one of its rules (yaml: key empty).
-      Next: metais check <package>
-  manifest.yaml.key_not_scalar
-      The manifest breaks one of its rules (yaml: key not scalar).
-      Next: metais check <package>
-  manifest.yaml.merge_key
-      The manifest breaks one of its rules (yaml: merge key).
-      Next: metais check <package>
-  manifest.yaml.multi_document
-      The manifest breaks one of its rules (yaml: multi document).
-      Next: metais check <package>
-  manifest.yaml.root_not_mapping
-      The manifest breaks one of its rules (yaml: root not mapping).
-      Next: metais check <package>
-  manifest.yaml.scalar_refused
-      The manifest breaks one of its rules (yaml: scalar refused).
-      Next: metais check <package>
-  manifest.yaml.syntax
-      The manifest breaks one of its rules (yaml: syntax).
-      Next: metais check <package>
-  manifest.yaml.tag
-      The manifest breaks one of its rules (yaml: tag).
-      Next: metais check <package>
-  output.container.missing_entry
-      A container's profile (container: missing entry), a error.
-      Next: metais check <package>
-  output.container.non_ascii
-      A container's profile (container: non ascii), a error.
-      Next: metais check <package>
-  output.container.reserved_entry
-      A container's profile (container: reserved entry), a error.
-      Next: metais check <package>
-  output.container.space
-      A container's profile (container: space), a warning.
-      Next: metais check <package>
   output.declaration.validate_kind
       (declaration: validate kind), a error.
-      Next: metais check <package>
-  package.compiled.mismatch
-      The package is refused (compiled: mismatch).
-      Next: metais check <package>
-  package.compiled.missing
-      The package is refused (compiled: missing).
-      Next: metais check <package>
-  package.compiled.unknown_file
-      The package is refused (compiled: unknown file).
-      Next: metais check <package>
-  package.container.archive_comment
-      The package is refused (container: archive comment).
-      Next: metais check <package>
-  package.container.crc_mismatch
-      The package is refused (container: crc mismatch).
-      Next: metais check <package>
-  package.container.data_descriptor
-      The package is refused (container: data descriptor).
-      Next: metais check <package>
-  package.container.deflate_stream
-      The package is refused (container: deflate stream).
-      Next: metais check <package>
-  package.container.encrypted
-      The package is refused (container: encrypted).
-      Next: metais check <package>
-  package.container.entry_order
-      The package is refused (container: entry order).
-      Next: metais check <package>
-  package.container.extra_field
-      The package is refused (container: extra field).
-      Next: metais check <package>
-  package.container.field_value
-      The package is refused (container: field value).
-      Next: metais check <package>
-  package.container.flags
-      The package is refused (container: flags).
-      Next: metais check <package>
-  package.container.header_mismatch
-      The package is refused (container: header mismatch).
-      Next: metais check <package>
-  package.container.method
-      The package is refused (container: method).
-      Next: metais check <package>
-  package.container.not_zip
-      The package is refused (container: not zip).
-      Next: metais check <package>
-  package.container.overlap_or_gap
-      The package is refused (container: overlap or gap).
-      Next: metais check <package>
-  package.container.prepended_data
-      The package is refused (container: prepended data).
-      Next: metais check <package>
-  package.container.second_end_record
-      The package is refused (container: second end record).
-      Next: metais check <package>
-  package.container.size_mismatch
-      The package is refused (container: size mismatch).
-      Next: metais check <package>
-  package.container.trailing_data
-      The package is refused (container: trailing data).
-      Next: metais check <package>
-  package.container.zip64
-      The package is refused (container: zip64).
-      Next: metais check <package>
-  package.digest.entries_mismatch
-      The package is refused (digest: entries mismatch).
-      Next: metais check <package>
-  package.digest.mismatch
-      The package is refused (digest: mismatch).
-      Next: metais check <package>
-  package.digest.not_canonical
-      The package is refused (digest: not canonical).
-      Next: metais check <package>
-  package.digest.package_mismatch
-      The package is refused (digest: package mismatch).
-      Next: metais check <package>
-  package.layout.compiled_in_source
-      The package is refused (layout: compiled in source).
-      Next: metais check <package>
-  package.layout.empty_directory
-      The package is refused (layout: empty directory).
-      Next: metais check <package>
-  package.layout.missing_manifest
-      The package is refused (layout: missing manifest).
-      Next: metais check <package>
-  package.layout.non_regular_file
-      The package is refused (layout: non regular file).
-      Next: metais check <package>
-  package.layout.not_packed
-      The package's tree (layout: not packed), a warning.
-      Next: metais check <package>
-  package.layout.os_litter
-      The package's tree (layout: os litter), a warning.
-      Next: metais check <package>
-  package.layout.unknown_top_level
-      The package is refused (layout: unknown top level).
-      Next: metais check <package>
-  package.name.case_collision
-      The package is refused (name: case collision).
-      Next: metais check <package>
-  package.name.character
-      The package is refused (name: character).
-      Next: metais check <package>
-  package.name.directory_entry
-      The package is refused (name: directory entry).
-      Next: metais check <package>
-  package.name.duplicate
-      The package is refused (name: duplicate).
-      Next: metais check <package>
-  package.name.encoding
-      The package is refused (name: encoding).
-      Next: metais check <package>
-  package.name.file_directory_conflict
-      The package is refused (name: file directory conflict).
-      Next: metais check <package>
-  package.name.not_nfc
-      The package is refused (name: not nfc).
-      Next: metais check <package>
-  package.name.not_portable
-      The package is refused (name: not portable).
-      Next: metais check <package>
-  package.name.shape
-      The package is refused (name: shape).
-      Next: metais check <package>
-  package.not_found
-      The package is refused (not found).
-      Next: metais check <package>
-  package.not_readable
-      The package is refused (not readable).
-      Next: metais check <package>
-  package.version.malformed
-      The package is refused (version: malformed).
-      Next: metais check <package>
-  package.version.missing
-      The package is refused (version: missing).
-      Next: metais check <package>
-  package.version.not_string
-      The package is refused (version: not string).
-      Next: metais check <package>
-  package.version.unsupported_major
-      The package is refused (version: unsupported major).
-      Next: metais check <package>
-  package.version.unsupported_minor
-      The package is refused (version: unsupported minor).
-      Next: metais check <package>
-  report.step_skipped
-      The report (step skipped), a info.
-      Next: metais check <package>
-  schema.dialect
-      An input schema is refused (dialect).
-      Next: metais check <package>
-  schema.format_unsupported
-      An input schema is refused (format unsupported).
-      Next: metais check <package>
-  schema.id_duplicate
-      An input schema is refused (id duplicate).
-      Next: metais check <package>
-  schema.invalid
-      An input schema is refused (invalid).
-      Next: metais check <package>
-  schema.invalid_default
-      A schema (invalid default), a error.
-      Next: metais check <package>
-  schema.invalid_example
-      A schema (invalid example), a error.
-      Next: metais check <package>
-  schema.keyword_unknown
-      An input schema is refused (keyword unknown).
-      Next: metais check <package>
-  schema.pattern_unsupported
-      An input schema is refused (pattern unsupported).
-      Next: metais check <package>
-  schema.ref_by_path
-      An input schema is refused (ref by path).
-      Next: metais check <package>
-  schema.ref_escapes
-      An input schema is refused (ref escapes).
-      Next: metais check <package>
-  schema.ref_unresolved
-      An input schema is refused (ref unresolved).
-      Next: metais check <package>
-  schema.required_not_declared
-      A schema (required not declared), a warning.
-      Next: metais check <package>
-  schema.syntax
-      An input schema is refused (syntax).
-      Next: metais check <package>
-  schema.unsatisfiable
-      A schema (unsatisfiable), a error.
-      Next: metais check <package>
-  schema.unusable_enum_member
-      A schema (unusable enum member), a warning.
-      Next: metais check <package>
-  template.crlf
-      A template or a manifest expression (crlf), a warning.
-      Next: metais check <package>
-  template.date_format
-      An output's path, when or for_each does not parse (date format).
-      Next: metais check <package>
-  template.division_by_zero
-      An output's path, when or for_each does not parse (division by zero).
-      Next: metais check <package>
-  template.embed_index
-      A template does not parse (embed index), an error.
-      Next: metais check <package>
-  template.embed_unknown_input
-      A template does not parse (embed unknown input), an error.
-      Next: metais check <package>
-  template.filter_argument
-      An output's path, when or for_each does not parse (filter argument).
-      Next: metais check <package>
-  template.filter_input
-      A template does not parse (filter input), an error.
-      Next: metais check <package>
-  template.include
-      An output's path, when or for_each does not parse (include).
-      Next: metais check <package>
-  template.not_utf8
-      A template does not parse (not utf8), an error.
-      Next: metais check <package>
-  template.number_range
-      An output's path, when or for_each does not parse (number range).
-      Next: metais check <package>
-  template.ooxml.split_construct
-      A template or a manifest expression (ooxml: split construct), a error.
-      Next: metais check <package>
-  template.ooxml.split_delimiter
-      A template or a manifest expression (ooxml: split delimiter), a error.
-      Next: metais check <package>
-  template.partial_name
-      A template does not parse (partial name), an error.
-      Next: metais check <package>
-  template.provenance_argument
-      A template does not parse (provenance argument), an error.
-      Next: metais check <package>
-  template.provenance_style
-      A template does not parse (provenance style), an error.
-      Next: metais check <package>
-  template.reserved_name
-      A template does not parse (reserved name), an error.
-      Next: metais check <package>
-  template.safe_position
-      An output's path, when or for_each does not parse (safe position).
-      Next: metais check <package>
-  template.syntax
-      An output's path, when or for_each does not parse (syntax).
-      Next: metais check <package>
-  template.tag_context
-      An output's path, when or for_each does not parse (tag context).
-      Next: metais check <package>
-  template.unknown_filter
-      An output's path, when or for_each does not parse (unknown filter).
-      Next: metais check <package>
-  template.xref.budget_exhausted
-      A template or a manifest expression (xref: budget exhausted), a warning.
-      Next: metais check <package>
-  template.xref.dynamic_reference
-      A template or a manifest expression (xref: dynamic reference), a warning.
-      Next: metais check <package>
-  template.xref.for_each_not_array
-      A template or a manifest expression (xref: for each not array), a error.
-      Next: metais check <package>
-  template.xref.index_out_of_range
-      A template or a manifest expression (xref: index out of range), a error.
-      Next: metais check <package>
-  template.xref.missing_asset
-      A template or a manifest expression (xref: missing asset), a error.
-      Next: metais check <package>
-  template.xref.missing_partial
-      A template or a manifest expression (xref: missing partial), a error.
-      Next: metais check <package>
-  template.xref.not_an_array
-      A template or a manifest expression (xref: not an array), a error.
-      Next: metais check <package>
-  template.xref.not_an_object
-      A template or a manifest expression (xref: not an object), a error.
-      Next: metais check <package>
-  template.xref.partial_parameter_not_passed
-      A template or a manifest expression (xref: partial parameter not passed),
-      a warning.
-      Next: metais check <package>
-  template.xref.unknown_field
-      A template or a manifest expression (xref: unknown field), a error.
-      Next: metais check <package>
-  template.xref.unknown_input
-      A template or a manifest expression (xref: unknown input), a error.
-      Next: metais check <package>
-  template.xref.unknown_variable
-      A template or a manifest expression (xref: unknown variable), a error.
-      Next: metais check <package>
-  template.xref.unused_input
-      A template or a manifest expression (xref: unused input), a warning.
-      Next: metais check <package>
-  template.xref.unused_template
-      A template or a manifest expression (xref: unused template), a warning.
       Next: metais check <package>
   usage.bad_value
       A flag's value is missing, or is not one the flag accepts, or a flag that
@@ -574,6 +75,41 @@ Refusals:
       An argument that is not a flag the command accepts, an abbreviated flag,
       or one-letter aliases written together.
       Next: metais check --help
+
+  Each line below is a family of codes: how many there are, the cause they share
+  and their next step. 'metais help refusals check' lists every code, and help
+  --json gives each code's own cause.
+
+  example.layout (1)        An example's layout (layout), a error.
+                            Next: metais check <package>
+  manifest.* (60)           The manifest breaks one of its rules.
+                            Next: metais check <package>
+  manifest.guide_link_missing (1)
+                            The manifest (guide link missing), a warning.
+                            Next: metais check <package>
+  manifest.input.* (2)      The manifest, a error. Next: metais check <package>
+  output.container.* (3)    A container's profile, a error.
+                            Next: metais check <package>
+  output.container.space (1)
+                            A container's profile (container: space), a warning.
+                            Next: metais check <package>
+  package.* (46)            The package is refused. Next: metais check <package>
+  package.layout.* (2)      The package's tree, a warning.
+                            Next: metais check <package>
+  report.step_skipped (1)   The report (step skipped), a info.
+                            Next: metais check <package>
+  schema.* (10)             An input schema is refused.
+                            Next: metais check <package>
+  schema.* (3)              A schema, a error. Next: metais check <package>
+  schema.* (2)              A schema, a warning. Next: metais check <package>
+  template.* (6)            A template or a manifest expression, a warning.
+                            Next: metais check <package>
+  template.* (9)            An output's path, when or for_each does not parse.
+                            Next: metais check <package>
+  template.* (8)            A template does not parse, an error.
+                            Next: metais check <package>
+  template.* (11)           A template or a manifest expression, a error.
+                            Next: metais check <package>
 
 Examples:
   metais check

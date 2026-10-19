@@ -1,0 +1,17 @@
+metais help refusals — Every code a command may refuse with: metais help
+refusals <command>.
+
+metais help refusals <command> lists every code the command may refuse with, by
+the next step each names. metais <command> --help gives the cause of each
+refusal, and lists the codes of one family that share a cause and a next step on
+one line.
+
+A line that names no command may be refused with:
+
+Next: metais help
+      Lists every command, the global flags and the help topics.
+  usage.bad_value
+  usage.missing_command
+  usage.repeated_flag
+  usage.unknown_command
+  usage.unknown_flag

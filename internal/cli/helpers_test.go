@@ -325,6 +325,11 @@ func parsesAsLine(line string) error {
 			return fmt.Errorf("%q names no command or topic", line)
 		}
 	}
+	if l.cmd != nil && l.cmd.Name == "help" && len(l.parsed.Operands) == 2 {
+		if l.parsed.Operands[0] != "refusals" || lookup(table, l.parsed.Operands[1]) == nil {
+			return fmt.Errorf("%q names no command after the topic refusals", line)
+		}
+	}
 	return nil
 }
 

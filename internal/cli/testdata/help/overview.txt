@@ -56,6 +56,8 @@ Topics (metais help <topic>):
   globs       The patterns that select a package's entries.
   json        The JSON document every command prints with --json.
   exit-codes  What each exit status means.
+  refusals    Every code a command may refuse with: metais help refusals
+              <command>.
 
 Exit codes:
   0  Success, warnings included; help, version and limits.

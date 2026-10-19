@@ -73,6 +73,19 @@ type Refusal struct {
 	// step of the row whose match it satisfies, or else of the row of
 	// Code with no match.
 	match func(f finding.Finding) bool
+	// gist is the cause of a refusal a loop over the registry declares,
+	// without the code's own words: text help lists the refusals of one
+	// code family that share a gist and a next step on one line (ADR-008
+	// D15 item 3, as amended by A1). A hand-written refusal has none, and
+	// is listed on its own.
+	gist string
+}
+
+// familyRefusal is the refusal of code a loop over the registry declares:
+// its cause is what with the code's own words, words, in parentheses, and
+// its gist is what alone.
+func familyRefusal(code finding.Code, what, words string, next Next) Refusal {
+	return Refusal{Code: code, Cause: what + " (" + words + ").", Next: next, gist: what + "."}
 }
 
 // valueRefused matches usage.bad_value for a value one of flags refuses
@@ -282,22 +295,27 @@ func declarations() []*Command {
 			run: runLimits,
 		},
 		{
-			Name: "help", Group: "The tool", Synopsis: "help [<command> | <topic>] [--json]",
+			Name: "help", Group: "The tool", Synopsis: "help [<command> | <topic> [<command>]] [--json]",
 			Description: "Print the overview, a command's help, or a topic.",
 			Detail: "With no operand, prints the overview: the commands by group, the global flags, " +
 				"the topics and the exit codes. With a command's name, prints that command's help, " +
-				"as metais <command> --help does. With a topic, prints the topic.\n\n" +
+				"as metais <command> --help does. With a topic, prints the topic; the topic refusals " +
+				"takes a command's name after it, and lists every code that command may refuse with.\n\n" +
 				"With --json, prints the help as one metais.help/1 document: every command's full " +
 				"declaration and every topic for the overview, or the one command or topic asked for.",
-			Role:     finding.RoleNoPackage,
-			Operands: []args.Operand{{Name: "<command> | <topic>", Description: "A command's name, or one of the topics inputs, globs, json and exit-codes."}},
+			Role: finding.RoleNoPackage,
+			Operands: []args.Operand{
+				{Name: "<command> | <topic>", Description: "A command's name, or one of the topics inputs, globs, json, exit-codes and refusals."},
+				{Name: "<command>", Description: "After the topic refusals, the command whose codes are listed; no other topic takes one."},
+			},
 			Format:   "metais.help/1",
 			Prints:   "The help asked for, wrapped at 80 columns, never coloured.",
-			Refusals: []Refusal{{Code: finding.CodeUsageUnknownTopic, Cause: "The operand names no command and no topic.", Next: nextHelp}},
+			Refusals: []Refusal{{Code: finding.CodeUsageUnknownTopic, Cause: "The operand names no command and no topic, or the operand after refusals names no command.", Next: nextHelp}},
 			Examples: []Example{
 				{"metais help", "Prints the overview."},
 				{"metais help limits", "Prints the help of metais limits."},
 				{"metais help exit-codes", "Prints what each exit status means."},
+				{"metais help refusals render", "Lists every code metais render may refuse with, by its next step."},
 				{"metais help --json", "Prints every command's declaration and every topic as one document."},
 			},
 			run: runHelp,

@@ -16,6 +16,10 @@ import (
 // helpWidth is the column help is wrapped at (ADR-008 D11 item 7).
 const helpWidth = 80
 
+// familyWidth is the widest column a command's help gives its refusal
+// families' patterns; a longer pattern has a line to itself.
+const familyWidth = 28
+
 // description is the tool's one-line description, at the head of the
 // overview.
 const description = "metais reads, validates and renders METAIS packages, and helps author them."
@@ -26,13 +30,17 @@ type topic struct {
 	Name  string
 	Title string
 	body  func(h *helpText, t []*Command)
+	// operand is the command a topic that takes one is printed for, as
+	// metais help refusals <command> is.
+	operand string
 }
 
 var topics = []topic{
-	{"inputs", "Supplying a package's inputs, and which source wins.", inputsTopic},
-	{"globs", "The patterns that select a package's entries.", globsTopic},
-	{"json", "The JSON document every command prints with --json.", jsonTopic},
-	{"exit-codes", "What each exit status means.", exitCodesTopic},
+	{"inputs", "Supplying a package's inputs, and which source wins.", inputsTopic, ""},
+	{"globs", "The patterns that select a package's entries.", globsTopic, ""},
+	{"json", "The JSON document every command prints with --json.", jsonTopic, ""},
+	{"exit-codes", "What each exit status means.", exitCodesTopic, ""},
+	{"refusals", "Every code a command may refuse with: metais help refusals <command>.", refusalsTopic, ""},
 }
 
 func lookupTopic(name string) (topic, bool) {
@@ -142,6 +150,107 @@ func exitCodesTopic(h *helpText, _ []*Command) {
 	h.blank()
 	h.para("When several apply, the first in the order 2, 3, 4, 1, 5 is the status: "+
 		"fixing a destination alone would not help a run whose inputs are invalid.", "")
+}
+
+// refusalsTopic is metais help refusals: how to list a command's codes,
+// and the codes of a line that names no command.
+func refusalsTopic(h *helpText, _ []*Command) {
+	h.para("metais help refusals <command> lists every code the command may refuse with, "+
+		"by the next step each names. metais <command> --help gives the cause of each "+
+		"refusal, and lists the codes of one family that share a cause and a next step "+
+		"on one line.", "")
+	h.blank()
+	h.line("A line that names no command may be refused with:")
+	h.blank()
+	refusalsByNext(h, toolRefusals)
+}
+
+// commandRefusalsTopic is metais help refusals <command>.
+func commandRefusalsTopic(c *Command) topic {
+	return topic{
+		Name:    "refusals",
+		Title:   "Every code metais " + c.Name + " may refuse with, and its next step.",
+		body:    func(h *helpText, _ []*Command) { refusalsByNext(h, c.Refusals) },
+		operand: c.Name,
+	}
+}
+
+// refusalsByNext writes each next step of rs, in the order of its first
+// code, and beneath it every code of rs that names it.
+func refusalsByNext(h *helpText, rs []Refusal) {
+	var nexts []Next
+	for _, r := range rs {
+		if !slices.Contains(nexts, r.Next) {
+			nexts = append(nexts, r.Next)
+		}
+	}
+	for i, n := range nexts {
+		if i > 0 {
+			h.blank()
+		}
+		h.line("Next: " + n.Run)
+		h.para(n.Why, "      ")
+		for _, r := range rs {
+			if r.Next == n {
+				h.line("  " + string(r.Code))
+			}
+		}
+	}
+}
+
+// family is the refusals of one code family a command declares from the
+// registry with one gist and one next step, which its text help lists on
+// one line (ADR-008 D15 item 3, as amended by A1).
+type family struct {
+	codes []finding.Code
+	gist  string
+	next  Next
+	// cause is the first code's own cause, which a family of one gives.
+	cause string
+}
+
+// pattern is the codes' longest common prefix of whole segments, followed
+// by .*, or the code itself when there is one.
+func (f family) pattern() string {
+	if len(f.codes) == 1 {
+		return string(f.codes[0])
+	}
+	prefix := strings.Split(string(f.codes[0]), ".")
+	for _, c := range f.codes[1:] {
+		segs := strings.Split(string(c), ".")
+		n := 0
+		for n < len(prefix) && n < len(segs) && prefix[n] == segs[n] {
+			n++
+		}
+		prefix = prefix[:n]
+	}
+	p := strings.Join(prefix, ".")
+	if slices.Contains(f.codes, finding.Code(p)) {
+		return p + " and " + p + ".*"
+	}
+	return p + ".*"
+}
+
+// families groups rs's refusals that have a gist by their code family,
+// gist and next step, each in the order of its first code.
+func families(rs []Refusal) []family {
+	var out []family
+	for _, r := range rs {
+		if r.gist == "" {
+			continue
+		}
+		fam, _, _ := strings.Cut(string(r.Code), ".")
+		i := slices.IndexFunc(out, func(f family) bool {
+			first, _, _ := strings.Cut(string(f.codes[0]), ".")
+			return first == fam && f.gist == r.gist && f.next == r.Next
+		})
+		if i < 0 {
+			out = append(out, family{gist: r.gist, next: r.Next, cause: r.Cause})
+			i = len(out) - 1
+		}
+		out[i].codes = append(out[i].codes, r.Code)
+	}
+	return out
 }
 
 // overview is the outcome of metais help and metais --help.
@@ -389,9 +498,34 @@ func commandText(c *Command) []byte {
 	b.para(c.Prints+" With --json, one "+c.Format+" document.", "  ")
 	b.heading("Refusals:")
 	for _, r := range c.Refusals {
+		if r.gist != "" {
+			continue
+		}
 		b.line("  " + string(r.Code))
 		b.para(r.Cause, "      ")
 		b.para("Next: "+r.Next.Run, "      ")
+	}
+	if fs := families(c.Refusals); len(fs) > 0 {
+		b.blank()
+		b.para("Each line below is a family of codes: how many there are, the cause they "+
+			"share and their next step. 'metais help refusals "+c.Name+"' lists every code, "+
+			"and help --json gives each code's own cause.", "  ")
+		b.blank()
+		names := make([]string, len(fs))
+		width := 0
+		for i, f := range fs {
+			names[i] = "  " + f.pattern() + " (" + strconv.Itoa(len(f.codes)) + ")"
+			width = max(width, utf8.RuneCountInString(names[i])+2)
+		}
+		width = min(width, familyWidth)
+		for i, f := range fs {
+			cause := f.gist
+			if len(f.codes) == 1 {
+				cause = f.cause
+			}
+			b.item(names[i], width, cause)
+			b.join("Next: "+f.next.Run, width)
+		}
 	}
 	b.heading("Examples:")
 	for _, e := range c.Examples {
@@ -404,7 +538,11 @@ func commandText(c *Command) []byte {
 // topicText is metais help <topic>.
 func topicText(t []*Command, tp topic) []byte {
 	var b helpText
-	b.para("metais help "+tp.Name+" — "+tp.Title, "")
+	name := tp.Name
+	if tp.operand != "" {
+		name += " " + tp.operand
+	}
+	b.para("metais help "+name+" — "+tp.Title, "")
 	b.blank()
 	tp.body(&b, t)
 	return b.bytes()
@@ -443,6 +581,19 @@ func (h *helpText) item(name string, width int, text string) {
 		return
 	}
 	h.b = wrap(h.b, text, name+strings.Repeat(" ", width-utf8.RuneCountInString(name)), strings.Repeat(" ", width))
+}
+
+// join appends text to the last line written when it fits there, and
+// otherwise writes it on a line of its own, indented by width; text is
+// never broken.
+func (h *helpText) join(text string, width int) {
+	last := h.b[:len(h.b)-1]
+	start := strings.LastIndexByte(string(last), '\n') + 1
+	if utf8.RuneCount(last[start:])+1+utf8.RuneCountInString(text) <= helpWidth {
+		h.b = append(append(append(last, ' '), text...), '\n')
+		return
+	}
+	h.line(strings.Repeat(" ", width) + text)
 }
 
 // flags writes each flag's spellings, then its description, values and

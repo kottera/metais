@@ -1247,6 +1247,55 @@ document.
 - `golang.org/x/term` (`IsTerminal`): https://pkg.go.dev/golang.org/x/term
 - Go, GODEBUG settings and their precedence: https://go.dev/doc/godebug
 
+## Amendments
+
+### A1 — Text help lists generated refusals by family, and `metais help refusals <command>` lists every code
+
+**Status:** Accepted on merge, recording Ed Funnekotter's ruling of
+2026-10-19, given by guidance to PLAN-2026-10-metais-v1 (Wave 5b, Fix 5).
+It needs no ratification.
+**Amends:** D15 item 3 (what a command's text help lists of its refusals)
+and D15 item 4 (the topics), and with them what D16 item 1's coverage test
+asserts of refusals. D14, D15 items 1 and 5, and D16 item 2 are unchanged.
+
+1. **A command's declaration still names every code it may refuse with**,
+   each with its own cause and next step (D15 item 1). Most of them are
+   declared by a loop over the finding registry: every code of a family an
+   open, a supply, a render or a check reports, with a cause built from the
+   code's own words. Listing each of those in text help made
+   `metais render --help` more than a thousand lines, most of them such
+   codes, and buried the refusals a caller acts on.
+2. **`metais <command> --help` lists each refusal whose cause or next step
+   is hand-written on its own**, with its cause and next step, in code
+   order.
+3. **It lists the refusals the registry loops declare as one line per
+   family.** A family is the refusals of one code family (the code's first
+   segment) that share one cause and one next step. Its line gives the
+   family pattern, which is its codes' longest common prefix of whole
+   segments followed by `.*` (or the code itself, for a family of one), the
+   number of codes in parentheses, the cause they share, and their next
+   step. A family of one code gives that code's own cause. Two families of
+   one code family may share a pattern where their causes differ; the count
+   and the cause tell them apart, and the topic of item 4 lists their codes.
+4. **A topic, `metais help refusals <command>`, lists every code the
+   command declares, beneath the next step it names**, each next step in
+   the order of its first code. It is one of D15 item 4's topics: the
+   overview lists it, `help --json` carries it, and D16 item 1's tests
+   reach it. With no command, `metais help refusals` says how to use it and
+   lists the refusals of a line that names no command. A command's name is
+   the only second operand `metais help` takes: after any other topic it is
+   `usage.unexpected_operand`, and after `refusals` an operand that names
+   no command is `usage.unknown_topic`.
+5. **`metais help --json` keeps the full declaration of every refusal**:
+   each code with its own cause and next step, as D15 item 5 says. The
+   grouping is a layout of text help only.
+6. **D16 item 1's coverage test** asserts that every declared refusal is in
+   `metais help refusals <command>` beneath its next step; that each
+   hand-written one is in `--help` with its next step; and that the family
+   lines of `--help` hold exactly the codes the registry loops declare, each
+   matched by its family's pattern. D16 item 2's per-code test reads the
+   declaration, which names every code, so it still proves every one.
+
 ## Implementation log
 
 Each work item writes its entry as a file of its own, in

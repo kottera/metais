@@ -1,0 +1,150 @@
+metais help refusals schema — Every code metais schema may refuse with, and its
+next step.
+
+Next: metais limits
+      Lists every limit with its default; a limit can be lowered and never
+      raised.
+  limit.invalid
+  limit.package
+
+Next: metais inspect <package>
+      Opens the package again once it is fixed or replaced; nothing of a refused
+      package is used.
+  manifest.additional_item
+  manifest.additional_property
+  manifest.any_of
+  manifest.const
+  manifest.contains
+  manifest.dependent_required
+  manifest.enum
+  manifest.exclusive_maximum
+  manifest.exclusive_minimum
+  manifest.file.wrong_name
+  manifest.forbidden
+  manifest.format
+  manifest.input.duplicate_name
+  manifest.json.duplicate_name
+  manifest.json.encoding
+  manifest.json.lone_surrogate
+  manifest.json.noncharacter
+  manifest.json.syntax
+  manifest.json.trailing_content
+  manifest.license.expression
+  manifest.max_contains
+  manifest.max_items
+  manifest.max_length
+  manifest.max_properties
+  manifest.maximum
+  manifest.min_contains
+  manifest.min_items
+  manifest.min_length
+  manifest.min_properties
+  manifest.minimum
+  manifest.multiple_of
+  manifest.not
+  manifest.number_out_of_range
+  manifest.one_of
+  manifest.one_of.ambiguous
+  manifest.output.duplicate_id
+  manifest.output.nested_for_each
+  manifest.path_not_found
+  manifest.pattern
+  manifest.property_name
+  manifest.required
+  manifest.type
+  manifest.unevaluated_item
+  manifest.unevaluated_property
+  manifest.unique_items
+  manifest.yaml.alias
+  manifest.yaml.anchor
+  manifest.yaml.bom
+  manifest.yaml.character
+  manifest.yaml.directive
+  manifest.yaml.duplicate_key
+  manifest.yaml.encoding
+  manifest.yaml.key_empty
+  manifest.yaml.key_not_scalar
+  manifest.yaml.merge_key
+  manifest.yaml.multi_document
+  manifest.yaml.root_not_mapping
+  manifest.yaml.scalar_refused
+  manifest.yaml.syntax
+  manifest.yaml.tag
+  package.compiled.mismatch
+  package.compiled.missing
+  package.compiled.unknown_file
+  package.container.archive_comment
+  package.container.crc_mismatch
+  package.container.data_descriptor
+  package.container.deflate_stream
+  package.container.encrypted
+  package.container.entry_order
+  package.container.extra_field
+  package.container.field_value
+  package.container.flags
+  package.container.header_mismatch
+  package.container.method
+  package.container.not_zip
+  package.container.overlap_or_gap
+  package.container.prepended_data
+  package.container.second_end_record
+  package.container.size_mismatch
+  package.container.trailing_data
+  package.container.zip64
+  package.digest.entries_mismatch
+  package.digest.mismatch
+  package.digest.not_canonical
+  package.digest.package_mismatch
+  package.layout.compiled_in_source
+  package.layout.empty_directory
+  package.layout.missing_manifest
+  package.layout.non_regular_file
+  package.layout.unknown_top_level
+  package.name.case_collision
+  package.name.character
+  package.name.directory_entry
+  package.name.duplicate
+  package.name.encoding
+  package.name.file_directory_conflict
+  package.name.not_nfc
+  package.name.not_portable
+  package.name.shape
+  package.not_found
+  package.not_readable
+  package.version.malformed
+  package.version.missing
+  package.version.not_string
+  package.version.unsupported_major
+  package.version.unsupported_minor
+  schema.dialect
+  schema.format_unsupported
+  schema.id_duplicate
+  schema.invalid
+  schema.keyword_unknown
+  schema.pattern_unsupported
+  schema.ref_by_path
+  schema.ref_escapes
+  schema.ref_unresolved
+  schema.syntax
+  template.date_format
+  template.division_by_zero
+  template.filter_argument
+  template.include
+  template.number_range
+  template.safe_position
+  template.syntax
+  template.tag_context
+  template.unknown_filter
+
+Next: metais schema --help
+      Prints the operands and flags metais schema takes.
+  usage.bad_value
+  usage.missing_operand
+  usage.package_from_stdin
+  usage.repeated_flag
+  usage.unexpected_operand
+  usage.unknown_flag
+
+Next: metais inspect <package>
+      Lists the package's inputs, each with how to supply it.
+  usage.unknown_input

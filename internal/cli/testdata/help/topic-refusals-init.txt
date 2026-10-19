@@ -1,0 +1,30 @@
+metais help refusals init — Every code metais init may refuse with, and its next
+step.
+
+Next: metais init <dir>
+      Writes the scaffold into a directory that is empty or does not exist yet.
+  output.destination.not_directory
+  output.destination.not_empty
+
+Next: metais init <dir>
+      Writes the scaffold again, into an empty directory, once the cause is
+      fixed.
+  output.destination.nothing_written
+  output.destination.write_failed
+
+Next: metais init --help
+      Prints the operands and flags metais init takes.
+  usage.bad_value
+  usage.repeated_flag
+  usage.unexpected_operand
+  usage.unknown_flag
+
+Next: metais init <dir> --name <name>
+      Gives a name of lower-case letters, digits, single hyphens and dots, which
+      the package name rule accepts.
+  usage.name_invalid
+
+Next: metais init --name <name>
+      Gives the package's name, which init takes only from the command line,
+      never from the working directory.
+  usage.name_required

@@ -1,0 +1,13 @@
+metais help refusals help — Every code metais help may refuse with, and its next
+step.
+
+Next: metais help --help
+      Prints the operands and flags metais help takes.
+  usage.bad_value
+  usage.repeated_flag
+  usage.unexpected_operand
+  usage.unknown_flag
+
+Next: metais help
+      Lists every command, the global flags and the help topics.
+  usage.unknown_topic
