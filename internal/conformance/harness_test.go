@@ -7,7 +7,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -128,10 +127,11 @@ func (sb *sandbox) plantHarnessDecoys(v *vector, c *vcase) error {
 			if err == nil {
 				err = os.WriteFile(p, []byte(content), 0o644)
 			}
-			// A package's names may collide with one another as paths,
-			// a file where another name needs a directory; such a name
-			// has no decoy. A careless file always has one.
-			if err != nil && (careless || !errors.Is(err, fs.ErrExist) && !errors.Is(err, fs.ErrNotExist) && !isNotDir(err)) {
+			// A name of a package's may be one this file system cannot
+			// hold, or collide with another as a path, a file where the
+			// other needs a directory; such a name has no decoy. A
+			// careless file always has one.
+			if err != nil && careless {
 				return fmt.Errorf("the decoy %s: %w", name, err)
 			}
 		}
@@ -151,12 +151,6 @@ func (sb *sandbox) plantHarnessDecoys(v *vector, c *vcase) error {
 		}
 	}
 	return nil
-}
-
-// isNotDir reports whether err is a path through a file.
-func isNotDir(err error) bool {
-	var pe *fs.PathError
-	return errors.As(err, &pe) && strings.Contains(pe.Err.Error(), "not a directory")
 }
 
 // Where a package refers to a name: a partial, an asset or an embed in a
