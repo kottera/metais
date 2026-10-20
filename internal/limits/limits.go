@@ -185,7 +185,7 @@ var table = [count]Limit{
 	{ContainerDepth, "container-depth", 3, Count, ClassWork},
 	{OutputSize, "output-size", 128 * mib, Bytes, ClassWork},
 	{OutputTotal, "output-total", 256 * mib, Bytes, ClassWork},
-	{OutputValues, "output-values", 1_000_000, Count, ClassWork},
+	{OutputValues, "output-values", 400_000, Count, ClassWork},
 	{Findings, "findings", 100_000, Count, ClassWork},
 	{GrepMatches, "grep-matches", 10_000, Count, ClassWork},
 	{GrepContext, "grep-context", 7, Count, ClassWork},

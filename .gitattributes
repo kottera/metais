@@ -51,6 +51,7 @@ spec/conformance/vectors/pkg/crc-wrong/expected/findings.json merge=metais-gener
 spec/conformance/vectors/pkg/data-descriptor/expected/findings.json merge=metais-generated-values
 spec/conformance/vectors/pkg/deflate-stream/expected/findings.json merge=metais-generated-values
 spec/conformance/vectors/pkg/deflate-truncated/expected/findings.json merge=metais-generated-values
+spec/conformance/vectors/pkg/digest-values/vector.json merge=metais-generated-values
 spec/conformance/vectors/pkg/directory-entry-data/expected/findings.json merge=metais-generated-values
 spec/conformance/vectors/pkg/directory-entry-mode/expected/findings.json merge=metais-generated-values
 spec/conformance/vectors/pkg/disk-number-start/expected/findings.json merge=metais-generated-values

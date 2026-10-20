@@ -64,6 +64,7 @@ lower a limit for one operation; nothing raises one.
 | `path-depth` | 32 segments | an entry name, and an output path |
 | `manifest-size` | 1 MiB | `metais.yaml`, and `.compiled/manifest.json` |
 | `schema-size` | 4 MiB | one schema file |
+| `schema-yaml-size` | 1 MiB | one schema file in YAML |
 | `combined-schema-size` | 16 MiB | the combined schema, stored or derived |
 | `schema-depth` | 64 | the nesting of subschemas |
 | `schema-subschemas` | 20,000 | the subschemas of every schema file of a package together, and of the combined schema |
@@ -125,6 +126,12 @@ schema, stored or derived, is longer in its canonical JSON than
 `combined-schema-size` with `limit.package` located at
 `.compiled/schema.json`, observing that length, before it compiles the
 combined schema.
+
+<a id="mts-sec-061"></a>**MTS-SEC-061** A processor MUST refuse a schema file
+in YAML, an entry whose name ends in `.yaml` or `.yml`, longer in bytes than
+`schema-yaml-size` with `limit.package` located at the file, observing its
+length, before it reads the file. A schema file in JSON is not bounded by
+`schema-yaml-size`.
 
 <a id="mts-sec-044"></a>**MTS-SEC-044** A subschema's depth is 1 at its schema
 file's root, and one more than the depth of the subschema holding it. A
@@ -192,8 +199,8 @@ one. A limit of §14.2 that bounds a parsed document, `value-depth` and
 |---|---|---|
 | `input-size` | 32 MiB | one input file, one collection item, one `--inputs-json`, `--set` or `--set-json` value |
 | `inputs-total` | 128 MiB | all the input bytes one operation reads |
-| `input-values` | 1,000,000 | the values all the inputs of one operation decode to |
-| `yaml-size` | 1 MiB | one YAML input file or collection item |
+| `input-values` | 500,000 | the values all the inputs of one operation decode to |
+| `yaml-size` | 1 MiB | one YAML input file or collection item, and one rendered output validated as YAML |
 | `csv-rows` | 1,000,000 | the data records of one CSV input |
 | `csv-columns` | 1,024 | the fields of one record |
 | `csv-cell` | 1 MiB | one field |
@@ -225,6 +232,11 @@ creates, or a schema default supplies, does not count.
 <a id="mts-sec-060"></a>**MTS-SEC-060** A processor MUST refuse a YAML input
 file or collection item whose bytes number more than `yaml-size` with
 `limit.exceeded` naming `yaml-size`, before it parses the document.
+
+<a id="mts-sec-062"></a>**MTS-SEC-062** A processor MUST refuse a rendered
+output it validates as YAML ([chapter 10](10-transforms.md)) whose bytes
+number more than `yaml-size` with `limit.exceeded.output` naming `yaml-size`,
+before it parses the output.
 
 ## 14.5 Reading the host
 
@@ -277,7 +289,8 @@ limit is.
 | `outputs` | 100,000 | the files one render plans |
 | `container-depth` | 3 | the containers an output nests one inside another, the outermost counting as the first ([chapter 10](10-transforms.md)) |
 | `output-size` | 128 MiB | one file a render writes |
-| `output-total` | 512 MiB | every byte one render writes |
+| `output-total` | 256 MiB | every byte one render writes |
+| `output-values` | 400,000 | the values one validated output decodes to |
 
 <a id="mts-sec-008"></a>**MTS-SEC-008** A processor MUST bound a render's
 template work by `render-work`, counted in units — 16 for every node it
@@ -299,6 +312,13 @@ the limit, at the token that exceeded it.
 bytes exceed `output-size`, and the output whose bytes take a render's total
 beyond `output-total`, with `limit.exceeded.output`, naming the output and the
 limit.
+
+<a id="mts-sec-063"></a>**MTS-SEC-063** A processor MUST count against
+`output-values` every value of the data model it decodes from one rendered
+output it validates ([chapter 10](10-transforms.md)), its root included, as
+MTS-SEC-059 counts a JSON or YAML file's, and apart from every other output,
+and MUST refuse the output whose value passes the bound with
+`limit.exceeded.output` naming `output-values`, at that value.
 
 <a id="mts-sec-011"></a>**MTS-SEC-011** A processor MUST refuse a render whose
 manifest plans more files than `outputs` with `limit.package`, located at the

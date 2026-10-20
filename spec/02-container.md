@@ -444,6 +444,14 @@ and a processor MUST refuse a digest file that is not one JSON object, does
 not have exactly that form, or is not byte for byte the canonical JSON of its
 value with `package.digest.not_canonical`.
 
+<a id="mts-pkg-073"></a>**MTS-PKG-073** A processor MUST count the values of
+the data model it decodes from the digest file, its root included, as it
+decodes them, and MUST refuse a digest file that decodes to more values than
+the bound of the `entries` limit ([chapter 14](14-security.md)) plus four with
+`package.digest.not_canonical`, reason `shape`, decoding no value past that
+count: §2.6.1's form holds the object, `algorithm`, `entries`, `package` and
+one digest for each entry it can name.
+
 <a id="mts-pkg-028"></a>**MTS-PKG-028** The members of the digest file's
 `entries` MUST be exactly the names of the package's entries other than the
 digest file and `README.md`, and a processor MUST refuse each entry the file does not name and

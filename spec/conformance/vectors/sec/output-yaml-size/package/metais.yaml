@@ -1,0 +1,11 @@
+metais: "1.0"
+name: org.example.outputs
+version: 1.0.0
+title: Outputs
+description: A package whose YAML output is validated.
+guide: Render it.
+inputs: []
+outputs:
+  - id: b
+    template: b.yaml.liquid
+    validate: references/array.schema.json

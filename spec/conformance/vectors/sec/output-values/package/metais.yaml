@@ -1,0 +1,14 @@
+metais: "1.0"
+name: org.example.outputs
+version: 1.0.0
+title: Outputs
+description: A package whose two outputs are validated.
+guide: Render it.
+inputs: []
+outputs:
+  - id: a
+    template: a.json.liquid
+    validate: references/array.schema.json
+  - id: b
+    template: b.yaml.liquid
+    validate: references/array.schema.json

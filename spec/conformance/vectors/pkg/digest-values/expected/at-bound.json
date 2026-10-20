@@ -1,0 +1,47 @@
+[
+  {
+    "code": "package.digest.entries_mismatch",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/digests.json",
+      "pointer": "/entries/templates~1gone-a.md.liquid"
+    },
+    "params": {
+      "reason": "no_entry"
+    }
+  },
+  {
+    "code": "package.digest.entries_mismatch",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/digests.json",
+      "pointer": "/entries/templates~1gone-b.md.liquid"
+    },
+    "params": {
+      "reason": "no_entry"
+    }
+  },
+  {
+    "code": "package.digest.entries_mismatch",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/digests.json",
+      "pointer": "/entries/templates~1gone-c.md.liquid"
+    },
+    "params": {
+      "reason": "no_entry"
+    }
+  }
+]

@@ -1,0 +1,17 @@
+metais: "1.0"
+name: org.example.schemas
+version: 1.0.0
+title: Schemas
+description: A package of one YAML and one JSON schema file.
+guide: Supply a report and a note.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.yaml
+  - name: note
+    title: Note
+    schema: inputs/note.schema.json
+    required: false
+outputs:
+  - id: report
+    template: report.md.liquid
