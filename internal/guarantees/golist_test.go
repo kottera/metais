@@ -6,7 +6,6 @@ package guarantees
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -16,6 +15,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -79,90 +79,51 @@ func (p *listedPackage) releaseFiles() []string {
 	return append(append([]string(nil), p.GoFiles...), p.CgoFiles...)
 }
 
-var (
-	modCacheOnce sync.Once
-	modCache     string
-	modCacheErr  error
-)
+// hostEnviron is the environment this test binary started with, taken
+// before any test points HOME at a temporary directory: go env reads the
+// host's caches from it.
+var hostEnviron = os.Environ()
 
-// goTool is the go command of the toolchain running this test, so the
-// tripwires read the tree with the toolchain that builds it. A test binary
-// built with -trimpath does not know its GOROOT; then the go on PATH is used.
-func goTool(t testing.TB) string {
-	t.Helper()
+// goHost is the host's toolchain and its caches (testenv.GoHost), read
+// once by the go command of the toolchain running this test. A test binary
+// built with -trimpath does not know its GOROOT; then the go on PATH asks.
+var goHost = sync.OnceValues(func() (testenv.GoHost, error) {
 	exe := "go"
-	if runtime.GOOS == "windows" {
-		exe += ".exe"
-	}
 	if root := runtime.GOROOT(); root != "" {
-		p := filepath.Join(root, "bin", exe)
-		if _, err := os.Stat(p); err == nil {
-			return p
-		}
+		exe = filepath.Join(root, "bin", "go")
 	}
-	p, err := exec.LookPath("go")
+	cmd := exec.Command(exe, testenv.GoHostQuery...)
+	cmd.Env = append(slices.Clone(hostEnviron), "GOTOOLCHAIN=local")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	out, err := cmd.Output()
 	if err != nil {
-		t.Fatalf("no go command: %v", err)
+		return testenv.GoHost{}, fmt.Errorf("go %s: %v\n%s", strings.Join(testenv.GoHostQuery, " "), err, stderr.Bytes())
 	}
-	return p
-}
+	return testenv.ParseGoHost(hostEnviron, out)
+})
 
-// moduleCache is where the toolchain keeps downloaded modules. It is the one
-// fact read from the developer's go configuration, by go env GOMODCACHE,
-// because without it the isolated go list below would need the network.
-func moduleCache(t testing.TB) string {
+// goCommand is the go command with args, in the whole environment
+// testenv.GoEnv gives over a fresh directory: it takes nothing from the
+// host but its toolchain and caches, and never reaches the network.
+func goCommand(t testing.TB, args ...string) *exec.Cmd {
 	t.Helper()
-	modCacheOnce.Do(func() {
-		out, err := exec.Command(goTool(t), "env", "GOMODCACHE").Output()
-		modCache, modCacheErr = strings.TrimSpace(string(out)), err
-		if err == nil && modCache == "" {
-			modCacheErr = errors.New("go env GOMODCACHE is empty")
-		}
-	})
-	if modCacheErr != nil {
-		t.Fatalf("locating the module cache: %v", modCacheErr)
+	h, err := goHost()
+	if err != nil {
+		t.Fatalf("locating the host's toolchain: %v", err)
 	}
-	return modCache
+	cmd := exec.Command(h.Go(), args...)
+	cmd.Env = testenv.GoEnv(h, testenv.Dir(t))
+	return cmd
 }
 
-// isolatedGoEnv is the whole environment of a go command the tripwires run.
-// Nothing is inherited: HOME, the temporary directory, GOPATH and the
-// build cache are fresh directories from internal/testenv, GOENV=off ignores the developer's go
-// configuration file, GOPROXY=off, GOSUMDB=off and GOTOOLCHAIN=local keep
-// the command off the network, and the module cache is the one the
-// toolchain already holds, read only (-mod=readonly).
-func isolatedGoEnv(t testing.TB, tg target) []string {
-	t.Helper()
-	home, tmp := testenv.Dir(t), testenv.Dir(t)
-	return []string{
-		"HOME=" + home,
-		"USERPROFILE=" + home,
-		"TMPDIR=" + tmp,
-		"TMP=" + tmp,
-		"TEMP=" + tmp,
-		"GOTMPDIR=" + tmp,
-		"GOENV=off",
-		"GOFLAGS=-mod=readonly",
-		"GOPROXY=off",
-		"GOSUMDB=off",
-		"GOTOOLCHAIN=local",
-		"GOWORK=off",
-		"GOMODCACHE=" + moduleCache(t),
-		"GOCACHE=" + testenv.Dir(t),
-		"GOPATH=" + testenv.Dir(t),
-		"CGO_ENABLED=0",
-		"GOOS=" + tg.goos,
-		"GOARCH=" + tg.goarch,
-	}
-}
-
-// runGo runs the go command in dir under tg with the isolated environment
-// and returns its standard output.
+// runGo runs the go command in dir under tg, cgo off, and returns its
+// standard output.
 func runGo(t testing.TB, dir string, tg target, args ...string) []byte {
 	t.Helper()
-	cmd := exec.Command(goTool(t), args...)
+	cmd := goCommand(t, args...)
 	cmd.Dir = dir
-	cmd.Env = isolatedGoEnv(t, tg)
+	cmd.Env = append(cmd.Env, "GOOS="+tg.goos, "GOARCH="+tg.goarch)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	out, err := cmd.Output()

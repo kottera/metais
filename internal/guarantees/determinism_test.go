@@ -200,11 +200,13 @@ func TestDeterminismDetector(t *testing.T) {
 }
 
 // buildMetais builds ./cmd/metais into a temporary directory and returns
-// its path.
+// its path. The go command takes nothing from the host but its toolchain
+// and caches (goCommand), so no module is downloaded, and none is written
+// under a temporary directory where RemoveAll could not delete it.
 func buildMetais(t *testing.T) string {
 	t.Helper()
 	bin := filepath.Join(testenv.Dir(t), "metais")
-	cmd := exec.Command("go", "build", "-trimpath", "-o", bin, "./cmd/metais")
+	cmd := goCommand(t, "build", "-trimpath", "-o", bin, "./cmd/metais")
 	cmd.Dir = moduleRootAbs(t)
 	if b, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("go build ./cmd/metais: %v\n%s", err, b)
