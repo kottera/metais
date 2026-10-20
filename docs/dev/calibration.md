@@ -23,8 +23,8 @@ measures the binary as it is released, and refuses a race-built one. It
 builds `./cmd/metais` with `-trimpath`, runs each case once, one at a time,
 and writes the record whatever the outcome. Then it fails, naming each
 case and the ceiling it broke. A run takes some minutes, and its cases
-write up to 1 GiB to the temporary directory, which each case removes when
-it ends.
+write up to `output-total` to the temporary directory, which each case
+removes when it ends.
 
 `-calibration.cases=<name>,<name>` runs only the cases named, which is how
 one case is measured again. `-conformance.tool=<path>` measures another
@@ -47,12 +47,13 @@ replaced by wall time. The wall time is recorded beside it, and a 30-minute
 wall clock ends a case that would otherwise never end. A case it ends breaks
 the CPU ceiling.
 
-The ceilings are ADR-009 D18 item 2's:
+The ceilings are ADR-009 D18 item 2's, its CPU ceiling as Amendment A3
+item 1 sets it:
 
 | Ceiling | Bound |
 |---|---|
 | CPU time of a case refused from metadata | 0.5 s |
-| CPU time of every other case | 10 s |
+| CPU time of every other case | 120 s |
 | Peak resident memory | 1 GiB |
 
 No case is refused from metadata: each one does the work its limit allows
@@ -103,7 +104,7 @@ Each run writes one JSON document, `metais.calibration/1`:
   "go": "go1.26.9",
   "tool": "metais 0.0.0-dev ...",
   "cpus": 10,
-  "ceilings": {"cpu_ns": 10000000000, "metadata_cpu_ns": 500000000, "rss_bytes": 1073741824},
+  "ceilings": {"cpu_ns": 120000000000, "metadata_cpu_ns": 500000000, "rss_bytes": 1073741824},
   "cases": [
     {
       "case": "render-work",
@@ -116,7 +117,7 @@ Each run writes one JSON document, `metais.calibration/1`:
       "rss_bytes": 0,
       "wall_ns": 0,
       "broken": [],
-      "cpu_ceiling_ns": 10000000000,
+      "cpu_ceiling_ns": 120000000000,
       "rss_ceiling_bytes": 1073741824,
       "cpu_fraction": 0
     }
