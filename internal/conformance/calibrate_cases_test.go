@@ -101,6 +101,42 @@ var calCases = []calCase{
 		beyond:  refusedBy("schema-work"),
 	},
 	{
+		// A failing tree of exactly the units the limit allows: two-branch
+		// anyOfs nested by $ref over a type every level fails, so each
+		// choice's alternatives nest the next and the findings listed
+		// reach the findings limit. Every unit evaluated fails, so the
+		// library, the adapter and the mapping each hold a failure for it.
+		// schemaWorkAnyOf says how the units are made up. The validation
+		// is not refused, so it does all the work the limit allows: one
+		// unit more is refused before anything is evaluated.
+		name: "schema-work-anyof", limit: "schema-work",
+		lowered: calLimits{"schema-work": 100_000},
+		build: func(dir string, lim calLimits) ([]string, error) {
+			schema, err := schemaWorkAnyOf(lim["schema-work"])
+			if err != nil {
+				return nil, err
+			}
+			return validateInput(dir, schema, "5")
+		},
+		reached: func(r *calResult, lim calLimits) error {
+			if r.OK {
+				return fmt.Errorf("the command succeeded")
+			}
+			choice := false
+			for _, f := range r.Findings {
+				if f.Params["limit"] != nil {
+					return fmt.Errorf("the validation was refused by %v", f.Params["limit"])
+				}
+				choice = choice || f.Code == "input.any_of"
+			}
+			if !choice {
+				return fmt.Errorf("no input.any_of was reported")
+			}
+			return nil
+		},
+		beyond: refusedBy("schema-work"),
+	},
+	{
 		// grep's pattern at about 4,000 instructions, under regex-program,
 		// over lines of a thousand bytes it never matches, until the
 		// charge of D10 item 7 runs out.
@@ -311,6 +347,48 @@ var calCases = []calCase{
 			return r.refusedBy("schema-subschemas", lim["schema-subschemas"], ".compiled/schema.json")
 		},
 	},
+}
+
+// schemaWorkAnyOf is an input schema whose validation of 5 costs exactly
+// units of schema-work, and fails at every unit: an allOf of $refs to
+// levels of two-branch anyOfs, level j reaching level j-1 by $ref twice
+// and level 0 a string type. As the input of validateInput, the schema
+// costs 4 units, and each $ref to level j 4×2^j - 2 more; a last allOf of
+// k string types costs k + 1. The deepest level comes first, so its
+// choice nests the most.
+func schemaWorkAnyOf(units int64) (string, error) {
+	left := units - 4
+	if left < 2 {
+		return "", fmt.Errorf("no schema costs %d units this way", units)
+	}
+	cost := func(j int) int64 { return 4<<j - 2 }
+	var levels []int
+	for j := 40; j >= 0; j-- {
+		for cost(j) <= left {
+			levels = append(levels, j)
+			left -= cost(j)
+		}
+	}
+	k := int64(0)
+	if left == 1 {
+		// No level costs one unit: give back the shallowest level and
+		// make its units and this one up with string types.
+		last := levels[len(levels)-1]
+		levels = levels[:len(levels)-1]
+		k = cost(last)
+	}
+	parts := make([]string, 0, len(levels)+1)
+	for _, j := range levels {
+		parts = append(parts, fmt.Sprintf(`{"$ref":"#/$defs/l%d"}`, j))
+	}
+	if k > 0 {
+		parts = append(parts, `{"allOf":[`+strings.TrimSuffix(strings.Repeat(`{"type":"string"},`, int(k)), ",")+`]}`)
+	}
+	defs := []string{`"l0":{"type":"string"}`}
+	for j := 1; j <= levels[0]; j++ {
+		defs = append(defs, fmt.Sprintf(`"l%d":{"anyOf":[{"$ref":"#/$defs/l%d"},{"$ref":"#/$defs/l%d"}]}`, j, j-1, j-1))
+	}
+	return `{"allOf":[` + strings.Join(parts, ",") + `],"$defs":{` + strings.Join(defs, ",") + `}}`, nil
 }
 
 // combinedOverhead is how many more subschemas the combined schema holds

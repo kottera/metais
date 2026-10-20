@@ -270,6 +270,9 @@ type Alternative struct {
 	Title    string
 	Findings []Finding
 	Omitted  int
+	// gathered is set when a Branch gathered Findings, already sorted,
+	// de-duplicated and capped, so New takes them as they are.
+	gathered bool
 }
 
 // Related is another location a finding concerns, with a fixed note
@@ -785,7 +788,9 @@ func (f *Finding) clean() {
 	alts := make([]Alternative, len(f.alternatives))
 	for i, a := range f.alternatives {
 		a.Title = validUTF8(a.Title)
-		a.Findings, a.Omitted = branchFindings(a.Findings, a.Omitted)
+		if !a.gathered {
+			a.Findings, a.Omitted = branchFindings(a.Findings, a.Omitted)
+		}
 		alts[i] = a
 	}
 	f.alternatives = alts
@@ -832,7 +837,7 @@ func (b *Branch) Add(f Finding) { b.r.Add(f) }
 // Alternative returns the alternative: the findings the branch lists and
 // how many it omits.
 func (b *Branch) Alternative() Alternative {
-	return Alternative{Branch: b.branch, Title: b.title, Findings: b.r.sorted(), Omitted: b.r.omitted()}
+	return Alternative{Branch: b.branch, Title: b.title, Findings: b.r.sorted(), Omitted: b.r.omitted(), gathered: true}
 }
 
 // branchFindings sorts and de-duplicates one alternative's findings within

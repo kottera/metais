@@ -285,7 +285,7 @@ func (r *Report) omitted() int { return len(r.groups) - r.listed.Len() }
 func (r *Report) Findings() []Finding {
 	out := r.sorted()
 	if n := len(r.groups) - len(out); n > 0 {
-		out = append(out, r.truncated(len(out), n))
+		out = append(slices.Clip(out), r.truncated(len(out), n))
 	}
 	return out
 }
@@ -295,7 +295,7 @@ func (r *Report) Findings() []Finding {
 // their alternatives, leave the cap room, and the last is cut short to
 // what is left (MTS-FND-020, MTS-FND-021).
 func (r *Report) sorted() []Finding {
-	out := make([]Finding, 0, r.listed.Len()+1)
+	out := make([]Finding, 0, r.listed.Len())
 	for _, it := range r.listed.items {
 		out = append(out, it.f)
 	}
