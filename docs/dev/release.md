@@ -26,13 +26,14 @@ It refuses, and writes nothing, when:
 
 - the working tree has any change, staged, unstaged or untracked;
 - `HEAD` is not the commit the tag `v<version>` names;
+- `go.mod` has no single `toolchain` line naming a go release;
 - the tool built from `HEAD` does not report `<version>`, or its
   `implements` names a specification revision that is not released. A
   revision `M.m` is released when the annotated tag `spec-M.m` is on
   `HEAD`'s history and `HEAD` holds `spec/conformance/released/M.m.sha256`
   (ADR-011 D5 items 2 and 6). Release the specification first;
-- a binary's `go version -m` does not show exactly the release's settings:
-  `-trimpath=true`, `CGO_ENABLED=0`, the target's `GOOS` and `GOARCH`,
+- a binary's `go version -m` does not show exactly go.mod's toolchain and
+  the release's settings: `-trimpath=true`, `CGO_ENABLED=0`, the target's `GOOS` and `GOARCH`,
   `GOAMD64=v1` or `GOARM64=v8.0`, and a clean `git` stamp of `HEAD`, with
   no other setting such as build tags or the race detector;
 - the two builds of a target differ.
@@ -45,10 +46,19 @@ target in each clone with that clone's own `GOCACHE`, by the build line of
 
 ```bash
 CGO_ENABLED=0 GOAMD64=v1 GOARM64=v8.0 GOFLAGS=-mod=readonly GOOS=<os> GOARCH=<arch> \
+  GOTOOLCHAIN=<go.mod's toolchain> GOWORK=off GOENV=off \
+  GOPROXY=https://proxy.golang.org,direct GOSUMDB=sum.golang.org \
+  GOPRIVATE= GONOPROXY= GONOSUMDB= GOINSECURE= \
   go build -trimpath -buildvcs=true \
   -ldflags "-s -w -X github.com/kottera/metais/internal/version.release=<version>" \
   -o <dir>/metais ./cmd/metais
 ```
+
+Every go command it runs takes these go settings, whatever the
+developer's environment holds. So a release is built by go.mod's
+`toolchain` under any `GOTOOLCHAIN`, `local` included, which the go on
+`PATH` fetches and switches to as ADR-010 D1 requires. No workspace, go
+env file, proxy or module exemption of the developer's reaches it.
 
 The SC7 harness (`TestHostIsolation`) builds the binary it judges by the
 same line, so the binary it clears is the one a release ships. The
