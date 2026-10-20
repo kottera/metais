@@ -1,0 +1,74 @@
+{
+  "format": "metais-example-acr/1",
+  "product": {
+    "name": "Ledgerline Lite",
+    "version": null,
+    "description": null
+  },
+  "vendor": {
+    "name": "Example Ledger Ltd",
+    "contact": null,
+    "email": null,
+    "website": null
+  },
+  "date": "2026-09-15",
+  "edition": "wcag",
+  "methods": "Keyboard-only operation and a screen reader check with NVDA 2026.2 and Firefox on Windows 11, by the vendor's developers.",
+  "notes": null,
+  "tables": [
+    {
+      "standard": "wcag",
+      "criteria": [
+        {
+          "criterion": "1.1.1",
+          "label": "Non-text Content",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Every image has a text alternative, and decorative images are hidden from screen readers."
+        },
+        {
+          "criterion": "1.4.3",
+          "label": "Contrast (Minimum)",
+          "wcag_level": "AA",
+          "conformance": "Partially Supports",
+          "remarks": "Body text meets the ratio. The \"Draft\" badge on unsent invoices measures 3.1 to 1."
+        },
+        {
+          "criterion": "2.1.1",
+          "label": "Keyboard",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Every function can be operated from a keyboard."
+        },
+        {
+          "criterion": "2.4.7",
+          "label": "Focus Visible",
+          "wcag_level": "AA",
+          "conformance": "Does Not Support",
+          "remarks": "The product's style sheet removes the browser's focus outline, and nothing replaces it."
+        },
+        {
+          "criterion": "3.1.1",
+          "label": "Language of Page",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "4.1.2",
+          "label": "Name, Role, Value",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Every control is a native one, or exposes its name, role and state."
+        },
+        {
+          "criterion": "2.4.13",
+          "label": "Focus Appearance",
+          "wcag_level": "AAA",
+          "conformance": "Not Evaluated",
+          "remarks": "Level AAA; not evaluated."
+        }
+      ]
+    }
+  ]
+}

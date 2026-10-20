@@ -1,0 +1,6 @@
+{
+  "product": { "name": "Ledgerline Lite" },
+  "vendor": { "name": "Example Ledger Ltd" },
+  "date": "2026-09-15",
+  "methods": "Keyboard-only operation and a screen reader check with NVDA 2026.2 and Firefox on Windows 11, by the vendor's developers."
+}

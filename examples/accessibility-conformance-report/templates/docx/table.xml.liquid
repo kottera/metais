@@ -1,0 +1,22 @@
+{%- comment -%}
+The table of one standard's criteria: a header row, then a row per entry of
+rows in the order supplied, naming each criterion by its number and its
+label, with its conformance level and its remarks. standard is the input's
+name, which chooses the partial that labels its criteria.
+{%- endcomment -%}
+<w:tbl>
+<w:tblPr><w:tblStyle w:val="ReportTable"/><w:tblW w:w="5000" w:type="pct"/><w:tblLayout w:type="fixed"/><w:tblLook w:val="0020" w:firstRow="1" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="1" w:noVBand="1"/></w:tblPr>
+<w:tblGrid><w:gridCol w:w="3000"/><w:gridCol w:w="1800"/><w:gridCol w:w="4560"/></w:tblGrid>
+<w:tr><w:trPr><w:cantSplit/><w:tblHeader/></w:trPr><w:tc><w:tcPr><w:tcW w:w="3000" w:type="dxa"/></w:tcPr><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Criterion</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="1800" w:type="dxa"/></w:tcPr><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Conformance level</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="4560" w:type="dxa"/></w:tcPr><w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Remarks and explanations</w:t></w:r></w:p></w:tc></w:tr>
+{% for row in rows -%}
+{%- case standard -%}
+{%- when "wcag" -%}
+{%- capture label %}{% render "criteria/wcag.liquid", id: row.criterion %} (Level {% render "criteria/wcag-level.liquid", id: row.criterion %}){% endcapture -%}
+{%- when "section508" -%}
+{%- capture label %}{% render "criteria/section508.liquid", id: row.criterion %}{% endcapture -%}
+{%- when "en301549" -%}
+{%- capture label %}{% render "criteria/en301549.liquid", id: row.criterion %}{% endcapture -%}
+{%- endcase -%}
+<w:tr><w:trPr><w:cantSplit/></w:trPr><w:tc><w:tcPr><w:tcW w:w="3000" w:type="dxa"/></w:tcPr><w:p><w:r><w:t xml:space="preserve">{{ row.criterion }} {{ label }}</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="1800" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>{{ row.conformance }}</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="4560" w:type="dxa"/></w:tcPr>{% if row.remarks %}{% render "docx/paragraphs.xml.liquid", text: row.remarks, style: nil %}{% else %}<w:p/>{% endif %}</w:tc></w:tr>
+{% endfor -%}
+</w:tbl>

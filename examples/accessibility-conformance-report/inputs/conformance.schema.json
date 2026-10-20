@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Conformance level",
+  "description": "How far the product meets one criterion. inputs/conformance.md says what each level means and when to choose it.",
+  "type": "string",
+  "enum": ["Supports", "Partially Supports", "Does Not Support", "Not Applicable", "Not Evaluated"],
+  "examples": ["Partially Supports"]
+}

@@ -1,0 +1,105 @@
+metais: "1.0"
+name: "accessibility-conformance-report"
+version: "1.0.0"
+title: "Accessibility conformance report"
+description: "An accessibility conformance report (ACR) for one product, as a Word document and a JSON copy, from the product's details and one CSV table of criteria for each standard its edition answers."
+license: "Apache-2.0"
+guide: |-
+  This package writes an accessibility conformance report (ACR): a
+  document that tells a buyer how far one product meets the accessibility
+  standards they ask about. It writes two files:
+
+  - **acr.docx**, the report as a Word document: the product, its vendor,
+    how it was evaluated, the standards it answers, what each conformance
+    level means, and one table per standard with a row per criterion.
+  - **acr.json**, the same report as JSON for programs, in the shape
+    references/acr.schema.json gives. Every render checks the file against
+    that schema before it writes anything.
+
+  Gather the inputs in this order, as files of one data directory:
+
+  1. **report** (report.yaml or report.json): the product, the vendor,
+     the report's date, how the product was evaluated, and the
+     **edition**. Read [what the report details mean](inputs/report.md)
+     first: the edition decides which tables you supply.
+  2. **wcag** (wcag.csv): the WCAG 2.2 table, which every edition holds.
+  3. **section508** (section508.csv): the Revised Section 508 table, for
+     the section508 and international editions only.
+  4. **en301549** (en301549.csv): the EN 301 549 table, for the en301549
+     and international editions only.
+
+  Each table is a CSV file with the header `criterion,conformance,remarks`
+  and a row per criterion. [How to fill in a table](inputs/tables.md) says
+  what each column holds, which criteria to list and how to write the
+  remarks, and [what the conformance levels mean](inputs/conformance.md)
+  says which level to choose. What each criterion asks is in the
+  package's references: references/wcag-2.2.md, references/section-508.md
+  and references/en-301-549.md, one section per criterion. Search them
+  with `metais grep <package> <number or word> references/`.
+
+  Base every level and remark on an evaluation of the real product, and
+  say how it was evaluated in the report's methods. A criterion you did
+  not evaluate is Not Evaluated, never Supports.
+
+  Then run `metais validate <package> --data <dir>`, which reports every
+  problem at once: a value that does not fit, a criterion number that does
+  not exist, or a table the edition needs and you left out, or one it
+  does not hold and you supplied. Fix them all, and run
+  `metais render <package> --data <dir> --out <dir>` to write the report.
+inputs:
+  - name: report
+    title: "Report details"
+    description: "The product, its vendor, the report's date and edition, and how the product was evaluated."
+    schema: inputs/report.schema.json
+    meaning: inputs/report.md
+    forms:
+      - yaml
+      - json
+  - name: wcag
+    title: "WCAG 2.2 table"
+    description: "One row per WCAG 2.2 success criterion: its number, the product's conformance level and remarks. Every edition holds it."
+    schema: inputs/wcag.schema.json
+    meaning: inputs/tables.md
+    forms:
+      - csv
+  - name: section508
+    title: "Revised Section 508 table"
+    description: "One row per criterion of chapters 3 to 6 of the Revised Section 508 Standards. Supplied for the section508 and international editions, and for no other."
+    schema: inputs/section508.schema.json
+    meaning: inputs/tables.md
+    forms:
+      - csv
+    required: false
+  - name: en301549
+    title: "EN 301 549 table"
+    description: "One row per clause of EN 301 549 outside its WCAG-based clauses. Supplied for the en301549 and international editions, and for no other."
+    schema: inputs/en301549.schema.json
+    meaning: inputs/tables.md
+    forms:
+      - csv
+    required: false
+input_constraints: inputs/edition.schema.json
+outputs:
+  - id: docx
+    path: acr.docx
+    container:
+      profile: ooxml
+      entries:
+        - template: docx/content-types.xml
+          path: "[Content_Types].xml"
+        - template: docx/rels.xml
+          path: _rels/.rels
+        - template: docx/document.xml.liquid
+          path: word/document.xml
+          escape: html
+        - template: docx/document.xml.rels
+          path: word/_rels/document.xml.rels
+        - template: docx/styles.xml
+          path: word/styles.xml
+        - template: docx/core.xml.liquid
+          path: docProps/core.xml
+          escape: html
+  - id: json
+    template: acr.json.liquid
+    path: acr.json
+    validate: references/acr.schema.json

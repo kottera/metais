@@ -1,0 +1,1776 @@
+{
+  "format": "metais-example-acr/1",
+  "product": {
+    "name": "Ledgerline",
+    "version": "4.2",
+    "description": "Ledgerline is a web application for small businesses to keep their accounts, send invoices and reconcile bank statements.\nThis report covers the web application in a desktop browser. It does not cover the mobile applications."
+  },
+  "vendor": {
+    "name": "Example Ledger Ltd",
+    "contact": "Accessibility team",
+    "email": "accessibility@example.com",
+    "website": "https://example.com/accessibility"
+  },
+  "date": "2026-10-01",
+  "edition": "international",
+  "methods": "Evaluated by the vendor's accessibility team between 1 and 26 September 2026, against Ledgerline 4.2 in production.\nEvery screen was operated with the keyboard alone, with NVDA 2026.2 and Firefox and with JAWS 2026 and Chrome on Windows 11, and with VoiceOver and Safari on macOS 15. Contrast was measured with a colour picker, and every page was also checked by an automated tool.\nThe evaluation covered every screen a customer can reach after signing in, the sign-in and sign-up flows, the help centre and the onboarding videos.",
+  "notes": "Fixes for the cash-flow chart, the invoice grid and the date picker are planned for release 4.3.",
+  "tables": [
+    {
+      "standard": "wcag",
+      "criteria": [
+        {
+          "criterion": "1.1.1",
+          "label": "Non-text Content",
+          "wcag_level": "A",
+          "conformance": "Partially Supports",
+          "remarks": "Product images and icons that act as buttons have text alternatives.\nThe cash-flow chart on the dashboard has no text alternative, so its figures are not available to screen reader users. The same figures are in the cash-flow report's table."
+        },
+        {
+          "criterion": "1.2.1",
+          "label": "Audio-only and Video-only (Prerecorded)",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no audio-only or video-only content."
+        },
+        {
+          "criterion": "1.2.2",
+          "label": "Captions (Prerecorded)",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "The three onboarding videos have captions, reviewed by the vendor."
+        },
+        {
+          "criterion": "1.2.3",
+          "label": "Audio Description or Media Alternative (Prerecorded)",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Each onboarding video has a text transcript that describes what is shown."
+        },
+        {
+          "criterion": "1.2.4",
+          "label": "Captions (Live)",
+          "wcag_level": "AA",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no live video."
+        },
+        {
+          "criterion": "1.2.5",
+          "label": "Audio Description (Prerecorded)",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Each onboarding video has an audio-described version."
+        },
+        {
+          "criterion": "1.3.1",
+          "label": "Info and Relationships",
+          "wcag_level": "A",
+          "conformance": "Partially Supports",
+          "remarks": "Headings, lists, tables and form groups are marked up. The invoice line-item grid uses generic containers for its rows, so screen readers do not announce it as a table."
+        },
+        {
+          "criterion": "1.3.2",
+          "label": "Meaningful Sequence",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "1.3.3",
+          "label": "Sensory Characteristics",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "1.3.4",
+          "label": "Orientation",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "1.3.5",
+          "label": "Identify Input Purpose",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "1.4.1",
+          "label": "Use of Color",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "1.4.2",
+          "label": "Audio Control",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "1.4.3",
+          "label": "Contrast (Minimum)",
+          "wcag_level": "AA",
+          "conformance": "Partially Supports",
+          "remarks": "Body text meets the ratio. The grey placeholder text in search fields measures 3.9 to 1 against white."
+        },
+        {
+          "criterion": "1.4.4",
+          "label": "Resize Text",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "1.4.5",
+          "label": "Images of Text",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "1.4.10",
+          "label": "Reflow",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Every page reflows to a width of 320 CSS pixels, except the bank reconciliation view, whose two-column comparison is essential to the task."
+        },
+        {
+          "criterion": "1.4.11",
+          "label": "Non-text Contrast",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "1.4.12",
+          "label": "Text Spacing",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "1.4.13",
+          "label": "Content on Hover or Focus",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.1.1",
+          "label": "Keyboard",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Every function can be operated from a keyboard."
+        },
+        {
+          "criterion": "2.1.2",
+          "label": "No Keyboard Trap",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.1.4",
+          "label": "Character Key Shortcuts",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.2.1",
+          "label": "Timing Adjustable",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.2.2",
+          "label": "Pause, Stop, Hide",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.3.1",
+          "label": "Three Flashes or Below Threshold",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.4.1",
+          "label": "Bypass Blocks",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.4.2",
+          "label": "Page Titled",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.4.3",
+          "label": "Focus Order",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.4.4",
+          "label": "Link Purpose (In Context)",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.4.5",
+          "label": "Multiple Ways",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.4.6",
+          "label": "Headings and Labels",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.4.7",
+          "label": "Focus Visible",
+          "wcag_level": "AA",
+          "conformance": "Partially Supports",
+          "remarks": "Focus is visible on every control except the date picker's day cells, which show no focus indicator."
+        },
+        {
+          "criterion": "2.4.11",
+          "label": "Focus Not Obscured (Minimum)",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.5.1",
+          "label": "Pointer Gestures",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.5.2",
+          "label": "Pointer Cancellation",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.5.3",
+          "label": "Label in Name",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.5.4",
+          "label": "Motion Actuation",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.5.7",
+          "label": "Dragging Movements",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.5.8",
+          "label": "Target Size (Minimum)",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Every target is at least 24 by 24 CSS pixels."
+        },
+        {
+          "criterion": "3.1.1",
+          "label": "Language of Page",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.1.2",
+          "label": "Language of Parts",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.2.1",
+          "label": "On Focus",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.2.2",
+          "label": "On Input",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.2.3",
+          "label": "Consistent Navigation",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.2.4",
+          "label": "Consistent Identification",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.2.6",
+          "label": "Consistent Help",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.3.1",
+          "label": "Error Identification",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.3.2",
+          "label": "Labels or Instructions",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.3.3",
+          "label": "Error Suggestion",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.3.4",
+          "label": "Error Prevention (Legal, Financial, Data)",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.3.7",
+          "label": "Redundant Entry",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.3.8",
+          "label": "Accessible Authentication (Minimum)",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Sign-in accepts password managers and pasting, and offers a passkey."
+        },
+        {
+          "criterion": "4.1.2",
+          "label": "Name, Role, Value",
+          "wcag_level": "A",
+          "conformance": "Partially Supports",
+          "remarks": "Native controls are used throughout, except the custom account selector, which exposes no expanded or collapsed state."
+        },
+        {
+          "criterion": "4.1.3",
+          "label": "Status Messages",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        }
+      ]
+    },
+    {
+      "standard": "section508",
+      "criteria": [
+        {
+          "criterion": "302.1",
+          "label": "Without Vision",
+          "conformance": "Partially Supports",
+          "remarks": "Every function can be used with a screen reader, except reading the dashboard's cash-flow chart; see WCAG 1.1.1."
+        },
+        {
+          "criterion": "302.2",
+          "label": "With Limited Vision",
+          "conformance": "Supports",
+          "remarks": "The product works with browser zoom to 400 percent and with the platforms' magnifiers."
+        },
+        {
+          "criterion": "302.3",
+          "label": "Without Perception of Color",
+          "conformance": "Supports",
+          "remarks": "No information is given by colour alone."
+        },
+        {
+          "criterion": "302.4",
+          "label": "Without Hearing",
+          "conformance": "Supports",
+          "remarks": "The onboarding videos have captions; the product has no other sound."
+        },
+        {
+          "criterion": "302.5",
+          "label": "With Limited Hearing",
+          "conformance": "Supports",
+          "remarks": "The onboarding videos have captions; the product has no other sound."
+        },
+        {
+          "criterion": "302.6",
+          "label": "Without Speech",
+          "conformance": "Not Applicable",
+          "remarks": "The product takes no speech input."
+        },
+        {
+          "criterion": "302.7",
+          "label": "With Limited Manipulation",
+          "conformance": "Supports",
+          "remarks": "Every function can be operated from a keyboard, without simultaneous actions."
+        },
+        {
+          "criterion": "302.8",
+          "label": "With Limited Reach and Strength",
+          "conformance": "Supports",
+          "remarks": "The product runs on the user's own device and needs no reach or strength beyond it."
+        },
+        {
+          "criterion": "302.9",
+          "label": "With Limited Language, Cognitive, and Learning Abilities",
+          "conformance": "Supports",
+          "remarks": "Plain language throughout, consistent navigation, and error messages that say how to fix the error."
+        },
+        {
+          "criterion": "402.1",
+          "label": "Closed Functionality: General",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "402.2",
+          "label": "Speech-Output Enabled",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "402.2.1",
+          "label": "Information Displayed On-Screen",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "402.2.2",
+          "label": "Transactional Outputs",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "402.2.3",
+          "label": "Speech Delivery Type and Coordination",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "402.2.4",
+          "label": "User Control",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "402.2.5",
+          "label": "Braille Instructions",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "402.3",
+          "label": "Volume",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "402.3.1",
+          "label": "Private Listening",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "402.3.2",
+          "label": "Non-private Listening",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "402.4",
+          "label": "Characters on Display Screens",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "402.5",
+          "label": "Characters on Variable Message Signs",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "403.1",
+          "label": "Biometrics",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "404.1",
+          "label": "Preservation of Information Provided for Accessibility",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "405.1",
+          "label": "Privacy",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "406.1",
+          "label": "Standard Connections",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.2",
+          "label": "Contrast",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.3",
+          "label": "Input Controls",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.3.1",
+          "label": "Tactilely Discernible",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.3.2",
+          "label": "Alphabetic Keys",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.3.3",
+          "label": "Numeric Keys",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.4",
+          "label": "Key Repeat",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.5",
+          "label": "Timed Response",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.6",
+          "label": "Operation",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.7",
+          "label": "Tickets, Fare Cards, and Keycards",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.8",
+          "label": "Reach Height and Depth",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.8.1",
+          "label": "Vertical Reference Plane",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.8.1.1",
+          "label": "Vertical Plane for Side Reach",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.8.1.2",
+          "label": "Vertical Plane for Forward Reach",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.8.2",
+          "label": "Side Reach",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.8.2.1",
+          "label": "Unobstructed Side Reach",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.8.2.2",
+          "label": "Obstructed Side Reach",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.8.3",
+          "label": "Forward Reach",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.8.3.1",
+          "label": "Unobstructed Forward Reach",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.8.3.2",
+          "label": "Obstructed Forward Reach",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.8.3.2.1",
+          "label": "Operable Part Height for ICT with Obstructed Forward Reach",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "407.8.3.2.2",
+          "label": "Knee and Toe Space under ICT with Obstructed Forward Reach",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "408.2",
+          "label": "Visibility",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "408.3",
+          "label": "Flashing",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "409.1",
+          "label": "Status Indicators",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "410.1",
+          "label": "Color Coding",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "411.1",
+          "label": "Audible Signals",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.2",
+          "label": "Volume Gain",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.2.1",
+          "label": "Volume Gain for Wireline Telephones",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.2.2",
+          "label": "Volume Gain for Non-Wireline ICT",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.3",
+          "label": "Interference Reduction and Magnetic Coupling",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.3.1",
+          "label": "Wireless Handsets",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.3.2",
+          "label": "Wireline Handsets",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.4",
+          "label": "Digital Encoding of Speech",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.6",
+          "label": "Caller ID",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.7",
+          "label": "Video Communication",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.8",
+          "label": "Legacy TTY Support",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.8.1",
+          "label": "TTY Connectability",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.8.2",
+          "label": "Voice and Hearing Carry Over",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.8.3",
+          "label": "Signal Compatibility",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "412.8.4",
+          "label": "Voice Mail and Other Messaging Systems",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "413.1.1",
+          "label": "Decoding and Display of Closed Captions",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "413.1.2",
+          "label": "Pass-Through of Closed Caption Data",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "414.1.1",
+          "label": "Digital Television Tuners",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "414.1.2",
+          "label": "Other ICT",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "415.1.1",
+          "label": "Caption Controls",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "415.1.2",
+          "label": "Audio Description Controls",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "502.2.1",
+          "label": "User Control of Accessibility Features",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.2.2",
+          "label": "No Disruption of Accessibility Features",
+          "conformance": "Supports",
+          "remarks": "The product does not override the browser's or the platform's accessibility features."
+        },
+        {
+          "criterion": "502.3",
+          "label": "Accessibility Services",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "502.3.1",
+          "label": "Object Information",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.2",
+          "label": "Modification of Object Information",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.3",
+          "label": "Row, Column, and Headers",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.4",
+          "label": "Values",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.5",
+          "label": "Modification of Values",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.6",
+          "label": "Label Relationships",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.7",
+          "label": "Hierarchical Relationships",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.8",
+          "label": "Text",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.9",
+          "label": "Modification of Text",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.10",
+          "label": "List of Actions",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.11",
+          "label": "Actions on Objects",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.12",
+          "label": "Focus Cursor",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.13",
+          "label": "Modification of Focus Cursor",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.3.14",
+          "label": "Event Notification",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform."
+        },
+        {
+          "criterion": "502.4",
+          "label": "Platform Accessibility Features",
+          "conformance": "Not Applicable",
+          "remarks": "The product is not a platform."
+        },
+        {
+          "criterion": "503.2",
+          "label": "User Preferences",
+          "conformance": "Supports",
+          "remarks": "The product follows the browser's text size, colour and contrast settings."
+        },
+        {
+          "criterion": "503.3",
+          "label": "Alternative User Interfaces",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no alternative user interface."
+        },
+        {
+          "criterion": "503.4",
+          "label": "User Controls for Captions and Audio Description",
+          "conformance": "Supports",
+          "remarks": "The video player's caption and audio description controls sit beside its play and volume controls."
+        },
+        {
+          "criterion": "503.4.1",
+          "label": "Caption Controls",
+          "conformance": "Supports",
+          "remarks": "The caption control sits beside the play and volume controls."
+        },
+        {
+          "criterion": "503.4.2",
+          "label": "Audio Description Controls",
+          "conformance": "Supports",
+          "remarks": "The audio description control sits beside the play and volume controls."
+        },
+        {
+          "criterion": "504.2",
+          "label": "Content Creation or Editing",
+          "conformance": "Not Applicable",
+          "remarks": "The product is not an authoring tool."
+        },
+        {
+          "criterion": "504.2.1",
+          "label": "Preservation of Information Provided for Accessibility in Format Conversion",
+          "conformance": "Not Applicable",
+          "remarks": "The product is not an authoring tool."
+        },
+        {
+          "criterion": "504.2.2",
+          "label": "PDF Export",
+          "conformance": "Not Applicable",
+          "remarks": "The product is not an authoring tool."
+        },
+        {
+          "criterion": "504.3",
+          "label": "Prompts",
+          "conformance": "Not Applicable",
+          "remarks": "The product is not an authoring tool."
+        },
+        {
+          "criterion": "504.4",
+          "label": "Templates",
+          "conformance": "Not Applicable",
+          "remarks": "The product is not an authoring tool."
+        },
+        {
+          "criterion": "602.2",
+          "label": "Accessibility and Compatibility Features",
+          "conformance": "Supports",
+          "remarks": "The help centre's accessibility page lists and explains the product's accessibility features."
+        },
+        {
+          "criterion": "602.3",
+          "label": "Electronic Support Documentation",
+          "conformance": "Supports",
+          "remarks": "The help centre meets the WCAG 2.2 criteria at Levels A and AA."
+        },
+        {
+          "criterion": "602.4",
+          "label": "Alternate Formats for Non-Electronic Support Documentation",
+          "conformance": "Not Applicable",
+          "remarks": "No printed documentation is offered; the help centre is electronic."
+        },
+        {
+          "criterion": "603.2",
+          "label": "Information on Accessibility and Compatibility Features",
+          "conformance": "Supports",
+          "remarks": "Support staff are trained to explain the product's accessibility features."
+        },
+        {
+          "criterion": "603.3",
+          "label": "Accommodation of Communication Needs",
+          "conformance": "Supports",
+          "remarks": "Support is offered by email, chat and telephone, and by relay services."
+        }
+      ]
+    },
+    {
+      "standard": "en301549",
+      "criteria": [
+        {
+          "criterion": "4.2.1",
+          "label": "Use without vision",
+          "conformance": "Partially Supports",
+          "remarks": "Every function can be used with a screen reader, except reading the dashboard's cash-flow chart; see WCAG 1.1.1."
+        },
+        {
+          "criterion": "4.2.2",
+          "label": "Use with limited vision",
+          "conformance": "Supports",
+          "remarks": "The product works with browser zoom to 400 percent and with the platforms' magnifiers."
+        },
+        {
+          "criterion": "4.2.3",
+          "label": "Use without perceiving colour",
+          "conformance": "Supports",
+          "remarks": "No information is given by colour alone."
+        },
+        {
+          "criterion": "4.2.4",
+          "label": "Use without hearing",
+          "conformance": "Supports",
+          "remarks": "The onboarding videos have captions; the product has no other sound."
+        },
+        {
+          "criterion": "4.2.5",
+          "label": "Use with limited hearing",
+          "conformance": "Supports",
+          "remarks": "The onboarding videos have captions; the product has no other sound."
+        },
+        {
+          "criterion": "4.2.6",
+          "label": "Use without speech, or with limited speech",
+          "conformance": "Not Applicable",
+          "remarks": "The product takes no speech input."
+        },
+        {
+          "criterion": "4.2.7",
+          "label": "Use with limited manipulation or strength",
+          "conformance": "Supports",
+          "remarks": "Every function can be operated from a keyboard, without simultaneous actions."
+        },
+        {
+          "criterion": "4.2.8",
+          "label": "Use with limited reach",
+          "conformance": "Not Applicable",
+          "remarks": "The product runs on the user's own device and stands in no place."
+        },
+        {
+          "criterion": "4.2.9",
+          "label": "Reducing triggers of photosensitive seizures",
+          "conformance": "Supports",
+          "remarks": "Nothing in the product flashes."
+        },
+        {
+          "criterion": "4.2.10",
+          "label": "Use with limited cognition, language or learning",
+          "conformance": "Supports",
+          "remarks": "Plain language throughout, consistent navigation, and error messages that say how to fix the error."
+        },
+        {
+          "criterion": "4.2.11",
+          "label": "Privacy of users of accessibility features",
+          "conformance": "Supports",
+          "remarks": "Accessibility features give the same privacy as every other feature."
+        },
+        {
+          "criterion": "5.1.2.1",
+          "label": "Closed functionality: general",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.2.2",
+          "label": "Closed functionality: no reliance on assistive technology",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.1",
+          "label": "Non-visual access: general",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.2",
+          "label": "Non-visual access: delivering speech",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.3",
+          "label": "Non-visual access: keeping speech in step",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.4",
+          "label": "Non-visual access: control of speech",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.5",
+          "label": "Non-visual access: interrupting speech",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.6",
+          "label": "Non-visual access: speaking non-text content",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.7",
+          "label": "Non-visual access: speaking video information",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.8",
+          "label": "Non-visual access: masked entry",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.9",
+          "label": "Non-visual access: private personal data",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.10",
+          "label": "Non-visual access: audio that does not interfere",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.11",
+          "label": "Non-visual access: private listening volume",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.12",
+          "label": "Non-visual access: speaker volume",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.13",
+          "label": "Non-visual access: resetting volume",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.14",
+          "label": "Non-visual access: spoken languages",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.15",
+          "label": "Non-visual access: identifying errors",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.3.16",
+          "label": "Non-visual access: receipts and tickets",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.4",
+          "label": "Closed functionality: enlarging text",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.5",
+          "label": "Closed functionality: seeing auditory information",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.6.1",
+          "label": "Closed functionality: operating without a keyboard",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.6.2",
+          "label": "Closed functionality: input focus",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.1.7",
+          "label": "Closed functionality: access without speech",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.2",
+          "label": "Turning on accessibility features",
+          "conformance": "Supports",
+          "remarks": "The product's own accessibility settings can be reached from a keyboard and by a screen reader."
+        },
+        {
+          "criterion": "5.3",
+          "label": "Biometrics",
+          "conformance": "Not Applicable",
+          "remarks": "The product does not identify users by a biological characteristic."
+        },
+        {
+          "criterion": "5.4",
+          "label": "Keeping accessibility information through conversion",
+          "conformance": "Supports",
+          "remarks": "Exports to PDF and to spreadsheets keep headings, table headers and text alternatives."
+        },
+        {
+          "criterion": "5.5.1",
+          "label": "Operable parts: how they are operated",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.5.2",
+          "label": "Operable parts: telling them apart",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.6.1",
+          "label": "Locking and toggle controls: status by touch or sound",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.6.2",
+          "label": "Locking and toggle controls: status by sight",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no closed functionality: it runs in the user's own browser, with the user's own assistive technology."
+        },
+        {
+          "criterion": "5.7",
+          "label": "Key repeat",
+          "conformance": "Not Applicable",
+          "remarks": "The product relies on the platform's key repeat."
+        },
+        {
+          "criterion": "5.8",
+          "label": "Accepting a double strike",
+          "conformance": "Not Applicable",
+          "remarks": "The product relies on the platform's keyboard handling."
+        },
+        {
+          "criterion": "5.9",
+          "label": "Simultaneous user actions",
+          "conformance": "Supports",
+          "remarks": "No function needs simultaneous actions."
+        },
+        {
+          "criterion": "6.1",
+          "label": "Audio bandwidth for speech",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.2.1.1",
+          "label": "Real-time text: communicating in text",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.2.1.2",
+          "label": "Real-time text: voice and text at once",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.2.2.1",
+          "label": "Real-time text: telling text apart",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.2.2.2",
+          "label": "Real-time text: direction known to software",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.2.2.3",
+          "label": "Real-time text: identifying the speaker",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.2.2.4",
+          "label": "Real-time text: visual indicator of audio",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.2.3",
+          "label": "Real-time text: interoperability",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.2.4",
+          "label": "Real-time text: responsiveness",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.3",
+          "label": "Caller identification",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.4",
+          "label": "Alternatives to voice-based services",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.5.1",
+          "label": "Video communication: general",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.5.2",
+          "label": "Video communication: resolution",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.5.3",
+          "label": "Video communication: frame rate",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.5.4",
+          "label": "Video communication: audio and video in step",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.5.5",
+          "label": "Video communication: visual indicator of audio",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.5.6",
+          "label": "Video communication: identifying who signs",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "6.6",
+          "label": "Alternatives to video-based services",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no two-way voice or video communication."
+        },
+        {
+          "criterion": "7.1.1",
+          "label": "Captions: playing them",
+          "conformance": "Supports",
+          "remarks": "The video player shows captions."
+        },
+        {
+          "criterion": "7.1.2",
+          "label": "Captions: keeping them in step",
+          "conformance": "Supports",
+          "remarks": "Captions are in step with the soundtrack."
+        },
+        {
+          "criterion": "7.1.3",
+          "label": "Captions: keeping them",
+          "conformance": "Not Applicable",
+          "remarks": "The product does not convert or pass on video."
+        },
+        {
+          "criterion": "7.1.4",
+          "label": "Captions: how they look",
+          "conformance": "Supports",
+          "remarks": "Users can change the size and colours of captions."
+        },
+        {
+          "criterion": "7.1.5",
+          "label": "Spoken subtitles",
+          "conformance": "Not Applicable",
+          "remarks": "The videos have no subtitles in another language."
+        },
+        {
+          "criterion": "7.2.1",
+          "label": "Audio description: playing it",
+          "conformance": "Supports",
+          "remarks": "The video player plays the audio-described version of each video."
+        },
+        {
+          "criterion": "7.2.2",
+          "label": "Audio description: keeping it in step",
+          "conformance": "Supports",
+          "remarks": "Audio description is in step with the picture."
+        },
+        {
+          "criterion": "7.2.3",
+          "label": "Audio description: keeping it",
+          "conformance": "Not Applicable",
+          "remarks": "The product does not convert or pass on video."
+        },
+        {
+          "criterion": "7.3",
+          "label": "Controls for captions and audio description",
+          "conformance": "Supports",
+          "remarks": "The caption and audio description controls sit beside the play and volume controls."
+        },
+        {
+          "criterion": "8.1.1",
+          "label": "Hardware: general",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "8.1.2",
+          "label": "Hardware: standard connections",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "8.1.3",
+          "label": "Hardware: colour",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "8.2.1.1",
+          "label": "Hardware speech: volume range",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "8.2.1.2",
+          "label": "Hardware speech: stepping the volume",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "8.2.2.1",
+          "label": "Magnetic coupling: fixed-line devices",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "8.2.2.2",
+          "label": "Magnetic coupling: wireless devices",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "8.3",
+          "label": "Stationary products: physical access",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "8.4.1",
+          "label": "Mechanically operable parts: numeric keys",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "8.4.2.1",
+          "label": "Mechanically operable parts: how they are operated",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "8.4.2.2",
+          "label": "Mechanically operable parts: force",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "8.4.3",
+          "label": "Keys, tickets and fare cards",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "8.5",
+          "label": "Tactile indication of speech mode",
+          "conformance": "Not Applicable",
+          "remarks": "The product is software and has no hardware."
+        },
+        {
+          "criterion": "11.5.2.1",
+          "label": "Accessibility services: software with a user interface",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.2",
+          "label": "Accessibility services: assistive technologies",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.3",
+          "label": "Accessibility services: using them",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.4",
+          "label": "Assistive technology: using the services",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.5",
+          "label": "Object information",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.6",
+          "label": "Rows, columns and headers",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.7",
+          "label": "Values",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.8",
+          "label": "Label relationships",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.9",
+          "label": "Parent and child relationships",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.10",
+          "label": "Text",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.11",
+          "label": "Available actions: listing them",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.12",
+          "label": "Available actions: carrying them out",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.13",
+          "label": "Focus and selection: tracking them",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.14",
+          "label": "Focus and selection: changing them",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.15",
+          "label": "Change notification",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.16",
+          "label": "States and properties: changing them",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.5.2.17",
+          "label": "Values and text: changing them",
+          "conformance": "Not Applicable",
+          "remarks": "The product is a web application, not a platform or assistive technology; the WCAG table answers its interoperability with assistive technology."
+        },
+        {
+          "criterion": "11.6.1",
+          "label": "Documented accessibility: user control",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no accessibility feature of its own beyond the platform's."
+        },
+        {
+          "criterion": "11.6.2",
+          "label": "Documented accessibility: no disruption",
+          "conformance": "Supports",
+          "remarks": "The product does not override the browser's or the platform's accessibility features."
+        },
+        {
+          "criterion": "11.7",
+          "label": "User preferences",
+          "conformance": "Supports",
+          "remarks": "The product follows the browser's text size, colour and contrast settings."
+        },
+        {
+          "criterion": "11.8.1",
+          "label": "Authoring tools: content technology",
+          "conformance": "Not Applicable",
+          "remarks": "The product is not an authoring tool."
+        },
+        {
+          "criterion": "11.8.2",
+          "label": "Authoring tools: creating accessible content",
+          "conformance": "Not Applicable",
+          "remarks": "The product is not an authoring tool."
+        },
+        {
+          "criterion": "11.8.3",
+          "label": "Authoring tools: keeping accessibility through transformation",
+          "conformance": "Not Applicable",
+          "remarks": "The product is not an authoring tool."
+        },
+        {
+          "criterion": "11.8.4",
+          "label": "Authoring tools: help with repairs",
+          "conformance": "Not Applicable",
+          "remarks": "The product is not an authoring tool."
+        },
+        {
+          "criterion": "11.8.5",
+          "label": "Authoring tools: templates",
+          "conformance": "Not Applicable",
+          "remarks": "The product is not an authoring tool."
+        },
+        {
+          "criterion": "12.1.1",
+          "label": "Product documentation: accessibility and compatibility features",
+          "conformance": "Supports",
+          "remarks": "The help centre's accessibility page lists and explains the product's accessibility features."
+        },
+        {
+          "criterion": "12.1.2",
+          "label": "Product documentation: accessible documentation",
+          "conformance": "Supports",
+          "remarks": "The help centre meets the WCAG 2.2 criteria at Levels A and AA."
+        },
+        {
+          "criterion": "12.2.2",
+          "label": "Support services: information on accessibility features",
+          "conformance": "Supports",
+          "remarks": "Support staff are trained to explain the product's accessibility features."
+        },
+        {
+          "criterion": "12.2.3",
+          "label": "Support services: effective communication",
+          "conformance": "Supports",
+          "remarks": "Support is offered by email, chat and telephone, and by relay services."
+        },
+        {
+          "criterion": "12.2.4",
+          "label": "Support services: accessible documentation",
+          "conformance": "Supports",
+          "remarks": "Documents from support are sent as accessible PDF or as web pages."
+        },
+        {
+          "criterion": "13.1.1",
+          "label": "Relay services: communication between users",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no relay or emergency service."
+        },
+        {
+          "criterion": "13.1.2",
+          "label": "Relay services: text",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no relay or emergency service."
+        },
+        {
+          "criterion": "13.1.3",
+          "label": "Relay services: sign language",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no relay or emergency service."
+        },
+        {
+          "criterion": "13.1.4",
+          "label": "Relay services: lip reading",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no relay or emergency service."
+        },
+        {
+          "criterion": "13.1.5",
+          "label": "Relay services: captioned telephony",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no relay or emergency service."
+        },
+        {
+          "criterion": "13.1.6",
+          "label": "Relay services: speech to speech",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no relay or emergency service."
+        },
+        {
+          "criterion": "13.2",
+          "label": "Reaching relay services",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no relay or emergency service."
+        },
+        {
+          "criterion": "13.3",
+          "label": "Reaching emergency services",
+          "conformance": "Not Applicable",
+          "remarks": "The product offers no relay or emergency service."
+        }
+      ]
+    }
+  ]
+}

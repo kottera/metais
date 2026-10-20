@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>
+{%- assign report = inputs.report %}
+{%- case report.edition -%}
+{%- when "wcag" -%}{%- assign edition = "WCAG" -%}
+{%- when "section508" -%}{%- assign edition = "Revised Section 508" -%}
+{%- when "en301549" -%}{%- assign edition = "EN 301 549" -%}
+{%- when "international" -%}{%- assign edition = "International" -%}
+{%- endcase %}
+<w:p><w:pPr><w:pStyle w:val="Title"/></w:pPr><w:r><w:t xml:space="preserve">{{ report.product.name }} Accessibility Conformance Report</w:t></w:r></w:p>
+<w:p><w:pPr><w:pStyle w:val="Subtitle"/></w:pPr><w:r><w:t xml:space="preserve">{{ edition }} edition, {{ report.date }}</w:t></w:r></w:p>
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Product</w:t></w:r></w:p>
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Name: </w:t></w:r><w:r><w:t xml:space="preserve">{{ report.product.name }}</w:t></w:r></w:p>
+{% if report.product.version -%}
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Version: </w:t></w:r><w:r><w:t xml:space="preserve">{{ report.product.version }}</w:t></w:r></w:p>
+{% endif -%}
+{% if report.product.description -%}
+{% render "docx/paragraphs.xml.liquid", text: report.product.description, style: nil -%}
+{% endif -%}
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Report date: </w:t></w:r><w:r><w:t xml:space="preserve">{{ report.date }}</w:t></w:r></w:p>
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Vendor</w:t></w:r></w:p>
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Name: </w:t></w:r><w:r><w:t xml:space="preserve">{{ report.vendor.name }}</w:t></w:r></w:p>
+{% if report.vendor.contact -%}
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Contact: </w:t></w:r><w:r><w:t xml:space="preserve">{{ report.vendor.contact }}</w:t></w:r></w:p>
+{% endif -%}
+{% if report.vendor.email -%}
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Email: </w:t></w:r><w:r><w:t xml:space="preserve">{{ report.vendor.email }}</w:t></w:r></w:p>
+{% endif -%}
+{% if report.vendor.website -%}
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Website: </w:t></w:r><w:r><w:t xml:space="preserve">{{ report.vendor.website }}</w:t></w:r></w:p>
+{% endif -%}
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Evaluation methods</w:t></w:r></w:p>
+{% render "docx/paragraphs.xml.liquid", text: report.methods, style: nil -%}
+{% if report.notes -%}
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Notes</w:t></w:r></w:p>
+{% render "docx/paragraphs.xml.liquid", text: report.notes, style: nil -%}
+{% endif -%}
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Standards</w:t></w:r></w:p>
+<w:p><w:r><w:t xml:space="preserve">This report answers these standards, one table for each:</w:t></w:r></w:p>
+<w:p><w:r><w:t xml:space="preserve">Web Content Accessibility Guidelines (WCAG) 2.2, W3C Recommendation, at Levels A, AA and AAA.</w:t></w:r></w:p>
+{% if report.edition == "section508" or report.edition == "international" -%}
+<w:p><w:r><w:t xml:space="preserve">Revised Section 508 Standards, 36 CFR part 1194, chapters 3 to 6.</w:t></w:r></w:p>
+{% endif -%}
+{% if report.edition == "en301549" or report.edition == "international" -%}
+<w:p><w:r><w:t xml:space="preserve">EN 301 549 V3.2.1 (2021-03), Accessibility requirements for ICT products and services.</w:t></w:r></w:p>
+{% endif -%}
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Conformance levels</w:t></w:r></w:p>
+<w:p><w:r><w:t xml:space="preserve">Each row of a table gives one of these levels for its criterion:</w:t></w:r></w:p>
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Supports: </w:t></w:r><w:r><w:t xml:space="preserve">the product meets the criterion, and no defect against it is known.</w:t></w:r></w:p>
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Partially Supports: </w:t></w:r><w:r><w:t xml:space="preserve">the product meets the criterion in some of its functions and not in others.</w:t></w:r></w:p>
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Does Not Support: </w:t></w:r><w:r><w:t xml:space="preserve">the product does not meet the criterion in most of its functions.</w:t></w:r></w:p>
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Not Applicable: </w:t></w:r><w:r><w:t xml:space="preserve">the criterion does not concern this product.</w:t></w:r></w:p>
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Not Evaluated: </w:t></w:r><w:r><w:t xml:space="preserve">the product was not evaluated against the criterion.</w:t></w:r></w:p>
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>WCAG 2.2</w:t></w:r></w:p>
+{% render "docx/table.xml.liquid", rows: inputs.wcag, standard: "wcag" -%}
+{% if report.edition == "section508" or report.edition == "international" -%}
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Revised Section 508</w:t></w:r></w:p>
+<w:p><w:r><w:t xml:space="preserve">The WCAG 2.2 table answers the Revised Section 508 provisions that apply WCAG to electronic content and to software. This table answers the criteria of chapters 3 to 6.</w:t></w:r></w:p>
+{% render "docx/table.xml.liquid", rows: inputs.section508, standard: "section508" -%}
+{% endif -%}
+{% if report.edition == "en301549" or report.edition == "international" -%}
+<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>EN 301 549</w:t></w:r></w:p>
+<w:p><w:r><w:t xml:space="preserve">The WCAG 2.2 table answers the clauses of EN 301 549 that apply WCAG to web pages, documents and software: clauses 9, 10 and 11.1 to 11.4. This table answers its other clauses.</w:t></w:r></w:p>
+{% render "docx/table.xml.liquid", rows: inputs.en301549, standard: "en301549" -%}
+{% endif -%}
+<w:p/>
+<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr>
+</w:body>
+</w:document>

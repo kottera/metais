@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Edition and tables",
+  "description": "The report's edition decides which tables it holds. Every edition holds the WCAG 2.2 table, which its own input requires; the section508 and international editions require the Revised Section 508 table and refuse it in every other edition; and the en301549 and international editions require the EN 301 549 table and refuse it in every other edition.",
+  "allOf": [
+    {
+      "if": {
+        "required": ["report"],
+        "properties": {
+          "report": {
+            "required": ["edition"],
+            "properties": { "edition": { "enum": ["section508", "international"] } }
+          }
+        }
+      },
+      "then": { "properties": { "section508": true }, "required": ["section508"] },
+      "else": { "properties": { "section508": false } }
+    },
+    {
+      "if": {
+        "required": ["report"],
+        "properties": {
+          "report": {
+            "required": ["edition"],
+            "properties": { "edition": { "enum": ["en301549", "international"] } }
+          }
+        }
+      },
+      "then": { "properties": { "en301549": true }, "required": ["en301549"] },
+      "else": { "properties": { "en301549": false } }
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+product:
+  name: Ledgerline
+  version: "4.2"
+  description: |-
+    Ledgerline is a web application for small businesses to keep their accounts, send invoices and reconcile bank statements.
+    This report covers the web application in a desktop browser. It does not cover the mobile applications.
+vendor:
+  name: Example Ledger Ltd
+  contact: Accessibility team
+  email: accessibility@example.com
+  website: https://example.com/accessibility
+date: 2026-10-01
+edition: international
+methods: |-
+  Evaluated by the vendor's accessibility team between 1 and 26 September 2026, against Ledgerline 4.2 in production.
+  Every screen was operated with the keyboard alone, with NVDA 2026.2 and Firefox and with JAWS 2026 and Chrome on Windows 11, and with VoiceOver and Safari on macOS 15. Contrast was measured with a colour picker, and every page was also checked by an automated tool.
+  The evaluation covered every screen a customer can reach after signing in, the sign-in and sign-up flows, the help centre and the onboarding videos.
+notes: Fixes for the cash-flow chart, the invoice grid and the date picker are planned for release 4.3.

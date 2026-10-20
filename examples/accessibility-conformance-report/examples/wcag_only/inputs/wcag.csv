@@ -1,0 +1,8 @@
+criterion,conformance,remarks
+1.1.1,Supports,"Every image has a text alternative, and decorative images are hidden from screen readers."
+1.4.3,Partially Supports,"Body text meets the ratio. The ""Draft"" badge on unsent invoices measures 3.1 to 1."
+2.1.1,Supports,Every function can be operated from a keyboard.
+2.4.7,Does Not Support,"The product's style sheet removes the browser's focus outline, and nothing replaces it."
+3.1.1,Supports,
+4.1.2,Supports,"Every control is a native one, or exposes its name, role and state."
+2.4.13,Not Evaluated,Level AAA; not evaluated.

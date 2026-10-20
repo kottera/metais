@@ -1,0 +1,111 @@
+{%- comment -%}
+The label of each criterion of the Revised Section 508 criteria table, by its number: what a
+row of the table names it. Written from catalogue.py's section508 list, as
+references/section-508.md is; the two say the same.
+{%- endcomment -%}
+{%- case id -%}
+{%- when "302.1" -%}Without Vision
+{%- when "302.2" -%}With Limited Vision
+{%- when "302.3" -%}Without Perception of Color
+{%- when "302.4" -%}Without Hearing
+{%- when "302.5" -%}With Limited Hearing
+{%- when "302.6" -%}Without Speech
+{%- when "302.7" -%}With Limited Manipulation
+{%- when "302.8" -%}With Limited Reach and Strength
+{%- when "302.9" -%}With Limited Language, Cognitive, and Learning Abilities
+{%- when "402.1" -%}Closed Functionality: General
+{%- when "402.2" -%}Speech-Output Enabled
+{%- when "402.2.1" -%}Information Displayed On-Screen
+{%- when "402.2.2" -%}Transactional Outputs
+{%- when "402.2.3" -%}Speech Delivery Type and Coordination
+{%- when "402.2.4" -%}User Control
+{%- when "402.2.5" -%}Braille Instructions
+{%- when "402.3" -%}Volume
+{%- when "402.3.1" -%}Private Listening
+{%- when "402.3.2" -%}Non-private Listening
+{%- when "402.4" -%}Characters on Display Screens
+{%- when "402.5" -%}Characters on Variable Message Signs
+{%- when "403.1" -%}Biometrics
+{%- when "404.1" -%}Preservation of Information Provided for Accessibility
+{%- when "405.1" -%}Privacy
+{%- when "406.1" -%}Standard Connections
+{%- when "407.2" -%}Contrast
+{%- when "407.3" -%}Input Controls
+{%- when "407.3.1" -%}Tactilely Discernible
+{%- when "407.3.2" -%}Alphabetic Keys
+{%- when "407.3.3" -%}Numeric Keys
+{%- when "407.4" -%}Key Repeat
+{%- when "407.5" -%}Timed Response
+{%- when "407.6" -%}Operation
+{%- when "407.7" -%}Tickets, Fare Cards, and Keycards
+{%- when "407.8" -%}Reach Height and Depth
+{%- when "407.8.1" -%}Vertical Reference Plane
+{%- when "407.8.1.1" -%}Vertical Plane for Side Reach
+{%- when "407.8.1.2" -%}Vertical Plane for Forward Reach
+{%- when "407.8.2" -%}Side Reach
+{%- when "407.8.2.1" -%}Unobstructed Side Reach
+{%- when "407.8.2.2" -%}Obstructed Side Reach
+{%- when "407.8.3" -%}Forward Reach
+{%- when "407.8.3.1" -%}Unobstructed Forward Reach
+{%- when "407.8.3.2" -%}Obstructed Forward Reach
+{%- when "407.8.3.2.1" -%}Operable Part Height for ICT with Obstructed Forward Reach
+{%- when "407.8.3.2.2" -%}Knee and Toe Space under ICT with Obstructed Forward Reach
+{%- when "408.2" -%}Visibility
+{%- when "408.3" -%}Flashing
+{%- when "409.1" -%}Status Indicators
+{%- when "410.1" -%}Color Coding
+{%- when "411.1" -%}Audible Signals
+{%- when "412.2" -%}Volume Gain
+{%- when "412.2.1" -%}Volume Gain for Wireline Telephones
+{%- when "412.2.2" -%}Volume Gain for Non-Wireline ICT
+{%- when "412.3" -%}Interference Reduction and Magnetic Coupling
+{%- when "412.3.1" -%}Wireless Handsets
+{%- when "412.3.2" -%}Wireline Handsets
+{%- when "412.4" -%}Digital Encoding of Speech
+{%- when "412.6" -%}Caller ID
+{%- when "412.7" -%}Video Communication
+{%- when "412.8" -%}Legacy TTY Support
+{%- when "412.8.1" -%}TTY Connectability
+{%- when "412.8.2" -%}Voice and Hearing Carry Over
+{%- when "412.8.3" -%}Signal Compatibility
+{%- when "412.8.4" -%}Voice Mail and Other Messaging Systems
+{%- when "413.1.1" -%}Decoding and Display of Closed Captions
+{%- when "413.1.2" -%}Pass-Through of Closed Caption Data
+{%- when "414.1.1" -%}Digital Television Tuners
+{%- when "414.1.2" -%}Other ICT
+{%- when "415.1.1" -%}Caption Controls
+{%- when "415.1.2" -%}Audio Description Controls
+{%- when "502.2.1" -%}User Control of Accessibility Features
+{%- when "502.2.2" -%}No Disruption of Accessibility Features
+{%- when "502.3" -%}Accessibility Services
+{%- when "502.3.1" -%}Object Information
+{%- when "502.3.2" -%}Modification of Object Information
+{%- when "502.3.3" -%}Row, Column, and Headers
+{%- when "502.3.4" -%}Values
+{%- when "502.3.5" -%}Modification of Values
+{%- when "502.3.6" -%}Label Relationships
+{%- when "502.3.7" -%}Hierarchical Relationships
+{%- when "502.3.8" -%}Text
+{%- when "502.3.9" -%}Modification of Text
+{%- when "502.3.10" -%}List of Actions
+{%- when "502.3.11" -%}Actions on Objects
+{%- when "502.3.12" -%}Focus Cursor
+{%- when "502.3.13" -%}Modification of Focus Cursor
+{%- when "502.3.14" -%}Event Notification
+{%- when "502.4" -%}Platform Accessibility Features
+{%- when "503.2" -%}User Preferences
+{%- when "503.3" -%}Alternative User Interfaces
+{%- when "503.4" -%}User Controls for Captions and Audio Description
+{%- when "503.4.1" -%}Caption Controls
+{%- when "503.4.2" -%}Audio Description Controls
+{%- when "504.2" -%}Content Creation or Editing
+{%- when "504.2.1" -%}Preservation of Information Provided for Accessibility in Format Conversion
+{%- when "504.2.2" -%}PDF Export
+{%- when "504.3" -%}Prompts
+{%- when "504.4" -%}Templates
+{%- when "602.2" -%}Accessibility and Compatibility Features
+{%- when "602.3" -%}Electronic Support Documentation
+{%- when "602.4" -%}Alternate Formats for Non-Electronic Support Documentation
+{%- when "603.2" -%}Information on Accessibility and Compatibility Features
+{%- when "603.3" -%}Accommodation of Communication Needs
+{%- endcase -%}

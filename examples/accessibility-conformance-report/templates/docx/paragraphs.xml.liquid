@@ -1,0 +1,11 @@
+{%- comment -%}
+One paragraph of WordprocessingML for each line of text, in style, or in
+Normal when style is nil. A line break of the input starts a new paragraph,
+and an empty line writes an empty one.
+{%- endcomment -%}
+{%- capture newline %}
+{% endcapture -%}
+{%- assign lines = text | split: newline -%}
+{%- for line in lines -%}
+<w:p>{% if style %}<w:pPr><w:pStyle w:val="{{ style }}"/></w:pPr>{% endif %}<w:r><w:t xml:space="preserve">{{ line }}</w:t></w:r></w:p>
+{% endfor -%}
