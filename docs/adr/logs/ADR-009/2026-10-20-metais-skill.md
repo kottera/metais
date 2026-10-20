@@ -31,3 +31,18 @@ with the host access A5 allows, and no more.
   with a forged stamp, and a stamp holding a control character. That
   stamp is never echoed. `TestHostile` and `internal/cli`'s
   `TestSkillRefusals` cover a `--dir` that names a file or nothing.
+- **The SC7 harness** runs the command in `internal/conformance`'s
+  `TestSkillHostIsolation`, as item 5 requires:
+  - 24 command lines: each harness in human and `--json` form, and
+    `--print` in both, each in both path modes;
+  - each run in environments A and B, B started two seconds after A;
+  - a decoy `--dir` whose name holds the sandbox-path sentinel;
+  - A's decoys, sentinel `SKILL.md` copies among them, in the home,
+    working and temporary directories.
+
+  It makes checks 1 to 4 with the runner's own helpers. Check 4 allows
+  only the `SKILL.md` the decision names and its directories, and nothing
+  at all with `--print`. The test also asserts that every run exits 0 and
+  that the file written is what `--print` prints. Check 2's vocabulary
+  adds the skill's text, which is the tool's own words. A self-check
+  shows the decoy directory's absolute path in a stream is caught.
