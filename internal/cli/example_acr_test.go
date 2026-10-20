@@ -255,3 +255,47 @@ func TestACRCatalogueInStep(t *testing.T) {
 		}
 	}
 }
+
+// TestACREditions holds the §4.1 example to the editions of the standards
+// its terms check ruled it reports against (plan §6, W7-A1): every file
+// that names EN 301 549's edition names V4.1.1 and no other, and every
+// file that copies WCAG 2.2's names carries W3C's notice.
+func TestACREditions(t *testing.T) {
+	read := func(p string) string {
+		t.Helper()
+		b, err := os.ReadFile(filepath.Join(acrPackage, p))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(b)
+	}
+	other := regexp.MustCompile(`EN 301 549 V[0-9]+\.[0-9]+\.[0-9]+`)
+	for _, p := range []string{
+		"metais.yaml",
+		"inputs/en301549.schema.json",
+		"inputs/report.md",
+		"inputs/report.schema.json",
+		"inputs/tables.md",
+		"references/en-301-549.md",
+		"references/sources.md",
+		"templates/docx/document.xml.liquid",
+	} {
+		s := read(p)
+		named := other.FindAllString(s, -1)
+		if len(named) == 0 {
+			t.Errorf("%s does not name EN 301 549's edition", p)
+		}
+		for _, n := range named {
+			if n != "EN 301 549 V4.1.1" {
+				t.Errorf("%s names %s, and the package reports against V4.1.1", p, n)
+			}
+		}
+	}
+	notice := "Copyright © 2020-2024 World Wide Web\nConsortium. W3C® liability, trademark and document use rules apply."
+	for _, p := range []string{"references/wcag-2.2.md"} {
+		s := read(p)
+		if !strings.Contains(s, notice) || !strings.Contains(s, "https://www.w3.org/TR/2024/REC-WCAG22-20241212/") || !strings.Contains(s, "W3C\nRecommendation 12 December 2024") {
+			t.Errorf("%s copies WCAG 2.2's names without W3C's notice, link and status", p)
+		}
+	}
+}

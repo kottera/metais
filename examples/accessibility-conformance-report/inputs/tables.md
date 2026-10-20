@@ -60,9 +60,11 @@ the functional performance criteria (302), hardware (402 to 415), software
 (502 to 504) and support documentation and services (602 and 603). For
 software, chapter 4's hardware criteria are Not Applicable.
 
-The **EN 301 549** table lists the clauses outside clauses 9, 10 and 11.1
-to 11.4, which the WCAG table answers: the functional performance
-statements (4.2), the generic requirements (5), two-way voice
-communication (6), video (7), hardware (8), software interoperability,
-user preferences and authoring tools (11.5 to 11.8), documentation and
-support services (12), and relay and emergency services (13).
+The **EN 301 549** table, for EN 301 549 V4.1.1 (2026-09), lists the
+clauses outside clauses 9, 10 and 11.1 to 11.4, which the WCAG table
+answers: the functional performance statements (4.2), the generic
+requirements, authoring tools among them (5), real-time voice, text and
+video communication (6), video playback (7), hardware (8), software's
+interoperability with assistive technology and its accessibility
+settings (11.5 to 11.7), information and documentation about the product
+and its services (12), and relay services (13).

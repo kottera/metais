@@ -5,13 +5,19 @@ What each success criterion of the Web Content Accessibility Guidelines
 them, with the criterion's number, its name and its conformance level.
 These are the values the `criterion` column of the **wcag** input takes.
 
+The numbers, names and levels are excerpts of W3C's document, copied as
+they are: Web Content Accessibility Guidelines (WCAG) 2.2,
+<https://www.w3.org/TR/2024/REC-WCAG22-20241212/>, status: W3C
+Recommendation 12 December 2024. Copyright © 2020-2024 World Wide Web
+Consortium. W3C® liability, trademark and document use rules apply.
+
 Each summary is the METAIS project's own wording of what the criterion
 asks, written for whoever fills in the table; it is not W3C's text, and
 where a summary says "with stated exceptions" the criterion lists them.
-The criterion's normative text is W3C's, at
-<https://www.w3.org/TR/WCAG22/>, and it governs: read it before deciding
-a conformance level. `sources.md` records this source and its terms.
-WCAG 2.2 removed 4.1.1 Parsing, which is therefore not listed.
+The criterion's normative text is W3C's, at the address above, and it
+governs: read it before deciding a conformance level. W3C has not
+reviewed or endorsed this package. `sources.md` records this source and
+its terms. WCAG 2.2 removed 4.1.1 Parsing, which is therefore not listed.
 
 ## 1.1.1 Non-text Content (Level A)
 

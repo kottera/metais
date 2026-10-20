@@ -25,7 +25,7 @@ guide: |-
   2. **wcag** (wcag.csv): the WCAG 2.2 table, which every edition holds.
   3. **section508** (section508.csv): the Revised Section 508 table, for
      the section508 and international editions only.
-  4. **en301549** (en301549.csv): the EN 301 549 table, for the en301549
+  4. **en301549** (en301549.csv): the EN 301 549 V4.1.1 table, for the en301549
      and international editions only.
 
   Each table is a CSV file with the header `criterion,conformance,remarks`
@@ -72,7 +72,7 @@ inputs:
     required: false
   - name: en301549
     title: "EN 301 549 table"
-    description: "One row per clause of EN 301 549 outside its WCAG-based clauses. Supplied for the en301549 and international editions, and for no other."
+    description: "One row per clause of EN 301 549 V4.1.1 outside its WCAG-based clauses. Supplied for the en301549 and international editions, and for no other."
     schema: inputs/en301549.schema.json
     meaning: inputs/tables.md
     forms:

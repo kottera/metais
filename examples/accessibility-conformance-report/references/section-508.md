@@ -1,7 +1,7 @@
 # Revised Section 508 criteria
 
 What each criterion of chapters 3 to 6 of the Revised Section 508
-Standards (36 CFR part 1194, appendix C) asks, one section per criterion,
+Standards (36 CFR Part 1194, U.S. Access Board, appendix C) asks, one section per criterion,
 in the standards' order, with the criterion's number and its heading.
 These are the values the `criterion` column of the **section508** input
 takes.
@@ -10,8 +10,12 @@ Chapter 3 holds the functional performance criteria, chapter 4 hardware,
 chapter 5 software and chapter 6 support documentation and services.
 The provisions that apply WCAG to electronic content and to software
 (E205.4 and E207.2) are answered by the WCAG 2.2 table, so this list holds
-what that table does not. Criteria whose only role is to group the ones beneath them, and
-412.5, which the standards reserve, are not listed.
+what that table does not. The Revised Section 508 Standards incorporate
+WCAG 2.0 at Levels A and AA by reference (E205.4, 702.10.1); WCAG's text
+remains W3C's, under W3C's terms, and the WCAG 2.2 table, whose criteria
+include all of WCAG 2.0's, answers it. Criteria whose only role is to
+group the ones beneath them, and 412.5, which the standards reserve, are
+not listed.
 
 Each summary is the METAIS project's own wording of what the criterion
 asks; the standards' text governs, at

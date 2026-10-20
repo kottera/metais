@@ -57,7 +57,7 @@ tables you supply:
 |---|---|---|
 | `wcag` | WCAG 2.2 | wcag |
 | `section508` | WCAG 2.2 and the Revised Section 508 Standards | wcag, section508 |
-| `en301549` | WCAG 2.2 and EN 301 549 | wcag, en301549 |
+| `en301549` | WCAG 2.2 and EN 301 549 V4.1.1 | wcag, en301549 |
 | `international` | all three | wcag, section508, en301549 |
 
 Choose the edition the buyer asked for. A United States federal buyer

@@ -86,7 +86,7 @@
     "edition": {
       "type": "string",
       "title": "Edition",
-      "description": "Which standards the report answers, and so which tables it holds: wcag, WCAG 2.2 alone; section508, WCAG 2.2 and the Revised Section 508 Standards; en301549, WCAG 2.2 and EN 301 549; international, all three. Left out, the edition is wcag.",
+      "description": "Which standards the report answers, and so which tables it holds: wcag, WCAG 2.2 alone; section508, WCAG 2.2 and the Revised Section 508 Standards; en301549, WCAG 2.2 and EN 301 549 V4.1.1; international, all three. Left out, the edition is wcag.",
       "enum": ["wcag", "section508", "en301549", "international"],
       "default": "wcag",
       "examples": ["international"]
