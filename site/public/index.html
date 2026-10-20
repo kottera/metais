@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- Copyright 2026 Kottera. SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>METAIS — document templates you can check</title>
+<meta name="description" content="METAIS is a package format for document templates, and metais is the tool that reads, validates and renders them.">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav><a href="/">METAIS</a><a href="/install/">Install</a><a href="/getting-started/">Getting started</a></nav>
+<main>
+<h1>METAIS</h1>
+<p><strong>Multi-file Extensible Templating And Instantiation Specification.</strong></p>
+
+<p>A METAIS package is a document template in one file, usually named
+<code>&lt;name&gt;-&lt;version&gt;.metais</code>. It says which inputs a
+document needs, with a JSON Schema and a prose explanation for each one, and
+it carries the Liquid templates that render the document from them. One
+package can produce anything from a Markdown report to a set of files for a
+static site.</p>
+
+<p><code>metais</code> is the reference tool. It reads a package in place,
+without unpacking it, checks the data you supply against the package's
+schemas and reports every problem at once, and renders the outputs. It never
+runs code from a package and never touches the network, and the same package
+and data give the same bytes on every platform. It also helps authors write,
+check, test and pack their own packages.</p>
+
+<h2>Where to go next</h2>
+<ul>
+<li><strong>Someone gave you a <code>.metais</code> file:</strong>
+<a href="/install/">install metais</a>, then follow
+<a href="/getting-started/#use-a-package">Use a package</a>.</li>
+<li><strong>You want to write a package:</strong>
+<a href="/install/">install metais</a>, then follow
+<a href="/getting-started/#write-a-package">Write a package</a>.</li>
+<li><strong>You are building another implementation:</strong> the
+specification's JSON Schemas are published at their <code>$id</code>s under
+<a href="/schemas/1.0/manifest.schema.json"><code>https://metais.org/schemas/</code></a>.</li>
+</ul>
+</main>
+<footer>METAIS is created by <a href="https://github.com/kottera">Kottera</a>,
+under the Apache License 2.0. Source: <a href="https://github.com/kottera/metais">github.com/kottera/metais</a>.</footer>
+</body>
+</html>

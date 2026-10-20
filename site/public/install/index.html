@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!-- Copyright 2026 Kottera. SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install metais — METAIS</title>
+<meta name="description" content="How to download metais from its latest release, verify it against SHA256SUMS, and put it on your PATH.">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav><a href="/">METAIS</a><a href="/install/">Install</a><a href="/getting-started/">Getting started</a></nav>
+<main>
+<h1>Install metais</h1>
+
+<p><code>metais</code> is one static binary with no dependencies. Each
+release publishes an archive for each of these platforms, and a
+<code>SHA256SUMS</code> file that lists the checksum of every archive:</p>
+
+<ul>
+<li>macOS on Apple silicon: <code>darwin_arm64</code></li>
+<li>macOS on Intel: <code>darwin_amd64</code></li>
+<li>Linux on x86-64: <code>linux_amd64</code></li>
+<li>Linux on ARM64: <code>linux_arm64</code></li>
+</ul>
+
+<p>On Windows, <a href="#from-source">build it from source</a>.</p>
+
+<h2 id="download">1. Download the latest release</h2>
+
+<p>Open the latest release:
+<a href="https://github.com/kottera/metais/releases/latest">github.com/kottera/metais/releases/latest</a>.
+Its title is its version. Download two files from it: the archive for your
+platform, <code>metais_&lt;version&gt;_&lt;os&gt;_&lt;arch&gt;.tar.gz</code>,
+and <code>SHA256SUMS</code>.</p>
+
+<p>With the <a href="https://cli.github.com/">GitHub CLI</a>, this downloads
+both for Linux on x86-64; change the pattern for another platform:</p>
+
+<pre><code>gh release download --repo kottera/metais --pattern 'metais_*_linux_amd64.tar.gz' --pattern SHA256SUMS</code></pre>
+
+<h2 id="verify">2. Verify the archive</h2>
+
+<p>Check the archive against <code>SHA256SUMS</code> before you unpack it.
+Run this in the directory that holds both files.</p>
+
+<p>On Linux:</p>
+<pre><code>sha256sum --check --ignore-missing SHA256SUMS</code></pre>
+
+<p>On macOS:</p>
+<pre><code>shasum -a 256 --check --ignore-missing SHA256SUMS</code></pre>
+
+<p>Each command prints the archive's name followed by <code>OK</code>. Any
+other answer means the download is damaged or is not the release's: delete
+it and do not use it.</p>
+
+<p>The release's binaries are reproducible: building the release's tag with
+the release builder in the repository gives the same bytes, so the
+checksums can be checked independently of the download.</p>
+
+<h2 id="unpack">3. Unpack it and put metais on your PATH</h2>
+
+<p>The archive holds <code>metais</code> and its <code>LICENSE</code>,
+<code>NOTICE</code> and <code>THIRD-PARTY-NOTICES.txt</code>.</p>
+
+<pre><code>tar -xzf metais_*_linux_amd64.tar.gz metais
+sudo install metais /usr/local/bin/</code></pre>
+
+<p>Any directory on your <code>PATH</code> will do, such as
+<code>~/.local/bin</code> without <code>sudo</code>. On macOS, if Gatekeeper
+refuses a binary downloaded with a browser, remove its quarantine attribute
+after verifying it: <code>xattr -d com.apple.quarantine metais</code>.</p>
+
+<h2 id="check">4. Check it runs</h2>
+
+<pre><code>metais version
+metais help</code></pre>
+
+<p><code>metais version</code> prints the tool's version and the
+specification versions it implements. <code>metais help</code> is the
+tool's own reference: every command, flag and refusal is in it, and
+<code>metais help &lt;command&gt;</code> prints one command's.</p>
+
+<p>Next: <a href="/getting-started/">getting started</a>.</p>
+
+<h2 id="from-source">Building from source</h2>
+
+<p>With Go installed, clone the repository at the release's tag and build
+it. Its <code>go.mod</code> names the exact Go toolchain, which Go fetches
+by itself.</p>
+
+<pre><code>git clone https://github.com/kottera/metais.git
+cd metais
+git checkout "$(git describe --tags --abbrev=0 --match 'v*')"
+CGO_ENABLED=0 go build -trimpath ./cmd/metais</code></pre>
+
+<p>A binary built this way is not the release's: <code>metais version</code>
+reports <code>0.0.0-devel</code>.</p>
+</main>
+<footer>METAIS is created by <a href="https://github.com/kottera">Kottera</a>,
+under the Apache License 2.0. Source: <a href="https://github.com/kottera/metais">github.com/kottera/metais</a>.</footer>
+</body>
+</html>
