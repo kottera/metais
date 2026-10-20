@@ -460,6 +460,38 @@ func TestCalibrationLowered(t *testing.T) {
 	}
 }
 
+// TestCalibrationJointLocations proves that Amendment A1's joint cases
+// hold their leaves' locations at schema-location-length as well as their
+// count at schema-subschemas: one byte less refuses the schema file.
+func TestCalibrationJointLocations(t *testing.T) {
+	tool := calTool(t)
+	defaults, err := toolDefaults(tool, testenv.Dir(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var n int
+	for _, c := range calCases {
+		if !strings.HasPrefix(c.name, "schema-joint-") {
+			continue
+		}
+		n++
+		t.Run(c.name, func(t *testing.T) {
+			lim := defaults.with(c.lowered)
+			less := lim.with(calLimits{"schema-location-length": lim["schema-location-length"] - 1})
+			run, err := runCase(tool, c.atLimit(lim), defaults, less, testenv.Dir(t), defaultWall)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := run.res.refusedBy("schema-location-length", less["schema-location-length"], "inputs/report.schema.json"); err != nil {
+				t.Fatalf("one byte under the locations: %v", err)
+			}
+		})
+	}
+	if n != 2 {
+		t.Fatalf("%d joint cases, not A1 item 5's two", n)
+	}
+}
+
 // atLimit is c built for lim whatever limits it is run under, so the run
 // at one less than its limit is the same case.
 func (c calCase) atLimit(lim calLimits) calCase {
