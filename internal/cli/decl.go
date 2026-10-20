@@ -68,6 +68,10 @@ type Refusal struct {
 	Code  finding.Code
 	Cause string
 	Next  Next
+	// Hint, when set, is the hint template of this cause's findings in
+	// place of the code's own: for a cause whose author the registry's
+	// hint, written for every reader of the code, does not help.
+	Hint string
 	// match picks out the findings of this cause, where the command
 	// declares Code for more than one: a finding of Code takes the next
 	// step of the row whose match it satisfies, or else of the row of

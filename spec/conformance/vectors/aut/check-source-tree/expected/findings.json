@@ -1,5 +1,16 @@
 [
   {
+    "code": "package.layout.not_packed",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "archive.metais"
+    }
+  },
+  {
     "code": "package.layout.os_litter",
     "severity": "warning",
     "subject": {

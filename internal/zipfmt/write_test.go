@@ -6,6 +6,7 @@ package zipfmt
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/binary"
 	"hash/crc32"
 	"io"
 	"strings"
@@ -276,4 +277,47 @@ type largestWrite struct {
 func (l *largestWrite) Write(b []byte) (int, error) {
 	l.max = max(l.max, len(b))
 	return l.w.Write(b)
+}
+
+// TestWritePartsRanges: WriteParts reports where it wrote each entry's
+// records, which a writer reads to name the entry that holds a byte of
+// the zip. The local records tile the zip from its start, each beginning
+// with a local header's signature and ending with the entry's stored
+// bytes; the central headers tile the central directory, each beginning
+// with a central header's signature, up to the end record.
+func TestWritePartsRanges(t *testing.T) {
+	entries := sample()
+	parts := make([]Part, len(entries))
+	for i, e := range entries {
+		parts[i] = Part{Name: e.Name, Method: e.Method, Content: func(w io.Writer) error {
+			_, err := w.Write(e.Content)
+			return err
+		}}
+	}
+	var buf bytes.Buffer
+	written, err := WriteParts(&buf, parts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b := buf.Bytes()
+	le := binary.LittleEndian
+	var local, central int64 = 0, written[0].Central[0]
+	for i, w := range written {
+		h, data, err := encode(entries[i])
+		if err != nil {
+			t.Fatal(err)
+		}
+		switch {
+		case w.Local[0] != local || le.Uint32(b[local:]) != sigLocal:
+			t.Errorf("%s: local record at %d, want %d", entries[i].Name, w.Local[0], local)
+		case w.Central[0] != central || le.Uint32(b[central:]) != sigCentral:
+			t.Errorf("%s: central header at %d, want %d", entries[i].Name, w.Central[0], central)
+		case !bytes.Equal(b[w.Local[1]-int64(h.csize):w.Local[1]], data):
+			t.Errorf("%s: the local record does not end with the stored bytes", entries[i].Name)
+		}
+		local, central = w.Local[1], w.Central[1]
+	}
+	if local != written[0].Central[0] || central != int64(len(b))-eocdLen || le.Uint32(b[central:]) != sigEOCD {
+		t.Errorf("the records end at %d and %d, the zip at %d", local, central, len(b))
+	}
 }

@@ -21,7 +21,9 @@ file's time, mode or owner, the order a directory lists its names in, the
 platform, the locale or the clock. One build of metais packs a source directory
 to the same bytes every time. The package is read back as every reader reads one
 before it is kept, and a limit only its bytes show, such as entry-ratio, refuses
-it as limit.package.
+it as limit.package. An entry whose bytes put the end of central directory
+signature in the package's final 65,557 bytes refuses it as
+package.container.second_end_record, and the next step names that entry.
 
 --out names the package file. Without it, the file is <name>-<version>.metais,
 from the manifest, in the working directory; an --out that names an existing
@@ -93,6 +95,11 @@ Refusals:
       The package file could not be written, and nothing was: its directory does
       not exist, what stands at its name is not a regular file, a temporary file
       .metais-tmp-<h> is left beside it, or a write failed.
+      Next: metais pack <dir>
+  package.container.second_end_record
+      An entry of the package pack built puts the end of central directory
+      signature in the package's final 65,557 bytes, so a reader refuses the
+      package; nothing was written.
       Next: metais pack <dir>
   usage.archive_to_terminal
       --out - is given, and standard output is a terminal.

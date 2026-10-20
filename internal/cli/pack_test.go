@@ -5,6 +5,7 @@ package cli
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/testenv"
+	"github.com/kottera/metais/internal/zipfmt"
 )
 
 // packSource copies the source directory of the vector id's tree dir into
@@ -314,4 +316,83 @@ func TestPackOutputRefusals(t *testing.T) {
 			t.Errorf("--out %q: status %d, codes %q", out, r.status, r.codes())
 		}
 	}
+}
+
+// TestPackSecondEndRecordAdvice is pack's own advice when its read-back
+// refuses the package it built (R1-014, ADR-008 D14): an entry whose
+// stored bytes hold the end record's signature in the package's final
+// 65,557 bytes. The refusal is a reader's, code, offset and status
+// unchanged, and nothing is written; the hint is pack's, and the next step
+// names the entry, quoted for a shell, since packing the same source again
+// writes the same bytes. The operand's open keeps the code's own hint and
+// next step.
+func TestPackSecondEndRecordAdvice(t *testing.T) {
+	testenv.Home(t)
+	src := secondEndSource(t)
+	out := testenv.Dir(t)
+	r := runTool(t, "pack", "--json", src, "--out", filepath.Join(out, "p.metais"))
+	if r.status != finding.ExitRefused || !slices.Equal(r.codes(), []string{string(zipfmt.CodeSecondEndRecord)}) {
+		t.Fatalf("status %d, codes %q:\n%s", r.status, r.codes(), r.stdout)
+	}
+	var doc struct {
+		Findings []struct {
+			Hint     string
+			Location map[string]any
+			Params   map[string]any
+		}
+	}
+	if err := json.Unmarshal([]byte(r.stdout), &doc); err != nil {
+		t.Fatal(err)
+	}
+	f := doc.Findings[0]
+	if _, ok := f.Params["offset"]; !ok || len(f.Params) != 1 || f.Location["file"] != nil {
+		t.Errorf("the finding's members are not a reader's: params %v, location %v", f.Params, f.Location)
+	}
+	if f.Hint != packSecondEnd.Hint {
+		t.Errorf("hint %q, want pack's own", f.Hint)
+	}
+	want := Next{Run: "metais pack <dir>", Why: strings.Replace(packSecondEnd.Next.Why, "<entry>", "'assets/my blob.bin'", 1)}
+	if !slices.Equal(r.doc.Next, []Next{want}) {
+		t.Errorf("next %+v, want %+v", r.doc.Next, want)
+	}
+	if names, _ := os.ReadDir(out); len(names) != 0 {
+		t.Errorf("pack wrote %v", names)
+	}
+	h := runTool(t, "pack", src, "--out", filepath.Join(out, "p.metais"))
+	if h.status != finding.ExitRefused || !strings.Contains(h.stderr, "hint: "+packSecondEnd.Hint) || !strings.Contains(h.stderr, want.Why) {
+		t.Errorf("human: status %d\n%s", h.status, h.stderr)
+	}
+
+	hostile := filepath.Join(vectorsDir, "pkg/second-end-record/package.metais")
+	r = runTool(t, "pack", "--json", hostile, "--out", filepath.Join(out, "p.metais"))
+	if !slices.Equal(r.codes(), []string{string(zipfmt.CodeSecondEndRecord)}) || slices.Contains(r.doc.Next, packSecondEnd.Next) ||
+		strings.Contains(r.stdout, packSecondEnd.Hint) {
+		t.Errorf("the operand's open took pack's advice: %q\n%s", r.codes(), r.stdout)
+	}
+}
+
+// secondEndSource is a source directory that checks and tests clean, and
+// whose entry assets/my blob.bin is stored and holds the end of central
+// directory signature, so the package pack builds from it is refused on
+// reading it back.
+func secondEndSource(t *testing.T) string {
+	t.Helper()
+	src := packSource(t, "aut/pack", "package")
+	for _, n := range []string{"archive.metais", "drafts", "notes.txt"} {
+		// Its warnings, which are not what it is for.
+		if err := os.RemoveAll(filepath.Join(src, n)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// Incompressible bytes, so the entry is stored, with the signature in
+	// the middle of them.
+	var blob []byte
+	for sum := sha256.Sum256([]byte("W6-NB1")); len(blob) < 96; sum = sha256.Sum256(sum[:]) {
+		blob = append(blob, sum[:]...)
+	}
+	copy(blob[40:], "PK\x05\x06")
+	if err := os.WriteFile(filepath.Join(src, "assets", "my blob.bin"), blob, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return src
 }

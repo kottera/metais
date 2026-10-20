@@ -65,10 +65,14 @@ type Part struct {
 	Content func(w io.Writer) error
 }
 
-// Written is what WriteParts chose for one entry: whether Auto deflated
-// it.
+// Written is what WriteParts chose for one entry, whether Auto deflated
+// it, and where it wrote the entry's records.
 type Written struct {
 	Deflated bool
+	// Local and Central are the byte ranges, [start, end), of the entry's
+	// local header with its stored bytes, and of its central directory
+	// header, in the zip.
+	Local, Central [2]int64
 }
 
 // MaxEntries is the most entries a zip WriteParts writes may hold: ADR-001
@@ -99,7 +103,9 @@ func WriteParts(w io.Writer, parts []Part) ([]Written, error) {
 		written[i].Deflated = h.method == methodDeflated
 		h.offset = uint32(offset)
 		local := h.appendLocal(nil)
+		written[i].Local[0] = offset
 		offset += int64(len(local)) + int64(h.csize)
+		written[i].Local[1] = offset
 		if offset > maxSize {
 			return nil, errors.New("zipfmt: the entries are larger than a zip can hold")
 		}
@@ -109,7 +115,13 @@ func WriteParts(w io.Writer, parts []Part) ([]Written, error) {
 		if err := d.emit(w, p, h); err != nil {
 			return nil, err
 		}
+		written[i].Central[0] = int64(len(cd))
 		cd = h.appendCentral(cd)
+		written[i].Central[1] = int64(len(cd))
+	}
+	for i := range written {
+		written[i].Central[0] += offset
+		written[i].Central[1] += offset
 	}
 	if offset+int64(len(cd))+eocdLen > maxSize {
 		return nil, errors.New("zipfmt: the entries are larger than a zip can hold")

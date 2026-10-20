@@ -53,9 +53,10 @@ type Packed struct {
 	// Digest is the package digest of the entries (ADR-001 D6).
 	Digest digest.Sum
 
-	tree  pkgtree.Tree
-	sums  map[string]digest.Sum
-	bytes map[string][]byte // the compiled files, the digest file's included
+	tree    pkgtree.Tree
+	sums    map[string]digest.Sum
+	bytes   map[string][]byte // the compiled files, the digest file's included
+	written []zipfmt.Written  // where the last Write put each entry, in the order of Entries
 }
 
 // PlanPack reads every entry of tree, a source directory that opened,
@@ -152,8 +153,24 @@ func (p *Packed) Write(w io.Writer) error {
 			return nil
 		}
 	}
-	_, err := zipfmt.WriteParts(w, parts)
+	written, err := zipfmt.WriteParts(w, parts)
+	p.written = written
 	return err
+}
+
+// EntryAt is the entry whose records, as the last Write wrote them, hold
+// the byte at offset: its local header and stored bytes, or its central
+// directory header. A reader that refuses a second end record cannot know
+// which entry holds the signature; pack can, and that entry is the one an
+// author changes, since packing the same source again writes the same
+// bytes (R1-014).
+func (p *Packed) EntryAt(offset int64) (string, bool) {
+	for i, w := range p.written {
+		if offset >= w.Local[0] && offset < w.Local[1] || offset >= w.Central[0] && offset < w.Central[1] {
+			return p.Entries[i], true
+		}
+	}
+	return "", false
 }
 
 // ReadError is a source entry pack could not read, or one that changed
