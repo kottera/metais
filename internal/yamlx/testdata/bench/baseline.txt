@@ -1,0 +1,19 @@
+# ADR-010 D15 item 1's benchmarks of ./internal/yamlx, in benchstat's input format.
+# sandbox figure, not a budget
+# host: MacBook-Pro, a contended Work Order sandbox
+# cpu: Apple M2 Max
+# go version go1.26.9 darwin/arm64
+# GOOS=darwin GOARCH=arm64
+# command: go test -run '^$' -bench . -benchmem -count 6 ./internal/yamlx
+goos: darwin
+goarch: arm64
+pkg: github.com/kottera/metais/internal/yamlx
+cpu: Apple M2 Max
+BenchmarkParse-12    	       1	2705159209 ns/op	   3.88 MB/s	498467104 B/op	 8118699 allocs/op
+BenchmarkParse-12    	       1	2624138042 ns/op	   4.00 MB/s	498401696 B/op	 8118665 allocs/op
+BenchmarkParse-12    	       1	1697237792 ns/op	   6.18 MB/s	498403384 B/op	 8118664 allocs/op
+BenchmarkParse-12    	       1	1860177292 ns/op	   5.64 MB/s	498401632 B/op	 8118663 allocs/op
+BenchmarkParse-12    	       1	1888266875 ns/op	   5.55 MB/s	498477608 B/op	 8118673 allocs/op
+BenchmarkParse-12    	       1	1649835875 ns/op	   6.36 MB/s	498459560 B/op	 8118673 allocs/op
+PASS
+ok  	github.com/kottera/metais/internal/yamlx	13.459s

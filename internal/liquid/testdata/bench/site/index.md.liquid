@@ -1,0 +1,4 @@
+{%- render "partials/header.md.liquid", page: inputs.site, site: inputs.site -%}
+{% for page in inputs.pages %}
+{%- render "partials/link.md.liquid", page: page %}
+{% endfor -%}

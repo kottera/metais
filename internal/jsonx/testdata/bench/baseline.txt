@@ -1,0 +1,19 @@
+# ADR-010 D15 item 1's benchmarks of ./internal/jsonx, in benchstat's input format.
+# sandbox figure, not a budget
+# host: MacBook-Pro, a contended Work Order sandbox
+# cpu: Apple M2 Max
+# go version go1.26.9 darwin/arm64
+# GOOS=darwin GOARCH=arm64
+# command: go test -run '^$' -bench . -benchmem -count 6 ./internal/jsonx
+goos: darwin
+goarch: arm64
+pkg: github.com/kottera/metais/internal/jsonx
+cpu: Apple M2 Max
+BenchmarkParse-12    	       1	1130904917 ns/op	   9.27 MB/s	251328952 B/op	 3713143 allocs/op
+BenchmarkParse-12    	       1	1316184459 ns/op	   7.97 MB/s	251291952 B/op	 3713103 allocs/op
+BenchmarkParse-12    	       1	1322033750 ns/op	   7.93 MB/s	251292080 B/op	 3713105 allocs/op
+BenchmarkParse-12    	       1	1202214458 ns/op	   8.72 MB/s	251292096 B/op	 3713104 allocs/op
+BenchmarkParse-12    	       2	1486267480 ns/op	   7.06 MB/s	251291944 B/op	 3713103 allocs/op
+BenchmarkParse-12    	       1	2073909959 ns/op	   5.06 MB/s	251292048 B/op	 3713104 allocs/op
+PASS
+ok  	github.com/kottera/metais/internal/jsonx	11.509s

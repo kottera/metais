@@ -1,0 +1,49 @@
+# ADR-010 D15 item 1's benchmarks of ./internal/liquid, in benchstat's input format.
+# sandbox figure, not a budget
+# host: MacBook-Pro, a contended Work Order sandbox
+# cpu: Apple M2 Max
+# go version go1.26.9 darwin/arm64
+# GOOS=darwin GOARCH=arm64
+# command: go test -run '^$' -bench . -benchmem -count 6 ./internal/liquid
+goos: darwin
+goarch: arm64
+pkg: github.com/kottera/metais/internal/liquid
+cpu: Apple M2 Max
+BenchmarkParse/table-12         	   23130	     47309 ns/op	    7536 B/op	      78 allocs/op
+BenchmarkParse/table-12         	   32574	     45774 ns/op	    7536 B/op	      78 allocs/op
+BenchmarkParse/table-12         	   23029	     54031 ns/op	    7536 B/op	      78 allocs/op
+BenchmarkParse/table-12         	   32384	     35575 ns/op	    7536 B/op	      78 allocs/op
+BenchmarkParse/table-12         	   50902	     27862 ns/op	    7536 B/op	      78 allocs/op
+BenchmarkParse/table-12         	   15409	     80659 ns/op	    7536 B/op	      78 allocs/op
+BenchmarkParse/site-12          	   10000	    374470 ns/op	   39304 B/op	     473 allocs/op
+BenchmarkParse/site-12          	   10000	    256406 ns/op	   39304 B/op	     473 allocs/op
+BenchmarkParse/site-12          	   10000	    226209 ns/op	   39304 B/op	     473 allocs/op
+BenchmarkParse/site-12          	    6759	    310862 ns/op	   39304 B/op	     473 allocs/op
+BenchmarkParse/site-12          	   10000	    193765 ns/op	   39304 B/op	     473 allocs/op
+BenchmarkParse/site-12          	   10000	    175455 ns/op	   39304 B/op	     473 allocs/op
+BenchmarkParse/nested-12        	    2653	   1169224 ns/op	  193112 B/op	    2487 allocs/op
+BenchmarkParse/nested-12        	    5319	   1167259 ns/op	  193112 B/op	    2487 allocs/op
+BenchmarkParse/nested-12        	     925	   1109967 ns/op	  193113 B/op	    2487 allocs/op
+BenchmarkParse/nested-12        	    1209	   1527871 ns/op	  193113 B/op	    2487 allocs/op
+BenchmarkParse/nested-12        	     757	   1659542 ns/op	  193114 B/op	    2487 allocs/op
+BenchmarkParse/nested-12        	    4813	   1538105 ns/op	  193113 B/op	    2487 allocs/op
+BenchmarkRender/table-12        	      25	  53360577 ns/op	   9.21 MB/s	  13062360 cpu-ns/op	 7229647 B/op	   90008 allocs/op
+BenchmarkRender/table-12        	     100	  46101245 ns/op	  10.65 MB/s	  14841700 cpu-ns/op	 7229644 B/op	   90008 allocs/op
+BenchmarkRender/table-12        	      85	  78487732 ns/op	   6.26 MB/s	  14438812 cpu-ns/op	 7229646 B/op	   90008 allocs/op
+BenchmarkRender/table-12        	     100	  85293868 ns/op	   5.76 MB/s	  13795290 cpu-ns/op	 7229648 B/op	   90008 allocs/op
+BenchmarkRender/table-12        	      26	  42025078 ns/op	  11.69 MB/s	  13041885 cpu-ns/op	 7229627 B/op	   90008 allocs/op
+BenchmarkRender/table-12        	      18	  72191224 ns/op	   6.80 MB/s	  13739556 cpu-ns/op	 7229652 B/op	   90008 allocs/op
+BenchmarkRender/site-12         	      54	  74811812 ns/op	   3.14 MB/s	  20285611 cpu-ns/op	 6429424 B/op	  131741 allocs/op
+BenchmarkRender/site-12         	      97	  93219085 ns/op	   2.52 MB/s	  19519454 cpu-ns/op	 6429416 B/op	  131741 allocs/op
+BenchmarkRender/site-12         	      46	  75106809 ns/op	   3.13 MB/s	  18904652 cpu-ns/op	 6429396 B/op	  131741 allocs/op
+BenchmarkRender/site-12         	     100	  61315347 ns/op	   3.83 MB/s	  17654740 cpu-ns/op	 6429397 B/op	  131741 allocs/op
+BenchmarkRender/site-12         	      16	  74199117 ns/op	   3.17 MB/s	  16487125 cpu-ns/op	 6429409 B/op	  131741 allocs/op
+BenchmarkRender/site-12         	     100	  38748107 ns/op	   6.06 MB/s	  19108920 cpu-ns/op	 6429381 B/op	  131741 allocs/op
+BenchmarkRender/nested-12       	     100	  20114486 ns/op	   2.42 MB/s	   7201600 cpu-ns/op	 1066239 B/op	   38411 allocs/op
+BenchmarkRender/nested-12       	     100	  23466443 ns/op	   2.08 MB/s	   6923930 cpu-ns/op	 1066240 B/op	   38411 allocs/op
+BenchmarkRender/nested-12       	     100	  20671280 ns/op	   2.36 MB/s	   8146110 cpu-ns/op	 1066236 B/op	   38411 allocs/op
+BenchmarkRender/nested-12       	      31	  36289132 ns/op	   1.34 MB/s	   7391516 cpu-ns/op	 1066239 B/op	   38411 allocs/op
+BenchmarkRender/nested-12       	     100	  29418011 ns/op	   1.66 MB/s	   8126350 cpu-ns/op	 1066242 B/op	   38411 allocs/op
+BenchmarkRender/nested-12       	      49	  25577441 ns/op	   1.91 MB/s	   9323224 cpu-ns/op	 1066240 B/op	   38411 allocs/op
+PASS
+ok  	github.com/kottera/metais/internal/liquid	108.708s

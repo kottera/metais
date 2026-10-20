@@ -157,6 +157,11 @@ Agents that do not load skills read them as plain files:
   raising its timeout.
 - **Bounded work is measured.** A test that holds work to a time measures
   CPU time, not wall time alone.
+- **A benchmarked package commits its baseline** in
+  `testdata/bench/baseline.txt` beside its benchmarks, labelled with its
+  host, CPU and `go version` as a sandbox figure, not a budget.
+  `docs/dev/benchmarks.md` is the one command that runs every benchmark,
+  and how a run is compared with the baselines.
 - **A fuzz target is proved by its seed corpus.** The corpus under
   `testdata/fuzz/` runs in every `go test`, and that is the proof a change
   gives. A Work Order never runs `go test -fuzz`: Go starts a fuzz worker on

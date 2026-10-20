@@ -1,0 +1,25 @@
+# ADR-010 D15 item 1's benchmarks of ./internal/cli, in benchstat's input format.
+# sandbox figure, not a budget
+# host: MacBook-Pro, a contended Work Order sandbox
+# cpu: Apple M2 Max
+# go version go1.26.9 darwin/arm64
+# GOOS=darwin GOARCH=arm64
+# command: go test -run '^$' -bench . -benchmem -count 6 ./internal/cli
+goos: darwin
+goarch: arm64
+pkg: github.com/kottera/metais/internal/cli
+cpu: Apple M2 Max
+BenchmarkInspect-12     	       6	 231979250 ns/op	 287075000 cpu-ns/op	586693270 B/op	 1434976 allocs/op
+BenchmarkInspect-12     	       5	 241607583 ns/op	 314955400 cpu-ns/op	586681756 B/op	 1434977 allocs/op
+BenchmarkInspect-12     	       5	 237043342 ns/op	 328268200 cpu-ns/op	586689296 B/op	 1434978 allocs/op
+BenchmarkInspect-12     	       5	 218240667 ns/op	 337435200 cpu-ns/op	586693451 B/op	 1434972 allocs/op
+BenchmarkInspect-12     	       6	 186825452 ns/op	 286189000 cpu-ns/op	586675469 B/op	 1434964 allocs/op
+BenchmarkInspect-12     	       6	 186629674 ns/op	 296114833 cpu-ns/op	586696429 B/op	 1434976 allocs/op
+BenchmarkValidate-12    	       2	 828252230 ns/op	 940634000 cpu-ns/op	219123048 B/op	 3814528 allocs/op
+BenchmarkValidate-12    	       2	 828834438 ns/op	 941705500 cpu-ns/op	218991412 B/op	 3814559 allocs/op
+BenchmarkValidate-12    	       2	 790100688 ns/op	 902634000 cpu-ns/op	219120864 B/op	 3814526 allocs/op
+BenchmarkValidate-12    	       2	 909632604 ns/op	1009405000 cpu-ns/op	219147416 B/op	 3814545 allocs/op
+BenchmarkValidate-12    	       1	2183482416 ns/op	1200430000 cpu-ns/op	218958928 B/op	 3814521 allocs/op
+BenchmarkValidate-12    	       1	3174822833 ns/op	1509955000 cpu-ns/op	218954440 B/op	 3814516 allocs/op
+PASS
+ok  	github.com/kottera/metais/internal/cli	50.273s

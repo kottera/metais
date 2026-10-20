@@ -1,0 +1,8 @@
+{%- render "partials/header.md.liquid", page: item, site: inputs.site -%}
+{%- for section in item.sections %}
+{% render "partials/section.md.liquid", section: section, number: forloop.index %}
+{%- endfor %}
+{% if item.tags.size > 0 -%}
+Tags: {{ item.tags | join: ", " }}
+{% endif -%}
+{%- render "partials/footer.md.liquid", page: item, pages: inputs.pages -%}

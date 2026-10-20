@@ -1,0 +1,50 @@
+{%- for c in inputs.cases -%}
+{%- if c.n >= 1 -%}{%- unless c.skip contains 1 %}a1{% case c.k %}{% when 1 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+  {%- if c.n >= 2 -%}{%- unless c.skip contains 2 %}  a2{% case c.k %}{% when 2 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+    {%- if c.n >= 3 -%}{%- unless c.skip contains 3 %}    a3{% case c.k %}{% when 3 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+      {%- if c.n >= 4 -%}{%- unless c.skip contains 4 %}      a4{% case c.k %}{% when 4 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+        {%- if c.n >= 5 -%}{%- unless c.skip contains 5 %}        a5{% case c.k %}{% when 0 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+          {%- if c.n >= 6 -%}{%- unless c.skip contains 6 %}          a6{% case c.k %}{% when 1 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+            {%- if c.n >= 7 -%}{%- unless c.skip contains 7 %}            a7{% case c.k %}{% when 2 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+              {%- if c.n >= 8 -%}{%- unless c.skip contains 8 %}              a8{% case c.k %}{% when 3 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                {%- if c.n >= 9 -%}{%- unless c.skip contains 9 %}                a9{% case c.k %}{% when 4 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                  {%- if c.n >= 10 -%}{%- unless c.skip contains 10 %}                  a10{% case c.k %}{% when 0 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                    {%- if c.n >= 11 -%}{%- unless c.skip contains 11 %}                    a11{% case c.k %}{% when 1 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                      {%- if c.n >= 12 -%}{%- unless c.skip contains 12 %}                      a12{% case c.k %}{% when 2 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                        {%- if c.n >= 13 -%}{%- unless c.skip contains 13 %}                        a13{% case c.k %}{% when 3 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                          {%- if c.n >= 14 -%}{%- unless c.skip contains 14 %}                          a14{% case c.k %}{% when 4 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                            {%- if c.n >= 15 -%}{%- unless c.skip contains 15 %}                            a15{% case c.k %}{% when 0 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                              {%- if c.n >= 16 -%}{%- unless c.skip contains 16 %}                              a16{% case c.k %}{% when 1 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                                {%- if c.n >= 17 -%}{%- unless c.skip contains 17 %}                                a17{% case c.k %}{% when 2 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                                  {%- if c.n >= 18 -%}{%- unless c.skip contains 18 %}                                  a18{% case c.k %}{% when 3 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                                    {%- if c.n >= 19 -%}{%- unless c.skip contains 19 %}                                    a19{% case c.k %}{% when 4 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                                      {%- if c.n >= 20 -%}{%- unless c.skip contains 20 %}                                      a20{% case c.k %}{% when 0 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                                        {%- if c.n >= 21 -%}{%- unless c.skip contains 21 %}                                        a21{% case c.k %}{% when 1 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                                          {%- if c.n >= 22 -%}{%- unless c.skip contains 22 %}                                          a22{% case c.k %}{% when 2 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                                            {%- if c.n >= 23 -%}{%- unless c.skip contains 23 %}                                            a23{% case c.k %}{% when 3 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                                              {%- if c.n >= 24 -%}{%- unless c.skip contains 24 %}                                              a24{% case c.k %}{% when 4 %}k{% when 5, 6 %}h{% else %}-{% endcase %}
+                                              {%- endunless -%}{%- elsif c.s == "s3" and c.n > 0 %}e24{% else %}z24{% endif -%}
+                                            {%- endunless -%}{%- elsif c.s == "s2" and c.n > 2 %}e23{% else %}z23{% endif -%}
+                                          {%- endunless -%}{%- elsif c.s == "s1" and c.n > 1 %}e22{% else %}z22{% endif -%}
+                                        {%- endunless -%}{%- elsif c.s == "s0" and c.n > 0 %}e21{% else %}z21{% endif -%}
+                                      {%- endunless -%}{%- elsif c.s == "s6" and c.n > 2 %}e20{% else %}z20{% endif -%}
+                                    {%- endunless -%}{%- elsif c.s == "s5" and c.n > 1 %}e19{% else %}z19{% endif -%}
+                                  {%- endunless -%}{%- elsif c.s == "s4" and c.n > 0 %}e18{% else %}z18{% endif -%}
+                                {%- endunless -%}{%- elsif c.s == "s3" and c.n > 2 %}e17{% else %}z17{% endif -%}
+                              {%- endunless -%}{%- elsif c.s == "s2" and c.n > 1 %}e16{% else %}z16{% endif -%}
+                            {%- endunless -%}{%- elsif c.s == "s1" and c.n > 0 %}e15{% else %}z15{% endif -%}
+                          {%- endunless -%}{%- elsif c.s == "s0" and c.n > 2 %}e14{% else %}z14{% endif -%}
+                        {%- endunless -%}{%- elsif c.s == "s6" and c.n > 1 %}e13{% else %}z13{% endif -%}
+                      {%- endunless -%}{%- elsif c.s == "s5" and c.n > 0 %}e12{% else %}z12{% endif -%}
+                    {%- endunless -%}{%- elsif c.s == "s4" and c.n > 2 %}e11{% else %}z11{% endif -%}
+                  {%- endunless -%}{%- elsif c.s == "s3" and c.n > 1 %}e10{% else %}z10{% endif -%}
+                {%- endunless -%}{%- elsif c.s == "s2" and c.n > 0 %}e9{% else %}z9{% endif -%}
+              {%- endunless -%}{%- elsif c.s == "s1" and c.n > 2 %}e8{% else %}z8{% endif -%}
+            {%- endunless -%}{%- elsif c.s == "s0" and c.n > 1 %}e7{% else %}z7{% endif -%}
+          {%- endunless -%}{%- elsif c.s == "s6" and c.n > 0 %}e6{% else %}z6{% endif -%}
+        {%- endunless -%}{%- elsif c.s == "s5" and c.n > 2 %}e5{% else %}z5{% endif -%}
+      {%- endunless -%}{%- elsif c.s == "s4" and c.n > 1 %}e4{% else %}z4{% endif -%}
+    {%- endunless -%}{%- elsif c.s == "s3" and c.n > 0 %}e3{% else %}z3{% endif -%}
+  {%- endunless -%}{%- elsif c.s == "s2" and c.n > 2 %}e2{% else %}z2{% endif -%}
+{%- endunless -%}{%- elsif c.s == "s1" and c.n > 1 %}e1{% else %}z1{% endif -%}
+{%- endfor -%}
