@@ -392,6 +392,22 @@ func corpusCases() []pkgCase {
 		{"pkg/compiled-missing-digests", func(t testing.TB) []byte {
 			return zipOf(without(hostile(t), digest.File))
 		}},
+		{"pkg/compiled-stale", func(t testing.TB) []byte {
+			// The combined schema and the references index both disagree
+			// with what the sources derive, as a .compiled/ left from an
+			// earlier packing would: two independent findings of one step.
+			// A stale .compiled/manifest.json is not among them, since its
+			// comparison gates the version check both derivations follow
+			// (ADR-002 D11 item 8).
+			es := hostile(t)
+			es = edit(es, ".compiled/schema.json", func(e *zentry) {
+				e.content = bytes.Replace(e.content, []byte(`"required":["report"]`), []byte(`"required":[]`), 1)
+			})
+			es = edit(es, ".compiled/references.json", func(e *zentry) {
+				e.content = []byte(`{"references":[{"lines":1,"path":"references/x.md","size":4,"text":true,"title":null}]}`)
+			})
+			return zipOf(withDigests(es))
+		}},
 
 		// Digests (D17 item 4; ADR-001 Conformance, Digests).
 		{"pkg/digest-not-listed", func(t testing.TB) []byte {

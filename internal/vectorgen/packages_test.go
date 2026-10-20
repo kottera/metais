@@ -437,7 +437,7 @@ func packageCases() []pkgCase {
 				e.content = bytes.ReplaceAll(e.content, []byte(`,"`), []byte(`, "`))
 			}))
 		}},
-}, corpusCases()...)
+	}, corpusCases()...)
 }
 
 // centralHeaders is the offset of each central directory header of b, by
