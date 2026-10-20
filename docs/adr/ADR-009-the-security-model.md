@@ -277,6 +277,7 @@ it at its defaults.
 | `path-depth` | 32 components | the same paths | |
 | `manifest-size` | 1 MiB | `metais.yaml`, and `.compiled/manifest.json` | a manifest is prose plus declarations |
 | `schema-size` | 4 MiB | one schema entry | a regulator's field glossary fits |
+| `schema-yaml-size` | 1 MiB | one schema entry in YAML, a name ending `.yaml` or `.yml`, refused before it is read (Amendment A6 item 5) | yaml/v3 builds the whole node tree before any value can be counted: a 4 MiB YAML schema file peaked at 1376 MiB; a file of `const: [0, …]` at 1 MiB peaks at 221 to 311 MiB alone, and at 2 MiB at 436 to 592 MiB, past 40% of 1 GiB (calibration record sha256 `8b577376…f03e9c88`, logs/ADR-009/W7-C9.md) |
 | `combined-schema-size` | 16 MiB | `.compiled/`'s combined input schema, and the tool's own derivation of it | inlining `$ref`s duplicates subschemas, so an author can build a small schema whose inlined form is exponential; `pack` refuses it and so does every reader |
 | `schema-depth` | 64 | nesting of subschemas | recursion in validators and in the cross-reference check |
 | `schema-subschemas` | 20,000 | the subschemas of all a package's schema files together, and of the combined schema as a whole (Amendment A1 item 1) | the library's compile time is quadratic in the subschema count; FHIR R4's 15,521 fit |
@@ -296,8 +297,8 @@ it at its defaults.
 |---|---|---|---|
 | `input-size` | 32 MiB | one input file, one collection item, one `--inputs-json`, `--set` or `--set-json` value, standard input | parsed values occupy several times their source size |
 | `inputs-total` | 128 MiB | all input bytes one command reads | keeps peak memory within D17's ceiling |
-| `input-values` | 1,000,000 | the data-model values decoded from all of one command's inputs, counted as each reader decodes them (Amendment A4 item 1) | memory spent loading inputs grows with the values decoded, not the bytes read; the joint cases of Amendment A4 item 3 peak at 697 to 815 MiB, and 1,100,000 at 882 MiB (calibration record sha256 `2d8032e6…cba1a4a`, logs/ADR-009/W7-C6.md) |
-| `yaml-size` | 1 MiB | one YAML input file or collection item, refused before it is parsed (Amendment A4 item 2) | yaml/v3 builds the whole node tree, about 160 B a node, before any value can be counted; a document of flow zeros at 1 MiB peaks at 215 to 306 MiB alone, and at 2 MiB at 495 to 601 MiB, past 40% of 1 GiB (calibration record sha256 `2d8032e6…cba1a4a`, logs/ADR-009/W7-C6.md) |
+| `input-values` | 500,000 | the data-model values decoded from all of one command's inputs, counted as each reader decodes them (Amendment A4 item 1) | memory spent loading inputs grows with the values decoded, not the bytes read; halved by Amendment A6 item 4 so that a render holds its inputs, its outputs and a validated output together within 1 GiB, the joint render case (calibration record sha256 `8b577376…f03e9c88`, logs/ADR-009/W7-C9.md) |
+| `yaml-size` | 1 MiB | one YAML input file or collection item, and one rendered output validated as YAML, refused before it is parsed (Amendments A4 item 2, A6 item 3) | yaml/v3 builds the whole node tree, about 160 B a node, before any value can be counted; a document of flow zeros at 1 MiB peaks at 215 to 306 MiB alone, and at 2 MiB at 495 to 601 MiB, past 40% of 1 GiB (calibration record sha256 `2d8032e6…cba1a4a`, logs/ADR-009/W7-C6.md) |
 | `csv-rows` | 1,000,000 | data rows in one CSV input | `input-values` binds first at the defaults, since each row costs at least two values; `csv-rows` still bounds a CSV when a caller lowers `input-values` (Amendment A4 item 4) |
 | `csv-columns` | 1,024 | fields per record | |
 | `csv-cell` | 1 MiB | one field | |
@@ -318,7 +319,8 @@ it at its defaults.
 | `outputs` | 100,000 | files one render plans, assets, containers and container entries included (ADR-005 D13) | one per item of a full collection |
 | `container-depth` | 3 | zip containers nested inside one another (ADR-005 D8 item 4) | a submission zip holding a `.docx` is a real case; deeper is not |
 | `output-size` | 128 MiB | one written file, including a container and a copied asset | a render holds an output in a growing buffer, about 2.3 times its size at its peak; with `output-total` it holds the render within D18 item 2's 1 GiB (Amendment A3) |
-| `output-total` | 512 MiB | all bytes one render writes, or writes to standard output | a render holds every output until it writes them, so its peak is about this plus 1.3 times `output-size`: 914 MiB at these defaults (Amendment A3) |
+| `output-total` | 256 MiB | all bytes one render writes, or writes to standard output | a render holds every output until it writes them, so its peak is about this plus 1.3 times `output-size`; halved by Amendment A6 item 4 to hold the joint render case within 1 GiB (calibration record sha256 `8b577376…f03e9c88`, logs/ADR-009/W7-C9.md) |
+| `output-values` | 400,000 | the data-model values decoded from one validated output, counted as its reader decodes them, per output (Amendment A6 item 3) | a validated output's parse costs about 290 B a value in JSON and 360 B in YAML; the joint render case peaks at 992 to 1000 MiB with a JSON output at 400,000 values and 1001 to 1003 MiB with a YAML output at `yaml-size`, and at 500,000 at 1020 to 1026 MiB (calibration record sha256 `8b577376…f03e9c88`, logs/ADR-009/W7-C9.md) |
 | `findings` | 100,000 | findings one command reports | a result bound (D2 item 6) |
 | `grep-matches` | 10,000 | matches `grep` reports | a result bound (D2 item 6) |
 | `grep-context` | 7 lines | lines of context per match | a larger `-C` is refused; `grep` holds about 5 KiB for each line it shows, `grep-matches` times twice this plus one, so 7 peaks at 738 MiB (Amendment A3) |
