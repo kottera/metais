@@ -475,3 +475,43 @@ func TestCheckCompiledLimits(t *testing.T) {
 		t.Errorf("at the bound: %q", lines(t, fs))
 	}
 }
+
+// TestCheckOutputPaths is MTS-AUT-080, the plan orchestrator's Wave 7
+// ruling: check refuses an output path the manifest writes literally that
+// every render refuses, with the render's finding, alone and together; a
+// path template's path, a declaration with a when, and an asset's root
+// destination are left to the render.
+func TestCheckOutputPaths(t *testing.T) {
+	files := checkFiles()
+	files["metais.yaml"] = checkManifest + `    path: ../escape.txt
+  - id: computed
+    template: report.md.liquid
+    path: "{{ package.name }}/../escape.txt"
+  - id: first
+    template: report.md.liquid
+    path: a.md
+  - id: again
+    template: report.md.liquid
+    path: a.md
+  - id: sometimes
+    template: report.md.liquid
+    path: a.md
+    when: package.name == "example"
+  - id: everything
+    asset: .
+    path: .
+`
+	files["assets/logo.txt"] = "logo\n"
+	want := []string{
+		`output.path.shape metais.yaml#/outputs/0/path path="../escape.txt" reason="dot_segment"`,
+		`output.path.duplicate metais.yaml#/outputs/3/path path="a.md"`,
+	}
+	if got := lines(t, runCheck(t, files)); !slices.Equal(got, want) {
+		t.Errorf("findings\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+	files["metais.yaml"] = strings.Replace(files["metais.yaml"], "path: ../escape.txt", "path: escape.txt", 1)
+	files["metais.yaml"] = strings.Replace(files["metais.yaml"], "  - id: again\n    template: report.md.liquid\n    path: a.md\n", "", 1)
+	if fs := runCheck(t, files); len(fs) > 0 {
+		t.Errorf("portable paths: findings %q", lines(t, fs))
+	}
+}
