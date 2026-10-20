@@ -543,7 +543,9 @@ func runGrep(s *session, p args.Parsed) outcome {
 	if refused != nil {
 		return *refused
 	}
-	maxResults, refused := s.count(p, "max-results", 100, 1, lim.Value(limits.GrepMatches))
+	// grep-matches bounds what is reported (ADR-009 D2 item 6), so a
+	// lowered limit caps the default too.
+	maxResults, refused := s.count(p, "max-results", min(100, lim.Value(limits.GrepMatches)), 1, lim.Value(limits.GrepMatches))
 	if refused != nil {
 		return *refused
 	}
