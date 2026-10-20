@@ -588,7 +588,8 @@ func (k *checker) containers(outs []manifest.Output, owner string, depth int) []
 // declarations with no when and no for_each, which every render plans
 // once, are checked together, and a container's entries as a tree of
 // their own, to container-depth, as a render plans them; a reserved
-// entry, which a render plans nowhere, is left out of its tree. in is the
+// entry, which a render plans nowhere, is left out of its tree, and a
+// container nested deeper than container-depth is left out whole. in is the
 // container whose entries outs are, and nil for the output directory.
 func (k *checker) outputPaths(outs []manifest.Output, in *manifest.Container, owner string, depth int) []finding.Finding {
 	var out []finding.Finding
@@ -599,6 +600,11 @@ func (k *checker) outputPaths(outs []manifest.Output, in *manifest.Container, ow
 	}
 	var tree []literal
 	for _, d := range outs {
+		if d.Container != nil && int64(depth) >= k.lim.Value(limits.ContainerDepth) {
+			// A render plans nothing of a container nested deeper than
+			// container-depth, its own path included; containers reports it.
+			continue
+		}
 		id := cmp.Or(d.ID, owner)
 		subj := finding.Subject{Kind: finding.SubjectOutput, Name: id}
 		p, ptr, ok := staticPath(d)
@@ -612,11 +618,11 @@ func (k *checker) outputPaths(outs []manifest.Output, in *manifest.Container, ow
 				out = append(out, templates.PathFinding(pr, subj, loc, finding.Params{"path": finding.String(p)}, true, k.lim))
 			}
 			_, _, planned := staticPath(d)
-			if planned && len(problems) == 0 && d.When == "" && d.ForEach == "" && (in == nil || in.CheckEntry(p) != manifest.EntryReserved) {
+			if planned && d.When == "" && d.ForEach == "" && (in == nil || in.CheckEntry(p) != manifest.EntryReserved) {
 				tree = append(tree, literal{p, subj, loc})
 			}
 		}
-		if d.Container != nil && int64(depth) < k.lim.Value(limits.ContainerDepth) {
+		if d.Container != nil {
 			out = append(out, k.outputPaths(d.Container.Entries, d.Container, id, depth+1)...)
 		}
 	}
