@@ -207,7 +207,7 @@ format.
 | `%C` | the year divided by 100, rounded down, two digits |
 | `%y` | the year modulo 100, two digits |
 | `%Y` | the year, four digits |
-| `%G` | the year of the ISO 8601 week, four digits |
+| `%G` | the year of the [ISO 8601](A-references.md#iso8601) week, four digits |
 | `%m` | the month, `01` to `12` |
 | `%d` | the day of the month, `01` to `31` |
 | `%e` | the day of the month, two characters, padded with a space |

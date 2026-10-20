@@ -105,7 +105,7 @@ validation §7.3 cites for it, and MUST report a string that is not of its
 format with `input.format`; a value that is not a string passes. Where those
 definitions leave a choice: `date-time`'s `T` and `Z`, and `time`'s `Z`, may be
 lower case; a leap second, second 60, is valid only where the time, moved to
-UTC by its offset, is 23:59:60; an `email` is RFC 5321's `Mailbox`, a quoted
+UTC by its offset, is 23:59:60; an `email` is [RFC 5321](A-references.md#rfc5321)'s `Mailbox`, a quoted
 local part and an IPv4 or `IPv6:` address literal included; a `hostname` has no
 trailing dot; an `ipv4` octet has no leading zero; an `ipv6` address has no
 zone; a `uuid` is the 8-4-4-4-12 form of hexadecimal digits of either case; and
