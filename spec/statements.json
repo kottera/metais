@@ -183,6 +183,7 @@
     {"id": "MTS-PTH-007", "chapter": "11-rendering.md", "section": "11.4", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-PTH-008", "chapter": "11-rendering.md", "section": "11.4", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-PTH-009", "chapter": "11-rendering.md", "section": "11.4", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-PTH-010", "chapter": "11-rendering.md", "section": "11.4", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-RND-001", "chapter": "11-rendering.md", "section": "11.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-RND-002", "chapter": "11-rendering.md", "section": "11.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-RND-003", "chapter": "11-rendering.md", "section": "11.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
