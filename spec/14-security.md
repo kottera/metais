@@ -112,9 +112,9 @@ references when the chain ends, before it compiles any schema.
 
 <a id="mts-sec-035"></a>**MTS-SEC-035** A processor MUST enforce
 `value-depth` and `number-length` while it parses the manifest and each schema
-file: it MUST refuse each array or object nested deeper than `value-depth`
-allows with `limit.package` located at it, reading nothing nested beneath
-it, and each number literal longer than `number-length` bytes with
+file: it MUST refuse each array or object at the first depth beyond
+`value-depth` with one `limit.package` located at it, reporting nothing nested
+beneath it, and each number literal longer than `number-length` bytes with
 `limit.package` located at it, before converting it to a number.
 
 ## 14.2 Entry confinement

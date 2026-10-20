@@ -1,16 +1,14 @@
 {
   "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
-  "id": "sec/manifest-tag-include",
-  "title": "An !include tag is refused, and nothing is read",
+  "id": "man/hostile-merge-key",
+  "title": "A merge key is refused, and nothing is merged",
   "statements": [
     "MTS-MAN-005",
     "MTS-MAN-024"
   ],
   "since": "1.0",
   "class": "processor",
-  "tags": [
-    "security"
-  ],
+  "tags": [],
   "requires": [],
   "notes": "",
   "cases": [

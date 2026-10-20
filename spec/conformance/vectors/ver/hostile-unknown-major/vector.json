@@ -1,9 +1,10 @@
 {
   "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
-  "id": "sec/manifest-multi-document",
-  "title": "A second YAML document is refused",
+  "id": "ver/hostile-unknown-major",
+  "title": "A manifest declaring an unknown major specification version is refused at the version gate",
   "statements": [
-    "MTS-MAN-004"
+    "MTS-VER-004",
+    "MTS-VER-006"
   ],
   "since": "1.0",
   "class": "processor",

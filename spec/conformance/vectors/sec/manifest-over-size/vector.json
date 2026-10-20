@@ -3,8 +3,8 @@
   "id": "sec/manifest-over-size",
   "title": "A manifest over a lowered manifest-size is refused before it is parsed",
   "statements": [
-    "MTS-MAN-020",
-    "MTS-SEC-001"
+    "MTS-SEC-001",
+    "MTS-MAN-020"
   ],
   "since": "1.0",
   "class": "processor",

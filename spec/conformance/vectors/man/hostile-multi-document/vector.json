@@ -1,16 +1,13 @@
 {
   "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
-  "id": "sec/manifest-billion-laughs",
-  "title": "Billion laughs: nine anchors whose aliases would expand to 9⁹ strings are refused as written, never expanded",
+  "id": "man/hostile-multi-document",
+  "title": "A second YAML document is refused",
   "statements": [
-    "MTS-MAN-005",
-    "MTS-MAN-024"
+    "MTS-MAN-004"
   ],
   "since": "1.0",
   "class": "processor",
-  "tags": [
-    "security"
-  ],
+  "tags": [],
   "requires": [],
   "notes": "",
   "cases": [

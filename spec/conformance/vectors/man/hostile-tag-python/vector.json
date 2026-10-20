@@ -1,15 +1,14 @@
 {
   "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
-  "id": "sec/manifest-duplicate-key",
-  "title": "A repeated key is refused, and neither value is taken",
+  "id": "man/hostile-tag-python",
+  "title": "A !!python/object tag is refused, and nothing is constructed",
   "statements": [
-    "MTS-MAN-006"
+    "MTS-MAN-005",
+    "MTS-MAN-024"
   ],
   "since": "1.0",
   "class": "processor",
-  "tags": [
-    "security"
-  ],
+  "tags": [],
   "requires": [],
   "notes": "",
   "cases": [
