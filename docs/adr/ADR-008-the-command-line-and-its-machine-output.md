@@ -1296,6 +1296,295 @@ asserts of refusals. D14, D15 items 1 and 5, and D16 item 2 are unchanged.
    matched by its family's pattern. D16 item 2's per-code test reads the
    declaration, which names every code, so it still proves every one.
 
+### A2 — `metais skill` writes metais's agent skill into a project, for the harness that will read it
+
+**Status:** Accepted 2026-10-20 by Ed Funnekotter, with rulings on items 3
+and 4, given in answer to the design question of the work order that
+drafted it. The text states the rulings.
+**Amends:** D1 item 1 (a command in the group "The tool"), D4 (which
+commands take `--limit`), D9 (nothing: `skill` is not an authoring
+command), D10 item 5 (a format, `metais.skill/1`), D13's roles (a command
+that opens no package), D14 item 3 (its next step) and D15 item 4 (no new
+topic). ADR-009 A5 decides its host access. No conformance vector changes:
+like every command, `skill` is the reference tool's contract, not the
+format's (Conformance; Proposed ruling 7), and the specification does not
+mention it.
+
+1. **Why.** A coding agent that meets a `.metais` file learns what it is
+   from the package's README (ADR-001 A1, A2), and what to run from
+   `metais --help`. On 2026-10-20 a fresh Claude Code session asked to
+   "fill this file: report.metais", with metais on `PATH`, unzipped the
+   package before running the tool, pulled field lists out of
+   `metais schema --json` with ad-hoc scripts (two of which printed
+   nothing), and hand-wrote a placeholder data directory. Every current
+   harness loads an *agent skill* — a directory holding a `SKILL.md` with
+   a `name` and a `description` in YAML frontmatter — into its context by
+   name and description before the first command, and reads the whole
+   file when a task matches. A skill puts the golden paths in front of the
+   agent before it improvises. The tool writes its own skill, so the text
+   always describes the tool that wrote it.
+
+2. **The command**:
+
+   `metais skill [--harness <name>]... [--dir <dir>] [--overwrite] [--dry-run] [--print] [--json]`
+
+   - It writes one file, `SKILL.md`, to `<dir>/.claude/skills/metais/`,
+     `<dir>/.agents/skills/metais/`, or both (item 3), creating the
+     missing directories, and lists what it did to each.
+   - **`--print`** writes the skill's text to standard output and touches
+     nothing, for a harness item 3 does not cover; it takes no other flag
+     but `--json`. With `--json` the text is the result's `text` member.
+   - **One command, not `skill install` and `skill print`.** D1 has one
+     level of command name, and the parser, the help declaration, the
+     help goldens and the format names (`metais.<command>/1`) all assume
+     it. A second level would be the first, for two verbs that differ
+     only in destination, where `render --out -` already shows how this
+     tool spells "to standard output" without a verb.
+   - It takes no package operand, no supply flag and no `--limit`: it
+     reads no package. D13 places it with `version`, `help` and `limits`
+     as a command that opens no package. It is in the group "The tool".
+   - **Exit codes:** 0 when every target was written or already current;
+     3 for a usage error, including no harness chosen (item 3) and an
+     unexpanded `~` (item 4); 5 (class `destination`) when a copy someone
+     edited (item 5), a link, a special file or a failed write stands in
+     the way. Each target is
+     decided on its own: one refused target does not stop another's
+     write, and the exit code is the worst of them (D13's order).
+
+3. **Choosing the harness**. Five harnesses are named, and
+   they read two places (item 6 cites each vendor's documentation):
+
+   | `--harness` | Directory written, under `<dir>` |
+   |---|---|
+   | `claude` | `.claude/skills/metais/SKILL.md` |
+   | `codex`, `gemini`, `cursor`, `opencode` | `.agents/skills/metais/SKILL.md` |
+
+   - **`--harness` is repeatable.** Names that share a directory write it
+     once, and the result lists every name the directory serves.
+   - **Both directories are written only when the command line asks for
+     both**, by `--harness` given once for each. Cursor and OpenCode also
+     read `.claude/skills/`, so a project with both copies shows them the
+     skill twice under one name; that is the caller's choice to make, never
+     the tool's.
+   - **Without `--harness`, the tool detects**, from which of `.claude/`
+     and `.agents/` exist as directories directly in `<dir>`. When exactly
+     one exists, it is the target. Detection is reported, never silent:
+     human output says "chosen because `.claude/` exists", and the JSON
+     result's `chosen` is `flag` or `detected`, with the target's
+     `because`.
+   - **When neither exists, or both do, and no `--harness` is given, it
+     refuses** (`usage.harness_required`, exit 3) and writes nothing. The
+     message says the command needs direction and why (neither directory,
+     or both), and names the five values. The `next` lists the
+     single-harness form for each value (`metais skill --harness claude`,
+     `metais skill --harness codex`, …) and the two-flag form that writes
+     both directories, `metais skill --harness claude --harness codex`.
+     It never picks a harness the project shows no sign of, and never
+     picks between two it does.
+
+4. **Scope**. **The golden path is the project: `<dir>` is
+   `.`, the current directory.** `--dir <dir>` names another directory, and
+   the user's own scope is `--dir ~`, written with a space, which the shell
+   expands: every
+   harness's user directory is `~/.claude/skills` or `~/.agents/skills`
+   (Gemini and OpenCode read `~/.agents/skills` beside their own). The
+   tool never reads `$HOME` or asks the operating system for the home
+   directory (ADR-009 D12, D14 item 1; A5 item 3).
+   - **`--dir=~` is not expanded.** Bash and zsh expand a `~` only at the
+     start of a word, so `--dir=~` and `--dir=~/x` reach the tool with a
+     literal `~`. Help, examples and `next` therefore write `--dir ~` alone.
+     A `--dir` whose value is `~`, or whose first path element is `~`, is
+     refused (`usage.unexpanded_tilde`, exit 3) and nothing is written:
+     its hint says the shell did not expand the `~`, which happens when it
+     follows `=`, and to write `--dir ~` with a space or the directory's
+     path. A directory literally named `~` is written `--dir ./~`.
+   - **The tool does not look for the repository's top level.** Claude
+     Code, Codex and OpenCode read project skills from the start
+     directory and every parent up to the repository root; Gemini CLI's
+     workspace is the start directory; Cursor's is the opened folder. So a
+     skill at the top level serves every harness, and one in a
+     subdirectory serves sessions started there or below. Finding the top
+     level means walking up the parents looking for `.git`, a read of the
+     host above the directory the caller named, which ADR-009 A5 item 2
+     does not allow.
+   - Instead, **when `<dir>` holds no `.git` entry, the result carries a
+     warning** (`output.destination.not_repository_root`, severity warning, exit 0):
+     the skill serves harnesses started in that directory or below, and
+     running `metais skill` at the repository's top level serves the whole
+     repository. With `--dir ~` that warning is expected and correct, and
+     says so.
+
+5. **Updates and hand edits**. The skill's text is embedded
+   in the binary and versioned with it (item 7). Every written `SKILL.md`
+   ends with one line the tool owns:
+
+   `<!-- metais skill: version <tool version>, sha256 <hex> -->`
+
+   where `<hex>` is the SHA-256 of every byte before that line. An HTML
+   comment is invisible to a Markdown reader and is passed to the model
+   as one short line. On each target the tool reads the existing
+   `SKILL.md`, if any (at most 64 KiB; ADR-009 A5 item 2), and decides:
+
+   | Existing file | Action, and `action` in JSON |
+   |---|---|
+   | none | written — `installed` |
+   | last line is a well-formed stamp whose digest matches, and its version and text equal this tool's | nothing — `unchanged` |
+   | stamp's digest matches, but the version or text differs | replaced — `updated` |
+   | no stamp, a malformed stamp, a digest that does not match, or larger than 64 KiB | left untouched — `edited`, finding `output.destination.edited` (error, exit 5); next: `metais skill --overwrite` |
+   | same, with `--overwrite` | replaced — `replaced` |
+
+   - **A file whose digest matches was written by some `metais` and never
+     edited**, so replacing it loses nothing; the version in the stamp is
+     reported (`from`) so a downgrade is visible.
+   - **Anything else is somebody's work**, and the tool does not decide it
+     is disposable. `--overwrite` is the consent, per target.
+   - `--dry-run` decides every target, writes nothing, and reports the
+     action each would take (`would_install`, `would_update`, …). It is
+     how a person or a harness asks "is my skill current?".
+   - **No staleness warning in `inspect` or `version`.** Either would have
+     to read the working directory, which neither does today and ADR-009
+     D7 confines them from doing: `inspect` reads a package, `version`
+     reads nothing. `metais skill --dry-run` answers the question, and the
+     skill's own text tells the agent to run it when `metais version`
+     differs from the stamp it was installed with.
+
+6. **The harnesses' discovery paths**, checked on 2026-10-20 against each
+   vendor's documentation:
+   - **Claude Code** reads `.claude/skills/<name>/SKILL.md` in the start
+     directory and each parent up to the repository root, nested
+     `.claude/skills/` below it on first use, and `~/.claude/skills/`. It
+     does not read `.agents/skills/`.
+     <https://code.claude.com/docs/en/skills>
+   - **Codex** reads `.agents/skills/<name>/SKILL.md` in every directory
+     from the working directory up to the repository root, then
+     `$HOME/.agents/skills`, `/etc/codex/skills` and its bundled skills.
+     Its own `skill-installer` still writes `~/.codex/skills`
+     (openai/skills#420), which the documentation no longer names; METAIS
+     follows the documentation. <https://developers.openai.com/codex/skills>
+   - **Gemini CLI** reads `.gemini/skills/` and its documented alias
+     `.agents/skills/` in the workspace, and `~/.gemini/skills/` and
+     `~/.agents/skills/` for the user; within a tier the `.agents` alias
+     wins. <https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/skills.md>,
+     <https://geminicli.com/docs/cli/using-agent-skills/>
+   - **Cursor** reads `.agents/skills/` and `.cursor/skills/` in the
+     project, `~/.cursor/skills/` for the user, and for compatibility
+     `.claude/skills/`, `.codex/skills/` and their home-directory forms.
+     <https://cursor.com/docs/skills>
+   - **OpenCode** reads `.opencode/skills/`, `.claude/skills/` and
+     `.agents/skills/` from the working directory up to the worktree root,
+     and `~/.config/opencode/skills/`, `~/.claude/skills/` and
+     `~/.agents/skills/`. Its documentation added the `.agents` paths on
+     2026-02-04 (anomalyco/opencode#12067), so an OpenCode older than that
+     needs `--harness claude`. Its v2 documentation lists the same project
+     and global directories. <https://opencode.ai/docs/skills/>
+
+   Every one of the four `.agents/skills` harnesses reads
+   `.agents/skills/<name>/SKILL.md` in the project, so none needs a
+   directory of its own. The common frontmatter rules hold the skill to
+   `name` (lowercase letters, digits and single hyphens, at most 64
+   characters, equal to its directory's name) and `description`; OpenCode
+   refuses any other field but `license`, `compatibility` and `metadata`,
+   so the skill's frontmatter holds `name` and `description` alone.
+
+   **Re-checked when the command was built** (2026-10-20). The vendors'
+   web pages cannot be fetched from the build host, so each path was
+   re-checked against the vendor's own source where it publishes one:
+   - Gemini CLI against `docs/cli/skills.md` in google-gemini/gemini-cli;
+   - OpenCode against `packages/web/src/content/docs/skills.mdx` and the
+     v2 `services/www/src/docs/content/skills.mdx` in anomalyco/opencode;
+   - Codex against its loader, `codex-rs/ext/skills/src/host_roots.rs` in
+     openai/codex, which reads `.agents/skills` in each directory from the
+     project root to the working directory and in the home directory
+     (the repository's `docs/skills.md` points to the web page);
+   - Claude Code by the live check of the built command, recorded in this
+     amendment's implementation log. The `.agents/skills` text in its
+     binary belongs to its importer, which copies other harnesses' skills
+     into `.claude/skills`; it is not a discovery path.
+
+   Cursor publishes no source for its documentation, so its paths stand on
+   its web page as found by search, and are not re-checked here. Every
+   path re-checked matched; nothing in item 3 changes. A vendor's later
+   change is a further amendment.
+
+7. **The skill's text**.
+   - **Its source is `internal/skill/SKILL.md`, embedded with `go:embed`**
+     by the package that writes it. It is the tool's documentation, not
+     the format's, so it is not under `spec/`; and keeping the source
+     where it is embedded means there is no second copy to drift.
+   - **Its drift test runs against the commands instead.** Every
+     `metais <command> …` line in the text must parse under that
+     command's help declaration (D15): the command exists, and every flag
+     it names is declared. A renamed command or flag fails the test until
+     the skill says the new name. A second test holds the frontmatter to
+     item 6's rules, and a third holds the text under 16 KiB, so a harness
+     that reads every skill whole is not taxed.
+   - `metais skill --print` with no other flag prints exactly the embedded
+     text and its stamp, and a golden holds that output, like the help
+     goldens, regenerated by `regenerate.sh`.
+   - **What it says**, written for a model working from nothing:
+     - what a `.metais` file is, and that it is read in place with
+       `metais`: never unzipped, never read from its raw bytes;
+     - the consuming path, command by command: `metais inspect`, then the
+       `read`s, `schema`s and example listings its "Read next" names, then
+       `validate --data`, then `render --data --out`;
+     - how to get the fields: `metais schema <package> <input>` prints a
+       JSON Schema to write to a file or read whole; with `--json` the
+       schema is the result's `schema` member; never scrape `--json`
+       output with ad-hoc text tools;
+     - the data directory's file names, from `inspect`'s `files`, and
+       `metais help inputs` for `--set` and `--inputs-json`;
+     - **never invent facts for a real document**: data comes from the
+       person or from sources they name; a value nobody supplied is asked
+       for, not guessed. Fictional data only when the person asks for it,
+       and then `metais sample --to <dir>` or a shipped example's
+       `inputs/`, never hand-made placeholders;
+     - the authoring path: `init`, `render --sample`, `check`, `test`,
+       `pack`, and `unpack` to edit a packed package;
+     - reading `--json`: one document, `ok`, `findings`, `next`; follow
+       `next`;
+     - where to look when stuck: `metais help`, `metais help <command>`,
+       `metais help inputs`, `metais help refusals <command>`;
+     - keeping it current: `metais skill --dry-run`.
+
+8. **The JSON result**, `metais.skill/1`, defined by
+   `docs/cli/schemas/metais.skill.1.json`:
+   `{"skill":"metais","version":"<tool version>","chosen":"flag"|"detected"|null,"targets":[{"path":".claude/skills/metais/SKILL.md","harnesses":["claude"],"because":"flag"|".claude/ exists","action":"installed"|"unchanged"|"updated"|"edited"|"replaced"|"would_install"|"would_update"|"would_replace","from":"<stamp version>"|null}],"text":null}`.
+   With `--print`, `chosen` is `null`, `targets` is `[]` and `text` is the
+   skill. Paths are relative to `<dir>`, which is never echoed (D11 item
+   5); in `next`, `<dir>` is the placeholder `<dir>`.
+
+9. **Next** (D14 item 3): after a write, `metais help` and, for each
+   harness written, nothing harness-specific — the skill is picked up by
+   the harness on its next session, which the human output says. After
+   `edited`: `metais skill --overwrite` and `metais skill --print`, to
+   compare. After `usage.harness_required`: item 3's list. After
+   `usage.unexpanded_tilde`: `metais skill --dir ~`.
+
+10. **Help and its goldens.** `skill` is declared like every command (D15),
+    so `metais skill --help`, `metais help skill`, the overview's group
+    "The tool", `help --json`, the help goldens and D16 item 1's coverage
+    test carry it. Its refusals are `usage.harness_required`,
+    `usage.unexpanded_tilde`, `output.destination.edited` and the
+    destination codes `hostfs` reports (`output.destination.link` and the
+    write failures); `output.destination.not_repository_root` is a
+    warning. The four new codes are registered in
+    `spec/findings/registry.json` like every code the tool reports, with
+    no statements, as the `usage.*` codes are: chapter 12's generated
+    catalog lists them with no statement, and no other text of the
+    specification and no vector changes. They belong to the families
+    ADR-006 D3 item 2 already lists, so no family is added:
+    `output.destination.edited` is class `destination`;
+    `output.destination.not_repository_root` is a warning of class
+    `content`, since a warning refuses nothing; and `usage.harness_required` and `usage.unexpanded_tilde` are
+    class `usage`.
+
+11. **What this does not decide.** Installing for a harness by its own
+    command (`claude plugin`, `gemini skills install`); a skill per
+    package, written from a package's guide — that would put package
+    content into a host file, which ADR-009 A5 item 4 refuses; and
+    writing under `.gemini/skills`, `.cursor/skills` or `.opencode/skills`,
+    which each harness reads but none needs.
+
 ## Implementation log
 
 This log is this section together with the entry files in
