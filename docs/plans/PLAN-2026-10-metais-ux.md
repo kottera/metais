@@ -143,30 +143,29 @@ Made in the 2026-10-20 session:
   `internal/vectorgen`, not written by hand (Work Order `01a15ad6`).
 - **R-UX-4.** The package README names `metais inspect` (ADR-001 A2, merged
   in #177).
-
-For Ed to rule before this plan merges:
-
-- **Q-UX-1, the scorecard's thresholds.**
-  - *Lean:* every consuming scenario passes on Opus, Sonnet and Haiku, and
-    every authoring scenario passes on Opus and Sonnet. Haiku's authoring
-    results are recorded, not gated.
+- **R-UX-5, the scorecard's thresholds (Q-UX-1).**
+  - Every consuming scenario passes on Opus, Sonnet and Haiku, and every
+    authoring scenario passes on Opus and Sonnet. Haiku's authoring results
+    are recorded, not gated.
   - *A pass means:* the first `metais` command of a consuming scenario is
     `inspect`; no zip extraction; no unknown-command error; and the
     scenario's own outcome check holds. For a real document that check is
     asking rather than inventing; otherwise it is `validate` with 0 errors
     and a rendered output.
-- **Q-UX-2, where the runs happen.**
-  - *Lean:* Wave 1's first item proves whether a dispatch can run a nested
-    `claude -p` with the isolation `docs/dev/ux-testing.md` requires: its own
-    credential, no host memory, no user settings, no MCP. If it can, the
-    waves run the harness from dispatches. If it cannot, each scorecard
-    becomes an off-tera act on Ed's host (§6), and the dispatches build only
-    the runner and the scorer.
-- **Q-UX-3, harnesses beyond Claude Code.**
-  - *Lean:* the runner takes the harness as a parameter. Claude Code is the
-    only one this train gates on. A `.agents/skills` harness (Codex or
-    OpenCode) is run once in Wave 3 if one can be installed on a host, and
-    its results recorded.
+- **R-UX-6, harnesses beyond Claude Code (Q-UX-3).** The runner takes the
+  harness as a parameter, and Claude Code is the only one this train gates
+  on. A `.agents/skills` harness (Codex or OpenCode) is run once in Wave 3
+  if one can be installed on a host, and its results recorded.
+
+Open, before this plan merges:
+
+- **Q-UX-2, where the runs happen.** Can a dispatch run a nested `claude -p`
+  with the isolation `docs/dev/ux-testing.md` requires: its own credential,
+  no host memory, no user settings, no MCP? Ed asked for the answer before
+  this plan merges, and Work Order `01a15b3b` is probing it.
+  - If it can, the waves run the harness from dispatches.
+  - If it cannot, each scorecard becomes an off-tera act on Ed's host (§6),
+    and the dispatches build only the runner and the scorer.
 
 ## 5. Wave 1 — the harness and the baseline
 
@@ -226,7 +225,7 @@ a number for today's binary.
 
 | Act | When | Who | Before | Notes |
 |---|---|---|---|---|
-| Rule Q-UX-1 to Q-UX-3 | now | Ed | this plan's merge | §4 |
+| Rule Q-UX-2, on probe `01a15b3b`'s verdict | now | Ed | this plan's merge | §4 |
 | Accept ADR-008 A2 and ADR-009 A5 (the skill), drafted in metais#179 | now | Ed | `01a15ad7`'s build | That Work Order is parked on the question, together with whether to install a `.agents/skills` harness on the dispatch host |
 | Run a scorecard on Ed's host | each of Wave 1's baseline and Wave 3's runs, only if Q-UX-2 finds a dispatch cannot | Ed | that wave's verification | The runner and the scenarios are the Wave 1 item's. Ed runs one command and publishes the scorecard. |
 | Add Wave 2's orchestrator to T-A3's `depends_on` | when Wave 2 is filed | the plan orchestrator, or Ed | the v1.0 release | R-UX-1 |
