@@ -284,10 +284,10 @@ func TestInspectOpensTheScaffold(t *testing.T) {
 	}
 }
 
-// TestInspectExamplesInNameOrder is ADR-008 D6 item 7 under ADR-004's
-// iteration order (W7-C3): inspect lists a package's examples by name in
-// code-point order, every run alike, and the Read next list's example step
-// names the first of them. The package has seven examples, so a list built
+// TestInspectExamplesInNameOrder is ADR-008 D6 items 7 and 8 (W7-C3):
+// inspect lists a package's examples in name order, names compared by code
+// point as ADR-004 compares strings, every run alike, and the Read next
+// list's example step names the first of them. The package has seven examples, so a list built
 // in map order differs from name order within a few runs.
 func TestInspectExamplesInNameOrder(t *testing.T) {
 	testenv.Home(t)
