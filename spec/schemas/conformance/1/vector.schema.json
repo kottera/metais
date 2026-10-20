@@ -193,7 +193,7 @@
                 "title": "Name",
                 "description": "The path's new last segment.",
                 "type": "string",
-                "pattern": "^[^/\\u0000]*[:\\\\][^/\\u0000]*$"
+                "pattern": "^[^/\\x00]*[:\\\\][^/\\x00]*$"
               }
             }
           }

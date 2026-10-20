@@ -9,7 +9,7 @@
   "class": "processor",
   "tags": [],
   "requires": [],
-  "notes": "manifest.any_of and manifest.one_of.ambiguous have no case: the 1.0 manifest schema's one anyOf is beneath a not, and no value matches two of its closed oneOf branches.",
+  "notes": "manifest.any_of and manifest.one_of.ambiguous are not registered (ADR-006 A1): the 1.0 manifest schema's one anyOf is beneath a not, and no value matches two of its closed oneOf branches.",
   "cases": [
     {
       "name": "const",
