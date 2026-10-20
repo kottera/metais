@@ -4,9 +4,11 @@
 package conformance
 
 import (
+	"encoding/json"
 	"maps"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -203,7 +205,11 @@ func TestHarnessReach(t *testing.T) {
 	if len(entries) < 2 {
 		t.Fatalf("rnd/archive's package has %d entries", len(entries))
 	}
-	want := map[string]int{"ls": 2, "read": 2 * len(entries), "grep": 2, "schema": 2, "extract": 2, "render": 4}
+	var names []string
+	for _, e := range entries {
+		names = append(names, e.name)
+	}
+	want := reachWant(names)
 	again := v.Cases[0]
 	again.Name = "again"
 	for _, c := range []*vcase{&v.Cases[0], &again} {
@@ -255,8 +261,7 @@ func TestHarnessReach(t *testing.T) {
 			reach := run.steps[len(c.Steps)]
 			counts := map[string]int{}
 			for _, inv := range reach.invs {
-				cmd, _, _ := strings.Cut(strings.TrimPrefix(inv.label, "reach: "), " ")
-				counts[cmd]++
+				counts[reachSignature(inv.args)]++
 				for _, a := range inv.args {
 					if a == "package" || strings.HasPrefix(a, reachPrefix) {
 						t.Errorf("%s: %s gives a relative path %q", c.Name, inv.label, a)
@@ -268,6 +273,104 @@ func TestHarnessReach(t *testing.T) {
 			}
 			if len(reach.trees) != 2 {
 				t.Errorf("%s, environment %s: the reach read %d extract trees, want 2", c.Name, e, len(reach.trees))
+			}
+		}
+	}
+}
+
+// reachWant is ADR-009 D16 item 1's reach over a package of the entries
+// named, as reachSignature writes each command line: ls --recursive, read
+// of every entry, outline of every Markdown entry, grep over every entry,
+// schema, extract, and render with --dry-run and to standard output, each
+// in JSON and in human form. It is written from the decision, not from
+// reachCommands, so a command the reach stops running is missing here.
+func reachWant(entries []string) map[string]int {
+	lines := []string{"ls <path> --recursive"}
+	for _, e := range entries {
+		lines = append(lines, "read <path> "+e)
+		if ext := strings.ToLower(path.Ext(e)); ext == ".md" || ext == ".markdown" {
+			lines = append(lines, "outline <path> "+e)
+		}
+	}
+	lines = append(lines,
+		"grep <path> . ** .compiled/**",
+		"schema <path>",
+		"extract <path> ** --to <path>",
+		"render <path> --out <path> --dry-run",
+		"render <path> --out -",
+	)
+	want := map[string]int{}
+	for _, l := range lines {
+		want[l+", json"]++
+		want[l+", human"]++
+	}
+	return want
+}
+
+// reachSignature is a reach command line as reachWant writes it: its
+// arguments without --json and the limits, every absolute path as
+// <path>, and its form.
+func reachSignature(args []string) string {
+	form := "human"
+	var sig []string
+	for i := 0; i < len(args); i++ {
+		switch a := args[i]; {
+		case a == "--json":
+			form = "json"
+		case a == "--limit":
+			i++
+		case filepath.IsAbs(a):
+			sig = append(sig, "<path>")
+		default:
+			sig = append(sig, a)
+		}
+	}
+	return strings.Join(sig, " ") + ", " + form
+}
+
+// TestReachCommands pins the command lines of the reach over a package
+// with Markdown entries, which no vector TestHarnessReach can afford to
+// run has: outline is run over each Markdown entry, by either extension
+// in any case, and over no other, and every other command of ADR-009 D16
+// item 1 is run once in each form. It runs no process.
+func TestReachCommands(t *testing.T) {
+	work := testenv.Dir(t)
+	entries := []string{"README.md", "docs/guide.MARKDOWN", "metais.yaml", "notes.mdx", "templates/t.md.liquid"}
+	for _, e := range entries {
+		p := filepath.Join(work, "package", filepath.FromSlash(e))
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte("x\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	sb := &sandbox{work: work, abs: true}
+	st := &step{Op: "render", args: stepArgs{Package: "package", Limits: map[string]json.RawMessage{"outputs": json.RawMessage("2")}}}
+	cmds, err := (&runner{}).reachCommands(sb, reachTarget{operand: "package", supply: st}, 0, "owner")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]int{}
+	for _, c := range cmds {
+		got[reachSignature(c.args)]++
+		if !slices.Contains(c.args, "--limit") {
+			t.Errorf("%s does not take the step's limits", c.label())
+		}
+	}
+	want := reachWant(entries)
+	if want["outline <path> README.md, json"] != 1 || want["outline <path> docs/guide.MARKDOWN, human"] != 1 || len(want) != 2*13 {
+		t.Fatalf("reachWant gives %v", want)
+	}
+	if !maps.Equal(got, want) {
+		for k, n := range want {
+			if got[k] != n {
+				t.Errorf("the reach runs %q %d times, want %d", k, got[k], n)
+			}
+		}
+		for k, n := range got {
+			if _, ok := want[k]; !ok {
+				t.Errorf("the reach runs %q %d times, which D16 item 1 does not list", k, n)
 			}
 		}
 	}
