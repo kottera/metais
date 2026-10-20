@@ -1,0 +1,22 @@
+[
+  {
+    "code": "package.version.unsupported_major",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 1,
+      "column": 9,
+      "pointer": "/metais"
+    },
+    "params": {
+      "declared": "2.0",
+      "implemented": [
+        "1.0"
+      ]
+    }
+  }
+]

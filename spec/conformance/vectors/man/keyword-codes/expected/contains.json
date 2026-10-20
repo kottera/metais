@@ -1,0 +1,17 @@
+[
+  {
+    "code": "manifest.contains",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 11,
+      "column": 12,
+      "pointer": "/inputs/0/forms"
+    },
+    "params": {}
+  }
+]

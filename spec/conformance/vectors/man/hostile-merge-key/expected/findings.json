@@ -1,0 +1,17 @@
+[
+  {
+    "code": "manifest.yaml.merge_key",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {}
+  }
+]

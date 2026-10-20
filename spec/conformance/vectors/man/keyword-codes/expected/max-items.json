@@ -1,0 +1,20 @@
+[
+  {
+    "code": "manifest.max_items",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 8,
+      "column": 3,
+      "pointer": "/authors"
+    },
+    "params": {
+      "limit": 64,
+      "count": 65
+    }
+  }
+]

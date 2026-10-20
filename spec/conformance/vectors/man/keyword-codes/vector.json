@@ -1,0 +1,135 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "man/keyword-codes",
+  "title": "Each keyword code the manifest schema can produce, one package each: const, contains, dependentRequired, false, maxItems, minLength, oneOf and uniqueItems",
+  "statements": [
+    "MTS-MAN-019"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "manifest.any_of and manifest.one_of.ambiguous have no case: the 1.0 manifest schema's one anyOf is beneath a not, and no value matches two of its closed oneOf branches.",
+  "cases": [
+    {
+      "name": "const",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package-const"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/const.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "contains",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package-contains"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/contains.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "dependent-required",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package-dependent-required"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/dependent-required.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "forbidden",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package-forbidden"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/forbidden.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "max-items",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package-max-items"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/max-items.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "min-length",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package-min-length"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/min-length.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "one-of",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package-one-of"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/one-of.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unique-items",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package-unique-items"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/unique-items.json"
+          }
+        }
+      ]
+    }
+  ]
+}

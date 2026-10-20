@@ -1,0 +1,17 @@
+metais: "1.0"
+name: hostile
+version: 1.0.0
+title: Hostile
+description: A package that breaks one rule.
+guide: Supply a report.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+outputs:
+  - id: report
+    path: report.zip
+    container:
+      format: tar
+      entries:
+        - template: report.md.liquid

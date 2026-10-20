@@ -1,0 +1,19 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml"
+    },
+    "params": {
+      "limit": "manifest-size",
+      "bound": 262,
+      "lowered": true,
+      "observed": 263
+    }
+  }
+]

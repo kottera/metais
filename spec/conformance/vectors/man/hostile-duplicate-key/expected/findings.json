@@ -1,0 +1,17 @@
+[
+  {
+    "code": "manifest.yaml.duplicate_key",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 1,
+      "pointer": "/title"
+    },
+    "params": {}
+  }
+]

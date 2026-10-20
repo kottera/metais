@@ -1,0 +1,22 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "line": 1,
+      "column": 37,
+      "pointer": "/minProperties"
+    },
+    "params": {
+      "limit": "number-length",
+      "bound": 1024,
+      "lowered": false,
+      "observed": 1025
+    }
+  }
+]

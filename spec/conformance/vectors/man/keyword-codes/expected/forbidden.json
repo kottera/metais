@@ -1,0 +1,19 @@
+[
+  {
+    "code": "manifest.forbidden",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 17,
+      "pointer": "/outputs/0/container/mimetype"
+    },
+    "params": {
+      "property": "mimetype"
+    }
+  }
+]

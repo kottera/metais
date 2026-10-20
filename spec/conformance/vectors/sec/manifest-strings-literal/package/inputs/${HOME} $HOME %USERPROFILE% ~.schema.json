@@ -1,0 +1,8 @@
+{
+  "title": "${HOME} $HOME %USERPROFILE% ~",
+  "description": "${HOME} $HOME %USERPROFILE% ~",
+  "type": "object",
+  "properties": {
+    "s": {"type": "string", "default": "${HOME} $HOME %USERPROFILE% ~"}
+  }
+}

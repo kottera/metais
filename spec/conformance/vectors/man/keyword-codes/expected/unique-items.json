@@ -1,0 +1,20 @@
+[
+  {
+    "code": "manifest.unique_items",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 11,
+      "column": 19,
+      "pointer": "/inputs/0/forms/1"
+    },
+    "params": {
+      "index": 1,
+      "duplicate_of": 0
+    }
+  }
+]

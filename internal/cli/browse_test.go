@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/kottera/metais/internal/browse"
@@ -71,55 +72,45 @@ func result(t *testing.T, r ran, v any) {
 // vector produces yet, and the line codes lineCases proves for every
 // command, are excepted, as inspect's test excepts them.
 func TestReadingRefusalsTriggered(t *testing.T) {
-	testenv.Home(t)
+	var mu sync.Mutex
 	seen := map[string]map[string]bool{}
+	note := func(cmd string, codes []string) {
+		mu.Lock()
+		defer mu.Unlock()
+		if seen[cmd] == nil {
+			seen[cmd] = map[string]bool{}
+		}
+		for _, c := range codes {
+			seen[cmd][c] = true
+		}
+	}
 	run := func(argv ...string) ran {
 		t.Helper()
 		r := runTool(t, argv...)
-		if seen[argv[0]] == nil {
-			seen[argv[0]] = map[string]bool{}
-		}
-		for _, c := range r.codes() {
-			seen[argv[0]][c] = true
-		}
+		note(argv[0], r.codes())
 		return r
 	}
 	lines := map[string][]string{
 		"ls": {}, "read": {"metais.yaml"}, "outline": {"metais.yaml"}, "grep": {"x"}, "schema": {},
-		"extract": {"**", "--to", filepath.Join(testenv.Dir(t), "never")},
 	}
+	// The suite's packages are walked first, each package a parallel
+	// subtest within the gate's -parallel share, so the walk's wall time
+	// does not grow with the corpus one package at a time (R-W6-9a). It
+	// sets no environment, so it runs before testenv.Home, whose t.Setenv
+	// no parallel test may share; Run reads no environment, as ADR-009
+	// D16 item 3's symbol rule holds every non-test file outside hostenv
+	// to. Each package extracts to a destination of its own.
 	pkgs, _ := filepath.Glob(filepath.Join(vectorsDir, "*", "*", "package*"))
-	for _, p := range pkgs {
-		var limitArgs []string
-		if b, err := os.ReadFile(filepath.Join(filepath.Dir(p), "vector.json")); err == nil && bytes.Contains(b, []byte(`"limits"`)) {
-			var v struct {
-				Cases []struct {
-					Steps []struct {
-						Args struct {
-							Limits map[string]json.Number `json:"limits"`
-						} `json:"args"`
-					} `json:"steps"`
-				} `json:"cases"`
-			}
-			json.Unmarshal(b, &v)
-			for name, val := range v.Cases[0].Steps[0].Args.Limits {
-				limitArgs = append(limitArgs, "--limit", name+"="+val.String())
-			}
+	t.Run("suite", func(t *testing.T) {
+		for _, p := range pkgs {
+			name, _ := filepath.Rel(vectorsDir, p)
+			t.Run(filepath.ToSlash(name), func(t *testing.T) {
+				t.Parallel()
+				readSuitePackage(t, p, lines, note)
+			})
 		}
-		var want []string
-		for _, cmd := range append([]string{"inspect"}, readingCommands...) {
-			args := append(append([]string{cmd, "--json", p}, lines[cmd]...), limitArgs...)
-			if cmd == "inspect" {
-				want = run(args...).codes()
-				continue
-			}
-			// A refused package refuses every reading command with the
-			// findings inspect gives (ADR-011 D16 item 3).
-			if r := run(args...); len(want) > 0 && (!slices.Equal(r.codes(), want) || r.status != finding.ExitRefused) {
-				t.Errorf("metais %s over %s: %q and exit %d; inspect: %q", cmd, p, r.codes(), r.status, want)
-			}
-		}
-	}
+	})
+	testenv.Home(t)
 	pkg := browsePackage(t)
 	dest := testenv.Dir(t)
 	ro := filepath.Join(dest, "ro")
@@ -225,7 +216,7 @@ func TestReadingRefusalsTriggered(t *testing.T) {
 			t.Fatal(err)
 		}
 		for _, name := range readingCommands {
-			run(append([]string{name, "--json", dir}, lines[name]...)...)
+			run(append(append([]string{name, "--json", dir}, lines[name]...), extractTo(t, name)...)...)
 		}
 	}
 	unwired := map[string]bool{}
@@ -251,11 +242,57 @@ func TestReadingRefusalsTriggered(t *testing.T) {
 		}
 	}
 	for _, name := range readingCommands {
-		r := runTool(t, append([]string{name, "--json", filepath.Join(testenv.Dir(t), "absent")}, lines[name]...)...)
+		r := runTool(t, append(append([]string{name, "--json", filepath.Join(testenv.Dir(t), "absent")}, lines[name]...), extractTo(t, name)...)...)
 		if !slices.Equal(r.codes(), []string{"package.not_found"}) || r.status != finding.ExitRefused {
 			t.Errorf("metais %s of an absent package: %s", name, r.stdout)
 		}
 	}
+}
+
+// readSuitePackage runs inspect and every reading command over the
+// suite's package p, under the limits its vector's first step lowers, and
+// notes each command's codes. A package inspect refuses refuses every
+// reading command with inspect's findings and the refused exit (ADR-011
+// D16 item 3).
+func readSuitePackage(t *testing.T, p string, lines map[string][]string, note func(cmd string, codes []string)) {
+	var limitArgs []string
+	if b, err := os.ReadFile(filepath.Join(filepath.Dir(p), "vector.json")); err == nil && bytes.Contains(b, []byte(`"limits"`)) {
+		var v struct {
+			Cases []struct {
+				Steps []struct {
+					Args struct {
+						Limits map[string]json.Number `json:"limits"`
+					} `json:"args"`
+				} `json:"steps"`
+			} `json:"cases"`
+		}
+		json.Unmarshal(b, &v)
+		for name, val := range v.Cases[0].Steps[0].Args.Limits {
+			limitArgs = append(limitArgs, "--limit", name+"="+val.String())
+		}
+	}
+	var want []string
+	for _, cmd := range append([]string{"inspect"}, readingCommands...) {
+		args := append(append(append([]string{cmd, "--json", p}, lines[cmd]...), extractTo(t, cmd)...), limitArgs...)
+		r := runTool(t, args...)
+		note(cmd, r.codes())
+		if cmd == "inspect" {
+			want = r.codes()
+			continue
+		}
+		if len(want) > 0 && (!slices.Equal(r.codes(), want) || r.status != finding.ExitRefused) {
+			t.Errorf("metais %s over %s: %q and exit %d; inspect: %q", cmd, p, r.codes(), r.status, want)
+		}
+	}
+}
+
+// extractTo is extract's destination operands, a directory of t's own
+// that does not exist yet, and nothing for any other command.
+func extractTo(t *testing.T, cmd string) []string {
+	if cmd != "extract" {
+		return nil
+	}
+	return []string{"**", "--to", filepath.Join(testenv.Dir(t), "never")}
 }
 
 // TestReadingRefusalExits is ADR-008 D13 for the reading commands: a

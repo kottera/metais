@@ -1,0 +1,20 @@
+[
+  {
+    "code": "manifest.min_length",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 11,
+      "pointer": "/outputs/0/when"
+    },
+    "params": {
+      "limit": 1,
+      "length": 0
+    }
+  }
+]
