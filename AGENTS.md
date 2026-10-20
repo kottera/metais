@@ -95,7 +95,19 @@ for t in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64 windows
   GOOS=${t%/*} GOARCH=${t#*/} CGO_ENABLED=0 go build ./...
 done
 go generate ./internal/specdata && git diff --exit-code internal/specdata
+# the SC7 reach: one invocation per group of at most 25 vectors of an area
+go test -race -count=1 -run '^TestHostIsolation$/^<area>$/^(<slug>|…)$' \
+  ./internal/conformance -args -conformance.reach
 ```
+
+The last step is the SC7 harness's every-command reach (ADR-009 D16 item
+1) over every vector. Every `go test` runs that reach only over the
+canaries' probes and in `TestHarnessReach`. Over the whole suite it is
+more than one `go test` binary can run within its ten-minute timeout at the
+gate's share of the host. So the wave tier runs it in groups of one area's
+vectors, each group in its own invocation under the same timeout and share
+(R-W6-3, plan orchestrator, 2026-10-20). It runs at the wave's verification
+and again before a release.
 
 Run either tier in the background, and watch it with `gate-wait.sh` until
 it says `DONE`. After a fix, or after a rebase onto a sibling,

@@ -25,7 +25,15 @@ every step's verdict.
   - `internal/guarantees`' tests of the specification's text;
   - the specdata drift.
 - **The wave tier** is AGENTS.md's full list: every package under
-  `go test -race`, and every other step.
+  `go test -race`, and every other step. Its last steps, `reach <area>
+  <first slug>`, run the SC7 harness's every-command reach over every
+  vector (R-W6-3). Each is `TestHostIsolation` with `-conformance.reach`
+  over at most 25 vectors of one area (`METAIS_GATE_REACH_CHUNK` sets the
+  size), in its own `go test` invocation, so each stays within the
+  ten-minute timeout. A group that runs fewer vectors than it selects
+  fails. Every `go test` runs the reach over the canaries' probes and in
+  `TestHarnessReach` alone, so a harness that stops catching a leak is
+  red in either tier.
 - **The shared seams** are `go.mod`, `go.sum`, `internal/fault`,
   `internal/testenv` and this skill's scripts. A change to one needs both
   tiers. The scoped run says so in its log, with a `NOTE`.
