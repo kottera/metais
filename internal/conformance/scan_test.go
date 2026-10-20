@@ -215,3 +215,74 @@ func scanWritten(f finder, sb *sandbox, before, after map[string]node, trees []s
 	}
 	return ps
 }
+
+// packedFiles are the regular files step st created or changed in the work
+// directory, by work-directory path, when st is a pack: the packages it
+// wrote (ADR-009 D16 item 1).
+func packedFiles(st *step, before, after map[string]node) []string {
+	if st.Op != "pack" {
+		return nil
+	}
+	var packed []string
+	for _, p := range sortedKeys(after) {
+		if rel, ok := strings.CutPrefix(p, "work/"); ok && after[p].kind == "file" && before[p] != after[p] {
+			packed = append(packed, rel)
+		}
+	}
+	return packed
+}
+
+// scanPacked scans a package pack wrote for f's hits: its raw bytes and
+// every entry decompressed, and each zip inside one, to zipDepth levels
+// (ADR-009 D16 item 1). What a pack writes is a package, so one the scan
+// cannot read as a package from its first byte is itself a hit: a prefix
+// a zip reader reads past would otherwise keep its entries from the scan.
+func scanPacked(f finder, name string, b []byte) string {
+	if hit := scanFor(f, name, b, zipDepth); hit != "" {
+		return hit
+	}
+	if !isZip(b) {
+		return fmt.Sprintf("%s does not begin as a package, so the scan cannot see inside it", name)
+	}
+	return ""
+}
+
+// scanPackages scans each file of packed, by work-directory path, as a
+// package pack wrote (scanPacked).
+func scanPackages(f finder, sb *sandbox, packed []string) []problem {
+	var ps []problem
+	for _, rel := range packed {
+		name := "the package pack wrote, " + rel
+		if src := f.find([]byte(rel)); src != "" && src != "the sandbox path" {
+			ps = append(ps, problem{check: f.check, msg: fmt.Sprintf("%s: its path holds %s %s", name, f.holds, src)})
+		}
+		b, err := os.ReadFile(filepath.Join(sb.work, filepath.FromSlash(rel)))
+		if err != nil {
+			ps = append(ps, problem{check: checkHarness, harness: true, msg: err.Error()})
+			continue
+		}
+		if hit := scanPacked(f, name, b); hit != "" {
+			ps = append(ps, problem{check: f.check, msg: hit})
+		}
+	}
+	return ps
+}
+
+// withoutFiles is trees without the files packed names, by work-directory
+// path, which scanPackages scans instead.
+func withoutFiles(trees map[string]*tree, packed []string) map[string]*tree {
+	if len(packed) == 0 {
+		return trees
+	}
+	out := make(map[string]*tree, len(trees))
+	for root, t := range trees {
+		kept := &tree{files: map[string]treeFile{}}
+		for n, f := range t.files {
+			if !slices.Contains(packed, path.Join(path.Clean(root), n)) {
+				kept.files[n] = f
+			}
+		}
+		out[root] = kept
+	}
+	return out
+}

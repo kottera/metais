@@ -357,16 +357,23 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 			run.problems = append(run.problems, r.expectations(v, si, st, sr)...)
 		}
 		archive, _, _ := st.args.stream()
+		// The packages a pack step wrote are scanned as packages, and
+		// left out of the scan of every other written file.
+		packed := packedFiles(st, before, after)
 		for _, f := range finders {
-			for _, p := range scanWritten(f, sb, before, after, append(treePaths, excluded...)) {
+			for _, p := range scanWritten(f, sb, before, after, slices.Concat(treePaths, excluded, packed)) {
 				p.step = si + 1
 				run.problems = append(run.problems, p)
 			}
 			for _, inv := range invs {
-				for _, p := range scanInvocation(f, inv, archive, sr.trees) {
+				for _, p := range scanInvocation(f, inv, archive, withoutFiles(sr.trees, packed)) {
 					p.step, p.where = si+1, inv.label
 					run.problems = append(run.problems, p)
 				}
+			}
+			for _, p := range scanPackages(f, sb, packed) {
+				p.step = si + 1
+				run.problems = append(run.problems, p)
 			}
 		}
 	}
