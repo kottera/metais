@@ -91,3 +91,10 @@ const UpdateBeyondExpected Set = 1 << 8
 // differ between two packs of one source by one build (ADR-007 D7 item
 // 4). Its seam is internal/author.
 const PackMapOrder Set = 1 << 9
+
+// ColourJSON makes a JSON document written to a terminal coloured, its
+// bytes between an SGR sequence and the reset, whatever NO_COLOR and
+// --color say (ADR-008 D16 item 6): the presentation test must catch a
+// document that depends on whether standard output is a terminal. Its
+// seam is internal/cli.
+const ColourJSON Set = 1 << 10

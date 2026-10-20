@@ -113,6 +113,10 @@ func (s *session) emit(o outcome) int {
 		if canaryLeak != nil && o.dataDir != "" {
 			fb = canaryLeak(fb, o.dataDir)
 		}
+		if s.inv.Options.Faults.Has(fault.ColourJSON) && isTerminal(stdout) {
+			write(stdout, []byte("\x1b[1m"))
+			defer write(stdout, []byte("\x1b[0m"))
+		}
 		writeJSON(stdout, envelope{
 			Format:   s.line.format(),
 			OK:       status == finding.ExitOK && sum.Errors == 0,

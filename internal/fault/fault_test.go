@@ -47,6 +47,7 @@ func TestFaultBits(t *testing.T) {
 		"StdoutNotice":         {StdoutNotice, 1 << 7},
 		"UpdateBeyondExpected": {UpdateBeyondExpected, 1 << 8},
 		"PackMapOrder":         {PackMapOrder, 1 << 9},
+		"ColourJSON":           {ColourJSON, 1 << 10},
 	} {
 		if tt.got != tt.want {
 			t.Errorf("%s = %#x, want %#x", name, uint64(tt.got), uint64(tt.want))
