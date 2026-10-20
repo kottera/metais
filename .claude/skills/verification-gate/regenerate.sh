@@ -22,6 +22,7 @@
 set -u
 
 here=$(cd "$(dirname "$0")" && pwd) || exit 2
+. "$here/git-env.sh" || exit 2
 root=$(git rev-parse --show-toplevel 2>/dev/null) || {
 	echo "regenerate: not inside a git checkout" >&2
 	exit 2
