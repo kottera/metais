@@ -1,0 +1,194 @@
+[
+  {
+    "code": "input.any_of",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "v",
+      "title": "V"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "v.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/v.schema.json",
+      "pointer": "/anyOf",
+      "keyword": "anyOf"
+    },
+    "field": {
+      "title": "V"
+    },
+    "params": {
+      "branch_count": 2
+    },
+    "alternatives": [
+      {
+        "branch": 0,
+        "findings": [
+          {
+            "code": "input.any_of",
+            "severity": "error",
+            "subject": {
+              "kind": "input",
+              "name": "v",
+              "title": "V"
+            },
+            "location": {
+              "origin": "data_dir",
+              "file": "v.json",
+              "line": 1,
+              "column": 1,
+              "pointer": ""
+            },
+            "schema": {
+              "entry": "inputs/v.schema.json",
+              "pointer": "/anyOf/0/anyOf",
+              "keyword": "anyOf"
+            },
+            "field": {
+              "title": "V"
+            },
+            "params": {
+              "branch_count": 2
+            },
+            "alternatives": [
+              {
+                "branch": 0,
+                "findings": [
+                  {
+                    "code": "input.type",
+                    "severity": "error",
+                    "subject": {
+                      "kind": "input",
+                      "name": "v",
+                      "title": "V"
+                    },
+                    "location": {
+                      "origin": "data_dir",
+                      "file": "v.json",
+                      "line": 1,
+                      "column": 1,
+                      "pointer": ""
+                    },
+                    "schema": {
+                      "entry": "inputs/v.schema.json",
+                      "pointer": "/anyOf/0/anyOf/0/type",
+                      "keyword": "type"
+                    },
+                    "field": {
+                      "title": "V"
+                    },
+                    "params": {
+                      "expected": [
+                        "string"
+                      ],
+                      "actual": "number"
+                    }
+                  }
+                ],
+                "omitted": 0
+              },
+              {
+                "branch": 1,
+                "findings": [
+                  {
+                    "code": "input.type",
+                    "severity": "error",
+                    "subject": {
+                      "kind": "input",
+                      "name": "v",
+                      "title": "V"
+                    },
+                    "location": {
+                      "origin": "data_dir",
+                      "file": "v.json",
+                      "line": 1,
+                      "column": 1,
+                      "pointer": ""
+                    },
+                    "schema": {
+                      "entry": "inputs/v.schema.json",
+                      "pointer": "/anyOf/0/anyOf/1/type",
+                      "keyword": "type"
+                    },
+                    "field": {
+                      "title": "V"
+                    },
+                    "params": {
+                      "expected": [
+                        "boolean"
+                      ],
+                      "actual": "number"
+                    }
+                  }
+                ],
+                "omitted": 0
+              }
+            ]
+          }
+        ],
+        "omitted": 0
+      },
+      {
+        "branch": 1,
+        "findings": [
+          {
+            "code": "input.any_of",
+            "severity": "error",
+            "subject": {
+              "kind": "input",
+              "name": "v",
+              "title": "V"
+            },
+            "location": {
+              "origin": "data_dir",
+              "file": "v.json",
+              "line": 1,
+              "column": 1,
+              "pointer": ""
+            },
+            "schema": {
+              "entry": "inputs/v.schema.json",
+              "pointer": "/anyOf/1/anyOf",
+              "keyword": "anyOf"
+            },
+            "field": {
+              "title": "V"
+            },
+            "params": {
+              "branch_count": 2
+            },
+            "alternatives": [
+              {
+                "branch": 0,
+                "findings": [],
+                "omitted": 1
+              },
+              {
+                "branch": 1,
+                "findings": [],
+                "omitted": 1
+              }
+            ]
+          }
+        ],
+        "omitted": 0
+      }
+    ]
+  },
+  {
+    "code": "report.truncated",
+    "severity": "info",
+    "subject": {
+      "kind": "report"
+    },
+    "params": {
+      "listed": 1,
+      "omitted": 1
+    }
+  }
+]

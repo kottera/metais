@@ -34,10 +34,9 @@ type Report struct {
 	// flat counts each finding as one, whatever its alternatives list: a
 	// branch's cap counts its own findings (ADR-006 D6 item 6.4). A
 	// report's cap counts every finding it lists, those within
-	// alternatives too (MTS-FND-020).
+	// alternatives too (MTS-FND-020), and lists the findings it holds
+	// only while they leave the cap room.
 	flat bool
-	// weight is how many findings the listed findings list together.
-	weight int
 	groups map[[sha256.Size]byte]*group
 	listed itemHeap // the last listed finding first
 	spill  itemHeap // past the cap, tying with listed's first on the prefix; the first in order first
@@ -225,58 +224,46 @@ func (r *Report) count(f Finding) {
 	}
 }
 
-// lists is how many findings f counts for against the cap.
-func (r *Report) lists(f Finding) int {
-	if r.flat {
-		return 1
-	}
-	return f.listed
-}
-
-// insert lists it, and then trims the list to the cap.
+// insert lists it if the list has room or it sorts before the last listed
+// finding, and keeps whatever that pushes past the cap in the spill while
+// it ties with the new last listed finding on the prefix. Every finding in
+// the spill ties with the last listed one, so when that changes to one
+// earlier on the prefix, the whole spill goes: it sorts after every
+// finding that can still be listed.
+//
+// The list holds the first findings the cap could list were each to list
+// only itself. What each lists within its alternatives is counted when the
+// report is read (MTS-FND-020), since a duplicate that replaces a listed
+// finding can list less than it did, and so let in a finding after it.
 func (r *Report) insert(it *item) {
 	heap.Push(&r.listed, it)
-	r.weight += r.lists(it.f)
-	r.trim()
-}
-
-// trim takes off the list every finding that starts past the cap: one
-// that the findings before it fill the cap without (MTS-FND-020). The last
-// listed finding may still list more than is left; Findings cuts it short.
-// trim keeps what it takes off in the spill while it ties with the new
-// last listed finding on the prefix. Every finding in the spill ties with
-// the last listed one, so when that changes to one earlier on the prefix,
-// the whole spill goes: it sorts after every finding that can still be
-// listed.
-func (r *Report) trim() {
-	for r.listed.Len() > 0 && r.weight-r.lists(r.listed.items[0].f) >= r.max {
-		out := heap.Pop(&r.listed).(*item)
-		r.weight -= r.lists(out.f)
-		r.lost = true
-		if r.listed.Len() == 0 {
-			drop(out)
-			continue
+	if r.listed.Len() <= r.max {
+		return
+	}
+	out := heap.Pop(&r.listed).(*item)
+	r.lost = true
+	if r.listed.Len() == 0 {
+		drop(out)
+		return
+	}
+	last := r.listed.items[0].f
+	if comparePrefix(out.f, last) == 0 {
+		heap.Push(&r.spill, out)
+	} else {
+		drop(out)
+	}
+	if r.spill.Len() > 0 && comparePrefix(r.spill.items[0].f, last) != 0 {
+		for _, s := range r.spill.items {
+			drop(s)
 		}
-		last := r.listed.items[0].f
-		if comparePrefix(out.f, last) == 0 {
-			heap.Push(&r.spill, out)
-		} else {
-			drop(out)
-		}
-		if r.spill.Len() > 0 && comparePrefix(r.spill.items[0].f, last) != 0 {
-			for _, s := range r.spill.items {
-				drop(s)
-			}
-			r.spill.items = nil
-		}
+		r.spill.items = nil
 	}
 }
 
 func drop(it *item) { it.g.it = nil }
 
 // remove takes it out of the report, listing the first of the spill in its
-// place while the cap has room when it was listed. The spill sorts after
-// every listed finding, so the first of it starts where the list ends.
+// place when it was listed.
 func (r *Report) remove(it *item) {
 	drop(it)
 	if it.spilled {
@@ -284,45 +271,52 @@ func (r *Report) remove(it *item) {
 		return
 	}
 	heap.Remove(&r.listed, it.index)
-	r.weight -= r.lists(it.f)
-	for r.spill.Len() > 0 && r.weight < r.max {
-		in := heap.Pop(&r.spill).(*item)
-		heap.Push(&r.listed, in)
-		r.weight += r.lists(in.f)
+	if r.spill.Len() > 0 {
+		heap.Push(&r.listed, heap.Pop(&r.spill))
 	}
 }
 
-// omitted is how many distinct findings are counted and not listed.
+// omitted is how many distinct findings a flat report counts and does not
+// list.
 func (r *Report) omitted() int { return len(r.groups) - r.listed.Len() }
 
 // Findings returns the listed findings in D8's order, followed, when any
 // were omitted, by one report.truncated (D8 item 6).
 func (r *Report) Findings() []Finding {
 	out := r.sorted()
-	if n := r.omitted(); n > 0 {
-		out = append(out, r.truncated(n))
+	if n := len(r.groups) - len(out); n > 0 {
+		out = append(out, r.truncated(len(out), n))
 	}
 	return out
 }
 
-// sorted is the listed findings in D8's order, the last cut short to what
-// the cap has left for it (MTS-FND-021).
+// sorted is the listed findings in D8's order. Unless the report is flat,
+// each is listed while the findings before it, and what they list within
+// their alternatives, leave the cap room, and the last is cut short to
+// what is left (MTS-FND-020, MTS-FND-021).
 func (r *Report) sorted() []Finding {
 	out := make([]Finding, 0, r.listed.Len()+1)
 	for _, it := range r.listed.items {
 		out = append(out, it.f)
 	}
 	slices.SortFunc(out, Compare)
-	if !r.flat && r.weight > r.max {
-		last := len(out) - 1
-		out[last] = out[last].listAtMost(r.max - (r.weight - out[last].listed))
+	if r.flat {
+		return out
+	}
+	left := r.max
+	for i, f := range out {
+		if left == 0 {
+			return out[:i]
+		}
+		out[i] = f.listAtMost(left)
+		left -= out[i].listed
 	}
 	return out
 }
 
-func (r *Report) truncated(omitted int) Finding {
+func (r *Report) truncated(listed, omitted int) Finding {
 	return New(CodeReportTruncated, Subject{Kind: SubjectReport}, nil,
-		Params{"listed": Int(int64(r.listed.Len())), "omitted": Int(int64(omitted))})
+		Params{"listed": Int(int64(listed)), "omitted": Int(int64(omitted))})
 }
 
 // CodeCount is how many distinct findings of one code a report counted.
@@ -344,12 +338,13 @@ type Summary struct {
 
 // Summary returns the report's totals.
 func (r *Report) Summary() Summary {
+	listed := len(r.sorted())
 	s := Summary{
 		Errors:   r.sum.errors,
 		Warnings: r.sum.warnings,
 		Info:     r.sum.info,
-		Listed:   r.listed.Len(),
-		Omitted:  r.omitted(),
+		Listed:   listed,
+		Omitted:  len(r.groups) - listed,
 	}
 	by := make(map[Code]int, len(r.sum.byCode)+1)
 	for c, n := range r.sum.byCode {
