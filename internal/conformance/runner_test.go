@@ -114,6 +114,10 @@ type runner struct {
 	// command over each package the case names (harness_test.go). It
 	// needs the cli adapter.
 	sc7 bool
+	// reach, under sc7, runs every command over each package a case
+	// names (runReach). TestHostIsolation sets it over every vector only
+	// with -conformance.reach, R-W6-3.
+	reach bool
 	// facts, when set, are the real host facts check 2 looks for in
 	// every stream of both environments (hostfacts_test.go).
 	facts *hostFacts
@@ -260,8 +264,8 @@ func (r *runner) runCaseIn(v *vector, c *vcase, base string, mode pathMode) *cas
 // runEnv runs every step of c in one fresh sandbox of environment e, with
 // the paths its steps name given in mode. It checks the expectations when
 // expectations is set, and scans every stream with r's finders. Under the
-// SC7 harness, in the absolute-path mode, it then runs every command over
-// the case's packages (runReach).
+// SC7 harness with its reach, in the absolute-path mode, it then runs
+// every command over the case's packages (runReach).
 func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bool, mode pathMode) *envRun {
 	if r.slots != nil {
 		r.slots <- struct{}{}
@@ -366,7 +370,7 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 			}
 		}
 	}
-	if r.sc7 && mode == absPaths && !run.fatal() {
+	if r.sc7 && r.reach && mode == absPaths && !run.fatal() {
 		r.runReach(run, v, c, finders, last)
 	}
 	return run

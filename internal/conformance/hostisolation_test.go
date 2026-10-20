@@ -68,7 +68,7 @@ func hostRunner(t *testing.T, program string) (*runner, string) {
 	}
 	r := newRunner(t, suite, a)
 	r.short = false
-	r.sc7 = true
+	r.sc7, r.reach = true, true
 	vocab, err := toolVocabulary(program, testenv.Dir(t))
 	if err != nil {
 		t.Fatal(err)
@@ -83,22 +83,30 @@ func hostRunner(t *testing.T, program string) (*runner, string) {
 
 // TestHostIsolation is ADR-009 D16 item 1's harness: the release build
 // runs every vector of the suite under the SC7 harness, in the sentinel
-// and the plain environment and in both path modes, every case followed
-// by every command over each package it names, and must give no hit on
-// any channel — check 1, the sentinel scan of every stream and of every
-// file the step wrote anywhere in its sandbox; check 2, the host's real
-// facts; check 3, the differential; and check 4, nothing written outside —
-// and no crash (D18 item 2). Each vector's own expectations hold in both
-// path modes too.
+// and the plain environment and in both path modes, and must give no hit
+// on any channel — check 1, the sentinel scan of every stream and of
+// every file the step wrote anywhere in its sandbox; check 2, the host's
+// real facts; check 3, the differential; and check 4, nothing written
+// outside — and no crash (D18 item 2). Each vector's own expectations hold
+// in both path modes too.
+//
+// With -conformance.reach, every case's absolute-path run is followed by
+// every command over each package it names. Over every vector that is
+// some 29,000 processes, more than one go test binary can run within its
+// ten-minute timeout at the gate's share of the host, so the wave tier
+// runs it, one area to an invocation (R-W6-3, plan orchestrator,
+// 2026-10-20). Every go test runs the reach over the canaries' probes and
+// in TestHarnessReach, so a harness that stops catching a leak is red in
+// every run.
 //
 // TestConformance runs ADR-011 D12's environments alone, so its default
-// run stays within ADR-011 D11 item 9's budget; this test carries the
-// harness's reach.
+// run stays within ADR-011 D11 item 9's budget.
 func TestHostIsolation(t *testing.T) {
 	if builtTool == "" {
 		t.Skip("runs the release build of ./cmd/metais, which -conformance.tool replaces")
 	}
 	r, _ := hostRunner(t, releaseBuild(t))
+	r.reach = *flagReach
 	before := procStarted.Load()
 	t.Cleanup(func() { t.Logf("the harness ran %d processes", procStarted.Load()-before) })
 	runSuite(t, r)
