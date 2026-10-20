@@ -207,3 +207,36 @@ func TestBranchKeepsWhatItLists(t *testing.T) {
 		t.Errorf("the branch holds %d findings, more than it lists", b.r.listed.Len())
 	}
 }
+
+// TestEncodeFlushes holds EncodeJSON and EncodeHuman to AppendJSON's and
+// AppendHuman's bytes, and to handing them over a finding at a time: a
+// finding whose alternatives list many is written without being held as
+// one encoding.
+func TestEncodeFlushes(t *testing.T) {
+	withTestCodes(t)
+	f := tree()
+	for _, tc := range []struct {
+		name   string
+		want   []byte
+		encode func(b []byte, flush func([]byte) []byte) []byte
+	}{
+		{"json", AppendJSON(nil, f)[1 : len(AppendJSON(nil, f))-1], func(b []byte, flush func([]byte) []byte) []byte { return EncodeJSON(b, f, flush) }},
+		{"human", AppendHuman(nil, false, f), func(b []byte, flush func([]byte) []byte) []byte { return EncodeHuman(b, false, f, flush) }},
+	} {
+		var got []byte
+		chunks := 0
+		flush := func(b []byte) []byte {
+			got = append(got, b...)
+			chunks++
+			return b[:0]
+		}
+		flush(tc.encode(nil, flush))
+		if !bytes.Equal(got, tc.want) {
+			t.Errorf("%s: written a piece at a time\n got  %s\n want %s", tc.name, got, tc.want)
+		}
+		// One piece before each of the six findings within, and the last.
+		if chunks != 7 {
+			t.Errorf("%s: written in %d pieces, want 7", tc.name, chunks)
+		}
+	}
+}
