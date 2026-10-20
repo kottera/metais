@@ -1,0 +1,26 @@
+[
+  {
+    "code": "input.additional_property",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "vendor.json",
+      "line": 1,
+      "column": 2,
+      "pointer": "/\u001b[2J\u001b]0;pwn\u0007\u202eevil\u2066"
+    },
+    "schema": {
+      "entry": "inputs/closed.json",
+      "pointer": "/additionalProperties",
+      "keyword": "additionalProperties"
+    },
+    "params": {
+      "property": "\u001b[2J\u001b]0;pwn\u0007\u202eevil\u2066"
+    }
+  }
+]

@@ -1,0 +1,37 @@
+metais: "1.0"
+name: org.example.bounds
+version: 1.0.0
+title: Bounds
+description: A package whose inputs are read at the data limits' bounds.
+guide: Supply the inputs.
+inputs:
+  - name: doc
+    title: Doc
+    schema: inputs/any.json
+    required: false
+  - name: other
+    title: Other
+    schema: inputs/any.json
+    required: false
+  - name: table
+    title: Table
+    schema: inputs/any.json
+    forms: [csv]
+    required: false
+  - name: items
+    title: Items
+    schema: inputs/any.json
+    collection: true
+    required: false
+  - name: page
+    title: Page
+    schema: inputs/any.json
+    forms: [markdown]
+    required: false
+  - name: nums
+    title: Nums
+    schema: inputs/nums.json
+    required: false
+outputs:
+  - id: report
+    template: report.md.liquid

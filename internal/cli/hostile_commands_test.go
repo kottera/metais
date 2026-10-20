@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp/syntax"
 	"slices"
 	"strconv"
 	"strings"
@@ -16,6 +15,8 @@ import (
 	"time"
 
 	"github.com/kottera/metais/internal/finding"
+	"github.com/kottera/metais/internal/limits"
+	"github.com/kottera/metais/internal/regexprofile"
 	"github.com/kottera/metais/internal/testenv"
 )
 
@@ -141,18 +142,14 @@ func TestHostileGrepContext(t *testing.T) {
 }
 
 // programSize is the instruction count regex-program bounds for a grep
-// pattern: its regexp/syntax program, as ADR-009 D10 counts it.
+// pattern, as ADR-009 D10 counts it.
 func programSize(t *testing.T, pattern string) int {
 	t.Helper()
-	re, err := syntax.Parse(pattern, syntax.Perl)
+	re, err := regexprofile.CompileRE2(pattern, false, limits.Defaults(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	prog, err := syntax.Compile(re.Simplify())
-	if err != nil {
-		t.Fatal(err)
-	}
-	return len(prog.Inst)
+	return re.Instructions()
 }
 
 // TestHostileGrepPattern is pattern-length, regex-program and regex-work

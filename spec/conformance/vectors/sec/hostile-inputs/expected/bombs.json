@@ -1,0 +1,1744 @@
+[
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "deep",
+      "title": "Deep"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "deep.json",
+      "line": 1,
+      "column": 65,
+      "pointer": "/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+    },
+    "params": {
+      "limit": "value-depth",
+      "bound": 64,
+      "lowered": false
+    }
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "notes",
+      "title": "Notes"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "notes.md",
+      "line": 2,
+      "column": 4,
+      "pointer": "/a"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "notes",
+      "title": "Notes"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "notes.md",
+      "line": 3,
+      "column": 4,
+      "pointer": "/b"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "notes",
+      "title": "Notes"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "notes.md",
+      "line": 3,
+      "column": 8,
+      "pointer": "/b/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "notes",
+      "title": "Notes"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "notes.md",
+      "line": 3,
+      "column": 12,
+      "pointer": "/b/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "notes",
+      "title": "Notes"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "notes.md",
+      "line": 3,
+      "column": 16,
+      "pointer": "/b/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "notes",
+      "title": "Notes"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "notes.md",
+      "line": 4,
+      "column": 4,
+      "pointer": "/c"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "notes",
+      "title": "Notes"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "notes.md",
+      "line": 4,
+      "column": 8,
+      "pointer": "/c/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "notes",
+      "title": "Notes"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "notes.md",
+      "line": 4,
+      "column": 12,
+      "pointer": "/c/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "notes",
+      "title": "Notes"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "notes.md",
+      "line": 4,
+      "column": 16,
+      "pointer": "/c/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "page",
+      "title": "Page"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "page.md",
+      "line": 2,
+      "column": 67,
+      "pointer": "/a/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0/0"
+    },
+    "params": {
+      "limit": "value-depth",
+      "bound": 64,
+      "lowered": false
+    }
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 1,
+      "column": 4,
+      "pointer": "/a"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 2,
+      "column": 4,
+      "pointer": "/b"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 2,
+      "column": 8,
+      "pointer": "/b/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 2,
+      "column": 12,
+      "pointer": "/b/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 2,
+      "column": 16,
+      "pointer": "/b/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 2,
+      "column": 20,
+      "pointer": "/b/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 2,
+      "column": 24,
+      "pointer": "/b/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 2,
+      "column": 28,
+      "pointer": "/b/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 2,
+      "column": 32,
+      "pointer": "/b/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 2,
+      "column": 36,
+      "pointer": "/b/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 2,
+      "column": 40,
+      "pointer": "/b/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 3,
+      "column": 4,
+      "pointer": "/c"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 3,
+      "column": 8,
+      "pointer": "/c/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 3,
+      "column": 12,
+      "pointer": "/c/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 3,
+      "column": 16,
+      "pointer": "/c/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 3,
+      "column": 20,
+      "pointer": "/c/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 3,
+      "column": 24,
+      "pointer": "/c/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 3,
+      "column": 28,
+      "pointer": "/c/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 3,
+      "column": 32,
+      "pointer": "/c/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 3,
+      "column": 36,
+      "pointer": "/c/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 3,
+      "column": 40,
+      "pointer": "/c/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 4,
+      "column": 4,
+      "pointer": "/d"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 4,
+      "column": 8,
+      "pointer": "/d/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 4,
+      "column": 12,
+      "pointer": "/d/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 4,
+      "column": 16,
+      "pointer": "/d/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 4,
+      "column": 20,
+      "pointer": "/d/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 4,
+      "column": 24,
+      "pointer": "/d/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 4,
+      "column": 28,
+      "pointer": "/d/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 4,
+      "column": 32,
+      "pointer": "/d/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 4,
+      "column": 36,
+      "pointer": "/d/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 4,
+      "column": 40,
+      "pointer": "/d/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 5,
+      "column": 4,
+      "pointer": "/e"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 5,
+      "column": 8,
+      "pointer": "/e/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 5,
+      "column": 12,
+      "pointer": "/e/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 5,
+      "column": 16,
+      "pointer": "/e/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 5,
+      "column": 20,
+      "pointer": "/e/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 5,
+      "column": 24,
+      "pointer": "/e/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 5,
+      "column": 28,
+      "pointer": "/e/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 5,
+      "column": 32,
+      "pointer": "/e/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 5,
+      "column": 36,
+      "pointer": "/e/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 5,
+      "column": 40,
+      "pointer": "/e/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 6,
+      "column": 4,
+      "pointer": "/f"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 6,
+      "column": 8,
+      "pointer": "/f/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 6,
+      "column": 12,
+      "pointer": "/f/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 6,
+      "column": 16,
+      "pointer": "/f/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 6,
+      "column": 20,
+      "pointer": "/f/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 6,
+      "column": 24,
+      "pointer": "/f/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 6,
+      "column": 28,
+      "pointer": "/f/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 6,
+      "column": 32,
+      "pointer": "/f/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 6,
+      "column": 36,
+      "pointer": "/f/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 6,
+      "column": 40,
+      "pointer": "/f/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 7,
+      "column": 4,
+      "pointer": "/g"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 7,
+      "column": 8,
+      "pointer": "/g/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 7,
+      "column": 12,
+      "pointer": "/g/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 7,
+      "column": 16,
+      "pointer": "/g/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 7,
+      "column": 20,
+      "pointer": "/g/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 7,
+      "column": 24,
+      "pointer": "/g/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 7,
+      "column": 28,
+      "pointer": "/g/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 7,
+      "column": 32,
+      "pointer": "/g/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 7,
+      "column": 36,
+      "pointer": "/g/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 7,
+      "column": 40,
+      "pointer": "/g/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 8,
+      "column": 4,
+      "pointer": "/h"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 8,
+      "column": 8,
+      "pointer": "/h/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 8,
+      "column": 12,
+      "pointer": "/h/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 8,
+      "column": 16,
+      "pointer": "/h/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 8,
+      "column": 20,
+      "pointer": "/h/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 8,
+      "column": 24,
+      "pointer": "/h/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 8,
+      "column": 28,
+      "pointer": "/h/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 8,
+      "column": 32,
+      "pointer": "/h/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 8,
+      "column": 36,
+      "pointer": "/h/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 8,
+      "column": 40,
+      "pointer": "/h/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 9,
+      "column": 4,
+      "pointer": "/i"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 9,
+      "column": 8,
+      "pointer": "/i/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 9,
+      "column": 12,
+      "pointer": "/i/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 9,
+      "column": 16,
+      "pointer": "/i/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 9,
+      "column": 20,
+      "pointer": "/i/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 9,
+      "column": 24,
+      "pointer": "/i/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 9,
+      "column": 28,
+      "pointer": "/i/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 9,
+      "column": 32,
+      "pointer": "/i/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 9,
+      "column": 36,
+      "pointer": "/i/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 9,
+      "column": 40,
+      "pointer": "/i/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 10,
+      "column": 4,
+      "pointer": "/j"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 10,
+      "column": 8,
+      "pointer": "/j/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 10,
+      "column": 12,
+      "pointer": "/j/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 10,
+      "column": 16,
+      "pointer": "/j/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 10,
+      "column": 20,
+      "pointer": "/j/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 10,
+      "column": 24,
+      "pointer": "/j/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 10,
+      "column": 28,
+      "pointer": "/j/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 10,
+      "column": 32,
+      "pointer": "/j/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 10,
+      "column": 36,
+      "pointer": "/j/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml",
+      "line": 10,
+      "column": 40,
+      "pointer": "/j/8"
+    },
+    "params": {}
+  }
+]

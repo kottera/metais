@@ -1,0 +1,62 @@
+[
+  {
+    "code": "input.validation.partial",
+    "severity": "info",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items",
+      "pointer": ""
+    },
+    "params": {
+      "unparsed": 3,
+      "suppressed": 0
+    }
+  },
+  {
+    "code": "input.link",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/\u001b[31mred.json"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.link",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/a\nb.json"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.link",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/x\u202egnp.json"
+    },
+    "params": {}
+  }
+]

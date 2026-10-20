@@ -73,6 +73,11 @@ schema, stored or derived, has more than `schema-subschemas` with
 its first subschema past the limit, before it compiles the combined schema.
 A location in the combined schema is not bounded by `schema-location-length`.
 
+<a id="mts-sec-058"></a>**MTS-SEC-058** A limit's bound is the most an
+operation may use: a processor MUST accept a size, a count or a depth equal
+to the bound of the limit that bounds it, at the default or at a lower value
+a caller gives, and only one greater than the bound breaches the limit.
+
 ## 14.2 Entry confinement
 
 <a id="mts-sec-002"></a>**MTS-SEC-002** A processor MUST refuse every entry
