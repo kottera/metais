@@ -11,7 +11,7 @@
     "portable-paths"
   ],
   "requires": [],
-  "notes": "escape's ../escape.txt is the plan orchestrator's ruling's own case, which a render refuses with the same finding (pth/ vectors). dotted's default path is its template's name less .liquid, trailing., which ends in a dot. sometimes has a when, and computed's path is a path template, so neither is check's to judge; everything's destination is ., the output directory's root. files and site are an asset's and a mirror's destinations, each reported by its own path.",
+  "notes": "escape's ../escape.txt is the plan orchestrator's ruling's own case, which a render refuses with the same finding (pth/ vectors). dotted's default path is its template's name less .liquid, trailing., which ends in a dot. sometimes has a when, and computed's path is a path template, so neither is check's to judge; sometimes' NOTES.txt is a path of its own that would collide with first's Notes.txt, so a when-guarded path that entered the collision check would be a finding of its own; everything's destination is ., the output directory's root. files and site are an asset's and a mirror's destinations, each reported by its own path.",
   "cases": [
     {
       "name": "check",

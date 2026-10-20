@@ -1,0 +1,57 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-output-path-limits",
+  "title": "Check refuses an output path the manifest writes literally beyond path-length or path-depth with limit.package, the finding a render refuses it with",
+  "statements": [
+    "MTS-AUT-080"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "portable-paths",
+    "limits"
+  ],
+  "requires": [],
+  "notes": "long's path is one byte over path-length and deep's one segment over path-depth. A literal path is the package's own content, so both are limit.package, never limit.exceeded.output, which is a rendered path's; the render case is the same refusal, so check and render give one finding for each.",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package",
+            "limits": {
+              "path-length": 18,
+              "path-depth": 3
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "path-length": 18,
+              "path-depth": 3
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}
