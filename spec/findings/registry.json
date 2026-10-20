@@ -1927,6 +1927,7 @@
       "location": "value",
       "since": "1.0",
       "statements": [
+        "MTS-AUT-052",
         "MTS-PTH-007",
         "MTS-SEC-001",
         "MTS-SEC-011",
@@ -3688,6 +3689,27 @@
       ]
     },
     {
+      "code": "output.destination.in_package",
+      "severity": "error",
+      "class": "destination",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "entry",
+          "type": "string",
+          "meaning": "The top-level entry of the source directory that holds the output file: metais.yaml, when the output is the manifest itself, or the layout tree assets, examples, inputs, references or templates that it lies in.",
+          "always": true
+        }
+      ],
+      "message": "The output file would be written in the source directory's {entry}, which is part of the package being packed.",
+      "hint": "Write the package beside the layout trees, in the source directory itself or anywhere outside it; nothing was written.",
+      "location": "none",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-051"
+      ]
+    },
+    {
       "code": "output.destination.link",
       "severity": "error",
       "class": "destination",
@@ -3727,6 +3749,7 @@
       "since": "1.0",
       "statements": [
         "MTS-AUT-028",
+        "MTS-AUT-050",
         "MTS-RND-003",
         "MTS-RND-016",
         "MTS-SMP-006"
@@ -3809,6 +3832,7 @@
       "statements": [
         "MTS-AUT-026",
         "MTS-AUT-027",
+        "MTS-AUT-050",
         "MTS-RND-006",
         "MTS-RND-018",
         "MTS-RND-019",
@@ -7912,8 +7936,8 @@
           "always": true
         }
       ],
-      "message": "Argument {argument} writes the render's archive to standard output, which is a terminal, and an archive is not written to a terminal.",
-      "hint": "Redirect standard output to a file or a pipe, or select one file with --only <path>, whose bytes may go to a terminal.",
+      "message": "Argument {argument} writes an archive to standard output, which is a terminal, and an archive is not written to a terminal.",
+      "hint": "Redirect standard output to a file or a pipe; a render can instead select one file with --only <path>, whose bytes may go to a terminal.",
       "location": "none",
       "since": "1.0",
       "statements": []
@@ -8386,7 +8410,7 @@
           "always": true
         }
       ],
-      "message": "Argument {argument} names a packed package, and this writes into a source directory.",
+      "message": "Argument {argument} names a packed package, and this needs a source directory.",
       "hint": "Unpack it with metais unpack and give the source directory it writes; nothing was written.",
       "location": "none",
       "since": "1.0",

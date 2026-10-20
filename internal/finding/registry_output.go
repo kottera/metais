@@ -7,6 +7,7 @@ package finding
 const (
 	CodeDestinationCaseVariant    Code = "output.destination.case_variant"
 	CodeDestinationCommitFailed   Code = "output.destination.commit_failed"
+	CodeDestinationInPackage      Code = "output.destination.in_package"
 	CodeDestinationLink           Code = "output.destination.link"
 	CodeDestinationNotDirectory   Code = "output.destination.not_directory"
 	CodeDestinationNotEmpty       Code = "output.destination.not_empty"
@@ -169,6 +170,20 @@ var outputCodes = []Entry{
 		Statements: []string{"MTS-RND-022"},
 	},
 	{
+		Code:     "output.destination.in_package",
+		Severity: SeverityError,
+		Class:    ClassDestination,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "entry", Type: TypeString, Meaning: "The top-level entry of the source directory that holds the output file: metais.yaml, when the output is the manifest itself, or the layout tree assets, examples, inputs, references or templates that it lies in.", Always: true},
+		},
+		Message:    "The output file would be written in the source directory's {entry}, which is part of the package being packed.",
+		Hint:       "Write the package beside the layout trees, in the source directory itself or anywhere outside it; nothing was written.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{"MTS-AUT-051"},
+	},
+	{
 		Code:     "output.destination.link",
 		Severity: SeverityError,
 		Class:    ClassDestination,
@@ -194,7 +209,7 @@ var outputCodes = []Entry{
 		Hint:       "Name a directory, or a path that does not exist yet beneath directories only. Nothing was written.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-028", "MTS-RND-003", "MTS-RND-016", "MTS-SMP-006"},
+		Statements: []string{"MTS-AUT-028", "MTS-AUT-050", "MTS-RND-003", "MTS-RND-016", "MTS-SMP-006"},
 	},
 	{
 		Code:     "output.destination.not_empty",
@@ -238,7 +253,7 @@ var outputCodes = []Entry{
 		Hint:       "Fix the cause, and run the command again; there is nothing to remove first.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-026", "MTS-AUT-027", "MTS-RND-006", "MTS-RND-018", "MTS-RND-019", "MTS-RND-022", "MTS-SMP-008"},
+		Statements: []string{"MTS-AUT-026", "MTS-AUT-027", "MTS-AUT-050", "MTS-RND-006", "MTS-RND-018", "MTS-RND-019", "MTS-RND-022", "MTS-SMP-008"},
 	},
 	{
 		Code:       "output.destination.staging_exists",

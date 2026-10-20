@@ -47,8 +47,8 @@ var usageCodes = []Entry{
 		Params: []ParamSpec{
 			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of --out's value, -, among the arguments after metais.", Always: true},
 		},
-		Message:    "Argument {argument} writes the render's archive to standard output, which is a terminal, and an archive is not written to a terminal.",
-		Hint:       "Redirect standard output to a file or a pipe, or select one file with --only <path>, whose bytes may go to a terminal.",
+		Message:    "Argument {argument} writes an archive to standard output, which is a terminal, and an archive is not written to a terminal.",
+		Hint:       "Redirect standard output to a file or a pipe; a render can instead select one file with --only <path>, whose bytes may go to a terminal.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},
@@ -328,7 +328,7 @@ var usageCodes = []Entry{
 		Params: []ParamSpec{
 			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of the refused argument among the arguments after metais.", Always: true},
 		},
-		Message:    "Argument {argument} names a packed package, and this writes into a source directory.",
+		Message:    "Argument {argument} names a packed package, and this needs a source directory.",
 		Hint:       "Unpack it with metais unpack and give the source directory it writes; nothing was written.",
 		Span:       SpanNone,
 		Since:      "1.0",

@@ -295,19 +295,11 @@ func runTest(s *session, p args.Parsed) outcome {
 		slices.SortFunc(selected, func(a, b *exampleRun) int { return strings.Compare(a.name, b.name) })
 	}
 
-	// The package's templates are parsed once, and its output validation
-	// schemas compiled once; an error there stops test before any example
-	// runs (ADR-007 D5 item 2, ADR-005 D11 item 3).
-	ts := template.NewTemplates(pkg.Tree, lim, pkg.Manifest.Inputs)
-	pfs := parseTemplates(pkg.Manifest.Outputs, ts)
-	schemas, sfs := outputSchemas(pkg, lim)
-	if pfs = append(pfs, sfs...); s.fails(pfs) {
+	pfs, ran := s.runExamples(pkg, lim, selected)
+	if !ran {
 		return outcome{findings: append(fs, pfs...), result: &testResult{Examples: []testExample{}}, report: true, next: []Next{nextTestAgain}}
 	}
 	fs = append(fs, pfs...)
-	for _, e := range selected {
-		s.runExample(pkg, ts, schemas, lim, e)
-	}
 	result := &testResult{Examples: []testExample{}}
 	var upd *testUpdate
 	if update {
@@ -354,6 +346,24 @@ func runTest(s *session, p args.Parsed) outcome {
 		o.next = []Next{nextPack}
 	}
 	return o
+}
+
+// runExamples runs each example of selected over pkg under lim. The
+// package's templates are parsed once, and its output validation schemas
+// compiled once; their findings are returned, and an error there stops
+// test before any example runs, which runExamples reports with false
+// (ADR-007 D5 item 2, ADR-005 D11 item 3).
+func (s *session) runExamples(pkg *loader.Package, lim limits.Set, selected []*exampleRun) ([]finding.Finding, bool) {
+	ts := template.NewTemplates(pkg.Tree, lim, pkg.Manifest.Inputs)
+	pfs := parseTemplates(pkg.Manifest.Outputs, ts)
+	schemas, sfs := outputSchemas(pkg, lim)
+	if pfs = append(pfs, sfs...); s.fails(pfs) {
+		return pfs, false
+	}
+	for _, e := range selected {
+		s.runExample(pkg, ts, schemas, lim, e)
+	}
+	return pfs, true
 }
 
 // exampleRuns is the examples of pkg, in byte order of name (ADR-007 D5

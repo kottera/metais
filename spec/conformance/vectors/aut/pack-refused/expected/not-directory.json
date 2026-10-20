@@ -1,0 +1,10 @@
+[
+  {
+    "code": "output.destination.not_directory",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {}
+  }
+]

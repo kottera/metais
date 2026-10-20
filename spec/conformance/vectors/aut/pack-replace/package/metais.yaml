@@ -1,0 +1,13 @@
+metais: "1.0"
+name: replace
+version: 1.0.0
+title: Replace
+description: A package whose earlier package file pack replaces.
+guide: Supply a report.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid

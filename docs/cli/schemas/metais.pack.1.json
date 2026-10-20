@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.pack.1.json",
+  "title": "metais.pack/1",
+  "description": "What metais pack prints with --json: the package it wrote, or with --dry-run would write (ADR-007 D7, ADR-008 D9). With --out - the document is on standard error, after the package's bytes on standard output.",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.pack/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "dry_run",
+        "size",
+        "digest",
+        "entries"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "dry_run": {
+          "description": "Whether --dry-run was given, so that nothing was written.",
+          "type": "boolean"
+        },
+        "file": {
+          "description": "The package file's name, <name>-<version>.metais, when pack chose it: without --out, or with an --out naming an existing directory; - when the package went to standard output. Absent when the caller named the file, whose path is never echoed.",
+          "type": "string",
+          "minLength": 1
+        },
+        "size": {
+          "description": "The package file's size in bytes.",
+          "type": "integer",
+          "minimum": 22
+        },
+        "digest": {
+          "description": "The package digest: sha256: and 64 lower-case hexadecimal digits.",
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "entries": {
+          "description": "The number of entries the package holds, .compiled/'s included.",
+          "type": "integer",
+          "minimum": 5
+        }
+      }
+    }
+  }
+}

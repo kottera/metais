@@ -5,6 +5,8 @@ Usage:
 
 Golden paths:
   Consuming a package: inspect → read → schema → validate → render
+  Authoring a package: init → edit (preview with render --sample) → check → test
+  → pack
 
 Commands:
   Reading a package:
@@ -32,6 +34,8 @@ Commands:
               data directory or an example.
     test      Render every example of a package and compare it with the outputs
               it should produce.
+    pack      Check and test a source directory, then write it as one package
+              file.
     unpack    Write a packed package's source directory, to edit it.
   The tool:
     version   Print the tool's version and the specification versions it

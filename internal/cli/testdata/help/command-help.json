@@ -17,6 +17,10 @@
       {
         "title": "Consuming a package",
         "steps": "inspect → read → schema → validate → render"
+      },
+      {
+        "title": "Authoring a package",
+        "steps": "init → edit (preview with render --sample) → check → test → pack"
       }
     ],
     "commands": [

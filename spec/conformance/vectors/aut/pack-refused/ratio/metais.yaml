@@ -1,0 +1,13 @@
+metais: "1.0"
+name: ratio
+version: 1.0.0
+title: Refused
+description: A package pack refuses, or a source to refuse an output for.
+guide: Supply a report.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid

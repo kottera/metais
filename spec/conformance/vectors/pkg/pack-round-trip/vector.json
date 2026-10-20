@@ -1,0 +1,161 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pkg/pack-round-trip",
+  "title": "A package packed, unpacked and packed again holds the same entries, the same content and the same package digest: the scaffold init writes, and a fixture with every kind of entry pack meets",
+  "statements": [
+    "MTS-PKG-040",
+    "MTS-AUT-047"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "container"
+  ],
+  "requires": [],
+  "notes": "scaffold is a copy of the source directory metais init --name acme-report writes (internal/author/testdata/scaffold), its quiet .gitattributes included; fixture is a copy of aut/pack's source directory. Each case packs its source, unpacks the package, and packs the unpacked source again: both packages equal one expected package by entries, the digest file and its package digest included, so the two package digests are equal. That the two are also byte for byte equal within one build is internal/guarantees' TestPackDeterminism. The expected packages were written by metais pack.",
+  "cases": [
+    {
+      "name": "scaffold",
+      "setup": {
+        "dirs": [
+          "out1",
+          "out2"
+        ]
+      },
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "scaffold",
+            "to": "out1"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out1",
+                "equals": "expected/scaffold/out",
+                "containers": [
+                  {
+                    "path": "acme-report-0.1.0.metais",
+                    "methods": []
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "unpack",
+          "args": {
+            "package": "out1/acme-report-0.1.0.metais",
+            "to": "src"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "src",
+                "equals": "expected/scaffold/src"
+              }
+            ]
+          }
+        },
+        {
+          "op": "pack",
+          "args": {
+            "source": "src",
+            "to": "out2"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out2",
+                "equals": "expected/scaffold/out",
+                "containers": [
+                  {
+                    "path": "acme-report-0.1.0.metais",
+                    "methods": []
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fixture",
+      "setup": {
+        "dirs": [
+          "out1",
+          "out2"
+        ]
+      },
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "fixture",
+            "to": "out1"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out1",
+                "equals": "expected/fixture/out",
+                "containers": [
+                  {
+                    "path": "pack-1.0.0.metais",
+                    "methods": []
+                  }
+                ]
+              }
+            ],
+            "findings": "expected/fixture/pack.json"
+          }
+        },
+        {
+          "op": "unpack",
+          "args": {
+            "package": "out1/pack-1.0.0.metais",
+            "to": "src"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "src",
+                "equals": "expected/fixture/src"
+              }
+            ]
+          }
+        },
+        {
+          "op": "pack",
+          "args": {
+            "source": "src",
+            "to": "out2"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out2",
+                "equals": "expected/fixture/out",
+                "containers": [
+                  {
+                    "path": "pack-1.0.0.metais",
+                    "methods": []
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

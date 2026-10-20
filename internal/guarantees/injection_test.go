@@ -25,6 +25,7 @@ var faultSeams = map[string]string{
 	"RemoveForeign":        "internal/hostfs",
 	"StdoutNotice":         "internal/cli",
 	"UpdateBeyondExpected": "internal/cli",
+	"PackMapOrder":         "internal/author",
 }
 
 const (

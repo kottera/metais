@@ -17,6 +17,10 @@
       {
         "title": "Consuming a package",
         "steps": "inspect → read → schema → validate → render"
+      },
+      {
+        "title": "Authoring a package",
+        "steps": "init → edit (preview with render --sample) → check → test → pack"
       }
     ],
     "commands": [
@@ -18729,6 +18733,2780 @@
         ]
       },
       {
+        "name": "pack",
+        "group": "Authoring",
+        "synopsis": "metais pack [<dir>] [--out <file>|-] [--dry-run] [--limit <name>=<value>]... [--json]",
+        "description": "Check and test a source directory, then write it as one package file.",
+        "detail": "Runs metais check on the source directory, the current directory when omitted. Any error stops pack: every finding is reported and nothing is written. With no error it runs metais test over every example; an example that fails stops it the same way. Warnings are reported and do not stop it. There is no way to skip a step: the bytes a supplier receives are the bytes whose examples passed.\n\nThe package holds metais.yaml and every file of inputs/, templates/, references/, assets/ and examples/, names beginning with . included, and .compiled/, computed afresh. A top-level name beginning with ., and a top-level file ending .metais, is left out silently; any other top-level name is left out and reported as package.layout.not_packed. Each file is packed byte for byte. The package's bytes depend only on its entries' paths and contents: never on a file's time, mode or owner, the order a directory lists its names in, the platform, the locale or the clock. One build of metais packs a source directory to the same bytes every time. The package is read back as every reader reads one before it is kept, and a limit only its bytes show, such as entry-ratio, refuses it as limit.package.\n\n--out names the package file. Without it, the file is <name>-<version>.metais, from the manifest, in the working directory; an --out that names an existing directory writes that file inside it. The file is written to a temporary file .metais-tmp-<h> beside it, created exclusively, synced, and renamed over the file, so a reader never sees part of a package and a package file already there is replaced: replacing its own previous package is pack's edit loop, so there is no --overwrite. A file inside one of the layout trees, or the manifest itself, is refused, and so is an --out that exists and is not a regular file or a directory. --out - writes the package to standard output, and is refused when standard output is a terminal; with --json the document then goes to standard error, after the package.\n\n--dry-run checks, tests and builds the package as pack does, and checks where it would write it, and writes nothing: it reports the package's size, digest and entries as pack would, and is refused exactly when pack would be refused before writing. A packed package is refused as the operand: unpack it first.",
+        "opens_package": true,
+        "role": "authoring",
+        "operands": [
+          {
+            "name": "<dir>",
+            "description": "The source directory to pack; the current directory when omitted. A packed package file is refused.",
+            "required": false,
+            "repeatable": false
+          }
+        ],
+        "flags": [
+          {
+            "name": "--out",
+            "short": null,
+            "value": "<file>",
+            "values": null,
+            "default": null,
+            "repeatable": false,
+            "required": false,
+            "description": "The package file to write, an existing directory to write <name>-<version>.metais in, or - for standard output. Default: <name>-<version>.metais in the working directory."
+          },
+          {
+            "name": "--dry-run",
+            "short": null,
+            "value": null,
+            "values": null,
+            "default": null,
+            "repeatable": false,
+            "required": false,
+            "description": "Check, test and build the package, and write nothing."
+          },
+          {
+            "name": "--limit",
+            "short": null,
+            "value": "<name>=<value>",
+            "values": null,
+            "default": null,
+            "repeatable": true,
+            "required": false,
+            "description": "Lower one resource limit for this run, to a whole number no higher than its default (a size may end in KiB, MiB or GiB). metais limits lists them."
+          },
+          {
+            "name": "--fail-on",
+            "short": null,
+            "value": "<severity>",
+            "values": [
+              "error",
+              "warning"
+            ],
+            "default": "error",
+            "repeatable": false,
+            "required": false,
+            "description": "With warning, a warning fails the command with exit status 1 as an error does; no finding's severity changes."
+          },
+          {
+            "name": "--json",
+            "short": null,
+            "value": null,
+            "values": null,
+            "default": null,
+            "repeatable": false,
+            "required": false,
+            "description": "Print the result as one JSON document on standard output."
+          },
+          {
+            "name": "--color",
+            "short": null,
+            "value": "<when>",
+            "values": [
+              "auto",
+              "always",
+              "never"
+            ],
+            "default": "auto",
+            "repeatable": false,
+            "required": false,
+            "description": "Colour human output: auto colours a stream that is a terminal when NO_COLOR is unset or empty; always and never override NO_COLOR."
+          },
+          {
+            "name": "--help",
+            "short": "-h",
+            "value": null,
+            "values": null,
+            "default": null,
+            "repeatable": false,
+            "required": false,
+            "description": "Print help to standard output and exit 0; nothing else runs."
+          }
+        ],
+        "format": "metais.pack/1",
+        "prints": "The package file's name when pack chose it, its size, its package digest and its entry count; with --dry-run, the entries it would pack.",
+        "refusals": [
+          {
+            "code": "collection.as_file",
+            "cause": "An example's inputs are refused (as file).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "collection.directory_name",
+            "cause": "An example's inputs are refused (directory name).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "collection.item_name",
+            "cause": "An example's inputs are refused (item name).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "collection.stem_duplicate",
+            "cause": "An example's inputs are refused (stem duplicate).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "collection.subdirectory",
+            "cause": "An example's inputs are refused (subdirectory).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "csv.after_quote",
+            "cause": "An example's inputs are refused (after quote).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "csv.bare_quote",
+            "cause": "An example's inputs are refused (bare quote).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "csv.field_count",
+            "cause": "An example's inputs are refused (field count).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "csv.header_duplicate",
+            "cause": "An example's inputs are refused (header duplicate).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "csv.header_empty",
+            "cause": "An example's inputs are refused (header empty).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "csv.header_missing",
+            "cause": "An example's inputs are refused (header missing).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "csv.unterminated_quote",
+            "cause": "An example's inputs are refused (unterminated quote).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "example.layout",
+            "cause": "An example's layout (layout), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "example.metadata",
+            "cause": "An example fails (metadata).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "example.output_differs",
+            "cause": "An example fails (output differs).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "example.output_missing",
+            "cause": "An example fails (output missing).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "example.output_unexpected",
+            "cause": "An example fails (output unexpected).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.additional_item",
+            "cause": "An example's inputs are refused (additional item).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.additional_property",
+            "cause": "An example's inputs are refused (additional property).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.any_of",
+            "cause": "An example's inputs are refused (any of).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.const",
+            "cause": "An example's inputs are refused (const).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.constraints_failed",
+            "cause": "An example's inputs are refused (constraints failed).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.constraints_not_evaluated",
+            "cause": "An example's inputs are refused (constraints not evaluated).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.contains",
+            "cause": "An example's inputs are refused (contains).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.dependent_required",
+            "cause": "An example's inputs are refused (dependent required).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.encoding_invalid",
+            "cause": "An example's inputs are refused (encoding invalid).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.enum",
+            "cause": "An example's inputs are refused (enum).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.exclusive_maximum",
+            "cause": "An example's inputs are refused (exclusive maximum).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.exclusive_minimum",
+            "cause": "An example's inputs are refused (exclusive minimum).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.extension_not_accepted",
+            "cause": "An example's inputs are refused (extension not accepted).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.file_duplicate",
+            "cause": "An example's inputs are refused (file duplicate).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.file_unknown",
+            "cause": "An example's inputs are refused (file unknown).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.forbidden",
+            "cause": "An example's inputs are refused (forbidden).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.format",
+            "cause": "An example's inputs are refused (format).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.json_arg_invalid",
+            "cause": "An example's inputs are refused (json arg invalid).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.json_arg_not_object",
+            "cause": "An example's inputs are refused (json arg not object).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.json_arg_unknown",
+            "cause": "An example's inputs are refused (json arg unknown).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.link",
+            "cause": "An example's inputs are refused (link).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.max_contains",
+            "cause": "An example's inputs are refused (max contains).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.max_items",
+            "cause": "An example's inputs are refused (max items).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.max_length",
+            "cause": "An example's inputs are refused (max length).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.max_properties",
+            "cause": "An example's inputs are refused (max properties).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.maximum",
+            "cause": "An example's inputs are refused (maximum).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.min_contains",
+            "cause": "An example's inputs are refused (min contains).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.min_items",
+            "cause": "An example's inputs are refused (min items).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.min_length",
+            "cause": "An example's inputs are refused (min length).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.min_properties",
+            "cause": "An example's inputs are refused (min properties).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.minimum",
+            "cause": "An example's inputs are refused (minimum).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.missing",
+            "cause": "An example's inputs are refused (missing).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.multiple_of",
+            "cause": "An example's inputs are refused (multiple of).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.noncharacter",
+            "cause": "An example's inputs are refused (noncharacter).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.not",
+            "cause": "An example's inputs are refused (not).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.not_readable",
+            "cause": "An example's inputs are refused (not readable).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.not_regular_file",
+            "cause": "An example's inputs are refused (not regular file).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.number_out_of_range",
+            "cause": "An example's inputs are refused (number out of range).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.one_of",
+            "cause": "An example's inputs are refused (one of).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.one_of.ambiguous",
+            "cause": "An example's inputs are refused (one of: ambiguous).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.pattern",
+            "cause": "An example's inputs are refused (pattern).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.property_name",
+            "cause": "An example's inputs are refused (property name).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.raw_unavailable",
+            "cause": "An example's inputs are refused (raw unavailable).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.required",
+            "cause": "An example's inputs are refused (required).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.set_into_unparsed",
+            "cause": "An example's inputs are refused (set into unparsed).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.set_pointer_invalid",
+            "cause": "An example's inputs are refused (set pointer invalid).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.set_traversal",
+            "cause": "An example's inputs are refused (set traversal).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.type",
+            "cause": "An example's inputs are refused (type).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.unevaluated_item",
+            "cause": "An example's inputs are refused (unevaluated item).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.unevaluated_property",
+            "cause": "An example's inputs are refused (unevaluated property).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.unique_items",
+            "cause": "An example's inputs are refused (unique items).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "input.validation.partial",
+            "cause": "An example's inputs are refused (validation: partial).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "json.duplicate_name",
+            "cause": "An example's inputs are refused (duplicate name).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "json.lone_surrogate",
+            "cause": "An example's inputs are refused (lone surrogate).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "json.noncharacter",
+            "cause": "An example's inputs are refused (noncharacter).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "json.syntax",
+            "cause": "An example's inputs are refused (syntax).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "json.trailing_content",
+            "cause": "An example's inputs are refused (trailing content).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "limit.exceeded",
+            "cause": "An example's inputs are refused (exceeded).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "limit.exceeded.output",
+            "cause": "An example's output is refused (exceeded: output).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "limit.exceeded.template",
+            "cause": "An example's output is refused (exceeded: template).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "limit.invalid",
+            "cause": "A --limit names no limit, gives a malformed value, or tries to raise one.",
+            "next": {
+              "run": "metais pack --help",
+              "why": "Prints the operands and flags metais pack takes."
+            }
+          },
+          {
+            "code": "limit.package",
+            "cause": "The package, or the package's bytes as pack writes them, breach one of its limits; nothing was written.",
+            "next": {
+              "run": "metais limits",
+              "why": "Lists every limit with its default; a limit can be lowered and never raised."
+            }
+          },
+          {
+            "code": "manifest.additional_item",
+            "cause": "The manifest breaks one of its rules (additional item).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.additional_property",
+            "cause": "The manifest breaks one of its rules (additional property).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.any_of",
+            "cause": "The manifest breaks one of its rules (any of).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.const",
+            "cause": "The manifest breaks one of its rules (const).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.contains",
+            "cause": "The manifest breaks one of its rules (contains).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.dependent_required",
+            "cause": "The manifest breaks one of its rules (dependent required).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.enum",
+            "cause": "The manifest breaks one of its rules (enum).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.exclusive_maximum",
+            "cause": "The manifest breaks one of its rules (exclusive maximum).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.exclusive_minimum",
+            "cause": "The manifest breaks one of its rules (exclusive minimum).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.file.wrong_name",
+            "cause": "The manifest breaks one of its rules (file: wrong name).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.forbidden",
+            "cause": "The manifest breaks one of its rules (forbidden).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.format",
+            "cause": "The manifest breaks one of its rules (format).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.guide_link_missing",
+            "cause": "The manifest (guide link missing), a warning.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.input.collection_shape",
+            "cause": "The manifest (input: collection shape), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.input.duplicate_name",
+            "cause": "The manifest breaks one of its rules (input: duplicate name).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.input.form_shape",
+            "cause": "The manifest (input: form shape), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.json.duplicate_name",
+            "cause": "The manifest breaks one of its rules (json: duplicate name).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.json.encoding",
+            "cause": "The manifest breaks one of its rules (json: encoding).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.json.lone_surrogate",
+            "cause": "The manifest breaks one of its rules (json: lone surrogate).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.json.noncharacter",
+            "cause": "The manifest breaks one of its rules (json: noncharacter).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.json.syntax",
+            "cause": "The manifest breaks one of its rules (json: syntax).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.json.trailing_content",
+            "cause": "The manifest breaks one of its rules (json: trailing content).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.license.expression",
+            "cause": "The manifest breaks one of its rules (license: expression).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.max_contains",
+            "cause": "The manifest breaks one of its rules (max contains).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.max_items",
+            "cause": "The manifest breaks one of its rules (max items).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.max_length",
+            "cause": "The manifest breaks one of its rules (max length).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.max_properties",
+            "cause": "The manifest breaks one of its rules (max properties).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.maximum",
+            "cause": "The manifest breaks one of its rules (maximum).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.min_contains",
+            "cause": "The manifest breaks one of its rules (min contains).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.min_items",
+            "cause": "The manifest breaks one of its rules (min items).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.min_length",
+            "cause": "The manifest breaks one of its rules (min length).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.min_properties",
+            "cause": "The manifest breaks one of its rules (min properties).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.minimum",
+            "cause": "The manifest breaks one of its rules (minimum).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.multiple_of",
+            "cause": "The manifest breaks one of its rules (multiple of).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.not",
+            "cause": "The manifest breaks one of its rules (not).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.number_out_of_range",
+            "cause": "The manifest breaks one of its rules (number out of range).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.one_of",
+            "cause": "The manifest breaks one of its rules (one of).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.one_of.ambiguous",
+            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.output.duplicate_id",
+            "cause": "The manifest breaks one of its rules (output: duplicate id).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.output.nested_for_each",
+            "cause": "The manifest breaks one of its rules (output: nested for each).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.path_not_found",
+            "cause": "The manifest breaks one of its rules (path not found).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.pattern",
+            "cause": "The manifest breaks one of its rules (pattern).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.property_name",
+            "cause": "The manifest breaks one of its rules (property name).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.required",
+            "cause": "The manifest breaks one of its rules (required).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.type",
+            "cause": "The manifest breaks one of its rules (type).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.unevaluated_item",
+            "cause": "The manifest breaks one of its rules (unevaluated item).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.unevaluated_property",
+            "cause": "The manifest breaks one of its rules (unevaluated property).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.unique_items",
+            "cause": "The manifest breaks one of its rules (unique items).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.alias",
+            "cause": "The manifest breaks one of its rules (yaml: alias).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.anchor",
+            "cause": "The manifest breaks one of its rules (yaml: anchor).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.bom",
+            "cause": "The manifest breaks one of its rules (yaml: bom).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.character",
+            "cause": "The manifest breaks one of its rules (yaml: character).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.directive",
+            "cause": "The manifest breaks one of its rules (yaml: directive).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.duplicate_key",
+            "cause": "The manifest breaks one of its rules (yaml: duplicate key).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.encoding",
+            "cause": "The manifest breaks one of its rules (yaml: encoding).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.key_empty",
+            "cause": "The manifest breaks one of its rules (yaml: key empty).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.key_not_scalar",
+            "cause": "The manifest breaks one of its rules (yaml: key not scalar).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.merge_key",
+            "cause": "The manifest breaks one of its rules (yaml: merge key).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.multi_document",
+            "cause": "The manifest breaks one of its rules (yaml: multi document).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.root_not_mapping",
+            "cause": "The manifest breaks one of its rules (yaml: root not mapping).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.scalar_refused",
+            "cause": "The manifest breaks one of its rules (yaml: scalar refused).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.syntax",
+            "cause": "The manifest breaks one of its rules (yaml: syntax).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "manifest.yaml.tag",
+            "cause": "The manifest breaks one of its rules (yaml: tag).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "markdown.frontmatter_body_field",
+            "cause": "An example's inputs are refused (frontmatter body field).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "markdown.frontmatter_not_mapping",
+            "cause": "An example's inputs are refused (frontmatter not mapping).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "markdown.frontmatter_unclosed",
+            "cause": "An example's inputs are refused (frontmatter unclosed).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.additional_item",
+            "cause": "An example's output fails its validation (additional item).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.additional_property",
+            "cause": "An example's output fails its validation (additional property).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.any_of",
+            "cause": "An example's output fails its validation (any of).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.const",
+            "cause": "An example's output fails its validation (const).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.container.missing_entry",
+            "cause": "A container's profile (container: missing entry), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "output.container.non_ascii",
+            "cause": "A container's profile (container: non ascii), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "output.container.reserved_entry",
+            "cause": "A container's profile (container: reserved entry), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "output.container.space",
+            "cause": "A container's profile (container: space), a warning.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "output.container.too_many_entries",
+            "cause": "An example's output is refused (container: too many entries).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.contains",
+            "cause": "An example's output fails its validation (contains).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.declaration.empty_mirror",
+            "cause": "An example's output fails its validation (declaration: empty mirror).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.declaration.empty_name",
+            "cause": "An example's output fails its validation (declaration: empty name).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.declaration.validate_kind",
+            "cause": "An output's declaration (declaration: validate kind), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "output.dependent_required",
+            "cause": "An example's output fails its validation (dependent required).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.destination.in_package",
+            "cause": "The package file would be inside one of the layout trees of the source directory, or be its manifest.",
+            "next": {
+              "run": "metais pack <dir> --out <path>",
+              "why": "Writes the package to a file outside the layout trees: in the source directory itself, or anywhere outside it."
+            }
+          },
+          {
+            "code": "output.destination.not_directory",
+            "cause": "A directory above the package file exists and is not a directory.",
+            "next": {
+              "run": "metais pack <dir> --out <path>",
+              "why": "Writes the package to a file outside the layout trees: in the source directory itself, or anywhere outside it."
+            }
+          },
+          {
+            "code": "output.destination.nothing_written",
+            "cause": "The package file could not be written, and nothing was: its directory does not exist, what stands at its name is not a regular file, a temporary file .metais-tmp-<h> is left beside it, or a write failed.",
+            "next": {
+              "run": "metais pack <dir>",
+              "why": "Packs the source directory again once the cause is fixed; nothing was written."
+            }
+          },
+          {
+            "code": "output.enum",
+            "cause": "An example's output fails its validation (enum).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.exclusive_maximum",
+            "cause": "An example's output fails its validation (exclusive maximum).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.exclusive_minimum",
+            "cause": "An example's output fails its validation (exclusive minimum).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.expression.for_each_type",
+            "cause": "An example's output is refused (expression: for each type).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.forbidden",
+            "cause": "An example's output fails its validation (forbidden).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.format",
+            "cause": "An example's output fails its validation (format).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.max_contains",
+            "cause": "An example's output fails its validation (max contains).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.max_items",
+            "cause": "An example's output fails its validation (max items).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.max_length",
+            "cause": "An example's output fails its validation (max length).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.max_properties",
+            "cause": "An example's output fails its validation (max properties).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.maximum",
+            "cause": "An example's output fails its validation (maximum).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.min_contains",
+            "cause": "An example's output fails its validation (min contains).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.min_items",
+            "cause": "An example's output fails its validation (min items).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.min_length",
+            "cause": "An example's output fails its validation (min length).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.min_properties",
+            "cause": "An example's output fails its validation (min properties).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.minimum",
+            "cause": "An example's output fails its validation (minimum).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.multiple_of",
+            "cause": "An example's output fails its validation (multiple of).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.not",
+            "cause": "An example's output fails its validation (not).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.one_of",
+            "cause": "An example's output fails its validation (one of).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.one_of.ambiguous",
+            "cause": "An example's output fails its validation (one of: ambiguous).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.parse",
+            "cause": "An example's output fails its validation (parse).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.path.case_collision",
+            "cause": "An example's output is refused (path: case collision).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.path.character",
+            "cause": "An example's output is refused (path: character).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.path.duplicate",
+            "cause": "An example's output is refused (path: duplicate).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.path.encoding",
+            "cause": "An example's output is refused (path: encoding).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.path.file_directory_conflict",
+            "cause": "An example's output is refused (path: file directory conflict).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.path.not_nfc",
+            "cause": "An example's output is refused (path: not nfc).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.path.not_portable",
+            "cause": "An example's output is refused (path: not portable).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.path.shape",
+            "cause": "An example's output is refused (path: shape).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.pattern",
+            "cause": "An example's output fails its validation (pattern).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.property_name",
+            "cause": "An example's output fails its validation (property name).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.required",
+            "cause": "An example's output fails its validation (required).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.type",
+            "cause": "An example's output fails its validation (type).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.unevaluated_item",
+            "cause": "An example's output fails its validation (unevaluated item).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.unevaluated_property",
+            "cause": "An example's output fails its validation (unevaluated property).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.unique_items",
+            "cause": "An example's output fails its validation (unique items).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "package.compiled.mismatch",
+            "cause": "The package is refused (compiled: mismatch).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.compiled.missing",
+            "cause": "The package is refused (compiled: missing).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.compiled.unknown_file",
+            "cause": "The package is refused (compiled: unknown file).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.archive_comment",
+            "cause": "The package is refused (container: archive comment).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.crc_mismatch",
+            "cause": "The package is refused (container: crc mismatch).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.data_descriptor",
+            "cause": "The package is refused (container: data descriptor).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.deflate_stream",
+            "cause": "The package is refused (container: deflate stream).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.encrypted",
+            "cause": "The package is refused (container: encrypted).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.entry_order",
+            "cause": "The package is refused (container: entry order).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.extra_field",
+            "cause": "The package is refused (container: extra field).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.field_value",
+            "cause": "The package is refused (container: field value).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.flags",
+            "cause": "The package is refused (container: flags).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.header_mismatch",
+            "cause": "The package is refused (container: header mismatch).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.method",
+            "cause": "The package is refused (container: method).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.not_zip",
+            "cause": "The package is refused (container: not zip).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.overlap_or_gap",
+            "cause": "The package is refused (container: overlap or gap).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.prepended_data",
+            "cause": "The package is refused (container: prepended data).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.second_end_record",
+            "cause": "The package is refused (container: second end record).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.size_mismatch",
+            "cause": "The package is refused (container: size mismatch).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.trailing_data",
+            "cause": "The package is refused (container: trailing data).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.container.zip64",
+            "cause": "The package is refused (container: zip64).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.digest.entries_mismatch",
+            "cause": "The package is refused (digest: entries mismatch).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.digest.mismatch",
+            "cause": "The package is refused (digest: mismatch).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.digest.not_canonical",
+            "cause": "The package is refused (digest: not canonical).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.digest.package_mismatch",
+            "cause": "The package is refused (digest: package mismatch).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.layout.compiled_in_source",
+            "cause": "The package is refused (layout: compiled in source).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.layout.empty_directory",
+            "cause": "The package is refused (layout: empty directory).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.layout.missing_manifest",
+            "cause": "The package is refused (layout: missing manifest).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.layout.non_regular_file",
+            "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.layout.not_packed",
+            "cause": "The package's tree (layout: not packed), a warning.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.layout.os_litter",
+            "cause": "The package's tree (layout: os litter), a warning.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.layout.unknown_top_level",
+            "cause": "The package is refused (layout: unknown top level).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.name.case_collision",
+            "cause": "The package is refused (name: case collision).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.name.character",
+            "cause": "The package is refused (name: character).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.name.directory_entry",
+            "cause": "The package is refused (name: directory entry).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.name.duplicate",
+            "cause": "The package is refused (name: duplicate).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.name.encoding",
+            "cause": "The package is refused (name: encoding).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.name.file_directory_conflict",
+            "cause": "The package is refused (name: file directory conflict).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.name.not_nfc",
+            "cause": "The package is refused (name: not nfc).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.name.not_portable",
+            "cause": "The package is refused (name: not portable).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.name.shape",
+            "cause": "The package is refused (name: shape).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.not_found",
+            "cause": "The package is refused (not found).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.not_readable",
+            "cause": "The package is refused (not readable).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.version.malformed",
+            "cause": "The package is refused (version: malformed).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.version.missing",
+            "cause": "The package is refused (version: missing).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.version.not_string",
+            "cause": "The package is refused (version: not string).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.version.unsupported_major",
+            "cause": "The package is refused (version: unsupported major).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "package.version.unsupported_minor",
+            "cause": "The package is refused (version: unsupported minor).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "report.step_skipped",
+            "cause": "The report (step skipped), an info.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.dialect",
+            "cause": "An input schema is refused (dialect).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.format_unsupported",
+            "cause": "An input schema is refused (format unsupported).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.id_duplicate",
+            "cause": "An input schema is refused (id duplicate).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.invalid",
+            "cause": "An input schema is refused (invalid).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.invalid_default",
+            "cause": "A schema (invalid default), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.invalid_example",
+            "cause": "A schema (invalid example), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.keyword_unknown",
+            "cause": "An input schema is refused (keyword unknown).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.pattern_unsupported",
+            "cause": "An input schema is refused (pattern unsupported).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.ref_by_path",
+            "cause": "An input schema is refused (ref by path).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.ref_escapes",
+            "cause": "An input schema is refused (ref escapes).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.ref_unresolved",
+            "cause": "An input schema is refused (ref unresolved).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.required_not_declared",
+            "cause": "A schema (required not declared), a warning.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.syntax",
+            "cause": "An input schema is refused (syntax).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.unsatisfiable",
+            "cause": "A schema (unsatisfiable), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.unusable_enum_member",
+            "cause": "A schema (unusable enum member), a warning.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.asset_ambiguous",
+            "cause": "A template is refused (asset ambiguous).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.asset_not_found",
+            "cause": "A template is refused (asset not found).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.asset_not_text",
+            "cause": "A template is refused (asset not text).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.asset_not_written",
+            "cause": "A template is refused (asset not written).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.asset_tree",
+            "cause": "A template is refused (asset tree).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.comparison",
+            "cause": "A template is refused (comparison).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.crlf",
+            "cause": "A template or a manifest expression (crlf), a warning.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.date_format",
+            "cause": "An output's path, when or for_each does not parse (date format).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.date_input",
+            "cause": "A template is refused (date input).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.division_by_zero",
+            "cause": "An output's path, when or for_each does not parse (division by zero).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.embed_index",
+            "cause": "A template does not parse (embed index), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.embed_unknown_input",
+            "cause": "A template does not parse (embed unknown input), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.filter_argument",
+            "cause": "An output's path, when or for_each does not parse (filter argument).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.filter_input",
+            "cause": "A template does not parse (filter input), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.include",
+            "cause": "An output's path, when or for_each does not parse (include).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.invalid_utf8",
+            "cause": "A template is refused (invalid utf8).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.nil_property",
+            "cause": "A template is refused (nil property).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.not_utf8",
+            "cause": "A template does not parse (not utf8), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.number_range",
+            "cause": "An output's path, when or for_each does not parse (number range).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.object_output",
+            "cause": "A template is refused (object output).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.ooxml.split_construct",
+            "cause": "A template or a manifest expression (ooxml: split construct), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.ooxml.split_delimiter",
+            "cause": "A template or a manifest expression (ooxml: split delimiter), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.partial_name",
+            "cause": "A template does not parse (partial name), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.partial_not_found",
+            "cause": "A template is refused (partial not found).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.provenance_argument",
+            "cause": "A template does not parse (provenance argument), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.provenance_style",
+            "cause": "A template does not parse (provenance style), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.reserved_name",
+            "cause": "A template does not parse (reserved name), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.safe_position",
+            "cause": "An output's path, when or for_each does not parse (safe position).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.slug_empty",
+            "cause": "A template is refused (slug empty).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.syntax",
+            "cause": "An output's path, when or for_each does not parse (syntax).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.tag_argument",
+            "cause": "A template is refused (tag argument).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.tag_context",
+            "cause": "An output's path, when or for_each does not parse (tag context).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.undefined_property",
+            "cause": "A template is refused (undefined property).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.undefined_variable",
+            "cause": "A template is refused (undefined variable).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.unknown_filter",
+            "cause": "An output's path, when or for_each does not parse (unknown filter).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.budget_exhausted",
+            "cause": "A template or a manifest expression (xref: budget exhausted), a warning.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.dynamic_reference",
+            "cause": "A template or a manifest expression (xref: dynamic reference), a warning.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.for_each_not_array",
+            "cause": "A template or a manifest expression (xref: for each not array), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.index_out_of_range",
+            "cause": "A template or a manifest expression (xref: index out of range), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.missing_asset",
+            "cause": "A template or a manifest expression (xref: missing asset), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.missing_partial",
+            "cause": "A template or a manifest expression (xref: missing partial), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.not_an_array",
+            "cause": "A template or a manifest expression (xref: not an array), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.not_an_object",
+            "cause": "A template or a manifest expression (xref: not an object), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.partial_parameter_not_passed",
+            "cause": "A template or a manifest expression (xref: partial parameter not passed), a warning.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.unknown_field",
+            "cause": "A template or a manifest expression (xref: unknown field), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.unknown_input",
+            "cause": "A template or a manifest expression (xref: unknown input), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.unknown_variable",
+            "cause": "A template or a manifest expression (xref: unknown variable), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.unused_input",
+            "cause": "A template or a manifest expression (xref: unused input), a warning.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.xref.unused_template",
+            "cause": "A template or a manifest expression (xref: unused template), a warning.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "usage.archive_to_terminal",
+            "cause": "--out - is given, and standard output is a terminal.",
+            "next": {
+              "run": "metais pack <dir> --out <path>",
+              "why": "Writes the package to a file; or redirect standard output to a file or a pipe, since a package is not written to a terminal."
+            }
+          },
+          {
+            "code": "usage.bad_value",
+            "cause": "A flag's value is missing, or is not one the flag accepts, or a flag that takes no value is given one.",
+            "next": {
+              "run": "metais pack --help",
+              "why": "Prints the operands and flags metais pack takes."
+            }
+          },
+          {
+            "code": "usage.bad_value",
+            "cause": "--out is empty, or names a file whose name metais will not write.",
+            "next": {
+              "run": "metais pack --help",
+              "why": "Prints the operands and flags metais pack takes."
+            }
+          },
+          {
+            "code": "usage.not_a_source_directory",
+            "cause": "The operand is a packed package, which pack does not read: it packs a source directory.",
+            "next": {
+              "run": "metais unpack <package> --to <dir>",
+              "why": "Writes the packed package's source directory, which pack reads."
+            }
+          },
+          {
+            "code": "usage.package_from_stdin",
+            "cause": "The package operand is -, standard input.",
+            "next": {
+              "run": "metais pack --help",
+              "why": "Prints the operands and flags metais pack takes."
+            }
+          },
+          {
+            "code": "usage.repeated_flag",
+            "cause": "A flag that may be given once is given again.",
+            "next": {
+              "run": "metais pack --help",
+              "why": "Prints the operands and flags metais pack takes."
+            }
+          },
+          {
+            "code": "usage.unexpected_operand",
+            "cause": "An operand the command does not take.",
+            "next": {
+              "run": "metais pack --help",
+              "why": "Prints the operands and flags metais pack takes."
+            }
+          },
+          {
+            "code": "usage.unknown_flag",
+            "cause": "An argument that is not a flag the command accepts, an abbreviated flag, or one-letter aliases written together.",
+            "next": {
+              "run": "metais pack --help",
+              "why": "Prints the operands and flags metais pack takes."
+            }
+          },
+          {
+            "code": "yaml.alias",
+            "cause": "An example's inputs are refused (alias).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "yaml.anchor",
+            "cause": "An example's inputs are refused (anchor).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "yaml.bom",
+            "cause": "An example's inputs are refused (bom).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "yaml.character",
+            "cause": "An example's inputs are refused (character).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "yaml.directive",
+            "cause": "An example's inputs are refused (directive).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "yaml.duplicate_key",
+            "cause": "An example's inputs are refused (duplicate key).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "yaml.key_empty",
+            "cause": "An example's inputs are refused (key empty).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "yaml.key_not_scalar",
+            "cause": "An example's inputs are refused (key not scalar).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "yaml.merge_key",
+            "cause": "An example's inputs are refused (merge key).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "yaml.multi_document",
+            "cause": "An example's inputs are refused (multi document).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "yaml.scalar_refused",
+            "cause": "An example's inputs are refused (scalar refused).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "yaml.syntax",
+            "cause": "An example's inputs are refused (syntax).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "yaml.tag",
+            "cause": "An example's inputs are refused (tag).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          }
+        ],
+        "examples": [
+          {
+            "run": "metais pack",
+            "why": "Checks, tests and packs the source directory in the working directory into <name>-<version>.metais there."
+          },
+          {
+            "run": "metais pack report --out dist",
+            "why": "Packs the source directory report into dist/<name>-<version>.metais, dist being an existing directory."
+          },
+          {
+            "run": "metais pack --out -",
+            "why": "Writes the package to standard output, which must be a file or a pipe, not a terminal."
+          },
+          {
+            "run": "metais pack --dry-run --json",
+            "why": "Checks, tests and builds the package, writes nothing, and prints its size and digest as one metais.pack/1 document."
+          }
+        ]
+      },
+      {
         "name": "unpack",
         "group": "Authoring",
         "synopsis": "metais unpack <package> --to <dir> [--dry-run] [--limit <name>=<value>]... [--json]",
@@ -20358,7 +23136,7 @@
       {
         "name": "json",
         "title": "The JSON document every command prints with --json.",
-        "text": "With --json, a run prints exactly one JSON document on standard output: compact\nUTF-8 with no byte order mark, one line ending in one LF, HTML escaping off, and\nstandard error empty. Its members are always present, in this order:\n\n  format    The document's name and major version, metais.<command>/<major>.\n  ok        True when the command completed and no finding is an error.\n  findings  The findings, in the specification's order; [] when there are none.\n            A usage error is a finding too.\n  summary   The exact counts of errors, warnings and info, how many findings are\n            listed and omitted, and the count of each code.\n  result    The command's result, or null when it was refused before producing\n            one.\n  next      The commands to run next, each {\"run\", \"why\"}; [] when there is\n            nothing to suggest, and never empty after a refusal.\n\nThe exit status is the same with and without --json, and --json is honoured even\non a command line that does not parse. Within a major version a format only\ngains members and enumeration values: ignore a member you do not know, and read\nan unknown value as other.\n\nThe formats:\n  metais.inspect/1   metais inspect\n  metais.ls/1        metais ls\n  metais.read/1      metais read\n  metais.outline/1   metais outline\n  metais.grep/1      metais grep\n  metais.schema/1    metais schema\n  metais.extract/1   metais extract\n  metais.validate/1  metais validate\n  metais.render/1    metais render\n  metais.init/1      metais init\n  metais.check/1     metais check\n  metais.sample/1    metais sample\n  metais.test/1      metais test\n  metais.unpack/1    metais unpack\n  metais.version/1   metais version\n  metais.limits/1    metais limits\n  metais.help/1      metais help\n  metais.usage/1     a line that names no command\n"
+        "text": "With --json, a run prints exactly one JSON document on standard output: compact\nUTF-8 with no byte order mark, one line ending in one LF, HTML escaping off, and\nstandard error empty. Its members are always present, in this order:\n\n  format    The document's name and major version, metais.<command>/<major>.\n  ok        True when the command completed and no finding is an error.\n  findings  The findings, in the specification's order; [] when there are none.\n            A usage error is a finding too.\n  summary   The exact counts of errors, warnings and info, how many findings are\n            listed and omitted, and the count of each code.\n  result    The command's result, or null when it was refused before producing\n            one.\n  next      The commands to run next, each {\"run\", \"why\"}; [] when there is\n            nothing to suggest, and never empty after a refusal.\n\nThe exit status is the same with and without --json, and --json is honoured even\non a command line that does not parse. Within a major version a format only\ngains members and enumeration values: ignore a member you do not know, and read\nan unknown value as other.\n\nThe formats:\n  metais.inspect/1   metais inspect\n  metais.ls/1        metais ls\n  metais.read/1      metais read\n  metais.outline/1   metais outline\n  metais.grep/1      metais grep\n  metais.schema/1    metais schema\n  metais.extract/1   metais extract\n  metais.validate/1  metais validate\n  metais.render/1    metais render\n  metais.init/1      metais init\n  metais.check/1     metais check\n  metais.sample/1    metais sample\n  metais.test/1      metais test\n  metais.pack/1      metais pack\n  metais.unpack/1    metais unpack\n  metais.version/1   metais version\n  metais.limits/1    metais limits\n  metais.help/1      metais help\n  metais.usage/1     a line that names no command\n"
       },
       {
         "name": "exit-codes",

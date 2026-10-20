@@ -1,0 +1,47 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/pack-replace",
+  "title": "Pack replaces the package file already at its output whole, through its temporary file, and leaves nothing else beside it",
+  "statements": [
+    "MTS-AUT-049"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "container"
+  ],
+  "requires": [],
+  "notes": "The setup puts an earlier file at out/replace-1.0.0.metais. After the pack, out holds the new package alone: the old bytes are gone, and the temporary file .metais-tmp-<h> it was written through was renamed over them. The expected package was written by metais pack and is compared by entries.",
+  "cases": [
+    {
+      "name": "replace",
+      "setup": {
+        "copy": "setup/old"
+      },
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "package",
+            "to": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out",
+                "containers": [
+                  {
+                    "path": "replace-1.0.0.metais",
+                    "methods": []
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

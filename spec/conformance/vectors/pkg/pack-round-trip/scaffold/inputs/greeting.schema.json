@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Greeting",
+  "description": "Who the greeting is for, and an optional note printed beneath it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "title": "Name",
+      "description": "The name of the person greeted, as the heading prints it.",
+      "examples": ["Ada Lovelace"]
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 400,
+      "title": "Note",
+      "description": "A short message printed beneath the heading. Leaving it out prints nothing there."
+    }
+  }
+}

@@ -398,3 +398,51 @@ manifest, its input schemas and its compiled files as step 7 of
 > **Note.** No option skips a step. A package that opens is the package its
 > digest names, and a person who needs the bytes of a damaged package uses a
 > general-purpose zip tool, outside METAIS.
+
+## 2.7 Writing a package
+
+A packer turns a source directory into a packed package
+([chapter 13](13-authoring.md) says when it may). It writes the profile of
+§2.2 and nothing of its host, so the package's bytes are a function of its
+entries alone. The compressed bytes of a deflated entry are the encoder's
+own: two implementations, or two builds of one, may write different bytes
+for one source directory, and their packages are still the same package,
+with the same entries and the same package digest.
+
+<a id="mts-pkg-034"></a>**MTS-PKG-034** A packer MUST write a packed
+package that §2.2 to §2.6 accept: every field the profile fixes holding its
+fixed value, every entry's CRC-32 and sizes in its local and central
+headers, no data descriptor, and the digest file and the compiled files
+of §2.5 and §2.6.
+
+<a id="mts-pkg-035"></a>**MTS-PKG-035** A packer MUST write the entries in
+ascending order of their names' UTF-8 bytes, so that
+`.compiled/digests.json` is the first.
+
+<a id="mts-pkg-036"></a>**MTS-PKG-036** A packer MUST store an entry whose
+content is empty, and one that deflating does not make strictly shorter;
+it MUST deflate every other entry, keeping the deflated data only when it
+is strictly shorter than the content.
+
+<a id="mts-pkg-037"></a>**MTS-PKG-037** A packer MUST write each source
+entry's content byte for byte as the source directory holds it: it MUST
+NOT change a line ending, a byte order mark, an encoding or anything else
+of it.
+
+<a id="mts-pkg-038"></a>**MTS-PKG-038** The package digest of a packed
+package a packer writes MUST be the package digest of the source directory
+it was written from ([MTS-PKG-031](#mts-pkg-031)), and the package MUST
+open as [MTS-PKG-032](#mts-pkg-032) verifies one.
+
+<a id="mts-pkg-039"></a>**MTS-PKG-039** The bytes of a packed package MUST
+depend only on its entries' names and contents: never on a file's
+modification time, permissions or owner, the order a directory lists its
+names in, the file system's treatment of case, the platform, the locale,
+the time zone or the clock, and never on the packer's version, which a
+package does not record. One build of a packer MUST write the same bytes
+for the same source directory every time and on every platform.
+
+<a id="mts-pkg-040"></a>**MTS-PKG-040** A source directory unpacked from a
+packed package ([chapter 13](13-authoring.md)) MUST pack to a package with
+the same entries, the same content and the same package digest; packed by
+the build that wrote the first package, to the same bytes.

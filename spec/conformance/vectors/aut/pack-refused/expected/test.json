@@ -1,0 +1,33 @@
+[
+  {
+    "code": "package.layout.not_packed",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "notes.txt"
+    },
+    "params": {}
+  },
+  {
+    "code": "example.output_differs",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "basic"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/basic/expected/report.md",
+      "line": 1,
+      "column": 3
+    },
+    "params": {
+      "path": "report.md",
+      "binary": false,
+      "cause": "none"
+    }
+  }
+]

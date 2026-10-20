@@ -475,3 +475,81 @@ each line are removed from each; and otherwise `none`.
 A reference tool's command line adds what the operation cannot observe,
 such as writing an example's render into its `expected/`; its help
 documents it.
+
+## 13.8 Packing a package
+
+Packing is the last step of authoring: it checks a source directory,
+tests it, and writes it as one packed package ([chapter 2](02-container.md)).
+It has no way to skip a step, so the bytes a supplier receives are the
+bytes whose check reported no error and whose examples passed. A source
+directory is the author's own tree, and replacing its own previous package
+is packing's edit loop, so a package file at the output is replaced whole,
+never written into.
+
+<a id="mts-aut-043"></a>**MTS-AUT-043** An authoring tool's pack MUST take
+a source directory and an output, and MUST open the source as every
+operation that opens a package does ([chapter 2](02-container.md)) before
+anything else: a package that is refused MUST be refused with the findings
+every such operation reports, and nothing written. A path that opens as a
+packed package MUST then be refused with `usage.not_a_source_directory`,
+and nothing written.
+
+<a id="mts-aut-044"></a>**MTS-AUT-044** Pack MUST run the check of §13.1
+over the source directory. When the check reports an error, pack MUST
+report every finding of the check, MUST NOT test the package, and MUST
+write nothing.
+
+<a id="mts-aut-045"></a>**MTS-AUT-045** When the check reports no error,
+pack MUST run the test of §13.7 over every example. When an example fails,
+pack MUST report every finding of the check and of the test, and MUST
+write nothing.
+
+<a id="mts-aut-046"></a>**MTS-AUT-046** A warning or a note of the check or
+the test MUST be reported and MUST NOT stop pack.
+
+<a id="mts-aut-047"></a>**MTS-AUT-047** Pack MUST write exactly the source
+directory's entries ([MTS-PKG-021](02-container.md#mts-pkg-021)) and
+`.compiled/`, computed from them: `metais.yaml` and every file beneath
+`inputs/`, `templates/`, `references/`, `assets/` and `examples/`, a name
+beginning with `.` included. A top-level name beginning with `.`, and a
+top-level regular file whose name ends in `.metais`, MUST be left out with
+no finding; every other top-level name §2.4's table does not hold MUST be
+left out, and reported as the check reports it
+([MTS-AUT-004](#mts-aut-004)).
+
+<a id="mts-aut-048"></a>**MTS-AUT-048** When the output names an existing
+directory, pack MUST write the package into it as the file
+`<name>-<version>.metais`, from the manifest's `name` and `version`;
+otherwise it MUST write the package as the file the output names.
+
+<a id="mts-aut-049"></a>**MTS-AUT-049** Pack MUST write the package to a
+temporary file in the output file's own directory, named `.metais-tmp-`
+followed by the first 16 lower-case hexadecimal digits of the SHA-256 of
+the output file's name and created exclusively, and MUST then rename it to
+the output file, so that the output file at every instant holds what it
+held before or the whole package. A regular file at the output MUST be
+replaced in that rename, and never written into.
+
+<a id="mts-aut-050"></a>**MTS-AUT-050** Pack MUST refuse, with
+`output.destination.nothing_written`, an output file whose name holds
+anything but a regular file, with `reason` `is_directory` for a directory
+and `not_regular_file` for anything else, a symbolic link included; an
+output whose directory does not exist, with `reason` `not_found`; and an
+output whose temporary file's name is already taken, with `reason`
+`exists`. It MUST refuse an output beneath a file with
+`output.destination.not_directory`. In each case it MUST write nothing.
+
+<a id="mts-aut-051"></a>**MTS-AUT-051** Pack MUST refuse an output file
+that lies inside one of the source directory's layout trees, `inputs/`,
+`templates/`, `references/`, `assets/` and `examples/`, or that is its
+`metais.yaml`, with `output.destination.in_package`, whose `entry` names
+that tree or file, and MUST write nothing: the package would join the
+source it was packed from, or replace it.
+
+<a id="mts-aut-052"></a>**MTS-AUT-052** Before it writes the package
+anywhere, pack MUST read the package it built as a processor verifies a
+packed package ([MTS-PKG-032](02-container.md#mts-pkg-032)'s steps 1 to
+5), under the limits in force, and MUST refuse one a processor would
+refuse with that verification's findings, writing nothing: a limit only
+the packed bytes show, such as `entry-ratio` and `package-size`, which
+the check cannot judge without the encoder, is pack's to hold.

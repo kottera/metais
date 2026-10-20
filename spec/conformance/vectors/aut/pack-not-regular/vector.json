@@ -1,0 +1,92 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/pack-not-regular",
+  "title": "Pack refuses an output file that is a named pipe or a symbolic link, never writing through or replacing it, and writes nothing",
+  "statements": [
+    "MTS-AUT-050"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [
+    "symlinks",
+    "fifos"
+  ],
+  "notes": "A symbolic link at the output is refused whether pack names the file in an existing directory or the caller names the link itself, and whether or not it points at a regular file: the link is not followed, so the file it points at is not written, and it is not replaced.",
+  "cases": [
+    {
+      "name": "fifo",
+      "setup": {
+        "dirs": [
+          "out"
+        ],
+        "fifos": [
+          "out/refused-1.0.0.metais"
+        ]
+      },
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "package",
+            "to": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-regular.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "link-in-a-directory",
+      "setup": {
+        "copy": "setup/target",
+        "symlinks": [
+          {
+            "path": "out/refused-1.0.0.metais",
+            "target": "../elsewhere.metais"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "package",
+            "to": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-regular.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "link-named",
+      "setup": {
+        "copy": "setup/target",
+        "symlinks": [
+          {
+            "path": "out/refused-1.0.0.metais",
+            "target": "../elsewhere.metais"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "package",
+            "to": "out/refused-1.0.0.metais"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-regular.json"
+          }
+        }
+      ]
+    }
+  ]
+}

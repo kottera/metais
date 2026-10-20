@@ -1,0 +1,12 @@
+[
+  {
+    "code": "output.destination.nothing_written",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "reason": "exists"
+    }
+  }
+]

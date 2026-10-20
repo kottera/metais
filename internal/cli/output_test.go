@@ -459,6 +459,7 @@ func TestRefusalNextPerCause(t *testing.T) {
 		sampleBadValue = "--seed or --items is not a whole number in range, or --example is not a name an example can have."
 		renderSample   = "--data is given with --sample, whose generated data takes the data directory's place."
 		renderArchive  = "--overwrite is given with --out -, and an archive on standard output replaces nothing."
+		packBadValue   = "--out is empty, or names a file whose name metais will not write."
 	)
 	cases := []struct {
 		line  []string
@@ -479,6 +480,8 @@ func TestRefusalNextPerCause(t *testing.T) {
 		{[]string{"sample", pkg, "--to", to, "--seed=+1"}, finding.CodeUsageBadValue, sampleBadValue},
 		{[]string{"sample", pkg, "--to", to, "--items", "-1"}, finding.CodeUsageBadValue, sampleBadValue},
 		{[]string{"sample", pkg, "--example", "Not-A-Name"}, finding.CodeUsageBadValue, sampleBadValue},
+		{[]string{"pack", pkg, "--out"}, finding.CodeUsageBadValue, lineBadValue},
+		{[]string{"pack", pkg, "--out", ""}, finding.CodeUsageBadValue, packBadValue},
 	}
 	covered := map[string]bool{}
 	for _, tc := range cases {

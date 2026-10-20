@@ -1,0 +1,192 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/pack-refused",
+  "title": "Pack refuses a source that does not open, a check error and a failing example with every finding, a package whose bytes a reader refuses, and an output inside the package, at a directory, with no directory, beneath a file or beside a leftover temporary file, writing nothing",
+  "statements": [
+    "MTS-AUT-043",
+    "MTS-AUT-044",
+    "MTS-AUT-045",
+    "MTS-AUT-049",
+    "MTS-AUT-050",
+    "MTS-AUT-051",
+    "MTS-AUT-052"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "broken's template reads inputs.report.author, which its schema does not declare, so its check reports an error, and the warning for its notes.txt beside it; failing's one example expects # Annual and renders # Quarterly. ratio's assets/zeros.bin is 1,100,000 zero bytes, which check passes and which deflate to more than 200 times smaller, beyond the entry-ratio limit a reader holds a package to; the ratio observed is the encoder's, and is not compared. hostile holds .compiled/, which every opening command refuses. A packed package given to pack is refused with usage.not_a_source_directory, a usage finding, which internal/cli's tests prove (TestPackPackedOperand). The leftover .metais-tmp-7a492021d794c86c is the temporary file a pack of refused-1.0.0.metais writes through: the first 16 hexadecimal digits of the SHA-256 of that name.",
+  "cases": [
+    {
+      "name": "check-error",
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "broken",
+            "to": "out.metais"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/check.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "test-failure",
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "failing",
+            "to": "out.metais"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/test.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "refused-source",
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "hostile",
+            "to": "out.metais"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/hostile.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "entry-ratio",
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "ratio",
+            "to": "out.metais"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/ratio.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "in-a-layout-tree",
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "package",
+            "to": "package/templates"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/in-templates.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "the-manifest",
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "package",
+            "to": "package/metais.yaml"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/in-manifest.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "a-directory",
+      "setup": {
+        "dirs": [
+          "out/refused-1.0.0.metais"
+        ]
+      },
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "package",
+            "to": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/is-directory.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "no-directory",
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "package",
+            "to": "missing/refused.metais"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-found.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "beneath-a-file",
+      "setup": {
+        "copy": "setup/file"
+      },
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "package",
+            "to": "afile/refused.metais"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-directory.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "temporary-file-left",
+      "setup": {
+        "copy": "setup/leftover"
+      },
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "package",
+            "to": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/exists.json"
+          }
+        }
+      ]
+    }
+  ]
+}
