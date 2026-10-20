@@ -494,8 +494,10 @@ in the order they are written rather than in byte order of name, and that
 an end-record signature may lie within an entry's data, since an entry may
 itself be a stored zip. An
 expected container that is not read MUST be reported as
-`example.expected_unreadable`, located at the expected file, with the code
-of the first refusal in `reason`, and its entries MUST NOT be compared.
+`example.expected_unreadable`, located at the expected file, or, for a
+container entry ([MTS-AUT-069](#mts-aut-069)), where that entry is
+located, with the code of the first refusal in `reason`; its entries MUST
+NOT be compared.
 
 <a id="mts-aut-067"></a>**MTS-AUT-067** An entry the expected container
 holds and the rendered one does not MUST be reported as
