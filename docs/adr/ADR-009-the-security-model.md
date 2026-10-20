@@ -1583,6 +1583,111 @@ byte per byte, and end tabular inputs at a few thousand rows.
    a later change that lowers the memory per value may raise `input-values`
    again, by a further amendment that cites a calibration run.
 
+### A5 — `metais skill` writes two fixed paths under the directory its caller names, and no package content reaches them
+
+**Status:** Proposed 2026-10-20, for Ed Funnekotter's decision, with
+ADR-008 A2. Nothing is built until it is accepted.
+**Amends:** D7 (one more read of the host), D8 (one more writer), D12
+(nothing: no row changes), D16 item 3 (no symbol is allowed anywhere new)
+and `internal/guarantees/layers.json` (two rules added). D14 item 1's
+`Isolate()` is unchanged.
+
+1. **What the command is.** `metais skill` (ADR-008 A2) takes no package
+   and writes outside any output directory, into the directory its caller
+   names with `--dir`, `.` by default. It is the first writer whose
+   destination is not a render's, an extract's, `init`'s, `sample`'s,
+   `unpack`'s or `pack`'s. This amendment fixes exactly what it may touch.
+
+2. **What it may read and write** *(decision 6)*. Everything goes through
+   `internal/hostfs` on an `os.Root` opened on `<dir>`, as D8 item 1
+   requires of every writer; `<dir>` is the caller's own name, so it may be
+   a symbolic link (D7 item 4) and must resolve to a directory.
+   - **Reads:** an `Lstat` of `.claude`, `.agents` and `.git` directly in
+     the root (harness detection and the repository-root warning); an
+     `Lstat` of each component of the two target paths; and the bytes of
+     an existing `.claude/skills/metais/SKILL.md` or
+     `.agents/skills/metais/SKILL.md`, a regular file only, opened as D7
+     item 3 opens a file and read to at most 64 KiB plus one byte. That
+     read is D8 item 4's exception, and the only one: the tool must see
+     its own stamp to know whether a copy is its own (ADR-008 A2 item 5).
+     What it reads decides an action and is never echoed: the stamp's
+     version is reported only when its digest matches, so the reported
+     text is a version string this tool family wrote.
+   - **Writes:** the directories `.claude/skills/metais/` and
+     `.agents/skills/metais/` and their missing ancestors under the root,
+     and the file `SKILL.md` in either, replaced by D8 item 3's rename of a
+     file staged beside it under a fixed name (ADR-005 D14). Nothing else
+     is created, and nothing is ever deleted.
+   - **Refusals:** a symbolic link at any component under the root, even
+     one pointing inside, is `output.link`; a non-directory where a
+     directory is needed, or a non-regular file at `SKILL.md`, is refused
+     with the codes D8 already uses for render. Claude Code documents a
+     symbolic-linked skill directory as supported; the tool still does not
+     write through one, because writing through a link is what D8 item 3
+     exists to refuse, and the refusal's next step is `--print`, which the
+     person redirects to wherever their link points.
+   - **Never:** the parent of `<dir>`, a walk up to a repository's top
+     level, `$HOME`, `os.UserHomeDir`, the working directory's name, or any
+     path built by joining strings onto a host path. The user's scope is
+     reached by the caller writing `--dir ~`, which their shell expands
+     before the tool runs.
+
+3. **No host fact reaches the file or a message.** The written bytes are
+   the embedded text, the tool's build-time version, and the SHA-256 of
+   those two: constants of the binary. The directory's name, the user and
+   the clock are not in them, so two hosts write byte-identical files.
+   Messages name paths relative to `<dir>` and the role "the directory"
+   (D15 item 1). D12's table needs no new row: the command asks for no
+   host fact the table lists, and `Isolate()` already makes a missed one
+   return nothing.
+
+4. **No package content reaches the paths it writes.** The command opens
+   no package and reads no input, so nothing a package author controls can
+   choose a path or a byte it writes. This is held by structure, not by
+   care:
+   - **The writer is its own package, `internal/skill`**, which embeds the
+     text and alone decides what to write.
+   - `layers.json` gains a **`never-depends`** rule: `internal/skill`
+     depends on none of `internal/loader`, `internal/pkgtree`,
+     `internal/zipfmt`, `internal/manifest`, `internal/inputs`,
+     `internal/template` and `internal/browse`, so no code that reads a
+     package or an input is in its closure.
+   - and a **`single-entry-point`** rule: `internal/skill` reaches
+     `internal/hostfs` only through its one entry point, `skill.Install`,
+     as `inputs` and `browse` already do.
+
+5. **How the guarantees hold it.**
+   - **`TestNoHostFacts` and the symbol rule (D16 item 3)**: the new
+     package uses `hostfs`, `crypto/sha256` and `embed`, all already
+     allowed. No allow-list entry is added, so the tripwire keeps its whole
+     reach and `TestModuleAllowListIsR2143` is unchanged.
+   - **The SC7 harness (D16 item 1)** runs `metais skill` with every
+     harness, in both path modes, with and without `--json`, and with
+     `--print`, under environments A and B, against a decoy `<dir>` whose
+     name holds a sentinel and a `HOME` full of decoys. Its checks apply as
+     to every command: no sentinel or host fact in any stream or in the
+     written file, and A and B byte-identical.
+   - **The hostile corpus (D17)** covers a package, which this command
+     never opens, so it gains no vector. The command's own hostile cases
+     are `internal/skill` and `cmd/metais` tests:
+     - `.claude` as a symbolic link, pointing inside and out;
+     - `.claude/skills/metais` as a symbolic link, and as a regular file;
+     - `SKILL.md` as a symbolic link, a FIFO and a directory;
+     - an existing `SKILL.md` larger than 64 KiB, and one of exactly 64 KiB
+       with a forged stamp;
+     - a stamp naming a version with control characters, never echoed;
+     - a read-only directory, so the write fails and nothing is staged
+       outside it;
+     - a `--dir` that names a regular file.
+     Each names its finding code, as a corpus case does.
+
+6. **Why not the user's scope by default, or `$HOME` read before
+   `Isolate()`.** Reading `HOME` as `Isolate()` reads `NO_COLOR` would
+   make the home directory a host fact the binary holds, for one command,
+   and add a row to D12 for a convenience the shell already provides
+   (`--dir ~`). The project is the golden path (ADR-008 A2 item 4); a
+   person who wants the skill everywhere types one more argument.
+
 ## Implementation log
 
 This log is this section together with the entry files in
