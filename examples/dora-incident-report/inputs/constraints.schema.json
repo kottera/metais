@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "What each stage requires",
+  "description": "The stage, field 1.1, decides which fields of sections 3 and 4 are mandatory: section 3's in the intermediate and the final report, section 4's in the final report, each with the conditional fields whose condition the classification criteria of 2.5 meet.",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "stage": {
+            "enum": [
+              "intermediate report",
+              "final report"
+            ]
+          }
+        },
+        "required": [
+          "stage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "incident": {
+            "properties": {
+              "occurred_at": true,
+              "clients_affected": true,
+              "clients_affected_percentage": true,
+              "financial_counterparts_affected": true,
+              "financial_counterparts_affected_percentage": true,
+              "relevant_clients_or_counterparts_impacted": true,
+              "transactions_affected": true,
+              "transactions_affected_percentage": true,
+              "transactions_affected_value": true,
+              "impact_figures_basis": true,
+              "duration": true,
+              "duration_figures_basis": true,
+              "critical_services_affected": true,
+              "incident_types": true,
+              "affected_functional_areas": true,
+              "infrastructure_components_affected": true,
+              "client_financial_interest_impact": true,
+              "other_authorities_informed": true,
+              "temporary_actions": true
+            },
+            "required": [
+              "occurred_at",
+              "clients_affected",
+              "clients_affected_percentage",
+              "financial_counterparts_affected",
+              "financial_counterparts_affected_percentage",
+              "relevant_clients_or_counterparts_impacted",
+              "transactions_affected",
+              "transactions_affected_percentage",
+              "transactions_affected_value",
+              "impact_figures_basis",
+              "duration",
+              "duration_figures_basis",
+              "critical_services_affected",
+              "incident_types",
+              "affected_functional_areas",
+              "infrastructure_components_affected",
+              "client_financial_interest_impact",
+              "other_authorities_informed",
+              "temporary_actions"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "classification_criteria": {
+                      "contains": {
+                        "const": "reputational impact"
+                      }
+                    }
+                  },
+                  "required": [
+                    "classification_criteria"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "reputational_impact": true,
+                    "reputational_impact_context": true
+                  },
+                  "required": [
+                    "reputational_impact",
+                    "reputational_impact_context"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "classification_criteria": {
+                      "contains": {
+                        "const": "geographical spread"
+                      }
+                    }
+                  },
+                  "required": [
+                    "classification_criteria"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "member_state_impact_types": true,
+                    "member_state_impact_description": true
+                  },
+                  "required": [
+                    "member_state_impact_types",
+                    "member_state_impact_description"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "classification_criteria": {
+                      "contains": {
+                        "const": "data losses"
+                      }
+                    }
+                  },
+                  "required": [
+                    "classification_criteria"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "data_losses": true,
+                    "data_losses_description": true
+                  },
+                  "required": [
+                    "data_losses",
+                    "data_losses_description"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "stage": {
+            "const": "final report"
+          }
+        },
+        "required": [
+          "stage"
+        ]
+      },
+      "then": {
+        "properties": {
+          "incident": {
+            "properties": {
+              "root_cause_categories": true,
+              "root_cause_details": true,
+              "root_cause_information": true,
+              "resolution_summary": true,
+              "root_cause_addressed_at": true,
+              "resolved_at": true,
+              "gross_costs_and_losses": true,
+              "financial_recoveries": true
+            },
+            "required": [
+              "root_cause_categories",
+              "root_cause_details",
+              "root_cause_information",
+              "resolution_summary",
+              "root_cause_addressed_at",
+              "resolved_at",
+              "gross_costs_and_losses",
+              "financial_recoveries"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "classification_criteria": {
+                      "contains": {
+                        "const": "economic impact"
+                      }
+                    }
+                  },
+                  "required": [
+                    "classification_criteria"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "economic_impact_threshold_met": true
+                  },
+                  "required": [
+                    "economic_impact_threshold_met"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

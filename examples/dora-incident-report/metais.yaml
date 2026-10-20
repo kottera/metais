@@ -1,0 +1,73 @@
+metais: "1.0"
+name: "dora-incident-report"
+version: "1.0.0"
+title: "DORA major ICT-related incident report"
+description: "Renders a financial entity's report on a major ICT-related incident under Regulation (EU) 2022/2554 (DORA), at each of its three stages, from the fields of the template of Implementing Regulation (EU) 2025/302."
+license: "Apache-2.0"
+guide: |-
+  A financial entity that classifies an ICT-related incident as major
+  reports it to its competent authority three times, on one template: an
+  initial notification, an intermediate report and a final report.
+  Implementing Regulation (EU) 2025/302 lays down the template in its
+  Annex I and its data glossary in its Annex II, which numbers every field,
+  gives its type, and says at which stage it becomes mandatory. This
+  package carries that glossary as its schemas and renders each report as
+  incident-report.md, every field under its number.
+
+  Supply three inputs in a data directory:
+
+  - stage, field 1.1, the type of report: "initial notification",
+    "intermediate report" or "final report";
+  - entity, section 1 of the template: who submits the report, for which
+    financial entity, and whom to contact;
+  - incident, sections 2, 3 and 4: the incident itself.
+
+  Read [what the stage decides](inputs/incident.md) before filling the
+  incident in. The stage decides which fields are mandatory. Section 2's
+  are mandatory at every stage, section 3's from the intermediate report
+  on, and section 4's in the final report. A field the stage does not yet
+  require may be given early, and is then checked like any other.
+
+  Each report updates the one before it. Keep one data directory per
+  incident, and for each new report change stage, add the fields the stage
+  adds and correct what has changed:
+
+      metais validate dora-incident-report --data incident
+      metais render dora-incident-report --data incident --out report
+
+  validate reports every mandatory field the stage still lacks, and every
+  value that does not fit its field's type, all at once. Each schema's
+  properties carry the glossary's field number as x-field and its type as
+  x-field-type; metais schema dora-incident-report incident shows them.
+
+  The package renders the content of a report. It does not file it: send
+  it to your competent authority in the form and through the channel that
+  authority prescribes. The package's [references](references/sources.md)
+  name the legal texts it is written from and their reuse terms.
+inputs:
+  - name: stage
+    title: "1.1 Type of report"
+    description: "Which of the three reports on the incident this is: the initial notification, the intermediate report or the final report."
+    schema: inputs/stage.schema.json
+    forms:
+      - json
+      - yaml
+  - name: entity
+    title: "The financial entity"
+    description: "Section 1 of the template: the entity submitting the report, the financial entity affected, and whom to contact."
+    schema: inputs/entity.schema.json
+    forms:
+      - json
+      - yaml
+  - name: incident
+    title: "The incident"
+    description: "Sections 2, 3 and 4 of the template: the incident, as this stage's report states it."
+    schema: inputs/incident.schema.json
+    meaning: inputs/incident.md
+    forms:
+      - json
+      - yaml
+input_constraints: inputs/constraints.schema.json
+outputs:
+  - id: report
+    template: incident-report.md.liquid
