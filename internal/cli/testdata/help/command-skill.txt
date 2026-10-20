@@ -1,0 +1,120 @@
+metais skill — Write metais's agent skill, which teaches a coding agent the
+golden paths, where the agent's harness reads skills.
+
+Usage:
+  metais skill [--harness <name>]... [--dir <dir>] [--overwrite] [--dry-run]
+               [--print] [--json]
+
+Writes SKILL.md, the skill a coding agent's harness loads before its first
+command, to .claude/skills/metais/ for Claude Code, or to .agents/skills/metais/
+for Codex, Gemini CLI, Cursor and OpenCode, beneath the directory --dir names:
+the current directory when it is omitted. The skill's text is part of metais and
+versioned with it.
+
+Without --harness, the harness is the one the directory shows: .claude/ or
+.agents/. When it holds neither, or both, metais skill writes nothing and asks
+for --harness. Both directories are written only when --harness names a harness
+of each.
+
+A harness finds a project's skills from the directory it starts in up to the
+repository's top level, so run metais skill there; a directory with no .git
+entry gets a warning. For every project of your own, write --dir ~, with a
+space: a shell does not expand the ~ of --dir=~.
+
+Each SKILL.md ends with a line naming the version that wrote it and the digest
+of the text above it. Running metais skill again replaces a copy metais wrote
+that nobody edited, when its version or text differs, and leaves an edited copy
+as it is unless --overwrite is given. --dry-run reports what each target needs,
+so it says whether the skill is current.
+
+Flags:
+  --harness <name>
+      The harness to write the skill for: claude writes .claude/skills, and
+      codex, gemini, cursor and opencode write .agents/skills. Detected from the
+      directory when omitted. Values: claude, codex, gemini, cursor, opencode.
+      May be given more than once.
+  --dir <dir>
+      The existing directory to write beneath, the current directory when
+      omitted: a repository's top level, or ~ for your own scope, written --dir
+      ~ with a space.
+  --overwrite
+      Replace a skill someone edited, or one metais did not write.
+  --dry-run
+      Report what each target needs, and write nothing.
+  --print
+      Print the skill to standard output, and write nothing; it takes no other
+      flag but --json.
+  --json
+      Print the result as one JSON document on standard output.
+  --color <when>
+      Colour human output: auto colours a stream that is a terminal when
+      NO_COLOR is unset or empty; always and never override NO_COLOR. Values:
+      auto, always, never. Default: auto.
+  -h, --help
+      Print help to standard output and exit 0; nothing else runs.
+
+Prints:
+  Each SKILL.md written, or that would be, with what was done to it and the
+  harnesses that read it; with --print, the skill itself. With --json, one
+  metais.skill/1 document.
+
+Refusals:
+  output.destination.link
+      A symbolic link stands at, or above, a target beneath the directory.
+      Next: metais skill --print
+  output.destination.not_directory
+      The directory, or a directory a target needs, is not a directory.
+      Next: metais skill
+  output.destination.not_regular_file
+      A directory or special file stands at a target's SKILL.md.
+      Next: metais skill
+  output.destination.nothing_written
+      The directory cannot be opened, or a write failed before any target was
+      written.
+      Next: metais skill
+  output.destination.write_failed
+      A write failed after another target was written, which is left in place.
+      Next: metais skill
+  usage.bad_value
+      A flag's value is missing, or is not one the flag accepts, or a flag that
+      takes no value is given one.
+      Next: metais skill --help
+  usage.flag_excluded
+      --print is given with another of metais skill's flags.
+      Next: metais skill --help
+  usage.harness_required
+      No --harness is given, and the directory holds neither or both of .claude/
+      and .agents/.
+      Next: metais skill --harness claude
+  usage.repeated_flag
+      A flag that may be given once is given again.
+      Next: metais skill --help
+  usage.skill_edited
+      A SKILL.md metais did not write, or one edited since, stands at a target.
+      Next: metais skill --overwrite
+  usage.unexpanded_tilde
+      --dir's value begins with a literal ~, as --dir=~ gives it.
+      Next: metais skill --dir ~
+  usage.unexpected_operand
+      An operand the command does not take.
+      Next: metais skill --help
+  usage.unknown_flag
+      An argument that is not a flag the command accepts, an abbreviated flag,
+      or one-letter aliases written together.
+      Next: metais skill --help
+
+Examples:
+  metais skill --harness claude
+      Writes .claude/skills/metais/SKILL.md beneath the current directory, for
+      Claude Code.
+  metais skill
+      Writes the skill for the harness the current directory shows, .claude/ or
+      .agents/.
+  metais skill --harness claude --harness codex
+      Writes it for Claude Code and for the harnesses that read .agents/skills.
+  metais skill --harness claude --dir ~
+      Writes it to ~/.claude/skills, for every project of yours.
+  metais skill --dry-run
+      Reports whether the skill is current, and writes nothing.
+  metais skill --print
+      Prints the skill, for a harness that reads skills from somewhere else.

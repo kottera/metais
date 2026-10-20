@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metais.org/cli/schemas/metais.skill.1.json",
+  "title": "metais.skill/1",
+  "description": "What metais skill prints with --json: what it did, or with --dry-run would do, to each SKILL.md it decided, or with --print the skill's text (ADR-008 A2 item 8).",
+  "$ref": "metais.envelope.1.json",
+  "properties": {
+    "format": {
+      "const": "metais.skill/1"
+    },
+    "result": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/result"
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": [
+        "skill",
+        "version",
+        "chosen",
+        "targets",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "skill": {
+          "description": "The skill's name, its directory's name beneath each skills directory.",
+          "const": "metais"
+        },
+        "version": {
+          "description": "The version of metais whose skill this is, as metais version prints it.",
+          "type": "string",
+          "minLength": 1
+        },
+        "chosen": {
+          "description": "flag when --harness named the targets, detected when the directory did; null with --print.",
+          "enum": [
+            "flag",
+            "detected",
+            null
+          ]
+        },
+        "targets": {
+          "description": "Each SKILL.md decided, .claude/skills before .agents/skills; empty with --print.",
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/target"
+          }
+        },
+        "text": {
+          "description": "With --print, the skill as metais skill writes it, its stamp line last; otherwise null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "path",
+        "harnesses",
+        "because",
+        "action",
+        "from"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "description": "The file's path relative to the directory, which is never echoed.",
+          "enum": [
+            ".claude/skills/metais/SKILL.md",
+            ".agents/skills/metais/SKILL.md"
+          ]
+        },
+        "harnesses": {
+          "description": "The harnesses that read this file: the --harness values that share its directory, or under detection every harness that does.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "claude",
+              "codex",
+              "gemini",
+              "cursor",
+              "opencode"
+            ]
+          }
+        },
+        "because": {
+          "description": "Why it is a target: flag, or the harness directory whose existence chose it.",
+          "enum": [
+            "flag",
+            ".claude/ exists",
+            ".agents/ exists"
+          ]
+        },
+        "action": {
+          "description": "What was done to it, or with --dry-run would be: installed where there was none; unchanged for this version's own copy; updated for a copy another version wrote, unedited; edited for a copy metais did not write or someone changed, left as it is; replaced for such a copy with --overwrite.",
+          "enum": [
+            "installed",
+            "unchanged",
+            "updated",
+            "edited",
+            "replaced",
+            "would_install",
+            "would_update",
+            "would_replace"
+          ]
+        },
+        "from": {
+          "description": "The version in the stamp of the copy found, when its digest matched; otherwise null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

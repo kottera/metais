@@ -30,6 +30,9 @@ func helpGolden() map[string][]string {
 		"overview.txt":      {"help"},
 		"help.json":         {"help", "--json"},
 		"command-help.json": {"version", "--help", "--json"},
+		// The agent skill is help too, for a harness: metais skill --print
+		// prints what metais skill writes (ADR-008 A2 item 7).
+		"skill-print.md": {"skill", "--print"},
 	}
 	for _, c := range table {
 		g["command-"+c.Name+".txt"] = []string{"help", c.Name}
@@ -429,7 +432,9 @@ func TestHelpForm(t *testing.T) {
 	saved := isTerminal
 	t.Cleanup(func() { isTerminal = saved })
 	for _, argv := range helpGolden() {
-		if slices.Contains(argv, "--json") {
+		// The skill is read by a harness, not wrapped for a terminal: its
+		// frontmatter and stamp are one line each (ADR-008 A2 items 5, 7).
+		if slices.Contains(argv, "--json") || argv[0] == "skill" {
 			continue
 		}
 		isTerminal = func(any) bool { return false }

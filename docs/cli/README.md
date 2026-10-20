@@ -56,4 +56,5 @@ members.
 | [metais.unpack.1.json](schemas/metais.unpack.1.json) | `unpack` |
 | [metais.version.1.json](schemas/metais.version.1.json) | `version` |
 | [metais.limits.1.json](schemas/metais.limits.1.json) | `limits` |
+| [metais.skill.1.json](schemas/metais.skill.1.json) | `skill` |
 | [metais.help.1.json](schemas/metais.help.1.json) | `help --json` |

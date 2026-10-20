@@ -1646,11 +1646,15 @@ and `internal/guarantees/layers.json` (two rules added). D14 item 1's
    care:
    - **The writer is its own package, `internal/skill`**, which embeds the
      text and alone decides what to write.
-   - `layers.json` gains a **`never-depends`** rule: `internal/skill`
-     depends on none of `internal/loader`, `internal/pkgtree`,
-     `internal/zipfmt`, `internal/manifest`, `internal/inputs`,
-     `internal/template` and `internal/browse`, so no code that reads a
-     package or an input is in its closure.
+   - `layers.json` gains **`never-depends`** rules: `internal/skill`
+     depends on none of `internal/loader`, `internal/zipfmt`,
+     `internal/manifest`, `internal/inputs`, `internal/template` and
+     `internal/browse`, so no code that reads a package or an input is in
+     its closure. `internal/pkgtree` is in it, as the type `hostfs`'s
+     source-directory reader returns; it defines the interface a package
+     is read through and reads nothing itself, and the
+     `single-entry-point` rule below keeps `internal/skill` from calling
+     that reader.
    - and a **`single-entry-point`** rule: `internal/skill` reaches
      `internal/hostfs` only through its one entry point, `skill.Install`,
      as `inputs` and `browse` already do.

@@ -1,0 +1,96 @@
+---
+name: metais
+description: Read, fill in, validate and render METAIS packages (.metais files), and author them, with the metais command. Use whenever a task names a .metais file, a METAIS package or its source directory (one holding metais.yaml), or asks to fill, check or render a document from one.
+---
+
+# metais
+
+A `.metais` file is a METAIS package: a document template. It declares
+the inputs a document needs, each with a JSON Schema and a guide to what
+it means, and renders the document from them. The `metais` command reads
+it, checks inputs against it and renders it.
+
+## Rules
+
+- **Read a package with `metais`, in place.** Never unzip it, never read
+  its raw bytes, never `cat` its README. Every command below takes the
+  `.metais` file, or a source directory, as it is.
+- **Never invent facts for a real document.** The inputs come from the
+  person or from the sources they name. A value nobody supplied is asked
+  for, not guessed, and not filled with a placeholder.
+- **Fictional data only when the person asks for it** ("example data",
+  "sample", "demo"). Then generate it with `metais sample`, or start from a
+  shipped example's inputs; never hand-write placeholder values.
+- **Follow `next`.** Every command ends with the commands to run next
+  (`Next:` in text, `next` in JSON). `<package>`, `<dir>` and `<data dir>`
+  there are placeholders for your own paths.
+
+## Filling in and rendering a package
+
+1. `metais inspect report.metais` — what the package is, its guide, every
+   input (with the file name it takes in a data directory, such as
+   `status.json`), every output, and "Read next". Read all of it. If the
+   guide was cut, `metais inspect report.metais --guide`.
+2. Run what "Read next" lists, in order:
+   - `metais read report.metais <entry>` for each input's meaning document;
+   - `metais ls report.metais examples/<name>/ -r`, then
+     `metais read report.metais examples/<name>/inputs/<file>`, to see a
+     filled-in value;
+   - `metais grep report.metais <pattern> references/` for the references.
+3. `metais schema report.metais <input>` — the fields of one input, as one
+   JSON Schema document. Read it whole, or write it to a file:
+   `metais schema report.metais <input> > <input>.schema.json`. With
+   `--json` the schema is the `result.schema` member of one JSON document;
+   parse it with a JSON parser, never with `grep` or `sed`.
+4. Write a data directory: one file per input, named as `inspect` shows
+   (`<input>.json`, `<input>.csv`, …), or one directory per collection
+   input. `metais help inputs` explains `--set` and `--inputs-json`, which
+   supply values on the command line instead.
+5. `metais validate report.metais --data <data dir>` — every finding at
+   once. Fix them all and run it again until it is clean.
+6. `metais render report.metais --data <data dir> --out <new dir>` — the
+   document. `--out` must be a new or empty directory; `--dry-run` lists
+   what it would write.
+
+**Fictional data, when asked for:**
+`metais sample report.metais --to <data dir>` writes valid generated data
+(`--seed <n>` varies it); then `validate` and `render` as above. Or start
+from an example's inputs:
+`metais extract report.metais 'examples/<name>/inputs/**' --to <dir>`, then
+use `<dir>/examples/<name>/inputs` as the data directory. Say in your
+answer that the data is fictional.
+
+## Writing a package
+
+1. `metais init <dir>` — a new source directory with an input, a template
+   and an example.
+2. Edit `metais.yaml`, `inputs/`, `templates/` and `examples/`. Preview
+   with `metais render <dir> --sample --out <preview dir>`.
+3. `metais check <dir>` — every defect, without data.
+4. `metais test <dir>` — renders each example and compares it with its
+   `expected/` outputs; `metais test <dir> --update` records them.
+5. `metais pack <dir>` — check, test, and write `<name>-<version>.metais`.
+
+To change a packed package: `metais unpack report.metais --to <dir>`,
+edit, then `check`, `test` and `pack`.
+
+## Machine output
+
+`--json` on any command prints exactly one JSON document on standard
+output: `{"format", "ok", "findings", "summary", "result", "next"}`.
+`ok` is false when any finding is an error; each finding has a `code`,
+a `message` and a `hint`. `metais help json` lists every format.
+
+## When stuck
+
+- `metais help` — the commands and both paths.
+- `metais help <command>` — a command's operands, flags, refusals and
+  examples.
+- `metais help inputs` — supplying inputs, and which source wins.
+- `metais help refusals <command>` — every code a command can report, with
+  the next step.
+- A finding's `hint` says what to do; its code is stable.
+
+This skill was installed by `metais skill`. If `metais version` is newer
+than the version in the last line, `metais skill --dry-run` says whether to
+refresh it.

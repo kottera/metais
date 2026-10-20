@@ -38,5 +38,6 @@ The formats:
   metais.unpack/1    metais unpack
   metais.version/1   metais version
   metais.limits/1    metais limits
+  metais.skill/1     metais skill
   metais.help/1      metais help
   metais.usage/1     a line that names no command

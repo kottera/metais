@@ -41,6 +41,8 @@ Commands:
     version   Print the tool's version and the specification versions it
               implements.
     limits    List every resource limit, with its default, unit and class.
+    skill     Write metais's agent skill, which teaches a coding agent the
+              golden paths, where the agent's harness reads skills.
     help      Print the overview, a command's help, or a topic.
 
 Global flags:

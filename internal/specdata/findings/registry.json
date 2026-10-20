@@ -8068,6 +8068,25 @@
       "statements": []
     },
     {
+      "code": "usage.harness_required",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "found",
+          "type": "string",
+          "meaning": "Which of .claude/ and .agents/ the directory holds: neither, or both.",
+          "always": true
+        }
+      ],
+      "message": "metais skill needs direction: no --harness is given, and the directory holds {found} of .claude/ and .agents/, so it does not settle which harness to write the skill for.",
+      "hint": "Name the harness with --harness: claude, codex, gemini, cursor or opencode. Give --harness once for each of .claude/ and .agents/ to write both.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "usage.is_a_directory",
       "severity": "error",
       "class": "usage",
@@ -8280,6 +8299,18 @@
       "statements": []
     },
     {
+      "code": "usage.not_repository_root",
+      "severity": "warning",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [],
+      "message": "The directory metais skill wrote into holds no .git entry: a harness started in it or below it finds the skill, and one started at the repository's top level does not.",
+      "hint": "To serve the whole repository, run metais skill at its top level. With --dir ~, for your own scope, this is expected.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "usage.not_text",
       "severity": "error",
       "class": "usage",
@@ -8344,6 +8375,44 @@
       ],
       "message": "{flag} is given again at argument {argument}; it may be given only once.",
       "hint": "Give {flag} once: a repeated flag is refused rather than letting the last one win.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.skill_edited",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The skill file's path, relative to the directory.",
+          "always": true
+        }
+      ],
+      "message": "The skill at {path} is not a copy metais wrote, or was edited since, so it was left as it is.",
+      "hint": "Compare it with `metais skill --print`, and give --overwrite to replace it.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
+      "code": "usage.unexpanded_tilde",
+      "severity": "error",
+      "class": "usage",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "argument",
+          "type": "number",
+          "meaning": "The 1-based position of --dir's value among the arguments after metais.",
+          "always": true
+        }
+      ],
+      "message": "Argument {argument} gives --dir a path whose first element is a literal ~, which the shell did not expand.",
+      "hint": "A shell expands ~ only at the start of a word, so --dir=~ reaches metais unexpanded: write --dir ~ with a space, or the directory's path. A directory named ~ is written ./~.",
       "location": "none",
       "since": "1.0",
       "statements": []

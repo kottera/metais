@@ -219,6 +219,23 @@ func (w *Writer) List(name string, max int) ([]Entry, error) {
 	return d.List(name, max)
 }
 
+// ReadFile returns the bytes of the regular file name, as Dir.ReadFile
+// does, after examining every component above it as a write does: each
+// that exists must be a directory and not a link. It is the one read of
+// a file beneath a directory a Writer writes, and metais skill alone
+// makes it, to read the stamp of the SKILL.md it may replace (ADR-009 A5
+// item 2); a render never opens an existing file (D8 item 4).
+func (w *Writer) ReadFile(name string, limit int64) ([]byte, error) {
+	if _, ok := osName(name); !ok || name == "." {
+		return nil, fail("open", BadName)
+	}
+	if _, err := checkParents(w.root, "open", name); err != nil {
+		return nil, err
+	}
+	d := Dir{root: w.root}
+	return d.ReadFile(name, limit)
+}
+
 // checkParents examines every component of name but the last with Lstat
 // under root: each that exists must be a directory and not a link. It
 // returns the number of components that exist.
