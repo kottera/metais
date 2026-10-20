@@ -130,9 +130,9 @@ Refusals:
                             Next: metais test <dir>
   csv.* (7)                 An example's inputs are refused.
                             Next: metais test <dir>
+  example.* (9)             An example fails. Next: metais test <dir>
   example.layout (1)        An example's layout (layout), an error.
                             Next: metais check <dir>
-  example.* (4)             An example fails. Next: metais test <dir>
   input.* (52)              An example's inputs are refused.
                             Next: metais test <dir>
   json.* (5)                An example's inputs are refused.

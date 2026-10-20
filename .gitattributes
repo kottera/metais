@@ -22,4 +22,5 @@ internal/yamlx/testdata/write/document.yaml merge=metais-generated
 spec/conformance/vectors/**/package.metais merge=metais-generated
 spec/conformance/vectors/aut/test-containers/package/examples/** merge=metais-generated
 spec/conformance/vectors/aut/test-containers-packed/packed.metais merge=metais-generated
+spec/conformance/vectors/aut/pack-containers/*/examples/** merge=metais-generated
 THIRD-PARTY-NOTICES.txt merge=metais-generated

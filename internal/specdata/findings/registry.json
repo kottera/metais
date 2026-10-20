@@ -214,6 +214,177 @@
       ]
     },
     {
+      "code": "example.entry_method",
+      "severity": "error",
+      "class": "content",
+      "subject": "example",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The container output's path, relative to the example's expected/ and to the output directory.",
+          "always": true
+        },
+        {
+          "name": "entry",
+          "type": "string",
+          "meaning": "The entry's path within the container, after the path of each container entry it is within, joined by !.",
+          "always": true
+        },
+        {
+          "name": "expected_method",
+          "type": "string",
+          "meaning": "The expected entry's compression method: \"deflated\".",
+          "always": true
+        },
+        {
+          "name": "rendered_method",
+          "type": "string",
+          "meaning": "The rendered entry's compression method, which its declaration's stored: true or its profile fixes: \"stored\".",
+          "always": true
+        }
+      ],
+      "message": "The expected container {path} holds the entry {entry} deflated, which the render stores, as its declaration's stored: true or its profile requires.",
+      "hint": "Only an entry stored: true or a profile's mimetype has its method compared; record the container as the render writes it. When the render is right, `metais test <package> --update` records it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-070"
+      ]
+    },
+    {
+      "code": "example.entry_missing",
+      "severity": "error",
+      "class": "content",
+      "subject": "example",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The container output's path, relative to the example's expected/ and to the output directory.",
+          "always": true
+        },
+        {
+          "name": "entry",
+          "type": "string",
+          "meaning": "The entry's path within the container, after the path of each container entry it is within, joined by !.",
+          "always": true
+        }
+      ],
+      "message": "The expected container {path} holds the entry {entry}, which the render's container does not.",
+      "hint": "Make the container declare the entry, or remove it from the expected container. When the render is right, `metais test <package> --update` records it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-067"
+      ]
+    },
+    {
+      "code": "example.entry_order",
+      "severity": "error",
+      "class": "content",
+      "subject": "example",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The container output's path, relative to the example's expected/ and to the output directory.",
+          "always": true
+        },
+        {
+          "name": "entry",
+          "type": "string",
+          "meaning": "For a container that is an entry of another, its path within the output, after the path of each container entry it is within, joined by !.",
+          "always": false
+        },
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The 0-based index, among the entries both containers hold, at which their order first differs.",
+          "always": true
+        },
+        {
+          "name": "expected",
+          "type": "string",
+          "meaning": "The expected container's entry at index.",
+          "always": true
+        },
+        {
+          "name": "rendered",
+          "type": "string",
+          "meaning": "The render's container's entry at index.",
+          "always": true
+        }
+      ],
+      "message": "The entries of the container {path} are in another order than the expected container's, from index {index}: {expected} is expected and {rendered} is rendered.",
+      "hint": "A container's entries are in a fixed order: a profile's first, then each first: true declaration's, then the rest in byte order of path. Change first: true, or record the container as the render writes it. When the render is right, `metais test <package> --update` records it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-068"
+      ]
+    },
+    {
+      "code": "example.entry_unexpected",
+      "severity": "error",
+      "class": "content",
+      "subject": "example",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The container output's path, relative to the example's expected/ and to the output directory.",
+          "always": true
+        },
+        {
+          "name": "entry",
+          "type": "string",
+          "meaning": "The entry's path within the container, after the path of each container entry it is within, joined by !.",
+          "always": true
+        }
+      ],
+      "message": "The render's container {path} holds the entry {entry}, which the expected container does not.",
+      "hint": "Add the entry to the expected container, or stop the container declaring it. When the render is right, `metais test <package> --update` records it.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-067"
+      ]
+    },
+    {
+      "code": "example.expected_unreadable",
+      "severity": "error",
+      "class": "content",
+      "subject": "example",
+      "params": [
+        {
+          "name": "path",
+          "type": "string",
+          "meaning": "The container output's path, relative to the example's expected/ and to the output directory.",
+          "always": true
+        },
+        {
+          "name": "entry",
+          "type": "string",
+          "meaning": "For a container that is an entry of another, its path within the output, after the path of each container entry it is within, joined by !.",
+          "always": false
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "The code of the first finding the package reader refuses the zip with, such as package.container.not_zip or limit.package.",
+          "always": true
+        }
+      ],
+      "message": "The example's expected container {path} is not a zip the package reader reads ({reason}).",
+      "hint": "An expected container is read as a packed package is, with its bounds and profile, but in its entries' own order; record it as the render writes it, which `metais test <package> --update` does.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-AUT-066"
+      ]
+    },
+    {
       "code": "example.layout",
       "severity": "error",
       "class": "content",
@@ -272,6 +443,12 @@
           "type": "string",
           "meaning": "The output's path, relative to the example's expected/ and to the output directory.",
           "always": true
+        },
+        {
+          "name": "entry",
+          "type": "string",
+          "meaning": "For an entry of a container output, its path within the container, after the path of each container entry it is within, joined by !; the location is the expected file's path, ! and this.",
+          "always": false
         },
         {
           "name": "binary",
@@ -341,7 +518,8 @@
       "statements": [
         "MTS-AUT-040",
         "MTS-AUT-041",
-        "MTS-AUT-042"
+        "MTS-AUT-042",
+        "MTS-AUT-069"
       ]
     },
     {

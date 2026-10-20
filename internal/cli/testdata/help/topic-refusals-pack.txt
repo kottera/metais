@@ -16,6 +16,11 @@ Next: metais test <dir>
   csv.header_empty
   csv.header_missing
   csv.unterminated_quote
+  example.entry_method
+  example.entry_missing
+  example.entry_order
+  example.entry_unexpected
+  example.expected_unreadable
   example.metadata
   example.output_differs
   example.output_missing

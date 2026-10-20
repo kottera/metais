@@ -1,0 +1,20 @@
+[
+  {
+    "code": "example.entry_order",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "order"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/order/expected/box.zip!b.txt"
+    },
+    "params": {
+      "path": "box.zip",
+      "index": 0,
+      "expected": "b.txt",
+      "rendered": "a.txt"
+    }
+  }
+]

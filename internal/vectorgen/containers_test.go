@@ -5,25 +5,38 @@ package vectorgen
 
 import (
 	"bytes"
+	"errors"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"slices"
 	"testing"
 
 	"github.com/kottera/metais/internal/testenv"
 )
 
-// The expected containers of aut/test-containers, each example's
-// expected/box.zip and expected/doc.odt, and aut/test-containers-packed's
-// packed.metais, the same source directory packed (W6-4). Each example
-// breaks the comparison by entries in one way; "equal" holds the render's
-// entries in zips of other bytes, every method the render does not fix
-// chosen the other way.
+// The expected containers of W6-4's vectors. aut/test-containers' examples
+// each break the comparison by entries in one way, and "equal" holds the
+// render's entries in zips of other bytes, every method the render does
+// not fix chosen the other way; aut/test-containers-packed is its source
+// directory packed. aut/pack-containers is where W6-4 meets pack (W6-1):
+// its package's one example is "equal", so it packs, and its failing
+// source's is "order", so pack refuses it.
 const (
 	containersVector = "aut/test-containers"
 	containersPacked = "aut/test-containers-packed"
+	packContainers   = "aut/pack-containers"
 )
+
+// containerSources are the source directories whose examples/ the
+// generator writes, each with the examples it holds.
+var containerSources = []struct {
+	dir      string
+	examples []string
+}{
+	{containersVector + "/package", []string{"content", "equal", "method", "missing", "order", "unexpected", "unreadable"}},
+	{packContainers + "/package", []string{"equal"}},
+	{packContainers + "/failing", []string{"order"}},
+}
 
 // The rendered entries: the package's templates.
 var (
@@ -35,9 +48,9 @@ var (
 	ctMimetype = []byte("application/vnd.oasis.opendocument.text")
 )
 
-// containerFiles is every file of aut/test-containers' examples/, by its
-// path within the package.
-func containerFiles() map[string][]byte {
+// containerFiles is every file of each named example of aut/test-containers'
+// package, by its path within the package.
+func containerFiles(names []string) map[string][]byte {
 	inner := func(es ...zentry) zentry { return zentry{name: "inner.zip", content: zipOf(es)} }
 	c := zentry{name: "c.txt", content: ctC}
 	box := func(es ...zentry) []byte { return zipOf(es) }
@@ -61,7 +74,8 @@ func containerFiles() map[string][]byte {
 		"unreadable": {"An expected container that is not a zip", []byte("not a zip archive\n"), rendered},
 	}
 	out := map[string][]byte{}
-	for name, e := range examples {
+	for _, name := range names {
+		e := examples[name]
 		dir := "examples/" + name + "/"
 		out[dir+"example.yaml"] = []byte("title: " + e.title + "\n")
 		out[dir+"expected/box.zip"] = e.box
@@ -76,37 +90,39 @@ func containerFiles() map[string][]byte {
 // source directory packed; with it, each is written.
 func TestContainerVectors(t *testing.T) {
 	testenv.Home(t)
-	src := filepath.Join(vectorsDir, filepath.FromSlash(containersVector), "package")
-	files := containerFiles()
-	for name, want := range files {
-		path := filepath.Join(src, filepath.FromSlash(name))
-		if *update {
-			if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-				t.Fatal(err)
+	for _, src := range containerSources {
+		root := filepath.Join(vectorsDir, filepath.FromSlash(src.dir))
+		files := containerFiles(src.examples)
+		for name, want := range files {
+			path := filepath.Join(root, filepath.FromSlash(name))
+			if *update {
+				if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(path, want, 0o644); err != nil {
+					t.Fatal(err)
+				}
+				continue
 			}
-			if err := os.WriteFile(path, want, 0o644); err != nil {
-				t.Fatal(err)
+			if got, err := os.ReadFile(path); err != nil || !bytes.Equal(got, want) {
+				t.Errorf("%s/%s is not what its case builds (run go test ./internal/vectorgen -run TestContainerVectors -args -update): %v", src.dir, name, err)
 			}
-			continue
 		}
-		if got, err := os.ReadFile(path); err != nil || !bytes.Equal(got, want) {
-			t.Errorf("%s/package/%s is not what its case builds (run go test ./internal/vectorgen -run TestContainerVectors -args -update): %v", containersVector, name, err)
+		var committed []string
+		err := filepath.WalkDir(filepath.Join(root, "examples"), func(p string, d fs.DirEntry, err error) error {
+			if err == nil && !d.IsDir() {
+				rel, _ := filepath.Rel(root, p)
+				committed = append(committed, filepath.ToSlash(rel))
+			}
+			return err
+		})
+		if err != nil && !(*update && errors.Is(err, fs.ErrNotExist)) {
+			t.Fatal(err)
 		}
-	}
-	var committed []string
-	err := filepath.WalkDir(filepath.Join(src, "examples"), func(p string, d fs.DirEntry, err error) error {
-		if err == nil && !d.IsDir() {
-			rel, _ := filepath.Rel(src, p)
-			committed = append(committed, filepath.ToSlash(rel))
-		}
-		return err
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, n := range committed {
-		if _, ok := files[n]; !ok {
-			t.Errorf("%s/package/%s: a committed file that no case builds", containersVector, n)
+		for _, n := range committed {
+			if _, ok := files[n]; !ok {
+				t.Errorf("%s/%s: a committed file that no case builds", src.dir, n)
+			}
 		}
 	}
 	packed := pack(t, sourceFiles(t, containersVector))
@@ -122,8 +138,5 @@ func TestContainerVectors(t *testing.T) {
 	}
 	if got, err := os.ReadFile(path); err != nil || !bytes.Equal(got, packed) {
 		t.Errorf("%s/packed.metais is not the source directory packed: %v", containersPacked, err)
-	}
-	if !slices.Contains(committed, "examples/equal/expected/box.zip") {
-		t.Error("the examples are not committed")
 	}
 }
