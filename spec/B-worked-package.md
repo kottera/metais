@@ -106,9 +106,8 @@ outputs:
   Liquid template, so the file is named from the version: `release-2.4.0.md`
   ([MTS-OUT-003](09-outputs.md#mts-out-003)). `announcement` has none, so its
   file is its template's path with `.liquid` removed, `announcement.txt`
-  ([MTS-OUT-001](09-outputs.md#mts-out-001)). The value of `path` begins with
-  a letter, not `{`, and is quoted anyway: a YAML value beginning with `{` must
-  be.
+  ([MTS-OUT-001](09-outputs.md#mts-out-001)). In YAML, a `path` that begins
+  with `{` must be quoted; quoting every one costs nothing.
 
 The manifest names files that do not exist yet. Each of the next sections
 writes one of them.
