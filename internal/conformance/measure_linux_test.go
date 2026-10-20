@@ -41,9 +41,10 @@ func buildProcStub(dir string) (string, error) {
 // few MiB, which no Go program's own peak falls below.
 //
 // The stub is a small program of its own, never race-built
-// (TestStubIsItsOwnProgram): every process the runner starts pays for the stub's
-// start and exit, and the test binary, re-executed as the stub, made that
-// the race runtime's start and its second's sleep at exit.
+// (TestStubIsItsOwnProgram): every process the runner starts pays for
+// the stub's start and exit, and the test binary, re-executed as the
+// stub, made that the race runtime's start and its second's sleep at
+// exit.
 func measured(ctx context.Context, path string, args, env []string) (*exec.Cmd, func(*os.ProcessState) (usage, error), error) {
 	if procStub == "" {
 		return nil, nil, errors.New("the measuring stub was not built")
