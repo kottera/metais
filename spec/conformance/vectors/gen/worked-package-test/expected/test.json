@@ -1,0 +1,21 @@
+[
+  {
+    "code": "example.output_differs",
+    "severity": "error",
+    "subject": {
+      "kind": "example",
+      "name": "lantern"
+    },
+    "location": {
+      "origin": "package",
+      "file": "examples/lantern/expected/release-2.4.0.md",
+      "line": 3,
+      "column": 10
+    },
+    "params": {
+      "path": "release-2.4.0.md",
+      "binary": false,
+      "cause": "none"
+    }
+  }
+]

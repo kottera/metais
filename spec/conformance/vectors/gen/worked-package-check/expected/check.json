@@ -1,0 +1,38 @@
+[
+  {
+    "code": "template.xref.unknown_field",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/announcement.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/announcement.txt.liquid",
+      "line": 1,
+      "column": 87
+    },
+    "params": {
+      "property": "data",
+      "declared": [
+        "changes",
+        "date",
+        "highlight",
+        "product",
+        "version"
+      ],
+      "declared_count": 5,
+      "suggestion": "date",
+      "input": "release",
+      "output": "announcement"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "inputs/release.schema.json",
+        "pointer": "",
+        "note": "where the schema declares it"
+      }
+    ]
+  }
+]

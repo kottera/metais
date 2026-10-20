@@ -1,0 +1,23 @@
+metais: "1.0"
+name: "release-notes"
+version: "1.0.0"
+title: "Release Notes"
+description: "Writes the release notes and a short announcement for one release of a product."
+guide: |-
+  This package writes two files for one release of a product: release
+  notes in Markdown, named after the version, and a plain-text
+  announcement to post where the product's users will see it.
+
+  Supply one input, the release. Read
+  [what the release means](inputs/release.md) before you write it.
+inputs:
+  - name: release
+    title: "Release"
+    schema: inputs/release.schema.json
+    meaning: inputs/release.md
+outputs:
+  - id: notes
+    template: notes.md.liquid
+    path: "release-{{ inputs.release.version }}.md"
+  - id: announcement
+    template: announcement.txt.liquid

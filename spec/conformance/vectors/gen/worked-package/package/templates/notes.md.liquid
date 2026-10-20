@@ -1,0 +1,12 @@
+# {{ inputs.release.product }} {{ inputs.release.version }}
+
+Released on {{ inputs.release.date }}.
+{%- if inputs.release.highlight %}
+
+{{ inputs.release.highlight }}
+{%- endif %}
+
+## Changes
+{% for change in inputs.release.changes %}
+- {{ change.kind | capitalize }}: {{ change.text }}
+{%- endfor %}

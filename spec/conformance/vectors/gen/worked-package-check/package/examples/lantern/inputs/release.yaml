@@ -1,0 +1,11 @@
+product: Lantern
+version: 2.4.0
+date: 2026-10-20
+highlight: Lantern now opens shared boards without an account.
+changes:
+  - kind: added
+    text: Anyone with a board's link can open it read-only.
+  - kind: changed
+    text: Exports keep the column order you see on screen.
+  - kind: fixed
+    text: Cards dragged between boards no longer lose their labels.

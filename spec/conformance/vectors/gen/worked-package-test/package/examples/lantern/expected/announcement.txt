@@ -1,0 +1,2 @@
+Lantern 2.4.0 shipped on 2026-10-20, with 3 changes. Lantern now opens shared boards without an account.
+Read the release notes: release-2.4.0.md
