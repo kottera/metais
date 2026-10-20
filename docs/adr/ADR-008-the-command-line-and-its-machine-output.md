@@ -1344,10 +1344,10 @@ mention it.
      reads no package. D13 places it with `version`, `help` and `limits`
      as a command that opens no package. It is in the group "The tool".
    - **Exit codes:** 0 when every target was written or already current;
-     1 (class `content`) when a target holds an edited copy and
-     `--overwrite` was not given (item 5); 3 for a usage error, including
-     no harness chosen (item 3) and an unexpanded `~` (item 4); 5 (class `destination`) when a link,
-     special file or failed write stands in the way. Each target is
+     3 for a usage error, including no harness chosen (item 3) and an
+     unexpanded `~` (item 4); 5 (class `destination`) when a copy someone
+     edited (item 5), a link, a special file or a failed write stands in
+     the way. Each target is
      decided on its own: one refused target does not stop another's
      write, and the exit code is the worst of them (D13's order).
 
@@ -1408,7 +1408,7 @@ mention it.
      host above the directory the caller named, which ADR-009 A5 item 2
      does not allow.
    - Instead, **when `<dir>` holds no `.git` entry, the result carries a
-     warning** (`skill.not_repository_root`, severity warning, exit 0):
+     warning** (`output.destination.not_repository_root`, severity warning, exit 0):
      the skill serves harnesses started in that directory or below, and
      running `metais skill` at the repository's top level serves the whole
      repository. With `--dir ~` that warning is expected and correct, and
@@ -1430,7 +1430,7 @@ mention it.
    | none | written — `installed` |
    | last line is a well-formed stamp whose digest matches, and its version and text equal this tool's | nothing — `unchanged` |
    | stamp's digest matches, but the version or text differs | replaced — `updated` |
-   | no stamp, a malformed stamp, a digest that does not match, or larger than 64 KiB | left untouched — `edited`, finding `skill.edited` (error, exit 1); next: `metais skill --overwrite` |
+   | no stamp, a malformed stamp, a digest that does not match, or larger than 64 KiB | left untouched — `edited`, finding `output.destination.edited` (error, exit 5); next: `metais skill --overwrite` |
    | same, with `--overwrite` | replaced — `replaced` |
 
    - **A file whose digest matches was written by some `metais` and never
@@ -1564,15 +1564,18 @@ mention it.
     so `metais skill --help`, `metais help skill`, the overview's group
     "The tool", `help --json`, the help goldens and D16 item 1's coverage
     test carry it. Its refusals are `usage.harness_required`,
-    `usage.unexpanded_tilde`, `skill.edited` and the destination codes
-    `hostfs` reports (`output.link` and the write failures);
-    `skill.not_repository_root` is a warning. The four new codes are registered in
+    `usage.unexpanded_tilde`, `output.destination.edited` and the
+    destination codes `hostfs` reports (`output.destination.link` and the
+    write failures); `output.destination.not_repository_root` is a
+    warning. The four new codes are registered in
     `spec/findings/registry.json` like every code the tool reports, with
     no statements, as the `usage.*` codes are: chapter 12's generated
     catalog lists them with no statement, and no other text of the
-    specification and no vector changes. `skill.edited` is class
-    `content`; `skill.not_repository_root` is a warning of class
-    `content`; `usage.harness_required` and `usage.unexpanded_tilde` are
+    specification and no vector changes. They belong to the families
+    ADR-006 D3 item 2 already lists, so no family is added:
+    `output.destination.edited` is class `destination`;
+    `output.destination.not_repository_root` is a warning of class
+    `content`, since a warning refuses nothing; and `usage.harness_required` and `usage.unexpanded_tilde` are
     class `usage`.
 
 11. **What this does not decide.** Installing for a harness by its own

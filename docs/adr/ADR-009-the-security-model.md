@@ -1618,7 +1618,7 @@ and `internal/guarantees/layers.json` (two rules added). D14 item 1's
      file staged beside it under a fixed name (ADR-005 D14). Nothing else
      is created, and nothing is ever deleted.
    - **Refusals:** a symbolic link at any component under the root, even
-     one pointing inside, is `output.link`; a non-directory where a
+     one pointing inside, is `output.destination.link`; a non-directory where a
      directory is needed, or a non-regular file at `SKILL.md`, is refused
      with the codes D8 already uses for render. Claude Code documents a
      symbolic-linked skill directory as supported; the tool still does not
