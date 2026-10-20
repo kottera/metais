@@ -143,7 +143,7 @@ another harness's type to get past a capacity wait.** Park on
 | 5 | **The render's capabilities, and the rest of authoring**: the METAIS filters and `date`; escaping; `embed` and `provenance`; fan-out, conditions and path templates; assets and the mirror; zip containers and their profiles; CRLF and output validation; existing destinations; dry run, the standard-output archive and `--only`; `sample`; `render --sample`; `test` | 4 | **complete** — [verdict](#11-wave-5--the-renders-capabilities-and-the-rest-of-authoring) |
 | 5b | **The gate's cost and merge friction** (inserted by Ed, 2026-10-19): the two-tier gate and its scripts; the shared-host cap; the skills; the `hostfs` limit tests; self-merging generated files; per-item ADR logs; one edit per finding code; help refusals by family; `render.go` split by phase | 5 | **complete** — [verdict](#11b-wave-5b--the-gates-cost-and-merge-friction-inserted-by-ed-2026-10-19) |
 | 6 | **Pack, and hardening**: `pack` with the example-package harness; `test`'s container comparison; the hostile corpus in full; the SC7 harness's full reach; limit calibration; benchmark budgets; the release builder | 5b | **complete**, release builder carried to Wave 7 — [verdict](#12-wave-6--pack-and-hardening) |
-| 7 | **The example packages and the close-out**: the packages of PRD §4.1 to §4.5; the worked package of `B-worked-package.md`; the specification's 1.0 text complete; the README, documentation and ADR implementation logs | 6 | not started |
+| 7 | **The example packages and the close-out**: the packages of PRD §4.1 to §4.5; the worked package of `B-worked-package.md`; the specification's 1.0 text complete; the README, documentation and ADR implementation logs | 6 | **complete** — [verdict](#13-wave-7--the-example-packages-and-the-close-out) |
 | — | **The out-of-band acts**: §6 | — | — |
 
 Two chains set the wave count:
@@ -1678,6 +1678,48 @@ specification's 1.0 text is complete and ready for the release act.
     same on every host, and A3 item 5 can raise `schema-work` once its cost
     per unit is cut after the train.
   - Both halves land together in W7-C6's PR #166.
+
+**Verdict (2026-10-20): complete.** What landed:
+
+- All five packages of PRD §4.1 to §4.5 are under `examples/`, passing the
+  example-package harness, with SC2's and SC3's tests.
+- The specification's 1.0 text is complete: chapter 15, appendix B's worked
+  package, the references, and the front page at `Status: Draft`. The
+  unwired list is gone, and no code is exempted.
+- The release builder landed under Ed's ADR-009 A2
+  ([#163](https://github.com/kottera/metais/pull/163)), so the acceptance
+  carried from §12 is met.
+- Ed's rulings during the wave are in: ADR-009 A3 (the 1 GiB memory
+  ceiling, the 120 s CPU ceiling, and the lowered defaults) and A4
+  (`input-values` and `yaml-size`), ADR-001 A1 (`README.md` first, stored),
+  and the `metais.org` site.
+
+That took eighteen PRs (#148 to #172). The verification round passed with
+no blocking finding: it ran the wave tier green on a fresh clone with all
+58 reach groups, and mutated 16 items.
+
+Brief and closeout:
+[brief-plan-2026-10-metais-v1-wave7.md](../briefs/brief-plan-2026-10-metais-v1-wave7.md)
+(brief [#144](https://github.com/kottera/metais/pull/144), rulings
+[#147](https://github.com/kottera/metais/pull/147),
+[#154](https://github.com/kottera/metais/pull/154) and
+[#168](https://github.com/kottera/metais/pull/168), closeout
+[#174](https://github.com/kottera/metais/pull/174)).
+
+The wave's own ruling R-W7-4, which allowed a merge when a change's tests
+passed alone, was rescinded. The wave tier judged the two items merged
+under it.
+
+Owed before the release, and filed at the train's close:
+
+- **design session W7-D1** (`01a15abe-ed83-7284-9592-ca591cdd72db`): output
+  validation and YAML schema files still reach past 1 GiB at the defaults;
+- **a four-target calibration re-run** that includes A4's cases. The
+  wave's figures came from a sandbox;
+- **the SC1 and SC9 rounds** (`01a15abf-4d58-7c58-94ca-f4833e218555`,
+  `01a15abf-6347-7520-8a58-1b9ab5f65180`).
+
+Still running when the wave closed: W7-NB1 to W7-NB5.
 
 ## 14. What this plan does not cover
 
