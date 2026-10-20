@@ -143,7 +143,8 @@ func TestLower(t *testing.T) {
 		{"entry-size=64MiB", EntrySize, 64 << 20},
 		{"path-length=2KiB" /* above 512 */, PathLength, -1},
 		{"path-length=511", PathLength, 511},
-		{"output-total=1GiB", OutputTotal, 1 << 30},
+		{"output-total=512MiB", OutputTotal, 512 << 20},
+		{"output-total=1GiB" /* above 512 MiB */, OutputTotal, -1},
 		{"regex-work=8589934592", RegexWork, 1 << 33},
 		{"entry-ratio=100", EntryRatio, 100},
 	}
