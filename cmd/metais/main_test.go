@@ -83,7 +83,7 @@ func TestBinary(t *testing.T) {
 		t.Skip("builds the binary")
 	}
 	bin := filepath.Join(testenv.Dir(t), "metais")
-	build := exec.Command("go", "build", "-trimpath", "-o", bin, ".")
+	build := goCommand(t, "build", "-trimpath", "-o", bin, ".")
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
 	}

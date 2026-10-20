@@ -82,7 +82,7 @@ func TestReleaseFlag(t *testing.T) {
 		t.Skip("builds a binary")
 	}
 	bin := filepath.Join(testenv.Dir(t), "printversion")
-	build := exec.Command("go", "build", "-trimpath", "-o", bin,
+	build := goCommand(t, "build", "-trimpath", "-o", bin,
 		"-ldflags", "-X github.com/kottera/metais/internal/version.release=1.2.3-rc.1",
 		"./testdata/printversion")
 	if out, err := build.CombinedOutput(); err != nil {

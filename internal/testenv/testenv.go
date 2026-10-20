@@ -7,11 +7,16 @@
 //
 // It is built only on the testing package's own helpers, never on an os
 // file or environment function, so it holds no host access of its own:
-// GitEnv works on the environment its caller passes it.
+// GitEnv works on the environment its caller passes it, and GoHost on the
+// environment and go env output its caller passes it.
 package testenv
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -70,4 +75,100 @@ func GitEnv(environ []string) []string {
 		"GIT_CONFIG_KEY_2=core.attributesFile",
 		"GIT_CONFIG_VALUE_2="+os.DevNull,
 	)
+}
+
+// GoHostQuery is the go env invocation whose output ParseGoHost reads. A
+// test runs the go command of the toolchain running it with these
+// arguments, in the environment the test process started with and
+// GOTOOLCHAIN=local, so the answer names the host's own toolchain and
+// caches whatever HOME a test has since set.
+var GoHostQuery = []string{"env", "-json", "GOROOT", "GOMODCACHE", "GOCACHE", "CC"}
+
+// GoHost is the whole of what a go command a test runs takes from the host:
+// the toolchain, the module cache it already holds, its build cache, and
+// the C compiler and PATH that a cgo build (the race detector's) finds it
+// by.
+type GoHost struct {
+	GOROOT     string
+	GOMODCACHE string
+	GOCACHE    string
+	CC         string
+	PATH       string
+}
+
+// ParseGoHost reads a GoHost from goEnv, the output of the go command run
+// with GoHostQuery, and from environ, the environment it was run in.
+//
+// Pass the environment the test process started with, taken before any
+// test changed it; ParseGoHost reads no environment of its own.
+func ParseGoHost(environ []string, goEnv []byte) (GoHost, error) {
+	var h GoHost
+	if err := json.Unmarshal(goEnv, &h); err != nil {
+		return GoHost{}, fmt.Errorf("reading go env -json: %v", err)
+	}
+	for _, kv := range environ {
+		if k, v, _ := strings.Cut(kv, "="); strings.EqualFold(k, "PATH") {
+			h.PATH = v
+		}
+	}
+	switch {
+	case h.GOROOT == "":
+		return GoHost{}, errors.New("go env reports no GOROOT")
+	case h.GOMODCACHE == "":
+		return GoHost{}, errors.New("go env reports no GOMODCACHE")
+	case h.GOCACHE == "" || h.GOCACHE == "off":
+		return GoHost{}, fmt.Errorf("go env reports GOCACHE %q; a build needs a build cache", h.GOCACHE)
+	}
+	return h, nil
+}
+
+// Go is the go command of h's toolchain.
+func (h GoHost) Go() string {
+	return filepath.Join(h.GOROOT, "bin", "go")
+}
+
+// GoEnv returns the whole environment of a go command a test runs, so that
+// nothing the host configures can change what it builds or send it to the
+// network. Nothing is inherited but h:
+//
+//   - HOME, the temporary directory and GOPATH are under dir, which the
+//     caller makes and removes;
+//   - PATH is the host's, after h's toolchain's bin directory, so a script
+//     the test runs finds the same go command;
+//   - GOENV=off ignores the developer's go configuration file, and
+//     GOWORK=off any workspace above the module;
+//   - GOPROXY=off, GOSUMDB=off and GOTOOLCHAIN=local keep the command off
+//     the network: a module the host's cache does not hold is an error,
+//     never a download;
+//   - GOMODCACHE is the cache the host's toolchain already holds, read
+//     only (-mod=readonly), so no module is written under dir, where it
+//     would be read-only and RemoveAll could not delete it;
+//   - GOCACHE is the host's build cache, which changes how long a build
+//     takes and never what it builds;
+//   - -buildvcs=false stamps no VCS information, so neither git nor the
+//     tree's state reaches the binary;
+//   - CGO_ENABLED=0, which a caller that builds with the race detector
+//     overrides by appending CGO_ENABLED=1: the last value of a variable
+//     is the one a command sees.
+func GoEnv(h GoHost, dir string) []string {
+	return []string{
+		"HOME=" + dir,
+		"USERPROFILE=" + dir,
+		"TMPDIR=" + dir,
+		"TMP=" + dir,
+		"TEMP=" + dir,
+		"GOTMPDIR=" + dir,
+		"GOPATH=" + filepath.Join(dir, "gopath"),
+		"PATH=" + filepath.Join(h.GOROOT, "bin") + string(os.PathListSeparator) + h.PATH,
+		"CC=" + h.CC,
+		"GOENV=off",
+		"GOWORK=off",
+		"GOFLAGS=-mod=readonly -buildvcs=false",
+		"GOPROXY=off",
+		"GOSUMDB=off",
+		"GOTOOLCHAIN=local",
+		"GOMODCACHE=" + h.GOMODCACHE,
+		"GOCACHE=" + h.GOCACHE,
+		"CGO_ENABLED=0",
+	}
 }

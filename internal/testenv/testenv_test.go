@@ -103,6 +103,86 @@ func TestGitEnv(t *testing.T) {
 	}
 }
 
+func TestParseGoHost(t *testing.T) {
+	environ := []string{"HOME=/home/x", "PATH=/usr/bin:/bin", "GOMODCACHE=/elsewhere", "GOFLAGS=-mod=mod"}
+	out := []byte(`{"CC": "clang", "GOCACHE": "/home/x/Library/Caches/go-build", "GOMODCACHE": "/home/x/go/pkg/mod", "GOROOT": "/usr/local/go"}`)
+	h, err := ParseGoHost(environ, out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := GoHost{
+		GOROOT:     "/usr/local/go",
+		GOMODCACHE: "/home/x/go/pkg/mod",
+		GOCACHE:    "/home/x/Library/Caches/go-build",
+		CC:         "clang",
+		PATH:       "/usr/bin:/bin",
+	}
+	if h != want {
+		t.Errorf("ParseGoHost = %+v, want %+v", h, want)
+	}
+	if got, want := h.Go(), filepath.Join("/usr/local/go", "bin", "go"); got != want {
+		t.Errorf("Go() = %q, want %q", got, want)
+	}
+	if h, err := ParseGoHost([]string{"Path=C:\\Windows"}, out); err != nil || h.PATH != "C:\\Windows" {
+		t.Errorf("ParseGoHost reads Windows' Path as %q (%v), want C:\\Windows", h.PATH, err)
+	}
+	for _, bad := range []string{
+		`{"GOCACHE": "/c", "GOMODCACHE": "/m"}`,
+		`{"GOROOT": "/r", "GOCACHE": "/c"}`,
+		`{"GOROOT": "/r", "GOMODCACHE": "/m"}`,
+		`{"GOROOT": "/r", "GOMODCACHE": "/m", "GOCACHE": "off"}`,
+		`not json`,
+	} {
+		if _, err := ParseGoHost(nil, []byte(bad)); err == nil {
+			t.Errorf("ParseGoHost(%s) succeeded, want an error", bad)
+		}
+	}
+}
+
+// TestGoEnv pins the whole environment GoEnv gives: exactly these
+// variables, once each, and nothing of the host's but what GoHost names.
+func TestGoEnv(t *testing.T) {
+	h := GoHost{GOROOT: "/r", GOMODCACHE: "/m", GOCACHE: "/c", CC: "clang", PATH: "/bin"}
+	dir := Dir(t)
+	want := map[string]string{
+		"HOME":        dir,
+		"USERPROFILE": dir,
+		"TMPDIR":      dir,
+		"TMP":         dir,
+		"TEMP":        dir,
+		"GOTMPDIR":    dir,
+		"GOPATH":      filepath.Join(dir, "gopath"),
+		"PATH":        filepath.Join("/r", "bin") + string(os.PathListSeparator) + "/bin",
+		"CC":          "clang",
+		"GOENV":       "off",
+		"GOWORK":      "off",
+		"GOFLAGS":     "-mod=readonly -buildvcs=false",
+		"GOPROXY":     "off",
+		"GOSUMDB":     "off",
+		"GOTOOLCHAIN": "local",
+		"GOMODCACHE":  "/m",
+		"GOCACHE":     "/c",
+		"CGO_ENABLED": "0",
+	}
+	got := GoEnv(h, dir)
+	seen := map[string]bool{}
+	for _, kv := range got {
+		k, v, _ := strings.Cut(kv, "=")
+		if seen[k] {
+			t.Errorf("GoEnv sets %s twice: %q", k, got)
+		}
+		seen[k] = true
+		if w, ok := want[k]; !ok || v != w {
+			t.Errorf("GoEnv gives %s, want %s=%s", kv, k, w)
+		}
+	}
+	for k := range want {
+		if !seen[k] {
+			t.Errorf("GoEnv does not set %s: %q", k, got)
+		}
+	}
+}
+
 func assertEmptyDir(t *testing.T, dir string) {
 	t.Helper()
 	entries, err := os.ReadDir(dir)

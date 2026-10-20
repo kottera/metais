@@ -245,7 +245,7 @@ func TestPresentationUnderTerminal(t *testing.T) {
 		t.Fatal(err)
 	}
 	bin := filepath.Join(testenv.Dir(t), "metais")
-	if out, err := exec.Command("go", "build", "-trimpath", "-o", bin, "../../cmd/metais").CombinedOutput(); err != nil {
+	if out, err := goCommand(t, "build", "-trimpath", "-o", bin, "../../cmd/metais").CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
 	}
 	for _, p := range presentationProblems(t, tool{path: bin}, pkg) {

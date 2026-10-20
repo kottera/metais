@@ -33,8 +33,11 @@ var hostPackages = []string{"os", "syscall", "time", "io/fs", "path/filepath", "
 func hostDeps(t *testing.T, patterns ...string) []string {
 	t.Helper()
 	testenv.Home(t)
-	cmd := exec.Command("go", append([]string{"list", "-deps"}, patterns...)...)
+	cmd := goCommand(t, append([]string{"list", "-deps"}, patterns...)...)
 	cmd.Dir = "../.."
+	// With cgo on, a package that links runtime/cgo lists it, so the
+	// closure read is the widest any build of these packages has.
+	cmd.Env = append(cmd.Env, "CGO_ENABLED=1")
 	out, err := cmd.Output()
 	if err != nil {
 		var ee *exec.ExitError

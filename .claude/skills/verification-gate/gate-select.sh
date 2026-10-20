@@ -123,10 +123,11 @@ go list -f '{{.ImportPath}}	{{.Dir}}	{{len .TestGoFiles}}{{len .XTestGoFiles}}' 
 awk -F'\t' -v r="$root/" '{d = $2; sub("^" r, "", d); if ($2 == substr(r, 1, length(r) - 1)) d = "."; print $1 "\t" d "\t" ($3 != "00")}' \
 	"$work/pkgs" >"$work/dirs"
 
-# Blind packages: a test file that runs the go command.
+# Blind packages: a test file that runs the go command, which it gives
+# testenv.GoEnv's environment, or names directly.
 : >"$work/blind"
 while IFS=$'\t' read -r pkg dir _; do
-	if grep -lE 'exec\.Command(Context)?\([^"]*"go"' "$dir"/*_test.go >/dev/null 2>&1; then
+	if grep -lE 'testenv\.GoEnv\(|exec\.Command(Context)?\([^"]*"go"' "$dir"/*_test.go >/dev/null 2>&1; then
 		echo "$pkg" >>"$work/blind"
 	fi
 done <"$work/dirs"

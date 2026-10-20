@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"slices"
@@ -538,7 +537,11 @@ func blackBoxViolations(deps []string) []string {
 // TestBlackBox fails when the runner's test binary links any package of
 // the implementation, internal/cli included.
 func TestBlackBox(t *testing.T) {
-	out, err := exec.Command("go", "list", "-deps", "-test", "-f", "{{.ImportPath}}", ".").Output()
+	cmd, err := goCommand(testenv.Dir(t), "list", "-deps", "-test", "-f", "{{.ImportPath}}", ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := cmd.Output()
 	if err != nil {
 		t.Fatalf("go list: %v", err)
 	}

@@ -74,9 +74,9 @@ these rules:
   drift step check every generated file on every run anyway.
 - **The blind packages** (`blind` in the output) are the ones whose tests
   build the binary or list the module with the `go` command: `conformance`,
-  `guarantees`, `version`, `pkgtree` and `cmd/metais`. Any change to the
-  module's code has them tested, because no import edge shows what they
-  read.
+  `guarantees`, `hostfs`, `version`, `pkgtree` and `cmd/metais`. Any
+  change to the module's code has them tested, because no import edge
+  shows what they read.
 
 `internal/guarantees`' `TestGateSelectReach` holds these rules to a probe
 list, `testdata/gateselect/reach.txt`: each probe is a changed path and the
@@ -148,7 +148,10 @@ script that runs git sources `git-env.sh` first. It drops the caller's
 excludes file, and turns `core.precomposeunicode` off, which git on darwin
 writes into every repository it creates. The go command's git inherits it.
 A test that runs git gives it the same environment through
-`internal/testenv`'s `GitEnv`.
+`internal/testenv`'s `GitEnv`. A test that runs the go command gives it
+`testenv.GoEnv`'s, which takes the host's module cache, read only, and no
+proxy; the scripts' own go commands are the developer's build, and run in
+the developer's environment.
 
 ## When to run it: once, last, right before merge
 

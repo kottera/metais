@@ -178,7 +178,10 @@ func (c *spawnClient) stop() error {
 // dir, and returns its path.
 func buildSpawner(dir string) (string, error) {
 	out := filepath.Join(dir, spawnerName)
-	cmd := exec.Command("go", "build", "-trimpath", "-o", out, "./internal/conformance/testdata/spawner")
+	cmd, err := goCommand(filepath.Join(dir, goEnvDir), "build", "-trimpath", "-o", out, "./internal/conformance/testdata/spawner")
+	if err != nil {
+		return "", fmt.Errorf("building the spawner: %v", err)
+	}
 	cmd.Dir = moduleRoot
 	if b, err := cmd.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("building the spawner: %v\n%s", err, b)

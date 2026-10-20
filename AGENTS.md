@@ -182,7 +182,10 @@ Agents that do not load skills read them as plain files:
   one target for a minute at most, on a third of the cores:
   `go test -run '^$' -fuzz '^FuzzX$' -fuzztime 60s -parallel $(( $(getconf _NPROCESSORS_ONLN) / 3 )) ./internal/x`.
 - **Isolate tests with `HOME` and temporary directories**, through
-  `internal/testenv`, never with the developer's real configuration.
+  `internal/testenv`, never with the developer's real configuration. A
+  test that runs the go command gives it `testenv.GoEnv`'s whole
+  environment: the host's module cache, read only, and no proxy, so it
+  never downloads a module.
 - **Dependencies are few and justified.** A new module dependency is named
   in the ADR that needs it.
 
