@@ -15,6 +15,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/kottera/metais/internal/backstop"
 	"github.com/kottera/metais/internal/cli/args"
 	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/finding"
@@ -42,14 +43,20 @@ type Invocation struct {
 
 // Main runs the tool for cmd/metais: args are the arguments after the
 // program name, and d is what hostenv.Isolate returned. It builds the
-// invocation with a zero fault set and returns the exit status.
+// invocation with a zero fault set, runs it under the memory backstop
+// (ADR-009 Amendment A6 item 6), and returns the exit status. When the
+// backstop stops the command, Main returns while the command is still
+// running, so cmd/metais exits at once.
 func Main(args []string, stdin io.Reader, stdout, stderr io.Writer, d hostenv.Display) int {
-	return Run(context.Background(), Invocation{
-		Args:    args,
-		Stdin:   stdin,
-		Stdout:  stdout,
-		Stderr:  stderr,
-		Options: Options{Display: d},
+	inv := Invocation{Args: args, Stdin: stdin, Options: Options{Display: d}}
+	return backstop.Run(stdout, stderr, func(ctx context.Context, stdout, stderr io.Writer) int {
+		inv := inv
+		inv.Stdout, inv.Stderr = stdout, stderr
+		return Run(ctx, inv)
+	}, func(stdout, stderr io.Writer) int {
+		inv := inv
+		inv.Stdout, inv.Stderr = stdout, stderr
+		return memoryStop(inv)
 	})
 }
 
