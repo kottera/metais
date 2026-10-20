@@ -311,7 +311,7 @@ it at its defaults.
 | `value-size` | 64 MiB | any string a template produces: a filter result, a `capture`, a concatenation | string doubling by `append` reaches a gibibyte in thirty steps |
 | `array-size` | 1,000,000 elements | an array a filter or a range produces | `split` on a large string |
 | `assign-bytes` | 512 MiB | bytes stored by `assign` and `capture`, summed over one command | Shopify's assign score |
-| `schema-work` | 100,000,000 | subschema evaluations in one command | nested `anyOf`/`oneOf` over non-consuming refs is exponential in depth |
+| `schema-work` | 14,000,000 | subschema evaluations in one command | nested `anyOf`/`oneOf` over non-consuming refs is exponential in depth; the calibration case's array of `schema-work`/12 items peaks at 758 MiB (Amendment A3) |
 | `regex-work` | 2³³ units | regular-expression matching in one command (D10) | the deterministic CPU bound for patterns and `grep` |
 | `outputs` | 100,000 | files one render plans, assets, containers and container entries included (ADR-005 D13) | one per item of a full collection |
 | `container-depth` | 3 | zip containers nested inside one another (ADR-005 D8 item 4) | a submission zip holding a `.docx` is a real case; deeper is not |

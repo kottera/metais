@@ -51,7 +51,7 @@ var adr009 = []struct{ name, def, class string }{
 	{"value-size", "64 MiB", "work"},
 	{"array-size", "1,000,000 elements", "work"},
 	{"assign-bytes", "512 MiB", "work"},
-	{"schema-work", "100,000,000", "work"},
+	{"schema-work", "14,000,000", "work"},
 	{"regex-work", "2^33 units", "work"},
 	{"outputs", "100,000", "work"},
 	{"container-depth", "3", "work"},
