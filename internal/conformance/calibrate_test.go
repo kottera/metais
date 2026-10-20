@@ -164,12 +164,11 @@ func runCal(tool string, args []string, dir string, wall time.Duration) (*calRun
 	stderr := &capped{}
 	ctx, cancel := context.WithTimeout(context.Background(), wall)
 	defer cancel()
-	cmd, usage, err := measured(ctx, tool, args)
+	cmd, usage, err := measured(ctx, tool, args, []string{"HOME=" + home, "TMPDIR=" + tmp, "PATH=" + bin, "TZ=UTC", "LC_ALL=C"})
 	if err != nil {
 		return nil, err
 	}
 	cmd.Dir = filepath.Join(dir, "work")
-	cmd.Env = []string{"HOME=" + home, "TMPDIR=" + tmp, "PATH=" + bin, "TZ=UTC", "LC_ALL=C"}
 	cmd.Stdout, cmd.Stderr = stdout, stderr
 	cmd.WaitDelay = time.Second
 	start := time.Now()

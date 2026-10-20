@@ -14,9 +14,13 @@ import (
 // measured is the command that runs path with args, and the function that
 // reads its usage once it has finished, or releases what it holds when
 // given nil because the process never started. Off linux the process is
-// started directly and its own usage is read.
-func measured(ctx context.Context, path string, args []string) (*exec.Cmd, func(*os.ProcessState) (usage, error), error) {
+// started directly, with exactly env, and its own usage is read.
+func measured(ctx context.Context, path string, args, env []string) (*exec.Cmd, func(*os.ProcessState) (usage, error), error) {
 	cmd := exec.CommandContext(ctx, path, args...)
+	cmd.Env = env
+	if env == nil {
+		cmd.Env = []string{}
+	}
 	return cmd, func(ps *os.ProcessState) (usage, error) {
 		if ps == nil {
 			return usage{}, nil
