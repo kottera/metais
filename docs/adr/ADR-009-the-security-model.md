@@ -311,7 +311,7 @@ it at its defaults.
 | `value-size` | 64 MiB | any string a template produces: a filter result, a `capture`, a concatenation | string doubling by `append` reaches a gibibyte in thirty steps |
 | `array-size` | 1,000,000 elements | an array a filter or a range produces | `split` on a large string |
 | `assign-bytes` | 512 MiB | bytes stored by `assign` and `capture`, summed over one command | Shopify's assign score |
-| `schema-work` | 450,000 | subschema evaluations in one command | nested `anyOf`/`oneOf` over non-consuming refs is exponential in depth; a tree that fails at every unit costs about 1.8 KiB of resident memory a unit, and its calibration case, nested `anyOf`s, peaks at 779 to 819 MiB (Amendment A3; logs/ADR-009/W7-C6.md) |
+| `schema-work` | 450,000 | subschema evaluations in one command | nested `anyOf`/`oneOf` over non-consuming refs is exponential in depth; a tree that fails at every unit costs about 1.8 KiB of resident memory a unit, and its calibration case, nested `anyOf`s, peaks at 779 to 820 MiB (Amendment A3; calibration record sha256 `6e6c2ac6…7e9636`, logs/ADR-009/W7-C6.md) |
 | `regex-work` | 2³³ units | regular-expression matching in one command (D10) | the deterministic CPU bound for patterns and `grep` |
 | `outputs` | 100,000 | files one render plans, assets, containers and container entries included (ADR-005 D13) | one per item of a full collection |
 | `container-depth` | 3 | zip containers nested inside one another (ADR-005 D8 item 4) | a submission zip holding a `.docx` is a real case; deeper is not |
