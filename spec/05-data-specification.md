@@ -111,6 +111,19 @@ trailing dot; an `ipv4` octet has no leading zero; an `ipv6` address has no
 zone; a `uuid` is the 8-4-4-4-12 form of hexadecimal digits of either case; and
 a `duration` is RFC 3339 Appendix A's, its units in order with none skipped.
 
+<a id="mts-dat-013"></a>**MTS-DAT-013** A processor MUST report an array that
+`uniqueItems` requires to hold distinct items, and that holds two equal ones,
+with one `input.unique_items` at the first item, in the order of their
+indexes, that equals an earlier one, naming its index and, as
+`duplicate_of`, the index of the first item it equals. Two values are equal
+when they are the same value of the data model, a number by its mathematical
+value, so `1.0` equals `1`.
+
+<a id="mts-dat-014"></a>**MTS-DAT-014** A processor MUST decide `multipleOf`
+exactly: a number is a multiple of the divisor when their quotient, computed
+from their decimal values without rounding, is an integer, however large or
+small either is, and MUST report one that is not with `input.multiple_of`.
+
 <a id="mts-dat-012"></a>**MTS-DAT-012** A processor MUST evaluate the input
 constraints over the whole inputs object, reporting a failure inside one
 input's value about that input, with the conditional that selected it, a

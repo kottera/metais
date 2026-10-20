@@ -29,6 +29,7 @@ lower a limit for one operation; nothing raises one.
 | `schema-depth` | 64 | the nesting of subschemas |
 | `schema-subschemas` | 20,000 | the subschemas of every schema file of a package together, and of the combined schema |
 | `schema-location-length` | 512 bytes | the location of one subschema of a schema file |
+| `ref-depth` | 32 | the references one chain of subschemas follows at one instance location |
 | `pattern-length` | 4,096 bytes | one `pattern` or `patternProperties` key |
 | `regex-program` | 4,096 instructions | one compiled regular expression |
 | `template-size` | 8 MiB | one template, and one `path` of the manifest |
@@ -77,6 +78,37 @@ A location in the combined schema is not bounded by `schema-location-length`.
 operation may use: a processor MUST accept a size, a count or a depth equal
 to the bound of the limit that bounds it, at the default or at a lower value
 a caller gives, and only one greater than the bound breaches the limit.
+
+<a id="mts-sec-043"></a>**MTS-SEC-043** A processor MUST refuse a schema file
+longer, in bytes, than `schema-size` with `limit.package` located at the file,
+observing its length, before it reads the file; and a package whose combined
+schema, stored or derived, is longer in its canonical JSON than
+`combined-schema-size` with `limit.package` located at
+`.compiled/schema.json`, observing that length, before it compiles the
+combined schema.
+
+<a id="mts-sec-044"></a>**MTS-SEC-044** A subschema's depth is 1 at its schema
+file's root, and one more than the depth of the subschema holding it. A
+processor MUST refuse a schema file holding a subschema that is an object and
+is deeper than `schema-depth` with `limit.package`, located at the file and
+JSON Pointer of the first such subschema in the order of MTS-SEC-020,
+observing its depth, before it compiles any schema.
+
+A reference that consumes nothing of the instance can be followed by another,
+and a cycle of them never ends, so the references followed at one place in
+the instance are bounded too. A chain is a sequence of subschemas each of
+which applies where the one before it applies: as a subschema of `allOf`,
+`anyOf`, `oneOf`, `not`, `if`, `then`, `else` or `dependentSchemas`, or as
+the target of a `$ref` or a `$dynamicRef`. A `$dynamicRef` whose target
+declares the `$dynamicAnchor` it names may reach any subschema declaring that
+anchor, and a reference to a meta-schema ends a chain.
+
+<a id="mts-sec-045"></a>**MTS-SEC-045** A processor MUST refuse a package one
+of whose schema files holds a `$ref` or `$dynamicRef` that begins a chain
+following more than `ref-depth` references, itself included, or a chain that
+never ends, with `limit.package` located at the file and JSON Pointer of the
+first such reference in the order of MTS-SEC-020, observing the number of
+references when the chain ends, before it compiles any schema.
 
 ## 14.2 Entry confinement
 
@@ -168,6 +200,7 @@ limit is.
 | `value-size` | 64 MiB | a string a template builds: a filter's result, a `capture` |
 | `array-size` | 1,000,000 elements | an array a filter or a range builds |
 | `assign-bytes` | 512 MiB | the bytes `assign` and `capture` store in one render, summed |
+| `schema-work` | 100,000,000 units | the validations of one operation, summed |
 | `outputs` | 100,000 | the files one render plans |
 | `output-size` | 256 MiB | one file a render writes |
 | `output-total` | 1 GiB | every byte one render writes |
@@ -197,7 +230,61 @@ limit.
 manifest plans more files than `outputs` with `limit.package`, located at the
 first declaration beyond the limit.
 
-## 14.6 Output confinement
+Nested `anyOf` over references makes a small schema's validation exponential
+in its depth, so a validation's work is counted before anything of it is
+evaluated, and counted whatever any evaluation's outcome, so that every
+processor counts the same units.
+
+<a id="mts-sec-046"></a>**MTS-SEC-046** A processor MUST count, before it
+evaluates anything of a validation, the units it costs: one for each
+subschema applied to a place in the instance, and one more for each member
+of the object or item of the array there. At a place apply its `$ref`; its
+`$dynamicRef`, resolved by the dynamic scope; every subschema of `allOf`,
+`anyOf` and `oneOf`; `not`; `if`; `then` unless `if` is `false`; `else`
+unless `if` is `true`; and the `dependentSchemas` subschema of each member
+the object has. To a member apply its `properties` subschema; each
+`patternProperties` subschema whose pattern matches its name;
+`additionalProperties` when neither applies; `unevaluatedProperties` when
+none of those three applies; and `propertyNames`, to its name, in a dynamic
+scope of its own. To an item apply `prefixItems` by its index; `items` beyond
+them; `contains`; and `unevaluatedItems` when neither `prefixItems` nor
+`items` applies. A processor MUST refuse a validation whose units would take
+the operation's total beyond `schema-work`, giving no other finding of that
+validation: of the inputs, with `limit.exceeded` naming the limit about each
+input the inputs object holds; of an output, with `limit.exceeded.output`.
+
+## 14.6 The package regular-expression profile
+
+A schema's `pattern` and the names of its `patternProperties` are regular
+expressions of one profile: ECMA-262 patterns
+([ECMA-262](A-references.md#ecma262)) in `u` mode, unanchored, without the
+constructs no automaton can match. A pattern is matched without
+backtracking, so a hostile pattern costs what a plain one costs.
+
+<a id="mts-sec-040"></a>**MTS-SEC-040** A processor MUST give every pattern of
+the profile the answer ECMA-262 gives it, and MUST decide each match in time
+proportional to the size of the pattern's program times the length of the
+string, whatever the pattern. In particular, `.` matches every code point
+but U+000A, U+000D, U+2028 and U+2029; `\s` matches U+0009 to U+000D,
+U+0020, U+00A0, U+1680, U+2000 to U+200A, U+2028, U+2029, U+202F, U+205F,
+U+3000 and U+FEFF, and `\S` every other code point; `[]` matches nothing; and
+`[^]` matches every code point.
+
+<a id="mts-sec-041"></a>**MTS-SEC-041** A processor MUST refuse a pattern
+holding a lookahead, a lookbehind, a numbered or named backreference, or a
+quantifier whose bound is above 1000 with `schema.pattern_unsupported`,
+naming the construct: `lookahead`, `lookbehind`, `backreference` or
+`repeat_bound`.
+
+<a id="mts-sec-042"></a>**MTS-SEC-042** A processor MUST refuse a pattern
+longer, in bytes, than `pattern-length`, or whose program has more
+instructions than `regex-program`, with `limit.package` located at the file
+and JSON Pointer of its `pattern` or `patternProperties` member, observing
+the length or the count, before it matches anything. A pattern's program is
+the one Go's `regexp/syntax` package compiles from the pattern translated to
+its syntax, simplified.
+
+## 14.7 Output confinement
 
 <a id="mts-sec-012"></a>**MTS-SEC-012** A processor MUST write nothing outside
 a render's output directory: it MUST refuse every output path that could
