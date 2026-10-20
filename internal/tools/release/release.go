@@ -33,6 +33,7 @@ var (
 	errNotReproducible = errors.New("the two builds of a target differ")
 	errToolVersion     = errors.New("the built tool does not report the release's version")
 	errUnreleased      = errors.New("the tool's implements names an unreleased specification revision")
+	errNoToolchain     = errors.New("go.mod has no single toolchain line naming a go release")
 )
 
 // The files every archive holds beside the binary, from the work tree's
@@ -45,12 +46,25 @@ const binaryName = "metais"
 // copies is how many times each target is built.
 const copies = 2
 
+// releaseProxy and releaseSumDB are the module proxy and checksum database
+// a release fetches go.mod's toolchain and the modules go.sum pins from,
+// the go command's own defaults whatever the developer configured.
+const (
+	releaseProxy = "https://proxy.golang.org,direct"
+	releaseSumDB = "sum.golang.org"
+)
+
 // config is one run of the builder.
 type config struct {
 	dir     string // where git is asked for the work tree; "" is the working directory
 	version string // the release's semantic version, without a leading v
 	stdout  io.Writer
 	environ []string // the environment the builder was started with
+	proxy   string   // the GOPROXY every go command takes: releaseProxy, or off in a test
+
+	// toolchain is the toolchain go.mod's toolchain line names, which every
+	// go command runs as (ADR-010 D1). run reads it from the first clone.
+	toolchain string
 
 	// tamper, when set, is called on every binary once it is built and
 	// before it is judged. Only tests set it, to make a build differ.
@@ -109,6 +123,14 @@ func (c *config) run() error {
 		}
 	}
 
+	gomod, err := os.ReadFile(filepath.Join(srcs[0], "go.mod"))
+	if err != nil {
+		return err
+	}
+	if c.toolchain, err = goModToolchain(gomod); err != nil {
+		return err
+	}
+
 	if err := c.checkImplements(root, srcs[0]); err != nil {
 		return err
 	}
@@ -131,7 +153,7 @@ func (c *config) run() error {
 			if err != nil {
 				return err
 			}
-			if err := checkSettings(info, t, head); err != nil {
+			if err := checkSettings(info, t, head, c.toolchain); err != nil {
 				return fmt.Errorf("%s, copy %d: %w", t, i+1, err)
 			}
 			b, err := os.ReadFile(bin)
@@ -244,12 +266,13 @@ func (c *config) released(root, rev string) error {
 	return nil
 }
 
-// checkSettings judges go version -m's report on a binary built for t: the
-// build settings must be exactly the release's (ADR-010 D12 items 1, 2 and
-// 4), from a clean tree at head, and nothing else. Under -trimpath the go
+// checkSettings judges go version -m's report on a binary built for t: it
+// must have been built by toolchain, go.mod's (ADR-010 D1), and the build
+// settings must be exactly the release's (ADR-010 D12 items 1, 2 and 4),
+// from a clean tree at head, and nothing else. Under -trimpath the go
 // command records no -ldflags, so the version the release sets is judged
 // by asking the host's build (checkImplements).
-func checkSettings(info string, t buildline.Target, head string) error {
+func checkSettings(info string, t buildline.Target, head, toolchain string) error {
 	want := map[string]string{
 		"-buildmode":   "exe",
 		"-compiler":    "gc",
@@ -267,6 +290,15 @@ func checkSettings(info string, t buildline.Target, head string) error {
 	case "arm64":
 		want["GOARM64"] = "v8.0"
 	}
+	var bad []string
+	first, _, _ := strings.Cut(info, "\n")
+	built := ""
+	if i := strings.LastIndex(first, ": "); i >= 0 {
+		built = first[i+len(": "):]
+	}
+	if built != toolchain {
+		bad = append(bad, fmt.Sprintf("was built by %s, not go.mod's %s", built, toolchain))
+	}
 	got := map[string]string{}
 	for line := range strings.Lines(info) {
 		rest, ok := strings.CutPrefix(strings.TrimRight(line, "\n"), "\tbuild\t")
@@ -281,7 +313,6 @@ func checkSettings(info string, t buildline.Target, head string) error {
 		}
 		got[k] = v
 	}
-	var bad []string
 	for k, w := range want {
 		if g, ok := got[k]; !ok {
 			bad = append(bad, fmt.Sprintf("lacks %s=%s", k, w))
@@ -389,7 +420,7 @@ func (c *config) git(dir string, args ...string) (string, error) {
 func (c *config) goCmd(dir string, set []string, args ...string) (string, error) {
 	cmd := exec.Command("go", args...)
 	cmd.Dir = dir
-	cmd.Env = goEnv(c.environ, set)
+	cmd.Env = goEnv(c.environ, c.toolchain, c.proxy, set)
 	return output(cmd)
 }
 
@@ -426,11 +457,23 @@ func gitEnv(environ []string) []string {
 }
 
 // goEnv is gitEnv's environment, for the git the go command runs to stamp
-// the build, with buildline's settings, GOFLAGS fixed so no flag of the
-// host's joins the build, and set's variables, each replacing any of the
-// same name.
-func goEnv(environ, set []string) []string {
-	over := slices.Concat(buildline.Settings, []string{"GOFLAGS=-mod=readonly"}, set)
+// the build, with buildline's settings, and set's variables, each
+// replacing any of the same name. Nothing of the developer's go
+// configuration reaches the build: GOFLAGS is fixed so no flag of the
+// host's joins it, GOTOOLCHAIN is toolchain, go.mod's, GOWORK and GOENV
+// are off so no workspace and no go env file is read, and the module proxy
+// is proxy and the checksum database releaseSumDB, with no module exempt
+// from either.
+func goEnv(environ []string, toolchain, proxy string, set []string) []string {
+	over := slices.Concat(buildline.Settings, []string{
+		"GOFLAGS=-mod=readonly",
+		"GOTOOLCHAIN=" + toolchain,
+		"GOWORK=off",
+		"GOENV=off",
+		"GOPROXY=" + proxy,
+		"GOSUMDB=" + releaseSumDB,
+		"GOPRIVATE=", "GONOPROXY=", "GONOSUMDB=", "GOINSECURE=",
+	}, set)
 	env := slices.DeleteFunc(gitEnv(environ), func(kv string) bool {
 		name, _, _ := strings.Cut(kv, "=")
 		return slices.ContainsFunc(over, func(o string) bool { return strings.HasPrefix(o, name+"=") })
@@ -473,4 +516,20 @@ func numeral(s string) bool {
 		return false
 	}
 	return s == "0" || s[0] != '0'
+}
+
+// goModToolchain is the toolchain go.mod's one toolchain line names, a go
+// release such as go1.26.9 (ADR-010 D1).
+func goModToolchain(gomod []byte) (string, error) {
+	var found []string
+	for line := range strings.Lines(string(gomod)) {
+		line, _, _ = strings.Cut(line, "//")
+		if f := strings.Fields(line); len(f) > 0 && f[0] == "toolchain" {
+			found = append(found, strings.Join(f[1:], " "))
+		}
+	}
+	if len(found) != 1 || !strings.HasPrefix(found[0], "go1.") || strings.ContainsAny(found[0], " ") {
+		return "", fmt.Errorf("%w: it has %q", errNoToolchain, found)
+	}
+	return found[0], nil
 }

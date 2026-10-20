@@ -15,9 +15,14 @@
 # directory through iconv's UTF-8-MAC converter, and dies where iconv cannot
 # open it. Variables given this way outrank every configuration file, the
 # repository's own included.
+#
+# It is POSIX sh, because a script that sources it may run under a /bin/sh
+# that is dash. The names come from env, whose every variable begins a line
+# NAME=. A line inside a multi-line value can look like one too; unsetting
+# a name that is not set does nothing.
 
-for v in $(compgen -e); do
-	case $v in GIT_*) unset "$v" ;; esac
+for v in $(env | sed -n 's/^\(GIT_[A-Za-z0-9_]*\)=.*/\1/p'); do
+	unset "$v"
 done
 export GIT_CONFIG_NOSYSTEM=1 GIT_ATTR_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null
 export GIT_CONFIG_COUNT=3

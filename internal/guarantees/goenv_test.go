@@ -90,7 +90,9 @@ func TestGoCommandTakesNoHostGoEnv(t *testing.T) {
 // The test sets CC to fakecc, which refuses unless CC_TOOLCHAIN_TARGET_FAKE
 // is set and otherwise runs the host's own compiler, and builds a cgo
 // program, whose C preamble no build cache holds, in GoEnv's environment
-// over that host. The build must succeed, and fakecc must have run.
+// over that host. The build must succeed, and fakecc must have run in it.
+// The go env query that reads the host runs CC too, so the marker it
+// leaves is removed before the build: only the build can make it again.
 func TestGoCommandKeepsHostCToolchain(t *testing.T) {
 	if testing.Short() {
 		t.Skip("builds a cgo program")
@@ -136,6 +138,10 @@ func TestGoCommandKeepsHostCToolchain(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	if err := os.Remove(fake + ".ran"); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		t.Fatal(err)
+	}
+
 	probe := filepath.Join(dir, "probe")
 	nonce := strconv.FormatInt(time.Now().UnixNano(), 10)
 	if err := os.Mkdir(probe, 0o700); err != nil {
@@ -156,6 +162,6 @@ func TestGoCommandKeepsHostCToolchain(t *testing.T) {
 		t.Fatalf("a cgo build in GoEnv's environment, over a host whose CC needs its own variable: %v\n%s", err, b)
 	}
 	if _, err := os.Stat(fake + ".ran"); err != nil {
-		t.Errorf("the cgo build never ran the host's CC: %v", err)
+		t.Errorf("the cgo build never ran the host's CC, fakecc: %v", err)
 	}
 }
