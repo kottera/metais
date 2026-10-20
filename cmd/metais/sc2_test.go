@@ -149,7 +149,7 @@ func TestSC2IncidentReportStages(t *testing.T) {
 	}
 	work := testenv.Dir(t)
 	bin := filepath.Join(work, "metais")
-	build := exec.Command("go", "build", "-trimpath", "-o", bin, ".")
+	build := goCommand(t, "build", "-trimpath", "-o", bin, ".")
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
 	}

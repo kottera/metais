@@ -19,7 +19,10 @@ import (
 // dir, and returns its path.
 func buildProcStub(dir string) (string, error) {
 	out := filepath.Join(dir, procStubName)
-	cmd := exec.Command("go", "build", "-trimpath", "-o", out, "./internal/conformance/testdata/procstub")
+	cmd, err := goCommand(filepath.Join(dir, goEnvDir), "build", "-trimpath", "-o", out, "./internal/conformance/testdata/procstub")
+	if err != nil {
+		return "", fmt.Errorf("building the measuring stub: %v", err)
+	}
 	cmd.Dir = moduleRoot
 	if b, err := cmd.CombinedOutput(); err != nil {
 		return "", fmt.Errorf("building the measuring stub: %v\n%s", err, b)

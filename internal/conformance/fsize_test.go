@@ -6,7 +6,6 @@ package conformance
 import (
 	"errors"
 	"fmt"
-	"os/exec"
 	"path/filepath"
 	"sync"
 )
@@ -36,7 +35,11 @@ func fsizeStub() (string, error) {
 			return
 		}
 		out := filepath.Join(stubDir, fsizeStubName)
-		cmd := exec.Command("go", "build", "-trimpath", "-o", out, "./internal/conformance/testdata/fsizestub")
+		cmd, err := goCommand(filepath.Join(stubDir, goEnvDir), "build", "-trimpath", "-o", out, "./internal/conformance/testdata/fsizestub")
+		if err != nil {
+			fsizeErr = fmt.Errorf("building the file-size stub: %v", err)
+			return
+		}
 		cmd.Dir = moduleRoot
 		if b, err := cmd.CombinedOutput(); err != nil {
 			fsizeErr = fmt.Errorf("building the file-size stub: %v\n%s", err, b)

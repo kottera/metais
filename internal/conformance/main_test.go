@@ -8,7 +8,6 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -51,6 +50,7 @@ const (
 	procStubName  = "metais-procstub"
 	fakeDirPrefix = "metais-fake-"
 	toolName      = "metais"
+	goEnvDir      = "go-env" // the go command's HOME and temporary directory, under the stubs' directory
 )
 
 // TestMain re-executes as the reference driver or a fake when the test
@@ -85,7 +85,7 @@ func TestMain(m *testing.M) {
 		}
 		if err == nil && *flagTool == "" {
 			builtTool = filepath.Join(dir, toolName)
-			err = buildTool(builtTool)
+			err = buildTool(dir, builtTool)
 		}
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -111,13 +111,21 @@ func fileExists(p string) bool {
 	return err == nil
 }
 
-// buildTool builds ./cmd/metais to out.
-func buildTool(out string) error {
+// buildTool builds ./cmd/metais to out, the go command's own directories
+// under dir.
+func buildTool(dir, out string) error {
 	args := []string{"build", "-trimpath", "-o", out}
 	if raceEnabled {
 		args = append(args, "-race")
 	}
-	cmd := exec.Command("go", append(args, "./cmd/metais")...)
+	cmd, err := goCommand(filepath.Join(dir, goEnvDir), append(args, "./cmd/metais")...)
+	if err != nil {
+		return fmt.Errorf("building ./cmd/metais: %v", err)
+	}
+	if raceEnabled {
+		// The race detector needs cgo.
+		cmd.Env = append(cmd.Env, "CGO_ENABLED=1")
+	}
 	cmd.Dir = moduleRoot
 	if b, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("building ./cmd/metais: %v\n%s", err, b)

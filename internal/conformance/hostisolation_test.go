@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"maps"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"slices"
@@ -185,9 +184,15 @@ func build(t *testing.T, name string, flags ...string) string {
 	}
 	bin := filepath.Join(dir, toolName)
 	args := slices.Concat([]string{"build"}, releaseFlags, flags, []string{"-o", bin, "./cmd/metais"})
-	cmd := exec.Command("go", args...)
+	cmd, err := goCommand(testenv.Dir(t), args...)
+	if err != nil {
+		t.Fatal(err)
+	}
 	cmd.Dir = moduleRoot
-	cmd.Env = append(os.Environ(), releaseSettings...)
+	// The release line stamps the VCS state (-buildvcs=true outranks
+	// GOFLAGS), so the go command runs git, which takes nothing from the
+	// host's git configuration either.
+	cmd.Env = testenv.GitEnv(append(cmd.Env, releaseSettings...))
 	if b, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("building %s: %v\n%s", name, err, b)
 	}

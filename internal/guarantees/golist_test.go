@@ -113,8 +113,19 @@ func goCommand(t testing.TB, args ...string) *exec.Cmd {
 		t.Fatalf("locating the host's toolchain: %v", err)
 	}
 	cmd := exec.Command(h.Go(), args...)
-	cmd.Env = testenv.GoEnv(h, testenv.Dir(t))
+	cmd.Env = goEnv(t)
 	return cmd
+}
+
+// goEnv is testenv.GoEnv's environment over a fresh directory, for a go
+// command a test runs directly or through a script.
+func goEnv(t testing.TB) []string {
+	t.Helper()
+	h, err := goHost()
+	if err != nil {
+		t.Fatalf("locating the host's toolchain: %v", err)
+	}
+	return testenv.GoEnv(h, testenv.Dir(t))
 }
 
 // runGo runs the go command in dir under tg, cgo off, and returns its

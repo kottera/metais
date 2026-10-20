@@ -152,7 +152,7 @@ func TestGoEnv(t *testing.T) {
 		"TEMP":        dir,
 		"GOTMPDIR":    dir,
 		"GOPATH":      filepath.Join(dir, "gopath"),
-		"PATH":        "/bin",
+		"PATH":        filepath.Join("/r", "bin") + string(os.PathListSeparator) + "/bin",
 		"CC":          "clang",
 		"GOENV":       "off",
 		"GOWORK":      "off",

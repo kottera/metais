@@ -35,6 +35,8 @@ func needGateTools(t *testing.T) {
 }
 
 // runGateSelect runs the selector in dir with args, and returns its lines.
+// Its go list takes goEnv's environment, which outranks the host's, so it
+// reads the host's module cache and never the network.
 func runGateSelect(t *testing.T, dir string, args ...string) []string {
 	t.Helper()
 	script, err := filepath.Abs(gateSelect)
@@ -43,7 +45,7 @@ func runGateSelect(t *testing.T, dir string, args ...string) []string {
 	}
 	cmd := exec.Command("bash", append([]string{script}, args...)...)
 	cmd.Dir = dir
-	cmd.Env = testenv.GitEnv(os.Environ())
+	cmd.Env = testenv.GitEnv(append(os.Environ(), goEnv(t)...))
 	out, err := cmd.Output()
 	if err != nil {
 		t.Fatalf("gate-select.sh %s: %v\n%s", strings.Join(args, " "), err, out)

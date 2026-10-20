@@ -133,6 +133,8 @@ func (h GoHost) Go() string {
 //
 //   - HOME, the temporary directory and GOPATH are under dir, which the
 //     caller makes and removes;
+//   - PATH is the host's, after h's toolchain's bin directory, so a script
+//     the test runs finds the same go command;
 //   - GOENV=off ignores the developer's go configuration file, and
 //     GOWORK=off any workspace above the module;
 //   - GOPROXY=off, GOSUMDB=off and GOTOOLCHAIN=local keep the command off
@@ -157,7 +159,7 @@ func GoEnv(h GoHost, dir string) []string {
 		"TEMP=" + dir,
 		"GOTMPDIR=" + dir,
 		"GOPATH=" + filepath.Join(dir, "gopath"),
-		"PATH=" + h.PATH,
+		"PATH=" + filepath.Join(h.GOROOT, "bin") + string(os.PathListSeparator) + h.PATH,
 		"CC=" + h.CC,
 		"GOENV=off",
 		"GOWORK=off",
