@@ -76,6 +76,8 @@ func exampleDirs(root string) ([]string, error) {
 //
 //   - check reports no error and no warning;
 //   - test passes every example, and there is at least one;
+//   - each example's inputs render each file of its expected/ with that
+//     file's executable bit, which test does not compare;
 //   - pack writes the package it reports, which checks and tests green;
 //   - for each of sampleModes, render --sample writes exactly the files
 //     its result lists, with their sizes, digests and modes; sample writes
@@ -131,6 +133,7 @@ func exampleHarness(t *testing.T, src string) []string {
 
 	green("check", "check", src)
 	passes("test", src)
+	expectedModes(t, src, add)
 
 	packed := filepath.Join(work, "packed.metais")
 	if r, ok := green("pack", "pack", src, "--out", packed); ok {
@@ -183,6 +186,50 @@ func exampleHarness(t *testing.T, src string) []string {
 		add("the source directory", "the harness's commands changed it: %q became %q", sortedKeys(before), sortedKeys(after))
 	}
 	return ps
+}
+
+// expectedModes renders the inputs of each example of the source
+// directory src that holds expected/, and reports, through add, each file
+// render lists whose executable bit is not that of the file of the same
+// path in expected/. Test compares an example's files by their bytes
+// alone (MTS-AUT-040), so the modes its expected/ carries are held here.
+// A checkout on Windows keeps no mode to compare.
+func expectedModes(t *testing.T, src string, add func(step, format string, args ...any)) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		return
+	}
+	examples, err := exampleDirs(filepath.Join(src, "examples"))
+	if err != nil {
+		add("expected modes", "%v", err)
+		return
+	}
+	for _, ex := range examples {
+		expected := filepath.Join(ex, "expected")
+		if _, err := os.Stat(expected); err != nil {
+			continue
+		}
+		step := "expected modes of " + filepath.Base(ex)
+		argv := []string{"render", src, "--out", filepath.Join(testenv.Dir(t), "out"), "--json"}
+		if _, err := os.Stat(filepath.Join(ex, "inputs")); err == nil {
+			argv = append(argv, "--data", filepath.Join(ex, "inputs"))
+		}
+		r := runTool(t, argv...)
+		var res renderResult
+		if r.doc == nil || r.status != 0 || json.Unmarshal(r.doc.Result, &res) != nil {
+			add(step, "render: status %d, findings %q", r.status, r.codes())
+			continue
+		}
+		for _, f := range res.Files {
+			fi, err := os.Stat(filepath.Join(expected, filepath.FromSlash(f.Path)))
+			if err != nil {
+				continue
+			}
+			if want := fi.Mode()&0o100 != 0; f.Executable != want {
+				add(step, "%s renders executable %t, and expected/ holds it with mode %v", f.Path, f.Executable, fi.Mode())
+			}
+		}
+	}
 }
 
 // writtenAsListed compares the tree at dir with render's list of the
@@ -258,6 +305,14 @@ func TestExampleHarness(t *testing.T) {
 		{"a failing example", func(t *testing.T, dir string) {
 			write(t, filepath.Join(dir, "examples/basic/expected/greeting.md"), "# Hello, someone else\n")
 		}, []string{"test: ", "pack: "}},
+		{"an expected file whose mode is not the render's", func(t *testing.T, dir string) {
+			if runtime.GOOS == "windows" {
+				t.Skip("a checkout on Windows keeps no mode")
+			}
+			if err := os.Chmod(filepath.Join(dir, "examples/basic/expected/greeting.md"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+		}, []string{"expected modes of basic: "}},
 		{"no example", func(t *testing.T, dir string) {
 			if err := os.RemoveAll(filepath.Join(dir, "examples")); err != nil {
 				t.Fatal(err)
