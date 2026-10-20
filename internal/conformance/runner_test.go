@@ -215,9 +215,10 @@ func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
 // runCaseIn runs case c of v with the paths its steps name given in mode.
 func (r *runner) runCaseIn(v *vector, c *vcase, base string, mode pathMode) *caseResult {
 	res := &caseResult{runs: map[env]*envRun{}}
-	if c.Setup != nil && len(c.Setup.Unwritable) > 0 && !slices.Contains(v.Requires, "unwritable-dirs") {
-		res.problems = append(res.problems, problem{check: checkHarness, harness: true,
-			msg: "the setup makes a directory unwritable, and the vector does not require unwritable-dirs"})
+	if msgs := setupProblems(v, c); len(msgs) > 0 {
+		for _, m := range msgs {
+			res.problems = append(res.problems, problem{check: checkHarness, harness: true, msg: m})
+		}
 		return res
 	}
 	probe := r.probe
@@ -259,6 +260,48 @@ func (r *runner) runCaseIn(v *vector, c *vcase, base string, mode pathMode) *cas
 		res.problems = append(res.problems, differences(a, b, checkAB, differingVars(a.sb.vars, b.sb.vars))...)
 	}
 	return res
+}
+
+// setupProblems are the harness errors of c's setup that no run can
+// mend, found before anything runs: a directory made unwritable, or a
+// path made unreadable, in a vector that does not require what makes it
+// so (ADR-011 A2 item 3, A4 item 3); and a path listed absent that the
+// vector directory holds, or that no step names (A4 item 1).
+func setupProblems(v *vector, c *vcase) []string {
+	s := c.Setup
+	if s == nil {
+		return nil
+	}
+	var msgs []string
+	if len(s.Unwritable) > 0 && !slices.Contains(v.Requires, "unwritable-dirs") {
+		msgs = append(msgs, "the setup makes a directory unwritable, and the vector does not require unwritable-dirs")
+	}
+	if len(s.Unreadable) > 0 && !slices.Contains(v.Requires, "unreadable-files") {
+		msgs = append(msgs, "the setup makes a path unreadable, and the vector does not require unreadable-files")
+	}
+	for _, a := range s.Absent {
+		if _, err := os.Lstat(filepath.Join(v.dir, filepath.FromSlash(a))); err == nil {
+			msgs = append(msgs, fmt.Sprintf("the setup lists %s as absent, and the vector directory holds it", a))
+		}
+		if !slices.Contains(stepPaths(c), a) {
+			msgs = append(msgs, fmt.Sprintf("the setup lists %s as absent, and no step names it", a))
+		}
+	}
+	return msgs
+}
+
+// stepPaths are the paths c's steps name: what they read, and where they
+// write.
+func stepPaths(c *vcase) []string {
+	paths := inputPaths(c)
+	for _, st := range c.Steps {
+		for _, p := range []string{st.args.Out, st.args.To} {
+			if p != "" && !slices.Contains(paths, p) {
+				paths = append(paths, p)
+			}
+		}
+	}
+	return paths
 }
 
 // runEnv runs every step of c in one fresh sandbox of environment e, with
@@ -310,6 +353,10 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 				return run
 			}
 		}
+	}
+	if err := sb.checkAbsent(c); err != nil {
+		fail(0, checkHarness, err.Error())
+		return run
 	}
 	finders := r.finders(v, sb, e)
 	var last map[string]node // the snapshot after the last step

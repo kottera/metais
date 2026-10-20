@@ -52,6 +52,14 @@ type setup struct {
 	// once everything else is in place: the pre-state of a write that
 	// fails (ADR-011 D9 item 6, A2).
 	Unwritable []string `json:"unwritable"`
+	// Absent are paths that must not exist in the work directory when
+	// the first step runs, which a step may name: the operand of a
+	// refusal that nothing is there (ADR-011 A4 item 1).
+	Absent []string `json:"absent"`
+	// Unreadable are files and directories made unreadable to the
+	// implementation, mode 0000, after everything else, the unwritable
+	// directories included (ADR-011 A4 item 2).
+	Unreadable []string `json:"unreadable"`
 }
 
 type symlink struct {

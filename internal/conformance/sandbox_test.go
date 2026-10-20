@@ -50,6 +50,14 @@ type sandbox struct {
 	abs  bool   // the paths a step names are absolute paths into work
 
 	locked []string // the unwritable directories, until unlock
+	sealed []sealed // the unreadable paths, until unlock
+}
+
+// sealed is a path the setup made unreadable, and the mode unlock gives
+// it back.
+type sealed struct {
+	path string
+	mode fs.FileMode
 }
 
 // newSandbox makes a sandbox below base for e. Environment A's sandbox and
@@ -198,7 +206,8 @@ func (sb *sandbox) plantDecoys(v *vector, c *vcase) error {
 // 4): the setup tree's contents, the empty directories, the links and the
 // named pipes, then the package and every tree or file the steps'
 // arguments name, each at the same relative path, and last the
-// unwritable directories (lockUnwritable). expected/ is never copied.
+// unwritable directories (lockUnwritable) and then the unreadable paths
+// (sealUnreadable). expected/ is never copied.
 func (sb *sandbox) applySetup(v *vector, c *vcase) error {
 	if s := c.Setup; s != nil {
 		if s.Copy != nil && *s.Copy != "" {
@@ -253,7 +262,10 @@ func (sb *sandbox) applySetup(v *vector, c *vcase) error {
 		}
 	}
 	if c.Setup != nil {
-		return sb.lockUnwritable(c.Setup.Unwritable)
+		if err := sb.lockUnwritable(c.Setup.Unwritable); err != nil {
+			return err
+		}
+		return sb.sealUnreadable(c.Setup.Unreadable)
 	}
 	return nil
 }
@@ -282,10 +294,47 @@ func (sb *sandbox) lockUnwritable(dirs []string) error {
 	return nil
 }
 
-// unlock gives every directory lockUnwritable locked its mode back, so the
-// sandbox can be kept or removed.
+// unreadableMode is the mode an unreadable path is given: nothing for
+// anyone, so the implementation can neither read a file nor list a
+// directory.
+const unreadableMode = 0o000
+
+// sealUnreadable makes each path of paths, which the setup has put in
+// place, unreadable (ADR-011 A4 item 2), last of all, and records it with
+// its mode so unlock can give the mode back. A case whose setup names one
+// requires unreadable-files, which runCase holds it to before the sandbox
+// is made.
+func (sb *sandbox) sealUnreadable(paths []string) error {
+	for _, rel := range paths {
+		p := filepath.Join(sb.work, filepath.FromSlash(rel))
+		fi, err := os.Lstat(p)
+		if err != nil {
+			return fmt.Errorf("setup unreadable: %w", err)
+		}
+		if err := os.Chmod(p, unreadableMode); err != nil {
+			return fmt.Errorf("setup unreadable: %w", err)
+		}
+		sb.sealed = append(sb.sealed, sealed{p, fi.Mode().Perm()})
+	}
+	return nil
+}
+
+// isSealed reports whether p is a path sealUnreadable sealed.
+func (sb *sandbox) isSealed(p string) bool {
+	return slices.ContainsFunc(sb.sealed, func(s sealed) bool { return s.path == p })
+}
+
+// unlock gives every path sealUnreadable sealed and every directory
+// lockUnwritable locked its mode back, so the sandbox can be kept or
+// removed.
 func (sb *sandbox) unlock() error {
 	var first error
+	for _, s := range slices.Backward(sb.sealed) {
+		if err := os.Chmod(s.path, s.mode); err != nil && first == nil {
+			first = err
+		}
+	}
+	sb.sealed = nil
 	for _, p := range slices.Backward(sb.locked) {
 		if err := os.Chmod(p, 0o755); err != nil && first == nil {
 			first = err
@@ -293,6 +342,22 @@ func (sb *sandbox) unlock() error {
 	}
 	sb.locked = nil
 	return first
+}
+
+// checkAbsent fails when a path c's setup lists as absent exists in the
+// work directory once everything else is in place, just before the first
+// step (ADR-011 A4 item 1): the setup's own trees or a step's copied
+// argument made it.
+func (sb *sandbox) checkAbsent(c *vcase) error {
+	if c.Setup == nil {
+		return nil
+	}
+	for _, a := range c.Setup.Absent {
+		if _, err := os.Lstat(filepath.Join(sb.work, filepath.FromSlash(a))); !errors.Is(err, fs.ErrNotExist) {
+			return fmt.Errorf("the setup lists %s as absent, and the work directory holds it before the first step", a)
+		}
+	}
+	return nil
 }
 
 // path is the path a step's argument p is given to the implementation as:
@@ -385,7 +450,9 @@ type node struct {
 
 // snapshot records home, tmp and work below the sandbox's root, and the
 // working directory when it is not work, keyed by slash paths relative to
-// the root.
+// the root. A path the setup sealed is recorded by its type and mode
+// alone, since nothing can read it: its content, or what a directory
+// holds, is not recorded.
 func (sb *sandbox) snapshot() (map[string]node, error) {
 	snap := map[string]node{}
 	tops := []string{"home", "tmp", "work"}
@@ -412,6 +479,13 @@ func (sb *sandbox) snapshot() (map[string]node, error) {
 			}
 			n := node{mode: fi.Mode()}
 			switch {
+			case sb.isSealed(p) && fi.Mode().Perm() == unreadableMode:
+				n.kind = "sealed"
+				snap[filepath.ToSlash(rel)] = n
+				if d.IsDir() {
+					return filepath.SkipDir
+				}
+				return nil
 			case d.IsDir():
 				n.kind = "dir"
 			case d.Type().IsRegular():
@@ -511,6 +585,8 @@ func probeRequirement(dir, req string) (bool, string) {
 		return true, ""
 	case "unwritable-dirs":
 		return probeUnwritable(d)
+	case "unreadable-files":
+		return probeUnreadable(d)
 	case "case-sensitive-fs":
 		if err := os.WriteFile(filepath.Join(d, "a"), nil, 0o644); err != nil {
 			return false, err.Error()
@@ -563,6 +639,35 @@ func probeUnwritable(dir string) (bool, string) {
 		if err := try.do(); err == nil {
 			return false, "this process can " + try.what + " in a directory of mode 0555, as root can"
 		}
+	}
+	return true, ""
+}
+
+// probeUnreadable reports whether a file below dir of the mode
+// sealUnreadable gives cannot be opened for reading by this process:
+// whether the implementation, which runs as this process's user, meets
+// the pre-state a vector asks for (ADR-011 A4 item 3). It does not when
+// the process runs as root, whom a mode does not bind, nor on a file
+// system or platform where a file's mode does not govern reading it.
+func probeUnreadable(dir string) (bool, string) {
+	sealedFile := filepath.Join(dir, "sealed")
+	if err := os.WriteFile(sealedFile, []byte("x"), 0o644); err != nil {
+		return false, err.Error()
+	}
+	if err := os.Chmod(sealedFile, unreadableMode); err != nil {
+		return false, "cannot change a file's mode: " + err.Error()
+	}
+	defer os.Chmod(sealedFile, 0o644)
+	fi, err := os.Stat(sealedFile)
+	if err != nil {
+		return false, err.Error()
+	}
+	if fi.Mode().Perm() != unreadableMode {
+		return false, fmt.Sprintf("a file given mode %v has mode %v", fs.FileMode(unreadableMode), fi.Mode().Perm())
+	}
+	if f, err := os.Open(sealedFile); err == nil {
+		f.Close()
+		return false, "this process can open a file of mode 0000 for reading, as root can"
 	}
 	return true, ""
 }
