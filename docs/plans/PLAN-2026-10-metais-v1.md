@@ -1622,6 +1622,22 @@ specification's 1.0 text is complete and ready for the release act.
   source directory's top level, so each package's own documentation is its
   guide and its meaning documents.
 
+**Rulings made during the wave:**
+- **A code whose input name cannot live in the committed suite tree gets a
+  run-time setup** (plan orchestrator, 2026-10-20; for Ed to ratify).
+  - `collection.item_name` needs an item name holding `:`, `\` or invalid
+    UTF-8, which ADR-011 D9 item 8 forbids in a vector's tree.
+  - An ADR-011 amendment in the shape of Ed's A4 adds a setup member that
+    creates such a name at run time, behind a `requires` probe for a
+    filesystem that allows it. The portable-name rule for the committed
+    tree is untouched.
+  - The same applies to `output.destination.write_failed`, if no existing
+    setup reaches it.
+  - The unwired list ends empty, with no exemption list.
+- **The release builder remains held** for Ed's design session
+  `01a1566e-2786-7173-84ff-c1485fcf8cdf`. His ruling is recorded here when
+  it comes.
+
 ## 14. What this plan does not cover
 
 These are ruled out by PRD-001 §3, or deferred:
