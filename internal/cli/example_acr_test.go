@@ -4,9 +4,9 @@
 package cli
 
 import (
-	"archive/zip"
+	"bytes"
 	"encoding/json"
-	"io/fs"
+	"io"
 	"maps"
 	"os"
 	"path/filepath"
@@ -15,7 +15,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/testenv"
+	"github.com/kottera/metais/internal/zipfmt"
 )
 
 // acrPackage is the §4.1 example, the accessibility conformance report
@@ -305,14 +307,19 @@ func TestACREditions(t *testing.T) {
 	if r := runTool(t, "render", acrPackage, "--data", data, "--out", out); r.status != 0 {
 		t.Fatalf("render exits %d: %s", r.status, r.stderr)
 	}
-	docx, err := zip.OpenReader(filepath.Join(out, "acr.docx"))
+	b, err := os.ReadFile(filepath.Join(out, "acr.docx"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer docx.Close()
-	document, err := fs.ReadFile(docx, "word/document.xml")
-	if err != nil {
-		t.Fatal(err)
+	var document bytes.Buffer
+	sink := func(name string) io.Writer {
+		if name == "word/document.xml" {
+			return &document
+		}
+		return nil
+	}
+	if _, fs, err := zipfmt.OpenContainer(bytes.NewReader(b), int64(len(b)), limits.Defaults(), sink); err != nil || len(fs) > 0 {
+		t.Fatalf("the rendered acr.docx: %v %v", err, fs)
 	}
 	acrJSON, err := os.ReadFile(filepath.Join(out, "acr.json"))
 	if err != nil {
@@ -322,7 +329,7 @@ func TestACREditions(t *testing.T) {
 		"references/wcag-2.2.md":               read("references/wcag-2.2.md"),
 		"templates/criteria/wcag.liquid":       read("templates/criteria/wcag.liquid"),
 		"templates/criteria/wcag-level.liquid": read("templates/criteria/wcag-level.liquid"),
-		"the rendered acr.docx":                string(document),
+		"the rendered acr.docx":                document.String(),
 		"the rendered acr.json":                string(acrJSON),
 	}
 	space := regexp.MustCompile(`\s+`)
@@ -338,7 +345,7 @@ func TestACREditions(t *testing.T) {
 			}
 		}
 	}
-	if !strings.Contains(string(document), "Non-text Content") || !strings.Contains(string(acrJSON), "Non-text Content") {
+	if !strings.Contains(document.String(), "Non-text Content") || !strings.Contains(string(acrJSON), "Non-text Content") {
 		t.Errorf("the rendered outputs print no WCAG name, so this test sees no copy of one")
 	}
 }
