@@ -1378,8 +1378,10 @@ PLAN-2026-10-metais-test-economy W3-1 lands.
    feeding a pipe that the commit reads in order (ADR-010 D2 item 3, as A6
    amends it), so the scheduler cannot reorder its bytes.
 3. **Host variation** is unchanged. Environment A carries
-   `TZ=Pacific/Chatham` and `LC_ALL` of `tr_TR.UTF-8`, and
-   `TestRenderUnderAClosedUmask` carries the umask of `077`.
+   `TZ=Pacific/Chatham` and `LC_ALL` of `tr_TR.UTF-8`. The detector's fresh
+   process, under a umask of `077`, renders the probe and every vector whose
+   expected trees mark a file executable, since the execute bit is the only
+   observed byte a umask reaches.
 
 ## Implementation log
 

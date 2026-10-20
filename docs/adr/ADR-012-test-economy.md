@@ -73,7 +73,8 @@ measurement (D12):
   about five times. In this design's package run, `TestCasesWaitTogether`
   showed 55 s and `TestUnmetRequirementIsSkippedAndReported` 64 s from
   their first `cont`, because they ran beside `TestDriverProtocol`'s
-  suite; alone, each is a few seconds (D12).
+  suite. Alone, each costs under a CPU-second beyond the package's
+  `TestMain`, and its wall time is a sleep (D12).
 
 ### Where the time goes
 
@@ -169,7 +170,8 @@ published method an implementation and a release are run by.**
    `TestHostIsolation` keeps its name only for the every-command reach of
    ADR-009 D16 item 1, under `-conformance.reach`, so the wave tier's
    command in AGENTS.md is unchanged. Without the flag it runs nothing,
-   and says that `TestConformance` is the run that covers it.
+   as `TestCalibration` runs only under `-calibration.record`, and says
+   that `TestConformance` is the run that covers it.
 2. **The record.** One file per vector, at
    `internal/conformance/testdata/record/<area>/<slug>.json`. It is outside
    the suite tree, because it is a fact about the reference tool, not part
@@ -437,11 +439,16 @@ along each axis. Writing a limit's full default count moves to calibration.**
      - the in-process `cli.Run` path;
      - `GOMAXPROCS` 1, against the one goroutine D4 item 2 shows cannot
        reorder bytes;
-     - umask 077, which `TestRenderUnderAClosedUmask` proves on its own.
-   - So the main loop shrinks to the control's own probe: the 20-member
-     object rendered under `MapOrder`, at most 20 times, which must be
-     caught, and the same probe clean, which must not. This keeps the
-     detector honest without re-running the suite.
+     - umask 077, in its fresh process.
+   - So the in-process loop shrinks to the control's own probe: the
+     20-member object rendered under `MapOrder`, at most 20 times, which
+     must be caught, and the same probe clean, which must not. This keeps
+     the detector honest without re-running the suite.
+   - The fresh process under umask 077 stays, for the probe and for every
+     vector whose expected trees mark a file executable. The execute bit is
+     the only observed byte a umask can reach.
+     `TestRenderUnderAClosedUmask` (umask 777) proves something else: that
+     a render needs no permission from the umask.
    - `TestPackDeterminism` (`packdeterminism_test.go:149-166`) keeps
      `disturb`, changed file times and modes, which no vector varies. It
      drops the `GOMAXPROCS` loop.

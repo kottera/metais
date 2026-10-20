@@ -118,17 +118,20 @@ compares ratios with its own baseline.
 
 | Package | Baseline, linux (wall / CPU-s) | Baseline, Apple M | Target CPU-s, linux | Other target |
 |---|---|---|---|---|
-| `internal/conformance` | 287 s / 1,492 | 275 s / 959 | **≤ 300** | the pass ≤ 1,600 processes for the current 780 steps, equal to its plan; the package ≤ 2,500 processes and ≤ 11 builds of `metais` |
-| `internal/cli` | 180 s / 379 | 98 s / 194 | **≤ 230** | — |
-| `internal/guarantees` | 138 s / 228 | 88 s / 126 | **≤ 120** | ≤ 2 builds of `metais` |
-| `internal/tools/release` | 96 s / 325 | — | **≤ 170** | — |
+| `internal/conformance` | 287 s / 1,492 | 275 s / 959 | **≤ 250** | the pass ≤ 1,600 processes for the current 780 steps, and equal to its plan; the package ≤ 2,500 processes (about 21,000 today) and ≤ 8 builds of `metais` (11 today) |
+| `internal/cli` | 180 s / 379 | 98 s / 194 | **≤ 190** | — |
+| `internal/guarantees` | 138 s / 228 | 88 s / 126 | **≤ 150** | ≤ 2 builds of `metais`; ≤ 125 CPU-s once the gate-selection fix moves the gate-script tests out of its runs |
+| `internal/tools/release` | 96 s / 325 | — | **≤ 210** | — |
 | `internal/hostfs` | 36 s / 36 | — | **≤ 8** | — |
 | `internal/author` | 8 s / 8 | — | **≤ 5** | — |
 | `internal/testenv` | — | — | **≤ baseline + 20** | receives the cgo toolchain test |
 | every other package | — | — | **no worse than baseline** | — |
 
 Each target is the baseline less the saving the items below estimate, with
-about a quarter left as margin. An item that misses its share says why, and
+a quarter to a half left as margin. The margin is widest for
+`internal/conformance`, whose figure is a projection: about 1,500
+release-built processes at the 0.04 CPU-s each measured today, plus the
+canaries, the self-proof and `TestMain`, come to about 150 CPU-s. An item that misses its share says why, and
 by how much. A target missed at a wave's verification is a finding for Ed,
 not a reason to cut further.
 
@@ -194,10 +197,10 @@ ADR-012 D5.
   `Writer.mkdir`. Today's tests pass against it, which the item shows. The
   new tests fail. Then the same with one handle per file, and one per depth
   level.
-- **Saving, measured on the baseline host:** `TestShapes…` 20.0 s and
-  `TestExisting…` 13.5 s of `internal/hostfs`'s 36 CPU-s; `TestUnpack…`
-  3.7 s of `internal/author`'s 8. About 30 CPU-s per change that reaches
-  either package.
+- **Saving, alone, net of `TestMain`:** `TestShapes…` 19.4 and
+  `TestExisting…` 13.0 of `internal/hostfs`'s 36 CPU-s; most of
+  `TestUnpack…`'s 3.7 s of work in `internal/author`. About 33 CPU-s per
+  change that reaches either package.
 
 ### W1-2 — the release builder, once
 
@@ -225,11 +228,14 @@ ADR-012 D6.
   `archive()`. Today the second run catches it, and the new in-process test
   must too. A scratch commit makes `released()` accept a revision with no
   tag, and the table must fail.
-- **Saving:** `TestReleaseBuildsTwiceAndWritesDist` 52 s of work, half of
-  its builds; `TestReleaseRefusesAnUnreleasedRevision` 18 s. Of the
-  package's 325 CPU-s, the item's own measurement settles the CPU share.
-  With the gate-selection fix, the package stops running on changes that
-  do not reach it.
+- **Saving, alone, net of `TestMain`:** half of
+  `TestReleaseBuildsTwiceAndWritesDist`'s 168 CPU-s, and all but one cold
+  build of `TestReleaseRefusesAnUnreleasedRevision`'s 62: about 135 of the
+  package's 325. `TestReleaseRefusesABuildWithoutTheReleaseSettings` and
+  `TestReleaseRefusesUnequalBuilds` cost 30 CPU-s each, in about three cold
+  builds. The audit did not name them, and the item reports whether a
+  build each is what their refusal needs. With the gate-selection fix, the
+  package stops running on changes that do not reach it.
 
 ### W1-3 — the guarantee package: one build, one listing, and the gate scripts' tests
 
@@ -247,6 +253,11 @@ ADR-012 D7 items 3 to 6.
     `moduleFiles` once.
   - Move `TestGoCommandKeepsHostCToolchain` to `internal/testenv`. That is
     a shared seam, so the wave tier runs before merge.
+  - Profile `TestReadInPlaceDetector`. It costs 21 CPU-s alone for about
+    50 command lines over two packages, which its size does not explain. The
+    audit did not name it. The item finds where the time goes, fixes what
+    is the test's own, and reports anything that is the tool's as a finding
+    rather than changing it.
 - **What proves it after:** `TestGateSelectWorkingTreeHostGit` (same
   assertions, plus the hostile git configuration); the moved test, in the
   package whose code it tests; the tripwires, unchanged, over the cached
@@ -254,9 +265,12 @@ ADR-012 D7 items 3 to 6.
 - **Red first:** not applicable to the consolidations, which change no
   assertion. The item shows each tripwire's control still red over the
   cached listing.
-- **Saving:** `TestGoCommandKeepsHostCToolchain` 17.8 s of work leaves the
-  package. `TestGateSelectWorkingTree` takes about 3 s. The builds and
-  listings are measured by the item.
+- **Saving, alone, net of `TestMain`:** `TestGoCommandKeepsHostCToolchain`
+  20 CPU-s leaves the package. `TestGateSelectWorkingTree` takes 3 CPU-s.
+  The gate-script tests together are 28 CPU-s per change that does not touch
+  the scripts, once the gate-selection fix places them. The listing tests
+  (`TestNoHostFacts` 13, `TestLayers` 8, `TestNoEncodingCSV` 4.5) share one
+  listing per target. The builds are measured by the item.
 
 ### W1-4 — the command line's walks become representatives and a static check
 
@@ -287,10 +301,14 @@ ADR-012 D8.
     skipped. The new check fails.
   - A scratch commit couples two ACR tables, and the ten cases must catch
     it.
-- **Saving:** `TestReadingRefusalsTriggered` 48 s and
-  `TestInspectRefusalsTriggered` 22 s of work; `TestHostileMarkdown` 19 s,
-  most of it; `TestACREditionDecidesTables` 6 s, three quarters of it;
-  `TestPresentationNeverReachesJSON` 6 s, three quarters of it.
+- **Saving, alone, net of `TestMain`:**
+  - most of `TestReadingRefusalsTriggered`'s 184 CPU-s;
+  - all but the line cases of `TestInspectRefusalsTriggered`'s 25.5;
+  - most of `TestHostileMarkdown`'s 21;
+  - three quarters of `TestACREditionDecidesTables`'s 5.7 and of
+    `TestPresentationNeverReachesJSON`'s 4.9.
+
+  That is about 230 of `internal/cli`'s 379 CPU-s.
 
 ### W1-5 — the render's one goroutine, under the race detector
 
@@ -446,8 +464,10 @@ ADR-012 D7 items 1 and 2, with ADR-005 A2 and ADR-010 A6's D13 item 4.
   - pack determinism under changed file times and modes;
   - no write outside the output directory, in-process (R12 item 1, SC6).
 - **Change:**
-  - `TestDeterminismDetector`'s main loop becomes its control's probe,
-    clean and under `MapOrder`.
+  - `TestDeterminismDetector`'s in-process loop becomes its control's
+    probe, clean and under `MapOrder`. Its fresh process under umask 077
+    renders the probe and every vector with an executable file in its
+    expected trees.
   - `TestPackDeterminism` keeps `disturb` and drops the `GOMAXPROCS` loop.
   - `TestConfinementDetector`'s main loop becomes the hostile traversal
     members, with `SkipConfine` as its control.
@@ -455,13 +475,14 @@ ADR-012 D7 items 1 and 2, with ADR-005 A2 and ADR-010 A6's D13 item 4.
   - the pass's comparison of every vector against its record, from
     another process, environment and day (W2-3);
   - check 4 over the whole sandbox (W2-1);
-  - the detectors' probes and controls;
-  - `TestRenderUnderAClosedUmask`, for umask.
+  - the detectors' probes and controls, and the fresh process under umask
+    077.
 - **Red first:** each control stays red, and that is shown. A scratch
   commit makes one output depend on the process id. The pass's record
   comparison must catch it, not the shrunk detector.
-- **Saving:** `TestDeterminismDetector` 31 s and `TestConfinementDetector`
-  21 s of work, most of both; `TestPackDeterminism` 6 s, part of it.
+- **Saving, alone, net of `TestMain`:** most of `TestDeterminismDetector`'s
+  32 CPU-s and `TestConfinementDetector`'s 19, and part of
+  `TestPackDeterminism`'s 6.
 
 ### W3-2 — the train's measurement
 

@@ -1911,7 +1911,9 @@ detectors), and D14 item 8.
    probe, a 20-member object, clean and under `MapOrder`, up to 20 times
    in one process. Repetition across processes, environments and days,
    for every vector, is the conformance pass's comparison with its record
-   (ADR-005 A2). `TestPackDeterminism` keeps the changed file times and
+   (ADR-005 A2). Its fresh process under umask `077` renders the probe and
+   every vector with an executable file in its expected trees.
+   `TestPackDeterminism` keeps the changed file times and
    modes, which no vector varies.
 3. **D13 item 4, confinement** (W3-1). The conformance pass snapshots the
    whole sandbox, the parent of the work directory included, before and
