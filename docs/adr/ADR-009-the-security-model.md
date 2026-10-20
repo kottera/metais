@@ -1506,6 +1506,81 @@ limits whose worst case breaks the memory ceiling.
    memory a case needs per unit of its limit may raise that default again,
    by a further amendment that cites a calibration run within the ceiling.
 
+### A4 — Input loading is bounded by the values it decodes, and YAML by its bytes
+
+**Status:** Accepted 2026-10-20 by Ed Funnekotter, in design session
+`01a159ac-1a15-7017-9a1d-9f99bef3ad55` (PLAN-2026-10-metais-v1, W7-A2).
+**Amends:** D3 (two data limits added, and `csv-rows`'s rationale). D10,
+D18 and A3 are unchanged; this amendment applies A3 item 3 to input loading.
+
+Memory spent loading inputs grows with the number of values decoded, not
+with the bytes read. W7-C6 measured the peak resident memory per byte of
+input as about 240 B for JSON, 190 B for YAML and 700 B for CSV. A JSON
+array of 2,000,001 numbers, under 4 MiB of source, peaked at 963 MiB. So
+`input-size` and `inputs-total` cannot hold the 1 GiB ceiling at any useful
+default. Lowering them to the costliest format's figure (about 1.5 MiB)
+would refuse large, simple inputs such as long text, which cost about one
+byte per byte, and end tabular inputs at a few thousand rows.
+
+1. **`input-values`** is a data limit: the values decoded from all of one
+   command's inputs, summed. A value is one of the data model's (ADR-003 D8
+   item 3): a null, boolean, number, string, array or object. The count is
+   defined on the decoded value, not on the parser, so every conforming
+   implementation refuses the same inputs:
+   - a JSON or YAML file, and a `--inputs-json` or `--set-json` text,
+     counts every value it decodes to, its root included;
+   - a CSV file counts its array, each record's object, and each member a
+     record has (an unquoted empty field is absent, ADR-003 D11 item 5, and
+     is not counted);
+   - a plain text file, and a `--set` value, counts one;
+   - a Markdown file counts its object, its `body`, and every value of its
+     frontmatter's fields (the frontmatter mapping is the object, counted
+     once);
+   - a collection counts one for its array, plus each item as above.
+
+   A value is counted when it is decoded, whether or not precedence (ADR-003
+   D18) later discards it: the memory was spent. Values created by a path
+   set's intermediate step (ADR-003 D17 item 4) and values a schema default
+   supplies are not counted. Each reader counts as it decodes and stops at
+   the bound. A command whose inputs exceed it is refused with
+   `limit.exceeded` naming `input-values`, as for every data limit.
+2. **`yaml-size`** is a data limit: the bytes of one YAML document read as
+   an input, whether a file or a collection item. `go.yaml.in/yaml/v3`
+   builds its whole node tree (about 160 B a node) before any value
+   exists to count, so no count can stop a YAML document while it is being
+   parsed. Its bytes are the bound that can. Frontmatter keeps
+   `frontmatter-size` and the manifest keeps `manifest-size`. An input over
+   `yaml-size` is refused before it is parsed. `input-size` and
+   `inputs-total` keep their meaning, and still bound large, simple inputs.
+3. **The defaults hold the worst case of loading them together**, not each
+   alone. In one command, the costliest decoded shape can sit at
+   `input-values`, the rest of `inputs-total` can be long strings, and the
+   last input read can be a YAML document at `yaml-size`, whose tree is still
+   resident. The implementing item:
+   - may first cut a reader's memory per decoded value toward the cheapest
+     reader's, provided no value, finding or position changes, as W7-C6 did
+     for `schema-work`;
+   - sets `yaml-size` first, to the largest power-of-two MiB whose case
+     alone peaks within 40% of 1 GiB;
+   - then sets `input-values` to the largest round value whose joint case
+     (one calibration case for each format's costliest shape, at
+     `input-values`, with the rest of `inputs-total` as strings and a last
+     YAML document at `yaml-size`) peaks within 80% of 1 GiB on its host,
+     the headroom W7-C6 used for `schema-work`;
+   - writes both defaults into D3's table, citing the calibration record,
+     and adds the cases to the calibration suite. The four-target re-run
+     A3 requires covers them.
+4. **`csv-rows` keeps its default.** At these defaults `input-values`
+   refuses a CSV well before 1,000,000 rows, because each row costs at
+   least two values. D3's rationale for `csv-rows` says so. `csv-rows` still
+   bounds a CSV when a caller lowers `input-values`.
+5. **The specification and vectors follow** (AGENTS.md: the specification
+   comes first). Spec §14.6 gains both rows. Each limit gains a statement
+   and a vector at a lowered limit, passing at the bound and refused one
+   value or one byte over it. `metais limits` lists both. A3 item 5 applies:
+   a later change that lowers the memory per value may raise `input-values`
+   again, by a further amendment that cites a calibration run.
+
 ## Implementation log
 
 This log is this section together with the entry files in

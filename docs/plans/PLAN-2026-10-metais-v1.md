@@ -1654,22 +1654,30 @@ specification's 1.0 text is complete and ready for the release act.
   is rescinded, as Ed's guidance of 2026-10-19 requires. The items merged
   under it are judged by the wave tier at verification. A timeout there is
   root-caused and fixed, never merged around.
-- **Input loading's memory needs Ed's ruling** (design session
-  `01a159ac-1a15-7017-9a1d-9f99bef3ad55`, still open). W7-C6 measured the
-  peak per byte of input as about 240 B for JSON, 190 B for YAML and 700 B
-  for CSV. That means `input-size` (32 MiB) and `inputs-total` (128 MiB)
-  cannot hold ADR-009 A3's 1 GiB ceiling, and no limit A3 names bounds
-  this.
-  - The plan orchestrator and the wave recommend a decode-counted
-    `input-values` limit, plus a YAML byte bound. Ed rules.
-  - Weigh beside it: under A3 item 3, W7-C6's records put `schema-work` at
-    450,000. At that default, a 10,000-item collection under the
-    benchmark's item schema costs 350,001 units, and `collection-items` and
-    `csv-rows` admit more data than one validation can check. So input
-    within the 1.0 data limits can be refused with `limit.exceeded` on
-    `schema-work`.
-  - Both halves land together in W7-C6's PR #166, which waits on the
-    ruling.
+- **Input loading is bounded by ADR-009 Amendment A4** (Ed's ruling of
+  2026-10-20, design session `01a159ac-1a15-7017-9a1d-9f99bef3ad55`).
+  W7-C6 measured the peak per byte of input as about 240 B for JSON, 190 B
+  for YAML and 700 B for CSV. So `input-size` (32 MiB) and `inputs-total`
+  (128 MiB) cannot hold A3's 1 GiB ceiling.
+  - A4 adds two data limits. `input-values` counts the data-model values
+    decoded from all of one command's inputs, with an exact counting rule
+    per form. `yaml-size` bounds one YAML document's bytes.
+  - Both defaults are calibrated together on the joint worst case, within
+    80% of 1 GiB. `yaml-size` is set first. A reader's memory per value may
+    be cut before calibrating.
+  - `csv-rows` keeps its default. Its rationale notes that `input-values`
+    binds first.
+  - W7-C6 builds A4 in PR #166, together with the spec rows, statements,
+    vectors and calibration cases.
+  - Under A3 item 3, W7-C6's records put `schema-work` at 450,000. At that
+    default, a 10,000-item collection under the benchmark's item schema
+    costs 350,001 units, and `collection-items` and `csv-rows` admit more
+    data than one validation can check. So input within the 1.0 data
+    limits can be refused with `limit.exceeded` on `schema-work`. Ed
+    accepted this overlap for 1.0 in the same session. The refusal is the
+    same on every host, and A3 item 5 can raise `schema-work` once its cost
+    per unit is cut after the train.
+  - Both halves land together in W7-C6's PR #166.
 
 ## 14. What this plan does not cover
 
