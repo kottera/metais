@@ -125,7 +125,7 @@ func TestContainerVectors(t *testing.T) {
 			}
 		}
 	}
-	packed := pack(t, sourceFiles(t, containersVector))
+	packed := pack(t, sourceFiles(t, containersVector)).bytes
 	path := filepath.Join(vectorsDir, filepath.FromSlash(containersPacked), "packed.metais")
 	if *update {
 		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
