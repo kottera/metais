@@ -183,6 +183,54 @@ var _ = reflect.TypeOf(0)`, nil},
 		{"a platform file in hostfs", "internal/hostfs", "", "//go:build linux\n\npackage hostfs", nil},
 		{"a non-platform tag", "internal/cli", "", "//go:build go1.26\n\npackage cli", nil},
 		{"a name like a platform", "internal/cli", "linux.go", `package cli`, nil},
+		{"the release builder runs, reads the environment and writes", "internal/tools/release", "", `package main
+import ("os"; "os/exec")
+func main() { _ = exec.Command("go"); _ = os.Environ(); _ = os.Getenv("GOOS"); _, _ = os.LookupEnv("GOOS"); _, _ = os.MkdirTemp("", "x"); _ = os.TempDir(); _ = os.WriteFile("x", nil, 0o644); _ = os.RemoveAll("x"); _, _ = os.Lstat("x"); os.Stdout.Write(nil); os.Stderr.Write(nil); _ = os.Stdin; os.Exit(len(os.Args)) }`, nil},
+		{"a package beneath the release builder", "internal/tools/release/sub", "", `package sub
+import "os"
+func f() ([]byte, error) { return os.ReadFile(os.Getenv("X")) }`, nil},
+		{"the release builder reads the clock", "internal/tools/release", "", `package main
+import "time"
+func f() time.Time { return time.Now() }`, []string{"time.Now"}},
+		{"the release builder starts a timer", "internal/tools/release/sub", "", `package sub
+import "time"
+func f() { <-time.After(0) }`, []string{"time.After"}},
+		{"the release builder reads the working directory", "internal/tools/release", "", `package main
+import "os"
+func f() (string, error) { return os.Getwd() }`, []string{"os.Getwd"}},
+		{"the release builder makes a path absolute", "internal/tools/release", "", `package main
+import "path/filepath"
+func f() (string, error) { return filepath.Abs("x") }`, []string{"path/filepath.Abs"}},
+		{"the release builder walks with path/filepath", "internal/tools/release", "", `package main
+import "path/filepath"
+func f() { filepath.WalkDir(".", nil) }`, []string{"path/filepath.WalkDir"}},
+		{"the release builder creates a temporary file", "internal/tools/release", "", `package main
+import "os"
+func f() { os.CreateTemp("", "x") }`, []string{"os.CreateTemp"}},
+		{"the release builder reads the host name", "internal/tools/release", "", `package main
+import "os"
+func f() (string, error) { return os.Hostname() }`, []string{"os.Hostname"}},
+		{"the release builder reads the process", "internal/tools/release", "", `package main
+import "os"
+func f() int { return os.Getpid() + os.Getuid() }`, []string{"os.Getpid"}},
+		{"the release builder reads the home directory", "internal/tools/release", "", `package main
+import "os"
+func f() (string, error) { return os.UserHomeDir() }`, []string{"os.UserHomeDir"}},
+		{"the release builder imports os/user", "internal/tools/release", "", `package main
+import "os/user"
+func f() { user.Current() }`, []string{"imports os/user"}},
+		{"the release builder imports a random source", "internal/tools/release", "", `package main
+import "crypto/rand"
+func f() { rand.Text() }`, []string{"imports crypto/rand"}},
+		{"the release builder sets the environment", "internal/tools/release", "", `package main
+import "os"
+func f() { os.Setenv("X", "y") }`, []string{"os.Setenv"}},
+		{"a sibling named like the release builder", "internal/tools/releasex", "", `package main
+import "os"
+func f() string { return os.Getenv("X") }`, []string{"os.Getenv"}},
+		{"the release builder's parent", "internal/tools", "", `package tools
+import "os"
+func f() string { return os.Getenv("X") }`, []string{"os.Getenv"}},
 		{"strings.Index is no host fact", "internal/cli", "", `package cli
 import ("os"; "strings")
 var _ = strings.Index("", ""); var _ os.FileMode`, nil},
@@ -321,16 +369,44 @@ func f() { o.Getenv("X"); o.Getenv("Y"); o.Stdout.Write(nil); _ = strings.Index;
 
 func TestModuleAllowListIsR2143(t *testing.T) {
 	// RULINGS-v1 R2-143 and ADR-009 D16 item 3: these four, each with its
-	// reason, and no other.
+	// reason; ADR-009 Amendment A2 item 6: and the release builder's one
+	// entry; and no other.
 	var got []string
 	for _, a := range moduleAllowList {
 		got = append(got, a.pkg+"."+a.fn)
 		if strings.TrimSpace(a.reason) == "" {
 			t.Errorf("allow-list entry %s has no reason", a.pkg)
 		}
+		if a.beneath != (a.pkg == "internal/tools/release") {
+			t.Errorf("allow-list entry %s: beneath is %v; only A2's entry covers the packages beneath it", a.pkg, a.beneath)
+		}
 	}
-	want := []string{"internal/hostenv.Isolate", "internal/hostfs.", "cmd/metais.", "internal/dates."}
+	want := []string{"internal/hostenv.Isolate", "internal/hostfs.", "cmd/metais.", "internal/dates.", "internal/tools/release."}
 	if !slices.Equal(got, want) {
-		t.Errorf("the module allow-list is %q, want R2-143's %q", got, want)
+		t.Errorf("the module allow-list is %q, want R2-143's and A2's %q", got, want)
+	}
+
+	// A2 item 1's symbols, spelled out, so the entry cannot grow with
+	// hostSymbols: the environment reads, every os file function, os.TempDir
+	// and os.MkdirTemp, and a main's arguments, streams and exit.
+	builder := []string{
+		"os.Environ", "os.Getenv", "os.LookupEnv",
+		"os.Chmod", "os.Chown", "os.Chtimes", "os.CopyFS", "os.Create", "os.DirFS",
+		"os.Lchown", "os.Link", "os.Lstat", "os.Mkdir", "os.MkdirAll", "os.NewFile",
+		"os.Open", "os.OpenFile", "os.OpenInRoot", "os.OpenRoot", "os.Pipe", "os.ReadDir",
+		"os.ReadFile", "os.Readlink", "os.Remove", "os.RemoveAll", "os.Rename", "os.Stat",
+		"os.Symlink", "os.Truncate", "os.WriteFile",
+		"os.TempDir", "os.MkdirTemp",
+		"os.Args", "os.Stdin", "os.Stdout", "os.Stderr", "os.Exit",
+	}
+	slices.Sort(builder)
+	for _, a := range moduleAllowList {
+		if a.pkg != "internal/tools/release" {
+			continue
+		}
+		syms := slices.Sorted(slices.Values(a.symbols))
+		if !slices.Equal(syms, builder) || a.fn != "" || a.onlyArg != nil {
+			t.Errorf("A2's entry allows %q (function %q, arguments %v), want exactly %q", syms, a.fn, a.onlyArg, builder)
+		}
 	}
 }

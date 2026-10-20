@@ -250,6 +250,7 @@ func fileFunctions() []string {
 // to the symbols it names.
 type moduleAllowance struct {
 	pkg     string            // module-relative package path
+	beneath bool              // the packages beneath pkg are allowed too
 	fn      string            // the one function, or "" for the whole package
 	symbols []string          // what it may refer to
 	onlyArg map[string]string // a symbol it may call only with this string literal
@@ -257,8 +258,9 @@ type moduleAllowance struct {
 }
 
 // moduleAllowList is RULINGS-v1 R2-143's allow-list, exactly: ADR-009 D16
-// item 3's four entries, each with its reason. No entry is added to make
-// the tripwire pass; a package that cannot pass without one is a finding.
+// item 3's four entries, each with its reason, and ADR-009 Amendment A2's
+// one entry for the release builder. No entry is added to make the
+// tripwire pass; a package that cannot pass without one is a finding.
 // internal/hostfs and internal/dates are named before they exist, so the
 // seams they fill are fixed before their code lands.
 var moduleAllowList = []moduleAllowance{
@@ -288,13 +290,43 @@ var moduleAllowList = []moduleAllowance{
 		reason: "parses --now with time.Parse into a fixed offset and does the date filter's " +
 			"arithmetic with time.Unix and its kin, never with time.Local (ADR-004 D11, ADR-010 D11 item 5)",
 	},
+	{
+		pkg:     "internal/tools/release",
+		beneath: true,
+		symbols: releaseBuilderSymbols(),
+		reason: "the release builder, a developer's tool run with go run and never linked into metais, " +
+			"builds twice in fresh directories, hands each build its own environment and writes dist/; " +
+			"the clock, random sources, the user, the host name, the process and the working directory " +
+			"stay refused (ADR-009 A2 items 1 to 3, ADR-010 D12 items 4 and 5)",
+	},
+}
+
+// releaseBuilderSymbols are exactly ADR-009 Amendment A2 item 1's symbols:
+// the environment reads, every os file function, os.TempDir and
+// os.MkdirTemp, and a main package's arguments, streams and exit. os/exec,
+// the item's first entry, is no symbol of hostSymbols: the import rule
+// keeps it out of the binary, and the never-depends rule of layers.json
+// keeps the builder out of the binary.
+func releaseBuilderSymbols() []string {
+	syms := []string{
+		"os.Environ", "os.Getenv", "os.LookupEnv",
+		"os.TempDir", "os.MkdirTemp",
+		"os.Args", "os.Stdin", "os.Stdout", "os.Stderr", "os.Exit",
+	}
+	for _, s := range fileFunctions() {
+		if strings.HasPrefix(s, "os.") {
+			syms = append(syms, s)
+		}
+	}
+	return syms
 }
 
 // allowed reports whether ref, in package pkg (module-relative), is one an
 // allow-list entry lets through.
 func allowed(pkg string, ref reference) bool {
 	for _, a := range moduleAllowList {
-		if a.pkg != pkg || (a.fn != "" && a.fn != ref.fn) || !slices.Contains(a.symbols, ref.symbol()) {
+		within := a.pkg == pkg || a.beneath && strings.HasPrefix(pkg, a.pkg+"/")
+		if !within || (a.fn != "" && a.fn != ref.fn) || !slices.Contains(a.symbols, ref.symbol()) {
 			continue
 		}
 		if want, ok := a.onlyArg[ref.symbol()]; ok {
