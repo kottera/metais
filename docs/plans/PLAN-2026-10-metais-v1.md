@@ -1712,8 +1712,25 @@ under it.
 
 Owed before the release, and filed at the train's close:
 
-- **design session W7-D1** (`01a15abe-ed83-7284-9592-ca591cdd72db`): output
-  validation and YAML schema files still reach past 1 GiB at the defaults;
+- **ADR-009 Amendment A6**, from design session W7-D1
+  (`01a15abe-ed83-7284-9592-ca591cdd72db`, Ed's ruling of 2026-10-20).
+  An audit of every whole-document parse found more paths past 1 GiB
+  than output validation and YAML schema files, and a render at the
+  defaults reaching 1.5 GiB before any output is validated. Ed ruled
+  80/20 for 1.0:
+  - the cheap paths are bounded: the digest file by its form,
+    `example.yaml` by `manifest-size`, the open's outline at the first
+    title, validated YAML outputs by `yaml-size`, plus `output-values` and
+    `schema-yaml-size`;
+  - `input-values` and `output-total` are halved, and a joint render case
+    sets `output-values`;
+  - a memory backstop at 1.5 GiB exits `internal.memory`, as a defect,
+    never as a limit;
+  - A6 item 7 names what stays unbounded until a later release owns the
+    YAML reader and the schema library and counts a budget.
+
+  One implementing item builds A6 with its spec rows, vectors and
+  calibration cases, before the four-target re-run below;
 - **a four-target calibration re-run** that includes A4's cases. The
   wave's figures came from a sandbox;
 - **the SC1 and SC9 rounds** (`01a15abf-4d58-7c58-94ca-f4833e218555`,

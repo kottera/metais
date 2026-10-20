@@ -1687,6 +1687,134 @@ and `internal/guarantees/layers.json` (two rules added). D14 item 1's
    (`--dir ~`). The project is the golden path (ADR-008 A2 item 4); a
    person who wants the skill everywhere types one more argument.
 
+### A6 — Every whole-document parse is bounded, the render is held jointly, and a backstop catches what is not
+
+**Status:** Accepted 2026-10-20 by Ed Funnekotter, in design session
+`01a15abe-ed83-7284-9592-ca591cdd72db` (PLAN-2026-10-metais-v1, W7-D1).
+**Amends:** D3 (three limits added, two defaults lowered, `yaml-size`
+extended to validated outputs), D18 item 2 (a backstop exit fails a case),
+and A3 item 2's scope. It applies A4's shape to the parses A4 did not
+reach. A4 item 3's rule for `input-values` gives way to item 4 below.
+
+W7-V's verifier and an audit of every whole-document parse in
+`cmd/metais`'s closure, both at HEAD 647c0cf on darwin/arm64, found paths
+past the 1 GiB ceiling at the defaults that no calibration case covered:
+
+| Path | Bound before A6 | Peak |
+|---|---|---|
+| Output validation, JSON (`internal/cli/transform.go`) | `output-size` | about 287 B a value; 5,000,000 values in a 10 MB output, 1347 MiB |
+| Output validation, YAML | `output-size`; `yaml-size` not applied | about 360 B a value; 5,000,000, 1755 to 1811 MiB |
+| A YAML schema file | `schema-size` | a 4 MiB file, 1372 MiB, against 880 MiB as JSON |
+| Schema files together, input and output schemas | `schema-size` per file only | about 390 MiB a 4 MiB file, with no bound on the sum |
+| `.compiled/digests.json` | `entry-size` | 8625 MiB at 64 MiB, from an 18 MB package |
+| `example.yaml` read as JSON | `input-size`, where its YAML form has `manifest-size` | 3515 MiB at 32 MiB |
+| The outline of a `references/` Markdown entry, at every open | `entry-size` | 5791 MiB at 64 MiB of headings |
+| `metais outline` of one reference | `entry-size` | 3194 MiB at 16 MiB |
+| A render at the defaults: inputs at `input-values`, outputs held to `output-total` | each calibrated alone | 1489 to 1501 MiB; with one 9 MB validated JSON output last, 2538 MiB |
+
+The template engine is not among them: its own limits hold. The cost is the
+parse in every row, and in most the parser is METAIS's own. The YAML reader
+and the schema library are the exceptions: `go.yaml.in/yaml/v3` builds its
+whole tree before any value can be counted, and the schema library
+validates a copy of the value tree in its own form.
+
+1. **The ceiling binds every path, and every combination of limits one
+   command can reach.** A3 item 2 states what a hostile package must not be
+   able to do; the calibration suite is the evidence for it, not its scope.
+   1.0 bounds the paths of items 2 to 5 and holds the render jointly
+   (item 4). Item 7 names what stays unbounded at 1.0, and item 6 stops it
+   from exhausting a host.
+2. **Bounds that need no new limit.**
+   - **The digest file** is refused once it decodes more values than its
+     form can hold: `entries` plus 4 (the object, `algorithm`, `package`
+     and `entries`, then one digest an entry). It is counted as it is
+     decoded, as A4 item 1 counts an input, and refused with the digest
+     file's existing finding, reason `shape`.
+   - **`example.yaml`** is bounded by `manifest-size` whichever form it is
+     read in, as ADR-007 D5 item 1's "the profiles metais.yaml is read
+     under" already requires.
+   - **No entry is read into a buffer sized by what it declares** before
+     the limit that bounds the entry has admitted that size.
+   - **The open's outline stops at the first level-1 heading.** It needs
+     only the title (ADR-001's references index).
+   - **A manifest's value that exhausts `schema-work`** is refused with
+     `limit.exceeded` on `schema-work`, never `internal.error`.
+3. **`output-values`** is a work and output limit: the values decoded from
+   one validated output (ADR-005 D11 item 3), counted as A4 item 1 counts a
+   JSON or YAML input. It is per output, not summed, because one output's
+   value is released before the next is validated. An output over it is
+   refused with `limit.exceeded.output` naming `output-values`. **A validated
+   YAML output is bounded by `yaml-size`** before it is parsed, for A4
+   item 2's reason. D3's `yaml-size` row says it bounds a validated output
+   too, and its refusal there is `limit.exceeded.output`.
+4. **The render is held jointly.** The defaults of `input-values` and
+   `output-total` are halved: **`input-values` 500,000** and
+   **`output-total` 256 MiB**. Lowering a default before 1.0 and raising it
+   after is the compatible direction (A3 item 5), so the conservative value
+   costs nothing later. The calibration suite gains the joint render case:
+   inputs at `input-values` in A4 item 3's costliest shape and validated by
+   a schema that reaches the library's copy, outputs held to `output-total`,
+   and last the costlier of a JSON output at `output-values` and a YAML
+   output at `yaml-size`. `output-values` is the largest round value whose
+   joint case stays within 1 GiB on every supported target. If the case
+   breaks the ceiling with no validated output, or with `output-values` at
+   100,000, the defaults give way in this order, each by a further
+   amendment citing its run (R1-015): `yaml-size`, then `input-values` and
+   `output-total` in equal proportion.
+5. **`schema-yaml-size`** is a package limit: the bytes of one YAML schema
+   file, refused with `limit.package` before it is parsed. JSON schema files
+   keep `schema-size`. Its default is set by A4 item 3's rule for
+   `yaml-size`: the largest power-of-two MiB whose case alone, a schema file
+   of `const: [0, …]`, peaks within 40% of 1 GiB. A package limit, not
+   `yaml-size`, because a data limit never bounds the package (D3).
+6. **A memory backstop.** `metais` watches its own Go-managed memory: the
+   memory mapped from the operating system less what it has released, read
+   from `runtime/metrics` at least every 10 ms. It sets the runtime's soft
+   memory limit to 1 GiB, so collectable garbage does not count against it.
+   Past **1.5 GiB** it stops the command with the new finding
+   `internal.memory` (class `internal`, its one parameter `tool_version`,
+   exit `2`). It is not `internal.error`, whose hint says a second run meets
+   the same defect: whether the backstop fires depends on the host. The
+   backstop is not a limit, and it is not the guarantee:
+   - it is not in D3's table, and `--limit` names nothing that lowers it;
+     a measured value refuses differently on different hosts, which D3
+     item 1 rules out for a limit;
+   - reaching it is a defect in the tool, never a refusal a package can
+     rely on, so D18 item 2 fails any case that exits through it;
+   - the figure measured never reaches a finding, an output, a template or
+     standard error (D15). The finding names no amount;
+   - its package alone may name `runtime/metrics` and the memory-limit
+     setter, by an allow-list entry in A2's shape, if D16 item 3's symbol
+     rule refuses them;
+   - it does not watch memory the Go runtime does not manage. The binary
+     uses none (ADR-010 D2's `CGO_ENABLED=0`).
+7. **What stays unbounded at 1.0**, each held by item 6 until a later
+   release bounds it:
+   - schema files together: each file is bounded, the package's sum is not,
+     and the joint render case does not include them;
+   - `metais outline` of one large reference, bounded only by `entry-size`;
+   - the raw bytes of every schema file and Markdown reference the open
+     keeps, up to `package-uncompressed`, not yet measured;
+   - the joint case of commands other than `render`.
+8. **What a later release does.** It owns the readers whose cost it cannot
+   count today, the YAML reader and the schema library's value form, and
+   gives every reader and builder a charge per value and per byte against
+   one command-wide budget. The budget is counted, not measured, so a
+   refusal stays the same on every host and in every conforming
+   implementation, as D3 item 1 requires. A3 item 5 then raises the
+   defaults this amendment lowered, citing the calibration runs.
+9. **The specification and vectors follow** (AGENTS.md: the specification
+   comes first). Spec §14.6 gains `output-values` and `output-total`'s new
+   default; §14.4 gains `input-values`'s new default and `yaml-size`'s
+   reach to validated outputs; §14.2 gains `schema-yaml-size`. The finding
+   registry (spec chapter 12) gains `internal.memory`. Each new limit gains
+   a statement and a vector at a lowered limit, passing at the bound and
+   refused one value or one byte over it, and the digest file's value
+   bound gains a vector. `metais limits` lists the new limits. D3's table
+   takes the new rows and defaults, citing the calibration record. The
+   calibration suite gains item 4's and item 5's cases and a case for each
+   path of item 2, and the four-target re-run A3 requires covers them.
+
 ## Implementation log
 
 This log is this section together with the entry files in
