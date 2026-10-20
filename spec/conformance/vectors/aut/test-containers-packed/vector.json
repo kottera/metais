@@ -1,0 +1,33 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/test-containers-packed",
+  "title": "Test on a packed package reads its expected containers in place and gives the result it gives the source directory it was packed from (aut/test-containers)",
+  "statements": [
+    "MTS-AUT-065",
+    "MTS-AUT-071"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "byte-level"
+  ],
+  "requires": [],
+  "notes": "packed.metais is aut/test-containers' source directory packed by internal/vectorgen's TestContainerVectors.",
+  "cases": [
+    {
+      "name": "test",
+      "steps": [
+        {
+          "op": "test",
+          "args": {
+            "source": "packed.metais"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/test.json"
+          }
+        }
+      ]
+    }
+  ]
+}
