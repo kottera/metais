@@ -77,9 +77,22 @@ func deflated(b []byte) []byte {
 }
 
 func (z archive) bytes() []byte {
+	b, _ := z.write()
+	return b
+}
+
+// built is z's bytes and where they placed each record.
+func (z archive) built() built {
+	b, l := z.write()
+	return built{bytes: b, at: l}
+}
+
+// write is z's bytes, and the layout of every record it placed.
+func (z archive) write() ([]byte, layout) {
 	le := binary.LittleEndian
 	out := append([]byte{}, z.prefix...)
 	var cd []byte
+	var l layout
 	for _, e := range z.entries {
 		data := e.content
 		h := header{madeBy: versionMadeBy, needed: 10, flags: flagUTF8, date: dosDate,
@@ -108,6 +121,7 @@ func (z archive) bytes() []byte {
 		if e.central != nil {
 			e.central(&ch)
 		}
+		p := placed{name: e.name, local: len(out), central: len(cd), lh: lh, ch: ch}
 		out = le.AppendUint32(out, sigLocal)
 		for _, v := range []uint16{lh.needed, lh.flags, lh.method, lh.time, lh.date} {
 			out = le.AppendUint16(out, v)
@@ -119,6 +133,7 @@ func (z archive) bytes() []byte {
 		out = le.AppendUint16(out, lh.extraLen)
 		out = append(out, lname...)
 		out = append(out, e.localExtra...)
+		p.data = len(out)
 		out = append(out, data...)
 		out = append(out, e.gapAfter...)
 
@@ -137,14 +152,22 @@ func (z archive) bytes() []byte {
 		cd = append(cd, e.name...)
 		cd = append(cd, e.cdExtra...)
 		cd = append(cd, e.cdComment...)
+		l.entries = append(l.entries, p)
 	}
+	l.cdTail = len(cd)
 	cd = append(cd, z.cdTail...)
 	end := eocd{onDisk: uint16(len(z.entries)), total: uint16(len(z.entries)),
 		cdSize: uint32(len(cd)), cdOff: uint32(len(out)), commentLen: uint16(len(z.comment))}
 	if z.eocd != nil {
 		z.eocd(&end)
 	}
+	l.cd = len(out)
+	for i := range l.entries {
+		l.entries[i].central += l.cd
+	}
+	l.cdTail += l.cd
 	out = append(out, cd...)
+	l.end, l.eocd = len(out), end
 	out = le.AppendUint32(out, sigEOCD)
 	for _, v := range []uint16{end.disk, end.cdDisk, end.onDisk, end.total} {
 		out = le.AppendUint16(out, v)
@@ -153,5 +176,8 @@ func (z archive) bytes() []byte {
 	out = le.AppendUint32(out, end.cdOff)
 	out = le.AppendUint16(out, end.commentLen)
 	out = append(out, z.comment...)
-	return append(out, z.suffix...)
+	l.suffix = len(out)
+	out = append(out, z.suffix...)
+	l.size = len(out)
+	return out, l
 }

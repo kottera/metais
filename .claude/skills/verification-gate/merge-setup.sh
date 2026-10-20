@@ -43,6 +43,7 @@ driver() {
 	case "$1" in
 	metais-generated) echo "sh $script whole %O %A %B %P" ;;
 	metais-generated-region) echo "sh $script region %O %A %B %P %L" ;;
+	metais-generated-values) echo "sh $script values %O %A %B %P %L" ;;
 	esac
 }
 
@@ -50,6 +51,7 @@ label() {
 	case "$1" in
 	metais-generated) echo "metais: a generated file; keep one side, then regenerate" ;;
 	metais-generated-region) echo "metais: generated regions in hand-written text; merge the text, keep one side of each region, then regenerate" ;;
+	metais-generated-values) echo "metais: generated numbers in hand-written text; merge the text, keep one side of a conflict in digits alone, then regenerate" ;;
 	esac
 }
 

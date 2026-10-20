@@ -93,13 +93,20 @@ A committed generated file is never merged by hand (ADR-011 A5).
 - **`metais-generated`, for a file generated whole**, keeps one side's
   copy and reports a clean merge. These are `spec/statements.json`,
   `spec/findings/registry.json`, the specdata copies, the help, scaffold,
-  tar, YAML-writer and vector-package goldens, and
-  `THIRD-PARTY-NOTICES.txt`.
+  tar, YAML-writer and vector-package goldens, the packages pack's
+  vectors expect, and `THIRD-PARTY-NOTICES.txt`.
 - **`metais-generated-region`, for `spec/12-findings.md`**, gives the
   chapter's prose git's own three-way merge, conflicts included, and keeps
   one side only between the code catalog's markers. When the markers are
   not one well-formed pair, it merges the whole chapter as text. It never
   takes one side of hand-written text.
+- **`metais-generated-values`, for a vector file holding numbers vectorgen
+  writes** (a finding's offset or size, a limit lowered to the package's
+  size), gives the file git's three-way merge, then merges a conflict line
+  by line: a line keeps the side that changed it, and a line both sides
+  changed only in its digits keeps this side's, which regenerating
+  rewrites. Any other conflict stays. `TestValues` fails on a file it
+  writes numbers in that `.gitattributes` does not list.
 
 Every merge a driver resolves prints a `merge-generated:` line naming the
 file. The side it kept is stale until you regenerate:

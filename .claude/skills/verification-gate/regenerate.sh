@@ -45,6 +45,8 @@ run go test -count=1 -run '^TestGolden$' ./internal/tarw -args -update
 run go test -count=1 -run '^TestWriteGolden$' ./internal/yamlx -args -update
 run go test -count=1 -run '^TestPackages$' ./internal/vectorgen -args -update
 run go test -count=1 -run '^TestContainerVectors$' ./internal/vectorgen -args -update
+run go test -count=1 -run '^TestPackOutputs$' ./internal/vectorgen -args -update
+run go test -count=1 -run '^TestValues$' ./internal/vectorgen -args -update
 run go test -count=1 -run '^TestThirdPartyNotices$' ./internal/guarantees -args -notices.update
 
 echo "--- generated files that differ from HEAD"

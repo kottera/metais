@@ -123,7 +123,9 @@ check of a cgo-free binary.
 `.gitattributes` gives each committed generated file a merge driver that
 keeps one side's copy. For the code catalog in `spec/12-findings.md`, only
 the generated region keeps one side, and the chapter's prose gets an
-ordinary three-way merge. Git reads drivers only from a clone's own
+ordinary three-way merge. A vector file holding numbers vectorgen writes
+gets a three-way merge too, and a line both sides changed only in its
+digits keeps one side. Git reads drivers only from a clone's own
 configuration, so:
 
 - **In a fresh clone, before the first rebase or merge,** run
@@ -135,8 +137,13 @@ configuration, so:
   changes. It rewrites every committed generated file from its sources:
   - `spec/findings/registry.json`, the specdata copies,
     `spec/statements.json` and the code catalog, by `go generate`;
-  - the help, scaffold, tar, YAML-writer and vector-package goldens, by
-    their tests' `-update`;
+  - the help, scaffold, tar, YAML-writer and vector-package goldens, and
+    the packages pack's vectors expect, by their tests' `-update`;
+  - every number a vectorgen package's bytes fix in its vector: a
+    finding's offset, size or length, and a limit lowered to the
+    package's own size. `internal/vectorgen`'s `TestValues` derives each
+    from where vectorgen placed the records, and fails on one it does not
+    write, so no vector hard-codes an offset;
   - `THIRD-PARTY-NOTICES.txt`.
 
   Each file's drift test fails until it has run.

@@ -25,6 +25,11 @@
 #   prose       one line of spec/12-findings.md's prose edited two ways: the
 #               rebase stops on a conflict in it, so no side of hand-written
 #               text is taken
+#   values      two README edits of different lengths, each regenerated, and
+#               a hand-written edit beside a generated offset: the rebase
+#               resolves the vectors whose numbers vectorgen writes, the
+#               hand-written edit survives, and after regenerating the
+#               vectorgen drift tests pass
 #   collision   two statements that take the same identifier: the rebase
 #               resolves spec/statements.json, and after regenerating
 #               TestStatementsWellFormed fails on the duplicate (ADR-011 D3
@@ -193,6 +198,26 @@ code_two() {
 prose_one() { sed -i.bak 's/^the one source of this table\./the one source of this table, as the first branch says./' spec/12-findings.md && rm -f spec/12-findings.md.bak; }
 prose_two() { sed -i.bak 's/^the one source of this table\./the one source of this table, as the second branch says./' spec/12-findings.md && rm -f spec/12-findings.md.bak; }
 
+# The values case's edits. Each changes a different line of the README
+# text and of chapter 2's copy of it, by a different number of bytes, and
+# regenerates, so both branches rewrite the same offsets; the second also
+# edits the hand-written line beside pkg/count-disk's generated offset.
+readme() { # readme <sed expression>
+	sed -i.bak "$1" spec/readme/1.0/README.md spec/02-container.md &&
+		rm -f spec/readme/1.0/README.md.bak spec/02-container.md.bak &&
+		"$skills/regenerate.sh" >"$work/regen.branch" 2>&1 || {
+		cat "$work/regen.branch"
+		return 1
+	}
+}
+countdisk=spec/conformance/vectors/pkg/count-disk/expected/findings.json
+values_one() { readme 's/^document needs, checks them, and renders the document from them\./document needs, checks them, and renders the documents from them./'; }
+values_two() {
+	readme 's/^This README is the same in every METAIS package\./This README is the same in each and every METAIS package./' &&
+		sed -i.bak 's/"record": "end of central directory record"/"record": "end of central directory record, as the second branch says"/' "$countdisk" &&
+		rm -f "$countdisk.bak"
+}
+
 has() { grep -qF -- "$2" "$1"; }
 hasnt() { ! grep -qF -- "$2" "$1"; }
 # in_catalog <code> succeeds when the code has a row between the markers.
@@ -276,6 +301,20 @@ else
 	expect "the conflict markers hold both sides' prose" sh -c "grep -q '^<<<<<<<' spec/12-findings.md && grep -q 'as the first branch says' spec/12-findings.md && grep -q 'as the second branch says' spec/12-findings.md"
 	expect "the catalog is intact" in_catalog yaml.tag
 fi
+
+case=values
+echo
+echo "=== $case: two README edits, each regenerated, and a hand-written edit beside a generated offset"
+fresh
+branch one values_one
+branch two values_two
+if rebase two one; then ok "the rebase resolved"; else bad "the rebase stopped"; fi
+expect "$countdisk holds no conflict markers" no_markers "$countdisk"
+expect "the second branch's hand-written edit survived" has "$countdisk" 'as the second branch says'
+if regen; then ok "regenerate.sh ran"; else bad "regenerate.sh failed"; fi
+expect "the README holds both branches' edits" sh -c "grep -q 'renders the documents' spec/readme/1.0/README.md && grep -q 'each and every' spec/readme/1.0/README.md"
+expect "the hand-written edit is still there after regenerating" has "$countdisk" 'as the second branch says'
+if drift '^(TestPackages|TestContainerVectors|TestPackOutputs|TestValues)$' ./internal/vectorgen; then ok "the drift tests pass"; else bad "the drift tests fail"; fi
 
 case=collision
 echo

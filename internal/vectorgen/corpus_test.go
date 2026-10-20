@@ -37,36 +37,36 @@ const (
 )
 
 // named is the base package with one more entry, name, holding "a".
-func named(t testing.TB, name string) []byte {
-	return zipOf(hostile(t, zentry{name: name, content: []byte("a")}))
+func named(t testing.TB, name string) built {
+	return zipped(hostile(t, zentry{name: name, content: []byte("a")}))
 }
 
 // moded is the base package with one more entry, name, holding content,
 // whose central directory header gives it the external attributes ext.
-func moded(t testing.TB, name, content string, ext uint32) []byte {
-	return zipOf(hostile(t, zentry{name: name, content: []byte(content), central: func(h *header) { h.external = ext }}))
+func moded(t testing.TB, name, content string, ext uint32) built {
+	return zipped(hostile(t, zentry{name: name, content: []byte(content), central: func(h *header) { h.external = ext }}))
 }
 
 // tmplHeaders edits the base package's template entry's headers: local and
 // central are applied to its local and central directory headers, either
 // nil.
-func tmplHeaders(t testing.TB, local, central func(*header)) []byte {
-	return zipOf(edit(hostile(t), "templates/report.md.liquid", func(e *zentry) {
+func tmplHeaders(t testing.TB, local, central func(*header)) built {
+	return zipped(edit(hostile(t), "templates/report.md.liquid", func(e *zentry) {
 		e.local, e.central = local, central
 	}))
 }
 
 // onBoth is tmplHeaders applying f to both of the template entry's
 // headers.
-func onBoth(t testing.TB, f func(*header)) []byte { return tmplHeaders(t, f, f) }
+func onBoth(t testing.TB, f func(*header)) built { return tmplHeaders(t, f, f) }
 
 // both applies f to an entry's local and central directory headers.
 func both(f func(*header)) (func(*header), func(*header)) { return f, f }
 
 // deflatedTemplate edits the base package's template entry, deflated, with
 // f given the entry to change.
-func deflatedTemplate(t testing.TB, f func(e *zentry)) []byte {
-	return zipOf(edit(hostile(t), "templates/report.md.liquid", func(e *zentry) {
+func deflatedTemplate(t testing.TB, f func(e *zentry)) built {
+	return zipped(edit(hostile(t), "templates/report.md.liquid", func(e *zentry) {
 		e.deflate = true
 		f(e)
 	}))
@@ -79,35 +79,34 @@ func localRecord(e zentry) []byte {
 	return b[:30+len(e.name)+len(e.content)]
 }
 
-// excise removes the local header and data of the entry name from b, a
+// excise removes the local header and data of the entry name from z, a
 // zip whose entries are stored, and points its central directory header
-// at at instead: every later offset moves back by what was removed.
-func excise(b []byte, name string, at uint32) []byte {
+// at at instead: every later record moves back by what was removed.
+func excise(z built, name string, at int) built {
 	le := binary.LittleEndian
-	cd := centralHeaders(b)
-	h := cd[name]
-	off := le.Uint32(b[h+42:])
-	n := uint32(30 + int(le.Uint16(b[h+28:])) + int(le.Uint32(b[h+20:])))
-	out := append(slices.Clone(b[:off]), b[off+n:]...)
-	for other, p := range cd {
-		p -= int(n)
-		if o := le.Uint32(out[p+42:]); o > off {
-			le.PutUint32(out[p+42:], o-n)
+	x := z.at.entry(name)
+	n := x.data + int(x.lh.csize) - x.local
+	out := append(slices.Clone(z.bytes[:x.local]), z.bytes[x.local+n:]...)
+	l := z.at
+	l.entries = slices.Clone(l.entries)
+	for i := range l.entries {
+		e := &l.entries[i]
+		e.central -= n
+		switch {
+		case e.name == name:
+			e.local, e.data = at, at+30+len(name)
+		case e.local > x.local:
+			e.local, e.data = e.local-n, e.data-n
+		default:
+			continue
 		}
-		if other == name {
-			le.PutUint32(out[p+42:], at)
-		}
+		e.ch.offset = uint32(e.local)
+		le.PutUint32(out[e.central+cfOffset:], e.ch.offset)
 	}
-	eocd := len(out) - 22
-	le.PutUint32(out[eocd+16:], le.Uint32(out[eocd+16:])-n)
-	return out
-}
-
-// dataOffset is the offset of the file data of the entry name in b.
-func dataOffset(b []byte, name string) uint32 {
-	le := binary.LittleEndian
-	h := centralHeaders(b)[name]
-	return le.Uint32(b[h+42:]) + 30 + uint32(len(name))
+	l.cd, l.cdTail, l.end, l.suffix, l.size = l.cd-n, l.cdTail-n, l.end-n, l.suffix-n, l.size-n
+	l.eocd.cdOff = uint32(l.cd)
+	le.PutUint32(out[l.end+efCDOff:], l.eocd.cdOff)
+	return built{bytes: out, at: l}
 }
 
 // zip64End is a zip64 end of central directory record and its locator
@@ -170,8 +169,8 @@ func textLike(n int) []byte {
 // limitAsset is the base package with assets/k.bin of n bytes of text,
 // deflated when deflate is set: the package of a limit's pair, whose
 // case lowers the limit to its bound and past it.
-func limitAsset(t testing.TB, content []byte, deflate bool) []byte {
-	return zipOf(hostile(t, zentry{name: "assets/k.bin", content: content, deflate: deflate}))
+func limitAsset(t testing.TB, content []byte, deflate bool) built {
+	return zipped(hostile(t, zentry{name: "assets/k.bin", content: content, deflate: deflate}))
 }
 
 // pathOf is an entry name under assets/ of exactly length bytes, in
@@ -215,79 +214,79 @@ func nestedBomb(n, size int) []byte {
 func corpusCases() []pkgCase {
 	return []pkgCase{
 		// Entry names (ADR-009 D17 item 1; ADR-001 Conformance, Names).
-		{"pkg/name-parent", func(t testing.TB) []byte { return named(t, "../x") }},
-		{"pkg/name-parent-nested", func(t testing.TB) []byte { return named(t, "a/../../x") }},
-		{"pkg/name-absolute", func(t testing.TB) []byte { return named(t, "/etc/x") }},
-		{"pkg/name-drive-backslash", func(t testing.TB) []byte { return named(t, `C:\x`) }},
-		{"pkg/name-drive-relative", func(t testing.TB) []byte { return named(t, "C:x") }},
-		{"pkg/name-unc", func(t testing.TB) []byte { return named(t, `\\server\share\x`) }},
-		{"pkg/name-backslash-parent", func(t testing.TB) []byte { return named(t, `a\..\..\x`) }},
-		{"pkg/name-nul", func(t testing.TB) []byte { return named(t, "assets/a\x00b") }},
-		{"pkg/name-empty", func(t testing.TB) []byte { return named(t, "") }},
-		{"pkg/name-dot", func(t testing.TB) []byte { return named(t, "assets/./x") }},
-		{"pkg/name-empty-segment", func(t testing.TB) []byte { return named(t, "assets//b") }},
-		{"pkg/name-segment-length", func(t testing.TB) []byte { return named(t, "assets/"+strings.Repeat("s", 256)) }},
-		{"pkg/name-reserved", func(t testing.TB) []byte { return named(t, "assets/CON") }},
-		{"pkg/name-reserved-extension", func(t testing.TB) []byte { return named(t, "assets/nul.txt") }},
-		{"pkg/name-reserved-port", func(t testing.TB) []byte { return named(t, "assets/com1") }},
-		{"pkg/name-reserved-superscript", func(t testing.TB) []byte { return named(t, "assets/COM¹.txt") }},
-		{"pkg/name-reserved-spaced", func(t testing.TB) []byte { return named(t, "assets/Con .md") }},
-		{"pkg/name-stream", func(t testing.TB) []byte { return named(t, "assets/a:b") }},
-		{"pkg/name-asterisk", func(t testing.TB) []byte { return named(t, "assets/a*b") }},
-		{"pkg/name-trailing-dot", func(t testing.TB) []byte { return named(t, "assets/name.") }},
-		{"pkg/name-trailing-space", func(t testing.TB) []byte { return named(t, "assets/name ") }},
-		{"pkg/name-control", func(t testing.TB) []byte { return named(t, "assets/a\x01b") }},
-		{"pkg/name-git-upper", func(t testing.TB) []byte { return named(t, "assets/.GIT/config") }},
-		{"pkg/name-git-joiner", func(t testing.TB) []byte { return named(t, "assets/.g\u200cit/config") }},
-		{"pkg/name-git-short", func(t testing.TB) []byte { return named(t, "assets/git~1/config") }},
-		{"pkg/name-zero-width-space", func(t testing.TB) []byte { return named(t, "assets/a\u200bb") }},
-		{"pkg/name-private-use", func(t testing.TB) []byte { return named(t, "assets/a\ue000b") }},
-		{"pkg/name-unassigned", func(t testing.TB) []byte { return named(t, "assets/a\u0378b") }},
-		{"pkg/name-kelvin", func(t testing.TB) []byte { return named(t, "assets/\u212a.txt") }},
-		{"pkg/name-case-collision-ascii", func(t testing.TB) []byte {
-			return zipOf(hostile(t, zentry{name: "assets/A.txt", content: []byte("a")}, zentry{name: "assets/a.txt", content: []byte("b")}))
+		{"pkg/name-parent", func(t testing.TB) built { return named(t, "../x") }},
+		{"pkg/name-parent-nested", func(t testing.TB) built { return named(t, "a/../../x") }},
+		{"pkg/name-absolute", func(t testing.TB) built { return named(t, "/etc/x") }},
+		{"pkg/name-drive-backslash", func(t testing.TB) built { return named(t, `C:\x`) }},
+		{"pkg/name-drive-relative", func(t testing.TB) built { return named(t, "C:x") }},
+		{"pkg/name-unc", func(t testing.TB) built { return named(t, `\\server\share\x`) }},
+		{"pkg/name-backslash-parent", func(t testing.TB) built { return named(t, `a\..\..\x`) }},
+		{"pkg/name-nul", func(t testing.TB) built { return named(t, "assets/a\x00b") }},
+		{"pkg/name-empty", func(t testing.TB) built { return named(t, "") }},
+		{"pkg/name-dot", func(t testing.TB) built { return named(t, "assets/./x") }},
+		{"pkg/name-empty-segment", func(t testing.TB) built { return named(t, "assets//b") }},
+		{"pkg/name-segment-length", func(t testing.TB) built { return named(t, "assets/"+strings.Repeat("s", 256)) }},
+		{"pkg/name-reserved", func(t testing.TB) built { return named(t, "assets/CON") }},
+		{"pkg/name-reserved-extension", func(t testing.TB) built { return named(t, "assets/nul.txt") }},
+		{"pkg/name-reserved-port", func(t testing.TB) built { return named(t, "assets/com1") }},
+		{"pkg/name-reserved-superscript", func(t testing.TB) built { return named(t, "assets/COM¹.txt") }},
+		{"pkg/name-reserved-spaced", func(t testing.TB) built { return named(t, "assets/Con .md") }},
+		{"pkg/name-stream", func(t testing.TB) built { return named(t, "assets/a:b") }},
+		{"pkg/name-asterisk", func(t testing.TB) built { return named(t, "assets/a*b") }},
+		{"pkg/name-trailing-dot", func(t testing.TB) built { return named(t, "assets/name.") }},
+		{"pkg/name-trailing-space", func(t testing.TB) built { return named(t, "assets/name ") }},
+		{"pkg/name-control", func(t testing.TB) built { return named(t, "assets/a\x01b") }},
+		{"pkg/name-git-upper", func(t testing.TB) built { return named(t, "assets/.GIT/config") }},
+		{"pkg/name-git-joiner", func(t testing.TB) built { return named(t, "assets/.g\u200cit/config") }},
+		{"pkg/name-git-short", func(t testing.TB) built { return named(t, "assets/git~1/config") }},
+		{"pkg/name-zero-width-space", func(t testing.TB) built { return named(t, "assets/a\u200bb") }},
+		{"pkg/name-private-use", func(t testing.TB) built { return named(t, "assets/a\ue000b") }},
+		{"pkg/name-unassigned", func(t testing.TB) built { return named(t, "assets/a\u0378b") }},
+		{"pkg/name-kelvin", func(t testing.TB) built { return named(t, "assets/\u212a.txt") }},
+		{"pkg/name-case-collision-ascii", func(t testing.TB) built {
+			return zipped(hostile(t, zentry{name: "assets/A.txt", content: []byte("a")}, zentry{name: "assets/a.txt", content: []byte("b")}))
 		}},
-		{"pkg/name-case-collision-prefix", func(t testing.TB) []byte {
-			return zipOf(hostile(t, zentry{name: "assets/Docs/a", content: []byte("a")}, zentry{name: "assets/docs/b", content: []byte("b")}))
+		{"pkg/name-case-collision-prefix", func(t testing.TB) built {
+			return zipped(hostile(t, zentry{name: "assets/Docs/a", content: []byte("a")}, zentry{name: "assets/docs/b", content: []byte("b")}))
 		}},
 
 		// Entry types and modes (D17 item 2; ADR-001 D1 item 4).
-		{"pkg/symlink-inside", func(t testing.TB) []byte { return moded(t, "assets/link", "x.txt", modeSymlink) }},
-		{"pkg/symlink-outside", func(t testing.TB) []byte { return moded(t, "assets/link", "/etc/passwd", modeSymlink) }},
-		{"pkg/mode-fifo", func(t testing.TB) []byte { return moded(t, "assets/fifo", "", modeFIFO) }},
-		{"pkg/mode-character-device", func(t testing.TB) []byte { return moded(t, "assets/tty", "", modeCharDevice) }},
-		{"pkg/mode-block-device", func(t testing.TB) []byte { return moded(t, "assets/disk", "", modeBlock) }},
-		{"pkg/mode-socket", func(t testing.TB) []byte { return moded(t, "assets/socket", "", modeSocket) }},
-		{"pkg/mode-setuid", func(t testing.TB) []byte { return moded(t, "assets/run", "a", modeSetuid) }},
-		{"pkg/mode-executable", func(t testing.TB) []byte { return moded(t, "assets/run", "a", modeExecutable) }},
-		{"pkg/directory-entry-mode", func(t testing.TB) []byte { return moded(t, "assets/dir/", "", modeDirectory) }},
-		{"pkg/directory-entry-data", func(t testing.TB) []byte { return moded(t, "assets/dir/", "data", modeDirectory) }},
+		{"pkg/symlink-inside", func(t testing.TB) built { return moded(t, "assets/link", "x.txt", modeSymlink) }},
+		{"pkg/symlink-outside", func(t testing.TB) built { return moded(t, "assets/link", "/etc/passwd", modeSymlink) }},
+		{"pkg/mode-fifo", func(t testing.TB) built { return moded(t, "assets/fifo", "", modeFIFO) }},
+		{"pkg/mode-character-device", func(t testing.TB) built { return moded(t, "assets/tty", "", modeCharDevice) }},
+		{"pkg/mode-block-device", func(t testing.TB) built { return moded(t, "assets/disk", "", modeBlock) }},
+		{"pkg/mode-socket", func(t testing.TB) built { return moded(t, "assets/socket", "", modeSocket) }},
+		{"pkg/mode-setuid", func(t testing.TB) built { return moded(t, "assets/run", "a", modeSetuid) }},
+		{"pkg/mode-executable", func(t testing.TB) built { return moded(t, "assets/run", "a", modeExecutable) }},
+		{"pkg/directory-entry-mode", func(t testing.TB) built { return moded(t, "assets/dir/", "", modeDirectory) }},
+		{"pkg/directory-entry-data", func(t testing.TB) built { return moded(t, "assets/dir/", "data", modeDirectory) }},
 
 		// Header fields (ADR-001 D1 items 3, 4 and 6; Conformance, each D1
 		// field).
-		{"pkg/version-needed", func(t testing.TB) []byte { return onBoth(t, (func(h *header) { h.needed = 20 })) }},
-		{"pkg/flag-bit-6", func(t testing.TB) []byte { return onBoth(t, (func(h *header) { h.flags |= 1 << 6 })) }},
-		{"pkg/flag-bit-13", func(t testing.TB) []byte { return onBoth(t, (func(h *header) { h.flags |= 1 << 13 })) }},
-		{"pkg/flag-reserved", func(t testing.TB) []byte { return onBoth(t, (func(h *header) { h.flags |= 1 << 12 })) }},
-		{"pkg/flag-utf8-clear", func(t testing.TB) []byte { return onBoth(t, (func(h *header) { h.flags &^= flagUTF8 })) }},
-		{"pkg/method-deflate64", func(t testing.TB) []byte { return onBoth(t, (func(h *header) { h.method = 9 })) }},
-		{"pkg/method-lzma", func(t testing.TB) []byte { return onBoth(t, (func(h *header) { h.method = 14 })) }},
-		{"pkg/method-zstd", func(t testing.TB) []byte { return onBoth(t, (func(h *header) { h.method = 93 })) }},
-		{"pkg/method-aes", func(t testing.TB) []byte { return onBoth(t, (func(h *header) { h.method = 99 })) }},
-		{"pkg/mod-time", func(t testing.TB) []byte { return onBoth(t, (func(h *header) { h.time = 0x6000 })) }},
-		{"pkg/mod-date", func(t testing.TB) []byte { return onBoth(t, (func(h *header) { h.date = 0x5a21 })) }},
-		{"pkg/version-made-by", func(t testing.TB) []byte { return tmplHeaders(t, nil, func(h *header) { h.madeBy = 0x0014 }) }},
-		{"pkg/internal-attributes", func(t testing.TB) []byte { return tmplHeaders(t, nil, func(h *header) { h.internal = 1 }) }},
-		{"pkg/external-attributes", func(t testing.TB) []byte {
+		{"pkg/version-needed", func(t testing.TB) built { return onBoth(t, (func(h *header) { h.needed = 20 })) }},
+		{"pkg/flag-bit-6", func(t testing.TB) built { return onBoth(t, (func(h *header) { h.flags |= 1 << 6 })) }},
+		{"pkg/flag-bit-13", func(t testing.TB) built { return onBoth(t, (func(h *header) { h.flags |= 1 << 13 })) }},
+		{"pkg/flag-reserved", func(t testing.TB) built { return onBoth(t, (func(h *header) { h.flags |= 1 << 12 })) }},
+		{"pkg/flag-utf8-clear", func(t testing.TB) built { return onBoth(t, (func(h *header) { h.flags &^= flagUTF8 })) }},
+		{"pkg/method-deflate64", func(t testing.TB) built { return onBoth(t, (func(h *header) { h.method = 9 })) }},
+		{"pkg/method-lzma", func(t testing.TB) built { return onBoth(t, (func(h *header) { h.method = 14 })) }},
+		{"pkg/method-zstd", func(t testing.TB) built { return onBoth(t, (func(h *header) { h.method = 93 })) }},
+		{"pkg/method-aes", func(t testing.TB) built { return onBoth(t, (func(h *header) { h.method = 99 })) }},
+		{"pkg/mod-time", func(t testing.TB) built { return onBoth(t, (func(h *header) { h.time = 0x6000 })) }},
+		{"pkg/mod-date", func(t testing.TB) built { return onBoth(t, (func(h *header) { h.date = 0x5a21 })) }},
+		{"pkg/version-made-by", func(t testing.TB) built { return tmplHeaders(t, nil, func(h *header) { h.madeBy = 0x0014 }) }},
+		{"pkg/internal-attributes", func(t testing.TB) built { return tmplHeaders(t, nil, func(h *header) { h.internal = 1 }) }},
+		{"pkg/external-attributes", func(t testing.TB) built {
 			// The MS-DOS read-only bit beside the fixed regular-file mode.
 			return tmplHeaders(t, nil, func(h *header) { h.external = externalAttrs | 1 })
 		}},
-		{"pkg/disk-number-start", func(t testing.TB) []byte { return tmplHeaders(t, nil, func(h *header) { h.disk = 1 }) }},
-		{"pkg/file-comment", func(t testing.TB) []byte {
-			return zipOf(edit(hostile(t), "templates/report.md.liquid", func(e *zentry) { e.cdComment = []byte("a file comment") }))
+		{"pkg/disk-number-start", func(t testing.TB) built { return tmplHeaders(t, nil, func(h *header) { h.disk = 1 }) }},
+		{"pkg/file-comment", func(t testing.TB) built {
+			return zipped(edit(hostile(t), "templates/report.md.liquid", func(e *zentry) { e.cdComment = []byte("a file comment") }))
 		}},
-		{"pkg/extra-field-unicode-path", func(t testing.TB) []byte {
-			return zipOf(edit(hostile(t), "templates/report.md.liquid", func(e *zentry) {
+		{"pkg/extra-field-unicode-path", func(t testing.TB) built {
+			return zipped(edit(hostile(t), "templates/report.md.liquid", func(e *zentry) {
 				// Info-ZIP's Unicode Path field: a second name for the entry.
 				name := "templates/other.md.liquid"
 				x := binary.LittleEndian.AppendUint16(nil, 0x7075)
@@ -296,106 +295,105 @@ func corpusCases() []pkgCase {
 				e.cdExtra = append(x, name...)
 			}))
 		}},
-		{"pkg/zip64-extra-field", func(t testing.TB) []byte {
-			return zipOf(edit(hostile(t), "templates/report.md.liquid", func(e *zentry) {
+		{"pkg/zip64-extra-field", func(t testing.TB) built {
+			return zipped(edit(hostile(t), "templates/report.md.liquid", func(e *zentry) {
 				e.cdExtra = zip64Extra(len(e.content), len(e.content))
 				e.localExtra = e.cdExtra
 			}))
 		}},
-		{"pkg/zip64-end-record", func(t testing.TB) []byte {
+		{"pkg/zip64-end-record", func(t testing.TB) built {
 			es := hostile(t)
-			b := zipOf(es)
-			le := binary.LittleEndian
-			size, off := le.Uint32(b[len(b)-10:]), le.Uint32(b[len(b)-6:])
-			tail := zip64End(len(es), size, off)
-			return archive{entries: es, cdTail: tail, eocd: func(e *eocd) { e.cdSize -= uint32(len(tail)) }}.bytes()
+			end := zipped(es).at.eocd
+			tail := zip64End(len(es), end.cdSize, end.cdOff)
+			return archive{entries: es, cdTail: tail, eocd: func(e *eocd) { e.cdSize -= uint32(len(tail)) }}.built()
 		}},
-		{"pkg/end-disk-number", func(t testing.TB) []byte {
-			return archive{entries: hostile(t), eocd: func(e *eocd) { e.disk, e.cdDisk = 1, 1 }}.bytes()
+		{"pkg/end-disk-number", func(t testing.TB) built {
+			return archive{entries: hostile(t), eocd: func(e *eocd) { e.disk, e.cdDisk = 1, 1 }}.built()
 		}},
 
 		// Structure (D17 item 3; ADR-001 Conformance, Structure and Data).
-		{"pkg/overlap-quoted", func(t testing.TB) []byte {
+		{"pkg/overlap-quoted", func(t testing.TB) built {
 			// Fifield's quoted overlap: the next entry's local header and
 			// data are the content of a stored entry before it, and its
 			// central directory header points inside that content.
 			b := zentry{name: "assets/b.txt", content: []byte("quoted")}
 			a := zentry{name: "assets/a.bin", content: localRecord(b)}
-			z := zipOf(hostile(t, a, b))
-			return excise(z, b.name, dataOffset(z, a.name))
+			z := zipped(hostile(t, a, b))
+			return excise(z, b.name, z.at.entry(a.name).data)
 		}},
-		{"pkg/gap", func(t testing.TB) []byte {
-			return zipOf(edit(hostile(t), "inputs/report.schema.json", func(e *zentry) { e.gapAfter = []byte("hidden") }))
+		{"pkg/gap", func(t testing.TB) built {
+			return zipped(edit(hostile(t), "inputs/report.schema.json", func(e *zentry) { e.gapAfter = []byte("hidden") }))
 		}},
-		{"pkg/central-order", func(t testing.TB) []byte {
+		{"pkg/central-order", func(t testing.TB) built {
 			// The entries out of their names' order in the file, and the
 			// central directory in their names' order, each header
 			// pointing at its entry.
 			es := hostile(t)
 			i := slices.IndexFunc(es, func(e zentry) bool { return e.name == "inputs/report.schema.json" })
 			es[i], es[i+1] = es[i+1], es[i]
-			b := zipOf(es)
-			le := binary.LittleEndian
-			cd := int(le.Uint32(b[len(b)-6:]))
-			var records [][]byte
-			for p := cd; le.Uint32(b[p:]) == sigCentral; {
-				n := 46 + int(le.Uint16(b[p+28:])) + int(le.Uint16(b[p+30:])) + int(le.Uint16(b[p+32:]))
-				records = append(records, b[p:p+n])
-				p += n
+			z := zipped(es)
+			e := z.at.entries
+			end := z.at.cdTail
+			if i+2 < len(e) {
+				end = e[i+2].central
 			}
-			records[i], records[i+1] = records[i+1], records[i]
-			return append(append(slices.Clone(b[:cd]), bytes.Join(records, nil)...), b[len(b)-22:]...)
+			first := slices.Clone(z.bytes[e[i].central:e[i+1].central])
+			second := slices.Clone(z.bytes[e[i+1].central:end])
+			copy(z.bytes[e[i].central:], second)
+			copy(z.bytes[e[i].central+len(second):], first)
+			e[i].central, e[i+1].central = e[i].central+len(second), e[i].central
+			return z
 		}},
-		{"pkg/count-more", func(t testing.TB) []byte {
-			return archive{entries: hostile(t), eocd: func(e *eocd) { e.onDisk++; e.total++ }}.bytes()
+		{"pkg/count-more", func(t testing.TB) built {
+			return archive{entries: hostile(t), eocd: func(e *eocd) { e.onDisk++; e.total++ }}.built()
 		}},
-		{"pkg/count-fewer", func(t testing.TB) []byte {
-			return archive{entries: hostile(t), eocd: func(e *eocd) { e.onDisk--; e.total-- }}.bytes()
+		{"pkg/count-fewer", func(t testing.TB) built {
+			return archive{entries: hostile(t), eocd: func(e *eocd) { e.onDisk--; e.total-- }}.built()
 		}},
-		{"pkg/count-disk", func(t testing.TB) []byte {
-			return archive{entries: hostile(t), eocd: func(e *eocd) { e.onDisk-- }}.bytes()
+		{"pkg/count-disk", func(t testing.TB) built {
+			return archive{entries: hostile(t), eocd: func(e *eocd) { e.onDisk-- }}.built()
 		}},
-		{"pkg/local-name", func(t testing.TB) []byte {
-			return zipOf(edit(hostile(t), "templates/report.md.liquid", func(e *zentry) { e.localName = "templates/report.md.liquix" }))
+		{"pkg/local-name", func(t testing.TB) built {
+			return zipped(edit(hostile(t), "templates/report.md.liquid", func(e *zentry) { e.localName = "templates/report.md.liquix" }))
 		}},
-		{"pkg/local-method", func(t testing.TB) []byte { return tmplHeaders(t, func(h *header) { h.method = 8 }, nil) }},
-		{"pkg/local-compressed-size", func(t testing.TB) []byte { return tmplHeaders(t, func(h *header) { h.csize-- }, nil) }},
-		{"pkg/local-uncompressed-size", func(t testing.TB) []byte { return tmplHeaders(t, func(h *header) { h.usize-- }, nil) }},
-		{"pkg/local-flags", func(t testing.TB) []byte { return tmplHeaders(t, func(h *header) { h.flags |= 1 << 12 }, nil) }},
-		{"pkg/crc-wrong", func(t testing.TB) []byte { return onBoth(t, (func(h *header) { h.crc ^= 1 })) }},
-		{"pkg/size-more-data", func(t testing.TB) []byte {
+		{"pkg/local-method", func(t testing.TB) built { return tmplHeaders(t, func(h *header) { h.method = 8 }, nil) }},
+		{"pkg/local-compressed-size", func(t testing.TB) built { return tmplHeaders(t, func(h *header) { h.csize-- }, nil) }},
+		{"pkg/local-uncompressed-size", func(t testing.TB) built { return tmplHeaders(t, func(h *header) { h.usize-- }, nil) }},
+		{"pkg/local-flags", func(t testing.TB) built { return tmplHeaders(t, func(h *header) { h.flags |= 1 << 12 }, nil) }},
+		{"pkg/crc-wrong", func(t testing.TB) built { return onBoth(t, (func(h *header) { h.crc ^= 1 })) }},
+		{"pkg/size-more-data", func(t testing.TB) built {
 			// A deflated entry whose stream decodes past its declared size.
 			return deflatedTemplate(t, func(e *zentry) {
 				e.local, e.central = both(func(h *header) { h.usize-- })
 			})
 		}},
-		{"pkg/size-less-data", func(t testing.TB) []byte {
+		{"pkg/size-less-data", func(t testing.TB) built {
 			return deflatedTemplate(t, func(e *zentry) {
 				e.local, e.central = both(func(h *header) { h.usize++ })
 			})
 		}},
-		{"pkg/deflate-truncated", func(t testing.TB) []byte {
+		{"pkg/deflate-truncated", func(t testing.TB) built {
 			return deflatedTemplate(t, func(e *zentry) {
 				d := deflated(e.content)
 				e.data = d[:len(d)-2]
 			})
 		}},
-		{"pkg/truncated", func(t testing.TB) []byte {
+		{"pkg/truncated", func(t testing.TB) built {
 			b := zipOf(hostile(t))
-			return b[:len(b)/2]
+			return opaque(b[:len(b)/2])
 		}},
 
 		// The layout and .compiled/ (ADR-001 Conformance, Layout).
-		{"pkg/compiled-missing-manifest", func(t testing.TB) []byte {
-			return zipOf(withDigests(without(hostile(t), ".compiled/manifest.json")))
+		{"pkg/compiled-missing-manifest", func(t testing.TB) built {
+			return zipped(withDigests(without(hostile(t), ".compiled/manifest.json")))
 		}},
-		{"pkg/compiled-missing-schema", func(t testing.TB) []byte {
-			return zipOf(withDigests(without(hostile(t), ".compiled/schema.json")))
+		{"pkg/compiled-missing-schema", func(t testing.TB) built {
+			return zipped(withDigests(without(hostile(t), ".compiled/schema.json")))
 		}},
-		{"pkg/compiled-missing-digests", func(t testing.TB) []byte {
-			return zipOf(without(hostile(t), digest.File))
+		{"pkg/compiled-missing-digests", func(t testing.TB) built {
+			return zipped(without(hostile(t), digest.File))
 		}},
-		{"pkg/compiled-stale", func(t testing.TB) []byte {
+		{"pkg/compiled-stale", func(t testing.TB) built {
 			// The combined schema and the references index both disagree
 			// with what the sources derive, as a .compiled/ left from an
 			// earlier packing would: two independent findings of one step.
@@ -409,45 +407,45 @@ func corpusCases() []pkgCase {
 			es = edit(es, ".compiled/references.json", func(e *zentry) {
 				e.content = []byte(`{"references":[{"lines":1,"path":"references/x.md","size":4,"text":true,"title":null}]}`)
 			})
-			return zipOf(withDigests(es))
+			return zipped(withDigests(es))
 		}},
 
 		// Digests (D17 item 4; ADR-001 Conformance, Digests).
-		{"pkg/digest-not-listed", func(t testing.TB) []byte {
+		{"pkg/digest-not-listed", func(t testing.TB) built {
 			// The digest file, with its package digest, made without the
 			// template's line.
 			es := hostile(t)
-			return zipOf(edit(es, digest.File, func(e *zentry) { e.content = digestsOf(es, "templates/report.md.liquid") }))
+			return zipped(edit(es, digest.File, func(e *zentry) { e.content = digestsOf(es, "templates/report.md.liquid") }))
 		}},
-		{"pkg/digest-no-entry", func(t testing.TB) []byte {
+		{"pkg/digest-no-entry", func(t testing.TB) built {
 			es := hostile(t)
 			gone := digest.Entry{Name: "templates/gone.md.liquid", Sum: sha256.Sum256([]byte("gone\n"))}
-			return zipOf(edit(es, digest.File, func(e *zentry) { e.content = digestsOf(es, "", gone) }))
+			return zipped(edit(es, digest.File, func(e *zentry) { e.content = digestsOf(es, "", gone) }))
 		}},
-		{"pkg/digest-entry-added", func(t testing.TB) []byte {
+		{"pkg/digest-entry-added", func(t testing.TB) built {
 			// An entry added after packing, beside the digest file it
 			// predates.
 			es := append(hostile(t), zentry{name: "assets/added.txt", content: []byte("added after packing\n")})
 			sortEntries(es)
-			return zipOf(es)
+			return zipped(es)
 		}},
-		{"sec/nested-archive", func(t testing.TB) []byte {
-			return zipOf(hostile(t, zentry{name: "assets/bomb.zip", content: nestedBomb(32, 32<<20), deflate: true}))
+		{"sec/nested-archive", func(t testing.TB) built {
+			return zipped(hostile(t, zentry{name: "assets/bomb.zip", content: nestedBomb(32, 32<<20), deflate: true}))
 		}},
 
 		// The opening limits at their bounds (D17 item 12, D4 item 4):
 		// each package is refused past a lowered limit its case names, and
 		// accepted at it.
-		{"sec/package-size-packed", func(t testing.TB) []byte { return zipOf(hostile(t)) }},
-		{"sec/package-uncompressed", func(t testing.TB) []byte { return limitAsset(t, textLike(4096), true) }},
-		{"sec/entries-packed", func(t testing.TB) []byte { return zipOf(hostile(t)) }},
-		{"sec/entry-size", func(t testing.TB) []byte { return limitAsset(t, textLike(4096), false) }},
-		{"sec/entry-ratio", func(t testing.TB) []byte { return limitAsset(t, textLike(1<<20+4096), true) }},
-		{"sec/entry-ratio-floor", func(t testing.TB) []byte { return limitAsset(t, make([]byte, 1<<20), true) }},
-		{"sec/entry-ratio-default", func(t testing.TB) []byte { return limitAsset(t, make([]byte, 1<<20+1), true) }},
-		{"sec/path-length", func(t testing.TB) []byte { return named(t, pathOf(512)) }},
-		{"sec/path-length-past", func(t testing.TB) []byte { return named(t, pathOf(513)) }},
-		{"sec/path-depth", func(t testing.TB) []byte { return named(t, depthOf(32)) }},
-		{"sec/path-depth-past", func(t testing.TB) []byte { return named(t, depthOf(33)) }},
+		{"sec/package-size-packed", func(t testing.TB) built { return zipped(hostile(t)) }},
+		{"sec/package-uncompressed", func(t testing.TB) built { return limitAsset(t, textLike(4096), true) }},
+		{"sec/entries-packed", func(t testing.TB) built { return zipped(hostile(t)) }},
+		{"sec/entry-size", func(t testing.TB) built { return limitAsset(t, textLike(4096), false) }},
+		{"sec/entry-ratio", func(t testing.TB) built { return limitAsset(t, textLike(1<<20+4096), true) }},
+		{"sec/entry-ratio-floor", func(t testing.TB) built { return limitAsset(t, make([]byte, 1<<20), true) }},
+		{"sec/entry-ratio-default", func(t testing.TB) built { return limitAsset(t, make([]byte, 1<<20+1), true) }},
+		{"sec/path-length", func(t testing.TB) built { return named(t, pathOf(512)) }},
+		{"sec/path-length-past", func(t testing.TB) built { return named(t, pathOf(513)) }},
+		{"sec/path-depth", func(t testing.TB) built { return named(t, depthOf(32)) }},
+		{"sec/path-depth-past", func(t testing.TB) built { return named(t, depthOf(33)) }},
 	}
 }
