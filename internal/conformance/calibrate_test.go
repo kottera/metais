@@ -241,12 +241,15 @@ func readCalResult(r io.Reader) (*calResult, error) {
 // matches and skipping everything else.
 func readCalGrep(dec *json.Decoder, res *calResult) error {
 	tok, err := dec.Token()
-	if err != nil || tok != json.Delim('{') {
-		// null, or a result that is not an object: nothing a case reads.
-		if err == nil && (tok == json.Delim('[')) {
-			return skipRest(dec, 1)
-		}
+	switch {
+	case err != nil:
 		return err
+	case tok == json.Delim('['):
+		// A result that is an array holds nothing a case reads.
+		return skipRest(dec, 1)
+	case tok != json.Delim('{'):
+		// null, or a scalar.
+		return nil
 	}
 	for dec.More() {
 		key, err := dec.Token()
