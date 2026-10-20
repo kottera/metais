@@ -246,7 +246,7 @@ func TestSchemaWorkExponential(t *testing.T) {
 	}
 	defs["s"+strconv.Itoa(levels)] = map[string]any{"type": "string"}
 	b, _ := json.Marshal(map[string]any{"$ref": "#/$defs/s0", "$defs": defs})
-	lim := lower(t, "schema-work=1000000")
+	lim := lower(t, "schema-work=400000")
 	comp, fs := compileFiles(t, lim, map[string]string{"inputs/s.json": string(b)})
 	if len(fs) > 0 {
 		t.Fatal(describe(fs))
@@ -277,14 +277,38 @@ func TestCombinedSchemaDepth(t *testing.T) {
 	}
 }
 
-// TestUniqueItemsMillion is ADR-009 D17 item 6's uniqueItems over a
-// million items (MTS-DAT-013): a million integers, distinct but for the
-// last, which equals the first, so finding the duplicate means seeing
-// every item. The vector dat/unique-items lets a CPU bound show that the
-// check is not quadratic, at a size the conformance runner can afford in
-// both environments; this is the million the corpus names, in process.
+// TestUniqueItemsMillion is ADR-009 D17 item 6's uniqueItems over many
+// items (MTS-DAT-013): integers, distinct but for the last, which equals
+// the first, so finding the duplicate means seeing every item. The vector
+// dat/unique-items lets a CPU bound show that the check is not quadratic,
+// at a size the conformance runner can afford in both environments; this
+// is the most items schema-work's default lets one validation see, in
+// process, which costs a unit for the array and one for each item. The
+// million the corpus names is refused by schema-work before anything is
+// evaluated.
 func TestUniqueItemsMillion(t *testing.T) {
-	const n = 1_000_000
+	s := mustCompile(t, map[string]string{"inputs/s.json": `{"uniqueItems": true}`}, "inputs/s.json")
+	if _, err := s.Validate(uniqueItemsArray(t, 1_000_000)); !errors.As(err, new(*regexprofile.LimitError)) {
+		t.Fatalf("a million items: got %v, want a schema-work refusal", err)
+	}
+	n := int(limits.Get(limits.SchemaWork).Default) - 1
+	s = mustCompile(t, map[string]string{"inputs/s.json": `{"uniqueItems": true}`}, "inputs/s.json")
+	fails, err := s.Validate(uniqueItemsArray(t, n))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fails) != 1 || fails[0].Keyword != "uniqueItems" {
+		t.Fatalf("got %d failures, want one of uniqueItems: %+v", len(fails), fails)
+	}
+	if got := fmt.Sprint(fails[0].Data["duplicates"]); got != fmt.Sprint([]int{0, n - 1}) {
+		t.Errorf("duplicates %s, want the first item and the last", got)
+	}
+}
+
+// uniqueItemsArray is n integers, distinct but for the last, which
+// equals the first.
+func uniqueItemsArray(t *testing.T, n int) value.Value {
+	t.Helper()
 	items := make([]value.Value, n)
 	for i := range n - 1 {
 		num, err := value.ParseNumber(strconv.Itoa(i))
@@ -298,15 +322,5 @@ func TestUniqueItemsMillion(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := mustCompile(t, map[string]string{"inputs/s.json": `{"uniqueItems": true}`}, "inputs/s.json")
-	fails, err := s.Validate(arr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(fails) != 1 || fails[0].Keyword != "uniqueItems" {
-		t.Fatalf("got %d failures, want one of uniqueItems: %+v", len(fails), fails)
-	}
-	if got := fmt.Sprint(fails[0].Data["duplicates"]); got != fmt.Sprint([]int{0, n - 1}) {
-		t.Errorf("duplicates %s, want the first item and the last", got)
-	}
+	return arr
 }

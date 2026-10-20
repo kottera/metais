@@ -76,6 +76,7 @@ also proves that one less refuses it.
 | `array-size` | `render` | `split` of a doubled string of `x,` | refusal |
 | `assign-bytes` | `render` | a string of `value-size` bytes, copied by `assign` | refusal |
 | `schema-work` | `validate` | an array input, each item evaluating `items` and an `allOf` of nine, exactly the limit's units | accepted at the limit |
+| `schema-work-anyof` | `validate` | two-branch `anyOf`s nested by `$ref` over a type every level fails, exactly the limit's units, every one failing, the choices' alternatives nesting to the `findings` limit | accepted at the limit, with its findings |
 | `regex-work` | `grep` | a pattern of about 4,000 instructions over lines of 999 bytes it never matches | refusal |
 | `outputs` | `render` | a `for_each` of exactly `outputs` outputs, each written | accepted at the limit |
 | `container-depth` | `render` | containers nested `container-depth` deep | accepted at the limit |
@@ -90,8 +91,9 @@ also proves that one less refuses it.
 
 `schema-work` is counted before a validation evaluates anything
 (MTS-SEC-046), so a validation one unit past the limit is refused at the
-cost of the count alone. Its worst case is therefore the validation of
-exactly the limit's units, which is accepted and does all that work.
+cost of the count alone. Its worst cases are therefore validations of
+exactly the limit's units, which are accepted and do all that work: one
+that passes, and one that fails at every unit.
 
 ## The record
 

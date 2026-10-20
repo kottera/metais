@@ -172,7 +172,7 @@ var table = [count]Limit{
 	{ValueSize, "value-size", 64 * mib, Bytes, ClassWork},
 	{ArraySize, "array-size", 1_000_000, Count, ClassWork},
 	{AssignBytes, "assign-bytes", 512 * mib, Bytes, ClassWork},
-	{SchemaWork, "schema-work", 14_000_000, Count, ClassWork},
+	{SchemaWork, "schema-work", 450_000, Count, ClassWork},
 	{RegexWork, "regex-work", 1 << 33, Count, ClassWork},
 	{Outputs, "outputs", 100_000, Count, ClassWork},
 	{ContainerDepth, "container-depth", 3, Count, ClassWork},

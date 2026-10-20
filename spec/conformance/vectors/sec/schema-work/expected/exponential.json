@@ -14,7 +14,7 @@
     },
     "params": {
       "limit": "schema-work",
-      "bound": 1000000,
+      "bound": 400000,
       "lowered": true
     }
   }
