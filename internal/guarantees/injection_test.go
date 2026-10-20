@@ -26,6 +26,7 @@ var faultSeams = map[string]string{
 	"StdoutNotice":         "internal/cli",
 	"UpdateBeyondExpected": "internal/cli",
 	"PackMapOrder":         "internal/author",
+	"ColourJSON":           "internal/cli",
 }
 
 const (

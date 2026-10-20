@@ -6,7 +6,9 @@ package cli
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -16,6 +18,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostenv"
 	"github.com/kottera/metais/internal/limits"
@@ -104,8 +107,10 @@ func TestNeverColoured(t *testing.T) {
 
 // TestPresentationNeverReachesJSON is ADR-008 D12 item 6 in-process: the
 // documents and their exit statuses are the same bytes whatever NO_COLOR,
-// --color and the terminal say. The pseudo-terminal run of D16 item 6 is
-// Wave 6's.
+// --color and the terminal say. Its control is fault.ColourJSON, a build
+// that colours a document written to a terminal, which the comparison
+// catches. The pseudo-terminal run of D16 item 6 is internal/hostfs's
+// TestPresentationUnderTerminal.
 func TestPresentationNeverReachesJSON(t *testing.T) {
 	for _, argv := range [][]string{{"version", "--json"}, {"limits", "--json"}, {"help", "--json"}, {"version", "--bogus", "--json"}, {"--json"}} {
 		// --color is given, as a caller would, before the line's own
@@ -125,6 +130,16 @@ func TestPresentationNeverReachesJSON(t *testing.T) {
 				isTerminal = saved
 			}
 		}
+	}
+	saved := isTerminal
+	isTerminal = func(any) bool { return true }
+	defer func() { isTerminal = saved }()
+	argv := []string{"--color", "never", "version", "--json"}
+	var stdout bytes.Buffer
+	Run(context.Background(), Invocation{Args: argv, Stdin: strings.NewReader(""), Stdout: &stdout, Stderr: io.Discard,
+		Options: Options{Display: hostenv.Display{NoColor: true}, Faults: fault.ColourJSON}})
+	if base := runTool(t, argv...); stdout.String() == base.stdout {
+		t.Error("a build that colours JSON on a terminal writes the document it writes piped: the comparison above proves nothing")
 	}
 }
 

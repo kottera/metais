@@ -60,7 +60,23 @@ func Open(r io.ReaderAt, size int64, lim limits.Set) (*Archive, []finding.Findin
 // returns the Archive, and its digest file has verified it (ADR-001 D8
 // step 6).
 func OpenWith(r io.ReaderAt, size int64, lim limits.Set, sink func(name string) io.Writer) (*Archive, []finding.Finding, error) {
-	o := &opener{s: &source{r: r, size: size}, lim: lim, sink: sink}
+	return openWith(&opener{s: &source{r: r, size: size}, lim: lim, sink: sink})
+}
+
+// OpenContainer is OpenWith for a container output's zip (ADR-005 D8): the
+// same profile, steps 1 to 5 and bounds, but for two rules of a package
+// that a container breaks by right. ADR-001's sorted-entry rule does not
+// apply inside a container (D8 item 8), so its entries may be in any order,
+// and the Archive keeps the file's. And step 2's search for a second
+// end-record signature is not made: an entry may be a zip itself, stored
+// (D8 items 4 and 7), whose own end record then lies in the container's
+// final bytes. The end record must still be the file's last 22 bytes, and
+// step 4's walk still accounts for every byte before it.
+func OpenContainer(r io.ReaderAt, size int64, lim limits.Set, sink func(name string) io.Writer) (*Archive, []finding.Finding, error) {
+	return openWith(&opener{s: &source{r: r, size: size}, lim: lim, sink: sink, container: true})
+}
+
+func openWith(o *opener) (*Archive, []finding.Finding, error) {
 	for _, step := range []func() error{o.size, o.end, o.directory, o.walk, o.decode} {
 		if err := step(); err != nil {
 			return nil, nil, err
@@ -107,6 +123,8 @@ type opener struct {
 	entries []entry
 	decodes int
 	sink    func(name string) io.Writer
+	// container lifts the sorted-entry rule (OpenContainer).
+	container bool
 }
 
 func (o *opener) add(f finding.Finding) { o.found = append(o.found, f) }
@@ -145,7 +163,7 @@ func (o *opener) end() error {
 		return nil
 	}
 	eocd := s.size - eocdLen
-	for i := 0; i+4 <= len(tail); i++ {
+	for i := 0; !o.container && i+4 <= len(tail); i++ {
 		if i != recAt && le.Uint32(tail[i:]) == sigEOCD {
 			o.add(container(CodeSecondEndRecord, "", s.tailStart+int64(i), nil))
 			break
@@ -276,7 +294,7 @@ func (o *opener) directory() error {
 		o.header(&e, h, extra, commentLen)
 		if e.nameRead {
 			o.found = append(o.found, nameFindings(e.name, off, unitext.CheckPath(e.name, o.lim), o.lim)...)
-			if len(names) > 0 && e.name < names[len(names)-1] {
+			if !o.container && len(names) > 0 && e.name < names[len(names)-1] {
 				o.add(container(CodeEntryOrder, e.name, off, nil))
 			}
 			names = append(names, e.name)

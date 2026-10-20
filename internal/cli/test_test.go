@@ -361,46 +361,6 @@ func TestTestScaffold(t *testing.T) {
 	}
 }
 
-// TestTestContainer is W5-11.4: an example whose outputs include a
-// container renders and compares without internal.error. Until its
-// comparison by entries is built, its zip is compared byte for byte, as
-// any other file: the tool's zip writer is deterministic, so a recorded
-// zip compares equal, and one with other bytes differs as binary.
-func TestTestContainer(t *testing.T) {
-	root := testenv.Dir(t)
-	pkg := writePackage(t, root, `  - id: box
-    path: box.zip
-    container:
-      entries:
-        - template: a.txt.liquid
-`, map[string]string{"a.txt.liquid": "a\n"})
-	if err := os.MkdirAll(filepath.Join(pkg, "examples/basic"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(pkg, "examples/basic/example.yaml"), []byte("title: Basic\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if r := runTool(t, "test", pkg, "--update", "--json"); r.status != finding.ExitOK {
-		t.Fatalf("--update: status %d, codes %q", r.status, r.codes())
-	}
-	zip := filepath.Join(pkg, "examples/basic/expected/box.zip")
-	b, err := os.ReadFile(zip)
-	if err != nil || !bytes.HasPrefix(b, []byte("PK\x03\x04")) {
-		t.Fatalf("the recorded container: %v", err)
-	}
-	if r := runTool(t, "test", pkg, "--json"); r.status != finding.ExitOK || testRun(t, r).Examples[0].Status != "pass" {
-		t.Fatalf("test of the recorded container: status %d, codes %q", r.status, r.codes())
-	}
-	b[len(b)-1] ^= 1
-	if err := os.WriteFile(zip, b, 0o644); err != nil {
-		t.Fatal(err)
-	}
-	r := runTool(t, "test", pkg, "--json")
-	if r.status != finding.ExitFindings || !slices.Equal(r.codes(), []string{string(codeOutputDiffers)}) || r.doc.Findings[0].Params["binary"] != true {
-		t.Errorf("test of a changed container: status %d, findings %+v", r.status, r.doc.Findings)
-	}
-}
-
 // TestTestDiffCaps is ADR-007 D5 item 4's caps: a text difference's diff
 // is at most 16 KiB in JSON and 40 lines in human output, each marked
 // when truncated.

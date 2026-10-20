@@ -382,12 +382,13 @@ given with `--sample` as a usage error.
 
 An example is a set of inputs and the outputs a render of them should
 produce, kept inside the package. Testing renders every example and
-compares what it writes with what the example expects, byte for byte, so an
-author hears of any change to an output before a supplier does. The
-expected outputs are part of the package whose digest a provenance line
-records, and the tool that renders them changes version; testing therefore
-renders under one fixed identity, so that neither a change to the package
-nor a new tool changes what an example expects.
+compares what it writes with what the example expects, byte for byte or a
+container entry for entry, so an author hears of any change to an output
+before a supplier does. The expected outputs are part of the package whose
+digest a provenance line records, and the tool that renders them changes
+version; testing therefore renders under one fixed identity, so that
+neither a change to the package nor a new tool changes what an example
+expects.
 
 An example is a directory `examples/<name>/` whose name follows the rule
 for an input's name ([chapter 3](03-manifest.md)). It holds `inputs/`,
@@ -445,11 +446,10 @@ did not write MUST be reported as `example.output_missing`, located at the
 expected file; a path the render wrote that `expected/` does not hold, as
 `example.output_unexpected`, located with the origin `output` at the path;
 and a path in both whose bytes differ, as `example.output_differs`, located
-at the expected file. Each finding's `path` is the path within the output
-directory. An example without `expected/` is rendered and not compared.
-
-A container output ([chapter 9](09-outputs.md)) is compared as any other
-file in this draft; its comparison by entries is not yet specified.
+at the expected file, except that a container output is compared by its
+entries ([MTS-AUT-065](#mts-aut-065)). Each finding's `path` is the path
+within the output directory. An example without `expected/` is rendered and
+not compared.
 
 <a id="mts-aut-041"></a>**MTS-AUT-041** Two files are text when both are
 valid UTF-8 and neither holds a NUL byte, and are otherwise binary, as
@@ -471,6 +471,67 @@ with `crlf` naming the side that holds CR LF, `expected`, `rendered` or
 they are equal once a leading UTF-8 byte order mark is removed from each;
 `trailing_whitespace` when they are equal once the U+0020 and U+0009 ending
 each line are removed from each; and otherwise `none`.
+
+A container output ([chapter 9](09-outputs.md)) is compared by its
+entries rather than by its zip's bytes, as the conformance suite compares
+one: the method of an entry the package leaves to the encoder is the
+encoder's choice, so an `expected/` written by another conforming
+implementation compares equal.
+
+<a id="mts-aut-065"></a>**MTS-AUT-065** Test MUST compare a container
+output with the file of `expected/` at its path by their entries: their
+names, in order; each entry's uncompressed content; and the compression
+method of each entry whose declaration says `stored: true`, and of a
+profile's `mimetype` entry. It MUST NOT compare the method of any other
+entry, nor any other byte of the zips, so that two containers whose
+entries are equal by these rules are equal whatever their compressed
+bytes.
+
+<a id="mts-aut-066"></a>**MTS-AUT-066** Test MUST read an expected
+container as it reads a packed package ([chapter 2](02-container.md)),
+under the same bounds and the same profile, except that its entries are
+in the order they are written rather than in byte order of name, and that
+an end-record signature may lie within an entry's data, since an entry may
+itself be a stored zip. An
+expected container that is not read MUST be reported as
+`example.expected_unreadable`, located at the expected file, or, for a
+container entry ([MTS-AUT-069](#mts-aut-069)), where that entry is
+located, with the code of the first refusal in `reason`; its entries MUST
+NOT be compared.
+
+<a id="mts-aut-067"></a>**MTS-AUT-067** An entry the expected container
+holds and the rendered one does not MUST be reported as
+`example.entry_missing`, located at the expected file's path followed by
+`!` and the entry's name; an entry the rendered container holds and the
+expected one does not, as `example.entry_unexpected`, located with the
+origin `output` at the output's path followed by `!` and the entry's name.
+Each finding's `path` is the container output's path and its `entry` the
+entry's name.
+
+<a id="mts-aut-068"></a>**MTS-AUT-068** When the entries both containers
+hold are in another order in the one than in the other, test MUST report
+one `example.entry_order`, at the first index, among those entries, at
+which the two sequences of names differ: `index` is that 0-based index,
+and `expected` and `rendered` are each container's entry there.
+
+<a id="mts-aut-069"></a>**MTS-AUT-069** An entry both containers hold
+whose uncompressed contents differ MUST be reported as
+`example.output_differs`, as [MTS-AUT-041](#mts-aut-041) and
+[MTS-AUT-042](#mts-aut-042) report a file, located at the expected file's
+path followed by `!` and the entry's name, with `entry` naming it. An entry
+that is itself a container MUST be compared by its entries in the same
+way, each name within it located after its enclosing entry's name and a
+further `!`.
+
+<a id="mts-aut-070"></a>**MTS-AUT-070** An entry whose method is compared
+([MTS-AUT-065](#mts-aut-065)) and which the expected container deflates
+MUST be reported as `example.entry_method`, located as
+[MTS-AUT-069](#mts-aut-069) locates an entry, since the rendered entry is
+stored.
+
+<a id="mts-aut-071"></a>**MTS-AUT-071** Test on a packed package MUST read
+each expected container in place, inside the package, and MUST report what
+it reports for the source directory the package was packed from.
 
 A reference tool's command line adds what the operation cannot observe,
 such as writing an example's render into its `expected/`; its help

@@ -3,10 +3,11 @@
 `metais test [<package>] [--example <name>]… [--update [--dry-run]]`
 
 What `metais test` does with a package's examples is specified in chapter 13
-of the specification (§13.7, MTS-AUT-034 to 042), and proved by the
-conformance suite's `test` operation. This page states the rest: what the
-reference tool's command line adds, which the operation does not take and a
-vector cannot observe (ADR-011 D8). `metais test --help` prints the same.
+of the specification (§13.7, MTS-AUT-034 to 042 and MTS-AUT-065 to 071),
+and proved by the conformance suite's `test` operation. This page states
+the rest: what the reference tool's command line adds, which the operation
+does not take and a vector cannot observe (ADR-011 D8). `metais test
+--help` prints the same.
 
 ## Choosing examples
 
@@ -15,6 +16,24 @@ order of name. A name that is not an example of the package — a directory
 under `examples/` named as an input is — is refused with
 `usage.unknown_example`, whose `examples` lists every example, and nothing
 runs.
+
+## Container outputs
+
+A container output is compared by its entries, not by its zip's bytes
+(MTS-AUT-065 to 071, ADR-007 D5 item 3): the names in order, each entry's
+uncompressed content, and the method of each entry declared `stored: true`
+and of a profile's `mimetype`. An expected container written by another
+conforming implementation, whose other entries are deflated differently,
+compares equal. The expected container is read as a packed package is, with
+the package reader's bounds, `--limit` included, and in its entries' own
+order.
+
+In the result, and in the lines `test` prints, a difference inside a
+container is named `<output>!<entry>`, with the kind `missing`,
+`unexpected` or `differs`; an entry within a container entry is named after
+it and a further `!`. A container that does not read, and entries in
+another order, are a `differs` of the container itself, and the finding
+says which.
 
 ## `--update`
 
@@ -28,10 +47,12 @@ what its render writes (ADR-007 D5 item 5, RULINGS R1-006):
   render made no error is updated. Any other example is reported as `test`
   reports it, and its `expected/` is not touched.
 - Every file the render writes that `expected/` lacks, or holds with other
-  bytes, is written. When `expected/` exists, the files are prepared beneath
-  one staging directory inside it, `.metais-staging`, and committed unit by
-  unit (ADR-005 D14 item 2, Amendment A1); when it does not, it is created
-  through a staging directory beside it and renamed into place (D14 item 1).
+  bytes, is written; a container output is written whole when any of its
+  entries differs, and not when only its zip's bytes do. When `expected/`
+  exists, the files are prepared beneath one staging directory inside it,
+  `.metais-staging`, and committed unit by unit (ADR-005 D14 item 2,
+  Amendment A1); when it does not, it is created through a staging
+  directory beside it and renamed into place (D14 item 1).
   A file replaced is renamed over, never written into.
 - Every file of `expected/` the render no longer writes is removed, and so
   is every directory of `expected/` those removals leave empty, since a

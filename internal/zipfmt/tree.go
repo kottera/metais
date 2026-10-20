@@ -27,19 +27,21 @@ var _ pkgtree.Tree = (*Archive)(nil)
 
 // EntryInfo is what step 5 established about one entry: its name, its
 // uncompressed size and the SHA-256 of its content, which the loader
-// checks against the digest file (ADR-001 D8 step 6).
+// checks against the digest file (ADR-001 D8 step 6), and whether it is
+// deflated rather than stored.
 type EntryInfo struct {
-	Name   string
-	Size   int64
-	SHA256 [sha256.Size]byte
+	Name     string
+	Size     int64
+	SHA256   [sha256.Size]byte
+	Deflated bool
 }
 
 // Entries returns every entry, in the file's order, which is ascending
-// byte order of the names.
+// byte order of the names but in a container (OpenContainer).
 func (a *Archive) Entries() []EntryInfo {
 	out := make([]EntryInfo, len(a.entries))
 	for i, e := range a.entries {
-		out[i] = EntryInfo{Name: e.name, Size: int64(e.usize), SHA256: e.sum}
+		out[i] = EntryInfo{Name: e.name, Size: int64(e.usize), SHA256: e.sum, Deflated: e.method == methodDeflated}
 	}
 	return out
 }
@@ -49,7 +51,8 @@ func (a *Archive) Entries() []EntryInfo {
 // holds itself to ADR-010 D15 item 2's budget.
 func (a *Archive) Decodes() int { return a.decodes }
 
-// List returns every entry path, in ascending byte order.
+// List returns every entry path, in the file's order: ascending byte
+// order but in a container (OpenContainer).
 func (a *Archive) List() []string {
 	out := make([]string, len(a.entries))
 	for i, e := range a.entries {

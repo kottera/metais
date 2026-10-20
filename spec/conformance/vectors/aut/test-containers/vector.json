@@ -1,0 +1,37 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/test-containers",
+  "title": "A container output is compared by its entries: equal entries in zips of other bytes pass, and an entry missing, unexpected, out of order, of other content or, stored, deflated, and an expected container that is not a zip, are each reported, located at <output>!<entry>",
+  "statements": [
+    "MTS-AUT-065",
+    "MTS-AUT-066",
+    "MTS-AUT-067",
+    "MTS-AUT-068",
+    "MTS-AUT-069",
+    "MTS-AUT-070"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "byte-level"
+  ],
+  "requires": [],
+  "notes": "Each example's expected/box.zip and expected/doc.odt is written by internal/vectorgen's TestContainerVectors; the example equal holds the render's entries with every method the render does not fix chosen the other way, and reports nothing.",
+  "cases": [
+    {
+      "name": "test",
+      "steps": [
+        {
+          "op": "test",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/test.json"
+          }
+        }
+      ]
+    }
+  ]
+}

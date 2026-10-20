@@ -1,0 +1,76 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/pack-containers",
+  "title": "Pack tests a container output by its entries: a package whose expected containers hold the render's entries in zips of other bytes packs, and its packed package tests the same; one whose expected entries are in another order is refused with example.entry_order",
+  "statements": [
+    "MTS-AUT-045",
+    "MTS-AUT-065",
+    "MTS-AUT-068",
+    "MTS-AUT-071"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "byte-level"
+  ],
+  "requires": [],
+  "notes": "Where W6-4 meets pack (W6-1). package's one example is aut/test-containers' equal, and failing's is its order; internal/vectorgen's TestContainerVectors writes both examples' expected containers. The packed package's bytes are the implementation's, so the pack step is repeatable and its tree names the file.",
+  "cases": [
+    {
+      "name": "packs",
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "package",
+            "to": "out/containers.metais"
+          },
+          "expect": {
+            "ok": true,
+            "findings": "expected/none.json",
+            "trees": [
+              {
+                "path": "out",
+                "files": [
+                  "containers.metais"
+                ]
+              }
+            ]
+          },
+          "repeatable": true
+        },
+        {
+          "op": "test",
+          "args": {
+            "source": "out/containers.metais"
+          },
+          "expect": {
+            "ok": true,
+            "findings": "expected/none.json"
+          }
+        }
+      ],
+      "setup": {
+        "dirs": [
+          "out"
+        ]
+      }
+    },
+    {
+      "name": "refused",
+      "steps": [
+        {
+          "op": "pack",
+          "args": {
+            "source": "failing",
+            "to": "failing.metais"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/refused.json"
+          }
+        }
+      ]
+    }
+  ]
+}

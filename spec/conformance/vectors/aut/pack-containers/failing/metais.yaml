@@ -1,0 +1,29 @@
+metais: "1.0"
+name: containers
+version: 1.0.0
+title: Containers
+description: A package whose outputs are containers, compared with its examples by their entries.
+guide: Supply nothing and render.
+inputs: []
+outputs:
+  - id: box
+    path: box.zip
+    container:
+      entries:
+        - template: a.txt.liquid
+        - template: b.txt.liquid
+          stored: true
+        - id: inner
+          path: inner.zip
+          container:
+            entries:
+              - template: c.txt.liquid
+  - id: doc
+    path: doc.odt
+    container:
+      profile: odf
+      mimetype: application/vnd.oasis.opendocument.text
+      entries:
+        - template: content.xml.liquid
+        - template: manifest.xml.liquid
+          path: META-INF/manifest.xml

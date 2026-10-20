@@ -29,9 +29,14 @@ it, and the statements it reports.
 | `csv.header_empty` | error | content | input | `ordinal` | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
 | `csv.header_missing` | error | content | input | — | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
 | `csv.unterminated_quote` | error | content | input | — | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
+| `example.entry_method` | error | content | example | `path`, `entry`, `expected_method`, `rendered_method` | 1.0 | [MTS-AUT-070](13-authoring.md#mts-aut-070) |
+| `example.entry_missing` | error | content | example | `path`, `entry` | 1.0 | [MTS-AUT-067](13-authoring.md#mts-aut-067) |
+| `example.entry_order` | error | content | example | `path`, `index`, `expected`, `rendered`; optional: `entry` | 1.0 | [MTS-AUT-068](13-authoring.md#mts-aut-068) |
+| `example.entry_unexpected` | error | content | example | `path`, `entry` | 1.0 | [MTS-AUT-067](13-authoring.md#mts-aut-067) |
+| `example.expected_unreadable` | error | content | example | `path`, `reason`; optional: `entry` | 1.0 | [MTS-AUT-066](13-authoring.md#mts-aut-066) |
 | `example.layout` | error | content | example | `reason` | 1.0 | [MTS-AUT-020](13-authoring.md#mts-aut-020) |
 | `example.metadata` | error | content | example | `reason`; optional: `member` | 1.0 | [MTS-AUT-036](13-authoring.md#mts-aut-036) |
-| `example.output_differs` | error | content | example | `path`, `binary`, `cause`; optional: `crlf`, `diff`, `diff_truncated`, `offset`, `expected_size`, `rendered_size`, `expected_digest`, `rendered_digest` | 1.0 | [MTS-AUT-040](13-authoring.md#mts-aut-040), [MTS-AUT-041](13-authoring.md#mts-aut-041), [MTS-AUT-042](13-authoring.md#mts-aut-042) |
+| `example.output_differs` | error | content | example | `path`, `binary`, `cause`; optional: `entry`, `crlf`, `diff`, `diff_truncated`, `offset`, `expected_size`, `rendered_size`, `expected_digest`, `rendered_digest` | 1.0 | [MTS-AUT-040](13-authoring.md#mts-aut-040), [MTS-AUT-041](13-authoring.md#mts-aut-041), [MTS-AUT-042](13-authoring.md#mts-aut-042), [MTS-AUT-069](13-authoring.md#mts-aut-069) |
 | `example.output_missing` | error | content | example | `path` | 1.0 | [MTS-AUT-040](13-authoring.md#mts-aut-040) |
 | `example.output_unexpected` | error | content | example | `path` | 1.0 | [MTS-AUT-040](13-authoring.md#mts-aut-040) |
 | `input.additional_item` | error | content | input | `index`, `prefix_count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
