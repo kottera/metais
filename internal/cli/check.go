@@ -93,12 +93,16 @@ func checkRefusals() []Refusal {
 			continue
 		}
 		profile := slices.Contains(author.ContainerCodes(), e.Code)
-		if !slices.Contains(author.CheckCodes(), e.Code) && !profile && (!slices.Contains(wholesale, family) || e.Severity == finding.SeverityError) {
+		path := slices.Contains(author.PathCodes(), e.Code)
+		if !slices.Contains(author.CheckCodes(), e.Code) && !profile && !path && (!slices.Contains(wholesale, family) || e.Severity == finding.SeverityError) {
 			continue
 		}
 		subject := what[family]
-		if profile {
+		switch {
+		case profile:
 			subject = "A container's profile"
+		case path:
+			subject = "An output's literal path"
 		}
 		severity := withArticle(e.Severity.String())
 		cause := subject + " (" + strings.ReplaceAll(strings.ReplaceAll(rest, "_", " "), ".", ": ") + "), " + severity + "."

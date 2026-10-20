@@ -11,6 +11,7 @@ import (
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/limits"
+	templates "github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/unitext"
 )
 
@@ -66,52 +67,11 @@ func nthOf(plan []*planned, p string, n int) *planned {
 	return nil
 }
 
-// The output path codes (ADR-005 D12; ADR-005's interfaces name the
-// family output.path).
-const (
-	codePathEncoding     finding.Code = "output.path.encoding"
-	codePathNotNFC       finding.Code = "output.path.not_nfc"
-	codePathShape        finding.Code = "output.path.shape"
-	codePathCharacter    finding.Code = "output.path.character"
-	codePathNotPortable  finding.Code = "output.path.not_portable"
-	codePathDuplicate    finding.Code = "output.path.duplicate"
-	codePathCaseCollide  finding.Code = "output.path.case_collision"
-	codePathFileDirClash finding.Code = "output.path.file_directory_conflict"
-)
-
 // pathFinding is the finding of pr, one rule of ADR-005 D12 items 1 to 5
-// the path of pf breaks, at loc: the output path codes, and limit.package
-// for path-length and path-depth, since a manifest's path is the
-// package's own content (ADR-009 D19).
+// the path of pf breaks, at loc (template.PathFinding).
 func pathFinding(pf *planned, loc *finding.Location, pr unitext.Problem, lim limits.Set) finding.Finding {
 	subj := finding.Subject{Kind: finding.SubjectOutput, Name: pf.owner}
-	p := pathParams(pf)
-	var code finding.Code
-	switch pr.Kind {
-	case unitext.Encoding:
-		code, p["reason"] = codePathEncoding, finding.String(pr.Reason)
-	case unitext.NotNFC:
-		code = codePathNotNFC
-	case unitext.Shape:
-		code, p["reason"] = codePathShape, finding.String(pr.Reason)
-	case unitext.Character:
-		code, p["code_point"] = codePathCharacter, finding.Int(int64(pr.CodePoint))
-	case unitext.NotPortable:
-		code, p["reason"] = codePathNotPortable, finding.String(pr.Reason)
-	case unitext.Length, unitext.Depth:
-		id := limits.PathLength
-		if pr.Kind == unitext.Depth {
-			id = limits.PathDepth
-		}
-		if !pf.literal {
-			// A path template's path is the render's (ADR-009 D19).
-			return lim.ExceededOutput(id, subj, *loc, pr.Observed, true)
-		}
-		return lim.Breached(id, *loc, pr.Observed, true)
-	default:
-		panic("cli: an unknown path problem")
-	}
-	return finding.New(code, subj, loc, p)
+	return templates.PathFinding(pr, subj, *loc, pathParams(pf), pf.literal, lim)
 }
 
 // pathParams is the parameters every output path finding about pf has:
@@ -126,22 +86,11 @@ func pathParams(pf *planned) finding.Params {
 }
 
 // collisionFinding is the finding of c, ADR-005 D12 item 6 or 7, about the
-// planned file pf at loc, which collides with the one at other.
+// planned file pf at loc, which collides with the one at other
+// (template.CollisionFinding).
 func collisionFinding(pf *planned, loc *finding.Location, c unitext.Collision, other *finding.Location) finding.Finding {
 	subj := finding.Subject{Kind: finding.SubjectOutput, Name: pf.owner}
-	p := pathParams(pf)
-	switch c.Kind {
-	case unitext.Duplicate:
-		return finding.New(codePathDuplicate, subj, loc, p,
-			finding.WithRelated(finding.Related{Location: *other, Note: "first occurrence"}))
-	case unitext.CaseCollision:
-		p["member"], p["other"] = finding.String(c.Member), finding.String(c.OtherMember)
-		return finding.New(codePathCaseCollide, subj, loc, p,
-			finding.WithRelated(finding.Related{Location: *other, Note: "collides with"}))
-	}
-	p["member"], p["other"] = finding.String(c.Member), finding.String(c.OtherMember)
-	return finding.New(codePathFileDirClash, subj, loc, p,
-		finding.WithRelated(finding.Related{Location: *other, Note: "collides with"}))
+	return templates.CollisionFinding(c, subj, *loc, pathParams(pf), *other)
 }
 
 // destination is ADR-005 D13's phase 3 for an --out that exists: the

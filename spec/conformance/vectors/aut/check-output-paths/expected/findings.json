@@ -1,0 +1,204 @@
+[
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "bundle"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 47,
+      "column": 17,
+      "pointer": "/outputs/11/container/entries/0/path"
+    },
+    "params": {
+      "path": "a/./b.txt",
+      "reason": "dot_segment"
+    }
+  },
+  {
+    "code": "output.path.duplicate",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "bundle"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 51,
+      "column": 17,
+      "pointer": "/outputs/11/container/entries/2/path"
+    },
+    "params": {
+      "path": "c.txt"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 49,
+        "column": 17,
+        "pointer": "/outputs/11/container/entries/1/path",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "device"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 11,
+      "pointer": "/outputs/1/path"
+    },
+    "params": {
+      "path": "docs/con.txt",
+      "reason": "reserved_name"
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "dotted"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 15,
+      "pointer": "/outputs/2/template"
+    },
+    "params": {
+      "path": "trailing.",
+      "reason": "segment_end"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "escape"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 11,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "../escape.txt",
+      "reason": "dot_segment"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "files"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 35,
+      "column": 11,
+      "pointer": "/outputs/8/path"
+    },
+    "params": {
+      "path": "files:",
+      "reason": "colon"
+    }
+  },
+  {
+    "code": "output.path.file_directory_conflict",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "notes"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 25,
+      "column": 11,
+      "pointer": "/outputs/5/path"
+    },
+    "params": {
+      "path": "Notes.txt/extra.txt",
+      "member": "Notes.txt",
+      "other": "Notes.txt"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 19,
+        "column": 11,
+        "pointer": "/outputs/3/path",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "output.path.case_collision",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "second"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 11,
+      "pointer": "/outputs/4/path"
+    },
+    "params": {
+      "path": "notes.txt",
+      "member": "notes.txt",
+      "other": "Notes.txt"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 19,
+        "column": 11,
+        "pointer": "/outputs/3/path",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "site"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 41,
+      "column": 11,
+      "pointer": "/outputs/10/path"
+    },
+    "params": {
+      "path": "site/",
+      "reason": "trailing_slash"
+    }
+  }
+]

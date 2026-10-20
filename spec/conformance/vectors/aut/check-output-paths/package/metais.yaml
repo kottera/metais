@@ -1,0 +1,51 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: escape
+    template: page.txt.liquid
+    path: ../escape.txt
+  - id: device
+    template: page.txt.liquid
+    path: docs/con.txt
+  - id: dotted
+    template: trailing..liquid
+  - id: first
+    template: page.txt.liquid
+    path: Notes.txt
+  - id: second
+    template: page.txt.liquid
+    path: notes.txt
+  - id: notes
+    template: page.txt.liquid
+    path: Notes.txt/extra.txt
+  - id: sometimes
+    template: page.txt.liquid
+    path: notes.txt
+    when: package.name == "example"
+  - id: computed
+    template: page.txt.liquid
+    path: "{{ package.name }}/../computed.txt"
+  - id: files
+    asset: static
+    path: "files:"
+  - id: everything
+    asset: static
+    path: .
+  - id: site
+    mirror: site
+    path: site/
+  - id: bundle
+    path: bundle.zip
+    container:
+      entries:
+        - template: page.txt.liquid
+          path: a/./b.txt
+        - template: page.txt.liquid
+          path: c.txt
+        - template: page.txt.liquid
+          path: c.txt

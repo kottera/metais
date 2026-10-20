@@ -89,6 +89,29 @@ for a container whose profile requires an entry when no entry has that path
 so, and no entry's path is one only a render can know — a path template, an
 asset or a mirror.
 
+<a id="mts-aut-080"></a>**MTS-AUT-080** A check MUST hold every output
+path the manifest writes without Liquid markup, and every template's
+default path, at every depth of a container to `container-depth`, to the
+portable-path rules of [chapter 11](11-rendering.md) for one path
+([MTS-PTH-001](11-rendering.md#mts-pth-001) to
+[MTS-PTH-005](11-rendering.md#mts-pth-005),
+[MTS-PTH-007](11-rendering.md#mts-pth-007) and
+[MTS-PTH-010](11-rendering.md#mts-pth-010)), and MUST report a path that
+breaks one with the finding a render refuses it with, naming the path;
+an asset's or a mirror's destination written so, other than `.`, is held
+to them as the directory every file it writes lies beneath. It MUST hold
+together, by [MTS-PTH-006](11-rendering.md#mts-pth-006), the paths so
+written of the declarations with neither `when` nor `for_each` in the
+output directory, and in each container's entries but an entry its
+profile reserves, and report each collision as a render reports it. A
+path only a render can know, one a path template renders or a file an
+asset or a mirror expands into, is the render's to judge.
+
+> **Note.** A path written without Liquid markup is the same whatever the
+> data, so every render of the package refuses it. Check exists to tell an
+> author whether a package will render, and it says so before any data
+> exists.
+
 A package declares the specification minor it is written to
 ([chapter 4](04-versions.md)), and an author is best served by the lowest
 minor whose constructs it uses, which every tool implementing that minor or

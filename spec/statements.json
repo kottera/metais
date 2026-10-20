@@ -59,6 +59,7 @@
     {"id": "MTS-AUT-069", "chapter": "13-authoring.md", "section": "13.7", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-AUT-070", "chapter": "13-authoring.md", "section": "13.7", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-AUT-071", "chapter": "13-authoring.md", "section": "13.7", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-AUT-080", "chapter": "13-authoring.md", "section": "13.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-DAT-001", "chapter": "05-data-specification.md", "section": "5.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-DAT-002", "chapter": "05-data-specification.md", "section": "5.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-DAT-003", "chapter": "05-data-specification.md", "section": "5.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},

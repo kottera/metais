@@ -163,11 +163,13 @@ Refusals:
   output.container.space (1)
                             A container's profile (container: space), a warning.
                             Next: metais check <dir>
-  output.* (10)             An example's output is refused.
+  output.* (2)              An example's output is refused.
                             Next: metais test <dir>
   output.declaration.validate_kind (1)
                             An output's declaration (declaration: validate
                             kind), an error. Next: metais check <dir>
+  output.path.* (8)         An output's literal path, an error.
+                            Next: metais check <dir>
   package.* (46)            The package is refused. Next: metais check <dir>
   package.layout.* (2)      The package's tree, a warning.
                             Next: metais check <dir>

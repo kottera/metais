@@ -93,6 +93,8 @@ Refusals:
   output.declaration.validate_kind (1)
                             An output's declaration (declaration: validate
                             kind), an error. Next: metais check <package>
+  output.path.* (8)         An output's literal path, an error.
+                            Next: metais check <package>
   package.* (46)            The package is refused. Next: metais check <package>
   package.layout.* (2)      The package's tree, a warning.
                             Next: metais check <package>
