@@ -262,7 +262,7 @@ func TestHostileLimitFlag(t *testing.T) {
 		for _, argv := range [][]string{
 			{"inspect"}, {"ls"}, {"read", "metais.yaml"}, {"outline", "metais.yaml"}, {"grep", "match"}, {"schema"},
 			{"extract", "**", "--to", "extracted"}, {"check"}, {"test"}, {"validate"}, {"render", "--out", "out"},
-			{"unpack", "--to", "unpacked"}, {"sample", "--to", "sampled"},
+			{"unpack", "--to", "unpacked"}, {"sample", "--to", "sampled"}, {"pack", "--out", "packed.metais"},
 		} {
 			work := testenv.Dir(t)
 			line := append([]string{argv[0], "--json", pkg}, argv[1:]...)
