@@ -19,7 +19,6 @@ import (
 	"github.com/kottera/metais/internal/jsonx"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/zipfmt"
 )
 
 // vectorsDir is the conformance suite's vectors, from this package.
@@ -63,7 +62,7 @@ func TestOpenReadsEveryByteOnce(t *testing.T) {
 				break
 			}
 		}
-		a := p.Tree.(*zipfmt.Archive)
+		a := p.Tree.(contentTree).Archive
 		if n := len(a.List()); a.Decodes() != n {
 			t.Errorf("%s: %d entries decoded %d times", v, n, a.Decodes())
 		}
@@ -86,7 +85,7 @@ func TestOpenReadsEveryByteOnceControl(t *testing.T) {
 		t.Fatal(err)
 	}
 	r.Read(make([]byte, 1))
-	if a := p.Tree.(*zipfmt.Archive); a.Decodes() != len(a.List())+1 {
+	if a := p.Tree.(contentTree).Archive; a.Decodes() != len(a.List())+1 {
 		t.Error("a read after open is not seen by the counters")
 	}
 }

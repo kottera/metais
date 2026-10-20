@@ -10,7 +10,7 @@
       "file": "templates/report.md.liquid"
     },
     "params": {
-      "offset": 2614,
+      "offset": 3119,
       "record": "central directory header",
       "header_field": "disk number start",
       "value": 1,

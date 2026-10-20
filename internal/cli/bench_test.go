@@ -6,17 +6,14 @@ package cli
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/digest"
 	"github.com/kottera/metais/internal/hostenv"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
@@ -81,7 +78,8 @@ const benchItemsSchema = `{
 
 // benchSources is the benchmark package's source files: the manifest,
 // the schema, a template, and references enough that, packed with its
-// compiled files and its digest file, the package has entries entries.
+// README.md, its compiled files and its digest file, the package has
+// entries entries.
 func benchSources(t testing.TB, entries int) map[string][]byte {
 	t.Helper()
 	files := map[string][]byte{
@@ -93,7 +91,8 @@ func benchSources(t testing.TB, entries int) map[string][]byte {
 	if p == nil {
 		t.Fatalf("the benchmark package does not open: %v", fs)
 	}
-	for i := range entries - len(files) - len(p.Compiled) - 1 {
+	// The README.md and the digest file pack adds (ADR-001 A1 item 1).
+	for i := range entries - len(files) - len(p.Compiled) - 2 {
 		files[fmt.Sprintf("references/%02d/%04d.md", i%37, i)] = []byte(fmt.Sprintf("# Reference %d\n\n%s", i,
 			strings.Repeat(fmt.Sprintf("Line of reference %d, which says what it says.\n", i), 8+i%32)))
 	}
@@ -101,36 +100,10 @@ func benchSources(t testing.TB, entries int) map[string][]byte {
 }
 
 // packBench writes files as pack writes them, into a file of its own, and
-// returns the file's path: every entry, the compiled files the loader
-// derives and the digest file, in byte order of their names, each method
-// auto (ADR-001 D4).
+// returns the file's path.
 func packBench(t testing.TB, files map[string][]byte) string {
 	t.Helper()
-	p, fs := loader.OpenFiles(files, loader.Options{Limits: limits.Defaults()})
-	if p == nil {
-		t.Fatalf("the benchmark package does not open: %v", fs)
-	}
-	all := map[string][]byte{}
-	for n, b := range files {
-		all[n] = b
-	}
-	for _, f := range p.Compiled {
-		all[f.Name] = f.Content
-	}
-	var list []digest.Entry
-	for n, b := range all {
-		list = append(list, digest.Entry{Name: n, Sum: sha256.Sum256(b)})
-	}
-	all[digest.File] = digest.Encode(list)
-	var es []zipfmt.Entry
-	for n, b := range all {
-		es = append(es, zipfmt.Entry{Name: n, Content: b, Method: zipfmt.Auto})
-	}
-	slices.SortFunc(es, func(a, b zipfmt.Entry) int { return strings.Compare(a.Name, b.Name) })
-	var buf bytes.Buffer
-	if err := zipfmt.Write(&buf, es); err != nil {
-		t.Fatal(err)
-	}
+	buf := packFiles(t, files)
 	path := filepath.Join(testenv.Dir(t), "bench.metais")
 	if err := os.WriteFile(path, buf.Bytes(), 0o644); err != nil {
 		t.Fatal(err)

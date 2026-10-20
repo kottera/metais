@@ -466,7 +466,7 @@ func packageCases() []pkgCase {
 			var list []digest.Entry
 			for _, e := range es {
 				switch e.name {
-				case digest.File, "templates/report.md.liquid":
+				case digest.File, zipfmt.ReadmeName, "templates/report.md.liquid":
 				default:
 					list = append(list, digest.Entry{Name: e.name, Sum: sha256.Sum256(e.content)})
 				}

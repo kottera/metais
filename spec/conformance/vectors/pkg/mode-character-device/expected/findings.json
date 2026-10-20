@@ -10,7 +10,7 @@
       "file": "assets/tty"
     },
     "params": {
-      "offset": 2610,
+      "offset": 3115,
       "record": "central directory header",
       "header_field": "external file attributes",
       "value": 564396032,

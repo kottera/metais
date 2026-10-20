@@ -72,8 +72,9 @@ type Package struct {
 	// Form is how the package was given.
 	Form Form
 	// Tree is the package's entries: a packed package's are the zip's,
-	// .compiled/ included; a source directory's are the files pack would
-	// write from it, without .compiled/ (ADR-008 D2 items 2 and 3).
+	// .compiled/ included and README.md not (ADR-001 A1 item 5); a source
+	// directory's are the files pack would write from it, without
+	// .compiled/ (ADR-008 D2 items 2 and 3).
 	Tree pkgtree.Tree
 	// Digest is the package digest (ADR-001 D6): the verified one of a
 	// packed package, the one pack would write for a source directory.
@@ -212,7 +213,7 @@ func readPacked(r io.ReaderAt, size int64, opt Options, faults fault.Set) (*open
 	}); len(fs) > 0 {
 		return nil, nil, fs
 	}
-	return &opening{form: Packed, tree: a, entries: a.Entries(), names: names, lim: opt.Limits, c: c}, entries, nil
+	return &opening{form: Packed, tree: contentTree{a}, entries: a.Entries(), names: names, lim: opt.Limits, c: c}, entries, nil
 }
 
 // openSource reads the source directory at path (ADR-001 D5, D8 item 5).

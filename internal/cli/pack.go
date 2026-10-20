@@ -64,9 +64,11 @@ func packDeclaration() *Command {
 			"over every example; an example that fails stops it the same way. Warnings are reported and do " +
 			"not stop it. There is no way to skip a step: the bytes a supplier receives are the bytes whose " +
 			"examples passed.\n\n" +
-			"The package holds metais.yaml and every file of inputs/, templates/, references/, assets/ and " +
-			"examples/, names beginning with . included, and .compiled/, computed afresh. A top-level name " +
-			"beginning with ., and a top-level file ending .metais, is left out silently; any other top-level " +
+			"The package begins with README.md, stored: the specification's text, which says what the file " +
+			"is and where to find metais. It then holds metais.yaml and every file of inputs/, templates/, " +
+			"references/, assets/ and examples/, names beginning with . included, and .compiled/, computed " +
+			"afresh. A top-level name beginning with ., a top-level README.md, and a top-level file ending " +
+			".metais, are left out silently; any other top-level " +
 			"name is left out and reported as package.layout.not_packed. Each file is packed byte for byte. " +
 			"The package's bytes depend only on its entries' paths and contents: never on a file's time, " +
 			"mode or owner, the order a directory lists its names in, the platform, the locale or the clock. " +

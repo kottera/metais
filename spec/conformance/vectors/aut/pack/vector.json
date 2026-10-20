@@ -11,7 +11,8 @@
     "MTS-PKG-036",
     "MTS-PKG-037",
     "MTS-PKG-038",
-    "MTS-PKG-039"
+    "MTS-PKG-039",
+    "MTS-PKG-071"
   ],
   "since": "1.0",
   "class": "authoring",
@@ -36,7 +37,7 @@
               {
                 "path": "out",
                 "equals": "expected/out",
-                "containers": [ { "path": "pack-1.0.0.metais", "methods": ["references/empty.txt", "assets/noise.bin"] } ]
+                "containers": [ { "path": "pack-1.0.0.metais", "methods": ["README.md", "references/empty.txt", "assets/noise.bin"] } ]
               }
             ]
           }
@@ -62,7 +63,7 @@
               {
                 "path": "out",
                 "equals": "expected/named",
-                "containers": [ { "path": "named.metais", "methods": ["references/empty.txt", "assets/noise.bin"] } ]
+                "containers": [ { "path": "named.metais", "methods": ["README.md", "references/empty.txt", "assets/noise.bin"] } ]
               }
             ]
           }

@@ -10,7 +10,7 @@
       "file": "templates/report.md.liquid"
     },
     "params": {
-      "offset": 2107,
+      "offset": 2557,
       "header_field": "crc-32"
     }
   }

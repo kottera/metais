@@ -455,20 +455,21 @@ func TestCheckExamples(t *testing.T) {
 	}
 }
 
-// TestCheckCompiledLimits is step 3: the compiled files and the digest
-// file count toward the entries limit of the package pack would write.
+// TestCheckCompiledLimits is step 3: README.md, the compiled files and
+// the digest file count toward the entries limit of the package pack
+// would write (ADR-001 A1 item 1).
 func TestCheckCompiledLimits(t *testing.T) {
 	dir := writeSource(t, checkFiles())
 	lim := limits.Defaults()
-	if f, ok := lim.Lower("entries=6"); !ok {
+	if f, ok := lim.Lower("entries=7"); !ok {
 		t.Fatal(f)
 	}
 	got := lines(t, Check(dir, lim, 0))
-	if want := []string{`limit.package bound=6 limit="entries" lowered=true observed=7`}; !slices.Equal(got, want) {
+	if want := []string{`limit.package bound=7 limit="entries" lowered=true observed=8`}; !slices.Equal(got, want) {
 		t.Errorf("findings %q, want %q", got, want)
 	}
 	lim = limits.Defaults()
-	if f, ok := lim.Lower("entries=7"); !ok {
+	if f, ok := lim.Lower("entries=8"); !ok {
 		t.Fatal(f)
 	}
 	if fs := Check(dir, lim, 0); len(fs) > 0 {

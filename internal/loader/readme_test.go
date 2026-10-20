@@ -113,8 +113,13 @@ func TestOpenChecksReadme(t *testing.T) {
 			if p.Digest != src.Digest {
 				t.Errorf("the packed package's digest is not its source directory's")
 			}
-			if names := p.Tree.List(); !slices.IsSorted(names) || !slices.Contains(names, zipfmt.ReadmeName) {
+			// README.md is no part of the content every command reads
+			// (A1 item 5).
+			if names := p.Tree.List(); !slices.IsSorted(names) || slices.Contains(names, zipfmt.ReadmeName) {
 				t.Errorf("the tree lists %q", names)
+			}
+			if _, err := p.Tree.Open(zipfmt.ReadmeName); err == nil {
+				t.Errorf("the tree opens README.md")
 			}
 		})
 	}

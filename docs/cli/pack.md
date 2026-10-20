@@ -31,6 +31,15 @@ that changed since, or that changes while it is written, is refused as
 `package.not_readable` with `reason` `changed`, and nothing is written: the
 digests a package carries are always its entries' own.
 
+The package's first entry is `README.md`, stored, holding the
+specification's README text for the version the manifest declares
+(ADR-001 A1): whoever opens the file with no context reads, in its first
+bytes, what it is and where to find the tool. No author writes it. A
+source directory's own top-level `README.md`, which a repository commonly
+holds, is ignored as `.git` is and never packed. `README.md` is not covered
+by the digests, so the package digest is the same with it as without it,
+and `<n> entries` counts it.
+
 ## Where it writes
 
 - **No `--out`:** `<name>-<version>.metais` in the working directory, from

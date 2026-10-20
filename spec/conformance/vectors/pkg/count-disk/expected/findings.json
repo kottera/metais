@@ -9,11 +9,11 @@
       "origin": "package"
     },
     "params": {
-      "offset": 2660,
+      "offset": 3165,
       "record": "end of central directory record",
       "header_field": "total number of entries in the central directory on this disk",
-      "value": 6,
-      "expected": 7
+      "value": 7,
+      "expected": 8
     }
   }
 ]

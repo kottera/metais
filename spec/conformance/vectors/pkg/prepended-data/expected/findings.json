@@ -7,7 +7,7 @@
     },
     "location": {
       "origin": "package",
-      "file": ".compiled/digests.json"
+      "file": "README.md"
     },
     "params": {
       "offset": 0,

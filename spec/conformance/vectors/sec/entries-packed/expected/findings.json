@@ -10,9 +10,9 @@
     },
     "params": {
       "limit": "entries",
-      "bound": 6,
+      "bound": 7,
       "lowered": true,
-      "observed": 7
+      "observed": 8
     }
   }
 ]

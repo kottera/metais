@@ -1,7 +1,7 @@
 {
   "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
   "id": "aut/check-limits",
-  "title": "The package pack would write is held to the entries limit with its compiled files and digest file counted",
+  "title": "The package pack would write is held to the entries limit with its README.md, compiled files and digest file counted",
   "statements": [
     "MTS-AUT-005"
   ],

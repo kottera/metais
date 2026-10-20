@@ -71,7 +71,8 @@ func readingDeclarations() []*Command {
 				"--recursive every file and directory beneath it; a path that names a file lists that file. " +
 				"Directories are implied by the entries' paths. The listing is in the byte order of the " +
 				"paths, a directory's written with its trailing /.\n\n" +
-				"A packed package's entries are the zip's, .compiled/ included; a source directory's are the " +
+				"A packed package's entries are the zip's, .compiled/ included and README.md, the " +
+				"specification's text, not; a source directory's are the " +
 				"files metais pack would write from it, without .compiled/. Paths use / on every platform and " +
 				"are matched byte for byte, case-sensitively; the root is . or omitted.",
 			Operands: []args.Operand{{Name: "<path>", Description: "An entry or a directory of the package, with or without a trailing /; the root when omitted."}},
