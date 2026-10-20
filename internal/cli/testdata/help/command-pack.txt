@@ -170,7 +170,7 @@ Refusals:
                             kind), an error. Next: metais check <dir>
   output.path.* (8)         An output's literal path, an error.
                             Next: metais check <dir>
-  package.* (46)            The package is refused. Next: metais check <dir>
+  package.* (47)            The package is refused. Next: metais check <dir>
   package.layout.* (2)      The package's tree, a warning.
                             Next: metais check <dir>
   report.step_skipped (1)   The report (step skipped), an info.

@@ -167,7 +167,7 @@ Refusals:
                         Next: metais test <package>
   output.* (14)         An example's output is refused.
                         Next: metais test <package>
-  package.* (46)        The package is refused. Next: metais test <package>
+  package.* (47)        The package is refused. Next: metais test <package>
   schema.* (10)         An input schema is refused. Next: metais test <package>
   template.* (23)       A template is refused. Next: metais test <package>
   template.* (9)        An output's path, when or for_each does not parse.

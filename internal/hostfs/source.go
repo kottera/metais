@@ -22,6 +22,9 @@ import (
 const (
 	manifestName = "metais.yaml"
 	compiledName = ".compiled"
+	// readmeName is the README.md a packed package begins with, which a
+	// source directory never holds as its own (ADR-001 A1 item 7).
+	readmeName = "README.md"
 )
 
 var layoutDirs = []string{"assets", "examples", "inputs", "references", "templates"}
@@ -172,8 +175,8 @@ var _ pkgtree.Tree = (*Source)(nil)
 // device anywhere in them is refused from its Lstat mode, without being
 // followed or opened. Nothing outside the roots is opened or listed, so a
 // repository's .git never reaches a package: a top-level name beginning
-// with "." and a top-level regular file whose name ends ".metais" are
-// ignored silently, and any other top-level name is not part of the
+// with ".", the top-level name README.md, and a top-level regular file
+// whose name ends ".metais" are ignored silently, and any other top-level name is not part of the
 // package and is returned by Unknown, for check's warning (ADR-001 D5
 // item 5). A top-level .compiled is refused, and so is a directory with
 // no regular file metais.yaml.
@@ -330,6 +333,10 @@ func (w *walker) top() {
 			w.dir(name, fi, 1)
 		case strings.HasPrefix(name, "."):
 			// Ignored silently: .git, .gitignore, .DS_Store.
+		case name == readmeName:
+			// Ignored silently: a repository's README for its own
+			// authors; pack writes the specification's (ADR-001 A1
+			// item 7).
 		case kind == KindFile && strings.HasSuffix(name, ".metais"):
 			// Ignored silently: where pack writes by default.
 		default:

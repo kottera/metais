@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/kottera/metais/internal/finding"
@@ -18,6 +19,7 @@ import (
 	"github.com/kottera/metais/internal/schemafail"
 	"github.com/kottera/metais/internal/specdata"
 	"github.com/kottera/metais/internal/yamlx"
+	"github.com/kottera/metais/internal/zipfmt"
 )
 
 // manifestLocation is the location in metais.yaml.
@@ -106,21 +108,23 @@ func (o *opening) compareManifest(*Package) []finding.Finding {
 
 // gate is ADR-002 D11 item 4.
 func (o *opening) gate(*Package) []finding.Finding {
-	_, fs := manifest.Gate(o.doc.root, o.doc.src)
+	spec, fs := manifest.Gate(o.doc.root, o.doc.src)
+	o.spec = spec
 	return fs
 }
 
 // layout is ADR-001 D5 item 4 for a packed package, under the version the
-// gate admitted: every top-level name is one of the layout's, and every
-// file of .compiled/ one the version defines. A source directory's layout
-// was checked as it was walked.
+// gate admitted: every top-level name is one of the layout's, every file
+// of .compiled/ one the version defines, and README.md the version's
+// (ADR-001 A1 item 6). A source directory's layout was checked as it was
+// walked.
 func (o *opening) layout(*Package) []finding.Finding {
 	if o.form != Packed {
 		return nil
 	}
 	var out []finding.Finding
 	for _, n := range o.topNames() {
-		if !contains(topLevel, n) && !wrongManifestName(n) {
+		if !contains(topLevel, n) && n != zipfmt.ReadmeName && !wrongManifestName(n) {
 			out = append(out, entryFinding(CodeUnknownTopLevel, n, nil))
 		}
 	}
@@ -129,7 +133,34 @@ func (o *opening) layout(*Package) []finding.Finding {
 			out = append(out, entryFinding(CodeCompiledUnknown, n, nil))
 		}
 	}
+	return append(out, o.readme()...)
+}
+
+// readme is ADR-001 A1 item 6: a packed package's first entry is
+// README.md, stored, holding byte for byte the README text of the
+// version the gate admitted. A package without one is refused for that
+// alone; otherwise every reason that applies is reported, each its own
+// finding.
+func (o *opening) readme() []finding.Finding {
+	if !o.has(zipfmt.ReadmeName) {
+		return []finding.Finding{readmeFinding("missing")}
+	}
+	var out []finding.Finding
+	i := slices.IndexFunc(o.entries, func(e zipfmt.EntryInfo) bool { return e.Name == zipfmt.ReadmeName })
+	if i != 0 {
+		out = append(out, readmeFinding("not_first"))
+	}
+	if o.entries[i].Deflated {
+		out = append(out, readmeFinding("compressed"))
+	}
+	if !o.sameBytes(zipfmt.ReadmeName, Readme(o.spec)) {
+		out = append(out, readmeFinding("altered"))
+	}
 	return out
+}
+
+func readmeFinding(reason string) finding.Finding {
+	return entryFinding(CodeReadme, zipfmt.ReadmeName, finding.Params{"reason": finding.String(reason)})
 }
 
 func contains(s []string, v string) bool {

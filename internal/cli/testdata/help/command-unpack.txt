@@ -113,7 +113,7 @@ Refusals:
 
   manifest.* (44)  The manifest breaks one of its rules.
                    Next: metais unpack <package> --to <dir>
-  package.* (46)   The package is refused.
+  package.* (47)   The package is refused.
                    Next: metais unpack <package> --to <dir>
   schema.* (10)    An input schema is refused.
                    Next: metais unpack <package> --to <dir>

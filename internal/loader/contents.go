@@ -15,11 +15,12 @@ import (
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/pkgtree"
 	"github.com/kottera/metais/internal/schema"
+	"github.com/kottera/metais/internal/zipfmt"
 )
 
 // contents is what the open keeps of the entries as they are read, the one
 // time each is decoded (ADR-010 D15 item 2): the bytes of the entries step
-// 7 reads — the manifest, the compiled files, the schema files and the
+// 7 reads — the manifest, README.md, the compiled files, the schema files and the
 // Markdown references whose titles the references index gives — and, for
 // every reference, what the index says of it.
 type contents struct {
@@ -56,7 +57,7 @@ func (c *contents) sink(name string) io.Writer {
 
 // keep reports whether step 7 reads the entry name's bytes.
 func keep(name string) bool {
-	return name == manifest.ManifestFile || strings.HasPrefix(name, compiledDir) ||
+	return name == manifest.ManifestFile || name == zipfmt.ReadmeName || strings.HasPrefix(name, compiledDir) ||
 		schema.IsSchemaFile(name) || (strings.HasPrefix(name, referencesDir) && isMarkdown(name))
 }
 

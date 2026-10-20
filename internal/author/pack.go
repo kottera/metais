@@ -17,6 +17,7 @@ import (
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
+	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/pkgtree"
 	"github.com/kottera/metais/internal/zipfmt"
 )
@@ -45,30 +46,32 @@ func EntryDirs(names []string) []string {
 }
 
 // Packed is a package as pack writes it from a source directory (ADR-007
-// D7): its entries, the source's and .compiled/'s, and its package digest.
+// D7): its entries, README.md, the source's and .compiled/'s, and its
+// package digest.
 type Packed struct {
-	// Entries is every entry's name, in the order written: ascending
-	// byte order (ADR-001 D1 item 7).
+	// Entries is every entry's name, in the order written: README.md,
+	// then ascending byte order (ADR-001 D1 item 7, A1 item 4).
 	Entries []string
 	// Digest is the package digest of the entries (ADR-001 D6).
 	Digest digest.Sum
 
 	tree    pkgtree.Tree
 	sums    map[string]digest.Sum
-	bytes   map[string][]byte // the compiled files, the digest file's included
+	bytes   map[string][]byte // README.md and the compiled files, the digest file's included
 	written []zipfmt.Written  // where the last Write put each entry, in the order of Entries
 }
 
 // PlanPack reads every entry of tree, a source directory that opened,
-// once, and returns the package pack writes from it: those entries, the
-// compiled files the open derived, compiled, and the digest file of them
-// all (ADR-007 D7 item 3, ADR-001 D6 and D7). Content is packed byte for
-// byte, never normalised, and nothing but the entries' names and content
-// reaches the package (item 4).
+// once, and returns the package pack writes from it: the README text of
+// spec, its declared version, as README.md (ADR-001 A1 item 1); those
+// entries; the compiled files the open derived, compiled; and the digest
+// file of them all but README.md (ADR-007 D7 item 3, ADR-001 D6 and D7, A1
+// item 5). Content is packed byte for byte, never normalised, and nothing
+// but the entries' names and content reaches the package (item 4).
 //
 // faults are the invocation's; PlanPack is fault.PackMapOrder's seam,
 // which puts the entries in the order of a Go map built from them.
-func PlanPack(tree pkgtree.Tree, compiled []loader.File, faults fault.Set) (*Packed, error) {
+func PlanPack(tree pkgtree.Tree, compiled []loader.File, spec manifest.Spec, faults fault.Set) (*Packed, error) {
 	p := &Packed{tree: tree, sums: map[string]digest.Sum{}, bytes: map[string][]byte{}}
 	var list []digest.Entry
 	for _, n := range tree.List() {
@@ -94,6 +97,9 @@ func PlanPack(tree pkgtree.Tree, compiled []loader.File, faults fault.Set) (*Pac
 	}
 	p.Entries = append(p.Entries, digest.File)
 	slices.Sort(p.Entries)
+	// README.md first, before .compiled/ (ADR-001 A1 item 4).
+	p.bytes[zipfmt.ReadmeName] = loader.Readme(spec)
+	p.Entries = append([]string{zipfmt.ReadmeName}, p.Entries...)
 	return p, nil
 }
 
@@ -124,8 +130,8 @@ func mapOrdered(list []digest.Entry, pkg digest.Sum) []byte {
 	return append(b, `"}`...)
 }
 
-// Write writes the package to w through ADR-001 D4's writer, every entry
-// method auto (item 7). A source entry is read again for each pass the
+// Write writes the package to w through ADR-001 D4's writer: README.md
+// stored (ADR-001 A1 item 1), every other entry method auto (D4 item 7). A source entry is read again for each pass the
 // writer makes over it, and must hold the bytes PlanPack hashed: one that
 // changed since fails the write with a *ReadError of reason
 // hostfs.Changed, so the digests a package carries are always its
@@ -135,6 +141,9 @@ func (p *Packed) Write(w io.Writer) error {
 	parts := make([]zipfmt.Part, len(p.Entries))
 	for i, n := range p.Entries {
 		parts[i] = zipfmt.Part{Name: n, Method: zipfmt.Auto}
+		if n == zipfmt.ReadmeName {
+			parts[i].Method = zipfmt.Store
+		}
 		if b, ok := p.bytes[n]; ok {
 			parts[i].Content = func(w io.Writer) error {
 				_, err := w.Write(b)

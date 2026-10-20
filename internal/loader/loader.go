@@ -24,6 +24,7 @@ package loader
 import (
 	"bytes"
 	"io"
+	"maps"
 	"slices"
 	"strings"
 
@@ -161,13 +162,30 @@ func notReadable(r hostfs.Reason) finding.Finding {
 
 // openPacked is ADR-001 D8 over the packed package r of size bytes.
 func openPacked(r io.ReaderAt, size int64, opt Options, faults fault.Set) (*Package, []finding.Finding) {
+	o, entries, fs := readPacked(r, size, opt, faults)
+	if o == nil {
+		return nil, fs
+	}
+	// Step 7.
+	p, fs := o.step7()
+	if p == nil {
+		return nil, fs
+	}
+	p.Digest = digest.Package(entries)
+	return p, nil
+}
+
+// readPacked is ADR-001 D8's steps 1 to 6 over the packed package r of
+// size bytes: the opening step 7 continues, and the entries the package
+// digest is of, or the findings that refuse the package.
+func readPacked(r io.ReaderAt, size int64, opt Options, faults fault.Set) (*opening, []digest.Entry, []finding.Finding) {
 	c := newContents()
 	a, fs, err := zipfmt.OpenWith(r, size, opt.Limits, c.sink)
 	if err != nil {
-		return nil, []finding.Finding{notReadable(hostfs.ReasonOf(err))}
+		return nil, nil, []finding.Finding{notReadable(hostfs.ReasonOf(err))}
 	}
 	if len(fs) > 0 {
-		return nil, fs
+		return nil, nil, fs
 	}
 	// The compiled files must all be there before any can be read: a zip
 	// without them is not a package (ADR-001 D7 item 1).
@@ -179,28 +197,22 @@ func openPacked(r io.ReaderAt, size int64, opt Options, faults fault.Set) (*Pack
 		}
 	}
 	if len(missing) > 0 {
-		return nil, missing
+		return nil, nil, missing
 	}
-	// Step 6.
+	// Step 6. README.md is no entry of the digest file, wherever it lies
+	// (ADR-001 A1 item 5): step 7 judges it, with the layout.
 	var entries []digest.Entry
 	for _, e := range a.Entries() {
-		if e.Name != digest.File {
+		if e.Name != digest.File && e.Name != zipfmt.ReadmeName {
 			entries = append(entries, digest.Entry{Name: e.Name, Sum: e.SHA256})
 		}
 	}
 	if fs := pkgtree.VerifyDigests(faults, func() []finding.Finding {
 		return digest.Verify(c.bytes(digest.File), entries, opt.Limits)
 	}); len(fs) > 0 {
-		return nil, fs
+		return nil, nil, fs
 	}
-	// Step 7.
-	o := &opening{form: Packed, tree: a, names: names, lim: opt.Limits, c: c}
-	p, fs := o.step7()
-	if p == nil {
-		return nil, fs
-	}
-	p.Digest = digest.Package(entries)
-	return p, nil
+	return &opening{form: Packed, tree: a, entries: a.Entries(), names: names, lim: opt.Limits, c: c}, entries, nil
 }
 
 // openSource reads the source directory at path (ADR-001 D5, D8 item 5).
@@ -226,13 +238,20 @@ func openSource(path string, opt Options) (*Package, []finding.Finding) {
 }
 
 // OpenFiles opens files, a source directory's entries by their paths, held
-// in memory: the files pack would write from it, with no .compiled/. Its
+// in memory: the files pack would write from it, with no .compiled/, and
+// with no README.md, which it ignores as a source directory does. Its
 // names are held to ADR-001 D2 as a source directory's are, and it is
 // otherwise opened exactly as one, with its compiled files and package
 // digest computed in memory. It is how a program that builds packages
 // from entries, such as the conformance suite's generator, derives what
 // pack derives.
 func OpenFiles(files map[string][]byte, opt Options) (*Package, []finding.Finding) {
+	if _, ok := files[zipfmt.ReadmeName]; ok {
+		// Ignored silently, as a source directory's is (ADR-001 A1 item
+		// 7).
+		files = maps.Clone(files)
+		delete(files, zipfmt.ReadmeName)
+	}
 	t := newMemTree(files)
 	if err := unitext.CheckTree(t.List(), opt.Limits); err != nil {
 		return nil, zipfmt.NameFindings(err.(*unitext.TreeError), opt.Limits)
@@ -323,11 +342,13 @@ type File struct {
 type opening struct {
 	form    Form
 	tree    pkgtree.Tree
-	names   []string // every entry, in byte order
-	unknown []string // a source directory's top-level names that are not part of the package
+	entries []zipfmt.EntryInfo // a packed package's entries, in the file's order
+	names   []string           // every entry, in byte order
+	unknown []string           // a source directory's top-level names that are not part of the package
 	lim     limits.Set
 	c       *contents
 	doc     manifestDoc
+	spec    manifest.Spec // the version the gate admitted
 	derived []File
 }
 

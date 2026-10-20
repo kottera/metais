@@ -713,6 +713,14 @@
             }
           },
           {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
             "code": "package.layout.unknown_top_level",
             "cause": "The package is refused (layout: unknown top level).",
             "next": {
@@ -1757,6 +1765,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -2821,6 +2837,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -3897,6 +3921,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -4995,6 +5027,14 @@
             }
           },
           {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
             "code": "package.layout.unknown_top_level",
             "cause": "The package is refused (layout: unknown top level).",
             "next": {
@@ -6041,6 +6081,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -7193,6 +7241,14 @@
             }
           },
           {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
             "code": "package.layout.unknown_top_level",
             "cause": "The package is refused (layout: unknown top level).",
             "next": {
@@ -8283,6 +8339,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -10537,6 +10601,14 @@
             }
           },
           {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
             "code": "package.layout.unknown_top_level",
             "cause": "The package is refused (layout: unknown top level).",
             "next": {
@@ -12293,6 +12365,14 @@
           {
             "code": "package.layout.os_litter",
             "cause": "The package's tree (layout: os litter), a warning.",
+            "next": {
+              "run": "metais check <package>",
+              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -14315,6 +14395,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -16635,6 +16723,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais test <package>",
+              "why": "Tests every example again once the package or its examples are fixed."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais test <package>",
               "why": "Tests every example again once the package or its examples are fixed."
@@ -19151,6 +19247,14 @@
             }
           },
           {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
             "code": "package.layout.unknown_top_level",
             "cause": "The package is refused (layout: unknown top level).",
             "next": {
@@ -20719,6 +20823,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais unpack <package> --to <dir>",
+              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais unpack <package> --to <dir>",
               "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."

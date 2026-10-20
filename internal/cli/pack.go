@@ -235,7 +235,7 @@ func runPack(s *session, p args.Parsed) outcome {
 	}
 
 	// The deterministic write (items 3 to 5).
-	plan, err := author.PlanPack(pkg.Tree, pkg.Compiled, s.inv.Options.Faults)
+	plan, err := author.PlanPack(pkg.Tree, pkg.Compiled, pkg.Manifest.Metais, s.inv.Options.Faults)
 	if err == nil && plan.Digest != pkg.Digest {
 		// The source changed since it was opened, checked and tested.
 		err = &author.ReadError{Reason: hostfs.Changed}

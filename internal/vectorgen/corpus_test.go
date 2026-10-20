@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/kottera/metais/internal/digest"
+	"github.com/kottera/metais/internal/zipfmt"
 )
 
 // This file is the hostile corpus of ADR-009 D17 items 1 to 4 and ADR-001's
@@ -142,11 +143,11 @@ func zip64Extra(usize, csize int) []byte {
 }
 
 // digestsOf is the digest file of entries' names and contents, except
-// skip's, with extra listed beside them.
+// skip's and README.md's, with extra listed beside them.
 func digestsOf(entries []zentry, skip string, extra ...digest.Entry) []byte {
 	var list []digest.Entry
 	for _, e := range entries {
-		if e.name != digest.File && e.name != skip {
+		if e.name != digest.File && e.name != zipfmt.ReadmeName && e.name != skip {
 			list = append(list, digest.Entry{Name: e.name, Sum: sha256.Sum256(e.content)})
 		}
 	}

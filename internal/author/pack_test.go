@@ -59,7 +59,7 @@ func planned(t *testing.T, files map[string][]byte, tree pkgtree.Tree, faults fa
 	if tree == nil {
 		tree = pkg.Tree
 	}
-	p, err := PlanPack(tree, pkg.Compiled, faults)
+	p, err := PlanPack(tree, pkg.Compiled, pkg.Manifest.Metais, faults)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,14 +67,15 @@ func planned(t *testing.T, files map[string][]byte, tree pkgtree.Tree, faults fa
 }
 
 // TestPlanPack is ADR-007 D7 items 3 and 4 and ADR-001 D4 item 7: the
-// entries are the source's and the four compiled files, in byte order,
-// .compiled/digests.json first; the package digest is the one the open
+// entries are README.md, then the source's and the four compiled files,
+// in byte order, .compiled/digests.json first among them (ADR-001 A1
+// item 4); the package digest is the one the open
 // computed for the source directory; and the package written opens, with
 // that digest and every source entry's bytes as they were.
 func TestPlanPack(t *testing.T) {
 	files := packFiles()
 	pkg, p := planned(t, files, nil, 0)
-	want := []string{".compiled/digests.json", ".compiled/manifest.json", ".compiled/references.json", ".compiled/schema.json",
+	want := []string{"README.md", ".compiled/digests.json", ".compiled/manifest.json", ".compiled/references.json", ".compiled/schema.json",
 		"assets/.hidden", "inputs/report.schema.json", "metais.yaml", "templates/report.md.liquid"}
 	if !slices.Equal(p.Entries, want) {
 		t.Errorf("entries %q, want %q", p.Entries, want)
@@ -90,7 +91,7 @@ func TestPlanPack(t *testing.T) {
 	if err != nil || len(fs) > 0 {
 		t.Fatalf("the package does not read: %v %v", err, fs)
 	}
-	if !slices.Equal(a.List(), want) {
+	if listed := slices.Sorted(slices.Values(want)); !slices.Equal(a.List(), listed) {
 		t.Errorf("the zip holds %q", a.List())
 	}
 	for n, content := range files {
@@ -213,7 +214,7 @@ func TestPackSourceChanged(t *testing.T) {
 		t.Errorf("a changed entry: %v", err)
 	}
 	pkg, _ := loader.OpenFiles(files, loader.Options{Limits: limits.Defaults()})
-	_, err = PlanPack(failing{Tree: mem, name: "templates/report.md.liquid"}, pkg.Compiled, 0)
+	_, err = PlanPack(failing{Tree: mem, name: "templates/report.md.liquid"}, pkg.Compiled, pkg.Manifest.Metais, 0)
 	if !errors.As(err, &re) || re.Reason != hostfs.PermissionDenied {
 		t.Errorf("an unreadable entry: %v", err)
 	}
