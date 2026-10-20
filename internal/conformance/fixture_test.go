@@ -41,6 +41,7 @@ const (
 	fixBounded      = "fix/bounded"
 	fixRepeatable   = "fix/repeatable"
 	fixUnwritable   = "fix/unwritable"
+	fixPack         = "fix/pack"
 )
 
 // fixtureTree is the tree fix/render-tree's package renders.
@@ -249,8 +250,26 @@ func writeFixture(t testing.TB, root string) string {
 	unwritable["setup"] = map[string]any{"unwritable": []string{"locked"}}
 	vector(fixUnwritable, map[string]any{"requires": []string{"unwritable-dirs"}}, unwritable)
 
+	// fix/pack: a source directory packed into a directory, as the
+	// package its script names, whose deflated entry hides what it holds
+	// from a scan of its raw bytes.
+	putJSON(vec(fixPack)+"package/fake.json", map[string]any{"ok": true, "exit": 0, "findings": []any{},
+		"pack": map[string]any{"path": fixturePackName, "dir": "src", "stored": []string{"mimetype"}}})
+	putTree(vec(fixPack)+"package/src/", fixtureZip)
+	put(vec(fixPack)+"expected/out/"+fixturePackName, writeZip(zipEntries(), false))
+	pack := tcase("pack", step("pack", map[string]any{"source": "package", "to": "out"},
+		map[string]any{"ok": true, "trees": []any{map[string]any{
+			"path": "out", "equals": "expected/out",
+			"containers": []any{map[string]any{"path": fixturePackName, "methods": []string{"mimetype"}}},
+		}}}))
+	pack["setup"] = map[string]any{"dirs": []string{"out"}}
+	vector(fixPack, map[string]any{"class": "authoring"}, pack)
+
 	return filepath.Join(root, "conformance")
 }
+
+// fixturePackName is the package fix/pack's source packs into.
+const fixturePackName = "fake-1.0.0.metais"
 
 // projections keeps of each finding the members a vector may expect
 // (ADR-011 D10 item 2): never message or hint.

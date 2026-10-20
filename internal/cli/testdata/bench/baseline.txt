@@ -1,25 +1,37 @@
 # ADR-010 D15 item 1's benchmarks of ./internal/cli, in benchstat's input format.
 # sandbox figure, not a budget
-# host: MacBook-Pro, a contended Work Order sandbox
-# cpu: Apple M2 Max
-# go version go1.26.9 darwin/arm64
-# GOOS=darwin GOARCH=arm64
+# host: linux-desktop-1, a contended Work Order sandbox
+# cpu: AMD Ryzen 5 3600 6-Core Processor
+# go version go1.26.9 linux/amd64
+# GOOS=linux GOARCH=amd64
 # command: go test -run '^$' -bench . -benchmem -count 6 ./internal/cli
-goos: darwin
-goarch: arm64
+goos: linux
+goarch: amd64
 pkg: github.com/kottera/metais/internal/cli
-cpu: Apple M2 Max
-BenchmarkInspect-12     	       6	 231979250 ns/op	 287075000 cpu-ns/op	586693270 B/op	 1434976 allocs/op
-BenchmarkInspect-12     	       5	 241607583 ns/op	 314955400 cpu-ns/op	586681756 B/op	 1434977 allocs/op
-BenchmarkInspect-12     	       5	 237043342 ns/op	 328268200 cpu-ns/op	586689296 B/op	 1434978 allocs/op
-BenchmarkInspect-12     	       5	 218240667 ns/op	 337435200 cpu-ns/op	586693451 B/op	 1434972 allocs/op
-BenchmarkInspect-12     	       6	 186825452 ns/op	 286189000 cpu-ns/op	586675469 B/op	 1434964 allocs/op
-BenchmarkInspect-12     	       6	 186629674 ns/op	 296114833 cpu-ns/op	586696429 B/op	 1434976 allocs/op
-BenchmarkValidate-12    	       2	 828252230 ns/op	 940634000 cpu-ns/op	219123048 B/op	 3814528 allocs/op
-BenchmarkValidate-12    	       2	 828834438 ns/op	 941705500 cpu-ns/op	218991412 B/op	 3814559 allocs/op
-BenchmarkValidate-12    	       2	 790100688 ns/op	 902634000 cpu-ns/op	219120864 B/op	 3814526 allocs/op
-BenchmarkValidate-12    	       2	 909632604 ns/op	1009405000 cpu-ns/op	219147416 B/op	 3814545 allocs/op
-BenchmarkValidate-12    	       1	2183482416 ns/op	1200430000 cpu-ns/op	218958928 B/op	 3814521 allocs/op
-BenchmarkValidate-12    	       1	3174822833 ns/op	1509955000 cpu-ns/op	218954440 B/op	 3814516 allocs/op
+cpu: AMD Ryzen 5 3600 6-Core Processor              
+BenchmarkInspect-12     	       3	 397430829 ns/op	 557088333 cpu-ns/op	586770858 B/op	 1434987 allocs/op
+BenchmarkInspect-12     	       3	 473697182 ns/op	 732985333 cpu-ns/op	586757426 B/op	 1434971 allocs/op
+BenchmarkInspect-12     	       3	 477606239 ns/op	 753629000 cpu-ns/op	586765576 B/op	 1434978 allocs/op
+BenchmarkInspect-12     	       3	 447333082 ns/op	 682920667 cpu-ns/op	586773562 B/op	 1434977 allocs/op
+BenchmarkInspect-12     	       3	 460747110 ns/op	 610851667 cpu-ns/op	586766549 B/op	 1434991 allocs/op
+BenchmarkInspect-12     	       3	 383225190 ns/op	 554979667 cpu-ns/op	586775402 B/op	 1434979 allocs/op
+BenchmarkValidate-12    	       2	 732008230 ns/op	 949279000 cpu-ns/op	218784344 B/op	 3814461 allocs/op
+BenchmarkValidate-12    	       2	 678797010 ns/op	 882807500 cpu-ns/op	218753104 B/op	 3814432 allocs/op
+BenchmarkValidate-12    	       2	 656991370 ns/op	 902496000 cpu-ns/op	218748616 B/op	 3814426 allocs/op
+BenchmarkValidate-12    	       2	 710203246 ns/op	 966621000 cpu-ns/op	218750888 B/op	 3814434 allocs/op
+BenchmarkValidate-12    	       2	 691453467 ns/op	 918830000 cpu-ns/op	218753760 B/op	 3814438 allocs/op
+BenchmarkValidate-12    	       2	 781552166 ns/op	1084389000 cpu-ns/op	218763328 B/op	 3814464 allocs/op
+BenchmarkPack/scaffold-12         	       3	 407956924 ns/op	  62231000 cpu-ns/op	12898714 B/op	  111717 allocs/op
+BenchmarkPack/scaffold-12         	      22	  50974888 ns/op	  57493500 cpu-ns/op	12879949 B/op	  111718 allocs/op
+BenchmarkPack/scaffold-12         	      20	  58899005 ns/op	  59719950 cpu-ns/op	12883582 B/op	  111714 allocs/op
+BenchmarkPack/scaffold-12         	      21	  57972670 ns/op	  59116333 cpu-ns/op	12869395 B/op	  111710 allocs/op
+BenchmarkPack/scaffold-12         	      26	  42138269 ns/op	  49254154 cpu-ns/op	12866726 B/op	  111706 allocs/op
+BenchmarkPack/scaffold-12         	      26	  45970766 ns/op	  53758462 cpu-ns/op	12863833 B/op	  111708 allocs/op
+BenchmarkPack/fixture-12          	      26	  41330259 ns/op	  52794885 cpu-ns/op	12658417 B/op	  108694 allocs/op
+BenchmarkPack/fixture-12          	      30	  39065948 ns/op	  48093533 cpu-ns/op	12655125 B/op	  108691 allocs/op
+BenchmarkPack/fixture-12          	      27	  45683182 ns/op	  58959185 cpu-ns/op	12652467 B/op	  108691 allocs/op
+BenchmarkPack/fixture-12          	      22	  45689916 ns/op	  57708682 cpu-ns/op	12644054 B/op	  108691 allocs/op
+BenchmarkPack/fixture-12          	      25	  46908566 ns/op	  57714000 cpu-ns/op	12659549 B/op	  108690 allocs/op
+BenchmarkPack/fixture-12          	      34	  45681516 ns/op	  52970235 cpu-ns/op	12646849 B/op	  108691 allocs/op
 PASS
-ok  	github.com/kottera/metais/internal/cli	50.273s
+ok  	github.com/kottera/metais/internal/cli	61.347s

@@ -6,6 +6,7 @@ package cli
 import (
 	"bytes"
 	"context"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -65,6 +66,48 @@ func TestInit(t *testing.T) {
 	}
 	if b, _ := os.ReadFile(filepath.Join(dir2, "metais.yaml")); !bytes.Contains(b, []byte("\nname: \"other-name\"\n")) {
 		t.Errorf("metais.yaml does not take the name from --name: %q", b)
+	}
+}
+
+// TestInitScaffoldPinned is ADR-007 D1 item 7: the scaffold, exactly as
+// init writes it, checks with no finding at all, tests with its one
+// example passing, and packs, with no finding either, into a package that
+// checks with none. Nothing of it writes into the scaffold.
+func TestInitScaffoldPinned(t *testing.T) {
+	testenv.Home(t)
+	dir := filepath.Join(testenv.Dir(t), "report")
+	out := testenv.Dir(t)
+	steps := [][]string{
+		{"init", dir},
+		{"check", dir},
+		{"test", dir},
+		{"pack", dir, "--out", out},
+		{"check", filepath.Join(out, "report-0.1.0.metais")},
+	}
+	var written map[string][]byte
+	for i, argv := range steps {
+		r := runTool(t, append(argv, "--json")...)
+		if r.status != finding.ExitOK || r.doc == nil || !r.doc.OK || len(r.doc.Findings) != 0 {
+			t.Fatalf("metais %s: status %d, findings %q", argv[0], r.status, r.codes())
+		}
+		switch {
+		case i == 0:
+			written = treeState(t, dir)
+		case argv[0] == "test":
+			if res := testRun(t, r); len(res.Examples) != 1 || res.Examples[0].Name != "basic" || res.Examples[0].Status != "pass" {
+				t.Errorf("test of the scaffold: %+v", res.Examples)
+			}
+		case argv[0] == "pack":
+			var res packResult
+			result(t, r, &res)
+			b, err := os.ReadFile(filepath.Join(out, "report-0.1.0.metais"))
+			if err != nil || res.File != "report-0.1.0.metais" || int64(len(b)) != res.Size {
+				t.Errorf("pack of the scaffold: result %+v, the file: %d bytes, %v", res, len(b), err)
+			}
+		}
+	}
+	if got := treeState(t, dir); !maps.EqualFunc(got, written, bytes.Equal) {
+		t.Errorf("check, test or pack wrote into the scaffold: %q, as init wrote it %q", sortedKeys(got), sortedKeys(written))
 	}
 }
 

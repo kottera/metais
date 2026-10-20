@@ -51,7 +51,7 @@ baseline's `pkg:` line keeps its package's rows apart.
 | CSV parsing of a 10 MiB input | `internal/inputs/csv`: `BenchmarkRead` |
 | Schema validation of a 10,000-item collection | `internal/schema`: `BenchmarkValidate` |
 | Zip reading of a package of 10,000 entries | `internal/zipfmt`: `BenchmarkOpen` |
-| `pack` of the §4.1 example | not yet: W6-2 adds `pack`'s benchmark, and Wave 7 the §4.1 example |
+| `pack` of the §4.1 example | `internal/cli`: `BenchmarkPack/{scaffold,fixture}`, over the scaffold `init` writes and `aut/pack`'s source directory; Wave 7 adds the §4.1 example |
 
 ## The budgets
 
@@ -88,6 +88,6 @@ Each benchmark's fixture is held to the work it is there to time by a test
 in every `go test`: `TestBenchFixtures` (`internal/liquid`),
 `TestBenchInput` (`internal/jsonx`, `internal/yamlx`,
 `internal/inputs/csv`), `TestBenchCollection` (`internal/schema`),
-`TestBenchPackage` (`internal/zipfmt`) and `TestBenchCommands`
+`TestBenchPackage` (`internal/zipfmt`), and `TestBenchCommands` and `TestBenchPack`
 (`internal/cli`). A benchmark whose run is refused fails rather than
 timing the refusal.

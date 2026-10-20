@@ -18,7 +18,7 @@ import (
 )
 
 // fixtureIDs are every fixture vector.
-var fixtureIDs = []string{fixRenderTree, fixBounded, fixRefuse, fixValidate, fixRenderStream, fixRenderDry, fixRepeatable}
+var fixtureIDs = []string{fixRenderTree, fixBounded, fixRefuse, fixValidate, fixRenderStream, fixRenderDry, fixRepeatable, fixPack}
 
 // selfProofWall is the wall clock the self-proof runs its processes
 // under, clean and faulty alike, so the wall fault is caught in seconds.
@@ -88,6 +88,8 @@ var faults = []fault{
 	{"sentinel-zip-nested", fixRenderTree, checkSentinel, both},
 	{"sentinel-tar", fixRenderStream, checkSentinel, both},
 	{"sentinel-outside", fixRenderTree, checkSentinel, both},
+	{"sentinel-pack", fixPack, checkSentinel, both},
+	{"sentinel-pack-prefixed", fixPack, checkSentinel, both},
 	{"stream", fixRenderStream, checkStream, both},
 	{"listing", fixRenderDry, checkListing, both},
 	{"ab", fixRenderTree, checkAB, both},

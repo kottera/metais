@@ -43,6 +43,9 @@ type fakeScript struct {
 	// directory fails: a destination it cannot write.
 	WriteFailed     []any `json:"write_failed"`
 	WriteFailedExit int   `json:"write_failed_exit"`
+	// Pack, when set, is the package pack writes: Path is its name in
+	// an output directory.
+	Pack *fakeZip `json:"pack"`
 }
 
 // fakeZip is a container the fake writes: the files below Dir in the
@@ -218,6 +221,9 @@ func fakeDriver(fault string) int {
 		return 1
 	}
 	call := fakeCall{op: req.Op, pkg: a.Package, out: a.Out, dryRun: a.DryRun}
+	if req.Op == "pack" {
+		call.pkg, call.out = a.Source, a.To
+	}
 	call.archive, call.only, _ = a.stream()
 	res, err := fakeRun(fault, call)
 	if err != nil {
@@ -310,6 +316,9 @@ func fakeRun(fault string, call fakeCall) (*fakeResult, error) {
 			os.WriteFile(filepath.Join(os.TempDir(), "refused.txt"), []byte("refused\n"), 0o644)
 		}
 	}
+	if sc.OK && call.op == "pack" && sc.Pack != nil {
+		return res, fakePack(fault, call, sc.Pack)
+	}
 	if !sc.OK || call.op != "render" {
 		return res, nil
 	}
@@ -387,6 +396,37 @@ func fakeOutputs(fault, pkg string, sc *fakeScript) (map[string][]byte, []string
 		}
 	}
 	return files, exec, nil
+}
+
+// packStub is what the sentinel-pack-prefixed fault writes before the
+// package: a prefix a zip reader that finds the central directory from
+// the end reads past, and a scan that inflates only what begins as a zip
+// does not.
+const packStub = "#!/bin/sh\nexit 0\n"
+
+// fakePack writes the package z names, from the files below its Dir, into
+// call.out: as z.Path inside it when it is a directory, and as the file
+// otherwise. The pack faults plant the sentinel in a deflated entry, where
+// only inflating the package finds it, and sentinel-pack-prefixed writes
+// packStub before the package as well.
+func fakePack(fault string, call fakeCall, z *fakeZip) error {
+	entries, err := zipEntriesFrom(filepath.Join(call.pkg, z.Dir), z.Stored)
+	if err != nil {
+		return err
+	}
+	if fault == "sentinel-pack" || fault == "sentinel-pack-prefixed" {
+		entries = append(entries, zipEntry{name: "references/leak.txt", method: methodDeflate,
+			content: []byte(padding + os.Getenv("METAIS_SENTINEL") + padding)})
+	}
+	b := writeZip(entries, false)
+	if fault == "sentinel-pack-prefixed" {
+		b = append([]byte(packStub), b...)
+	}
+	out := call.out
+	if fi, err := os.Stat(out); err == nil && fi.IsDir() {
+		out = filepath.Join(out, z.Path)
+	}
+	return os.WriteFile(out, b, 0o644)
 }
 
 // zipEntriesFrom reads the files below dir as zip entries, sorted by name.
