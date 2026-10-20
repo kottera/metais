@@ -347,3 +347,38 @@ func TestCheckPassesFake(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+// TestCheckReportsMissingInByteOrder is W7-C3: a List that leaves out
+// several wanted entries is reported one error each, in want's byte order,
+// so the same breach gives the same text on every run.
+func TestCheckReportsMissingInByteOrder(t *testing.T) {
+	files := map[string][]byte{}
+	for _, p := range []string{"a", "b", "c", "d", "e", "f", "g", "h"} {
+		files[p] = []byte(p)
+	}
+	mem, err := New(files)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var want string
+	for range 32 {
+		err := Check(&fake{mem: mem, list: func() []string { return nil }}, files)
+		if err == nil {
+			t.Fatal("Check passed a List that lists nothing")
+		}
+		var missing []string
+		for line := range strings.SplitSeq(err.Error(), "\n") {
+			if strings.HasPrefix(line, "pkgtreetest: List: wanted entry ") {
+				missing = append(missing, line)
+			}
+		}
+		if len(missing) != len(files) || !slices.IsSorted(missing) {
+			t.Fatalf("the missing entries are reported as %q", missing)
+		}
+		if got := strings.Join(missing, "\n"); want == "" {
+			want = got
+		} else if got != want {
+			t.Fatalf("two runs report the missing entries as\n%s\nand\n%s", want, got)
+		}
+	}
+}
