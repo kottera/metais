@@ -45,6 +45,7 @@ case "${1:-}" in
 	;;
 esac
 
+. "$(dirname "$0")/git-env.sh" || exit 2
 root=$(git rev-parse --show-toplevel 2>/dev/null) || {
 	echo "merge-check: not inside a git checkout" >&2
 	exit 2

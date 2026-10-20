@@ -142,6 +142,14 @@ the highest `MTS-AUT` number in HEAD's tree, so no statement the
 specification assigns can take them. A new generated file needs a line in
 `.gitattributes` and a step in `regenerate.sh`, in the change that adds it.
 
+**The scripts' git takes nothing from the host's configuration.** Every
+script that runs git sources `git-env.sh` first. It drops the caller's
+`GIT_*` variables, reads no system or global configuration, attributes or
+excludes file, and turns `core.precomposeunicode` off, which git on darwin
+writes into every repository it creates. The go command's git inherits it.
+A test that runs git gives it the same environment through
+`internal/testenv`'s `GitEnv`.
+
 ## When to run it: once, last, right before merge
 
 The scoped tier takes minutes, and most of them go to the packages your

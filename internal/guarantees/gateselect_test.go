@@ -43,6 +43,7 @@ func runGateSelect(t *testing.T, dir string, args ...string) []string {
 	}
 	cmd := exec.Command("bash", append([]string{script}, args...)...)
 	cmd.Dir = dir
+	cmd.Env = testenv.GitEnv(os.Environ())
 	out, err := cmd.Output()
 	if err != nil {
 		t.Fatalf("gate-select.sh %s: %v\n%s", strings.Join(args, " "), err, out)
@@ -141,12 +142,42 @@ func TestGateSelectReach(t *testing.T) {
 // the deleted one is its control, which reaches nothing, so the planted
 // file alone reaches the packages its probe names.
 func TestGateSelectWorkingTree(t *testing.T) {
+	gateSelectWorkingTree(t)
+}
+
+// TestGateSelectWorkingTreeHostGit runs TestGateSelectWorkingTree's case
+// under a host's git configuration that would change its result if any git
+// the test or the selector runs read it: a global excludes file that
+// ignores every file, the planted one included, and, from the environment,
+// core.precomposeunicode on, which fails every git that reads a directory
+// holding a non-ASCII name on a darwin host whose iconv cannot convert from
+// UTF-8-MAC.
+func TestGateSelectWorkingTreeHostGit(t *testing.T) {
+	needGateTools(t)
+	dir := testenv.Dir(t)
+	ignore, global := filepath.Join(dir, "ignore"), filepath.Join(dir, "gitconfig")
+	if err := os.WriteFile(ignore, []byte("*\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(global, []byte("[core]\n\texcludesFile = "+ignore+"\n\tprecomposeUnicode = true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("GIT_CONFIG_GLOBAL", global)
+	t.Setenv("GIT_CONFIG_COUNT", "1")
+	t.Setenv("GIT_CONFIG_KEY_0", "core.precomposeunicode")
+	t.Setenv("GIT_CONFIG_VALUE_0", "true")
+	gateSelectWorkingTree(t)
+}
+
+func gateSelectWorkingTree(t *testing.T) {
+	t.Helper()
 	needGateTools(t)
 	probes := reachProbes(t)
 	planted, deleted := probes[0], probes[len(probes)-1].path
 	clone := filepath.Join(testenv.Dir(t), "clone")
 	cmd := exec.Command("git", "clone", "-q", "--no-local", ".", clone)
 	cmd.Dir = moduleRoot
+	cmd.Env = testenv.GitEnv(os.Environ())
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("git clone: %v\n%s", err, out)
 	}

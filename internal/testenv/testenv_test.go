@@ -6,6 +6,8 @@ package testenv
 import (
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 	"testing"
 )
 
@@ -52,6 +54,51 @@ func TestDir(t *testing.T) {
 	for _, d := range []string{a, b} {
 		if _, err := os.Stat(d); !os.IsNotExist(err) {
 			t.Errorf("directory %q still exists after its test: %v", d, err)
+		}
+	}
+}
+
+func TestGitEnv(t *testing.T) {
+	in := []string{
+		"PATH=/bin", "HOME=/home/x", "GIT_DIR=/elsewhere", "GIT_CONFIG_PARAMETERS='core.bare'='true'",
+		"GIT_CONFIG_COUNT=1", "GIT_CONFIG_KEY_0=core.precomposeunicode", "GIT_CONFIG_VALUE_0=true",
+		"GIT_CONFIG_GLOBAL=/home/x/.gitconfig",
+	}
+	got := GitEnv(slices.Clone(in))
+	for _, kv := range []string{"PATH=/bin", "HOME=/home/x"} {
+		if !slices.Contains(got, kv) {
+			t.Errorf("GitEnv dropped %s: %q", kv, got)
+		}
+	}
+	want := map[string]string{
+		"GIT_CONFIG_NOSYSTEM": "1",
+		"GIT_ATTR_NOSYSTEM":   "1",
+		"GIT_CONFIG_GLOBAL":   os.DevNull,
+		"GIT_CONFIG_COUNT":    "3",
+		"GIT_CONFIG_KEY_0":    "core.precomposeunicode",
+		"GIT_CONFIG_VALUE_0":  "false",
+		"GIT_CONFIG_KEY_1":    "core.excludesFile",
+		"GIT_CONFIG_VALUE_1":  os.DevNull,
+		"GIT_CONFIG_KEY_2":    "core.attributesFile",
+		"GIT_CONFIG_VALUE_2":  os.DevNull,
+	}
+	seen := map[string]bool{}
+	for _, kv := range got {
+		k, v, _ := strings.Cut(kv, "=")
+		if !strings.HasPrefix(k, "GIT_") {
+			continue
+		}
+		if seen[k] {
+			t.Errorf("GitEnv sets %s twice: %q", k, got)
+		}
+		seen[k] = true
+		if w, ok := want[k]; !ok || v != w {
+			t.Errorf("GitEnv gives %s, want %s=%s", kv, k, w)
+		}
+	}
+	for k := range want {
+		if !seen[k] {
+			t.Errorf("GitEnv does not set %s: %q", k, got)
 		}
 	}
 }
