@@ -1422,6 +1422,58 @@ checks before the library sees a schema). No dependency changes.
    suite is what shows that they still do after a library update
    (ADR-010 D3 item 5).
 
+### A2 — The release builder is allowed host access in its own package, and the binary can never reach it
+
+**Status:** Accepted 2026-10-20 by Ed Funnekotter, in design session
+`01a1566e-2786-7173-84ff-c1485fcf8cdf` (PLAN-2026-10-metais-v1, W6-A0).
+**Amends:** D16 item 3's symbol rule (one allow-list entry), and the
+`only-referrers` rule of `internal/guarantees/layers.json` (one package
+added). It adds one `never-depends` rule. ADR-010 D2 and D12 are
+unchanged: the builder stays at `internal/tools/release`, in the module.
+
+1. **The allowance.** The symbol rule's allow-list gains
+   `internal/tools/release` and the packages beneath it, for exactly
+   these symbols:
+   - `os/exec`, to run `go build`, `go version -m` and `git`;
+   - the environment reads `os.Environ`, `os.Getenv` and `os.LookupEnv`,
+     to hand each build its own `GOCACHE`, `GOOS`, `GOARCH`, `GOAMD64`,
+     `GOARM64` and `CGO_ENABLED`;
+   - every `os` file function, `os.TempDir` and `os.MkdirTemp`, to build
+     in fresh directories and to write `dist/`;
+   - `os.Args`, `os.Stdin`, `os.Stdout`, `os.Stderr` and `os.Exit`, because
+     the builder is a `main` package run with `go run`.
+2. **What it does not allow.** The clock (`time.Now`, `time.Since`,
+   `time.Until`, timers and tickers), the random sources, `os/user`,
+   `os.Hostname`, the process identity and the working-directory symbols
+   stay refused in the builder as everywhere else. The archives' instant
+   is ADR-001's fixed instant (ADR-010 D12 item 5), so the builder never
+   needs the clock. A random source stays refused with no exception (D12).
+3. **Why the builder may have it.** The builder is a developer's tool,
+   run with `go run` from a checkout. It is never linked into `metais`,
+   and nothing it reads can reach a template, an output or a finding,
+   because it never runs a package. Without these symbols it cannot do
+   what ADR-010 D12 item 4 requires: build twice, compare, and refuse a
+   dirty tree.
+4. **The proof that the binary cannot reach it.** `layers.json` gains a
+   `never-depends` rule: `github.com/kottera/metais/cmd/metais` depends,
+   directly or through another package, on nothing matching
+   `github.com/kottera/metais/internal/tools/...`. The import rule already
+   covers only `cmd/metais`'s closure, so it was never at risk. This rule
+   makes the reason the allowance is safe a test, so it can never become
+   false unnoticed.
+5. **The `only-referrers` rule** for `os.Args`, `os.Stdin`, `os.Stdout`,
+   `os.Stderr` and `os.Exit` names `internal/tools/release` beside
+   `cmd/metais`, for the same reason as item 1's last entry.
+6. **The allow-list stays exact.** `TestModuleAllowListIsR2143` pins the
+   module allow-list to R2-143 together with this amendment's entry. An
+   entry that no longer matches a hit still fails.
+7. **The tripwire keeps its reach.** Every other non-test file of the
+   module stays under the symbol rule. Two alternatives were rejected:
+   - scoping the rule to `cmd/metais`'s closure, which would stop guarding
+     any future module code outside it;
+   - moving the builder to its own module, which would add a second
+     `go.mod` and a second gate for one tool.
+
 ## Implementation log
 
 This log is this section together with the entry files in

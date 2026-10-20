@@ -1468,8 +1468,12 @@ A release can be built.
   - Rather than stop the train, Wave 6 verifies and closes without W6-13.
     §12's release-builder acceptance is unmet in Wave 6, and it carries to
     Wave 7.
-  - Wave 7 builds the release builder only once Ed has ruled. His ruling is
-    recorded here when it comes.
+  - Wave 7 builds the release builder only once Ed has ruled.
+- **Ed's ruling on the release builder** (2026-10-20, design session
+  `01a1566e-2786-7173-84ff-c1485fcf8cdf`): option (A), ADR-009 Amendment
+  A2. `internal/tools/release` is allowed `os/exec`, the environment reads,
+  the file functions and a `main`'s streams, in its own package only. A
+  `never-depends` rule proves that `cmd/metais` can never reach it.
 
 **Verdict (2026-10-20): complete, with the release builder carried to
 Wave 7.**
@@ -1634,9 +1638,11 @@ specification's 1.0 text is complete and ready for the release act.
   - The same applies to `output.destination.write_failed`, if no existing
     setup reaches it.
   - The unwired list ends empty, with no exemption list.
-- **The release builder remains held** for Ed's design session
-  `01a1566e-2786-7173-84ff-c1485fcf8cdf`. His ruling is recorded here when
-  it comes.
+- **The release builder is released** by Ed's ruling of 2026-10-20 in
+  design session `01a1566e-2786-7173-84ff-c1485fcf8cdf`: ADR-009 Amendment
+  A2. W7-R builds it under A2. It lands A2's allow-list entry, the
+  `only-referrers` addition and the `never-depends` rule with the builder,
+  each seen red without its change first.
 - **The release builder's fate is settled at the wave's end** (plan
   orchestrator, 2026-10-20). If Ed's ruling is still absent when the §4.1
   and §4.2 packages have merged, W7-R is cancelled. The release builder
