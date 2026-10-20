@@ -145,7 +145,7 @@ warning located at the name.
 
 <a id="mts-aut-022"></a>**MTS-AUT-022** With the combined schema made, a
 check MUST report a collection input whose schema's declared type set
-([chapter 5](05-data-specification.md)) holds no `array`, or that declares
+([chapter 6](06-supplying-inputs.md) §6.7) holds no `array`, or that declares
 no item schema, as `manifest.input.collection_shape`; and each form an
 input declares that disagrees with the declared type set of the schema a
 file of it holds — the input's, or a collection's item schema — as
@@ -421,8 +421,8 @@ neither a change to the package nor a new tool changes what an example
 expects.
 
 An example is a directory `examples/<name>/` whose name follows the rule
-for an input's name ([chapter 3](03-manifest.md)). It holds `inputs/`,
-laid out as a data directory ([chapter 6](06-supplying-inputs.md)) and
+for an input's name ([chapter 5](05-data-specification.md) §5.1). It holds
+`inputs/`, laid out as a data directory ([chapter 6](06-supplying-inputs.md)) and
 absent for an example that supplies nothing; `expected/`, optional, laid
 out as the output directory a render writes; and `example.yaml`, optional
 ([MTS-AUT-020](#mts-aut-020) refuses anything else). A packed package
@@ -595,8 +595,8 @@ pack MUST run the test of §13.7 over every example. When an example fails,
 pack MUST report every finding of the check and of the test, and MUST
 write nothing.
 
-<a id="mts-aut-046"></a>**MTS-AUT-046** A warning or a note of the check or
-the test MUST be reported and MUST NOT stop pack.
+<a id="mts-aut-046"></a>**MTS-AUT-046** A finding of warning or info
+severity of the check or the test MUST be reported and MUST NOT stop pack.
 
 <a id="mts-aut-047"></a>**MTS-AUT-047** Pack MUST write exactly the source
 directory's entries ([MTS-PKG-021](02-container.md#mts-pkg-021)) and

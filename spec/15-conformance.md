@@ -61,7 +61,7 @@ operation a vector uses, with its arguments and results.
 | Operation | Class | Arguments | Results | Defined in |
 |---|---|---|---|---|
 | `open` | processor | `package`; `limits` | `ok`, findings | [chapter 2](02-container.md) §2.6, [chapter 14](14-security.md) |
-| `validate` | processor | `package`; the supply arguments: `data`, `set`, `set_json`, `inputs_json`; `limits` | `ok`, findings | [chapter 5](05-data-specification.md) §5.2, [chapter 6](06-supplying-inputs.md) |
+| `validate` | processor | `package`; the supply arguments: `data`, `set`, `set_json`, `inputs_json`; `limits` | `ok`, findings | [chapter 5](05-data-specification.md) §5.3, [chapter 6](06-supplying-inputs.md) |
 | `render` | processor; authoring tool with `sample` | `package`; the supply arguments; one of `out` and `stream`; `only`, `overwrite`, `dry_run`, `fail_on`, `now`, `sample`, `limits` | `ok`, findings, the tree written at `out` or the bytes streamed, and with `dry_run` the listing | [chapter 11](11-rendering.md), [chapter 13](13-authoring.md) §13.6 |
 | `check` | authoring tool | `source`; `limits` | `ok`, findings | [chapter 13](13-authoring.md) §13.1 to §13.4 |
 | `test` | authoring tool | `source`; `examples`, `limits` | `ok`, findings | [chapter 13](13-authoring.md) §13.7 |
@@ -122,8 +122,9 @@ perform each operation of the classes it claims with the arguments this
 section lists, each as the chapter that owns the operation defines it, and
 MUST give the results this section lists for it: the findings in chapter
 12's order; the trees and the package file it writes, at the paths its
-arguments name; a render's streamed bytes; and a dry run's listing, of which
-the suite compares each record's `path`, `size` and `digest`.
+arguments name; a render's streamed bytes; and a dry run's listing, each
+record with the members [MTS-RND-009](11-rendering.md#mts-rnd-009) gives
+it.
 
 > **Note.** `metais` performs each operation as one command of its command
 > line, which the reference runner's `cli` adapter maps, so every vector
@@ -226,12 +227,14 @@ statement grants a freedom:
 - An archive stream is compared by its members (order, path, type, mode,
   owner, group, modification time, size and content), and a selected file
   byte for byte, or by entries when it is a container.
-- A dry run's listing is compared exactly, but only the path of a container
-  named in it.
+- A dry run's listing is compared exactly, record by record and member by
+  member, but only the path of a container the step names in it.
 - Every process the step starts stays within the step's bounds: 10 seconds
   of CPU time, 1024 MiB of peak resident memory and 120 seconds of wall
   clock, unless the step lowers them, read from the process's own resource
-  usage. A process that ends in a crash fails the step.
+  usage. A process that crashes fails the step: for a Go program, one that
+  exits through a panic or a fatal runtime error, whose standard error
+  holds the runtime's traceback.
 - The step gives the same results in both environments of §15.5, and none
   of its outputs carries the sentinel of environment A.
 

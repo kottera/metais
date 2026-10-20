@@ -9,12 +9,45 @@ it asserts, how a schema's references stay inside the package, the meaning
 documents that explain an input in prose, and the combined schema a packed
 package carries for all of its inputs.
 
-## 5.1 Input schemas at open
+## 5.1 The inputs section
+
+A package's inputs are declared in the manifest's `inputs` member
+([chapter 3](03-manifest.md)), an array of input declarations in the order a
+supplier meets them; it may be empty. Each declaration is an object with
+these members, in no required order:
+
+| Member | Required | Value |
+|---|---|---|
+| `name` | yes | the input's name: a lower-case letter, then up to 63 lower-case letters, digits and `_`, and none of `blank`, `empty`, `false`, `first`, `last`, `nil`, `null`, `size` and `true`, which Liquid reserves |
+| `title` | yes | what the input is, in brief: a line of 1 to 200 characters ([chapter 3](03-manifest.md) §3.4) |
+| `description` | no | what the input means, as prose (§3.4) |
+| `schema` | yes | the package path of the input's schema file, beneath `inputs/`, ending `.json`, `.yaml` or `.yml` (§5.2) |
+| `meaning` | no | the package path of the input's meaning document, beneath `inputs/`, ending `.md` |
+| `forms` | no | the forms the input may be supplied in, each at most once, of `json`, `yaml`, `csv`, `text` and `markdown` ([chapter 6](06-supplying-inputs.md)); omitted, `json` and `yaml` |
+| `csv` | no | how a CSV file of the input is read: an object whose one member, `delimiter`, is `,`, `;`, `\|` or a tab; allowed only when `forms` holds `csv` |
+| `collection` | no | `true` for a collection input, an array supplied as a directory of item files ([chapter 6](06-supplying-inputs.md) §6.8); omitted, `false` |
+| `required` | no | `false` for an input a supplier may leave out; omitted, `true` |
+
+The manifest schema ([chapter 3](03-manifest.md) §3.5) holds a declaration
+to this table, and the inputs' names are unique
+([MTS-MAN-016](03-manifest.md#mts-man-016)). A name is how a template reads
+the input (`inputs.<name>`, [chapter 7](07-template-environment.md)), how a
+data directory's file supplies it (§6.9), and the first token of a path set
+(§6.10).
+
+An input's schema says what shape its data has; its meaning document says
+what the data is for. A meaning document is CommonMark
+([CommonMark](A-references.md#commonmark)) prose for the supplier: what the
+input describes, and what good data looks like. A processor does not
+interpret it. The package's guide says how the inputs relate and in which
+order to gather them.
+
+## 5.2 Input schemas at open
 
 A package's inputs are declared in the manifest's `inputs` member, an ordered
 list of named slots, each naming the package path of its schema under
 `inputs/`. This section states what a processor checks of the schemas when it
-opens a package; §5.2 states how supplied inputs are validated against them,
+opens a package; §5.3 states how supplied inputs are validated against them,
 and [chapter 6](06-supplying-inputs.md) how inputs are supplied.
 
 <a id="mts-dat-001"></a>**MTS-DAT-001** Every `.json`, `.yaml` and `.yml` file
@@ -69,7 +102,7 @@ reference to its retrieval URI with `schema.ref_by_path`; and two resources
 MUST NOT have one canonical URI, which a processor refuses with
 `schema.id_duplicate`.
 
-### 5.1.1 The combined schema
+### 5.2.1 The combined schema
 
 <a id="mts-dat-009"></a>**MTS-DAT-009** `.compiled/schema.json` MUST be the
 canonical JSON ([chapter 3](03-manifest.md)) of one object schema with a
@@ -85,11 +118,11 @@ and `$schema` set, a YAML file as the JSON of its value and a boolean schema
 as `{}` or `{"not": {}}`. No reference inside an embedded resource is
 rewritten.
 
-## 5.2 Validating supplied inputs
+## 5.3 Validating supplied inputs
 
 The inputs a supplier gives are assembled into one inputs object, a member per
 input that has a value ([chapter 6](06-supplying-inputs.md)), and that object
-is validated against the combined schema of §5.1.1, which names every input,
+is validated against the combined schema of §5.2.1, which names every input,
 says which are required, and holds the input constraints. A failure is
 reported by the finding [chapter 12](12-findings.md) maps its keyword to.
 
@@ -100,7 +133,7 @@ its schema by its keyword's finding, and MUST report every failure the
 validation meets, not only the first.
 
 <a id="mts-dat-011"></a>**MTS-DAT-011** A processor MUST assert each `format`
-of §5.1 on the strings of the inputs, by the definition JSON Schema's
+of §5.2 on the strings of the inputs, by the definition JSON Schema's
 validation §7.3 cites for it, and MUST report a string that is not of its
 format with `input.format`; a value that is not a string passes. Where those
 definitions leave a choice: `date-time`'s `T` and `Z`, and `time`'s `Z`, may be

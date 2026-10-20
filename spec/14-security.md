@@ -255,6 +255,7 @@ limit is.
 | `assign-bytes` | 512 MiB | the bytes `assign` and `capture` store in one render, summed |
 | `schema-work` | 100,000,000 units | the validations of one operation, summed |
 | `outputs` | 100,000 | the files one render plans |
+| `container-depth` | 3 | the containers an output nests one inside another, the outermost counting as the first ([chapter 10](10-transforms.md)) |
 | `output-size` | 256 MiB | one file a render writes |
 | `output-total` | 1 GiB | every byte one render writes |
 
@@ -334,8 +335,9 @@ longer, in bytes, than `pattern-length`, or whose program has more
 instructions than `regex-program`, with `limit.package` located at the file
 and JSON Pointer of its `pattern` or `patternProperties` member, observing
 the length or the count, before it matches anything. A pattern's program is
-the one Go's `regexp/syntax` package compiles from the pattern translated to
-its syntax, simplified.
+the one Go's `regexp/syntax` package
+([Go regexp/syntax](A-references.md#go-regexp-syntax)) compiles from the
+pattern translated to its syntax, simplified.
 
 ## 14.8 Output confinement
 

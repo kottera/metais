@@ -69,6 +69,9 @@ background only.
   Specifications Issue 7*, IEEE Std 1003.1-2017, 2018 edition, the `pax`
   utility's pax interchange format and its ustar format —
   https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html
+- <a id="go-regexp-syntax"></a>**[Go regexp/syntax]** The Go Authors,
+  *Package regexp/syntax*, Go 1.26.9, the program `Compile` builds from a
+  simplified `Regexp` — https://pkg.go.dev/regexp/syntax@go1.26.9
 - <a id="ecma262"></a>**[ECMA-262]** Ecma International, *ECMAScript Language
   Specification*, `Number::toString` (§6.1.6.1.20) —
   https://tc39.es/ecma262/
