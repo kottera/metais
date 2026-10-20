@@ -299,6 +299,7 @@ func declarations() []*Command {
 			},
 			run: runLimits,
 		},
+		skillDeclaration(),
 		{
 			Name: "help", Group: "The tool", Synopsis: "help [<command> | <topic> [<command>]] [--json]",
 			Description: "Print the overview, a command's help, or a topic.",

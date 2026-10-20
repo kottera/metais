@@ -35,6 +35,10 @@ const (
 	CodeUsageArchiveToTerminal Code = "usage.archive_to_terminal"
 	CodeUsageNotSourceDir      Code = "usage.not_a_source_directory"
 	CodeUsageFlagRequires      Code = "usage.flag_requires"
+	CodeUsageHarnessRequired   Code = "usage.harness_required"
+	CodeUsageNotRepositoryRoot Code = "usage.not_repository_root"
+	CodeUsageSkillEdited       Code = "usage.skill_edited"
+	CodeUsageUnexpandedTilde   Code = "usage.unexpanded_tilde"
 )
 
 // usageCodes are the usage family's registry entries, in code order.
@@ -195,6 +199,20 @@ var usageCodes = []Entry{
 		Statements: []string{},
 	},
 	{
+		Code:     CodeUsageHarnessRequired,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "found", Type: TypeString, Meaning: "Which of .claude/ and .agents/ the directory holds: neither, or both.", Always: true},
+		},
+		Message:    "metais skill needs direction: no --harness is given, and the directory holds {found} of .claude/ and .agents/, so it does not settle which harness to write the skill for.",
+		Hint:       "Name the harness with --harness: claude, codex, gemini, cursor or opencode. Give --harness once for each of .claude/ and .agents/ to write both.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
 		Code:     CodeUsageIsADirectory,
 		Severity: SeverityError,
 		Class:    ClassUsage,
@@ -335,6 +353,17 @@ var usageCodes = []Entry{
 		Statements: []string{},
 	},
 	{
+		Code:       CodeUsageNotRepositoryRoot,
+		Severity:   SeverityWarning,
+		Class:      ClassUsage,
+		Subject:    SubjectInvocation,
+		Message:    "The directory metais skill wrote into holds no .git entry: a harness started in it or below it finds the skill, and one started at the repository's top level does not.",
+		Hint:       "To serve the whole repository, run metais skill at its top level. With --dir ~, for your own scope, this is expected.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
 		Code:     CodeUsageNotText,
 		Severity: SeverityError,
 		Class:    ClassUsage,
@@ -374,6 +403,34 @@ var usageCodes = []Entry{
 		},
 		Message:    "{flag} is given again at argument {argument}; it may be given only once.",
 		Hint:       "Give {flag} once: a repeated flag is refused rather than letting the last one win.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageSkillEdited,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "path", Type: TypeString, Meaning: "The skill file's path, relative to the directory.", Always: true},
+		},
+		Message:    "The skill at {path} is not a copy metais wrote, or was edited since, so it was left as it is.",
+		Hint:       "Compare it with `metais skill --print`, and give --overwrite to replace it.",
+		Span:       SpanNone,
+		Since:      "1.0",
+		Statements: []string{},
+	},
+	{
+		Code:     CodeUsageUnexpandedTilde,
+		Severity: SeverityError,
+		Class:    ClassUsage,
+		Subject:  SubjectInvocation,
+		Params: []ParamSpec{
+			{Name: "argument", Type: TypeNumber, Meaning: "The 1-based position of --dir's value among the arguments after metais.", Always: true},
+		},
+		Message:    "Argument {argument} gives --dir a path whose first element is a literal ~, which the shell did not expand.",
+		Hint:       "A shell expands ~ only at the start of a word, so --dir=~ reaches metais unexpanded: write --dir ~ with a space, or the directory's path. A directory named ~ is written ./~.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},

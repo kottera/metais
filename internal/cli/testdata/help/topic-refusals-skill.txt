@@ -1,0 +1,34 @@
+metais help refusals skill — Every code metais skill may refuse with, and its
+next step.
+
+Next: metais skill --print
+      Prints the skill, to compare or to write where you choose.
+  output.destination.link
+
+Next: metais skill
+      Writes the skill again once the cause is fixed.
+  output.destination.not_directory
+  output.destination.not_regular_file
+  output.destination.nothing_written
+  output.destination.write_failed
+
+Next: metais skill --help
+      Prints the operands and flags metais skill takes.
+  usage.bad_value
+  usage.flag_excluded
+  usage.repeated_flag
+  usage.unexpected_operand
+  usage.unknown_flag
+
+Next: metais skill --harness claude
+      Writes the skill for Claude Code.
+  usage.harness_required
+
+Next: metais skill --overwrite
+      Replaces the copy found with this version's skill.
+  usage.skill_edited
+
+Next: metais skill --dir ~
+      Writes the skill beneath your home directory, which the shell expands when
+      ~ stands alone.
+  usage.unexpanded_tilde

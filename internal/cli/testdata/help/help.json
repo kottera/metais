@@ -21381,6 +21381,242 @@
         ]
       },
       {
+        "name": "skill",
+        "group": "The tool",
+        "synopsis": "metais skill [--harness <name>]... [--dir <dir>] [--overwrite] [--dry-run] [--print] [--json]",
+        "description": "Write metais's agent skill, which teaches a coding agent the golden paths, where the agent's harness reads skills.",
+        "detail": "Writes SKILL.md, the skill a coding agent's harness loads before its first command, to .claude/skills/metais/ for Claude Code, or to .agents/skills/metais/ for Codex, Gemini CLI, Cursor and OpenCode, beneath the directory --dir names: the current directory when it is omitted. The skill's text is part of metais and versioned with it.\n\nWithout --harness, the harness is the one the directory shows: .claude/ or .agents/. When it holds neither, or both, metais skill writes nothing and asks for --harness. Both directories are written only when --harness names a harness of each.\n\nA harness finds a project's skills from the directory it starts in up to the repository's top level, so run metais skill there; a directory with no .git entry gets a warning. For every project of your own, write --dir ~, with a space: a shell does not expand the ~ of --dir=~.\n\nEach SKILL.md ends with a line naming the version that wrote it and the digest of the text above it. Running metais skill again replaces a copy metais wrote that nobody edited, when its version or text differs, and leaves an edited copy as it is unless --overwrite is given. --dry-run reports what each target needs, so it says whether the skill is current.",
+        "opens_package": false,
+        "role": "none",
+        "operands": [],
+        "flags": [
+          {
+            "name": "--harness",
+            "short": null,
+            "value": "<name>",
+            "values": [
+              "claude",
+              "codex",
+              "gemini",
+              "cursor",
+              "opencode"
+            ],
+            "default": null,
+            "repeatable": true,
+            "required": false,
+            "description": "The harness to write the skill for: claude writes .claude/skills, and codex, gemini, cursor and opencode write .agents/skills. Detected from the directory when omitted."
+          },
+          {
+            "name": "--dir",
+            "short": null,
+            "value": "<dir>",
+            "values": null,
+            "default": null,
+            "repeatable": false,
+            "required": false,
+            "description": "The existing directory to write beneath, the current directory when omitted: a repository's top level, or ~ for your own scope, written --dir ~ with a space."
+          },
+          {
+            "name": "--overwrite",
+            "short": null,
+            "value": null,
+            "values": null,
+            "default": null,
+            "repeatable": false,
+            "required": false,
+            "description": "Replace a skill someone edited, or one metais did not write."
+          },
+          {
+            "name": "--dry-run",
+            "short": null,
+            "value": null,
+            "values": null,
+            "default": null,
+            "repeatable": false,
+            "required": false,
+            "description": "Report what each target needs, and write nothing."
+          },
+          {
+            "name": "--print",
+            "short": null,
+            "value": null,
+            "values": null,
+            "default": null,
+            "repeatable": false,
+            "required": false,
+            "description": "Print the skill to standard output, and write nothing; it takes no other flag but --json."
+          },
+          {
+            "name": "--json",
+            "short": null,
+            "value": null,
+            "values": null,
+            "default": null,
+            "repeatable": false,
+            "required": false,
+            "description": "Print the result as one JSON document on standard output."
+          },
+          {
+            "name": "--color",
+            "short": null,
+            "value": "<when>",
+            "values": [
+              "auto",
+              "always",
+              "never"
+            ],
+            "default": "auto",
+            "repeatable": false,
+            "required": false,
+            "description": "Colour human output: auto colours a stream that is a terminal when NO_COLOR is unset or empty; always and never override NO_COLOR."
+          },
+          {
+            "name": "--help",
+            "short": "-h",
+            "value": null,
+            "values": null,
+            "default": null,
+            "repeatable": false,
+            "required": false,
+            "description": "Print help to standard output and exit 0; nothing else runs."
+          }
+        ],
+        "format": "metais.skill/1",
+        "prints": "Each SKILL.md written, or that would be, with what was done to it and the harnesses that read it; with --print, the skill itself.",
+        "refusals": [
+          {
+            "code": "output.destination.link",
+            "cause": "A symbolic link stands at, or above, a target beneath the directory.",
+            "next": {
+              "run": "metais skill --print",
+              "why": "Prints the skill, to compare or to write where you choose."
+            }
+          },
+          {
+            "code": "output.destination.not_directory",
+            "cause": "The directory, or a directory a target needs, is not a directory.",
+            "next": {
+              "run": "metais skill",
+              "why": "Writes the skill again once the cause is fixed."
+            }
+          },
+          {
+            "code": "output.destination.not_regular_file",
+            "cause": "A directory or special file stands at a target's SKILL.md.",
+            "next": {
+              "run": "metais skill",
+              "why": "Writes the skill again once the cause is fixed."
+            }
+          },
+          {
+            "code": "output.destination.nothing_written",
+            "cause": "The directory cannot be opened, or a write failed before any target was written.",
+            "next": {
+              "run": "metais skill",
+              "why": "Writes the skill again once the cause is fixed."
+            }
+          },
+          {
+            "code": "output.destination.write_failed",
+            "cause": "A write failed after another target was written, which is left in place.",
+            "next": {
+              "run": "metais skill",
+              "why": "Writes the skill again once the cause is fixed."
+            }
+          },
+          {
+            "code": "usage.bad_value",
+            "cause": "A flag's value is missing, or is not one the flag accepts, or a flag that takes no value is given one.",
+            "next": {
+              "run": "metais skill --help",
+              "why": "Prints the operands and flags metais skill takes."
+            }
+          },
+          {
+            "code": "usage.flag_excluded",
+            "cause": "--print is given with another of metais skill's flags.",
+            "next": {
+              "run": "metais skill --help",
+              "why": "Prints the operands and flags metais skill takes."
+            }
+          },
+          {
+            "code": "usage.harness_required",
+            "cause": "No --harness is given, and the directory holds neither or both of .claude/ and .agents/.",
+            "next": {
+              "run": "metais skill --harness claude",
+              "why": "Writes the skill for Claude Code."
+            }
+          },
+          {
+            "code": "usage.repeated_flag",
+            "cause": "A flag that may be given once is given again.",
+            "next": {
+              "run": "metais skill --help",
+              "why": "Prints the operands and flags metais skill takes."
+            }
+          },
+          {
+            "code": "usage.skill_edited",
+            "cause": "A SKILL.md metais did not write, or one edited since, stands at a target.",
+            "next": {
+              "run": "metais skill --overwrite",
+              "why": "Replaces the copy found with this version's skill."
+            }
+          },
+          {
+            "code": "usage.unexpanded_tilde",
+            "cause": "--dir's value begins with a literal ~, as --dir=~ gives it.",
+            "next": {
+              "run": "metais skill --dir ~",
+              "why": "Writes the skill beneath your home directory, which the shell expands when ~ stands alone."
+            }
+          },
+          {
+            "code": "usage.unexpected_operand",
+            "cause": "An operand the command does not take.",
+            "next": {
+              "run": "metais skill --help",
+              "why": "Prints the operands and flags metais skill takes."
+            }
+          },
+          {
+            "code": "usage.unknown_flag",
+            "cause": "An argument that is not a flag the command accepts, an abbreviated flag, or one-letter aliases written together.",
+            "next": {
+              "run": "metais skill --help",
+              "why": "Prints the operands and flags metais skill takes."
+            }
+          }
+        ],
+        "examples": [
+          {
+            "run": "metais skill --harness claude",
+            "why": "Writes .claude/skills/metais/SKILL.md beneath the current directory, for Claude Code."
+          },
+          {
+            "run": "metais skill",
+            "why": "Writes the skill for the harness the current directory shows, .claude/ or .agents/."
+          },
+          {
+            "run": "metais skill --harness claude --harness codex",
+            "why": "Writes it for Claude Code and for the harnesses that read .agents/skills."
+          },
+          {
+            "run": "metais skill --harness claude --dir ~",
+            "why": "Writes it to ~/.claude/skills, for every project of yours."
+          },
+          {
+            "run": "metais skill --dry-run",
+            "why": "Reports whether the skill is current, and writes nothing."
+          },
+          {
+            "run": "metais skill --print",
+            "why": "Prints the skill, for a harness that reads skills from somewhere else."
+          }
+        ]
+      },
+      {
         "name": "help",
         "group": "The tool",
         "synopsis": "metais help [<command> | <topic> [<command>]] [--json]",
@@ -21608,7 +21844,7 @@
       {
         "name": "json",
         "title": "The JSON document every command prints with --json.",
-        "text": "With --json, a run prints exactly one JSON document on standard output: compact\nUTF-8 with no byte order mark, one line ending in one LF, HTML escaping off, and\nstandard error empty. Its members are always present, in this order:\n\n  format    The document's name and major version, metais.<command>/<major>.\n  ok        True when the command completed and no finding is an error.\n  findings  The findings, in the specification's order; [] when there are none.\n            A usage error is a finding too.\n  summary   The exact counts of errors, warnings and info, how many findings are\n            listed and omitted, and the count of each code.\n  result    The command's result, or null when it was refused before producing\n            one.\n  next      The commands to run next, each {\"run\", \"why\"}; [] when there is\n            nothing to suggest, and never empty after a refusal.\n\nThe exit status is the same with and without --json, and --json is honoured even\non a command line that does not parse. Within a major version a format only\ngains members and enumeration values: ignore a member you do not know, and read\nan unknown value as other.\n\nThe formats:\n  metais.inspect/1   metais inspect\n  metais.ls/1        metais ls\n  metais.read/1      metais read\n  metais.outline/1   metais outline\n  metais.grep/1      metais grep\n  metais.schema/1    metais schema\n  metais.extract/1   metais extract\n  metais.validate/1  metais validate\n  metais.render/1    metais render\n  metais.init/1      metais init\n  metais.check/1     metais check\n  metais.sample/1    metais sample\n  metais.test/1      metais test\n  metais.pack/1      metais pack\n  metais.unpack/1    metais unpack\n  metais.version/1   metais version\n  metais.limits/1    metais limits\n  metais.help/1      metais help\n  metais.usage/1     a line that names no command\n"
+        "text": "With --json, a run prints exactly one JSON document on standard output: compact\nUTF-8 with no byte order mark, one line ending in one LF, HTML escaping off, and\nstandard error empty. Its members are always present, in this order:\n\n  format    The document's name and major version, metais.<command>/<major>.\n  ok        True when the command completed and no finding is an error.\n  findings  The findings, in the specification's order; [] when there are none.\n            A usage error is a finding too.\n  summary   The exact counts of errors, warnings and info, how many findings are\n            listed and omitted, and the count of each code.\n  result    The command's result, or null when it was refused before producing\n            one.\n  next      The commands to run next, each {\"run\", \"why\"}; [] when there is\n            nothing to suggest, and never empty after a refusal.\n\nThe exit status is the same with and without --json, and --json is honoured even\non a command line that does not parse. Within a major version a format only\ngains members and enumeration values: ignore a member you do not know, and read\nan unknown value as other.\n\nThe formats:\n  metais.inspect/1   metais inspect\n  metais.ls/1        metais ls\n  metais.read/1      metais read\n  metais.outline/1   metais outline\n  metais.grep/1      metais grep\n  metais.schema/1    metais schema\n  metais.extract/1   metais extract\n  metais.validate/1  metais validate\n  metais.render/1    metais render\n  metais.init/1      metais init\n  metais.check/1     metais check\n  metais.sample/1    metais sample\n  metais.test/1      metais test\n  metais.pack/1      metais pack\n  metais.unpack/1    metais unpack\n  metais.version/1   metais version\n  metais.limits/1    metais limits\n  metais.skill/1     metais skill\n  metais.help/1      metais help\n  metais.usage/1     a line that names no command\n"
       },
       {
         "name": "exit-codes",

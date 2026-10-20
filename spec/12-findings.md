@@ -339,6 +339,7 @@ it, and the statements it reports.
 | `usage.entry_not_found` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.flag_excluded` | error | usage | invocation | `argument`, `command`, `flag`, `other` | 1.0 | — |
 | `usage.flag_requires` | error | usage | invocation | `argument`, `command`, `flag`, `requires` | 1.0 | — |
+| `usage.harness_required` | error | usage | invocation | `found` | 1.0 | — |
 | `usage.is_a_directory` | error | usage | invocation | `argument`, `command` | 1.0 | — |
 | `usage.line_out_of_range` | error | usage | invocation | `argument`, `total` | 1.0 | — |
 | `usage.missing_command` | error | usage | invocation | — | 1.0 | — |
@@ -349,9 +350,12 @@ it, and the statements it reports.
 | `usage.no_match` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.not_a_packed_package` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.not_a_source_directory` | error | usage | invocation | `argument` | 1.0 | — |
+| `usage.not_repository_root` | warning | usage | invocation | — | 1.0 | — |
 | `usage.not_text` | error | usage | invocation | `argument`, `command` | 1.0 | — |
 | `usage.package_from_stdin` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.repeated_flag` | error | usage | invocation | `argument`, `flag` | 1.0 | — |
+| `usage.skill_edited` | error | usage | invocation | `path` | 1.0 | — |
+| `usage.unexpanded_tilde` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.unexpected_operand` | error | usage | invocation | `argument`, `command` | 1.0 | — |
 | `usage.unknown_command` | error | usage | invocation | `argument` | 1.0 | — |
 | `usage.unknown_example` | error | usage | invocation | `argument`, `examples` | 1.0 | — |
