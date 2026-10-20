@@ -33,6 +33,9 @@ type reader struct {
 	// steps counts the characters offsetOf has walked, which a test holds
 	// to the length of the text.
 	steps int
+	// counted is set once src.Values has passed its bound: the value
+	// that passed it is reported, and nothing after it is decoded.
+	counted bool
 }
 
 func newReader(src Source, data []byte, lim limits.Set) *reader {

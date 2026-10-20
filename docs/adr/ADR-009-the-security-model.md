@@ -296,7 +296,9 @@ it at its defaults.
 |---|---|---|---|
 | `input-size` | 32 MiB | one input file, one collection item, one `--inputs-json`, `--set` or `--set-json` value, standard input | parsed values occupy several times their source size |
 | `inputs-total` | 128 MiB | all input bytes one command reads | keeps peak memory within D17's ceiling |
-| `csv-rows` | 1,000,000 | data rows in one CSV input | |
+| `input-values` | 2,000,000 | the data-model values decoded from all of one command's inputs, counted as each reader decodes them (Amendment A4 item 1) | memory spent loading inputs grows with the values decoded, not the bytes read; CALIBRATION |
+| `yaml-size` | 8 MiB | one YAML input file or collection item, refused before it is parsed (Amendment A4 item 2) | yaml/v3 builds the whole node tree, about 160 B a node, before any value can be counted; CALIBRATION |
+| `csv-rows` | 1,000,000 | data rows in one CSV input | `input-values` binds first at the defaults, since each row costs at least two values; `csv-rows` still bounds a CSV when a caller lowers `input-values` (Amendment A4 item 4) |
 | `csv-columns` | 1,024 | fields per record | |
 | `csv-cell` | 1 MiB | one field | |
 | `collection-items` | 100,000 | files in one collection input | a large site |

@@ -37,7 +37,15 @@ func (r *reader) atPtr(n *yaml.Node, pl *place) finding.Location {
 // null: once anything is reported the document is refused, so the value
 // is never used.
 func (r *reader) node(n *yaml.Node, ptr *place, depth int) value.Value {
+	if r.counted {
+		return value.Null{}
+	}
 	ptr.value, ptr.hasValue = r.inFile(r.pos(n)), true
+	if !r.src.Values.Add(1) {
+		r.counted = true
+		r.findings = append(r.findings, r.limit(r.src.Values.ID(), r.atPtr(n, ptr), 0, false))
+		return value.Null{}
+	}
 	r.properties(n, ptr)
 	switch n.Kind {
 	case yaml.AliasNode:

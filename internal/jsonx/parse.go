@@ -135,6 +135,11 @@ func (p *parser) value(pa *path, n *node) value.Value {
 		p.syntaxError(p.i, pa.pointer(), wantValue, foundEnd)
 		return nil
 	}
+	if !p.from.Values.Add(1) {
+		p.limitExceeded(p.from.Values.ID(), p.i, pa.pointer(), true, -1)
+		p.stopped = true
+		return nil
+	}
 	switch c := p.src[p.i]; {
 	case c == '{':
 		return p.object(pa, n)

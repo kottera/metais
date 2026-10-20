@@ -44,6 +44,8 @@ const (
 
 	InputSize
 	InputsTotal
+	InputValues
+	YAMLSize
 	CSVRows
 	CSVColumns
 	CSVCell
@@ -161,6 +163,8 @@ var table = [count]Limit{
 
 	{InputSize, "input-size", 32 * mib, Bytes, ClassData},
 	{InputsTotal, "inputs-total", 128 * mib, Bytes, ClassData},
+	{InputValues, "input-values", 2_000_000, Count, ClassData},
+	{YAMLSize, "yaml-size", 8 * mib, Bytes, ClassData},
 	{CSVRows, "csv-rows", 1_000_000, Count, ClassData},
 	{CSVColumns, "csv-columns", 1_024, Count, ClassData},
 	{CSVCell, "csv-cell", 1 * mib, Bytes, ClassData},
@@ -393,3 +397,39 @@ func (s Set) breach(id ID, observed int64, hasObserved bool) finding.Params {
 	}
 	return p
 }
+
+// Counter counts one limit's units across every reading of one command:
+// input-values, which the readers of all of a command's inputs add to as
+// they decode (Amendment A4 item 1). A nil Counter counts nothing.
+type Counter struct {
+	id    ID
+	bound int64
+	n     int64
+}
+
+// Counter returns a counter of id's units, bounded by id's value in s.
+func (s Set) Counter(id ID) *Counter {
+	s.check(id)
+	return &Counter{id: id, bound: s.value[id]}
+}
+
+// Add counts n more units and reports whether the count is still within
+// the bound. Once it is not, every later Add reports so too.
+func (c *Counter) Add(n int64) bool {
+	if c == nil {
+		return true
+	}
+	c.n += n
+	return c.n <= c.bound
+}
+
+// Count is how many units have been counted.
+func (c *Counter) Count() int64 {
+	if c == nil {
+		return 0
+	}
+	return c.n
+}
+
+// ID is the limit c counts.
+func (c *Counter) ID() ID { return c.id }

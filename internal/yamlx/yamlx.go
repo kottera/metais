@@ -46,6 +46,11 @@ type Source struct {
 	// so a frontmatter's positions count from the first line of its file
 	// (ADR-006 D5 item 6). Zero is line 1.
 	FirstLine int
+	// Values, when set, counts every value the document decodes to, its
+	// root included, against input-values, which a command's inputs share
+	// (ADR-009 Amendment A4 item 1). The reading stops at the value that
+	// passes the bound.
+	Values *limits.Counter
 }
 
 // Doc is a parsed document: its value in the data model and the position
@@ -239,6 +244,9 @@ func (r *reader) parse() (value.Value, []finding.Finding) {
 		if r.manifest {
 			r.add(ruleRootNotMapping, r.at(finding.Pos{}).WithPointer(""), nil)
 			return nil, r.findings
+		}
+		if !r.src.Values.Add(1) {
+			return nil, []finding.Finding{r.limit(r.src.Values.ID(), r.at(finding.Pos{}).WithPointer(""), 0, false)}
 		}
 		return value.Null{}, nil
 	case err != nil:

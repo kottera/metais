@@ -21,6 +21,7 @@ package csv
 
 import (
 	"github.com/kottera/metais/internal/finding"
+	"github.com/kottera/metais/internal/limits"
 )
 
 // Delimiter is the byte that separates the fields of a record: one of
@@ -63,6 +64,12 @@ type Source struct {
 	// At is the origin of the text, with its file. Its Line, Column and
 	// Pointer are ignored.
 	At finding.Location
+	// Values, when set, counts the values the file decodes to against
+	// input-values, which a command's inputs share (ADR-009 Amendment A4
+	// item 1): its array, and each data record's object and each field it
+	// holds, an unquoted empty field being absent. The reading stops at
+	// the record that passes the bound.
+	Values *limits.Counter
 }
 
 // Field is one field of a record (ADR-010 D8 item 2).

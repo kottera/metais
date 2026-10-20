@@ -50,6 +50,11 @@ type Source struct {
 	// PackageSize, bounds a package file and never one document, and
 	// leaves the text an input's, bounded by input-size, or an output's.
 	Size limits.ID
+	// Values, when set, counts every value the text decodes to, its root
+	// included, against input-values, which a command's inputs share
+	// (ADR-009 Amendment A4 item 1). The reading stops at the value that
+	// passes the bound.
+	Values *limits.Counter
 }
 
 // Doc is one parsed JSON text: its value and where each part of it is.

@@ -24,7 +24,7 @@ func FuzzForms(f *testing.F) {
 		for _, in := range l.inputs {
 			loc := finding.Location{Origin: finding.OriginDataDir, File: in.Name}
 			for _, form := range in.Forms {
-				p := l.reader(in, lim).read(data, form, loc, "", []schema.Step{schema.Member(in.Name)})
+				p := l.reader(in, lim, lim.Counter(limits.InputValues)).read(data, form, loc, "", []schema.Step{schema.Member(in.Name)})
 				if p.value == nil && len(p.findings) == 0 {
 					t.Fatalf("%s as %s: no value and no finding", in.Name, form)
 				}

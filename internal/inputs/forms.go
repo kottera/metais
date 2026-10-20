@@ -99,6 +99,7 @@ type reader struct {
 	in     manifest.Input
 	subj   finding.Subject
 	lim    limits.Set
+	values *limits.Counter
 	walker *walker
 }
 
@@ -107,8 +108,14 @@ type reader struct {
 // input's own file, /<index> for a collection's item, and at is the
 // static path of that place, for coercion.
 func (r *reader) read(src []byte, form manifest.Form, loc finding.Location, prefix string, at []schema.Step) parsed {
+	if form == manifest.FormYAML && int64(len(src)) > r.lim.Value(limits.YAMLSize) {
+		// yaml/v3 builds the whole document's tree before any value can
+		// be counted, so a YAML document is bounded by its bytes before it
+		// is parsed (ADR-009 Amendment A4 item 2).
+		return parsed{findings: []finding.Finding{r.lim.Exceeded(limits.YAMLSize, r.subj, loc, int64(len(src)), true)}}
+	}
 	if form == manifest.FormJSON {
-		doc, fs := jsonx.Parse(src, jsonx.Source{Input: r.subj, At: loc}, r.lim)
+		doc, fs := jsonx.Parse(src, jsonx.Source{Input: r.subj, At: loc, Values: r.values}, r.lim)
 		if len(fs) > 0 {
 			return parsed{findings: r.place(fs, prefix)}
 		}
@@ -120,7 +127,7 @@ func (r *reader) read(src []byte, form manifest.Form, loc finding.Location, pref
 	text := bytes.TrimPrefix(src, bom)
 	switch form {
 	case manifest.FormYAML:
-		doc, fs := yamlx.Parse(text, yamlx.Source{Subject: r.subj, At: loc, Size: limits.InputSize}, r.lim)
+		doc, fs := yamlx.Parse(text, yamlx.Source{Subject: r.subj, At: loc, Size: limits.InputSize, Values: r.values}, r.lim)
 		if len(fs) > 0 {
 			return parsed{findings: r.place(fs, prefix)}
 		}
@@ -132,11 +139,24 @@ func (r *reader) read(src []byte, form manifest.Form, loc finding.Location, pref
 		if f, ok := noncharacters(text, r.subj, loc, 1); !ok {
 			return parsed{findings: []finding.Finding{f}}
 		}
+		if f, ok := r.count(1, loc, prefix); !ok {
+			return parsed{findings: []finding.Finding{f}}
+		}
 		return parsed{value: fromValue(str(bytes.TrimSuffix(text, []byte("\n"))), plainLocator{loc})}
 	case manifest.FormMarkdown:
 		return r.markdown(text, loc, prefix)
 	}
 	panic(fmt.Sprintf("inputs: no reader for the form %q", form))
+}
+
+// count counts n values decoded at loc, at the pointer ptr in its input,
+// against input-values, and reports the finding that refuses them when
+// they pass it.
+func (r *reader) count(n int64, loc finding.Location, ptr string) (finding.Finding, bool) {
+	if r.values.Add(n) {
+		return finding.Finding{}, true
+	}
+	return r.lim.Exceeded(limits.InputValues, r.subj, loc.WithPointer(ptr), 0, false), false
 }
 
 // place puts a reader's findings where the file's value is in its input.
@@ -270,7 +290,7 @@ func (r *reader) csv(text []byte, loc finding.Location, prefix string, at []sche
 	if !ok {
 		panic(fmt.Sprintf("inputs: the manifest gave input %s the delimiter %q", r.in.Name, r.in.Delimiter))
 	}
-	table, fs := csv.Read(text, delim, csv.Source{Input: r.subj, At: loc}, r.lim)
+	table, fs := csv.Read(text, delim, csv.Source{Input: r.subj, At: loc, Values: r.values}, r.lim)
 	rejected := map[int]bool{}
 	whole := table.Header == nil
 	for _, f := range fs {
@@ -396,9 +416,15 @@ func (r *reader) markdown(text []byte, loc finding.Location, prefix string) pars
 	}
 	ml := markdownLocator{at: loc, bodyLine: 1}
 	obj := newObject(ml)
-	if front != nil {
+	if front == nil {
+		// The file's object, which a frontmatter's mapping is when it has
+		// one (ADR-009 Amendment A4 item 1).
+		if f, ok := r.count(1, loc, prefix); !ok {
+			return parsed{findings: []finding.Finding{f}}
+		}
+	} else {
 		ml.bodyLine = frontLine + bytes.Count(front, []byte("\n")) + 1
-		doc, fs := yamlx.Parse(front, yamlx.Source{Subject: r.subj, At: loc, Size: limits.FrontmatterSize, FirstLine: frontLine}, r.lim)
+		doc, fs := yamlx.Parse(front, yamlx.Source{Subject: r.subj, At: loc, Size: limits.FrontmatterSize, FirstLine: frontLine, Values: r.values}, r.lim)
 		if len(fs) > 0 {
 			return parsed{findings: r.place(fs, prefix)}
 		}
@@ -427,6 +453,9 @@ func (r *reader) markdown(text []byte, loc finding.Location, prefix string) pars
 		}
 	}
 	if f, ok := noncharacters(body, r.subj, loc, ml.bodyLine); !ok {
+		return parsed{findings: []finding.Finding{f}}
+	}
+	if f, ok := r.count(1, loc.At(finding.Pos{Line: ml.bodyLine, Column: 1}), prefix+finding.Pointer(bodyField)); !ok {
 		return parsed{findings: []finding.Finding{f}}
 	}
 	obj.obj[bodyField] = &node{scalar: str(bytes.TrimSuffix(body, []byte("\n")))}

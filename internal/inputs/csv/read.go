@@ -81,6 +81,10 @@ func (r *reader) pos() finding.Pos { return finding.Pos{Line: r.line, Column: r.
 func (r *reader) file() {
 	sawHeader := false
 	index := 0
+	if !r.from.Values.Add(1) {
+		r.limitExceeded(r.from.Values.ID(), r.pos(), nil)
+		return
+	}
 	for !r.stopped {
 		for !r.eof() && r.src[r.off] == '\n' {
 			r.next()
@@ -111,6 +115,10 @@ func (r *reader) file() {
 			ok = false
 		}
 		if ok {
+			if !r.from.Values.Add(values(fields)) {
+				r.limitExceeded(r.from.Values.ID(), start, r.recordPointer(index))
+				return
+			}
 			r.table.Records = append(r.table.Records, Record{Index: index, Line: line, Fields: fields})
 		}
 		index++
@@ -118,6 +126,19 @@ func (r *reader) file() {
 	if !sawHeader {
 		r.report(CodeHeaderMissing, r.pos(), nil, nil)
 	}
+}
+
+// values is how many values a data record of fields decodes to: its
+// object, and each field but an unquoted empty one, which is absent
+// (ADR-003 D11 item 5).
+func values(fields []Field) int64 {
+	n := int64(1)
+	for _, f := range fields {
+		if f.Quoted || f.Text != "" {
+			n++
+		}
+	}
+	return n
 }
 
 // record reads one record, the header when index is negative, and reports

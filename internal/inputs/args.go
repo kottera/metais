@@ -62,7 +62,7 @@ func (s *Supply) AddInputsJSON(text []byte) {
 		return
 	}
 	s.total += int64(len(text))
-	doc, fs := jsonx.Parse(text, jsonx.Source{Input: argSubject, At: loc}, s.lim)
+	doc, fs := jsonx.Parse(text, jsonx.Source{Input: argSubject, At: loc, Values: s.values}, s.lim)
 	unknown := map[string]bool{}
 	for _, f := range fs {
 		l, _ := f.At()
@@ -193,11 +193,16 @@ func (s *Supply) addSet(arg string, isJSON bool) {
 			s.add(f)
 			return
 		}
+		if !s.values.Add(1) {
+			s.add(s.lim.Exceeded(limits.InputValues, subj, loc.WithPointer(target), 0, false))
+			s.broken[ps.input] = true
+			return
+		}
 		ps.text = text
 		s.sets = append(s.sets, ps)
 		return
 	}
-	doc, fs := jsonx.Parse([]byte(text), jsonx.Source{Input: subj, At: loc}, s.lim)
+	doc, fs := jsonx.Parse([]byte(text), jsonx.Source{Input: subj, At: loc, Values: s.values}, s.lim)
 	if len(fs) > 0 {
 		for _, f := range fs {
 			s.add(rebuild(f, subj, under(target)))
