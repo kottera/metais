@@ -29,6 +29,7 @@ var (
 	flagRecord   = flag.String("conformance.record", "", "write the cross-platform record to this file")
 	flagCompare  = flag.String("conformance.compare", "", "compare these records, comma-separated, instead of running vectors")
 	flagKeep     = flag.String("conformance.keep", "", "keep each failing case's sandbox under this directory")
+	flagReach    = flag.Bool("conformance.reach", false, "TestHostIsolation also runs every command over every vector's packages (the wave tier's reach step)")
 )
 
 // builtTool is the metais binary TestMain built from ./cmd/metais, or "".

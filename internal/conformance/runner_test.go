@@ -13,6 +13,7 @@ import (
 	"path"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -39,6 +40,8 @@ const (
 	checkDriver    = "driver"
 	checkHarness   = "harness"
 	checkContainer = "container"
+	checkCrash     = "crash"
+	checkHost      = "host-fact"
 )
 
 // problem is one failure of a step: a conformance failure, or a harness
@@ -49,6 +52,7 @@ type problem struct {
 	step    int    // 1-based; 0 for the case as a whole
 	where   string // the invocation, when a step ran several
 	msg     string
+	mode    pathMode
 }
 
 func (p problem) String() string {
@@ -57,8 +61,11 @@ func (p problem) String() string {
 		kind = "harness error"
 	}
 	at := ""
+	if p.mode == absPaths {
+		at = "with absolute paths: "
+	}
 	if p.step > 0 {
-		at = fmt.Sprintf("step %d", p.step)
+		at += fmt.Sprintf("step %d", p.step)
 		if p.where != "" {
 			at += " (" + p.where + ")"
 		}
@@ -101,6 +108,22 @@ type runner struct {
 	// wait sleeps until B may start; nil is time.Sleep. Only the tests
 	// that pin the wait set it.
 	wait func(until time.Time)
+
+	// sc7 runs ADR-009 D16 item 1's additions to every case: environment
+	// A's further variables and decoys, both path modes, and every
+	// command over each package the case names (harness_test.go). It
+	// needs the cli adapter.
+	sc7 bool
+	// reach, under sc7, runs every command over each package a case
+	// names (runReach). TestHostIsolation sets it over every vector only
+	// with -conformance.reach, R-W6-3.
+	reach bool
+	// facts, when set, are the real host facts check 2 looks for in
+	// every stream of both environments (hostfacts_test.go).
+	facts *hostFacts
+	// reached are the reach commands a case has claimed, each with the
+	// case that runs them (claim).
+	reached sync.Map
 }
 
 // identity is the tool's identity, asked once.
@@ -140,9 +163,12 @@ type envRun struct {
 }
 
 // fatal reports whether the run stopped early: on a harness error, or on
-// a process the wall clock killed, whose step has nothing left to compare.
+// a process the wall clock killed or that crashed, whose step has nothing
+// left to compare.
 func (e *envRun) fatal() bool {
-	return slices.ContainsFunc(e.problems, func(p problem) bool { return p.harness || p.check == checkWall })
+	return slices.ContainsFunc(e.problems, func(p problem) bool {
+		return p.harness || p.check == checkWall || p.check == checkCrash
+	})
 }
 
 // caseResult is the outcome of one case.
@@ -162,7 +188,32 @@ type caseResult struct {
 // least two seconds after every one A's made, however long the host took
 // to run A: a tool that writes the clock at second resolution differs
 // between the two whatever the load.
+//
+// Under the SC7 harness the case runs in both path modes at once, each in
+// sandboxes of its own; the relative mode's runs are the result's runs.
 func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
+	if !r.sc7 {
+		return r.runCaseIn(v, c, base, relPaths)
+	}
+	var abs *caseResult
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		abs = r.runCaseIn(v, c, base, absPaths)
+	}()
+	res := r.runCaseIn(v, c, base, relPaths)
+	<-done
+	if res.skipped == "" {
+		for _, p := range abs.problems {
+			p.mode = absPaths
+			res.problems = append(res.problems, p)
+		}
+	}
+	return res
+}
+
+// runCaseIn runs case c of v with the paths its steps name given in mode.
+func (r *runner) runCaseIn(v *vector, c *vcase, base string, mode pathMode) *caseResult {
 	res := &caseResult{runs: map[env]*envRun{}}
 	if c.Setup != nil && len(c.Setup.Unwritable) > 0 && !slices.Contains(v.Requires, "unwritable-dirs") {
 		res.problems = append(res.problems, problem{check: checkHarness, harness: true,
@@ -179,7 +230,7 @@ func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
 			return res
 		}
 	}
-	a := r.runEnv(v, c, base, envA, true)
+	a := r.runEnv(v, c, base, envA, true, mode)
 	aEnded := time.Now()
 	res.runs[envA] = a
 	res.problems = append(res.problems, a.problems...)
@@ -187,7 +238,7 @@ func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
 		return res
 	}
 	if slices.ContainsFunc(c.Steps, func(s step) bool { return s.Repeatable }) {
-		again := r.runEnv(v, c, base, envA, false)
+		again := r.runEnv(v, c, base, envA, false, mode)
 		res.problems = append(res.problems, again.problems...)
 		if !again.fatal() {
 			res.problems = append(res.problems, differences(a, again, checkRepeat, nil)...)
@@ -201,7 +252,7 @@ func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
 	} else {
 		time.Sleep(time.Until(until))
 	}
-	b := r.runEnv(v, c, base, envB, false)
+	b := r.runEnv(v, c, base, envB, false, mode)
 	res.runs[envB] = b
 	res.problems = append(res.problems, b.problems...)
 	if !b.fatal() {
@@ -210,10 +261,12 @@ func (r *runner) runCase(v *vector, c *vcase, base string) *caseResult {
 	return res
 }
 
-// runEnv runs every step of c in one fresh sandbox of environment e. It
-// checks the expectations when expectations is set, and in environment A
-// scans for the sentinel.
-func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bool) *envRun {
+// runEnv runs every step of c in one fresh sandbox of environment e, with
+// the paths its steps name given in mode. It checks the expectations when
+// expectations is set, and scans every stream with r's finders. Under the
+// SC7 harness with its reach, in the absolute-path mode, it then runs
+// every command over the case's packages (runReach).
+func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bool, mode pathMode) *envRun {
 	if r.slots != nil {
 		r.slots <- struct{}{}
 		defer func() { <-r.slots }()
@@ -230,6 +283,12 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 	if r.adapter.race() {
 		sb.quietRaceExit()
 	}
+	if r.sc7 {
+		if err := sb.harness(mode); err != nil {
+			fail(0, checkHarness, err.Error())
+			return run
+		}
+	}
 	run.sb = sb
 	defer func() {
 		if err := sb.unlock(); err != nil {
@@ -245,7 +304,15 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 			fail(0, checkHarness, err.Error())
 			return run
 		}
+		if r.sc7 {
+			if err := sb.plantHarnessDecoys(v, c); err != nil {
+				fail(0, checkHarness, err.Error())
+				return run
+			}
+		}
 	}
+	finders := r.finders(v, sb, e)
+	var last map[string]node // the snapshot after the last step
 	for si := range c.Steps {
 		st := &c.Steps[si]
 		before, err := sb.snapshot()
@@ -278,6 +345,7 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 			fail(si+1, checkHarness, err.Error())
 			return run
 		}
+		last = after
 		var excluded []string
 		if x := r.adapter.excluded(st); x != "" {
 			excluded = append(excluded, x)
@@ -288,21 +356,38 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 		if expectations {
 			run.problems = append(run.problems, r.expectations(v, si, st, sr)...)
 		}
-		if e == envA {
-			for _, p := range scanWritten(sb, before, after, append(treePaths, excluded...)) {
+		archive, _, _ := st.args.stream()
+		for _, f := range finders {
+			for _, p := range scanWritten(f, sb, before, after, append(treePaths, excluded...)) {
 				p.step = si + 1
 				run.problems = append(run.problems, p)
 			}
-			archive, _, _ := st.args.stream()
 			for _, inv := range invs {
-				for _, p := range scanInvocation(inv, archive, sr.trees) {
+				for _, p := range scanInvocation(f, inv, archive, sr.trees) {
 					p.step, p.where = si+1, inv.label
 					run.problems = append(run.problems, p)
 				}
 			}
 		}
 	}
+	if r.sc7 && r.reach && mode == absPaths && !run.fatal() {
+		r.runReach(run, v, c, finders, last)
+	}
 	return run
+}
+
+// finders are what the scan of environment e looks for: the sentinel in
+// environment A (check 1), and the host's real facts in both when the
+// runner looks for them (check 2).
+func (r *runner) finders(v *vector, sb *sandbox, e env) []finder {
+	var fs []finder
+	if e == envA {
+		fs = append(fs, sentinels)
+	}
+	if r.facts != nil {
+		fs = append(fs, r.facts.finder(v, filepath.Dir(sb.root)))
+	}
+	return fs
 }
 
 // expectations compares what step si gave with what it must give (ADR-011
@@ -412,6 +497,7 @@ func differences(a, b *envRun, check string, vars []string) []problem {
 				{"standard error", ia.stderr, ib.stderr},
 				{"the stream", ia.stream, ib.stream},
 				{"the listing", marshal(ia.listing), marshal(ib.listing)},
+				{"the exit status", exitStatus(ia), exitStatus(ib)},
 			} {
 				if !bytes.Equal(art.x, art.y) {
 					ps = append(ps, problem{check: check, step: si + 1, where: ia.label,
@@ -441,6 +527,15 @@ func differences(a, b *envRun, check string, vars []string) []problem {
 		}
 	}
 	return ps
+}
+
+// exitStatus is the exit status inv's process ended with, as text, or nil
+// when no process ran.
+func exitStatus(inv *invocation) []byte {
+	if inv.proc == nil {
+		return nil
+	}
+	return []byte(strconv.Itoa(inv.proc.exit))
 }
 
 // marshal is v's JSON, or nil for nil.

@@ -64,6 +64,10 @@ func refDriverMain(tool string) int {
 	if err != nil {
 		return fail("%v", err)
 	}
+	if crashed(p.stderr) != "" {
+		// The whole traceback, so the runner reads the crash from it.
+		return fail("%s crashed\n%s", c.args[0], p.stderr)
+	}
 	if p.exit == 2 || p.exit == 3 {
 		return fail("%s exited %d\n%s", c.args[0], p.exit, tail(p.stderr))
 	}

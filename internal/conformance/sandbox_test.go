@@ -35,7 +35,10 @@ const (
 var sandboxSeq atomic.Int64
 
 // sandbox is one case's fresh directory (ADR-011 D11 item 4): home, tmp,
-// bin and work, with work the working directory of every step.
+// bin and work, with work the working directory of every step. In the
+// SC7 harness's absolute-path mode (ADR-009 D16 item 1) the working
+// directory is away instead, and every path a step names is given as an
+// absolute path into work.
 type sandbox struct {
 	root string
 	env  env
@@ -43,6 +46,8 @@ type sandbox struct {
 	home string
 	tmp  string
 	work string
+	cwd  string // the working directory of every step: work, or away
+	abs  bool   // the paths a step names are absolute paths into work
 
 	locked []string // the unwritable directories, until unlock
 }
@@ -63,6 +68,7 @@ func newSandbox(base string, e env) (*sandbox, error) {
 		sb.tmp = filepath.Join(sb.root, "tmp")
 	}
 	sb.work = filepath.Join(sb.root, "work")
+	sb.cwd = sb.work
 	bin := filepath.Join(sb.root, "bin")
 	if e == envA {
 		bin = filepath.Join(bin, sentinel+"BIN")
@@ -155,9 +161,9 @@ func differingVars(a, b map[string]string) []string {
 }
 
 // plantDecoys writes environment A's decoys (ADR-011 D12 item 2):
-// SENTINEL.txt in the work directory and the home directory, and for every
-// file directly inside a data tree the case's steps name, a file of the
-// same name in each, unless the work directory already holds one.
+// SENTINEL.txt in the working directory and the home directory, and for
+// every file directly inside a data tree the case's steps name, a file of
+// the same name in each, unless the directory already holds one.
 func (sb *sandbox) plantDecoys(v *vector, c *vcase) error {
 	names := []string{"SENTINEL.txt"}
 	for _, st := range c.Steps {
@@ -175,7 +181,7 @@ func (sb *sandbox) plantDecoys(v *vector, c *vcase) error {
 		}
 	}
 	for _, n := range names {
-		for _, d := range []struct{ dir, token string }{{sb.work, sentinel + "CWD"}, {sb.home, sentinel + "HOME"}} {
+		for _, d := range []struct{ dir, token string }{{sb.cwd, sentinel + "CWD"}, {sb.home, sentinel + "HOME"}} {
 			p := filepath.Join(d.dir, n)
 			if _, err := os.Lstat(p); err == nil {
 				continue
@@ -289,6 +295,18 @@ func (sb *sandbox) unlock() error {
 	return first
 }
 
+// path is the path a step's argument p is given to the implementation as:
+// p itself, relative to the working directory, or in the absolute-path
+// mode, the absolute path of p in the work directory, joined without
+// cleaning so that p's own components reach the implementation as the
+// vector wrote them. Standard input and output, "-", stay as they are.
+func (sb *sandbox) path(p string) string {
+	if !sb.abs || p == "" || p == "-" {
+		return p
+	}
+	return sb.work + string(filepath.Separator) + filepath.FromSlash(p)
+}
+
 // inputPaths are the vector paths c's steps read: the package or source,
 // the data tree and the inputs file.
 func inputPaths(c *vcase) []string {
@@ -365,11 +383,20 @@ type node struct {
 	target string
 }
 
-// snapshot records home, tmp and work below the sandbox's root, keyed by
-// slash paths relative to the root.
+// snapshot records home, tmp and work below the sandbox's root, and the
+// working directory when it is not work, keyed by slash paths relative to
+// the root.
 func (sb *sandbox) snapshot() (map[string]node, error) {
 	snap := map[string]node{}
-	for _, top := range []string{"home", "tmp", "work"} {
+	tops := []string{"home", "tmp", "work"}
+	if sb.cwd != sb.work {
+		rel, err := filepath.Rel(sb.root, sb.cwd)
+		if err != nil {
+			return nil, err
+		}
+		tops = append(tops, rel)
+	}
+	for _, top := range tops {
 		dir := filepath.Join(sb.root, top)
 		err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
 			if err != nil {

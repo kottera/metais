@@ -407,7 +407,7 @@ func hostileOpenProblems(suite string, a *cliAdapter, base string) []string {
 					bad = append(bad, where+": the opening set: "+err.Error())
 					continue
 				}
-				plan, err := openPlan(set, st.args.Package)
+				plan, err := openPlan(set, st.args.Package, (&sandbox{}).path)
 				if err != nil {
 					bad = append(bad, where+": "+err.Error())
 					continue
@@ -474,14 +474,14 @@ func TestHostileVectorsOpenEverywhereControl(t *testing.T) {
 	}) {
 		t.Errorf("a declared opening command the adapter cannot run passed; reported %q", bad)
 	}
-	plan, err := openPlan(set, "package")
+	plan, err := openPlan(set, "package", (&sandbox{}).path)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if missing := planCovers(set, plan[:len(plan)-1]); !slices.Equal(missing, set[len(set)-1:]) {
 		t.Errorf("a plan without %s is reported missing %q", set[len(set)-1], missing)
 	}
-	if _, err := openPlan(nil, "package"); err == nil {
+	if _, err := openPlan(nil, "package", (&sandbox{}).path); err == nil {
 		t.Error("an empty opening set gives a plan")
 	}
 }

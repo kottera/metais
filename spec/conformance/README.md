@@ -64,8 +64,8 @@ create a file, a directory or a rename in it: when it runs as root, or on a
 platform whose directory modes do not govern writing, such as Windows. A
 vector whose setup names an `unwritable` directory requires it.
 
-Every case runs twice, in two environments, and every byte observed in one
-must equal the byte observed in the other:
+Every case runs twice, in two environments, and every byte observed in one,
+and every process's exit status, must equal what is observed in the other:
 
 - **Environment A** plants a sentinel token in everything the
   implementation could read from its host: the sandbox's path, `HOME`,
@@ -121,7 +121,9 @@ Every process runs under 10 seconds of CPU time, 1024 MiB of peak resident
 memory and 120 seconds of wall clock, which a step's `bounds` can lower. CPU
 time and memory are read from the process's own resource usage. For a
 race-built program the CPU bound is multiplied by 20 and the memory bound
-by 10.
+by 10. A process that exits through a Go panic or a runtime fatal error,
+whose standard error holds the Go runtime's traceback, fails its step,
+whether the runner started it or a driver did.
 
 ## Running the suite
 
@@ -150,6 +152,26 @@ Its flags follow `-args`:
 | `-conformance.keep` | none | keep each failing case's sandbox under this directory |
 
 With `go test -short`, only environment A runs.
+
+`TestHostIsolation` in the same package is the reference tool's own proof
+of host isolation (SC7), and goes beyond what this suite asks of an
+implementation. It runs every vector against a release build of `metais`
+with the cli adapter, in both environments, with more of the host planted
+in environment A: further variables, among them `OLDPWD`, `SHELL`,
+`SOURCE_DATE_EPOCH`, `CI` and 32 named `METAIS_<n>`, and decoys in the
+working, home and temporary directories of every name the vector's packages
+refer to and of the files a careless tool might read. It runs every case
+twice:
+
+- once with its paths relative to the working directory;
+- once with them absolute, under the sandbox's sentinel-named directory,
+  from a working directory outside the work directory.
+
+The absolute run then runs `ls --recursive`, `read`, `outline`, `grep`,
+`schema`, `extract` and `render` (dry run, and to standard output) over
+each package, in human and JSON form. Every stream of both environments is
+also searched for the test machine's own host name, user name, temporary
+root, home directory and checkout.
 
 ## The driver protocol
 

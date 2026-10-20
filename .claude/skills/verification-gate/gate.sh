@@ -343,6 +343,46 @@ tests() {
 	return $rc
 }
 
+# The SC7 reach (R-W6-3, plan orchestrator, 2026-10-20, extending ADR-010
+# Amendment A5 item 1): the wave tier runs ADR-009 D16 item 1's
+# every-command reach over every vector, which every go test runs only over
+# the canaries' probes. Over the whole suite it is more than one go test
+# binary can run within its ten-minute timeout at the gate's share, so it
+# runs as one step per group of at most reach_chunk vectors of one area,
+# each its own `go test -run` invocation under the same timeout and share.
+reach_chunk=${METAIS_GATE_REACH_CHUNK:-25}
+
+# reach_groups prints one line per group: the area, then its vectors' slugs.
+reach_groups() {
+	local area
+	for area in spec/conformance/vectors/*/; do
+		area=$(basename "$area")
+		find "spec/conformance/vectors/$area" -name vector.json |
+			sed -e "s|^spec/conformance/vectors/$area/||" -e 's|/vector.json$||' | sort |
+			awk -v a="$area" -v n="$reach_chunk" '{s = s " " $0} NR % n == 0 {print a s; s = ""} END {if (s != "") print a s}'
+	done
+}
+
+# reach runs the reach over one group: TestHostIsolation with
+# -conformance.reach, selecting the area and the group's vectors. A run that
+# ran fewer vectors than the group names fails, so a selection that matches
+# nothing cannot pass.
+reach() {
+	local area=$1 out rc n
+	shift
+	out=$(go test -race -count=1 -p "$p" -parallel "$parallel" -v \
+		-run "^TestHostIsolation\$/^$area\$/^($(echo "$@" | tr ' ' '|'))\$" \
+		./internal/conformance -args -conformance.reach 2>&1)
+	rc=$?
+	printf '%s\n' "$out" | grep -vE '^(=== (RUN|PAUSE|CONT|NAME)|[[:space:]]*--- PASS)'
+	n=$(printf '%s\n' "$out" | sed -n 's/.*ran \([0-9][0-9]*\) vectors.*/\1/p' | head -1)
+	if [ "${n:-0}" -ne $# ]; then
+		echo "reach $area ran ${n:-no} vectors of the $# it selects"
+		return 1
+	fi
+	return $rc
+}
+
 want="$state/$run.want"
 if [ "$tier" = wave ]; then
 	go list ./... >"$want" || exit 2
@@ -361,6 +401,10 @@ if [ "$tier" = wave ]; then
 	step static static_build
 	step cross cross
 	step specdata specdata_fresh
+	while read -r area slugs; do
+		# shellcheck disable=SC2086
+		step "reach $area $(echo $slugs | cut -d' ' -f1)" reach "$area" $slugs
+	done < <(reach_groups)
 else
 	sel="$state/$run.select"
 	if [ -n "$base" ]; then

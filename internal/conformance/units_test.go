@@ -301,3 +301,102 @@ func TestZipFixedFields(t *testing.T) {
 		}
 	}
 }
+
+// TestCrashed holds crashed to what the Go runtime writes when a process
+// exits through a panic or a fatal error (ADR-009 D18 item 2), and to
+// nothing else: a recovered panic's internal error, and text that merely
+// begins like a traceback, are not crashes.
+func TestCrashed(t *testing.T) {
+	for _, c := range []struct {
+		name, stderr, want string
+	}{
+		{"a panic", "panic: boom\n\ngoroutine 1 [running]:\nmain.main()\n\t/x.go:3 +0x1\nexit status 2\n", "panic: boom"},
+		{"a panic with the runtime's goroutine detail",
+			"panic: boom [recovered]\n\tpanic: again\n\ngoroutine 7 gp=0x1400 m=0 mp=0x1028 [running]:\nmain.f()\n", "panic: boom [recovered]"},
+		{"a fatal error", "runtime: goroutine stack exceeds 65536-byte limit\nfatal error: stack overflow\n\nruntime stack:\nruntime.throw()\n\ngoroutine 1 gp=0x14 m=0 mp=0x10 [running]:\n", "fatal error: stack overflow"},
+		{"an internal error the tool reported", "error internal.panic: the command stopped on an internal error\n", ""},
+		{"a message that begins like a panic", "panic: is a word a package may print\n", ""},
+		{"a goroutine line alone", "goroutine 1 [running]:\n", ""},
+		{"nothing", "", ""},
+	} {
+		if got := crashed([]byte(c.stderr)); got != c.want {
+			t.Errorf("%s: crashed is %q, want %q", c.name, got, c.want)
+		}
+	}
+}
+
+// TestRefDriverForwardsCrash runs the reference driver over a fake that
+// panics: the driver's own exit says only that it failed, and the runner
+// must still read the crash from the traceback it forwards.
+func TestRefDriverForwardsCrash(t *testing.T) {
+	t.Parallel()
+	suite := writeFixture(t, testenv.Dir(t))
+	fake := fakeProgram(t, testenv.Dir(t), "panic")
+	a, err := newAdapter("exec", refDriver(t, filepath.Dir(fake), ""), suite)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := newRunner(t, suite, a)
+	r.short = true
+	ps := runVector(r, suite, fixRenderTree, testenv.Dir(t))
+	if !slices.ContainsFunc(ps, func(p problem) bool { return p.check == checkCrash }) {
+		t.Errorf("the reference driver over a fake that panics gave no crash; the runner reported %q", ps)
+	}
+}
+
+// TestFactAt holds check 2's matching to ADR-009 D16 item 1: each kind of
+// host fact is found in a stream, whatever its case, and a word or a path
+// that merely begins or ends with one is not.
+func TestFactAt(t *testing.T) {
+	facts := addPath(addPath([]hostFact{
+		{what: "the host name", value: "buildhost"},
+		{what: "the user name", value: "edwardf"},
+	}, "the real home directory", "/home/edwardf"), "the test's temporary root", "/tmp/TestX123/001")
+	for _, c := range []struct{ in, want string }{
+		{"rendered on buildhost.", "the host name"},
+		{"rendered on BuildHost", "the host name"},
+		{"rendered on buildhosts", ""},
+		{"by edwardf", "the user name"},
+		{`{"path":"/home/edwardf/x.json"}`, "the user name"},
+		{"file:///home/edwardf", "the user name"},
+		{"/tmp/TestX123/001/MTSSENTINELPATH-1/work", "the test's temporary root"},
+		{"/tmp/TestX123/0011", ""},
+		{"/tmp/TestX123/001.bak", ""},
+		{"an edwardfs value", ""},
+		{"", ""},
+	} {
+		if got := factAt([]byte(c.in), facts); got != c.want {
+			t.Errorf("factAt(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+	paths := addPath(nil, "the checkout", "/src/metais")
+	if got := factAt([]byte("in /src/metais/internal"), paths); got != "the checkout" {
+		t.Errorf("a path below the checkout: %q", got)
+	}
+	if got := factAt([]byte("in /src/metaisx"), paths); got != "" {
+		t.Errorf("a path the checkout's begins: %q", got)
+	}
+	if addPath(nil, "the root", "/") != nil {
+		t.Error("the root is a fact")
+	}
+}
+
+// TestHostFactsSkipVocabulary pins newHostFacts's one exclusion: a host
+// or user name that is a word of the tool's own text, or no longer than
+// minNameLength, is not looked for, since a scan cannot tell it from that
+// text; every other is.
+func TestHostFactsSkipVocabulary(t *testing.T) {
+	h := newHostFacts()
+	if len(h.paths) == 0 {
+		t.Fatal("no path fact: the checkout is always one")
+	}
+	for _, f := range h.names {
+		hv := newHostFacts([]byte("The tool's text names " + f.value + " itself."))
+		if slices.ContainsFunc(hv.names, func(g hostFact) bool { return g.value == f.value }) {
+			t.Errorf("%s %q is looked for although the tool's text holds it", f.what, f.value)
+		}
+		if len(f.value) <= minNameLength {
+			t.Errorf("%s %q is looked for, and is no longer than %d", f.what, f.value, minNameLength)
+		}
+	}
+}

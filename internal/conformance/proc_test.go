@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"sync/atomic"
 	"time"
@@ -90,8 +91,9 @@ var procSlots = make(chan struct{}, max(1, runtime.GOMAXPROCS(0)))
 
 // procRunning counts the processes running now, and procPeak the most
 // that ever ran at once, which TestProcessesAreBounded holds to
-// procSlots.
-var procRunning, procPeak atomic.Int64
+// procSlots; procStarted counts every process run, which TestHostIsolation
+// reports.
+var procRunning, procPeak, procStarted atomic.Int64
 
 // proc is one finished process.
 type proc struct {
@@ -108,6 +110,7 @@ type proc struct {
 func runProc(path string, args []string, dir string, env []string, stdin []byte, wall time.Duration) (*proc, error) {
 	procSlots <- struct{}{}
 	defer func() { <-procSlots }()
+	procStarted.Add(1)
 	defer procRunning.Add(-1)
 	for n, peak := procRunning.Add(1), procPeak.Load(); n > peak && !procPeak.CompareAndSwap(peak, n); peak = procPeak.Load() {
 	}
@@ -192,6 +195,34 @@ func boundProblems(p *proc, lim limits) []problem {
 		ps = append(ps, problem{check: checkRSS, msg: fmt.Sprintf("the process's peak resident memory was %d MiB, above the bound of %d MiB", p.rss>>20, lim.rss>>20)})
 	}
 	return ps
+}
+
+// goHeader and goGoroutine are the lines the Go runtime begins a
+// traceback with: the panic or fatal error itself, and the header of a
+// goroutine's stack.
+var (
+	goHeader    = regexp.MustCompile(`(?m)^(panic: |fatal error: )[^\n]*`)
+	goGoroutine = regexp.MustCompile(`(?m)^goroutine \d+ [^\n]*\[[^\n]*\]:$`)
+)
+
+// crashed reports how a process exited through a Go panic or a runtime
+// fatal error (ADR-009 D18 item 2), read from the traceback the Go runtime
+// writes to standard error, or "" when it did not. A recovered panic is
+// not one: the tool reports it as an internal error, and exits 2 without
+// a traceback. The traceback may reach the runner through a driver, whose
+// own exit status says nothing of how the implementation ended, so the
+// traceback decides, not the status.
+func crashed(stderr []byte) string {
+	h := goHeader.Find(stderr)
+	if h == nil || !goGoroutine.Match(stderr) {
+		return ""
+	}
+	return string(h)
+}
+
+// crashProblem is the failure of a process that crashed with header.
+func crashProblem(header string) problem {
+	return problem{check: checkCrash, msg: fmt.Sprintf("the process exited through a Go panic or a runtime fatal error: %q", header)}
 }
 
 // executable reports whether path names a file this process can run.

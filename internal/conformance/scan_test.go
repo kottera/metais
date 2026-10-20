@@ -13,8 +13,10 @@ import (
 	"strings"
 )
 
-// sentinelSources names where each sentinel suffix was planted, longest
-// first so a match takes the most specific (ADR-011 D12 item 3).
+// sentinelSources names where each sentinel suffix was planted, a suffix
+// before every other it begins, so a match takes the most specific
+// (ADR-011 D12 item 3, and the SC7 harness's additions of ADR-009 D16
+// item 1).
 var sentinelSources = []struct{ suffix, source string }{
 	{"NOCOLOR", "NO_COLOR"},
 	{"PATH", "the sandbox path"},
@@ -24,9 +26,17 @@ var sentinelSources = []struct{ suffix, source string }{
 	{"TERM", "TERM"},
 	{"CWD", "a working-directory decoy"},
 	{"ENV", "METAIS_SENTINEL"},
+	{"TMPDECOY", "a temporary-directory decoy"},
 	{"TMP", "TMPDIR"},
 	{"BIN", "PATH"},
 	{"XDG", "an XDG directory"},
+	{"OLDPWD", "OLDPWD"},
+	{"SHELL", "SHELL"},
+	{"EPOCH", "SOURCE_DATE_EPOCH"},
+	{"CI", "CI"},
+	{"GHTOKEN", "GITHUB_TOKEN"},
+	{"AWSKEY", "AWS_SECRET_ACCESS_KEY"},
+	{"METAIS", "a METAIS_<n> variable"},
 }
 
 // asciiUpper upper-cases the ASCII letters of b and nothing else, so an
@@ -74,12 +84,29 @@ func sentinelAt(b []byte) string {
 // item 3).
 const zipDepth = 3
 
-// scanBytes scans one artefact: its bytes, and when it is a zip, each
-// entry inflated, recursively to depth levels. It returns a hit as
-// "<artefact>: <source>", or "".
+// finder is one kind of hit the scan looks for: the sentinel (check 1),
+// or a real fact of the host (ADR-009 D16 item 1, check 2). find names the
+// source of a hit in b, or gives "" when b holds none.
+type finder struct {
+	check string
+	find  func(b []byte) string
+	holds string // what a hit's message says the artefact holds
+}
+
+// sentinels is check 1's finder.
+var sentinels = finder{check: checkSentinel, find: sentinelAt, holds: "the sentinel from"}
+
+// scanBytes scans one artefact for the sentinel (scanFor).
 func scanBytes(name string, b []byte, depth int) string {
-	if src := sentinelAt(b); src != "" {
-		return fmt.Sprintf("%s holds the sentinel from %s", name, src)
+	return scanFor(sentinels, name, b, depth)
+}
+
+// scanFor scans one artefact for f's hits: its bytes, and when it is a
+// zip, each entry inflated, recursively to depth levels. It returns a hit
+// as "<artefact> holds <source>", or "".
+func scanFor(f finder, name string, b []byte, depth int) string {
+	if src := f.find(b); src != "" {
+		return fmt.Sprintf("%s holds %s %s", name, f.holds, src)
 	}
 	if depth == 0 || !isZip(b) {
 		return ""
@@ -89,30 +116,30 @@ func scanBytes(name string, b []byte, depth int) string {
 		return fmt.Sprintf("%s reads as a zip that cannot be opened, so the scan cannot see inside it: %v", name, err)
 	}
 	for _, h := range z.headers {
-		if src := sentinelAt([]byte(h.name)); src != "" {
-			return fmt.Sprintf("%s: the entry name %q holds the sentinel from %s", name, h.name, src)
+		if src := f.find([]byte(h.name)); src != "" {
+			return fmt.Sprintf("%s: the entry name %q holds %s %s", name, h.name, f.holds, src)
 		}
 		content, err := h.inflate(b)
 		if err != nil {
 			return fmt.Sprintf("%s: the entry %q cannot be inflated, so the scan cannot see inside it: %v", name, h.name, err)
 		}
-		if hit := scanBytes(name+": entry "+h.name, content, depth-1); hit != "" {
+		if hit := scanFor(f, name+": entry "+h.name, content, depth-1); hit != "" {
 			return hit
 		}
 	}
 	return ""
 }
 
-// scanTar scans each member of a tar stream: its name and its content,
-// and each zip inside it. A stream that does not read as a tar to its end
-// cannot be scanned, which is itself a hit.
-func scanTar(name string, b []byte) string {
+// scanTar scans each member of a tar stream for f's hits: its name and
+// its content, and each zip inside it. A stream that does not read as a
+// tar to its end cannot be scanned, which is itself a hit.
+func scanTar(f finder, name string, b []byte) string {
 	members, err := readTar(b)
 	for _, m := range members {
-		if src := sentinelAt([]byte(m.name + "\x00" + m.uname + "\x00" + m.gname)); src != "" {
-			return fmt.Sprintf("%s: the member header %q holds the sentinel from %s", name, m.name, src)
+		if src := f.find([]byte(m.name + "\x00" + m.uname + "\x00" + m.gname)); src != "" {
+			return fmt.Sprintf("%s: the member header %q holds %s %s", name, m.name, f.holds, src)
 		}
-		if hit := scanBytes(name+": member "+m.name, m.content, zipDepth); hit != "" {
+		if hit := scanFor(f, name+": member "+m.name, m.content, zipDepth); hit != "" {
 			return hit
 		}
 	}
@@ -122,44 +149,46 @@ func scanTar(name string, b []byte) string {
 	return ""
 }
 
-// scanInvocation scans everything one invocation of environment A
-// produced: standard output and standard error (which hold a driver's
-// response), every file of the step's declared trees and its zips, and
-// the stream and its members.
-func scanInvocation(inv *invocation, archive bool, trees map[string]*tree) []problem {
+// scanInvocation scans everything one invocation produced for f's hits:
+// standard output and standard error (which hold a driver's response),
+// every file of the step's declared trees and its zips, and the stream
+// and its members.
+func scanInvocation(f finder, inv *invocation, archive bool, trees map[string]*tree) []problem {
 	var ps []problem
 	add := func(hit string) {
 		if hit != "" {
-			ps = append(ps, problem{check: checkSentinel, msg: hit})
+			ps = append(ps, problem{check: f.check, msg: hit})
 		}
 	}
-	add(scanBytes("standard output", inv.stdout, 0))
-	add(scanBytes("standard error", inv.stderr, 0))
+	add(scanFor(f, "standard output", inv.stdout, 0))
+	add(scanFor(f, "standard error", inv.stderr, 0))
 	if inv.stream != nil {
-		add(scanBytes("the stream", inv.stream, zipDepth))
+		add(scanFor(f, "the stream", inv.stream, zipDepth))
 		if archive {
-			add(scanTar("the stream", inv.stream))
+			add(scanTar(f, "the stream", inv.stream))
 		}
 	}
-	for root, t := range trees {
+	for _, root := range sortedKeys(trees) {
+		t := trees[root]
 		for _, n := range sortedKeys(t.files) {
 			p := root + "/" + n
-			if src := sentinelAt([]byte(p)); src != "" {
-				add(fmt.Sprintf("the written path %s holds the sentinel from %s", p, src))
+			if src := f.find([]byte(p)); src != "" {
+				add(fmt.Sprintf("the written path %s holds %s %s", p, f.holds, src))
 			}
-			add(scanBytes("the written file "+p, t.files[n].content, zipDepth))
+			add(scanFor(f, "the written file "+p, t.files[n].content, zipDepth))
 		}
 	}
 	return ps
 }
 
 // scanWritten scans every regular file a step created or changed anywhere
-// in the sandbox outside its declared trees, which scanInvocation scans:
-// a file the step should not have written may still carry a host fact,
-// and ADR-009 D16 item 1 scans every written file. Paths are relative to
-// the sandbox's root, as snapshot keys them; trees are relative to the
-// work directory.
-func scanWritten(sb *sandbox, before, after map[string]node, trees []string) []problem {
+// in the sandbox outside its declared trees, which scanInvocation scans,
+// for f's hits: a file the step should not have written may still carry
+// a host fact, and ADR-009 D16 item 1 scans every written file. Paths are
+// relative to the sandbox's root, as snapshot keys them; trees are
+// relative to the work directory. A written path is not scanned for the
+// sandbox's own path, which every path below the root carries.
+func scanWritten(f finder, sb *sandbox, before, after map[string]node, trees []string) []problem {
 	var ps []problem
 	for _, p := range sortedKeys(after) {
 		n := after[p]
@@ -172,16 +201,16 @@ func scanWritten(sb *sandbox, before, after map[string]node, trees []string) []p
 		}) {
 			continue
 		}
-		if src := sentinelAt([]byte(p)); src != "" && src != "the sandbox path" {
-			ps = append(ps, problem{check: checkSentinel, msg: fmt.Sprintf("the written path %s holds the sentinel from %s", p, src)})
+		if src := f.find([]byte(p)); src != "" && src != "the sandbox path" {
+			ps = append(ps, problem{check: f.check, msg: fmt.Sprintf("the written path %s holds %s %s", p, f.holds, src)})
 		}
 		b, err := os.ReadFile(filepath.Join(sb.root, filepath.FromSlash(p)))
 		if err != nil {
 			ps = append(ps, problem{check: checkHarness, harness: true, msg: err.Error()})
 			continue
 		}
-		if hit := scanBytes("the written file "+p, b, zipDepth); hit != "" {
-			ps = append(ps, problem{check: checkSentinel, msg: hit})
+		if hit := scanFor(f, "the written file "+p, b, zipDepth); hit != "" {
+			ps = append(ps, problem{check: f.check, msg: hit})
 		}
 	}
 	return ps
