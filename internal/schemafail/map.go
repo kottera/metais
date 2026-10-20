@@ -9,6 +9,7 @@ import (
 	"math"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/kottera/metais/internal/finding"
 )
@@ -152,6 +153,9 @@ type mapper struct {
 	// paths makes each finding's instance path from the one it made
 	// before, so the failures under one member name read it once.
 	paths finding.PathCache
+	// fields holds field's answer for each failure it has looked up, so
+	// the failures beneath one schema object read its chain once.
+	fields map[*Failure]fieldAt
 }
 
 // emitted is one finding, and whether D7 item 4 suppresses it. A failure
@@ -362,13 +366,18 @@ func (m *mapper) choice(path []*Failure, n *Failure, via []finding.Via, sink fun
 // branchOf returns the index of the branch of choice c is evaluated in,
 // from c's evaluation path, which an adapter gives whether or not it
 // gives a node for each $ref between them.
+//
+// It compares the two paths as written, a token at a time being equal
+// exactly when its escaped form is, so that a deep tree's paths are never
+// split for each of its failures.
 func branchOf(choice, c *Failure) (int, bool) {
-	at, ct := tokens(choice.KeywordLocation), tokens(c.KeywordLocation)
-	if len(ct) <= len(at) || !slices.Equal(ct[:len(at)], at) {
+	rest, ok := strings.CutPrefix(c.KeywordLocation, choice.KeywordLocation+"/")
+	if !ok {
 		return 0, false
 	}
-	b, err := strconv.Atoi(ct[len(at)])
-	if err != nil || b < 0 || strconv.Itoa(b) != ct[len(at)] {
+	tok, _, _ := strings.Cut(rest, "/")
+	b, err := strconv.Atoi(tok)
+	if err != nil || b < 0 || strconv.Itoa(b) != tok {
 		return 0, false
 	}
 	return b, true

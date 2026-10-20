@@ -63,8 +63,9 @@ func (f Failure) Instance() string {
 
 // Walk calls fn for f and each failure beneath it, depth first, parents
 // before children and children in order. path holds the ancestors of the
-// failure fn is given, outermost first. When fn returns false, the
-// failure's children are skipped.
+// failure fn is given, outermost first, and is fn's only during the call:
+// the walk reuses it, so a tree is walked without a copy of the path for
+// each failure. When fn returns false, the failure's children are skipped.
 func (f *Failure) Walk(fn func(path []*Failure, f *Failure) bool) {
 	f.walk(nil, fn)
 }
@@ -75,7 +76,7 @@ func (f *Failure) walk(path []*Failure, fn func([]*Failure, *Failure) bool) {
 	}
 	path = append(path, f)
 	for i := range f.Children {
-		f.Children[i].walk(slices.Clip(path), fn)
+		f.Children[i].walk(path, fn)
 	}
 }
 
