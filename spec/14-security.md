@@ -192,6 +192,8 @@ one. A limit of §14.2 that bounds a parsed document, `value-depth` and
 |---|---|---|
 | `input-size` | 32 MiB | one input file, one collection item, one `--inputs-json`, `--set` or `--set-json` value |
 | `inputs-total` | 128 MiB | all the input bytes one operation reads |
+| `input-values` | 2,000,000 | the values all the inputs of one operation decode to |
+| `yaml-size` | 8 MiB | one YAML input file or collection item |
 | `csv-rows` | 1,000,000 | the data records of one CSV input |
 | `csv-columns` | 1,024 | the fields of one record |
 | `csv-cell` | 1 MiB | one field |
@@ -205,6 +207,24 @@ or at the lower value a caller gives for one operation, and MUST refuse an
 input that breaches one with `limit.exceeded` about that input, naming the
 limit and its bound, before it reads the bytes the limit bounds; the input
 then gives no value.
+
+<a id="mts-sec-059"></a>**MTS-SEC-059** A processor MUST count against
+`input-values` every value of the data model it decodes from the inputs of one
+operation, summed over them, and MUST refuse with `limit.exceeded` naming
+`input-values` the input whose value passes the bound, at that value. A JSON or
+YAML file, and an `--inputs-json` or `--set-json` text, counts every value it
+decodes to, its root included; a CSV file counts its array, each data record's
+object and each field the record holds, an unquoted empty field being absent;
+a plain text file and a `--set` value count one; a Markdown file counts its
+object, its `body` and every value of its frontmatter's fields, its
+frontmatter's mapping being the object; and a collection counts one for its
+array, and each item as its form counts. A value counts when it is decoded,
+though precedence later discards it; a value a path set's intermediate step
+creates, or a schema default supplies, does not count.
+
+<a id="mts-sec-060"></a>**MTS-SEC-060** A processor MUST refuse a YAML input
+file or collection item whose bytes number more than `yaml-size` with
+`limit.exceeded` naming `yaml-size`, before it parses the document.
 
 ## 14.5 Reading the host
 

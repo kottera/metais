@@ -1,0 +1,393 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/input-values",
+  "title": "Every reader counts the values it decodes against input-values, which passes at the bound and refuses one value over it",
+  "statements": [
+    "MTS-SEC-059"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "Each form's count, at the bound: j.json {\"a\": [1, 2], \"b\": null} is 5, its root included; y.yaml the same document, 5; c.csv is its array, each record's object and each field but the unquoted empty one: 1 + 3 + 4 = 8; t.txt 1; m.md with frontmatter its object, title, tags and its two items, and body, 6; without, its object and body, 2; collection k is its array and items [1] and {}, 1 + 2 + 1 = 4; --set 1; --set-json {\"a\": [1]} 3; --inputs-json {\"j\": [1, 2]} 4, its root included.",
+  "cases": [
+    {
+      "name": "json-at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/json",
+            "limits": {
+              "input-values": 5
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "json-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/json",
+            "limits": {
+              "input-values": 4
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/json-over.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yaml-at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/yaml",
+            "limits": {
+              "input-values": 5
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "yaml-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/yaml",
+            "limits": {
+              "input-values": 4
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/yaml-over.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "csv-at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/csv",
+            "limits": {
+              "input-values": 8
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "csv-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/csv",
+            "limits": {
+              "input-values": 7
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/csv-over.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "text-at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/text",
+            "limits": {
+              "input-values": 1
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "text-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/text",
+            "limits": {
+              "input-values": 0
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/text-over.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "markdown-at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/markdown",
+            "limits": {
+              "input-values": 6
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "markdown-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/markdown",
+            "limits": {
+              "input-values": 5
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/markdown-over.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "markdown-plain-at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/markdown-plain",
+            "limits": {
+              "input-values": 2
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "markdown-plain-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/markdown-plain",
+            "limits": {
+              "input-values": 1
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/markdown-plain-over.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "collection-at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/collection",
+            "limits": {
+              "input-values": 4
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "collection-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/collection",
+            "limits": {
+              "input-values": 3
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/collection-over.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set-at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set": [
+              "/t=hello"
+            ],
+            "limits": {
+              "input-values": 1
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "set-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set": [
+              "/t=hello"
+            ],
+            "limits": {
+              "input-values": 0
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/set-over.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set-json-at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set_json": [
+              "/j={\"a\": [1]}"
+            ],
+            "limits": {
+              "input-values": 3
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "set-json-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set_json": [
+              "/j={\"a\": [1]}"
+            ],
+            "limits": {
+              "input-values": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/set-json-over.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "inputs-json-at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "inputs_json": "args/inputs.json",
+            "limits": {
+              "input-values": 4
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "inputs-json-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "inputs_json": "args/inputs.json",
+            "limits": {
+              "input-values": 3
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/inputs-json-over.json"
+          }
+        }
+      ]
+    }
+  ]
+}

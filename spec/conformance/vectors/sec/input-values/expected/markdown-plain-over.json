@@ -1,0 +1,23 @@
+[
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "m",
+      "title": "M"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "m.md",
+      "line": 1,
+      "column": 1,
+      "pointer": "/body"
+    },
+    "params": {
+      "limit": "input-values",
+      "bound": 1,
+      "lowered": true
+    }
+  }
+]

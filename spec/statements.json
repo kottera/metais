@@ -256,6 +256,8 @@
     {"id": "MTS-SEC-045", "chapter": "14-security.md", "section": "14.2", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-SEC-046", "chapter": "14-security.md", "section": "14.6", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-SEC-058", "chapter": "14-security.md", "section": "14.2", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-SEC-059", "chapter": "14-security.md", "section": "14.4", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-SEC-060", "chapter": "14-security.md", "section": "14.4", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-SMP-001", "chapter": "13-authoring.md", "section": "13.6", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-SMP-002", "chapter": "13-authoring.md", "section": "13.6", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-SMP-003", "chapter": "13-authoring.md", "section": "13.6", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
