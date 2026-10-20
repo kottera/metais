@@ -1,0 +1,52 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/schema-location-length",
+  "title": "schema-location-length bounds a subschema's location: its resource's URI, #, and its JSON Pointer",
+  "statements": [
+    "MTS-SEC-021"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "The longest location is metais:///inputs/report.schema.json#/properties/title, 53 bytes.",
+  "cases": [
+    {
+      "name": "at-the-limit",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package",
+            "limits": {
+              "schema-location-length": 53
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-limit",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package",
+            "limits": {
+              "schema-location-length": 52
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beyond-the-limit.json"
+          }
+        }
+      ]
+    }
+  ]
+}

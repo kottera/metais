@@ -98,6 +98,6 @@ var limitCodes = []Entry{
 		Hint:       "Make the package smaller than the limit; run `metais limits` to see every limit, which can be lowered and never raised.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-PTH-007", "MTS-SEC-001", "MTS-SEC-011"},
+		Statements: []string{"MTS-PTH-007", "MTS-SEC-001", "MTS-SEC-011", "MTS-SEC-020", "MTS-SEC-021", "MTS-SEC-022"},
 	},
 }

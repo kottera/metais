@@ -279,6 +279,8 @@ it at its defaults.
 | `schema-size` | 4 MiB | one schema entry | a regulator's field glossary fits |
 | `combined-schema-size` | 16 MiB | `.compiled/`'s combined input schema, and the tool's own derivation of it | inlining `$ref`s duplicates subschemas, so an author can build a small schema whose inlined form is exponential; `pack` refuses it and so does every reader |
 | `schema-depth` | 64 | nesting of subschemas | recursion in validators and in the cross-reference check |
+| `schema-subschemas` | 20,000 | the subschemas of all a package's schema files together, and of the combined schema as a whole (Amendment A1 item 1) | the library's compile time is quadratic in the subschema count; FHIR R4's 15,521 fit |
+| `schema-location-length` | 512 bytes | a subschema's location: its resource's URI, `#`, and its JSON pointer (Amendment A1 item 2) | the same compile time is multiplied by the locations' length; FHIR R4's longest pointer is 105 bytes |
 | `ref-depth` | 32 | consecutive `$ref` / `$dynamicRef` hops at one instance location | refs that consume no instance can otherwise loop or fan out |
 | `pattern-length` | 4,096 bytes | a `pattern`, a `patternProperties` key, a `grep` pattern | |
 | `regex-program` | 4,096 instructions | a compiled regular expression | the matching cost is linear in the input times the program size; this bounds the second factor |

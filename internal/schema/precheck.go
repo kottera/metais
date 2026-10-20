@@ -100,15 +100,43 @@ type prechecker struct {
 	refs      []reference
 	anchors   []declared // each $anchor and $dynamicAnchor, by its URI
 	deep      bool       // schema-depth has been reported
+
+	count     *subschemas // the compilation's tally, which every file adds to
+	retrieval string      // the file's retrieval URI; "" checks no location
+	long      bool        // schema-location-length has been reported
+	resBase   *url.URL    // the base whose resource length resLen is
+	resLen    int
+}
+
+// subschemas is schema-subschemas' tally over every file one compilation
+// reads (ADR-009 Amendment A1 item 1): the package's total, because one
+// compilation follows $ref across files.
+type subschemas struct {
+	n    int64
+	past *finding.Location // the first subschema past the bound
+}
+
+// breached returns the limit.package finding for a tally past the bound,
+// at its first subschema past it, observing the whole tally; or false.
+func (t *subschemas) breached(lim limits.Set) (finding.Finding, bool) {
+	if t.past == nil {
+		return finding.Finding{}, false
+	}
+	return lim.Breached(limits.SchemaSubschemas, *t.past, t.n, true), true
 }
 
 // walk checks the subschema v at ptr, depth levels below the file's root
-// schema, whose base URI is base.
+// schema, whose base URI is base. Every value it is called on is a
+// subschema schema-subschemas counts, a boolean or not.
 func (w *prechecker) walk(v value.Value, ptr string, base *url.URL, depth int) {
+	if w.count.n++; w.count.n > w.lim.Value(limits.SchemaSubschemas) && w.count.past == nil {
+		w.count.past = at(w.entry, ptr)
+	}
 	o, ok := v.(value.Object)
 	if !ok {
-		// A boolean schema has nothing to check, and a value that is not a
-		// schema is the meta-schema's to refuse.
+		// A boolean schema has nothing else to check, and a value that is
+		// not a schema is the meta-schema's to refuse.
+		w.location(base, ptr)
 		return
 	}
 	if depth > int(w.lim.Value(limits.SchemaDepth)) {
@@ -130,6 +158,7 @@ func (w *prechecker) walk(v value.Value, ptr string, base *url.URL, depth int) {
 			}
 		}
 	}
+	w.location(base, ptr)
 	for name, member := range o.All() {
 		at := ptr + "/" + escapeToken(name)
 		sh, known := keywords[name]
@@ -189,6 +218,29 @@ func (w *prechecker) walk(v value.Value, ptr string, base *url.URL, depth int) {
 			}
 		}
 	}
+}
+
+// location checks schema-location-length (ADR-009 Amendment A1 item 2)
+// for the subschema at ptr, whose resource's canonical URI is base,
+// reporting the file's first location over it.
+func (w *prechecker) location(base *url.URL, ptr string) {
+	if w.retrieval == "" || w.long {
+		return
+	}
+	if n := w.resourceLength(base) + 1 + len(ptr); int64(n) > w.lim.Value(limits.SchemaLocationLength) {
+		w.long = true
+		w.findings = append(w.findings, w.lim.Breached(limits.SchemaLocationLength, *at(w.entry, ptr), int64(n), true))
+	}
+}
+
+// resourceLength is the length of the URI of the resource whose base is
+// base: its canonical URI or the file's retrieval URI, whichever is
+// longer. base changes only at an $id, so the last one's is kept.
+func (w *prechecker) resourceLength(base *url.URL) int {
+	if base != w.resBase {
+		w.resBase, w.resLen = base, max(len(base.String()), len(w.retrieval))
+	}
+	return w.resLen
 }
 
 // pattern compiles a pattern or a patternProperties name by the profile,

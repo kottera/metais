@@ -13,8 +13,8 @@ import (
 	"github.com/kottera/metais/internal/finding"
 )
 
-// adr009 is ADR-009 D3's three tables as the ADR writes them: name,
-// default and table, in order.
+// adr009 is ADR-009 D3's three tables as the ADR writes them, with
+// Amendment A1's two package limits: name, default and table, in order.
 var adr009 = []struct{ name, def, class string }{
 	{"package-size", "256 MiB", "package"},
 	{"package-uncompressed", "512 MiB", "package"},
@@ -27,6 +27,8 @@ var adr009 = []struct{ name, def, class string }{
 	{"schema-size", "4 MiB", "package"},
 	{"combined-schema-size", "16 MiB", "package"},
 	{"schema-depth", "64", "package"},
+	{"schema-subschemas", "20,000", "package"},
+	{"schema-location-length", "512 bytes", "package"},
 	{"ref-depth", "32", "package"},
 	{"pattern-length", "4,096 bytes", "package"},
 	{"regex-program", "4,096 instructions", "package"},
@@ -204,6 +206,10 @@ func TestLowerRefuses(t *testing.T) {
 		{"output-total=2GiB", want{ReasonAboveDefault, `"name":"output-total","default":1073741824,"unit":"bytes","value":2147483648`}},
 		{"findings=9007199254740993", want{ReasonAboveDefault, findingsLimit}},
 		{"findings=99999999999999999999999", want{ReasonAboveDefault, findingsLimit}},
+		// Amendment A1's two, each one above its default.
+		{"schema-subschemas=20001", want{ReasonAboveDefault, `"name":"schema-subschemas","default":20000,"unit":"count","value":20001`}},
+		{"schema-location-length=513", want{ReasonAboveDefault, `"name":"schema-location-length","default":512,"unit":"bytes","value":513`}},
+		{"schema-location-length=1KiB", want{ReasonAboveDefault, `"name":"schema-location-length","default":512,"unit":"bytes","value":1024`}},
 		{"entry-size=9007199254740992GiB", want{ReasonAboveDefault, `"name":"entry-size","default":67108864,"unit":"bytes"`}},
 		// An unknown name.
 		{"nope=1", want{ReasonUnknownName, ""}},
