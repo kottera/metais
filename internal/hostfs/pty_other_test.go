@@ -3,7 +3,7 @@
 
 //go:build !linux && !darwin
 
-package main
+package hostfs_test
 
 import (
 	"errors"
@@ -16,3 +16,6 @@ import (
 func openPTY() (master, slave *os.File, err error) {
 	return nil, nil, errors.New("the test opens a pseudo-terminal on linux and darwin, and this is " + runtime.GOOS)
 }
+
+// rawOutput is never reached: openPTY opens nothing here.
+func rawOutput(*os.File) error { return errors.New("no terminal") }

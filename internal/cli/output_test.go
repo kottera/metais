@@ -109,7 +109,7 @@ func TestNeverColoured(t *testing.T) {
 // documents and their exit statuses are the same bytes whatever NO_COLOR,
 // --color and the terminal say. Its control is fault.ColourJSON, a build
 // that colours a document written to a terminal, which the comparison
-// catches. The pseudo-terminal run of D16 item 6 is cmd/metais's
+// catches. The pseudo-terminal run of D16 item 6 is internal/hostfs's
 // TestPresentationUnderTerminal.
 func TestPresentationNeverReachesJSON(t *testing.T) {
 	for _, argv := range [][]string{{"version", "--json"}, {"limits", "--json"}, {"help", "--json"}, {"version", "--bogus", "--json"}, {"--json"}} {

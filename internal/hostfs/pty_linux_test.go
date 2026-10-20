@@ -1,7 +1,7 @@
 // Copyright 2026 Kottera
 // SPDX-License-Identifier: Apache-2.0
 
-package main
+package hostfs_test
 
 import (
 	"os"
@@ -34,4 +34,15 @@ func openPTY() (master, slave *os.File, err error) {
 		return nil, nil, err
 	}
 	return m, s, nil
+}
+
+// rawOutput turns off the output processing of the terminal f, so that it
+// hands on the bytes written to it: no LF becomes CR LF.
+func rawOutput(f *os.File) error {
+	t, err := unix.IoctlGetTermios(int(f.Fd()), unix.TCGETS)
+	if err != nil {
+		return err
+	}
+	t.Oflag &^= unix.OPOST
+	return unix.IoctlSetTermios(int(f.Fd()), unix.TCSETS, t)
 }

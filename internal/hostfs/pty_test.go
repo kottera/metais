@@ -1,7 +1,7 @@
 // Copyright 2026 Kottera
 // SPDX-License-Identifier: Apache-2.0
 
-package main
+package hostfs_test
 
 import (
 	"bytes"
@@ -15,8 +15,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"testing"
-
-	"golang.org/x/term"
 
 	"github.com/kottera/metais/internal/cli"
 	"github.com/kottera/metais/internal/fault"
@@ -105,7 +103,7 @@ func present(t *testing.T, tl tool, dir string, args []string, terminal bool) pr
 		out, outSlave := requirePTY(t)
 		errm, errSlave := requirePTY(t)
 		for _, s := range []*os.File{outSlave, errSlave} {
-			if _, err := term.MakeRaw(int(s.Fd())); err != nil {
+			if err := rawOutput(s); err != nil {
 				t.Fatalf("a raw terminal: %v", err)
 			}
 		}
@@ -233,6 +231,10 @@ func presentationProblems(t *testing.T, tl tool, pkg string) []string {
 // message. Its control is this test binary as the tool, which passes
 // without a fault and is caught with fault.ColourJSON, a build that
 // colours a JSON document written to a terminal.
+//
+// It is internal/hostfs's because it opens the pseudo-terminal through
+// golang.org/x/sys, which hostfs alone may import (ADR-010 Amendment A1
+// item 4); it is an external test, so that it may import internal/cli.
 func TestPresentationUnderTerminal(t *testing.T) {
 	if testing.Short() {
 		t.Skip("builds the binary")
@@ -243,7 +245,7 @@ func TestPresentationUnderTerminal(t *testing.T) {
 		t.Fatal(err)
 	}
 	bin := filepath.Join(testenv.Dir(t), "metais")
-	if out, err := exec.Command("go", "build", "-trimpath", "-o", bin, ".").CombinedOutput(); err != nil {
+	if out, err := exec.Command("go", "build", "-trimpath", "-o", bin, "../../cmd/metais").CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
 	}
 	for _, p := range presentationProblems(t, tool{path: bin}, pkg) {
