@@ -1,0 +1,262 @@
+{%- comment -%}
+One report on a major ICT-related incident: field 1.1, then each section
+of the template that holds a value, every field under its number in
+Annex II to Implementing Regulation (EU) 2025/302.
+{%- endcomment -%}
+# Major ICT-related incident report {{ inputs.incident.reference_code }}
+
+- **1.1 Type of submission:** {{ inputs.stage | capitalize }}
+
+{%- capture section %}
+{%- if inputs.entity.submitting_entity_name != nil %}
+- **1.2 Name of the entity submitting the report:** {{ inputs.entity.submitting_entity_name }}
+{%- endif %}
+{%- if inputs.entity.submitting_entity_code != nil %}
+- **1.3 Identification code of the entity submitting the report:** {{ inputs.entity.submitting_entity_code }}
+{%- endif %}
+{%- if inputs.entity.affected_entity_types != nil %}
+- **1.4 Type of the affected financial entity:** {{ inputs.entity.affected_entity_types | join: "; " }}
+{%- endif %}
+{%- if inputs.entity.affected_entity_name != nil %}
+- **1.5 Name of the financial entity affected:** {{ inputs.entity.affected_entity_name }}
+{%- endif %}
+{%- if inputs.entity.affected_entity_lei != nil %}
+- **1.6 LEI code of the financial entity affected:** {{ inputs.entity.affected_entity_lei }}
+{%- endif %}
+{%- if inputs.entity.primary_contact_name != nil %}
+- **1.7 Primary contact person name:** {{ inputs.entity.primary_contact_name }}
+{%- endif %}
+{%- if inputs.entity.primary_contact_email != nil %}
+- **1.8 Primary contact person email:** {{ inputs.entity.primary_contact_email }}
+{%- endif %}
+{%- if inputs.entity.primary_contact_telephone != nil %}
+- **1.9 Primary contact person telephone:** {{ inputs.entity.primary_contact_telephone }}
+{%- endif %}
+{%- if inputs.entity.second_contact_name != nil %}
+- **1.10 Second contact person name:** {{ inputs.entity.second_contact_name }}
+{%- endif %}
+{%- if inputs.entity.second_contact_email != nil %}
+- **1.11 Second contact person email:** {{ inputs.entity.second_contact_email }}
+{%- endif %}
+{%- if inputs.entity.second_contact_telephone != nil %}
+- **1.12 Second contact person telephone:** {{ inputs.entity.second_contact_telephone }}
+{%- endif %}
+{%- if inputs.entity.parent_undertaking_name != nil %}
+- **1.13 Name of the ultimate parent undertaking:** {{ inputs.entity.parent_undertaking_name }}
+{%- endif %}
+{%- if inputs.entity.parent_undertaking_lei != nil %}
+- **1.14 LEI code of the ultimate parent undertaking:** {{ inputs.entity.parent_undertaking_lei }}
+{%- endif %}
+{%- if inputs.entity.reporting_currency != nil %}
+- **1.15 Reporting currency:** {{ inputs.entity.reporting_currency }}
+{%- endif %}
+{%- endcapture %}
+{%- if section != "" %}
+
+## 1. The financial entity
+{{ section }}
+{%- endif %}
+{%- capture section %}
+{%- if inputs.incident.reference_code != nil %}
+- **2.1 Incident reference code assigned by the financial entity:** {{ inputs.incident.reference_code }}
+{%- endif %}
+{%- if inputs.incident.detected_at != nil %}
+- **2.2 Date and time of detection of the ICT-related incident:** {{ inputs.incident.detected_at }}
+{%- endif %}
+{%- if inputs.incident.classified_at != nil %}
+- **2.3 Date and time of classification of the incident as major:** {{ inputs.incident.classified_at }}
+{%- endif %}
+{%- if inputs.incident.description != nil %}
+- **2.4 Description of the ICT-related incident:** {{ inputs.incident.description }}
+{%- endif %}
+{%- if inputs.incident.classification_criteria != nil %}
+- **2.5 Classification criteria that triggered the incident report:** {{ inputs.incident.classification_criteria | join: "; " }}
+{%- endif %}
+{%- if inputs.incident.geographical_spread_countries != nil %}
+- **2.6 Materiality thresholds for the classification criterion ‘Geographical spread’:** {{ inputs.incident.geographical_spread_countries | join: "; " }}
+{%- endif %}
+{%- if inputs.incident.discovery != nil %}
+- **2.7 Discovery of the major ICT-related incident:** {{ inputs.incident.discovery }}
+{%- endif %}
+{%- if inputs.incident.originating_provider != nil %}
+- **2.8 Indication whether the incident originates from a third-party provider or another financial entity:** {{ inputs.incident.originating_provider }}
+{%- endif %}
+{%- if inputs.incident.business_continuity_plan_activated != nil %}
+- **2.9 Activation of business continuity plan, if activated:** {% if inputs.incident.business_continuity_plan_activated %}Yes{% else %}No{% endif %}
+{%- endif %}
+{%- if inputs.incident.other_information != nil %}
+- **2.10 Other relevant information:** {{ inputs.incident.other_information }}
+{%- endif %}
+{%- endcapture %}
+{%- if section != "" %}
+
+## 2. Initial notification
+{{ section }}
+{%- endif %}
+{%- capture section %}
+{%- if inputs.incident.authority_reference_code != nil %}
+- **3.1 Incident reference code provided by the competent authority:** {{ inputs.incident.authority_reference_code }}
+{%- endif %}
+{%- if inputs.incident.occurred_at != nil %}
+- **3.2 Date and time of occurrence of the incident:** {{ inputs.incident.occurred_at }}
+{%- endif %}
+{%- if inputs.incident.restored_at != nil %}
+- **3.3 Date and time when services, activities or operations have been recovered:** {{ inputs.incident.restored_at }}
+{%- endif %}
+{%- if inputs.incident.clients_affected != nil %}
+- **3.4 Number of clients affected:** {{ inputs.incident.clients_affected }}
+{%- endif %}
+{%- if inputs.incident.clients_affected_percentage != nil %}
+- **3.5 Percentage of clients affected:** {{ inputs.incident.clients_affected_percentage }}
+{%- endif %}
+{%- if inputs.incident.financial_counterparts_affected != nil %}
+- **3.6 Number of financial counterparts affected:** {{ inputs.incident.financial_counterparts_affected }}
+{%- endif %}
+{%- if inputs.incident.financial_counterparts_affected_percentage != nil %}
+- **3.7 Percentage of financial counterparts affected:** {{ inputs.incident.financial_counterparts_affected_percentage }}
+{%- endif %}
+{%- if inputs.incident.relevant_clients_or_counterparts_impacted != nil %}
+- **3.8 Impact on relevant clients or financial counterparts:** {% if inputs.incident.relevant_clients_or_counterparts_impacted %}Yes{% else %}No{% endif %}
+{%- endif %}
+{%- if inputs.incident.transactions_affected != nil %}
+- **3.9 Number of affected transactions:** {{ inputs.incident.transactions_affected }}
+{%- endif %}
+{%- if inputs.incident.transactions_affected_percentage != nil %}
+- **3.10 Percentage of affected transactions:** {{ inputs.incident.transactions_affected_percentage }}
+{%- endif %}
+{%- if inputs.incident.transactions_affected_value != nil %}
+- **3.11 Value of affected transactions:** {{ inputs.incident.transactions_affected_value }}
+{%- endif %}
+{%- if inputs.incident.impact_figures_basis != nil %}
+- **3.12 Information on whether the numbers are actual or estimates, or whether there has not been any impact:** {{ inputs.incident.impact_figures_basis | join: "; " }}
+{%- endif %}
+{%- if inputs.incident.reputational_impact != nil %}
+- **3.13 Reputational impact:** {{ inputs.incident.reputational_impact | join: "; " }}
+{%- endif %}
+{%- if inputs.incident.reputational_impact_context != nil %}
+- **3.14 Contextual information about the reputational impact:** {{ inputs.incident.reputational_impact_context }}
+{%- endif %}
+{%- if inputs.incident.duration != nil %}
+- **3.15 Duration of the incident:** {{ inputs.incident.duration }}
+{%- endif %}
+{%- if inputs.incident.service_downtime != nil %}
+- **3.16 Service downtime:** {{ inputs.incident.service_downtime }}
+{%- endif %}
+{%- if inputs.incident.duration_figures_basis != nil %}
+- **3.17 Information on whether the numbers for duration and service downtime are actual or estimates:** {{ inputs.incident.duration_figures_basis }}
+{%- endif %}
+{%- if inputs.incident.member_state_impact_types != nil %}
+- **3.18 Types of impact in the Member States:** {{ inputs.incident.member_state_impact_types | join: "; " }}
+{%- endif %}
+{%- if inputs.incident.member_state_impact_description != nil %}
+- **3.19 Description of how the incident has an impact in other Member States:** {{ inputs.incident.member_state_impact_description }}
+{%- endif %}
+{%- if inputs.incident.data_losses != nil %}
+- **3.20 Materiality thresholds for the classification criterion ‘Data losses’:** {{ inputs.incident.data_losses | join: "; " }}
+{%- endif %}
+{%- if inputs.incident.data_losses_description != nil %}
+- **3.21 Description of the data losses:** {{ inputs.incident.data_losses_description }}
+{%- endif %}
+{%- if inputs.incident.critical_services_affected != nil %}
+- **3.22 Classification criterion ‘Critical services affected’:** {{ inputs.incident.critical_services_affected }}
+{%- endif %}
+{%- if inputs.incident.incident_types != nil %}
+- **3.23 Type of the incident:** {{ inputs.incident.incident_types | join: "; " }}
+{%- endif %}
+{%- if inputs.incident.other_incident_types != nil %}
+- **3.24 Other types of incidents:** {{ inputs.incident.other_incident_types }}
+{%- endif %}
+{%- if inputs.incident.threats_and_techniques != nil %}
+- **3.25 Threats and techniques used by the threat actor:** {{ inputs.incident.threats_and_techniques | join: "; " }}
+{%- endif %}
+{%- if inputs.incident.other_techniques != nil %}
+- **3.26 Other types of techniques:** {{ inputs.incident.other_techniques }}
+{%- endif %}
+{%- if inputs.incident.affected_functional_areas != nil %}
+- **3.27 Information about affected functional areas and business processes:** {{ inputs.incident.affected_functional_areas }}
+{%- endif %}
+{%- if inputs.incident.infrastructure_components_affected != nil %}
+- **3.28 Affected infrastructure components supporting business processes:** {{ inputs.incident.infrastructure_components_affected }}
+{%- endif %}
+{%- if inputs.incident.infrastructure_components_description != nil %}
+- **3.29 Information about affected infrastructure components supporting business processes:** {{ inputs.incident.infrastructure_components_description }}
+{%- endif %}
+{%- if inputs.incident.client_financial_interest_impact != nil %}
+- **3.30 Impact on the financial interest of clients:** {{ inputs.incident.client_financial_interest_impact }}
+{%- endif %}
+{%- if inputs.incident.other_authorities_informed != nil %}
+- **3.31 Reporting to other authorities:** {{ inputs.incident.other_authorities_informed | join: "; " }}
+{%- endif %}
+{%- if inputs.incident.other_authorities != nil %}
+- **3.32 Specification of ‘other’ authorities:** {{ inputs.incident.other_authorities }}
+{%- endif %}
+{%- if inputs.incident.temporary_actions != nil %}
+- **3.33 Temporary actions/measures taken or planned to be taken to recover from the incident:** {% if inputs.incident.temporary_actions %}Yes{% else %}No{% endif %}
+{%- endif %}
+{%- if inputs.incident.temporary_actions_description != nil %}
+- **3.34 Description of any temporary actions and measures taken or planned to be taken to recover from the incident:** {{ inputs.incident.temporary_actions_description }}
+{%- endif %}
+{%- if inputs.incident.indicators_of_compromise != nil %}
+- **3.35 Indicators of compromise:** {{ inputs.incident.indicators_of_compromise }}
+{%- endif %}
+{%- endcapture %}
+{%- if section != "" %}
+
+## 3. Intermediate report
+{{ section }}
+{%- endif %}
+{%- capture section %}
+{%- if inputs.incident.root_cause_categories != nil %}
+- **4.1 High-level classification of root causes of the incident:** {{ inputs.incident.root_cause_categories | join: "; " }}
+{%- endif %}
+{%- if inputs.incident.root_cause_details != nil %}
+- **4.2 Detailed classification of root causes of the incident:** {{ inputs.incident.root_cause_details | join: "; " }}
+{%- endif %}
+{%- if inputs.incident.additional_root_causes != nil %}
+- **4.3 Additional classification of root causes of the incident:** {{ inputs.incident.additional_root_causes | join: "; " }}
+{%- endif %}
+{%- if inputs.incident.other_root_causes != nil %}
+- **4.4 Other types of root cause types:** {{ inputs.incident.other_root_causes }}
+{%- endif %}
+{%- if inputs.incident.root_cause_information != nil %}
+- **4.5 Information about the root causes of the incident:** {{ inputs.incident.root_cause_information }}
+{%- endif %}
+{%- if inputs.incident.resolution_summary != nil %}
+- **4.6 Incident resolution:** {{ inputs.incident.resolution_summary }}
+{%- endif %}
+{%- if inputs.incident.root_cause_addressed_at != nil %}
+- **4.7 Date and time when the incident root cause was addressed:** {{ inputs.incident.root_cause_addressed_at }}
+{%- endif %}
+{%- if inputs.incident.resolved_at != nil %}
+- **4.8 Date and time when the incident was resolved:** {{ inputs.incident.resolved_at }}
+{%- endif %}
+{%- if inputs.incident.resolution_date_difference != nil %}
+- **4.9 Information if the permanent resolution date of the incidents differs from the initially planned implementation date:** {{ inputs.incident.resolution_date_difference }}
+{%- endif %}
+{%- if inputs.incident.resolution_risk_assessment != nil %}
+- **4.10 Assessment of risk to critical functions for resolution purposes:** {{ inputs.incident.resolution_risk_assessment }}
+{%- endif %}
+{%- if inputs.incident.resolution_authority_information != nil %}
+- **4.11 Information relevant for resolution authorities:** {{ inputs.incident.resolution_authority_information }}
+{%- endif %}
+{%- if inputs.incident.economic_impact_threshold != nil %}
+- **4.12 Materiality threshold for the classification criterion ‘Economic impact’:** {{ inputs.incident.economic_impact_threshold }}
+{%- endif %}
+{%- if inputs.incident.gross_costs_and_losses != nil %}
+- **4.13 Amount of gross direct and indirect costs and losses:** {{ inputs.incident.gross_costs_and_losses }}
+{%- endif %}
+{%- if inputs.incident.financial_recoveries != nil %}
+- **4.14 Amount of financial recoveries:** {{ inputs.incident.financial_recoveries }}
+{%- endif %}
+{%- if inputs.incident.recurring_incidents != nil %}
+- **4.15 Information on whether the non-major incidents have been recurring:** {{ inputs.incident.recurring_incidents }}
+{%- endif %}
+{%- if inputs.incident.recurring_incidents_occurred_at != nil %}
+- **4.16 Date and time of occurrence of recurring incidents:** {{ inputs.incident.recurring_incidents_occurred_at }}
+{%- endif %}
+{%- endcapture %}
+{%- if section != "" %}
+
+## 4. Final report
+{{ section }}
+{%- endif %}

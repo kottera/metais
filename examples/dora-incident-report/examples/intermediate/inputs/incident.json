@@ -1,0 +1,62 @@
+{
+  "reference_code": "NWB-INC-2026-0042",
+  "detected_at": "2026-03-02T06:40:00Z",
+  "classified_at": "2026-03-02T08:10:00Z",
+  "description": "From 06:15 UTC on 2 March, card payments by retail clients in Germany and Austria were declined after a scheduled configuration change to the card payment gateway disabled its fallback route. The change was rolled back at 11:05 UTC and card payments were fully restored at 11:30 UTC.",
+  "classification_criteria": [
+    "clients, financial counterparts and transactions affected",
+    "reputational impact",
+    "duration and service downtime",
+    "geographical spread",
+    "critical services affected"
+  ],
+  "geographical_spread_countries": [
+    "AT",
+    "DE"
+  ],
+  "discovery": "monitoring systems",
+  "business_continuity_plan_activated": true,
+  "authority_reference_code": "BAFIN-DORA-2026-117",
+  "occurred_at": "2026-03-02T06:15:00Z",
+  "restored_at": "2026-03-02T11:30:00Z",
+  "clients_affected": 18500,
+  "clients_affected_percentage": 4.2,
+  "financial_counterparts_affected": 0,
+  "financial_counterparts_affected_percentage": 0,
+  "relevant_clients_or_counterparts_impacted": false,
+  "transactions_affected": 41200,
+  "transactions_affected_percentage": 12.5,
+  "transactions_affected_value": 2350,
+  "impact_figures_basis": [
+    "actual figures for clients affected",
+    "estimates for transactions affected",
+    "no impact on financial counterparts"
+  ],
+  "reputational_impact": [
+    "the major ICT-related incident has been reflected in the media",
+    "the major ICT-related incident has resulted in repetitive complaints from different clients or financial counterparts on client-facing services or critical business relationships"
+  ],
+  "reputational_impact_context": "Two national newspapers reported the declined payments, and the client service desk received about 1,900 complaints.",
+  "duration": "00:05:15",
+  "service_downtime": "00:05:15",
+  "duration_figures_basis": "Actual figures",
+  "member_state_impact_types": [
+    "clients",
+    "branch of the financial entity"
+  ],
+  "member_state_impact_description": "Clients of the Vienna branch could not pay by card for the whole of the incident.",
+  "critical_services_affected": "Card payment processing for retail clients.",
+  "incident_types": [
+    "Process failure",
+    "System failure"
+  ],
+  "affected_functional_areas": "Retail card payments, and the client service desk, which handled the complaints.",
+  "infrastructure_components_affected": "Yes",
+  "infrastructure_components_description": "The card payment gateway cluster and the configuration service that deploys its settings.",
+  "client_financial_interest_impact": "No",
+  "other_authorities_informed": [
+    "None"
+  ],
+  "temporary_actions": true,
+  "temporary_actions_description": "The previous gateway configuration was restored, and configuration changes to the gateway are frozen until the root cause is addressed."
+}
