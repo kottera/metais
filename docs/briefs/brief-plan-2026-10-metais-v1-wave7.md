@@ -267,5 +267,323 @@ From plan §6, carried whole. The wave orchestrator places each.
 
 ## Closeout
 
-*Not yet written. The wave orchestrator replaces this line with the wave's
-closeout.*
+The wave orchestrator wrote this closeout (Work Order
+`01a15827-975d-7a7b-8cb0-3714d12e7de4`) after the wave drained and its one
+verification round reported. It records what landed and what carries
+forward. **It is not a correctness verdict.**
+
+**What I checked, and how:**
+- I read every child's report, the verifier's full report, and `main`'s
+  log from `e51b1ee` to `dd179da`.
+- In the merged tree at `dd179da`, I checked these, and nothing more:
+  - `examples/` holds five packages;
+  - `internal/finding/testdata/unwired.txt` is gone, and the 14 + 2
+    `manifest.*` codes are out of `spec/findings/registry.json`;
+  - `collection.item_name` and `output.destination.write_failed` are
+    produced by `sup/collection-item-name` and `aut/unpack-write-stopped`;
+  - ADR-011 A6 is marked Proposed;
+  - `spec/15-conformance.md` holds CNF statements;
+  - `input-values` (1,000,000) and `yaml-size` (1 MiB) are in
+    `internal/limits`;
+  - the worked package's packed `.metais` begins with `README.md`, stored;
+  - `internal/tools/release` exists;
+  - no commit in the range carries a `Co-authored-by` trailer.
+- I ran no test, no gate and no mutation. Where something is said below
+  to be proved, the proof is the producer's or the verifier's, and is
+  attributed to them.
+
+**Wave range:** `e51b1ee..dd179da` on `main`.
+
+- **The breakdown:** ten items were drafted and approved (Q1 to Q3). Seven
+  were released as one set. W7-E1 and W7-E2 were held for the terms act
+  and released to build first (Q5). W7-R was held for Ed's ruling and
+  released when ADR-009 A2 landed.
+- **Correctives:**
+  - mine: W7-C1, W7-C2, W7-C6 and W7-C8;
+  - filed from Ed's session: W7-C3, W7-C4, W7-C5, W7-C7 and W7-S1;
+  - W7-A1b, an off-tera act I added.
+- **Verification:** one round, W7-V. Verdict **pass**, with no blocking
+  finding.
+- **Non-blocking findings:** five children, one design session for Ed and
+  one janitorial issue (question 4). The wave completed **without waiting
+  for them, deliberately**, and without waiting for the SC1 and SC9 acts.
+- **Not this wave's commits:**
+  - `71266cd` [W6-A0], Ed's ADR-009 A2;
+  - `39105ac` [W6-A2], Ed's calibration record and ADR-009 A3;
+  - `3f827de`, Ed's ADR-001 A1;
+  - `2bfe6ac` [W7-A2], Ed's ADR-009 A4;
+  - `c05b324`, `5f6ba42` and `a7db156`, the plan orchestrator's records in
+    §13;
+  - `c1e8e15` W6-NB1 and `a0cee04` W6-NB2.
+- **People consulted:** the plan orchestrator, five times:
+  - the breakdown (Q1 to Q3);
+  - the release builder and the terms gate (Q4, Q5);
+  - `schema-work` and input loading (Q6, Q7);
+  - the Q6 follow-up.
+
+  Ed answered W7-A1 and W7-A1b, and ruled Q6 as ADR-009 A4.
+
+### 1. Did each item land, and does it match the ask?
+
+| Item | Work Order | PR | Merge | Landed |
+|---|---|---|---|---|
+| W7-1 the codes no vector could produce | `01a15832-417d-713c-8c1e-f3fbc1412e23` | #151 | `990b370` | ADR-006 A1's 14 codes and the two relayed ones unregistered, under `TestManifestKeywordCodes`. ADR-011 A4's `absent`, `unreadable` and `unreadable-files`. `open` vectors for both `package.*` codes (MTS-PKG-046). `input.not_readable` (MTS-SUP-030). `collection.item_name` (MTS-SUP-031) and `write_failed` through ADR-011 A6, Proposed. The unwired list is deleted, and `TestFindingCodesCovered` exempts nothing |
+| W7-2 the specification's 1.0 text | `01a15832-9f83-71b9-9e8e-06419c9bf1d5` | #153 | `44277c1` | Chapter 15 (MTS-CNF-001 to 006). `check` refuses literal output paths `render` refuses (MTS-AUT-080, `aut/check-output-paths`). `A-references.md` complete, with `TestLinksResolve`. The front page at Draft. Eight `check`-running vectors reclassified as authoring, with the guard in `TestVectorsWellFormed` |
+| W7-3 the worked package | `01a15832-f01a-77bc-8da0-1652ad20f083` | #150 | `3cc1c97` | Appendix B from three `gen/` vectors. MTS-GEN-001. `docs/dev/rounds/sc9.md` |
+| W7-4 the documentation | `01a15833-54dd-7c0a-b642-087e3a18b663` | #149 | `7d05b03` | README with status and both golden paths. `docs/cli/README.md`. A `W7-4.md` log in each ADR's directory. `docs/INDEX.md` |
+| W7-E1 §4.1 the conformance report | `01a15834-5476-7c7f-9f16-d7da14640d7c` | #156 | `8a56ce8` | `examples/accessibility-conformance-report/`: the edition decides the tables, criteria come as CSV, a `.docx` through `ooxml` with no split-run finding, and a validated `acr.json`. EN 301 549 V4.1.1 in own words. `docs/dev/rounds/sc1.md` |
+| W7-E2 §4.2 the staged incident report | `01a15834-a323-7877-b6e1-0dcbc15e82de` | #155 | `62017c2` | `examples/dora-incident-report/`: Annex II's names, types and choice values verbatim (75 fields, after W7-A1b). The stage decides required fields. SC2's test, red first |
+| W7-E3 §4.3 and §4.5 | `01a15833-b216-74ab-8c5f-5bbcf91acf07` | #148 | `254bafb` | `examples/status-widget/` with SC3's test (`cmd/metais/sc3_test.go`), and `examples/repo-scaffold/` |
+| W7-E4 §4.4 the static site | `01a15833-f402-7b69-a069-feaaf47b5eaa` | #152 | `5a02c74` | `examples/static-site/`: a page per article, an index, an Atom feed and assets |
+| W7-R the release builder | `01a15834-f64d-72f1-af06-c69c22542390` | #163 | `9eade03` | `internal/tools/release` under ADR-009 A2. Builds twice in fresh clones, compares, and refuses on every listed condition. `internal/tarw` archives and `SHA256SUMS`. A2's three tripwire changes each seen red |
+| W7-C1 hermetic git | `01a158bb-dcc4-755b-80f3-1cc6e86c05f2` | #157 | `84e6337` | darwin git writes `core.precomposeunicode=true` into every new repository and needs iconv tables the sandbox denies. Gate scripts source `git-env.sh`, and the tests use `testenv.GitEnv` |
+| W7-C2 conformance's run time | `01a158ee-aa78-752c-9e95-85829b1517c7` | #160 | `b68d6ca` | darwin fork copy-on-write re-faults, fixed by a non-race spawner. `TestRealToolInRecord` replaced by the default run's own record. 2,288 to 957 CPU-s. The runner's stream cap enforced |
+| W7-C3 `inspect`'s example order | `01a15919-8b73-76d9-a067-04b39dc355e4` | #159 | `01fae3d` | `sortedKeys`. 49 map ranges swept |
+| W7-C4 hermetic go | `01a15919-d2aa-7de6-a27b-8963f45f4be0` | #162 | `123f79f` | `testenv.GoEnv`: no host module cache writes, no proxy, no host Go config |
+| W7-C5 ADR-009 A3 | `01a15968-db87-791f-996a-8d07ccd91ff6` | #164 | `96ef280` | `grep-context` 7, `output-size` 128 MiB, `output-total` 512 MiB, `schema-work` 14M (later 450k). CPU ceiling 120 s |
+| W7-C6 ADR-009 A4, and `schema-work` | `01a15987-791b-7186-8e46-5b50e5368775` | #166 | `dd179da` | `input-values` 1,000,000 and `yaml-size` 1 MiB (MTS-SEC-059/060). Nested findings bounded (MTS-FND-020/021). `schema-work` 450,000. Memory per value cut first. Calibration record `2d8032e6…` |
+| W7-C7 ADR-001 A1 | `01a159a6-4485-70f6-96bc-81c5b0a3c3ed` | #167 | `462281d` | `README.md` first and stored in every package, verified at open with four refusal vectors. 150 of 156 regenerated `.metais` keep their digest; the six others are explained |
+| W7-C8 the C toolchain in `GoEnv` | `01a15a7a-b79e-7854-98d4-e9d479548e2a` | #172 | `210f8e5` | linux `-race` needs cgo. `GoEnv` keeps the go command's C settings and the compiler's own variables |
+| W7-S1 metais.org | `01a15a5d-4c3e-7562-bdc8-a822d4f0a61e` | #170 | `9b48397` | `site/` (home, install, getting started, spec schemas at their `$id`s). A Pages workflow gated on a public repository and a `v*` tag. `docs/dev/release.md` |
+| W7-A1 the terms check | `01a15831-d4bb-7dd3-bfc1-e6e117c6bf94` | — | — | Off-tera (Ed). Verdicts per source (question 5) |
+| W7-A1b Annex II's table | `01a158ce-f8cd-7db3-8ae3-bb937a236888` | — | — | Off-tera (Ed). 8 differences, and the regulation handed to W7-E2 |
+
+**The plan's §13 acceptance:**
+- **The harness passes over every package under `examples/`:** the
+  verifier's wave tier passed `TestExamplePackages` over all five.
+- **SC2 and SC3 have their tests:** W7-E2's and W7-E3's, each seen red
+  first by the producer and mutated red by the verifier.
+- **SC4 holds:** each package checks, tests, packs and previews with
+  `--optional all` and `none`.
+- **Every chapter is complete:** `TestCoverage`, `TestChangelog`,
+  `TestFindingCodesCovered` (with no unwired list) and every D14 tripwire
+  are green in the verifier's wave tier.
+- **`Status: Draft`:** confirmed above.
+- **The SC1 and SC9 acts are filed** (question 5).
+- **§12's release-builder acceptance, carried from Wave 6, is met** by
+  W7-R, under Ed's ADR-009 A2.
+
+**Divergences from the ask:**
+- **W7-E1.4's "criterion text":** the Revised 508 text is own-words
+  summaries, although W7-A1 allowed it verbatim. WCAG and EN 301 549 are
+  in own words as their verdicts require.
+- **W7-C6:** A4 item 5 names spec §14.6, and the rows are in §14.4 (issue
+  #173).
+- **The calibration figures are sandbox figures.** W7-C5's ran on
+  linux/amd64. W7-C6's ran on darwin/arm64 with go1.26.2, because the host
+  sets `GOTOOLCHAIN=local`. A3's four-target re-run is still owed.
+- **W7-3, W7-4, W7-E3 and W7-E4 merged with their scoped gates not
+  green,** before W7-C1 and W7-C2 existed. W7-4 and W7-E3 merged under
+  R-W7-4, which was later rescinded. The verifier's wave tier is green on
+  the merged tree, which is the judgement the rescission names.
+
+### 2. What children flagged, degraded, declined or discovered
+
+None of this was verified by me.
+
+- **The shared host is the wave's main friction.** Package timeouts came
+  from oversubscription: a fixed probe got 0.5 to 2.0 of 5 cores. Three
+  real defects hid behind them:
+  - darwin's fork cost (W7-C2);
+  - git's iconv on darwin (W7-C1);
+  - the module cache and C toolchain in tests' go env (W7-C4, W7-C8).
+
+  The verifier measured 1.45 to 5.00 of 5 cores during its green run.
+- **Memory at the defaults.** A3 and A4 bound the calibrated paths. The
+  verifier found two that are not bounded (question 4, W7-D1).
+- **Decisions Ed made during the wave:**
+  - ADR-009 A2, A3 and A4, and ADR-001 A1;
+  - EN 301 549 V4.1.1;
+  - both regulated examples stay;
+  - the `schema-work` overlap accepted at 450,000;
+  - metais.org on GitHub Pages, live at release.
+- **Stricter rules that won, each in its PR:**
+  - `check` refuses what `render` refuses (W7-2);
+  - `internal/tarw` instead of `archive/tar`, which imports `os/user` (W7-R);
+  - "os file functions" read as `os.*` only (W7-R);
+  - fresh clones for the release builds (W7-R).
+- **Found and fixed in passing:**
+  - eight vectors of the wrong class (W7-2);
+  - the runner's unenforced stream cap (W7-C2);
+  - `pkgtreetest`'s map-ordered failure text (W7-C3).
+- **Unexplained:** one `TestHostIsolationCanaries/home` failure before
+  W7-C2's change, from a signal. It did not recur in the verifier's run.
+- **`examples/dora-incident-report`'s generator and `annex2.json` live
+  only in W7-E2's scratch.** The committed schemas are the source.
+
+### 3. What carries to the next wave
+
+This is the last wave, so this is what carries to the train's close.
+
+- **For Ed, before the release:**
+  - W7-D1 (question 4): output validation and YAML schema files past
+    1 GiB;
+  - ratify ADR-011 A6 (W7-1's run-time setups) and W7-1's per-position
+    reading of ADR-006 A1 item 4;
+  - the four-target calibration re-run that A3 requires, now covering A4's
+    cases;
+  - the matrix and calibration acts W6-A1 and W6-A2, which Wave 6 carried.
+- **For the plan orchestrator:**
+  - plan §3 still shows Wave 7 "not started";
+  - the rulings below (R-W7-C1, R-W7-C5, and R-W7-4 rescinded) are for its
+    verdict.
+- **What I would do differently:**
+  - **Fix the host before the wave.** Every early item merged over the same
+    three environmental reds. That cost a rescinded ruling, eight
+    correctives and many wakes. A wave tier run on a fresh clone at
+    breakdown would have surfaced C1, C2 and C4/C8 first.
+  - **Never rule a merge condition from "passed alone".** R-W7-4 had to be
+    rescinded. The right answer was always a corrective item.
+  - **File the off-tera acts so that their results can reach the
+    children.** A held draft whose task I edit worked. Recall is not
+    available in a dispatch, so W7-A1b had to be a second act.
+
+### 4. What the verification round found, and where every finding went
+
+**Verifier:** W7-V, `01a15aa4-f04d-78d5-8f3d-785e503420bc`
+(`wave-verification`).
+
+- **The gate:** `gate.sh wave` on a fresh clone of `main` at `dd179da`,
+  go1.26.9 as `go.mod` pins it, `-p 5 -parallel 5` on a 16-core host.
+  **GREEN:**
+  - every step passed;
+  - `go test -race` passed over all 45 packages;
+  - all 58 reach groups passed;
+  - nothing was set by the caller;
+  - `internal/conformance` took 276 s.
+
+  `TestConformance`'s default run took 19.7 s.
+- **The verdict:** pass, with no blocking finding.
+- **Coverage:**
+  - all 20 ids I sent came back;
+  - all 18 merges are on `main`, and the other commits in the range are
+    the ones I named.
+- **Depth:**
+  - 16 items **mutated**;
+  - W7-4 and W7-C3 **inspected**;
+  - W7-A1 and W7-A1b **skipped**: their reports are off-tera and not
+    readable from the verifier, so it checked their consequences in the
+    examples instead.
+
+  Every claimed-red row it spot-checked reproduced.
+- **What it mutated, in brief:**
+  - W7-1's harness checks;
+  - W7-2's check branch for asset and mirror destinations;
+  - W7-3's shown date;
+  - the ACR's `input_constraints` and its split-run template;
+  - the incident report's stage constraints;
+  - the widget's `escape: html`;
+  - the site's draft filter;
+  - the builder's `GOAMD64`;
+  - `git-env.sh`'s override;
+  - the spawner's cap;
+  - `inspect`'s sort;
+  - `GoEnv`'s `GOPROXY=off` and `CC_TOOLCHAIN_*`;
+  - the calibration ceiling;
+  - `yaml-size`'s pre-parse check;
+  - the README's storage method;
+  - a schema's `$id`.
+
+  Each went red.
+- **The meetings it checked all hold:**
+  - `check` against the examples;
+  - the lowered defaults against every example and vector;
+  - `GoEnv` against W7-R's tests;
+  - W7-C1 against W7-R;
+  - chapter 15 against the suite.
+
+**Blocking findings: none.** No fix child was filed in Step 5b.
+
+**Non-blocking findings.** Each is listed with where it went. **The wave
+completed without waiting for any of them, deliberately.** They run beside
+the train's close and are not re-verified.
+
+| Finding | Item | Where it went |
+|---|---|---|
+| Output validation parses a rendered JSON or YAML output with no value bound: a ~20 MiB output peaks at 2.0 GiB. A ~4 MiB YAML schema file makes `inspect` peak at 1.38 GiB. No calibration case covers either (cross-item) | W7-C5 / C6 | **W7-D1** `01a15abe-ed83-7284-9592-ca591cdd72db`, a design session for Ed, because bounding them is an ADR-009 amendment (question 5) |
+| The release builder pins neither `GOTOOLCHAIN` nor `GOWORK`, and never checks the toolchain line, against ADR-010 D1 (cross-item with W7-S1's install page) | W7-R | W7-NB1 `01a15abd-ddca-79b8-ab4f-4a8dae61b37e`, member A |
+| `git-env.sh` uses bash's `compgen` under `#!/bin/sh`, so `GIT_*` leaks on dash through `merge-setup.sh` | W7-C1 | W7-NB1, member B |
+| `TestGoCommandKeepsHostCToolchain`'s fake-CC check is vacuous | W7-C8 | W7-NB1, member C |
+| A1's tripwire can judge two `oneOf` branches exclusive while ignoring `type` (latent) | W7-1 | W7-NB2 `01a15abe-23ff-7dea-9dcb-3ad5a42f366e`, member A |
+| `TestLinksResolve` reads one line at a time | W7-2 | W7-NB2, member B |
+| Nothing holds chapter 14's limit defaults to the code | W7-C5 / C6 | W7-NB2, member C |
+| Appendix B §B.9 omits the stored `README.md` (W7-3 meets W7-C7) | W7-3 / C7 | W7-NB2, member D |
+| `check`'s finding for an over-long or over-deep literal path is unpinned | W7-2 | W7-NB3 `01a15abe-5929-7b9c-9746-cca65dede722`, member A |
+| `aut/check-output-paths`' "sometimes" case cannot catch its defect | W7-2 | W7-NB3, member B |
+| `inspect`'s per-input examples order is unpinned | W7-C3 | W7-NB3, member C |
+| An empty YAML document or frontmatter counting one value is unpinned | W7-C6 | W7-NB3, member D |
+| The nested-findings memory bound has no go-test guard | W7-C6 | W7-NB3, member E |
+| WCAG names are copied into templates and outputs without W3C's notice | W7-E1 | W7-NB4 `01a15abe-8fb7-7553-ae46-c09bad697eec`, member A |
+| The partials cite a nonexistent `catalogue.py` | W7-E1 | W7-NB4, member B |
+| The ACR's level set and `acr.json` validation are unpinned | W7-E1 | W7-NB4, member C |
+| The scaffold's `executable: true` is unpinned | W7-E3 | W7-NB4, member D |
+| The CLI schemas' `$id`s will not resolve on the site | W7-S1 | W7-NB5 `01a15abe-c2dd-7474-9870-06cc2d45750f`, member A |
+| `sc1.md`'s pack command exits 127 as written | W7-E1 | W7-NB5, member B |
+| `inspect --guide`'s help line misstates its output | W7-4 | W7-NB5, member C |
+| README and INDEX give paths, not links | W7-4 | W7-NB5, member D |
+| A4 item 5 names spec §14.6; the rows are in §14.4 | W7-C6 | **janitorial issue #173** |
+| Plan §3 shows Wave 7 "not started" | W7-4 | **Not filed:** the plan orchestrator's verdict writes §3 |
+| Some log files say "recorded above" | W7-4 | **Not filed:** log entries are never overwritten (AGENTS.md), and the wording misleads no one |
+| W7-3.5 and the scoped gate | W7-3 | **No action:** history; the wave tier judged it green |
+| `TestConformance`'s timing on the merged tree | W7-C2 | **No action:** C2.3 holds, at 19.7 s |
+
+
+**Why the members are grouped:**
+- **W7-NB1:** the host environment's reach. It touches shared seams, so
+  one wave tier covers all three.
+- **W7-NB2:** `spec/` and its tripwires (`internal/guarantees`,
+  `internal/finding`).
+- **W7-NB3:** guards in `internal/author`, `internal/cli` and
+  `internal/inputs`, which the gate selects together.
+- **W7-NB4:** `examples/`, under one harness.
+- **W7-NB5:** what a reader is pointed at: the site, runbooks, help and
+  index.
+
+Every task says its members are severable.
+
+**Where the verifier found nothing:** W7-C2's criteria hold on the merged
+tree, and W7-C7's README-first holds over all 151 tracked packages.
+
+### 5. Out-of-band acts
+
+| Act | Type | Work Order | Placement |
+|---|---|---|---|
+| W7-A1: terms check of the §4.1 and §4.2 sources | `manual-qa-pass` | `01a15831-d4bb-7dd3-bfc1-e6e117c6bf94` | **Waited on**, by holding and then gating E1's and E2's merges (Q5). Ended by Ed, verdict pass. Every source is usable: WCAG as excerpts with W3C's notice; OpenACR CC0; Revised 508 verbatim; EN 301 549 in own words at V4.1.1; DORA and 2025/302 verbatim with the EU notice |
+| W7-A1b: Annex II's field table | `manual-qa-pass` | `01a158ce-f8cd-7db3-8ae3-bb937a236888` | **Waited on** by W7-E2's merge. Ended by Ed: 8 substantive differences found, and the regulation handed to W7-E2, which fixed them |
+| W7-A2: the SC1 round | `dogfood-round` | `01a15abf-4d58-7c58-94ca-f4833e218555` | **Carried, not waited on.** `runbook` `docs/dev/rounds/sc1.md`, `build` `dd179da`. Its focus names `sc1.md`'s broken pack line (W7-NB5) |
+| W7-A3: the SC9 round | `dogfood-round` | `01a15abf-6347-7520-8a58-1b9ab5f65180` | **Carried, not waited on.** `runbook` `docs/dev/rounds/sc9.md`, `build` `dd179da`. Its focus names §B.9's missing README (W7-NB2) |
+| W7-D1: two unbounded memory paths | `design-session` | `01a15abe-ed83-7284-9592-ca591cdd72db` | **Carried**, for Ed before the release |
+
+Wave 6's W6-A1 (the matrix rehearsal) and W6-A2 (calibration) were carried
+into this wave. W6-A2's record merged as `39105ac` with ADR-009 A3.
+
+### Rulings made during this wave
+
+- **Q1** (plan orchestrator, plan §13): `collection.item_name`, and
+  `write_failed` if needed, are produced through an ADR-011 amendment in
+  A4's shape, with a run-time setup behind a `requires` probe and no
+  exemption list. Governs W7-1, which wrote A6, Proposed.
+- **Q2 and Q3** (plan orchestrator): §4.3 to §4.5 are written in the
+  project's own words, with no terms act. The release builder stays held.
+- **Q4 and Q5** (plan orchestrator): E1 and E2 build first and park before
+  merging for W7-A1. W7-R's fate was to be settled at the end; Ed's A2
+  released it first.
+- **Q6** (Ed): ADR-009 A4. **Q7** (plan orchestrator): `schema-work` under
+  A3 item 3, with no nested-findings limit this wave.
+- **R-W7-4** (wave orchestrator): merge over package timeouts caused by
+  host contention when the tests reading the changed files pass alone.
+  **Rescinded by the plan orchestrator**, because "it passed alone"
+  closes nothing (Ed, 2026-10-19). W7-4 and W7-E3 merged under it, and the
+  verifier's wave tier is green on the merged tree.
+- **R-W7-C1** (wave orchestrator): W7-C1 merged on a green wave tier at its
+  exact head, while a scoped re-run's only red was a timeout owned by
+  W7-C2. This broke the C1/C2 deadlock. For the plan orchestrator's
+  verdict.
+- **R-W7-C5** (wave orchestrator): `schema-work` lowered under A3 item 3,
+  with the unbounded paths filed as W7-C6.
+- **R-W7-E2b** (wave orchestrator, upheld by Ed): §4.2 carries the three
+  reports only.
+- **On gate re-runs** (wave orchestrator, given to E1, C4, C5, C6 and R): a
+  `gate.sh --resume` once a starved host gives the gate its share is a
+  re-run of the same gate, not a merge around a red. The PR names the run
+  and its CPU.
