@@ -1,0 +1,121 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/container-entry-path-limits",
+  "title": "path-length and path-depth bound a container entry's path within its container: at the bound it is written, and one past it is refused, with limit.package for a path the manifest writes and limit.exceeded.output for a path a template renders",
+  "statements": [
+    "MTS-TRN-002",
+    "MTS-PTH-007",
+    "MTS-PTH-009"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "ADR-009 D17 item 12. The entry paths are d/eeeeeeeeeeeeee.txt, 20 bytes, and f/g/h/i.txt, 4 segments; the package's own entry names and box.zip are shorter and shallower, so the lowered limits bound the entry paths alone.",
+  "cases": [
+    {
+      "name": "written-at-the-limits",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "written",
+            "out": "out",
+            "limits": {
+              "path-length": 20,
+              "path-depth": 4
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/written-at-the-limits",
+                "containers": [
+                  {
+                    "path": "box.zip",
+                    "methods": "all"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "written-beyond-the-limits",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "written",
+            "out": "out",
+            "limits": {
+              "path-length": 19,
+              "path-depth": 3
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/written-beyond-the-limits.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "rendered-at-the-limits",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "rendered",
+            "out": "out",
+            "limits": {
+              "path-length": 20,
+              "path-depth": 4
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/rendered-at-the-limits",
+                "containers": [
+                  {
+                    "path": "box.zip",
+                    "methods": "all"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rendered-beyond-the-limits",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "rendered",
+            "out": "out",
+            "limits": {
+              "path-length": 19,
+              "path-depth": 3
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/rendered-beyond-the-limits.json"
+          }
+        }
+      ]
+    }
+  ]
+}

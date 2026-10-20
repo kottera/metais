@@ -1,0 +1,20 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/t.txt.liquid",
+      "line": 1,
+      "column": 1101
+    },
+    "params": {
+      "limit": "template-nesting",
+      "bound": 100,
+      "lowered": false
+    }
+  }
+]

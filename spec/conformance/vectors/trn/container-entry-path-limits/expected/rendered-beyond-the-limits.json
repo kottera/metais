@@ -1,0 +1,43 @@
+[
+  {
+    "code": "limit.exceeded.output",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "deep"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 17,
+      "pointer": "/outputs/0/container/entries/1/path"
+    },
+    "params": {
+      "limit": "path-depth",
+      "bound": 3,
+      "lowered": true,
+      "observed": 4
+    }
+  },
+  {
+    "code": "limit.exceeded.output",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "long"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 17,
+      "pointer": "/outputs/0/container/entries/0/path"
+    },
+    "params": {
+      "limit": "path-length",
+      "bound": 19,
+      "lowered": true
+    }
+  }
+]

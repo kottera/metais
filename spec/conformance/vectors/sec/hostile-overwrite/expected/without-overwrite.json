@@ -1,0 +1,56 @@
+[
+  {
+    "code": "output.destination.link",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "path": "link.txt"
+    }
+  },
+  {
+    "code": "output.destination.not_empty",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "entries": [
+        "fifo.txt",
+        "link.txt"
+      ],
+      "more": false
+    }
+  },
+  {
+    "code": "output.destination.not_regular_file",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "path": "fifo.txt",
+      "reason": "not_regular_file"
+    }
+  },
+  {
+    "code": "output.path.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "placed"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "../escape.txt",
+      "reason": "dot_segment"
+    }
+  }
+]

@@ -1,0 +1,20 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: p
+    title: P
+    schema: inputs/p.schema.json
+outputs:
+  - id: placed
+    template: t.txt.liquid
+    path: "{{ inputs.p }}"
+  - id: linked
+    template: t.txt.liquid
+    path: link.txt
+  - id: piped
+    template: t.txt.liquid
+    path: fifo.txt

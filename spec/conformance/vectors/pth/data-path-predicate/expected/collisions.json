@@ -1,0 +1,114 @@
+[
+  {
+    "code": "output.path.case_collision",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "café.txt",
+      "item": 1,
+      "member": "café.txt",
+      "other": "café.txt"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 15,
+        "column": 11,
+        "pointer": "/outputs/0/path",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "output.path.case_collision",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "ff.txt",
+      "item": 3,
+      "member": "ff.txt",
+      "other": "ﬀ.txt"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 15,
+        "column": 11,
+        "pointer": "/outputs/0/path",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "output.path.file_directory_conflict",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "dir/x.txt",
+      "item": 5,
+      "member": "dir",
+      "other": "dir"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "metais.yaml",
+        "line": 15,
+        "column": 11,
+        "pointer": "/outputs/0/path",
+        "note": "collides with"
+      }
+    ]
+  },
+  {
+    "code": "output.path.not_nfc",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "café.txt",
+      "item": 1
+    }
+  }
+]

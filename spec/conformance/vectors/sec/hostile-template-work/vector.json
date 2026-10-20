@@ -1,0 +1,198 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/hostile-template-work",
+  "title": "A template that nests 10,000 blocks, loops over (1..1000000000), nests loops past loop-iterations, doubles a string past value-size or assign-bytes, splits past array-size, searches a string in a loop past render-work, or writes past output-size is refused at its render step by the limit, and nothing is written",
+  "statements": [
+    "MTS-SEC-001",
+    "MTS-SEC-009",
+    "MTS-SEC-008",
+    "MTS-SEC-010"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "ADR-009 D17 item 7, one defect per package. nested-blocks and range-billion run at the defaults, which refuse them before the cost they describe is paid. The other cases prove their rule at a lowered limit with an input sized to it (ADR-009 D4 item 4): at the defaults, nested loops cost seconds of CPU and a doubled string hundreds of MiB of memory.",
+  "cases": [
+    {
+      "name": "nested-blocks",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "nested-blocks",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/nested-blocks.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "range-billion",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "range-billion",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/range-billion.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "nested-loops",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "nested-loops",
+            "out": "out",
+            "limits": {
+              "loop-iterations": 10000
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/nested-loops.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "doubling-value-size",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "doubling-value-size",
+            "out": "out",
+            "limits": {
+              "value-size": 1024
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/doubling-value-size.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "doubling-assign-bytes",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "doubling-assign-bytes",
+            "out": "out",
+            "limits": {
+              "assign-bytes": 4096
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/doubling-assign-bytes.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "split-array-size",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "split-array-size",
+            "out": "out",
+            "limits": {
+              "array-size": 8
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/split-array-size.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "contains-render-work",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "contains-render-work",
+            "out": "out",
+            "limits": {
+              "render-work": 100000
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/contains-render-work.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "output-size",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "output-size",
+            "out": "out",
+            "limits": {
+              "output-size": 65535
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/output-size.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

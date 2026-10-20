@@ -1,0 +1,204 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/hostile-partials",
+  "title": "A template that includes, renders a partial from outside the package's templates or from the host, names an asset outside assets/, or recurses without end is refused at its render step, and nothing is written",
+  "statements": [
+    "MTS-TPL-042",
+    "MTS-TPL-002",
+    "MTS-TPL-043",
+    "MTS-TPL-046",
+    "MTS-TAG-013"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "ADR-009 D17 item 7, one defect per package. render-decoy's work directory holds decoy.liquid and templates/decoy.liquid beside the package, which the partial must not be read from; render-compiled and render-asset name entries of the package that are not templates. The recursive cases are refused at the default partial-depth, which costs 33 nested renders.",
+  "cases": [
+    {
+      "name": "include",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "include",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/include.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "render-traversal",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "render-traversal",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/render-traversal.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "render-absolute",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "render-absolute",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/render-absolute.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "render-decoy",
+      "setup": {
+        "copy": "setup-decoy"
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "render-decoy",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/render-decoy.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "render-compiled",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "render-compiled",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/render-compiled.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "render-asset",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "render-asset",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/render-asset.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "asset-outside",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "asset-outside",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/asset-outside.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "self-recursive",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "self-recursive",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/self-recursive.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "mutually-recursive",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "mutually-recursive",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/mutually-recursive.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

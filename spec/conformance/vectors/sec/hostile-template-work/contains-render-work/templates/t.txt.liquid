@@ -1,0 +1,1 @@
+{% assign s = "x" %}{% for i in (1..12) %}{% assign s = s | append: s %}{% endfor %}{% for i in (1..1000) %}{% if s contains "y" %}{% endif %}{% endfor %}

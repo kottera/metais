@@ -1,0 +1,282 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pth/hostile-output-paths",
+  "title": "An output path the manifest writes in a Windows-invalid form, with a reserved name, a control or bidirectional character, or a .git segment is refused at its render step, and nothing is written",
+  "statements": [
+    "MTS-PTH-003",
+    "MTS-PTH-004",
+    "MTS-PTH-005",
+    "MTS-PTH-010",
+    "MTS-SEC-012"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "portable-paths"
+  ],
+  "requires": [],
+  "notes": "ADR-009 D17 item 8 and ADR-005's path cases, one defect per package: each manifest declares one output, at the path its case is named for. Traversal and absolute manifest paths are pth/output-path-traversal's.",
+  "cases": [
+    {
+      "name": "drive-relative",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "drive-relative",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/drive-relative.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "unc",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "unc",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/unc.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "backslash-traversal",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "backslash-traversal",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/backslash-traversal.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "reserved-name",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "reserved-name",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/reserved-name.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "superscript-reserved-name",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "superscript-reserved-name",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/superscript-reserved-name.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "spaced-reserved-name",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "spaced-reserved-name",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/spaced-reserved-name.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "stream",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "stream",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/stream.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "wildcard",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "wildcard",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/wildcard.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "dot-end",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "dot-end",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/dot-end.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "space-end",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "space-end",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/space-end.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "control",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "control",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/control.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "bidi",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "bidi",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/bidi.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "git-hooks",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "git-hooks",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/git-hooks.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

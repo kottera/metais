@@ -1,0 +1,248 @@
+[
+  {
+    "code": "limit.exceeded.template",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/self.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/self.liquid",
+      "line": 1,
+      "column": 2
+    },
+    "params": {
+      "limit": "partial-depth",
+      "bound": 32,
+      "lowered": false,
+      "output_path": "t.txt"
+    },
+    "related": [
+      {
+        "origin": "package",
+        "file": "templates/t.txt.liquid",
+        "line": 1,
+        "column": 1,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      },
+      {
+        "origin": "package",
+        "file": "templates/self.liquid",
+        "line": 1,
+        "column": 2,
+        "note": "rendered from"
+      }
+    ]
+  }
+]

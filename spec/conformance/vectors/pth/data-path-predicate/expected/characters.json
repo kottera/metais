@@ -1,0 +1,502 @@
+[
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "c0-\u0001.txt",
+      "item": 6,
+      "code_point": 1
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "ideographic-space-　.txt",
+      "item": 21,
+      "code_point": 12288
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "pipe-|.txt",
+      "item": 25,
+      "code_point": 124
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "delete-.txt",
+      "item": 8,
+      "code_point": 127
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "c1-.txt",
+      "item": 9,
+      "code_point": 133
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "no-break-space- .txt",
+      "item": 20,
+      "code_point": 160
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "soft-hyphen-­.txt",
+      "item": 12,
+      "code_point": 173
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "quote-\".txt",
+      "item": 24,
+      "code_point": 34
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "star-*.txt",
+      "item": 27,
+      "code_point": 42
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "private-use-.txt",
+      "item": 16,
+      "code_point": 57344
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "less-<.txt",
+      "item": 22,
+      "code_point": 60
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "greater->.txt",
+      "item": 23,
+      "code_point": 62
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "question-?.txt",
+      "item": 26,
+      "code_point": 63
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "specials-￰.txt",
+      "item": 28,
+      "code_point": 65520
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "object-replacement-￼.txt",
+      "item": 29,
+      "code_point": 65532
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "replacement-�.txt",
+      "item": 30,
+      "code_point": 65533
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "zero-width-non-joiner-‌.txt",
+      "item": 11,
+      "code_point": 8204
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "zero-width-joiner-‍.txt",
+      "item": 10,
+      "code_point": 8205
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "left-to-right-mark-‎.txt",
+      "item": 13,
+      "code_point": 8206
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "line-separator- .txt",
+      "item": 18,
+      "code_point": 8232
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "paragraph-separator- .txt",
+      "item": 19,
+      "code_point": 8233
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "right-to-left-override-‮.txt",
+      "item": 14,
+      "code_point": 8238
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "isolate-⁦.txt",
+      "item": 15,
+      "code_point": 8294
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "unassigned-͸.txt",
+      "item": 17,
+      "code_point": 888
+    }
+  },
+  {
+    "code": "output.path.character",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "tab-\t.txt",
+      "item": 7,
+      "code_point": 9
+    }
+  }
+]
