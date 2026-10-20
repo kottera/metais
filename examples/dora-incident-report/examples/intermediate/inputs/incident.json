@@ -27,15 +27,19 @@
   "transactions_affected": 41200,
   "transactions_affected_percentage": 12.5,
   "transactions_affected_value": 2350,
-  "impact_figures_basis": "actual figures and estimates",
+  "impact_figures_basis": [
+    "actual figures for clients affected",
+    "estimates for transactions affected",
+    "no impact on financial counterparts"
+  ],
   "reputational_impact": [
-    "the incident has been reflected in the media",
-    "the incident has resulted in repeated complaints from clients or financial counterparts"
+    "the major ICT-related incident has been reflected in the media",
+    "the major ICT-related incident has resulted in repetitive complaints from different clients or financial counterparts on client-facing services or critical business relationships"
   ],
   "reputational_impact_context": "Two national newspapers reported the declined payments, and the client service desk received about 1,900 complaints.",
   "duration": "00:05:15",
   "service_downtime": "00:05:15",
-  "duration_figures_basis": "actual figures",
+  "duration_figures_basis": "Actual figures",
   "member_state_impact_types": [
     "clients",
     "branch of the financial entity"
@@ -43,15 +47,15 @@
   "member_state_impact_description": "Clients of the Vienna branch could not pay by card for the whole of the incident.",
   "critical_services_affected": "Card payment processing for retail clients.",
   "incident_types": [
-    "process failure",
-    "system failure"
+    "Process failure",
+    "System failure"
   ],
   "affected_functional_areas": "Retail card payments, and the client service desk, which handled the complaints.",
-  "infrastructure_components_affected": "yes",
+  "infrastructure_components_affected": "Yes",
   "infrastructure_components_description": "The card payment gateway cluster and the configuration service that deploys its settings.",
-  "client_financial_interest_impact": "no",
+  "client_financial_interest_impact": "No",
   "other_authorities_informed": [
-    "none"
+    "None"
   ],
   "temporary_actions": true,
   "temporary_actions_description": "The previous gateway configuration was restored, and configuration changes to the gateway are frozen until the root cause is addressed."

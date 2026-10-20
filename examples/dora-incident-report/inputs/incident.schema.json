@@ -15,7 +15,7 @@
   ],
   "properties": {
     "reference_code": {
-      "title": "2.1 Incident reference code provided by the financial entity",
+      "title": "2.1 Incident reference code assigned by the financial entity",
       "description": "The financial entity's own reference for the incident, the same in every report about it. Mandatory in the initial notification, the intermediate report and the final report.",
       "x-field": "2.1",
       "x-field-type": "Alphanumeric",
@@ -26,10 +26,10 @@
       ]
     },
     "detected_at": {
-      "title": "2.2 Date and time of detection of the incident",
+      "title": "2.2 Date and time of detection of the ICT-related incident",
       "description": "When the incident was detected, in UTC. Mandatory in the initial notification, the intermediate report and the final report.",
       "x-field": "2.2",
-      "x-field-type": "Date and time",
+      "x-field-type": "ISO 8601 standard UTC (YYYY-MM-DD Thh: mm:ss)",
       "type": "string",
       "format": "date-time",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
@@ -41,7 +41,7 @@
       "title": "2.3 Date and time of classification of the incident as major",
       "description": "When the incident was classified as major, in UTC. Mandatory in the initial notification, the intermediate report and the final report.",
       "x-field": "2.3",
-      "x-field-type": "Date and time",
+      "x-field-type": "ISO 8601 standard UTC (YYYY-MM-DD Thh: mm:ss)",
       "type": "string",
       "format": "date-time",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
@@ -50,7 +50,7 @@
       ]
     },
     "description": {
-      "title": "2.4 Description of the incident",
+      "title": "2.4 Description of the ICT-related incident",
       "description": "What happened and what it affects, in plain words, updated as more is known. Mandatory in the initial notification, the intermediate report and the final report.",
       "x-field": "2.4",
       "x-field-type": "Alphanumeric",
@@ -81,10 +81,10 @@
       }
     },
     "geographical_spread_countries": {
-      "title": "2.6 Materiality thresholds for the classification criterion 'Geographical spread'",
+      "title": "2.6 Materiality thresholds for the classification criterion ‘Geographical spread’",
       "description": "The EEA countries the incident had an impact in, given when 2.5 includes geographical spread. Mandatory when its condition holds.",
       "x-field": "2.6",
-      "x-field-type": "Choice (multiple, ISO 3166-1 alpha-2 country codes)",
+      "x-field-type": "Choice (multiple) populated by using ISO 3166 ALPHA-2 of the affected countries",
       "type": "array",
       "minItems": 1,
       "uniqueItems": true,
@@ -124,21 +124,21 @@
       }
     },
     "discovery": {
-      "title": "2.7 Discovery of the incident",
+      "title": "2.7 Discovery of the major ICT-related incident",
       "description": "How the incident was discovered. Mandatory in the initial notification, the intermediate report and the final report.",
       "x-field": "2.7",
       "x-field-type": "Choice",
       "enum": [
-        "IT security",
+        "IT Security",
         "staff",
-        "internal audit function",
-        "external audit function",
+        "internal audit",
+        "external audit",
         "clients",
         "financial counterparts",
         "third-party provider",
         "attacker",
         "monitoring systems",
-        "authority, agency or law enforcement body",
+        "authority/agency/ law enforcement body",
         "other"
       ]
     },
@@ -157,15 +157,15 @@
       "title": "2.9 Activation of business continuity plan, if activated",
       "description": "Whether the business continuity plan was activated. Mandatory in the initial notification, the intermediate report and the final report.",
       "x-field": "2.9",
-      "x-field-type": "Boolean",
+      "x-field-type": "Boolean (Yes or No)",
       "type": "boolean",
       "examples": [
         true
       ]
     },
     "other_information": {
-      "title": "2.10 Other information",
-      "description": "Anything else the competent authority should know at this stage. Optional.",
+      "title": "2.10 Other relevant information",
+      "description": "Anything else the competent authority should know that the template has no field for. Mandatory when its condition holds.",
       "x-field": "2.10",
       "x-field-type": "Alphanumeric",
       "type": "string",
@@ -189,7 +189,7 @@
       "title": "3.2 Date and time of occurrence of the incident",
       "description": "When the incident began, in UTC. Mandatory in the intermediate report and the final report.",
       "x-field": "3.2",
-      "x-field-type": "Date and time",
+      "x-field-type": "ISO 8601 standard UTC (YYYY-MM-DD Thh: mm:ss)",
       "type": "string",
       "format": "date-time",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
@@ -198,10 +198,10 @@
       ]
     },
     "restored_at": {
-      "title": "3.3 Date and time when services, activities and/or operations have been restored",
-      "description": "When regular services, activities and operations were restored, in UTC, given once they have been. Mandatory when its condition holds.",
+      "title": "3.3 Date and time when services, activities or operations have been recovered",
+      "description": "When services, activities and operations were recovered, in UTC, given from the intermediate report on when 3.16 is. Mandatory when its condition holds.",
       "x-field": "3.3",
-      "x-field-type": "Date and time",
+      "x-field-type": "ISO 8601 standard UTC (YYYY-MM-DD Thh: mm:ss)",
       "type": "string",
       "format": "date-time",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
@@ -213,7 +213,7 @@
       "title": "3.4 Number of clients affected",
       "description": "How many clients the incident affected. Mandatory in the intermediate report and the final report.",
       "x-field": "3.4",
-      "x-field-type": "Number",
+      "x-field-type": "Numerical integer",
       "type": "integer",
       "minimum": 0,
       "examples": [
@@ -224,7 +224,7 @@
       "title": "3.5 Percentage of clients affected",
       "description": "The clients affected, as a percentage of all the financial entity's clients. Mandatory in the intermediate report and the final report.",
       "x-field": "3.5",
-      "x-field-type": "Percentage",
+      "x-field-type": "Expressed as percentage – any value up to 5 numeric characters including up to 1 decimal place expressed as percentage (e.g. 2,4 instead of 2,4 %). If the value has more than 1 digit after the decimal, reporting counterparties shall round half-up",
       "type": "number",
       "minimum": 0,
       "maximum": 100,
@@ -236,7 +236,7 @@
       "title": "3.6 Number of financial counterparts affected",
       "description": "How many financial counterparts the incident affected. Mandatory in the intermediate report and the final report.",
       "x-field": "3.6",
-      "x-field-type": "Number",
+      "x-field-type": "Numerical integer",
       "type": "integer",
       "minimum": 0,
       "examples": [
@@ -247,7 +247,7 @@
       "title": "3.7 Percentage of financial counterparts affected",
       "description": "The financial counterparts affected, as a percentage of all of them. Mandatory in the intermediate report and the final report.",
       "x-field": "3.7",
-      "x-field-type": "Percentage",
+      "x-field-type": "Expressed as percentage – any value up to 5 numeric characters including up to 1 decimal place expressed as percentage (e.g. 2,4 instead of 2,4 %). If the value has more than 1 digit after the decimal, reporting counterparties shall round half-up",
       "type": "number",
       "minimum": 0,
       "maximum": 100,
@@ -257,9 +257,9 @@
     },
     "relevant_clients_or_counterparts_impacted": {
       "title": "3.8 Impact on relevant clients or financial counterparts",
-      "description": "Whether the incident affected clients or financial counterparts that are relevant under Delegated Regulation (EU) 2024/1772. Mandatory in the intermediate report and the final report.",
+      "description": "Whether the incident affected clients or financial counterparts that are relevant under Delegated Regulation (EU) 2024/1772, given when that threshold is met. Mandatory when its condition holds.",
       "x-field": "3.8",
-      "x-field-type": "Boolean",
+      "x-field-type": "Boolean (Yes or No)",
       "type": "boolean",
       "examples": [
         false
@@ -267,9 +267,9 @@
     },
     "transactions_affected": {
       "title": "3.9 Number of affected transactions",
-      "description": "How many transactions the incident affected. Mandatory in the intermediate report and the final report.",
+      "description": "How many transactions the incident affected, given when it affected any. Mandatory when its condition holds.",
       "x-field": "3.9",
-      "x-field-type": "Number",
+      "x-field-type": "Numerical integer",
       "type": "integer",
       "minimum": 0,
       "examples": [
@@ -278,9 +278,9 @@
     },
     "transactions_affected_percentage": {
       "title": "3.10 Percentage of affected transactions",
-      "description": "The transactions affected, as a percentage of the daily average. Mandatory in the intermediate report and the final report.",
+      "description": "The transactions affected, as a percentage of the daily average, given when the incident affected any. Mandatory when its condition holds.",
       "x-field": "3.10",
-      "x-field-type": "Percentage",
+      "x-field-type": "Expressed as percentage – any value up to 5 numeric characters including up to 1 decimal place expressed as percentage (e.g. 2,4 instead of 2,4 %). If the value has more than 1 digit after the decimal, reporting counterparties shall round half-up",
       "type": "number",
       "minimum": 0,
       "maximum": 100,
@@ -290,7 +290,7 @@
     },
     "transactions_affected_value": {
       "title": "3.11 Value of affected transactions",
-      "description": "The total value of the transactions affected, in the reporting currency. Mandatory in the intermediate report and the final report.",
+      "description": "The total value of the transactions affected, in the reporting currency, given when the incident affected any. Mandatory when its condition holds.",
       "x-field": "3.11",
       "x-field-type": "Monetary",
       "type": "number",
@@ -300,16 +300,26 @@
       ]
     },
     "impact_figures_basis": {
-      "title": "3.12 Information whether the numbers are actual or estimates, or whether there has not been any impact",
-      "description": "Whether 3.4 to 3.11 are actual figures, estimates or both, or there was no impact. Mandatory in the intermediate report and the final report.",
+      "title": "3.12 Information on whether the numbers are actual or estimates, or whether there has not been any impact",
+      "description": "For clients, financial counterparts and transactions in turn, whether 3.4 to 3.11 are actual figures or estimates, or there was no impact. Mandatory in the intermediate report and the final report.",
       "x-field": "3.12",
-      "x-field-type": "Choice",
-      "enum": [
-        "actual figures",
-        "estimates",
-        "actual figures and estimates",
-        "no impact"
-      ]
+      "x-field-type": "Choice (multiple)",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "actual figures for clients affected",
+          "actual figures for financial counterparts affected",
+          "actual figures for transactions affected",
+          "estimates for clients affected",
+          "estimates for financial counterparts affected",
+          "estimates for transactions affected",
+          "no impact on clients",
+          "no impact on financial counterparts",
+          "no impact on transactions"
+        ]
+      }
     },
     "reputational_impact": {
       "title": "3.13 Reputational impact",
@@ -321,10 +331,10 @@
       "uniqueItems": true,
       "items": {
         "enum": [
-          "the incident has been reflected in the media",
-          "the incident has resulted in repeated complaints from clients or financial counterparts",
-          "the financial entity will not be able to, or is likely not to be able to, meet regulatory requirements",
-          "the financial entity is likely to lose clients or financial counterparts with a material impact on its business"
+          "the major ICT-related incident has been reflected in the media",
+          "the major ICT-related incident has resulted in repetitive complaints from different clients or financial counterparts on client-facing services or critical business relationships",
+          "the financial entity will not be able to or is likely not to be able to meet regulatory requirements as a result of the major ICT-related incident",
+          "the financial entity will or is likely to lose clients or financial counterparts with a material impact on its business as a result of the major ICT-related incident"
         ]
       }
     },
@@ -343,7 +353,7 @@
       "title": "3.15 Duration of the incident",
       "description": "How long the incident lasted, from its occurrence to its resolution, or to the report. Mandatory in the intermediate report and the final report.",
       "x-field": "3.15",
-      "x-field-type": "Duration (DD:HH:MM)",
+      "x-field-type": "DD:HH:MM",
       "type": "string",
       "pattern": "^[0-9]{2,3}:([01][0-9]|2[0-3]):[0-5][0-9]$",
       "examples": [
@@ -354,7 +364,7 @@
       "title": "3.16 Service downtime",
       "description": "How long the service was unavailable to clients, given when it was. Mandatory when its condition holds.",
       "x-field": "3.16",
-      "x-field-type": "Duration (DD:HH:MM)",
+      "x-field-type": "DD:HH:MM",
       "type": "string",
       "pattern": "^[0-9]{2,3}:([01][0-9]|2[0-3]):[0-5][0-9]$",
       "examples": [
@@ -362,15 +372,15 @@
       ]
     },
     "duration_figures_basis": {
-      "title": "3.17 Information whether the numbers for duration and service downtime are actual or estimates",
-      "description": "Whether 3.15 and 3.16 are actual figures, estimates or both. Mandatory in the intermediate report and the final report.",
+      "title": "3.17 Information on whether the numbers for duration and service downtime are actual or estimates",
+      "description": "Whether 3.15 and 3.16 are actual figures, estimates or both, given from the intermediate report on when 2.5 includes duration and service downtime. Mandatory when its condition holds.",
       "x-field": "3.17",
       "x-field-type": "Choice",
       "enum": [
-        "actual figures",
-        "estimates",
-        "actual figures and estimates",
-        "information not available"
+        "Actual figures",
+        "Estimates",
+        "Actual figures and estimates",
+        "No information available"
       ]
     },
     "member_state_impact_types": {
@@ -386,7 +396,7 @@
           "clients",
           "financial counterparts",
           "branch of the financial entity",
-          "financial entity within the group carrying out activities in the respective Member State",
+          "financial entities within the group carrying out activities in the respective Member State",
           "financial market infrastructure",
           "third-party providers that may be common to other financial entities"
         ]
@@ -404,7 +414,7 @@
       ]
     },
     "data_losses": {
-      "title": "3.20 Materiality thresholds for the classification criterion 'Data losses'",
+      "title": "3.20 Materiality thresholds for the classification criterion ‘Data losses’",
       "description": "Which properties of data the incident compromised, given when 2.5 includes data losses. Mandatory when its condition holds.",
       "x-field": "3.20",
       "x-field-type": "Choice (multiple)",
@@ -432,7 +442,7 @@
       ]
     },
     "critical_services_affected": {
-      "title": "3.22 Classification criterion 'Critical services affected'",
+      "title": "3.22 Classification criterion ‘Critical services affected’",
       "description": "Which critical services the incident affected, and how. Mandatory in the intermediate report and the final report.",
       "x-field": "3.22",
       "x-field-type": "Alphanumeric",
@@ -452,18 +462,18 @@
       "uniqueItems": true,
       "items": {
         "enum": [
-          "cybersecurity-related",
-          "process failure",
-          "system failure",
-          "external event",
-          "payment-related",
-          "other"
+          "Cybersecurity-related",
+          "Process failure",
+          "System failure",
+          "External event",
+          "Payment-related",
+          "Other (please specify)"
         ]
       }
     },
     "other_incident_types": {
       "title": "3.24 Other types of incidents",
-      "description": "The kind of incident, in words, given when 3.23 includes other. Mandatory when its condition holds.",
+      "description": "The kind of incident, in words, given from the intermediate report on when 3.23 includes other. Mandatory when its condition holds.",
       "x-field": "3.24",
       "x-field-type": "Alphanumeric",
       "type": "string",
@@ -474,7 +484,7 @@
     },
     "threats_and_techniques": {
       "title": "3.25 Threats and techniques used by the threat actor",
-      "description": "The threats and techniques the attacker used, given when 3.23 includes cybersecurity-related. Mandatory when its condition holds.",
+      "description": "The threats and techniques the attacker used, given from the intermediate report on when 3.23 includes cybersecurity-related. Mandatory when its condition holds.",
       "x-field": "3.25",
       "x-field-type": "Choice (multiple)",
       "type": "array",
@@ -482,22 +492,22 @@
       "uniqueItems": true,
       "items": {
         "enum": [
-          "social engineering, including phishing",
+          "Social engineering (including phishing)",
           "(D)DoS",
-          "identity theft",
-          "data encryption for impact, including ransomware",
-          "resource hijacking",
-          "data exfiltration and manipulation, including identity theft",
-          "data destruction",
-          "defacement",
-          "supply-chain attack",
-          "other"
+          "Identity theft",
+          "Data encryption for impact, including ransomware",
+          "Resource hijacking",
+          "Data exfiltration and manipulation, including identity theft",
+          "Data destruction",
+          "Defacement",
+          "Supply-chain attack",
+          "Other (please specify)"
         ]
       }
     },
     "other_techniques": {
       "title": "3.26 Other types of techniques",
-      "description": "The techniques, in words, given when 3.25 includes other. Mandatory when its condition holds.",
+      "description": "The techniques, in words, given from the intermediate report on when 3.25 includes other. Mandatory when its condition holds.",
       "x-field": "3.26",
       "x-field-type": "Alphanumeric",
       "type": "string",
@@ -523,14 +533,14 @@
       "x-field": "3.28",
       "x-field-type": "Choice",
       "enum": [
-        "yes",
-        "no",
-        "information not available"
+        "Yes",
+        "No",
+        "Information not available"
       ]
     },
     "infrastructure_components_description": {
       "title": "3.29 Information about affected infrastructure components supporting business processes",
-      "description": "Which infrastructure components were affected, given when 3.28 is yes. Mandatory when its condition holds.",
+      "description": "Which infrastructure components were affected, given from the intermediate report on when 3.28 is Yes. Mandatory when its condition holds.",
       "x-field": "3.29",
       "x-field-type": "Alphanumeric",
       "type": "string",
@@ -545,9 +555,9 @@
       "x-field": "3.30",
       "x-field-type": "Choice",
       "enum": [
-        "yes",
-        "no",
-        "information not available"
+        "Yes",
+        "No",
+        "Information not available"
       ]
     },
     "other_authorities_informed": {
@@ -560,18 +570,18 @@
       "uniqueItems": true,
       "items": {
         "enum": [
-          "police or law enforcement",
+          "Police/Law Enforcement",
           "CSIRT",
-          "data protection authority",
-          "national cybersecurity agency",
-          "none",
-          "other"
+          "Data Protection Authority",
+          "National Cybersecurity Agency",
+          "None",
+          "Other (please specify)"
         ]
       }
     },
     "other_authorities": {
-      "title": "3.32 Specification of 'other' authorities",
-      "description": "The other authorities, by name, given when 3.31 includes other. Mandatory when its condition holds.",
+      "title": "3.32 Specification of ‘other’ authorities",
+      "description": "The other authorities, by name, given from the intermediate report on when 3.31 includes other. Mandatory when its condition holds.",
       "x-field": "3.32",
       "x-field-type": "Alphanumeric",
       "type": "string",
@@ -584,7 +594,7 @@
       "title": "3.33 Temporary actions/measures taken or planned to be taken to recover from the incident",
       "description": "Whether temporary actions or measures have been taken, or are planned, to recover from the incident. Mandatory in the intermediate report and the final report.",
       "x-field": "3.33",
-      "x-field-type": "Boolean",
+      "x-field-type": "Boolean (Yes or No)",
       "type": "boolean",
       "examples": [
         true
@@ -592,7 +602,7 @@
     },
     "temporary_actions_description": {
       "title": "3.34 Description of any temporary actions and measures taken or planned to be taken to recover from the incident",
-      "description": "What the temporary actions and measures are, given when 3.33 is true. Mandatory when its condition holds.",
+      "description": "What the temporary actions and measures are, given from the intermediate report on when 3.33 is true. Mandatory when its condition holds.",
       "x-field": "3.34",
       "x-field-type": "Alphanumeric",
       "type": "string",
@@ -603,7 +613,7 @@
     },
     "indicators_of_compromise": {
       "title": "3.35 Indicators of compromise",
-      "description": "The indicators of compromise found, given for a cybersecurity-related incident where there are any. Mandatory when its condition holds.",
+      "description": "The indicators of compromise found, given from the intermediate report on when 3.23 includes cybersecurity-related. Mandatory when its condition holds.",
       "x-field": "3.35",
       "x-field-type": "Alphanumeric",
       "type": "string",
@@ -624,7 +634,7 @@
         "enum": [
           "malicious actions",
           "process failure",
-          "system failure or malfunction",
+          "system failure / malfunction",
           "human error",
           "external event"
         ]
@@ -641,50 +651,70 @@
       "items": {
         "enum": [
           "malicious actions: deliberate internal actions",
-          "malicious actions: deliberate physical damage, manipulation or theft",
+          "malicious actions: deliberate physical damage/manipulation/theft",
           "malicious actions: fraudulent actions",
-          "process failure: insufficient or failed monitoring and control",
-          "process failure: insufficient or unclear roles and responsibilities",
+          "process failure: insufficient monitoring or failure of monitoring and control",
+          "process failure: insufficient/unclear roles and responsibilities",
           "process failure: ICT risk management process failure",
-          "process failure: insufficient or failed ICT operations and ICT security operations",
-          "process failure: insufficient or failed ICT project management",
-          "process failure: inadequate internal policies, procedures and documentation",
-          "process failure: inadequate ICT systems acquisition, development and maintenance",
-          "process failure: other",
-          "system failure or malfunction: hardware capacity and performance",
-          "system failure or malfunction: hardware maintenance",
-          "system failure or malfunction: hardware obsolescence or ageing",
-          "system failure or malfunction: software compatibility or configuration",
-          "system failure or malfunction: software performance",
-          "system failure or malfunction: network configuration",
-          "system failure or malfunction: physical damage",
-          "system failure or malfunction: other",
+          "process failure: insufficient or failure of ICT operations and ICT security operations",
+          "process failure: insufficient or failure of ICT project management",
+          "process failure: inadequacy of internal policies, procedures and documentation",
+          "Process failure: inadequate ICT systems acquisition, development, and maintenance",
+          "process failure: other (please specify)",
+          "system failure: hardware capacity and performance",
+          "system failure: hardware maintenance",
+          "system failure: hardware obsolescence/ageing",
+          "system failure: software compatibility/configuration",
+          "system failure: software performance",
+          "system failure: network configuration",
+          "system failure: physical damage",
+          "system failure: other (please specify)",
           "human error: omission",
           "human error: mistake",
-          "human error: skills and knowledge",
+          "human error: skills & knowledge",
           "human error: inadequate human resources",
-          "human error: miscommunication",
-          "human error: other",
-          "external event: natural disaster or force majeure",
-          "external event: third-party failure",
-          "external event: other"
+          "human error miscommunication",
+          "human error: other (please specify)",
+          "external event: natural disasters/force majeure",
+          "external event: third-party failures",
+          "external event: other (please specify)"
         ]
       }
     },
     "additional_root_causes": {
       "title": "4.3 Additional classification of root causes of the incident",
-      "description": "Further causes the detailed classification does not name. Mandatory when its condition holds.",
+      "description": "The finer causes under those categories of 4.2 that the glossary refines, given in the final report when 4.2 reports one of them. Mandatory when its condition holds.",
       "x-field": "4.3",
-      "x-field-type": "Alphanumeric",
-      "type": "string",
-      "minLength": 1,
-      "examples": [
-        "No change review before deployment."
-      ]
+      "x-field-type": "Choice (multiple)",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "monitoring of policy adherence",
+          "monitoring of third-party service providers",
+          "monitoring and verification of remediation of vulnerabilities",
+          "identity and access management",
+          "encryption and cryptography",
+          "logging",
+          "failure in specifying accurate risk tolerance levels",
+          "insufficient vulnerability and threat assessments",
+          "inadequate risk treatment measures",
+          "poor management of residual ICT risks",
+          "vulnerability and patch management",
+          "change management",
+          "capacity and performance management",
+          "ICT asset management and information classification",
+          "backup and restore",
+          "error handling",
+          "inadequate ICT systems acquisition, development, and maintenance",
+          "insufficient or failure of software testing"
+        ]
+      }
     },
     "other_root_causes": {
       "title": "4.4 Other types of root cause types",
-      "description": "The causes, in words, given when 4.2 includes an other. Mandatory when its condition holds.",
+      "description": "The causes, in words, given in the final report when 4.2 includes an other. Mandatory when its condition holds.",
       "x-field": "4.4",
       "x-field-type": "Alphanumeric",
       "type": "string",
@@ -705,7 +735,7 @@
       ]
     },
     "resolution_summary": {
-      "title": "4.6 Incident resolution summary",
+      "title": "4.6 Incident resolution",
       "description": "How the incident was resolved, and what was done so it does not recur. Mandatory in the final report.",
       "x-field": "4.6",
       "x-field-type": "Alphanumeric",
@@ -719,7 +749,7 @@
       "title": "4.7 Date and time when the incident root cause was addressed",
       "description": "When the root cause was addressed, in UTC. Mandatory in the final report.",
       "x-field": "4.7",
-      "x-field-type": "Date and time",
+      "x-field-type": "ISO 8601 standard UTC (YYYY-MM-DD Thh: mm:ss)",
       "type": "string",
       "format": "date-time",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
@@ -731,7 +761,7 @@
       "title": "4.8 Date and time when the incident was resolved",
       "description": "When the incident was resolved, in UTC. Mandatory in the final report.",
       "x-field": "4.8",
-      "x-field-type": "Date and time",
+      "x-field-type": "ISO 8601 standard UTC (YYYY-MM-DD Thh: mm:ss)",
       "type": "string",
       "format": "date-time",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
@@ -740,8 +770,8 @@
       ]
     },
     "resolution_date_difference": {
-      "title": "4.9 Information if the permanent resolution date of the incident differs from the initially planned implementation date",
-      "description": "Why the incident was resolved on another date than planned, given when it was. Mandatory when its condition holds.",
+      "title": "4.9 Information if the permanent resolution date of the incidents differs from the initially planned implementation date",
+      "description": "Whether the incident was permanently resolved on another date than planned, and why. Mandatory in the final report.",
       "x-field": "4.9",
       "x-field-type": "Alphanumeric",
       "type": "string",
@@ -772,14 +802,15 @@
         "None."
       ]
     },
-    "economic_impact_threshold_met": {
-      "title": "4.12 Materiality threshold for the classification criterion 'Economic impact'",
-      "description": "Whether the incident's costs and losses met the economic impact threshold, given when 2.5 includes economic impact. Mandatory when its condition holds.",
+    "economic_impact_threshold": {
+      "title": "4.12 Materiality threshold for the classification criterion ‘Economic impact’",
+      "description": "What the incident reached of the thresholds of the economic impact criterion. Mandatory in the final report.",
       "x-field": "4.12",
-      "x-field-type": "Boolean",
-      "type": "boolean",
+      "x-field-type": "Alphanumeric",
+      "type": "string",
+      "minLength": 1,
       "examples": [
-        false
+        "The costs and losses stayed below the economic impact threshold."
       ]
     },
     "gross_costs_and_losses": {
@@ -805,7 +836,7 @@
       ]
     },
     "recurring_incidents": {
-      "title": "4.15 Information whether the non-major incidents have been recurring",
+      "title": "4.15 Information on whether the non-major incidents have been recurring",
       "description": "Whether the incident is one of recurring incidents that together are major, and what they share, given when it is. Mandatory when its condition holds.",
       "x-field": "4.15",
       "x-field-type": "Alphanumeric",
@@ -817,9 +848,9 @@
     },
     "recurring_incidents_occurred_at": {
       "title": "4.16 Date and time of occurrence of recurring incidents",
-      "description": "When the first of the recurring incidents occurred, in UTC, given with 4.15. Mandatory when its condition holds.",
+      "description": "When the recurring incidents occurred, in UTC, given in the final report with 4.15. Mandatory when its condition holds.",
       "x-field": "4.16",
-      "x-field-type": "Date and time",
+      "x-field-type": "ISO 8601 standard UTC (YYYY-MM-DD Thh: mm:ss)",
       "type": "string",
       "format": "date-time",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
@@ -848,179 +879,6 @@
         },
         "required": [
           "geographical_spread_countries"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "incident_types": {
-            "contains": {
-              "const": "other"
-            }
-          }
-        },
-        "required": [
-          "incident_types"
-        ]
-      },
-      "then": {
-        "properties": {
-          "other_incident_types": true
-        },
-        "required": [
-          "other_incident_types"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "incident_types": {
-            "contains": {
-              "const": "cybersecurity-related"
-            }
-          }
-        },
-        "required": [
-          "incident_types"
-        ]
-      },
-      "then": {
-        "properties": {
-          "threats_and_techniques": true
-        },
-        "required": [
-          "threats_and_techniques"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "threats_and_techniques": {
-            "contains": {
-              "const": "other"
-            }
-          }
-        },
-        "required": [
-          "threats_and_techniques"
-        ]
-      },
-      "then": {
-        "properties": {
-          "other_techniques": true
-        },
-        "required": [
-          "other_techniques"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "infrastructure_components_affected": {
-            "const": "yes"
-          }
-        },
-        "required": [
-          "infrastructure_components_affected"
-        ]
-      },
-      "then": {
-        "properties": {
-          "infrastructure_components_description": true
-        },
-        "required": [
-          "infrastructure_components_description"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "other_authorities_informed": {
-            "contains": {
-              "const": "other"
-            }
-          }
-        },
-        "required": [
-          "other_authorities_informed"
-        ]
-      },
-      "then": {
-        "properties": {
-          "other_authorities": true
-        },
-        "required": [
-          "other_authorities"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "temporary_actions": {
-            "const": true
-          }
-        },
-        "required": [
-          "temporary_actions"
-        ]
-      },
-      "then": {
-        "properties": {
-          "temporary_actions_description": true
-        },
-        "required": [
-          "temporary_actions_description"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "root_cause_details": {
-            "contains": {
-              "enum": [
-                "process failure: other",
-                "system failure or malfunction: other",
-                "human error: other",
-                "external event: other"
-              ]
-            }
-          }
-        },
-        "required": [
-          "root_cause_details"
-        ]
-      },
-      "then": {
-        "properties": {
-          "other_root_causes": true
-        },
-        "required": [
-          "other_root_causes"
-        ]
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "recurring_incidents": true
-        },
-        "required": [
-          "recurring_incidents"
-        ]
-      },
-      "then": {
-        "properties": {
-          "recurring_incidents_occurred_at": true
-        },
-        "required": [
-          "recurring_incidents_occurred_at"
         ]
       }
     }

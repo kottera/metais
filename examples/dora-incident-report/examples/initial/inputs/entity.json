@@ -1,7 +1,6 @@
 {
   "submitting_entity_name": "Nordwind Bank AG",
   "submitting_entity_code": "529900NORDWIND000017",
-  "submitting_entity_code_type": "LEI",
   "affected_entity_types": [
     "credit institution"
   ],

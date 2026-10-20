@@ -39,57 +39,55 @@ type sc2Field struct {
 // glossary's columns and not from the package's schemas, so the test
 // holds the schemas to the glossary.
 var sc2Mandatory = []sc2Field{
-	{"entity", "submitting_entity_name", 0, "Example Bank AG"},                         // 1.2
-	{"entity", "submitting_entity_code", 0, "529900EXAMPLE0000012"},                    // 1.3a
-	{"entity", "submitting_entity_code_type", 0, "LEI"},                                // 1.3b
-	{"entity", "affected_entity_types", 0, []string{"credit institution"}},             // 1.4
-	{"entity", "primary_contact_name", 0, "Alex Example"},                              // 1.7
-	{"entity", "primary_contact_email", 0, "alex@example.com"},                         // 1.8
-	{"entity", "primary_contact_telephone", 0, "+49 69 1234567"},                       // 1.9
-	{"entity", "second_contact_name", 0, "Sam Example"},                                // 1.10
-	{"entity", "second_contact_email", 0, "sam@example.com"},                           // 1.11
-	{"entity", "second_contact_telephone", 0, "+49 69 7654321"},                        // 1.12
-	{"incident", "reference_code", 0, "INC-1"},                                         // 2.1
-	{"incident", "detected_at", 0, "2026-03-02T06:40:00Z"},                             // 2.2
-	{"incident", "classified_at", 0, "2026-03-02T08:10:00Z"},                           // 2.3
-	{"incident", "description", 0, "Card payments failed."},                            // 2.4
-	{"incident", "classification_criteria", 0, []string{"critical services affected"}}, // 2.5
-	{"incident", "discovery", 0, "monitoring systems"},                                 // 2.7
-	{"incident", "business_continuity_plan_activated", 0, false},                       // 2.9
-	{"incident", "occurred_at", 1, "2026-03-02T06:15:00Z"},                             // 3.2
-	{"incident", "clients_affected", 1, 100},                                           // 3.4
-	{"incident", "clients_affected_percentage", 1, 1.5},                                // 3.5
-	{"incident", "financial_counterparts_affected", 1, 0},                              // 3.6
-	{"incident", "financial_counterparts_affected_percentage", 1, 0},                   // 3.7
-	{"incident", "relevant_clients_or_counterparts_impacted", 1, false},                // 3.8
-	{"incident", "transactions_affected", 1, 300},                                      // 3.9
-	{"incident", "transactions_affected_percentage", 1, 2},                             // 3.10
-	{"incident", "transactions_affected_value", 1, 12},                                 // 3.11
-	{"incident", "impact_figures_basis", 1, "estimates"},                               // 3.12
-	{"incident", "duration", 1, "00:05:15"},                                            // 3.15
-	{"incident", "duration_figures_basis", 1, "actual figures"},                        // 3.17
-	{"incident", "critical_services_affected", 1, "Card payments."},                    // 3.22
-	{"incident", "incident_types", 1, []string{"system failure"}},                      // 3.23
-	{"incident", "affected_functional_areas", 1, "Retail payments."},                   // 3.27
-	{"incident", "infrastructure_components_affected", 1, "no"},                        // 3.28
-	{"incident", "client_financial_interest_impact", 1, "no"},                          // 3.30
-	{"incident", "other_authorities_informed", 1, []string{"none"}},                    // 3.31
-	{"incident", "temporary_actions", 1, false},                                        // 3.33
-	{"incident", "root_cause_categories", 2, []string{"human error"}},                  // 4.1
-	{"incident", "root_cause_details", 2, []string{"human error: mistake"}},            // 4.2
-	{"incident", "root_cause_information", 2, "A wrong configuration value."},          // 4.5
-	{"incident", "resolution_summary", 2, "The value was corrected."},                  // 4.6
-	{"incident", "root_cause_addressed_at", 2, "2026-03-09T16:00:00Z"},                 // 4.7
-	{"incident", "resolved_at", 2, "2026-03-10T09:00:00Z"},                             // 4.8
-	{"incident", "gross_costs_and_losses", 2, 180},                                     // 4.13
-	{"incident", "financial_recoveries", 2, 0},                                         // 4.14
+	{"entity", "submitting_entity_name", 0, "Example Bank AG"},                          // 1.2
+	{"entity", "submitting_entity_code", 0, "529900EXAMPLE0000012"},                     // 1.3
+	{"entity", "affected_entity_types", 0, []string{"credit institution"}},              // 1.4
+	{"entity", "primary_contact_name", 0, "Alex Example"},                               // 1.7
+	{"entity", "primary_contact_email", 0, "alex@example.com"},                          // 1.8
+	{"entity", "primary_contact_telephone", 0, "+49 69 1234567"},                        // 1.9
+	{"entity", "second_contact_name", 0, "Sam Example"},                                 // 1.10
+	{"entity", "second_contact_email", 0, "sam@example.com"},                            // 1.11
+	{"entity", "second_contact_telephone", 0, "+49 69 7654321"},                         // 1.12
+	{"entity", "reporting_currency", 0, "EUR"},                                          // 1.15
+	{"incident", "reference_code", 0, "INC-1"},                                          // 2.1
+	{"incident", "detected_at", 0, "2026-03-02T06:40:00Z"},                              // 2.2
+	{"incident", "classified_at", 0, "2026-03-02T08:10:00Z"},                            // 2.3
+	{"incident", "description", 0, "Card payments failed."},                             // 2.4
+	{"incident", "classification_criteria", 0, []string{"critical services affected"}},  // 2.5
+	{"incident", "discovery", 0, "monitoring systems"},                                  // 2.7
+	{"incident", "business_continuity_plan_activated", 0, false},                        // 2.9
+	{"incident", "occurred_at", 1, "2026-03-02T06:15:00Z"},                              // 3.2
+	{"incident", "clients_affected", 1, 100},                                            // 3.4
+	{"incident", "clients_affected_percentage", 1, 1.5},                                 // 3.5
+	{"incident", "financial_counterparts_affected", 1, 0},                               // 3.6
+	{"incident", "financial_counterparts_affected_percentage", 1, 0},                    // 3.7
+	{"incident", "impact_figures_basis", 1, []string{"estimates for clients affected"}}, // 3.12
+	{"incident", "duration", 1, "00:05:15"},                                             // 3.15
+	{"incident", "critical_services_affected", 1, "Card payments."},                     // 3.22
+	{"incident", "incident_types", 1, []string{"System failure"}},                       // 3.23
+	{"incident", "affected_functional_areas", 1, "Retail payments."},                    // 3.27
+	{"incident", "infrastructure_components_affected", 1, "No"},                         // 3.28
+	{"incident", "client_financial_interest_impact", 1, "No"},                           // 3.30
+	{"incident", "other_authorities_informed", 1, []string{"None"}},                     // 3.31
+	{"incident", "temporary_actions", 1, false},                                         // 3.33
+	{"incident", "root_cause_categories", 2, []string{"human error"}},                   // 4.1
+	{"incident", "root_cause_details", 2, []string{"human error: mistake"}},             // 4.2
+	{"incident", "root_cause_information", 2, "A wrong configuration value."},           // 4.5
+	{"incident", "resolution_summary", 2, "The value was corrected."},                   // 4.6
+	{"incident", "root_cause_addressed_at", 2, "2026-03-09T16:00:00Z"},                  // 4.7
+	{"incident", "resolved_at", 2, "2026-03-10T09:00:00Z"},                              // 4.8
+	{"incident", "resolution_date_difference", 2, "Resolved on the planned date."},      // 4.9
+	{"incident", "economic_impact_threshold", 2, "No threshold reached."},               // 4.12
+	{"incident", "gross_costs_and_losses", 2, 180},                                      // 4.13
+	{"incident", "financial_recoveries", 2, 0},                                          // 4.14
 }
 
 // sc2Triggers are values that meet the condition of every conditional
-// field Annex II makes mandatory on a condition the data can show: every
-// classification criterion in 2.5, and an "other" or a "yes" wherever one
-// asks for more. sc2Conditional is each field they make mandatory, and the
-// first stage it is mandatory in.
+// field Annex II makes mandatory on a condition the report itself shows:
+// every classification criterion in 2.5, a service downtime in 3.16, and
+// an "other", a "Yes", a cybersecurity-related incident or a refined
+// root cause wherever one asks for more. sc2Conditional is each field
+// they make mandatory, and the first stage it is mandatory in.
 var (
 	sc2Triggers = []sc2Field{
 		{"entity", "affected_entity_name", 0, "Example Payments GmbH"}, // 1.5
@@ -98,32 +96,37 @@ var (
 			"clients, financial counterparts and transactions affected", "reputational impact",
 			"duration and service downtime", "geographical spread", "data losses",
 			"critical services affected", "economic impact"}},
-		{"incident", "incident_types", 0, []string{"cybersecurity-related", "other"}}, // 3.23
-		{"incident", "threats_and_techniques", 0, []string{"other"}},                  // 3.25
-		{"incident", "infrastructure_components_affected", 0, "yes"},                  // 3.28
-		{"incident", "other_authorities_informed", 0, []string{"other"}},              // 3.31
-		{"incident", "temporary_actions", 0, true},                                    // 3.33
-		{"incident", "root_cause_details", 0, []string{"process failure: other"}},     // 4.2
-		{"incident", "recurring_incidents", 0, "Two earlier gateway failures."},       // 4.15
+		{"incident", "service_downtime", 0, "00:01:00"},                                                // 3.16
+		{"incident", "incident_types", 0, []string{"Cybersecurity-related", "Other (please specify)"}}, // 3.23
+		{"incident", "threats_and_techniques", 0, []string{"Other (please specify)"}},                  // 3.25
+		{"incident", "infrastructure_components_affected", 0, "Yes"},                                   // 3.28
+		{"incident", "other_authorities_informed", 0, []string{"Other (please specify)"}},              // 3.31
+		{"incident", "temporary_actions", 0, true},                                                     // 3.33
+		{"incident", "root_cause_details", 0, []string{ // 4.2
+			"process failure: ICT risk management process failure", "process failure: other (please specify)"}},
+		{"incident", "recurring_incidents", 0, "Two earlier gateway failures."}, // 4.15
 	}
 	sc2Conditional = []sc2Field{
 		{"entity", "affected_entity_lei", 0, nil},                     // 1.6, with 1.5
 		{"entity", "parent_undertaking_lei", 0, nil},                  // 1.14, with 1.13
 		{"incident", "geographical_spread_countries", 0, nil},         // 2.6, geographical spread
-		{"incident", "other_incident_types", 0, nil},                  // 3.24, other
-		{"incident", "other_techniques", 0, nil},                      // 3.26, other
-		{"incident", "infrastructure_components_description", 0, nil}, // 3.29, yes
-		{"incident", "other_authorities", 0, nil},                     // 3.32, other
-		{"incident", "temporary_actions_description", 0, nil},         // 3.34, true
-		{"incident", "other_root_causes", 0, nil},                     // 4.4, an other
-		{"incident", "recurring_incidents_occurred_at", 0, nil},       // 4.16, with 4.15
+		{"incident", "restored_at", 1, nil},                           // 3.3, with 3.16
 		{"incident", "reputational_impact", 1, nil},                   // 3.13, reputational impact
 		{"incident", "reputational_impact_context", 1, nil},           // 3.14
+		{"incident", "duration_figures_basis", 1, nil},                // 3.17, duration and service downtime
 		{"incident", "member_state_impact_types", 1, nil},             // 3.18, geographical spread
 		{"incident", "member_state_impact_description", 1, nil},       // 3.19
 		{"incident", "data_losses", 1, nil},                           // 3.20, data losses
 		{"incident", "data_losses_description", 1, nil},               // 3.21
-		{"incident", "economic_impact_threshold_met", 2, nil},         // 4.12, economic impact
+		{"incident", "other_incident_types", 1, nil},                  // 3.24, other
+		{"incident", "other_techniques", 1, nil},                      // 3.26, other
+		{"incident", "infrastructure_components_description", 1, nil}, // 3.29, Yes
+		{"incident", "other_authorities", 1, nil},                     // 3.32, other
+		{"incident", "temporary_actions_description", 1, nil},         // 3.34, true
+		{"incident", "indicators_of_compromise", 1, nil},              // 3.35, cybersecurity-related
+		{"incident", "additional_root_causes", 2, nil},                // 4.3, a refined 4.2 category
+		{"incident", "other_root_causes", 2, nil},                     // 4.4, an other
+		{"incident", "recurring_incidents_occurred_at", 2, nil},       // 4.16, with 4.15
 	}
 )
 

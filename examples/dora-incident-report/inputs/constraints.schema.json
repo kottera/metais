@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "What each stage requires",
-  "description": "The stage, field 1.1, decides which fields of sections 3 and 4 are mandatory: section 3's in the intermediate and the final report, section 4's in the final report, each with the conditional fields whose condition the classification criteria of 2.5 meet.",
+  "description": "The stage, field 1.1, decides which fields of sections 3 and 4 are mandatory: section 3's in the intermediate and the final report, section 4's in the final report, each with the conditional fields whose condition the report itself shows.",
   "allOf": [
     {
       "if": {
@@ -26,13 +26,8 @@
               "clients_affected_percentage": true,
               "financial_counterparts_affected": true,
               "financial_counterparts_affected_percentage": true,
-              "relevant_clients_or_counterparts_impacted": true,
-              "transactions_affected": true,
-              "transactions_affected_percentage": true,
-              "transactions_affected_value": true,
               "impact_figures_basis": true,
               "duration": true,
-              "duration_figures_basis": true,
               "critical_services_affected": true,
               "incident_types": true,
               "affected_functional_areas": true,
@@ -47,13 +42,8 @@
               "clients_affected_percentage",
               "financial_counterparts_affected",
               "financial_counterparts_affected_percentage",
-              "relevant_clients_or_counterparts_impacted",
-              "transactions_affected",
-              "transactions_affected_percentage",
-              "transactions_affected_value",
               "impact_figures_basis",
               "duration",
-              "duration_figures_basis",
               "critical_services_affected",
               "incident_types",
               "affected_functional_areas",
@@ -84,6 +74,28 @@
                   "required": [
                     "reputational_impact",
                     "reputational_impact_context"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "classification_criteria": {
+                      "contains": {
+                        "const": "duration and service downtime"
+                      }
+                    }
+                  },
+                  "required": [
+                    "classification_criteria"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "duration_figures_basis": true
+                  },
+                  "required": [
+                    "duration_figures_basis"
                   ]
                 }
               },
@@ -134,6 +146,154 @@
                     "data_losses_description"
                   ]
                 }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "service_downtime": true
+                  },
+                  "required": [
+                    "service_downtime"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "restored_at": true
+                  },
+                  "required": [
+                    "restored_at"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "incident_types": {
+                      "contains": {
+                        "const": "Other (please specify)"
+                      }
+                    }
+                  },
+                  "required": [
+                    "incident_types"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "other_incident_types": true
+                  },
+                  "required": [
+                    "other_incident_types"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "incident_types": {
+                      "contains": {
+                        "const": "Cybersecurity-related"
+                      }
+                    }
+                  },
+                  "required": [
+                    "incident_types"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "threats_and_techniques": true,
+                    "indicators_of_compromise": true
+                  },
+                  "required": [
+                    "threats_and_techniques",
+                    "indicators_of_compromise"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "threats_and_techniques": {
+                      "contains": {
+                        "const": "Other (please specify)"
+                      }
+                    }
+                  },
+                  "required": [
+                    "threats_and_techniques"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "other_techniques": true
+                  },
+                  "required": [
+                    "other_techniques"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "infrastructure_components_affected": {
+                      "const": "Yes"
+                    }
+                  },
+                  "required": [
+                    "infrastructure_components_affected"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "infrastructure_components_description": true
+                  },
+                  "required": [
+                    "infrastructure_components_description"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "other_authorities_informed": {
+                      "contains": {
+                        "const": "Other (please specify)"
+                      }
+                    }
+                  },
+                  "required": [
+                    "other_authorities_informed"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "other_authorities": true
+                  },
+                  "required": [
+                    "other_authorities"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "temporary_actions": {
+                      "const": true
+                    }
+                  },
+                  "required": [
+                    "temporary_actions"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "temporary_actions_description": true
+                  },
+                  "required": [
+                    "temporary_actions_description"
+                  ]
+                }
               }
             ]
           }
@@ -161,6 +321,8 @@
               "resolution_summary": true,
               "root_cause_addressed_at": true,
               "resolved_at": true,
+              "resolution_date_difference": true,
+              "economic_impact_threshold": true,
               "gross_costs_and_losses": true,
               "financial_recoveries": true
             },
@@ -171,6 +333,8 @@
               "resolution_summary",
               "root_cause_addressed_at",
               "resolved_at",
+              "resolution_date_difference",
+              "economic_impact_threshold",
               "gross_costs_and_losses",
               "financial_recoveries"
             ],
@@ -178,22 +342,72 @@
               {
                 "if": {
                   "properties": {
-                    "classification_criteria": {
+                    "root_cause_details": {
                       "contains": {
-                        "const": "economic impact"
+                        "enum": [
+                          "process failure: insufficient monitoring or failure of monitoring and control",
+                          "process failure: ICT risk management process failure",
+                          "process failure: insufficient or failure of ICT operations and ICT security operations",
+                          "Process failure: inadequate ICT systems acquisition, development, and maintenance"
+                        ]
                       }
                     }
                   },
                   "required": [
-                    "classification_criteria"
+                    "root_cause_details"
                   ]
                 },
                 "then": {
                   "properties": {
-                    "economic_impact_threshold_met": true
+                    "additional_root_causes": true
                   },
                   "required": [
-                    "economic_impact_threshold_met"
+                    "additional_root_causes"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "root_cause_details": {
+                      "contains": {
+                        "enum": [
+                          "process failure: other (please specify)",
+                          "system failure: other (please specify)",
+                          "human error: other (please specify)",
+                          "external event: other (please specify)"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "root_cause_details"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "other_root_causes": true
+                  },
+                  "required": [
+                    "other_root_causes"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "recurring_incidents": true
+                  },
+                  "required": [
+                    "recurring_incidents"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "recurring_incidents_occurred_at": true
+                  },
+                  "required": [
+                    "recurring_incidents_occurred_at"
                   ]
                 }
               }
