@@ -7,6 +7,18 @@
     },
     "location": {
       "origin": "package",
+      "file": "archive.metais"
+    },
+    "params": {}
+  },
+  {
+    "code": "package.layout.not_packed",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
       "file": "drafts"
     },
     "params": {}

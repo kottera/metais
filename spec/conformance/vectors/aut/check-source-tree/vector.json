@@ -9,7 +9,7 @@
   "class": "authoring",
   "tags": [],
   "requires": [],
-  "notes": "",
+  "notes": "notes.txt and archive.metais/ are top-level entries outside the layout; archive.metais/ is a directory, so its .metais suffix does not make it the regular file pack leaves out with no finding (MTS-AUT-047).",
   "cases": [
     {
       "name": "check",
