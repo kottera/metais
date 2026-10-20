@@ -344,23 +344,6 @@ func TestUpdateConfinement(t *testing.T) {
 	})
 }
 
-// TestTestScaffold is ADR-007 D1's golden path: the scaffold init writes
-// checks with no finding, and test passes it.
-func TestTestScaffold(t *testing.T) {
-	dir := filepath.Join(testenv.Dir(t), "report")
-	for _, argv := range [][]string{{"init", dir}, {"check", dir}, {"test", dir}} {
-		r := runTool(t, append(argv, "--json")...)
-		if r.status != finding.ExitOK || len(r.doc.Findings) != 0 {
-			t.Fatalf("metais %s: status %d, findings %q", argv[0], r.status, r.codes())
-		}
-		if argv[0] == "test" {
-			if res := testRun(t, r); len(res.Examples) != 1 || res.Examples[0].Status != "pass" {
-				t.Errorf("test of the scaffold: %+v", res.Examples)
-			}
-		}
-	}
-}
-
 // TestTestDiffCaps is ADR-007 D5 item 4's caps: a text difference's diff
 // is at most 16 KiB in JSON and 40 lines in human output, each marked
 // when truncated.

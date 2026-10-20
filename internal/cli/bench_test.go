@@ -30,7 +30,9 @@ import (
 //   - BenchmarkInspect: inspect of a packed package of 10,000 entries,
 //     whole-package verification included (the 500 ms budget);
 //   - BenchmarkValidate: validate of a 10,000-item collection, read from
-//     a data directory (the 500 ms budget).
+//     a data directory (the 500 ms budget);
+//   - BenchmarkPack: pack of a source directory, its check and test
+//     included, which D15 item 1 names and no budget bounds.
 //
 // The table's 200 ms budget is internal/liquid's BenchmarkRender/table.
 // Each reports cpu-ns/op beside ns/op, since a budget is CPU time.
@@ -199,6 +201,43 @@ func BenchmarkValidate(b *testing.B) {
 	cpu.report(b)
 }
 
+// packBenchSources are the source directories BenchmarkPack packs: the
+// scaffold init writes, and aut/pack's source directory, which holds every
+// kind of entry pack meets. Pack of the §4.1 example joins them with it.
+func packBenchSources(t testing.TB) []struct{ name, src string } {
+	t.Helper()
+	scaffold := filepath.Join(testenv.Dir(t), "scaffold")
+	status := Run(context.Background(), Invocation{
+		Args: []string{"init", scaffold}, Stdin: strings.NewReader(""), Stdout: io.Discard, Stderr: io.Discard,
+		Options: Options{Display: hostenv.Display{NoColor: true}},
+	})
+	if status != 0 {
+		t.Fatalf("metais init exited %d", status)
+	}
+	return []struct{ name, src string }{
+		{"scaffold", scaffold},
+		{"fixture", filepath.Join(vectorsDir, "aut/pack/package")},
+	}
+}
+
+// BenchmarkPack is pack of each of packBenchSources into a file, check
+// and test included, as the binary runs it: ADR-010 D15 item 1's pack.
+func BenchmarkPack(b *testing.B) {
+	testenv.Home(b)
+	for _, c := range packBenchSources(b) {
+		b.Run(c.name, func(b *testing.B) {
+			argv := []string{"pack", "--json", c.src, "--out", filepath.Join(testenv.Dir(b), "packed.metais")}
+			benchRun(b, argv...)
+			b.ReportAllocs()
+			cpu := startCPU()
+			for b.Loop() {
+				benchRun(b, argv...)
+			}
+			cpu.report(b)
+		})
+	}
+}
+
 // writeBenchSources writes files as a source directory at dir.
 func writeBenchSources(t testing.TB, dir string, files map[string][]byte) {
 	t.Helper()
@@ -282,5 +321,30 @@ func TestBenchCommands(t *testing.T) {
 	}
 	if r := runTool(t, "validate", "--json", src, "--data", data); r.status == 0 {
 		t.Error("an invalid item is not reported: the benchmark's validation does not look")
+	}
+}
+
+// TestBenchPack holds BenchmarkPack to the work it times, in every go
+// test: pack of each source packs, rather than refusing, and writes a
+// package that opens as packed, with every entry pack reports.
+func TestBenchPack(t *testing.T) {
+	testenv.Home(t)
+	for _, c := range packBenchSources(t) {
+		out := filepath.Join(testenv.Dir(t), "packed.metais")
+		r := runTool(t, "pack", "--json", c.src, "--out", out)
+		var res packResult
+		result(t, r, &res)
+		b, err := os.ReadFile(out)
+		if err != nil {
+			t.Fatal(err)
+		}
+		a, fs, err := zipfmt.Open(bytes.NewReader(b), int64(len(b)), limits.Defaults())
+		if err != nil || len(fs) > 0 || len(a.List()) != res.Entries || res.Entries < 8 {
+			t.Errorf("pack of the %s: %d entries reported, and the package opens with %v %v", c.name, res.Entries, err, fs)
+			continue
+		}
+		if r := runTool(t, "inspect", "--json", out); r.status != 0 || !r.doc.OK {
+			t.Errorf("inspect of the packed %s: %s", c.name, r.stdout)
+		}
 	}
 }
