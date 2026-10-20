@@ -310,12 +310,14 @@ file's bytes, before anything says the file is a zip archive, and first in
 any zip lister. So every packed package begins with `README.md`, stored,
 holding a text the specification fixes and no author writes. The text says
 what a METAIS package is, that the file is a zip archive, where inside it
-the package describes itself, and where to find the tool. It names no
-command and quotes nothing of the package, so a package packed long ago
-never gives stale instructions: everything that can change is on the
-website it names. It is not part of the package's content: no digest
-covers it (§2.6.1), a source directory does not hold it, and unpacking does
-not write it ([chapter 13](13-authoring.md)).
+the package describes itself, where to find the tool, and the one
+command to start with, `metais inspect`, which the reference tool keeps
+for every package of this version. It gives no install command and quotes
+nothing of the package, so a package packed long ago never gives stale
+instructions: everything that can change is on the website it names. It
+is not part of the package's content: no digest covers it (§2.6.1), a
+source directory does not hold it, and unpacking does not write it
+([chapter 13](13-authoring.md)).
 
 The **README text** of specification 1.0 is these bytes, UTF-8 with LF line
 endings and ending in one line feed, which are also the file
@@ -330,7 +332,9 @@ document needs, checks them, and renders the document from them.
 This file is a zip archive. Inside it, metais.yaml holds this package's
 own title, description and guide.
 
-To use it, you need the metais tool. How to install it and how to
+To use it, you need the metais tool. With it installed, start by
+running `metais inspect` on this file: it shows what the package
+needs and the commands to run next. How to install it and how to
 start: https://metais.org/
 
 This README is the same in every METAIS package.

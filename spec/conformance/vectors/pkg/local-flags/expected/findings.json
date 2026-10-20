@@ -10,7 +10,7 @@
       "file": "templates/report.md.liquid"
     },
     "params": {
-      "offset": 2549,
+      "offset": 2678,
       "header_field": "general purpose bit flag"
     }
   }

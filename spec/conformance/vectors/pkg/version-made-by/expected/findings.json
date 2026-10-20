@@ -10,7 +10,7 @@
       "file": "templates/report.md.liquid"
     },
     "params": {
-      "offset": 3089,
+      "offset": 3218,
       "record": "central directory header",
       "header_field": "version made by",
       "value": 20,
