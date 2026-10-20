@@ -588,12 +588,7 @@ func TestCalibration(t *testing.T) {
 		}
 		t.Logf("%s: %v of CPU, %s peak resident, %v wall, exit %d, reached %v", c.name,
 			time.Duration(r.CPUNanos), rss, time.Duration(r.WallNanos).Round(time.Millisecond), r.Exit, r.Reached)
-		for _, b := range r.Broken {
-			failures = append(failures, fmt.Sprintf("%s broke the %s", c.name, b))
-		}
-		if r.Problem != "" {
-			failures = append(failures, fmt.Sprintf("%s: %s", c.name, r.Problem))
-		}
+		failures = append(failures, r.failures()...)
 	}
 	rec.Pass = len(failures) == 0
 	b, err := json.MarshalIndent(rec, "", "  ")
@@ -609,19 +604,88 @@ func TestCalibration(t *testing.T) {
 	}
 }
 
+// failures are the suite's failure lines for r: one per ceiling it broke,
+// naming the case, the ceiling and the figure, and one for its problem.
+func (r calRecorded) failures() []string {
+	var f []string
+	for _, b := range r.Broken {
+		f = append(f, fmt.Sprintf("%s broke the %s", r.Case, b))
+	}
+	if r.Problem != "" {
+		f = append(f, fmt.Sprintf("%s: %s", r.Case, r.Problem))
+	}
+	return f
+}
+
+// TestCalibrationJudgement holds the suite's judgement to a measurement
+// over each of D18 item 2's ceilings, and to one at each ceiling, in every
+// go test: TestCalibration judges only at the defaults, which no go test
+// runs, so a judgement that stopped reporting breaches would read there as
+// a clean calibration. Its runs are written, not run.
+func TestCalibrationJudgement(t *testing.T) {
+	reached := func(*calResult, calLimits) error { return nil }
+	work := calCase{name: "judged-work", limit: "work-limit", reached: reached}
+	meta := calCase{name: "judged-metadata", limit: "metadata-limit", metadata: true, reached: reached}
+	defaults := calLimits{"work-limit": 10, "metadata-limit": 20}
+	run := func(cpu time.Duration, rss int64) *calRun {
+		return &calRun{res: &calResult{}, cpu: cpu, rss: rss, wall: cpu}
+	}
+	for _, tc := range []struct {
+		name string
+		c    calCase
+		run  *calRun
+		want []string
+	}{
+		{"cpu", work, run(calCPU+time.Millisecond, 1<<20),
+			[]string{"judged-work broke the CPU ceiling of 10s with 10.001s"}},
+		{"metadata-cpu", meta, run(calMetadataCPU+time.Millisecond, 1<<20),
+			[]string{"judged-metadata broke the CPU ceiling of 500ms with 501ms"}},
+		{"rss", work, run(time.Second, calRSS+1<<20),
+			[]string{"judged-work broke the peak resident memory ceiling of 1024 MiB with 1025 MiB"}},
+		{"metadata-rss", meta, run(time.Millisecond, calRSS+1<<20),
+			[]string{"judged-metadata broke the peak resident memory ceiling of 1024 MiB with 1025 MiB"}},
+		{"cpu-and-rss", work, run(calCPU+time.Second, calRSS+2<<20), []string{
+			"judged-work broke the CPU ceiling of 10s with 11s",
+			"judged-work broke the peak resident memory ceiling of 1024 MiB with 1026 MiB",
+		}},
+		{"killed", work, &calRun{res: &calResult{}, cpu: time.Second, rss: -1, wall: calWall, killed: true},
+			[]string{"judged-work broke the CPU ceiling of 10s: the case ran past the 30m0s wall clock and was killed"}},
+		// At each ceiling, and a work case over the metadata ceiling: no breach.
+		{"at-cpu", work, run(calCPU, calRSS), nil},
+		{"at-metadata-cpu", meta, run(calMetadataCPU, calRSS), nil},
+		{"work-over-metadata-cpu", work, run(calMetadataCPU+time.Second, 1<<20), nil},
+		{"rss-not-measured", work, run(time.Second, -1), nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := judgeCase(tc.c, defaults, tc.run, nil).failures()
+			if !slices.Equal(got, tc.want) {
+				t.Errorf("the judgement reports\n\t%q\nwant\n\t%q", got, tc.want)
+			}
+		})
+	}
+}
+
 // measureCase runs c at the defaults and judges it.
 func measureCase(t *testing.T, tool string, c calCase, defaults calLimits) calRecorded {
-	r := calRecorded{Case: c.name, Limit: c.limit, Bound: defaults[c.limit], Metadata: c.metadata, Gap: c.gap,
-		CPUCeiling: int64(calCPU), RSSCeiling: calRSS, Broken: []string{}}
-	if c.metadata {
-		r.CPUCeiling = int64(calMetadataCPU)
-	}
 	dir, err := os.MkdirTemp(testenv.Dir(t), "case-")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(dir) // a case's outputs reach a gibibyte
 	run, err := runCase(tool, c, defaults, defaults, dir, calWall)
+	return judgeCase(c, defaults, run, err)
+}
+
+// judgeCase judges run, c's run at the defaults, and err, the error it
+// ended with, against D18 item 2's ceilings. It runs nothing, so
+// TestCalibrationJudgement holds it to measurements over each ceiling in
+// every go test.
+func judgeCase(c calCase, defaults calLimits, run *calRun, err error) calRecorded {
+	r := calRecorded{Case: c.name, Limit: c.limit, Bound: defaults[c.limit], Metadata: c.metadata, Gap: c.gap,
+		CPUCeiling: int64(calCPU), RSSCeiling: calRSS, Broken: []string{}}
+	if c.metadata {
+		r.CPUCeiling = int64(calMetadataCPU)
+	}
 	if run == nil {
 		r.Problem = err.Error()
 		return r

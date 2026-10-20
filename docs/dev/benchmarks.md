@@ -10,14 +10,15 @@ the committed baselines, and which benchmark measures which budget. Plan
 From the module's root, on an otherwise idle host:
 
 ```bash
-go test -run '^$' -bench . -benchmem -count 6 -p 1 -timeout 60m ./... > bench.txt
+GOTOOLCHAIN=auto go test -run '^$' -bench . -benchmem -count 6 -p 1 -timeout 60m ./... > bench.txt
 ```
 
 That is the one command. It runs every benchmark of the module, six times
 each, one package at a time (`-p 1`, so that no two packages' benchmarks
 share the cores), and writes `bench.txt` in benchstat's input format. It
-runs under the `go.mod` toolchain, fetched under the default
-`GOTOOLCHAIN=auto`. Record the host, its CPU, `go version`, GOOS and GOARCH
+runs under the `go.mod` toolchain, which `GOTOOLCHAIN=auto` fetches, and
+the command sets it because a host may set `GOTOOLCHAIN=local`: a run on
+the host's own toolchain measures a different compiler and runtime. Record the host, its CPU, `go version`, GOOS and GOARCH
 beside the file.
 
 ## Comparing with the baselines
