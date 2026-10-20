@@ -293,7 +293,7 @@ var familyFiles = map[string][]Entry{
 // What the module emits is held elsewhere: New panics on a code the
 // table does not hold; TestFindingCodesCovered, in internal/guarantees,
 // requires a vector for every registered code of class refused, content
-// or destination, or its place on the unwired list; and internal/cli's
+// or destination, with no list to exempt one; and internal/cli's
 // tests trigger every refusal a command declares (ADR-008 D16 item 2).
 func TestRegistryFamilies(t *testing.T) {
 	n := len(schemaEntries())

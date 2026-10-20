@@ -85,7 +85,7 @@ NOT open a network connection.
     {"code": "limit.invalid", "severity": "error", "class": "usage", "subject": "invocation", "params": [{"name": "reason", "always": true}, {"name": "name", "always": false}], "since": "1.0", "statements": []},
     {"code": "output.old", "severity": "error", "class": "refused", "subject": "output", "params": [], "since": "1.0", "retired": "1.1", "statements": []},
     {"code": "output.path_absolute", "severity": "error", "class": "refused", "subject": "output", "params": [], "since": "1.0", "statements": ["MTS-OUT-001", "MTS-OUT-004"]},
-    {"code": "report.truncated", "severity": "info", "class": "content", "subject": "report", "params": [{"name": "listed", "always": true}], "since": "1.0", "statements": []}
+    {"code": "report.truncated", "severity": "info", "class": "content", "subject": "report", "params": [{"name": "listed", "always": true}], "since": "1.0", "statements": ["MTS-OUT-001"]}
   ]
 }
 `,
@@ -127,7 +127,7 @@ NOT open a network connection.
   ]
 }
 `,
-	"conformance/vectors/out/relative-path/expected/findings.json": `[{"code": "output.path_absolute", "severity": "error"}]` + "\n",
+	"conformance/vectors/out/relative-path/expected/findings.json": `[{"code": "output.path_absolute", "severity": "error"}, {"code": "report.truncated", "severity": "info"}]` + "\n",
 	"conformance/vectors/out/relative-path/expected/out/a.txt":     "A\n",
 	"conformance/vectors/out/relative-path/package/metais.yaml":    "name: x\n",
 	"conformance/vectors/out/relative-path/package/README.md":      "A package file the document never reads: it MUST be ignored.\n",
@@ -136,7 +136,7 @@ NOT open a network connection.
 // specFixture is a specification every tripwire passes, in temporary
 // directories.
 type specFixture struct {
-	root, embedded, unwired string
+	root, embedded string
 }
 
 func writeFile(t *testing.T, p, body string) {
@@ -152,12 +152,10 @@ func writeFile(t *testing.T, p, body string) {
 func newSpecFixture(t *testing.T) *specFixture {
 	t.Helper()
 	f := &specFixture{root: testenv.Dir(t), embedded: testenv.Dir(t)}
-	f.unwired = filepath.Join(testenv.Dir(t), "unwired.txt")
 	for name, body := range fixtureFiles {
 		f.write(t, name, body)
 	}
 	writeFile(t, filepath.Join(f.embedded, "1.0", "x.schema.json"), fixtureFiles["schemas/1.0/x.schema.json"])
-	writeFile(t, f.unwired, "# A comment.\n\nreport.truncated W4\n")
 	f.regenerate(t)
 	f.write(t, releasedDir+"/1.0.sha256",
 		sha256Hex([]byte(fixtureFiles["conformance/vectors/out/relative-path/vector.json"]))+"  conformance/vectors/out/relative-path/vector.json\n"+
@@ -511,40 +509,26 @@ func TestFindingCatalogForm(t *testing.T) {
 		"| `limit.invalid` | error | usage | invocation | `reason`; optional: `name` | 1.0 | — |\n" +
 		"| `output.old` | error | refused | output | — | 1.0, retired 1.1 | — |\n" +
 		"| `output.path_absolute` | error | refused | output | — | 1.0 | [MTS-OUT-001](09-outputs.md#mts-out-001), [MTS-OUT-004](09-outputs.md#mts-out-004) |\n" +
-		"| `report.truncated` | info | content | report | `listed` | 1.0 | — |\n"
+		"| `report.truncated` | info | content | report | `listed` | 1.0 | [MTS-OUT-001](09-outputs.md#mts-out-001) |\n"
 	if got != want {
 		t.Errorf("the catalog is\n%s\nwant\n%s", got, want)
 	}
 }
 
 func TestFindingCodesCoveredControl(t *testing.T) {
-	check := func(t *testing.T, f *specFixture) []string { return codesCoveredProblems(f.root, f.unwired) }
+	check := func(t *testing.T, f *specFixture) []string { return codesCoveredProblems(f.root) }
 	findings := vectorsDir + "/out/relative-path/expected/findings.json"
-	unwiredEdit := func(old, new string) func(*testing.T, *specFixture) {
-		return func(t *testing.T, f *specFixture) { editFile(t, f.unwired, old, new) }
-	}
 	runControl(t, check, []tripwireCase{
-		{"a listed code a vector produces", edit(findings, `}]`, `}, {"code": "report.truncated"}]`), []string{"unwired.txt:3: report.truncated is produced by out/relative-path; take it off the list"}},
-		{"a listed code not registered", unwiredEdit("report.truncated W4\n", "report.truncated W4\nzzz.unknown W5\n"), []string{"unwired.txt:4: zzz.unknown is not registered"}},
-		{"a refused code no vector produces, unlisted", edit(findings, `"output.path_absolute"`, `"internal.bug"`), []string{"output.path_absolute is registered, of class refused, and no vector's expected findings hold it"}},
-		{"a content code no vector produces, unlisted", unwiredEdit("report.truncated W4\n", ""), []string{"report.truncated is registered, of class content"}},
-		{"a destination code no vector produces, unlisted", edit(registryFile, `"class": "content"`, `"class": "destination"`), nil},
-		{"a destination code unlisted", func(t *testing.T, f *specFixture) {
+		{"a refused code no vector produces", edit(findings, `"output.path_absolute"`, `"internal.bug"`), []string{"output.path_absolute is registered, of class refused, and no vector's expected findings hold it"}},
+		{"a content code no vector produces", edit(findings, `, {"code": "report.truncated", "severity": "info"}`, ``), []string{"report.truncated is registered, of class content, and no vector's expected findings hold it"}},
+		{"a destination code no vector produces", func(t *testing.T, f *specFixture) {
 			f.edit(t, registryFile, `"class": "content"`, `"class": "destination"`)
-			editFile(t, f.unwired, "report.truncated W4\n", "")
-		}, []string{"report.truncated is registered, of class destination"}},
+			f.edit(t, findings, `, {"code": "report.truncated", "severity": "info"}`, ``)
+		}, []string{"report.truncated is registered, of class destination, and no vector's expected findings hold it"}},
+		{"a retired code no vector produces", func(*testing.T, *specFixture) {}, nil},
 		{"a produced code naming no statement", edit(registryFile, `["MTS-OUT-001", "MTS-OUT-004"]`, `[]`), []string{"output.path_absolute names no statement"}},
-		{"a listed code need not name a statement", func(*testing.T, *specFixture) {}, nil},
 		{"a usage code naming a statement", edit(registryFile, `"class": "usage", "subject": "invocation", "params": [{"name": "reason", "always": true}, {"name": "name", "always": false}], "since": "1.0", "statements": []`, `"class": "usage", "subject": "invocation", "params": [], "since": "1.0", "statements": ["MTS-OUT-001"]`), []string{"limit.invalid is of class usage, and names the statements"}},
 		{"an internal code naming a statement", edit(registryFile, `"class": "internal", "subject": "invocation", "params": [], "since": "1.0", "statements": []`, `"class": "internal", "subject": "invocation", "params": [], "since": "1.0", "statements": ["MTS-OUT-001"]`), []string{"internal.bug is of class internal"}},
-		{"a usage code listed", unwiredEdit("report.truncated W4\n", "limit.invalid W3\nreport.truncated W4\n"), []string{"unwired.txt:3: limit.invalid is of class usage"}},
-		{"a retired code listed", unwiredEdit("report.truncated W4\n", "output.old W5\nreport.truncated W4\n"), []string{"output.old is retired"}},
-		{"a line with no wave", unwiredEdit("report.truncated W4\n", "report.truncated\n"), []string{"unwired.txt:3: \"report.truncated\" is not a code and the wave"}},
-		{"a wave already past", unwiredEdit("W4", "W2"), []string{"is not a code and the wave, W3 to W7"}},
-		{"a wave past the plan's last", unwiredEdit("W4", "W8"), []string{"W3 to W7"}},
-		{"codes out of order", unwiredEdit("report.truncated W4\n", "report.truncated W4\noutput.path_absolute W5\n"), []string{"output.path_absolute is out of order or listed twice"}},
-		{"a code listed twice", unwiredEdit("report.truncated W4\n", "report.truncated W4\nreport.truncated W5\n"), []string{"listed twice"}},
-		{"no unwired list", func(t *testing.T, f *specFixture) { os.Remove(f.unwired) }, []string{"no such file"}},
 		{"a findings file outside its vector", edit(vectorsDir+"/out/relative-path/vector.json", `"expected/findings.json"`, `"../findings.json"`), []string{"is not inside the vector"}},
 	})
 }

@@ -4,8 +4,6 @@
 package guarantees
 
 import (
-	"bufio"
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/fs"
@@ -144,50 +142,6 @@ func readRegistry(root string) ([]registryCode, error) {
 	return r.Codes, nil
 }
 
-// unwiredFile is the unwired list, from this package's directory (plan
-// §8, "The unwired list").
-const unwiredFile = "../finding/testdata/unwired.txt"
-
-// unwired is one line of the unwired list: a registered code no vector
-// produces yet, and the wave expected to wire it.
-type unwired struct {
-	code, wave string
-	line       int
-}
-
-// The waves a listed code may name: those after this one, up to Wave 7,
-// by whose close the list is empty.
-var unwiredWaveRe = regexp.MustCompile(`^W[3-7]$`)
-
-// readUnwired reads the unwired list. A line is a code and a wave,
-// separated by spaces; a line beginning with # is a comment. The codes are
-// in byte order, each once.
-func readUnwired(p string) ([]unwired, []string) {
-	b, err := os.ReadFile(p)
-	if err != nil {
-		return nil, []string{err.Error()}
-	}
-	var list []unwired
-	var problems []string
-	sc := bufio.NewScanner(bytes.NewReader(b))
-	for n := 1; sc.Scan(); n++ {
-		l := sc.Text()
-		if blank(l) || strings.HasPrefix(l, "#") {
-			continue
-		}
-		f := strings.Fields(l)
-		if len(f) != 2 || !unwiredWaveRe.MatchString(f[1]) {
-			problems = append(problems, fmt.Sprintf("unwired.txt:%d: %q is not a code and the wave, W3 to W7, expected to wire it", n, l))
-			continue
-		}
-		if k := len(list); k > 0 && list[k-1].code >= f[0] {
-			problems = append(problems, fmt.Sprintf("unwired.txt:%d: %s is out of order or listed twice", n, f[0]))
-		}
-		list = append(list, unwired{code: f[0], wave: f[1], line: n})
-	}
-	return list, problems
-}
-
 // exemptClass reports whether codes of class are proved by internal/cli
 // tests, not vectors: the cli adapter fails a step on the exit codes
 // they give (plan §8, "Decisions settled before filing").
@@ -195,48 +149,24 @@ func exemptClass(class string) bool { return class == "usage" || class == "inter
 
 // findingCodeProblems is TestFindingCodesCovered's check: every
 // registered, unretired code of class refused, content or destination is
-// produced by a vector and names a statement, or is on the unwired list;
-// a listed code is registered, of such a class, and produced by no vector;
+// produced by a vector and names a statement, with no list to exempt one;
 // and a code of class usage or internal names no statement.
-func findingCodeProblems(codes []registryCode, list []unwired, produced map[string][]string) []string {
+func findingCodeProblems(codes []registryCode, produced map[string][]string) []string {
 	var problems []string
-	listed := map[string]unwired{}
-	for _, u := range list {
-		listed[u.code] = u
-	}
-	registered := map[string]registryCode{}
 	for _, c := range codes {
-		registered[c.Code] = c
-		u, onList := listed[c.Code]
-		by := produced[c.Code]
 		switch {
 		case c.Retired != "":
-			if onList {
-				problems = append(problems, fmt.Sprintf("unwired.txt:%d: %s is retired, so nothing wires it", u.line, c.Code))
-			}
 		case exemptClass(c.Class):
-			if onList {
-				problems = append(problems, fmt.Sprintf("unwired.txt:%d: %s is of class %s, which internal/cli's tests prove, and is not listed", u.line, c.Code, c.Class))
-			}
 			if len(c.Statements) > 0 {
 				problems = append(problems, fmt.Sprintf("%s is of class %s, and names the statements %q; a code the command line alone reports names none", c.Code, c.Class, c.Statements))
 			}
-		case onList:
-			if len(by) > 0 {
-				problems = append(problems, fmt.Sprintf("unwired.txt:%d: %s is produced by %s; take it off the list, which only shrinks", u.line, c.Code, strings.Join(by, ", ")))
-			}
 		default:
-			if len(by) == 0 {
-				problems = append(problems, fmt.Sprintf("%s is registered, of class %s, and no vector's expected findings hold it; add one, or list it in unwired.txt with the wave that wires it", c.Code, c.Class))
+			if len(produced[c.Code]) == 0 {
+				problems = append(problems, fmt.Sprintf("%s is registered, of class %s, and no vector's expected findings hold it; add one", c.Code, c.Class))
 			}
 			if len(c.Statements) == 0 {
 				problems = append(problems, fmt.Sprintf("%s names no statement", c.Code))
 			}
-		}
-	}
-	for _, u := range list {
-		if _, ok := registered[u.code]; !ok {
-			problems = append(problems, fmt.Sprintf("unwired.txt:%d: %s is not registered in spec/%s", u.line, u.code, registryFile))
 		}
 	}
 	return problems
@@ -260,9 +190,8 @@ func producedCodes(root string, vs []vector) (map[string][]string, error) {
 	return produced, nil
 }
 
-// codesCoveredProblems runs findingCodeProblems over root and the unwired
-// list at unwiredPath.
-func codesCoveredProblems(root, unwiredPath string) []string {
+// codesCoveredProblems runs findingCodeProblems over root.
+func codesCoveredProblems(root string) []string {
 	codes, err := readRegistry(root)
 	if err != nil {
 		return []string{err.Error()}
@@ -275,8 +204,7 @@ func codesCoveredProblems(root, unwiredPath string) []string {
 	if err != nil {
 		return []string{err.Error()}
 	}
-	list, problems := readUnwired(unwiredPath)
-	return append(problems, findingCodeProblems(codes, list, produced)...)
+	return findingCodeProblems(codes, produced)
 }
 
 // coverageProblems is TestCoverage's check: every active, observable
@@ -487,9 +415,9 @@ func TestCitationsResolve(t *testing.T) {
 }
 
 // TestFindingCodesCovered is ADR-011 D14's tripwire and ADR-006 D13 item
-// 4's second test, over spec/ and the unwired list.
+// 4's second test, over spec/, with no list to exempt a code.
 func TestFindingCodesCovered(t *testing.T) {
-	report(t, codesCoveredProblems(specRoot, unwiredFile))
+	report(t, codesCoveredProblems(specRoot))
 }
 
 // TestExamplesMatchVectors is ADR-011 D14's tripwire over spec/.
