@@ -57,26 +57,39 @@ The change is everything that differs from the merge base with
 Fetch `origin` first, or the base is stale. A path reaches packages by
 these rules:
 
-- **A path in a package's directory** (Go files, `testdata/`, embedded
-  files) touches that package. Every package that imports it, tests
-  included, is tested.
-- **A path outside every package** (`spec/`, `docs/`, a root file) is data.
-  It touches the packages whose test files name it as a path literal
-  (`"spec/…"`, `"../../spec"`). A change under `spec/` reaches the spec
-  readers: `cli`, `conformance`, `finding`, `guarantees`, `liquidspec`,
-  `loader`, `specdata`, `template` and `vectorgen`.
+- **A non-test file in a package's directory** (Go files, embedded files,
+  anything outside `testdata/`) touches that package. Every package that
+  imports it, tests included, is tested.
+- **A test file, or testdata the build does not embed,** has its own
+  package tested, and no importer: no other test binary compiles it.
+- **Any path is data to the tests that name it.** A package is tested when
+  its test files name the path, or a directory above it, as a string
+  literal or as a run of literal arguments to a `Join`
+  (`filepath.Join(root, "docs", "adr")` names `docs/adr`).
+  `gate-select-named.awk` reads them. Naming `docs/guide.MARKDOWN` reaches
+  that file, not every file under `docs/`, so an ADR's log reaches nothing.
+  A run that climbs out of a computed base
+  (`filepath.Join(suite, "..", "README.md")`) names any path ending in it.
+  A bare word (`"docs"`, `"internal"`) names only the root's file of that
+  name.
 - **A Go file outside every package** (build-ignored, or under a directory
-  `go list ./...` does not see) also touches every package whose test files
+  `go list ./...` does not see) also reaches every package whose test files
   name the module root itself (`"../.."` from `internal/x`). Those tests
   walk the module's tree: `TestLicenceHeaders` and `TestNoHostFacts` read
   every Go file, whatever `go list` sees.
+- **The module walkers**, the root readers whose tests also name Go files
+  by a pattern (`"*.go"`, `"_test.go"`), are reached by every path in a
+  package's directory: `internal/guarantees` reads every package's test
+  files and baselines.
 - **A generated file is a path like any other.** The tripwires and the
   drift step check every generated file on every run anyway.
 - **The blind packages** (`blind` in the output) are the ones whose tests
   build the binary or list the module with the `go` command: `conformance`,
-  `guarantees`, `hostfs`, `version`, `pkgtree` and `cmd/metais`. Any
-  change to the module's code has them tested, because no import edge
-  shows what they read.
+  `guarantees`, `hostfs`, `version`, `pkgtree`, `tools/release` and
+  `cmd/metais`. No import edge shows what they read, so every build input
+  of the module has them tested: a non-test file in a package's directory,
+  `go.mod` or `go.sum`. A test file or testdata in another package does
+  not.
 
 `internal/guarantees`' `TestGateSelectReach` holds these rules to a probe
 list, `testdata/gateselect/reach.txt`: each probe is a changed path and the
