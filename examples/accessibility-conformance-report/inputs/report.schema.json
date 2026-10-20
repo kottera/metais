@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Report details",
+  "description": "What the report is about and how it was made: the product, its vendor, the date, the edition and the evaluation methods.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["product", "vendor", "date", "methods"],
+  "properties": {
+    "product": {
+      "type": "object",
+      "title": "Product",
+      "description": "The product the report is about.",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "$ref": "text.schema.json#/$defs/line",
+          "title": "Product name",
+          "description": "The product's name, as its vendor sells it. The report's title begins with it.",
+          "maxLength": 200,
+          "examples": ["Ledgerline"]
+        },
+        "version": {
+          "$ref": "text.schema.json#/$defs/line",
+          "title": "Product version",
+          "description": "The version, release or build the report covers. Left out, the report names no version.",
+          "maxLength": 100,
+          "examples": ["4.2"]
+        },
+        "description": {
+          "$ref": "text.schema.json#/$defs/prose",
+          "title": "Product description",
+          "description": "What the product is and what it does, in a few sentences, so a reader knows what was evaluated.",
+          "maxLength": 2000,
+          "examples": ["A web application for small businesses to keep their accounts, send invoices and reconcile bank statements."]
+        }
+      }
+    },
+    "vendor": {
+      "type": "object",
+      "title": "Vendor",
+      "description": "Who makes the product and answers questions about the report.",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "$ref": "text.schema.json#/$defs/line",
+          "title": "Vendor name",
+          "description": "The company or organization that makes the product.",
+          "maxLength": 200,
+          "examples": ["Example Ledger Ltd"]
+        },
+        "contact": {
+          "$ref": "text.schema.json#/$defs/line",
+          "title": "Contact",
+          "description": "The person or team a reader asks about the report.",
+          "maxLength": 200,
+          "examples": ["Accessibility team"]
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "title": "Contact email",
+          "description": "The address a reader writes to about the report.",
+          "maxLength": 254,
+          "examples": ["accessibility@example.com"]
+        },
+        "website": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://[^\\u0000-\\u0020\\u007F]+$",
+          "title": "Website",
+          "description": "The vendor's or the product's web address, beginning https:// or http://.",
+          "maxLength": 2048,
+          "examples": ["https://example.com/accessibility"]
+        }
+      }
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Report date",
+      "description": "The date the report was completed, as YYYY-MM-DD.",
+      "examples": ["2026-10-01"]
+    },
+    "edition": {
+      "type": "string",
+      "title": "Edition",
+      "description": "Which standards the report answers, and so which tables it holds: wcag, WCAG 2.2 alone; section508, WCAG 2.2 and the Revised Section 508 Standards; en301549, WCAG 2.2 and EN 301 549 V4.1.1; international, all three. Left out, the edition is wcag.",
+      "enum": ["wcag", "section508", "en301549", "international"],
+      "default": "wcag",
+      "examples": ["international"]
+    },
+    "methods": {
+      "$ref": "text.schema.json#/$defs/prose",
+      "title": "Evaluation methods",
+      "description": "How the product was evaluated: the tools, the assistive technologies and their versions, the browsers and platforms, the people who tested, and what was in and out of scope.",
+      "maxLength": 8000,
+      "examples": ["Tested by the vendor's accessibility team in September 2026, with keyboard-only operation, NVDA 2026.2 on Firefox and JAWS 2026 on Chrome under Windows 11, VoiceOver on Safari under macOS 15, and automated checks of every page."]
+    },
+    "notes": {
+      "$ref": "text.schema.json#/$defs/prose",
+      "title": "Notes",
+      "description": "Anything else the reader should know before reading the tables, such as known issues being fixed, or parts of the product the report does not cover. Left out, the report has no notes.",
+      "maxLength": 8000,
+      "examples": ["The mobile applications are covered by a separate report."]
+    }
+  }
+}

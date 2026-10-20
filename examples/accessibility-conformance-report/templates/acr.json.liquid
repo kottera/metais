@@ -1,0 +1,33 @@
+{%- comment -%}
+The report as JSON, for programs: every value of the report's inputs, and
+each criterion's label, in the shape references/acr.schema.json gives it.
+A value the inputs leave out is null.
+{%- endcomment -%}
+{%- assign report = inputs.report -%}
+{
+  "format": "metais-example-acr/1",
+  "product": {
+    "name": {{ report.product.name | json }},
+    "version": {{ report.product.version | json }},
+    "description": {{ report.product.description | json }}
+  },
+  "vendor": {
+    "name": {{ report.vendor.name | json }},
+    "contact": {{ report.vendor.contact | json }},
+    "email": {{ report.vendor.email | json }},
+    "website": {{ report.vendor.website | json }}
+  },
+  "date": {{ report.date | json }},
+  "edition": {{ report.edition | json }},
+  "methods": {{ report.methods | json }},
+  "notes": {{ report.notes | json }},
+  "tables": [
+    {% render "acr-table.json.liquid", rows: inputs.wcag, standard: "wcag" %}
+{%- if report.edition == "section508" or report.edition == "international" %},
+    {% render "acr-table.json.liquid", rows: inputs.section508, standard: "section508" %}
+{%- endif %}
+{%- if report.edition == "en301549" or report.edition == "international" %},
+    {% render "acr-table.json.liquid", rows: inputs.en301549, standard: "en301549" %}
+{%- endif %}
+  ]
+}

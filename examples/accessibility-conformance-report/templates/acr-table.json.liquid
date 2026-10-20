@@ -1,0 +1,29 @@
+{%- comment -%}
+One table of the JSON report: its standard, then a criterion object per
+entry of rows, in the order supplied.
+{%- endcomment -%}
+{
+      "standard": {{ standard | json }},
+      "criteria": [
+{%- for row in rows %}
+        {
+{%- case standard -%}
+{%- when "wcag" -%}
+{%- capture label %}{% render "criteria/wcag.liquid", id: row.criterion %}{% endcapture -%}
+{%- capture level %}{% render "criteria/wcag-level.liquid", id: row.criterion %}{% endcapture -%}
+{%- when "section508" -%}
+{%- capture label %}{% render "criteria/section508.liquid", id: row.criterion %}{% endcapture -%}
+{%- when "en301549" -%}
+{%- capture label %}{% render "criteria/en301549.liquid", id: row.criterion %}{% endcapture -%}
+{%- endcase %}
+          "criterion": {{ row.criterion | json }},
+          "label": {{ label | json }},
+{%- if standard == "wcag" %}
+          "wcag_level": {{ level | json }},
+{%- endif %}
+          "conformance": {{ row.conformance | json }},
+          "remarks": {{ row.remarks | json }}
+        }{% unless forloop.last %},{% endunless %}
+{%- endfor %}
+      ]
+    }

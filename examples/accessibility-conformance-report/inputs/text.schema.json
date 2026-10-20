@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Text",
+  "description": "The two kinds of text the report's inputs hold. A Word document's XML holds no control character but the tab and the line feed, so neither kind admits any other.",
+  "$defs": {
+    "line": {
+      "type": "string",
+      "title": "Line",
+      "description": "One line of text: no line break, no tab and no other control character, and at least one character.",
+      "minLength": 1,
+      "pattern": "^[^\\u0000-\\u001F\\u007F]+$"
+    },
+    "prose": {
+      "type": "string",
+      "title": "Prose",
+      "description": "Text of one or more paragraphs, each line break starting a new one. It holds no control character but the line feed and the tab, and at least one character.",
+      "minLength": 1,
+      "pattern": "^[^\\u0000-\\u0008\\u000B-\\u001F\\u007F]+$"
+    }
+  }
+}

@@ -1,0 +1,105 @@
+criterion,conformance,remarks
+302.1,Partially Supports,"Every function can be used with a screen reader, except reading the dashboard's cash-flow chart; see WCAG 1.1.1."
+302.2,Supports,The product works with browser zoom to 400 percent and with the platforms' magnifiers.
+302.3,Supports,No information is given by colour alone.
+302.4,Supports,The onboarding videos have captions; the product has no other sound.
+302.5,Supports,The onboarding videos have captions; the product has no other sound.
+302.6,Not Applicable,The product takes no speech input.
+302.7,Supports,"Every function can be operated from a keyboard, without simultaneous actions."
+302.8,Supports,The product runs on the user's own device and needs no reach or strength beyond it.
+302.9,Supports,"Plain language throughout, consistent navigation, and error messages that say how to fix the error."
+402.1,Not Applicable,The product is software and has no hardware.
+402.2,Not Applicable,The product is software and has no hardware.
+402.2.1,Not Applicable,The product is software and has no hardware.
+402.2.2,Not Applicable,The product is software and has no hardware.
+402.2.3,Not Applicable,The product is software and has no hardware.
+402.2.4,Not Applicable,The product is software and has no hardware.
+402.2.5,Not Applicable,The product is software and has no hardware.
+402.3,Not Applicable,The product is software and has no hardware.
+402.3.1,Not Applicable,The product is software and has no hardware.
+402.3.2,Not Applicable,The product is software and has no hardware.
+402.4,Not Applicable,The product is software and has no hardware.
+402.5,Not Applicable,The product is software and has no hardware.
+403.1,Not Applicable,The product is software and has no hardware.
+404.1,Not Applicable,The product is software and has no hardware.
+405.1,Not Applicable,The product is software and has no hardware.
+406.1,Not Applicable,The product is software and has no hardware.
+407.2,Not Applicable,The product is software and has no hardware.
+407.3,Not Applicable,The product is software and has no hardware.
+407.3.1,Not Applicable,The product is software and has no hardware.
+407.3.2,Not Applicable,The product is software and has no hardware.
+407.3.3,Not Applicable,The product is software and has no hardware.
+407.4,Not Applicable,The product is software and has no hardware.
+407.5,Not Applicable,The product is software and has no hardware.
+407.6,Not Applicable,The product is software and has no hardware.
+407.7,Not Applicable,The product is software and has no hardware.
+407.8,Not Applicable,The product is software and has no hardware.
+407.8.1,Not Applicable,The product is software and has no hardware.
+407.8.1.1,Not Applicable,The product is software and has no hardware.
+407.8.1.2,Not Applicable,The product is software and has no hardware.
+407.8.2,Not Applicable,The product is software and has no hardware.
+407.8.2.1,Not Applicable,The product is software and has no hardware.
+407.8.2.2,Not Applicable,The product is software and has no hardware.
+407.8.3,Not Applicable,The product is software and has no hardware.
+407.8.3.1,Not Applicable,The product is software and has no hardware.
+407.8.3.2,Not Applicable,The product is software and has no hardware.
+407.8.3.2.1,Not Applicable,The product is software and has no hardware.
+407.8.3.2.2,Not Applicable,The product is software and has no hardware.
+408.2,Not Applicable,The product is software and has no hardware.
+408.3,Not Applicable,The product is software and has no hardware.
+409.1,Not Applicable,The product is software and has no hardware.
+410.1,Not Applicable,The product is software and has no hardware.
+411.1,Not Applicable,The product is software and has no hardware.
+412.2,Not Applicable,The product is software and has no hardware.
+412.2.1,Not Applicable,The product is software and has no hardware.
+412.2.2,Not Applicable,The product is software and has no hardware.
+412.3,Not Applicable,The product is software and has no hardware.
+412.3.1,Not Applicable,The product is software and has no hardware.
+412.3.2,Not Applicable,The product is software and has no hardware.
+412.4,Not Applicable,The product is software and has no hardware.
+412.6,Not Applicable,The product is software and has no hardware.
+412.7,Not Applicable,The product is software and has no hardware.
+412.8,Not Applicable,The product is software and has no hardware.
+412.8.1,Not Applicable,The product is software and has no hardware.
+412.8.2,Not Applicable,The product is software and has no hardware.
+412.8.3,Not Applicable,The product is software and has no hardware.
+412.8.4,Not Applicable,The product is software and has no hardware.
+413.1.1,Not Applicable,The product is software and has no hardware.
+413.1.2,Not Applicable,The product is software and has no hardware.
+414.1.1,Not Applicable,The product is software and has no hardware.
+414.1.2,Not Applicable,The product is software and has no hardware.
+415.1.1,Not Applicable,The product is software and has no hardware.
+415.1.2,Not Applicable,The product is software and has no hardware.
+502.2.1,Not Applicable,"The product is a web application, not a platform."
+502.2.2,Supports,The product does not override the browser's or the platform's accessibility features.
+502.3,Not Applicable,"The product is a web application, not a platform; the WCAG table answers its interoperability with assistive technology."
+502.3.1,Not Applicable,"The product is a web application, not a platform."
+502.3.2,Not Applicable,"The product is a web application, not a platform."
+502.3.3,Not Applicable,"The product is a web application, not a platform."
+502.3.4,Not Applicable,"The product is a web application, not a platform."
+502.3.5,Not Applicable,"The product is a web application, not a platform."
+502.3.6,Not Applicable,"The product is a web application, not a platform."
+502.3.7,Not Applicable,"The product is a web application, not a platform."
+502.3.8,Not Applicable,"The product is a web application, not a platform."
+502.3.9,Not Applicable,"The product is a web application, not a platform."
+502.3.10,Not Applicable,"The product is a web application, not a platform."
+502.3.11,Not Applicable,"The product is a web application, not a platform."
+502.3.12,Not Applicable,"The product is a web application, not a platform."
+502.3.13,Not Applicable,"The product is a web application, not a platform."
+502.3.14,Not Applicable,"The product is a web application, not a platform."
+502.4,Not Applicable,The product is not a platform.
+503.2,Supports,"The product follows the browser's text size, colour and contrast settings."
+503.3,Not Applicable,The product offers no alternative user interface.
+503.4,Supports,The video player's caption and audio description controls sit beside its play and volume controls.
+503.4.1,Supports,The caption control sits beside the play and volume controls.
+503.4.2,Supports,The audio description control sits beside the play and volume controls.
+504.2,Not Applicable,The product is not an authoring tool.
+504.2.1,Not Applicable,The product is not an authoring tool.
+504.2.2,Not Applicable,The product is not an authoring tool.
+504.3,Not Applicable,The product is not an authoring tool.
+504.4,Not Applicable,The product is not an authoring tool.
+602.2,Supports,The help centre's accessibility page lists and explains the product's accessibility features.
+602.3,Supports,The help centre meets the WCAG 2.2 criteria at Levels A and AA.
+602.4,Not Applicable,No printed documentation is offered; the help centre is electronic.
+603.2,Supports,Support staff are trained to explain the product's accessibility features.
+603.3,Supports,"Support is offered by email, chat and telephone, and by relay services."
