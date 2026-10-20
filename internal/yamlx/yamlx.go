@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"strconv"
 	"strings"
 
 	"go.yaml.in/yaml/v3"
@@ -46,6 +47,11 @@ type Source struct {
 	// so a frontmatter's positions count from the first line of its file
 	// (ADR-006 D5 item 6). Zero is line 1.
 	FirstLine int
+	// Values, when set, counts every value the document decodes to, its
+	// root included, against input-values, which a command's inputs share
+	// (ADR-009 Amendment A4 item 1). The reading stops at the value that
+	// passes the bound.
+	Values *limits.Counter
 }
 
 // Doc is a parsed document: its value in the data model and the position
@@ -73,29 +79,64 @@ type positions struct {
 var _ finding.PathPositions = (*positions)(nil)
 
 func newPositions() *positions {
-	root := &place{}
+	root := &place{index: -1}
 	return &positions{root: root, paths: finding.NewResolver(root, func(pl *place, tok string) (*place, bool) {
-		c := pl.children[tok]
+		c := pl.lookup(tok)
 		return c, c != nil
 	})}
 }
 
 // place is one value of the document: where it and, for an object member,
 // its name are, and the places within it by token.
+//
+// A sequence's places are held by index, and every position in half the
+// words of a finding.Pos, since a document has a place for every value it
+// holds (ADR-009 Amendment A4 item 3).
 type place struct {
 	parent   *place
-	token    string
-	value    finding.Pos
+	token    string // a member's name; an element's is its index
+	index    int32  // an element's index, or -1
 	hasValue bool
-	key      finding.Pos
 	hasKey   bool
-	children map[string]*place
-	path     *finding.Path // built when a finding first needs it
 	built    bool
+	value    packedPos
+	key      packedPos
+	children map[string]*place // a mapping's members, by name
+	elems    []*place          // a sequence's elements, by index
+	path     *finding.Path     // built when a finding first needs it
 }
 
-// child returns the place of the member or element token of the value at
-// p. Every occurrence of a duplicate name is one place.
+// packedPos is a line and a column.
+type packedPos struct{ line, col uint32 }
+
+func pack(p finding.Pos) packedPos   { return packedPos{uint32(p.Line), uint32(p.Column)} }
+func (p packedPos) pos() finding.Pos { return finding.Pos{Line: int(p.line), Column: int(p.col)} }
+
+// elem returns the place of the i'th element of the sequence at p.
+func (p *place) elem(i int) *place {
+	for len(p.elems) <= i {
+		p.elems = append(p.elems, nil)
+	}
+	if p.elems[i] == nil {
+		p.elems[i] = &place{parent: p, index: int32(i)}
+	}
+	return p.elems[i]
+}
+
+// lookup returns the place within p that token names, and nil when there
+// is none.
+func (p *place) lookup(token string) *place {
+	if c, ok := p.children[token]; ok {
+		return c
+	}
+	if i, err := strconv.Atoi(token); err == nil && i >= 0 && i < len(p.elems) && strconv.Itoa(i) == token {
+		return p.elems[i]
+	}
+	return nil
+}
+
+// child returns the place of the member token of the value at p. Every
+// occurrence of a duplicate name is one place.
 func (p *place) child(token string) *place {
 	if c, ok := p.children[token]; ok {
 		return c
@@ -103,7 +144,7 @@ func (p *place) child(token string) *place {
 	if p.children == nil {
 		p.children = map[string]*place{}
 	}
-	c := &place{parent: p, token: token}
+	c := &place{parent: p, token: token, index: -1}
 	p.children[token] = c
 	return c
 }
@@ -114,7 +155,11 @@ func (p *place) pointer() *finding.Path {
 		return nil
 	}
 	if !p.built {
-		p.path, p.built = p.parent.pointer().Child(p.token), true
+		token := p.token
+		if p.index >= 0 {
+			token = strconv.Itoa(int(p.index))
+		}
+		p.path, p.built = p.parent.pointer().Child(token), true
 	}
 	return p.path
 }
@@ -136,7 +181,7 @@ func (p *positions) find(ptr string) (*place, bool) {
 		if !escaped(tok) {
 			return nil, false
 		}
-		if pl = pl.children[tokenUnescaper.Replace(tok)]; pl == nil {
+		if pl = pl.lookup(tokenUnescaper.Replace(tok)); pl == nil {
 			return nil, false
 		}
 	}
@@ -159,7 +204,7 @@ func escaped(tok string) bool {
 // Value is the position of the value at ptr.
 func (p *positions) Value(ptr string) (finding.Pos, bool) {
 	if pl, ok := p.find(ptr); ok && pl.hasValue {
-		return pl.value, true
+		return pl.value.pos(), true
 	}
 	return finding.Pos{}, false
 }
@@ -167,7 +212,7 @@ func (p *positions) Value(ptr string) (finding.Pos, bool) {
 // Key is the position of the member name of the object member at ptr.
 func (p *positions) Key(ptr string) (finding.Pos, bool) {
 	if pl, ok := p.find(ptr); ok && pl.hasKey {
-		return pl.key, true
+		return pl.key.pos(), true
 	}
 	return finding.Pos{}, false
 }
@@ -186,7 +231,7 @@ func (p *positions) findPath(path *finding.Path) (*place, bool) {
 // ValueAt is Value of the pointer path names.
 func (p *positions) ValueAt(path *finding.Path) (finding.Pos, bool) {
 	if pl, ok := p.findPath(path); ok && pl.hasValue {
-		return pl.value, true
+		return pl.value.pos(), true
 	}
 	return finding.Pos{}, false
 }
@@ -194,7 +239,7 @@ func (p *positions) ValueAt(path *finding.Path) (finding.Pos, bool) {
 // KeyAt is Key of the pointer path names.
 func (p *positions) KeyAt(path *finding.Path) (finding.Pos, bool) {
 	if pl, ok := p.findPath(path); ok && pl.hasKey {
-		return pl.key, true
+		return pl.key.pos(), true
 	}
 	return finding.Pos{}, false
 }
@@ -239,6 +284,9 @@ func (r *reader) parse() (value.Value, []finding.Finding) {
 		if r.manifest {
 			r.add(ruleRootNotMapping, r.at(finding.Pos{}).WithPointer(""), nil)
 			return nil, r.findings
+		}
+		if !r.src.Values.Add(1) {
+			return nil, []finding.Finding{r.limit(r.src.Values.ID(), r.at(finding.Pos{}).WithPointer(""), 0, false)}
 		}
 		return value.Null{}, nil
 	case err != nil:

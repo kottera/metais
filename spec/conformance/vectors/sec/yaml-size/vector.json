@@ -1,0 +1,108 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/yaml-size",
+  "title": "A YAML input file or collection item of yaml-size bytes is read, and one of a byte more is refused before it is parsed",
+  "statements": [
+    "MTS-SEC-060"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "Each document is 5 bytes. broken/y.yaml does not parse, and is refused by yaml-size alone, since the bound is checked before parsing.",
+  "cases": [
+    {
+      "name": "document-at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/document",
+            "limits": {
+              "yaml-size": 5
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "document-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/document",
+            "limits": {
+              "yaml-size": 4
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/document-one-over.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unparsed-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/broken",
+            "limits": {
+              "yaml-size": 4
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/unparsed-one-over.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "item-at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/collection",
+            "limits": {
+              "yaml-size": 5
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "item-one-over",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/collection",
+            "limits": {
+              "yaml-size": 4
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/item-one-over.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -74,7 +74,7 @@
               "/report=5"
             ],
             "limits": {
-              "schema-work": 1000000
+              "schema-work": 400000
             }
           },
           "expect": {

@@ -111,7 +111,18 @@ func AppendJSON(b []byte, fs ...Finding) []byte {
 	return append(b, ']')
 }
 
-func (f Finding) appendJSON(b []byte) []byte {
+// EncodeJSON appends f's object to b as AppendJSON does, and before each
+// finding within its alternatives, at any depth, hands what it holds to
+// flush and carries on with the buffer flush returns. A writer flushes the
+// bytes and returns the buffer emptied, so a finding whose alternatives
+// list the findings limit's findings is never held as one encoding.
+func EncodeJSON(b []byte, f Finding, flush func([]byte) []byte) []byte {
+	return f.encodeJSON(b, flush)
+}
+
+func (f Finding) appendJSON(b []byte) []byte { return f.encodeJSON(b, nil) }
+
+func (f Finding) encodeJSON(b []byte, flush func([]byte) []byte) []byte {
 	o := openObject(b)
 	o.str("code", string(f.entry.Code))
 	o.str("severity", f.entry.Severity.String())
@@ -146,7 +157,7 @@ func (f Finding) appendJSON(b []byte) []byte {
 	o.key("params")
 	p := openObject(o.b)
 	for _, spec := range f.entry.Params {
-		if v, ok := f.params[spec.Name]; ok {
+		if v, ok := f.params.get(spec.Name); ok {
 			p.key(spec.Name)
 			p.b = v.appendJSON(p.b, appendJSONString)
 		}
@@ -188,7 +199,17 @@ func (f Finding) appendJSON(b []byte) []byte {
 			s.num("branch", a.Branch)
 			s.strIf("title", a.Title)
 			s.key("findings")
-			s.b = AppendJSON(s.b, a.Findings...)
+			s.b = append(s.b, '[')
+			for j, g := range a.Findings {
+				if j > 0 {
+					s.b = append(s.b, ',')
+				}
+				if flush != nil {
+					s.b = flush(s.b)
+				}
+				s.b = g.encodeJSON(s.b, flush)
+			}
+			s.b = append(s.b, ']')
 			s.num("omitted", a.Omitted)
 			o.b = s.close()
 		}
@@ -262,7 +283,18 @@ func AppendHuman(b []byte, colour bool, fs ...Finding) []byte {
 	return b
 }
 
+// EncodeHuman appends f to b as AppendHuman does, and before each finding
+// within its alternatives hands what it holds to flush and carries on with
+// the buffer flush returns, as EncodeJSON does.
+func EncodeHuman(b []byte, colour bool, f Finding, flush func([]byte) []byte) []byte {
+	return f.encodeHuman(b, colour, "", flush)
+}
+
 func (f Finding) appendHuman(b []byte, colour bool, indent string) []byte {
+	return f.encodeHuman(b, colour, indent, nil)
+}
+
+func (f Finding) encodeHuman(b []byte, colour bool, indent string, flush func([]byte) []byte) []byte {
 	b = append(b, indent...)
 	b = appendText(b, f.where())
 	b = append(b, ": "...)
@@ -353,7 +385,10 @@ func (f Finding) appendHuman(b []byte, colour bool, indent string) []byte {
 		}
 		b = append(b, '\n')
 		for _, af := range a.Findings {
-			b = af.appendHuman(b, colour, indent+"    ")
+			if flush != nil {
+				b = flush(b)
+			}
+			b = af.encodeHuman(b, colour, indent+"    ", flush)
 		}
 		if a.Omitted > 0 {
 			b = append(b, indent...)

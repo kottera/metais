@@ -4,8 +4,10 @@
 package jsonx
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"strconv"
 	"strings"
@@ -61,6 +63,36 @@ type encoder struct {
 	b      strings.Builder
 	indent int
 	number func(float64) string
+	// w, when set, takes what b holds whenever it passes spillAt, so the
+	// text is never held whole.
+	w io.Writer
+}
+
+// spillAt is how much text an encoder with a writer holds before it
+// hands it on.
+const spillAt = 64 << 10
+
+// spill hands b to w once it holds spillAt or more.
+func (e *encoder) spill() {
+	if e.w != nil && e.b.Len() >= spillAt {
+		io.WriteString(e.w, e.b.String())
+		e.b.Reset()
+	}
+}
+
+// CanonicalDigest is the SHA-256 digest of Canonical(v). It writes the
+// canonical text as Encode does, which is byte-identical to Canonical,
+// into the hash a piece at a time, so neither the text nor a second tree
+// of v is built: an input's digest costs no memory for its size (ADR-009
+// Amendment A4 item 3).
+func CanonicalDigest(v value.Value) [sha256.Size]byte {
+	h := sha256.New()
+	e := encoder{number: FormatNumber, w: h}
+	e.value(v, 0)
+	io.WriteString(h, e.b.String())
+	var d [sha256.Size]byte
+	h.Sum(d[:0])
+	return d
 }
 
 func (e *encoder) newline(depth int) {
@@ -82,7 +114,20 @@ func (e *encoder) value(v value.Value, depth int) {
 	case value.Number:
 		e.b.WriteString(e.number(v.Float64()))
 	case value.String:
-		writeString(&e.b, v.Text())
+		if e.w == nil {
+			writeString(&e.b, v.Text())
+			break
+		}
+		// A long string is written a piece at a time, as the rest is.
+		s := v.Text()
+		e.b.WriteByte('"')
+		for len(s) > 0 {
+			n := min(len(s), spillAt)
+			writeEscaped(&e.b, s[:n])
+			s = s[n:]
+			e.spill()
+		}
+		e.b.WriteByte('"')
 	case value.Array:
 		if v.Len() == 0 {
 			e.b.WriteString("[]")
@@ -95,6 +140,7 @@ func (e *encoder) value(v value.Value, depth int) {
 			}
 			e.newline(depth + 1)
 			e.value(el, depth+1)
+			e.spill()
 		}
 		e.newline(depth)
 		e.b.WriteByte(']')
@@ -117,6 +163,7 @@ func (e *encoder) value(v value.Value, depth int) {
 				e.b.WriteByte(' ')
 			}
 			e.value(m, depth+1)
+			e.spill()
 		}
 		e.newline(depth)
 		e.b.WriteByte('}')
@@ -131,8 +178,15 @@ func (e *encoder) value(v value.Value, depth int) {
 // and \r, every other code point below U+0020 as \u00xx in lowercase hex,
 // and everything else as itself.
 func writeString(b *strings.Builder, s string) {
-	const hex = "0123456789abcdef"
 	b.WriteByte('"')
+	writeEscaped(b, s)
+	b.WriteByte('"')
+}
+
+// writeEscaped writes s as writeString does, without the quotes. It
+// escapes a byte at a time, so s may be any piece of a string.
+func writeEscaped(b *strings.Builder, s string) {
+	const hex = "0123456789abcdef"
 	for i := 0; i < len(s); i++ {
 		c := s[i]
 		switch {
@@ -157,7 +211,6 @@ func writeString(b *strings.Builder, s string) {
 			b.WriteByte(c)
 		}
 	}
-	b.WriteByte('"')
 }
 
 // FormatNumber writes f as ECMAScript's Number::toString does (ECMA-262

@@ -7,7 +7,6 @@ import (
 	"cmp"
 	"crypto/sha256"
 	"encoding/binary"
-	"slices"
 	"strings"
 )
 
@@ -129,20 +128,15 @@ func (f Finding) canonicalParams() string { return f.paramsKey }
 // members sorted by name, no whitespace, numbers in canonical form and
 // strings escaped as RFC 8785 §3.2.2.2 says. Parameter names are lowercase
 // ASCII, so their byte order is RFC 8785's UTF-16 order.
-func canonicalForm(params Params) string {
-	names := make([]string, 0, len(params))
-	for n := range params {
-		names = append(names, n)
-	}
-	slices.Sort(names)
+func canonicalForm(params paramList) string {
 	b := []byte{'{'}
-	for i, n := range names {
+	for i, p := range params {
 		if i > 0 {
 			b = append(b, ',')
 		}
-		b = appendCanonicalString(b, n)
+		b = appendCanonicalString(b, p.name)
 		b = append(b, ':')
-		b = params[n].appendJSON(b, appendCanonicalString)
+		b = p.v.appendJSON(b, appendCanonicalString)
 	}
 	return string(append(b, '}'))
 }

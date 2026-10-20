@@ -270,6 +270,9 @@ type Alternative struct {
 	Title    string
 	Findings []Finding
 	Omitted  int
+	// gathered is set when a Branch gathered Findings, already sorted,
+	// de-duplicated and capped, so New takes them as they are.
+	gathered bool
 }
 
 // Related is another location a finding concerns, with a fixed note
@@ -285,13 +288,19 @@ type Finding struct {
 	entry        *Entry
 	subject      Subject
 	location     *Location
-	params       Params
+	params       paramList
 	schema       *Schema
 	field        *Field
 	via          []Via
 	alternatives []Alternative
 	related      []Related
 	hint         string // a declared hint template in place of the code's; see WithHint
+	// listed is how many findings the finding lists: itself and every
+	// finding within its alternatives, at any depth (MTS-FND-020).
+	listed int
+	// listMax, when positive, is the most New lets the finding list; see
+	// WithListedAtMost.
+	listMax int
 
 	paramsKey string // the canonical form of params, for Compare and the duplicate key
 }
@@ -385,7 +394,7 @@ func (f Finding) Field() (Field, bool) {
 
 // Param returns the parameter called name, and false when it is absent.
 func (f Finding) Param(name string) (Value, bool) {
-	v, ok := f.params[name]
+	v, ok := f.params.get(name)
 	return v, ok
 }
 
@@ -412,6 +421,14 @@ func WithVia(v ...Via) Option { return func(f *Finding) { f.via = append(f.via, 
 func WithAlternatives(a ...Alternative) Option {
 	return func(f *Finding) { f.alternatives = append(f.alternatives, a...) }
 }
+
+// WithListedAtMost bounds what the finding lists, itself included, to n
+// findings (MTS-FND-020): the findings within its alternatives past the
+// first n-1 in the order a report lists them are left out, each counted
+// in its branch's omitted (MTS-FND-021). A report lists at most its
+// findings limit in all, so a finding built under that limit never holds
+// more than the report could list. n below 1 bounds nothing.
+func WithListedAtMost(n int) Option { return func(f *Finding) { f.listMax = n } }
 
 // WithRelated records other locations the finding concerns.
 func WithRelated(r ...Related) Option {
@@ -454,6 +471,11 @@ func New(code Code, subj Subject, loc *Location, p Params, opts ...Option) Findi
 		o(&f)
 	}
 	f.clean()
+	f.listed = f.countListed()
+	if f.listMax > 0 && f.listed > f.listMax {
+		f = f.listAtMost(f.listMax)
+	}
+	f.listMax = 0
 	if err := f.checkPointers(); err != nil {
 		panic(fmt.Sprintf("finding: %s: %v", code, err))
 	}
@@ -715,7 +737,7 @@ func (f Finding) placeholder(name string, write bool) (string, error) {
 		}
 		return "", fmt.Errorf("{output} in a finding about a %s with no output name", f.subject.Kind)
 	}
-	v, ok := f.params[name]
+	v, ok := f.params.get(name)
 	if !ok {
 		return "", fmt.Errorf("placeholder {%s} names no parameter given", name)
 	}
@@ -766,7 +788,9 @@ func (f *Finding) clean() {
 	alts := make([]Alternative, len(f.alternatives))
 	for i, a := range f.alternatives {
 		a.Title = validUTF8(a.Title)
-		a.Findings, a.Omitted = branchFindings(a.Findings, a.Omitted)
+		if !a.gathered {
+			a.Findings, a.Omitted = branchFindings(a.Findings, a.Omitted)
+		}
 		alts[i] = a
 	}
 	f.alternatives = alts
@@ -790,15 +814,84 @@ func (f *Finding) clean() {
 // D6 item 6).
 const maxBranchFindings = 16
 
+// Branch gathers one alternative's findings as New keeps them: sorted and
+// de-duplicated within the branch, the first maxBranchFindings held and
+// the rest counted, so a branch with many findings is never held whole.
+type Branch struct {
+	branch int
+	title  string
+	r      *Report
+}
+
+// NewBranch returns an empty gathering of the branch'th alternative,
+// titled title.
+func NewBranch(branch int, title string) *Branch {
+	r := NewReport(maxBranchFindings)
+	r.flat = true
+	return &Branch{branch: branch, title: title, r: r}
+}
+
+// Add adds f to the branch's findings.
+func (b *Branch) Add(f Finding) { b.r.Add(f) }
+
+// Alternative returns the alternative: the findings the branch lists and
+// how many it omits.
+func (b *Branch) Alternative() Alternative {
+	return Alternative{Branch: b.branch, Title: b.title, Findings: b.r.sorted(), Omitted: b.r.omitted(), gathered: true}
+}
+
 // branchFindings sorts and de-duplicates one alternative's findings within
 // the branch (ADR-006 D8 item 4) and keeps the first maxBranchFindings,
 // adding the rest to omitted.
 func branchFindings(fs []Finding, omitted int) ([]Finding, int) {
 	r := NewReport(maxBranchFindings)
+	r.flat = true
 	for _, f := range fs {
 		r.Add(f)
 	}
 	return r.sorted(), omitted + r.omitted()
+}
+
+// countListed is how many findings f lists: itself, and every finding
+// within its alternatives with what each of them lists.
+func (f Finding) countListed() int {
+	n := 1
+	for _, a := range f.alternatives {
+		for _, g := range a.Findings {
+			n += g.listed
+		}
+	}
+	return n
+}
+
+// listAtMost returns f listing at most n findings, n at least 1, in the
+// order a report lists them (MTS-FND-020): f itself, then its
+// alternatives in branch order, each branch's findings in D8's order, each
+// followed by what it lists. A finding the bound leaves out is counted in
+// its branch's omitted, and one cut short keeps its own (MTS-FND-021).
+func (f Finding) listAtMost(n int) Finding {
+	if f.listed <= n {
+		return f
+	}
+	left := n - 1
+	alts := make([]Alternative, len(f.alternatives))
+	for i, a := range f.alternatives {
+		kept := a.Findings[:0:0]
+		for _, g := range a.Findings {
+			if left == 0 {
+				a.Omitted++
+				continue
+			}
+			g = g.listAtMost(left)
+			left -= g.listed
+			kept = append(kept, g)
+		}
+		a.Findings = kept
+		alts[i] = a
+	}
+	f.alternatives = alts
+	f.listed = n - left
+	return f
 }
 
 func cleanSubject(s Subject) Subject {
@@ -810,10 +903,39 @@ func cleanLocation(l Location) Location {
 	return l
 }
 
-func cleanParams(p Params) Params {
-	out := make(Params, len(p))
+func cleanParams(p Params) paramList {
+	out := make(paramList, 0, len(p))
 	for k, v := range p {
-		out[k] = v.clean()
+		out = append(out, namedParam{k, v.clean()})
+	}
+	slices.SortFunc(out, func(a, b namedParam) int { return strings.Compare(a.name, b.name) })
+	return out
+}
+
+// paramList is a finding's parameters as it holds them: sorted by name,
+// a few words each where a map would hold a table for every finding.
+type paramList []namedParam
+
+type namedParam struct {
+	name string
+	v    Value
+}
+
+// get returns the parameter called name, and false when it is absent.
+func (l paramList) get(name string) (Value, bool) {
+	for _, p := range l {
+		if p.name == name {
+			return p.v, true
+		}
+	}
+	return Value{}, false
+}
+
+// Params returns the parameters as a map.
+func (l paramList) Params() Params {
+	out := make(Params, len(l))
+	for _, p := range l {
+		out[p.name] = p.v
 	}
 	return out
 }

@@ -5,6 +5,7 @@ package yamlx
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 	"unicode/utf8"
@@ -182,13 +183,18 @@ func (p *positions) entries() (values, keys map[string]finding.Pos) {
 	var walk func(pl *place, ptr string)
 	walk = func(pl *place, ptr string) {
 		if pl.hasValue {
-			values[ptr] = pl.value
+			values[ptr] = pl.value.pos()
 		}
 		if pl.hasKey {
-			keys[ptr] = pl.key
+			keys[ptr] = pl.key.pos()
 		}
 		for tok, c := range pl.children {
 			walk(c, ptr+finding.Pointer(tok))
+		}
+		for i, c := range pl.elems {
+			if c != nil {
+				walk(c, ptr+finding.Pointer(strconv.Itoa(i)))
+			}
 		}
 	}
 	walk(p.root, "")

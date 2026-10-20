@@ -83,8 +83,10 @@ func (l *Layer) subject(name string) finding.Subject {
 	return finding.Subject{Kind: finding.SubjectInput, Name: name, Title: l.inputs[l.byName[name]].Title}
 }
 
-func (l *Layer) reader(in manifest.Input, lim limits.Set) *reader {
-	return &reader{in: in, subj: l.subject(in.Name), lim: lim, walker: l.walker}
+// reader is a reader of in's files under lim, counting the values it
+// decodes on values.
+func (l *Layer) reader(in manifest.Input, lim limits.Set, values *limits.Counter) *reader {
+	return &reader{in: in, subj: l.subject(in.Name), lim: lim, values: values, walker: l.walker}
 }
 
 // Supply is one command's supplied inputs, before assembly.
@@ -93,7 +95,10 @@ type Supply struct {
 	lim limits.Set
 
 	// total is the input bytes read so far, against inputs-total.
-	total    int64
+	total int64
+	// values counts the values every reader of the command decodes,
+	// against input-values (ADR-009 Amendment A4 item 1).
+	values   *limits.Counter
 	findings []finding.Finding
 
 	dataDir bool
@@ -126,7 +131,7 @@ type fileInput struct {
 	value      *node    // an input's file's value
 	items      []*item  // a collection's items, in order
 	partial    *partial // a CSV file validated in part
-	raw        []byte   // an input's file's bytes
+	raw        string   // an input's file's bytes
 	// broken is set when any finding refused the input's entry or any
 	// item of it: no path set is applied into it (ADR-003 D18 item 4).
 	broken bool
@@ -151,7 +156,7 @@ type item struct {
 	file  string // the entry, relative to the data directory
 	index int    // the item's index in the collection's order
 	value *node
-	raw   []byte
+	raw   string
 	ok    bool // the item parsed
 }
 
@@ -159,7 +164,7 @@ type item struct {
 // command's limits, the same the package was opened under, whose
 // regex-work the compiled schemas' matching already counts against.
 func (l *Layer) NewSupply(lim limits.Set) *Supply {
-	return &Supply{l: l, lim: lim, files: map[string]*fileInput{}, broken: map[string]bool{}}
+	return &Supply{l: l, lim: lim, values: lim.Counter(limits.InputValues), files: map[string]*fileInput{}, broken: map[string]bool{}}
 }
 
 func (s *Supply) add(fs ...finding.Finding) { s.findings = append(s.findings, fs...) }

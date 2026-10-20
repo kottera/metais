@@ -1,0 +1,39 @@
+[
+  {
+    "code": "input.validation.partial",
+    "severity": "info",
+    "subject": {
+      "kind": "input",
+      "name": "k",
+      "title": "K"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "k",
+      "pointer": ""
+    },
+    "params": {
+      "unparsed": 1,
+      "suppressed": 0
+    }
+  },
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "k",
+      "title": "K"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "k/one.yaml"
+    },
+    "params": {
+      "limit": "yaml-size",
+      "bound": 4,
+      "lowered": true,
+      "observed": 5
+    }
+  }
+]

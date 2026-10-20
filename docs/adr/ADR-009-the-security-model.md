@@ -296,7 +296,9 @@ it at its defaults.
 |---|---|---|---|
 | `input-size` | 32 MiB | one input file, one collection item, one `--inputs-json`, `--set` or `--set-json` value, standard input | parsed values occupy several times their source size |
 | `inputs-total` | 128 MiB | all input bytes one command reads | keeps peak memory within D17's ceiling |
-| `csv-rows` | 1,000,000 | data rows in one CSV input | |
+| `input-values` | 1,000,000 | the data-model values decoded from all of one command's inputs, counted as each reader decodes them (Amendment A4 item 1) | memory spent loading inputs grows with the values decoded, not the bytes read; the joint cases of Amendment A4 item 3 peak at 697 to 815 MiB, and 1,100,000 at 882 MiB (calibration record sha256 `2d8032e6…cba1a4a`, logs/ADR-009/W7-C6.md) |
+| `yaml-size` | 1 MiB | one YAML input file or collection item, refused before it is parsed (Amendment A4 item 2) | yaml/v3 builds the whole node tree, about 160 B a node, before any value can be counted; a document of flow zeros at 1 MiB peaks at 215 to 306 MiB alone, and at 2 MiB at 495 to 601 MiB, past 40% of 1 GiB (calibration record sha256 `2d8032e6…cba1a4a`, logs/ADR-009/W7-C6.md) |
+| `csv-rows` | 1,000,000 | data rows in one CSV input | `input-values` binds first at the defaults, since each row costs at least two values; `csv-rows` still bounds a CSV when a caller lowers `input-values` (Amendment A4 item 4) |
 | `csv-columns` | 1,024 | fields per record | |
 | `csv-cell` | 1 MiB | one field | |
 | `collection-items` | 100,000 | files in one collection input | a large site |
@@ -311,7 +313,7 @@ it at its defaults.
 | `value-size` | 64 MiB | any string a template produces: a filter result, a `capture`, a concatenation | string doubling by `append` reaches a gibibyte in thirty steps |
 | `array-size` | 1,000,000 elements | an array a filter or a range produces | `split` on a large string |
 | `assign-bytes` | 512 MiB | bytes stored by `assign` and `capture`, summed over one command | Shopify's assign score |
-| `schema-work` | 14,000,000 | subschema evaluations in one command | nested `anyOf`/`oneOf` over non-consuming refs is exponential in depth; the calibration case's array of `schema-work`/12 items peaks at 758 MiB (Amendment A3) |
+| `schema-work` | 450,000 | subschema evaluations in one command | nested `anyOf`/`oneOf` over non-consuming refs is exponential in depth; a tree that fails at every unit costs about 1.8 KiB of resident memory a unit, and its calibration case, nested `anyOf`s, peaks at 779 to 820 MiB (Amendment A3; calibration record sha256 `6e6c2ac6…7e9636`, logs/ADR-009/W7-C6.md) |
 | `regex-work` | 2³³ units | regular-expression matching in one command (D10) | the deterministic CPU bound for patterns and `grep` |
 | `outputs` | 100,000 | files one render plans, assets, containers and container entries included (ADR-005 D13) | one per item of a full collection |
 | `container-depth` | 3 | zip containers nested inside one another (ADR-005 D8 item 4) | a submission zip holding a `.docx` is a real case; deeper is not |

@@ -30,7 +30,13 @@ import (
 // which the input and schema limits bound, so exact totals and an exact
 // list never cost more than that beside the cap.
 type Report struct {
-	max    int
+	max int
+	// flat counts each finding as one, whatever its alternatives list: a
+	// branch's cap counts its own findings (ADR-006 D6 item 6.4). A
+	// report's cap counts every finding it lists, those within
+	// alternatives too (MTS-FND-020), and lists the findings it holds
+	// only while they leave the cap room.
+	flat   bool
 	groups map[[sha256.Size]byte]*group
 	listed itemHeap // the last listed finding first
 	spill  itemHeap // past the cap, tying with listed's first on the prefix; the first in order first
@@ -224,6 +230,11 @@ func (r *Report) count(f Finding) {
 // the spill ties with the last listed one, so when that changes to one
 // earlier on the prefix, the whole spill goes: it sorts after every
 // finding that can still be listed.
+//
+// The list holds the first findings the cap could list were each to list
+// only itself. What each lists within its alternatives is counted when the
+// report is read (MTS-FND-020), since a duplicate that replaces a listed
+// finding can list less than it did, and so let in a finding after it.
 func (r *Report) insert(it *item) {
 	heap.Push(&r.listed, it)
 	if r.listed.Len() <= r.max {
@@ -265,32 +276,47 @@ func (r *Report) remove(it *item) {
 	}
 }
 
-// omitted is how many distinct findings are counted and not listed.
+// omitted is how many distinct findings a flat report counts and does not
+// list.
 func (r *Report) omitted() int { return len(r.groups) - r.listed.Len() }
 
 // Findings returns the listed findings in D8's order, followed, when any
 // were omitted, by one report.truncated (D8 item 6).
 func (r *Report) Findings() []Finding {
 	out := r.sorted()
-	if n := r.omitted(); n > 0 {
-		out = append(out, r.truncated(n))
+	if n := len(r.groups) - len(out); n > 0 {
+		out = append(slices.Clip(out), r.truncated(len(out), n))
 	}
 	return out
 }
 
-// sorted is the listed findings in D8's order.
+// sorted is the listed findings in D8's order. Unless the report is flat,
+// each is listed while the findings before it, and what they list within
+// their alternatives, leave the cap room, and the last is cut short to
+// what is left (MTS-FND-020, MTS-FND-021).
 func (r *Report) sorted() []Finding {
-	out := make([]Finding, 0, r.listed.Len()+1)
+	out := make([]Finding, 0, r.listed.Len())
 	for _, it := range r.listed.items {
 		out = append(out, it.f)
 	}
 	slices.SortFunc(out, Compare)
+	if r.flat {
+		return out
+	}
+	left := r.max
+	for i, f := range out {
+		if left == 0 {
+			return out[:i]
+		}
+		out[i] = f.listAtMost(left)
+		left -= out[i].listed
+	}
 	return out
 }
 
-func (r *Report) truncated(omitted int) Finding {
+func (r *Report) truncated(listed, omitted int) Finding {
 	return New(CodeReportTruncated, Subject{Kind: SubjectReport}, nil,
-		Params{"listed": Int(int64(r.listed.Len())), "omitted": Int(int64(omitted))})
+		Params{"listed": Int(int64(listed)), "omitted": Int(int64(omitted))})
 }
 
 // CodeCount is how many distinct findings of one code a report counted.
@@ -312,12 +338,13 @@ type Summary struct {
 
 // Summary returns the report's totals.
 func (r *Report) Summary() Summary {
+	listed := len(r.sorted())
 	s := Summary{
 		Errors:   r.sum.errors,
 		Warnings: r.sum.warnings,
 		Info:     r.sum.info,
-		Listed:   r.listed.Len(),
-		Omitted:  r.omitted(),
+		Listed:   listed,
+		Omitted:  len(r.groups) - listed,
 	}
 	by := make(map[Code]int, len(r.sum.byCode)+1)
 	for c, n := range r.sum.byCode {

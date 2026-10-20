@@ -4,7 +4,6 @@
 package template
 
 import (
-	"bytes"
 	"encoding/hex"
 	"slices"
 	"strconv"
@@ -130,11 +129,11 @@ func (e embedTag) Render(c liquid.TagContext, t *ast.Tag) *liquid.Error {
 	if !has {
 		return &liquid.Error{Code: codeRawUnavailable, Args: args, Detail: "the input has no raw form"}
 	}
-	raw = bytes.TrimPrefix(raw, bom)
-	if !utf8.Valid(raw) {
+	raw = strings.TrimPrefix(raw, string(bom))
+	if !utf8.ValidString(raw) {
 		return &liquid.Error{Code: liquid.CodeInvalidUTF8, Args: map[string]string{"tag": "embed"}, Detail: "the raw form is not UTF-8"}
 	}
-	return c.Write(raw)
+	return c.Write([]byte(raw))
 }
 
 // embedName is an embed tag's input name: its first argument, a string

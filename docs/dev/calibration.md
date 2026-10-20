@@ -76,12 +76,18 @@ also proves that one less refuses it.
 | `array-size` | `render` | `split` of a doubled string of `x,` | refusal |
 | `assign-bytes` | `render` | a string of `value-size` bytes, copied by `assign` | refusal |
 | `schema-work` | `validate` | an array input, each item evaluating `items` and an `allOf` of nine, exactly the limit's units | accepted at the limit |
+| `schema-work-anyof` | `validate` | two-branch `anyOf`s nested by `$ref` over a type every level fails, exactly the limit's units, every one failing, the choices' alternatives nesting to the `findings` limit | accepted at the limit, with its findings |
+| `yaml-size` | `validate` | one YAML document of exactly `yaml-size` bytes, a flow sequence of zeros | accepted at the limit |
+| `input-values-json` | `validate` | Amendment A4 item 3's joint case: `[{},{},…]` for the values the rest leaves, the rest of `inputs-total` as plain text files of `input-size` at most, and a last YAML document at `yaml-size`, exactly `input-values` values in all | accepted at the limit |
+| `input-values-csv` | `validate` | the same, with a CSV of one present field a row | accepted at the limit |
+| `input-values-yaml` | `validate` | the same, with a collection of YAML documents at `yaml-size` | accepted at the limit |
 | `regex-work` | `grep` | a pattern of about 4,000 instructions over lines of 999 bytes it never matches | refusal |
 | `outputs` | `render` | a `for_each` of exactly `outputs` outputs, each written | accepted at the limit |
 | `container-depth` | `render` | containers nested `container-depth` deep | accepted at the limit |
 | `output-size` | `render` | one output of exactly `output-size` bytes, written | accepted at the limit |
 | `output-total` | `render` | outputs of `output-size` bytes, exactly `output-total` together, written | accepted at the limit |
 | `findings` | `validate` | an array input with one more failing item than `findings` lists | the result's listed count at the limit, with findings omitted |
+| `findings-nested` | `validate` | one `anyOf` of branches of 16 failing `const`s each, sharing one subschema by `$ref`, whose alternatives list more than `findings` (MTS-FND-020) | the choice cut short at the limit, with findings omitted |
 | `grep-matches` | `grep` | one more 1,024-byte matching line than `--max-results` at the limit reports | the result truncated at the limit |
 | `grep-context` | `grep` | every line matches, so each of the most matches repeats its neighbours as context, `--context` at the limit | accepted at the limit |
 | `schema-joint-file` | `inspect` | the schema files hold exactly `schema-subschemas`, every leaf's location exactly `schema-location-length` long; they compile, and the combined schema is then refused by its count | the combined schema's refusal |
@@ -89,8 +95,15 @@ also proves that one less refuses it.
 
 `schema-work` is counted before a validation evaluates anything
 (MTS-SEC-046), so a validation one unit past the limit is refused at the
-cost of the count alone. Its worst case is therefore the validation of
-exactly the limit's units, which is accepted and does all that work.
+cost of the count alone. Its worst cases are therefore validations of
+exactly the limit's units, which are accepted and do all that work: one
+that passes, and one that fails at every unit.
+
+The loading cases, `yaml-size` and the three `input-values-` cases, decode
+more values than `schema-work`'s 450,000 units can validate, so their
+validation is refused by `schema-work` once the inputs are loaded. They are
+judged on the loading: no data limit refuses the inputs, and one value or
+byte more is refused by the case's limit.
 
 ## The record
 

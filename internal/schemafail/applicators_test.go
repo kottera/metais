@@ -223,3 +223,19 @@ func TestBooleanContexts(t *testing.T) {
 		checkBriefs(t, c.name, mapAll(t, target(d), c.f), c.want...)
 	}
 }
+
+// TestChoiceListedAtMost is MTS-FND-020 in the mapping: a choice is built
+// listing at most the target's Listed, itself and its alternatives'
+// findings together, so a report's findings limit bounds what one finding
+// holds; the findings past it are counted in their branch's omitted.
+func TestChoiceListedAtMost(t *testing.T) {
+	d := newDocs(t, map[string]string{"vendor.schema.json": paymentSchema})
+	all := payment(kindConst(0, "card"), kindConst(1, "transfer"), cashConst(true))
+	tg := target(d)
+	tg.Listed = 2
+	checkBriefs(t, "listed at most 2", mapAll(t, tg, all),
+		`input.any_of "/payment" {"branch_count":3} field=Payment| alts=[`+
+			`0(Card): input.const "/payment/kind" {"expected":"\"card\""} | `+
+			`1(Transfer)+1:  | `+
+			`2(Cash)+1: ]`)
+}

@@ -61,10 +61,14 @@ func benchCollection(n int) string {
 // the collection decoded beforehand.
 func BenchmarkValidate(b *testing.B) {
 	testenv.Home(b)
-	s := mustCompile(b, map[string]string{"inputs/items.schema.json": benchSchema}, "inputs/items.schema.json")
 	v := mustValue(b, benchCollection(10_000))
 	b.ReportAllocs()
 	for b.Loop() {
+		// Each validation is a command of its own, with its own
+		// schema-work; the compile is not timed.
+		b.StopTimer()
+		s := mustCompile(b, map[string]string{"inputs/items.schema.json": benchSchema}, "inputs/items.schema.json")
+		b.StartTimer()
 		if fails, err := s.Validate(v); err != nil || len(fails) > 0 {
 			b.Fatalf("the collection is not valid: %v %v", err, fails)
 		}
@@ -81,6 +85,8 @@ func TestBenchCollection(t *testing.T) {
 	if fails, err := s.Validate(mustValue(t, good)); err != nil || len(fails) > 0 {
 		t.Fatalf("the collection is not valid: %v %v", err, fails)
 	}
+	// A second command, with schema-work of its own.
+	s = mustCompile(t, map[string]string{"inputs/items.schema.json": benchSchema}, "inputs/items.schema.json")
 	bad := strings.Replace(good, `"status": "held"`, `"status": "gone"`, 1)
 	if fails, err := s.Validate(mustValue(t, bad)); err != nil || len(fails) == 0 {
 		t.Errorf("an item outside the enum is not caught: %v", err)

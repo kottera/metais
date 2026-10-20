@@ -26,8 +26,10 @@ type Record struct {
 	// value came from, exactly as read, byte order mark and line breaks
 	// included, when no --inputs-json member or path set touched it; nil
 	// otherwise, and always for a collection, whose items have their own
-	// (D21 item 2). HasRaw tells an empty file's raw form from none.
-	Raw    []byte
+	// (D21 item 2). HasRaw tells an empty file's raw form from none. It is
+	// held as a string, which a plain text value shares rather than copies
+	// (ADR-009 Amendment A4 item 3).
+	Raw    string
 	HasRaw bool
 	// Source is where the input came from (D21 item 3).
 	Source Source
@@ -55,7 +57,7 @@ type Item struct {
 	Stem     string
 	Form     manifest.Form
 	// Raw is the item file's bytes, when no path set touched the item.
-	Raw    []byte
+	Raw    string
 	HasRaw bool
 	// Digest is SHA-256 over the item's canonical JSON serialization.
 	Digest [sha256.Size]byte
@@ -113,7 +115,7 @@ func (s *Supply) record(in manifest.Input, root *node, instance value.Object, st
 		return r
 	}
 	r.Value, _ = instance.Get(in.Name)
-	r.Digest, r.HasDigest = sha256.Sum256(jsonx.Canonical(r.Value)), true
+	r.Digest, r.HasDigest = jsonx.CanonicalDigest(r.Value), true
 	r.From = slices.Clone(st.from)
 	switch {
 	case st.fromFile:
@@ -133,7 +135,7 @@ func (s *Supply) record(in manifest.Input, root *node, instance value.Object, st
 	if arr, isArr := r.Value.(value.Array); in.Collection && isArr {
 		r.Items = make([]Item, len(n.arr))
 		for i, e := range n.arr {
-			it := Item{Digest: sha256.Sum256(jsonx.Canonical(arr.At(i)))}
+			it := Item{Digest: jsonx.CanonicalDigest(arr.At(i))}
 			if e.item != nil && st.fromFile {
 				it.FromFile, it.Name, it.Stem, it.Form = true, e.item.name, e.item.stem, e.item.form
 				if !slices.Contains(st.touchedItems, e.item.index) {

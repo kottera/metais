@@ -518,6 +518,19 @@ the first in the order of §12.2, and when it omits any MUST list after them
 one `report.truncated`, about the report, giving how many it listed and how
 many it omitted.
 
+<a id="mts-fnd-020"></a>**MTS-FND-020** A processor MUST count toward the
+`findings` limit every finding it lists, a finding listed within another's
+`alternatives` included, taking them in the order it lists them: the
+report's findings in the order of §12.2, each followed by the findings of its
+`alternatives`, branch by branch in index order, and each of those followed
+in turn by the findings of its own.
+
+<a id="mts-fnd-021"></a>**MTS-FND-021** When the `findings` limit is reached
+within a finding's `alternatives`, a processor MUST list that finding with
+only the findings of its alternatives that come before the limit, MUST count
+each finding it leaves out of a branch in that branch's `omitted`, and MUST
+list no later finding of the report but the `report.truncated`.
+
 ## 12.6 What a finding may say
 
 <a id="mts-fnd-011"></a>**MTS-FND-011** No member of a finding MUST hold a

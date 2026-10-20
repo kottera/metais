@@ -101,6 +101,42 @@ var calCases = []calCase{
 		beyond:  refusedBy("schema-work"),
 	},
 	{
+		// A failing tree of exactly the units the limit allows: two-branch
+		// anyOfs nested by $ref over a type every level fails, so each
+		// choice's alternatives nest the next and the findings listed
+		// reach the findings limit. Every unit evaluated fails, so the
+		// library, the adapter and the mapping each hold a failure for it.
+		// schemaWorkAnyOf says how the units are made up. The validation
+		// is not refused, so it does all the work the limit allows: one
+		// unit more is refused before anything is evaluated.
+		name: "schema-work-anyof", limit: "schema-work",
+		lowered: calLimits{"schema-work": 100_000},
+		build: func(dir string, lim calLimits) ([]string, error) {
+			schema, err := schemaWorkAnyOf(lim["schema-work"])
+			if err != nil {
+				return nil, err
+			}
+			return validateInput(dir, schema, "5")
+		},
+		reached: func(r *calResult, lim calLimits) error {
+			if r.OK {
+				return fmt.Errorf("the command succeeded")
+			}
+			choice := false
+			for _, f := range r.Findings {
+				if f.Params["limit"] != nil {
+					return fmt.Errorf("the validation was refused by %v", f.Params["limit"])
+				}
+				choice = choice || f.Code == "input.any_of"
+			}
+			if !choice {
+				return fmt.Errorf("no input.any_of was reported")
+			}
+			return nil
+		},
+		beyond: refusedBy("schema-work"),
+	},
+	{
 		// grep's pattern at about 4,000 instructions, under regex-program,
 		// over lines of a thousand bytes it never matches, until the
 		// charge of D10 item 7 runs out.
@@ -194,6 +230,40 @@ var calCases = []calCase{
 		},
 	},
 	{
+		// One choice whose alternatives list more findings than the limit
+		// (MTS-FND-020): branches of 16 const failures each, every branch
+		// rejected, so the choice lists itself and 16 per branch, and the
+		// report cuts it short at the limit. The branches share one
+		// subschema by $ref, so the tree that fails is the least that
+		// lists this many.
+		name: "findings-nested", limit: "findings",
+		lowered: calLimits{"findings": 1_000},
+		build: func(dir string, lim calLimits) ([]string, error) {
+			branches := lim["findings"]/16 + 1
+			consts := make([]string, 16)
+			for i := range consts {
+				consts[i] = fmt.Sprintf(`{"const":%d}`, i)
+			}
+			schema := `{"anyOf":[` + strings.TrimSuffix(strings.Repeat(`{"$ref":"#/$defs/s"},`, int(branches)), ",") +
+				`],"$defs":{"s":{"allOf":[` + strings.Join(consts, ",") + `]}}}`
+			return validateInput(dir, schema, "16")
+		},
+		reached: func(r *calResult, lim calLimits) error {
+			if r.OK || len(r.Findings) != 1 || r.Findings[0].Code != "input.any_of" {
+				return fmt.Errorf("%d findings were listed, not one input.any_of", len(r.Findings))
+			}
+			listed, omitted := int64(1), int64(0)
+			for _, a := range r.Findings[0].Alternatives {
+				listed += int64(len(a.Findings))
+				omitted += a.Omitted
+			}
+			if listed != lim["findings"] || omitted < 1 {
+				return fmt.Errorf("the choice lists %d findings and omits %d, not %d listed and some omitted", listed, omitted, lim["findings"])
+			}
+			return nil
+		},
+	},
+	{
 		// One more matching line than the limit reports, each as long as a
 		// reported line is shown.
 		name: "grep-matches", limit: "grep-matches",
@@ -277,6 +347,65 @@ var calCases = []calCase{
 			return r.refusedBy("schema-subschemas", lim["schema-subschemas"], ".compiled/schema.json")
 		},
 	},
+	{
+		// One YAML document of exactly yaml-size bytes, in its costliest
+		// shape: a flow sequence of zeros, a value for every two bytes. It
+		// is read, and a byte less is refused before it is parsed
+		// (ADR-009 Amendment A4 item 2).
+		name: "yaml-size", limit: "yaml-size",
+		lowered: calLimits{"yaml-size": 64 << 10},
+		build: func(dir string, lim calLimits) ([]string, error) {
+			doc, _ := yamlZeros(lim["yaml-size"])
+			return loadInputs(dir, []loadInput{{name: "y", form: "yaml", files: map[string]string{"y.yaml": doc}}})
+		},
+		reached: notRefusedLoading,
+		beyond:  refusedBy("yaml-size"),
+	},
+	jointCase("json"),
+	jointCase("csv"),
+	jointCase("yaml"),
+}
+
+// schemaWorkAnyOf is an input schema whose validation of 5 costs exactly
+// units of schema-work, and fails at every unit: an allOf of $refs to
+// levels of two-branch anyOfs, level j reaching level j-1 by $ref twice
+// and level 0 a string type. As the input of validateInput, the schema
+// costs 4 units, and each $ref to level j 4×2^j - 2 more; a last allOf of
+// k string types costs k + 1. The deepest level comes first, so its
+// choice nests the most.
+func schemaWorkAnyOf(units int64) (string, error) {
+	left := units - 4
+	if left < 2 {
+		return "", fmt.Errorf("no schema costs %d units this way", units)
+	}
+	cost := func(j int) int64 { return 4<<j - 2 }
+	var levels []int
+	for j := 40; j >= 0; j-- {
+		for cost(j) <= left {
+			levels = append(levels, j)
+			left -= cost(j)
+		}
+	}
+	k := int64(0)
+	if left == 1 {
+		// No level costs one unit: give back the shallowest level and
+		// make its units and this one up with string types.
+		last := levels[len(levels)-1]
+		levels = levels[:len(levels)-1]
+		k = cost(last)
+	}
+	parts := make([]string, 0, len(levels)+1)
+	for _, j := range levels {
+		parts = append(parts, fmt.Sprintf(`{"$ref":"#/$defs/l%d"}`, j))
+	}
+	if k > 0 {
+		parts = append(parts, `{"allOf":[`+strings.TrimSuffix(strings.Repeat(`{"type":"string"},`, int(k)), ",")+`]}`)
+	}
+	defs := []string{`"l0":{"type":"string"}`}
+	for j := 1; j <= levels[0]; j++ {
+		defs = append(defs, fmt.Sprintf(`"l%d":{"anyOf":[{"$ref":"#/$defs/l%d"},{"$ref":"#/$defs/l%d"}]}`, j, j-1, j-1))
+	}
+	return `{"allOf":[` + strings.Join(parts, ",") + `],"$defs":{` + strings.Join(defs, ",") + `}}`, nil
 }
 
 // combinedOverhead is how many more subschemas the combined schema holds
@@ -420,4 +549,148 @@ func jointSchema(dir string, lim calLimits, n int64) ([]string, error) {
 		return nil, err
 	}
 	return []string{"inspect", "--json", "pkg"}, nil
+}
+
+// loadInput is one input of a loading case: its name, its form, whether
+// it is a collection, and its files beneath the data directory.
+type loadInput struct {
+	name, form string
+	collection bool
+	files      map[string]string
+}
+
+// loadInputs writes a package of inputs, each optional and of any value,
+// and a data directory holding their files, and returns the command that
+// validates them.
+func loadInputs(dir string, inputs []loadInput) ([]string, error) {
+	var m strings.Builder
+	m.WriteString(manifestHead + "inputs:\n")
+	files := map[string]string{
+		"pkg/templates/a.txt.liquid": "a",
+		"pkg/inputs/any.schema.json": "{}",
+	}
+	for _, in := range inputs {
+		fmt.Fprintf(&m, "  - name: %s\n    title: %s\n    schema: inputs/any.schema.json\n    required: false\n    forms: [%s]\n", in.name, strings.ToUpper(in.name), in.form)
+		if in.collection {
+			m.WriteString("    collection: true\n")
+		}
+		for name, content := range in.files {
+			files["data/"+name] = content
+		}
+	}
+	m.WriteString("outputs:\n  - id: a\n    template: a.txt.liquid\n")
+	files["pkg/metais.yaml"] = m.String()
+	if err := writeFiles(dir, files); err != nil {
+		return nil, err
+	}
+	return []string{"validate", "--json", "pkg", "--data", "data"}, nil
+}
+
+// yamlZeros is a YAML document of exactly size bytes, size at least 3: a
+// flow sequence of zeros, ended by a line feed when size is even, and the
+// values it decodes to.
+func yamlZeros(size int64) (string, int64) {
+	k := (size - 1) / 2
+	doc := "[" + strings.Repeat("0,", int(k-1)) + "0]"
+	if size%2 == 0 {
+		doc += "\n"
+	}
+	return doc, k + 1
+}
+
+// notRefusedLoading is a reached that wants the inputs loaded whole: no
+// data limit refused them. The validation that follows may still be
+// refused by schema-work, which a loading case's values pass.
+func notRefusedLoading(r *calResult, _ calLimits) error {
+	for _, f := range r.Findings {
+		switch f.Params["limit"] {
+		case "input-values", "yaml-size", "inputs-total", "input-size", "csv-rows", "collection-items":
+			return fmt.Errorf("the inputs were refused by %v at %s%s", f.Params["limit"], f.Location.File, f.Location.Pointer)
+		}
+	}
+	return nil
+}
+
+// jointCase is ADR-009 Amendment A4 item 3's joint case for form: the
+// form's costliest shape decoded to the values input-values leaves, the
+// rest of inputs-total as long strings in plain text files of input-size
+// at most, and a last YAML document at yaml-size, the values of all of
+// them together exactly input-values. One value more is refused.
+func jointCase(form string) calCase {
+	return calCase{
+		name: "input-values-" + form, limit: "input-values",
+		lowered: calLimits{"input-values": 60_000, "yaml-size": 64 << 10, "inputs-total": 1 << 20, "input-size": 256 << 10},
+		build: func(dir string, lim calLimits) ([]string, error) {
+			last, lastValues := yamlZeros(lim["yaml-size"])
+			z := loadInput{name: "z", form: "yaml", files: map[string]string{"z.yaml": last}}
+			// The form's shape, first sized for the values the strings
+			// leave, then the strings sized for the bytes the shape leaves.
+			shape := func(values int64) (loadInput, int64, error) {
+				switch form {
+				case "json":
+					// [{},{},…]: an object for every three bytes.
+					if values < 2 {
+						return loadInput{}, 0, fmt.Errorf("%d values make no array of objects", values)
+					}
+					doc := "[" + strings.TrimSuffix(strings.Repeat("{},", int(values-1)), ",") + "]"
+					return loadInput{name: "a", form: "json", files: map[string]string{"a.json": doc}}, int64(len(doc)), nil
+				case "csv":
+					// A header of two columns and rows of one field each,
+					// the second unquoted and empty, so absent: an object
+					// and a member for every three bytes. An odd count
+					// takes a last row of both.
+					rows := (values - 1) / 2
+					doc := "a,b\n" + strings.Repeat("0,\n", int(rows))
+					if (values-1)%2 == 1 {
+						if rows == 0 {
+							return loadInput{}, 0, fmt.Errorf("%d values make no table", values)
+						}
+						doc = "a,b\n" + strings.Repeat("0,\n", int(rows-1)) + "0,0\n"
+					}
+					return loadInput{name: "a", form: "csv", files: map[string]string{"a.csv": doc}}, int64(len(doc)), nil
+				case "yaml":
+					// A collection of documents at yaml-size, the last
+					// smaller, each a flow sequence of zeros.
+					in := loadInput{name: "a", form: "yaml", collection: true, files: map[string]string{}}
+					left, size := values-1, int64(0)
+					for i := 0; left > 0; i++ {
+						docSize := lim["yaml-size"]
+						if _, v := yamlZeros(docSize); v > left {
+							docSize = 2*left - 1
+						}
+						if docSize < 3 {
+							return loadInput{}, 0, fmt.Errorf("%d values make no last document", left)
+						}
+						doc, v := yamlZeros(docSize)
+						in.files[fmt.Sprintf("a/%06d.yaml", i)] = doc
+						left -= v
+						size += int64(len(doc))
+					}
+					return in, size, nil
+				}
+				return loadInput{}, 0, fmt.Errorf("no shape for %s", form)
+			}
+			// The strings come first: plain text files, a value each.
+			_, guess, err := shape(lim["input-values"] - lastValues)
+			if err != nil {
+				return nil, err
+			}
+			rest := lim["inputs-total"] - guess - lim["yaml-size"]
+			texts := (rest + lim["input-size"] - 1) / lim["input-size"]
+			a, size, err := shape(lim["input-values"] - lastValues - texts)
+			if err != nil {
+				return nil, err
+			}
+			rest = lim["inputs-total"] - size - lim["yaml-size"]
+			ins := []loadInput{a}
+			for i := range texts {
+				n := min(rest, lim["input-size"])
+				rest -= n
+				ins = append(ins, loadInput{name: fmt.Sprintf("s%d", i), form: "text", files: map[string]string{fmt.Sprintf("s%d.txt", i): strings.Repeat("x", int(n))}})
+			}
+			return loadInputs(dir, append(ins, z))
+		},
+		reached: notRefusedLoading,
+		beyond:  refusedBy("input-values"),
+	}
 }

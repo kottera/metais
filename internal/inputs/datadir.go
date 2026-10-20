@@ -232,13 +232,14 @@ func (s *Supply) readEntries(src dirSource, top []dirEntry) {
 				fi.broken = true
 				break
 			}
-			p := s.l.reader(in, s.lim).read(b, form, l, "", []schema.Step{schema.Member(in.Name)})
+			raw := string(b)
+			p := s.l.reader(in, s.lim, s.values).read(b, raw, form, l, "", []schema.Step{schema.Member(in.Name)})
 			s.add(p.findings...)
 			if p.value == nil {
 				fi.broken = true
 				break
 			}
-			fi.value, fi.partial, fi.raw = p.value, p.partial, b
+			fi.value, fi.partial, fi.raw = p.value, p.partial, raw
 			fi.broken = len(p.findings) > 0
 		}
 	}
@@ -307,6 +308,13 @@ func (s *Supply) readCollection(src dirSource, in manifest.Input, fi *fileInput)
 		return
 	}
 	fi.listed = true
+	// The collection's array is a value of its own (ADR-009 Amendment A4
+	// item 1).
+	if !s.values.Add(1) {
+		s.add(s.lim.Exceeded(limits.InputValues, subj, dirLoc, 0, false))
+		fi.broken = true
+		return
+	}
 	// An item's name is its file name in NFC; items are ordered by the
 	// UTF-8 bytes of those names (D15 items 5 and 6).
 	type candidate struct {
@@ -379,13 +387,14 @@ func (s *Supply) readCollection(src dirSource, in manifest.Input, fi *fileInput)
 			continue
 		}
 		at := []schema.Step{schema.Member(in.Name), schema.Index(it.index)}
-		p := s.l.reader(in, s.lim).read(b, form, l, finding.Pointer(itoa(it.index)), at)
+		raw := string(b)
+		p := s.l.reader(in, s.lim, s.values).read(b, raw, form, l, finding.Pointer(itoa(it.index)), at)
 		s.add(p.findings...)
 		if p.value == nil {
 			fi.broken = true
 			continue
 		}
 		fi.broken = fi.broken || len(p.findings) > 0
-		it.value, it.raw, it.ok = p.value, b, true
+		it.value, it.raw, it.ok = p.value, raw, true
 	}
 }

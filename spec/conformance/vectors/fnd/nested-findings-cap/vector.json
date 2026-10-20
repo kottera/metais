@@ -1,0 +1,55 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "fnd/nested-findings-cap",
+  "title": "The findings limit counts the findings listed within alternatives, and cuts a finding's alternatives short where it is reached",
+  "statements": [
+    "MTS-FND-020",
+    "MTS-FND-021",
+    "MTS-FND-010"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "five",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/two-inputs",
+            "limits": {
+              "findings": 5
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings-5.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "three",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/two-inputs",
+            "limits": {
+              "findings": 3
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings-3.json"
+          }
+        }
+      ]
+    }
+  ]
+}

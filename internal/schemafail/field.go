@@ -17,46 +17,95 @@ const maxRefs = 64
 // schemaObject is a schema object within an entry.
 type schemaObject struct{ entry, pointer string }
 
+// fieldAt is field's answer for the chain of failures ending at one: the
+// first title and the first description along it, and whether any object
+// on it is writeOnly.
+type fieldAt struct {
+	fd        finding.Field
+	writeOnly bool
+}
+
 // field is ADR-006 D6 item 9's lookup for a finding of n at inst. It walks
 // the evaluation path from n toward the root and takes the first title and,
 // independently, the first description of a schema object whose instance
 // location is inst. It reports, too, whether any of those objects is
 // writeOnly (D9 item 5).
+//
+// The answer for a failure is its own objects' answer completed by its
+// parent's, when the walk goes on to the parent, so each failure's is
+// worked out once and kept: a deep tree of failures costs its depth once,
+// not once for each of its findings.
 func (m *mapper) field(path []*Failure, n *Failure, inst []string) (finding.Field, bool) {
-	var objs []schemaObject
+	if !slices.Equal(n.InstancePointer, inst) {
+		return finding.Field{}, false
+	}
+	if m.fields == nil {
+		m.fields = map[*Failure]fieldAt{}
+	}
 	chain := append(slices.Clip(path), n)
-	for i := len(chain) - 1; i >= 0; i-- {
+	// Walk up to the first failure whose answer is known or that ends the
+	// walk, then work the answers out back down.
+	top := len(chain) - 1
+	for top > 0 {
+		if _, ok := m.fields[chain[top]]; ok {
+			break
+		}
+		if m.own(chain[top]).descended || !slices.Equal(chain[top-1].InstancePointer, inst) {
+			break
+		}
+		top--
+	}
+	for i := top; i < len(chain); i++ {
 		f := chain[i]
-		if !slices.Equal(f.InstancePointer, inst) {
-			break
+		if _, ok := m.fields[f]; ok {
+			continue
 		}
-		toks := tokens(f.SchemaPointer)
-		if f.Keyword != KeywordFalse && len(toks) > 0 {
-			toks = toks[:len(toks)-1] // the object the keyword is written in
-		}
-		up, descended := upward(toks)
-		for _, p := range up {
-			if o := (schemaObject{f.Entry, p}); !slices.Contains(objs, o) {
-				objs = append(objs, o)
+		at := m.own(f).at
+		if i > top {
+			p := m.fields[chain[i-1]]
+			if at.fd.Title == "" {
+				at.fd.Title = p.fd.Title
 			}
+			if at.fd.Description == "" {
+				at.fd.Description = p.fd.Description
+			}
+			at.writeOnly = at.writeOnly || p.writeOnly
 		}
-		if descended {
-			break
-		}
+		m.fields[f] = at
 	}
-	var fd finding.Field
-	writeOnly := false
-	for _, o := range objs {
-		a := m.t.Schemas.Annotations(o.entry, o.pointer)
-		if fd.Title == "" {
-			fd.Title = a.Title
-		}
-		if fd.Description == "" {
-			fd.Description = a.Description
-		}
-		writeOnly = writeOnly || a.WriteOnly
+	at := m.fields[n]
+	return at.fd, at.writeOnly
+}
+
+// ownField is what one failure's own schema objects give field: the
+// answer over the objects at its instance location from the one its
+// keyword is written in toward its entry's root, and whether the walk
+// descended, so that it ends there.
+type ownField struct {
+	at        fieldAt
+	descended bool
+}
+
+// own is f's ownField.
+func (m *mapper) own(f *Failure) ownField {
+	toks := tokens(f.SchemaPointer)
+	if f.Keyword != KeywordFalse && len(toks) > 0 {
+		toks = toks[:len(toks)-1] // the object the keyword is written in
 	}
-	return fd, writeOnly
+	up, descended := upward(toks)
+	var o ownField
+	o.descended = descended
+	for _, p := range up {
+		a := m.t.Schemas.Annotations(f.Entry, p)
+		if o.at.fd.Title == "" {
+			o.at.fd.Title = a.Title
+		}
+		if o.at.fd.Description == "" {
+			o.at.fd.Description = a.Description
+		}
+		o.at.writeOnly = o.at.writeOnly || a.WriteOnly
+	}
+	return o
 }
 
 // upward returns the schema objects at the instance location of the one

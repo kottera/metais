@@ -12,7 +12,7 @@
     "security"
   ],
   "requires": [],
-  "notes": "A check comparing every pair would make about 5,000,000,000 comparisons here, past the step's CPU bound. internal/schema's TestUniqueItemsMillion runs the million items ADR-009 D17 item 6 names, in process. Its generated files are written by internal/vectorgen (go test ./internal/vectorgen -run TestSchemaCorpus -args -update), whose test reproduces them.",
+  "notes": "A check comparing every pair would make about 5,000,000,000 comparisons here, past the step's CPU bound. internal/schema's TestUniqueItemsMillion runs, in process, the most items schema-work's default lets one validation see, and shows the million ADR-009 D17 item 6 names refused by schema-work. Its generated files are written by internal/vectorgen (go test ./internal/vectorgen -run TestSchemaCorpus -args -update), whose test reproduces them.",
   "cases": [
     {
       "name": "validate",

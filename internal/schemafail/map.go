@@ -6,8 +6,10 @@ package schemafail
 import (
 	"fmt"
 	"maps"
+	"math"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/kottera/metais/internal/finding"
 )
@@ -69,6 +71,11 @@ type Target struct {
 	// Partial, when set, says the document is an array validated without
 	// the items that did not parse (ADR-006 D7 item 4).
 	Partial *Partial
+	// Listed, when positive, is the command's findings limit: the most
+	// one input.any_of or input.one_of lists, itself and the findings
+	// within its alternatives together (MTS-FND-020), since a report lists
+	// no more than that in all. Map builds no more of a finding than that.
+	Listed int
 }
 
 // Partial describes an array validated in part: Kept[i] is the original
@@ -104,7 +111,10 @@ func Map(t Target, fs ...Failure) ([]finding.Finding, error) {
 		return nil, fmt.Errorf("schemafail: only an input is validated in part")
 	}
 	m := &mapper{t: t}
-	var out []finding.Finding
+	// kept holds each distinct finding once, as the command's report
+	// would keep it, so a tree that reaches one keyword by many paths is
+	// never held as many findings.
+	kept := finding.NewReport(math.MaxInt)
 	// suppressed counts the distinct findings D7 item 4 suppresses, as a
 	// report would count them; it lists none of them.
 	suppressed := finding.NewReport(1)
@@ -112,20 +122,20 @@ func Map(t Target, fs ...Failure) ([]finding.Finding, error) {
 		if err := fs[i].Check(); err != nil {
 			return nil, err
 		}
-		for _, e := range m.node(nil, &fs[i], nil) {
-			if !e.ok {
-				continue
-			}
-			if e.suppressed {
+		m.visit(nil, &fs[i], nil, func(e emitted) {
+			switch {
+			case !e.ok:
+			case e.suppressed:
 				suppressed.Add(e.f)
-			} else {
-				out = append(out, e.f)
+			default:
+				kept.Add(e.f)
 			}
-		}
+		})
 	}
 	if m.err != nil {
 		return nil, m.err
 	}
+	out := kept.Findings()
 	if t.Partial != nil {
 		s := suppressed.Summary()
 		loc := t.Locate(nil, false).WithPath(nil)
@@ -143,6 +153,10 @@ type mapper struct {
 	// paths makes each finding's instance path from the one it made
 	// before, so the failures under one member name read it once.
 	paths finding.PathCache
+	// fields holds field's answer for each failure on the path being
+	// walked that it has looked up, so the failures beneath one schema
+	// object read its chain once.
+	fields map[*Failure]fieldAt
 }
 
 // emitted is one finding, and whether D7 item 4 suppresses it. A failure
@@ -173,32 +187,31 @@ var numericKeywords = map[string]string{
 	"exclusiveMinimum": "exclusive_minimum", "exclusiveMaximum": "exclusive_maximum",
 }
 
-// node maps n, beneath path, to its findings, each with via, the
-// conditionals and alternatives above it, outermost first.
-func (m *mapper) node(path []*Failure, n *Failure, via []finding.Via) []emitted {
-	children := func(via []finding.Via) []emitted {
+// visit maps n, beneath path, and gives sink each of its findings, each
+// with via, the conditionals and alternatives above it, outermost first.
+// A transparent keyword hands its children's findings straight on, so a
+// tree of failures is never held as findings beyond what sink keeps.
+func (m *mapper) visit(path []*Failure, n *Failure, via []finding.Via, sink func(emitted)) {
+	// Once n is mapped, nothing beneath it asks for its field again, so
+	// field's answers are held for the path being walked and no more.
+	defer delete(m.fields, n)
+	children := func(via []finding.Via) {
 		p := append(slices.Clip(path), n)
-		var out []emitted
 		for i := range n.Children {
-			out = append(out, m.node(p, &n.Children[i], via)...)
+			m.visit(p, &n.Children[i], via, sink)
 		}
-		return out
-	}
-	inst := n.InstancePointer
-	one := func(suffix string, p finding.Params, opts ...finding.Option) []emitted {
-		return []emitted{m.emit(path, n, inst, suffix, n.Keyword, p, via, opts...)}
 	}
 	switch k := n.Keyword; k {
 	// D6 item 5: transparent.
 	case "$ref", "$dynamicRef", "allOf", "properties", "patternProperties", "additionalProperties",
 		"unevaluatedProperties", "items", "prefixItems", "unevaluatedItems", "dependentSchemas":
-		return children(via)
+		children(via)
 	case "contains":
-		return append(one("contains", finding.Params{}), children(via)...)
+		sink(m.emit(path, n, n.InstancePointer, "contains", k, finding.Params{}, via))
+		children(via)
 
 	// D6 item 7: transparent with a reason; D6 item 10: if never reports.
 	case "if":
-		return nil
 	case "then", "else":
 		toks := tokens(n.SchemaPointer)
 		cond := pointer(append(slices.Clip(toks[:max(len(toks)-1, 0)]), "if"))
@@ -207,8 +220,25 @@ func (m *mapper) node(path []*Failure, n *Failure, via []finding.Via) []emitted 
 			SchemaPointer: n.SchemaPointer,
 			Condition:     &finding.Condition{SchemaPointer: cond, Title: m.t.Schemas.Annotations(n.Entry, cond).Title},
 		})
-		return children(v)
+		children(v)
 
+	case "anyOf", "oneOf":
+		m.choice(path, n, via, sink)
+	default:
+		for _, e := range m.node(path, n, via) {
+			sink(e)
+		}
+	}
+}
+
+// node maps n, a failure of a keyword visit does not pass through, beneath
+// path, to its findings, each with via.
+func (m *mapper) node(path []*Failure, n *Failure, via []finding.Via) []emitted {
+	inst := n.InstancePointer
+	one := func(suffix string, p finding.Params, opts ...finding.Option) []emitted {
+		return []emitted{m.emit(path, n, inst, suffix, n.Keyword, p, via, opts...)}
+	}
+	switch k := n.Keyword; k {
 	// D6 item 10: the subschemas of not and propertyNames report nothing
 	// from inside them.
 	case "not":
@@ -218,8 +248,6 @@ func (m *mapper) node(path []*Failure, n *Failure, via []finding.Via) []emitted 
 		return []emitted{m.emit(path, n, append(slices.Clip(inst), name), "property_name", k,
 			finding.Params{"property": finding.String(name)}, via)}
 
-	case "anyOf", "oneOf":
-		return m.choice(path, n, via)
 	case KeywordFalse:
 		return m.falseSchema(path, n, via)
 
@@ -274,15 +302,17 @@ func (m *mapper) node(path []*Failure, n *Failure, via []finding.Via) []emitted 
 }
 
 // choice maps an anyOf or oneOf none of whose branches matched by ADR-006
-// D6 item 6, and a oneOf more than one of whose did by its item 5.
-func (m *mapper) choice(path []*Failure, n *Failure, via []finding.Via) []emitted {
+// D6 item 6, and a oneOf more than one of whose did by its item 5, and
+// gives sink the findings.
+func (m *mapper) choice(path []*Failure, n *Failure, via []finding.Via, sink func(emitted)) {
 	suffix := map[string]string{"anyOf": "any_of", "oneOf": "one_of"}[n.Keyword]
 	if _, ok := n.Data[dataMatched]; ok && n.Keyword == "oneOf" {
 		var bs []finding.Value
 		for _, b := range m.ints(n, dataMatched) {
 			bs = append(bs, finding.Int(int64(b)))
 		}
-		return []emitted{m.emit(path, n, n.InstancePointer, "one_of.ambiguous", n.Keyword, finding.Params{"branches": finding.List(bs...)}, via)}
+		sink(m.emit(path, n, n.InstancePointer, "one_of.ambiguous", n.Keyword, finding.Params{"branches": finding.List(bs...)}, via))
+		return
 	}
 	count := m.int(n, dataBranchCount)
 	branches := make([][]*Failure, max(count, 0))
@@ -291,7 +321,7 @@ func (m *mapper) choice(path []*Failure, n *Failure, via []finding.Via) []emitte
 		b, ok := branchOf(n, c)
 		if !ok || b >= count {
 			m.fail(n, "a child at %q is in no branch of %d", c.KeywordLocation, count)
-			return nil
+			return
 		}
 		branches[b] = append(branches[b], c)
 	}
@@ -307,40 +337,51 @@ func (m *mapper) choice(path []*Failure, n *Failure, via []finding.Via) []emitte
 	if len(open) == 1 {
 		b := open[0]
 		v := append(slices.Clip(via), finding.Via{Keyword: n.Keyword, SchemaPointer: n.SchemaPointer, Branch: b, Title: m.branchTitle(n, b)})
-		var out []emitted
+		given := 0
 		for _, c := range branches[b] {
-			out = append(out, m.node(p, c, v)...)
+			m.visit(p, c, v, func(e emitted) {
+				given++
+				sink(e)
+			})
 		}
-		if len(out) > 0 {
-			return out
+		if given > 0 {
+			return
 		}
 	}
-	// D6 item 6.4: every branch, with its findings.
+	// D6 item 6.4: every branch, with its findings, each branch's gathered
+	// as the finding keeps them, so no more of a branch is held than it
+	// lists.
 	alts := make([]finding.Alternative, len(branches))
 	for b, cs := range branches {
-		alts[b] = finding.Alternative{Branch: b, Title: m.branchTitle(n, b)}
+		br := finding.NewBranch(b, m.branchTitle(n, b))
 		for _, c := range cs {
-			for _, e := range m.node(p, c, nil) {
+			m.visit(p, c, nil, func(e emitted) {
 				if e.ok && !e.suppressed {
-					alts[b].Findings = append(alts[b].Findings, e.f)
+					br.Add(e.f)
 				}
-			}
+			})
 		}
+		alts[b] = br.Alternative()
 	}
-	return []emitted{m.emit(path, n, n.InstancePointer, suffix, n.Keyword,
-		finding.Params{"branch_count": finding.Int(int64(count))}, via, finding.WithAlternatives(alts...))}
+	sink(m.emit(path, n, n.InstancePointer, suffix, n.Keyword,
+		finding.Params{"branch_count": finding.Int(int64(count))}, via, finding.WithAlternatives(alts...), finding.WithListedAtMost(m.t.Listed)))
 }
 
 // branchOf returns the index of the branch of choice c is evaluated in,
 // from c's evaluation path, which an adapter gives whether or not it
 // gives a node for each $ref between them.
+//
+// It compares the two paths as written, a token at a time being equal
+// exactly when its escaped form is, so that a deep tree's paths are never
+// split for each of its failures.
 func branchOf(choice, c *Failure) (int, bool) {
-	at, ct := tokens(choice.KeywordLocation), tokens(c.KeywordLocation)
-	if len(ct) <= len(at) || !slices.Equal(ct[:len(at)], at) {
+	rest, ok := strings.CutPrefix(c.KeywordLocation, choice.KeywordLocation+"/")
+	if !ok {
 		return 0, false
 	}
-	b, err := strconv.Atoi(ct[len(at)])
-	if err != nil || b < 0 || strconv.Itoa(b) != ct[len(at)] {
+	tok, _, _ := strings.Cut(rest, "/")
+	b, err := strconv.Atoi(tok)
+	if err != nil || b < 0 || strconv.Itoa(b) != tok {
 		return 0, false
 	}
 	return b, true
