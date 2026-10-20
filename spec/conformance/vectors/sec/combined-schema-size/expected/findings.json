@@ -1,0 +1,19 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/schema.json"
+    },
+    "params": {
+      "limit": "combined-schema-size",
+      "bound": 450,
+      "lowered": true,
+      "observed": 451
+    }
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "schema.dialect",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/$schema"
+    },
+    "params": {
+      "reason": "schema"
+    }
+  }
+]

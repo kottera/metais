@@ -1,0 +1,20 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/$ref"
+    },
+    "params": {
+      "limit": "ref-depth",
+      "bound": 31,
+      "lowered": true,
+      "observed": 32
+    }
+  }
+]

@@ -1,0 +1,37 @@
+[
+  {
+    "code": "input.unique_items",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "report.json",
+      "line": 1,
+      "column": 588886,
+      "pointer": "/99999"
+    },
+    "schema": {
+      "entry": "inputs/report.schema.json",
+      "pointer": "/uniqueItems",
+      "keyword": "uniqueItems"
+    },
+    "params": {
+      "index": 99999,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "report.json",
+        "line": 1,
+        "column": 2,
+        "pointer": "/0",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/pattern-dot",
+  "title": ". matches every code point but the four line terminators, translated rather than refused",
+  "statements": [
+    "MTS-SEC-040"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "Go's . excludes only U+000A: ECMA-262's excludes U+000D, U+2028 and U+2029 too, and matches U+0085 and an astral code point as one.",
+  "cases": [
+    {
+      "name": "validate",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "inputs_json": "inputs.json"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

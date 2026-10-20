@@ -1,0 +1,20 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/items/items/items/items/items/items/items/items"
+    },
+    "params": {
+      "limit": "schema-depth",
+      "bound": 8,
+      "lowered": true,
+      "observed": 9
+    }
+  }
+]

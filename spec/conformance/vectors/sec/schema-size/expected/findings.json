@@ -1,0 +1,19 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json"
+    },
+    "params": {
+      "limit": "schema-size",
+      "bound": 63,
+      "lowered": true,
+      "observed": 64
+    }
+  }
+]

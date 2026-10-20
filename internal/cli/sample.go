@@ -243,10 +243,10 @@ func (s *session) generate(p args.Parsed, pkg *loader.Package, lim limits.Set, o
 		var le *regexprofile.LimitError
 		switch {
 		case errors.As(err, &le):
-			// The command's matching budget is spent, so no value of this
-			// input can be checked against its patterns.
+			// The command's matching budget or its schema-work is spent,
+			// so no value of this input can be checked against its schema.
 			at := finding.Location{Origin: finding.OriginSample}.WithPointer("")
-			fs = append(fs, lim.Exceeded(limits.RegexWork, finding.Subject{Kind: finding.SubjectInput, Name: in.Name}, at, 0, false))
+			fs = append(fs, lim.Exceeded(le.Limit, finding.Subject{Kind: finding.SubjectInput, Name: in.Name}, at, 0, false))
 			continue
 		case err != nil:
 			panic("cli: " + err.Error())

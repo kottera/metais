@@ -1,0 +1,20 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/p/pattern"
+    },
+    "params": {
+      "limit": "regex-program",
+      "bound": 4096,
+      "lowered": false,
+      "observed": 4097
+    }
+  }
+]

@@ -1,0 +1,1 @@
+{"type": "object", "properties": {"p": {"pattern": "a{1000}a{1000}a{1000}a{1000}a{95}"}}}

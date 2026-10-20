@@ -1,0 +1,1 @@
+{"type": "object", "properties": {"a": {"multipleOf": 1e-308}, "b": {"multipleOf": 3e-308}}}

@@ -29,7 +29,7 @@ var limitCodes = []Entry{
 		Hint:       "Supply a smaller or shallower input; a limit can be lowered with --limit but never raised. Run `metais limits` to see every limit.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-SEC-005"},
+		Statements: []string{"MTS-SEC-005", "MTS-SEC-046"},
 	},
 	{
 		Code:     "limit.exceeded.output",
@@ -46,7 +46,7 @@ var limitCodes = []Entry{
 		Hint:       "Supply less data, or render fewer or smaller files; a limit can be lowered with --limit and never raised. Run `metais limits` to see every limit.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-OUT-011", "MTS-PTH-009", "MTS-SEC-010"},
+		Statements: []string{"MTS-OUT-011", "MTS-PTH-009", "MTS-SEC-010", "MTS-SEC-046"},
 	},
 	{
 		Code:     "limit.exceeded.template",
@@ -98,6 +98,6 @@ var limitCodes = []Entry{
 		Hint:       "Make the package smaller than the limit; run `metais limits` to see every limit, which can be lowered and never raised.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-AUT-052", "MTS-PTH-007", "MTS-SEC-001", "MTS-SEC-011", "MTS-SEC-020", "MTS-SEC-021", "MTS-SEC-022"},
+		Statements: []string{"MTS-AUT-052", "MTS-PTH-007", "MTS-SEC-001", "MTS-SEC-011", "MTS-SEC-020", "MTS-SEC-021", "MTS-SEC-022", "MTS-SEC-042", "MTS-SEC-043", "MTS-SEC-044", "MTS-SEC-045"},
 	},
 }

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "schema.ref_unresolved",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/$ref"
+    },
+    "params": {
+      "reference": "file:///etc/passwd"
+    }
+  }
+]

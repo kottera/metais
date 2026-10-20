@@ -1,0 +1,40 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/pattern-backtracking",
+  "title": "^(a+)+$ against a run of a as long as a lowered input-size allows is decided at once",
+  "statements": [
+    "MTS-SEC-040"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "data/report.json is 65,536 bytes: a JSON string of 65,533 a and an exclamation mark, on which a backtracking engine takes time exponential in the run. Its generated files are written by internal/vectorgen (go test ./internal/vectorgen -run TestSchemaCorpus -args -update), whose test reproduces them.",
+  "cases": [
+    {
+      "name": "validate",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "limits": {
+              "input-size": 65536
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

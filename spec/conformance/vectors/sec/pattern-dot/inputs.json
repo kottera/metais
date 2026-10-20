@@ -1,0 +1,11 @@
+{
+  "report": {
+    "lf": "\n",
+    "cr": "\r",
+    "line-separator": "\u2028",
+    "paragraph-separator": "\u2029",
+    "nel": "\u0085",
+    "e-acute": "\u00e9",
+    "astral": "\ud83d\ude00"
+  }
+}

@@ -127,9 +127,9 @@ func validateOutput(pkg *loader.Package, pf *planned, schemas map[string]*schema
 	var le *regexprofile.LimitError
 	switch {
 	case errors.As(err, &le):
-		// The command's matching budget is spent, so the output's
-		// validation has no answer.
-		return []finding.Finding{lim.ExceededOutput(limits.RegexWork, subj, at.WithPointer(""), 0, false)}
+		// The command's matching budget or its schema-work is spent, so
+		// the output's validation has no answer.
+		return []finding.Finding{lim.ExceededOutput(le.Limit, subj, at.WithPointer(""), 0, false)}
 	case err != nil:
 		panic("cli: validating an output: " + err.Error())
 	}

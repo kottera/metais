@@ -74,17 +74,31 @@ var calCases = []calCase{
 		reached: refusedBy("assign-bytes"),
 	},
 	{
-		// One more subschema evaluation than the limit allows: each item of
-		// an array evaluates items and its allOf of nine.
+		// Exactly the units the limit allows (MTS-SEC-046). The combined
+		// schema's root costs 2; its properties/report and the file's root
+		// each apply to the array, 1 and 1 for each of its n items; the
+		// first item's prefixItems, an allOf of rest, costs 1 + rest; and
+		// every other item evaluates items and an allOf of nine, 10: in all
+		// 12n + rest - 5. The validation is accepted, so it does all the
+		// work the limit allows: one unit more is refused before anything
+		// is evaluated.
 		name: "schema-work", limit: "schema-work",
 		lowered: calLimits{"schema-work": 100_000},
-		gap:     "the tool does not count schema-work: the schema library has no hook per subschema evaluation (ADR-010's implementation log, W2-10)",
 		build: func(dir string, lim calLimits) ([]string, error) {
-			schema := `{"type":"array","items":{"allOf":[` + strings.TrimSuffix(strings.Repeat(`{"type":"integer"},`, 9), ",") + `]}}`
-			items := lim["schema-work"]/10 + 1
+			rest := (lim["schema-work"] + 5) % 12
+			items := (lim["schema-work"] + 5 - rest) / 12
+			integers := func(n int64) string {
+				return strings.TrimSuffix(strings.Repeat(`{"type":"integer"},`, int(n)), ",")
+			}
+			first := `{}`
+			if rest > 0 {
+				first = `{"allOf":[` + integers(rest) + `]}`
+			}
+			schema := `{"type":"array","prefixItems":[` + first + `],"items":{"allOf":[` + integers(9) + `]}}`
 			return validateInput(dir, schema, "["+strings.TrimSuffix(strings.Repeat("0,", int(items)), ",")+"]")
 		},
-		reached: refusedBy("schema-work"),
+		reached: succeeded,
+		beyond:  refusedBy("schema-work"),
 	},
 	{
 		// grep's pattern at about 4,000 instructions, under regex-program,

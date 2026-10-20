@@ -1,0 +1,40 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/schema-ref-decoy",
+  "title": "A reference to a schema only the working directory holds is refused, and the decoy is never read",
+  "statements": [
+    "MTS-SEC-004",
+    "MTS-DAT-007"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "setup/ puts decoy.schema.json in the working directory, beside the package: a reference resolved against the working directory, rather than the package, would find it.",
+  "cases": [
+    {
+      "name": "open",
+      "setup": {
+        "copy": "setup"
+      },
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

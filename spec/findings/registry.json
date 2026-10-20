@@ -1353,6 +1353,7 @@
       "since": "1.0",
       "statements": [
         "MTS-DAT-010",
+        "MTS-DAT-014",
         "MTS-FND-004"
       ]
     },
@@ -1759,6 +1760,7 @@
       "since": "1.0",
       "statements": [
         "MTS-DAT-010",
+        "MTS-DAT-013",
         "MTS-FND-004"
       ]
     },
@@ -1940,7 +1942,8 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-SEC-005"
+        "MTS-SEC-005",
+        "MTS-SEC-046"
       ]
     },
     {
@@ -1981,7 +1984,8 @@
       "statements": [
         "MTS-OUT-011",
         "MTS-PTH-009",
-        "MTS-SEC-010"
+        "MTS-SEC-010",
+        "MTS-SEC-046"
       ]
     },
     {
@@ -2111,7 +2115,11 @@
         "MTS-SEC-011",
         "MTS-SEC-020",
         "MTS-SEC-021",
-        "MTS-SEC-022"
+        "MTS-SEC-022",
+        "MTS-SEC-042",
+        "MTS-SEC-043",
+        "MTS-SEC-044",
+        "MTS-SEC-045"
       ]
     },
     {
@@ -6363,7 +6371,8 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-DAT-006"
+        "MTS-DAT-006",
+        "MTS-SEC-041"
       ]
     },
     {

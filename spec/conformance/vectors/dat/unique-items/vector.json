@@ -1,0 +1,38 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "dat/unique-items",
+  "title": "uniqueItems over a hundred thousand items finds the one duplicate, the last, within a bound no quadratic check fits",
+  "statements": [
+    "MTS-DAT-013",
+    "MTS-DAT-010"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "A check comparing every pair would make about 5,000,000,000 comparisons here, past the step's CPU bound. internal/schema's TestUniqueItemsMillion runs the million items ADR-009 D17 item 6 names, in process. Its generated files are written by internal/vectorgen (go test ./internal/vectorgen -run TestSchemaCorpus -args -update), whose test reproduces them.",
+  "cases": [
+    {
+      "name": "validate",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 256
+          }
+        }
+      ]
+    }
+  ]
+}

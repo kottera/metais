@@ -47,6 +47,11 @@ type Compiler struct {
 	dynRefs map[root]string        // each $dynamicRef's resolved URI, by the schema object holding it
 	subs    map[root]*Schema       // each subschema Subschema compiled
 	count   *subschemas            // the subschemas of every file read
+
+	resources  map[string][]string                      // the pointer of each resource of a file, by entry
+	dynamic    map[string][]dynamic                     // each $dynamicAnchor of a file, by entry
+	resourceOf map[*jsonschema.Schema]string            // the resource of each compiled schema schema-work met
+	patternsOf map[*jsonschema.Schema][]patternProperty // each compiled schema's patternProperties, in order
 }
 
 // root is where a resource the library holds as a root document is in the
@@ -92,7 +97,9 @@ type file struct {
 // Amendment A1), and every reference that leaves the
 // package, escapes InputsDir, names a file by its path where it has an $id, or
 // resolves to nothing; and two resources with one URI. Every finding of
-// every file is reported at once. When there is any, the compiler is nil.
+// every file is reported at once. Once every reference resolves, it refuses
+// a reference that begins a chain past ref-depth, or one that never ends.
+// When there is any finding, the compiler is nil.
 func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode, output ...outputScope) (*Compiler, []finding.Finding) {
 	var c *Compiler
 	var files []*file
@@ -139,10 +146,18 @@ func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode, output ...out
 			c.anchors[a.uri] = root{f.entry, a.ptr}
 		}
 		c.recordRefs(f.entry, f.walk.refs)
+		c.resources[f.entry] = []string{""}
+		for _, r := range f.walk.resources {
+			c.resources[f.entry] = append(c.resources[f.entry], r.ptr)
+		}
+		c.dynamic[f.entry] = f.walk.dynamic
 		if err := c.add(lib, f); err != nil {
 			// The pre-check refused every URI the library could not take.
 			panic(err)
 		}
+	}
+	if fs := c.checkRefDepth(files); len(fs) > 0 {
+		return nil, fs
 	}
 	for _, f := range files {
 		s, err := lib.Compile(f.retrieval)
@@ -248,6 +263,11 @@ func newCompiler(lim limits.Set, scope string, meter *regexprofile.Meter) *Compi
 		dynRefs: map[root]string{},
 		subs:    map[root]*Schema{},
 		count:   &subschemas{},
+
+		resources:  map[string][]string{},
+		dynamic:    map[string][]dynamic{},
+		resourceOf: map[*jsonschema.Schema]string{},
+		patternsOf: map[*jsonschema.Schema][]patternProperty{},
 	}
 }
 
@@ -466,8 +486,14 @@ func (c *Compiler) Schema(entry string) (*Schema, bool) {
 // nothing to the library's (ADR-010 D5 item 5), or none when v is valid.
 // It returns a *regexprofile.LimitError naming regex-work, and no
 // failures, once the command's matching budget is spent: a pattern's
-// answer can no longer be had, so no answer is given.
+// answer can no longer be had, so no answer is given. It returns one
+// naming schema-work, and no failures, when what the validation would
+// cost passes what remains of the command's schema-work, which is
+// counted before the library evaluates anything.
 func (s *Schema) Validate(v value.Value) ([]schemafail.Failure, error) {
+	if err := s.c.charge(s.lib, v); err != nil {
+		return nil, err
+	}
 	err := s.lib.Validate(toLibrary(v))
 	if s.c.meter.Exhausted() {
 		return nil, &regexprofile.LimitError{Limit: limits.RegexWork}

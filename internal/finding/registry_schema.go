@@ -115,7 +115,7 @@ var schemaCodes = []Entry{
 		Hint:       "Rewrite the pattern without the construct; a pattern is an ECMA-262 regular expression without lookaround, backreferences, repeat bounds above 1000 or RE2-only syntax.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-DAT-006"},
+		Statements: []string{"MTS-DAT-006", "MTS-SEC-041"},
 	},
 	{
 		Code:     "schema.ref_by_path",
