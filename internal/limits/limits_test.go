@@ -51,15 +51,15 @@ var adr009 = []struct{ name, def, class string }{
 	{"value-size", "64 MiB", "work"},
 	{"array-size", "1,000,000 elements", "work"},
 	{"assign-bytes", "512 MiB", "work"},
-	{"schema-work", "100,000,000", "work"},
+	{"schema-work", "14,000,000", "work"},
 	{"regex-work", "2^33 units", "work"},
 	{"outputs", "100,000", "work"},
 	{"container-depth", "3", "work"},
-	{"output-size", "256 MiB", "work"},
-	{"output-total", "1 GiB", "work"},
+	{"output-size", "128 MiB", "work"},
+	{"output-total", "512 MiB", "work"},
 	{"findings", "100,000", "work"},
 	{"grep-matches", "10,000", "work"},
-	{"grep-context", "100 lines", "work"},
+	{"grep-context", "7 lines", "work"},
 }
 
 // parseADR reads a default as ADR-009 writes it, and its unit: a size in
@@ -143,7 +143,8 @@ func TestLower(t *testing.T) {
 		{"entry-size=64MiB", EntrySize, 64 << 20},
 		{"path-length=2KiB" /* above 512 */, PathLength, -1},
 		{"path-length=511", PathLength, 511},
-		{"output-total=1GiB", OutputTotal, 1 << 30},
+		{"output-total=512MiB", OutputTotal, 512 << 20},
+		{"output-total=1GiB" /* above 512 MiB */, OutputTotal, -1},
 		{"regex-work=8589934592", RegexWork, 1 << 33},
 		{"entry-ratio=100", EntryRatio, 100},
 	}
@@ -203,7 +204,7 @@ func TestLowerRefuses(t *testing.T) {
 		// A raise.
 		{"findings=100001", want{ReasonAboveDefault, findingsLimit + `,"value":100001`}},
 		{"entry-size=65MiB", want{ReasonAboveDefault, `"name":"entry-size","default":67108864,"unit":"bytes","value":68157440`}},
-		{"output-total=2GiB", want{ReasonAboveDefault, `"name":"output-total","default":1073741824,"unit":"bytes","value":2147483648`}},
+		{"output-total=2GiB", want{ReasonAboveDefault, `"name":"output-total","default":536870912,"unit":"bytes","value":2147483648`}},
 		{"findings=9007199254740993", want{ReasonAboveDefault, findingsLimit}},
 		{"findings=99999999999999999999999", want{ReasonAboveDefault, findingsLimit}},
 		// Amendment A1's two, each one above its default.

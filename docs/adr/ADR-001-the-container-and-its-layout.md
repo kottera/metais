@@ -261,7 +261,7 @@ directory entries).
    well under 4 GiB, and its default maximum entry count under 65,535. Since
    a caller may only lower a limit, no package that passes the limits needs
    zip64, and zip64 is refused outright (D1 item 2). The same holds for the
-   zip container outputs: ADR-009's `output-size` (256 MiB) keeps every
+   zip container outputs: ADR-009's `output-size` (128 MiB) keeps every
    container far below the size ceiling, and ADR-005 D8 refuses a container
    that plans more than 65,534 entries.
 3. **A later major version may admit zip64** if a real package needs it.

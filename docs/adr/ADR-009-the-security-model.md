@@ -311,15 +311,15 @@ it at its defaults.
 | `value-size` | 64 MiB | any string a template produces: a filter result, a `capture`, a concatenation | string doubling by `append` reaches a gibibyte in thirty steps |
 | `array-size` | 1,000,000 elements | an array a filter or a range produces | `split` on a large string |
 | `assign-bytes` | 512 MiB | bytes stored by `assign` and `capture`, summed over one command | Shopify's assign score |
-| `schema-work` | 100,000,000 | subschema evaluations in one command | nested `anyOf`/`oneOf` over non-consuming refs is exponential in depth |
+| `schema-work` | 14,000,000 | subschema evaluations in one command | nested `anyOf`/`oneOf` over non-consuming refs is exponential in depth; the calibration case's array of `schema-work`/12 items peaks at 758 MiB (Amendment A3) |
 | `regex-work` | 2³³ units | regular-expression matching in one command (D10) | the deterministic CPU bound for patterns and `grep` |
 | `outputs` | 100,000 | files one render plans, assets, containers and container entries included (ADR-005 D13) | one per item of a full collection |
 | `container-depth` | 3 | zip containers nested inside one another (ADR-005 D8 item 4) | a submission zip holding a `.docx` is a real case; deeper is not |
-| `output-size` | 256 MiB | one written file, including a container and a copied asset | |
-| `output-total` | 1 GiB | all bytes one render writes, or writes to standard output | |
+| `output-size` | 128 MiB | one written file, including a container and a copied asset | a render holds an output in a growing buffer, about 2.3 times its size at its peak; with `output-total` it holds the render within D18 item 2's 1 GiB (Amendment A3) |
+| `output-total` | 512 MiB | all bytes one render writes, or writes to standard output | a render holds every output until it writes them, so its peak is about this plus 1.3 times `output-size`: 914 MiB at these defaults (Amendment A3) |
 | `findings` | 100,000 | findings one command reports | a result bound (D2 item 6) |
 | `grep-matches` | 10,000 | matches `grep` reports | a result bound (D2 item 6) |
-| `grep-context` | 100 lines | lines of context per match | a larger `-C` is refused |
+| `grep-context` | 7 lines | lines of context per match | a larger `-C` is refused; `grep` holds about 5 KiB for each line it shows, `grep-matches` times twice this plus one, so 7 peaks at 738 MiB (Amendment A3) |
 
 1. **There is no CPU-time or wall-clock limit.** Every channel through which a
    package or an input can make the tool work without bound has a counter

@@ -172,15 +172,15 @@ var table = [count]Limit{
 	{ValueSize, "value-size", 64 * mib, Bytes, ClassWork},
 	{ArraySize, "array-size", 1_000_000, Count, ClassWork},
 	{AssignBytes, "assign-bytes", 512 * mib, Bytes, ClassWork},
-	{SchemaWork, "schema-work", 100_000_000, Count, ClassWork},
+	{SchemaWork, "schema-work", 14_000_000, Count, ClassWork},
 	{RegexWork, "regex-work", 1 << 33, Count, ClassWork},
 	{Outputs, "outputs", 100_000, Count, ClassWork},
 	{ContainerDepth, "container-depth", 3, Count, ClassWork},
-	{OutputSize, "output-size", 256 * mib, Bytes, ClassWork},
-	{OutputTotal, "output-total", 1 * gib, Bytes, ClassWork},
+	{OutputSize, "output-size", 128 * mib, Bytes, ClassWork},
+	{OutputTotal, "output-total", 512 * mib, Bytes, ClassWork},
 	{Findings, "findings", 100_000, Count, ClassWork},
 	{GrepMatches, "grep-matches", 10_000, Count, ClassWork},
-	{GrepContext, "grep-context", 100, Count, ClassWork},
+	{GrepContext, "grep-context", 7, Count, ClassWork},
 }
 
 // All returns every limit, in ADR-009 D3's table order.

@@ -131,8 +131,8 @@ func TestHostileGrepContext(t *testing.T) {
 		flags []string
 		ok    bool
 	}{
-		{[]string{"-C", "100"}, true},
-		{[]string{"-C", "101"}, false},
+		{[]string{"-C", "7"}, true},
+		{[]string{"-C", "8"}, false},
 		{[]string{"--limit", "grep-context=3", "-C", "3"}, true},
 		{[]string{"--limit", "grep-context=3", "-C", "4"}, false},
 	} {

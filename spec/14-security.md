@@ -253,11 +253,11 @@ limit is.
 | `value-size` | 64 MiB | a string a template builds: a filter's result, a `capture` |
 | `array-size` | 1,000,000 elements | an array a filter or a range builds |
 | `assign-bytes` | 512 MiB | the bytes `assign` and `capture` store in one render, summed |
-| `schema-work` | 100,000,000 units | the validations of one operation, summed |
+| `schema-work` | 14,000,000 units | the validations of one operation, summed |
 | `outputs` | 100,000 | the files one render plans |
 | `container-depth` | 3 | the containers an output nests one inside another, the outermost counting as the first ([chapter 10](10-transforms.md)) |
-| `output-size` | 256 MiB | one file a render writes |
-| `output-total` | 1 GiB | every byte one render writes |
+| `output-size` | 128 MiB | one file a render writes |
+| `output-total` | 512 MiB | every byte one render writes |
 
 <a id="mts-sec-008"></a>**MTS-SEC-008** A processor MUST bound a render's
 template work by `render-work`, counted in units — 16 for every node it

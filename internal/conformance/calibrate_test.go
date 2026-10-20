@@ -27,18 +27,20 @@ import (
 // The limit-calibration suite of ADR-009 D3 item 3 and D18 item 4: the
 // worst case of each work and output limit of D3, and Amendment A1's joint
 // worst case, each run at the default as a process of the built binary and
-// judged against D18 item 2's ceilings. It runs only when
-// -calibration.record names the record to write (docs/dev/calibration.md);
-// TestCalibrationLowered runs every case at lowered limits in every go
-// test, so a case that stops reaching its limit fails there.
+// judged against D18 item 2's ceilings as Amendment A3 sets them. It runs
+// only when -calibration.record names the record to write
+// (docs/dev/calibration.md); TestCalibrationLowered runs every case at
+// lowered limits in every go test, so a case that stops reaching its limit
+// fails there.
 var (
 	flagCalRecord = flag.String("calibration.record", "", "run the limit-calibration suite at the defaults and write its record to this file")
 	flagCalCases  = flag.String("calibration.cases", "", "run only these calibration cases, comma-separated (default: all)")
 )
 
-// The ceilings of ADR-009 D18 item 2.
+// The ceilings of ADR-009 D18 item 2, the CPU ceiling as Amendment A3
+// item 1 sets it.
 const (
-	calCPU         = 10 * time.Second
+	calCPU         = 120 * time.Second
 	calMetadataCPU = 500 * time.Millisecond
 	calRSS         = 1 << 30
 )
@@ -637,7 +639,7 @@ func TestCalibrationJudgement(t *testing.T) {
 		want []string
 	}{
 		{"cpu", work, run(calCPU+time.Millisecond, 1<<20),
-			[]string{"judged-work broke the CPU ceiling of 10s with 10.001s"}},
+			[]string{"judged-work broke the CPU ceiling of 2m0s with 2m0.001s"}},
 		{"metadata-cpu", meta, run(calMetadataCPU+time.Millisecond, 1<<20),
 			[]string{"judged-metadata broke the CPU ceiling of 500ms with 501ms"}},
 		{"rss", work, run(time.Second, calRSS+1<<20),
@@ -645,11 +647,11 @@ func TestCalibrationJudgement(t *testing.T) {
 		{"metadata-rss", meta, run(time.Millisecond, calRSS+1<<20),
 			[]string{"judged-metadata broke the peak resident memory ceiling of 1024 MiB with 1025 MiB"}},
 		{"cpu-and-rss", work, run(calCPU+time.Second, calRSS+2<<20), []string{
-			"judged-work broke the CPU ceiling of 10s with 11s",
+			"judged-work broke the CPU ceiling of 2m0s with 2m1s",
 			"judged-work broke the peak resident memory ceiling of 1024 MiB with 1026 MiB",
 		}},
 		{"killed", work, &calRun{res: &calResult{}, cpu: time.Second, rss: -1, wall: calWall, killed: true},
-			[]string{"judged-work broke the CPU ceiling of 10s: the case ran past the 30m0s wall clock and was killed"}},
+			[]string{"judged-work broke the CPU ceiling of 2m0s: the case ran past the 30m0s wall clock and was killed"}},
 		// At each ceiling, and a work case over the metadata ceiling: no breach.
 		{"at-cpu", work, run(calCPU, calRSS), nil},
 		{"at-metadata-cpu", meta, run(calMetadataCPU, calRSS), nil},
@@ -671,7 +673,7 @@ func measureCase(t *testing.T, tool string, c calCase, defaults calLimits) calRe
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(dir) // a case's outputs reach a gibibyte
+	defer os.RemoveAll(dir) // a case's outputs reach output-total
 	run, err := runCase(tool, c, defaults, defaults, dir, calWall)
 	return judgeCase(c, defaults, run, err)
 }

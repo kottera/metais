@@ -354,7 +354,7 @@ Two rules are shared:
    named). Entries are searched in path order, lines in order.
 3. **Binary entries are skipped** and listed in the result's `skipped`.
 4. **`--context <n>`**, from 0 to the `grep-context` limit (ADR-009, default
-   100), default 0: lines before and after each matching line.
+   7), default 0: lines before and after each matching line.
 5. **`--max-results <n>`**, from 1 to the `grep-matches` limit in force
    (ADR-009, default 10000), default 100: the number of matching lines
    reported. The search still runs to the end and reports
