@@ -1,0 +1,19 @@
+{%- render "_head.html.liquid", page_title: inputs.site.title -%}
+<h1>{{ inputs.site.title }}</h1>
+{%- if inputs.site.description %}
+<p class="site-description">{{ inputs.site.description }}</p>
+{%- endif %}
+<ol class="article-list">
+{%- for article in inputs.articles reversed -%}
+{%- if article.draft == true -%}{%- continue -%}{%- endif -%}
+{%- assign stem = sources.articles[forloop.rindex0].stem %}
+<li>
+<a href="articles/{{ stem }}.html">{{ article.title }}</a>
+<time datetime="{{ article.date }}">{{ article.date | date: "%-d %B %Y" }}</time>
+{%- if article.summary %}
+<p>{{ article.summary }}</p>
+{%- endif %}
+</li>
+{%- endfor %}
+</ol>
+{% render "_foot.html.liquid" -%}

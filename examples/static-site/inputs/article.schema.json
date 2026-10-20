@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Article",
+  "description": "One article: its frontmatter's fields, and its text as body.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "date", "body"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "title": "Title",
+      "description": "The article's headline, as its page, the index and the feed print it.",
+      "examples": ["Starting a field notebook"]
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date",
+      "description": "The day the article was published, as YYYY-MM-DD.",
+      "examples": ["2026-09-14"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 400,
+      "title": "Summary",
+      "description": "One or two sentences on what the article is about, shown in the index and the feed. Leaving it out shows the title alone."
+    },
+    "tags": {
+      "type": "array",
+      "maxItems": 10,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 40 },
+      "title": "Tags",
+      "description": "Short topic words listed beneath the article's headline and as the feed entry's categories."
+    },
+    "draft": {
+      "type": "boolean",
+      "title": "Draft",
+      "description": "true keeps the article off the site: it gets no page and is in neither the index nor the feed."
+    },
+    "body": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100000,
+      "title": "Body",
+      "description": "The article's text: the Markdown after the frontmatter, in the subset the meaning document describes."
+    }
+  }
+}

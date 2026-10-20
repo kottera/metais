@@ -1,0 +1,37 @@
+{%- assign base = inputs.site.url -%}
+{%- assign last_char = base | slice: -1 -%}
+{%- if last_char != "/" -%}{%- assign base = base | append: "/" -%}{%- endif -%}
+{%- assign published = inputs.articles | reject: "draft", true -%}
+{%- comment -%} The newest published date; with every article a draft, the newest of all. {%- endcomment -%}
+{%- assign newest = inputs.articles | map: "date" | sort | last -%}
+{%- assign updated = published | map: "date" | sort | last | default: newest -%}
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="{{ inputs.site.language }}">
+<title>{{ inputs.site.title }}</title>
+{%- if inputs.site.description %}
+<subtitle>{{ inputs.site.description }}</subtitle>
+{%- endif %}
+<id>{{ base }}</id>
+<link href="{{ base }}"/>
+<link rel="self" href="{{ base }}feed.xml"/>
+<updated>{{ updated }}T00:00:00Z</updated>
+<author><name>{{ inputs.site.author }}</name></author>
+{%- for article in inputs.articles reversed -%}
+{%- if article.draft == true -%}{%- continue -%}{%- endif -%}
+{%- assign stem = sources.articles[forloop.rindex0].stem -%}
+{%- capture content -%}{% render "_body.html.liquid", body: article.body %}{%- endcapture %}
+<entry>
+<title>{{ article.title }}</title>
+<id>{{ base }}articles/{{ stem }}.html</id>
+<link href="{{ base }}articles/{{ stem }}.html"/>
+<updated>{{ article.date }}T00:00:00Z</updated>
+{%- for tag in article.tags %}
+<category term="{{ tag }}"/>
+{%- endfor %}
+{%- if article.summary %}
+<summary>{{ article.summary }}</summary>
+{%- endif %}
+<content type="html">{{ content | strip | escape }}</content>
+</entry>
+{%- endfor %}
+</feed>

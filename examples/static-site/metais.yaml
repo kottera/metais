@@ -1,0 +1,64 @@
+metais: "1.0"
+name: "static-site"
+version: "1.0.0"
+title: "Static site"
+description: "A small static website: one HTML page per article, an index of the articles and an Atom feed, from a directory of Markdown files and one site configuration."
+license: "Apache-2.0"
+guide: |-
+  This package renders a static website you can copy to any web server as it
+  is. It writes index.html, listing every published article newest first;
+  one page per article under articles/; feed.xml, an Atom feed of the same
+  articles; and the stylesheet and script the pages link to, under css/ and
+  js/.
+
+  Supply two inputs:
+
+  - **site**, one file (site.yaml or site.json): the site's title, its
+    address, its author and its language. Read
+    [what the site configuration means](inputs/site.md).
+  - **articles**, a directory named articles holding one Markdown file per
+    article, each with frontmatter giving its title and date. Read
+    [what an article holds](inputs/articles.md) before you write one: it
+    says how to name the files, which frontmatter fields there are, and
+    which Markdown the body may use.
+
+  The index and the feed both read the same articles and the same site
+  configuration, so a page never disagrees with the feed. An article whose
+  frontmatter says `draft: true` gets no page, and is left out of the index
+  and the feed.
+
+  `metais validate` checks the data, and `metais render --data <dir> --out
+  <dir>` writes the site. Nothing is fetched: every page links only to
+  files the same render writes, and to the site's own address.
+inputs:
+  - name: site
+    title: "Site configuration"
+    description: "The site's title, address, author and language, shared by every page and the feed."
+    schema: inputs/site.schema.json
+    meaning: inputs/site.md
+    forms:
+      - yaml
+      - json
+  - name: articles
+    title: "Articles"
+    description: "One Markdown file per article: frontmatter for its title, date and summary, and the article's text as the body."
+    schema: inputs/articles.schema.json
+    meaning: inputs/articles.md
+    collection: true
+    forms:
+      - markdown
+outputs:
+  - id: index
+    template: index.html.liquid
+    escape: html
+  - id: article
+    template: article.html.liquid
+    for_each: inputs.articles
+    when: "item.draft != true"
+    path: "articles/{{ sources.articles[fan_out.index0].stem }}.html"
+    escape: html
+  - id: feed
+    template: feed.xml.liquid
+    escape: html
+  - id: assets
+    asset: "."

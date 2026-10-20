@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="{{ inputs.site.language }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page_title }}</title>
+<link rel="stylesheet" href="{% asset "css/site.css" %}">
+<link rel="alternate" type="application/atom+xml" title="{{ inputs.site.title }}" href="{{ output.root }}feed.xml">
+<script src="{% asset "js/site.js" %}" defer></script>
+</head>
+<body>
+<header class="site-header">
+<a class="site-title" href="{{ output.root }}index.html">{{ inputs.site.title }}</a>
+<button class="theme-toggle" type="button" hidden>Dark theme</button>
+</header>
+<main>

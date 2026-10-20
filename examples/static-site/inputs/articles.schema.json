@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Articles",
+  "description": "The site's articles, one per Markdown file, in the order of their file names.",
+  "type": "array",
+  "minItems": 1,
+  "maxItems": 500,
+  "items": { "$ref": "article.schema.json" }
+}

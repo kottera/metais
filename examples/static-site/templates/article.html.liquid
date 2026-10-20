@@ -1,0 +1,10 @@
+{%- assign page_title = item.title | append: " — " | append: inputs.site.title -%}
+{%- render "_head.html.liquid", page_title: page_title -%}
+<article>
+<h1>{{ item.title }}</h1>
+<p class="article-meta"><time datetime="{{ item.date }}">{{ item.date | date: "%-d %B %Y" }}</time>
+{%- if item.tags and item.tags.size > 0 %} · {{ item.tags | join: ", " }}{% endif %}</p>
+{%- render "_body.html.liquid", body: item.body %}
+</article>
+<p class="back"><a href="{{ output.root }}index.html">All articles</a></p>
+{% render "_foot.html.liquid" -%}
