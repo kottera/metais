@@ -36,11 +36,13 @@ run with every baseline at once:
 
 ```bash
 cat $(git ls-files '*/testdata/bench/baseline.txt') > baseline.txt
-benchstat baseline.txt bench.txt
+benchstat -ignore goos,goarch,cpu baseline.txt bench.txt
 ```
 
 benchstat is the operator's tool, not a dependency of the module. Each
-baseline's `pkg:` line keeps its package's rows apart.
+baseline's `pkg:` line keeps its package's rows apart. `-ignore` is needed
+because the baselines were taken on other hosts. Without it, benchstat puts
+each host's lines in a table of their own and compares nothing.
 
 ## The benchmarks
 

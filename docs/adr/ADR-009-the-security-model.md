@@ -1474,6 +1474,38 @@ unchanged: the builder stays at `internal/tools/release`, in the module.
    - moving the builder to its own module, which would add a second
      `go.mod` and a second gate for one tool.
 
+### A3 — The CPU ceiling is two minutes; the memory ceiling holds, and the defaults that break it are lowered
+
+**Status:** Accepted 2026-10-20 by Ed Funnekotter, on the calibration act
+of PLAN-2026-10-metais-v1 (W6-A2, `01a15822-7680-746c-b98e-dc38260f857a`).
+**Amends:** D18 item 2 (the 10 s CPU ceiling), and D3's defaults for the
+limits whose worst case breaks the memory ceiling.
+
+1. **The CPU ceiling is 120 s** for every case not refused from metadata.
+   The 0.5 s ceiling for a metadata refusal is unchanged. METAIS is not a
+   performance tool. A hostile package that costs up to two minutes of CPU
+   on the slowest supported target is acceptable. The deterministic work
+   limits still guarantee that every command ends. The worst case measured
+   on a real host is `regex-work`, at 76.7 s on linux/amd64.
+2. **The memory ceiling stays 1 GiB.** A hostile package must not be able
+   to exhaust the memory of a CI runner or a developer's machine. On every
+   supported target, three cases break the ceiling at today's defaults:
+   - `grep-context`, at about 9.3 GiB;
+   - `schema-work`, at 4.4 to 5.0 GiB;
+   - `output-total`, at about 1.8 GiB.
+3. **Their defaults are lowered.** Each limit that drives one of these
+   peaks is given the largest default whose calibration case stays within
+   1 GiB on every supported target, together with A1 item 5's joint worst
+   cases. The implementing item identifies which limit drives each peak,
+   writes the new defaults into D3's table, and cites the calibration
+   records that justify each one. Like every default, the new values can be
+   lowered further by `--limit` and raised by nothing (D4).
+4. **The calibration suite's ceilings follow** items 1 and 2. Its
+   30-minute wall clock per case is unchanged.
+5. **A default raised later needs evidence.** A change that lowers the
+   memory a case needs per unit of its limit may raise that default again,
+   by a further amendment that cites a calibration run within the ceiling.
+
 ## Implementation log
 
 This log is this section together with the entry files in
