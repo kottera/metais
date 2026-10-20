@@ -285,7 +285,7 @@ type Finding struct {
 	entry        *Entry
 	subject      Subject
 	location     *Location
-	params       Params
+	params       paramList
 	schema       *Schema
 	field        *Field
 	via          []Via
@@ -391,7 +391,7 @@ func (f Finding) Field() (Field, bool) {
 
 // Param returns the parameter called name, and false when it is absent.
 func (f Finding) Param(name string) (Value, bool) {
-	v, ok := f.params[name]
+	v, ok := f.params.get(name)
 	return v, ok
 }
 
@@ -734,7 +734,7 @@ func (f Finding) placeholder(name string, write bool) (string, error) {
 		}
 		return "", fmt.Errorf("{output} in a finding about a %s with no output name", f.subject.Kind)
 	}
-	v, ok := f.params[name]
+	v, ok := f.params.get(name)
 	if !ok {
 		return "", fmt.Errorf("placeholder {%s} names no parameter given", name)
 	}
@@ -898,10 +898,39 @@ func cleanLocation(l Location) Location {
 	return l
 }
 
-func cleanParams(p Params) Params {
-	out := make(Params, len(p))
+func cleanParams(p Params) paramList {
+	out := make(paramList, 0, len(p))
 	for k, v := range p {
-		out[k] = v.clean()
+		out = append(out, namedParam{k, v.clean()})
+	}
+	slices.SortFunc(out, func(a, b namedParam) int { return strings.Compare(a.name, b.name) })
+	return out
+}
+
+// paramList is a finding's parameters as it holds them: sorted by name,
+// a few words each where a map would hold a table for every finding.
+type paramList []namedParam
+
+type namedParam struct {
+	name string
+	v    Value
+}
+
+// get returns the parameter called name, and false when it is absent.
+func (l paramList) get(name string) (Value, bool) {
+	for _, p := range l {
+		if p.name == name {
+			return p.v, true
+		}
+	}
+	return Value{}, false
+}
+
+// Params returns the parameters as a map.
+func (l paramList) Params() Params {
+	out := make(Params, len(l))
+	for _, p := range l {
+		out[p.name] = p.v
 	}
 	return out
 }

@@ -153,8 +153,9 @@ type mapper struct {
 	// paths makes each finding's instance path from the one it made
 	// before, so the failures under one member name read it once.
 	paths finding.PathCache
-	// fields holds field's answer for each failure it has looked up, so
-	// the failures beneath one schema object read its chain once.
+	// fields holds field's answer for each failure on the path being
+	// walked that it has looked up, so the failures beneath one schema
+	// object read its chain once.
 	fields map[*Failure]fieldAt
 }
 
@@ -191,6 +192,9 @@ var numericKeywords = map[string]string{
 // A transparent keyword hands its children's findings straight on, so a
 // tree of failures is never held as findings beyond what sink keeps.
 func (m *mapper) visit(path []*Failure, n *Failure, via []finding.Via, sink func(emitted)) {
+	// Once n is mapped, nothing beneath it asks for its field again, so
+	// field's answers are held for the path being walked and no more.
+	defer delete(m.fields, n)
 	children := func(via []finding.Via) {
 		p := append(slices.Clip(path), n)
 		for i := range n.Children {

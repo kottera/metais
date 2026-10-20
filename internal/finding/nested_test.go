@@ -80,7 +80,7 @@ func TestListAtMost(t *testing.T) {
 			t.Errorf("at most %d: counts %d listed, and lists %d, want %d", n, g.listed, g.countListed(), min(n, 7))
 		}
 		// New under the same bound builds the same finding.
-		if b := New(f.entry.Code, f.subject, f.location, f.params, WithAlternatives(f.alternatives...), WithListedAtMost(n)); shape(b) != want {
+		if b := New(f.entry.Code, f.subject, f.location, f.params.Params(), WithAlternatives(f.alternatives...), WithListedAtMost(n)); shape(b) != want {
 			t.Errorf("New at most %d: lists %s, want %s", n, shape(b), want)
 		}
 	}
@@ -141,7 +141,7 @@ func weightedFindings(rng *rand.Rand, n int) []Finding {
 			alts[b] = Alternative{Branch: b, Findings: fs}
 		}
 		s, _ := f.Schema()
-		out[i] = New(f.entry.Code, f.subject, f.location, f.params, WithSchema(s), WithAlternatives(alts...))
+		out[i] = New(f.entry.Code, f.subject, f.location, f.params.Params(), WithSchema(s), WithAlternatives(alts...))
 	}
 	return out
 }

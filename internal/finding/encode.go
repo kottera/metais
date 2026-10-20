@@ -157,7 +157,7 @@ func (f Finding) encodeJSON(b []byte, flush func([]byte) []byte) []byte {
 	o.key("params")
 	p := openObject(o.b)
 	for _, spec := range f.entry.Params {
-		if v, ok := f.params[spec.Name]; ok {
+		if v, ok := f.params.get(spec.Name); ok {
 			p.key(spec.Name)
 			p.b = v.appendJSON(p.b, appendJSONString)
 		}
