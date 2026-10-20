@@ -3,11 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # build.sh <out> writes the metais.org site into <out>, which must not exist:
-# the pages and CNAME of site/public/, and every JSON Schema of spec/schemas/
-# under schemas/, so that each one is served at the path its $id names
-# (https://metais.org/schemas/<path> is spec/schemas/<path>). The schemas are
-# copied from the commit being built, never committed twice; site_test.go
-# holds the $id-to-path mapping and runs this script.
+# the pages and CNAME of site/public/, every JSON Schema of spec/schemas/
+# under schemas/, and every CLI output schema of docs/cli/schemas/ under
+# cli/schemas/, so that each one is served at the path its $id names
+# (https://metais.org/schemas/<path> is spec/schemas/<path>, and
+# https://metais.org/cli/schemas/<path> is docs/cli/schemas/<path>). The
+# schemas are copied from the commit being built, never committed twice;
+# site_test.go holds the $id-to-path mapping and runs this script.
 set -eu
 
 if [ "$#" -ne 1 ]; then
@@ -25,8 +27,14 @@ if [ -e "$root/site/public/schemas" ]; then
 	echo "site/build.sh: site/public/schemas exists; schemas/ is spec/schemas/ alone" >&2
 	exit 1
 fi
+if [ -e "$root/site/public/cli" ]; then
+	echo "site/build.sh: site/public/cli exists; cli/ is docs/cli/schemas/ alone" >&2
+	exit 1
+fi
 
 mkdir -p "$out"
 cp -R "$root/site/public/." "$out/"
 mkdir "$out/schemas"
 cp -R "$root/spec/schemas/." "$out/schemas/"
+mkdir -p "$out/cli/schemas"
+cp -R "$root/docs/cli/schemas/." "$out/cli/schemas/"
