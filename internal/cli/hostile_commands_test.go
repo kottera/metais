@@ -61,7 +61,10 @@ func findingParams(r ran) []string {
 // unmarked; one more is cut at the bound and marked, in the result and on
 // standard error, and the exit status is the one the cap does not change.
 // A lowered grep-matches bounds what is reported when --max-results is not
-// given, and --max-results takes the bound and refuses one more.
+// given, and --max-results takes the bound and refuses one more. The
+// truncation line names what capped the results: the grep-matches limit
+// when it lowered the default, and --max-results, given or by its default,
+// otherwise.
 func TestHostileGrepMatches(t *testing.T) {
 	testenv.Home(t)
 	const bound = 5
@@ -75,11 +78,11 @@ func TestHostileGrepMatches(t *testing.T) {
 		noticeWant string
 	}{
 		{"at the bound", bound, lowered, bound, false, ""},
-		{"past the bound", bound + 1, lowered, bound, true, "Showing the first 5 of 6 matching lines; 1 more were found and not shown (--max-results).\n"},
-		{"past the bound, --max-results at it", bound + 1, append(slices.Clone(lowered), "--max-results", strconv.Itoa(bound)), bound, true, "Showing the first 5 of 6 matching lines; 1 more"},
-		{"a flood", 30, lowered, bound, true, "Showing the first 5 of 30 matching lines; 25 more"},
+		{"past the bound", bound + 1, lowered, bound, true, "Showing the first 5 of 6 matching lines; 1 more were found and not shown (the grep-matches limit).\n"},
+		{"past the bound, --max-results at it", bound + 1, append(slices.Clone(lowered), "--max-results", strconv.Itoa(bound)), bound, true, "Showing the first 5 of 6 matching lines; 1 more were found and not shown (--max-results).\n"},
+		{"a flood", 30, lowered, bound, true, "Showing the first 5 of 30 matching lines; 25 more were found and not shown (the grep-matches limit).\n"},
 		{"the default, at --max-results", 100, nil, 100, false, ""},
-		{"the default, past --max-results", 101, nil, 100, true, "Showing the first 100 of 101 matching lines; 1 more"},
+		{"the default, past --max-results", 101, nil, 100, true, "Showing the first 100 of 101 matching lines; 1 more were found and not shown (--max-results).\n"},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			pkg := floodPackage(t, c.lines)

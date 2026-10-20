@@ -549,6 +549,12 @@ func runGrep(s *session, p args.Parsed) outcome {
 	if refused != nil {
 		return *refused
 	}
+	// The truncation line names what capped the results: the flag, given
+	// or by its default, or the lowered limit under that default.
+	capped := "--max-results"
+	if _, given := p.Value("max-results"); !given && lim.Value(limits.GrepMatches) < 100 {
+		capped = "the grep-matches limit"
+	}
 	globs, refused := s.globs(p, 2)
 	if refused != nil {
 		return *refused
@@ -590,7 +596,7 @@ func runGrep(s *session, p args.Parsed) outcome {
 	if found.Truncated {
 		o.notice = append(o.notice, ("Showing the first " + strconv.Itoa(len(found.Matches)) + " of " +
 			strconv.Itoa(found.MatchingLines) + " matching lines; " + strconv.Itoa(found.MatchingLines-len(found.Matches)) +
-			" more were found and not shown (--max-results).\n")...)
+			" more were found and not shown (" + capped + ").\n")...)
 	}
 	if len(found.Skipped) > 0 {
 		o.notice = append(o.notice, "Binary entries skipped:\n"...)
