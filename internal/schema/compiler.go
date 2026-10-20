@@ -280,6 +280,20 @@ func (c *Compiler) inScope(p string) bool {
 	return strings.HasPrefix(p, "/"+c.scope) && !strings.HasPrefix(p, "/.compiled/")
 }
 
+// SizeBreached reports the limit a schema file entry of size bytes breaches
+// under lim, if any: schema-size, then, for a YAML file, schema-yaml-size,
+// since the YAML reader builds the whole document's tree before any value
+// of it can be counted (ADR-009 Amendment A6 item 5).
+func SizeBreached(entry string, size int64, lim limits.Set) (limits.ID, bool) {
+	switch {
+	case size > lim.Value(limits.SchemaSize):
+		return limits.SchemaSize, true
+	case path.Ext(entry) != ".json" && size > lim.Value(limits.SchemaYAMLSize):
+		return limits.SchemaYAMLSize, true
+	}
+	return 0, false
+}
+
 // schemaExtension reports whether entry is named as a JSON or YAML file.
 func schemaExtension(entry string) bool {
 	switch path.Ext(entry) {
@@ -289,16 +303,17 @@ func schemaExtension(entry string) bool {
 	return false
 }
 
-// read checks schema-size, decodes entry and walks it.
+// read checks schema-size, and schema-yaml-size for a YAML file, decodes
+// entry and walks it.
 func (c *Compiler) read(tree pkgtree.Tree, entry string, decode Decode) (*file, []finding.Finding) {
 	info, err := tree.Stat(entry)
 	if err != nil {
 		// tree.List named it; a Tree answers the same way on every call.
 		panic(err)
 	}
-	if info.Size > c.lim.Value(limits.SchemaSize) {
+	if id, over := SizeBreached(entry, info.Size, c.lim); over {
 		loc := finding.Location{Origin: finding.OriginPackage, File: entry}
-		return nil, []finding.Finding{c.lim.Breached(limits.SchemaSize, loc, info.Size, true)}
+		return nil, []finding.Finding{c.lim.Breached(id, loc, info.Size, true)}
 	}
 	r, err := tree.Open(entry)
 	if err != nil {

@@ -109,14 +109,22 @@ func validateOutput(pkg *loader.Package, pf *planned, schemas map[string]*schema
 	reader := finding.Subject{Kind: finding.SubjectInput, Name: pf.owner}
 	var v value.Value
 	var pos finding.Positions
+	// The values the output decodes to are counted against output-values,
+	// its own and no other output's, since each output's value is released
+	// before the next is validated; a YAML output is bounded by yaml-size
+	// before it is parsed (ADR-009 Amendment A6 item 3).
+	values := lim.Counter(limits.OutputValues)
 	if kind == "json" {
-		doc, fs := jsonx.Parse(pf.bytes, jsonx.Source{Input: reader, At: at, Output: true}, lim)
+		doc, fs := jsonx.Parse(pf.bytes, jsonx.Source{Input: reader, At: at, Output: true, Values: values}, lim)
 		if len(fs) > 0 {
 			return outputParseFindings(fs, subj, kind)
 		}
 		v, pos = doc.Value, doc.Positions()
 	} else {
-		doc, fs := yamlx.Parse(bytes.TrimPrefix(pf.bytes, bom), yamlx.Source{Subject: reader, At: at, Size: limits.OutputSize}, lim)
+		if n := int64(len(pf.bytes)); n > lim.Value(limits.YAMLSize) {
+			return []finding.Finding{lim.ExceededOutput(limits.YAMLSize, subj, at, n, true)}
+		}
+		doc, fs := yamlx.Parse(bytes.TrimPrefix(pf.bytes, bom), yamlx.Source{Subject: reader, At: at, Size: limits.YAMLSize, Values: values}, lim)
 		if len(fs) > 0 {
 			return outputParseFindings(fs, subj, kind)
 		}

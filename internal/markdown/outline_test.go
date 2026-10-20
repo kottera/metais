@@ -108,3 +108,27 @@ func TestOutlineLinesOffsetPastFrontmatter(t *testing.T) {
 		}
 	}
 }
+
+// TestTitle holds Title to Outline's first level-1 heading, a link
+// reference definition after the heading included, on documents whose
+// first heading is not level 1, that have none, and that have several.
+func TestTitle(t *testing.T) {
+	testenv.Home(t)
+	for _, src := range []string{
+		"", "no heading\n", "## Two\n### Three\n", "## Two\n# One\n# Again\n",
+		"Sub\n---\nTitle\n===\n# Later\n", "---\ntitle: x\n---\n# After frontmatter\n",
+		"# [a] and [b][]\n\n[a]: /a\n[b]: /b\n", "```\n# no\n```\nYes\n===\n",
+		"> # quoted\n# plain\n", "- # in a list\n",
+	} {
+		want, wantOK := "", false
+		for _, h := range Outline([]byte(src)) {
+			if h.Level == 1 {
+				want, wantOK = h.Text, true
+				break
+			}
+		}
+		if got, ok := Title([]byte(src)); got != want || ok != wantOK {
+			t.Errorf("Title(%q) = %q, %v; the outline's first level-1 heading is %q, %v", src, got, ok, want, wantOK)
+		}
+	}
+}

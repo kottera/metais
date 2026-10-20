@@ -510,12 +510,18 @@ func exampleNow(pkg *loader.Package, e *exampleRun, lim limits.Set) (string, []f
 	if err != nil {
 		return "", nil
 	}
+	subj := finding.Subject{Kind: finding.SubjectExample, Name: e.name}
+	at := finding.Location{Origin: finding.OriginPackage, File: entry}
+	if info.Size > lim.Value(limits.ManifestSize) {
+		// manifest-size bounds the file in either form, and is checked
+		// before it is read (ADR-009 Amendment A6 item 2); its reader
+		// would refuse it as it refuses a syntax error.
+		return "", []finding.Finding{finding.New(codeExampleMetadata, subj, &at, finding.Params{"reason": finding.String("syntax")})}
+	}
 	src, err := readEntry(pkg, entry, info.Size)
 	if err != nil {
 		panic("cli: reading " + entry + ": " + err.Error())
 	}
-	subj := finding.Subject{Kind: finding.SubjectExample, Name: e.name}
-	at := finding.Location{Origin: finding.OriginPackage, File: entry}
 	bad := func(reason, member string, pos finding.Positions, ptr string) []finding.Finding {
 		l := at
 		if pos != nil {
@@ -533,7 +539,7 @@ func exampleNow(pkg *loader.Package, e *exampleRun, lim limits.Set) (string, []f
 	var pos finding.Positions
 	var pfs []finding.Finding
 	if isJSONText(src) {
-		doc, fs := jsonx.Parse(src, jsonx.Source{Input: finding.Subject{Kind: finding.SubjectInput, Name: exampleMetadata}, At: at}, lim)
+		doc, fs := jsonx.Parse(src, jsonx.Source{Input: finding.Subject{Kind: finding.SubjectInput, Name: exampleMetadata}, At: at, Size: limits.ManifestSize}, lim)
 		root, pos, pfs = doc.Value, doc.Positions(), fs
 	} else {
 		doc, fs := yamlx.Parse(src, yamlx.Source{Subject: finding.Subject{Kind: finding.SubjectInput, Name: exampleMetadata}, At: at, Size: limits.ManifestSize}, lim)
@@ -603,7 +609,10 @@ func isJSONText(src []byte) bool {
 	return len(t) > 0 && t[0] == '{'
 }
 
-// readEntry reads the package entry name of size bytes.
+// readEntry reads the package entry name of size bytes. The caller has
+// admitted size under the limit that bounds the entry: entry-size, which
+// the package's open checks of every entry, or a tighter one of the
+// entry's own (ADR-009 Amendment A6 item 2).
 func readEntry(pkg *loader.Package, name string, size int64) ([]byte, error) {
 	r, err := pkg.Tree.Open(name)
 	if err != nil {

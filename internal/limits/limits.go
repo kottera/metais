@@ -29,6 +29,7 @@ const (
 	PathDepth
 	ManifestSize
 	SchemaSize
+	SchemaYAMLSize
 	CombinedSchemaSize
 	SchemaDepth
 	SchemaSubschemas
@@ -63,6 +64,7 @@ const (
 	ContainerDepth
 	OutputSize
 	OutputTotal
+	OutputValues
 	Findings
 	GrepMatches
 	GrepContext
@@ -136,8 +138,8 @@ type Limit struct {
 	Class   Class
 }
 
-// table is ADR-009 D3's table, exact (D3 item 2), as Amendment A1 amends
-// it, indexed by ID.
+// table is ADR-009 D3's table, exact (D3 item 2), as Amendments A1, A3,
+// A4 and A6 amend it, indexed by ID.
 var table = [count]Limit{
 	{PackageSize, "package-size", 256 * mib, Bytes, ClassPackage},
 	{PackageUncompressed, "package-uncompressed", 512 * mib, Bytes, ClassPackage},
@@ -148,6 +150,7 @@ var table = [count]Limit{
 	{PathDepth, "path-depth", 32, Count, ClassPackage},
 	{ManifestSize, "manifest-size", 1 * mib, Bytes, ClassPackage},
 	{SchemaSize, "schema-size", 4 * mib, Bytes, ClassPackage},
+	{SchemaYAMLSize, "schema-yaml-size", 1 * mib, Bytes, ClassPackage},
 	{CombinedSchemaSize, "combined-schema-size", 16 * mib, Bytes, ClassPackage},
 	{SchemaDepth, "schema-depth", 64, Count, ClassPackage},
 	{SchemaSubschemas, "schema-subschemas", 20_000, Count, ClassPackage},
@@ -163,7 +166,7 @@ var table = [count]Limit{
 
 	{InputSize, "input-size", 32 * mib, Bytes, ClassData},
 	{InputsTotal, "inputs-total", 128 * mib, Bytes, ClassData},
-	{InputValues, "input-values", 1_000_000, Count, ClassData},
+	{InputValues, "input-values", 500_000, Count, ClassData},
 	{YAMLSize, "yaml-size", 1 * mib, Bytes, ClassData},
 	{CSVRows, "csv-rows", 1_000_000, Count, ClassData},
 	{CSVColumns, "csv-columns", 1_024, Count, ClassData},
@@ -181,7 +184,8 @@ var table = [count]Limit{
 	{Outputs, "outputs", 100_000, Count, ClassWork},
 	{ContainerDepth, "container-depth", 3, Count, ClassWork},
 	{OutputSize, "output-size", 128 * mib, Bytes, ClassWork},
-	{OutputTotal, "output-total", 512 * mib, Bytes, ClassWork},
+	{OutputTotal, "output-total", 256 * mib, Bytes, ClassWork},
+	{OutputValues, "output-values", 1_000_000, Count, ClassWork},
 	{Findings, "findings", 100_000, Count, ClassWork},
 	{GrepMatches, "grep-matches", 10_000, Count, ClassWork},
 	{GrepContext, "grep-context", 7, Count, ClassWork},
@@ -398,9 +402,10 @@ func (s Set) breach(id ID, observed int64, hasObserved bool) finding.Params {
 	return p
 }
 
-// Counter counts one limit's units across every reading of one command:
+// Counter counts one limit's units across the readings it is given:
 // input-values, which the readers of all of a command's inputs add to as
-// they decode (Amendment A4 item 1). A nil Counter counts nothing.
+// they decode (Amendment A4 item 1), and output-values, which counts one
+// validated output's (Amendment A6 item 3). A nil Counter counts nothing.
 type Counter struct {
 	id    ID
 	bound int64
@@ -411,6 +416,15 @@ type Counter struct {
 func (s Set) Counter(id ID) *Counter {
 	s.check(id)
 	return &Counter{id: id, bound: s.value[id]}
+}
+
+// CounterTo returns a counter of id's units bounded by bound rather than
+// by id's value in s: a bound a document's form takes from a limit, as
+// the digest file holds at most entries plus 4 values (Amendment A6
+// item 2).
+func CounterTo(id ID, bound int64) *Counter {
+	Get(id)
+	return &Counter{id: id, bound: bound}
 }
 
 // Add counts n more units and reports whether the count is still within

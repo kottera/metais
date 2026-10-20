@@ -71,6 +71,10 @@ type blockParser struct {
 	open     []*block // open[0] is the document; the last is the tip
 	headings []rawHeading
 	refs     map[string]bool
+	// titleOnly keeps no heading after the first of level 1, which is
+	// all a title needs; the pass still reads every line, for the link
+	// reference definitions the title's text may use.
+	titleOnly bool
 
 	// lastText is the offset of the last byte of the line being read that
 	// is not a space or a tab, -1 for a blank line, so that whether the
@@ -101,8 +105,8 @@ type blockParser struct {
 // firstLine of the file. A line ends at an LF, a CRLF or a CR (§2.1); the
 // line number of the file counts LFs only (ADR-008 D5), so a CR ends a
 // CommonMark line without starting a new line of the file.
-func scanBlocks(src []byte, firstLine int) ([]rawHeading, map[string]bool) {
-	p := &blockParser{open: []*block{{kind: kindDocument}}, refs: map[string]bool{}, blankFrom: -1}
+func scanBlocks(src []byte, firstLine int, titleOnly bool) ([]rawHeading, map[string]bool) {
+	p := &blockParser{open: []*block{{kind: kindDocument}}, refs: map[string]bool{}, blankFrom: -1, titleOnly: titleOnly}
 	line := firstLine
 	for i := 0; i < len(src); {
 		j := i
@@ -230,7 +234,7 @@ starts:
 		case '#':
 			if level, content, ok := atxHeading(rest); ok {
 				closeForLeaf()
-				p.headings = append(p.headings, rawHeading{level: level, content: content, line: line})
+				p.heading(rawHeading{level: level, content: content, line: line})
 				return
 			}
 		case '`', '~':
@@ -409,6 +413,14 @@ func (p *blockParser) definitions(b *block) int {
 	return n
 }
 
+// heading keeps h, unless the pass keeps only a title and has it.
+func (p *blockParser) heading(h rawHeading) {
+	if p.titleOnly && (h.level != 1 || len(p.headings) > 0) {
+		return
+	}
+	p.headings = append(p.headings, h)
+}
+
 // setextHeading reads a setext heading underline after the paragraph para,
 // the tip, at level 1 for '=' and 2 for '-' (§4.3). It reports false,
 // having closed the paragraph, when the paragraph was only link reference
@@ -424,7 +436,7 @@ func (p *blockParser) setextHeading(para *block, ch byte) bool {
 	if ch == '-' {
 		level = 2
 	}
-	p.headings = append(p.headings, rawHeading{level: level, content: trimSpaceTab(text), line: para.lines[0].line})
+	p.heading(rawHeading{level: level, content: trimSpaceTab(text), line: para.lines[0].line})
 	p.open[len(p.open)-1].hasChild = true
 	return true
 }

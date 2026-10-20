@@ -197,12 +197,23 @@ func refusal(code finding.Code, file, ptr string, p finding.Params) finding.Find
 // form when it is not: syntax, when it is not one JSON object; shape, when
 // it does not hold exactly ADR-001 D6 item 1's members and values; and
 // not_canonical, when its bytes are not ADR-002 D9's form of its value.
+//
+// The file is held to the values its form can hold, counted as they are
+// decoded: the object, algorithm, package and entries, and a digest for
+// each of at most entries entries (ADR-009 Amendment A6 item 2). The
+// reading stops at the value past them, and the file is refused, reason
+// shape, having decoded no more.
 func parse(src []byte, lim limits.Set) (map[string]string, string, string) {
+	values := limits.CounterTo(limits.Entries, lim.Value(limits.Entries)+4)
 	doc, fs := jsonx.Parse(src, jsonx.Source{
-		Input: finding.Subject{Kind: finding.SubjectInput, Name: "digests"},
-		At:    finding.Location{Origin: finding.OriginPackage, File: File},
-		Size:  limits.EntrySize,
+		Input:  finding.Subject{Kind: finding.SubjectInput, Name: "digests"},
+		At:     finding.Location{Origin: finding.OriginPackage, File: File},
+		Size:   limits.EntrySize,
+		Values: values,
 	}, lim)
+	if !values.Add(0) {
+		return nil, "", reasonShape
+	}
 	if len(fs) > 0 {
 		return nil, "", reasonSyntax
 	}

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -473,5 +474,38 @@ func TestDecodeFindingsReported(t *testing.T) {
 	})
 	if c != nil || len(fs) != 1 || fs[0].Code() != want.Code() {
 		t.Errorf("got %v, %s", c, describe(fs))
+	}
+}
+
+// TestSchemaYAMLSize is ADR-009 Amendment A6 item 5, pinned false first: a
+// YAML schema file longer than schema-yaml-size is refused with
+// limit.package, observing its length, before it is read; one of exactly
+// schema-yaml-size compiles, and a JSON file is not bounded by it.
+func TestSchemaYAMLSize(t *testing.T) {
+	const doc = `{"type": "string"}`
+	n := strconv.Itoa(len(doc))
+	less := strconv.Itoa(len(doc) - 1)
+	for _, c := range []struct {
+		entry, lim string
+		refused    bool
+	}{
+		{"inputs/s.yaml", "schema-yaml-size=" + n, false},
+		{"inputs/s.yml", "schema-yaml-size=" + n, false},
+		{"inputs/s.yaml", "schema-yaml-size=" + less, true},
+		{"inputs/s.yml", "schema-yaml-size=" + less, true},
+		{"inputs/s.json", "schema-yaml-size=" + less, false},
+	} {
+		_, fs := compileFiles(t, lower(t, c.lim), map[string]string{c.entry: doc})
+		switch {
+		case !c.refused && len(fs) > 0:
+			t.Errorf("%s at %s: %s", c.entry, c.lim, describe(fs))
+		case c.refused && (len(fs) != 1 || fs[0].Code() != finding.Code("limit.package") || param(t, fs[0], "limit") != "schema-yaml-size"):
+			t.Errorf("%s at %s: %s, want limit.package naming schema-yaml-size", c.entry, c.lim, describe(fs))
+		case c.refused:
+			o, _ := fs[0].Param("observed")
+			if v, ok := o.Int(); !ok || v != int64(len(doc)) {
+				t.Errorf("%s at %s: observed %d, %v", c.entry, c.lim, v, ok)
+			}
+		}
 	}
 }
