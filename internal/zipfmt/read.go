@@ -261,9 +261,14 @@ func (o *opener) directory() error {
 		} else if err := r.skip(int64(e.nameLen)); err != nil {
 			return err
 		}
-		extra := make([]byte, e.extraLen)
-		if err := r.readFull(extra); err != nil {
-			return err
+		// A package has no extra field (ADR-001 D1 item 3), so only a
+		// header that is refused anyway has one to read.
+		var extra []byte
+		if e.extraLen > 0 {
+			extra = make([]byte, e.extraLen)
+			if err := r.readFull(extra); err != nil {
+				return err
+			}
 		}
 		if err := r.skip(int64(commentLen)); err != nil {
 			return err
