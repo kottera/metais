@@ -35,6 +35,11 @@ criterion,conformance,remarks
   inside it doubled (`""`); a line break starts a new paragraph of the
   remarks. Leave the field empty only when there is nothing to say.
 
+A row speaks for the whole product. Where its parts meet a criterion
+differently, such as its web pages, its documents and its software, give
+the level the product as a whole earns and say in the remarks how each
+part fares.
+
 ## Which criteria to list
 
 List each criterion of the table once, in the standard's order, which is
