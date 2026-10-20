@@ -1,6 +1,6 @@
 ---
 name: root-cause
-description: How to find out why something failed, with an instrument instead of repetition. Read this the moment a test fails, a behaviour is wrong, or a failure looks intermittent and you do not yet know WHY, before re-running anything. Names the two moves that beat sampling (make the failure deterministic, or make one occurrence sufficient), a catalogue of instruments keyed by the kind of failure (seam logging, forcing an interleaving, the timeout's goroutine dump, stretching a timing failure's interval at its seam rather than loading the host, CPU time instead of wall time, environment diffs, bisect last), metais's own instruments and the failure each is for (internal/fault's bits, internal/testenv, the guarantee detectors and their fault controls, the host-isolation canaries, CPU-time measurement and the work counters), why a failure under load is a defect with a mechanism and passing alone closes nothing, the TEMP-DEBUG rule for temporary instrumentation, and how to confirm a fix so the green means something.
+description: How to find out why something failed, with an instrument instead of repetition. Read this the moment a test fails, a behaviour is wrong, or a failure looks intermittent and you do not yet know WHY, before re-running anything. Names the two moves that beat sampling (make the failure deterministic, or make one occurrence sufficient), a catalogue of instruments keyed by the kind of failure (seam logging, forcing an interleaving, the timeout's goroutine dump, stretching a timing failure's interval at its seam rather than loading the host, CPU time instead of wall time, environment diffs, bisect last), metais's own instruments and the failure each is for (internal/fault's bits, internal/testenv, the guarantee detectors and their fault controls, the host-isolation canaries, CPU-time measurement and the work counters, the gate's share line that says whether a red package was starved), why a failure under load is a defect with a mechanism and passing alone closes nothing, the TEMP-DEBUG rule for temporary instrumentation, and how to confirm a fix so the green means something.
 ---
 
 # Root-cause: find out why
@@ -120,8 +120,57 @@ proves it: with the delay still in place, the test passes.
 Sometimes the "wait" is the gate itself. A package whose own run takes four
 minutes reaches the ten-minute `go test` timeout when several gates share
 the host. That mechanism is oversubscription, and the `verification-gate`
-skill's `-p` cap is its fix. Establish it by measurement: the package's time
-alone, and its time in the full run. Do not assume it.
+skill's `-p` cap is its fix. Establish it by measurement, and the gate
+measures it on every run: read the red's share line (below). Do not assume
+it.
+
+### The gate's share line: was the red starved?
+
+The gate runs every test binary through `gate-exec.sh`, which takes the
+binary's CPU from the kernel's accounting of the processes it reaped, so
+measuring runs nothing beside the test. A red package's `FAIL:` line in
+the gate's output carries what it got:
+
+```
+FAIL: github.com/kottera/metais/internal/conformance: got 1.30 of 4 cores (CPU 812.4s over 615.0s wall, beside 0.2 other test binaries); host load 25.31 on 16 cores; last green scoped-20261020T101500Z got 4.10 of 4 cores (CPU 2350.1s over 493.0s wall), CPU now 0.35x it
+```
+
+- **got … of p cores** is the package's CPU over its wall time, against
+  the gate's share `p`. The CPU is user plus system time of its test
+  binary and of every process it waited for: the tool, stub and spawner
+  processes its tests run, and the builds its tests start. Packages that
+  run together share `p`, so **beside** says how many other test binaries
+  ran beside it, on average over its wall time.
+- **host load … on … cores** is the host's one-minute load average when
+  the binary ended, against the host's cores. A load above the cores means
+  every process on the host was waiting for a turn.
+- **last green** is the same package's newest PASS in `.local/gate/`, from
+  any earlier run, with its own figures, and **CPU now …x it** compares the
+  two runs' CPU. A timed-out binary's CPU is what it had used when it was
+  killed, so it can only be at most its full run's CPU.
+- The `.record` keeps every tested package's figures as its fifth field,
+  and `--resume` carries them with a verdict it reuses. The test step's
+  `=== PASS test` or `=== FAIL test` line gives the cores the whole
+  `go test` got against `p`, its builds included.
+
+A package can get few cores and not be starved: one that mostly waits on a
+sleep, a lock or a child gets few cores on an idle host too. That is why
+the line compares with the package's own last green, not only with `p`.
+Read it by these cases:
+
+| The red's share line | What it is | What you do |
+|---|---|---|
+| **Starved:** its cores are well under its last green's, or with no green well under `p` with nothing beside it, while the host's load is above its cores. Its CPU matches its last green's (for a timeout, it is no more than the green's) | **No evidence about the change either way.** The host gave the gate too little. The red is not a pass and not a defect of the change: it is no verdict | Do not merge on it. Wait until `gate-exec.sh --load` is below the host's cores, then `gate.sh --resume`, which runs the red package again at the same share and timeout. Its new line decides: at its full share, its verdict stands, red or green. If the host stays loaded, report the red with its share lines to whoever owns your work, and do not merge |
+| **At its full share:** its cores are those of its last green, or the host's load is below its cores | **A defect to root-cause.** The share did not cause it | This skill, from the top: one of the four mechanisms above, or the change |
+| **More work:** its CPU is well above its last green's | **The package did more work**, whatever the share | Find by what, with the counters and a CPU-time measurement (below) |
+
+None of these raises a timeout, enlarges the share or lowers `-p` for one
+package: `METAIS_GATE_P` stays what it is. A starved red's re-run is the
+gate's own verdict under the same share and the same timeout, taken when
+the host can give that share. It counts only because the first red was
+measured as starved, with its CPU unchanged. "It passed alone" still closes
+nothing, and a red at its full share that passes on a re-run still has a
+mechanism to find.
 
 `internal/conformance/wallclock_test.go` is a worked example. The
 self-proof's rows ran out their 5 s wall clock under the full parallel

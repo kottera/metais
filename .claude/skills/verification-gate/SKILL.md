@@ -243,7 +243,9 @@ These rules make the background run work:
   dump that names the stuck test. A shell kill throws that dump away.
 - **The files are under `.local/gate/`** (git-ignored). `latest.log` is the
   newest run's log. `<run>.record` holds one verdict per step and per
-  package, each with the tree it was reached on.
+  package, each with the tree it was reached on, and for a package the
+  CPU, wall time and cores its run got. `<run>.cpu` holds one line per
+  test binary, as `gate-exec.sh` measured it.
 
 ## Resuming: re-run only what is still unverified
 
@@ -299,6 +301,15 @@ gate, not by the code.
   binaries at once, and as `-parallel`, the parallel tests at once in one
   binary. `-parallel` also bounds the tool processes `internal/conformance`
   runs. `METAIS_GATE_P` sets the share (Amendment A5 item 7).
+- **The gate measures the share it was given.** Every `go test` it runs
+  starts its test binaries through `gate-exec.sh` (`go test -exec`). It
+  records each binary's CPU, its own and that of every process it waited
+  for, beside its wall time and the host's load. It reads the kernel's
+  accounting, so measuring runs nothing beside the test. Each package's
+  verdict keeps the figures (`cpu= wall= cores= beside= p= load=`), and
+  `--resume` keeps them for a verdict it reuses. The log's
+  `measured <pkg>:` lines give them for every green package. The test
+  step's own line gives the cores the whole `go test` got against `p`.
 - **A test must not hold a parallel slot while it waits.** One that does
   turns a lower `-parallel` into a timeout the gate caused. Fix the test,
   not the cap.
@@ -321,7 +332,16 @@ acquittal.
 
 1. **Read the failure, and the lines around it.** A `-timeout` panic names
    the test that was running and dumps every goroutine. A spec-tripwire
-   failure names the file, the line and the statement number.
+   failure names the file, the line and the statement number. A red
+   package's `FAIL:` line is its share line: the cores it got against
+   `p`, its CPU-seconds, the host's load against its cores, and its last
+   green in `.local/gate/`. Read it by `root-cause`'s table ("The gate's
+   share line"). **Starved** means well under its share, with its CPU
+   matching its last green. That red is no evidence about your change
+   either way. Do not merge on it: when the host's load is below its
+   cores, `gate.sh --resume`, and the verdict at its full share stands.
+   **A red at its full share** is a defect to root-cause, whatever a
+   re-run says.
 2. **Does your change reach it?** `gate-select.sh` says which packages your
    change reaches, and through which path. A spec file, vector or generated
    file you changed reaches every test that reads it.
