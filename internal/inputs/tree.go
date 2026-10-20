@@ -238,30 +238,44 @@ func (p plainLocator) locate(*finding.Path, bool) finding.Location { return p.at
 
 // csvLocator locates a value in a CSV file's rows: a row at its first
 // field, a member at its field.
+//
+// Its positions are held flat, a row's fields in column order after the
+// row before's, since a table's positions are as many as its fields and a
+// map for each row would cost several times its positions (ADR-009
+// Amendment A4 item 3).
 type csvLocator struct {
-	at    finding.Location
-	rows  map[int]finding.Pos            // by the row's index
-	cells map[int]map[string]finding.Pos // by the row's index, then the column
+	at      *finding.Location
+	columns map[string]int // each column's ordinal, by its header name
+	rows    []int          // each row kept, by its index, ascending
+	cells   []cellPos      // len(columns) for each row of rows, in order
 }
 
-func (c csvLocator) locate(at *finding.Path, _ bool) finding.Location {
+// cellPos is a field's position: its line and column.
+type cellPos struct{ line, col uint32 }
+
+func (c cellPos) pos() finding.Pos { return finding.Pos{Line: int(c.line), Column: int(c.col)} }
+
+func (c *csvLocator) locate(at *finding.Path, _ bool) finding.Location {
 	rel := at.Tokens()
 	if len(rel) == 0 {
-		return c.at
+		return *c.at
 	}
 	row, ok := arrayIndex(rel[0])
 	if !ok {
-		return c.at
+		return *c.at
 	}
+	k, ok := slices.BinarySearch(c.rows, row)
+	if !ok {
+		return *c.at
+	}
+	fields := c.cells[k*len(c.columns) : (k+1)*len(c.columns)]
 	if len(rel) >= 2 {
-		if p, ok := c.cells[row][rel[1]]; ok {
-			return c.at.At(p)
+		if j, ok := c.columns[rel[1]]; ok {
+			return c.at.At(fields[j].pos())
 		}
 	}
-	if p, ok := c.rows[row]; ok {
-		return c.at.At(p)
-	}
-	return c.at
+	// A row is at its first field.
+	return c.at.At(fields[0].pos())
 }
 
 // markdownLocator locates a value in a Markdown file: the body at its

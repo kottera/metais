@@ -40,7 +40,7 @@ func (r *reader) node(n *yaml.Node, ptr *place, depth int) value.Value {
 	if r.counted {
 		return value.Null{}
 	}
-	ptr.value, ptr.hasValue = r.inFile(r.pos(n)), true
+	ptr.value, ptr.hasValue = pack(r.inFile(r.pos(n))), true
 	if !r.src.Values.Add(1) {
 		r.counted = true
 		r.findings = append(r.findings, r.limit(r.src.Values.ID(), r.atPtr(n, ptr), 0, false))
@@ -61,7 +61,7 @@ func (r *reader) node(n *yaml.Node, ptr *place, depth int) value.Value {
 	if n.Kind == yaml.SequenceNode {
 		elems := make([]value.Value, len(n.Content))
 		for i, c := range n.Content {
-			elems[i] = r.node(c, ptr.child(strconv.Itoa(i)), depth+1)
+			elems[i] = r.node(c, ptr.elem(i), depth+1)
 		}
 		a, err := value.NewArray(elems...)
 		if err != nil {
@@ -109,7 +109,7 @@ func (r *reader) mapping(n *yaml.Node, ptr *place, depth int) value.Value {
 			continue
 		}
 		first[name] = r.pos(k)
-		at.key, at.hasKey = r.inFile(first[name]), true
+		at.key, at.hasKey = pack(r.inFile(first[name])), true
 		members = append(members, value.Member{Name: name, Value: r.node(v, at, depth+1)})
 	}
 	o, err := value.NewObject(members...)

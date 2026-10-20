@@ -4,9 +4,11 @@
 package jsonx
 
 import (
+	"crypto/sha256"
 	"errors"
 	"math"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/gowebpki/jcs"
@@ -281,6 +283,38 @@ func TestEncodedLen(t *testing.T) {
 			if n := EncodedLen(v, indent); n != int64(len(b)) {
 				t.Errorf("EncodedLen(%s, %d) = %d, Encode writes %d bytes", Canonical(v), indent, n, len(b))
 			}
+		}
+	}
+}
+
+// TestCanonicalDigest holds CanonicalDigest to the digest of Canonical's
+// text, for values whose text passes the size at which the digest writes
+// a piece at a time, and for small ones.
+func TestCanonicalDigest(t *testing.T) {
+	long := strings.Repeat("a\"\\\u0001é", spillAt/3)
+	elems := make([]value.Value, 0, spillAt)
+	for i := range spillAt {
+		n, err := value.ParseNumber(strconv.Itoa(i) + ".50")
+		if err != nil {
+			t.Fatal(err)
+		}
+		elems = append(elems, n)
+	}
+	arr, err := value.NewArray(elems...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := value.NewString(long)
+	if err != nil {
+		t.Fatal(err)
+	}
+	obj, err := value.NewObject(value.Member{Name: "z", Value: s}, value.Member{Name: "a", Value: arr}, value.Member{Name: "é", Value: value.Null{}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, v := range []value.Value{value.Null{}, value.Bool(true), s, arr, obj} {
+		if got, want := CanonicalDigest(v), sha256.Sum256(Canonical(v)); got != want {
+			t.Errorf("CanonicalDigest of a %s is not the digest of its canonical text", v.Kind())
 		}
 	}
 }

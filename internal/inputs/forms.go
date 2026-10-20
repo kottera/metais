@@ -309,7 +309,10 @@ func (r *reader) csv(text []byte, loc finding.Location, prefix string, at []sche
 		}
 	}
 	rows := &node{isArr: true}
-	cl := csvLocator{at: loc, rows: map[int]finding.Pos{}, cells: map[int]map[string]finding.Pos{}}
+	cl := &csvLocator{at: &loc, columns: map[string]int{}}
+	for j, h := range table.Header {
+		cl.columns[h.Text] = j
+	}
 	types := map[[2]string]schema.TypeSet{}
 	// A row's static subschema depends on its index only while prefixItems
 	// covers it, which it does for a prefix of the rows; past that, every
@@ -323,7 +326,10 @@ func (r *reader) csv(text []byte, loc finding.Location, prefix string, at []sche
 			rowStatic = r.walker.pointer(rowAt)
 			stable = !strings.HasSuffix(rowStatic, "/prefixItems/"+strconv.Itoa(rec.Index))
 		}
-		cells := map[string]finding.Pos{}
+		cells := len(cl.cells)
+		for _, fd := range rec.Fields {
+			cl.cells = append(cl.cells, cellPos{uint32(fd.Line), uint32(fd.Col)})
+		}
 		ok := true
 		for j, fd := range rec.Fields {
 			col := table.Header[j].Text
@@ -334,7 +340,6 @@ func (r *reader) csv(text []byte, loc finding.Location, prefix string, at []sche
 				types[key] = ts
 			}
 			pos := finding.Pos{Line: fd.Line, Column: fd.Col}
-			cells[col] = pos
 			v, present, err := schema.CoerceField(fd.Text, fd.Quoted, ts)
 			if err != nil {
 				panic("inputs: " + err.Error())
@@ -351,10 +356,10 @@ func (r *reader) csv(text []byte, loc finding.Location, prefix string, at []sche
 			row.obj[col] = &node{scalar: v}
 		}
 		if !ok {
+			cl.cells = cl.cells[:cells]
 			continue
 		}
-		cl.rows[rec.Index] = finding.Pos{Line: rec.Fields[0].Line, Column: rec.Fields[0].Col}
-		cl.cells[rec.Index] = cells
+		cl.rows = append(cl.rows, rec.Index)
 		rows.arr = append(rows.arr, row)
 	}
 	fs = r.place(fs, prefix)
