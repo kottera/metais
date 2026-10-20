@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"syscall"
 )
@@ -112,32 +113,42 @@ func (o *FileOut) Replaces() bool { return o.info != nil }
 // Close releases the directory. It removes nothing.
 func (o *FileOut) Close() error { return o.w.Close() }
 
-// Held is the identity of some top-level entries of a source directory,
-// which Within compares a file's directory and the file itself with.
+// Held is the identity of some top-level entries of a source directory
+// and of every directory beneath them, which Within compares a file's
+// directory and the file itself with.
 type Held struct {
 	dirs, files []heldEntry
 }
 
 type heldEntry struct {
-	name string
+	top  string // the top-level entry it is or lies beneath
 	info fs.FileInfo
 }
 
-// Hold examines names, top-level entries of the directory at source, the
-// caller's own path, each with Lstat, and holds the identity of each that
-// is a directory or a regular file. A name that is absent is not held. An
-// error is the source directory's, never the output's.
-func Hold(source string, names []string) (*Held, error) {
+// Hold examines top, top-level entries of the directory at source, the
+// caller's own path, and dirs, directories beneath them relative to
+// source and "/"-separated, each with Lstat through a root on source, and
+// holds the identity of each that is a directory, and of each top-level
+// entry that is a regular file. A name that is absent is not held. For a
+// source directory that opened, dirs are its entries' directories: every
+// directory beneath a layout tree holds an entry, or the open refused it
+// (ADR-001 D5 item 6). An error is the source directory's, never an
+// output's.
+func Hold(source string, top, dirs []string) (*Held, error) {
 	root, err := openRoot(source)
 	if err != nil {
 		return nil, err
 	}
 	defer root.Close()
 	h := &Held{}
-	for _, n := range names {
+	for _, n := range append(slices.Clone(top), dirs...) {
 		on, ok := osName(n)
 		if !ok {
 			return nil, fail("stat", BadName)
+		}
+		first, _, _ := strings.Cut(n, "/")
+		if !slices.Contains(top, first) {
+			continue
 		}
 		info, err := root.Lstat(on)
 		switch {
@@ -145,52 +156,35 @@ func Hold(source string, names []string) (*Held, error) {
 		case err != nil:
 			return nil, mapErr("stat", err)
 		case info.IsDir():
-			h.dirs = append(h.dirs, heldEntry{n, info})
-		case info.Mode().IsRegular():
-			h.files = append(h.files, heldEntry{n, info})
+			h.dirs = append(h.dirs, heldEntry{first, info})
+		case info.Mode().IsRegular() && n == first:
+			h.files = append(h.files, heldEntry{first, info})
 		}
 	}
 	return h, nil
 }
 
-// Within reports which entry of h holds the file: a directory that is the
-// file's directory or one above it, or a regular file that is the file
-// itself. It returns "" when none does. Identity decides (os.SameFile),
-// never a path's text, so a link, a second name or a case variant of an
-// entry is seen for what it is: the file's directory is resolved once
-// through every link in it (filepath.EvalSymlinks), and each directory
-// above it is then its parent by name.
+// Within reports which top-level entry of h holds the file: one whose
+// directory, or a directory beneath it, is the file's directory, or a
+// regular file that is the file itself. It returns "" when none does.
+// Identity decides (os.SameFile), never a path's text, so a link, a
+// second name or a case variant of a directory is seen for what it is.
 func (o *FileOut) Within(h *Held) (string, error) {
 	for _, f := range h.files {
 		if o.info != nil && os.SameFile(f.info, o.info) {
-			return f.name, nil
+			return f.top, nil
 		}
 	}
-	if len(h.dirs) == 0 {
-		return "", nil
-	}
-	p, err := filepath.EvalSymlinks(o.dir)
+	here, err := o.w.root.Stat(".")
 	if err != nil {
 		return "", mapErr("stat", err)
 	}
-	info, err := os.Stat(p)
-	for {
-		if err != nil {
-			return "", mapErr("stat", err)
+	for _, d := range h.dirs {
+		if os.SameFile(here, d.info) {
+			return d.top, nil
 		}
-		for _, d := range h.dirs {
-			if os.SameFile(info, d.info) {
-				return d.name, nil
-			}
-		}
-		up := filepath.Join(p, "..")
-		parent, perr := os.Stat(up)
-		if perr == nil && os.SameFile(parent, info) {
-			// The root of the file system is its own parent.
-			return "", nil
-		}
-		p, info, err = up, parent, perr
 	}
+	return "", nil
 }
 
 // Write writes the file: write is called once with the temporary file,

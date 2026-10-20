@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kottera/metais/internal/digest"
 	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/limits"
@@ -107,18 +108,30 @@ func TestPlanPack(t *testing.T) {
 }
 
 // TestPackMapOrder is the control fault.PackMapOrder is for (ADR-010 D13
-// item 2): under it the entries are a Go map's order, which differs
-// between plans, so the determinism detector that holds pack's bytes
-// equal has a failure to catch.
+// item 2): under it the digest file's members are a Go map's order, which
+// differs between plans, so the determinism detector that holds pack's
+// bytes equal has a failure to catch; the entries stay in byte order.
 func TestPackMapOrder(t *testing.T) {
 	files := packFiles()
 	_, want := planned(t, files, nil, 0)
 	for range 20 {
-		if _, p := planned(t, files, nil, fault.PackMapOrder); !slices.Equal(p.Entries, want.Entries) {
+		_, p := planned(t, files, nil, fault.PackMapOrder)
+		if !slices.Equal(p.Entries, want.Entries) {
+			t.Fatalf("the entries moved: %q", p.Entries)
+		}
+		if !bytes.Equal(p.bytes[digest.File], want.bytes[digest.File]) {
 			return
 		}
 	}
-	t.Error("with PackMapOrder, twenty plans all wrote the entries in byte order")
+	t.Error("with PackMapOrder, twenty plans all wrote the canonical digest file")
+}
+
+// TestEntryDirs is every directory that holds an entry, each once.
+func TestEntryDirs(t *testing.T) {
+	got := EntryDirs([]string{"a/b/c.txt", "a/b/d.txt", "a/e.txt", "metais.yaml", "t/x/y/z"})
+	if want := []string{"a", "a/b", "t", "t/x", "t/x/y"}; !slices.Equal(got, want) {
+		t.Errorf("EntryDirs = %q, want %q", got, want)
+	}
 }
 
 // changing is a tree whose entry name reads differently each time it is

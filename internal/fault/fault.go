@@ -84,10 +84,10 @@ const StdoutNotice Set = 1 << 7
 // forbid. Its seam is internal/cli.
 const UpdateBeyondExpected Set = 1 << 8
 
-// PackMapOrder makes pack write a package's entries in the order of a Go
-// map built from them, rather than in byte order of their names (ADR-010
-// D13 item 2): the map-order control of pack's byte identity, as MapOrder
-// is a render's. The determinism detector must catch a pack whose bytes
+// PackMapOrder makes pack write the digest file's entries in the order of
+// a Go map built from them, rather than in canonical order (ADR-010 D13
+// item 2): the map-order control of pack's byte identity, as MapOrder is
+// a render's. The determinism detector must catch a pack whose bytes
 // differ between two packs of one source by one build (ADR-007 D7 item
 // 4). Its seam is internal/author.
 const PackMapOrder Set = 1 << 9

@@ -5,8 +5,11 @@ package author
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"io"
+	"path"
 	"slices"
+	"strconv"
 
 	"github.com/kottera/metais/internal/digest"
 	"github.com/kottera/metais/internal/fault"
@@ -23,6 +26,23 @@ import (
 // layout trees (ADR-007 D7 item 3). pack refuses an output inside any of
 // them (item 5).
 var LayoutEntries = []string{"assets", "examples", "inputs", "metais.yaml", "references", "templates"}
+
+// EntryDirs is every directory that holds one of names, entry paths,
+// each once, in byte order: for a source directory that opened, every
+// directory beneath its layout trees, since an empty one is refused
+// (ADR-001 D5 item 6).
+func EntryDirs(names []string) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, n := range names {
+		for d := path.Dir(n); d != "." && !seen[d]; d = path.Dir(d) {
+			seen[d] = true
+			out = append(out, d)
+		}
+	}
+	slices.Sort(out)
+	return out
+}
 
 // Packed is a package as pack writes it from a source directory (ADR-007
 // D7): its entries, the source's and .compiled/'s, and its package digest.
@@ -64,23 +84,43 @@ func PlanPack(tree pkgtree.Tree, compiled []loader.File, faults fault.Set) (*Pac
 	}
 	p.bytes[digest.File] = digest.Encode(list)
 	p.Digest = digest.Package(list)
+	if faults.Has(fault.PackMapOrder) {
+		// The control's seam (ADR-010 D13 item 2).
+		p.bytes[digest.File] = mapOrdered(list, p.Digest)
+	}
 	for _, e := range list {
 		p.Entries = append(p.Entries, e.Name)
 	}
 	p.Entries = append(p.Entries, digest.File)
 	slices.Sort(p.Entries)
-	if faults.Has(fault.PackMapOrder) {
-		// The control's seam (ADR-010 D13 item 2).
-		set := map[string]bool{}
-		for _, e := range p.Entries {
-			set[e] = true
-		}
-		p.Entries = p.Entries[:0]
-		for e := range set {
-			p.Entries = append(p.Entries, e)
-		}
-	}
 	return p, nil
+}
+
+// mapOrdered is the digest file of list under fault.PackMapOrder: its
+// entries' members in the order of a Go map built from them, not the
+// canonical order of digest.Encode (ADR-002 D9). The zip stays one a
+// reader's steps 1 to 5 accept, and its bytes change from one pack to the
+// next.
+func mapOrdered(list []digest.Entry, pkg digest.Sum) []byte {
+	m := map[string]digest.Sum{}
+	for _, e := range list {
+		m[e.Name] = e.Sum
+	}
+	b := []byte(`{"algorithm":"` + digest.Algorithm + `","entries":{`)
+	first := true
+	for n, sum := range m {
+		if !first {
+			b = append(b, ',')
+		}
+		first = false
+		b = strconv.AppendQuote(b, n)
+		b = append(b, ':', '"')
+		b = hex.AppendEncode(b, sum[:])
+		b = append(b, '"')
+	}
+	b = append(b, `},"package":"`...)
+	b = hex.AppendEncode(b, pkg[:])
+	return append(b, `"}`...)
 }
 
 // Write writes the package to w through ADR-001 D4's writer, every entry

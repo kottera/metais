@@ -130,11 +130,11 @@ func TestFileOutWriteFails(t *testing.T) {
 
 // TestFileOutWithin is ADR-007 D7 item 5's refusal of an output inside
 // the source directory's layout trees, or at its manifest: found by
-// identity, at any depth, through a relative path that climbs, and not
+// identity, for each directory held, through a path that climbs, and not
 // for a file beside them. A source that cannot be read is Hold's error.
 func TestFileOutWithin(t *testing.T) {
 	root := dir(t)
-	if _, err := Hold(filepath.Join(root, "missing"), []string{"templates"}); ReasonOf(err) != NotFound {
+	if _, err := Hold(filepath.Join(root, "missing"), []string{"templates"}, nil); ReasonOf(err) != NotFound {
 		t.Errorf("Hold of a missing source: %v", err)
 	}
 	src := filepath.Join(root, "src")
@@ -154,7 +154,7 @@ func TestFileOutWithin(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		h, err := Hold(src, names)
+		h, err := Hold(src, names, []string{"assets", "templates/deep", "templates"})
 		if err != nil {
 			t.Fatal(err)
 		}

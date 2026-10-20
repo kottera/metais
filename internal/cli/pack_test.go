@@ -293,7 +293,9 @@ func TestPackRefusalsTriggered(t *testing.T) {
 	}
 	check, test := lookup(table, "check").Refusals, lookup(table, "test").Refusals
 	for _, rf := range lookup(table, "pack").Refusals {
-		in := func(rs []Refusal) bool { return slices.ContainsFunc(rs, func(r Refusal) bool { return r.Code == rf.Code }) }
+		in := func(rs []Refusal) bool {
+			return slices.ContainsFunc(rs, func(r Refusal) bool { return r.Code == rf.Code })
+		}
 		if !own[rf.Code] && !in(check) && !in(test) {
 			t.Errorf("pack declares %s, which neither check, test nor its own tests trigger", rf.Code)
 		}

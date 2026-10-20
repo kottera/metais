@@ -46,7 +46,7 @@ func TestFileOutWithinLink(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer o.Close()
-	h, err := Hold(src, []string{"metais.yaml", "references"})
+	h, err := Hold(src, []string{"metais.yaml", "references"}, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

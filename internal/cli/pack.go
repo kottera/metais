@@ -268,7 +268,7 @@ func runPack(s *session, p args.Parsed) outcome {
 			return s.packFailed(fs, err)
 		}
 		defer fo.Close()
-		held, err := hostfs.Hold(operand, author.LayoutEntries)
+		held, err := hostfs.Hold(operand, author.LayoutEntries, author.EntryDirs(pkg.Tree.List()))
 		if err != nil {
 			return s.packFailed(fs, &author.ReadError{Reason: hostfs.ReasonOf(err)})
 		}
