@@ -12,6 +12,12 @@
       "reason": "ADR-007 D4 item 1: the split-run scan does not depend on the manifest, so it runs before a container is wired up"
     },
     {
+      "rule": "never-depends",
+      "package": "github.com/kottera/metais/cmd/metais",
+      "imports": "github.com/kottera/metais/internal/tools/...",
+      "reason": "ADR-009 A2 item 4: the binary never reaches the release builder, which is why the builder may run commands, read the environment and write files"
+    },
+    {
       "rule": "single-entry-point",
       "package": "github.com/kottera/metais/internal/browse",
       "imports": "github.com/kottera/metais/internal/hostfs",
@@ -91,8 +97,8 @@
     {
       "rule": "only-referrers",
       "symbols": ["os.Args", "os.Stdin", "os.Stdout", "os.Stderr", "os.Exit"],
-      "packages": ["github.com/kottera/metais/cmd/metais"],
-      "reason": "ADR-010 D2 item 2, ADR-009 D14 item 4: everything else receives the arguments and streams, so the whole tool runs in-process under test"
+      "packages": ["github.com/kottera/metais/cmd/metais", "github.com/kottera/metais/internal/tools/release"],
+      "reason": "ADR-010 D2 item 2, ADR-009 D14 item 4: everything else receives the arguments and streams, so the whole tool runs in-process under test; ADR-009 A2 item 5: the release builder is a main package run with go run"
     }
   ]
 }

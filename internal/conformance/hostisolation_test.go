@@ -157,16 +157,26 @@ func buildCanary(t *testing.T, channel string) string {
 	return build(t, "canary-"+channel, "-tags", "metais_canary_"+channel)
 }
 
-// releaseBuild builds ./cmd/metais as a release is built, with -trimpath
-// and release tags and without the race detector, whatever this test
-// binary is built with, and returns its path.
+// releaseBuild builds ./cmd/metais as a release is built, by ADR-010 D12
+// item 1's line with release tags and without the race detector, whatever
+// this test binary is built with, and returns its path. So the binary the
+// harness clears is the one a release ships, its version aside.
 func releaseBuild(t *testing.T) string {
 	t.Helper()
 	return build(t, "release")
 }
 
-// build builds ./cmd/metais with -trimpath and flags into a directory
-// named name, and returns the binary's path.
+// The release build line, as internal/tools/release/buildline states it.
+// The runner links nothing of the implementation (ADR-011 D11 item 2), so
+// it states the line itself, and the release builder's
+// TestHarnessBuildsByTheReleaseLine holds the two to each other.
+var (
+	releaseFlags    = []string{"-trimpath", "-buildvcs=true", "-ldflags", "-s -w -X github.com/kottera/metais/internal/version.release=0.0.0-sc7"}
+	releaseSettings = []string{"CGO_ENABLED=0", "GOAMD64=v1", "GOARM64=v8.0"}
+)
+
+// build builds ./cmd/metais by the release build line, with flags added,
+// into a directory named name, and returns the binary's path.
 func build(t *testing.T, name string, flags ...string) string {
 	t.Helper()
 	dir := filepath.Join(testenv.Dir(t), name)
@@ -174,9 +184,10 @@ func build(t *testing.T, name string, flags ...string) string {
 		t.Fatal(err)
 	}
 	bin := filepath.Join(dir, toolName)
-	args := append(append([]string{"build", "-trimpath"}, flags...), "-o", bin, "./cmd/metais")
+	args := slices.Concat([]string{"build"}, releaseFlags, flags, []string{"-o", bin, "./cmd/metais"})
 	cmd := exec.Command("go", args...)
 	cmd.Dir = moduleRoot
+	cmd.Env = append(os.Environ(), releaseSettings...)
 	if b, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("building %s: %v\n%s", name, err, b)
 	}
