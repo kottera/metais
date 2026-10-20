@@ -163,8 +163,8 @@ var table = [count]Limit{
 
 	{InputSize, "input-size", 32 * mib, Bytes, ClassData},
 	{InputsTotal, "inputs-total", 128 * mib, Bytes, ClassData},
-	{InputValues, "input-values", 2_000_000, Count, ClassData},
-	{YAMLSize, "yaml-size", 8 * mib, Bytes, ClassData},
+	{InputValues, "input-values", 1_000_000, Count, ClassData},
+	{YAMLSize, "yaml-size", 1 * mib, Bytes, ClassData},
 	{CSVRows, "csv-rows", 1_000_000, Count, ClassData},
 	{CSVColumns, "csv-columns", 1_024, Count, ClassData},
 	{CSVCell, "csv-cell", 1 * mib, Bytes, ClassData},

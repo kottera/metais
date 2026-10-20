@@ -192,8 +192,8 @@ one. A limit of §14.2 that bounds a parsed document, `value-depth` and
 |---|---|---|
 | `input-size` | 32 MiB | one input file, one collection item, one `--inputs-json`, `--set` or `--set-json` value |
 | `inputs-total` | 128 MiB | all the input bytes one operation reads |
-| `input-values` | 2,000,000 | the values all the inputs of one operation decode to |
-| `yaml-size` | 8 MiB | one YAML input file or collection item |
+| `input-values` | 1,000,000 | the values all the inputs of one operation decode to |
+| `yaml-size` | 1 MiB | one YAML input file or collection item |
 | `csv-rows` | 1,000,000 | the data records of one CSV input |
 | `csv-columns` | 1,024 | the fields of one record |
 | `csv-cell` | 1 MiB | one field |

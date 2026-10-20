@@ -77,6 +77,10 @@ also proves that one less refuses it.
 | `assign-bytes` | `render` | a string of `value-size` bytes, copied by `assign` | refusal |
 | `schema-work` | `validate` | an array input, each item evaluating `items` and an `allOf` of nine, exactly the limit's units | accepted at the limit |
 | `schema-work-anyof` | `validate` | two-branch `anyOf`s nested by `$ref` over a type every level fails, exactly the limit's units, every one failing, the choices' alternatives nesting to the `findings` limit | accepted at the limit, with its findings |
+| `yaml-size` | `validate` | one YAML document of exactly `yaml-size` bytes, a flow sequence of zeros | accepted at the limit |
+| `input-values-json` | `validate` | Amendment A4 item 3's joint case: `[{},{},…]` for the values the rest leaves, the rest of `inputs-total` as plain text files of `input-size` at most, and a last YAML document at `yaml-size`, exactly `input-values` values in all | accepted at the limit |
+| `input-values-csv` | `validate` | the same, with a CSV of one present field a row | accepted at the limit |
+| `input-values-yaml` | `validate` | the same, with a collection of YAML documents at `yaml-size` | accepted at the limit |
 | `regex-work` | `grep` | a pattern of about 4,000 instructions over lines of 999 bytes it never matches | refusal |
 | `outputs` | `render` | a `for_each` of exactly `outputs` outputs, each written | accepted at the limit |
 | `container-depth` | `render` | containers nested `container-depth` deep | accepted at the limit |
@@ -94,6 +98,12 @@ also proves that one less refuses it.
 cost of the count alone. Its worst cases are therefore validations of
 exactly the limit's units, which are accepted and do all that work: one
 that passes, and one that fails at every unit.
+
+The loading cases, `yaml-size` and the three `input-values-` cases, decode
+more values than `schema-work`'s 450,000 units can validate, so their
+validation is refused by `schema-work` once the inputs are loaded. They are
+judged on the loading: no data limit refuses the inputs, and one value or
+byte more is refused by the case's limit.
 
 ## The record
 

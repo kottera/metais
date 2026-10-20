@@ -40,8 +40,8 @@ var adr009 = []struct{ name, def, class string }{
 
 	{"input-size", "32 MiB", "data"},
 	{"inputs-total", "128 MiB", "data"},
-	{"input-values", "2,000,000", "data"},
-	{"yaml-size", "8 MiB", "data"},
+	{"input-values", "1,000,000", "data"},
+	{"yaml-size", "1 MiB", "data"},
 	{"csv-rows", "1,000,000", "data"},
 	{"csv-columns", "1,024", "data"},
 	{"csv-cell", "1 MiB", "data"},
