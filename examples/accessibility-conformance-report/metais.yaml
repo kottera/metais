@@ -12,9 +12,11 @@ guide: |-
   - **acr.docx**, the report as a Word document: the product, its vendor,
     how it was evaluated, the standards it answers, what each conformance
     level means, and one table per standard with a row per criterion.
+    The WCAG 2.2 table carries W3C's notice for the criterion names and
+    levels it copies, as references/sources.md says.
   - **acr.json**, the same report as JSON for programs, in the shape
-    references/acr.schema.json gives. Every render checks the file against
-    that schema before it writes anything.
+    references/acr.schema.json gives, W3C's notice included. Every render
+    checks the file against that schema before it writes anything.
 
   Gather the inputs in this order, as files of one data directory:
 

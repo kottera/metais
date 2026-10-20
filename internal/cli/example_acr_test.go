@@ -4,7 +4,10 @@
 package cli
 
 import (
+	"archive/zip"
 	"encoding/json"
+	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -291,11 +294,152 @@ func TestACREditions(t *testing.T) {
 			}
 		}
 	}
-	notice := "Copyright © 2020-2024 World Wide Web\nConsortium. W3C® liability, trademark and document use rules apply."
-	for _, p := range []string{"references/wcag-2.2.md"} {
-		s := read(p)
-		if !strings.Contains(s, notice) || !strings.Contains(s, "https://www.w3.org/TR/2024/REC-WCAG22-20241212/") || !strings.Contains(s, "W3C\nRecommendation 12 December 2024") {
-			t.Errorf("%s copies WCAG 2.2's names without W3C's notice, link and status", p)
+	// Every copy of WCAG's names or levels carries W3C's notice, link and
+	// status: the reference, the two partials, and both outputs a render
+	// of the international example writes, which print them.
+	data := testenv.Dir(t)
+	if err := os.CopyFS(data, os.DirFS(filepath.Join(acrPackage, "examples/international/inputs"))); err != nil {
+		t.Fatal(err)
+	}
+	out := filepath.Join(testenv.Dir(t), "out")
+	if r := runTool(t, "render", acrPackage, "--data", data, "--out", out); r.status != 0 {
+		t.Fatalf("render exits %d: %s", r.status, r.stderr)
+	}
+	docx, err := zip.OpenReader(filepath.Join(out, "acr.docx"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer docx.Close()
+	document, err := fs.ReadFile(docx, "word/document.xml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	acrJSON, err := os.ReadFile(filepath.Join(out, "acr.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	copies := map[string]string{
+		"references/wcag-2.2.md":               read("references/wcag-2.2.md"),
+		"templates/criteria/wcag.liquid":       read("templates/criteria/wcag.liquid"),
+		"templates/criteria/wcag-level.liquid": read("templates/criteria/wcag-level.liquid"),
+		"the rendered acr.docx":                string(document),
+		"the rendered acr.json":                string(acrJSON),
+	}
+	space := regexp.MustCompile(`\s+`)
+	for _, p := range slices.Sorted(maps.Keys(copies)) {
+		s := space.ReplaceAllString(copies[p], " ")
+		for _, want := range []string{
+			"Copyright © 2020-2024 World Wide Web Consortium. W3C® liability, trademark and document use rules apply.",
+			"https://www.w3.org/TR/2024/REC-WCAG22-20241212/",
+			"W3C Recommendation 12 December 2024",
+		} {
+			if !strings.Contains(s, want) {
+				t.Errorf("%s copies WCAG 2.2's names or levels without %q", p, want)
+			}
 		}
+	}
+	if !strings.Contains(string(document), "Non-text Content") || !strings.Contains(string(acrJSON), "Non-text Content") {
+		t.Errorf("the rendered outputs print no WCAG name, so this test sees no copy of one")
+	}
+}
+
+// acrLevels are the five conformance levels PRD-001 §4.1 names, in its
+// order.
+var acrLevels = []string{"Supports", "Partially Supports", "Does Not Support", "Not Applicable", "Not Evaluated"}
+
+// TestACRFiveLevels holds the §4.1 example to the five conformance levels
+// and no other: the level every table's schema takes, the level acr.json's
+// schema allows, and the levels the report and its input's meaning define.
+func TestACRFiveLevels(t *testing.T) {
+	read := func(p string) string {
+		t.Helper()
+		b, err := os.ReadFile(filepath.Join(acrPackage, p))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(b)
+	}
+	var conformance struct{ Enum []string }
+	if err := json.Unmarshal([]byte(read("inputs/conformance.schema.json")), &conformance); err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Equal(conformance.Enum, acrLevels) {
+		t.Errorf("inputs/conformance.schema.json allows %q, want %q", conformance.Enum, acrLevels)
+	}
+	for _, input := range []string{"wcag", "section508", "en301549"} {
+		var schema struct {
+			Items struct {
+				Properties struct {
+					Conformance struct {
+						Ref  string `json:"$ref"`
+						Enum []string
+					}
+				}
+			}
+		}
+		if err := json.Unmarshal([]byte(read("inputs/"+input+".schema.json")), &schema); err != nil {
+			t.Fatal(err)
+		}
+		if c := schema.Items.Properties.Conformance; c.Ref != "conformance.schema.json" || c.Enum != nil {
+			t.Errorf("inputs/%s.schema.json's conformance is %+v, not inputs/conformance.schema.json's levels", input, c)
+		}
+	}
+	var acr struct {
+		Defs struct {
+			Criterion struct {
+				Properties struct {
+					Conformance struct{ Enum []string }
+				}
+			}
+		} `json:"$defs"`
+	}
+	if err := json.Unmarshal([]byte(read("references/acr.schema.json")), &acr); err != nil {
+		t.Fatal(err)
+	}
+	if got := acr.Defs.Criterion.Properties.Conformance.Enum; !slices.Equal(got, acrLevels) {
+		t.Errorf("references/acr.schema.json allows %q, want %q", got, acrLevels)
+	}
+	for p, re := range map[string]*regexp.Regexp{
+		"inputs/conformance.md":              regexp.MustCompile(`(?m)^- \*\*([^*]+)\*\*:`),
+		"templates/docx/document.xml.liquid": regexp.MustCompile(`<w:b/></w:rPr><w:t xml:space="preserve">([^:<]+): </w:t></w:r><w:r><w:t xml:space="preserve">the `),
+	} {
+		var defined []string
+		for _, m := range re.FindAllStringSubmatch(read(p), -1) {
+			defined = append(defined, m[1])
+		}
+		if !slices.Equal(defined, acrLevels) {
+			t.Errorf("%s defines %q, want %q", p, defined, acrLevels)
+		}
+	}
+}
+
+// TestACRJSONValidated holds the §4.1 example to its guide's promise that
+// every render checks acr.json against references/acr.schema.json before it
+// writes anything: a copy of the package whose acr.json template writes a
+// format the schema does not allow renders nothing, and reports the
+// output's refusal.
+func TestACRJSONValidated(t *testing.T) {
+	testenv.Home(t)
+	pkg := copyTree(t, acrPackage)
+	tmpl := filepath.Join(pkg, "templates/acr.json.liquid")
+	b, err := os.ReadFile(tmpl)
+	if err != nil {
+		t.Fatal(err)
+	}
+	broken := strings.Replace(string(b), `"format": "metais-example-acr/1"`, `"format": "metais-example-acr/0"`, 1)
+	if broken == string(b) {
+		t.Fatal("templates/acr.json.liquid writes no format to break")
+	}
+	if err := os.WriteFile(tmpl, []byte(broken), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	data := filepath.Join(pkg, "examples/wcag_only/inputs")
+	out := filepath.Join(testenv.Dir(t), "out")
+	r := runTool(t, "render", pkg, "--data", data, "--out", out, "--json")
+	if r.status == 0 || !slices.Contains(r.codes(), "output.const") {
+		t.Errorf("render of an acr.json the schema refuses exits %d and reports %q, want output.const", r.status, r.codes())
+	}
+	if ents, err := os.ReadDir(out); err == nil && len(ents) > 0 {
+		t.Errorf("render of an acr.json the schema refuses wrote %d entries into the output directory", len(ents))
 	}
 }

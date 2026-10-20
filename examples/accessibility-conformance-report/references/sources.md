@@ -33,8 +33,11 @@ reused here.
   5 October 2023, updated 12 December 2024,
   <https://www.w3.org/TR/2024/REC-WCAG22-20241212/>.
 - **What this package takes:** each success criterion's number, its name
-  and its conformance level, copied as they are, in
-  references/wcag-2.2.md, the label partials and the input schema. Every
+  and its conformance level, copied as they are. The names and levels are
+  in references/wcag-2.2.md and the two WCAG partials,
+  templates/criteria/wcag.liquid and templates/criteria/wcag-level.liquid,
+  and every render prints them in acr.docx and acr.json. The input schema,
+  inputs/wcag.schema.json, holds the numbers alone, as identifiers. Every
   summary of what a criterion asks is the project's own words, not W3C's
   text.
 - **Terms:** the W3C Document License (2023),
@@ -45,10 +48,20 @@ reused here.
   document, its pre-existing copyright notice, and its status. It grants
   no right to modify W3C's text, except in software and its
   documentation.
-- **Notice required, and given in references/wcag-2.2.md:** "Copyright ©
-  2020-2024 World Wide Web Consortium. W3C® liability, trademark and
-  document use rules apply." with the link above and the status "W3C
-  Recommendation 12 December 2024".
+- **Notice required:** "Copyright © 2020-2024 World Wide Web Consortium.
+  W3C® liability, trademark and document use rules apply." with the link
+  above and the status "W3C Recommendation 12 December 2024".
+- **Where each copy carries it:** every copy of WCAG's names or levels
+  carries the notice, the link and the status, beside the text it copies:
+  - references/wcag-2.2.md, in its opening paragraphs;
+  - templates/criteria/wcag.liquid and templates/criteria/wcag-level.liquid,
+    in the comment that opens each;
+  - acr.docx, in a source note opening the WCAG 2.2 section, before its
+    table, written by templates/docx/document.xml.liquid;
+  - acr.json, in the WCAG table's `source` member, written by
+    templates/acr-table.json.liquid, which references/acr.schema.json
+    requires on that table and holds to these exact values, so a render
+    whose acr.json lacks it is refused.
 - **Verdict:** excerpts only, verbatim, with that notice. Numbers, names
   and levels may be copied as they are; summaries stay in the project's
   own words. W3C's name is not used to imply that W3C endorses this
