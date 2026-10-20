@@ -20,8 +20,8 @@ import (
 	"github.com/kottera/metais/internal/testenv"
 )
 
-// examplePackagesDir is where the example packages live: one source directory
-// per package, at the repository's root (plan §13).
+// examplePackagesDir is where the example packages live: one source
+// directory per package, at the repository's root (plan §13).
 const examplePackagesDir = "../../examples"
 
 // sampleModes are the --optional modes every example previews in: every
@@ -223,9 +223,9 @@ func writtenAsListed(dir string, files []renderFile) []string {
 // TestExampleHarness holds the harness to what it is there to see: the
 // scaffold init writes passes it with nothing to report, and a package
 // that warns in check, one whose example fails, and one whose preview
-// cannot be made each fail on the step that shows it. A missing
-// examples/ directory, an empty one and a file there each hold no
-// package.
+// cannot be made each fail on the step that shows it, and a written tree
+// that is not the one render lists is reported. A missing examples/
+// directory, an empty one and a file there each hold no package.
 func TestExampleHarness(t *testing.T) {
 	testenv.Home(t)
 	scaffold := func(t *testing.T) string {

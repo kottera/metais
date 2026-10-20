@@ -77,7 +77,10 @@ and every process's exit status, must equal what is observed in the other:
   Standard output, standard error, every written file, every zip entry
   inflated to a depth of three, every member of a tar stream and a driver's
   response are scanned for the token, case-insensitively; a hit fails the
-  step and names where the token was planted.
+  step and names where the token was planted. A file a `pack` step writes
+  is scanned as a package: its raw bytes and every entry inflated, and one
+  that does not begin as a zip fails the step, since the scan cannot see
+  inside it.
 - **Environment B** has only `HOME`, `TMPDIR` and `PATH` as plain sandbox
   directories, `TZ=UTC` and `LC_ALL=C`, and starts at least two seconds after
   A, in other processes.
