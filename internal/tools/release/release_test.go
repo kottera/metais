@@ -146,10 +146,13 @@ func commit(t *testing.T, dir, msg string) {
 	gitIn(t, dir, "commit", "--quiet", "-m", msg)
 }
 
-// runIn runs the builder over the work tree dir for version.
-func runIn(dir, version string, tamper func(buildline.Target, int, string) error) (string, error) {
+// runIn runs the builder over the work tree dir for version, in hostlessEnv's
+// environment, so its go commands take nothing from the host but its
+// toolchain and caches.
+func runIn(t *testing.T, dir, version string, tamper func(buildline.Target, int, string) error) (string, error) {
+	t.Helper()
 	var out bytes.Buffer
-	c := config{dir: dir, version: version, stdout: &out, environ: os.Environ(), tamper: tamper}
+	c := config{dir: dir, version: version, stdout: &out, environ: hostlessEnv(t), tamper: tamper}
 	err := c.run()
 	return out.String(), err
 }
@@ -158,7 +161,7 @@ func runIn(dir, version string, tamper func(buildline.Target, int, string) error
 // written to dist/.
 func refused(t *testing.T, dir, version string, want error, tamper func(buildline.Target, int, string) error) error {
 	t.Helper()
-	_, err := runIn(dir, version, tamper)
+	_, err := runIn(t, dir, version, tamper)
 	if !errors.Is(err, want) {
 		t.Fatalf("the builder returned %v, want %v", err, want)
 	}
@@ -183,7 +186,7 @@ func TestReleaseBuildsTwiceAndWritesDist(t *testing.T) {
 		return nil
 	}
 	head := gitIn(t, dir, "rev-parse", "HEAD")
-	report, err := runIn(dir, "1.0.0", record)
+	report, err := runIn(t, dir, "1.0.0", record)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -238,7 +241,7 @@ func TestReleaseBuildsTwiceAndWritesDist(t *testing.T) {
 	if err := os.Rename(dist, filepath.Join(testenv.Dir(t), "first")); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := runIn(dir, "1.0.0", nil); err != nil {
+	if _, err := runIn(t, dir, "1.0.0", nil); err != nil {
 		t.Fatal(err)
 	}
 	if again := readFile(t, filepath.Join(dist, "SHA256SUMS")); again != sums {
@@ -308,7 +311,7 @@ func readFile(t *testing.T, p string) string {
 
 func goVersionM(t *testing.T, bin string) string {
 	t.Helper()
-	out, err := exec.Command("go", "version", "-m", bin).Output()
+	out, err := goCommand(t, "version", "-m", bin).Output()
 	if err != nil {
 		t.Fatalf("go version -m %s: %v", bin, err)
 	}
@@ -371,7 +374,7 @@ func TestReleaseRefusesAVersion(t *testing.T) {
 func TestReleaseRefusesAnExistingDist(t *testing.T) {
 	dir := fakeRepo(t)
 	write(t, dir, "dist/old.tar.gz", "")
-	if _, err := runIn(dir, "1.0.0", nil); !errors.Is(err, errDistExists) {
+	if _, err := runIn(t, dir, "1.0.0", nil); !errors.Is(err, errDistExists) {
 		t.Fatalf("the builder returned %v, want %v", err, errDistExists)
 	}
 	if got := readFile(t, filepath.Join(dir, "dist", "old.tar.gz")); got != "" {
@@ -463,9 +466,9 @@ func TestReleaseRefusesABuildWithoutTheReleaseSettings(t *testing.T) {
 		if copy == 0 {
 			return nil
 		}
-		cmd := exec.Command("go", "build", "-o", bin, buildline.Package)
+		cmd := goCommand(t, "build", "-o", bin, buildline.Package)
 		cmd.Dir = filepath.Join(filepath.Dir(filepath.Dir(filepath.Dir(bin))), "src")
-		cmd.Env = append(os.Environ(), "GOOS="+tg.OS, "GOARCH="+tg.Arch, "CGO_ENABLED=1", "GOFLAGS=")
+		cmd.Env = testenv.GitEnv(append(cmd.Env, "GOOS="+tg.OS, "GOARCH="+tg.Arch, "CGO_ENABLED=1", "GOFLAGS="))
 		if out, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("go build: %v\n%s", err, out)
 		}
