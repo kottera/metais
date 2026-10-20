@@ -343,6 +343,7 @@ func TestRefDriverForwardsCrash(t *testing.T) {
 		t.Errorf("the reference driver over a fake that panics gave no crash; the runner reported %q", ps)
 	}
 }
+
 // TestFactAt holds check 2's matching to ADR-009 D16 item 1: each kind of
 // host fact is found in a stream, whatever its case, and a word or a path
 // that merely begins or ends with one is not.
