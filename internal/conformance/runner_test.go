@@ -41,6 +41,7 @@ const (
 	checkHarness   = "harness"
 	checkContainer = "container"
 	checkCrash     = "crash"
+	checkBackstop  = "memory-backstop"
 	checkHost      = "host-fact"
 )
 
@@ -163,11 +164,12 @@ type envRun struct {
 }
 
 // fatal reports whether the run stopped early: on a harness error, or on
-// a process the wall clock killed or that crashed, whose step has nothing
+// a process the wall clock killed, that crashed or that the memory
+// backstop stopped, whose step has nothing
 // left to compare.
 func (e *envRun) fatal() bool {
 	return slices.ContainsFunc(e.problems, func(p problem) bool {
-		return p.harness || p.check == checkWall || p.check == checkCrash
+		return p.harness || p.check == checkWall || p.check == checkCrash || p.check == checkBackstop
 	})
 }
 

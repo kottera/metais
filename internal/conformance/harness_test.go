@@ -595,6 +595,9 @@ func (a *cliAdapter) reachInvoke(sb *sandbox, c reachCommand, lim limits) (*invo
 	if h := crashed(p.stderr); h != "" {
 		return inv, append(ps, crashProblem(h))
 	}
+	if backstopped(p) {
+		return inv, append(ps, backstopProblem())
+	}
 	doc := p.stdout
 	if c.stream {
 		if len(p.stdout) > 0 {
