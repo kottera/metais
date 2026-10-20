@@ -1355,10 +1355,11 @@ they write into an existing directory too.
 
 ## Implementation log
 
-Each work item writes its entry as a file of its own, in
-`docs/adr/logs/ADR-005/`, named by the item's address (AGENTS.md, "Writing
-documentation"). The entries below are the ones written in this file
-before that rule, and stay where they were written.
+This log is this section together with the entry files in
+`docs/adr/logs/ADR-005/`. Each work item writes its entry as a file of its
+own there, named as AGENTS.md's "Writing documentation" says. The entries
+below are the ones written in this file before that rule, and stay where
+they were written.
 
 - **2026-10-19, PLAN-2026-10-metais-v1 W2-5.** D14 and D15's library half
   landed in `internal/hostfs`, ahead of the renderer that composes it:

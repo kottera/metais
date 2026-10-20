@@ -1298,10 +1298,11 @@ asserts of refusals. D14, D15 items 1 and 5, and D16 item 2 are unchanged.
 
 ## Implementation log
 
-Each work item writes its entry as a file of its own, in
-`docs/adr/logs/ADR-008/`, named by the item's address (AGENTS.md, "Writing
-documentation"). The entries below are the ones written in this file
-before that rule, and stay where they were written.
+This log is this section together with the entry files in
+`docs/adr/logs/ADR-008/`. Each work item writes its entry as a file of its
+own there, named as AGENTS.md's "Writing documentation" says. The entries
+below are the ones written in this file before that rule, and stay where
+they were written.
 
 - **PLAN-2026-10-metais-v1 W2-1 — the command-line core.** `internal/cli`
   and `internal/cli/args` implement D1 for `version`, `limits` and `help`,

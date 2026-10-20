@@ -1112,10 +1112,11 @@ unambiguous; `--inputs-json` remains the whole-array route.
 
 ## Implementation log
 
-Each work item writes its entry as a file of its own, in
-`docs/adr/logs/ADR-003/`, named by the item's address (AGENTS.md, "Writing
-documentation"). The entries below are the ones written in this file
-before that rule, and stay where they were written.
+This log is this section together with the entry files in
+`docs/adr/logs/ADR-003/`. Each work item writes its entry as a file of its
+own there, named as AGENTS.md's "Writing documentation" says. The entries
+below are the ones written in this file before that rule, and stay where
+they were written.
 
 - **2026-10-19, PLAN-2026-10-metais-v1 W2-12.** D7 items 1 to 4 landed as
   `schema.Bundle` in `internal/schema`, building the combined schema as an
