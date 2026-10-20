@@ -97,7 +97,9 @@ type file struct {
 // Amendment A1), and every reference that leaves the
 // package, escapes InputsDir, names a file by its path where it has an $id, or
 // resolves to nothing; and two resources with one URI. Every finding of
-// every file is reported at once. When there is any, the compiler is nil.
+// every file is reported at once. Once every reference resolves, it refuses
+// a reference that begins a chain past ref-depth, or one that never ends.
+// When there is any finding, the compiler is nil.
 func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode, output ...outputScope) (*Compiler, []finding.Finding) {
 	var c *Compiler
 	var files []*file
