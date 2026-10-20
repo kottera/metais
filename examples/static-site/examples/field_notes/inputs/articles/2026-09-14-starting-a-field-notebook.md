@@ -9,7 +9,6 @@ you saw something. It does not need batteries, it does not mind rain, and
 nobody has ever lost an afternoon's notes to a software update.
 
 ## The one rule
-
 Write the date and the place first, every time, before anything else. An
 observation without a when and a where is a story, not a record.
 

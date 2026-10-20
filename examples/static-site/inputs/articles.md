@@ -59,10 +59,11 @@ The body is the article's text. It is written as plain Markdown blocks,
 each separated from the next by a blank line, and this package writes each
 block as one HTML element:
 
-- a block that opens with `# ` or `## ` is a section heading, and one that
-  opens with `### ` a subsection heading, its text the rest of the block
-  (the article's title is the page's one top-level heading, so `#` and
-  `##` both write the level beneath it);
+- a block that opens with `# ` or `## ` has a section heading as its first
+  line, and one that opens with `### ` a subsection heading; any lines after
+  the heading's are a paragraph beneath it (the article's title is the
+  page's one top-level heading, so `#` and `##` both write the level beneath
+  it);
 - a block whose lines each open with `- ` is a bulleted list, one item per
   line;
 - a block that opens with a line of three backticks is code, shown as it is
