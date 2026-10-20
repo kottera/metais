@@ -1298,9 +1298,9 @@ asserts of refusals. D14, D15 items 1 and 5, and D16 item 2 are unchanged.
 
 ### A2 — `metais skill` writes metais's agent skill into a project, for the harness that will read it
 
-**Status:** Proposed 2026-10-20, for Ed Funnekotter's decision. Nothing is
-built until it is accepted. Each item marked *(decision)* is one the
-proposal leans on; the lean is the text.
+**Status:** Accepted 2026-10-20 by Ed Funnekotter, with rulings on items 3
+and 4, given in answer to the design question of the work order that
+drafted it. The text states the rulings.
 **Amends:** D1 item 1 (a command in the group "The tool"), D4 (which
 commands take `--limit`), D9 (nothing: `skill` is not an authoring
 command), D10 item 5 (a format, `metais.skill/1`), D13's roles (a command
@@ -1324,7 +1324,7 @@ mention it.
    agent before it improvises. The tool writes its own skill, so the text
    always describes the tool that wrote it.
 
-2. **The command** *(decision 1)*:
+2. **The command**:
 
    `metais skill [--harness <name>]... [--dir <dir>] [--overwrite] [--dry-run] [--print] [--json]`
 
@@ -1346,12 +1346,12 @@ mention it.
    - **Exit codes:** 0 when every target was written or already current;
      1 (class `content`) when a target holds an edited copy and
      `--overwrite` was not given (item 5); 3 for a usage error, including
-     no harness chosen (item 3); 5 (class `destination`) when a link,
+     no harness chosen (item 3) and an unexpanded `~` (item 4); 5 (class `destination`) when a link,
      special file or failed write stands in the way. Each target is
      decided on its own: one refused target does not stop another's
      write, and the exit code is the worst of them (D13's order).
 
-3. **Choosing the harness** *(decision 2)*. Five harnesses are named, and
+3. **Choosing the harness**. Five harnesses are named, and
    they read two places (item 6 cites each vendor's documentation):
 
    | `--harness` | Directory written, under `<dir>` |
@@ -1361,30 +1361,43 @@ mention it.
 
    - **`--harness` is repeatable.** Names that share a directory write it
      once, and the result lists every name the directory serves.
+   - **Both directories are written only when the command line asks for
+     both**, by `--harness` given once for each. Cursor and OpenCode also
+     read `.claude/skills/`, so a project with both copies shows them the
+     skill twice under one name; that is the caller's choice to make, never
+     the tool's.
    - **Without `--harness`, the tool detects**, from which of `.claude/`
-     and `.agents/` exist as directories directly in `<dir>`: each one
-     that exists is a target, so both may be. Detection is reported, never
-     silent: human output says "chosen because `.claude/` exists", and the
-     JSON result's `chosen` is `flag` or `detected`, with each target's
+     and `.agents/` exist as directories directly in `<dir>`. When exactly
+     one exists, it is the target. Detection is reported, never silent:
+     human output says "chosen because `.claude/` exists", and the JSON
+     result's `chosen` is `flag` or `detected`, with the target's
      `because`.
-   - **When neither exists and no `--harness` is given, it refuses**
-     (`usage.harness_required`, exit 3) and writes nothing. The refusal
-     names the five values and the `next` lists
-     `metais skill --harness claude` and `metais skill --harness codex`.
-     It never picks a harness the project shows no sign of.
-   - Cursor and OpenCode also read `.claude/skills/`. Detection that finds
-     both directories writes both, and those two harnesses then list the
-     skill twice under one name. That is harmless (each vendor resolves a
-     clash by its own precedence, and both copies are the same text), and
-     writing only one would leave the other harnesses without it.
+   - **When neither exists, or both do, and no `--harness` is given, it
+     refuses** (`usage.harness_required`, exit 3) and writes nothing. The
+     message says the command needs direction and why (neither directory,
+     or both), and names the five values. The `next` lists the
+     single-harness form for each value (`metais skill --harness claude`,
+     `metais skill --harness codex`, …) and the two-flag form that writes
+     both directories, `metais skill --harness claude --harness codex`.
+     It never picks a harness the project shows no sign of, and never
+     picks between two it does.
 
-4. **Scope** *(decision 3)*. **The golden path is the project: `<dir>` is
+4. **Scope**. **The golden path is the project: `<dir>` is
    `.`, the current directory.** `--dir <dir>` names another directory, and
-   the user's own scope is `--dir ~`, which the shell expands: every
+   the user's own scope is `--dir ~`, written with a space, which the shell
+   expands: every
    harness's user directory is `~/.claude/skills` or `~/.agents/skills`
    (Gemini and OpenCode read `~/.agents/skills` beside their own). The
    tool never reads `$HOME` or asks the operating system for the home
    directory (ADR-009 D12, D14 item 1; A5 item 3).
+   - **`--dir=~` is not expanded.** Bash and zsh expand a `~` only at the
+     start of a word, so `--dir=~` and `--dir=~/x` reach the tool with a
+     literal `~`. Help, examples and `next` therefore write `--dir ~` alone.
+     A `--dir` whose value is `~`, or whose first path element is `~`, is
+     refused (`usage.unexpanded_tilde`, exit 3) and nothing is written:
+     its hint says the shell did not expand the `~`, which happens when it
+     follows `=`, and to write `--dir ~` with a space or the directory's
+     path. A directory literally named `~` is written `--dir ./~`.
    - **The tool does not look for the repository's top level.** Claude
      Code, Codex and OpenCode read project skills from the start
      directory and every parent up to the repository root; Gemini CLI's
@@ -1401,7 +1414,7 @@ mention it.
      repository. With `--dir ~` that warning is expected and correct, and
      says so.
 
-5. **Updates and hand edits** *(decision 5)*. The skill's text is embedded
+5. **Updates and hand edits**. The skill's text is embedded
    in the binary and versioned with it (item 7). Every written `SKILL.md`
    ends with one line the tool owns:
 
@@ -1436,7 +1449,7 @@ mention it.
      differs from the stamp it was installed with.
 
 6. **The harnesses' discovery paths**, checked on 2026-10-20 against each
-   vendor's documentation *(decision 4)*:
+   vendor's documentation:
    - **Claude Code** reads `.claude/skills/<name>/SKILL.md` in the start
      directory and each parent up to the repository root, nested
      `.claude/skills/` below it on first use, and `~/.claude/skills/`. It
@@ -1460,9 +1473,10 @@ mention it.
    - **OpenCode** reads `.opencode/skills/`, `.claude/skills/` and
      `.agents/skills/` from the working directory up to the worktree root,
      and `~/.config/opencode/skills/`, `~/.claude/skills/` and
-     `~/.agents/skills/`. Its documentation from before 2026 lists only the
-     first two, so an older OpenCode needs `--harness claude`.
-     <https://opencode.ai/docs/skills/>
+     `~/.agents/skills/`. Its documentation added the `.agents` paths on
+     2026-02-04 (anomalyco/opencode#12067), so an OpenCode older than that
+     needs `--harness claude`. Its v2 documentation lists the same project
+     and global directories. <https://opencode.ai/docs/skills/>
 
    Every one of the four `.agents/skills` harnesses reads
    `.agents/skills/<name>/SKILL.md` in the project, so none needs a
@@ -1470,11 +1484,29 @@ mention it.
    `name` (lowercase letters, digits and single hyphens, at most 64
    characters, equal to its directory's name) and `description`; OpenCode
    refuses any other field but `license`, `compatibility` and `metadata`,
-   so the skill's frontmatter holds `name` and `description` alone. The
-   paths are re-checked when the command is built, and a vendor's change
-   is a further amendment.
+   so the skill's frontmatter holds `name` and `description` alone.
 
-7. **The skill's text** *(decision 7)*.
+   **Re-checked when the command was built** (2026-10-20). The vendors'
+   web pages cannot be fetched from the build host, so each path was
+   re-checked against the vendor's own source where it publishes one:
+   - Gemini CLI against `docs/cli/skills.md` in google-gemini/gemini-cli;
+   - OpenCode against `packages/web/src/content/docs/skills.mdx` and the
+     v2 `services/www/src/docs/content/skills.mdx` in anomalyco/opencode;
+   - Codex against its loader, `codex-rs/ext/skills/src/host_roots.rs` in
+     openai/codex, which reads `.agents/skills` in each directory from the
+     project root to the working directory and in the home directory
+     (the repository's `docs/skills.md` points to the web page);
+   - Claude Code by the live check of the built command, recorded in this
+     amendment's implementation log. The `.agents/skills` text in its
+     binary belongs to its importer, which copies other harnesses' skills
+     into `.claude/skills`; it is not a discovery path.
+
+   Cursor publishes no source for its documentation, so its paths stand on
+   its web page as found by search, and are not re-checked here. Every
+   path re-checked matched; nothing in item 3 changes. A vendor's later
+   change is a further amendment.
+
+7. **The skill's text**.
    - **Its source is `internal/skill/SKILL.md`, embedded with `go:embed`**
      by the package that writes it. It is the tool's documentation, not
      the format's, so it is not under `spec/`; and keeping the source
@@ -1525,21 +1557,23 @@ mention it.
    harness written, nothing harness-specific — the skill is picked up by
    the harness on its next session, which the human output says. After
    `edited`: `metais skill --overwrite` and `metais skill --print`, to
-   compare. After `usage.harness_required`: one line per directory.
+   compare. After `usage.harness_required`: item 3's list. After
+   `usage.unexpanded_tilde`: `metais skill --dir ~`.
 
 10. **Help and its goldens.** `skill` is declared like every command (D15),
     so `metais skill --help`, `metais help skill`, the overview's group
     "The tool", `help --json`, the help goldens and D16 item 1's coverage
     test carry it. Its refusals are `usage.harness_required`,
-    `skill.edited` and the destination codes `hostfs` reports
-    (`output.link` and the write failures); `skill.not_repository_root` is
-    a warning. The three new codes are registered in
+    `usage.unexpanded_tilde`, `skill.edited` and the destination codes
+    `hostfs` reports (`output.link` and the write failures);
+    `skill.not_repository_root` is a warning. The four new codes are registered in
     `spec/findings/registry.json` like every code the tool reports, with
     no statements, as the `usage.*` codes are: chapter 12's generated
     catalog lists them with no statement, and no other text of the
     specification and no vector changes. `skill.edited` is class
     `content`; `skill.not_repository_root` is a warning of class
-    `content`; `usage.harness_required` is class `usage`.
+    `content`; `usage.harness_required` and `usage.unexpanded_tilde` are
+    class `usage`.
 
 11. **What this does not decide.** Installing for a harness by its own
     command (`claude plugin`, `gemini skills install`); a skill per

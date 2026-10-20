@@ -1585,8 +1585,7 @@ byte per byte, and end tabular inputs at a few thousand rows.
 
 ### A5 — `metais skill` writes two fixed paths under the directory its caller names, and no package content reaches them
 
-**Status:** Proposed 2026-10-20, for Ed Funnekotter's decision, with
-ADR-008 A2. Nothing is built until it is accepted.
+**Status:** Accepted 2026-10-20 by Ed Funnekotter, with ADR-008 A2.
 **Amends:** D7 (one more read of the host), D8 (one more writer), D12
 (nothing: no row changes), D16 item 3 (no symbol is allowed anywhere new)
 and `internal/guarantees/layers.json` (two rules added). D14 item 1's
@@ -1598,7 +1597,7 @@ and `internal/guarantees/layers.json` (two rules added). D14 item 1's
    destination is not a render's, an extract's, `init`'s, `sample`'s,
    `unpack`'s or `pack`'s. This amendment fixes exactly what it may touch.
 
-2. **What it may read and write** *(decision 6)*. Everything goes through
+2. **What it may read and write**. Everything goes through
    `internal/hostfs` on an `os.Root` opened on `<dir>`, as D8 item 1
    requires of every writer; `<dir>` is the caller's own name, so it may be
    a symbolic link (D7 item 4) and must resolve to a directory.
