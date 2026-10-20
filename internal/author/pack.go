@@ -131,12 +131,12 @@ func mapOrdered(list []digest.Entry, pkg digest.Sum) []byte {
 }
 
 // Write writes the package to w through ADR-001 D4's writer: README.md
-// stored (ADR-001 A1 item 1), every other entry method auto (D4 item 7). A source entry is read again for each pass the
-// writer makes over it, and must hold the bytes PlanPack hashed: one that
-// changed since fails the write with a *ReadError of reason
-// hostfs.Changed, so the digests a package carries are always its
-// entries' own. A failure to read one is a *ReadError too; a failure to
-// write to w is returned as it is.
+// stored (ADR-001 A1 item 1), every other entry method auto (D4 item 7). A
+// source entry is read again for each pass the writer makes over it, and
+// must hold the bytes PlanPack hashed: one that changed since fails the
+// write with a *ReadError of reason hostfs.Changed, so the digests a
+// package carries are always its entries' own. A failure to read one is a
+// *ReadError too; a failure to write to w is returned as it is.
 func (p *Packed) Write(w io.Writer) error {
 	parts := make([]zipfmt.Part, len(p.Entries))
 	for i, n := range p.Entries {

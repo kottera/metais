@@ -176,10 +176,10 @@ var _ pkgtree.Tree = (*Source)(nil)
 // followed or opened. Nothing outside the roots is opened or listed, so a
 // repository's .git never reaches a package: a top-level name beginning
 // with ".", the top-level name README.md, and a top-level regular file
-// whose name ends ".metais" are ignored silently, and any other top-level name is not part of the
-// package and is returned by Unknown, for check's warning (ADR-001 D5
-// item 5). A top-level .compiled is refused, and so is a directory with
-// no regular file metais.yaml.
+// whose name ends ".metais" are ignored silently, and any other top-level
+// name is not part of the package and is returned by Unknown, for check's
+// warning (ADR-001 D5 item 5). A top-level .compiled is refused, and so is
+// a directory with no regular file metais.yaml.
 //
 // Every problem is reported at once, in one *SourceError, and no Source is
 // returned beside it. An error that is not a *SourceError is an *Error

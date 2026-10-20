@@ -340,8 +340,8 @@ func (o *opening) bundle(m *manifest.Manifest, values map[string]value.Value) (v
 
 // packLimits is ADR-007 D2 step 3 for a source directory: the package
 // pack would write, its source entries and the README.md, compiled files
-// and digest file pack adds, within entries, entry-size and package-uncompressed
-// (ADR-009 D3). The digest file is not computed here; it holds one line
+// and digest file pack adds, within entries, entry-size and
+// package-uncompressed (ADR-009 D3). The digest file is not computed here; it holds one line
 // per entry, and its size is computed from them.
 func (o *opening) packLimits(compiled []File) []finding.Finding {
 	var total int64
