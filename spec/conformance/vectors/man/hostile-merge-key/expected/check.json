@@ -1,0 +1,35 @@
+[
+  {
+    "code": "manifest.yaml.merge_key",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {}
+  },
+  {
+    "code": "report.step_skipped",
+    "severity": "info",
+    "subject": {
+      "kind": "report"
+    },
+    "params": {
+      "steps": [
+        "limits of the compiled files",
+        "manifest paths",
+        "guide links",
+        "combined schema",
+        "manifest expressions",
+        "cross-reference",
+        "compiled form"
+      ]
+    }
+  }
+]

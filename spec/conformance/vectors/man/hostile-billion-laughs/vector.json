@@ -8,21 +8,46 @@
   ],
   "since": "1.0",
   "class": "processor",
-  "tags": [],
+  "tags": [
+    "security"
+  ],
   "requires": [],
-  "notes": "",
+  "notes": "Refused with content-class findings, so check adds the report.step_skipped MTS-AUT-002 requires, and the case cannot carry an open step (R-W6-9b; docs/adr/logs/ADR-011/W6-9.md).",
   "cases": [
     {
-      "name": "open",
+      "name": "validate",
       "steps": [
         {
-          "op": "open",
+          "op": "validate",
           "args": {
             "package": "package"
           },
           "expect": {
             "ok": false,
             "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/check.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
           }
         }
       ]
