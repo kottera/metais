@@ -42,7 +42,10 @@ one-minute load average when the binary ended.
 - the package's **cores**, its CPU over its wall time;
 - **beside**, how many other test binaries of the run ran beside it, on
   average over its wall time, from the start and end times. A package
-  beside three others under `-p 4` shares four cores.
+  beside three others under `-p 4` shares four cores. Either figure can
+  exceed `p`, because `-p` bounds how many binaries run at once, not their
+  threads or the processes their tests start. The final scoped run's test
+  step got 5.05 of 4.
 
 **What it reports.** Each package's verdict in `<run>.record` gains a fifth
 field:

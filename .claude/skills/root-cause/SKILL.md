@@ -140,7 +140,9 @@ FAIL: github.com/kottera/metais/internal/conformance: got 1.30 of 4 cores (CPU 8
   binary and of every process it waited for: the tool, stub and spawner
   processes its tests run, and the builds its tests start. Packages that
   run together share `p`, so **beside** says how many other test binaries
-  ran beside it, on average over its wall time.
+  ran beside it, on average over its wall time. A package can get more
+  than `p`: `-p` bounds how many binaries run at once, not their threads
+  or the processes their tests start.
 - **host load … on … cores** is the host's one-minute load average when
   the binary ended, against the host's cores. A load above the cores means
   every process on the host was waiting for a turn.
