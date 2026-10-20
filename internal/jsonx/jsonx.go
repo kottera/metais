@@ -43,6 +43,13 @@ type Source struct {
 	// its schema (ADR-005 D11 item 3), whose length output-size bounds
 	// rather than input-size.
 	Output bool
+	// Size is the limit on the length of a text that is the package's own
+	// content: ManifestSize for metais.yaml under the JSON profile,
+	// SchemaSize for a schema file, EntrySize for the digest file. A data
+	// limit never bounds the package (ADR-009 D3). Its zero value,
+	// PackageSize, bounds a package file and never one document, and
+	// leaves the text an input's, bounded by input-size, or an output's.
+	Size limits.ID
 }
 
 // Doc is one parsed JSON text: its value and where each part of it is.

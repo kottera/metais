@@ -284,3 +284,27 @@ func TestHostileLimitFlag(t *testing.T) {
 		}
 	}
 }
+
+// TestDataLimitsDoNotBoundThePackage is a caller lowering the data limits
+// (ADR-009 D3, D4) to below the size of the package's own documents: a
+// packed package's digest file, a JSON schema file and a manifest under
+// the JSON profile are bounded by entry-size, schema-size and
+// manifest-size, never by input-size, so the package opens.
+func TestDataLimitsDoNotBoundThePackage(t *testing.T) {
+	testenv.Home(t)
+	src := writeTree(t, map[string]string{
+		"metais.yaml": `{"metais": "1.0", "name": "org.example.json", "version": "1.0.0", "title": "JSON",
+ "description": "A package whose manifest and schema are JSON.", "guide": "Supply the input.",
+ "inputs": [{"name": "doc", "title": "Doc", "schema": "inputs/doc.schema.json"}],
+ "outputs": [{"id": "report", "template": "report.md.liquid"}]}`,
+		"inputs/doc.schema.json":     `{"type": "object", "properties": {"name": {"type": "string"}}}`,
+		"templates/report.md.liquid": "Report\n",
+	})
+	packed := filepath.Join("..", "..", "spec", "conformance", "vectors", "aut", "unpack", "package.metais")
+	for _, pkg := range []string{src, packed} {
+		r := runTool(t, "inspect", "--json", pkg, "--limit", "input-size=8")
+		if r.status != 0 || len(r.doc.Findings) != 0 {
+			t.Errorf("%s under input-size=8: exit %d, findings %q", filepath.Base(pkg), r.status, findingParams(r))
+		}
+	}
+}
