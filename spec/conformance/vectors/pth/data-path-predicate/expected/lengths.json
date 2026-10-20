@@ -1,0 +1,63 @@
+[
+  {
+    "code": "limit.exceeded.output",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "limit": "path-depth",
+      "bound": 32,
+      "lowered": false,
+      "observed": 33
+    }
+  },
+  {
+    "code": "output.path.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "each"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 11,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "path": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+      "item": 1,
+      "reason": "segment_length"
+    }
+  },
+  {
+    "code": "limit.exceeded.output",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "long"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 11,
+      "pointer": "/outputs/1/path"
+    },
+    "params": {
+      "limit": "path-length",
+      "bound": 512,
+      "lowered": false
+    }
+  }
+]

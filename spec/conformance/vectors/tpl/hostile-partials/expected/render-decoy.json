@@ -1,0 +1,20 @@
+[
+  {
+    "code": "template.partial_not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/t.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/t.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "partial": "decoy.liquid",
+      "column": 1
+    }
+  }
+]

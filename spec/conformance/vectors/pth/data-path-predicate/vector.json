@@ -1,0 +1,109 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pth/data-path-predicate",
+  "title": "Paths a template renders from input data are held to the portable-path predicate code point by code point, name by name, at its length boundaries at the defaults and among themselves, and the render is refused before anything is written",
+  "statements": [
+    "MTS-PTH-008",
+    "MTS-OUT-009",
+    "MTS-PTH-002",
+    "MTS-PTH-004",
+    "MTS-PTH-005",
+    "MTS-PTH-006",
+    "MTS-PTH-009",
+    "MTS-PTH-010"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "portable-paths"
+  ],
+  "requires": [],
+  "notes": "ADR-005's path cases. Each data file holds both sides of its boundaries, and an accepted name gives no finding: in characters, one code point of each general category L, M, N, P and S and U+0020; in reserved-names, every Windows device name bare, with one and two extensions and with spaces before its extension, every .git spelling, and near misses of both; in lengths, segments of 255 and 256 bytes, paths of 512 and 513 bytes and of 32 and 33 segments, at the default limits, the 513-byte path in a declaration of its own because a path rendered past path-length ends its declaration's render; in collisions, NFC beside NFD, full case folding (U+FB00 beside ff) and a file beside a directory of its name.",
+  "cases": [
+    {
+      "name": "characters",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "characters"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/characters.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "reserved-names",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "reserved-names"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/reserved-names.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "lengths",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "lengths-package",
+            "out": "out",
+            "data": "lengths"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/lengths.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "collisions",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "collisions"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/collisions.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

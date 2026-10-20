@@ -253,6 +253,16 @@ regard to ASCII case), a `.git` segment in any spelling Git treats as `.git`,
 a segment ending in `.` or U+0020, or a segment longer than 255 bytes, and a
 processor MUST refuse a path that has one with `output.path.not_portable`.
 
+<a id="mts-pth-010"></a>**MTS-PTH-010** A segment is a Windows device name
+when the part before its first `.`, with every trailing U+0020 removed, is one
+of the names [MTS-PTH-005](#mts-pth-005) lists, or `com` or `lpt` followed by
+`¹`, `²` or `³`, compared without regard to ASCII case; a processor MUST
+refuse `COM¹.txt` and `Con .md` as it refuses `nul.tar.gz`.
+
+> **Note.** Windows treats the superscript digits as the digits they look
+> like when it resolves a device name, and drops the spaces before a name's
+> extension, so either spelling opens a device rather than a file.
+
 <a id="mts-pth-006"></a>**MTS-PTH-006** In the set of every output path of a
 tree and every directory prefix of each, no two distinct members MUST be
 canonical caseless matches under full case folding (Unicode 15.0.0,

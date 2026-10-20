@@ -138,6 +138,16 @@ refusing it with `input.not_regular_file` from what the directory says it is.
 The data directory itself is the caller's own name, and a processor follows it
 when it is a link.
 
+> **Note.** A hard link is not detected. A file hard-linked to one outside
+> the data directory cannot be told from an ordinary file without refusing
+> every file that has more than one link, which breaks common tooling. A
+> hard link cannot cross machines in a downloaded archive's data, and making
+> one needs access to its target, so what remains is a supplier who already
+> shares the caller's machine and can read the target. On the writing side
+> nothing remains: a render replaces an existing file by renaming over its
+> directory entry, so another link to it keeps the old bytes
+> ([chapter 11](11-rendering.md)).
+
 <a id="mts-sec-007"></a>**MTS-SEC-007** A processor MUST take every supplied
 text, a file's content, an `--inputs-json` argument and a path set's value,
 as data: `$VAR`, `${VAR}`, `%VAR%`, `~` and `@path` in it are those characters,

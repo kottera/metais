@@ -1,0 +1,94 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/hostile-overwrite",
+  "title": "A render whose path from data climbs out of the output directory, into an existing output directory holding a symbolic link and a FIFO at two of its output paths, is refused for all three with or without the request to replace files, and nothing is written, followed or opened",
+  "statements": [
+    "MTS-SEC-012",
+    "MTS-RND-015",
+    "MTS-RND-016",
+    "MTS-PTH-008"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [
+    "symlinks",
+    "fifos"
+  ],
+  "notes": "ADR-009 D17 item 8. out/link.txt points at target.txt, outside the output directory, and out/fifo.txt is a FIFO the render must not open: opening it to write would block. The link's target, the FIFO and the escape path's target are all unchanged.",
+  "cases": [
+    {
+      "name": "with-overwrite",
+      "setup": {
+        "copy": "setup",
+        "symlinks": [
+          {
+            "path": "out/link.txt",
+            "target": "../target.txt"
+          }
+        ],
+        "fifos": [
+          "out/fifo.txt"
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "overwrite": true,
+            "set": [
+              "/p=../escape.txt"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/with-overwrite.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "without-overwrite",
+      "setup": {
+        "copy": "setup",
+        "symlinks": [
+          {
+            "path": "out/link.txt",
+            "target": "../target.txt"
+          }
+        ],
+        "fifos": [
+          "out/fifo.txt"
+        ]
+      },
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "set": [
+              "/p=../escape.txt"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/without-overwrite.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

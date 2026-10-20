@@ -1,0 +1,139 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/hostile-text",
+  "title": "A template that is not UTF-8, holds U+0000, or reads env, ENV.HOME, site or page is refused at its render step, and nothing of the host is read or written",
+  "statements": [
+    "MTS-TPL-006",
+    "MTS-TPL-033",
+    "MTS-TPL-027"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "ADR-009 D17 item 7, one defect per package. env, ENV, site and page are the names other Liquid hosts bind to the process environment and to a site generator's objects; none is a global of the dialect.",
+  "cases": [
+    {
+      "name": "not-utf8",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "not-utf8",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/not-utf8.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "null-byte",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "null-byte",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/null-byte.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "env",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "env",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/env.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "env-home",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "env-home",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/env-home.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "site",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "site",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/site.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "page",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "page",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/page.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

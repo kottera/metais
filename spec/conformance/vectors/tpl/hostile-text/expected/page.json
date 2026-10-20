@@ -1,0 +1,21 @@
+[
+  {
+    "code": "template.undefined_variable",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/t.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/t.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "name": "page",
+      "column": 1,
+      "output_path": "t.txt"
+    }
+  }
+]

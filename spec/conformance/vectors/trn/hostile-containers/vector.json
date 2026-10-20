@@ -1,0 +1,62 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/hostile-containers",
+  "title": "A container entry path that climbs out of its container, written in the manifest or rendered from data, is refused at the render step, and nothing is written",
+  "statements": [
+    "MTS-TRN-002",
+    "MTS-PTH-003",
+    "MTS-PTH-008"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "ADR-009 D17 item 8, one defect per package. A container listing itself is trn/container-tree's lists-itself: a manifest writes a container's entries inline, so a container can list itself only through a YAML alias to its own declaration, which the manifest refuses.",
+  "cases": [
+    {
+      "name": "entry-traversal",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "escape",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/entry-traversal.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "entry-traversal-from-data",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "escape-data",
+            "out": "out",
+            "set": [
+              "/p=../../escape.txt"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/entry-traversal-from-data.json"
+          },
+          "bounds": {
+            "cpu_ms": 1000,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

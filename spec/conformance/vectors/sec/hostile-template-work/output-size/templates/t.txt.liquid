@@ -1,0 +1,1 @@
+{% assign s = "x" %}{% for i in (1..16) %}{% assign s = s | append: s %}{% endfor %}{{ s }}
