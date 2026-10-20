@@ -16,7 +16,10 @@
     "MTS-MAN-001",
     "MTS-MAN-017",
     "MTS-OUT-001",
-    "MTS-OUT-003"
+    "MTS-OUT-003",
+    "MTS-SUP-007",
+    "MTS-SUP-018",
+    "MTS-TPL-014"
   ],
   "since": "1.0",
   "class": "authoring",
