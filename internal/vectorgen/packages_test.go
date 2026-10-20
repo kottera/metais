@@ -298,7 +298,7 @@ func packageCases() []pkgCase {
 			return archive{entries: hostile(t), comment: []byte("an archive comment")}.built()
 		}},
 		{"pkg/second-end-record", func(t testing.TB) built {
-			inner := append(append([]byte("an inner archive: "), signature...), make([]byte, 18)...)
+			inner := append(append([]byte(innerPrefix), signature...), make([]byte, 18)...)
 			return zipped(hostile(t, zentry{name: "assets/inner.zip", content: inner}))
 		}},
 		{"pkg/zip64", func(t testing.TB) built {
