@@ -12,6 +12,7 @@
 |---|---|---|
 | [PLAN-2026-10-metais-v1](plans/PLAN-2026-10-metais-v1.md) | `metais-v1` | Ratified; §3 gives each wave's status |
 | [PLAN-2026-10-metais-test-economy](plans/PLAN-2026-10-metais-test-economy.md) | `metais-test-economy` | Accepted |
+| [PLAN-2026-10-metais-ux](plans/PLAN-2026-10-metais-ux.md) | `metais-ux` | Draft |
 
 Each wave's brief, ending in the closeout its wave orchestrator writes, is under [briefs/](briefs/), named
 `brief-plan-2026-10-metais-v1-wave<N>.md`:
