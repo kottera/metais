@@ -1,0 +1,29 @@
+[
+  {
+    "code": "input.pattern",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "report.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/report.schema.json",
+      "pointer": "/pattern",
+      "keyword": "pattern"
+    },
+    "field": {
+      "title": "Report"
+    },
+    "params": {
+      "pattern": "^(a+)+$"
+    }
+  }
+]

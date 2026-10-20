@@ -1,0 +1,21 @@
+{
+  "report": {
+    "space": {
+      "tab": "\t",
+      "vertical-tab": "\u000b",
+      "nbsp": "\u00a0",
+      "ogham": "\u1680",
+      "en-quad": "\u2000",
+      "line-separator": "\u2028",
+      "narrow-nbsp": "\u202f",
+      "ideographic": "\u3000",
+      "bom": "\ufeff"
+    },
+    "nonspace": {
+      "nbsp": "\u00a0",
+      "bom": "\ufeff",
+      "nel": "\u0085",
+      "x": "x"
+    }
+  }
+}

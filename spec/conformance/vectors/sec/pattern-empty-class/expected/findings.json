@@ -1,0 +1,26 @@
+[
+  {
+    "code": "input.pattern",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "location": {
+      "origin": "inputs_json",
+      "argument": 1,
+      "line": 4,
+      "column": 13,
+      "pointer": "/none"
+    },
+    "schema": {
+      "entry": "inputs/report.schema.json",
+      "pointer": "/properties/none/pattern",
+      "keyword": "pattern"
+    },
+    "params": {
+      "pattern": "[]"
+    }
+  }
+]

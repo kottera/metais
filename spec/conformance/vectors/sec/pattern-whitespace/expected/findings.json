@@ -1,0 +1,50 @@
+[
+  {
+    "code": "input.pattern",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "location": {
+      "origin": "inputs_json",
+      "argument": 1,
+      "line": 15,
+      "column": 15,
+      "pointer": "/nonspace/nbsp"
+    },
+    "schema": {
+      "entry": "inputs/report.schema.json",
+      "pointer": "/properties/nonspace/additionalProperties/pattern",
+      "keyword": "pattern"
+    },
+    "params": {
+      "pattern": "^\\S$"
+    }
+  },
+  {
+    "code": "input.pattern",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "location": {
+      "origin": "inputs_json",
+      "argument": 1,
+      "line": 16,
+      "column": 14,
+      "pointer": "/nonspace/bom"
+    },
+    "schema": {
+      "entry": "inputs/report.schema.json",
+      "pointer": "/properties/nonspace/additionalProperties/pattern",
+      "keyword": "pattern"
+    },
+    "params": {
+      "pattern": "^\\S$"
+    }
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/ref-cycle",
+  "title": "A cycle of references that consumes no instance is refused at open, with no length observed",
+  "statements": [
+    "MTS-SEC-045"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "open",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

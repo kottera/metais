@@ -42,9 +42,11 @@ func (c *Compiler) Combined(doc value.Value) (*Schema, []finding.Finding) {
 	// The combined schema's subschemas are counted as a whole, apart from
 	// the files'; its locations, longer by /$defs/ and a package path, are
 	// bounded by the files' and path-length (ADR-009 Amendment A1 items 1
-	// and 2).
+	// and 2). Its root is walked at depth 0, so that each file it embeds
+	// beneath $defs keeps the depths its own pre-check measured: a file at
+	// schema-depth is embedded at it, not past it.
 	w := &prechecker{entry: CombinedEntry, lim: c.lim, count: &subschemas{}}
-	w.walk(doc, "", base, 1)
+	w.walk(doc, "", base, 0)
 	if f, ok := w.count.breached(c.lim); ok {
 		return nil, []finding.Finding{f}
 	}

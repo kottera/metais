@@ -1,0 +1,37 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/pattern-empty-class",
+  "title": "[^] matches every code point and [] nothing, translated rather than refused",
+  "statements": [
+    "MTS-SEC-040"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "RE2 has no empty class: [^] and [] are syntax errors to it, and ECMA-262 classes to the profile.",
+  "cases": [
+    {
+      "name": "validate",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "inputs_json": "inputs.json"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

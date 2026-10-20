@@ -1,0 +1,80 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/ref-depth",
+  "title": "A chain of references as long as ref-depth is accepted, and one past it is refused",
+  "statements": [
+    "MTS-SEC-045"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "limits"
+  ],
+  "requires": [],
+  "notes": "package/ holds a chain of 32 references at one instance location, beyond/ one of 33. The pre-check walks the root's $defs before its $ref, so a definition's reference begins the first chain the walk meets, and is reported when its own chain is past the bound. Its generated files are written by internal/vectorgen (go test ./internal/vectorgen -run TestSchemaCorpus -args -update), whose test reproduces them.",
+  "cases": [
+    {
+      "name": "at-the-limit",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set_json": [
+              "/report={}"
+            ]
+          },
+          "expect": {
+            "ok": true
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-limit",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package",
+            "limits": {
+              "ref-depth": 31
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beyond-the-limit.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-default",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "beyond"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beyond-the-default.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

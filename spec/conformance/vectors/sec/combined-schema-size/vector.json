@@ -1,0 +1,64 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/combined-schema-size",
+  "title": "A combined schema as long as a lowered combined-schema-size is accepted, and one byte past it is refused",
+  "statements": [
+    "MTS-SEC-043"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "limits"
+  ],
+  "requires": [],
+  "notes": "The combined schema's canonical JSON is 451 bytes.",
+  "cases": [
+    {
+      "name": "at-the-limit",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set_json": [
+              "/report={}"
+            ],
+            "limits": {
+              "combined-schema-size": 451
+            }
+          },
+          "expect": {
+            "ok": true
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-limit",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package",
+            "limits": {
+              "combined-schema-size": 450
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

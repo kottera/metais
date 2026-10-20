@@ -1,0 +1,37 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "dat/multiple-of-extremes",
+  "title": "multipleOf is decided exactly, at the ends of the number range",
+  "statements": [
+    "MTS-DAT-014"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "1e308 is a multiple of 1e-308, their quotient 10^616, and not of 3e-308; both quotients overflow a binary double.",
+  "cases": [
+    {
+      "name": "validate",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "inputs_json": "inputs.json"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "dat/unique-items-million",
+  "title": "uniqueItems over a million items finds the one duplicate, the last",
+  "statements": [
+    "MTS-DAT-013",
+    "MTS-DAT-010"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "Its generated files are written by internal/vectorgen (go test ./internal/vectorgen -run TestSchemaCorpus -args -update), whose test reproduces them.",
+  "cases": [
+    {
+      "name": "validate",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 6000
+          }
+        }
+      ]
+    }
+  ]
+}

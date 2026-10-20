@@ -1,0 +1,21 @@
+[
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "location": {
+      "origin": "set",
+      "argument": 1,
+      "pointer": ""
+    },
+    "params": {
+      "limit": "schema-work",
+      "bound": 1000000,
+      "lowered": true
+    }
+  }
+]

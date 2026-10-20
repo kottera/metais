@@ -1,0 +1,36 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "dat/schema-format-regex",
+  "title": "format: regex is refused, whatever a pattern engine could do with it",
+  "statements": [
+    "MTS-DAT-005"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "open",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

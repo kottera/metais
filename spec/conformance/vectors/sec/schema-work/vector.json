@@ -1,0 +1,92 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/schema-work",
+  "title": "A validation of exactly a lowered schema-work is run, one unit past it is refused, and an exponential one is refused before it runs",
+  "statements": [
+    "MTS-SEC-046"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "limits"
+  ],
+  "requires": [],
+  "notes": "package/ is four levels of anyOf, each of two references to the next, over an integer; exponential/ is thirty, whose 2^30 paths no validation can run. The units of package/ against {\"report\": 5}: the combined schema's root, 2; its properties/report, 1; the file's root, 1; each level i, 1 and 2 for its references, over level i+1, so 3 + 2T(i+1) with T(4) = 1; 4 + T(0) = 65. Its generated files are written by internal/vectorgen (go test ./internal/vectorgen -run TestSchemaCorpus -args -update), whose test reproduces them.",
+  "cases": [
+    {
+      "name": "at-the-limit",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set_json": [
+              "/report=5"
+            ],
+            "limits": {
+              "schema-work": 65
+            }
+          },
+          "expect": {
+            "ok": true
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-limit",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set_json": [
+              "/report=5"
+            ],
+            "limits": {
+              "schema-work": 64
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beyond-the-limit.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "exponential",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "exponential",
+            "set_json": [
+              "/report=5"
+            ],
+            "limits": {
+              "schema-work": 1000000
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/exponential.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

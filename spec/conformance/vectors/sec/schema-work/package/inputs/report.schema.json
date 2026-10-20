@@ -1,0 +1,1 @@
+{"$defs":{"s0":{"anyOf":[{"$ref":"#/$defs/s1"},{"$ref":"#/$defs/s1"}]},"s1":{"anyOf":[{"$ref":"#/$defs/s2"},{"$ref":"#/$defs/s2"}]},"s2":{"anyOf":[{"$ref":"#/$defs/s3"},{"$ref":"#/$defs/s3"}]},"s3":{"anyOf":[{"$ref":"#/$defs/s4"},{"$ref":"#/$defs/s4"}]},"s4":{"type":"integer"}},"$ref":"#/$defs/s0"}

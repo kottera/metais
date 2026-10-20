@@ -1,0 +1,1 @@
+{"type": "object", "properties": {"any": {"pattern": "^[^]$"}, "none": {"pattern": "[]"}}}

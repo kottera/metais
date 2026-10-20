@@ -248,3 +248,22 @@ func TestSchemaWorkExponential(t *testing.T) {
 		t.Fatalf("got %v, want schema-work", err)
 	}
 }
+
+// TestCombinedSchemaDepth holds the combined schema to its files' depths:
+// a file at schema-depth is embedded under $defs, a level below the
+// combined schema's root, and the combined schema compiles all the same,
+// since what it embeds is the files the pre-check has passed.
+func TestCombinedSchemaDepth(t *testing.T) {
+	c, fs := compileFiles(t, lower(t, "schema-depth=3"), map[string]string{"inputs/a.json": `{"items": {"items": {}}}`})
+	if len(fs) > 0 {
+		t.Fatal(describe(fs))
+	}
+	doc, err := Bundle(Declarations{Inputs: []Input{{Name: "a", Title: "A", Schema: "inputs/a.json", Required: true}}},
+		[]File{{Path: "inputs/a.json", Root: c.docs["inputs/a.json"]}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, fs := c.Combined(doc); len(fs) > 0 {
+		t.Fatal(describe(fs))
+	}
+}

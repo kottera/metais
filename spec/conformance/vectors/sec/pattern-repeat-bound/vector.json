@@ -1,0 +1,59 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/pattern-repeat-bound",
+  "title": "A repeat bound of 1000 is accepted, and one of 1001 is refused",
+  "statements": [
+    "MTS-SEC-041",
+    "MTS-DAT-006"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "limits"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "at-the-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set_json": [
+              "/report={}"
+            ]
+          },
+          "expect": {
+            "ok": true
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-bound",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "beyond"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

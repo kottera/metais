@@ -1,0 +1,17 @@
+[
+  {
+    "code": "schema.ref_escapes",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/$ref"
+    },
+    "params": {
+      "reference": "../outside.json"
+    }
+  }
+]

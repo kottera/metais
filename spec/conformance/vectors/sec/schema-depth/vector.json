@@ -1,0 +1,64 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/schema-depth",
+  "title": "A subschema as deep as a lowered schema-depth is accepted, and one past it is refused",
+  "statements": [
+    "MTS-SEC-044"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "limits"
+  ],
+  "requires": [],
+  "notes": "The innermost subschema is at depth 9. At the defaults value-depth refuses a schema file before schema-depth can: a subschema at depth 65 is a JSON value nested at least 66 deep, so schema-depth is shown at a lowered bound.",
+  "cases": [
+    {
+      "name": "at-the-limit",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set_json": [
+              "/report=[]"
+            ],
+            "limits": {
+              "schema-depth": 9
+            }
+          },
+          "expect": {
+            "ok": true
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-limit",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package",
+            "limits": {
+              "schema-depth": 8
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

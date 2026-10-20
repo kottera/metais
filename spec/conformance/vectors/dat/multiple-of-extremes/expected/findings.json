@@ -1,0 +1,27 @@
+[
+  {
+    "code": "input.multiple_of",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "location": {
+      "origin": "inputs_json",
+      "argument": 1,
+      "line": 1,
+      "column": 30,
+      "pointer": "/b"
+    },
+    "schema": {
+      "entry": "inputs/report.schema.json",
+      "pointer": "/properties/b/multipleOf",
+      "keyword": "multipleOf"
+    },
+    "params": {
+      "divisor": 3e-308,
+      "value": 1e+308
+    }
+  }
+]
