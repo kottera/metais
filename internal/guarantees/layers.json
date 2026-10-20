@@ -138,6 +138,31 @@
       "reason": "ADR-010 D2, ADR-008 D9: the authoring commands' work is reached only through their declarations in the command table, so init, check, test, pack and unpack each have one entry from the command line"
     },
     {
+      "rule": "only-importers",
+      "imports": "runtime/metrics",
+      "importers": ["github.com/kottera/metais/internal/backstop"],
+      "reason": "ADR-009 A6 item 6: the memory backstop alone reads the runtime's memory, and the figure goes nowhere but its comparison with the ceiling, so no other code can carry a measure of the host into a finding or an output (D15)"
+    },
+    {
+      "rule": "only-referrers",
+      "symbols": ["runtime/debug.SetMemoryLimit"],
+      "packages": ["github.com/kottera/metais/internal/backstop"],
+      "reason": "ADR-009 A6 item 6: the memory backstop alone sets the runtime's soft memory limit, to 1 GiB, beside the ceiling it watches"
+    },
+    {
+      "rule": "only-importers",
+      "imports": "github.com/kottera/metais/internal/backstop",
+      "importers": ["github.com/kottera/metais/internal/cli"],
+      "reason": "ADR-009 A6 item 6: the backstop runs the command cmd/metais runs, and nothing else"
+    },
+    {
+      "rule": "single-entry-point",
+      "package": "github.com/kottera/metais/internal/cli",
+      "imports": "github.com/kottera/metais/internal/backstop",
+      "function": "Main",
+      "reason": "ADR-009 A6 item 6: the backstop wraps the process's one command in Main, the entry cmd/metais calls; Run, which tests drive in-process, runs no backstop"
+    },
+    {
       "rule": "only-referrers",
       "symbols": ["os.Args", "os.Stdin", "os.Stdout", "os.Stderr", "os.Exit"],
       "packages": ["github.com/kottera/metais/cmd/metais", "github.com/kottera/metais/internal/tools/release"],

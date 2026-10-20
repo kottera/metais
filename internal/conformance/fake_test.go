@@ -102,6 +102,12 @@ func fakeMain(fault string, args []string) int {
 		return fakeEnvelope(os.Stdout, "metais.help/1", true, []any{}, map[string]any{"commands": cmds}, 0)
 	}
 	crash(fault)
+	if fault == "memory" {
+		return fakeEnvelope(os.Stdout, "metais."+cmd+"/1", false, []any{map[string]any{
+			"code": "internal.memory", "severity": "error", "subject": map[string]any{"kind": "invocation"},
+			"params": map[string]any{"tool_version": fakeTool.Version},
+		}}, nil, 2)
+	}
 	call := fakeCall{op: cmd}
 	if cmd == "inspect" || cmd == "ls" || cmd == "schema" {
 		call.op = "open"

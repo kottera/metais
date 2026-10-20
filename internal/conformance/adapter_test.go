@@ -403,6 +403,9 @@ func (a *cliAdapter) invoke(sb *sandbox, c command, lim limits, dryRun bool) (*i
 	if h := crashed(p.stderr); h != "" {
 		return inv, append(ps, crashProblem(h))
 	}
+	if backstopped(p) {
+		return inv, append(ps, backstopProblem())
+	}
 	switch p.exit {
 	case 2:
 		return inv, append(ps, problem{check: checkHarness, harness: true,

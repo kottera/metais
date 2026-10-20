@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -143,6 +144,63 @@ func TestBinary(t *testing.T) {
 		}
 		if bytes.Contains(stdout.Bytes(), []byte("\x1b[")) || bytes.Contains(stderr.Bytes(), []byte("\x1b[")) {
 			t.Errorf("metais %q coloured its output under NO_COLOR", c.args)
+		}
+	}
+}
+
+// TestMemoryBackstop runs the memory canary's build, whose backstop
+// ceiling is zero bytes, as a subprocess: every command passes the
+// ceiling, and the process exits 2 through the backstop with
+// internal.memory, reported as the command's own report would be
+// (ADR-009 Amendment A6 item 6). It proves the stop at the process's own
+// exit on the host it runs on.
+func TestMemoryBackstop(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds the binary")
+	}
+	bin := filepath.Join(testenv.Dir(t), "metais")
+	build := goCommand(t, "build", "-trimpath", "-tags", "metais_canary_memory", "-o", bin, ".")
+	if out, err := build.CombinedOutput(); err != nil {
+		t.Fatalf("go build: %v\n%s", err, out)
+	}
+	for _, args := range [][]string{
+		{"version"},
+		{"version", "--json"},
+		{"limits", "--json"},
+		{"bogus", "--json"},
+	} {
+		cmd := exec.Command(bin, args...)
+		cmd.Dir = testenv.Dir(t)
+		cmd.Env = []string{"HOME=" + testenv.Dir(t), "NO_COLOR=1"}
+		var stdout, stderr bytes.Buffer
+		cmd.Stdout, cmd.Stderr = &stdout, &stderr
+		var exit *exec.ExitError
+		if err := cmd.Run(); !errors.As(err, &exit) || exit.ExitCode() != 2 {
+			t.Errorf("metais %q ended with %v, want exit 2\n%s", args, err, stderr.Bytes())
+			continue
+		}
+		if !slices.Contains(args, "--json") {
+			if stdout.Len() != 0 || !bytes.Contains(stderr.Bytes(), []byte("internal.memory")) {
+				t.Errorf("metais %q: stdout %q, stderr %q", args, stdout.Bytes(), stderr.Bytes())
+			}
+			continue
+		}
+		if stderr.Len() != 0 {
+			t.Errorf("metais %q wrote standard error %q", args, stderr.Bytes())
+		}
+		validateDocument(t, stdout.Bytes())
+		var doc struct {
+			OK       bool
+			Findings []struct {
+				Code   string
+				Params map[string]any
+			}
+		}
+		if err := json.Unmarshal(stdout.Bytes(), &doc); err != nil {
+			t.Fatal(err)
+		}
+		if doc.OK || len(doc.Findings) != 1 || doc.Findings[0].Code != "internal.memory" || len(doc.Findings[0].Params) != 1 {
+			t.Errorf("metais %q reported %s", args, stdout.Bytes())
 		}
 	}
 }

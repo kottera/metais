@@ -1821,6 +1821,25 @@
       "statements": []
     },
     {
+      "code": "internal.memory",
+      "severity": "error",
+      "class": "internal",
+      "subject": "invocation",
+      "params": [
+        {
+          "name": "tool_version",
+          "type": "string",
+          "meaning": "The tool's version, as metais version prints it.",
+          "always": true
+        }
+      ],
+      "message": "metais {tool_version} stopped the command because it held more memory than metais allows itself; this is a defect in metais, not a refusal of the package.",
+      "hint": "Report the command you ran to the metais project; whether it stops here again depends on the machine it runs on.",
+      "location": "none",
+      "since": "1.0",
+      "statements": []
+    },
+    {
       "code": "json.duplicate_name",
       "severity": "error",
       "class": "content",

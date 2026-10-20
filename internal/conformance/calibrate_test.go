@@ -203,6 +203,18 @@ func runCal(tool string, args []string, dir string, wall time.Duration) (*calRun
 	if _, err := stdout.Seek(0, io.SeekStart); err != nil {
 		return nil, err
 	}
+	if run.exit == 2 {
+		out, err := io.ReadAll(stdout)
+		if err != nil {
+			return nil, err
+		}
+		if backstopped(&proc{exit: run.exit, stdout: out, stderr: stderr.Bytes()}) {
+			return run, errors.New("the command exited through the memory backstop, internal.memory (ADR-009 A6 item 6, D18 item 2)")
+		}
+		if _, err := stdout.Seek(0, io.SeekStart); err != nil {
+			return nil, err
+		}
+	}
 	if run.res, err = readCalResult(stdout); err != nil {
 		return run, fmt.Errorf("the command exited %d, and its JSON: %v; standard error: %s", run.exit, err, stderr.Bytes())
 	}

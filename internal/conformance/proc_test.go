@@ -243,6 +243,25 @@ func crashProblem(header string) problem {
 	return problem{check: checkCrash, msg: fmt.Sprintf("the process exited through a Go panic or a runtime fatal error: %q", header)}
 }
 
+// backstopFinding is internal.memory as the tool reports it: a JSON
+// document's finding, or a human report's line, which ends with its code
+// in brackets.
+var backstopFinding = regexp.MustCompile(`"code":\s*"internal\.memory"|(?m)\[internal\.memory\]$`)
+
+// backstopped reports whether a process exited through metais's memory
+// backstop (ADR-009 Amendment A6 item 6): status 2, with internal.memory
+// reported on standard output or standard error. ADR-009 D18 item 2 fails
+// any case that does: reaching the backstop is a defect in the tool, never
+// a refusal a package can rely on, whatever the case expected.
+func backstopped(p *proc) bool {
+	return p.exit == 2 && (backstopFinding.Match(p.stdout) || backstopFinding.Match(p.stderr))
+}
+
+// backstopProblem is the failure of a process the backstop stopped.
+func backstopProblem() problem {
+	return problem{check: checkBackstop, msg: "the process exited through the memory backstop, internal.memory (ADR-009 A6 item 6, D18 item 2)"}
+}
+
 // executable reports whether path names a file this process can run.
 func executable(path string) error {
 	fi, err := os.Stat(path)

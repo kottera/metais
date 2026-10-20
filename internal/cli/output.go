@@ -6,6 +6,7 @@ package cli
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"slices"
@@ -290,6 +291,23 @@ func (s *session) internalError(phase string) int {
 	}
 	return s.emit(outcome{findings: []finding.Finding{f}, next: []Next{
 		{Run: "metais version", Why: "Prints the version to report with the command that met the defect."},
+	}})
+}
+
+// memoryStop reports inv's command, which the memory backstop stopped
+// (ADR-009 Amendment A6 item 6): one internal.memory finding, carrying the
+// tool's version and nothing of the memory, and status 2. The command's
+// own session belongs to the goroutine the backstop left running, so the
+// line is read again here, and the report goes where that command's
+// report would: in its format, to the stream it reports on.
+func memoryStop(inv Invocation) int {
+	s := &session{ctx: context.Background(), inv: inv, table: table}
+	s.line = readLine(table, inv.Args)
+	f := finding.New(finding.CodeInternalMemory, invocation, nil, finding.Params{
+		"tool_version": finding.String(version.String()),
+	})
+	return s.emit(outcome{findings: []finding.Finding{f}, next: []Next{
+		{Run: "metais version", Why: "Prints the version to report with the command that was stopped."},
 	}})
 }
 

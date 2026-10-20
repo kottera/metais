@@ -204,7 +204,7 @@ type exitCode struct {
 var exitCodes = []exitCode{
 	{finding.ExitOK, "Success, warnings included; help, version and limits."},
 	{finding.ExitFindings, "An error in content: invalid inputs, a failing check or test, an output refused by its schema or its path, a package's own defect under an authoring command, or a warning under --fail-on warning."},
-	{finding.ExitInternal, "A defect in metais itself (internal.error), or the Go runtime's status after a crash."},
+	{finding.ExitInternal, "A defect in metais itself (internal.error, or internal.memory when it stops a command holding more memory than it allows itself), or the Go runtime's status after a crash."},
 	{finding.ExitUsage, "The command line is wrong: an unknown command or flag, a missing or extra operand, a malformed or repeated flag, or no command at all."},
 	{finding.ExitRefused, "The package is refused: not found, unreadable, out of specification, a digest mismatch, an unsupported specification version or a package limit; or a package's own defect under a consuming command."},
 	{finding.ExitDestination, "The destination is refused: not empty without --overwrite, a link or special file in the way, or a failed write."},
