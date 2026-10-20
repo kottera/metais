@@ -308,6 +308,7 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 		}
 	}
 	finders := r.finders(v, sb, e)
+	var last map[string]node // the snapshot after the last step
 	for si := range c.Steps {
 		st := &c.Steps[si]
 		before, err := sb.snapshot()
@@ -340,6 +341,7 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 			fail(si+1, checkHarness, err.Error())
 			return run
 		}
+		last = after
 		var excluded []string
 		if x := r.adapter.excluded(st); x != "" {
 			excluded = append(excluded, x)
@@ -365,7 +367,7 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 		}
 	}
 	if r.sc7 && mode == absPaths && !run.fatal() {
-		r.runReach(run, v, c, finders)
+		r.runReach(run, v, c, finders, last)
 	}
 	return run
 }

@@ -173,8 +173,9 @@ func build(t *testing.T, name string, flags ...string) string {
 	return bin
 }
 
-// TestHarnessReach pins the harness's reach (ADR-009 D16 item 1): a case
-// run under it in the absolute-path mode ends with one more step that
+// TestHarnessReach pins the harness's reach (ADR-009 D16 item 1):
+// environment A carries its further variables and decoys, and B neither;
+// a case run under it in the absolute-path mode ends with one more step that
 // runs every command over the package in both forms, in both
 // environments, giving the implementation only absolute paths into the
 // work directory from a working directory outside it; the relative mode
@@ -182,10 +183,10 @@ func build(t *testing.T, name string, flags ...string) string {
 // and inputs runs none of it again.
 func TestHarnessReach(t *testing.T) {
 	if builtTool == "" {
-		t.Skip("runs the binary built from ./cmd/metais")
+		t.Skip("runs the release build of ./cmd/metais, which -conformance.tool replaces")
 	}
 	t.Parallel()
-	r, suite := hostRunner(t, builtTool)
+	r, suite := hostRunner(t, releaseBuild(t))
 	v, err := readVector(filepath.Join(suite, "vectors", "rnd", "archive"))
 	if err != nil {
 		t.Fatal(err)
@@ -215,6 +216,24 @@ func TestHarnessReach(t *testing.T) {
 			}
 			if run.sb.cwd == run.sb.work {
 				t.Errorf("%s: the working directory is the work directory", c.Name)
+			}
+			decoys := []string{
+				filepath.Join(run.sb.cwd, "templates", "t.txt.liquid"), filepath.Join(run.sb.cwd, "t.txt.liquid"),
+				filepath.Join(run.sb.home, "metais.yaml"), filepath.Join(run.sb.tmp, "metais.yaml"),
+				filepath.Join(run.sb.home, ".ssh", "id_ed25519"), filepath.Join(run.sb.cwd, ".netrc"),
+				filepath.Join(run.sb.tmp, ".metais", "config.yaml"),
+			}
+			for _, d := range decoys {
+				_, err := os.Lstat(d)
+				if planted := err == nil; planted != (e == envA) {
+					t.Errorf("%s, environment %s: the decoy %s is planted: %t", c.Name, e, d, planted)
+				}
+			}
+			for _, k := range []string{"OLDPWD", "SHELL", "SOURCE_DATE_EPOCH", "CI", "GITHUB_TOKEN", "AWS_SECRET_ACCESS_KEY", "METAIS_1", "METAIS_32"} {
+				val, ok := run.sb.vars[k]
+				if ok != (e == envA) || ok && sentinelAt([]byte(val)) == "" {
+					t.Errorf("%s, environment %s: %s is %q, set: %t", c.Name, e, k, val, ok)
+				}
 			}
 			if c == &again {
 				if len(run.steps) != len(c.Steps) {

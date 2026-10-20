@@ -485,14 +485,15 @@ func (c reachCommand) label() string {
 }
 
 // runReach runs every reach command over each package of c in run's
-// sandbox, after the case's steps, as one more step: all at once, since
+// sandbox, after the case's steps, whose last snapshot is before, as one
+// more step: all at once, since
 // each only reads the package, and extract writes only into its own
 // directory. It checks each command's process (crash, bounds, an exit
 // consistent with its JSON document and the same in both forms) and the
 // sandbox (check 4: only the extract directories change), and scans
 // everything with finders (checks 1 and 2). The step's invocations and
 // trees join run's steps, so check 3 compares them between A and B.
-func (r *runner) runReach(run *envRun, v *vector, c *vcase, finders []finder) {
+func (r *runner) runReach(run *envRun, v *vector, c *vcase, finders []finder, before map[string]node) {
 	owner := v.ID + "\x00" + c.Name
 	sb := run.sb
 	si := len(c.Steps) + 1
@@ -522,11 +523,6 @@ func (r *runner) runReach(run *envRun, v *vector, c *vcase, finders []finder) {
 		}
 	}
 	if len(cmds) == 0 {
-		return
-	}
-	before, err := sb.snapshot()
-	if err != nil {
-		add(problem{check: checkHarness, harness: true, msg: err.Error()})
 		return
 	}
 	invs := make([]*invocation, len(cmds))
