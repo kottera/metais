@@ -1,0 +1,8 @@
+FROM golang:{{ inputs.project.go }} AS build
+WORKDIR /src
+COPY . .
+RUN CGO_ENABLED=0 go build -trimpath -o /out/{{ inputs.project.name }} ./cmd/{{ inputs.project.name }}
+
+FROM scratch
+COPY --from=build /out/{{ inputs.project.name }} /{{ inputs.project.name }}
+ENTRYPOINT ["/{{ inputs.project.name }}"]

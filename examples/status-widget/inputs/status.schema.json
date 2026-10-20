@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Service status",
+  "description": "The status of one service: its name, its state, when the state was last updated, and optionally a message and the state of each component.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["service", "state", "updated"],
+  "properties": {
+    "service": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "title": "Service",
+      "description": "The service's name, as the widget's heading prints it.",
+      "examples": ["Payments API"]
+    },
+    "state": {
+      "$ref": "#/$defs/state",
+      "title": "State",
+      "description": "The service's state as a whole."
+    },
+    "updated": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Updated",
+      "description": "When the status was last updated, as an RFC 3339 date-time. The widget prints it as given.",
+      "examples": ["2026-10-20T08:15:00Z"]
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 280,
+      "title": "Message",
+      "description": "One or two sentences on what readers should know: what is affected, or when work ends. Left out, the widget shows the state alone."
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "title": "Components",
+      "description": "The parts of the service whose state readers follow separately, in the order the widget lists them.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "state"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "title": "Component name",
+            "description": "The component's name, as the list prints it.",
+            "examples": ["Card payments"]
+          },
+          "state": {
+            "$ref": "#/$defs/state",
+            "title": "Component state",
+            "description": "The component's own state."
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "state": {
+      "title": "State",
+      "description": "operational: working normally. degraded: working, slower or with some failures. outage: not working. maintenance: down or limited for planned work.",
+      "enum": ["operational", "degraded", "outage", "maintenance"]
+    }
+  }
+}

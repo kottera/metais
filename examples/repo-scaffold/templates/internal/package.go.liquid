@@ -1,0 +1,23 @@
+{%- render "_header.liquid" -%}
+{%- assign p = inputs.project -%}
+{%- assign pkg = p.name | replace: "-", "" -%}
+// Package {{ pkg }} is what the {{ p.name }} command does.
+package {{ pkg }}
+
+import (
+	"fmt"
+	"io"
+)
+
+// Description is what {{ p.name }} does.
+const Description = {{ p.description | json }}
+
+// Run runs {{ p.name }} with the arguments after the command's name,
+// writing its output to w.
+func Run(args []string, w io.Writer) error {
+	if len(args) > 0 {
+		return fmt.Errorf("unexpected argument %q", args[0])
+	}
+	_, err := fmt.Fprintln(w, Description)
+	return err
+}

@@ -1,0 +1,43 @@
+{%- assign p = inputs.project -%}
+# {{ p.name }}
+
+{{ p.description }}.
+
+## Building
+
+`{{ p.name }}` needs Go {{ p.go }} or later.
+
+```sh
+go build ./cmd/{{ p.name }}
+./{{ p.name }}
+```
+{%- if p.commands %}
+
+The repository holds these commands too, each built the same way:
+{% for c in p.commands %}
+- `{{ c.name }}`: {{ c.summary }}.
+{%- endfor %}
+{%- endif %}
+
+## Checking
+
+`scripts/check.sh` vets and tests the module and checks its formatting.
+Run it before every push.
+{%- if p.ci %}
+The CI workflow runs it on every push to `main` and every pull request.
+{%- endif %}
+{%- if p.container %}
+
+## Container
+
+```sh
+docker build -t {{ p.name }} .
+docker run --rm {{ p.name }}
+```
+
+The image holds the `{{ p.name }}` binary and nothing else.
+{%- endif %}
+
+## Licence
+
+Copyright {{ p.year }} {{ p.owner }}. Released under the `{{ p.license }}` licence.

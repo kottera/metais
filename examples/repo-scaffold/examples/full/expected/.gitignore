@@ -1,0 +1,6 @@
+# The binaries go build writes at the repository's root.
+/weather-cli
+/weather-import
+
+# What a container or release build leaves behind.
+/dist/

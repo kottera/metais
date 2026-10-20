@@ -1,0 +1,9 @@
+{%- render "_header.liquid" -%}
+// Command {{ item.name }}: {{ item.summary }}.
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println({{ item.summary | json }})
+}

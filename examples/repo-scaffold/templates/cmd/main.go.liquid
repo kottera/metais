@@ -1,0 +1,19 @@
+{%- render "_header.liquid" -%}
+{%- assign p = inputs.project -%}
+{%- assign pkg = p.name | replace: "-", "" -%}
+// Command {{ p.name }}: {{ p.description }}.
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"{{ p.module }}/internal/{{ pkg }}"
+)
+
+func main() {
+	if err := {{ pkg }}.Run(os.Args[1:], os.Stdout); err != nil {
+		fmt.Fprintln(os.Stderr, "{{ p.name }}:", err)
+		os.Exit(1)
+	}
+}
