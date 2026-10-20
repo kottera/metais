@@ -1,0 +1,96 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/data-entry-unreadable",
+  "title": "An input's file, a collection's directory and an item's file the processor may not read are each reported with input.not_readable",
+  "statements": [
+    "MTS-SUP-030",
+    "MTS-SUP-029"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [
+    "unreadable-files"
+  ],
+  "notes": "The setup makes the entry mode 0000 (ADR-011 A4 item 2). An item that cannot be read is left out of its collection's validation, as an item that does not parse is.",
+  "cases": [
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "file",
+      "setup": {
+        "unreadable": [
+          "data/report.json"
+        ]
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/file.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "collection",
+      "setup": {
+        "unreadable": [
+          "data/items"
+        ]
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/collection.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "item",
+      "setup": {
+        "unreadable": [
+          "data/items/a.json"
+        ]
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/item.json"
+          }
+        }
+      ]
+    }
+  ]
+}

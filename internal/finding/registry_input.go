@@ -169,7 +169,7 @@ var inputCodes = []Entry{
 		Hint:       "Make the entry readable and validate again. The input's schema was not checked.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-030"},
 	},
 	{
 		Code:     "input.not_regular_file",

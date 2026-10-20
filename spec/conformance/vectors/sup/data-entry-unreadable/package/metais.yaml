@@ -1,0 +1,18 @@
+metais: "1.0"
+name: org.example.inputs
+version: 1.0.0
+title: Inputs
+description: A package whose inputs are read from a data directory.
+guide: Supply the inputs.
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+  - name: items
+    title: Items
+    schema: inputs/items.schema.json
+    forms: [json]
+    collection: true
+outputs:
+  - id: report
+    template: report.md.liquid

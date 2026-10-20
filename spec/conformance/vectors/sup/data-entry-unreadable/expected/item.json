@@ -1,0 +1,36 @@
+[
+  {
+    "code": "input.validation.partial",
+    "severity": "info",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items",
+      "pointer": ""
+    },
+    "params": {
+      "unparsed": 1,
+      "suppressed": 0
+    }
+  },
+  {
+    "code": "input.not_readable",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/a.json"
+    },
+    "params": {
+      "reason": "permission_denied"
+    }
+  }
+]

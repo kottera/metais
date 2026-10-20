@@ -1,0 +1,52 @@
+[
+  {
+    "code": "input.validation.partial",
+    "severity": "info",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items",
+      "pointer": ""
+    },
+    "params": {
+      "unparsed": 2,
+      "suppressed": 0
+    }
+  },
+  {
+    "code": "collection.item_name",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/c:d.json"
+    },
+    "params": {
+      "reason": "character"
+    }
+  },
+  {
+    "code": "collection.item_name",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/e\\f.json"
+    },
+    "params": {
+      "reason": "character"
+    }
+  }
+]

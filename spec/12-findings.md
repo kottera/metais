@@ -19,7 +19,7 @@ it, and the statements it reports.
 |---|---|---|---|---|---|---|
 | `collection.as_file` | error | content | input | — | 1.0 | [MTS-SUP-015](06-supplying-inputs.md#mts-sup-015) |
 | `collection.directory_name` | error | content | input | — | 1.0 | [MTS-SUP-015](06-supplying-inputs.md#mts-sup-015) |
-| `collection.item_name` | error | content | input | `reason` | 1.0 | — |
+| `collection.item_name` | error | content | input | `reason` | 1.0 | [MTS-SUP-031](06-supplying-inputs.md#mts-sup-031) |
 | `collection.stem_duplicate` | error | content | input | `case` | 1.0 | [MTS-SUP-016](06-supplying-inputs.md#mts-sup-016) |
 | `collection.subdirectory` | error | content | input | — | 1.0 | [MTS-SUP-015](06-supplying-inputs.md#mts-sup-015) |
 | `csv.after_quote` | error | content | input | — | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
@@ -74,7 +74,7 @@ it, and the statements it reports.
 | `input.multiple_of` | error | content | input | `divisor`; optional: `value` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-DAT-014](05-data-specification.md#mts-dat-014), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.noncharacter` | error | content | input | `codepoint` | 1.0 | [MTS-SUP-004](06-supplying-inputs.md#mts-sup-004) |
 | `input.not` | error | content | input | — | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
-| `input.not_readable` | error | content | input | `reason` | 1.0 | — |
+| `input.not_readable` | error | content | input | `reason` | 1.0 | [MTS-SUP-030](06-supplying-inputs.md#mts-sup-030) |
 | `input.not_regular_file` | error | content | input | `kind` | 1.0 | [MTS-SEC-006](14-security.md#mts-sec-006), [MTS-SUP-018](06-supplying-inputs.md#mts-sup-018) |
 | `input.number_out_of_range` | error | content | input | `reason` | 1.0 | [MTS-SUP-005](06-supplying-inputs.md#mts-sup-005) |
 | `input.one_of` | error | content | input | `branch_count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-FND-006](12-findings.md#mts-fnd-006) |
@@ -253,8 +253,8 @@ it, and the statements it reports.
 | `package.name.not_nfc` | error | refused | package | optional: `offset` | 1.0 | [MTS-PKG-013](02-container.md#mts-pkg-013) |
 | `package.name.not_portable` | error | refused | package | `reason`; optional: `offset` | 1.0 | [MTS-PKG-016](02-container.md#mts-pkg-016) |
 | `package.name.shape` | error | refused | package | `reason`; optional: `offset` | 1.0 | [MTS-PKG-014](02-container.md#mts-pkg-014) |
-| `package.not_found` | error | refused | package | — | 1.0 | — |
-| `package.not_readable` | error | refused | package | `reason` | 1.0 | — |
+| `package.not_found` | error | refused | package | — | 1.0 | [MTS-PKG-001](02-container.md#mts-pkg-001) |
+| `package.not_readable` | error | refused | package | `reason` | 1.0 | [MTS-PKG-046](02-container.md#mts-pkg-046) |
 | `package.version.malformed` | error | refused | package | `implemented` | 1.0 | [MTS-VER-003](04-versions.md#mts-ver-003) |
 | `package.version.missing` | error | refused | package | `implemented` | 1.0 | [MTS-VER-001](04-versions.md#mts-ver-001) |
 | `package.version.not_string` | error | refused | package | `actual`, `implemented`; optional: `written` | 1.0 | [MTS-VER-002](04-versions.md#mts-ver-002) |

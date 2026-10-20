@@ -60,6 +60,20 @@ type setup struct {
 	// implementation, mode 0000, after everything else, the unwritable
 	// directories included (ADR-011 A4 item 2).
 	Unreadable []string `json:"unreadable"`
+	// Renames are paths the rest of the setup put in place, each renamed
+	// in its own directory to a name that holds a colon or a backslash,
+	// which the committed tree cannot (ADR-011 A6 item 1).
+	Renames []rename `json:"renames"`
+	// FileSizeLimit, when not zero, is the largest file in bytes that
+	// every process a step starts may write (ADR-011 A6 item 3).
+	FileSizeLimit int64 `json:"file_size_limit"`
+}
+
+// rename is one of the setup's renames: the path, and its new last
+// segment.
+type rename struct {
+	Path string `json:"path"`
+	Name string `json:"name"`
 }
 
 type symlink struct {

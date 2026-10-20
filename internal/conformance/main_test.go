@@ -78,6 +78,7 @@ func TestMain(m *testing.M) {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
+		stubDir = dir
 		if procStub, err = buildProcStub(dir); err == nil && *flagTool == "" {
 			builtTool = filepath.Join(dir, toolName)
 			err = buildTool(builtTool)

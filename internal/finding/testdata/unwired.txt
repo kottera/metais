@@ -10,8 +10,3 @@
 # internal, which internal/cli's tests prove instead. The list is empty by
 # Wave 7's close.
 
-collection.item_name W7
-input.not_readable W7
-output.destination.write_failed W7
-package.not_found W7
-package.not_readable W7

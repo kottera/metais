@@ -4,6 +4,7 @@
 package conformance
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -11,9 +12,11 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"sync/atomic"
 )
@@ -51,6 +54,7 @@ type sandbox struct {
 
 	locked []string // the unwritable directories, until unlock
 	sealed []sealed // the unreadable paths, until unlock
+	fsize  int64    // the file-size limit of every process a step starts, or 0
 }
 
 // sealed is a path the setup made unreadable, and the mode unlock gives
@@ -262,12 +266,52 @@ func (sb *sandbox) applySetup(v *vector, c *vcase) error {
 		}
 	}
 	if c.Setup != nil {
+		if err := sb.applyRenames(c.Setup.Renames); err != nil {
+			return err
+		}
 		if err := sb.lockUnwritable(c.Setup.Unwritable); err != nil {
 			return err
 		}
+		sb.fsize = c.Setup.FileSizeLimit
 		return sb.sealUnreadable(c.Setup.Unreadable)
 	}
 	return nil
+}
+
+// applyRenames renames each path of renames, which the setup has put in
+// place, in its own directory to its new name (ADR-011 A6 item 1), before
+// any directory is locked or any path sealed. A case whose setup names
+// one requires nonportable-names, which runCase holds it to, with each
+// name, before the sandbox is made.
+func (sb *sandbox) applyRenames(renames []rename) error {
+	for _, r := range renames {
+		from := filepath.Join(sb.work, filepath.FromSlash(r.Path))
+		if err := os.Rename(from, filepath.Join(filepath.Dir(from), r.Name)); err != nil {
+			return fmt.Errorf("setup renames: %w", err)
+		}
+	}
+	return nil
+}
+
+// limited returns the command line that runs path with args in sb: path
+// and args themselves, or, under the case's file-size limit, the stub
+// that sets the limit and executes path in its own place (ADR-011 A6 item
+// 3).
+func (sb *sandbox) limited(path string, args []string) (string, []string, error) {
+	if sb.fsize == 0 {
+		return path, args, nil
+	}
+	stub, err := fsizeStub()
+	if err != nil {
+		return "", nil, err
+	}
+	if path, err = exec.LookPath(path); err != nil && !errors.Is(err, exec.ErrDot) {
+		return "", nil, err
+	}
+	if path, err = filepath.Abs(path); err != nil {
+		return "", nil, err
+	}
+	return stub, append([]string{strconv.FormatInt(sb.fsize, 10), path}, args...), nil
 }
 
 // unwritableMode is the mode an unwritable directory is given: read and
@@ -587,6 +631,10 @@ func probeRequirement(dir, req string) (bool, string) {
 		return probeUnwritable(d)
 	case "unreadable-files":
 		return probeUnreadable(d)
+	case "nonportable-names":
+		return probeNonportable(d)
+	case "file-size-limit":
+		return probeFileSize(d)
 	case "case-sensitive-fs":
 		if err := os.WriteFile(filepath.Join(d, "a"), nil, 0o644); err != nil {
 			return false, err.Error()
@@ -670,4 +718,54 @@ func probeUnreadable(dir string) (bool, string) {
 		return false, "this process can open a file of mode 0000 for reading, as root can"
 	}
 	return true, ""
+}
+
+// nonportableNames are the names probeNonportable creates: one holding a
+// colon and one holding a backslash, the two characters an item name may
+// not hold (ADR-011 A6 item 2).
+var nonportableNames = []string{"a:b", `a\b`}
+
+// probeNonportable reports whether a file whose name holds a colon, and
+// one whose name holds a backslash, can be created below dir and are
+// listed back under those names, byte for byte. It does not where the
+// platform or the file system refuses or maps such a name, as Windows
+// does.
+func probeNonportable(dir string) (bool, string) {
+	for _, n := range nonportableNames {
+		if err := os.WriteFile(filepath.Join(dir, n), nil, 0o644); err != nil {
+			return false, fmt.Sprintf("cannot create a file named %q: %v", n, err)
+		}
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return false, err.Error()
+	}
+	for _, n := range nonportableNames {
+		if !slices.ContainsFunc(entries, func(e fs.DirEntry) bool { return e.Name() == n }) {
+			return false, fmt.Sprintf("a file created as %q is listed under another name", n)
+		}
+	}
+	return true, ""
+}
+
+// probeFileSize reports whether a process the runner starts under a
+// file-size limit is refused a write past it and survives the refusal:
+// the stub, given a limit, writes one byte more than it to a file below
+// dir. It does not on a platform with no such limit, as Windows has none.
+func probeFileSize(dir string) (bool, string) {
+	stub, err := fsizeStub()
+	if err != nil {
+		return false, err.Error()
+	}
+	p, err := runProc(stub, []string{"1024", "-probe", dir}, dir, nil, nil, defaultWall)
+	if err != nil {
+		return false, err.Error()
+	}
+	switch p.exit {
+	case 0:
+		return true, ""
+	case 1:
+		return false, "a process under a file-size limit wrote past it"
+	}
+	return false, fmt.Sprintf("the file-size probe exited %d: %s", p.exit, bytes.TrimSpace(p.stderr))
 }

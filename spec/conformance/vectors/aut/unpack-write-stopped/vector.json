@@ -1,0 +1,47 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/unpack-write-stopped",
+  "title": "An unpack into an empty directory whose write fails after it has written a file reports output.destination.write_failed, listing the file, and leaves it",
+  "statements": [
+    "MTS-AUT-027"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "byte-level"
+  ],
+  "requires": [
+    "file-size-limit"
+  ],
+  "notes": "Its package.metais is written by internal/vectorgen (go test ./internal/vectorgen -run TestPackages -args -update), whose test reproduces the committed bytes. It is packed from the source directory aut/unpack/expected/src. Unpack writes inputs/report.schema.json, of 228 bytes, and then metais.yaml, of 394, which the setup's file-size limit of 300 bytes refuses (ADR-011 A6 item 3).",
+  "cases": [
+    {
+      "name": "in-place",
+      "setup": {
+        "dirs": [
+          "dest"
+        ],
+        "file_size_limit": 300
+      },
+      "steps": [
+        {
+          "op": "unpack",
+          "args": {
+            "package": "package.metais",
+            "to": "dest"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json",
+            "trees": [
+              {
+                "path": "dest",
+                "equals": "expected/dest"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

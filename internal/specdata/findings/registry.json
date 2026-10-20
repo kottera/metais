@@ -45,7 +45,9 @@
       "hint": "Rename the file with a UTF-8 name that holds no backslash and no colon; the file was not read.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-031"
+      ]
     },
     {
       "code": "collection.stem_duplicate",
@@ -1410,7 +1412,9 @@
       "hint": "Make the entry readable and validate again. The input's schema was not checked.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-030"
+      ]
     },
     {
       "code": "input.not_regular_file",
@@ -5656,7 +5660,9 @@
       "hint": "Give the path of a packed package file or of a source directory; the path is opened as given, relative to the working directory.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-001"
+      ]
     },
     {
       "code": "package.not_readable",
@@ -5675,7 +5681,9 @@
       "hint": "Give the path of a packed package file or of a source directory that metais may read.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-046"
+      ]
     },
     {
       "code": "package.version.malformed",

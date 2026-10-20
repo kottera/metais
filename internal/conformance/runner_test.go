@@ -263,9 +263,11 @@ func (r *runner) runCaseIn(v *vector, c *vcase, base string, mode pathMode) *cas
 }
 
 // setupProblems are the harness errors of c's setup that no run can
-// mend, found before anything runs: a directory made unwritable, or a
-// path made unreadable, in a vector that does not require what makes it
-// so (ADR-011 A2 item 3, A4 item 3); and a path listed absent that the
+// mend, found before anything runs: a directory made unwritable, a path
+// made unreadable, a path renamed or a file-size limit, in a vector that
+// does not require what makes it so (ADR-011 A2 item 3, A4 item 3, A6
+// items 2 and 4); a rename to a name the committed tree could hold, or to
+// more than one segment (A6 item 1); and a path listed absent that the
 // vector directory holds, or that no step names (A4 item 1).
 func setupProblems(v *vector, c *vcase) []string {
 	s := c.Setup
@@ -278,6 +280,17 @@ func setupProblems(v *vector, c *vcase) []string {
 	}
 	if len(s.Unreadable) > 0 && !slices.Contains(v.Requires, "unreadable-files") {
 		msgs = append(msgs, "the setup makes a path unreadable, and the vector does not require unreadable-files")
+	}
+	if len(s.Renames) > 0 && !slices.Contains(v.Requires, "nonportable-names") {
+		msgs = append(msgs, "the setup renames a path, and the vector does not require nonportable-names")
+	}
+	for _, rn := range s.Renames {
+		if !strings.ContainsAny(rn.Name, `:\`) || strings.ContainsAny(rn.Name, "/\x00") || rn.Name == "." || rn.Name == ".." {
+			msgs = append(msgs, fmt.Sprintf("the setup renames %s to %q, which is not one segment holding a colon or a backslash", rn.Path, rn.Name))
+		}
+	}
+	if s.FileSizeLimit != 0 && !slices.Contains(v.Requires, "file-size-limit") {
+		msgs = append(msgs, "the setup sets a file-size limit, and the vector does not require file-size-limit")
 	}
 	for _, a := range s.Absent {
 		if _, err := os.Lstat(filepath.Join(v.dir, filepath.FromSlash(a))); err == nil {

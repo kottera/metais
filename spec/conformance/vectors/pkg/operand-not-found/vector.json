@@ -1,0 +1,57 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pkg/operand-not-found",
+  "title": "A path that names nothing, or names a place beneath a directory that does not exist, is refused by every command that opens a package",
+  "statements": [
+    "MTS-PKG-001"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "Each path is listed absent in the setup (ADR-011 A4 item 1), so the work directory holds nothing at it.",
+  "cases": [
+    {
+      "name": "missing",
+      "setup": {
+        "absent": [
+          "missing"
+        ]
+      },
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "missing"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "beneath-missing",
+      "setup": {
+        "absent": [
+          "missing/package.metais"
+        ]
+      },
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "missing/package.metais"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

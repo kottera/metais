@@ -57,7 +57,7 @@
       "description": "What the work directory's file system must offer; a case whose requirement is absent is skipped and reported, never counted as a pass.",
       "type": "array",
       "uniqueItems": true,
-      "items": { "enum": ["symlinks", "fifos", "case-sensitive-fs", "unwritable-dirs", "unreadable-files"] }
+      "items": { "enum": ["symlinks", "fifos", "case-sensitive-fs", "unwritable-dirs", "unreadable-files", "nonportable-names", "file-size-limit"] }
     },
     "notes": {
       "title": "Notes",
@@ -178,6 +178,31 @@
           "title": "Unreadable paths",
           "description": "Files and directories, put in place by the rest of the setup, that are made unreadable to the implementation, mode 0000, after everything else, the unwritable directories included. A vector whose setup names one requires unreadable-files.",
           "$ref": "#/$defs/paths"
+        },
+        "renames": {
+          "title": "Renames",
+          "description": "Paths the rest of the setup put in place, each renamed in its own directory, before any directory is made unwritable or any path unreadable, to a name holding a colon or a backslash, which no path of the committed suite may hold. A vector whose setup names one requires nonportable-names.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "name"],
+            "additionalProperties": false,
+            "properties": {
+              "path": { "$ref": "#/$defs/path" },
+              "name": {
+                "title": "Name",
+                "description": "The path's new last segment.",
+                "type": "string",
+                "pattern": "^[^/\\u0000]*[:\\\\][^/\\u0000]*$"
+              }
+            }
+          }
+        },
+        "file_size_limit": {
+          "title": "File-size limit",
+          "description": "The largest file, in bytes, that every process a step starts may write: a write that would make a file larger fails, and does not end the process. A vector whose setup sets one requires file-size-limit.",
+          "type": "integer",
+          "minimum": 1
         }
       }
     },

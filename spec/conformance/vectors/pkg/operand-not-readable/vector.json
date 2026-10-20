@@ -1,0 +1,59 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pkg/operand-not-readable",
+  "title": "A source directory or a file the processor may not read is refused by every command that opens a package",
+  "statements": [
+    "MTS-PKG-046"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [
+    "unreadable-files"
+  ],
+  "notes": "The setup makes the operand mode 0000 (ADR-011 A4 item 2). The file's bytes are never read, so it is not a package.",
+  "cases": [
+    {
+      "name": "directory",
+      "setup": {
+        "unreadable": [
+          "package"
+        ]
+      },
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "file",
+      "setup": {
+        "unreadable": [
+          "sealed"
+        ]
+      },
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "sealed"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

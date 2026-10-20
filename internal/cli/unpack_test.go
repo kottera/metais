@@ -210,8 +210,7 @@ func snapshot(t *testing.T, root string) []string {
 // TestUnpackRefusalsTriggered is ADR-008 D16 item 2 for unpack: every
 // refusal it declares is triggered by one of unpack's tests here, by
 // inspect's over the suite, which unpack shares through the open, or by a
-// line refusal, or is a code the unwired list says no vector produces
-// yet. The line's and the open's are proved by inspect's test.
+// line refusal. The line's and the open's are proved by inspect's test.
 func TestUnpackRefusalsTriggered(t *testing.T) {
 	own := map[finding.Code]bool{
 		finding.CodeUsageMissingOperand: true, finding.CodeUsagePackageFromStdin: true, finding.CodeUsageBadValue: true,
