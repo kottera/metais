@@ -1,0 +1,16 @@
+{%- assign s = inputs.status -%}
+<section class="status status-{{ s.state }}" aria-label="{{ s.service }} status">
+  <h2>{{ s.service }}</h2>
+  <p class="status-state">{{ s.state | capitalize }}</p>
+{%- if s.message %}
+  <p class="status-message">{{ s.message }}</p>
+{%- endif %}
+{%- if s.components %}
+  <ul class="status-components">
+{%- for c in s.components %}
+    <li class="status-{{ c.state }}">{{ c.name }}: {{ c.state | capitalize }}</li>
+{%- endfor %}
+  </ul>
+{%- endif %}
+  <p class="status-updated">Updated <time datetime="{{ s.updated }}">{{ s.updated }}</time></p>
+</section>

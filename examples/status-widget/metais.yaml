@@ -1,0 +1,40 @@
+metais: "1.0"
+name: "status-widget"
+version: "1.0.0"
+title: "Service status widget"
+description: "Renders one HTML fragment showing a service's status, from a JSON object a program supplies."
+license: "Apache-2.0"
+guide: |-
+  This package renders status.html, an HTML fragment that shows one
+  service's current status: its state, an optional message, the state of
+  each of its components, and when the status was last updated. A page
+  includes the fragment where the widget belongs; the fragment carries
+  class names and no style of its own.
+
+  It is written for a program, not a person. A scheduled job fetches the
+  status from wherever it is kept, writes it as status.json in a data
+  directory, and runs two commands:
+
+      metais validate status-widget --data data
+      metais render status-widget --data data --out widget
+
+  validate reports every value that does not fit the
+  [status schema](inputs/status.schema.json), and render writes
+  widget/status.html. Every value is HTML-escaped, so a service name or a
+  message may hold any text.
+
+  The state is one of operational, degraded, outage and maintenance, for
+  the service and for each component. Leave message out when there is
+  nothing to say beyond the state, and leave components out for a service
+  that is not divided into parts.
+inputs:
+  - name: status
+    title: "Service status"
+    description: "The status of one service, as the program that publishes the widget fetched it."
+    schema: inputs/status.schema.json
+    forms:
+      - json
+outputs:
+  - id: widget
+    template: status.html.liquid
+    escape: html

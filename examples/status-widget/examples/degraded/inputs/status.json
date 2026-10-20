@@ -1,0 +1,10 @@
+{
+  "service": "Payments <API>",
+  "state": "degraded",
+  "updated": "2026-10-20T08:15:00Z",
+  "message": "Card payments are slower than usual & some retries fail.",
+  "components": [
+    {"name": "Card payments", "state": "degraded"},
+    {"name": "Bank transfers", "state": "operational"}
+  ]
+}
