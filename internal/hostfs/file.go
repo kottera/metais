@@ -112,103 +112,125 @@ func (o *FileOut) Replaces() bool { return o.info != nil }
 // Close releases the directory. It removes nothing.
 func (o *FileOut) Close() error { return o.w.Close() }
 
-// maxWalk bounds the directories Within climbs from the file's: deeper
-// than any file system a host gives a path to.
-const maxWalk = 4096
+// Held is the identity of some top-level entries of a source directory,
+// which Within compares a file's directory and the file itself with.
+type Held struct {
+	dirs, files []heldEntry
+}
 
-// Within reports which of names, top-level entries of the directory at
-// source, the caller's own path, holds the file: a directory among them
-// that is the file's directory or one above it, or a regular file among
-// them that is the file itself. It returns "" when none does. Each name
-// is examined with Lstat and compared by identity (os.SameFile), never by
-// path, so a link, a second name or a case variant of a directory is
-// seen for what it is.
-//
-// The directories above the file's are found by appending ".." to the
-// caller's path, which a unix host resolves physically, through the
-// directory a link names; a windows host resolves ".." in a path by its
-// text.
-func (o *FileOut) Within(source string, names []string) (string, error) {
+type heldEntry struct {
+	name string
+	info fs.FileInfo
+}
+
+// Hold examines names, top-level entries of the directory at source, the
+// caller's own path, each with Lstat, and holds the identity of each that
+// is a directory or a regular file. A name that is absent is not held. An
+// error is the source directory's, never the output's.
+func Hold(source string, names []string) (*Held, error) {
 	root, err := openRoot(source)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer root.Close()
-	type held struct {
-		name string
-		info fs.FileInfo
-	}
-	var dirs []held
+	h := &Held{}
 	for _, n := range names {
 		on, ok := osName(n)
 		if !ok {
-			return "", fail("stat", BadName)
+			return nil, fail("stat", BadName)
 		}
 		info, err := root.Lstat(on)
 		switch {
 		case errors.Is(err, fs.ErrNotExist):
-			continue
 		case err != nil:
-			return "", mapErr("stat", err)
+			return nil, mapErr("stat", err)
 		case info.IsDir():
-			dirs = append(dirs, held{n, info})
-		case info.Mode().IsRegular() && o.info != nil && os.SameFile(info, o.info):
-			return n, nil
+			h.dirs = append(h.dirs, heldEntry{n, info})
+		case info.Mode().IsRegular():
+			h.files = append(h.files, heldEntry{n, info})
 		}
 	}
-	if len(dirs) == 0 {
+	return h, nil
+}
+
+// Within reports which entry of h holds the file: a directory that is the
+// file's directory or one above it, or a regular file that is the file
+// itself. It returns "" when none does. Identity decides (os.SameFile),
+// never a path's text, so a link, a second name or a case variant of an
+// entry is seen for what it is: the file's directory is resolved once
+// through every link in it (filepath.EvalSymlinks), and each directory
+// above it is then its parent by name.
+func (o *FileOut) Within(h *Held) (string, error) {
+	for _, f := range h.files {
+		if o.info != nil && os.SameFile(f.info, o.info) {
+			return f.name, nil
+		}
+	}
+	if len(h.dirs) == 0 {
 		return "", nil
 	}
-	p := o.dir
+	p, err := filepath.EvalSymlinks(o.dir)
+	if err != nil {
+		return "", mapErr("stat", err)
+	}
 	info, err := os.Stat(p)
-	for range maxWalk {
+	for {
 		if err != nil {
 			return "", mapErr("stat", err)
 		}
-		for _, d := range dirs {
+		for _, d := range h.dirs {
 			if os.SameFile(info, d.info) {
 				return d.name, nil
 			}
 		}
-		p += string(filepath.Separator) + ".."
-		parent, perr := os.Stat(p)
+		up := filepath.Join(p, "..")
+		parent, perr := os.Stat(up)
 		if perr == nil && os.SameFile(parent, info) {
 			// The root of the file system is its own parent.
 			return "", nil
 		}
-		info, err = parent, perr
+		p, info, err = up, parent, perr
 	}
-	return "", nil
 }
 
 // Write writes the file: write is called once with the temporary file,
-// buffered, which is then flushed, synced and closed, and renamed over
-// the target, a replacing rename when a regular file stood there and a
-// no-replace rename otherwise (ADR-005 D14 items 1.4 and 2.2). It returns
-// the number of bytes written. Any failure removes the temporary file
-// while it still holds what this write created, and leaves the target as
-// it was. A failure of write's own, other than a failed write to the
-// file, is returned as write returned it; every other is an *Error.
-func (o *FileOut) Write(write func(w io.Writer) error) (int64, error) {
+// buffered, which is then flushed and synced; verify, when it is not
+// nil, then reads the whole file back; and the file is closed and renamed
+// over the target, a replacing rename when a regular file stood there and
+// a no-replace rename otherwise (ADR-005 D14 items 1.4 and 2.2). It
+// returns the number of bytes written. Any failure removes the temporary
+// file while it still holds what this write created, and leaves the
+// target as it was. A failure of write's or verify's own, other than a
+// failed write to the file, is returned as they returned it; every other
+// is an *Error.
+func (o *FileOut) Write(write func(w io.Writer) error, verify func(r io.ReaderAt, size int64) error) (int64, error) {
 	tmp := TempName(o.name)
-	f, err := o.w.root.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, fileMode)
+	f, err := o.w.root.OpenFile(tmp, os.O_RDWR|os.O_CREATE|os.O_EXCL, fileMode)
 	if err != nil {
 		return 0, mapErr("create", err)
 	}
 	info, err := f.Stat()
+	if err != nil {
+		// The exclusive create made the name this write's, and nothing
+		// since has proved otherwise or given it away.
+		f.Close()
+		o.w.root.Remove(tmp)
+		return 0, mapErr("create", err)
+	}
 	cw := &countingWriter{w: f}
-	var own error
-	if err == nil {
-		bw := bufio.NewWriterSize(cw, 64<<10)
-		if own = write(bw); own == nil {
-			err = bw.Flush()
-		}
-		if cw.err != nil {
-			own, err = nil, cw.err
-		}
+	bw := bufio.NewWriterSize(cw, 64<<10)
+	own := write(bw)
+	if own == nil {
+		err = bw.Flush()
+	}
+	if cw.err != nil {
+		own, err = nil, cw.err
 	}
 	if err == nil && own == nil {
 		err = f.Sync()
+	}
+	if err == nil && own == nil && verify != nil {
+		own = verify(f, cw.n)
 	}
 	if err != nil || own != nil {
 		o.w.removeHeld(tmp, info)

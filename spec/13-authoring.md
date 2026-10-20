@@ -545,3 +545,11 @@ that lies inside one of the source directory's layout trees, `inputs/`,
 `metais.yaml`, with `output.destination.in_package`, whose `entry` names
 that tree or file, and MUST write nothing: the package would join the
 source it was packed from, or replace it.
+
+<a id="mts-aut-052"></a>**MTS-AUT-052** Before it writes the package
+anywhere, pack MUST read the package it built as a processor verifies a
+packed package ([MTS-PKG-032](02-container.md#mts-pkg-032)'s steps 1 to
+5), under the limits in force, and MUST refuse one a processor would
+refuse with that verification's findings, writing nothing: a limit only
+the packed bytes show, such as `entry-ratio` and `package-size`, which
+the check cannot judge without the encoder, is pack's to hold.

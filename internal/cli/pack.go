@@ -115,6 +115,11 @@ func packRefusals() []Refusal {
 		switch {
 		case r.Code == finding.CodeLimitInvalid || r.Code == finding.CodeUsagePackageFromStdin:
 			r.Next = nextCommandHelp("pack")
+		case r.Code == finding.CodeLimitPackage:
+			// check's breach, or one only the package's bytes show,
+			// such as entry-ratio, which pack finds reading them back.
+			r.Cause = "The package, or the package's bytes as pack writes them, breach one of its limits; nothing was written."
+			r.Next = nextLimits
 		case r.Next == nextCheckAgain:
 			r.Next = nextPackCheck
 		}
@@ -219,9 +224,27 @@ func runPack(s *session, p args.Parsed) outcome {
 	name := pkg.Manifest.Name + "-" + pkg.Manifest.Version + ".metais"
 	res := &packResult{DryRun: dry, Digest: digest.Format(plan.Digest), Entries: len(plan.Entries)}
 	o := outcome{findings: fs, result: res}
-	if toStream {
+	// Every byte is read back as a reader reads a package before any of
+	// it is kept: a limit only the bytes show refuses it (ADR-007 D2 step
+	// 3, MTS-PKG-038).
+	verify := func(r io.ReaderAt, size int64) error {
+		vfs, err := author.VerifyPacked(r, size, lim)
+		if err == nil && len(vfs) > 0 {
+			err = &unreadablePackage{vfs}
+		}
+		return err
+	}
+	inMemory := func() (*bytes.Buffer, error) {
 		var buf bytes.Buffer
-		if err := plan.Write(&buf); err != nil {
+		err := plan.Write(&buf)
+		if err == nil {
+			err = verify(bytes.NewReader(buf.Bytes()), int64(buf.Len()))
+		}
+		return &buf, err
+	}
+	if toStream {
+		buf, err := inMemory()
+		if err != nil {
 			return s.packFailed(fs, err)
 		}
 		res.File, res.Size = "-", int64(buf.Len())
@@ -229,7 +252,9 @@ func runPack(s *session, p args.Parsed) outcome {
 			o.stream = func(w io.Writer) { write(w, buf.Bytes()) }
 		}
 	} else {
-		target := name
+		// Without --out the file is name in the working directory, which
+		// is never read as a directory to write it in.
+		target := "."
 		if hasOut {
 			target = out
 		}
@@ -241,24 +266,28 @@ func runPack(s *session, p args.Parsed) outcome {
 			return s.packFailed(fs, err)
 		}
 		defer fo.Close()
-		entry, err := fo.Within(operand, author.LayoutEntries)
+		held, err := hostfs.Hold(operand, author.LayoutEntries)
+		if err != nil {
+			return s.packFailed(fs, &author.ReadError{Reason: hostfs.ReasonOf(err)})
+		}
+		entry, err := fo.Within(held)
 		switch {
 		case err != nil:
 			return s.packFailed(fs, err)
 		case entry != "":
 			return s.packFailed(fs, &inPackageError{entry})
 		}
-		if !hasOut || fo.InDirectory() {
+		if fo.InDirectory() {
 			// pack chose the name: no --out, or one that names an
 			// existing directory.
 			res.File = name
 		}
 		if dry {
-			var c countWriter
-			err = plan.Write(&c)
-			res.Size = c.n
+			var buf *bytes.Buffer
+			buf, err = inMemory()
+			res.Size = int64(buf.Len())
 		} else {
-			res.Size, err = fo.Write(plan.Write)
+			res.Size, err = fo.Write(plan.Write, verify)
 		}
 		if err != nil {
 			return s.packFailed(fs, err)
@@ -288,6 +317,12 @@ func (s *session) badOut(p args.Parsed) finding.Finding {
 	})
 }
 
+// unreadablePackage is a package pack built that a reader refuses, with
+// the reader's findings.
+type unreadablePackage struct{ fs []finding.Finding }
+
+func (e *unreadablePackage) Error() string { return "cli: the package built does not read" }
+
 // inPackageError is an output file inside the source directory's entry.
 type inPackageError struct{ entry string }
 
@@ -300,8 +335,12 @@ func (e *inPackageError) Error() string { return "cli: the output is in " + e.en
 func (s *session) packFailed(fs []finding.Finding, err error) outcome {
 	var re *author.ReadError
 	var ip *inPackageError
+	var up *unreadablePackage
 	var f finding.Finding
 	switch {
+	case errors.As(err, &up):
+		all := append(slices.Clone(fs), up.fs...)
+		return outcome{findings: all, next: s.nextSteps(up.fs)}
 	case errors.As(err, &re):
 		f = finding.New(loader.CodeNotReadable, finding.Subject{Kind: finding.SubjectPackage}, nil,
 			finding.Params{"reason": finding.String(string(re.Reason))})
@@ -341,12 +380,4 @@ func packHuman(r *packResult, entries []string) []byte {
 	}
 	b := []byte("Would pack " + what + facts + "--dry-run wrote nothing.\n")
 	return append(b, listing("Would pack "+strconv.Itoa(len(entries))+" entries:", entries, false)...)
-}
-
-// countWriter counts the bytes written to it and keeps none.
-type countWriter struct{ n int64 }
-
-func (c *countWriter) Write(b []byte) (int, error) {
-	c.n += int64(len(b))
-	return len(b), nil
 }

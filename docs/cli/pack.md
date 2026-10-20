@@ -21,8 +21,12 @@ stops it the same way. Nothing is written until both pass. Warnings and
 notes are reported and do not stop it, unless `--fail-on warning` is given,
 which makes a warning stop it as an error does. No flag skips a step.
 
-When check and test pass, the package is built and its package digest
-compared with the one the source directory opened with. A source entry
+When check and test pass, the package is built, its package digest
+compared with the one the source directory opened with, and its bytes read
+back as every reader reads a package, under the limits in force, before it
+is kept anywhere (MTS-AUT-052): a limit only the packed bytes show, such as
+`entry-ratio` for a file that deflates too far, is refused as
+`limit.package`, and nothing is written. A source entry
 that changed since, or that changes while it is written, is refused as
 `package.not_readable` with `reason` `changed`, and nothing is written: the
 digests a package carries are always its entries' own.
@@ -30,7 +34,8 @@ digests a package carries are always its entries' own.
 ## Where it writes
 
 - **No `--out`:** `<name>-<version>.metais` in the working directory, from
-  the manifest's `name` and `version`.
+  the manifest's `name` and `version`. A directory of that name is refused,
+  never written in.
 - **`--out <dir>`, an existing directory:** `<name>-<version>.metais` inside
   it.
 - **`--out <file>`:** that file. Its directory must exist.

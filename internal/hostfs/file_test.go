@@ -24,7 +24,7 @@ func writeOut(t *testing.T, path, name, body string) (*FileOut, int64, error) {
 	n, err := o.Write(func(w io.Writer) error {
 		_, err := io.WriteString(w, body)
 		return err
-	})
+	}, nil)
 	return o, n, err
 }
 
@@ -104,8 +104,21 @@ func TestFileOutWriteFails(t *testing.T) {
 	if _, err := o.Write(func(w io.Writer) error {
 		io.WriteString(w, "part")
 		return boom
-	}); err != boom {
+	}, nil); err != boom {
 		t.Errorf("Write returned %v, want the writer's own error", err)
+	}
+	// A verify that refuses what was written: it reads the whole file,
+	// and its error is returned as it is.
+	var read []byte
+	if _, err := o.Write(func(w io.Writer) error {
+		_, err := io.WriteString(w, "whole")
+		return err
+	}, func(r io.ReaderAt, size int64) error {
+		read = make([]byte, size)
+		r.ReadAt(read, 0)
+		return boom
+	}); err != boom || string(read) != "whole" {
+		t.Errorf("Write returned %v, having verified %q", err, read)
 	}
 	if b, _ := os.ReadFile(filepath.Join(root, "p.metais")); string(b) != "old" {
 		t.Errorf("the target holds %q", b)
@@ -117,9 +130,13 @@ func TestFileOutWriteFails(t *testing.T) {
 
 // TestFileOutWithin is ADR-007 D7 item 5's refusal of an output inside
 // the source directory's layout trees, or at its manifest: found by
-// identity, at any depth, and not for a file beside them.
+// identity, at any depth, through a relative path that climbs, and not
+// for a file beside them. A source that cannot be read is Hold's error.
 func TestFileOutWithin(t *testing.T) {
 	root := dir(t)
+	if _, err := Hold(filepath.Join(root, "missing"), []string{"templates"}); ReasonOf(err) != NotFound {
+		t.Errorf("Hold of a missing source: %v", err)
+	}
 	src := filepath.Join(root, "src")
 	files(t, src, map[string]string{"metais.yaml": "m", "templates/deep/x.liquid": "t", "assets/a": "a"})
 	names := []string{"assets", "examples", "inputs", "metais.yaml", "references", "templates"}
@@ -131,12 +148,17 @@ func TestFileOutWithin(t *testing.T) {
 		{filepath.Join(src, "metais.yaml"), "metais.yaml"},
 		{src, ""},
 		{root, ""},
+		{src + "/templates/deep/../../assets", "assets"},
 	} {
 		o, err := OpenFileOut(c.path, "p.metais")
 		if err != nil {
 			t.Fatal(err)
 		}
-		got, err := o.Within(src, names)
+		h, err := Hold(src, names)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got, err := o.Within(h)
 		o.Close()
 		if err != nil || got != c.want {
 			t.Errorf("%s: Within = %q, %v; want %q", c.path, got, err, c.want)

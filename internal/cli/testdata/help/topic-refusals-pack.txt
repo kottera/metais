@@ -161,7 +161,6 @@ Next: metais check <dir>
       Lists the errors that stop pack; fix them, then pack again, which checks
       and tests the package first.
   example.layout
-  limit.package
   manifest.additional_item
   manifest.additional_property
   manifest.any_of
@@ -338,6 +337,11 @@ Next: metais pack --help
   usage.repeated_flag
   usage.unexpected_operand
   usage.unknown_flag
+
+Next: metais limits
+      Lists every limit with its default; a limit can be lowered and never
+      raised.
+  limit.package
 
 Next: metais pack <dir> --out <path>
       Writes the package to a file outside the layout trees: in the source

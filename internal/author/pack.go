@@ -10,7 +10,9 @@ import (
 
 	"github.com/kottera/metais/internal/digest"
 	"github.com/kottera/metais/internal/fault"
+	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
+	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/pkgtree"
 	"github.com/kottera/metais/internal/zipfmt"
@@ -121,6 +123,17 @@ type ReadError struct {
 }
 
 func (e *ReadError) Error() string { return "author: reading a source entry: " + string(e.Reason) }
+
+// VerifyPacked reads the package at r, size bytes, as every reader reads
+// one, ADR-001 D8's steps 1 to 5, under lim, and returns what it finds: a
+// package whose bytes breach a limit only they can show, such as
+// entry-ratio or package-size, which check cannot judge without the
+// encoder, is one pack refuses rather than writes (ADR-007 D2 step 3,
+// MTS-PKG-038). An error is r's.
+func VerifyPacked(r io.ReaderAt, size int64, lim limits.Set) ([]finding.Finding, error) {
+	_, fs, err := zipfmt.Open(r, size, lim)
+	return fs, err
+}
 
 // hashEntry reads the entry n of tree, writing its bytes to w when w is
 // not nil, and returns their SHA-256. A failure to read is a *ReadError;

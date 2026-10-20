@@ -46,7 +46,11 @@ func TestFileOutWithinLink(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer o.Close()
-	if got, err := o.Within(src, []string{"metais.yaml", "references"}); err != nil || got != "references" {
+	h, err := Hold(src, []string{"metais.yaml", "references"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := o.Within(h); err != nil || got != "references" {
 		t.Errorf("Within = %q, %v; want references", got, err)
 	}
 }

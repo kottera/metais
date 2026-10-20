@@ -77,8 +77,9 @@ Refusals:
       A --limit names no limit, gives a malformed value, or tries to raise one.
       Next: metais pack --help
   limit.package
-      The package breaches one of its limits.
-      Next: metais check <dir>
+      The package, or the package's bytes as pack writes them, breach one of its
+      limits; nothing was written.
+      Next: metais limits
   output.destination.in_package
       The package file would be inside one of the layout trees of the source
       directory, or be its manifest.

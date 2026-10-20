@@ -84,6 +84,20 @@ func TestPackDefaultName(t *testing.T) {
 	if r.status != 0 || strings.Contains(r.stdout+r.stderr, "SENTINEL") || !strings.HasPrefix(r.stdout, "Packed the package: ") {
 		t.Errorf("human, into a named file: status %d, stdout %q, stderr %q", r.status, r.stdout, r.stderr)
 	}
+	// A directory at the default name is not one to write in: without
+	// --out, the file is the name in the working directory.
+	os.Remove(filepath.Join(work, "refused-1.0.0.metais"))
+	if err := os.Mkdir(filepath.Join(work, "refused-1.0.0.metais"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	r = runTool(t, "pack", "--json", src)
+	if r.status != finding.ExitDestination || !slices.Equal(r.codes(), []string{string(finding.CodeDestinationNothingWritten)}) {
+		t.Errorf("a directory at the default name: status %d, codes %q", r.status, r.codes())
+	}
+	if names, _ := os.ReadDir(filepath.Join(work, "refused-1.0.0.metais")); len(names) != 0 {
+		t.Errorf("pack wrote into the directory at the default name: %v", names)
+	}
+	os.Remove(filepath.Join(work, "refused-1.0.0.metais"))
 	r = runTool(t, "pack", src)
 	if r.status != 0 || !strings.HasPrefix(r.stdout, "Packed refused-1.0.0.metais: "+strconv.FormatInt(res.Size, 10)+" bytes, 7 entries, package digest "+res.Digest+"\n") {
 		t.Errorf("human: status %d, stdout %q", r.status, r.stdout)

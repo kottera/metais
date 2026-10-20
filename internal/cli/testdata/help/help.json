@@ -19456,10 +19456,10 @@
           },
           {
             "code": "limit.package",
-            "cause": "The package breaches one of its limits.",
+            "cause": "The package, or the package's bytes as pack writes them, breach one of its limits; nothing was written.",
             "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+              "run": "metais limits",
+              "why": "Lists every limit with its default; a limit can be lowered and never raised."
             }
           },
           {
