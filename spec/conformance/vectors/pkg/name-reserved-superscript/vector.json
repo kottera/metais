@@ -1,0 +1,39 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pkg/name-reserved-superscript",
+  "title": "An entry name whose segment is a Windows device name spelled with a superscript digit, COM¹.txt, is refused",
+  "statements": [
+    "MTS-PKG-016",
+    "MTS-PKG-070",
+    "MTS-SEC-002"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "byte-level"
+  ],
+  "requires": [],
+  "notes": "Its package.metais is written by internal/vectorgen (go test ./internal/vectorgen -run TestPackages -args -update), whose test reproduces the committed bytes.",
+  "cases": [
+    {
+      "name": "open",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package.metais"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -229,6 +229,8 @@ func corpusCases() []pkgCase {
 		{"pkg/name-reserved", func(t testing.TB) []byte { return named(t, "assets/CON") }},
 		{"pkg/name-reserved-extension", func(t testing.TB) []byte { return named(t, "assets/nul.txt") }},
 		{"pkg/name-reserved-port", func(t testing.TB) []byte { return named(t, "assets/com1") }},
+		{"pkg/name-reserved-superscript", func(t testing.TB) []byte { return named(t, "assets/COM¹.txt") }},
+		{"pkg/name-reserved-spaced", func(t testing.TB) []byte { return named(t, "assets/Con .md") }},
 		{"pkg/name-stream", func(t testing.TB) []byte { return named(t, "assets/a:b") }},
 		{"pkg/name-asterisk", func(t testing.TB) []byte { return named(t, "assets/a*b") }},
 		{"pkg/name-trailing-dot", func(t testing.TB) []byte { return named(t, "assets/name.") }},

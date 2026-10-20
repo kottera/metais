@@ -205,6 +205,18 @@ ASCII case), a `.git` segment in any spelling Git treats as `.git`, a segment
 ending in `.` or U+0020, or a segment longer than 255 bytes, and a processor
 MUST refuse a name that has one with `package.name.not_portable`.
 
+<a id="mts-pkg-070"></a>**MTS-PKG-070** A segment of an entry name is a
+Windows device name when the part before its first `.`, with every trailing
+U+0020 removed, is one of the names [MTS-PKG-016](#mts-pkg-016) lists, or
+`com` or `lpt` followed by `¹`, `²` or `³`, compared without regard to ASCII
+case; a processor MUST refuse `assets/COM¹.txt` and `assets/Con .md` as it
+refuses `assets/nul.txt`.
+
+> **Note.** Windows treats the superscript digits as the digits they look
+> like when it resolves a device name, and drops the spaces before a name's
+> extension, so either spelling opens a device rather than a file. Output
+> paths follow the same rule ([MTS-PTH-010](11-rendering.md#mts-pth-010)).
+
 <a id="mts-pkg-017"></a>**MTS-PKG-017** In the set of every entry name and
 every directory prefix of every entry name (`a/b/c` contributes `a`, `a/b` and
 `a/b/c`), no two distinct members MUST be canonical caseless matches under

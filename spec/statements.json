@@ -184,6 +184,7 @@
     {"id": "MTS-PKG-039", "chapter": "02-container.md", "section": "2.7", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-PKG-040", "chapter": "02-container.md", "section": "2.7", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-PKG-045", "chapter": "02-container.md", "section": "2.2.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-PKG-070", "chapter": "02-container.md", "section": "2.3", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-PTH-001", "chapter": "11-rendering.md", "section": "11.4", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-PTH-002", "chapter": "11-rendering.md", "section": "11.4", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-PTH-003", "chapter": "11-rendering.md", "section": "11.4", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
