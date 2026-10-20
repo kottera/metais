@@ -1585,10 +1585,11 @@ is not a ruling made by the train and needs no ratification.
 
 ## Implementation log
 
-Each work item writes its entry as a file of its own, in
-`docs/adr/logs/ADR-011/`, named by the item's address (AGENTS.md, "Writing
-documentation"). The entries below are the ones written in this file
-before that rule, and stay where they were written.
+This log is this section together with the entry files in
+`docs/adr/logs/ADR-011/`. Each work item writes its entry as a file of its
+own there, named as AGENTS.md's "Writing documentation" says. The entries
+below are the ones written in this file before that rule, and stay where
+they were written.
 
 - **2026-10-19, PLAN-2026-10-metais-v1 W2-3.** D14's document tripwires
   landed in `internal/guarantees` (ADR-010 D2's home for tripwires; no
