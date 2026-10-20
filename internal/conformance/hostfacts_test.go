@@ -7,11 +7,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"os/user"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"strings"
 	"sync"
@@ -33,13 +33,12 @@ type hostFact struct {
 	path  bool // a path: matched where no path character continues it
 }
 
-// hostFacts are the host's facts, gathered once, and the words a host or
+// hostFacts are the host's facts, gathered once, and the text a host or
 // user name may share with what the tool and the suite write themselves.
 type hostFacts struct {
 	names []hostFact // the host name and the user name
 	paths []hostFact // the real home directory and the checkout
-	vocab map[string]bool
-	words sync.Map // a vector's directory: the words of its files
+	texts sync.Map   // a vector's directory: the text of its files
 }
 
 // minNameLength is the length a host or user name must exceed to be
@@ -52,16 +51,13 @@ const minNameLength = 3
 // scan cannot tell it from the tool's own text. Nor, in a case, is one
 // that is a word of the vector's own files, which the tool may echo.
 func newHostFacts(vocab ...[]byte) *hostFacts {
-	h := &hostFacts{vocab: map[string]bool{}}
-	for _, b := range vocab {
-		for w := range words(b) {
-			h.vocab[w] = true
-		}
-	}
+	h := &hostFacts{}
+	text := bytes.Join(vocab, []byte{0})
 	name := func(what, v string) {
-		v = strings.ToLower(v)
-		if len(v) > minNameLength && !h.vocab[v] && !slices.ContainsFunc(h.names, func(f hostFact) bool { return f.value == v }) {
-			h.names = append(h.names, hostFact{what: what, value: v})
+		f := hostFact{what: what, value: strings.ToLower(v)}
+		if len(f.value) > minNameLength && factAt(text, []hostFact{f}) == "" &&
+			!slices.ContainsFunc(h.names, func(g hostFact) bool { return g.value == f.value }) {
+			h.names = append(h.names, f)
 		}
 	}
 	if host, err := os.Hostname(); err == nil {
@@ -107,47 +103,36 @@ func addPath(facts []hostFact, what, p string) []hostFact {
 	return facts
 }
 
-// word matches what a host or user name is compared with.
-var word = regexp.MustCompile(`[A-Za-z0-9_-]+`)
-
-// words are the lower-cased words of b.
-func words(b []byte) map[string]bool {
-	out := map[string]bool{}
-	for _, w := range word.FindAll(b, -1) {
-		out[strings.ToLower(string(w))] = true
+// vectorText is the text of every file of v's directory, each file's
+// first MiB, read once.
+func (h *hostFacts) vectorText(v *vector) []byte {
+	if b, ok := h.texts.Load(v.dir); ok {
+		return b.([]byte)
 	}
-	return out
-}
-
-// vectorWords are the words of every file of v's directory, read once.
-func (h *hostFacts) vectorWords(v *vector) map[string]bool {
-	if w, ok := h.words.Load(v.dir); ok {
-		return w.(map[string]bool)
-	}
-	w := map[string]bool{}
+	var text []byte
 	filepath.WalkDir(v.dir, func(p string, d fs.DirEntry, err error) error {
 		if err != nil || !d.Type().IsRegular() {
 			return nil
 		}
-		w[strings.ToLower(d.Name())] = true
-		if b, err := os.ReadFile(p); err == nil {
-			for x := range words(b) {
-				w[x] = true
-			}
+		text = append(append(text, 0), d.Name()...)
+		if f, err := os.Open(p); err == nil {
+			b, _ := io.ReadAll(io.LimitReader(f, 1<<20))
+			f.Close()
+			text = append(append(text, 0), b...)
 		}
 		return nil
 	})
-	h.words.Store(v.dir, w)
-	return w
+	h.texts.Store(v.dir, text)
+	return text
 }
 
 // finder is check 2's finder for a case of v whose sandboxes are below
 // tempRoot, the case's temporary root.
 func (h *hostFacts) finder(v *vector, tempRoot string) finder {
-	vw := h.vectorWords(v)
+	text := h.vectorText(v)
 	var facts []hostFact
 	for _, f := range h.names {
-		if !vw[f.value] {
+		if factAt(text, []hostFact{f}) == "" {
 			facts = append(facts, f)
 		}
 	}

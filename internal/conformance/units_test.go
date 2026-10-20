@@ -343,3 +343,59 @@ func TestRefDriverForwardsCrash(t *testing.T) {
 		t.Errorf("the reference driver over a fake that panics gave no crash; the runner reported %q", ps)
 	}
 }
+// TestFactAt holds check 2's matching to ADR-009 D16 item 1: each kind of
+// host fact is found in a stream, whatever its case, and a word or a path
+// that merely begins or ends with one is not.
+func TestFactAt(t *testing.T) {
+	facts := addPath(addPath([]hostFact{
+		{what: "the host name", value: "buildhost"},
+		{what: "the user name", value: "edwardf"},
+	}, "the real home directory", "/home/edwardf"), "the test's temporary root", "/tmp/TestX123/001")
+	for _, c := range []struct{ in, want string }{
+		{"rendered on buildhost.", "the host name"},
+		{"rendered on BuildHost", "the host name"},
+		{"rendered on buildhosts", ""},
+		{"by edwardf", "the user name"},
+		{`{"path":"/home/edwardf/x.json"}`, "the user name"},
+		{"file:///home/edwardf", "the user name"},
+		{"/tmp/TestX123/001/MTSSENTINELPATH-1/work", "the test's temporary root"},
+		{"/tmp/TestX123/0011", ""},
+		{"/tmp/TestX123/001.bak", ""},
+		{"an edwardfs value", ""},
+		{"", ""},
+	} {
+		if got := factAt([]byte(c.in), facts); got != c.want {
+			t.Errorf("factAt(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+	paths := addPath(nil, "the checkout", "/src/metais")
+	if got := factAt([]byte("in /src/metais/internal"), paths); got != "the checkout" {
+		t.Errorf("a path below the checkout: %q", got)
+	}
+	if got := factAt([]byte("in /src/metaisx"), paths); got != "" {
+		t.Errorf("a path the checkout's begins: %q", got)
+	}
+	if addPath(nil, "the root", "/") != nil {
+		t.Error("the root is a fact")
+	}
+}
+
+// TestHostFactsSkipVocabulary pins newHostFacts's one exclusion: a host
+// or user name that is a word of the tool's own text, or no longer than
+// minNameLength, is not looked for, since a scan cannot tell it from that
+// text; every other is.
+func TestHostFactsSkipVocabulary(t *testing.T) {
+	h := newHostFacts()
+	if len(h.paths) == 0 {
+		t.Fatal("no path fact: the checkout is always one")
+	}
+	for _, f := range h.names {
+		hv := newHostFacts([]byte("The tool's text names " + f.value + " itself."))
+		if slices.ContainsFunc(hv.names, func(g hostFact) bool { return g.value == f.value }) {
+			t.Errorf("%s %q is looked for although the tool's text holds it", f.what, f.value)
+		}
+		if len(f.value) <= minNameLength {
+			t.Errorf("%s %q is looked for, and is no longer than %d", f.what, f.value, minNameLength)
+		}
+	}
+}

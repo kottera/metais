@@ -117,6 +117,9 @@ type runner struct {
 	// facts, when set, are the real host facts check 2 looks for in
 	// every stream of both environments (hostfacts_test.go).
 	facts *hostFacts
+	// reached are the reach commands a case has claimed, each with the
+	// case that runs them (claim).
+	reached sync.Map
 }
 
 // identity is the tool's identity, asked once.
@@ -257,7 +260,8 @@ func (r *runner) runCaseIn(v *vector, c *vcase, base string, mode pathMode) *cas
 // runEnv runs every step of c in one fresh sandbox of environment e, with
 // the paths its steps name given in mode. It checks the expectations when
 // expectations is set, and scans every stream with r's finders. Under the
-// SC7 harness it then runs every command over the case's packages.
+// SC7 harness, in the absolute-path mode, it then runs every command over
+// the case's packages (runReach).
 func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bool, mode pathMode) *envRun {
 	if r.slots != nil {
 		r.slots <- struct{}{}
@@ -360,7 +364,7 @@ func (r *runner) runEnv(v *vector, c *vcase, base string, e env, expectations bo
 			}
 		}
 	}
-	if r.sc7 && !run.fatal() {
+	if r.sc7 && mode == absPaths && !run.fatal() {
 		r.runReach(run, v, c, finders)
 	}
 	return run

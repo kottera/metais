@@ -98,6 +98,7 @@ var faults = []fault{
 	{"wall", fixRenderTree, checkWall, both},
 	{"driver-malformed", fixRenderTree, checkDriver, []string{"exec"}},
 	{"driver-exit", fixRenderTree, checkDriver, []string{"exec"}},
+	{"host-path", fixRenderTree, checkHost, both},
 	{"panic", fixRenderTree, checkCrash, both},
 	{"fatal", fixRenderTree, checkCrash, both},
 }
@@ -119,8 +120,8 @@ func fakeProgram(t testing.TB, base, fault string) string {
 
 // fixtureRunner makes a runner over the fixture suite against the fake
 // for fault, through adapter kind, with both environments whatever the
-// test flags say: the self-proof's detectors and controls run in every go
-// test. Its wall clock is selfProofWall.
+// test flags say, and check 2's host facts: the self-proof's detectors and
+// controls run in every go test. Its wall clock is selfProofWall.
 func fixtureRunner(t testing.TB, suite, kind, fault string) *runner {
 	t.Helper()
 	a, err := newAdapter(kind, fakeProgram(t, testenv.Dir(t), fault), suite)
@@ -130,6 +131,11 @@ func fixtureRunner(t testing.TB, suite, kind, fault string) *runner {
 	r := newRunner(t, suite, a)
 	r.short = false
 	r.wall = selfProofWall
+	reg, err := os.ReadFile(filepath.Join(suite, "..", "findings", "registry.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.facts = newHostFacts(reg)
 	return r
 }
 
@@ -307,7 +313,7 @@ func TestBStartsTwoSecondsAfterA(t *testing.T) {
 // without one fails here.
 func TestSelfProofCoversEveryCheck(t *testing.T) {
 	checks := []string{checkOK, checkExit, checkFindings, checkTree, checkStream, checkListing, checkSnapshot,
-		checkSentinel, checkAB, checkRepeat, checkCPU, checkRSS, checkWall, checkDriver, checkContainer, checkCrash}
+		checkSentinel, checkAB, checkRepeat, checkCPU, checkRSS, checkWall, checkDriver, checkContainer, checkCrash, checkHost}
 	for _, c := range checks {
 		if !slices.ContainsFunc(faults, func(f fault) bool { return f.check == c }) {
 			t.Errorf("no fault breaks the %s check", c)

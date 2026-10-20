@@ -91,8 +91,9 @@ var procSlots = make(chan struct{}, max(1, runtime.GOMAXPROCS(0)))
 
 // procRunning counts the processes running now, and procPeak the most
 // that ever ran at once, which TestProcessesAreBounded holds to
-// procSlots.
-var procRunning, procPeak atomic.Int64
+// procSlots; procStarted counts every process run, which TestHostIsolation
+// reports.
+var procRunning, procPeak, procStarted atomic.Int64
 
 // proc is one finished process.
 type proc struct {
@@ -109,6 +110,7 @@ type proc struct {
 func runProc(path string, args []string, dir string, env []string, stdin []byte, wall time.Duration) (*proc, error) {
 	procSlots <- struct{}{}
 	defer func() { <-procSlots }()
+	procStarted.Add(1)
 	defer procRunning.Add(-1)
 	for n, peak := procRunning.Add(1), procPeak.Load(); n > peak && !procPeak.CompareAndSwap(peak, n); peak = procPeak.Load() {
 	}

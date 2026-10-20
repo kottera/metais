@@ -4,6 +4,7 @@
 package conformance
 
 import (
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -98,6 +99,8 @@ func TestHostIsolation(t *testing.T) {
 		t.Skip("runs the release build of ./cmd/metais, which -conformance.tool replaces")
 	}
 	r, _ := hostRunner(t, releaseBuild(t))
+	before := procStarted.Load()
+	t.Cleanup(func() { t.Logf("the harness ran %d processes", procStarted.Load()-before) })
 	runSuite(t, r)
 }
 
@@ -171,10 +174,12 @@ func build(t *testing.T, name string, flags ...string) string {
 }
 
 // TestHarnessReach pins the harness's reach (ADR-009 D16 item 1): a case
-// run under it, in each path mode, ends with one more step that runs
-// every command over the package in both forms, in both environments,
-// and the absolute-path mode gives the implementation only absolute paths
-// into the work directory, from a working directory outside it.
+// run under it in the absolute-path mode ends with one more step that
+// runs every command over the package in both forms, in both
+// environments, giving the implementation only absolute paths into the
+// work directory from a working directory outside it; the relative mode
+// runs the case's own steps alone. A second case over the same package
+// and inputs runs none of it again.
 func TestHarnessReach(t *testing.T) {
 	if builtTool == "" {
 		t.Skip("runs the binary built from ./cmd/metais")
@@ -185,20 +190,40 @@ func TestHarnessReach(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c := &v.Cases[0]
 	entries := packageEntries(filepath.Join(v.dir, "package"))
 	if len(entries) < 2 {
 		t.Fatalf("rnd/archive's package has %d entries", len(entries))
 	}
-	for _, mode := range []pathMode{relPaths, absPaths} {
-		res := r.runCaseIn(v, c, testenv.Dir(t), mode)
-		for _, p := range res.problems {
-			t.Errorf("mode %d: %s", mode, p)
+	want := map[string]int{"ls": 2, "read": 2 * len(entries), "grep": 2, "schema": 2, "extract": 2, "render": 4}
+	again := v.Cases[0]
+	again.Name = "again"
+	for _, c := range []*vcase{&v.Cases[0], &again} {
+		rel := r.runCaseIn(v, c, testenv.Dir(t), relPaths)
+		for _, run := range rel.runs {
+			if len(run.steps) != len(c.Steps) {
+				t.Errorf("%s: the relative mode ran %d steps, want the case's %d", c.Name, len(run.steps), len(c.Steps))
+			}
+		}
+		res := r.runCaseIn(v, c, testenv.Dir(t), absPaths)
+		for _, p := range append(rel.problems, res.problems...) {
+			t.Errorf("%s: %s", c.Name, p)
 		}
 		for _, e := range []env{envA, envB} {
 			run := res.runs[e]
-			if run == nil || len(run.steps) != len(c.Steps)+1 {
-				t.Fatalf("mode %d, environment %s: no reach step", mode, e)
+			if run == nil {
+				t.Fatalf("%s: environment %s did not run", c.Name, e)
+			}
+			if run.sb.cwd == run.sb.work {
+				t.Errorf("%s: the working directory is the work directory", c.Name)
+			}
+			if c == &again {
+				if len(run.steps) != len(c.Steps) {
+					t.Errorf("%s, environment %s: a second case over the same package and inputs ran the reach again", c.Name, e)
+				}
+				continue
+			}
+			if len(run.steps) != len(c.Steps)+1 {
+				t.Fatalf("%s, environment %s: no reach step", c.Name, e)
 			}
 			reach := run.steps[len(c.Steps)]
 			counts := map[string]int{}
@@ -206,22 +231,16 @@ func TestHarnessReach(t *testing.T) {
 				cmd, _, _ := strings.Cut(strings.TrimPrefix(inv.label, "reach: "), " ")
 				counts[cmd]++
 				for _, a := range inv.args {
-					if mode == absPaths && (a == "package" || strings.HasPrefix(a, reachPrefix)) {
-						t.Errorf("mode %d: %s gives a relative path %q", mode, inv.label, a)
+					if a == "package" || strings.HasPrefix(a, reachPrefix) {
+						t.Errorf("%s: %s gives a relative path %q", c.Name, inv.label, a)
 					}
 				}
 			}
-			want := map[string]int{"ls": 2, "read": 2 * len(entries), "grep": 2, "schema": 2, "extract": 2, "render": 4}
-			for cmd, n := range want {
-				if counts[cmd] != n {
-					t.Errorf("mode %d, environment %s: %d %s commands, want %d (%v)", mode, e, counts[cmd], cmd, n, counts)
-				}
+			if !maps.Equal(counts, want) {
+				t.Errorf("%s, environment %s: the reach ran %v, want %v", c.Name, e, counts, want)
 			}
 			if len(reach.trees) != 2 {
-				t.Errorf("mode %d, environment %s: the reach read %d extract trees, want 2", mode, e, len(reach.trees))
-			}
-			if mode == absPaths && run.sb.cwd == run.sb.work {
-				t.Errorf("mode %d: the working directory is the work directory", mode)
+				t.Errorf("%s, environment %s: the reach read %d extract trees, want 2", c.Name, e, len(reach.trees))
 			}
 		}
 	}

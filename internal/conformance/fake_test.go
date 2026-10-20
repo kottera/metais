@@ -295,6 +295,8 @@ func fakeRun(fault string, call fakeCall) (*fakeResult, error) {
 		res.note = fmt.Sprintf("rendered at %d", time.Now().Unix())
 	case "clock":
 		res.note = fmt.Sprintf("clock %d", time.Now().UnixNano())
+	case "host-path":
+		res.note, _ = os.Getwd()
 	case "sentinel-stderr":
 		fmt.Fprintln(os.Stderr, "home is", os.Getenv("HOME"))
 	case "write-outside":

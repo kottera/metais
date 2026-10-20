@@ -4,8 +4,12 @@
 package conformance
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path"
@@ -314,6 +318,44 @@ func reachTargets(sb *sandbox, c *vcase) []reachTarget {
 	return ts
 }
 
+// claim reports whether the case owner runs the reach commands that key
+// names. The first case to ask for a key runs them, and every run of that
+// case, in either environment, asks as the same owner, so its
+// environments run the same commands; every other case leaves them out,
+// since they would give the same bytes again.
+func (r *runner) claim(key, owner string) bool {
+	got, _ := r.reached.LoadOrStore(key, owner)
+	return got == owner
+}
+
+// treeDigest is the hexadecimal SHA-256 of what is at p: a directory's
+// every entry below it, by path, with its type, its link target and its
+// content; a file's content; or nothing.
+func treeDigest(p string) string {
+	h := sha256.New()
+	filepath.WalkDir(p, func(q string, d fs.DirEntry, err error) error {
+		if err != nil {
+			fmt.Fprintf(h, "error\x00%s\x00", err)
+			return nil
+		}
+		rel, _ := filepath.Rel(p, q)
+		fmt.Fprintf(h, "%s\x00%v\x00", filepath.ToSlash(rel), d.Type())
+		switch {
+		case d.Type()&fs.ModeSymlink != 0:
+			target, _ := os.Readlink(q)
+			fmt.Fprintf(h, "%s\x00", target)
+		case d.Type().IsRegular():
+			if f, err := os.Open(q); err == nil {
+				io.Copy(h, f)
+				f.Close()
+			}
+			h.Write([]byte{0})
+		}
+		return nil
+	})
+	return hex.EncodeToString(h.Sum(nil))
+}
+
 // reachCommand is one command line the harness runs over a package.
 type reachCommand struct {
 	args    []string
@@ -338,7 +380,11 @@ var driftCodes = []string{
 // extract, and render with --dry-run and to standard output, each in JSON
 // and in human form. Every command takes the limits of the step t's
 // arguments come from, and render its inputs and render time.
-func reachCommands(sb *sandbox, t reachTarget, i int) ([]reachCommand, error) {
+//
+// Reading and rendering are each run once for what they depend on, by
+// the first case to claim it: reading takes the package and the limits,
+// rendering the inputs and the render time as well (claim).
+func (r *runner) reachCommands(sb *sandbox, t reachTarget, i int, owner string) ([]reachCommand, error) {
 	x := t.supply.args
 	pkg := sb.path(t.operand)
 	var limits []string
@@ -372,39 +418,53 @@ func reachCommands(sb *sandbox, t reachTarget, i int) ([]reachCommand, error) {
 		stream  bool
 		extract string
 	}
-	lines := []line{{args: []string{"ls", pkg, "--recursive"}}}
-	for _, e := range packageEntries(filepath.Join(sb.work, filepath.FromSlash(t.operand))) {
-		if e.name == "" || strings.HasPrefix(e.name, "-") || strings.ContainsRune(e.name, 0) {
-			continue // no command line can name it as an operand
+	op := filepath.Join(sb.work, filepath.FromSlash(t.operand))
+	bounds, _ := json.Marshal(t.supply.Bounds)
+	key := treeDigest(op) + "\x00" + strings.Join(limits, "\x00") + "\x00" + string(bounds)
+	var lines []line
+	if r.claim("read\x00"+key, owner) {
+		lines = append(lines, line{args: []string{"ls", pkg, "--recursive"}})
+		for _, e := range packageEntries(op) {
+			if e.name == "" || strings.HasPrefix(e.name, "-") || strings.ContainsRune(e.name, 0) {
+				continue // no command line can name it as an operand
+			}
+			lines = append(lines, line{args: []string{"read", pkg, e.name}})
+			if ext := strings.ToLower(path.Ext(e.name)); ext == ".md" || ext == ".markdown" {
+				lines = append(lines, line{args: []string{"outline", pkg, e.name}})
+			}
 		}
-		lines = append(lines, line{args: []string{"read", pkg, e.name}})
-		if ext := strings.ToLower(path.Ext(e.name)); ext == ".md" || ext == ".markdown" {
-			lines = append(lines, line{args: []string{"outline", pkg, e.name}})
-		}
+		lines = append(lines,
+			line{args: []string{"grep", pkg, ".", "**", ".compiled/**"}},
+			line{args: []string{"schema", pkg}},
+			line{args: []string{"extract", pkg, "**", "--to"}, extract: "extract"},
+		)
 	}
-	lines = append(lines,
-		line{args: []string{"grep", pkg, ".", "**", ".compiled/**"}},
-		line{args: []string{"schema", pkg}},
-		line{args: []string{"extract", pkg, "**", "--to"}, extract: "extract"},
-		line{args: append([]string{"render", pkg, "--out", sb.path(fmt.Sprintf("%s%d-out", reachPrefix, i)), "--dry-run"}, supply...), stdin: stdin},
-		line{args: append([]string{"render", pkg, "--out", "-"}, supply...), stdin: stdin, stream: true},
-	)
+	data := ""
+	if x.Data != "" {
+		data = treeDigest(filepath.Join(sb.work, filepath.FromSlash(x.Data)))
+	}
+	if r.claim("render\x00"+key+"\x00"+data+"\x00"+digest(stdin)+"\x00"+strings.Join(supply, "\x00"), owner) {
+		lines = append(lines,
+			line{args: append([]string{"render", pkg, "--out", sb.path(fmt.Sprintf("%s%d-out", reachPrefix, i)), "--dry-run"}, supply...), stdin: stdin},
+			line{args: append([]string{"render", pkg, "--out", "-"}, supply...), stdin: stdin, stream: true},
+		)
+	}
 	var cmds []reachCommand
 	for _, l := range lines {
-		for _, json := range []bool{true, false} {
+		for _, asJSON := range []bool{true, false} {
 			form := "human"
 			args := slices.Clone(l.args)
-			if json {
+			if asJSON {
 				form = "json"
 				args = slices.Insert(args, 1, "--json")
 			}
-			c := reachCommand{args: append(args, limits...), stdin: l.stdin, json: json, stream: l.stream}
+			c := reachCommand{args: append(args, limits...), stdin: l.stdin, json: asJSON, stream: l.stream}
 			if l.extract != "" {
 				c.extract = fmt.Sprintf("%s%d-%s-%s", reachPrefix, i, l.extract, form)
 				c.args = slices.Insert(c.args, len(args), sb.path(c.extract))
 			}
 			c.twin = len(cmds) + 1
-			if !json {
+			if !asJSON {
 				c.twin = len(cmds) - 1
 			}
 			cmds = append(cmds, c)
@@ -433,6 +493,7 @@ func (c reachCommand) label() string {
 // everything with finders (checks 1 and 2). The step's invocations and
 // trees join run's steps, so check 3 compares them between A and B.
 func (r *runner) runReach(run *envRun, v *vector, c *vcase, finders []finder) {
+	owner := v.ID + "\x00" + c.Name
 	sb := run.sb
 	si := len(c.Steps) + 1
 	add := func(p problem) {
@@ -447,7 +508,7 @@ func (r *runner) runReach(run *envRun, v *vector, c *vcase, finders []finder) {
 	var cmds []reachCommand
 	var lims []limits
 	for i, t := range reachTargets(sb, c) {
-		cs, err := reachCommands(sb, t, i)
+		cs, err := r.reachCommands(sb, t, i, owner)
 		if err != nil {
 			add(problem{check: checkHarness, harness: true, msg: err.Error()})
 			return
