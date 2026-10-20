@@ -936,6 +936,78 @@ it (ADR-002).
 - GNU coreutils, *cksum output modes* (the untagged format and its escaping):
   https://www.gnu.org/software/coreutils/manual/html_node/cksum-output-modes.html
 
+## Amendments
+
+### A1 — Every package begins with `README.md`, the specification's fixed text, stored, so that a reader with no context learns what the file is
+
+**Status:** Accepted 2026-10-20 by Ed Funnekotter.
+**Amends:** D1 item 7 (entry order), D4 item 7 (the package's methods),
+D5 items 1, 5 and 7 (the layout and the first entry), D6 item 1 (what the
+digests cover), D8 item 1 (verification), and D9 item 3 (detection).
+
+1. **The entry.** Every packed package's first entry is `README.md`, at the
+   top level, stored (method 0). Its bytes are exactly the text the
+   specification defines for the package's declared specification version:
+   UTF-8, LF line endings, ending in one line feed. It is the same in every
+   package of that version, and no author writes it.
+2. **Why first and stored.** A reader who knows nothing about the file,
+   whether a person or a model, sees this text first in the raw bytes. It
+   appears with `head`, `less`, `strings` or a plain read, before anyone
+   knows that the file is a zip. A zip lister also shows it first. A
+   `mimetype` first entry (Alternatives rejected) would give a detector a
+   key, and nothing else. This entry tells a reader what the file is.
+3. **What the text says, and what it does not.** It says what a METAIS
+   package is, and that this file is a zip archive. It says that
+   `metais.yaml` inside holds the package's own title, description and
+   guide. It says that installing the tool, and getting started, are at
+   `https://metais.org/`. It gives no install command, no command line,
+   and no text from the package: a package packed years ago must never
+   give stale instructions, so the website carries everything that can
+   change. The text for specification 1.0 is:
+
+   ```markdown
+   # This is a METAIS package
+
+   A METAIS package is a document template. It describes the inputs a
+   document needs, checks them, and renders the document from them.
+
+   This file is a zip archive. Inside it, metais.yaml holds this package's
+   own title, description and guide.
+
+   To use it, you need the metais tool. How to install it and how to
+   start: https://metais.org/
+
+   This README is the same in every METAIS package.
+   ```
+
+   The specification document carries these bytes normatively. A later
+   minor version may define new text; a tool writes and checks the text of
+   the version a package declares.
+4. **Order.** `README.md` comes first. Every other entry follows in D1
+   item 7's ascending byte order, so `.compiled/` comes next.
+5. **Not content.** `README.md` is not an entry of
+   `.compiled/digests.json` and is not part of the package digest. D6
+   item 1's `entries` covers every entry except `.compiled/digests.json`
+   and `README.md`. The package digest stays a function of the package's
+   own content, and fixed boilerplate verified byte for byte needs no
+   digest.
+6. **Verification.** D8 item 1 checks, with the layout at step 7, that the
+   first entry is `README.md`, that it is stored, and that its bytes equal
+   the text of the declared version. A package that fails the check is
+   refused, with a finding of its own (ADR-006 names the code).
+7. **Layout.** D5 item 1's closed top level gains `README.md`, a file
+   that is required in a packed package. In a source directory a
+   top-level `README.md` is ignored silently, like `.git` (D5 item 5).
+   Repositories commonly hold one for their own authors; `pack` writes the
+   specification's, never the author's, and `unpack` does not write it.
+8. **Detection** (D9 item 3). A METAIS 1.0 package begins with the local
+   header signature `50 4B 03 04`, the name `README.md` at offset 30, and
+   the text's first line, `# This is a METAIS package`, at offset 39. Every
+   1.0 package shares those leading bytes. That is a stronger key for
+   `file(1)` than the first name alone.
+9. **Zip container outputs are unchanged.** ADR-005's containers are not
+   packages, and gain no `README.md`.
+
 ## Implementation log
 
 This log is this section together with the entry files in
