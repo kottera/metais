@@ -149,8 +149,9 @@ excludes file, and turns `core.precomposeunicode` off, which git on darwin
 writes into every repository it creates. The go command's git inherits it.
 A test that runs git gives it the same environment through
 `internal/testenv`'s `GitEnv`. A test that runs the go command gives it
-`testenv.GoEnv`'s, which takes the host's module cache, read only, and no
-proxy; the scripts' own go commands are the developer's build, and run in
+`testenv.GoEnv`'s, which takes the host's module cache, read only, no
+proxy, and the host's C toolchain with the variables it needs to run; the
+scripts' own go commands are the developer's build, and run in
 the developer's environment.
 
 ## When to run it: once, last, right before merge
