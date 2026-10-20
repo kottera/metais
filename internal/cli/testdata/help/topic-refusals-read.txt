@@ -10,18 +10,13 @@ Next: metais limits
 Next: metais inspect <package>
       Opens the package again once it is fixed or replaced; nothing of a refused
       package is used.
-  manifest.additional_item
   manifest.additional_property
-  manifest.any_of
   manifest.const
   manifest.contains
   manifest.dependent_required
   manifest.enum
-  manifest.exclusive_maximum
-  manifest.exclusive_minimum
   manifest.file.wrong_name
   manifest.forbidden
-  manifest.format
   manifest.input.duplicate_name
   manifest.json.duplicate_name
   manifest.json.encoding
@@ -30,30 +25,19 @@ Next: metais inspect <package>
   manifest.json.syntax
   manifest.json.trailing_content
   manifest.license.expression
-  manifest.max_contains
   manifest.max_items
   manifest.max_length
-  manifest.max_properties
-  manifest.maximum
-  manifest.min_contains
   manifest.min_items
   manifest.min_length
-  manifest.min_properties
-  manifest.minimum
-  manifest.multiple_of
   manifest.not
   manifest.number_out_of_range
   manifest.one_of
-  manifest.one_of.ambiguous
   manifest.output.duplicate_id
   manifest.output.nested_for_each
   manifest.path_not_found
   manifest.pattern
-  manifest.property_name
   manifest.required
   manifest.type
-  manifest.unevaluated_item
-  manifest.unevaluated_property
   manifest.unique_items
   manifest.yaml.alias
   manifest.yaml.anchor

@@ -85,7 +85,7 @@ Refusals:
   and their next step. 'metais help refusals outline' lists every code, and help
   --json gives each code's own cause.
 
-  manifest.* (60)  The manifest breaks one of its rules.
+  manifest.* (44)  The manifest breaks one of its rules.
                    Next: metais inspect <package>
   package.* (46)   The package is refused. Next: metais inspect <package>
   schema.* (10)    An input schema is refused. Next: metais inspect <package>

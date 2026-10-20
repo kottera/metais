@@ -12,22 +12,6 @@
 
 collection.item_name W7
 input.not_readable W7
-manifest.additional_item W7
-manifest.any_of W7
-manifest.exclusive_maximum W7
-manifest.exclusive_minimum W7
-manifest.format W7
-manifest.max_contains W7
-manifest.max_properties W7
-manifest.maximum W7
-manifest.min_contains W7
-manifest.min_properties W7
-manifest.minimum W7
-manifest.multiple_of W7
-manifest.one_of.ambiguous W7
-manifest.property_name W7
-manifest.unevaluated_item W7
-manifest.unevaluated_property W7
 output.destination.write_failed W7
 package.not_found W7
 package.not_readable W7

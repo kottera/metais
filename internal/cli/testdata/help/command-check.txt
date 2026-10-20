@@ -79,7 +79,7 @@ Refusals:
 
   example.layout (1)        An example's layout (layout), an error.
                             Next: metais check <package>
-  manifest.* (60)           The manifest breaks one of its rules.
+  manifest.* (44)           The manifest breaks one of its rules.
                             Next: metais check <package>
   manifest.guide_link_missing (1)
                             The manifest (guide link missing), a warning.

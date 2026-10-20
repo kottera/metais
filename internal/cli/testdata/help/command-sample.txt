@@ -186,7 +186,7 @@ Refusals:
                       refused. Next: metais inspect <package>
   limit.exceeded (1)  A value given with --set, --set-json or --inputs-json is
                       refused (exceeded). Next: metais inspect <package>
-  manifest.* (60)     The manifest breaks one of its rules.
+  manifest.* (44)     The manifest breaks one of its rules.
                       Next: metais inspect <package>
   markdown.* (3)      A value given with --set, --set-json or --inputs-json is
                       refused. Next: metais inspect <package>

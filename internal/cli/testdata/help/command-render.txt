@@ -265,7 +265,7 @@ Refusals:
   limit.exceeded (1)    An input is refused (exceeded).
                         Next: metais inspect <package>
   limit.exceeded.* (2)  An output is refused. Next: metais inspect <package>
-  manifest.* (60)       The manifest breaks one of its rules.
+  manifest.* (44)       The manifest breaks one of its rules.
                         Next: metais inspect <package>
   markdown.* (3)        An input is refused. Next: metais inspect <package>
   output.* (34)         An output fails its validation.
