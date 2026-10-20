@@ -36,6 +36,6 @@ func directUsage(ps *os.ProcessState) usage {
 	return u
 }
 
-// procStubMain is never run off linux, where no process is started
-// through the stub.
-func procStubMain([]string) int { return 2 }
+// buildProcStub builds nothing off linux, where no process is started
+// through a stub.
+func buildProcStub(string) (string, error) { return "", nil }

@@ -35,13 +35,17 @@ var (
 // builtTool is the metais binary TestMain built from ./cmd/metais, or "".
 var builtTool string
 
+// procStub is the stub TestMain built to start every measured process
+// through on linux (measured), or "".
+var procStub string
+
 // moduleRoot is the module's root, from this package's directory.
 const moduleRoot = "../.."
 
 // The names the test binary answers to when it is re-executed: as the
-// reference driver, as a fake implementation in a directory named for its
-// fault (ADR-011 D11 item 7, D18 item 1), and as the stub that starts a
-// measured process on linux (measured).
+// reference driver, and as a fake implementation in a directory named for
+// its fault (ADR-011 D11 item 7, D18 item 1); and the name of the stub
+// that starts a measured process on linux (measured).
 const (
 	refDriverName = "metais-refdriver"
 	procStubName  = "metais-procstub"
@@ -49,16 +53,17 @@ const (
 	toolName      = "metais"
 )
 
-// TestMain re-executes as the reference driver, a fake or the stub when
-// the test binary is run under one of their names. Otherwise it builds
-// ./cmd/metais once, with -trimpath and with -race when this binary is
-// race-built (ADR-011 D11 item 2), and runs the tests.
+// TestMain re-executes as the reference driver or a fake when the test
+// binary is run under one of their names. Otherwise it builds the
+// measuring stub, and ./cmd/metais once, with -trimpath and with -race
+// when this binary is race-built (ADR-011 D11 item 2), and runs the tests.
 func TestMain(m *testing.M) {
 	base := filepath.Base(os.Args[0])
-	if base == procStubName {
-		os.Exit(procStubMain(os.Args[1:]))
-	}
 	if base == refDriverName {
+		// The driver starts the tool through the stub beside it (refDriver).
+		if stub := filepath.Join(filepath.Dir(os.Args[0]), procStubName); fileExists(stub) {
+			procStub = stub
+		}
 		os.Exit(refDriverMain(filepath.Join(filepath.Dir(os.Args[0]), toolName)))
 	}
 	if fault, ok := strings.CutPrefix(filepath.Base(filepath.Dir(os.Args[0])), fakeDirPrefix); ok && base == toolName {
@@ -66,15 +71,18 @@ func TestMain(m *testing.M) {
 	}
 	flag.Parse()
 	var dir string
-	if *flagCompare == "" && *flagTool == "" {
+	if *flagCompare == "" {
 		var err error
 		dir, err = os.MkdirTemp("", "metais-conformance-")
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		builtTool = filepath.Join(dir, toolName)
-		if err := buildTool(builtTool); err != nil {
+		if procStub, err = buildProcStub(dir); err == nil && *flagTool == "" {
+			builtTool = filepath.Join(dir, toolName)
+			err = buildTool(builtTool)
+		}
+		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.RemoveAll(dir)
 			os.Exit(1)
@@ -85,6 +93,12 @@ func TestMain(m *testing.M) {
 		os.RemoveAll(dir)
 	}
 	os.Exit(code)
+}
+
+// fileExists reports whether p names something that exists.
+func fileExists(p string) bool {
+	_, err := os.Stat(p)
+	return err == nil
 }
 
 // buildTool builds ./cmd/metais to out.
