@@ -18,9 +18,26 @@ cmd/metais/main.go | cmd/metais internal/guarantees internal/conformance | code 
 internal/zipfmt/testdata/x.zip | internal/zipfmt
 internal/finding/testdata/x.txt | internal/finding
 internal/specdata/schemas/x.json | internal/specdata
-spec/13-authoring.md | internal/guarantees internal/conformance internal/specdata internal/loader
-examples/x/example.yaml | internal/guarantees
+# A chapter reaches the tests that read every chapter: guarantees' and
+# specdata's read spec/, and liquidspec's reads the chapters its delegated
+# statements cite. examples/ is read by cli's and vectorgen's.
+spec/13-authoring.md | internal/guarantees internal/liquidspec internal/specdata
+examples/x/example.yaml | internal/cli internal/vectorgen
 .claude/skills/verification-gate/gate-select.sh | internal/guarantees | seam .claude/skills/verification-gate/gate-select.sh
+
+# The probes of the test economy: a package's tests reach data they name,
+# not data that shares its top-level directory, and only the module's build
+# inputs reach the blind packages. A package written !<package> must not be
+# reached. internal/conformance's tests name "docs/guide.MARKDOWN", an entry
+# of a package they write, and internal/tarw's "docs/guide/index.html", a
+# tar entry; neither reads an ADR's log.
+docs/adr/logs/ADR-010/x.md | !internal/conformance !internal/tarw
+internal/finding/x_test.go | internal/finding internal/guarantees !internal/conformance !internal/hostfs !internal/tools/release !cmd/metais
+internal/finding/testdata/y.txt | internal/finding !internal/conformance !internal/hostfs !internal/tools/release
+internal/finding/x.go | internal/finding cmd/metais internal/conformance internal/guarantees internal/hostfs internal/pkgtree internal/tools/release internal/version
+internal/specdata/schemas/y.json | internal/specdata cmd/metais internal/conformance internal/hostfs
+docs/cli/schemas/x.json | cmd/metais internal/cli
+docs/adr/ADR-004-the-template-environment.md | internal/liquid !internal/conformance
 
 # The control, last: data no test names reaches nothing, so the reach above
 # is the rules', not a selector that tests everything.
