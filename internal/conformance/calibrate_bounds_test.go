@@ -4,11 +4,10 @@
 package conformance
 
 import (
-	"archive/zip"
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"hash/crc32"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -275,7 +274,7 @@ func exampleMetadata(reason string) func(*calResult, calLimits) error {
 
 // packedWithDigests packs a package of one output with the tool, beneath
 // dir, and rewrites it with its digest file replaced by digests, stored,
-// every other entry and header as the tool wrote it. It returns the
+// every other entry and header as the tool wrote them. It returns the
 // command that opens the rewritten package.
 func packedWithDigests(dir, digests string) ([]string, error) {
 	files := map[string]string{
@@ -292,36 +291,69 @@ func packedWithDigests(dir, digests string) ([]string, error) {
 	if p.exit != 0 {
 		return nil, fmt.Errorf("metais pack exited %d: %s", p.exit, p.stdout)
 	}
-	zr, err := zip.OpenReader(filepath.Join(dir, "packed.metais"))
+	packed, err := os.ReadFile(filepath.Join(dir, "packed.metais"))
 	if err != nil {
 		return nil, err
 	}
-	defer zr.Close()
-	var out bytes.Buffer
-	zw := zip.NewWriter(&out)
-	for _, f := range zr.File {
-		h := f.FileHeader
-		var content io.Reader
-		if f.Name == ".compiled/digests.json" {
-			h.Method, h.ReaderVersion, h.CRC32 = zip.Store, 10, crc32.ChecksumIEEE([]byte(digests))
-			h.CompressedSize64, h.UncompressedSize64 = uint64(len(digests)), uint64(len(digests))
-			content = strings.NewReader(digests)
-		} else if content, err = f.OpenRaw(); err != nil {
-			return nil, err
-		}
-		w, err := zw.CreateRaw(&h)
-		if err != nil {
-			return nil, err
-		}
-		if _, err := io.Copy(w, content); err != nil {
-			return nil, err
-		}
-	}
-	if err := zw.Close(); err != nil {
+	out, err := replaceStored(packed, ".compiled/digests.json", []byte(digests))
+	if err != nil {
 		return nil, err
 	}
-	if err := os.WriteFile(filepath.Join(dir, "pkg.metais"), out.Bytes(), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "pkg.metais"), out, 0o644); err != nil {
 		return nil, err
 	}
 	return []string{"inspect", "--json", "pkg.metais"}, nil
+}
+
+// replaceStored rewrites zip, a package as the tool packs it (no archive
+// comment, no extra fields, no data descriptors), with the content of the
+// entry name replaced by content, stored. Every other record is copied
+// byte for byte, and each offset moved by what the replacement changed.
+// The package's own reader is not used: the case is input to the tool
+// under test.
+func replaceStored(zip []byte, name string, content []byte) ([]byte, error) {
+	le := binary.LittleEndian
+	const eocdLen, centralLen, localLen = 22, 46, 30
+	if len(zip) < eocdLen || le.Uint32(zip[len(zip)-eocdLen:]) != 0x06054b50 {
+		return nil, fmt.Errorf("the packed package does not end in an end record")
+	}
+	eocd := zip[len(zip)-eocdLen:]
+	count, cdAt := int(le.Uint16(eocd[10:])), int(le.Uint32(eocd[16:]))
+	var body, cd []byte
+	at := cdAt
+	for range count {
+		if at+centralLen > len(zip) || le.Uint32(zip[at:]) != 0x02014b50 {
+			return nil, fmt.Errorf("no central directory header at %d", at)
+		}
+		nameLen := int(le.Uint16(zip[at+28:]))
+		if le.Uint16(zip[at+30:]) != 0 || le.Uint16(zip[at+32:]) != 0 {
+			return nil, fmt.Errorf("a central directory header with an extra field or a comment")
+		}
+		rec := bytes.Clone(zip[at : at+centralLen+nameLen])
+		at += len(rec)
+		local, csize := int(le.Uint32(rec[42:])), int(le.Uint32(rec[20:]))
+		le.PutUint32(rec[42:], uint32(len(body)))
+		if string(rec[centralLen:]) != name {
+			body = append(body, zip[local:local+localLen+nameLen+csize]...)
+			cd = append(cd, rec...)
+			continue
+		}
+		// Version needed, method, CRC-32 and both sizes, in the local
+		// header at 4 and the central one at 6.
+		crc := crc32.ChecksumIEEE(content)
+		lh := bytes.Clone(zip[local : local+localLen+nameLen])
+		for _, h := range [][]byte{lh[4:], rec[6:]} {
+			le.PutUint16(h[0:], 10)
+			le.PutUint16(h[4:], 0)
+			le.PutUint32(h[10:], crc)
+			le.PutUint32(h[14:], uint32(len(content)))
+			le.PutUint32(h[18:], uint32(len(content)))
+		}
+		body = append(append(body, lh...), content...)
+		cd = append(cd, rec...)
+	}
+	end := bytes.Clone(eocd)
+	le.PutUint32(end[12:], uint32(len(cd)))
+	le.PutUint32(end[16:], uint32(len(body)))
+	return append(append(body, cd...), end...), nil
 }

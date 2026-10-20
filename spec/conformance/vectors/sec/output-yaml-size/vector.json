@@ -27,7 +27,13 @@
             }
           },
           "expect": {
-            "ok": true
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/at-the-limit-out"
+              }
+            ]
           },
           "bounds": {
             "cpu_ms": 500,
