@@ -142,7 +142,7 @@ another harness's type to get past a capacity wait.** Park on
 | 4 | **Validate, read, the first render, check and unpack**: `validate`; `ls`, `read`, `outline`, `grep`, `schema` and `extract`; `render` of template outputs into a new directory with the template environment; `check`; `unpack`; the Liquid closure | 3 | **complete** — [verdict](#10-wave-4--validate-read-the-first-render-check-and-unpack) |
 | 5 | **The render's capabilities, and the rest of authoring**: the METAIS filters and `date`; escaping; `embed` and `provenance`; fan-out, conditions and path templates; assets and the mirror; zip containers and their profiles; CRLF and output validation; existing destinations; dry run, the standard-output archive and `--only`; `sample`; `render --sample`; `test` | 4 | **complete** — [verdict](#11-wave-5--the-renders-capabilities-and-the-rest-of-authoring) |
 | 5b | **The gate's cost and merge friction** (inserted by Ed, 2026-10-19): the two-tier gate and its scripts; the shared-host cap; the skills; the `hostfs` limit tests; self-merging generated files; per-item ADR logs; one edit per finding code; help refusals by family; `render.go` split by phase | 5 | **complete** — [verdict](#11b-wave-5b--the-gates-cost-and-merge-friction-inserted-by-ed-2026-10-19) |
-| 6 | **Pack, and hardening**: `pack` with the example-package harness; `test`'s container comparison; the hostile corpus in full; the SC7 harness's full reach; limit calibration; benchmark budgets; the release builder | 5b | not started |
+| 6 | **Pack, and hardening**: `pack` with the example-package harness; `test`'s container comparison; the hostile corpus in full; the SC7 harness's full reach; limit calibration; benchmark budgets; the release builder | 5b | **complete**, release builder carried to Wave 7 — [verdict](#12-wave-6--pack-and-hardening) |
 | 7 | **The example packages and the close-out**: the packages of PRD §4.1 to §4.5; the worked package of `B-worked-package.md`; the specification's 1.0 text complete; the README, documentation and ADR implementation logs | 6 | not started |
 | — | **The out-of-band acts**: §6 | — | — |
 
@@ -1470,6 +1470,74 @@ A release can be built.
     Wave 7.
   - Wave 7 builds the release builder only once Ed has ruled. His ruling is
     recorded here when it comes.
+
+**Verdict (2026-10-20): complete, with the release builder carried to
+Wave 7.**
+
+What landed:
+
+- `pack`, round-tripping through `unpack` and pinned from `init` through
+  `check`, `test` and `pack`, with the example-package harness;
+- `test`'s comparison of containers by entries;
+- the hostile corpus in full, by ADR-009 D17's areas;
+- the SC7 harness's full reach, as a wave-tier step under R-W6-3;
+- ADR-009 A1's schema compile bounds;
+- the limit-calibration suite;
+- the benchmarks, with sandbox baselines.
+
+That took thirteen items: W6-1 to W6-12 and the corrective W6-14 (#128 to
+the merge before #141). The verification round ran the wave tier green on a
+fresh clone, all 25 reach groups included, and mutated twelve of the
+thirteen items. It found two blocking defects in the gate's own scripts,
+fixed in #141 and not re-verified.
+
+Brief and closeout:
+[brief-plan-2026-10-metais-v1-wave6.md](../briefs/brief-plan-2026-10-metais-v1-wave6.md)
+(brief [#121](https://github.com/kottera/metais/pull/121) and
+[#122](https://github.com/kottera/metais/pull/122), rulings
+[#136](https://github.com/kottera/metais/pull/136) and
+[#140](https://github.com/kottera/metais/pull/140), closeout
+[#142](https://github.com/kottera/metais/pull/142)). No person was consulted
+during the wave.
+
+Not met, or weaker than it reads:
+
+- **§12's release-builder acceptance is not met.** Ed's design session
+  `01a1566e-2786-7173-84ff-c1485fcf8cdf` was still unclaimed, so the
+  builder moved to Wave 7, which builds it once Ed rules. W6-13's drafted
+  task is the starting point.
+- **Some proofs have run on no host:**
+  - the pseudo-terminal proof has run on no host;
+  - W6-14's darwin half is unproven;
+  - three `hostfs` device tests skip in sandboxes.
+
+  The matrix rehearsal W6-A1 (`01a15822-b803-7c96-9673-42aaf46e69b5`)
+  carries all three.
+- **The sandbox calibration breached nine ceilings.** No default was
+  changed. W6-A2 (`01a15822-7680-746c-b98e-dc38260f857a`) measures on real
+  hosts, and a real breach becomes an ADR-009 amendment for Ed (R1-015).
+- **W6-7 (benchmarks) was inspected, not mutated.**
+
+What changes the last wave:
+
+- **`check` accepts a literal output path `../escape.txt`**, which
+  `render` and `test` refuse. It is not a confinement breach, but `check`
+  exists to say whether a package will render. Wave 7's brief rules that
+  `check` refuses it, under the stricter-rule convention, with a chapter 13
+  statement and a vector.
+- **Two `manifest.*` codes no 1.0 manifest can produce**
+  (`manifest.any_of`, `manifest.one_of.ambiguous`) join the W7 work that
+  ADR-006 A1 rules.
+- **For Ed to ratify at the train's close:**
+  - R-W6-3;
+  - fault bits 9 and 10;
+  - `internal/hostfs` hosting the pty test;
+  - R-W6-9b, which proves content-class hostile cases through validate and
+    check steps. ADR-011 D16 item 3's "the same findings" collides with
+    MTS-AUT-002's `report.step_skipped` in `check`.
+- **Still running when the wave closed:** W6-NB1
+  (`01a15821-e3c7-7f0f-824c-26cb1e992efa`) and W6-NB2
+  (`01a15822-3703-7455-86b5-c54ca3c65732`).
 
 ## 13. Wave 7 — the example packages and the close-out
 
