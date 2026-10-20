@@ -157,7 +157,7 @@ func readingDeclarations() []*Command {
 			Flags: []args.Flag{
 				{Name: "context", Short: 'C', Value: "<n>", Default: "0", Description: "Show n lines before and after each matching line, from 0 to the grep-context limit."},
 				{Name: "ignore-case", Short: 'i', Description: "Match letters regardless of case."},
-				{Name: "max-results", Value: "<n>", Default: "100", Description: "Report at most n matching lines, from 1 to the grep-matches limit."},
+				{Name: "max-results", Value: "<n>", Default: "100", Description: "Report at most n matching lines, from 1 to the grep-matches limit; by default 100, or the limit when it is lower."},
 			},
 			Format: "metais.grep/1",
 			Prints: "Each matching line as path:line:text and each line of context as path-line-text, with -- between groups that are not adjacent; a truncation notice and the binary entries skipped go to standard error.",
