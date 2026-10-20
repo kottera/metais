@@ -1637,6 +1637,17 @@ specification's 1.0 text is complete and ready for the release act.
 - **The release builder remains held** for Ed's design session
   `01a1566e-2786-7173-84ff-c1485fcf8cdf`. His ruling is recorded here when
   it comes.
+- **The release builder's fate is settled at the wave's end** (plan
+  orchestrator, 2026-10-20). If Ed's ruling is still absent when the §4.1
+  and §4.2 packages have merged, W7-R is cancelled. The release builder
+  then carries beyond this train, and the closeout says that §12's
+  release-builder acceptance is unmet.
+- **The §4.1 and §4.2 packages build before the terms check ends, but do
+  not merge before it.** Each parks before merging for W7-A1's evidence.
+- **"It passed alone" is not a merge condition.** The wave's ruling R-W7-4
+  is rescinded, as Ed's guidance of 2026-10-19 requires. The items merged
+  under it are judged by the wave tier at verification. A timeout there is
+  root-caused and fixed, never merged around.
 
 ## 14. What this plan does not cover
 
