@@ -1,0 +1,42 @@
+{%- comment -%}
+  Writes an article's body as HTML: blocks are separated by a blank line;
+  a block opening "# " or "## " is a second-level heading, "### " a third, one whose lines each open
+  "- " is a list, one opening "```" is code, and any other is a paragraph.
+  Every text is written escaped, so markup in the body is shown as text.
+{%- endcomment -%}
+{%- capture nl %}
+{% endcapture -%}
+{%- assign blank_line = nl | append: nl -%}
+{%- assign blocks = body | split: blank_line -%}
+{%- for raw in blocks -%}
+{%- assign block = raw | strip -%}
+{%- if block == "" -%}{%- continue -%}{%- endif -%}
+{%- assign opening3 = block | slice: 0, 3 -%}
+{%- assign opening4 = block | slice: 0, 4 -%}
+{%- assign opening2 = block | slice: 0, 2 -%}
+{%- if opening4 == "### " %}
+<h3>{{ block | remove_first: "### " | strip_newlines }}</h3>
+{%- elsif opening3 == "## " %}
+<h2>{{ block | remove_first: "## " | strip_newlines }}</h2>
+{%- elsif opening2 == "# " %}
+<h2>{{ block | remove_first: "# " | strip_newlines }}</h2>
+{%- elsif opening3 == "```" -%}
+{%- assign lines = block | split: nl %}
+<pre><code>
+{%- for line in lines offset: 1 -%}
+{%- if forloop.last and line == "```" -%}{%- break -%}{%- endif -%}
+{%- unless forloop.first %}{{ nl }}{% endunless -%}
+{{ line }}
+{%- endfor -%}
+</code></pre>
+{%- elsif opening2 == "- " -%}
+{%- assign lines = block | split: nl %}
+<ul>
+{%- for line in lines %}
+<li>{{ line | remove_first: "- " }}</li>
+{%- endfor %}
+</ul>
+{%- else %}
+<p>{{ block }}</p>
+{%- endif -%}
+{%- endfor -%}

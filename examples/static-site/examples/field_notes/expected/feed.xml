@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+<title>Field Notes</title>
+<subtitle>Short notes on keeping a field notebook, written as the season goes.</subtitle>
+<id>https://notes.example.org/</id>
+<link href="https://notes.example.org/"/>
+<link rel="self" href="https://notes.example.org/feed.xml"/>
+<updated>2026-10-02T00:00:00Z</updated>
+<author><name>Sam Rivera</name></author>
+<entry>
+<title>What to write down</title>
+<id>https://notes.example.org/articles/2026-10-02-what-to-write-down.html</id>
+<link href="https://notes.example.org/articles/2026-10-02-what-to-write-down.html"/>
+<updated>2026-10-02T00:00:00Z</updated>
+<category term="method"/>
+<category term="weather"/>
+<summary>The five things every entry records, and why the weather is one of them.</summary>
+<content type="html">&lt;p&gt;Every entry records the same five things, in the same order, so that a
+page read a year later answers its own questions.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;date      2026-10-02
+place     north meadow, by the gate
+weather   overcast, light wind from the west
+who       Sam, Ali
+seen      two kestrels hunting the bank&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;The weather matters more than it seems: half of what you will not see is
+explained by it. Write it as you find it, and keep &amp;lt;b&amp;gt;tags&amp;lt;/b&amp;gt; &amp;amp; symbols
+out of your head: this page shows them as you typed them.&lt;/p&gt;
+&lt;h3&gt;Abbreviations&lt;/h3&gt;
+&lt;p&gt;Keep a list of your abbreviations on the inside cover, and never change
+what one means.&lt;/p&gt;</content>
+</entry>
+<entry>
+<title>Starting a field notebook</title>
+<id>https://notes.example.org/articles/2026-09-14-starting-a-field-notebook.html</id>
+<link href="https://notes.example.org/articles/2026-09-14-starting-a-field-notebook.html"/>
+<updated>2026-09-14T00:00:00Z</updated>
+<category term="notebooks"/>
+<category term="method"/>
+<summary>Why a paper notebook still beats a phone outdoors, and the one rule that keeps it useful.</summary>
+<content type="html">&lt;p&gt;A field notebook is a record you can trust later, written at the moment
+you saw something. It does not need batteries, it does not mind rain, and
+nobody has ever lost an afternoon&amp;#39;s notes to a software update.&lt;/p&gt;
+&lt;h2&gt;The one rule&lt;/h2&gt;
+&lt;p&gt;Write the date and the place first, every time, before anything else. An
+observation without a when and a where is a story, not a record.&lt;/p&gt;
+&lt;h2&gt;What to carry&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;a notebook with numbered pages&lt;/li&gt;
+&lt;li&gt;a pencil, which writes on damp paper&lt;/li&gt;
+&lt;li&gt;a ruler marked in millimetres&lt;/li&gt;
+&lt;/ul&gt;</content>
+</entry>
+</feed>

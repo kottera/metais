@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Site configuration",
+  "description": "What every page and the feed say about the site as a whole.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "url", "author"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "title": "Title",
+      "description": "The site's name, at the top of every page and as the feed's title.",
+      "examples": ["Field Notes"]
+    },
+    "url": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https?://",
+      "maxLength": 2048,
+      "title": "Address",
+      "description": "The absolute http or https address the site is published at. The feed's links are made from it.",
+      "examples": ["https://notes.example.org/"]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 300,
+      "title": "Description",
+      "description": "One or two sentences about the site, beneath the index's heading and as the feed's subtitle. Leaving it out writes neither."
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "title": "Author",
+      "description": "Who writes the site, named in every page's footer and as the feed's author.",
+      "examples": ["Sam Rivera"]
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
+      "default": "en",
+      "title": "Language",
+      "description": "The language the site is written in, as a BCP 47 tag such as en or fr-CA. It is en when left out.",
+      "examples": ["en"]
+    }
+  }
+}
