@@ -106,6 +106,8 @@
     {"id": "MTS-FND-010", "chapter": "12-findings.md", "section": "12.5", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-FND-011", "chapter": "12-findings.md", "section": "12.6", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-FND-012", "chapter": "12-findings.md", "section": "12.6", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-FND-020", "chapter": "12-findings.md", "section": "12.5", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-FND-021", "chapter": "12-findings.md", "section": "12.5", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-GEN-001", "chapter": "01-introduction.md", "section": "1.5", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-MAN-001", "chapter": "03-manifest.md", "section": "3.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-MAN-002", "chapter": "03-manifest.md", "section": "3.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
