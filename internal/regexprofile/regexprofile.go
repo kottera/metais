@@ -168,12 +168,15 @@ func (r *Regexp) MatchString(s string) bool {
 }
 
 // Meter is regex-work: the matching budget of one command (ADR-009 D10
-// item 7). It is not safe for concurrent use; nothing that matches starts
-// a goroutine.
+// item 7). It also carries the units of schema evaluation internal/schema
+// counts against schema-work (D3), since the validations of one command
+// share both budgets and this is the value they share. It is not safe for
+// concurrent use; nothing that matches starts a goroutine.
 type Meter struct {
 	remaining int64
 	spent     int64
 	exhausted bool
+	evaluated int64
 }
 
 // NewMeter returns a meter holding budget units.
@@ -185,6 +188,12 @@ func (m *Meter) Exhausted() bool { return m.exhausted }
 
 // Spent returns the units charged so far.
 func (m *Meter) Spent() int64 { return m.spent }
+
+// SchemaWork returns the units of schema evaluation charged so far.
+func (m *Meter) SchemaWork() int64 { return m.evaluated }
+
+// ChargeSchemaWork adds n units of schema evaluation.
+func (m *Meter) ChargeSchemaWork(n int64) { m.evaluated += n }
 
 func (m *Meter) charge(insts, length int64) bool {
 	if m.exhausted {

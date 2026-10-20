@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/liquid/value"
 	"github.com/kottera/metais/internal/regexprofile"
 	"github.com/kottera/metais/internal/schemafail"
@@ -78,12 +77,12 @@ func (s *Supply) Validate() (*Result, error) {
 	var le *regexprofile.LimitError
 	switch {
 	case errors.As(err, &le):
-		// The command's matching budget is spent, so no input's
-		// validation has an answer: each input present says so.
+		// The command's matching budget or its schema-work is spent, so
+		// no input's validation has an answer: each input present says so.
 		for _, in := range s.l.inputs {
 			if n, ok := root.obj[in.Name]; ok {
 				l := n.locator()(nil, false).WithPath(nil)
-				vfs = append(vfs, s.lim.Exceeded(limits.RegexWork, s.l.subject(in.Name), l, 0, false))
+				vfs = append(vfs, s.lim.Exceeded(le.Limit, s.l.subject(in.Name), l, 0, false))
 			}
 		}
 	case err != nil:

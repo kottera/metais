@@ -82,6 +82,12 @@ type declared struct {
 	v   value.Value
 }
 
+// dynamic is a $dynamicAnchor the walk found: its name, and the pointer of
+// the schema object that declares it.
+type dynamic struct {
+	name, ptr string
+}
+
 // reference is a $ref or $dynamicRef the walk found.
 type reference struct {
 	ptr  string // of the keyword
@@ -99,6 +105,7 @@ type prechecker struct {
 	resources []declared
 	refs      []reference
 	anchors   []declared // each $anchor and $dynamicAnchor, by its URI
+	dynamic   []dynamic  // each $dynamicAnchor, by its name
 	deep      bool       // schema-depth has been reported
 
 	count     *subschemas // the compilation's tally, which every file adds to
@@ -195,6 +202,9 @@ func (w *prechecker) walk(v value.Value, ptr string, base *url.URL, depth int) {
 		case "$anchor", "$dynamicAnchor":
 			if isString {
 				w.anchors = append(w.anchors, declared{uri: base.String() + "#" + s.Text(), ptr: ptr})
+				if name == "$dynamicAnchor" {
+					w.dynamic = append(w.dynamic, dynamic{name: s.Text(), ptr: ptr})
+				}
 			}
 		case "$ref", "$dynamicRef":
 			if isString {
