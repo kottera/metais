@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Project",
+  "description": "The project a repository is rendered for: its names, its Go module, who holds its copyright and under what licence, and the options that add files.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "module",
+    "description",
+    "owner",
+    "year",
+    "license"
+  ],
+  "properties": {
+    "name": {
+      "$ref": "#/$defs/command_name",
+      "not": {
+        "pattern": "^(b-?r-?e-?a-?k|c-?a-?s-?e|c-?h-?a-?n|c-?o-?n-?s-?t|c-?o-?n-?t-?i-?n-?u-?e|d-?e-?f-?a-?u-?l-?t|d-?e-?f-?e-?r|e-?l-?s-?e|f-?a-?l-?l-?t-?h-?r-?o-?u-?g-?h|f-?o-?r|f-?u-?n-?c|g-?o|g-?o-?t-?o|i-?f|i-?m-?p-?o-?r-?t|i-?n-?t-?e-?r-?f-?a-?c-?e|m-?a-?p|p-?a-?c-?k-?a-?g-?e|r-?a-?n-?g-?e|r-?e-?t-?u-?r-?n|s-?e-?l-?e-?c-?t|s-?t-?r-?u-?c-?t|s-?w-?i-?t-?c-?h|t-?y-?p-?e|v-?a-?r|m-?a-?i-?n)$"
+      },
+      "title": "Name",
+      "description": "The project's name, which is its command's name: lower-case letters and digits in words joined by single hyphens, starting with a letter. It names cmd/<name>/, and without its hyphens it names the Go package under internal/, so without its hyphens it is not a Go keyword and not main.",
+      "examples": [
+        "weather"
+      ]
+    },
+    "module": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*\\.[a-z]{2,}(/[A-Za-z0-9_.~-]+)+$",
+      "maxLength": 200,
+      "title": "Module path",
+      "description": "The Go module path: a domain the owner controls, then at least one path element, such as example.com/weather.",
+      "examples": [
+        "example.com/weather"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "pattern": "^[^\\s].*[^\\s.]$",
+      "minLength": 2,
+      "maxLength": 120,
+      "title": "Description",
+      "description": "What the command does, in one line with no final full stop, as the README's first line and the command's doc comment say it.",
+      "examples": [
+        "Prints the weather for a place"
+      ]
+    },
+    "owner": {
+      "type": "string",
+      "pattern": "^[^\\s](.*[^\\s])?$",
+      "maxLength": 100,
+      "title": "Owner",
+      "description": "Who holds the copyright: a person's or an organisation's name, as each Go file's copyright line and the README name it.",
+      "examples": [
+        "Example Ltd"
+      ]
+    },
+    "year": {
+      "type": "integer",
+      "minimum": 1970,
+      "maximum": 9999,
+      "title": "Copyright year",
+      "description": "The year each Go file's copyright line and the README give: the year the repository is created.",
+      "examples": [
+        2026
+      ]
+    },
+    "license": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9.+-]*$",
+      "maxLength": 64,
+      "title": "Licence",
+      "description": "The SPDX identifier of the project's licence, such as Apache-2.0 or MIT, or a LicenseRef- identifier for terms of the owner's own. Each Go file's SPDX-License-Identifier line and the README name it; no licence text is written.",
+      "examples": [
+        "Apache-2.0"
+      ]
+    },
+    "go": {
+      "type": "string",
+      "pattern": "^1\\.[0-9]{2}$",
+      "default": "1.24",
+      "title": "Go version",
+      "description": "The Go release the module is written for, as go.mod's go line and the CI workflow name it.",
+      "examples": [
+        "1.24"
+      ]
+    },
+    "commands": {
+      "type": "array",
+      "maxItems": 10,
+      "uniqueItems": true,
+      "title": "Extra commands",
+      "description": "Further commands the repository holds beside the project's own, each in cmd/<name>/, listed once each. No two may share a name, and none may take the project's.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "$ref": "#/$defs/command_name",
+            "title": "Command name",
+            "description": "The command's name, which names its directory under cmd/.",
+            "examples": [
+              "weather-import",
+              "weather-export",
+              "weather-serve"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "pattern": "^[^\\s].*[^\\s.]$",
+            "maxLength": 120,
+            "title": "Summary",
+            "description": "What the command does, in one line with no final full stop.",
+            "examples": [
+              "Loads observations into the weather store",
+              "Writes the weather store out as CSV",
+              "Serves forecasts over HTTP"
+            ]
+          }
+        }
+      }
+    },
+    "ci": {
+      "type": "boolean",
+      "default": false,
+      "title": "CI workflow",
+      "description": "Whether the repository holds .github/workflows/ci.yml, which runs scripts/check.sh on every push and pull request.",
+      "examples": [
+        true
+      ]
+    },
+    "container": {
+      "type": "boolean",
+      "default": false,
+      "title": "Container build",
+      "description": "Whether the repository holds a Dockerfile and a .dockerignore that build the command into an image.",
+      "examples": [
+        true
+      ]
+    }
+  },
+  "$defs": {
+    "command_name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+      "maxLength": 40
+    }
+  }
+}

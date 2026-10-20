@@ -1,0 +1,8 @@
+{
+  "name": "notes",
+  "module": "github.com/example/notes",
+  "description": "Keeps short notes in a plain-text file",
+  "owner": "Kottera",
+  "year": 2026,
+  "license": "Apache-2.0"
+}

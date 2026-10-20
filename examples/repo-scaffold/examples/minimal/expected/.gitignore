@@ -1,0 +1,5 @@
+# The binaries go build writes at the repository's root.
+/notes
+
+# What a container or release build leaves behind.
+/dist/

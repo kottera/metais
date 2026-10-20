@@ -1,0 +1,70 @@
+metais: "1.0"
+name: "repo-scaffold"
+version: "1.0.0"
+title: "Go repository scaffold"
+description: "Renders a complete Go repository from a project description: its command and package sources, configuration, a README, a check script and, when chosen, a CI workflow and a container build."
+license: "Apache-2.0"
+guide: |-
+  This package renders the first commit of a Go repository: a module whose
+  command builds, vets and tests green as it is written, ready for its
+  author to make it do something.
+
+  Supply one input, the project, as project.yaml or project.json in a data
+  directory. Read [what the project means](inputs/project.md) first: its
+  name decides the command's directory, cmd/<name>/, and the package's,
+  internal/<name without hyphens>/, and each extra command it lists gets a
+  directory of its own under cmd/.
+
+  Every repository holds go.mod, a README, .gitignore, .editorconfig, the
+  command, its package and the package's test, and scripts/check.sh, which
+  is written executable. Two options add files:
+
+  - ci adds .github/workflows/ci.yml, a workflow that runs scripts/check.sh
+    on every push and pull request;
+  - container adds a Dockerfile and a .dockerignore that build the command
+    into an image holding nothing else.
+
+  The repository is rendered into a new directory, which then becomes the
+  repository:
+
+      metais render repo-scaffold --data data --out weather
+      cd weather && git init && ./scripts/check.sh
+
+  Every Go file begins with a copyright line, from the owner and the year,
+  and the licence's SPDX identifier. The package writes no licence text:
+  add the licence's own text as LICENSE before you publish.
+inputs:
+  - name: project
+    title: "Project"
+    description: "The project the repository is for: its names, its module path, and the options that add files."
+    schema: inputs/project.schema.json
+    meaning: inputs/project.md
+outputs:
+  - id: base
+    mirror: "."
+    path: "."
+  - id: command
+    template: cmd/main.go.liquid
+    path: "cmd/{{ inputs.project.name }}/main.go"
+  - id: extra_commands
+    template: cmd/extra.go.liquid
+    for_each: inputs.project.commands
+    path: "cmd/{{ item.name }}/main.go"
+  - id: package
+    template: internal/package.go.liquid
+    path: "internal/{{ inputs.project.name | replace: '-', '' }}/{{ inputs.project.name | replace: '-', '' }}.go"
+  - id: package_test
+    template: internal/package_test.go.liquid
+    path: "internal/{{ inputs.project.name | replace: '-', '' }}/{{ inputs.project.name | replace: '-', '' }}_test.go"
+  - id: check_script
+    template: scripts/check.sh.liquid
+    executable: true
+  - id: ci
+    template: .github/workflows/ci.yml.liquid
+    when: inputs.project.ci
+  - id: dockerfile
+    template: Dockerfile.liquid
+    when: inputs.project.container
+  - id: dockerignore
+    template: .dockerignore.liquid
+    when: inputs.project.container

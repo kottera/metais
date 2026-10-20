@@ -1,0 +1,8 @@
+# The binaries go build writes at the repository's root.
+/{{ inputs.project.name }}
+{%- for c in inputs.project.commands %}
+/{{ c.name }}
+{%- endfor %}
+
+# What a container or release build leaves behind.
+/dist/

@@ -1,0 +1,2 @@
+title: Required fields only
+description: A project given only what is required, so no option adds a file, no extra command is written, and go.mod takes the default Go version.

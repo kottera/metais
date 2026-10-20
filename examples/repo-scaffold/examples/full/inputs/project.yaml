@@ -1,0 +1,12 @@
+name: weather-cli
+module: example.com/weather
+description: Prints the weather for a place
+owner: Kottera
+year: 2026
+license: Apache-2.0
+go: "1.25"
+commands:
+  - name: weather-import
+    summary: Loads observations into the weather store
+ci: true
+container: true
