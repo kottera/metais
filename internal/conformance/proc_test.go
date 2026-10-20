@@ -5,10 +5,12 @@ package conformance
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"debug/buildinfo"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"regexp"
@@ -107,12 +109,22 @@ type proc struct {
 // runProc runs path with argv0 and args in dir, with exactly env, feeding
 // stdin, under lim's wall clock. A process that cannot be started is an
 // error; one that runs and fails is a proc.
+//
+// Where Go starts a process by fork(2) the spawner starts it instead
+// (testdata/spawner, TestProcessesStartFromTheSpawner), so that this
+// race-built binary forks for none of the processes the runner runs.
 func runProc(path string, args []string, dir string, env []string, stdin []byte, wall time.Duration) (*proc, error) {
 	procSlots <- struct{}{}
 	defer func() { <-procSlots }()
 	procStarted.Add(1)
 	defer procRunning.Add(-1)
 	for n, peak := procRunning.Add(1), procPeak.Load(); n > peak && !procPeak.CompareAndSwap(peak, n); peak = procPeak.Load() {
+	}
+	if c, err := spawner(); err != nil || c != nil {
+		if err != nil {
+			return nil, err
+		}
+		return c.run(path, args, dir, env, stdin, wall)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), wall)
 	defer cancel()
@@ -163,19 +175,29 @@ type usage struct {
 }
 
 // capped holds what a process writes to one stream, up to maxInflate
-// bytes, so a runaway tool fails its step rather than the runner.
+// bytes (limit, when it is set), so a runaway tool fails its step rather
+// than the runner.
 type capped struct {
 	bytes.Buffer
-	over bool
+	limit int
+	over  bool
 }
 
 func (c *capped) Write(b []byte) (int, error) {
-	if room := maxInflate - c.Len(); len(b) > room {
+	limit := cmp.Or(c.limit, maxInflate)
+	if room := limit - c.Len(); len(b) > room {
 		c.over = true
 		c.Buffer.Write(b[:max(room, 0)])
 		return len(b), nil
 	}
 	return c.Buffer.Write(b)
+}
+
+// ReadFrom copies through Write. The embedded buffer's own, which io.Copy
+// prefers, and which os/exec's copy of a process's stream reaches, would
+// take everything past the cap.
+func (c *capped) ReadFrom(r io.Reader) (int64, error) {
+	return io.Copy(struct{ io.Writer }{c}, r)
 }
 
 // boundProblems checks p against lim (ADR-011 D13).

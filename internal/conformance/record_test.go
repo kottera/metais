@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -310,7 +311,7 @@ func TestRecordAndCompare(t *testing.T) {
 	dir := testenv.Dir(t)
 	conformance := func(args ...string) ([]byte, error) {
 		cmd := exec.Command(testBinary(t), append([]string{"-test.run=^TestConformance$", "-test.count=1",
-			"-conformance.suite=" + suite}, args...)...)
+			"-test.parallel=" + strconv.Itoa(testParallel()), "-conformance.suite=" + suite}, args...)...)
 		return cmd.CombinedOutput()
 	}
 	recA, recB := filepath.Join(dir, "a.json"), filepath.Join(dir, "b.json")
@@ -467,19 +468,20 @@ func TestCompareRecordsEveryField(t *testing.T) {
 	}
 }
 
-// TestRealToolInRecord is where the runner meets the command line (W2-1,
-// W2-2): run with -conformance.record against the metais binary built from
-// source, the runner reads the tool's identity from its version --json and
-// writes a record that carries it.
-func TestRealToolInRecord(t *testing.T) {
-	t.Parallel()
-	p := filepath.Join(testenv.Dir(t), "record.json")
-	cmd := exec.Command(testBinary(t), "-test.run=^TestConformance$", "-test.count=1",
-		"-conformance.tool="+builtTool, "-conformance.record="+p)
-	if out, err := cmd.CombinedOutput(); err != nil {
-		t.Fatalf("the run: %v\n%s", err, out)
+// checkRealToolRecord is where the runner meets the command line (W2-1,
+// W2-2): TestConformance's default run records itself against the metais
+// binary built from source, so the runner reads the tool's identity from
+// its version --json and writes a record of every vector that carries it.
+// It runs once the run's own cleanup has written the record. The record
+// is checked in the run that makes it rather than in a run of every vector
+// again: a second run doubled the package's work. TestRecordAndCompare
+// proves -conformance.record writes the same record from the command line.
+func checkRealToolRecord(t *testing.T, suite, p string) {
+	t.Helper()
+	if t.Failed() {
+		return
 	}
-	set, err := suiteSchemas(defaultSuite())
+	set, err := suiteSchemas(suite)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -55,8 +55,9 @@ const (
 
 // TestMain re-executes as the reference driver or a fake when the test
 // binary is run under one of their names. Otherwise it builds the
-// measuring stub, and ./cmd/metais once, with -trimpath and with -race
-// when this binary is race-built (ADR-011 D11 item 2), and runs the tests.
+// measuring stub, the spawner where Go starts a process by fork(2), and
+// ./cmd/metais once, with -trimpath and with -race when this binary is
+// race-built (ADR-011 D11 item 2), and runs the tests.
 func TestMain(m *testing.M) {
 	base := filepath.Base(os.Args[0])
 	if base == refDriverName {
@@ -79,7 +80,10 @@ func TestMain(m *testing.M) {
 			os.Exit(1)
 		}
 		stubDir = dir
-		if procStub, err = buildProcStub(dir); err == nil && *flagTool == "" {
+		if procStub, err = buildProcStub(dir); err == nil && forkStarts {
+			spawnerPath, err = buildSpawner(dir)
+		}
+		if err == nil && *flagTool == "" {
 			builtTool = filepath.Join(dir, toolName)
 			err = buildTool(builtTool)
 		}
@@ -90,6 +94,11 @@ func TestMain(m *testing.M) {
 		}
 	}
 	code := m.Run()
+	if spawnc != nil {
+		if err := spawnc.stop(); err != nil {
+			fmt.Fprintln(os.Stderr, "the spawner:", err)
+		}
+	}
 	if dir != "" {
 		os.RemoveAll(dir)
 	}
@@ -195,6 +204,8 @@ func newAdapter(kind, program, suite string) (adapter, error) {
 // TestConformance runs every vector of the suite against the
 // implementation the flags name (ADR-011 D11), or, with
 // -conformance.compare, compares cross-platform records (D15 item 4).
+// Its default run, against the binary built from ./cmd/metais, records
+// itself and checks its record (checkRealToolRecord).
 func TestConformance(t *testing.T) {
 	suite := *flagSuite
 	if suite == "" {
@@ -234,6 +245,11 @@ func TestConformance(t *testing.T) {
 	r.keep = *flagKeep
 	if *flagRecord != "" {
 		r.rec = &recorder{path: *flagRecord}
+	} else if program == builtTool && *flagAdapter == "cli" {
+		r.rec = &recorder{path: filepath.Join(t.TempDir(), "record.json")}
+		// Registered before runSuite's own cleanup, which writes the
+		// record, so it runs after it.
+		t.Cleanup(func() { checkRealToolRecord(t, suite, r.rec.path) })
 	}
 	runSuite(t, r)
 }

@@ -6,6 +6,7 @@ package conformance
 import (
 	"bytes"
 	"encoding/binary"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -398,5 +399,27 @@ func TestHostFactsSkipVocabulary(t *testing.T) {
 		if len(f.value) <= minNameLength {
 			t.Errorf("%s %q is looked for, and is no longer than %d", f.what, f.value, minNameLength)
 		}
+	}
+}
+
+// TestCappedHoldsThroughCopy pins the cap on a process's stream as
+// os/exec fills it, by io.Copy from a pipe: the copy reaches the cap's
+// own Write, never the embedded buffer's ReadFrom, which takes everything.
+func TestCappedHoldsThroughCopy(t *testing.T) {
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	go func() {
+		w.Write(bytes.Repeat([]byte("x"), 100))
+		w.Close()
+	}()
+	c := &capped{limit: 10}
+	if _, err := io.Copy(c, r); err != nil {
+		t.Fatal(err)
+	}
+	r.Close()
+	if !c.over || c.Len() != 10 {
+		t.Errorf("a stream of 100 bytes under a cap of 10: over %t, kept %d bytes", c.over, c.Len())
 	}
 }
