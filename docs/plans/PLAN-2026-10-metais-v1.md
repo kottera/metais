@@ -1461,9 +1461,15 @@ A release can be built.
     `gate.sh wave`, split by area within the existing timeout. It runs at
     every wave's verification and before the release.
   - No check is dropped, no timeout raised, and no host share enlarged.
-- **The release builder (W6-13) is held** until Ed's design session
-  `01a1566e-2786-7173-84ff-c1485fcf8cdf` rules. His ruling is recorded here
-  when it comes.
+- **The release builder moves to Wave 7** (plan orchestrator, 2026-10-20).
+  - Ed's design session `01a1566e-2786-7173-84ff-c1485fcf8cdf`, on how
+    `internal/tools/release` is allowed past ADR-009 D16 item 3's symbol
+    rule, was still unclaimed when every other Wave 6 item had merged.
+  - Rather than stop the train, Wave 6 verifies and closes without W6-13.
+    §12's release-builder acceptance is unmet in Wave 6, and it carries to
+    Wave 7.
+  - Wave 7 builds the release builder only once Ed has ruled. His ruling is
+    recorded here when it comes.
 
 ## 13. Wave 7 — the example packages and the close-out
 
