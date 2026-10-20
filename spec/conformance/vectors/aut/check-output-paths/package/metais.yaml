@@ -25,7 +25,7 @@ outputs:
     path: Notes.txt/extra.txt
   - id: sometimes
     template: page.txt.liquid
-    path: notes.txt
+    path: NOTES.txt
     when: package.name == "example"
   - id: computed
     template: page.txt.liquid

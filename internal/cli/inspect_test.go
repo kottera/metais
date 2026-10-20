@@ -317,3 +317,34 @@ func TestInspectExamplesInNameOrder(t *testing.T) {
 		}
 	}
 }
+
+// TestInspectInputExamplesInNameOrder is ADR-008 D6 item 3 (W7-NB3): each
+// input's entry lists the examples that supply it in name order, every run
+// alike. The package's one input is supplied by eight examples, so a list
+// built in map order differs from name order within a few runs.
+func TestInspectInputExamplesInNameOrder(t *testing.T) {
+	testenv.Home(t)
+	p := filepath.Join(vectorsDir, "aut/test-example-yaml/package")
+	want := []string{"json", "list", "member", "now", "plain", "syntax", "title", "type"}
+	for i := range 32 {
+		r := runTool(t, "inspect", "--json", p)
+		if !r.doc.OK {
+			t.Fatalf("metais inspect %s: %s", p, r.stdout)
+		}
+		var res struct {
+			Inputs []struct {
+				Name     string
+				Examples []string
+			}
+		}
+		if err := json.Unmarshal(r.doc.Result, &res); err != nil {
+			t.Fatal(err)
+		}
+		if len(res.Inputs) != 1 || res.Inputs[0].Name != "report" {
+			t.Fatalf("run %d: inputs %+v, want the one input report", i, res.Inputs)
+		}
+		if got := res.Inputs[0].Examples; !slices.Equal(got, want) {
+			t.Fatalf("run %d: report's examples %q, want %q", i, got, want)
+		}
+	}
+}
