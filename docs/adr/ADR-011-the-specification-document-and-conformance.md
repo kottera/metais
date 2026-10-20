@@ -7,6 +7,9 @@ ratification; the passages it changes are marked *(A1, proposed)*.
 [Amendment A3](#amendments) (the temporary directory is the step's
 `TMPDIR`) was ruled by Ed Funnekotter on 2026-10-19; the passages it
 changes are marked *(A3)*.
+[Amendment A7](#amendments) (against the reference tool, one pass compared with a committed record) is proposed by
+[ADR-012](ADR-012-test-economy.md) and awaits Ed Funnekotter's acceptance;
+it takes effect as PLAN-2026-10-metais-test-economy's items land.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R16 (items 1–3); the document side of R15 (items 1 and
@@ -1647,6 +1650,59 @@ requirements), and the vector schema
 6. **Nothing else moves.** The suite's format only gains members and
    values within its major version (`spec/conformance/README.md`), and no
    released vector changes.
+
+### A7 — Against the reference tool, the runner makes one pass and compares it with a committed record; the published method is `-conformance.live`
+
+**Status:** Proposed 2026-10-20 by [ADR-012](ADR-012-test-economy.md) D2,
+D3, D9 and D11, awaiting Ed Funnekotter's acceptance. Each item takes
+effect when the PLAN-2026-10-metais-test-economy item named in it lands.
+**Amends:** D11 items 2, 7 and 9; D12 items 4 and 5; D14's
+`TestHostileVectorsOpenEverywhere` row; D15 item 1; D16 item 3.
+
+1. **D11 item 2** (W2-1). `TestMain` builds `./cmd/metais` once, by the
+   release line (`CGO_ENABLED=0`, `-trimpath`, the release tags and
+   flags), whether or not the test binary is race-built. D13 item 3's
+   multipliers apply when `-conformance.tool` names a race-built tool.
+2. **D11 item 7** (W1-6). The protocol is exercised by a static round trip
+   of every step's request and expected findings through the two `driver-*`
+   schemas and the adapter, and by `TestDriverProtocol/fixtures` through
+   the reference driver. The whole suite runs through the reference driver
+   at release.
+3. **D11 item 9** (W2-3). The budget is a count. The pass's processes
+   equal its plan. The plan holds at most two processes per step, plus 13
+   for each representative of D16 item 3 and one for each repeatable step
+   (ADR-012 D9). Time is measured, by ADR-012 D12, and not asserted.
+4. **D12 items 4 and 5** (W2-3). Against the reference tool built from
+   source, environment B is a committed record, one file per vector under
+   `internal/conformance/testdata/record/`. It holds D15 item 3's fields
+   for every command of every step, and the regenerate step makes it.
+   Every observed byte of A must equal the record. A case whose
+   requirement the recording host did not meet runs B live. Under
+   `-conformance.live`, the default for any other tool or adapter, B runs
+   live as item 4 says. Under `-short`, B does not run live; the record
+   comparison costs no process and still applies.
+5. **D14** (W2-2, W2-3).
+   - `TestHostileVectorsOpenEverywhere` now fails when a pair of finding
+     code and package form among the security `open` steps has no
+     representative run through every package-opening command.
+   - `TestRecordsCurrent` is added. It fails when a vector has no record,
+     a record is stale or names a case or command the plan does not, or a
+     record holds `MTSSENTINEL` or a path that leaves its tree.
+
+   A record per vector conflicts only when two changes alter one vector's
+   output, and A5's merge driver and the regenerate step resolve that.
+   This is unlike the committed coverage file this decision rejects.
+6. **D15 item 1** (W2-3). On every change, the suite runs on the host
+   platform in environment A, compared with the record. Wherever the
+   record was made, every change on another platform checks item 4's
+   cross-platform agreement for every vector. The release still runs the
+   matrix with `-conformance.live` and compares the four records.
+7. **D16 item 3** (W2-2). Against the reference tool, a security `open`
+   step runs every package-opening command when it represents a pair of
+   an expected finding code and a package form: the first such step in
+   path order. Any other security `open` step runs `inspect`. Under
+   `-conformance.live`, every security `open` step runs every opening
+   command.
 
 ## Implementation log
 

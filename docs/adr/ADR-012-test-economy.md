@@ -12,8 +12,8 @@ that carries it lands.
 ADR-009, ADR-010 and ADR-011's guarantees per change, and what they cost.
 **Amends:** ADR-005 D19 item 2 (A2); ADR-009 D16 items 1 and 2 (A7);
 ADR-010 D2 item 3, D13 item 4 and D14 item 8 (A6); ADR-011 D11 items 2, 7
-and 9, D12 items 4 and 5, D14's `TestHostileVectorsOpenEverywhere` row and
-D15 item 1 (A7). Each amendment states the new rule in its ADR and points
+and 9, D12 items 4 and 5, D14's `TestHostileVectorsOpenEverywhere` row,
+D15 item 1 and D16 item 3 (A7). Each amendment states the new rule in its ADR and points
 here for the reasons.
 **Depends on:** ADR-010 Amendment A5 (the two gate tiers), and the
 gate-selection fix filed beside this design in the same cohort, which

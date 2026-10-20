@@ -1,6 +1,9 @@
 # ADR-005: Outputs, transforms and rendering — declared outputs expand into one sorted file plan that is rendered, transformed and verified in memory before a single commit writes it; zip containers, CRLF and schema validation are the only transforms; every path obeys one portable rule on every platform
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
+[Amendment A2](#amendments) (repetition is proved by the conformance pass against its record) is proposed by
+[ADR-012](ADR-012-test-economy.md) and awaits Ed Funnekotter's acceptance;
+it takes effect as PLAN-2026-10-metais-test-economy's items land.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R8 (items 1–5), R9 (items 1–5), R10 (items 1–4), R12 (items 1–5); the output-count and output-size parts of R14 item 2
@@ -1352,6 +1355,31 @@ they write into an existing directory too.
    existing directory that argument does not apply: there is no atomicity
    to lose, a leftover is refused by name as a temporary file was, item 5
    reserves the name, and item 4 keeps every rename on one filesystem.
+
+### A2 — Repetition is proved by the conformance pass against its record, and by the detector's probe
+
+**Status:** Proposed 2026-10-20 by [ADR-012](ADR-012-test-economy.md) D7
+item 1, awaiting Ed Funnekotter's acceptance. It takes effect when
+PLAN-2026-10-metais-test-economy W3-1 lands.
+**Amends:** D19 item 2's "Repetition" proof.
+
+1. **Every vector's bytes are compared across processes on every change.**
+   The reference runner's one pass runs each case in a fresh process in
+   environment A, and compares every observed byte with the committed
+   record of the same case run in environment B (ADR-012 D2). The record
+   was made by another process, earlier, with another environment and
+   path mode, and possibly on another host. Go randomises map iteration
+   per process, so a render that emits in map order fails that comparison
+   on some vector.
+2. **In one process, the determinism detector renders its control's probe**:
+   a 20-member object, clean and under `MapOrder`, up to 20 times (ADR-010
+   D13 item 4). It does not render every vector three times at `GOMAXPROCS`
+   1 and `NumCPU`. The render starts one goroutine, a single producer
+   feeding a pipe that the commit reads in order (ADR-010 D2 item 3, as A6
+   amends it), so the scheduler cannot reorder its bytes.
+3. **Host variation** is unchanged. Environment A carries
+   `TZ=Pacific/Chatham` and `LC_ALL` of `tr_TR.UTF-8`, and
+   `TestRenderUnderAClosedUmask` carries the umask of `077`.
 
 ## Implementation log
 

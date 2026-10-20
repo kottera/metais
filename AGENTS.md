@@ -169,6 +169,20 @@ Agents that do not load skills read them as plain files:
 - **Pin the property false first.** A headline guarantee — no write outside
   the output directory, no network, byte-identical outputs — gets a test
   that is red before the code that makes it true.
+- **Prove each property once, along each of its axes, at the smallest size
+  that can fail it** (ADR-012 D1). Vary each axis a defect could grow along
+  (directories, files, depth; process, environment, path mode, day) just
+  past where the defect shows. Full-scale counts of a limit live in the
+  calibration suite, which runs at release.
+- **Before adding a walk over the whole corpus, name what one
+  representative per code path would miss**, in the test's comment. If
+  nothing, run the representatives.
+- **When a test is slow, ask what it proves before making it parallel.**
+  Parallelism takes cost off the clock, not off the shared host.
+- **Answer an incident in the test infrastructure with a unit test of the
+  fix**, not with a run of the suite that would have shown it.
+- **A test that is shrunk, merged, moved or deleted names what still
+  proves its property**, in its pull request.
 - **Debug the mechanism, not the blame.** A failure asks *why*. Make it
   deterministic or make one occurrence sufficient. The aim is no
   intermittent failures at all: a red that passes on a re-run still has a
