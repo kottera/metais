@@ -19,7 +19,9 @@ and reported as package.layout.not_packed. Each file is packed byte for byte.
 The package's bytes depend only on its entries' paths and contents: never on a
 file's time, mode or owner, the order a directory lists its names in, the
 platform, the locale or the clock. One build of metais packs a source directory
-to the same bytes every time.
+to the same bytes every time. The package is read back as every reader reads one
+before it is kept, and a limit only its bytes show, such as entry-ratio, refuses
+it as limit.package.
 
 --out names the package file. Without it, the file is <name>-<version>.metais,
 from the manifest, in the working directory; an --out that names an existing
