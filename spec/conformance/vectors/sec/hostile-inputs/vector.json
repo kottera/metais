@@ -1,0 +1,210 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/hostile-inputs",
+  "title": "A hostile supplier's inputs are refused at validate and at render, without following a link, opening a pipe, expanding a bomb or writing anything, and the names and text they echo are carried exactly",
+  "statements": [
+    "MTS-SEC-006",
+    "MTS-SEC-005",
+    "MTS-SUP-006",
+    "MTS-SUP-012",
+    "MTS-SUP-015"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [
+    "symlinks",
+    "fifos"
+  ],
+  "notes": "",
+  "cases": [
+    {
+      "name": "links",
+      "setup": {
+        "symlinks": [
+          {
+            "path": "data/links/vendor.json",
+            "target": "../../package/metais.yaml"
+          },
+          {
+            "path": "data/links/deep.json",
+            "target": "rows.csv"
+          },
+          {
+            "path": "data/links/items",
+            "target": "../../package/inputs"
+          },
+          {
+            "path": "data/links/tags.yaml",
+            "target": "extra.json"
+          },
+          {
+            "path": "data/links/extra.json",
+            "target": "tags.yaml"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/links"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/links.json"
+          }
+        },
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data/links",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/links.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "fifo",
+      "setup": {
+        "fifos": [
+          "data/fifo/vendor.json",
+          "data/fifo/items/a.json"
+        ]
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/fifo"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/fifo.json"
+          }
+        },
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data/fifo",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/fifo.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "names",
+      "setup": {
+        "symlinks": [
+          {
+            "path": "data/names/items/a\nb.json",
+            "target": "a.json"
+          },
+          {
+            "path": "data/names/items/\u001b[31mred.json",
+            "target": "a.json"
+          },
+          {
+            "path": "data/names/items/x\u202egnp.json",
+            "target": "a.json"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/names"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/names.json"
+          }
+        },
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data/names",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/names.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "echo",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/echo"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/echo.json"
+          }
+        },
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data/echo",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/echo.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bombs",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/bombs"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/bombs.json"
+          }
+        },
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data/bombs",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/bombs.json"
+          }
+        }
+      ]
+    }
+  ]
+}

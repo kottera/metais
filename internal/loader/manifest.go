@@ -62,7 +62,7 @@ func (o *opening) parse(p *Package) []finding.Finding {
 	var root value.Value
 	var pos finding.Positions
 	if isJSON(src) {
-		doc, fs := jsonx.Parse(src, jsonx.Source{Input: manifestSubject, At: manifestLocation}, o.lim)
+		doc, fs := jsonx.Parse(src, jsonx.Source{Input: manifestSubject, At: manifestLocation, Size: limits.ManifestSize}, o.lim)
 		if len(fs) > 0 {
 			return fs
 		}
@@ -266,7 +266,7 @@ func decodeSchema(entry string, src []byte, lim limits.Set) (value.Value, []find
 	var fs []finding.Finding
 	form := "json"
 	if strings.HasSuffix(entry, ".json") {
-		doc, f := jsonx.Parse(src, jsonx.Source{Input: subject, At: at}, lim)
+		doc, f := jsonx.Parse(src, jsonx.Source{Input: subject, At: at, Size: limits.SchemaSize}, lim)
 		v, fs = doc.Value, f
 	} else {
 		form = "yaml"
@@ -333,7 +333,7 @@ func (p *Package) SchemaPositions(lim limits.Set) func(entry string) finding.Pos
 		subject := finding.Subject{Kind: finding.SubjectInput, Name: entry}
 		var pos finding.Positions
 		if strings.HasSuffix(entry, ".json") {
-			doc, fs := jsonx.Parse(src, jsonx.Source{Input: subject, At: entryLocation(entry)}, lim)
+			doc, fs := jsonx.Parse(src, jsonx.Source{Input: subject, At: entryLocation(entry), Size: limits.SchemaSize}, lim)
 			if len(fs) == 0 {
 				pos = doc.Positions()
 			}

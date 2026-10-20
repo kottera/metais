@@ -1,0 +1,72 @@
+[
+  {
+    "code": "input.link",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "deep",
+      "title": "Deep"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "deep.json"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.link",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "extra",
+      "title": "Extra"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "extra.json"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.link",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.link",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "tags",
+      "title": "Tags"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "tags.yaml"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.link",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "vendor",
+      "title": "Vendor"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "vendor.json"
+    },
+    "params": {}
+  }
+]

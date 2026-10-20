@@ -1,0 +1,22 @@
+[
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "page",
+      "title": "Page"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "page.md",
+      "line": 2,
+      "column": 1
+    },
+    "params": {
+      "limit": "frontmatter-size",
+      "bound": 5,
+      "lowered": true
+    }
+  }
+]

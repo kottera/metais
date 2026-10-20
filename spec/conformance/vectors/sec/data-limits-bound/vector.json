@@ -1,0 +1,308 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/data-limits-bound",
+  "title": "Each data limit and the findings limit admits an input exactly at its bound and refuses, or for findings truncates, one past it",
+  "statements": [
+    "MTS-SEC-058",
+    "MTS-SEC-005",
+    "MTS-FND-010"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "input-size",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/input-size-at",
+            "limits": {
+              "input-size": 16
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/input-size-past",
+            "limits": {
+              "input-size": 16
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/input-size-past.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "inputs-total",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/inputs-total-at",
+            "limits": {
+              "inputs-total": 32
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/inputs-total-past",
+            "limits": {
+              "inputs-total": 32
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/inputs-total-past.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "csv-rows",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/csv-rows-at",
+            "limits": {
+              "csv-rows": 2
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/csv-rows-past",
+            "limits": {
+              "csv-rows": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/csv-rows-past.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "csv-columns",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/csv-columns-at",
+            "limits": {
+              "csv-columns": 2
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/csv-columns-past",
+            "limits": {
+              "csv-columns": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/csv-columns-past.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "csv-cell",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/csv-cell-at",
+            "limits": {
+              "csv-cell": 4
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/csv-cell-past",
+            "limits": {
+              "csv-cell": 4
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/csv-cell-past.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "collection-items",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/collection-items-at",
+            "limits": {
+              "collection-items": 2
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/collection-items-past",
+            "limits": {
+              "collection-items": 2
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/collection-items-past.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "frontmatter-size",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/frontmatter-size-at",
+            "limits": {
+              "frontmatter-size": 5
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/frontmatter-size-past",
+            "limits": {
+              "frontmatter-size": 5
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/frontmatter-size-past.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "value-depth",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/value-depth-at",
+            "limits": {
+              "value-depth": 5
+            }
+          },
+          "expect": {
+            "ok": true
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/value-depth-past",
+            "limits": {
+              "value-depth": 5
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/value-depth-past.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "findings",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/findings-at",
+            "limits": {
+              "findings": 3
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings-at.json"
+          }
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/findings-past",
+            "limits": {
+              "findings": 3
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings-past.json"
+          }
+        }
+      ]
+    }
+  ]
+}

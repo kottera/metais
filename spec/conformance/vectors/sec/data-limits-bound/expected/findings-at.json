@@ -1,0 +1,83 @@
+[
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "nums",
+      "title": "Nums"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "nums.json",
+      "line": 1,
+      "column": 2,
+      "pointer": "/0"
+    },
+    "schema": {
+      "entry": "inputs/nums.json",
+      "pointer": "/items/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "nums",
+      "title": "Nums"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "nums.json",
+      "line": 1,
+      "column": 7,
+      "pointer": "/1"
+    },
+    "schema": {
+      "entry": "inputs/nums.json",
+      "pointer": "/items/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  },
+  {
+    "code": "input.type",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "nums",
+      "title": "Nums"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "nums.json",
+      "line": 1,
+      "column": 12,
+      "pointer": "/2"
+    },
+    "schema": {
+      "entry": "inputs/nums.json",
+      "pointer": "/items/type",
+      "keyword": "type"
+    },
+    "params": {
+      "expected": [
+        "integer"
+      ],
+      "actual": "string"
+    }
+  }
+]

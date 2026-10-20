@@ -50,11 +50,14 @@ func (p *path) pointer() *finding.Path {
 }
 
 func (p *parser) document() (value.Value, *node) {
-	// A rendered output's text is bounded by output-size, an input's by
-	// input-size.
+	// A rendered output's text is bounded by output-size, the package's
+	// own content by its own limit, and an input's by input-size.
 	size := limits.InputSize
-	if p.from.Output {
+	switch {
+	case p.from.Output:
 		size = limits.OutputSize
+	case p.from.Size != limits.PackageSize:
+		size = p.from.Size
 	}
 	if n := int64(len(p.src)); n > p.lim.Value(size) {
 		p.limitExceeded(size, 0, nil, false, n)

@@ -4843,7 +4843,7 @@
             "default": "100",
             "repeatable": false,
             "required": false,
-            "description": "Report at most n matching lines, from 1 to the grep-matches limit."
+            "description": "Report at most n matching lines, from 1 to the grep-matches limit; by default 100, or the limit when it is lower."
           },
           {
             "name": "--limit",

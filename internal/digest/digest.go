@@ -201,6 +201,7 @@ func parse(src []byte, lim limits.Set) (map[string]string, string, string) {
 	doc, fs := jsonx.Parse(src, jsonx.Source{
 		Input: finding.Subject{Kind: finding.SubjectInput, Name: "digests"},
 		At:    finding.Location{Origin: finding.OriginPackage, File: File},
+		Size:  limits.EntrySize,
 	}, lim)
 	if len(fs) > 0 {
 		return nil, "", reasonSyntax

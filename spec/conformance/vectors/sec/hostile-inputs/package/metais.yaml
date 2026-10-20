@@ -1,0 +1,47 @@
+metais: "1.0"
+name: org.example.hostile
+version: 1.0.0
+title: Hostile inputs
+description: A package whose inputs come from a hostile supplier.
+guide: Supply the inputs.
+inputs:
+  - name: vendor
+    title: Vendor
+    schema: inputs/closed.json
+    required: false
+  - name: rows
+    title: Rows
+    schema: inputs/any.json
+    forms: [csv]
+    required: false
+  - name: items
+    title: Items
+    schema: inputs/any.json
+    collection: true
+    required: false
+  - name: tags
+    title: Tags
+    schema: inputs/any.json
+    forms: [yaml]
+    required: false
+  - name: deep
+    title: Deep
+    schema: inputs/any.json
+    required: false
+  - name: extra
+    title: Extra
+    schema: inputs/any.json
+    required: false
+  - name: notes
+    title: Notes
+    schema: inputs/any.json
+    forms: [markdown]
+    required: false
+  - name: page
+    title: Page
+    schema: inputs/any.json
+    forms: [markdown]
+    required: false
+outputs:
+  - id: report
+    template: report.md.liquid

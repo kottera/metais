@@ -37,8 +37,8 @@ Flags:
   -i, --ignore-case
       Match letters regardless of case.
   --max-results <n>
-      Report at most n matching lines, from 1 to the grep-matches limit.
-      Default: 100.
+      Report at most n matching lines, from 1 to the grep-matches limit; by
+      default 100, or the limit when it is lower. Default: 100.
   --limit <name>=<value>
       Lower one resource limit for this run, to a whole number no higher than
       its default (a size may end in KiB, MiB or GiB). metais limits lists them.

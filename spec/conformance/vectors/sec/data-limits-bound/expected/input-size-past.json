@@ -1,0 +1,21 @@
+[
+  {
+    "code": "limit.exceeded",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "doc",
+      "title": "Doc"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "doc.json"
+    },
+    "params": {
+      "limit": "input-size",
+      "bound": 16,
+      "lowered": true,
+      "observed": 17
+    }
+  }
+]
