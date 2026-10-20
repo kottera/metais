@@ -20,7 +20,7 @@
         {
           "op": "open",
           "args": {
-            "package": "at-the-limit"
+            "package": "package-at-the-limit"
           },
           "expect": {
             "ok": false,
@@ -35,7 +35,7 @@
         {
           "op": "open",
           "args": {
-            "package": "beyond-the-limit"
+            "package": "package-beyond-the-limit"
           },
           "expect": {
             "ok": false,

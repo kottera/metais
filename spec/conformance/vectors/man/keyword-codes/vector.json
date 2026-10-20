@@ -17,7 +17,7 @@
         {
           "op": "open",
           "args": {
-            "package": "const"
+            "package": "package-const"
           },
           "expect": {
             "ok": false,
@@ -32,7 +32,7 @@
         {
           "op": "open",
           "args": {
-            "package": "contains"
+            "package": "package-contains"
           },
           "expect": {
             "ok": false,
@@ -47,7 +47,7 @@
         {
           "op": "open",
           "args": {
-            "package": "dependent-required"
+            "package": "package-dependent-required"
           },
           "expect": {
             "ok": false,
@@ -62,7 +62,7 @@
         {
           "op": "open",
           "args": {
-            "package": "forbidden"
+            "package": "package-forbidden"
           },
           "expect": {
             "ok": false,
@@ -77,7 +77,7 @@
         {
           "op": "open",
           "args": {
-            "package": "max-items"
+            "package": "package-max-items"
           },
           "expect": {
             "ok": false,
@@ -92,7 +92,7 @@
         {
           "op": "open",
           "args": {
-            "package": "min-length"
+            "package": "package-min-length"
           },
           "expect": {
             "ok": false,
@@ -107,7 +107,7 @@
         {
           "op": "open",
           "args": {
-            "package": "one-of"
+            "package": "package-one-of"
           },
           "expect": {
             "ok": false,
@@ -122,7 +122,7 @@
         {
           "op": "open",
           "args": {
-            "package": "unique-items"
+            "package": "package-unique-items"
           },
           "expect": {
             "ok": false,
