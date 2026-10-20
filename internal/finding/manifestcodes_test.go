@@ -28,8 +28,10 @@ import (
 // report nothing from inside them (D6 items 7 and 10). A oneOf maps to
 // manifest.one_of, and to manifest.one_of.ambiguous only when two of its
 // branches could both match: the tripwire counts two branches exclusive
-// when, through their $refs, one requires a member the other, a closed
-// object, does not allow.
+// when, through their $refs, one of them allows only an object, and one
+// requires a member the other, a closed object, does not allow. Any other
+// pair it counts as able to both match, the stricter reading: without a
+// type, a value that is not an object matches both.
 func TestManifestKeywordCodes(t *testing.T) {
 	for _, p := range manifestCodeProblems(specdata.ManifestSchema10, registeredManifestCodes(Registry())) {
 		t.Error(p)
@@ -57,6 +59,21 @@ func TestManifestKeywordCodesControl(t *testing.T) {
 		}
 		return []byte(strings.Replace(schema, old, new, 1))
 	}
+	// untyped removes type from the named outputs' branches, which still
+	// exclude each other's required members as objects, while a string
+	// matches every branch without a type.
+	untyped := func(kinds ...string) []byte {
+		s := schema
+		for _, k := range kinds {
+			old := `"type": "object",
+      "required": ["id", "` + k + `"`
+			if !strings.Contains(s, old) {
+				t.Fatalf("the manifest schema holds no %q to edit", old)
+			}
+			s = strings.Replace(s, old, `"required": ["id", "`+k+`"`, 1)
+		}
+		return []byte(s)
+	}
 	for _, c := range []struct {
 		name   string
 		schema []byte
@@ -75,6 +92,8 @@ func TestManifestKeywordCodesControl(t *testing.T) {
         "anyOf"`, `"then": {
         "anyOf"`), codes, "anyOf, at /properties/name/then/anyOf, which maps to manifest.any_of"},
 		{"a oneOf whose branches can both match", edit(`{ "$ref": "#/$defs/asset_output" },`, `{ "$ref": "#/$defs/asset_output" }, { "$ref": "#/$defs/asset_output" },`), codes,
+			"oneOf, at /$defs/output/oneOf, which maps to manifest.one_of.ambiguous"},
+		{"two closed oneOf branches without their type", untyped("template", "asset"), codes,
 			"oneOf, at /$defs/output/oneOf, which maps to manifest.one_of.ambiguous"},
 		{"a keyword the tripwire does not know", edit(`"uniqueItems": true`, `"uniqueItems": true, "$dynamicRef": "#x"`), codes,
 			"a keyword the tripwire does not know"},
@@ -256,7 +275,8 @@ func (w *codeWalk) keyword(ptr string, s map[string]any, k string) {
 }
 
 // exclusive reports whether no value can match two of branches: for each
-// pair, one requires a member the other does not allow.
+// pair, one allows only an object, and one requires a member the other
+// does not allow.
 func (w *codeWalk) exclusive(branches []any) bool {
 	objs := make([]map[string]any, len(branches))
 	for i, b := range branches {
@@ -264,7 +284,8 @@ func (w *codeWalk) exclusive(branches []any) bool {
 	}
 	for i := range objs {
 		for j := i + 1; j < len(objs); j++ {
-			if !excludes(objs[i], objs[j]) && !excludes(objs[j], objs[i]) {
+			if !objectOnly(objs[i]) && !objectOnly(objs[j]) ||
+				!excludes(objs[i], objs[j]) && !excludes(objs[j], objs[i]) {
 				return false
 			}
 		}
@@ -288,6 +309,18 @@ func (w *codeWalk) deref(s any) map[string]any {
 		}
 	}
 	return nil
+}
+
+// objectOnly reports whether s allows only an object: its type is
+// "object", or a list of that type alone.
+func objectOnly(s map[string]any) bool {
+	switch t := s["type"].(type) {
+	case string:
+		return t == "object"
+	case []any:
+		return len(t) > 0 && !slices.ContainsFunc(t, func(v any) bool { return v != "object" })
+	}
+	return false
 }
 
 // excludes reports whether a requires a member that b, a closed object,
