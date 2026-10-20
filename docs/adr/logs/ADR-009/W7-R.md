@@ -38,6 +38,10 @@ release builder it licenses, each part seen red without its change first.
   added and the test not yet amended.
 - **Item 7.** No other allowance, scope or exclusion changed.
 
-The SC7 harness's release build now uses the builder's own build line
-(`internal/tools/release/buildline`), so the binary `TestHostIsolation`
-clears is the one a release ships; its canaries are still caught.
+The SC7 harness's release build now states D12 item 1's line, the one
+`internal/tools/release/buildline` holds, so the binary
+`TestHostIsolation` clears is the one a release ships; its canaries are
+still caught. The runner links nothing of the implementation (ADR-011 D11
+item 2, `TestBlackBox`), so it cannot import `buildline`; the builder's
+`TestHarnessBuildsByTheReleaseLine` reads the harness's line and fails
+when the two differ.

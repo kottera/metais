@@ -9,7 +9,9 @@ is its page.
   line and item 2's targets, with `CGO_ENABLED=0`, `GOAMD64=v1` and
   `GOARM64=v8.0` set on every build whatever the caller's environment
   holds, and `GOFLAGS=-mod=readonly`, so no flag of the host's joins it.
-  The SC7 harness builds its release binary by the same line.
+  The SC7 harness builds its release binary by the same line, which it
+  states itself because the runner links nothing of the implementation;
+  `TestHarnessBuildsByTheReleaseLine` holds the two together.
 - **Item 4.** Every shipped target is built twice, each time in a fresh
   `git clone` of `HEAD` in a temporary directory with that clone's own
   `GOCACHE`, and the builder refuses unless the two binaries' SHA-256 are

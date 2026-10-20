@@ -16,6 +16,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -565,6 +566,31 @@ func TestCLI(t *testing.T) {
 		}
 		if stdout.Len() > 0 {
 			t.Errorf("cli(%q) wrote %q to stdout", args, stdout.String())
+		}
+	}
+}
+
+// TestHarnessBuildsByTheReleaseLine holds the SC7 harness's release build
+// to buildline's: the runner may link nothing of the implementation
+// (ADR-011 D11 item 2), so it states the line itself, and this test reads
+// it there.
+func TestHarnessBuildsByTheReleaseLine(t *testing.T) {
+	src := readFile(t, filepath.Join("..", "..", "conformance", "hostisolation_test.go"))
+	args := buildline.Args("0.0.0-sc7", "OUT")
+	flags := args[1:slices.Index(args, "-o")]
+	quote := func(ss []string) string {
+		q := make([]string, len(ss))
+		for i, s := range ss {
+			q[i] = strconv.Quote(s)
+		}
+		return strings.Join(q, ", ")
+	}
+	for _, want := range []string{
+		"releaseFlags    = []string{" + quote(flags) + "}",
+		"releaseSettings = []string{" + quote(buildline.Settings) + "}",
+	} {
+		if !strings.Contains(src, want) {
+			t.Errorf("internal/conformance/hostisolation_test.go does not state %s", want)
 		}
 	}
 }

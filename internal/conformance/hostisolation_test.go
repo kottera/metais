@@ -15,7 +15,6 @@ import (
 	"testing"
 
 	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/tools/release/buildline"
 )
 
 // canary is one of ADR-009 D16 item 2's canary builds: the leak its build
@@ -158,19 +157,23 @@ func buildCanary(t *testing.T, channel string) string {
 	return build(t, "canary-"+channel, "-tags", "metais_canary_"+channel)
 }
 
-// releaseBuild builds ./cmd/metais as a release is built, by the release
-// builder's own build line (ADR-010 D12 item 1) with release tags and
-// without the race detector, whatever this test binary is built with, and
-// returns its path. So the binary the harness clears is the one a release
-// ships, its version aside.
+// releaseBuild builds ./cmd/metais as a release is built, by ADR-010 D12
+// item 1's line with release tags and without the race detector, whatever
+// this test binary is built with, and returns its path. So the binary the
+// harness clears is the one a release ships, its version aside.
 func releaseBuild(t *testing.T) string {
 	t.Helper()
 	return build(t, "release")
 }
 
-// releaseVersion is the version the harness's builds set, as a release
-// sets its own. The runner substitutes whatever version the tool reports.
-const releaseVersion = "0.0.0-sc7"
+// The release build line, as internal/tools/release/buildline states it.
+// The runner links nothing of the implementation (ADR-011 D11 item 2), so
+// it states the line itself, and the release builder's
+// TestHarnessBuildsByTheReleaseLine holds the two to each other.
+var (
+	releaseFlags    = []string{"-trimpath", "-buildvcs=true", "-ldflags", "-s -w -X github.com/kottera/metais/internal/version.release=0.0.0-sc7"}
+	releaseSettings = []string{"CGO_ENABLED=0", "GOAMD64=v1", "GOARM64=v8.0"}
+)
 
 // build builds ./cmd/metais by the release build line, with flags added,
 // into a directory named name, and returns the binary's path.
@@ -181,10 +184,10 @@ func build(t *testing.T, name string, flags ...string) string {
 		t.Fatal(err)
 	}
 	bin := filepath.Join(dir, toolName)
-	args := slices.Insert(buildline.Args(releaseVersion, bin), 1, flags...)
+	args := slices.Concat([]string{"build"}, releaseFlags, flags, []string{"-o", bin, "./cmd/metais"})
 	cmd := exec.Command("go", args...)
 	cmd.Dir = moduleRoot
-	cmd.Env = append(os.Environ(), buildline.Settings...)
+	cmd.Env = append(os.Environ(), releaseSettings...)
 	if b, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("building %s: %v\n%s", name, err, b)
 	}
