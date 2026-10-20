@@ -1,0 +1,3 @@
+{{ inputs.release.product }} {{ inputs.release.version }} shipped on {{ inputs.release.data }}, with {{ inputs.release.changes | size }} changes.
+{%- if inputs.release.highlight %} {{ inputs.release.highlight }}{% endif %}
+Read the release notes: release-{{ inputs.release.version }}.md

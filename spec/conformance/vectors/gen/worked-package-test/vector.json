@@ -1,0 +1,50 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "gen/worked-package-test",
+  "title": "The worked package's second draft expects an output its template does not write: check reports no error, so the draft conforms, while test reports where the expected file first differs, and pack reports it and writes nothing",
+  "statements": [
+    "MTS-GEN-001",
+    "MTS-AUT-035",
+    "MTS-AUT-040",
+    "MTS-AUT-041",
+    "MTS-AUT-045"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "Appendix B's second draft: package/ is gen/worked-package's package with one difference, examples/lantern/expected/release-2.4.0.md written by hand as Released 2026-10-20. where the template writes Released on 2026-10-20. The first code point that differs is line 3, column 10. The finding's diff is the implementation's own and is not compared.",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": { "source": "package" },
+          "expect": { "ok": true }
+        }
+      ]
+    },
+    {
+      "name": "test",
+      "steps": [
+        {
+          "op": "test",
+          "args": { "source": "package" },
+          "expect": { "ok": false, "findings": "expected/test.json" }
+        }
+      ]
+    },
+    {
+      "name": "pack",
+      "setup": { "dirs": ["out"] },
+      "steps": [
+        {
+          "op": "pack",
+          "args": { "source": "package", "to": "out" },
+          "expect": { "ok": false, "findings": "expected/test.json" }
+        }
+      ]
+    }
+  ]
+}

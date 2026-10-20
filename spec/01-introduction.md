@@ -131,9 +131,14 @@ The conformance classes are:
   packages, and generates sample data for them.
 
 A program conforms to a class when it satisfies every statement addressed to
-that class. A package's conformance is established by a conforming authoring
-tool's check reporting no finding of error severity. Chapter 15 defines the
-operations each class performs and what a conformance claim names.
+that class. Chapter 15 defines the operations each class performs and what a
+conformance claim names.
+
+<a id="mts-gen-001"></a>**MTS-GEN-001** A package's conformance is
+established by a conforming authoring tool's check
+([chapter 13](13-authoring.md)): the check MUST report no finding of error
+severity for a package that satisfies every statement addressed to
+packages, and a package for which it reports one does not conform.
 
 > **Note.** `metais`, the reference tool, claims the processor and authoring
 > tool classes.

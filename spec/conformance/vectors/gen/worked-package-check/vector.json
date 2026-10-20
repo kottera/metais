@@ -1,0 +1,39 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "gen/worked-package-check",
+  "title": "The worked package's first draft reads a field its input's schema does not declare: check reports it as an error, so the draft does not conform, and pack reports the same finding and writes nothing",
+  "statements": [
+    "MTS-GEN-001",
+    "MTS-AUT-001",
+    "MTS-AUT-013",
+    "MTS-AUT-044"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "Appendix B's first draft: package/ is gen/worked-package's package with one difference, templates/announcement.txt.liquid reading inputs.release.data where the schema declares date. The check finds it with no data at all, and names date as the nearest declared name.",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": { "source": "package" },
+          "expect": { "ok": false, "findings": "expected/check.json" }
+        }
+      ]
+    },
+    {
+      "name": "pack",
+      "setup": { "dirs": ["out"] },
+      "steps": [
+        {
+          "op": "pack",
+          "args": { "source": "package", "to": "out" },
+          "expect": { "ok": false, "findings": "expected/check.json" }
+        }
+      ]
+    }
+  ]
+}
