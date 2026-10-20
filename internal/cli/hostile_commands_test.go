@@ -243,3 +243,44 @@ func TestHostileGrepPathological(t *testing.T) {
 		t.Errorf("past entry-size: exit %d, findings %q", r.status, findingParams(r))
 	}
 }
+
+// TestHostileLimitFlag is ADR-009 D17 item 11's --limit cases through
+// every command that takes the flag (D4): a value that raises a limit, a
+// name no limit has, and a malformed value are each refused with
+// limit.invalid alone, as a usage error, before the package is opened, and
+// nothing is written anywhere.
+func TestHostileLimitFlag(t *testing.T) {
+	testenv.Home(t)
+	pkg := floodPackage(t, 1)
+	for _, c := range []struct {
+		limit, want string
+	}{
+		{"input-size=33554433", `limit.invalid {"default":33554432,"name":"input-size","reason":"above_default","unit":"bytes","value":33554433}`},
+		{"grep-matches=10001", `limit.invalid {"default":10000,"name":"grep-matches","reason":"above_default","unit":"count","value":10001}`},
+		{"no-such-limit=3", `limit.invalid {"reason":"unknown_name"}`},
+		{"input-size=3x", `limit.invalid {"default":33554432,"name":"input-size","reason":"malformed_value","unit":"bytes"}`},
+		{"input-size=-1", `limit.invalid {"default":33554432,"name":"input-size","reason":"malformed_value","unit":"bytes"}`},
+		{"input-size", `limit.invalid {"default":33554432,"name":"input-size","reason":"malformed_value","unit":"bytes"}`},
+	} {
+		for _, argv := range [][]string{
+			{"inspect"}, {"ls"}, {"read", "metais.yaml"}, {"outline", "metais.yaml"}, {"grep", "match"}, {"schema"},
+			{"extract", "**", "--to", "extracted"}, {"check"}, {"test"}, {"validate"}, {"render", "--out", "out"},
+			{"unpack", "--to", "unpacked"}, {"sample", "--to", "sampled"},
+		} {
+			work := testenv.Dir(t)
+			line := append([]string{argv[0], "--json", pkg}, argv[1:]...)
+			for i, a := range line {
+				if i > 0 && (line[i-1] == "--to" || line[i-1] == "--out") {
+					line[i] = filepath.Join(work, a)
+				}
+			}
+			r := runTool(t, append(line, "--limit", c.limit)...)
+			if got := findingParams(r); r.status != finding.ExitUsage || !slices.Equal(got, []string{c.want}) {
+				t.Errorf("%s --limit %s: exit %d, findings %q, want %q", argv[0], c.limit, r.status, got, c.want)
+			}
+			if names := snapshotNames(t, work); len(names) != 1 {
+				t.Errorf("%s --limit %s wrote %q", argv[0], c.limit, names)
+			}
+		}
+	}
+}
