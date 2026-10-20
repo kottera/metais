@@ -4,6 +4,7 @@
 package cli
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"io"
@@ -109,22 +110,21 @@ func (s *session) emit(o outcome) int {
 		if sum.Errors > 0 && !(o.report && s.reports(fs)) {
 			result = nil
 		}
-		fb := finding.AppendJSON(nil, fs...)
+		leak := func(b []byte) []byte { return b }
 		if canaryLeak != nil && o.dataDir != "" {
-			fb = canaryLeak(fb, o.dataDir)
+			leak = func(b []byte) []byte { return canaryLeak(b, o.dataDir) }
 		}
 		if s.inv.Options.Faults.Has(fault.ColourJSON) && isTerminal(stdout) {
 			write(stdout, []byte("\x1b[1m"))
 			defer write(stdout, []byte("\x1b[0m"))
 		}
-		writeJSON(stdout, envelope{
-			Format:   s.line.format(),
-			OK:       status == finding.ExitOK && sum.Errors == 0,
-			Findings: fb,
-			Summary:  sum.AppendJSON(nil),
-			Result:   result,
-			Next:     next,
-		})
+		writeEnvelope(stdout, envelope{
+			Format:  s.line.format(),
+			OK:      status == finding.ExitOK && sum.Errors == 0,
+			Summary: sum.AppendJSON(nil),
+			Result:  result,
+			Next:    next,
+		}, fs, leak)
 		return status
 	}
 	// Human mode (ADR-008 D11 item 3): a refusal, its findings and its
@@ -274,17 +274,44 @@ func (s *session) internalError(phase string) int {
 	}})
 }
 
-// writeJSON writes v as one compact JSON document ending in one LF, with
-// HTML escaping off (ADR-008 D10 item 2).
-func writeJSON(w io.Writer, v any) {
+// writeEnvelope writes e as writeJSON would with fs as its findings, and
+// writes the findings one at a time, each through leak, so that a report
+// of the findings limit's findings is never held as one encoding beside
+// the findings it encodes.
+func writeEnvelope(w io.Writer, e envelope, fs []finding.Finding, leak func([]byte) []byte) {
+	bw := bufio.NewWriter(w)
+	e.Findings = json.RawMessage("[]")
+	b := marshal(e)
+	at := bytes.Index(b, []byte(`,"findings":[],`)) + len(`,"findings":`)
+	bw.Write(b[:at])
+	bw.WriteByte('[')
+	var f []byte
+	for i := range fs {
+		if i > 0 {
+			bw.WriteByte(',')
+		}
+		f = finding.AppendJSON(f[:0], fs[i])
+		bw.Write(leak(f[1 : len(f)-1]))
+	}
+	bw.WriteByte(']')
+	bw.Write(b[at+len("[]"):])
+	_ = bw.Flush()
+}
+
+// marshal is v's JSON document, as writeJSON writes it.
+func marshal(v any) []byte {
 	var b bytes.Buffer
 	enc := json.NewEncoder(&b)
 	enc.SetEscapeHTML(false)
 	if err := enc.Encode(v); err != nil {
 		panic("cli: encoding a document: " + err.Error())
 	}
-	write(w, b.Bytes())
+	return b.Bytes()
 }
+
+// writeJSON writes v as one compact JSON document ending in one LF, with
+// HTML escaping off (ADR-008 D10 item 2).
+func writeJSON(w io.Writer, v any) { write(w, marshal(v)) }
 
 // write writes b to w. A failed write is not reported: the stream it
 // would be reported on is the one that failed, and a closed standard
