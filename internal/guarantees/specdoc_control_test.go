@@ -484,6 +484,9 @@ func TestLinksResolveControl(t *testing.T) {
 		{"a link to a missing document", edit("README.md", "(09-outputs.md)", "(99-none.md)"), []string{"names 99-none.md, which does not exist"}},
 		{"a link to a missing anchor", edit("09-outputs.md", "(09-outputs.md#mts-out-004)", "(09-outputs.md#rfc9999)"), []string{"names #rfc9999"}},
 		{"a link to a heading", appendTo("09-outputs.md", "\nSee [the heading](#9-outputs).\n"), nil},
+		{"a broken link that wraps", appendTo("09-outputs.md", "\nSee [the\nheading](#9-none) and [chapter\n9](99-none.md).\n"),
+			[]string{"names #9-none", "names 99-none.md, which does not exist"}},
+		{"a link that wraps", appendTo("09-outputs.md", "\nSee [the\nheading](#9-outputs).\n"), nil},
 		{"a link from a subdirectory", func(t *testing.T, f *specFixture) {
 			f.write(t, "conformance/README.md", "See [the outputs](../09-outputs.md#mts-out-001).\n")
 		}, nil},
