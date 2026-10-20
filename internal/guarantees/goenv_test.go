@@ -165,3 +165,38 @@ func TestGoCommandKeepsHostCToolchain(t *testing.T) {
 		t.Errorf("the cgo build never ran the host's CC, fakecc: %v", err)
 	}
 }
+
+// TestGoCommandStartsNoTelemetrySidecar holds the go command a test runs to
+// leaving nothing running behind it (W7-NB1). In a HOME whose telemetry
+// directory is fresh, as every GoEnv HOME is, the go command takes the
+// day's upload token and forks a detached telemetry sidecar, which writes
+// under HOME after the command exits and races the test's removal of the
+// directory: TestReleaseTakesNoHostGoConfiguration's cleanup failed with
+// "directory not empty" over the sidecar's telemetry files. The token is
+// taken synchronously, before the fork, so a go command that leaves no
+// upload.token under its HOME started no sidecar.
+func TestGoCommandStartsNoTelemetrySidecar(t *testing.T) {
+	h, err := goHost()
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := testenv.Dir(t)
+	cmd := exec.Command(h.Go(), "env", "GOVERSION")
+	cmd.Dir = dir
+	cmd.Env = testenv.GoEnv(h, dir)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("go env: %v\n%s", err, out)
+	}
+	err = filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.Name() == "upload.token" {
+			t.Errorf("the go command took the telemetry upload token %s, and so started a sidecar that outlives it", p)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}

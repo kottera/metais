@@ -177,6 +177,7 @@ func TestGoEnv(t *testing.T) {
 		"GOMODCACHE":                "/m",
 		"GOCACHE":                   "/c",
 		"CGO_ENABLED":               "0",
+		"GO_TELEMETRY_CHILD":        "2",
 	}
 	got := GoEnv(h, dir)
 	seen := map[string]bool{}

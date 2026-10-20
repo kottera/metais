@@ -95,3 +95,25 @@ objects a cgo build links, the race build's on linux included, so they
 can change what is built. They come from the host because a cgo build on
 that host cannot run without them, not because they leave the binary
 alone.
+
+**Found on the way: the go command's telemetry sidecar outlived it (D14
+item 1).** The wave tier went red once on
+`TestReleaseTakesNoHostGoConfiguration`. Its `t.TempDir` cleanup failed
+with `directory not empty`. What was left was Go telemetry's
+`Library/Application Support/go/telemetry/{local,upload}`, under a `HOME`
+that `GoEnv` had made for one of its go commands. In a fresh telemetry
+directory, as every `GoEnv` `HOME` is, the go command takes the day's
+upload token and forks a detached sidecar. The sidecar writes under `HOME`
+after the command exits, and races the caller's removal of `dir`. Every
+`GoEnv` caller was exposed. This test lost the race because its last act
+is a go command.
+
+`GoEnv` now sets `GO_TELEMETRY_CHILD=2`. That is the mark
+`golang.org/x/telemetry` gives a process its sidecar started, and under it
+`telemetry.Start` forks nothing. `go telemetry off` would have been the
+documented switch, but it is a file under `HOME`, and `internal/testenv`
+holds no os file function. Pinned false first:
+`TestGoCommandStartsNoTelemetrySidecar` runs a go command under `GoEnv`
+and requires that no `upload.token` was left under its `HOME`. The token
+is taken synchronously, before the fork, so the check needs no waiting.
+Before the change, it found the token.
