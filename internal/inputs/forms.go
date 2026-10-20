@@ -104,10 +104,11 @@ type reader struct {
 }
 
 // read reads src, the bytes of one file in form, at loc (its origin and
-// file). prefix is where the file's value is in its input: "" for an
+// file); raw is the same bytes as a string, which a plain text value
+// shares when it is the file's text as it stands. prefix is where the file's value is in its input: "" for an
 // input's own file, /<index> for a collection's item, and at is the
 // static path of that place, for coercion.
-func (r *reader) read(src []byte, form manifest.Form, loc finding.Location, prefix string, at []schema.Step) parsed {
+func (r *reader) read(src []byte, raw string, form manifest.Form, loc finding.Location, prefix string, at []schema.Step) parsed {
 	if form == manifest.FormYAML && int64(len(src)) > r.lim.Value(limits.YAMLSize) {
 		// yaml/v3 builds the whole document's tree before any value can
 		// be counted, so a YAML document is bounded by its bytes before it
@@ -135,14 +136,23 @@ func (r *reader) read(src []byte, form manifest.Form, loc finding.Location, pref
 	case manifest.FormCSV:
 		return r.csv(normalize(text), loc, prefix, at)
 	case manifest.FormText:
-		text = normalize(text)
-		if f, ok := noncharacters(text, r.subj, loc, 1); !ok {
+		normal := normalize(text)
+		if f, ok := noncharacters(normal, r.subj, loc, 1); !ok {
 			return parsed{findings: []finding.Finding{f}}
 		}
 		if f, ok := r.count(1, loc, prefix); !ok {
 			return parsed{findings: []finding.Finding{f}}
 		}
-		return parsed{value: fromValue(str(bytes.TrimSuffix(text, []byte("\n"))), plainLocator{loc})}
+		if bytes.IndexByte(text, '\r') >= 0 {
+			return parsed{value: fromValue(str(bytes.TrimSuffix(normal, []byte("\n"))), plainLocator{loc})}
+		}
+		// The text needs no line break changed: its value is the raw
+		// string's, shared rather than copied (ADR-009 Amendment A4 item 3).
+		v, err := value.NewString(strings.TrimSuffix(raw[len(src)-len(text):], "\n"))
+		if err != nil {
+			panic("inputs: " + err.Error())
+		}
+		return parsed{value: fromValue(v, plainLocator{loc})}
 	case manifest.FormMarkdown:
 		return r.markdown(text, loc, prefix)
 	}

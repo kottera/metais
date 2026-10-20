@@ -4,7 +4,6 @@
 package inputs
 
 import (
-	"bytes"
 	"strings"
 	"testing"
 
@@ -75,7 +74,7 @@ func TestByteOrderMarkRemoved(t *testing.T) {
 	}
 	res := run(t, layer(t, formsPkg), limits.Defaults(), args{data: dataDir(t, withBOM)})
 	for _, r := range res.Inputs {
-		if r.HasRaw && !bytes.HasPrefix(r.Raw, []byte("\uFEFF")) {
+		if r.HasRaw && !strings.HasPrefix(r.Raw, "\uFEFF") {
 			t.Errorf("%s: the raw bytes lost the byte order mark: %q", r.Name, r.Raw)
 		}
 	}

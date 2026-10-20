@@ -38,7 +38,7 @@ func renderTagsWith(t *testing.T, text string, decls []manifest.Input, records [
 // template.invalid_utf8 naming the tag, and nothing of it is written.
 func TestEmbedNotUTF8(t *testing.T) {
 	decls := []manifest.Input{{Name: "x"}}
-	records := []inputs.Record{{Name: "x", Value: str("ignored"), Raw: []byte("\xEF\xBB\xBFok \xFF"), HasRaw: true}}
+	records := []inputs.Record{{Name: "x", Value: str("ignored"), Raw: "\xEF\xBB\xBFok \xFF", HasRaw: true}}
 	out, e := renderTagsWith(t, `a{% embed "x" %}b`, decls, records)
 	if e == nil || e.Code != liquid.CodeInvalidUTF8 || e.Args["tag"] != "embed" {
 		t.Fatalf("embed of bytes that are not UTF-8 wrote %q and gave %v, want invalid_utf8 naming embed", out, e)
@@ -58,7 +58,7 @@ func TestEmbedNotUTF8(t *testing.T) {
 
 	// The control: the same bytes made UTF-8 are written, without their
 	// byte order mark.
-	records[0].Raw = []byte("\xEF\xBB\xBFok \xC3\xBF")
+	records[0].Raw = "\xEF\xBB\xBFok \xC3\xBF"
 	if out, e := renderTagsWith(t, `a{% embed "x" %}b`, decls, records); e != nil || out != "aok ÿb" {
 		t.Errorf("embed wrote %q and gave %v, want %q", out, e, "aok ÿb")
 	}

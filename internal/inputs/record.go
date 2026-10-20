@@ -26,8 +26,10 @@ type Record struct {
 	// value came from, exactly as read, byte order mark and line breaks
 	// included, when no --inputs-json member or path set touched it; nil
 	// otherwise, and always for a collection, whose items have their own
-	// (D21 item 2). HasRaw tells an empty file's raw form from none.
-	Raw    []byte
+	// (D21 item 2). HasRaw tells an empty file's raw form from none. It is
+	// held as a string, which a plain text value shares rather than copies
+	// (ADR-009 Amendment A4 item 3).
+	Raw    string
 	HasRaw bool
 	// Source is where the input came from (D21 item 3).
 	Source Source
@@ -55,7 +57,7 @@ type Item struct {
 	Stem     string
 	Form     manifest.Form
 	// Raw is the item file's bytes, when no path set touched the item.
-	Raw    []byte
+	Raw    string
 	HasRaw bool
 	// Digest is SHA-256 over the item's canonical JSON serialization.
 	Digest [sha256.Size]byte

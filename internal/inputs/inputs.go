@@ -131,7 +131,7 @@ type fileInput struct {
 	value      *node    // an input's file's value
 	items      []*item  // a collection's items, in order
 	partial    *partial // a CSV file validated in part
-	raw        []byte   // an input's file's bytes
+	raw        string   // an input's file's bytes
 	// broken is set when any finding refused the input's entry or any
 	// item of it: no path set is applied into it (ADR-003 D18 item 4).
 	broken bool
@@ -156,7 +156,7 @@ type item struct {
 	file  string // the entry, relative to the data directory
 	index int    // the item's index in the collection's order
 	value *node
-	raw   []byte
+	raw   string
 	ok    bool // the item parsed
 }
 
