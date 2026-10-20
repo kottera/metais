@@ -89,6 +89,29 @@ for a container whose profile requires an entry when no entry has that path
 so, and no entry's path is one only a render can know — a path template, an
 asset or a mirror.
 
+<a id="mts-aut-080"></a>**MTS-AUT-080** A check MUST hold every output
+path the manifest writes without Liquid markup, and every template's
+default path, at every depth of a container to `container-depth`, to the
+portable-path rules of [chapter 11](11-rendering.md) for one path
+([MTS-PTH-001](11-rendering.md#mts-pth-001) to
+[MTS-PTH-005](11-rendering.md#mts-pth-005),
+[MTS-PTH-007](11-rendering.md#mts-pth-007) and
+[MTS-PTH-010](11-rendering.md#mts-pth-010)), and MUST report a path that
+breaks one with the finding a render refuses it with, naming the path;
+an asset's or a mirror's destination written so, other than `.`, is held
+to them as the directory every file it writes lies beneath. It MUST hold
+together, by [MTS-PTH-006](11-rendering.md#mts-pth-006), the paths so
+written of the declarations with neither `when` nor `for_each` in the
+output directory, and in each container's entries but an entry its
+profile reserves, and report each collision as a render reports it. A
+path only a render can know, one a path template renders or a file an
+asset or a mirror expands into, is the render's to judge.
+
+> **Note.** A path written without Liquid markup is the same whatever the
+> data, so every render of the package refuses it. Check exists to tell an
+> author whether a package will render, and it says so before any data
+> exists.
+
 A package declares the specification minor it is written to
 ([chapter 4](04-versions.md)), and an author is best served by the lowest
 minor whose constructs it uses, which every tool implementing that minor or
@@ -122,7 +145,7 @@ warning located at the name.
 
 <a id="mts-aut-022"></a>**MTS-AUT-022** With the combined schema made, a
 check MUST report a collection input whose schema's declared type set
-([chapter 5](05-data-specification.md)) holds no `array`, or that declares
+([chapter 6](06-supplying-inputs.md) §6.7) holds no `array`, or that declares
 no item schema, as `manifest.input.collection_shape`; and each form an
 input declares that disagrees with the declared type set of the schema a
 file of it holds — the input's, or a collection's item schema — as
@@ -310,6 +333,13 @@ the same package, and one tool's data may change between its versions;
 what an author keeps is kept as files, so nothing kept depends on a
 generator.
 
+The sample operation takes three options that steer its generator:
+`optional`, whether it writes the members a schema leaves optional (`all`,
+`none` or `mixed`); `seed`, an unsigned 64-bit integer from which its
+choices are drawn; and `items`, the number of items it aims at for every
+array and collection. What data they lead to is the tool's own, as the data
+is.
+
 <a id="mts-smp-001"></a>**MTS-SMP-001** An authoring tool's sample
 operation MUST write the data it generates as a data directory
 ([§6.9](06-supplying-inputs.md)): one file for each
@@ -391,8 +421,8 @@ neither a change to the package nor a new tool changes what an example
 expects.
 
 An example is a directory `examples/<name>/` whose name follows the rule
-for an input's name ([chapter 3](03-manifest.md)). It holds `inputs/`,
-laid out as a data directory ([chapter 6](06-supplying-inputs.md)) and
+for an input's name ([chapter 5](05-data-specification.md) §5.1). It holds
+`inputs/`, laid out as a data directory ([chapter 6](06-supplying-inputs.md)) and
 absent for an example that supplies nothing; `expected/`, optional, laid
 out as the output directory a render writes; and `example.yaml`, optional
 ([MTS-AUT-020](#mts-aut-020) refuses anything else). A packed package
@@ -565,8 +595,8 @@ pack MUST run the test of §13.7 over every example. When an example fails,
 pack MUST report every finding of the check and of the test, and MUST
 write nothing.
 
-<a id="mts-aut-046"></a>**MTS-AUT-046** A warning or a note of the check or
-the test MUST be reported and MUST NOT stop pack.
+<a id="mts-aut-046"></a>**MTS-AUT-046** A finding of warning or info
+severity of the check or the test MUST be reported and MUST NOT stop pack.
 
 <a id="mts-aut-047"></a>**MTS-AUT-047** Pack MUST write exactly the source
 directory's entries ([MTS-PKG-021](02-container.md#mts-pkg-021)) and

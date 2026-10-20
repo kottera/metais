@@ -118,14 +118,6 @@ Next: metais test <dir>
   output.one_of
   output.one_of.ambiguous
   output.parse
-  output.path.case_collision
-  output.path.character
-  output.path.duplicate
-  output.path.encoding
-  output.path.file_directory_conflict
-  output.path.not_nfc
-  output.path.not_portable
-  output.path.shape
   output.pattern
   output.property_name
   output.required
@@ -218,6 +210,14 @@ Next: metais check <dir>
   output.container.reserved_entry
   output.container.space
   output.declaration.validate_kind
+  output.path.case_collision
+  output.path.character
+  output.path.duplicate
+  output.path.encoding
+  output.path.file_directory_conflict
+  output.path.not_nfc
+  output.path.not_portable
+  output.path.shape
   package.compiled.mismatch
   package.compiled.missing
   package.compiled.unknown_file

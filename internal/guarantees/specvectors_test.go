@@ -14,6 +14,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"unicode"
 )
 
 // The tripwires that join the statements to the vectors and the finding
@@ -295,6 +296,80 @@ func citationProblems(docs []*mdDoc, stmts []statement, vs []vector, codes []reg
 	return problems
 }
 
+// anchorIDRe is an explicit anchor, which a fragment can name, as it can
+// a heading (headingRe).
+var anchorIDRe = regexp.MustCompile(`<a id="([^"]+)"></a>`)
+
+// headingSlug is the anchor a Markdown renderer gives a heading: its text
+// in lower case, with every character but a letter, a digit, a space, a
+// hyphen and an underscore removed, and each space a hyphen.
+func headingSlug(h string) string {
+	var b strings.Builder
+	for _, r := range strings.ToLower(h) {
+		switch {
+		case r == ' ':
+			b.WriteRune('-')
+		case r == '-', r == '_', unicode.IsLetter(r), unicode.IsDigit(r):
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
+}
+
+// linkProblems is TestLinksResolve's check: every link of the
+// specification's documents, outside code, that stays in the repository
+// names a file or a directory that exists, and its fragment, when it
+// names a document of the specification, an explicit anchor or a heading
+// of that document. A link with a scheme leaves the repository and is
+// not followed.
+func linkProblems(root string, docs []*mdDoc) []string {
+	anchors := map[string]map[string]bool{} // document, anchor
+	for _, d := range docs {
+		a := map[string]bool{}
+		for i, l := range d.lines {
+			if d.fenced[i] {
+				continue
+			}
+			for _, m := range anchorIDRe.FindAllStringSubmatch(l, -1) {
+				a[m[1]] = true
+			}
+			if m := headingRe.FindStringSubmatch(l); m != nil && m[2] != "" {
+				a[headingSlug(m[2])] = true
+			}
+		}
+		anchors[d.path] = a
+	}
+	var problems []string
+	for _, d := range docs {
+		for i, l := range d.lines {
+			if d.fenced[i] {
+				continue
+			}
+			for _, m := range mdLinkRe.FindAllStringSubmatch(l, -1) {
+				target := m[2]
+				if target == "" || strings.Contains(target, "://") || strings.HasPrefix(target, "mailto:") {
+					continue
+				}
+				file, frag, _ := strings.Cut(target, "#")
+				where := fmt.Sprintf("%s:%d", d.path, i+1)
+				if file == "" {
+					file = d.path
+				} else {
+					file = path.Clean(path.Join(path.Dir(d.path), file))
+				}
+				if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(file))); err != nil {
+					problems = append(problems, fmt.Sprintf("%s: the link %s names %s, which does not exist", where, m[0], file))
+					continue
+				}
+				if a, ok := anchors[file]; ok && frag != "" && !a[frag] {
+					problems = append(problems, fmt.Sprintf("%s: the link %s names #%s, which %s has no anchor or heading for", where, m[0], frag, file))
+				}
+			}
+		}
+	}
+	return problems
+}
+
 var (
 	exampleRe   = regexp.MustCompile(`^<!-- example: ([^ ]+) -->$`)
 	pathAttrRe  = regexp.MustCompile(`(?:^|\s)path=(\S+)`)
@@ -412,6 +487,12 @@ func TestCitationsResolve(t *testing.T) {
 	docs := mustDocs(t, specRoot)
 	stmts, _ := specStatements(docs)
 	report(t, citationProblems(docs, stmts, mustVectors(t, specRoot), mustRegistry(t, specRoot)))
+}
+
+// TestLinksResolve holds every link of the specification's documents to
+// a file and an anchor that exist (W7-2, Appendix A complete).
+func TestLinksResolve(t *testing.T) {
+	report(t, linkProblems(specRoot, mustDocs(t, specRoot)))
 }
 
 // TestFindingCodesCovered is ADR-011 D14's tripwire and ADR-006 D13 item

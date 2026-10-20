@@ -179,6 +179,7 @@ source directory's file, relative to the directory with `/` as its separator;
 a processor refuses a source directory that breaks one with the same code.
 
 <a id="mts-pkg-012"></a>**MTS-PKG-012** An entry name MUST be valid UTF-8
+([RFC 3629](A-references.md#rfc3629))
 with no byte order mark, and a processor MUST refuse one that is not with
 `package.name.encoding`. General purpose bit 11 is always set (§2.2.2), so no
 name is read as CP437.
@@ -216,10 +217,21 @@ U+0020 removed, is one of the names [MTS-PKG-016](#mts-pkg-016) lists, or
 case; a processor MUST refuse `assets/COM¹.txt` and `assets/Con .md` as it
 refuses `assets/nul.txt`.
 
-> **Note.** Windows treats the superscript digits as the digits they look
-> like when it resolves a device name, and drops the spaces before a name's
-> extension, so either spelling opens a device rather than a file. Output
+> **Note.** Windows ([Windows names](A-references.md#windows-names)) treats
+> the superscript digits as the digits they look like when it resolves a
+> device name, and drops the spaces before a name's extension, so either
+> spelling opens a device rather than a file. Output
 > paths follow the same rule ([MTS-PTH-010](11-rendering.md#mts-pth-010)).
+
+A segment is one Git treats as `.git` when, with every code point HFS+
+ignores removed (U+200C to U+200F, U+202A to U+202E, U+206A to U+206F and
+U+FEFF), it is `.git` compared without regard to ASCII case, or when it is
+`git~1`, the NTFS short name of `.git`, compared the same way. These are the
+spellings Git itself refuses to check out ([Git](A-references.md#git)),
+because a file written beneath such a segment can change what the next Git
+command in the directory runs.
+Output paths are held to the same definition
+([MTS-PTH-005](11-rendering.md#mts-pth-005)).
 
 <a id="mts-pkg-017"></a>**MTS-PKG-017** In the set of every entry name and
 every directory prefix of every entry name (`a/b/c` contributes `a`, `a/b` and
@@ -346,7 +358,7 @@ The digest file `.compiled/digests.json` is a JSON object with exactly three
 members: `algorithm`, the string `sha256`; `entries`, an object with one
 member per entry of the package other than the digest file itself, named by
 the entry name and valued by the 64 lowercase hexadecimal digits of the
-SHA-256 of the entry's uncompressed content; and `package`, the 64 lowercase
+SHA-256 ([FIPS 180-4](A-references.md#fips180-4)) of the entry's uncompressed content; and `package`, the 64 lowercase
 hexadecimal digits of the package digest.
 
 The **digest list** of a package is the UTF-8 text of one line per member of

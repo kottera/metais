@@ -35,6 +35,9 @@ program's conformance.
 - [Appendix B. A worked package](B-worked-package.md)
 - [Changelog](CHANGELOG.md)
 - [Errata](ERRATA.md)
+- [The conformance suite](conformance/README.md)
+- [The published schemas](schemas/)
+- [The finding-code registry](findings/registry.json)
 
 ## How to read this document
 

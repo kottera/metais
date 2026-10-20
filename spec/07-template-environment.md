@@ -17,7 +17,7 @@ raised rather than written into the output. This chapter states every rule
 on which METAIS pins or departs from that release; the rest of core Liquid —
 how each tag and each standard filter behaves — is adopted from the release
 by reference, and is proved by running Shopify's own liquid-spec suite
-against a conforming implementation ([chapter 15](15-conformance.md)).
+([liquid-spec](A-references.md#liquid-spec)) against a conforming implementation ([chapter 15](15-conformance.md)).
 
 <a id="mts-tpl-001"></a>**MTS-TPL-001** A processor MUST render a template as
 the `liquid` gem 5.14.0 renders it under the `strict2` error mode with strict

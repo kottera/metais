@@ -61,7 +61,8 @@ func statementIndex(suite string) (map[string]string, error) {
 // area is not the first statement's; since is not the statements'
 // highest; a referenced file is missing or a file is unreferenced; a
 // package.metais lacks byte-level; an expected findings file fails its
-// schema.
+// schema; a processor vector runs an operation only an authoring tool
+// performs.
 func vectorsWellFormed(suite string) []string {
 	dirs, err := vectorDirs(suite)
 	if err != nil {
@@ -121,9 +122,30 @@ func vectorsWellFormed(suite string) []string {
 				add("since %s is not its statements' highest, %s", v.Since, highest)
 			}
 		}
+		if op := authoringStep(v); v.Class == "processor" && op != "" {
+			add("class processor, and a step runs %s, which only an authoring tool performs", op)
+		}
 		bad = append(bad, referenceProblems(rel, v, set)...)
 	}
 	return bad
+}
+
+// authoringStep is the first operation of v that only an authoring tool
+// performs (chapter 15, the operations): check, test, pack, unpack,
+// sample, and a render with sample. "" when v has none, so a processor
+// claim can run it.
+func authoringStep(v *vector) string {
+	for _, c := range v.Cases {
+		for _, st := range c.Steps {
+			switch {
+			case slices.Contains([]string{"check", "test", "pack", "unpack", "sample"}, st.Op):
+				return st.Op
+			case st.Op == "render" && st.args.Sample != nil:
+				return "render with sample"
+			}
+		}
+	}
+	return ""
 }
 
 // referenceProblems checks that every file v names exists, but a path a
@@ -292,6 +314,12 @@ func TestVectorsWellFormedControl(t *testing.T) {
 		{"findings schema", "fails its schema", func(t *testing.T) {
 			os.WriteFile(filepath.Join(suite, "vectors", "fix", "validate", "expected", "findings.json"),
 				[]byte(`[{"code": "input.fake_invalid", "message": "a message is the implementation's"}]`), 0o644)
+		}},
+		{"class", "which only an authoring tool performs", func(t *testing.T) {
+			edit(t, fixValidate, func(m map[string]any) {
+				st := m["cases"].([]any)[0].(map[string]any)["steps"].([]any)[0].(map[string]any)
+				st["op"], st["args"] = "check", map[string]any{"source": "package"}
+			})
 		}},
 		{"byte-level", "not tagged byte-level", func(t *testing.T) {
 			dir := filepath.Join(suite, "vectors", "fix", "validate")

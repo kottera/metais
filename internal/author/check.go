@@ -28,6 +28,7 @@ import (
 	"github.com/kottera/metais/internal/regexprofile"
 	"github.com/kottera/metais/internal/schema"
 	templates "github.com/kottera/metais/internal/template"
+	"github.com/kottera/metais/internal/unitext"
 	"github.com/kottera/metais/internal/xref"
 )
 
@@ -64,6 +65,11 @@ func CheckCodes() []finding.Code {
 		CodeExampleLayout, CodeFormShape, CodeCollectionShape, CodeValidateKind, codeTemplateNotUTF8, ooxml.CodeSplitConstruct, ooxml.CodeSplitDelimiter}
 	return append(out, xref.Codes()...)
 }
+
+// PathCodes are the codes of ADR-005 D12's portable-path predicate, which
+// check reports over every output path the manifest writes literally, and
+// a render over every path it plans.
+func PathCodes() []finding.Code { return templates.PathCodes() }
 
 // ContainerCodes are the codes of ADR-005 D9's profile rules, which check
 // reports statically and a render on the planned entry paths (D9 item 6).
@@ -161,6 +167,7 @@ func (k *checker) run() []finding.Finding {
 		k.skip(stepGuideLinks)
 	} else {
 		k.add(k.validateKinds(c.Manifest.Outputs, "")...)
+		k.add(k.outputPaths(c.Manifest.Outputs, nil, "", 0)...)
 		k.add(k.containers(c.Manifest.Outputs, "", 0)...)
 		k.add(k.guideLinks()...)
 	}
@@ -567,6 +574,91 @@ func (k *checker) containers(outs []manifest.Output, owner string, depth int) []
 		out = append(out, k.containers(c.Entries, id, depth+1)...)
 	}
 	return out
+}
+
+// outputPaths holds every output path the manifest writes literally, in
+// the tree of outs, to the portable-path predicate a render holds it to
+// (ADR-005 D12), and reports what a render would refuse it with: a path
+// is refused by check exactly when every render refuses it, whatever the
+// data (PLAN-2026-10-metais-v1 Wave 7, the plan orchestrator's ruling
+// that check refuses a literal output path render would refuse). Each
+// literal path is checked alone; an asset's or a mirror's literal
+// destination is checked too, other than ".", the tree's root, since
+// every file it expands into lies beneath it. The literal paths of the
+// declarations with no when and no for_each, which every render plans
+// once, are checked together, and a container's entries as a tree of
+// their own, to container-depth, as a render plans them; a reserved
+// entry, which a render plans nowhere, is left out of its tree, and a
+// container nested deeper than container-depth is left out whole. in is the
+// container whose entries outs are, and nil for the output directory.
+func (k *checker) outputPaths(outs []manifest.Output, in *manifest.Container, owner string, depth int) []finding.Finding {
+	var out []finding.Finding
+	type literal struct {
+		path string
+		subj finding.Subject
+		loc  finding.Location
+	}
+	var tree []literal
+	for _, d := range outs {
+		if d.Container != nil && int64(depth) >= k.lim.Value(limits.ContainerDepth) {
+			// A render plans nothing of a container nested deeper than
+			// container-depth, its own path included; containers reports it.
+			continue
+		}
+		id := cmp.Or(d.ID, owner)
+		subj := finding.Subject{Kind: finding.SubjectOutput, Name: id}
+		p, ptr, ok := staticPath(d)
+		if !ok && (d.Form == manifest.OutputAsset || d.Form == manifest.OutputMirror) && d.Path != "." {
+			p, ptr, ok = d.Path, d.Pointer+"/path", d.Path != "" && !strings.Contains(d.Path, "{{") && !strings.Contains(d.Path, "{%")
+		}
+		if ok {
+			loc := *k.manifestAt(ptr)
+			problems := unitext.CheckPath(p, k.lim)
+			for _, pr := range problems {
+				out = append(out, templates.PathFinding(pr, subj, loc, finding.Params{"path": finding.String(p)}, true, k.lim))
+			}
+			_, _, planned := staticPath(d)
+			if planned && d.When == "" && d.ForEach == "" && (in == nil || in.CheckEntry(p) != manifest.EntryReserved) {
+				tree = append(tree, literal{p, subj, loc})
+			}
+		}
+		if d.Container != nil {
+			out = append(out, k.outputPaths(d.Container.Entries, d.Container, id, depth+1)...)
+		}
+	}
+	paths := make([]string, len(tree))
+	for i, l := range tree {
+		paths[i] = l.path
+	}
+	first := map[string]int{}
+	for i := len(tree) - 1; i >= 0; i-- {
+		first[tree[i].path] = i
+	}
+	repeats := map[string]int{}
+	for _, c := range unitext.Collisions(paths) {
+		at, other := first[c.Path], first[c.Other]
+		if c.Kind == unitext.Duplicate {
+			// The n-th repeat of a path is its (n+1)-th declaration.
+			repeats[c.Path]++
+			at = nth(paths, c.Path, repeats[c.Path])
+		}
+		l := tree[at]
+		out = append(out, templates.CollisionFinding(c, l.subj, l.loc, finding.Params{"path": finding.String(l.path)}, tree[other].loc))
+	}
+	return out
+}
+
+// nth is the index in paths of p after n others equal to it.
+func nth(paths []string, p string, n int) int {
+	for i, q := range paths {
+		if q == p {
+			if n == 0 {
+				return i
+			}
+			n--
+		}
+	}
+	return -1
 }
 
 // staticPath is the one path d's file has, and the pointer it is written

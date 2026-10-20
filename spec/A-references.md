@@ -50,6 +50,28 @@ background only.
 - <a id="rfc3339"></a>**[RFC3339]** Klyne, G., and C. Newman, *Date and Time
   on the Internet: Timestamps*, RFC 3339, July 2002 —
   https://www.rfc-editor.org/rfc/rfc3339
+- <a id="rfc3629"></a>**[RFC3629]** Yergeau, F., *UTF-8, a transformation
+  format of ISO 10646*, STD 63, RFC 3629, November 2003 —
+  https://www.rfc-editor.org/rfc/rfc3629
+- <a id="rfc5321"></a>**[RFC5321]** Klensin, J., *Simple Mail Transfer
+  Protocol*, RFC 5321, October 2008, its `Mailbox` production —
+  https://www.rfc-editor.org/rfc/rfc5321
+- <a id="fips180-4"></a>**[FIPS 180-4]** National Institute of Standards and
+  Technology, *Secure Hash Standard (SHS)*, FIPS PUB 180-4, August 2015,
+  SHA-256 — https://doi.org/10.6028/NIST.FIPS.180-4
+- <a id="ieee754"></a>**[IEEE 754]** IEEE, *IEEE Standard for Floating-Point
+  Arithmetic*, IEEE Std 754-2019, July 2019, the binary64 format —
+  https://doi.org/10.1109/IEEESTD.2019.8766229
+- <a id="iso8601"></a>**[ISO 8601]** ISO, *Date and time — Representations
+  for information interchange — Part 1: Basic rules*, ISO 8601-1:2019, its
+  week dates — https://www.iso.org/standard/70907.html
+- <a id="posix"></a>**[POSIX]** IEEE and The Open Group, *The Open Group Base
+  Specifications Issue 7*, IEEE Std 1003.1-2017, 2018 edition, the `pax`
+  utility's pax interchange format and its ustar format —
+  https://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html
+- <a id="go-regexp-syntax"></a>**[Go regexp/syntax]** The Go Authors,
+  *Package regexp/syntax*, Go 1.26.9, the program `Compile` builds from a
+  simplified `Regexp` — https://pkg.go.dev/regexp/syntax@go1.26.9
 - <a id="ecma262"></a>**[ECMA-262]** Ecma International, *ECMAScript Language
   Specification*, `Number::toString` (§6.1.6.1.20) —
   https://tc39.es/ecma262/
@@ -84,3 +106,23 @@ background only.
 - <a id="rfc6839"></a>**[RFC6839]** Hansen, T., and A. Melnikov, *Additional
   Media Type Structured Syntax Suffixes*, RFC 6839, January 2013 —
   https://www.rfc-editor.org/rfc/rfc6839
+- <a id="ecma376"></a>**[ECMA-376]** Ecma International, *Office Open XML
+  File Formats*, 5th edition, December 2021, Part 2, *Open Packaging
+  Conventions* —
+  https://ecma-international.org/publications-and-standards/standards/ecma-376/
+- <a id="odf"></a>**[ODF]** OASIS, *Open Document Format for Office
+  Applications (OpenDocument) Version 1.3*, Part 2, *Packages*, April 2021 —
+  https://docs.oasis-open.org/office/OpenDocument/v1.3/os/part2-packages/OpenDocument-v1.3-os-part2-packages.html
+- <a id="epub"></a>**[EPUB]** W3C, *EPUB 3.3*, W3C Recommendation, May 2023,
+  its Open Container Format — https://www.w3.org/TR/epub-33/
+- <a id="liquid-spec"></a>**[liquid-spec]** Shopify Inc., *liquid-spec*,
+  commit `84bf25e0edbca5f7e530574788b0f875ab331f50`, the suite the delegated
+  run selects from ([chapter 15](15-conformance.md)) —
+  https://github.com/Shopify/liquid-spec
+- <a id="git"></a>**[Git]** The Git project, *Git v2.2.1 Release Notes*,
+  December 2014, the spellings of `.git` Git refuses to check out
+  (CVE-2014-9390) —
+  https://github.com/git/git/blob/master/Documentation/RelNotes/2.2.1.txt
+- <a id="windows-names"></a>**[Windows names]** Microsoft, *Naming Files,
+  Paths, and Namespaces*, the reserved device names —
+  https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file

@@ -107,7 +107,7 @@ member names, arrays, strings of Unicode scalar values, numbers, `true`,
 so it reads the same for YAML and JSON sources.
 
 <a id="mts-man-010"></a>**MTS-MAN-010** A processor MUST convert a manifest
-number to the nearest IEEE 754 binary64, and MUST refuse a number that
+number to the nearest IEEE 754 ([IEEE 754](A-references.md#ieee754)) binary64, and MUST refuse a number that
 overflows to an infinity, and one whose value is an integer of magnitude above
 2⁵³ − 1, with `manifest.number_out_of_range`.
 

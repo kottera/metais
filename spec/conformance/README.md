@@ -251,8 +251,8 @@ output, then exits 0
 - `ok` is true when the operation completed and no finding is of error
   severity.
 - `findings` are the finding objects, in the specification's order.
-- `listing` is a dry run's listing of `path`, `size` and `digest`, and null
-  otherwise.
+- `listing` is a dry run's listing, each record with the members chapter 11
+  gives it (`path`, `size` and `digest` among them), and null otherwise.
 - `tool` names the implementation. For `version` the response holds `tool`
   alone; it is what replaces the substitution tokens and what the
   cross-platform record names.

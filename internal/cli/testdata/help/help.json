@@ -11987,6 +11987,70 @@
             }
           },
           {
+            "code": "output.path.case_collision",
+            "cause": "An output's literal path (path: case collision), an error.",
+            "next": {
+              "run": "metais check <package>",
+              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
+            }
+          },
+          {
+            "code": "output.path.character",
+            "cause": "An output's literal path (path: character), an error.",
+            "next": {
+              "run": "metais check <package>",
+              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
+            }
+          },
+          {
+            "code": "output.path.duplicate",
+            "cause": "An output's literal path (path: duplicate), an error.",
+            "next": {
+              "run": "metais check <package>",
+              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
+            }
+          },
+          {
+            "code": "output.path.encoding",
+            "cause": "An output's literal path (path: encoding), an error.",
+            "next": {
+              "run": "metais check <package>",
+              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
+            }
+          },
+          {
+            "code": "output.path.file_directory_conflict",
+            "cause": "An output's literal path (path: file directory conflict), an error.",
+            "next": {
+              "run": "metais check <package>",
+              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
+            }
+          },
+          {
+            "code": "output.path.not_nfc",
+            "cause": "An output's literal path (path: not nfc), an error.",
+            "next": {
+              "run": "metais check <package>",
+              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
+            }
+          },
+          {
+            "code": "output.path.not_portable",
+            "cause": "An output's literal path (path: not portable), an error.",
+            "next": {
+              "run": "metais check <package>",
+              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
+            }
+          },
+          {
+            "code": "output.path.shape",
+            "cause": "An output's literal path (path: shape), an error.",
+            "next": {
+              "run": "metais check <package>",
+              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
+            }
+          },
+          {
             "code": "package.compiled.mismatch",
             "cause": "The package is refused (compiled: mismatch).",
             "next": {
@@ -18712,66 +18776,66 @@
           },
           {
             "code": "output.path.case_collision",
-            "cause": "An example's output is refused (path: case collision).",
+            "cause": "An output's literal path (path: case collision), an error.",
             "next": {
-              "run": "metais test <dir>",
-              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
             }
           },
           {
             "code": "output.path.character",
-            "cause": "An example's output is refused (path: character).",
+            "cause": "An output's literal path (path: character), an error.",
             "next": {
-              "run": "metais test <dir>",
-              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
             }
           },
           {
             "code": "output.path.duplicate",
-            "cause": "An example's output is refused (path: duplicate).",
+            "cause": "An output's literal path (path: duplicate), an error.",
             "next": {
-              "run": "metais test <dir>",
-              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
             }
           },
           {
             "code": "output.path.encoding",
-            "cause": "An example's output is refused (path: encoding).",
+            "cause": "An output's literal path (path: encoding), an error.",
             "next": {
-              "run": "metais test <dir>",
-              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
             }
           },
           {
             "code": "output.path.file_directory_conflict",
-            "cause": "An example's output is refused (path: file directory conflict).",
+            "cause": "An output's literal path (path: file directory conflict), an error.",
             "next": {
-              "run": "metais test <dir>",
-              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
             }
           },
           {
             "code": "output.path.not_nfc",
-            "cause": "An example's output is refused (path: not nfc).",
+            "cause": "An output's literal path (path: not nfc), an error.",
             "next": {
-              "run": "metais test <dir>",
-              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
             }
           },
           {
             "code": "output.path.not_portable",
-            "cause": "An example's output is refused (path: not portable).",
+            "cause": "An output's literal path (path: not portable), an error.",
             "next": {
-              "run": "metais test <dir>",
-              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
             }
           },
           {
             "code": "output.path.shape",
-            "cause": "An example's output is refused (path: shape).",
+            "cause": "An output's literal path (path: shape), an error.",
             "next": {
-              "run": "metais test <dir>",
-              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
             }
           },
           {

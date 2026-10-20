@@ -382,9 +382,22 @@ that thing's name where the kind has one; its `location` where the code's
 registry entry gives it a span: the origin of the value or file, the file
 relative to that origin, the 1-based line and column, in Unicode code points,
 where the value starts, and the JSON Pointer of the value; and its `params`,
-which the registry declares by name and type. A message and a hint come with
-every finding; their wording is the implementation's own, and only the
-members above are compared.
+which the registry declares by name and type. A failure against a schema
+also carries `schema`, `field`, `via` and `alternatives` (§12.3), and a
+finding that names a second place, such as the earlier of two colliding
+declarations, carries it in `related`, each a location with a note. A
+message and a hint come with every finding, and a schema failure also
+gives the keyword's location in the evaluation; their wording and form are
+the implementation's own, and only the other members are compared.
+
+Each code also has a class, which the registry gives it and which says
+what kind of failure an error of that code is: `usage`, the operation was
+asked for wrongly; `refused`, the package could not be read as a package
+at all; `content`, the package, the inputs or the outputs break a rule;
+`destination`, where the operation writes refused the write; and
+`internal`, a defect in the implementation itself. A class decides how a
+tool reports the failure, such as its exit status, and changes nothing a
+finding says.
 
 <a id="mts-fnd-001"></a>**MTS-FND-001** A processor MUST report each finding
 with a code registered in §12.1, with the severity and the subject kind its

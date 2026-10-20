@@ -1,0 +1,32 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-output-paths",
+  "title": "Check refuses every output path the manifest writes literally that a render would refuse, alone and together, as a render refuses it, and leaves a path template's path to the render",
+  "statements": [
+    "MTS-AUT-080"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "portable-paths"
+  ],
+  "requires": [],
+  "notes": "escape's ../escape.txt is the plan orchestrator's ruling's own case, which a render refuses with the same finding (pth/ vectors). dotted's default path is its template's name less .liquid, trailing., which ends in a dot. sometimes has a when, and computed's path is a path template, so neither is check's to judge; everything's destination is ., the output directory's root. files and site are an asset's and a mirror's destinations, each reported by its own path.",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

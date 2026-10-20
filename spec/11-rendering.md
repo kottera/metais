@@ -85,8 +85,8 @@ uncompressed content.
 
 <a id="mts-rnd-010"></a>**MTS-RND-010** Rendering to standard output, a
 processor MUST write every top-level file of the render as one POSIX pax
-interchange format archive, built from the rendered bytes and never from
-files on disk: one regular-file entry (typeflag `0`) per file, in byte order
+interchange format archive ([POSIX](A-references.md#posix)), built from
+the rendered bytes and never from files on disk: one regular-file entry (typeflag `0`) per file, in byte order
 of its path, a container being one entry that holds the zip a render into a
 directory writes, and no directory entry, link or global extended header. Every
 entry MUST have the path as its name, as a ustar name, or prefix and name
@@ -252,6 +252,9 @@ be a Windows device name (`con`, `prn`, `aux`, `nul`, `com0` to `com9`,
 regard to ASCII case), a `.git` segment in any spelling Git treats as `.git`,
 a segment ending in `.` or U+0020, or a segment longer than 255 bytes, and a
 processor MUST refuse a path that has one with `output.path.not_portable`.
+
+A segment is one Git treats as `.git` exactly when an entry name's segment is
+([chapter 2](02-container.md), §2.3).
 
 <a id="mts-pth-010"></a>**MTS-PTH-010** A segment is a Windows device name
 when the part before its first `.`, with every trailing U+0020 removed, is one
