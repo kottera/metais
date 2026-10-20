@@ -36,7 +36,7 @@ func schemaCorpusFiles() []genFile {
 		{"sec/pattern-length/package/inputs/report.schema.json", func() []byte { return classPattern(4096) }},
 		{"sec/pattern-length/beyond/inputs/report.schema.json", func() []byte { return classPattern(4097) }},
 		{"sec/pattern-backtracking/data/report.json", func() []byte { return runOfA(64 << 10) }},
-		{"dat/unique-items-million/data/report.json", millionItems},
+		{"dat/unique-items/data/report.json", func() []byte { return distinctButLast(100_000) }},
 	}
 }
 
@@ -119,13 +119,13 @@ func runOfA(n int) []byte {
 	return []byte(`"` + strings.Repeat("a", n-3) + `!"`)
 }
 
-// millionItems is a JSON array input of a million integers, all distinct
-// but the last, which equals the first: uniqueItems must see every item to
+// distinctButLast is a JSON array input of n integers, all distinct but
+// the last, which equals the first: uniqueItems must see every item to
 // find the one duplicate.
-func millionItems() []byte {
+func distinctButLast(n int) []byte {
 	var b bytes.Buffer
 	b.WriteByte('[')
-	for i := range 999_999 {
+	for i := range n - 1 {
 		b.WriteString(strconv.Itoa(i))
 		b.WriteByte(',')
 	}

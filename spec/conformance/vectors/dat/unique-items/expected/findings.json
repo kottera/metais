@@ -11,8 +11,8 @@
       "origin": "data_dir",
       "file": "report.json",
       "line": 1,
-      "column": 6888885,
-      "pointer": "/999999"
+      "column": 588886,
+      "pointer": "/99999"
     },
     "schema": {
       "entry": "inputs/report.schema.json",
@@ -20,7 +20,7 @@
       "keyword": "uniqueItems"
     },
     "params": {
-      "index": 999999,
+      "index": 99999,
       "duplicate_of": 0
     },
     "related": [

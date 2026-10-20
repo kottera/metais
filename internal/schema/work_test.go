@@ -12,6 +12,7 @@ import (
 
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/limits"
+	"github.com/kottera/metais/internal/liquid/value"
 	"github.com/kottera/metais/internal/regexprofile"
 )
 
@@ -273,5 +274,39 @@ func TestCombinedSchemaDepth(t *testing.T) {
 	}
 	if _, fs := c.Combined(doc); len(fs) > 0 {
 		t.Fatal(describe(fs))
+	}
+}
+
+// TestUniqueItemsMillion is ADR-009 D17 item 6's uniqueItems over a
+// million items (MTS-DAT-013): a million integers, distinct but for the
+// last, which equals the first, so finding the duplicate means seeing
+// every item. The vector dat/unique-items lets a CPU bound show that the
+// check is not quadratic, at a size the conformance runner can afford in
+// both environments; this is the million the corpus names, in process.
+func TestUniqueItemsMillion(t *testing.T) {
+	const n = 1_000_000
+	items := make([]value.Value, n)
+	for i := range n - 1 {
+		num, err := value.ParseNumber(strconv.Itoa(i))
+		if err != nil {
+			t.Fatal(err)
+		}
+		items[i] = num
+	}
+	items[n-1] = items[0]
+	arr, err := value.NewArray(items...)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := mustCompile(t, map[string]string{"inputs/s.json": `{"uniqueItems": true}`}, "inputs/s.json")
+	fails, err := s.Validate(arr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(fails) != 1 || fails[0].Keyword != "uniqueItems" {
+		t.Fatalf("got %d failures, want one of uniqueItems: %+v", len(fails), fails)
+	}
+	if got := fmt.Sprint(fails[0].Data["duplicates"]); got != fmt.Sprint([]int{0, n - 1}) {
+		t.Errorf("duplicates %s, want the first item and the last", got)
 	}
 }
