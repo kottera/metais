@@ -25,7 +25,8 @@ Operands:
 
 Flags:
   --guide
-      Print only the package's identity and its whole guide.
+      Print only the whole guide: its Markdown alone, or with --json the
+      package's identity and the guide.
   --limit <name>=<value>
       Lower one resource limit for this run, to a whole number no higher than
       its default (a size may end in KiB, MiB or GiB). metais limits lists them.
