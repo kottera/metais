@@ -29,12 +29,16 @@ designed, and it does not rerun the conformance suite.
 
 ## What the author is given
 
-Two things, both from the commit the act names as its `build`:
+Two things, both from the commit the act names as its `build`. The runner
+prepares them at the root of a clone of this repository, with the author's
+directory, the author's working directory, named by an absolute path that
+does not exist yet:
 
 1. **The specification:** the `spec/` directory of that commit, and nothing
    else from the repository:
 
    ```bash
+   mkdir <author's directory>
    git archive --format=tar <commit> spec | tar -x -C <author's directory>
    ```
 
@@ -44,6 +48,7 @@ Two things, both from the commit the act names as its `build`:
    ```bash
    git checkout <commit>
    CGO_ENABLED=0 go build -trimpath -o <author's directory>/metais ./cmd/metais
+   <author's directory>/metais version
    ```
 
    The runner records the binary's SHA-256 and the output of
@@ -74,13 +79,20 @@ The task the author is set, in these words:
 
 ## The commands that judge the result
 
-The runner runs these on the author's source directory, with the binary the
-author was given, from a fresh copy of the directory and from its parent:
+The runner runs these with the binary the author was given, on a fresh
+copy of the author's package source directory, `<package directory>`. The
+copy is `package` in a judging directory, named by an absolute path that
+does not exist yet, and the commands run from the judging directory, the
+copy's parent:
 
 ```bash
-metais check <dir>
-metais test <dir>
-metais pack <dir> --out <empty directory>
+mkdir <judging directory>
+cp -R <package directory> <judging directory>/package
+cd <judging directory>
+<author's directory>/metais check package
+<author's directory>/metais test package
+mkdir packed
+<author's directory>/metais pack package --out packed
 ```
 
 **The round passes when each command exits 0 and reports no finding of
