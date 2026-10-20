@@ -10,40 +10,61 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"runtime"
+	"path/filepath"
 	"syscall"
 	"time"
 )
 
-// measured is the command that runs path with args, and the function that
-// reads its usage once it has finished, or releases what it holds when
-// given nil because the process never started.
+// buildProcStub builds testdata/procstub, without the race detector, into
+// dir, and returns its path.
+func buildProcStub(dir string) (string, error) {
+	out := filepath.Join(dir, procStubName)
+	cmd := exec.Command("go", "build", "-trimpath", "-o", out, "./internal/conformance/testdata/procstub")
+	cmd.Dir = moduleRoot
+	if b, err := cmd.CombinedOutput(); err != nil {
+		return "", fmt.Errorf("building the measuring stub: %v\n%s", err, b)
+	}
+	return out, nil
+}
+
+// measured is the command that runs path with args and exactly env, and
+// the function that reads its usage once it has finished, or releases
+// what it holds when given nil because the process never started.
 //
 // On linux a process's ru_maxrss counts the peak of the address space it
 // was executed from (TestRSSIsTheProcessAlone), and Go executes a child
 // from its parent's own address space, so read directly it would count
-// this test process's peak. The process is therefore started by the stub:
-// this test binary, executed afresh under procStubName, which starts it
-// with its standard streams, working directory and environment, waits for
-// it, and writes its usage to the pipe on its descriptor 3. What the
-// process inherits is the stub's own few MiB, which no Go program's own
-// peak falls below.
-func measured(ctx context.Context, path string, args []string) (*exec.Cmd, func(*os.ProcessState) (usage, error), error) {
-	stub, err := os.Executable()
-	if err != nil {
-		return nil, nil, err
+// this test process's peak. The process is therefore started by the stub,
+// testdata/procstub, which starts it with its standard streams, working
+// directory and environment, waits for it, and writes its usage to the
+// pipe on its descriptor 3. What the process inherits is the stub's own
+// few MiB, which no Go program's own peak falls below.
+//
+// The stub is a small program of its own, never race-built
+// (TestStubIsItsOwnProgram): every process the runner starts pays for
+// the stub's start and exit, and the test binary, re-executed as the
+// stub, made that the race runtime's start and its second's sleep at
+// exit.
+func measured(ctx context.Context, path string, args, env []string) (*exec.Cmd, func(*os.ProcessState) (usage, error), error) {
+	if procStub == "" {
+		return nil, nil, errors.New("the measuring stub was not built")
 	}
 	// The path is resolved here, against this process's PATH, as running
 	// it directly would; the stub runs in the step's environment.
-	if path, err = exec.LookPath(path); err != nil && !errors.Is(err, exec.ErrDot) {
+	path, err := exec.LookPath(path)
+	if err != nil && !errors.Is(err, exec.ErrDot) {
 		return nil, nil, err
 	}
 	r, w, err := os.Pipe()
 	if err != nil {
 		return nil, nil, err
 	}
-	cmd := exec.CommandContext(ctx, stub)
+	cmd := exec.CommandContext(ctx, procStub)
 	cmd.Args = append([]string{procStubName, path}, args...)
+	cmd.Env = env
+	if env == nil {
+		cmd.Env = []string{}
+	}
 	cmd.ExtraFiles = []*os.File{w}
 	return cmd, func(ps *os.ProcessState) (usage, error) {
 		w.Close()
@@ -74,41 +95,4 @@ func measured(ctx context.Context, path string, args []string) (*exec.Cmd, func(
 		u.cpu, u.rssOK = time.Duration(utime+stime), true
 		return u, nil
 	}, nil
-}
-
-// procStubMain is the stub measured starts: args are the path of the
-// process to run and its arguments. It runs it, and writes "usage" and its
-// wait status, user and system CPU time in nanoseconds and ru_maxrss to
-// descriptor 3, or "error" and why it could not start it.
-//
-// The process gets the stub's standard streams as they are and the stub's
-// environment exactly, and is killed when the stub dies, so the runner's
-// wall clock, which kills the stub, kills it too. The stub's thread is
-// locked because the kernel sends that signal when the starting thread
-// ends.
-func procStubMain(args []string) int {
-	report := os.NewFile(3, "report")
-	if len(args) == 0 {
-		fmt.Fprintln(report, "error no process named")
-		return 2
-	}
-	runtime.LockOSThread()
-	cmd := exec.Command(args[0], args[1:]...)
-	cmd.Err = nil // the runner resolved the path
-	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
-	cmd.Env = append([]string{}, os.Environ()...)
-	cmd.SysProcAttr = &syscall.SysProcAttr{Pdeathsig: syscall.SIGKILL}
-	err := cmd.Run()
-	ps := cmd.ProcessState
-	if ps == nil {
-		fmt.Fprintln(report, "error", err)
-		return 2
-	}
-	ru, ok := ps.SysUsage().(*syscall.Rusage)
-	if !ok || ru == nil {
-		fmt.Fprintln(report, "error no resource usage")
-		return 2
-	}
-	fmt.Fprintf(report, "usage %d %d %d %d\n", uint32(ps.Sys().(syscall.WaitStatus)), ru.Utime.Nano(), ru.Stime.Nano(), ru.Maxrss)
-	return 0
 }

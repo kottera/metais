@@ -112,8 +112,8 @@ func testBinary(t testing.TB) string {
 }
 
 // refDriver makes a directory below base holding the reference driver
-// beside tool, under the name the driver runs it by, and returns the
-// driver's path.
+// beside tool, under the name the driver runs it by, and beside the
+// measuring stub it starts tool through, and returns the driver's path.
 func refDriver(t testing.TB, dir, tool string) string {
 	t.Helper()
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -121,6 +121,11 @@ func refDriver(t testing.TB, dir, tool string) string {
 	}
 	if tool != "" {
 		if err := os.Symlink(tool, filepath.Join(dir, toolName)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if procStub != "" {
+		if err := os.Symlink(procStub, filepath.Join(dir, procStubName)); err != nil {
 			t.Fatal(err)
 		}
 	}

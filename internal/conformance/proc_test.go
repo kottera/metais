@@ -116,15 +116,11 @@ func runProc(path string, args []string, dir string, env []string, stdin []byte,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), wall)
 	defer cancel()
-	cmd, usage, err := measured(ctx, path, args)
+	cmd, usage, err := measured(ctx, path, args, env)
 	if err != nil {
 		return nil, err
 	}
 	cmd.Dir = dir
-	cmd.Env = env
-	if env == nil {
-		cmd.Env = []string{}
-	}
 	cmd.Stdin = bytes.NewReader(stdin)
 	stdout, stderr := &capped{}, &capped{}
 	cmd.Stdout, cmd.Stderr = stdout, stderr
