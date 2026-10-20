@@ -1,0 +1,50 @@
+# Copyright 2026 Kottera
+# SPDX-License-Identifier: Apache-2.0
+#
+# Publishes metais.org with GitHub Pages from a pushed release tag: the pages
+# of site/public/ and every schema of spec/schemas/ at the path its $id names,
+# built by site/build.sh from the tagged commit.
+#
+# Inert while the repository is private. GitHub's free plan publishes Pages
+# only from a public repository, so every job is gated on the repository
+# being public: on a private repository each job is skipped, nothing runs
+# and nothing fails. The gate also requires a v* tag, so a manual run from a
+# branch deploys nothing. docs/dev/release.md has the go-live steps.
+name: pages
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: ${{ !github.event.repository.private && startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: site/build.sh _site
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    if: ${{ !github.event.repository.private && startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
