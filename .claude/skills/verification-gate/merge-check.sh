@@ -138,9 +138,24 @@ in136() {
 	awk -v f="$work/stmt" '{ print } /^## 13\.6 / { print ""; while ((getline l < f) > 0) print l }' \
 		spec/13-authoring.md >"$work/ch" && cat "$work/ch" >spec/13-authoring.md
 }
-a043_end() { end13 043 "at the end of the chapter"; }
-a044_136() { in136 044 "in section 13.6"; }
-a043_136() { in136 043 "in section 13.6"; }
+# The planted statements take the two numbers after the highest MTS-AUT
+# number anywhere in HEAD's tree. Section 1.4 assigns an area's numbers in
+# order of addition and never reuses one, so no statement HEAD holds can
+# have either, however chapter 13 grows; a fixed pair is taken the day the
+# specification reaches it.
+top=$(git grep -ohE 'MTS-AUT-[0-9]+' "$head" -- . | sed 's/^MTS-AUT-0*//' | sort -n | tail -1)
+case "$top" in
+"" | *[!0-9]*)
+	echo "merge-check: HEAD holds no MTS-AUT statement to number after" >&2
+	exit 2
+	;;
+esac
+n1=$(printf '%03d' $((top + 1)))
+n2=$(printf '%03d' $((top + 2)))
+echo "statements: MTS-AUT-$n1 and MTS-AUT-$n2, after HEAD's highest, MTS-AUT-$(printf '%03d' "$top")"
+first_end() { end13 "$n1" "at the end of the chapter"; }
+second_136() { in136 "$n2" "in section 13.6"; }
+first_136() { in136 "$n1" "in section 13.6"; }
 
 # The catalog case's edits: a code at the end of the collection family and
 # one at the start of the csv family, whose catalog rows are adjacent, and a
@@ -194,8 +209,8 @@ rc=$?
 sed 's/^/    | /' "$work/setup.out"
 if [ "$rc" -eq 0 ]; then bad "merge-setup.sh --check passes in a clone without the drivers"; else ok "merge-setup.sh --check says the drivers are missing"; fi
 fresh
-branch one a043_end
-branch two a044_136
+branch one first_end
+branch two second_136
 if rebase two one; then
 	bad "the rebase succeeded with no driver configured"
 else
@@ -211,14 +226,14 @@ case=statements
 echo
 echo "=== $case: two new statements, in two sections of one chapter"
 fresh
-branch one a043_end
-branch two a044_136
+branch one first_end
+branch two second_136
 if rebase two one; then ok "the rebase resolved"; else bad "the rebase stopped"; fi
-expect "spec/statements.json holds one side: MTS-AUT-043" has spec/statements.json '"MTS-AUT-043"'
-expect "spec/statements.json lacks the other side's MTS-AUT-044 before regenerating" hasnt spec/statements.json '"MTS-AUT-044"'
+expect "spec/statements.json holds one side: MTS-AUT-$n1" has spec/statements.json "\"MTS-AUT-$n1\""
+expect "spec/statements.json lacks the other side's MTS-AUT-$n2 before regenerating" hasnt spec/statements.json "\"MTS-AUT-$n2\""
 if regen; then ok "regenerate.sh ran"; else bad "regenerate.sh failed"; fi
-expect "spec/statements.json holds MTS-AUT-043 after regenerating" has spec/statements.json '"MTS-AUT-043"'
-expect "spec/statements.json holds MTS-AUT-044 after regenerating" has spec/statements.json '"MTS-AUT-044"'
+expect "spec/statements.json holds MTS-AUT-$n1 after regenerating" has spec/statements.json "\"MTS-AUT-$n1\""
+expect "spec/statements.json holds MTS-AUT-$n2 after regenerating" has spec/statements.json "\"MTS-AUT-$n2\""
 if drift '^(TestStatementIndex|TestStatementsWellFormed|TestFindingCatalog)$' ./internal/guarantees; then ok "the drift tests pass"; else bad "the drift tests fail"; fi
 
 case=catalog
@@ -265,14 +280,14 @@ case=collision
 echo
 echo "=== $case: two statements that take the same identifier"
 fresh
-branch one a043_end
-branch two a043_136
+branch one first_end
+branch two first_136
 if rebase two one; then ok "the rebase resolved"; else bad "the rebase stopped"; fi
 if regen; then ok "regenerate.sh ran"; else bad "regenerate.sh failed"; fi
 if drift '^TestStatementsWellFormed$' ./internal/guarantees; then
-	bad "TestStatementsWellFormed passed with MTS-AUT-043 used twice"
+	bad "TestStatementsWellFormed passed with MTS-AUT-$n1 used twice"
 else
-	expect "TestStatementsWellFormed names the duplicate" grep -q 'MTS-AUT-043 is already used' "$work/drift.out"
+	expect "TestStatementsWellFormed names the duplicate" grep -q "MTS-AUT-$n1 is already used" "$work/drift.out"
 fi
 
 fresh

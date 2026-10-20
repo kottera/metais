@@ -65,6 +65,11 @@ these rules:
   (`"spec/…"`, `"../../spec"`). A change under `spec/` reaches the spec
   readers: `cli`, `conformance`, `finding`, `guarantees`, `liquidspec`,
   `loader`, `specdata`, `template` and `vectorgen`.
+- **A Go file outside every package** (build-ignored, or under a directory
+  `go list ./...` does not see) also touches every package whose test files
+  name the module root itself (`"../.."` from `internal/x`). Those tests
+  walk the module's tree: `TestLicenceHeaders` and `TestNoHostFacts` read
+  every Go file, whatever `go list` sees.
 - **A generated file is a path like any other.** The tripwires and the
   drift step check every generated file on every run anyway.
 - **The blind packages** (`blind` in the output) are the ones whose tests
@@ -72,6 +77,12 @@ these rules:
   `guarantees`, `version`, `pkgtree` and `cmd/metais`. Any change to the
   module's code has them tested, because no import edge shows what they
   read.
+
+`internal/guarantees`' `TestGateSelectReach` holds these rules to a probe
+list, `testdata/gateselect/reach.txt`: each probe is a changed path and the
+packages it must reach. A change to the rules adds its probe there, not in
+a test file, whose path literals the data rule would read as what that
+package reads.
 
 ## Generated files: the merge drivers, and regenerate.sh
 
@@ -126,7 +137,9 @@ of generated files, and says nothing. So:
 **`merge-check.sh` proves the drivers** on a fresh clone of HEAD, so commit
 first. It runs a scripted conflicting rebase of each kind, then
 regeneration, then the drift tests. Run it after changing `.gitattributes`,
-a generator or a driver. A new generated file needs a line in
+a generator or a driver. Its planted statements take the two numbers after
+the highest `MTS-AUT` number in HEAD's tree, so no statement the
+specification assigns can take them. A new generated file needs a line in
 `.gitattributes` and a step in `regenerate.sh`, in the change that adds it.
 
 ## When to run it: once, last, right before merge

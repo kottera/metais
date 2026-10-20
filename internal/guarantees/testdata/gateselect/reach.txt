@@ -1,0 +1,27 @@
+# The scoped tier's selector's probes (TestGateSelectReach), one per line:
+#
+#   <changed path> | <packages whose tests it reaches, or -> [| <output line>...]
+#
+# The data rule reads test files' path literals as the data they read, so a
+# probe named in a test file would reach that test's package by naming it.
+# The probes live here, where the selector does not look.
+
+# A Go file in no package: the module's tree walkers (TestLicenceHeaders,
+# TestNoHostFacts) read every Go file, whatever go list sees.
+tools/release.go | internal/guarantees
+spec/conformance/gen.go | internal/guarantees
+_tools/x.go | internal/guarantees
+
+# The probes Wave 6's verification showed reached.
+internal/dates/dates.go | internal/dates internal/cli internal/guarantees internal/conformance cmd/metais | code internal/dates/dates.go
+cmd/metais/main.go | cmd/metais internal/guarantees internal/conformance | code cmd/metais/main.go
+internal/zipfmt/testdata/x.zip | internal/zipfmt
+internal/finding/testdata/unwired.txt | internal/finding
+internal/specdata/schemas/x.json | internal/specdata
+spec/13-authoring.md | internal/guarantees internal/conformance internal/specdata internal/loader
+examples/x/example.yaml | internal/guarantees
+.claude/skills/verification-gate/gate-select.sh | internal/guarantees | seam .claude/skills/verification-gate/gate-select.sh
+
+# The control, last: data no test names reaches nothing, so the reach above
+# is the rules', not a selector that tests everything.
+AGENTS.md | -

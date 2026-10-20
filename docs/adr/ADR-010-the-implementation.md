@@ -1696,6 +1696,15 @@ ruling made by the train and needs no ratification.
      `"NOTICE"`). A change under `spec/` therefore touches, at this writing,
      `internal/cli`, `conformance`, `finding`, `guarantees`, `liquidspec`,
      `loader`, `specdata`, `template` and `vectorgen`.
+   - **A Go file in no package's directory** (build-ignored, under a
+     directory `go list ./...` does not list, or one the `go` command
+     ignores) is read only by the tests that walk the module's tree:
+     `internal/guarantees`' licence-header and build-directive checks read
+     every Go file below the root, whatever `go list` sees. It also touches
+     every package whose test files name the module root itself, by as many
+     `..` as the package's directory is deep (`"../.."`,
+     `filepath.Join("..", "..")`), since naming the root is how a test
+     reads the tree whole. Their importers are not tested for it.
    - **A generated file** is a path like any other. The specdata tree lies
      in `internal/specdata`'s directory, and the help goldens in
      `internal/cli`'s, so a change to one touches its package; `spec/`'s

@@ -35,6 +35,12 @@
 #     touches every package whose Go files name its top-level entry as a path
 #     literal ("spec/...", "../../spec", "NOTICE"), because those are the
 #     tests that read it as data.
+#   - A Go file in no package's directory (build-ignored, under a directory
+#     go list does not see) also touches every package whose test files name
+#     the module root itself as a path ("../..", filepath.Join("..", "..")
+#     from internal/x): those tests walk the module's tree, and its Go files
+#     whole (licence headers, build directives), whatever go list lists.
+#     Their importers are not tested for it, since no package's code changed.
 #   - A package is tested when it, or any package in its test binary's
 #     closure (`go list -test`'s Deps), is touched.
 #   - Any path inside a package's directory, and go.mod or go.sum, also
@@ -124,6 +130,18 @@ while IFS=$'\t' read -r pkg dir _; do
 	fi
 done <"$work/dirs"
 
+# Root readers: a test file that names the module root itself, by as many
+# ".." as its package's directory is deep, as a literal or a Join.
+: >"$work/rootreaders"
+while IFS=$'\t' read -r pkg dir _; do
+	[ "$dir" = . ] && continue
+	ups=$(printf '%s\n' "$dir" | awk -F/ '{ s = ""; for (i = 1; i < NF; i++) s = s "\\.\\./"; print s }')
+	joins=$(printf '%s\n' "$dir" | awk -F/ '{ s = ""; for (i = 1; i < NF; i++) s = s "\"\\.\\.\", *"; print s }')
+	if grep -lE "\"$ups\\.\\./?\"|Join\($joins\"\\.\\.\"\)" "$dir"/*_test.go >/dev/null 2>&1; then
+		echo "$pkg" >>"$work/rootreaders"
+	fi
+done <"$work/dirs"
+
 # Touched packages, with the path that touched each.
 : >"$work/touched"
 : >"$work/code"
@@ -154,6 +172,10 @@ while IFS= read -r p; do
 		cut -f1 "$work/dirs" | sed "s|\$|	$p|" >>"$work/touched"
 		continue
 		;;
+	esac
+	# A Go file outside every package: the module's tree walkers read it.
+	case "$p" in
+	*.go) sed "s|\$|	$p (a Go file in no package; its tests walk the module)|" "$work/rootreaders" >>"$work/blindhit" ;;
 	esac
 	# Data outside every package: its readers name its top-level entry.
 	top=${p%%/*}
