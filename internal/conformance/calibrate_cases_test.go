@@ -194,6 +194,40 @@ var calCases = []calCase{
 		},
 	},
 	{
+		// One choice whose alternatives list more findings than the limit
+		// (MTS-FND-020): branches of 16 const failures each, every branch
+		// rejected, so the choice lists itself and 16 per branch, and the
+		// report cuts it short at the limit. The branches share one
+		// subschema by $ref, so the tree that fails is the least that
+		// lists this many.
+		name: "findings-nested", limit: "findings",
+		lowered: calLimits{"findings": 1_000},
+		build: func(dir string, lim calLimits) ([]string, error) {
+			branches := lim["findings"]/16 + 1
+			consts := make([]string, 16)
+			for i := range consts {
+				consts[i] = fmt.Sprintf(`{"const":%d}`, i)
+			}
+			schema := `{"anyOf":[` + strings.TrimSuffix(strings.Repeat(`{"$ref":"#/$defs/s"},`, int(branches)), ",") +
+				`],"$defs":{"s":{"allOf":[` + strings.Join(consts, ",") + `]}}}`
+			return validateInput(dir, schema, "16")
+		},
+		reached: func(r *calResult, lim calLimits) error {
+			if r.OK || len(r.Findings) != 1 || r.Findings[0].Code != "input.any_of" {
+				return fmt.Errorf("%d findings were listed, not one input.any_of", len(r.Findings))
+			}
+			listed, omitted := int64(1), int64(0)
+			for _, a := range r.Findings[0].Alternatives {
+				listed += int64(len(a.Findings))
+				omitted += a.Omitted
+			}
+			if listed != lim["findings"] || omitted < 1 {
+				return fmt.Errorf("the choice lists %d findings and omits %d, not %d listed and some omitted", listed, omitted, lim["findings"])
+			}
+			return nil
+		},
+	},
+	{
 		// One more matching line than the limit reports, each as long as a
 		// reported line is shown.
 		name: "grep-matches", limit: "grep-matches",

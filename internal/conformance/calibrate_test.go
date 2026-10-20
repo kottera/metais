@@ -102,6 +102,12 @@ type calFinding struct {
 		Pointer string `json:"pointer"`
 	} `json:"location"`
 	Params map[string]any `json:"params"`
+	// Alternatives are its branches, each with how many findings it lists
+	// and omits; a case reads no more of them.
+	Alternatives []struct {
+		Findings []struct{} `json:"findings"`
+		Omitted  int64      `json:"omitted"`
+	} `json:"alternatives"`
 }
 
 // refusedBy reports how r falls short of a refusal by limit at bound,

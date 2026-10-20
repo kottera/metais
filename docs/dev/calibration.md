@@ -82,6 +82,7 @@ also proves that one less refuses it.
 | `output-size` | `render` | one output of exactly `output-size` bytes, written | accepted at the limit |
 | `output-total` | `render` | outputs of `output-size` bytes, exactly `output-total` together, written | accepted at the limit |
 | `findings` | `validate` | an array input with one more failing item than `findings` lists | the result's listed count at the limit, with findings omitted |
+| `findings-nested` | `validate` | one `anyOf` of branches of 16 failing `const`s each, sharing one subschema by `$ref`, whose alternatives list more than `findings` (MTS-FND-020) | the choice cut short at the limit, with findings omitted |
 | `grep-matches` | `grep` | one more 1,024-byte matching line than `--max-results` at the limit reports | the result truncated at the limit |
 | `grep-context` | `grep` | every line matches, so each of the most matches repeats its neighbours as context, `--context` at the limit | accepted at the limit |
 | `schema-joint-file` | `inspect` | the schema files hold exactly `schema-subschemas`, every leaf's location exactly `schema-location-length` long; they compile, and the combined schema is then refused by its count | the combined schema's refusal |
