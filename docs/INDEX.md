@@ -35,3 +35,9 @@ PRD-001 §27 maps each requirement to the ADR that designs it. [RULINGS-v1](adr/
 The JSON documents each command prints are defined by the schemas under
 [cli/schemas](cli/schemas/). [cli/sample.md](cli/sample.md) states the rules
 of `metais sample` and `render --sample` that only the command line has.
+
+## Development
+
+[dev/calibration.md](dev/calibration.md) is how the limit-calibration suite
+of ADR-009 D18 item 4 is run on a target, the record it writes, and what
+plan §6's act reports back.
