@@ -243,6 +243,7 @@ it, and the statements it reports.
 | `package.layout.non_regular_file` | error | refused | package | — | 1.0 | [MTS-PKG-023](02-container.md#mts-pkg-023) |
 | `package.layout.not_packed` | warning | content | package | — | 1.0 | [MTS-AUT-004](13-authoring.md#mts-aut-004) |
 | `package.layout.os_litter` | warning | content | package | — | 1.0 | [MTS-AUT-004](13-authoring.md#mts-aut-004) |
+| `package.layout.readme` | error | refused | package | `reason` | 1.0 | [MTS-PKG-071](02-container.md#mts-pkg-071), [MTS-PKG-072](02-container.md#mts-pkg-072) |
 | `package.layout.unknown_top_level` | error | refused | package | — | 1.0 | [MTS-PKG-019](02-container.md#mts-pkg-019) |
 | `package.name.case_collision` | error | refused | package | `member`, `other`; optional: `offset` | 1.0 | [MTS-PKG-017](02-container.md#mts-pkg-017) |
 | `package.name.character` | error | refused | package | `code_point`; optional: `offset` | 1.0 | [MTS-PKG-015](02-container.md#mts-pkg-015) |

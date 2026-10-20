@@ -53,3 +53,8 @@ const (
 	// (ADR-009 D3, RULINGS R2-147).
 	ratioFloor = 1 << 20
 )
+
+// ReadmeName is the entry a package begins with (ADR-001 A1 item 1): the
+// one entry that precedes every other, whatever their names, rather than
+// taking its place in byte order (item 4).
+const ReadmeName = "README.md"

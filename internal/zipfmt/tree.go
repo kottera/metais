@@ -19,6 +19,7 @@ import (
 type Archive struct {
 	s       *source
 	entries []entry
+	names   []string // List's: in byte order, but for a container in the file's
 	index   map[string]int
 	decodes int // entries decoded, at open and since; tests read it
 }
@@ -36,8 +37,9 @@ type EntryInfo struct {
 	Deflated bool
 }
 
-// Entries returns every entry, in the file's order, which is ascending
-// byte order of the names but in a container (OpenContainer).
+// Entries returns every entry, in the file's order: a package's README.md
+// first (ADR-001 A1 item 4), then ascending byte order of the names, and
+// in a container (OpenContainer) its own.
 func (a *Archive) Entries() []EntryInfo {
 	out := make([]EntryInfo, len(a.entries))
 	for i, e := range a.entries {
@@ -51,14 +53,11 @@ func (a *Archive) Entries() []EntryInfo {
 // holds itself to ADR-010 D15 item 2's budget.
 func (a *Archive) Decodes() int { return a.decodes }
 
-// List returns every entry path, in the file's order: ascending byte
-// order but in a container (OpenContainer).
+// List returns every entry path: in ascending byte order, a package's
+// README.md in its place among them rather than first; in a container
+// (OpenContainer), in the file's order.
 func (a *Archive) List() []string {
-	out := make([]string, len(a.entries))
-	for i, e := range a.entries {
-		out[i] = e.name
-	}
-	return out
+	return slices.Clone(a.names)
 }
 
 // Stat returns the entry at path, looked up exactly.

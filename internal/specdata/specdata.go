@@ -42,6 +42,13 @@ var FindingSchema []byte
 //go:embed schemas/1.0/manifest.schema.json
 var ManifestSchema10 []byte
 
+// Readme10 is spec/readme/1.0/README.md, the README.md every packed
+// package declaring specification 1.0 begins with (ADR-001 A1 item 3).
+// Chapter 2 carries the same bytes, which TestReadmeMatchesChapter holds.
+//
+//go:embed readme/1.0/README.md
+var Readme10 []byte
+
 // files are the embedded copies by their path below spec/, which is the
 // list generate_test.go's specFiles names.
 var files = map[string][]byte{
@@ -49,4 +56,5 @@ var files = map[string][]byte{
 	"schemas/1.0/finding-registry.schema.json": FindingRegistrySchema,
 	"schemas/1.0/finding.schema.json":          FindingSchema,
 	"schemas/1.0/manifest.schema.json":         ManifestSchema10,
+	"readme/1.0/README.md":                     Readme10,
 }

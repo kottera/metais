@@ -5400,13 +5400,35 @@
       ]
     },
     {
+      "code": "package.layout.readme",
+      "severity": "error",
+      "class": "refused",
+      "subject": "package",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "missing (the package holds no top-level README.md), not_first (README.md is not its first entry), compressed (README.md is not stored) or altered (its content is not the README text of the declared specification version).",
+          "always": true
+        }
+      ],
+      "message": "The packed package's README.md is not the specification's, first and stored ({reason}).",
+      "hint": "Every packed package begins with the specification's README.md, which pack writes; pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-PKG-071",
+        "MTS-PKG-072"
+      ]
+    },
+    {
       "code": "package.layout.unknown_top_level",
       "severity": "error",
       "class": "refused",
       "subject": "package",
       "params": [],
       "message": "The packed package holds a top-level name the layout does not define.",
-      "hint": "A package's top level holds only metais.yaml, inputs/, templates/, references/, assets/, examples/ and .compiled/; Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
+      "hint": "A package's top level holds only metais.yaml, inputs/, templates/, references/, assets/, examples/, .compiled/ and README.md; Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
       "location": "value",
       "since": "1.0",
       "statements": [

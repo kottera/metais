@@ -83,6 +83,7 @@ Next: metais unpack <package> --to <dir>
   package.layout.empty_directory
   package.layout.missing_manifest
   package.layout.non_regular_file
+  package.layout.readme
   package.layout.unknown_top_level
   package.name.case_collision
   package.name.character

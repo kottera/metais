@@ -13,6 +13,7 @@ import (
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/pkgtree"
+	"github.com/kottera/metais/internal/zipfmt"
 )
 
 // compiledPrefix is the derived directory unpack never writes (ADR-007 D8
@@ -20,12 +21,13 @@ import (
 const compiledPrefix = ".compiled/"
 
 // UnpackedEntries returns the entries of tree that unpack writes, in the
-// order it writes them: every entry but those beneath .compiled/, in byte
-// order (ADR-007 D8 item 4).
+// order it writes them: every entry but those beneath .compiled/, and but
+// README.md, which is the specification's and which pack writes again
+// (ADR-001 A1 item 7), in byte order (ADR-007 D8 item 4).
 func UnpackedEntries(tree pkgtree.Tree) []string {
 	var out []string
 	for _, e := range tree.List() {
-		if !strings.HasPrefix(e, compiledPrefix) {
+		if !strings.HasPrefix(e, compiledPrefix) && e != zipfmt.ReadmeName {
 			out = append(out, e)
 		}
 	}

@@ -57,10 +57,10 @@ not part of the layout and that a source directory does not ignore
 silently ([chapter 2](02-container.md)), because pack leaves it out.
 
 <a id="mts-aut-005"></a>**MTS-AUT-005** For a source directory, the check
-MUST hold the package pack would write — its source entries, the three
-compiled files of §2 and its digest file — to the `entries`, `entry-size`
-and `package-uncompressed` limits, and MUST report a breach as
-`limit.package`.
+MUST hold the package pack would write — its `README.md`, its source
+entries, the three compiled files of §2 and its digest file — to the
+`entries`, `entry-size` and `package-uncompressed` limits, and MUST report a
+breach as `limit.package`.
 
 <a id="mts-aut-006"></a>**MTS-AUT-006** A check MUST report
 `manifest.guide_link_missing`, a warning located at the manifest's
@@ -274,7 +274,8 @@ stored compiled files MUST equal what is computed.
 Unpacking turns a packed package back into the source directory an author
 edits. It writes what the author wrote and nothing derived: `.compiled/` is
 a function of the other entries (§2.5), stale after the first edit, and
-packing writes it again. It never writes into a directory that holds
+packing writes it again; `README.md` is the specification's text (§2.4.1),
+and packing writes it too. It never writes into a directory that holds
 anything of its own, because a file left from an earlier tree would join
 the unpacked source and be packed with it.
 
@@ -286,12 +287,12 @@ the findings every such operation reports, and nothing written. It MUST
 NOT run the check of §13.1: a package whose check reports errors is
 unpacked as any other.
 
-<a id="mts-aut-025"></a>**MTS-AUT-025** Unpack MUST write every entry of
-the package but those beneath `.compiled/`, each at its path beneath the
-target, holding the entry's bytes, and nothing else. It MUST write each
-file with mode 0644 and each directory with mode 0755, less the process's
-umask, whatever the package's zip records for the entry; no file it writes
-is executable.
+<a id="mts-aut-025"></a>**MTS-AUT-025** Unpack MUST write every entry of the
+package but `README.md` and those beneath `.compiled/`, each at its path
+beneath the target, holding the entry's bytes, and nothing else. It MUST
+write each file with mode 0644 and each directory with mode 0755, less the
+process's umask, whatever the package's zip records for the entry; no file
+it writes is executable.
 
 <a id="mts-aut-026"></a>**MTS-AUT-026** When the target does not exist,
 unpack MUST create it with its missing parent directories, by writing the
@@ -319,8 +320,8 @@ It has no way to overwrite.
 
 <a id="mts-aut-029"></a>**MTS-AUT-029** The source directory an unpack
 writes MUST open as a source directory, and MUST hold the same package:
-its entries are the packed package's outside `.compiled/`, and its package
-digest is the packed package's (§2.6).
+its entries are the packed package's outside `.compiled/` and
+`README.md`, and its package digest is the packed package's (§2.6).
 
 ## 13.6 Sample data
 
@@ -598,15 +599,17 @@ write nothing.
 <a id="mts-aut-046"></a>**MTS-AUT-046** A finding of warning or info
 severity of the check or the test MUST be reported and MUST NOT stop pack.
 
-<a id="mts-aut-047"></a>**MTS-AUT-047** Pack MUST write exactly the source
-directory's entries ([MTS-PKG-021](02-container.md#mts-pkg-021)) and
-`.compiled/`, computed from them: `metais.yaml` and every file beneath
-`inputs/`, `templates/`, `references/`, `assets/` and `examples/`, a name
-beginning with `.` included. A top-level name beginning with `.`, and a
-top-level regular file whose name ends in `.metais`, MUST be left out with
-no finding; every other top-level name §2.4's table does not hold MUST be
-left out, and reported as the check reports it
-([MTS-AUT-004](#mts-aut-004)).
+<a id="mts-aut-047"></a>**MTS-AUT-047** Pack MUST write exactly the README
+text of the declared version as `README.md`
+([MTS-PKG-071](02-container.md#mts-pkg-071)), the source directory's entries
+([MTS-PKG-021](02-container.md#mts-pkg-021)) and `.compiled/`, computed from
+them: `metais.yaml` and every file beneath `inputs/`, `templates/`,
+`references/`, `assets/` and `examples/`, a name beginning with `.`
+included. A top-level name beginning with `.`, the source directory's own
+top-level `README.md`, and a top-level regular file whose name ends in
+`.metais`, MUST be left out with no finding; every other top-level name
+§2.4's table does not hold MUST be left out, and reported as the check
+reports it ([MTS-AUT-004](#mts-aut-004)).
 
 <a id="mts-aut-048"></a>**MTS-AUT-048** When the output names an existing
 directory, pack MUST write the package into it as the file

@@ -5,7 +5,6 @@ package cli
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/json"
 	"io/fs"
 	"os"
@@ -14,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/digest"
+	"github.com/kottera/metais/internal/author"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
@@ -395,9 +394,8 @@ func TestTestContainerPacked(t *testing.T) {
 	}
 }
 
-// packDir is the packed package of the source directory dir: its files,
-// the compiled files the loader derives and the digest file, in byte order
-// of name, every method auto.
+// packDir is the packed package of the source directory dir, as pack
+// writes it.
 func packDir(t *testing.T, dir string) []byte {
 	t.Helper()
 	files := map[string][]byte{}
@@ -413,29 +411,26 @@ func packDir(t *testing.T, dir string) []byte {
 	if err != nil {
 		t.Fatal(err)
 	}
+	return packFiles(t, files).Bytes()
+}
+
+// packFiles is the package pack writes from files, a source directory's
+// entries: the plan of internal/author, which pack writes (ADR-007 D7).
+func packFiles(t testing.TB, files map[string][]byte) *bytes.Buffer {
+	t.Helper()
 	p, fs := loader.OpenFiles(files, loader.Options{Limits: limits.Defaults()})
 	if p == nil {
 		t.Fatalf("the source directory does not open: %v", fs)
 	}
-	for _, f := range p.Compiled {
-		files[f.Name] = f.Content
+	plan, err := author.PlanPack(p.Tree, p.Compiled, p.Manifest.Metais, 0)
+	if err != nil {
+		t.Fatal(err)
 	}
-	var list []digest.Entry
-	for n, b := range files {
-		list = append(list, digest.Entry{Name: n, Sum: sha256.Sum256(b)})
+	var buf bytes.Buffer
+	if err := plan.Write(&buf); err != nil {
+		t.Fatal(err)
 	}
-	files[digest.File] = digest.Encode(list)
-	var es []zipfmt.Entry
-	for _, n := range slices.Sorted(func(yield func(string) bool) {
-		for n := range files {
-			if !yield(n) {
-				return
-			}
-		}
-	}) {
-		es = append(es, zipfmt.Entry{Name: n, Content: files[n], Method: zipfmt.Auto})
-	}
-	return zipBytes(t, es...)
+	return &buf
 }
 
 // TestTestContainerStoredZipEntry: a container whose entry is a container

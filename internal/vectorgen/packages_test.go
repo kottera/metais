@@ -109,10 +109,11 @@ func baseFiles() map[string][]byte {
 	}
 }
 
-// packed is a package's entries as pack writes them, in byte order of
-// their names: files, whose compiled files loader derives, every entry of
-// extra beside them, and the digest file of them all. extra is how a case
-// adds an entry whose name no source directory can hold.
+// packed is a package's entries as pack writes them: README.md, stored,
+// first, then in byte order of their names files, whose compiled files
+// loader derives, every entry of extra beside them, and the digest file of
+// them all but README.md (ADR-001 A1). extra is how a case adds an entry
+// whose name no source directory can hold.
 func packed(t testing.TB, files map[string][]byte, extra ...zentry) []zentry {
 	t.Helper()
 	p, fs := loader.OpenFiles(files, loader.Options{Limits: limits.Defaults()})
@@ -126,12 +127,13 @@ func packed(t testing.TB, files map[string][]byte, extra ...zentry) []zentry {
 	for _, f := range p.Compiled {
 		out = append(out, zentry{name: f.Name, content: f.Content})
 	}
+	out = append(out, zentry{name: zipfmt.ReadmeName, content: loader.Readme(p.Manifest.Metais)})
 	out = append(out, extra...)
 	return withDigests(out)
 }
 
 // withDigests returns entries with the digest file of every one of them
-// added, sorted by name. A name that is not UTF-8 cannot be a member name
+// but README.md added, sorted by name but for README.md, first. A name that is not UTF-8 cannot be a member name
 // of the JSON digest file, so it is left out of it: the case it is in is
 // refused for that name, at step 3, before the digest file is read; so is
 // a second entry of one name, which the file lists once.
@@ -139,7 +141,7 @@ func withDigests(entries []zentry) []zentry {
 	var list []digest.Entry
 	listed := map[string]bool{}
 	for _, e := range entries {
-		if e.name != digest.File && utf8.ValidString(e.name) && !listed[e.name] {
+		if e.name != digest.File && e.name != zipfmt.ReadmeName && utf8.ValidString(e.name) && !listed[e.name] {
 			listed[e.name] = true
 			list = append(list, digest.Entry{Name: e.name, Sum: sha256.Sum256(e.content)})
 		}
@@ -150,8 +152,20 @@ func withDigests(entries []zentry) []zentry {
 	return out
 }
 
+// sortEntries puts es in the order pack writes: README.md first (ADR-001
+// A1 item 4), then byte order of the names.
 func sortEntries(es []zentry) {
-	slices.SortStableFunc(es, func(a, b zentry) int { return strings.Compare(a.name, b.name) })
+	slices.SortStableFunc(es, func(a, b zentry) int {
+		switch {
+		case a.name == b.name:
+			return 0
+		case a.name == zipfmt.ReadmeName:
+			return -1
+		case b.name == zipfmt.ReadmeName:
+			return 1
+		}
+		return strings.Compare(a.name, b.name)
+	})
 }
 
 func codes(fs []finding.Finding) string {
@@ -212,12 +226,17 @@ func treeFiles(t testing.TB, id, dir string) map[string][]byte {
 	return out
 }
 
-// pack is what pack writes from files: every entry method auto, written
-// by zipfmt.Write (ADR-001 D4 item 7).
+// pack is what pack writes from files: README.md stored, every other
+// entry method auto, written by zipfmt.Write (ADR-001 D4 item 7, A1 item
+// 1).
 func pack(t testing.TB, files map[string][]byte) []byte {
 	var es []zipfmt.Entry
 	for _, e := range packed(t, files) {
-		es = append(es, zipfmt.Entry{Name: e.name, Content: e.content, Method: zipfmt.Auto})
+		m := zipfmt.Auto
+		if e.name == zipfmt.ReadmeName {
+			m = zipfmt.Store
+		}
+		es = append(es, zipfmt.Entry{Name: e.name, Content: e.content, Method: m})
 	}
 	var b bytes.Buffer
 	if err := zipfmt.Write(&b, es); err != nil {
@@ -372,7 +391,29 @@ func packageCases() []pkgCase {
 
 		// The layout and .compiled/ (ADR-001 D5, D7).
 		{"pkg/unknown-top-level", func(t testing.TB) []byte {
-			return zipOf(hostile(t, zentry{name: "README.md", content: []byte("# Read me\n")}))
+			return zipOf(hostile(t, zentry{name: "NOTES.md", content: []byte("# Notes\n")}))
+		}},
+
+		// README.md (ADR-001 A1 item 6). Each package's digests are
+		// correct, since no digest covers README.md: only step 7 refuses
+		// it.
+		{"pkg/readme-missing", func(t testing.TB) []byte {
+			return zipOf(without(hostile(t), zipfmt.ReadmeName))
+		}},
+		{"pkg/readme-compressed", func(t testing.TB) []byte {
+			return zipOf(edit(hostile(t), zipfmt.ReadmeName, func(e *zentry) { e.deflate = true }))
+		}},
+		{"pkg/readme-not-first", func(t testing.TB) []byte {
+			// In its place in byte order, after .compiled/, where a
+			// packer that sorted every entry would put it.
+			es := hostile(t)
+			slices.SortStableFunc(es, func(a, b zentry) int { return strings.Compare(a.name, b.name) })
+			return zipOf(es)
+		}},
+		{"pkg/readme-altered", func(t testing.TB) []byte {
+			return zipOf(edit(hostile(t), zipfmt.ReadmeName, func(e *zentry) {
+				e.content = bytes.Replace(e.content, []byte("https://metais.org/"), []byte("https://example.com/"), 1)
+			}))
 		}},
 		{"pkg/missing-manifest", func(t testing.TB) []byte {
 			return zipOf(withDigests(without(hostile(t), "metais.yaml")))
@@ -425,7 +466,7 @@ func packageCases() []pkgCase {
 			var list []digest.Entry
 			for _, e := range es {
 				switch e.name {
-				case digest.File, "templates/report.md.liquid":
+				case digest.File, zipfmt.ReadmeName, "templates/report.md.liquid":
 				default:
 					list = append(list, digest.Entry{Name: e.name, Sum: sha256.Sum256(e.content)})
 				}

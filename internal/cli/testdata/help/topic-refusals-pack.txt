@@ -249,6 +249,7 @@ Next: metais check <dir>
   package.layout.non_regular_file
   package.layout.not_packed
   package.layout.os_litter
+  package.layout.readme
   package.layout.unknown_top_level
   package.name.case_collision
   package.name.character

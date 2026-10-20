@@ -713,6 +713,14 @@
             }
           },
           {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
             "code": "package.layout.unknown_top_level",
             "cause": "The package is refused (layout: unknown top level).",
             "next": {
@@ -1073,7 +1081,7 @@
         "group": "Reading a package",
         "synopsis": "metais ls <package> [<path>] [--recursive | -r] [--limit <name>=<value>]... [--json]",
         "description": "List the entries under a path of a package.",
-        "detail": "With no path, lists the root. A path that names a directory lists its children, or with --recursive every file and directory beneath it; a path that names a file lists that file. Directories are implied by the entries' paths. The listing is in the byte order of the paths, a directory's written with its trailing /.\n\nA packed package's entries are the zip's, .compiled/ included; a source directory's are the files metais pack would write from it, without .compiled/. Paths use / on every platform and are matched byte for byte, case-sensitively; the root is . or omitted.",
+        "detail": "With no path, lists the root. A path that names a directory lists its children, or with --recursive every file and directory beneath it; a path that names a file lists that file. Directories are implied by the entries' paths. The listing is in the byte order of the paths, a directory's written with its trailing /.\n\nA packed package's entries are the zip's, .compiled/ included and README.md, the specification's text, not; a source directory's are the files metais pack would write from it, without .compiled/. Paths use / on every platform and are matched byte for byte, case-sensitively; the root is . or omitted.",
         "opens_package": true,
         "role": "consumer",
         "operands": [
@@ -1757,6 +1765,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -2821,6 +2837,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -3897,6 +3921,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -4995,6 +5027,14 @@
             }
           },
           {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
             "code": "package.layout.unknown_top_level",
             "cause": "The package is refused (layout: unknown top level).",
             "next": {
@@ -6041,6 +6081,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -7193,6 +7241,14 @@
             }
           },
           {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
             "code": "package.layout.unknown_top_level",
             "cause": "The package is refused (layout: unknown top level).",
             "next": {
@@ -8283,6 +8339,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -10537,6 +10601,14 @@
             }
           },
           {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
             "code": "package.layout.unknown_top_level",
             "cause": "The package is refused (layout: unknown top level).",
             "next": {
@@ -12293,6 +12365,14 @@
           {
             "code": "package.layout.os_litter",
             "cause": "The package's tree (layout: os litter), a warning.",
+            "next": {
+              "run": "metais check <package>",
+              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -14315,6 +14395,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -16641,6 +16729,14 @@
             }
           },
           {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
+            "next": {
+              "run": "metais test <package>",
+              "why": "Tests every example again once the package or its examples are fixed."
+            }
+          },
+          {
             "code": "package.layout.unknown_top_level",
             "cause": "The package is refused (layout: unknown top level).",
             "next": {
@@ -17305,7 +17401,7 @@
         "group": "Authoring",
         "synopsis": "metais pack [<dir>] [--out <file>|-] [--dry-run] [--limit <name>=<value>]... [--json]",
         "description": "Check and test a source directory, then write it as one package file.",
-        "detail": "Runs metais check on the source directory, the current directory when omitted. Any error stops pack: every finding is reported and nothing is written. With no error it runs metais test over every example; an example that fails stops it the same way. Warnings are reported and do not stop it. There is no way to skip a step: the bytes a supplier receives are the bytes whose examples passed.\n\nThe package holds metais.yaml and every file of inputs/, templates/, references/, assets/ and examples/, names beginning with . included, and .compiled/, computed afresh. A top-level name beginning with ., and a top-level file ending .metais, is left out silently; any other top-level name is left out and reported as package.layout.not_packed. Each file is packed byte for byte. The package's bytes depend only on its entries' paths and contents: never on a file's time, mode or owner, the order a directory lists its names in, the platform, the locale or the clock. One build of metais packs a source directory to the same bytes every time. The package is read back as every reader reads one before it is kept, and a limit only its bytes show, such as entry-ratio, refuses it as limit.package. An entry whose bytes put the end of central directory signature in the package's final 65,557 bytes refuses it as package.container.second_end_record, and the next step names that entry.\n\n--out names the package file. Without it, the file is <name>-<version>.metais, from the manifest, in the working directory; an --out that names an existing directory writes that file inside it. The file is written to a temporary file .metais-tmp-<h> beside it, created exclusively, synced, and renamed over the file, so a reader never sees part of a package and a package file already there is replaced: replacing its own previous package is pack's edit loop, so there is no --overwrite. A file inside one of the layout trees, or the manifest itself, is refused, and so is an --out that exists and is not a regular file or a directory. --out - writes the package to standard output, and is refused when standard output is a terminal; with --json the document then goes to standard error, after the package.\n\n--dry-run checks, tests and builds the package as pack does, and checks where it would write it, and writes nothing: it reports the package's size, digest and entries as pack would, and is refused exactly when pack would be refused before writing. A packed package is refused as the operand: unpack it first.",
+        "detail": "Runs metais check on the source directory, the current directory when omitted. Any error stops pack: every finding is reported and nothing is written. With no error it runs metais test over every example; an example that fails stops it the same way. Warnings are reported and do not stop it. There is no way to skip a step: the bytes a supplier receives are the bytes whose examples passed.\n\nThe package begins with README.md, stored: the specification's text, which says what the file is and where to find metais. It then holds metais.yaml and every file of inputs/, templates/, references/, assets/ and examples/, names beginning with . included, and .compiled/, computed afresh. A top-level name beginning with ., a top-level README.md, and a top-level file ending .metais, are left out silently; any other top-level name is left out and reported as package.layout.not_packed. Each file is packed byte for byte. The package's bytes depend only on its entries' paths and contents: never on a file's time, mode or owner, the order a directory lists its names in, the platform, the locale or the clock. One build of metais packs a source directory to the same bytes every time. The package is read back as every reader reads one before it is kept, and a limit only its bytes show, such as entry-ratio, refuses it as limit.package. An entry whose bytes put the end of central directory signature in the package's final 65,557 bytes refuses it as package.container.second_end_record, and the next step names that entry.\n\n--out names the package file. Without it, the file is <name>-<version>.metais, from the manifest, in the working directory; an --out that names an existing directory writes that file inside it. The file is written to a temporary file .metais-tmp-<h> beside it, created exclusively, synced, and renamed over the file, so a reader never sees part of a package and a package file already there is replaced: replacing its own previous package is pack's edit loop, so there is no --overwrite. A file inside one of the layout trees, or the manifest itself, is refused, and so is an --out that exists and is not a regular file or a directory. --out - writes the package to standard output, and is refused when standard output is a terminal; with --json the document then goes to standard error, after the package.\n\n--dry-run checks, tests and builds the package as pack does, and checks where it would write it, and writes nothing: it reports the package's size, digest and entries as pack would, and is refused exactly when pack would be refused before writing. A packed package is refused as the operand: unpack it first.",
         "opens_package": true,
         "role": "authoring",
         "operands": [
@@ -19151,6 +19247,14 @@
             }
           },
           {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
             "code": "package.layout.unknown_top_level",
             "cause": "The package is refused (layout: unknown top level).",
             "next": {
@@ -19999,7 +20103,7 @@
         "group": "Authoring",
         "synopsis": "metais unpack <package> --to <dir> [--dry-run] [--limit <name>=<value>]... [--json]",
         "description": "Write a packed package's source directory, to edit it.",
-        "detail": "Writes every entry of the packed package into <dir>, as the source directory it was packed from: the manifest as its author wrote it, the inputs, templates, references, assets and examples. .compiled/ is not written: it is derived from the rest, and metais pack writes it again. Files are written with mode 0644 and directories 0755, less the umask, whatever the package records.\n\nBefore it writes anything, unpack verifies the whole package as inspect does, its digests included, and refuses a package that fails, writing nothing. It does not run check: a package with check errors is the one an author needs to unpack and fix. A source directory is refused: it is already what unpack would write.\n\n--to is required. A <dir> that does not exist is created, with its missing parents, by writing beside it and renaming the whole directory into place, so a failed write leaves nothing. An existing <dir> must be empty, apart from names beginning with . (such as .git) other than .compiled, and files ending .metais; it is written in place, and a failed write stops unpack, which lists the files it wrote and removes none of them. There is no --overwrite: a file left from an earlier tree would join the unpacked source and be packed with it.\n\n--dry-run lists the files unpack would write, and writes nothing anywhere. It is refused exactly when unpack would be refused before writing, with the same findings: a package that fails to open, a source directory, a <dir> that is not empty or not a directory, and a staging directory left beside a <dir> that does not exist. What only writing finds out, such as a full disk, it cannot report.",
+        "detail": "Writes every entry of the packed package into <dir>, as the source directory it was packed from: the manifest as its author wrote it, the inputs, templates, references, assets and examples. .compiled/ is not written: it is derived from the rest, and metais pack writes it again; nor is README.md, the specification's text, which pack also writes. Files are written with mode 0644 and directories 0755, less the umask, whatever the package records.\n\nBefore it writes anything, unpack verifies the whole package as inspect does, its digests included, and refuses a package that fails, writing nothing. It does not run check: a package with check errors is the one an author needs to unpack and fix. A source directory is refused: it is already what unpack would write.\n\n--to is required. A <dir> that does not exist is created, with its missing parents, by writing beside it and renaming the whole directory into place, so a failed write leaves nothing. An existing <dir> must be empty, apart from names beginning with . (such as .git) other than .compiled, and files ending .metais; it is written in place, and a failed write stops unpack, which lists the files it wrote and removes none of them. There is no --overwrite: a file left from an earlier tree would join the unpacked source and be packed with it.\n\n--dry-run lists the files unpack would write, and writes nothing anywhere. It is refused exactly when unpack would be refused before writing, with the same findings: a package that fails to open, a source directory, a <dir> that is not empty or not a directory, and a staging directory left beside a <dir> that does not exist. What only writing finds out, such as a full disk, it cannot report.",
         "opens_package": true,
         "role": "authoring",
         "operands": [
@@ -20719,6 +20823,14 @@
           {
             "code": "package.layout.non_regular_file",
             "cause": "The package is refused (layout: non regular file).",
+            "next": {
+              "run": "metais unpack <package> --to <dir>",
+              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
+            }
+          },
+          {
+            "code": "package.layout.readme",
+            "cause": "The package is refused (layout: readme).",
             "next": {
               "run": "metais unpack <package> --to <dir>",
               "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."

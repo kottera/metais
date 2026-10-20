@@ -33,7 +33,7 @@
           "type": "boolean"
         },
         "files": {
-          "description": "Each file written, or with --dry-run that would be, as a path relative to the directory unpack writes into, in the order written: every entry of the package but those beneath .compiled/, in byte order.",
+          "description": "Each file written, or with --dry-run that would be, as a path relative to the directory unpack writes into, in the order written: every entry of the package but README.md and those beneath .compiled/, in byte order.",
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,

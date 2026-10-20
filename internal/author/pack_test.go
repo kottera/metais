@@ -5,7 +5,9 @@ package author
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"slices"
 	"strings"
@@ -18,6 +20,7 @@ import (
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/pkgtree"
 	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
+	"github.com/kottera/metais/internal/specdata"
 	"github.com/kottera/metais/internal/zipfmt"
 )
 
@@ -56,7 +59,7 @@ func planned(t *testing.T, files map[string][]byte, tree pkgtree.Tree, faults fa
 	if tree == nil {
 		tree = pkg.Tree
 	}
-	p, err := PlanPack(tree, pkg.Compiled, faults)
+	p, err := PlanPack(tree, pkg.Compiled, pkg.Manifest.Metais, faults)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,14 +67,15 @@ func planned(t *testing.T, files map[string][]byte, tree pkgtree.Tree, faults fa
 }
 
 // TestPlanPack is ADR-007 D7 items 3 and 4 and ADR-001 D4 item 7: the
-// entries are the source's and the four compiled files, in byte order,
-// .compiled/digests.json first; the package digest is the one the open
+// entries are README.md, then the source's and the four compiled files,
+// in byte order, .compiled/digests.json first among them (ADR-001 A1
+// item 4); the package digest is the one the open
 // computed for the source directory; and the package written opens, with
 // that digest and every source entry's bytes as they were.
 func TestPlanPack(t *testing.T) {
 	files := packFiles()
 	pkg, p := planned(t, files, nil, 0)
-	want := []string{".compiled/digests.json", ".compiled/manifest.json", ".compiled/references.json", ".compiled/schema.json",
+	want := []string{"README.md", ".compiled/digests.json", ".compiled/manifest.json", ".compiled/references.json", ".compiled/schema.json",
 		"assets/.hidden", "inputs/report.schema.json", "metais.yaml", "templates/report.md.liquid"}
 	if !slices.Equal(p.Entries, want) {
 		t.Errorf("entries %q, want %q", p.Entries, want)
@@ -87,7 +91,7 @@ func TestPlanPack(t *testing.T) {
 	if err != nil || len(fs) > 0 {
 		t.Fatalf("the package does not read: %v %v", err, fs)
 	}
-	if !slices.Equal(a.List(), want) {
+	if listed := slices.Sorted(slices.Values(want)); !slices.Equal(a.List(), listed) {
 		t.Errorf("the zip holds %q", a.List())
 	}
 	for n, content := range files {
@@ -210,8 +214,74 @@ func TestPackSourceChanged(t *testing.T) {
 		t.Errorf("a changed entry: %v", err)
 	}
 	pkg, _ := loader.OpenFiles(files, loader.Options{Limits: limits.Defaults()})
-	_, err = PlanPack(failing{Tree: mem, name: "templates/report.md.liquid"}, pkg.Compiled, 0)
+	_, err = PlanPack(failing{Tree: mem, name: "templates/report.md.liquid"}, pkg.Compiled, pkg.Manifest.Metais, 0)
 	if !errors.As(err, &re) || re.Reason != hostfs.PermissionDenied {
 		t.Errorf("an unreadable entry: %v", err)
+	}
+}
+
+// readmeFirstStored is ADR-001 A1 items 1 and 8 over a packed package's
+// bytes: its first local header names README.md, stored, with no extra
+// field, so the README text is the file's bytes from offset 39.
+func readmeFirstStored(b, text []byte) error {
+	le := binary.LittleEndian
+	switch {
+	case len(b) < 39+len(text) || le.Uint32(b) != 0x04034b50:
+		return errors.New("no local header at offset 0")
+	case string(b[30:39]) != "README.md" || le.Uint16(b[26:]) != 9:
+		return fmt.Errorf("the first entry is %q", b[30:min(len(b), 30+int(le.Uint16(b[26:])))])
+	case le.Uint16(b[8:]) != 0:
+		return fmt.Errorf("README.md has method %d, not stored", le.Uint16(b[8:]))
+	case le.Uint16(b[28:]) != 0:
+		return errors.New("README.md has an extra field")
+	case !bytes.Equal(b[39:39+len(text)], text):
+		return fmt.Errorf("the bytes at offset 39 are %q", b[39:39+len(text)])
+	}
+	return nil
+}
+
+// TestPackWritesReadmeFirst is ADR-001 A1 items 1, 4 and 5 (MTS-PKG-035,
+// MTS-PKG-036, MTS-PKG-071): pack writes the README text of the declared
+// version as README.md, the first entry and stored, before .compiled/;
+// the digest file does not list it, and the package digest is the source
+// directory's.
+func TestPackWritesReadmeFirst(t *testing.T) {
+	files := packFiles()
+	pkg, p := planned(t, files, nil, 0)
+	if len(p.Entries) < 2 || p.Entries[0] != "README.md" || p.Entries[1] != digest.File {
+		t.Fatalf("entries %q, want README.md then %s first", p.Entries, digest.File)
+	}
+	var b bytes.Buffer
+	if err := p.Write(&b); err != nil {
+		t.Fatal(err)
+	}
+	if err := readmeFirstStored(b.Bytes(), specdata.Readme10); err != nil {
+		t.Error(err)
+	}
+	if bytes.Contains(p.bytes[digest.File], []byte(`"README.md"`)) {
+		t.Errorf("the digest file lists README.md: %s", p.bytes[digest.File])
+	}
+	if p.Digest != pkg.Digest {
+		t.Errorf("the package digest is not the source directory's")
+	}
+}
+
+// TestReadmeFirstStoredControl holds readmeFirstStored to failing on a
+// writer that deflates README.md as it deflates other entries, and on one
+// that writes it in byte order rather than first.
+func TestReadmeFirstStoredControl(t *testing.T) {
+	text := specdata.Readme10
+	rest := zipfmt.Entry{Name: digest.File, Content: []byte("{}"), Method: zipfmt.Auto}
+	for name, es := range map[string][]zipfmt.Entry{
+		"deflated":  {{Name: "README.md", Content: text, Method: zipfmt.Auto}, rest},
+		"not first": {rest, {Name: "README.md", Content: text, Method: zipfmt.Store}},
+	} {
+		var b bytes.Buffer
+		if err := zipfmt.Write(&b, es); err != nil {
+			t.Fatal(err)
+		}
+		if readmeFirstStored(b.Bytes(), text) == nil {
+			t.Errorf("%s: a package with README.md %s passed", name, name)
+		}
 	}
 }

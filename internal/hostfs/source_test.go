@@ -99,7 +99,8 @@ func TestSourceTreeChecks(t *testing.T) {
 	if err := pkgtreetest.Check(s, want); err != nil {
 		t.Fatal(err)
 	}
-	if got, w := s.Unknown(), []string{"README.md", "build"}; !slices.Equal(got, w) {
+	// README.md is ignored silently, as .git is (ADR-001 A1 item 7).
+	if got, w := s.Unknown(), []string{"build"}; !slices.Equal(got, w) {
 		t.Errorf("Unknown = %q, want %q", got, w)
 	}
 }

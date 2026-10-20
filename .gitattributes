@@ -1,6 +1,8 @@
 spec/conformance/** -text
 THIRD-PARTY-NOTICES.txt -text
 internal/zipfmt/testdata/canary/** -text
+spec/readme/** -text
+internal/specdata/readme/** -text
 
 # The committed generated files merge themselves (ADR-011 D3 item 7, as
 # amended by A1). A merge keeps one side of each, and
@@ -15,6 +17,7 @@ spec/findings/registry.json merge=metais-generated
 spec/12-findings.md merge=metais-generated-region
 internal/specdata/findings/** merge=metais-generated
 internal/specdata/schemas/** merge=metais-generated
+internal/specdata/readme/** merge=metais-generated
 internal/cli/testdata/help/** merge=metais-generated
 internal/author/testdata/scaffold/** merge=metais-generated
 internal/tarw/testdata/*.tar merge=metais-generated

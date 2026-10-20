@@ -8,7 +8,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/digest"
 	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
@@ -139,36 +138,10 @@ func Check(path string, opt Options, faults fault.Set) (*Checked, []finding.Find
 // checkPacked is ADR-001 D8 steps 1 to 6 over a packed package, then
 // check's steps.
 func checkPacked(f io.ReaderAt, size int64, opt Options, faults fault.Set) (*Checked, []finding.Finding) {
-	c := newContents()
-	a, fs, err := zipfmt.OpenWith(f, size, opt.Limits, c.sink)
-	if err != nil {
-		return nil, []finding.Finding{notReadable(hostfs.ReasonOf(err))}
-	}
-	if len(fs) > 0 {
+	o, _, fs := readPacked(f, size, opt, faults)
+	if o == nil {
 		return nil, fs
 	}
-	names := a.List()
-	var missing []finding.Finding
-	for _, n := range compiledFiles {
-		if _, found := slices.BinarySearch(names, n); !found {
-			missing = append(missing, entryFinding(CodeCompiledMissing, n, nil))
-		}
-	}
-	if len(missing) > 0 {
-		return nil, missing
-	}
-	var entries []digest.Entry
-	for _, e := range a.Entries() {
-		if e.Name != digest.File {
-			entries = append(entries, digest.Entry{Name: e.Name, Sum: e.SHA256})
-		}
-	}
-	if fs := pkgtree.VerifyDigests(faults, func() []finding.Finding {
-		return digest.Verify(c.bytes(digest.File), entries, opt.Limits)
-	}); len(fs) > 0 {
-		return nil, fs
-	}
-	o := &opening{form: Packed, tree: a, names: names, lim: opt.Limits, c: c}
 	return o.check()
 }
 
@@ -366,9 +339,9 @@ func (o *opening) bundle(m *manifest.Manifest, values map[string]value.Value) (v
 }
 
 // packLimits is ADR-007 D2 step 3 for a source directory: the package
-// pack would write, its source entries and the compiled files and digest
-// file pack adds, within entries, entry-size and package-uncompressed
-// (ADR-009 D3). The digest file is not computed here; it holds one line
+// pack would write, its source entries and the README.md, compiled files
+// and digest file pack adds, within entries, entry-size and
+// package-uncompressed (ADR-009 D3). The digest file is not computed here; it holds one line
 // per entry, and its size is computed from them.
 func (o *opening) packLimits(compiled []File) []finding.Finding {
 	var total int64
@@ -378,7 +351,14 @@ func (o *opening) packLimits(compiled []File) []finding.Finding {
 		}
 	}
 	var out []finding.Finding
-	count := int64(len(o.names) + len(compiled) + 1)
+	// The README.md pack writes first (ADR-001 A1 item 1), and the
+	// digest file.
+	readme := int64(len(Readme(o.spec)))
+	total += readme
+	if readme > o.lim.Value(limits.EntrySize) {
+		out = append(out, o.lim.Breached(limits.EntrySize, entryLocation(zipfmt.ReadmeName), readme, true))
+	}
+	count := int64(len(o.names) + len(compiled) + 2)
 	if count > o.lim.Value(limits.Entries) {
 		out = append(out, o.lim.Breached(limits.Entries, finding.Location{Origin: finding.OriginPackage}, count, true))
 	}

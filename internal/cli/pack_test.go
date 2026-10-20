@@ -101,7 +101,7 @@ func TestPackDefaultName(t *testing.T) {
 	}
 	os.Remove(filepath.Join(work, "refused-1.0.0.metais"))
 	r = runTool(t, "pack", src)
-	if r.status != 0 || !strings.HasPrefix(r.stdout, "Packed refused-1.0.0.metais: "+strconv.FormatInt(res.Size, 10)+" bytes, 7 entries, package digest "+res.Digest+"\n") {
+	if r.status != 0 || !strings.HasPrefix(r.stdout, "Packed refused-1.0.0.metais: "+strconv.FormatInt(res.Size, 10)+" bytes, 8 entries, package digest "+res.Digest+"\n") {
 		t.Errorf("human: status %d, stdout %q", r.status, r.stdout)
 	}
 }

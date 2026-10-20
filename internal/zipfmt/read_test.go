@@ -549,3 +549,38 @@ func TestOpenContainer(t *testing.T) {
 type writerFunc func([]byte) (int, error)
 
 func (f writerFunc) Write(p []byte) (int, error) { return f(p) }
+
+// TestOpenReadmeFirst is ADR-001 A1 item 4 (MTS-PKG-010): README.md as a
+// package's first entry precedes every other whatever their names, and
+// every other entry is in byte order after it; the Archive lists its
+// entries in byte order, as every pkgtree.Tree does, and gives them in the
+// file's order through Entries. Only a first README.md is exempt: one
+// elsewhere out of byte order is refused like any other entry.
+func TestOpenReadmeFirst(t *testing.T) {
+	def := limits.Defaults()
+	z := rawZip{entries: []rawEntry{{name: ReadmeName}, {name: ".compiled/digests.json"}, {name: "assets/a.txt"}, {name: "metais.yaml"}}}
+	a, found := open(t, z.bytes(), def)
+	if len(found) > 0 {
+		t.Fatalf("refused with %q", codes(found))
+	}
+	if got, want := a.List(), []string{".compiled/digests.json", ReadmeName, "assets/a.txt", "metais.yaml"}; !slices.Equal(got, want) {
+		t.Errorf("List = %q, want %q", got, want)
+	}
+	var order []string
+	for _, e := range a.Entries() {
+		order = append(order, e.Name)
+	}
+	if want := []string{ReadmeName, ".compiled/digests.json", "assets/a.txt", "metais.yaml"}; !slices.Equal(order, want) {
+		t.Errorf("Entries in the order %q, want %q", order, want)
+	}
+
+	for name, es := range map[string][]rawEntry{
+		"the rest out of order": {{name: ReadmeName}, {name: "metais.yaml"}, {name: ".compiled/digests.json"}},
+		"README.md not first":   {{name: ".compiled/digests.json"}, {name: "metais.yaml"}, {name: ReadmeName}},
+	} {
+		_, found := open(t, rawZip{entries: es}.bytes(), def)
+		if got := codes(found); !slices.Equal(got, []string{string(CodeEntryOrder)}) {
+			t.Errorf("%s: refused with %q, want %s", name, got, CodeEntryOrder)
+		}
+	}
+}

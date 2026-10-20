@@ -10,7 +10,7 @@
       "file": "assets/run"
     },
     "params": {
-      "offset": 2611,
+      "offset": 3116,
       "record": "central directory header",
       "header_field": "external file attributes",
       "value": 2179792896,

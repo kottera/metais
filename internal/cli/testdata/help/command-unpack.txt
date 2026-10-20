@@ -7,8 +7,9 @@ Usage:
 Writes every entry of the packed package into <dir>, as the source directory it
 was packed from: the manifest as its author wrote it, the inputs, templates,
 references, assets and examples. .compiled/ is not written: it is derived from
-the rest, and metais pack writes it again. Files are written with mode 0644 and
-directories 0755, less the umask, whatever the package records.
+the rest, and metais pack writes it again; nor is README.md, the specification's
+text, which pack also writes. Files are written with mode 0644 and directories
+0755, less the umask, whatever the package records.
 
 Before it writes anything, unpack verifies the whole package as inspect does,
 its digests included, and refuses a package that fails, writing nothing. It does
@@ -113,7 +114,7 @@ Refusals:
 
   manifest.* (44)  The manifest breaks one of its rules.
                    Next: metais unpack <package> --to <dir>
-  package.* (46)   The package is refused.
+  package.* (47)   The package is refused.
                    Next: metais unpack <package> --to <dir>
   schema.* (10)    An input schema is refused.
                    Next: metais unpack <package> --to <dir>

@@ -57,7 +57,8 @@ func unpackDeclaration() *Command {
 		Detail: "Writes every entry of the packed package into <dir>, as the source directory it was " +
 			"packed from: the manifest as its author wrote it, the inputs, templates, references, " +
 			"assets and examples. .compiled/ is not written: it is derived from the rest, and " +
-			"metais pack writes it again. Files are written with mode 0644 and directories 0755, " +
+			"metais pack writes it again; nor is README.md, the specification's text, which pack " +
+			"also writes. Files are written with mode 0644 and directories 0755, " +
 			"less the umask, whatever the package records.\n\n" +
 			"Before it writes anything, unpack verifies the whole package as inspect does, its " +
 			"digests included, and refuses a package that fails, writing nothing. It does not run " +

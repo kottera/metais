@@ -26,6 +26,7 @@ const (
 	CodeCompiledInSource   finding.Code = "package.layout.compiled_in_source"
 	CodeEmptyDirectory     finding.Code = "package.layout.empty_directory"
 	CodeNonRegularFile     finding.Code = "package.layout.non_regular_file"
+	CodeReadme             finding.Code = "package.layout.readme"
 	CodeCompiledMissing    finding.Code = "package.compiled.missing"
 	CodeCompiledUnknown    finding.Code = "package.compiled.unknown_file"
 	CodeCompiledMismatch   finding.Code = "package.compiled.mismatch"

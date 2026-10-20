@@ -22,6 +22,7 @@ var specFiles = []string{
 	"schemas/1.0/finding-registry.schema.json",
 	"schemas/1.0/finding.schema.json",
 	"schemas/1.0/manifest.schema.json",
+	"readme/1.0/README.md",
 }
 
 // specRoot is spec/, from this package's directory, where go test runs.

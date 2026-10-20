@@ -11,6 +11,7 @@ import (
 	"hash"
 	"hash/crc32"
 	"io"
+	"slices"
 
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/limits"
@@ -26,7 +27,9 @@ import (
 //     its entry count is within entries, and no other end-record signature
 //     lies in the file's final 65,557 bytes;
 //  3. every central directory header satisfies D1 item 4 and its name
-//     ADR-001 D2; the names are in order and pass the uniqueness rule; each
+//     ADR-001 D2; the names are in order, but for a first README.md, which
+//     precedes every other (ADR-001 A1 item 4), and pass the uniqueness
+//     rule; each
 //     entry's declared sizes and ratio, and the sum of the declared sizes,
 //     are within entry-size, entry-ratio and package-uncompressed;
 //  4. walking from offset 0, every local header is where the previous
@@ -88,6 +91,12 @@ func openWith(o *opener) (*Archive, []finding.Finding, error) {
 	a := &Archive{s: o.s, entries: o.entries, index: make(map[string]int, len(o.entries))}
 	for i, e := range o.entries {
 		a.index[e.name] = i
+		a.names = append(a.names, e.name)
+	}
+	if !o.container {
+		// A package's first README.md is the one entry out of byte
+		// order, and a pkgtree.Tree lists in byte order.
+		slices.Sort(a.names)
 	}
 	a.decodes = o.decodes
 	return a, nil, nil
@@ -294,7 +303,7 @@ func (o *opener) directory() error {
 		o.header(&e, h, extra, commentLen)
 		if e.nameRead {
 			o.found = append(o.found, nameFindings(e.name, off, unitext.CheckPath(e.name, o.lim), o.lim)...)
-			if !o.container && len(names) > 0 && e.name < names[len(names)-1] {
+			if !o.container && len(names) > 0 && e.name < names[len(names)-1] && !(len(names) == 1 && names[0] == ReadmeName) {
 				o.add(container(CodeEntryOrder, e.name, off, nil))
 			}
 			names = append(names, e.name)

@@ -88,3 +88,72 @@ func TestSpecDataMatchesSpecCatchesOneByte(t *testing.T) {
 		t.Errorf("a changed spec file: %d mismatches reported, want 1", len(got))
 	}
 }
+
+// readmeBlock is the fenced block of chapter 2 that follows the line
+// introducing the README text of version, the bytes MTS-PKG-071 fixes,
+// each line with its LF.
+func readmeBlock(chapter []byte, version string) ([]byte, error) {
+	intro := []byte("The **README text** of specification " + version + " is")
+	i := bytes.Index(chapter, intro)
+	if i < 0 {
+		return nil, fmt.Errorf("chapter 2 does not introduce the README text of %s", version)
+	}
+	rest := chapter[i:]
+	open := []byte("\n```text\n")
+	j := bytes.Index(rest, open)
+	if j < 0 {
+		return nil, fmt.Errorf("the README text of %s has no ```text block", version)
+	}
+	body := rest[j+len(open):]
+	k := bytes.Index(body, []byte("\n```\n"))
+	if k < 0 {
+		return nil, fmt.Errorf("the README text of %s's block is not closed", version)
+	}
+	return body[:k+1], nil
+}
+
+// TestReadmeMatchesChapter holds the README text the tool writes and
+// checks (ADR-001 A1) to the text chapter 2 states normatively: one
+// source, spec/readme/1.0/README.md, embedded as Readme10, and the same
+// bytes in the chapter. TestSpecDataMatchesSpec holds the embedded copy to
+// the file.
+func TestReadmeMatchesChapter(t *testing.T) {
+	chapter, err := os.ReadFile(filepath.Join(specRoot, "02-container.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	block, err := readmeBlock(chapter, "1.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(block, Readme10) {
+		t.Errorf("chapter 2's README text of 1.0 is\n%q\nbut spec/readme/1.0/README.md is\n%q", block, Readme10)
+	}
+	// A1 item 1: UTF-8, LF line endings, ending in one line feed.
+	if bytes.ContainsRune(Readme10, '\r') || !bytes.HasSuffix(Readme10, []byte("\n")) || bytes.HasSuffix(Readme10, []byte("\n\n")) {
+		t.Errorf("the README text is not LF-terminated lines ending in one line feed: %q", Readme10)
+	}
+	if !bytes.HasPrefix(Readme10, []byte("# This is a METAIS package\n")) {
+		t.Errorf("the README text does not begin with the line a detector keys on (A1 item 8): %q", Readme10)
+	}
+}
+
+// TestReadmeMatchesChapterCatchesOneByte is TestReadmeMatchesChapter's
+// control: a chapter one byte away from the file is caught.
+func TestReadmeMatchesChapterCatchesOneByte(t *testing.T) {
+	chapter, err := os.ReadFile(filepath.Join(specRoot, "02-container.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	block, err := readmeBlock(chapter, "1.0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	at := bytes.Index(chapter, block) + len(block)/2
+	changed := bytes.Clone(chapter)
+	changed[at] ^= 1
+	got, err := readmeBlock(changed, "1.0")
+	if err == nil && bytes.Equal(got, Readme10) {
+		t.Error("a chapter one byte away from the README text was not caught")
+	}
+}
