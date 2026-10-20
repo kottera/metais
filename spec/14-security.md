@@ -7,7 +7,46 @@ are rendered reaches them. This chapter describes the threat model, and
 specifies the resource limits and their defaults, the confinement of every
 entry path and output path, and the isolation of a render from its host.
 
-## 14.1 Package limits
+## 14.1 The threat model (informative)
+
+What this chapter protects is the host a package is rendered on: its CPU,
+memory and disk, and the program that called the processor; its secrets,
+the environment's variables, the files the calling user can read and the
+facts about the machine — its user, its host name, its paths, its time zone
+and its processes; and its file system, of which nothing is written,
+replaced or removed outside the output the caller named. It protects the
+caller's outputs too: a render writes exactly what the package and the
+inputs determine, or nothing.
+
+Two parties are hostile. A package's author controls every byte of the
+package — its container, its entry names, its manifest, schemas, templates,
+assets, references and examples — and of a source directory handed to
+someone else to check, test or pack. An input's supplier controls the data
+directory and the values given with the operation: file contents, names,
+types and sizes. A supplier is often less privileged than the caller, an
+agent in a sandbox or the author of a downloaded archive, so a supplier who
+plants a link to a file only the caller can read, hoping a render copies it
+into an output the supplier sees, is within the model.
+
+The caller is trusted. It names the package, the inputs, the output and the
+limits, sets the render time and asks for files to be replaced, and its
+choices are honoured. Data crosses into a template only as the validated
+inputs, the manifest's own members and the render time; nothing else of the
+host reaches a template, an output or a finding (§7.7.1, §14.5,
+[MTS-RND-005](11-rendering.md#mts-rnd-005)).
+
+These are outside the model: a malicious caller, who can run any program it
+likes; the operating system, the file system, the hardware and other
+processes racing a processor on the directories it uses; whether what a
+render writes is safe to run, open or publish, which is the caller's
+decision, with the one exception of a path that runs code merely by
+existing, `.git` ([chapter 2](02-container.md)); the authenticity of a
+package, since a digest detects corruption and an author who changes an
+entry can change its digest; side channels, as the time a render takes and
+the size of what it writes; and resource use up to the limits, which a
+render within every limit may spend.
+
+## 14.2 Package limits
 
 Every size, count and ratio a processor reads from a package is bounded, and
 every bound has a name and a default. A package within every package limit is
@@ -40,7 +79,7 @@ lower a limit for one operation; nothing raises one.
 KiB, MiB and GiB are powers of 1024.
 
 <a id="mts-sec-001"></a>**MTS-SEC-001** A processor MUST enforce every limit of
-§14.1 at its default, or at the lower value a caller gives for one operation,
+§14.2 at its default, or at the lower value a caller gives for one operation,
 and MUST refuse a package whose own content breaches one with `limit.package`,
 naming the limit and its bound, before it reads the bytes the limit bounds.
 
@@ -117,7 +156,7 @@ file: it MUST refuse each array or object at the first depth beyond
 beneath it, and each number literal longer than `number-length` bytes with
 `limit.package` located at it, before converting it to a number.
 
-## 14.2 Entry confinement
+## 14.3 Entry confinement
 
 <a id="mts-sec-002"></a>**MTS-SEC-002** A processor MUST refuse every entry
 name [chapter 2](02-container.md)'s rules refuse before it reads any entry's
@@ -142,11 +181,11 @@ entry that is itself a zip, a packed package or another archive, so that a
 package can carry such an entry, however far it would expand, at the cost of
 its own bytes.
 
-## 14.3 Data limits
+## 14.4 Data limits
 
 Every size and count a processor reads from the inputs of one operation is
 bounded too. A caller may lower a data limit for one operation; nothing raises
-one. A limit of §14.1 that bounds a parsed document, `value-depth` and
+one. A limit of §14.2 that bounds a parsed document, `value-depth` and
 `number-length`, bounds every input as it bounds the manifest.
 
 | Limit | Default | Bounds |
@@ -161,13 +200,13 @@ one. A limit of §14.1 that bounds a parsed document, `value-depth` and
 | `findings` | 100,000 | the findings one operation lists ([chapter 12](12-findings.md)) |
 
 <a id="mts-sec-005"></a>**MTS-SEC-005** A processor MUST enforce every limit
-of §14.3, and `value-depth` and `number-length` on every input, at its default
+of §14.4, and `value-depth` and `number-length` on every input, at its default
 or at the lower value a caller gives for one operation, and MUST refuse an
 input that breaches one with `limit.exceeded` about that input, naming the
 limit and its bound, before it reads the bytes the limit bounds; the input
 then gives no value.
 
-## 14.4 Reading the host
+## 14.5 Reading the host
 
 <a id="mts-sec-006"></a>**MTS-SEC-006** Inside a data directory a processor
 MUST open only the entries a declared input could be and the items of those
@@ -199,7 +238,7 @@ characters wherever the string appears, in a template's view of it, in an
 output path and in an output's bytes, and nothing in it is looked up in the
 environment or expanded to a home directory.
 
-## 14.5 Work and output limits
+## 14.6 Work and output limits
 
 What a render computes and writes is bounded by counters, never by a clock,
 so a render is refused at the same point on every host. Each bound is a
@@ -267,7 +306,7 @@ the operation's total beyond `schema-work`, giving no other finding of that
 validation: of the inputs, with `limit.exceeded` naming the limit about each
 input the inputs object holds; of an output, with `limit.exceeded.output`.
 
-## 14.6 The package regular-expression profile
+## 14.7 The package regular-expression profile
 
 A schema's `pattern` and the names of its `patternProperties` are regular
 expressions of one profile: ECMA-262 patterns
@@ -298,7 +337,7 @@ the length or the count, before it matches anything. A pattern's program is
 the one Go's `regexp/syntax` package compiles from the pattern translated to
 its syntax, simplified.
 
-## 14.7 Output confinement
+## 14.8 Output confinement
 
 <a id="mts-sec-012"></a>**MTS-SEC-012** A processor MUST write nothing outside
 a render's output directory: it MUST refuse every output path that could
