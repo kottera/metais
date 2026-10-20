@@ -432,7 +432,9 @@ func TestHelpForm(t *testing.T) {
 	saved := isTerminal
 	t.Cleanup(func() { isTerminal = saved })
 	for _, argv := range helpGolden() {
-		if slices.Contains(argv, "--json") {
+		// The skill is read by a harness, not wrapped for a terminal: its
+		// frontmatter and stamp are one line each (ADR-008 A2 items 5, 7).
+		if slices.Contains(argv, "--json") || argv[0] == "skill" {
 			continue
 		}
 		isTerminal = func(any) bool { return false }

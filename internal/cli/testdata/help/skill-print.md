@@ -31,10 +31,12 @@ it, checks inputs against it and renders it.
    input (with the file name it takes in a data directory, such as
    `status.json`), every output, and "Read next". Read all of it. If the
    guide was cut, `metais inspect report.metais --guide`.
-2. Run what "Read next" lists, in order: `metais read report.metais <entry>`
-   for each input's meaning document, `metais ls report.metais examples/<name>/ -r`
-   and `metais read` of an example's inputs to see a filled-in value, and
-   `metais grep report.metais <pattern> references/` for the references.
+2. Run what "Read next" lists, in order:
+   - `metais read report.metais <entry>` for each input's meaning document;
+   - `metais ls report.metais examples/<name>/ -r`, then
+     `metais read report.metais examples/<name>/inputs/<file>`, to see a
+     filled-in value;
+   - `metais grep report.metais <pattern> references/` for the references.
 3. `metais schema report.metais <input>` — the fields of one input, as one
    JSON Schema document. Read it whole, or write it to a file:
    `metais schema report.metais <input> > <input>.schema.json`. With
@@ -50,12 +52,13 @@ it, checks inputs against it and renders it.
    document. `--out` must be a new or empty directory; `--dry-run` lists
    what it would write.
 
-**Fictional data, when asked for:** `metais sample report.metais --to <data dir>`
-writes valid generated data (`--seed <n>` varies it), then `validate` and
-`render` as above. Or start from an example's inputs: `metais extract
-report.metais 'examples/<name>/inputs/**' --to <dir>`, then use
-`<dir>/examples/<name>/inputs` as the data directory. Say in your answer
-that the data is fictional.
+**Fictional data, when asked for:**
+`metais sample report.metais --to <data dir>` writes valid generated data
+(`--seed <n>` varies it); then `validate` and `render` as above. Or start
+from an example's inputs:
+`metais extract report.metais 'examples/<name>/inputs/**' --to <dir>`, then
+use `<dir>/examples/<name>/inputs` as the data directory. Say in your
+answer that the data is fictional.
 
 ## Writing a package
 
@@ -91,4 +94,4 @@ a `message` and a `hint`. `metais help json` lists every format.
 This skill was installed by `metais skill`. If `metais version` is newer
 than the version in the last line, `metais skill --dry-run` says whether to
 refresh it.
-<!-- metais skill: version 1.2.3, sha256 042f24a299f4fce4593384284f48dbf146aa6f123e9cb18fa6e7359892ddfd27 -->
+<!-- metais skill: version 1.2.3, sha256 70e6233725e123d7660d27d669dbd75a839eb2d30e3f5195ae9925a4daf876ec -->

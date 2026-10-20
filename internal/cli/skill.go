@@ -205,7 +205,9 @@ func runSkill(s *session, p args.Parsed) outcome {
 		}
 		result.Targets = append(result.Targets, st)
 	}
-	if !res.Repository {
+	// The warning says where the skill is found, so it follows a run that
+	// wrote or decided every target, not a refusal.
+	if !res.Repository && len(fs) == 0 {
 		fs = append(fs, finding.New(finding.CodeUsageNotRepositoryRoot, invocation, nil, nil))
 	}
 	if len(next) == 0 {

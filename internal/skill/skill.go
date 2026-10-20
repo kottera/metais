@@ -13,6 +13,7 @@
 package skill
 
 import (
+	"bytes"
 	"crypto/sha256"
 	_ "embed"
 	"encoding/hex"
@@ -166,6 +167,22 @@ func (e *NeedHarnessError) Error() string {
 	return "skill: no harness given, and the directory holds " + e.Found + " of .claude/ and .agents/"
 }
 
+// host is the directory Install opened, as the rest of the package sees
+// it: plain functions, so that Install is the one place that names
+// hostfs (ADR-009 A5 item 4).
+type host struct {
+	// isDir reports whether name is a directory, not a link to one.
+	isDir func(name string) bool
+	// exists reports whether there is an entry called name, of any kind.
+	exists func(name string) bool
+	// read returns the bytes of the regular file name, found false when
+	// there is none, and nil bytes for a file over MaxExisting.
+	read func(name string) (b []byte, found bool, err error)
+	// write puts text at path, replacing a regular file when replace is
+	// set and refusing any entry there otherwise.
+	write func(path string, text []byte, replace bool) error
+}
+
 // Install decides and writes the skill beneath dir, the caller's own name
 // for an existing directory, for the harnesses opt names or, when it
 // names none, the one the directory shows (ADR-008 A2, ADR-009 A5). It is
@@ -181,8 +198,55 @@ func Install(dir string, opt Options) (Result, error) {
 		return Result{}, err
 	}
 	defer w.Close()
-	res := Result{Repository: exists(w, ".git")}
-	tops, err := targets(w, opt.Harnesses)
+	h := host{
+		isDir: func(name string) bool {
+			e, err := w.Lstat(name)
+			return err == nil && e.Kind == hostfs.KindDir
+		},
+		exists: func(name string) bool {
+			_, err := w.Lstat(name)
+			return err == nil
+		},
+		read: func(name string) ([]byte, bool, error) {
+			b, err := w.ReadFile(name, MaxExisting)
+			switch hostfs.ReasonOf(err) {
+			case hostfs.NotFound:
+				return nil, false, nil
+			case hostfs.TooLarge:
+				return nil, true, nil
+			}
+			return b, err == nil, err
+		},
+		// write creates the missing directories above path, writes a file
+		// beside it under a fixed temporary name, and renames that over
+		// path, so a reader never sees a partial file and an existing one
+		// is replaced, never written into (ADR-009 D8 item 3). A failure
+		// removes what the write created and is still empty.
+		write: func(path string, text []byte, replace bool) error {
+			dir := path[:strings.LastIndexByte(path, '/')]
+			tmp := dir + "/" + hostfs.TempName("SKILL.md")
+			err := w.MkdirAll(dir)
+			if err == nil {
+				err = w.Create(tmp, false, bytes.NewReader(text))
+			}
+			if err == nil && replace {
+				err = w.RenameReplace(tmp, path)
+			} else if err == nil {
+				err = w.RenameNoReplace(tmp, path)
+			}
+			if err != nil {
+				w.RemoveCreated()
+			}
+			return err
+		},
+	}
+	return installIn(h, opt)
+}
+
+// installIn is Install over the directory h.
+func installIn(h host, opt Options) (Result, error) {
+	res := Result{Repository: h.exists(".git")}
+	tops, err := targets(h, opt.Harnesses)
 	if err != nil {
 		return Result{}, err
 	}
@@ -196,14 +260,14 @@ func Install(dir string, opt Options) (Result, error) {
 		if res.Chosen == "detected" {
 			t.Because = top + "/ exists"
 		}
-		for _, h := range Harnesses {
-			if dirOf(h) == top && (res.Chosen == "detected" || slices.Contains(opt.Harnesses, h)) {
-				t.Harnesses = append(t.Harnesses, h)
+		for _, hn := range Harnesses {
+			if dirOf(hn) == top && (res.Chosen == "detected" || slices.Contains(opt.Harnesses, hn)) {
+				t.Harnesses = append(t.Harnesses, hn)
 			}
 		}
-		t.Action, t.From, t.Err = decide(w, t.Path, text, opt)
+		t.Action, t.From, t.Err = decide(h, t.Path, text, opt)
 		if t.Err == nil && !opt.DryRun && writes(t.Action) {
-			if t.Err = write(w, t.Path, text, t.Action != Installed); t.Err != nil {
+			if t.Err = h.write(t.Path, text, t.Action != Installed); t.Err != nil {
 				t.Action = ""
 			}
 		}
@@ -215,18 +279,18 @@ func Install(dir string, opt Options) (Result, error) {
 // targets are the top-level directories the skill is written beneath:
 // one per directory the named harnesses share, or, with none named, the
 // one of .claude/ and .agents/ the directory holds.
-func targets(w *hostfs.Writer, named []string) ([]string, error) {
+func targets(h host, named []string) ([]string, error) {
 	var tops []string
 	if len(named) > 0 {
 		for _, top := range []string{claudeDir, agentsDir} {
-			if slices.ContainsFunc(named, func(h string) bool { return dirOf(h) == top }) {
+			if slices.ContainsFunc(named, func(hn string) bool { return dirOf(hn) == top }) {
 				tops = append(tops, top)
 			}
 		}
 		return tops, nil
 	}
 	for _, top := range []string{claudeDir, agentsDir} {
-		if e, err := w.Lstat(top); err == nil && e.Kind == hostfs.KindDir {
+		if h.isDir(top) {
 			tops = append(tops, top)
 		}
 	}
@@ -239,24 +303,15 @@ func targets(w *hostfs.Writer, named []string) ([]string, error) {
 	return tops, nil
 }
 
-// exists reports whether the directory holds an entry called name, of any
-// kind.
-func exists(w *hostfs.Writer, name string) bool {
-	_, err := w.Lstat(name)
-	return err == nil
-}
-
 // decide reads the SKILL.md at path, if any, and decides what to do to it
 // (ADR-008 A2 item 5). from is the version of a copy whose digest matched.
-func decide(w *hostfs.Writer, path string, text []byte, opt Options) (a Action, from string, err error) {
-	b, err := w.ReadFile(path, MaxExisting)
+func decide(h host, path string, text []byte, opt Options) (a Action, from string, err error) {
+	b, found, err := h.read(path)
 	switch {
-	case hostfs.ReasonOf(err) == hostfs.NotFound:
-		return pick(opt.DryRun, Installed, WouldInstall), "", nil
-	case hostfs.ReasonOf(err) == hostfs.TooLarge:
-		b = nil
 	case err != nil:
 		return "", "", err
+	case !found:
+		return pick(opt.DryRun, Installed, WouldInstall), "", nil
 	}
 	if v, ok := own(b); ok {
 		if string(b) == string(text) {
@@ -279,26 +334,3 @@ func pick(dryRun bool, done, would Action) Action {
 
 // writes reports whether a reaches the file.
 func writes(a Action) bool { return a == Installed || a == Updated || a == Replaced }
-
-// write puts text at path: it creates the missing directories above it,
-// writes a file beside it under a fixed temporary name, and renames that
-// over path, so a reader never sees a partial file and an existing one is
-// replaced, never written into (ADR-009 D8 item 3). A failure removes
-// what the write created and is still empty.
-func write(w *hostfs.Writer, path string, text []byte, replace bool) error {
-	dir := path[:strings.LastIndexByte(path, '/')]
-	tmp := dir + "/" + hostfs.TempName("SKILL.md")
-	err := w.MkdirAll(dir)
-	if err == nil {
-		err = w.Create(tmp, false, strings.NewReader(string(text)))
-	}
-	if err == nil && replace {
-		err = w.RenameReplace(tmp, path)
-	} else if err == nil {
-		err = w.RenameNoReplace(tmp, path)
-	}
-	if err != nil {
-		w.RemoveCreated()
-	}
-	return err
-}

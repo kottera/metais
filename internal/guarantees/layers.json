@@ -32,6 +32,49 @@
       "reason": "ADR-009 D7, ADR-010 D2 item 2: the inputs layer reaches the host only to read the data directory, through hostfs's read side in its single entry point, so no other path of the layer can open a host file or write one"
     },
     {
+      "rule": "never-depends",
+      "package": "github.com/kottera/metais/internal/skill",
+      "imports": "github.com/kottera/metais/internal/loader",
+      "reason": "ADR-009 A5 item 4: metais skill writes the host from nothing but the binary's own text and version, so no code that reads a package or an input is in its closure"
+    },
+    {
+      "rule": "never-depends",
+      "package": "github.com/kottera/metais/internal/skill",
+      "imports": "github.com/kottera/metais/internal/zipfmt/...",
+      "reason": "ADR-009 A5 item 4: metais skill writes the host from nothing but the binary's own text and version, so no code that reads a package or an input is in its closure"
+    },
+    {
+      "rule": "never-depends",
+      "package": "github.com/kottera/metais/internal/skill",
+      "imports": "github.com/kottera/metais/internal/manifest/...",
+      "reason": "ADR-009 A5 item 4: metais skill writes the host from nothing but the binary's own text and version, so no code that reads a package or an input is in its closure"
+    },
+    {
+      "rule": "never-depends",
+      "package": "github.com/kottera/metais/internal/skill",
+      "imports": "github.com/kottera/metais/internal/inputs/...",
+      "reason": "ADR-009 A5 item 4: metais skill writes the host from nothing but the binary's own text and version, so no code that reads a package or an input is in its closure"
+    },
+    {
+      "rule": "never-depends",
+      "package": "github.com/kottera/metais/internal/skill",
+      "imports": "github.com/kottera/metais/internal/template/...",
+      "reason": "ADR-009 A5 item 4: metais skill writes the host from nothing but the binary's own text and version, so no code that reads a package or an input is in its closure"
+    },
+    {
+      "rule": "never-depends",
+      "package": "github.com/kottera/metais/internal/skill",
+      "imports": "github.com/kottera/metais/internal/browse/...",
+      "reason": "ADR-009 A5 item 4: metais skill writes the host from nothing but the binary's own text and version, so no code that reads a package or an input is in its closure"
+    },
+    {
+      "rule": "single-entry-point",
+      "package": "github.com/kottera/metais/internal/skill",
+      "imports": "github.com/kottera/metais/internal/hostfs",
+      "function": "Install",
+      "reason": "ADR-009 A5 items 2 and 4: the skill package reaches the host only through Install, which reads and writes the two fixed skill paths beneath the directory its caller names"
+    },
+    {
       "rule": "test-only",
       "package": "github.com/kottera/metais/internal/pkgtree/pkgtreetest",
       "reason": "ADR-010 D2 item 2: pkgtreetest is a test-only helper package, an importable package only so that other packages' tests can build a package in memory and hold a Tree to its contract; no release code imports it"
