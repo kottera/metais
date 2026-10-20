@@ -1446,6 +1446,25 @@ A release can be built.
 - R2-161: the release is built twice. R2-175: the matrix. R2-178: one defect
   per hostile package.
 
+**Rulings made during the wave:**
+- **The SC7 harness's every-command reach runs over every vector at the wave
+  tier, not in every `go test`** (plan orchestrator, 2026-10-20; for Ed to
+  ratify, because it extends ADR-010 A5).
+  - Over every vector, the reach is 28,908 processes. At the gate's share of
+    the host it timed out once Wave 6's corpus landed.
+  - Every `go test` still runs TestHostIsolation over every vector with the
+    release build (variables, decoys, both path modes, checks 1 to 4, and
+    the crash check), and runs the reach over the canaries' probes and its
+    self-test. So a harness that stops catching a leak still goes red on
+    every change.
+  - The full reach over every vector is a named wave-tier step in
+    `gate.sh wave`, split by area within the existing timeout. It runs at
+    every wave's verification and before the release.
+  - No check is dropped, no timeout raised, and no host share enlarged.
+- **The release builder (W6-13) is held** until Ed's design session
+  `01a1566e-2786-7173-84ff-c1485fcf8cdf` rules. His ruling is recorded here
+  when it comes.
+
 ## 13. Wave 7 — the example packages and the close-out
 
 **Objective.** The use cases of PRD §4.1 to §4.5 ship as packages, and the
