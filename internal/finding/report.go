@@ -36,7 +36,7 @@ type Report struct {
 	// report's cap counts every finding it lists, those within
 	// alternatives too (MTS-FND-020), and lists the findings it holds
 	// only while they leave the cap room.
-	flat bool
+	flat   bool
 	groups map[[sha256.Size]byte]*group
 	listed itemHeap // the last listed finding first
 	spill  itemHeap // past the cap, tying with listed's first on the prefix; the first in order first
