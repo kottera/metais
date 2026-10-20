@@ -6,6 +6,7 @@ package testenv
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -104,8 +105,12 @@ func TestGitEnv(t *testing.T) {
 }
 
 func TestParseGoHost(t *testing.T) {
-	environ := []string{"HOME=/home/x", "PATH=/usr/bin:/bin", "GOMODCACHE=/elsewhere", "GOFLAGS=-mod=mod"}
-	out := []byte(`{"CC": "clang", "GOCACHE": "/home/x/Library/Caches/go-build", "GOMODCACHE": "/home/x/go/pkg/mod", "GOROOT": "/usr/local/go"}`)
+	environ := []string{
+		"HOME=/home/x", "PATH=/usr/bin:/bin", "GOMODCACHE=/elsewhere", "GOFLAGS=-mod=mod",
+		"CC_TOOLCHAIN_TARGET_GLIBC=2.31", "ZIG_GLOBAL_CACHE_DIR=/z", "SDKROOT=/sdk", "DEVELOPER_DIR=/dev",
+		"CC_TOOLCHAIN=x", "CCACHE_DIR=/cc", "SDKROOTS=/no", "CPATH=/inc", "GOARCH=386",
+	}
+	out := []byte(`{"CC": "clang", "CXX": "clang++", "CGO_CFLAGS": "-O2 -g", "CGO_CPPFLAGS": "", "CGO_CXXFLAGS": "-O2 -g", "CGO_LDFLAGS": "-O2 -g", "GOCACHE": "/home/x/Library/Caches/go-build", "GOMODCACHE": "/home/x/go/pkg/mod", "GOROOT": "/usr/local/go"}`)
 	h, err := ParseGoHost(environ, out)
 	if err != nil {
 		t.Fatal(err)
@@ -114,10 +119,13 @@ func TestParseGoHost(t *testing.T) {
 		GOROOT:     "/usr/local/go",
 		GOMODCACHE: "/home/x/go/pkg/mod",
 		GOCACHE:    "/home/x/Library/Caches/go-build",
-		CC:         "clang",
 		PATH:       "/usr/bin:/bin",
+		CToolchain: []string{
+			"CC=clang", "CXX=clang++", "CGO_CFLAGS=-O2 -g", "CGO_CXXFLAGS=-O2 -g", "CGO_LDFLAGS=-O2 -g",
+			"CC_TOOLCHAIN_TARGET_GLIBC=2.31", "ZIG_GLOBAL_CACHE_DIR=/z", "SDKROOT=/sdk", "DEVELOPER_DIR=/dev",
+		},
 	}
-	if h != want {
+	if !reflect.DeepEqual(h, want) {
 		t.Errorf("ParseGoHost = %+v, want %+v", h, want)
 	}
 	if got, want := h.Go(), filepath.Join("/usr/local/go", "bin", "go"); got != want {
@@ -140,29 +148,35 @@ func TestParseGoHost(t *testing.T) {
 }
 
 // TestGoEnv pins the whole environment GoEnv gives: exactly these
-// variables, once each, and nothing of the host's but what GoHost names.
+// variables, once each, and nothing of the host's but what GoHost names:
+// its C toolchain among them, whose variables the race build's C compiler
+// needs to run.
 func TestGoEnv(t *testing.T) {
-	h := GoHost{GOROOT: "/r", GOMODCACHE: "/m", GOCACHE: "/c", CC: "clang", PATH: "/bin"}
+	h := GoHost{GOROOT: "/r", GOMODCACHE: "/m", GOCACHE: "/c", PATH: "/bin",
+		CToolchain: []string{"CC=zig-cc", "CGO_CFLAGS=-O2 -g", "CC_TOOLCHAIN_TARGET_GLIBC=2.31", "SDKROOT=/sdk"}}
 	dir := Dir(t)
 	want := map[string]string{
-		"HOME":        dir,
-		"USERPROFILE": dir,
-		"TMPDIR":      dir,
-		"TMP":         dir,
-		"TEMP":        dir,
-		"GOTMPDIR":    dir,
-		"GOPATH":      filepath.Join(dir, "gopath"),
-		"PATH":        filepath.Join("/r", "bin") + string(os.PathListSeparator) + "/bin",
-		"CC":          "clang",
-		"GOENV":       "off",
-		"GOWORK":      "off",
-		"GOFLAGS":     "-mod=readonly -buildvcs=false",
-		"GOPROXY":     "off",
-		"GOSUMDB":     "off",
-		"GOTOOLCHAIN": "local",
-		"GOMODCACHE":  "/m",
-		"GOCACHE":     "/c",
-		"CGO_ENABLED": "0",
+		"HOME":                      dir,
+		"USERPROFILE":               dir,
+		"TMPDIR":                    dir,
+		"TMP":                       dir,
+		"TEMP":                      dir,
+		"GOTMPDIR":                  dir,
+		"GOPATH":                    filepath.Join(dir, "gopath"),
+		"PATH":                      filepath.Join("/r", "bin") + string(os.PathListSeparator) + "/bin",
+		"CC":                        "zig-cc",
+		"CGO_CFLAGS":                "-O2 -g",
+		"CC_TOOLCHAIN_TARGET_GLIBC": "2.31",
+		"SDKROOT":                   "/sdk",
+		"GOENV":                     "off",
+		"GOWORK":                    "off",
+		"GOFLAGS":                   "-mod=readonly -buildvcs=false",
+		"GOPROXY":                   "off",
+		"GOSUMDB":                   "off",
+		"GOTOOLCHAIN":               "local",
+		"GOMODCACHE":                "/m",
+		"GOCACHE":                   "/c",
+		"CGO_ENABLED":               "0",
 	}
 	got := GoEnv(h, dir)
 	seen := map[string]bool{}

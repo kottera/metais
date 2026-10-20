@@ -82,18 +82,35 @@ func GitEnv(environ []string) []string {
 // arguments, in the environment the test process started with and
 // GOTOOLCHAIN=local, so the answer names the host's own toolchain and
 // caches whatever HOME a test has since set.
-var GoHostQuery = []string{"env", "-json", "GOROOT", "GOMODCACHE", "GOCACHE", "CC"}
+var GoHostQuery = append([]string{"env", "-json", "GOROOT", "GOMODCACHE", "GOCACHE"}, cGoEnv...)
+
+// cGoEnv is the go command's own configuration of the C toolchain: the
+// compilers a cgo build (the race detector's, on linux) calls and the flags
+// it gives them.
+var cGoEnv = []string{"CC", "CXX", "CGO_CFLAGS", "CGO_CPPFLAGS", "CGO_CXXFLAGS", "CGO_LDFLAGS"}
+
+// cCompilerEnv is the C compiler's own configuration, which the compiler
+// reads from its environment rather than the go command passing it: the
+// variables of the cc toolchain's shim, which refuses to compile without
+// its target (CC_TOOLCHAIN_*), of the zig it runs (ZIG_*), and of Apple's
+// xcrun, by which /usr/bin/cc and the shim find the SDK (SDKROOT,
+// DEVELOPER_DIR). A name that ends in "_" is a prefix.
+var cCompilerEnv = []string{"CC_TOOLCHAIN_", "ZIG_", "SDKROOT", "DEVELOPER_DIR"}
 
 // GoHost is the whole of what a go command a test runs takes from the host:
-// the toolchain, the module cache it already holds, its build cache, and
-// the C compiler and PATH that a cgo build (the race detector's) finds it
-// by.
+// the toolchain, the module cache it already holds, its build cache, PATH,
+// and the C toolchain a cgo build (the race detector's) runs.
 type GoHost struct {
 	GOROOT     string
 	GOMODCACHE string
 	GOCACHE    string
-	CC         string
 	PATH       string
+	// CToolchain is the host's C toolchain, as KEY=VALUE: the go command's
+	// configuration of it that go env reports (cGoEnv), and the compiler's
+	// own variables of the host's environment (cCompilerEnv). It decides
+	// how C compiles on this host, and nothing of what Go code, modules or
+	// flags a build takes.
+	CToolchain []string
 }
 
 // ParseGoHost reads a GoHost from goEnv, the output of the go command run
@@ -102,13 +119,23 @@ type GoHost struct {
 // Pass the environment the test process started with, taken before any
 // test changed it; ParseGoHost reads no environment of its own.
 func ParseGoHost(environ []string, goEnv []byte) (GoHost, error) {
-	var h GoHost
-	if err := json.Unmarshal(goEnv, &h); err != nil {
+	var vars map[string]string
+	if err := json.Unmarshal(goEnv, &vars); err != nil {
 		return GoHost{}, fmt.Errorf("reading go env -json: %v", err)
 	}
+	h := GoHost{GOROOT: vars["GOROOT"], GOMODCACHE: vars["GOMODCACHE"], GOCACHE: vars["GOCACHE"]}
+	for _, k := range cGoEnv {
+		if v := vars[k]; v != "" {
+			h.CToolchain = append(h.CToolchain, k+"="+v)
+		}
+	}
 	for _, kv := range environ {
-		if k, v, _ := strings.Cut(kv, "="); strings.EqualFold(k, "PATH") {
+		k, v, _ := strings.Cut(kv, "=")
+		if strings.EqualFold(k, "PATH") {
 			h.PATH = v
+		}
+		if isCCompilerVar(k) {
+			h.CToolchain = append(h.CToolchain, kv)
 		}
 	}
 	switch {
@@ -120,6 +147,15 @@ func ParseGoHost(environ []string, goEnv []byte) (GoHost, error) {
 		return GoHost{}, fmt.Errorf("go env reports GOCACHE %q; a build needs a build cache", h.GOCACHE)
 	}
 	return h, nil
+}
+
+func isCCompilerVar(k string) bool {
+	for _, name := range cCompilerEnv {
+		if k == name || strings.HasSuffix(name, "_") && strings.HasPrefix(k, name) {
+			return true
+		}
+	}
+	return false
 }
 
 // Go is the go command of h's toolchain.
@@ -145,13 +181,17 @@ func (h GoHost) Go() string {
 //     would be read-only and RemoveAll could not delete it;
 //   - GOCACHE is the host's build cache, which changes how long a build
 //     takes and never what it builds;
+//   - the C toolchain is the host's (h.CToolchain), with the
+//     configuration a C compiler the host configured needs to run here:
+//     it decides how C compiles on this host, never which Go code,
+//     modules or Go flags a build takes;
 //   - -buildvcs=false stamps no VCS information, so neither git nor the
 //     tree's state reaches the binary;
 //   - CGO_ENABLED=0, which a caller that builds with the race detector
 //     overrides by appending CGO_ENABLED=1: the last value of a variable
 //     is the one a command sees.
 func GoEnv(h GoHost, dir string) []string {
-	return []string{
+	env := []string{
 		"HOME=" + dir,
 		"USERPROFILE=" + dir,
 		"TMPDIR=" + dir,
@@ -160,7 +200,6 @@ func GoEnv(h GoHost, dir string) []string {
 		"GOTMPDIR=" + dir,
 		"GOPATH=" + filepath.Join(dir, "gopath"),
 		"PATH=" + filepath.Join(h.GOROOT, "bin") + string(os.PathListSeparator) + h.PATH,
-		"CC=" + h.CC,
 		"GOENV=off",
 		"GOWORK=off",
 		"GOFLAGS=-mod=readonly -buildvcs=false",
@@ -171,4 +210,5 @@ func GoEnv(h GoHost, dir string) []string {
 		"GOCACHE=" + h.GOCACHE,
 		"CGO_ENABLED=0",
 	}
+	return append(env, h.CToolchain...)
 }

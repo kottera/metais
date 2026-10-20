@@ -185,7 +185,8 @@ Agents that do not load skills read them as plain files:
   `internal/testenv`, never with the developer's real configuration. A
   test that runs the go command gives it `testenv.GoEnv`'s whole
   environment: the host's module cache, read only, and no proxy, so it
-  never downloads a module.
+  never downloads a module. Of the host's configuration it keeps only the C
+  toolchain's, so a race build's C compiler runs where it is a wrapper.
 - **Dependencies are few and justified.** A new module dependency is named
   in the ADR that needs it.
 
