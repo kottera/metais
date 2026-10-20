@@ -30,7 +30,14 @@ import (
 // which the input and schema limits bound, so exact totals and an exact
 // list never cost more than that beside the cap.
 type Report struct {
-	max    int
+	max int
+	// flat counts each finding as one, whatever its alternatives list: a
+	// branch's cap counts its own findings (ADR-006 D6 item 6.4). A
+	// report's cap counts every finding it lists, those within
+	// alternatives too (MTS-FND-020).
+	flat bool
+	// weight is how many findings the listed findings list together.
+	weight int
 	groups map[[sha256.Size]byte]*group
 	listed itemHeap // the last listed finding first
 	spill  itemHeap // past the cap, tying with listed's first on the prefix; the first in order first
@@ -218,41 +225,58 @@ func (r *Report) count(f Finding) {
 	}
 }
 
-// insert lists it if the list has room or it sorts before the last listed
-// finding, and keeps whatever that pushes past the cap in the spill while
-// it ties with the new last listed finding on the prefix. Every finding in
-// the spill ties with the last listed one, so when that changes to one
-// earlier on the prefix, the whole spill goes: it sorts after every
-// finding that can still be listed.
+// lists is how many findings f counts for against the cap.
+func (r *Report) lists(f Finding) int {
+	if r.flat {
+		return 1
+	}
+	return f.listed
+}
+
+// insert lists it, and then trims the list to the cap.
 func (r *Report) insert(it *item) {
 	heap.Push(&r.listed, it)
-	if r.listed.Len() <= r.max {
-		return
-	}
-	out := heap.Pop(&r.listed).(*item)
-	r.lost = true
-	if r.listed.Len() == 0 {
-		drop(out)
-		return
-	}
-	last := r.listed.items[0].f
-	if comparePrefix(out.f, last) == 0 {
-		heap.Push(&r.spill, out)
-	} else {
-		drop(out)
-	}
-	if r.spill.Len() > 0 && comparePrefix(r.spill.items[0].f, last) != 0 {
-		for _, s := range r.spill.items {
-			drop(s)
+	r.weight += r.lists(it.f)
+	r.trim()
+}
+
+// trim takes off the list every finding that starts past the cap: one
+// that the findings before it fill the cap without (MTS-FND-020). The last
+// listed finding may still list more than is left; Findings cuts it short.
+// trim keeps what it takes off in the spill while it ties with the new
+// last listed finding on the prefix. Every finding in the spill ties with
+// the last listed one, so when that changes to one earlier on the prefix,
+// the whole spill goes: it sorts after every finding that can still be
+// listed.
+func (r *Report) trim() {
+	for r.listed.Len() > 0 && r.weight-r.lists(r.listed.items[0].f) >= r.max {
+		out := heap.Pop(&r.listed).(*item)
+		r.weight -= r.lists(out.f)
+		r.lost = true
+		if r.listed.Len() == 0 {
+			drop(out)
+			continue
 		}
-		r.spill.items = nil
+		last := r.listed.items[0].f
+		if comparePrefix(out.f, last) == 0 {
+			heap.Push(&r.spill, out)
+		} else {
+			drop(out)
+		}
+		if r.spill.Len() > 0 && comparePrefix(r.spill.items[0].f, last) != 0 {
+			for _, s := range r.spill.items {
+				drop(s)
+			}
+			r.spill.items = nil
+		}
 	}
 }
 
 func drop(it *item) { it.g.it = nil }
 
 // remove takes it out of the report, listing the first of the spill in its
-// place when it was listed.
+// place while the cap has room when it was listed. The spill sorts after
+// every listed finding, so the first of it starts where the list ends.
 func (r *Report) remove(it *item) {
 	drop(it)
 	if it.spilled {
@@ -260,8 +284,11 @@ func (r *Report) remove(it *item) {
 		return
 	}
 	heap.Remove(&r.listed, it.index)
-	if r.spill.Len() > 0 {
-		heap.Push(&r.listed, heap.Pop(&r.spill))
+	r.weight -= r.lists(it.f)
+	for r.spill.Len() > 0 && r.weight < r.max {
+		in := heap.Pop(&r.spill).(*item)
+		heap.Push(&r.listed, in)
+		r.weight += r.lists(in.f)
 	}
 }
 
@@ -278,13 +305,18 @@ func (r *Report) Findings() []Finding {
 	return out
 }
 
-// sorted is the listed findings in D8's order.
+// sorted is the listed findings in D8's order, the last cut short to what
+// the cap has left for it (MTS-FND-021).
 func (r *Report) sorted() []Finding {
 	out := make([]Finding, 0, r.listed.Len()+1)
 	for _, it := range r.listed.items {
 		out = append(out, it.f)
 	}
 	slices.SortFunc(out, Compare)
+	if !r.flat && r.weight > r.max {
+		last := len(out) - 1
+		out[last] = out[last].listAtMost(r.max - (r.weight - out[last].listed))
+	}
 	return out
 }
 

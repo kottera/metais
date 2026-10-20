@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/kottera/metais/internal/finding"
+	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/liquid/value"
 	"github.com/kottera/metais/internal/regexprofile"
 	"github.com/kottera/metais/internal/schemafail"
@@ -216,6 +217,7 @@ func (s *Supply) mapFailures(failures []schemafail.Failure, root *node, states m
 			Subject: s.l.subject(in.Name),
 			Schemas: s.l.pkg.Compiler,
 			Locate:  n.locator(),
+			Listed:  int(min(s.lim.Value(limits.Findings), int64(^uint(0)>>1))),
 		}
 		if st.partial != nil {
 			t.Partial = &schemafail.Partial{Kept: st.partial.kept, Unparsed: st.partial.unparsed}
@@ -251,27 +253,28 @@ func (s *Supply) condition(n *schemafail.Failure) finding.Via {
 	}
 }
 
-// strip returns the subtree n about the input name, its instance pointers
-// made the input's own. A subtree the combined schema evaluates through
-// the input's own `properties` member has that step taken off its
-// evaluation path too, which then runs from the input's root schema
-// (ADR-006 D6 item 8), as D7 item 4's suppression reads it.
+// strip makes the subtree n about the input name the input's own, in
+// place, and returns it: its instance pointers lose the input's name, and a
+// subtree the combined schema evaluates through the input's own
+// `properties` member has that step taken off its evaluation path too,
+// which then runs from the input's root schema (ADR-006 D6 item 8), as D7
+// item 4's suppression reads it. The tree is the validation's own and is
+// read once, so a failure tree as large as schema-work allows is never
+// copied.
 func (s *Supply) strip(n *schemafail.Failure, name string, constraint bool) schemafail.Failure {
 	prefix := "/properties/" + finding.Pointer(name)[1:]
-	var cp func(f schemafail.Failure) schemafail.Failure
-	cp = func(f schemafail.Failure) schemafail.Failure {
-		out := f
-		out.InstancePointer = slices.Clone(f.InstancePointer[1:])
+	var cut func(f *schemafail.Failure)
+	cut = func(f *schemafail.Failure) {
+		f.InstancePointer = f.InstancePointer[1:]
 		if !constraint {
 			if rest, ok := strings.CutPrefix(f.KeywordLocation, prefix); ok && (rest == "" || rest[0] == '/') {
-				out.KeywordLocation = rest
+				f.KeywordLocation = rest
 			}
 		}
-		out.Children = make([]schemafail.Failure, len(f.Children))
-		for i, c := range f.Children {
-			out.Children[i] = cp(c)
+		for i := range f.Children {
+			cut(&f.Children[i])
 		}
-		return out
 	}
-	return cp(*n)
+	cut(n)
+	return *n
 }

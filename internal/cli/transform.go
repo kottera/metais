@@ -137,6 +137,7 @@ func validateOutput(pkg *loader.Package, pf *planned, schemas map[string]*schema
 		Family:  schemafail.FamilyOutput,
 		Subject: subj,
 		Schemas: c,
+		Listed:  int(min(lim.Value(limits.Findings), int64(^uint(0)>>1))),
 		Locate: func(p *finding.Path, key bool) finding.Location {
 			l := at
 			got, ok := finding.ValueAt(pos, p)

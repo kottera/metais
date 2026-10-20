@@ -189,6 +189,7 @@ func (o *opening) validate(p *Package) []finding.Finding {
 		Family:  schemafail.FamilyManifest,
 		Subject: manifestSubject,
 		Schemas: manifestSchemas{c},
+		Listed:  int(min(o.lim.Value(limits.Findings), int64(^uint(0)>>1))),
 		Locate: func(ptr *finding.Path, key bool) finding.Location {
 			l := manifestLocation
 			if pos := o.doc.src.Positions; pos != nil {
