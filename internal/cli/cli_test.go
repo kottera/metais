@@ -6,6 +6,7 @@ package cli
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"slices"
 	"strings"
 	"testing"
@@ -13,6 +14,7 @@ import (
 	"github.com/kottera/metais/internal/cli/args"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostenv"
+	"github.com/kottera/metais/internal/version"
 )
 
 // lineCase is one command line, the status it exits with, and the codes
@@ -514,5 +516,56 @@ func TestDispatch(t *testing.T) {
 	stdout.Reset()
 	if status := Main([]string{"version"}, failingReader{t}, &stdout, &stderr, hostenv.Display{NoColor: true}); status != 0 || !strings.HasPrefix(stdout.String(), "metais ") {
 		t.Errorf("Main(version) = %d, %q", status, stdout.String())
+	}
+}
+
+// TestMemoryStop is ADR-009 Amendment A6 item 6's report: a command the
+// memory backstop stopped is reported as internal.memory with status 2,
+// carrying the tool's version and nothing else, in the format and on the
+// stream its own report would have used, a refused line's and a render
+// to standard output's included.
+func TestMemoryStop(t *testing.T) {
+	for _, c := range []struct {
+		argv []string
+		doc  string // the stream the JSON document is on, or "" in human form
+	}{
+		{[]string{"version"}, ""},
+		{[]string{"version", "--json"}, "stdout"},
+		{[]string{"validate", "pkg.metais", "--json"}, "stdout"},
+		{[]string{"render", "pkg.metais", "--out", "-", "--json"}, "stderr"},
+		{[]string{"--json", "no-such-command"}, "stdout"},
+	} {
+		var stdout, stderr bytes.Buffer
+		status := memoryStop(Invocation{Args: c.argv, Stdout: &stdout, Stderr: &stderr})
+		if status != finding.ExitInternal {
+			t.Errorf("metais %q exited %d, want 2", c.argv, status)
+		}
+		if c.doc == "" {
+			if stdout.Len() != 0 || !strings.Contains(stderr.String(), "internal.memory") {
+				t.Errorf("metais %q: standard output %q, standard error %q", c.argv, stdout.String(), stderr.String())
+			}
+			continue
+		}
+		doc, other := &stdout, &stderr
+		if c.doc == "stderr" {
+			doc, other = &stderr, &stdout
+		}
+		if other.Len() != 0 {
+			t.Errorf("metais %q wrote %q beside its document", c.argv, other.String())
+		}
+		if err := checkDocument(doc.Bytes()); err != nil {
+			t.Errorf("metais %q: %v", c.argv, err)
+		}
+		var d document
+		if err := json.Unmarshal(doc.Bytes(), &d); err != nil {
+			t.Fatalf("metais %q: %v", c.argv, err)
+		}
+		if d.OK || len(d.Findings) != 1 || d.Findings[0].Code != "internal.memory" || len(d.Next) == 0 {
+			t.Errorf("metais %q reported %s", c.argv, doc.Bytes())
+			continue
+		}
+		if p := d.Findings[0].Params; len(p) != 1 || p["tool_version"] != version.String() {
+			t.Errorf("metais %q: internal.memory's params are not its tool_version alone: %s", c.argv, doc.Bytes())
+		}
 	}
 }

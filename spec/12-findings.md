@@ -92,6 +92,7 @@ it, and the statements it reports.
 | `input.unique_items` | error | content | input | `index`, `duplicate_of` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-DAT-013](05-data-specification.md#mts-dat-013), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.validation.partial` | info | content | input | `unparsed`, `suppressed` | 1.0 | [MTS-SUP-029](06-supplying-inputs.md#mts-sup-029) |
 | `internal.error` | error | internal | invocation | `tool_version`, `phase` | 1.0 | — |
+| `internal.memory` | error | internal | invocation | `tool_version` | 1.0 | — |
 | `json.duplicate_name` | error | content | input | `name` | 1.0 | [MTS-SUP-003](06-supplying-inputs.md#mts-sup-003) |
 | `json.lone_surrogate` | error | content | input | — | 1.0 | [MTS-SUP-004](06-supplying-inputs.md#mts-sup-004) |
 | `json.noncharacter` | error | content | input | — | 1.0 | [MTS-SUP-004](06-supplying-inputs.md#mts-sup-004) |

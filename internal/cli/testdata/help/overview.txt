@@ -70,8 +70,9 @@ Exit codes:
   1  An error in content: invalid inputs, a failing check or test, an output
      refused by its schema or its path, a package's own defect under an
      authoring command, or a warning under --fail-on warning.
-  2  A defect in metais itself (internal.error), or the Go runtime's status
-     after a crash.
+  2  A defect in metais itself (internal.error, or internal.memory when it stops
+     a command holding more memory than it allows itself), or the Go runtime's
+     status after a crash.
   3  The command line is wrong: an unknown command or flag, a missing or extra
      operand, a malformed or repeated flag, or no command at all.
   4  The package is refused: not found, unreadable, out of specification, a

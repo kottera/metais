@@ -176,7 +176,7 @@
       },
       {
         "code": 2,
-        "meaning": "A defect in metais itself (internal.error), or the Go runtime's status after a crash."
+        "meaning": "A defect in metais itself (internal.error, or internal.memory when it stops a command holding more memory than it allows itself), or the Go runtime's status after a crash."
       },
       {
         "code": 3,

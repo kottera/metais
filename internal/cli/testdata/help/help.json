@@ -21849,7 +21849,7 @@
       {
         "name": "exit-codes",
         "title": "What each exit status means.",
-        "text": "metais exits with the same status with and without --json:\n\n  0  Success, warnings included; help, version and limits.\n  1  An error in content: invalid inputs, a failing check or test, an output\n     refused by its schema or its path, a package's own defect under an\n     authoring command, or a warning under --fail-on warning.\n  2  A defect in metais itself (internal.error), or the Go runtime's status\n     after a crash.\n  3  The command line is wrong: an unknown command or flag, a missing or extra\n     operand, a malformed or repeated flag, or no command at all.\n  4  The package is refused: not found, unreadable, out of specification, a\n     digest mismatch, an unsupported specification version or a package limit;\n     or a package's own defect under a consuming command.\n  5  The destination is refused: not empty without --overwrite, a link or\n     special file in the way, or a failed write.\n\nWhen several apply, the first in the order 2, 3, 4, 1, 5 is the status: fixing a\ndestination alone would not help a run whose inputs are invalid.\n"
+        "text": "metais exits with the same status with and without --json:\n\n  0  Success, warnings included; help, version and limits.\n  1  An error in content: invalid inputs, a failing check or test, an output\n     refused by its schema or its path, a package's own defect under an\n     authoring command, or a warning under --fail-on warning.\n  2  A defect in metais itself (internal.error, or internal.memory when it stops\n     a command holding more memory than it allows itself), or the Go runtime's\n     status after a crash.\n  3  The command line is wrong: an unknown command or flag, a missing or extra\n     operand, a malformed or repeated flag, or no command at all.\n  4  The package is refused: not found, unreadable, out of specification, a\n     digest mismatch, an unsupported specification version or a package limit;\n     or a package's own defect under a consuming command.\n  5  The destination is refused: not empty without --overwrite, a link or\n     special file in the way, or a failed write.\n\nWhen several apply, the first in the order 2, 3, 4, 1, 5 is the status: fixing a\ndestination alone would not help a run whose inputs are invalid.\n"
       },
       {
         "name": "refusals",
@@ -21868,7 +21868,7 @@
       },
       {
         "code": 2,
-        "meaning": "A defect in metais itself (internal.error), or the Go runtime's status after a crash."
+        "meaning": "A defect in metais itself (internal.error, or internal.memory when it stops a command holding more memory than it allows itself), or the Go runtime's status after a crash."
       },
       {
         "code": 3,
