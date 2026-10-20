@@ -321,8 +321,8 @@ func inspectOutcome(pkg *loader.Package, guideOnly bool, t []*Command) outcome {
 		}
 	}
 	exList := make([]inspectExample, 0, len(examples))
-	for _, ex := range examples {
-		exList = append(exList, *ex)
+	for _, name := range sortedKeys(examples) {
+		exList = append(exList, *examples[name])
 	}
 	res.Inputs, res.Outputs, res.References, res.Assets, res.Examples = &inputs, &outputs, refs, assets, &exList
 	return outcome{result: res, human: inspectHuman(res), next: inspectNext(res, t)}

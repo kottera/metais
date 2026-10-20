@@ -283,3 +283,37 @@ func TestInspectOpensTheScaffold(t *testing.T) {
 		t.Errorf("metais inspect of init's scaffold: status %d, %s", r.status, r.stdout)
 	}
 }
+
+// TestInspectExamplesInNameOrder is ADR-008 D6 items 7 and 8 (W7-C3):
+// inspect lists a package's examples in name order, names compared by code
+// point as ADR-004 compares strings, every run alike, and the Read next
+// list's example step names the first of them. The package has seven examples, so a list built
+// in map order differs from name order within a few runs.
+func TestInspectExamplesInNameOrder(t *testing.T) {
+	testenv.Home(t)
+	p := filepath.Join(vectorsDir, "aut/test-containers/package")
+	want := []string{"content", "equal", "method", "missing", "order", "unexpected", "unreadable"}
+	for i := range 32 {
+		r := runTool(t, "inspect", "--json", p)
+		if !r.doc.OK {
+			t.Fatalf("metais inspect %s: %s", p, r.stdout)
+		}
+		var res struct {
+			Examples []struct{ Name string }
+		}
+		if err := json.Unmarshal(r.doc.Result, &res); err != nil {
+			t.Fatal(err)
+		}
+		var got []string
+		for _, ex := range res.Examples {
+			got = append(got, ex.Name)
+		}
+		if !slices.Equal(got, want) {
+			t.Fatalf("run %d: examples %q, want %q", i, got, want)
+		}
+		step := "metais ls <package> examples/" + want[0] + "/ -r"
+		if !slices.ContainsFunc(r.doc.Next, func(n Next) bool { return n.Run == step }) {
+			t.Fatalf("run %d: next %v names no %q", i, r.doc.Next, step)
+		}
+	}
+}

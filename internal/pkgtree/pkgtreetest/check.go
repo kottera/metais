@@ -32,12 +32,12 @@ import (
 // purpose, with want the entries it was built from.
 func Check(t pkgtree.Tree, want map[string][]byte) error {
 	c := &checker{t: t}
-	c.list(want)
 	paths := make([]string, 0, len(want))
 	for p := range want {
 		paths = append(paths, p)
 	}
 	slices.Sort(paths)
+	c.list(want, paths)
 	for _, p := range paths {
 		c.entry(p, want[p])
 	}
@@ -56,8 +56,9 @@ func (c *checker) fail(msg string) {
 	c.errs = append(c.errs, errors.New("pkgtreetest: "+msg))
 }
 
-// list checks List.
-func (c *checker) list(want map[string][]byte) {
+// list checks List, given want and its paths in byte order, the order in
+// which a missing entry is reported.
+func (c *checker) list(want map[string][]byte, paths []string) {
 	got := c.t.List()
 	for i, p := range got {
 		if i > 0 && got[i-1] >= p {
@@ -72,7 +73,7 @@ func (c *checker) list(want map[string][]byte) {
 			c.fail("List: " + q(p) + " is listed but is not a wanted entry")
 		}
 	}
-	for p := range want {
+	for _, p := range paths {
 		if !slices.Contains(got, p) {
 			c.fail("List: wanted entry " + q(p) + " is not listed")
 		}
