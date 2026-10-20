@@ -66,5 +66,5 @@ plan §6's act reports back.
 are run and compared with their committed baselines, and which benchmark
 measures which budget.
 
-[dev/rounds/](dev/rounds/) holds the runbooks of the live rounds of plan §6:
+`dev/rounds/` holds the runbooks of the live rounds of plan §6:
 each note says what its round establishes and what it reports back.

@@ -16,9 +16,11 @@ outputs, and lets authors check, test and pack their own packages.
 
 - **The specification's 1.0 text** is in [`spec/`](spec/README.md). Its front
   page reads `Status: Draft`: it is complete for review and not yet
-  released. Every normative sentence is a numbered `MTS-` statement, and the
-  conformance vectors under `spec/conformance/` prove each one.
-- **The reference tool** implements every command, and passes every vector.
+  released. Every normative sentence is a numbered `MTS-` statement, and
+  each observable one is proved by a conformance vector under
+  `spec/conformance/`.
+- **The reference tool** implements every command, and passes every
+  conformance vector.
   It is built and tested from this repository; there is no published
   binary yet.
 - **The release is still to come.** The specification is released first,
@@ -107,7 +109,7 @@ path step by step.
 
 ## Example packages
 
-The example packages live under [`examples/`](examples/), one source
+The example packages live under `examples/`, one source
 directory each, `examples/<name>/`. Each package's guide in its
 `metais.yaml` and its meaning documents under `inputs/` are its
 documentation, and its `references/` records the sources it was written
