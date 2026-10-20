@@ -16,7 +16,7 @@ _tools/x.go | internal/guarantees
 internal/dates/dates.go | internal/dates internal/cli internal/guarantees internal/conformance cmd/metais | code internal/dates/dates.go
 cmd/metais/main.go | cmd/metais internal/guarantees internal/conformance | code cmd/metais/main.go
 internal/zipfmt/testdata/x.zip | internal/zipfmt
-internal/finding/testdata/unwired.txt | internal/finding
+internal/finding/testdata/x.txt | internal/finding
 internal/specdata/schemas/x.json | internal/specdata
 spec/13-authoring.md | internal/guarantees internal/conformance internal/specdata internal/loader
 examples/x/example.yaml | internal/guarantees

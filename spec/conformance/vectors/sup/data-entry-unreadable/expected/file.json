@@ -1,0 +1,18 @@
+[
+  {
+    "code": "input.not_readable",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "report",
+      "title": "Report"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "report.json"
+    },
+    "params": {
+      "reason": "permission_denied"
+    }
+  }
+]

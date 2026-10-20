@@ -159,7 +159,7 @@ Refusals:
                         Next: metais test <package>
   limit.exceeded.* (2)  An example's output is refused.
                         Next: metais test <package>
-  manifest.* (60)       The manifest breaks one of its rules.
+  manifest.* (44)       The manifest breaks one of its rules.
                         Next: metais test <package>
   markdown.* (3)        An example's inputs are refused.
                         Next: metais test <package>

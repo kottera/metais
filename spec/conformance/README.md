@@ -53,16 +53,52 @@ empty `dirs`, the `symlinks` and the `fifos`, then the package and every tree
 or file the steps' arguments name, each at the same relative path, and last
 the `unwritable` directories, each made mode 0555 so the implementation can
 list it and cannot create, rename or remove anything in it: the pre-state of
-a write that fails. Steps of a case share the work directory, in order; cases
+a write that fails. After them come the `unreadable` paths, files and
+directories the rest of the setup put in place, each made mode 0000 so the
+implementation can neither read the file nor list the directory. The runner
+gives every unwritable and unreadable path its mode back when the case's
+steps are done. Steps of a case share the work directory, in order; cases
 never share one.
 
+The setup's `absent` paths are paths that must not exist in the work
+directory when the first step runs, such as the operand of a refusal that
+nothing is at the path given. A step's argument may name one; the runner
+copies nothing for it and checks, before the first step, that it is absent.
+Every other path a step reads is in the vector's directory, but an `absent`
+path is not: a path listed `absent` that the vector's directory holds, or
+that no step names, is a harness error, as is one that exists in the work
+directory before the first step.
+
+The setup's `renames` and `file_size_limit` make, when the case runs, what the
+committed suite cannot hold. Each of `renames` names a path the rest of the
+setup put in place and a new last segment for it, holding a colon or a
+backslash, which no path of the committed suite may hold; the runner renames
+the path in its own directory before it makes any directory unwritable or any
+path unreadable. `file_size_limit` is the largest file, in bytes, that every
+process a step starts may write: the runner starts each with that file-size
+resource limit (`RLIMIT_FSIZE`) and with `SIGXFSZ` ignored, so a write that
+would make a file larger fails with an error and does not end the process. A
+rename to a name that holds neither a colon nor a backslash, or that is more
+than one segment, is a harness error.
+
 A case that `requires` something the host does not offer (`symlinks`,
-`fifos`, `case-sensitive-fs`, `unwritable-dirs`) is skipped with the reason.
-A skip is reported, and is never counted as a pass. `unwritable-dirs` is
-absent where a directory of mode 0555 still lets the runner's own process
-create a file, a directory or a rename in it: when it runs as root, or on a
-platform whose directory modes do not govern writing, such as Windows. A
-vector whose setup names an `unwritable` directory requires it.
+`fifos`, `case-sensitive-fs`, `unwritable-dirs`, `unreadable-files`,
+`nonportable-names`, `file-size-limit`) is skipped with the reason. A skip is reported, and is never counted as a pass.
+`unwritable-dirs` is absent where a directory of mode 0555 still lets the
+runner's own process create a file, a directory or a rename in it, and
+`unreadable-files` where a file of mode 0000 still lets it open the file for
+reading: when it runs as root, or on a platform whose modes do not govern
+writing or reading, such as Windows. A vector whose setup names an
+`unwritable` directory requires `unwritable-dirs`, and one whose setup names
+an `unreadable` path requires `unreadable-files`; a vector that does not is a
+harness error. `nonportable-names` is met where the runner can create a file
+whose name holds a colon and one whose name holds a backslash, and list each
+back under its name, and `file-size-limit` where a process the runner starts
+under a file-size limit is refused a write past it; neither is met on
+Windows. A vector whose setup has `renames` requires `nonportable-names`, and
+one whose setup sets `file_size_limit` requires `file-size-limit`; a vector
+that does not is a harness error. `absent` needs no requirement, because
+every platform can leave a path out.
 
 Every case runs twice, in two environments, and every byte observed in one,
 and every process's exit status, must equal what is observed in the other:

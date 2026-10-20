@@ -578,7 +578,7 @@ var packageCodes = []Entry{
 		Hint:       "Give the path of a packed package file or of a source directory; the path is opened as given, relative to the working directory.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-PKG-001"},
 	},
 	{
 		Code:     "package.not_readable",
@@ -592,7 +592,7 @@ var packageCodes = []Entry{
 		Hint:       "Give the path of a packed package file or of a source directory that metais may read.",
 		Span:       SpanNone,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-PKG-046"},
 	},
 	{
 		Code:     "package.version.malformed",

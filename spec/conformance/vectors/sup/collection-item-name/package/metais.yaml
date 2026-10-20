@@ -1,0 +1,15 @@
+metais: "1.0"
+name: org.example.items
+version: 1.0.0
+title: Items
+description: A package whose one input is a collection.
+guide: Supply the items, one file each.
+inputs:
+  - name: items
+    title: Items
+    schema: inputs/items.schema.json
+    forms: [json]
+    collection: true
+outputs:
+  - id: report
+    template: report.md.liquid

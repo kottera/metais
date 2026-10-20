@@ -1,0 +1,9 @@
+[
+  {
+    "code": "package.not_found",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    }
+  }
+]

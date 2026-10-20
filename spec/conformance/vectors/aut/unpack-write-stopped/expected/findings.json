@@ -1,0 +1,15 @@
+[
+  {
+    "code": "output.destination.write_failed",
+    "severity": "error",
+    "subject": {
+      "kind": "invocation"
+    },
+    "params": {
+      "reason": "io_error",
+      "written": [
+        "inputs/report.schema.json"
+      ]
+    }
+  }
+]

@@ -387,7 +387,11 @@ func (a *cliAdapter) run(r *runner, sb *sandbox, v *vector, st *step) ([]*invoca
 // invoke runs one command line and reads ADR-008's envelope from it.
 func (a *cliAdapter) invoke(sb *sandbox, c command, lim limits, dryRun bool) (*invocation, []problem) {
 	inv := &invocation{label: c.args[0]}
-	p, err := runProc(a.path, c.args, sb.cwd, sb.environ(), c.stdin, lim.wall)
+	path, args, err := sb.limited(a.path, c.args)
+	if err != nil {
+		return inv, []problem{{check: checkHarness, harness: true, msg: err.Error()}}
+	}
+	p, err := runProc(path, args, sb.cwd, sb.environ(), c.stdin, lim.wall)
 	if err != nil {
 		return inv, []problem{{check: checkHarness, harness: true, msg: err.Error()}}
 	}
@@ -571,7 +575,11 @@ func (a *execAdapter) call(sb *sandbox, req driverRequest, lim limits) (*proc, *
 	if err != nil {
 		return nil, nil, []problem{{check: checkHarness, harness: true, msg: err.Error()}}
 	}
-	p, err := runProc(a.path, nil, sb.cwd, sb.environ(), body, lim.wall)
+	path, args, err := sb.limited(a.path, nil)
+	if err != nil {
+		return nil, nil, []problem{{check: checkHarness, harness: true, msg: err.Error()}}
+	}
+	p, err := runProc(path, args, sb.cwd, sb.environ(), body, lim.wall)
 	if err != nil {
 		return nil, nil, []problem{{check: checkHarness, harness: true, msg: err.Error()}}
 	}

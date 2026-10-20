@@ -129,24 +129,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -185,22 +169,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -211,14 +179,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -289,14 +249,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -313,30 +265,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -347,30 +275,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -395,14 +299,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -441,14 +337,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -459,22 +347,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -1307,24 +1179,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -1363,22 +1219,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -1389,14 +1229,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -1467,14 +1299,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -1491,30 +1315,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -1525,30 +1325,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -1573,14 +1349,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -1619,14 +1387,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -1637,22 +1397,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -2499,24 +2243,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -2555,22 +2283,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -2581,14 +2293,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -2659,14 +2363,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -2683,30 +2379,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -2717,30 +2389,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -2765,14 +2413,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -2811,14 +2451,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -2829,22 +2461,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -3703,24 +3319,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -3759,22 +3359,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -3785,14 +3369,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -3863,14 +3439,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -3887,30 +3455,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -3921,30 +3465,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -3969,14 +3489,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -4015,14 +3527,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -4033,22 +3537,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -4923,24 +4411,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -4979,22 +4451,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -5005,14 +4461,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -5083,14 +4531,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -5107,30 +4547,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -5141,30 +4557,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -5189,14 +4581,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -5235,14 +4619,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -5253,22 +4629,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -6103,24 +5463,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -6159,22 +5503,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -6185,14 +5513,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -6263,14 +5583,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -6287,30 +5599,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -6321,30 +5609,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -6369,14 +5633,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -6415,14 +5671,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -6433,22 +5681,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -7305,24 +6537,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -7361,22 +6577,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -7387,14 +6587,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -7465,14 +6657,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -7489,30 +6673,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -7523,30 +6683,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -7571,14 +6707,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -7617,14 +6745,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -7635,22 +6755,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -8601,24 +7705,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -8657,22 +7745,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -8683,14 +7755,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -8761,14 +7825,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -8785,30 +7841,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -8819,30 +7851,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -8867,14 +7875,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -8913,14 +7913,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -8931,22 +7923,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -10489,24 +9465,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -10545,22 +9505,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -10571,14 +9515,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -10649,14 +9585,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -10673,30 +9601,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -10707,30 +9611,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -10755,14 +9635,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -10801,14 +9673,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -10819,22 +9683,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -12723,24 +11571,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -12779,22 +11611,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -12805,14 +11621,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -12907,14 +11715,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -12931,30 +11731,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -12965,30 +11741,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13013,14 +11765,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -13059,14 +11803,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -13077,22 +11813,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais check <package>",
-              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais check <package>",
               "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
@@ -14865,24 +13585,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -14921,22 +13625,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -14947,14 +13635,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -15025,14 +13705,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -15049,30 +13721,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -15083,30 +13731,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -15131,14 +13755,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -15177,14 +13793,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -15195,22 +13803,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais inspect <package>",
-              "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Opens the package again once it is fixed or replaced; nothing of a refused package is used."
@@ -16945,24 +15537,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais test <package>",
               "why": "Tests every example again once the package or its examples are fixed."
@@ -17001,22 +15577,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -17027,14 +15587,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais test <package>",
               "why": "Tests every example again once the package or its examples are fixed."
@@ -17105,14 +15657,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -17129,30 +15673,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -17163,30 +15683,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais test <package>",
               "why": "Tests every example again once the package or its examples are fixed."
@@ -17211,14 +15707,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais test <package>",
               "why": "Tests every example again once the package or its examples are fixed."
@@ -17257,14 +15745,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -17275,22 +15755,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais test <package>",
-              "why": "Tests every example again once the package or its examples are fixed."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais test <package>",
               "why": "Tests every example again once the package or its examples are fixed."
@@ -19543,24 +18007,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais check <dir>",
               "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
@@ -19599,22 +18047,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -19625,14 +18057,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais check <dir>",
               "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
@@ -19727,14 +18151,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -19751,30 +18167,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -19785,30 +18177,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais check <dir>",
               "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
@@ -19833,14 +18201,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais check <dir>",
               "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
@@ -19879,14 +18239,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -19897,22 +18249,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais check <dir>",
-              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais check <dir>",
               "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
@@ -21709,24 +20045,8 @@
             }
           },
           {
-            "code": "manifest.additional_item",
-            "cause": "The manifest breaks one of its rules (additional item).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
             "code": "manifest.additional_property",
             "cause": "The manifest breaks one of its rules (additional property).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
-            "code": "manifest.any_of",
-            "cause": "The manifest breaks one of its rules (any of).",
             "next": {
               "run": "metais unpack <package> --to <dir>",
               "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
@@ -21765,22 +20085,6 @@
             }
           },
           {
-            "code": "manifest.exclusive_maximum",
-            "cause": "The manifest breaks one of its rules (exclusive maximum).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
-            "code": "manifest.exclusive_minimum",
-            "cause": "The manifest breaks one of its rules (exclusive minimum).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
             "code": "manifest.file.wrong_name",
             "cause": "The manifest breaks one of its rules (file: wrong name).",
             "next": {
@@ -21791,14 +20095,6 @@
           {
             "code": "manifest.forbidden",
             "cause": "The manifest breaks one of its rules (forbidden).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
-            "code": "manifest.format",
-            "cause": "The manifest breaks one of its rules (format).",
             "next": {
               "run": "metais unpack <package> --to <dir>",
               "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
@@ -21869,14 +20165,6 @@
             }
           },
           {
-            "code": "manifest.max_contains",
-            "cause": "The manifest breaks one of its rules (max contains).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
             "code": "manifest.max_items",
             "cause": "The manifest breaks one of its rules (max items).",
             "next": {
@@ -21893,30 +20181,6 @@
             }
           },
           {
-            "code": "manifest.max_properties",
-            "cause": "The manifest breaks one of its rules (max properties).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
-            "code": "manifest.maximum",
-            "cause": "The manifest breaks one of its rules (maximum).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
-            "code": "manifest.min_contains",
-            "cause": "The manifest breaks one of its rules (min contains).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
             "code": "manifest.min_items",
             "cause": "The manifest breaks one of its rules (min items).",
             "next": {
@@ -21927,30 +20191,6 @@
           {
             "code": "manifest.min_length",
             "cause": "The manifest breaks one of its rules (min length).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
-            "code": "manifest.min_properties",
-            "cause": "The manifest breaks one of its rules (min properties).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
-            "code": "manifest.minimum",
-            "cause": "The manifest breaks one of its rules (minimum).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
-            "code": "manifest.multiple_of",
-            "cause": "The manifest breaks one of its rules (multiple of).",
             "next": {
               "run": "metais unpack <package> --to <dir>",
               "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
@@ -21975,14 +20215,6 @@
           {
             "code": "manifest.one_of",
             "cause": "The manifest breaks one of its rules (one of).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
-            "code": "manifest.one_of.ambiguous",
-            "cause": "The manifest breaks one of its rules (one of: ambiguous).",
             "next": {
               "run": "metais unpack <package> --to <dir>",
               "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
@@ -22021,14 +20253,6 @@
             }
           },
           {
-            "code": "manifest.property_name",
-            "cause": "The manifest breaks one of its rules (property name).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
             "code": "manifest.required",
             "cause": "The manifest breaks one of its rules (required).",
             "next": {
@@ -22039,22 +20263,6 @@
           {
             "code": "manifest.type",
             "cause": "The manifest breaks one of its rules (type).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_item",
-            "cause": "The manifest breaks one of its rules (unevaluated item).",
-            "next": {
-              "run": "metais unpack <package> --to <dir>",
-              "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."
-            }
-          },
-          {
-            "code": "manifest.unevaluated_property",
-            "cause": "The manifest breaks one of its rules (unevaluated property).",
             "next": {
               "run": "metais unpack <package> --to <dir>",
               "why": "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."

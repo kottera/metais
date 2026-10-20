@@ -1,0 +1,18 @@
+[
+  {
+    "code": "input.not_readable",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items"
+    },
+    "params": {
+      "reason": "permission_denied"
+    }
+  }
+]

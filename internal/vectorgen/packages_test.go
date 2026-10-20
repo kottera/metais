@@ -251,6 +251,7 @@ func packageCases() []pkgCase {
 		{"aut/unpack", func(t testing.TB) []byte { return pack(t, treeFiles(t, "aut/unpack", "expected/src")) }},
 		{"aut/unpack-refused", func(t testing.TB) []byte { return pack(t, treeFiles(t, "aut/unpack", "expected/src")) }},
 		{"aut/unpack-write-failed", func(t testing.TB) []byte { return pack(t, treeFiles(t, "aut/unpack", "expected/src")) }},
+		{"aut/unpack-write-stopped", func(t testing.TB) []byte { return pack(t, treeFiles(t, "aut/unpack", "expected/src")) }},
 
 		// The container (ADR-001 D1, D8 steps 1 to 5).
 		{"pkg/not-zip", func(t testing.TB) []byte { return bytes.Repeat([]byte("not a zip archive\n"), 4) }},

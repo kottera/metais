@@ -45,7 +45,9 @@
       "hint": "Rename the file with a UTF-8 name that holds no backslash and no colon; the file was not read.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-031"
+      ]
     },
     {
       "code": "collection.stem_duplicate",
@@ -1410,7 +1412,9 @@
       "hint": "Make the entry readable and validate again. The input's schema was not checked.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-SUP-030"
+      ]
     },
     {
       "code": "input.not_regular_file",
@@ -2123,31 +2127,6 @@
       ]
     },
     {
-      "code": "manifest.additional_item",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "index",
-          "type": "number",
-          "meaning": "The item's 0-based index in the array.",
-          "always": true
-        },
-        {
-          "name": "prefix_count",
-          "type": "number",
-          "meaning": "How many items the schema's prefixItems describes.",
-          "always": true
-        }
-      ],
-      "message": "{field} is beyond the {prefix_count} items the schema allows.",
-      "hint": "Remove the items after the first {prefix_count}.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
-    },
-    {
       "code": "manifest.additional_property",
       "severity": "error",
       "class": "content",
@@ -2174,25 +2153,6 @@
         "MTS-MAN-011",
         "MTS-MAN-019"
       ]
-    },
-    {
-      "code": "manifest.any_of",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "branch_count",
-          "type": "number",
-          "meaning": "How many alternatives the schema gives.",
-          "always": true
-        }
-      ],
-      "message": "{field} matches none of the {branch_count} alternatives the schema allows.",
-      "hint": "Change the value to match one alternative; each alternative's findings are listed under it.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
     },
     {
       "code": "manifest.const",
@@ -2291,56 +2251,6 @@
       ]
     },
     {
-      "code": "manifest.exclusive_maximum",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "limit",
-          "type": "number",
-          "meaning": "The keyword's value in the schema.",
-          "always": true
-        },
-        {
-          "name": "value",
-          "type": "number",
-          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
-          "always": false
-        }
-      ],
-      "message": "{field} must be less than {limit}.",
-      "hint": "Write a number less than {limit}.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
-    },
-    {
-      "code": "manifest.exclusive_minimum",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "limit",
-          "type": "number",
-          "meaning": "The keyword's value in the schema.",
-          "always": true
-        },
-        {
-          "name": "value",
-          "type": "number",
-          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
-          "always": false
-        }
-      ],
-      "message": "{field} must be greater than {limit}.",
-      "hint": "Write a number greater than {limit}.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
-    },
-    {
       "code": "manifest.file.wrong_name",
       "severity": "error",
       "class": "content",
@@ -2374,25 +2284,6 @@
       "statements": [
         "MTS-MAN-019"
       ]
-    },
-    {
-      "code": "manifest.format",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "format",
-          "type": "string",
-          "meaning": "The format the schema requires.",
-          "always": true
-        }
-      ],
-      "message": "{field} is not in the {format} format.",
-      "hint": "Write a value in the {format} format.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
     },
     {
       "code": "manifest.guide_link_missing",
@@ -2623,31 +2514,6 @@
       ]
     },
     {
-      "code": "manifest.max_contains",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "limit",
-          "type": "number",
-          "meaning": "The keyword's value in the schema.",
-          "always": true
-        },
-        {
-          "name": "count",
-          "type": "number",
-          "meaning": "How many items the contains subschema accepts.",
-          "always": true
-        }
-      ],
-      "message": "{field} must have at most {limit} items the schema's contains accepts; it has {count}.",
-      "hint": "Remove items the contains subschema accepts until there are at most {limit}.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
-    },
-    {
       "code": "manifest.max_items",
       "severity": "error",
       "class": "content",
@@ -2702,81 +2568,6 @@
         "MTS-MAN-014",
         "MTS-MAN-019"
       ]
-    },
-    {
-      "code": "manifest.max_properties",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "limit",
-          "type": "number",
-          "meaning": "The keyword's value in the schema.",
-          "always": true
-        },
-        {
-          "name": "count",
-          "type": "number",
-          "meaning": "How many members the object has.",
-          "always": true
-        }
-      ],
-      "message": "{field} must have at most {limit} members; it has {count}.",
-      "hint": "Remove members until there are at most {limit}.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
-    },
-    {
-      "code": "manifest.maximum",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "limit",
-          "type": "number",
-          "meaning": "The keyword's value in the schema.",
-          "always": true
-        },
-        {
-          "name": "value",
-          "type": "number",
-          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
-          "always": false
-        }
-      ],
-      "message": "{field} must be at most {limit}.",
-      "hint": "Write a number of at most {limit}.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
-    },
-    {
-      "code": "manifest.min_contains",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "limit",
-          "type": "number",
-          "meaning": "The keyword's value in the schema.",
-          "always": true
-        },
-        {
-          "name": "count",
-          "type": "number",
-          "meaning": "How many items the contains subschema accepts.",
-          "always": true
-        }
-      ],
-      "message": "{field} must have at least {limit} items the schema's contains accepts; it has {count}.",
-      "hint": "Add items the contains subschema accepts until there are at least {limit}.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
     },
     {
       "code": "manifest.min_items",
@@ -2834,81 +2625,6 @@
       ]
     },
     {
-      "code": "manifest.min_properties",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "limit",
-          "type": "number",
-          "meaning": "The keyword's value in the schema.",
-          "always": true
-        },
-        {
-          "name": "count",
-          "type": "number",
-          "meaning": "How many members the object has.",
-          "always": true
-        }
-      ],
-      "message": "{field} must have at least {limit} members; it has {count}.",
-      "hint": "Add members until there are at least {limit}.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
-    },
-    {
-      "code": "manifest.minimum",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "limit",
-          "type": "number",
-          "meaning": "The keyword's value in the schema.",
-          "always": true
-        },
-        {
-          "name": "value",
-          "type": "number",
-          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
-          "always": false
-        }
-      ],
-      "message": "{field} must be at least {limit}.",
-      "hint": "Write a number of at least {limit}.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
-    },
-    {
-      "code": "manifest.multiple_of",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "divisor",
-          "type": "number",
-          "meaning": "The keyword's value in the schema.",
-          "always": true
-        },
-        {
-          "name": "value",
-          "type": "number",
-          "meaning": "The value, absent when the schema at the value's location is writeOnly.",
-          "always": false
-        }
-      ],
-      "message": "{field} must be a multiple of {divisor}.",
-      "hint": "Write a multiple of {divisor}.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
-    },
-    {
       "code": "manifest.not",
       "severity": "error",
       "class": "content",
@@ -2964,26 +2680,6 @@
       "statements": [
         "MTS-MAN-019"
       ]
-    },
-    {
-      "code": "manifest.one_of.ambiguous",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "branches",
-          "type": "array",
-          "items": "number",
-          "meaning": "The 0-based indexes of two alternatives the value matches.",
-          "always": true
-        }
-      ],
-      "message": "{field} matches alternatives {branches} where the schema allows exactly one.",
-      "hint": "Change the value so that only one alternative accepts it.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
     },
     {
       "code": "manifest.output.duplicate_id",
@@ -3066,25 +2762,6 @@
       ]
     },
     {
-      "code": "manifest.property_name",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "property",
-          "type": "string",
-          "meaning": "The member's name, as the supplier wrote it or as the schema declares it.",
-          "always": true
-        }
-      ],
-      "message": "The member name `{property}` breaks the schema's rule for member names.",
-      "hint": "Rename `{property}` to a name the schema's propertyNames allows.",
-      "location": "key",
-      "since": "1.0",
-      "statements": []
-    },
-    {
       "code": "manifest.required",
       "severity": "error",
       "class": "content",
@@ -3135,50 +2812,6 @@
         "MTS-MAN-019",
         "MTS-VER-008"
       ]
-    },
-    {
-      "code": "manifest.unevaluated_item",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "index",
-          "type": "number",
-          "meaning": "The item's 0-based index in the array.",
-          "always": true
-        }
-      ],
-      "message": "{field} is an item the schema does not allow.",
-      "hint": "Remove the item.",
-      "location": "value",
-      "since": "1.0",
-      "statements": []
-    },
-    {
-      "code": "manifest.unevaluated_property",
-      "severity": "error",
-      "class": "content",
-      "subject": "manifest",
-      "params": [
-        {
-          "name": "property",
-          "type": "string",
-          "meaning": "The member's name, as the supplier wrote it or as the schema declares it.",
-          "always": true
-        },
-        {
-          "name": "suggestion",
-          "type": "string",
-          "meaning": "The declared member name closest to this one, by ADR-006 D9 item 7's rule; present when one is close enough.",
-          "always": false
-        }
-      ],
-      "message": "The member `{property}` is not one the schema allows.",
-      "hint": "Remove `{property}`, or rename it to a member the schema declares.",
-      "location": "key",
-      "since": "1.0",
-      "statements": []
     },
     {
       "code": "manifest.unique_items",
@@ -6027,7 +5660,9 @@
       "hint": "Give the path of a packed package file or of a source directory; the path is opened as given, relative to the working directory.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-001"
+      ]
     },
     {
       "code": "package.not_readable",
@@ -6046,7 +5681,9 @@
       "hint": "Give the path of a packed package file or of a source directory that metais may read.",
       "location": "none",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-PKG-046"
+      ]
     },
     {
       "code": "package.version.malformed",

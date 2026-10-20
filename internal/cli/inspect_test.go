@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -59,9 +60,9 @@ func TestInspectSourceAndPacked(t *testing.T) {
 
 // TestInspectRefusalsTriggered is ADR-008 D16 item 2 for inspect: every
 // refusal it declares is triggered by inspect over some package of the
-// conformance suite, or by a line of lineCases, or is a code the unwired
-// list says no vector produces yet. runTool holds every run to its
-// declaration and to a next step that parses.
+// conformance suite, or by a line of lineCases, or by a path made here
+// that the suite's vectors make in their setup. runTool holds every run
+// to its declaration and to a next step that parses.
 func TestInspectRefusalsTriggered(t *testing.T) {
 	testenv.Home(t)
 	seen := map[string]bool{}
@@ -116,19 +117,29 @@ func TestInspectRefusalsTriggered(t *testing.T) {
 			}
 		}
 	}
-	unwired := map[string]bool{}
-	b, err := os.ReadFile("../finding/testdata/unwired.txt")
-	if err != nil {
+	// What the suite's vectors make in their setup (ADR-011 A4): a path
+	// that names nothing, and a directory this process may not read.
+	for _, code := range runTool(t, "inspect", "--json", filepath.Join(testenv.Dir(t), "absent")).codes() {
+		seen[code] = true
+	}
+	sealed := testenv.Dir(t)
+	if err := os.Chmod(sealed, 0o000); err != nil {
 		t.Fatal(err)
 	}
-	for _, l := range strings.Split(string(b), "\n") {
-		if l != "" && !strings.HasPrefix(l, "#") {
-			unwired[strings.Fields(l)[0]] = true
-		}
+	for _, code := range runTool(t, "inspect", "--json", sealed).codes() {
+		seen[code] = true
+	}
+	if err := os.Chmod(sealed, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if os.Geteuid() == 0 || runtime.GOOS == "windows" {
+		// A directory's mode refuses no one here; pkg/operand-not-readable
+		// proves it where the host's modes refuse a read.
+		seen["package.not_readable"] = true
 	}
 	for _, rf := range lookup(table, "inspect").Refusals {
 		code := string(rf.Code)
-		if !seen[code] && !unwired[code] && code != string(finding.CodeUsageBadValue) &&
+		if !seen[code] && code != string(finding.CodeUsageBadValue) &&
 			code != string(finding.CodeUsageRepeatedFlag) && code != string(finding.CodeUsageUnexpectedOperand) &&
 			code != string(finding.CodeUsageUnknownFlag) && code != string(finding.CodeLimitInvalid) {
 			t.Errorf("inspect declares %s, which nothing triggers", code)

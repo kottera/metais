@@ -68,9 +68,10 @@ func result(t *testing.T, r ran, v any) {
 // commands (W4-2.3): every refusal each declares is triggered, by the
 // command over some package of the conformance suite or by a line below,
 // and runTool holds every run to its declaration, to a non-empty next
-// step and to next steps that parse. The codes the unwired list says no
-// vector produces yet, and the line codes lineCases proves for every
-// command, are excepted, as inspect's test excepts them.
+// step and to next steps that parse. The line codes lineCases proves for
+// every command, and the codes of an operand that names nothing or may not
+// be read, which inspect's test triggers and every command shares through
+// the open, are excepted.
 func TestReadingRefusalsTriggered(t *testing.T) {
 	var mu sync.Mutex
 	seen := map[string]map[string]bool{}
@@ -219,24 +220,11 @@ func TestReadingRefusalsTriggered(t *testing.T) {
 			run(append(append([]string{name, "--json", dir}, lines[name]...), extractTo(t, name)...)...)
 		}
 	}
-	unwired := map[string]bool{}
-	b, err := os.ReadFile("../finding/testdata/unwired.txt")
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, l := range strings.Split(string(b), "\n") {
-		if l != "" && !strings.HasPrefix(l, "#") {
-			unwired[strings.Fields(l)[0]] = true
-		}
-	}
 	lineCodes := []finding.Code{finding.CodeUsageBadValue, finding.CodeUsageRepeatedFlag, finding.CodeUsageUnexpectedOperand, finding.CodeUsageUnknownFlag}
 	for _, name := range readingCommands {
 		for _, rf := range lookup(table, name).Refusals {
 			code := string(rf.Code)
-			if !seen[name][code] && (!unwired[code] || rf.Code == finding.CodeDestinationNotEmpty ||
-				rf.Code == finding.CodeDestinationNotDirectory || rf.Code == finding.CodeDestinationWriteFailed ||
-				rf.Code == finding.CodeDestinationNothingWritten || rf.Code == finding.CodeDestinationStagingExists) &&
-				!slices.Contains(lineCodes, rf.Code) && code != "package.not_found" && code != "package.not_readable" {
+			if !seen[name][code] && !slices.Contains(lineCodes, rf.Code) && code != "package.not_found" && code != "package.not_readable" {
 				t.Errorf("%s declares %s, which nothing triggers", name, code)
 			}
 		}

@@ -39,7 +39,7 @@ var collectionCodes = []Entry{
 		Hint:       "Rename the file with a UTF-8 name that holds no backslash and no colon; the file was not read.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{},
+		Statements: []string{"MTS-SUP-031"},
 	},
 	{
 		Code:     "collection.stem_duplicate",

@@ -168,6 +168,13 @@ Unicode NFC and its stem that name without its last extension, and a
 processor MUST refuse two items whose stems are equal, or equal but for letter
 case, with `collection.stem_duplicate`.
 
+<a id="mts-sup-031"></a>**MTS-SUP-031** A processor MUST refuse an item
+whose file name is not UTF-8, with `collection.item_name` and `reason`
+`encoding`, and one whose file name holds a backslash or a colon, with
+`collection.item_name` and `reason` `character`, and MUST leave it out of its
+collection's validation, as an item that does not parse is
+([MTS-SUP-029](#mts-sup-029)).
+
 <a id="mts-sup-017"></a>**MTS-SUP-017** A processor MUST order the items of a
 collection by their names, comparing the UTF-8 bytes of the NFC names, with no
 case folding and no locale.
@@ -185,6 +192,13 @@ name begins with `.`. It MUST refuse an entry that names no declared input with
 `input.file_duplicate`, an extension whose form the input does not accept,
 `.schema.json` included, with `input.extension_not_accepted`, and a directory
 named as an input's file with `input.not_regular_file`.
+
+<a id="mts-sup-030"></a>**MTS-SUP-030** A processor MUST report a
+data-directory entry it is not permitted to read, whether an input's file, a
+collection's directory or an item's file, with `input.not_readable` about that
+input, located at the entry, whose `reason` is `permission_denied`. An item
+that cannot be read is left out of its collection's validation, as an item
+that does not parse is ([MTS-SUP-029](#mts-sup-029)).
 
 ## 6.10 The command line
 

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/collection-item-name",
+  "title": "An item whose file name holds a colon or a backslash is refused with collection.item_name and left out of its collection's validation",
+  "statements": [
+    "MTS-SUP-031",
+    "MTS-SUP-029"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [
+    "nonportable-names"
+  ],
+  "notes": "No path of the committed suite may hold a colon or a backslash (ADR-011 D9 item 8), so the setup renames two items to such names when the case runs (ADR-011 A6 item 1). The valid case is the same tree unrenamed.",
+  "cases": [
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "refused",
+      "setup": {
+        "renames": [
+          {
+            "path": "data/items/colon.json",
+            "name": "c:d.json"
+          },
+          {
+            "path": "data/items/backslash.json",
+            "name": "e\\f.json"
+          }
+        ]
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

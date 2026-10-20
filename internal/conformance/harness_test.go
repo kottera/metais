@@ -579,7 +579,11 @@ func (r *runner) runReach(run *envRun, v *vector, c *vcase, finders []finder, be
 // reachInvoke runs one reach command and reads what it gave.
 func (a *cliAdapter) reachInvoke(sb *sandbox, c reachCommand, lim limits) (*invocation, []problem) {
 	inv := &invocation{label: "reach: " + c.label(), args: c.args}
-	p, err := runProc(a.path, c.args, sb.cwd, sb.environ(), c.stdin, lim.wall)
+	path, args, err := sb.limited(a.path, c.args)
+	if err != nil {
+		return inv, []problem{{check: checkHarness, harness: true, msg: err.Error()}}
+	}
+	p, err := runProc(path, args, sb.cwd, sb.environ(), c.stdin, lim.wall)
 	if err != nil {
 		return inv, []problem{{check: checkHarness, harness: true, msg: err.Error()}}
 	}

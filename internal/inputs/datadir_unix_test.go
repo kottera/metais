@@ -8,6 +8,7 @@ package inputs
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"syscall"
 	"testing"
 
@@ -60,4 +61,29 @@ func TestCollectionItemNames(t *testing.T) {
 		`collection.item_name articles data_dir:articles/c\d.json {"reason":"character"}`,
 		`input.validation.partial articles data_dir:articles # {"unparsed":2,"suppressed":0}`,
 	)
+}
+
+// TestCollectionItemNameEncoding: an item whose file name is not UTF-8 is
+// refused with reason encoding, and counted among the items that did not
+// parse. A file system that refuses such a name, as APFS does, cannot
+// hold the case, which is skipped there.
+func TestCollectionItemNameEncoding(t *testing.T) {
+	testenv.Home(t)
+	dir := dataDir(t, map[string]string{"articles/ok.json": `3`})
+	if err := os.WriteFile(filepath.Join(dir, "articles", "\xff.json"), []byte(`1`), 0o644); err != nil {
+		t.Skipf("this file system refuses a name that is not UTF-8: %v", err)
+	}
+	res := run(t, layer(t, dirPkg), limits.Defaults(), args{data: dir})
+	if got := codes(res.Findings); !slices.Equal(got, []string{"collection.item_name", "input.validation.partial"}) {
+		t.Fatalf("codes %q", got)
+	}
+	for _, f := range res.Findings {
+		if f.Code() != "collection.item_name" {
+			continue
+		}
+		v, _ := f.Param("reason")
+		if r, _ := v.Str(); r != "encoding" {
+			t.Errorf("reason %q", r)
+		}
+	}
 }

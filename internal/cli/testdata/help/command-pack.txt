@@ -148,7 +148,7 @@ Refusals:
                             Next: metais test <dir>
   limit.exceeded.* (2)      An example's output is refused.
                             Next: metais test <dir>
-  manifest.* (60)           The manifest breaks one of its rules.
+  manifest.* (44)           The manifest breaks one of its rules.
                             Next: metais check <dir>
   manifest.guide_link_missing (1)
                             The manifest (guide link missing), a warning.

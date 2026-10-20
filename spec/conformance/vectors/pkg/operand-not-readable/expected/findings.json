@@ -1,0 +1,12 @@
+[
+  {
+    "code": "package.not_readable",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "params": {
+      "reason": "permission_denied"
+    }
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["n"],
+    "properties": {
+      "n": { "type": "integer" }
+    }
+  }
+}

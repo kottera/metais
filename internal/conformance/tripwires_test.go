@@ -126,8 +126,9 @@ func vectorsWellFormed(suite string) []string {
 	return bad
 }
 
-// referenceProblems checks that every file v names exists and every file
-// of its directory is named (ADR-011 D9 item 2).
+// referenceProblems checks that every file v names exists, but a path a
+// case's setup lists as absent, and every file of its directory is named
+// (ADR-011 D9 item 2, A4 item 1).
 func referenceProblems(rel string, v *vector, set *schemaSet) []string {
 	var bad []string
 	add := func(format string, args ...any) { bad = append(bad, rel+": "+fmt.Sprintf(format, args...)) }
@@ -166,6 +167,9 @@ func referenceProblems(rel string, v *vector, set *schemaSet) []string {
 		var written []string
 		for si, st := range c.Steps {
 			for _, p := range []string{st.args.Package, st.args.Source, st.args.Data, st.args.InputsJSON} {
+				if c.Setup != nil && slices.Contains(c.Setup.Absent, p) {
+					continue // ADR-011 A4 item 1: it must not exist
+				}
 				if p == "" || name(p) {
 					packed = packed || path.Base(p) == "package.metais"
 					continue

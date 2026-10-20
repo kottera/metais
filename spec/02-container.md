@@ -21,6 +21,10 @@ names a regular file as a packed package and a path that names a directory as
 a source directory, whatever the name or extension of either, and MUST refuse
 a path that names nothing with `package.not_found`.
 
+<a id="mts-pkg-046"></a>**MTS-PKG-046** A processor MUST refuse a path that
+names a file or a directory it is not permitted to read with
+`package.not_readable`, whose `reason` is `permission_denied`.
+
 <a id="mts-pkg-002"></a>**MTS-PKG-002** *(not observable)* A packed package's
 file name SHOULD end in `.metais`, in lower case.
 

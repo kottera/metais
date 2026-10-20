@@ -155,6 +155,34 @@ var schemaKeywords = []schemaKeyword{
 	}, "{field} matches alternatives {branches} where the schema allows exactly one.", "Change the value so that only one alternative accepts it.", SpanValue},
 }
 
+// manifestUnproducible are the keyword codes the manifest family does not
+// register, because no manifest can fail the 1.0 manifest schema in a way
+// that D6's mapping names by them (ADR-006 A1). Fourteen are keywords the
+// schema never uses (A1 item 1). The other two are failures the schema's
+// use of a keyword cannot give: its one anyOf is beneath a not, whose
+// subschema reports nothing from inside it (D6 item 10), and its oneOfs
+// choose between closed branches that each require a member no other
+// branch allows, so no value matches two. TestManifestKeywordCodes holds
+// this set to the schema the binary embeds.
+var manifestUnproducible = map[string]bool{
+	"additional_item":      true,
+	"any_of":               true,
+	"exclusive_maximum":    true,
+	"exclusive_minimum":    true,
+	"format":               true,
+	"max_contains":         true,
+	"max_properties":       true,
+	"maximum":              true,
+	"min_contains":         true,
+	"min_properties":       true,
+	"minimum":              true,
+	"multiple_of":          true,
+	"one_of.ambiguous":     true,
+	"property_name":        true,
+	"unevaluated_item":     true,
+	"unevaluated_property": true,
+}
+
 // schemaEntries are the registry entries of ADR-006 D6 item 4's keyword
 // codes in each family, and D7 item 4's partial-validation finding.
 // schemaStatements are the statements each keyword code a vector produces
@@ -246,6 +274,9 @@ func schemaEntries() []Entry {
 	var out []Entry
 	for _, fam := range schemaFamilies {
 		for _, k := range schemaKeywords {
+			if fam.prefix == "manifest" && manifestUnproducible[k.suffix] {
+				continue
+			}
 			out = append(out, Entry{
 				Code:       Code(fam.prefix + "." + k.suffix),
 				Severity:   SeverityError,

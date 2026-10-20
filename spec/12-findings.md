@@ -19,7 +19,7 @@ it, and the statements it reports.
 |---|---|---|---|---|---|---|
 | `collection.as_file` | error | content | input | — | 1.0 | [MTS-SUP-015](06-supplying-inputs.md#mts-sup-015) |
 | `collection.directory_name` | error | content | input | — | 1.0 | [MTS-SUP-015](06-supplying-inputs.md#mts-sup-015) |
-| `collection.item_name` | error | content | input | `reason` | 1.0 | — |
+| `collection.item_name` | error | content | input | `reason` | 1.0 | [MTS-SUP-031](06-supplying-inputs.md#mts-sup-031) |
 | `collection.stem_duplicate` | error | content | input | `case` | 1.0 | [MTS-SUP-016](06-supplying-inputs.md#mts-sup-016) |
 | `collection.subdirectory` | error | content | input | — | 1.0 | [MTS-SUP-015](06-supplying-inputs.md#mts-sup-015) |
 | `csv.after_quote` | error | content | input | — | 1.0 | [MTS-SUP-008](06-supplying-inputs.md#mts-sup-008) |
@@ -74,7 +74,7 @@ it, and the statements it reports.
 | `input.multiple_of` | error | content | input | `divisor`; optional: `value` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-DAT-014](05-data-specification.md#mts-dat-014), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.noncharacter` | error | content | input | `codepoint` | 1.0 | [MTS-SUP-004](06-supplying-inputs.md#mts-sup-004) |
 | `input.not` | error | content | input | — | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
-| `input.not_readable` | error | content | input | `reason` | 1.0 | — |
+| `input.not_readable` | error | content | input | `reason` | 1.0 | [MTS-SUP-030](06-supplying-inputs.md#mts-sup-030) |
 | `input.not_regular_file` | error | content | input | `kind` | 1.0 | [MTS-SEC-006](14-security.md#mts-sec-006), [MTS-SUP-018](06-supplying-inputs.md#mts-sup-018) |
 | `input.number_out_of_range` | error | content | input | `reason` | 1.0 | [MTS-SUP-005](06-supplying-inputs.md#mts-sup-005) |
 | `input.one_of` | error | content | input | `branch_count` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-FND-006](12-findings.md#mts-fnd-006) |
@@ -102,18 +102,13 @@ it, and the statements it reports.
 | `limit.exceeded.template` | error | content | template | `limit`, `bound`, `lowered`; optional: `output_path` | 1.0 | [MTS-OUT-010](09-outputs.md#mts-out-010), [MTS-SEC-008](14-security.md#mts-sec-008), [MTS-SEC-009](14-security.md#mts-sec-009), [MTS-TPL-046](07-template-environment.md#mts-tpl-046) |
 | `limit.invalid` | error | usage | invocation | `reason`; optional: `name`, `default`, `unit`, `value` | 1.0 | — |
 | `limit.package` | error | refused | package | `limit`, `bound`, `lowered`; optional: `observed` | 1.0 | [MTS-AUT-052](13-authoring.md#mts-aut-052), [MTS-PTH-007](11-rendering.md#mts-pth-007), [MTS-SEC-001](14-security.md#mts-sec-001), [MTS-SEC-011](14-security.md#mts-sec-011), [MTS-SEC-020](14-security.md#mts-sec-020), [MTS-SEC-021](14-security.md#mts-sec-021), [MTS-SEC-022](14-security.md#mts-sec-022), [MTS-SEC-042](14-security.md#mts-sec-042), [MTS-SEC-043](14-security.md#mts-sec-043), [MTS-SEC-044](14-security.md#mts-sec-044), [MTS-SEC-045](14-security.md#mts-sec-045) |
-| `manifest.additional_item` | error | content | manifest | `index`, `prefix_count` | 1.0 | — |
 | `manifest.additional_property` | error | content | manifest | `property`; optional: `suggestion` | 1.0 | [MTS-MAN-011](03-manifest.md#mts-man-011), [MTS-MAN-019](03-manifest.md#mts-man-019) |
-| `manifest.any_of` | error | content | manifest | `branch_count` | 1.0 | — |
 | `manifest.const` | error | content | manifest | `expected` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.contains` | error | content | manifest | — | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.dependent_required` | error | content | manifest | `property`, `because` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.enum` | error | content | manifest | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
-| `manifest.exclusive_maximum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
-| `manifest.exclusive_minimum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
 | `manifest.file.wrong_name` | error | content | manifest | — | 1.0 | [MTS-MAN-002](03-manifest.md#mts-man-002) |
 | `manifest.forbidden` | error | content | manifest | optional: `property` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
-| `manifest.format` | error | content | manifest | `format` | 1.0 | — |
 | `manifest.guide_link_missing` | warning | content | manifest | `target` | 1.0 | [MTS-AUT-006](13-authoring.md#mts-aut-006) |
 | `manifest.input.collection_shape` | error | content | manifest | — | 1.0 | [MTS-AUT-022](13-authoring.md#mts-aut-022) |
 | `manifest.input.duplicate_name` | error | content | manifest | `name` | 1.0 | [MTS-MAN-016](03-manifest.md#mts-man-016) |
@@ -125,30 +120,19 @@ it, and the statements it reports.
 | `manifest.json.syntax` | error | content | manifest | `expected`, `found` | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
 | `manifest.json.trailing_content` | error | content | manifest | — | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
 | `manifest.license.expression` | error | content | manifest | `reason`, `position` | 1.0 | [MTS-MAN-013](03-manifest.md#mts-man-013) |
-| `manifest.max_contains` | error | content | manifest | `limit`, `count` | 1.0 | — |
 | `manifest.max_items` | error | content | manifest | `limit`, `count` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.max_length` | error | content | manifest | `limit`; optional: `length` | 1.0 | [MTS-MAN-012](03-manifest.md#mts-man-012), [MTS-MAN-014](03-manifest.md#mts-man-014), [MTS-MAN-019](03-manifest.md#mts-man-019) |
-| `manifest.max_properties` | error | content | manifest | `limit`, `count` | 1.0 | — |
-| `manifest.maximum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
-| `manifest.min_contains` | error | content | manifest | `limit`, `count` | 1.0 | — |
 | `manifest.min_items` | error | content | manifest | `limit`, `count` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.min_length` | error | content | manifest | `limit`; optional: `length` | 1.0 | [MTS-MAN-012](03-manifest.md#mts-man-012), [MTS-MAN-019](03-manifest.md#mts-man-019) |
-| `manifest.min_properties` | error | content | manifest | `limit`, `count` | 1.0 | — |
-| `manifest.minimum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
-| `manifest.multiple_of` | error | content | manifest | `divisor`; optional: `value` | 1.0 | — |
 | `manifest.not` | error | content | manifest | — | 1.0 | [MTS-MAN-014](03-manifest.md#mts-man-014), [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.number_out_of_range` | error | content | manifest | `reason` | 1.0 | [MTS-MAN-010](03-manifest.md#mts-man-010) |
 | `manifest.one_of` | error | content | manifest | `branch_count` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
-| `manifest.one_of.ambiguous` | error | content | manifest | `branches` | 1.0 | — |
 | `manifest.output.duplicate_id` | error | content | manifest | `id` | 1.0 | [MTS-MAN-016](03-manifest.md#mts-man-016) |
 | `manifest.output.nested_for_each` | error | content | manifest | — | 1.0 | [MTS-MAN-016](03-manifest.md#mts-man-016) |
 | `manifest.path_not_found` | error | content | manifest | `directory` | 1.0 | [MTS-MAN-017](03-manifest.md#mts-man-017) |
 | `manifest.pattern` | error | content | manifest | `pattern` | 1.0 | [MTS-MAN-012](03-manifest.md#mts-man-012), [MTS-MAN-014](03-manifest.md#mts-man-014), [MTS-MAN-019](03-manifest.md#mts-man-019), [MTS-VER-008](04-versions.md#mts-ver-008) |
-| `manifest.property_name` | error | content | manifest | `property` | 1.0 | — |
 | `manifest.required` | error | content | manifest | `property` | 1.0 | [MTS-MAN-011](03-manifest.md#mts-man-011), [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.type` | error | content | manifest | `expected`, `actual` | 1.0 | [MTS-MAN-011](03-manifest.md#mts-man-011), [MTS-MAN-019](03-manifest.md#mts-man-019), [MTS-VER-008](04-versions.md#mts-ver-008) |
-| `manifest.unevaluated_item` | error | content | manifest | `index` | 1.0 | — |
-| `manifest.unevaluated_property` | error | content | manifest | `property`; optional: `suggestion` | 1.0 | — |
 | `manifest.unique_items` | error | content | manifest | `index`, `duplicate_of` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.yaml.alias` | error | content | manifest | — | 1.0 | [MTS-MAN-005](03-manifest.md#mts-man-005) |
 | `manifest.yaml.anchor` | error | content | manifest | — | 1.0 | [MTS-MAN-005](03-manifest.md#mts-man-005) |
@@ -269,8 +253,8 @@ it, and the statements it reports.
 | `package.name.not_nfc` | error | refused | package | optional: `offset` | 1.0 | [MTS-PKG-013](02-container.md#mts-pkg-013) |
 | `package.name.not_portable` | error | refused | package | `reason`; optional: `offset` | 1.0 | [MTS-PKG-016](02-container.md#mts-pkg-016) |
 | `package.name.shape` | error | refused | package | `reason`; optional: `offset` | 1.0 | [MTS-PKG-014](02-container.md#mts-pkg-014) |
-| `package.not_found` | error | refused | package | — | 1.0 | — |
-| `package.not_readable` | error | refused | package | `reason` | 1.0 | — |
+| `package.not_found` | error | refused | package | — | 1.0 | [MTS-PKG-001](02-container.md#mts-pkg-001) |
+| `package.not_readable` | error | refused | package | `reason` | 1.0 | [MTS-PKG-046](02-container.md#mts-pkg-046) |
 | `package.version.malformed` | error | refused | package | `implemented` | 1.0 | [MTS-VER-003](04-versions.md#mts-ver-003) |
 | `package.version.missing` | error | refused | package | `implemented` | 1.0 | [MTS-VER-001](04-versions.md#mts-ver-001) |
 | `package.version.not_string` | error | refused | package | `actual`, `implemented`; optional: `written` | 1.0 | [MTS-VER-002](04-versions.md#mts-ver-002) |
@@ -430,7 +414,17 @@ argument, pointer and parameters, it MUST report one.
 A failure of a value against its schema is reported by the code of the
 keyword that failed, in the family of what the schema validates: `input.` for a
 supplied input, `manifest.` for the manifest, `output.` for an output. The
-codes of the `input.` family:
+`input.` and `output.` families hold every code of the table below. The
+`manifest.` family holds only the codes a manifest can be given by the
+manifest schema of its revision ([chapter 3](03-manifest.md)): the schema of
+1.0 uses none of `multipleOf`, `maximum`, `exclusiveMaximum`, `minimum`,
+`exclusiveMinimum`, `format`, `minContains`, `maxContains`, `maxProperties`,
+`minProperties`, `items` after `prefixItems`, `unevaluatedProperties`,
+`unevaluatedItems` and `propertyNames`; its one `anyOf` stands beneath a
+`not`, whose subschema reports nothing; and no value matches two branches of
+any of its `oneOf`s. So `manifest.any_of`, `manifest.one_of.ambiguous` and
+the codes of those keywords are not registered. The codes of the `input.`
+family:
 
 | Keyword | Code |
 |---|---|

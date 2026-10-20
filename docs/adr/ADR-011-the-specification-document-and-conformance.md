@@ -1583,6 +1583,71 @@ is not a ruling made by the train and needs no ratification.
    caught only the one case of two changes taking the same number; the
    duplicate check catches that case wherever the two statements sit.
 
+### A6 — A renamed path and a file-size limit in the setup, behind `nonportable-names` and `file-size-limit`
+
+**Status:** Proposed 2026-10-20 by PLAN-2026-10-metais-v1 Wave 7 (W7-1),
+under the plan orchestrator's ruling of 2026-10-20 recorded in plan §13's
+"Rulings made during the wave" (Q1 at the breakdown review); awaiting
+ratification by Ed Funnekotter at the train's close. It follows Ed's A4,
+which settled the same kind of case: a code the tool emits whose pre-state
+the committed tree cannot hold.
+**Amends:** D9 item 4 (the setup), D9 item 6 (the closed set of
+requirements), and the vector schema
+`spec/schemas/conformance/1/vector.schema.json`. D9 item 8 is not amended.
+
+1. **The setup gains `renames`**, a list of a `path` and a `name`. Each
+   path is one the rest of the setup put in place, and the runner renames
+   it, in its own directory, to `name`: one segment holding a colon or a
+   backslash, which D9 item 8 forbids in every path of the committed
+   tree. The renames are applied after the trees the steps name are in
+   place, and before A2's `unwritable` directories and A4's `unreadable`
+   paths. A rename to a name holding neither character, or to more than
+   one segment, is a harness error, because the committed tree could hold
+   that name or the rename would move the path.
+2. **The requirements gain `nonportable-names`.** The runner probes it in
+   the work directory's file system: it creates a file whose name holds a
+   colon and one whose name holds a backslash, and the requirement is met
+   when it lists each back under its name, byte for byte. It is not met
+   where the platform or the file system refuses or maps such a name, as
+   Windows does. A vector whose setup has `renames` requires it, and one
+   that does not is a harness error.
+3. **The setup gains `file_size_limit`**, a positive number of bytes:
+   the largest file every process a step starts may write. The runner
+   starts each such process with that file-size resource limit
+   (`RLIMIT_FSIZE`) and with `SIGXFSZ` ignored, both of which it inherits
+   across `exec`, so a write that would make a file larger fails with an
+   error and does not end the process. A driver's implementation inherits
+   both from the driver.
+4. **The requirements gain `file-size-limit`.** The runner probes it by
+   starting a process under a limit that writes one byte past it, and the
+   requirement is met when that write fails and the file holds no more
+   than the limit. It is not met where a platform has no such limit, as
+   Windows has none. A vector whose setup sets `file_size_limit` requires
+   it, and one that does not is a harness error.
+5. **Why.** Two codes the tool emits had no vector, and no setup could
+   give one, so `TestFindingCodesCovered` could not end with no exemption
+   list (plan §13):
+   - `collection.item_name` refuses an item whose file name holds `:` or
+     `\`, and D9 item 8 keeps every such name out of the committed tree.
+     A rename at run time makes it, and the portable-name rule for the
+     committed tree is untouched.
+   - `output.destination.write_failed` is a write that fails after unpack
+     has written into an existing, empty directory (MTS-AUT-027). A2's
+     `unwritable` directories cannot reach it: the target must be empty
+     apart from names beginning with `.` and `*.metais` files, so a lock
+     on it refuses the first write (`output.destination.nothing_written`)
+     and nothing beneath it can be locked before unpack makes it. A4's
+     setups do not write. A file-size limit lets the first files through
+     and refuses a later, larger one, so the write stops after it has
+     written, which is exactly the statement's case.
+
+   A probe, rather than an assumption, keeps a run honest where the host
+   cannot make the pre-state: the case is skipped with the reason and
+   reported, never counted as a pass.
+6. **Nothing else moves.** The suite's format only gains members and
+   values within its major version (`spec/conformance/README.md`), and no
+   released vector changes.
+
 ## Implementation log
 
 This log is this section together with the entry files in
