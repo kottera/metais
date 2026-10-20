@@ -32,25 +32,6 @@
           }
         }
       ]
-    },
-    {
-      "name": "check",
-      "steps": [
-        {
-          "op": "check",
-          "args": {
-            "source": "package"
-          },
-          "expect": {
-            "ok": false,
-            "findings": "expected/check.json"
-          },
-          "bounds": {
-            "cpu_ms": 500,
-            "rss_mib": 64
-          }
-        }
-      ]
     }
   ]
 }

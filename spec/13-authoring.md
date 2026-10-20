@@ -333,6 +333,13 @@ the same package, and one tool's data may change between its versions;
 what an author keeps is kept as files, so nothing kept depends on a
 generator.
 
+The sample operation takes three options that steer its generator:
+`optional`, whether it writes the members a schema leaves optional (`all`,
+`none` or `mixed`); `seed`, an unsigned 64-bit integer from which its
+choices are drawn; and `items`, the number of items it aims at for every
+array and collection. What data they lead to is the tool's own, as the data
+is.
+
 <a id="mts-smp-001"></a>**MTS-SMP-001** An authoring tool's sample
 operation MUST write the data it generates as a data directory
 ([§6.9](06-supplying-inputs.md)): one file for each

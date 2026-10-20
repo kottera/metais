@@ -1,0 +1,72 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "cnf/ok-error-severity",
+  "title": "An operation's ok is true when it completed and no finding is an error: a render with a warning succeeds and writes, the same render asked to fail on warnings fails and writes nothing, and an open refused by a lowered limit fails",
+  "statements": [
+    "MTS-CNF-003"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "The mirror parts renders no file, which is output.declaration.empty_mirror, a warning (MTS-OUT-019). The manifest is 226 bytes, beyond a manifest-size lowered to 64.",
+  "cases": [
+    {
+      "name": "warning",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "findings": "expected/render.json",
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "fail-on-warning",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "fail_on": "warning"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/render.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "error",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package",
+            "limits": {
+              "manifest-size": 64
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/open.json"
+          }
+        }
+      ]
+    }
+  ]
+}

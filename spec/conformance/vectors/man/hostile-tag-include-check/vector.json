@@ -1,0 +1,37 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "man/hostile-tag-include-check",
+  "title": "Check refuses it too: an !include tag is refused, and nothing is read",
+  "statements": [
+    "MTS-MAN-005",
+    "MTS-MAN-024"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "Refused with content-class findings, so check adds the report.step_skipped MTS-AUT-002 requires, and the case cannot carry an open step (R-W6-9b; docs/adr/logs/ADR-011/W6-9.md).",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/check.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}
