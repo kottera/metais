@@ -1,0 +1,50 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/manifest-strings-literal",
+  "title": "${HOME}, $HOME, %USERPROFILE% and ~ in every string field of a manifest, a schema file and an entry name are rendered as those characters, never expanded",
+  "statements": [
+    "MTS-SEC-034",
+    "MTS-TPL-036"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security"
+  ],
+  "requires": [],
+  "notes": "name, version and metais admit none of the four by their grammars, nor license by SPDX's; a URI admits only $HOME and ~, so author url and homepage hold those two. Every other string field holds all four.",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "set_json": [
+              "/v={}"
+            ]
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out",
+                "containers": [
+                  {
+                    "path": "${HOME} $HOME %USERPROFILE% ~.odt",
+                    "methods": [
+                      "mimetype"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

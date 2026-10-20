@@ -105,14 +105,14 @@ it, and the statements it reports.
 | `manifest.additional_item` | error | content | manifest | `index`, `prefix_count` | 1.0 | — |
 | `manifest.additional_property` | error | content | manifest | `property`; optional: `suggestion` | 1.0 | [MTS-MAN-011](03-manifest.md#mts-man-011), [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.any_of` | error | content | manifest | `branch_count` | 1.0 | — |
-| `manifest.const` | error | content | manifest | `expected` | 1.0 | — |
-| `manifest.contains` | error | content | manifest | — | 1.0 | — |
-| `manifest.dependent_required` | error | content | manifest | `property`, `because` | 1.0 | — |
+| `manifest.const` | error | content | manifest | `expected` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
+| `manifest.contains` | error | content | manifest | — | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
+| `manifest.dependent_required` | error | content | manifest | `property`, `because` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.enum` | error | content | manifest | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.exclusive_maximum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
 | `manifest.exclusive_minimum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
 | `manifest.file.wrong_name` | error | content | manifest | — | 1.0 | [MTS-MAN-002](03-manifest.md#mts-man-002) |
-| `manifest.forbidden` | error | content | manifest | optional: `property` | 1.0 | — |
+| `manifest.forbidden` | error | content | manifest | optional: `property` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.format` | error | content | manifest | `format` | 1.0 | — |
 | `manifest.guide_link_missing` | warning | content | manifest | `target` | 1.0 | [MTS-AUT-006](13-authoring.md#mts-aut-006) |
 | `manifest.input.collection_shape` | error | content | manifest | — | 1.0 | [MTS-AUT-022](13-authoring.md#mts-aut-022) |
@@ -126,19 +126,19 @@ it, and the statements it reports.
 | `manifest.json.trailing_content` | error | content | manifest | — | 1.0 | [MTS-MAN-009](03-manifest.md#mts-man-009) |
 | `manifest.license.expression` | error | content | manifest | `reason`, `position` | 1.0 | [MTS-MAN-013](03-manifest.md#mts-man-013) |
 | `manifest.max_contains` | error | content | manifest | `limit`, `count` | 1.0 | — |
-| `manifest.max_items` | error | content | manifest | `limit`, `count` | 1.0 | — |
+| `manifest.max_items` | error | content | manifest | `limit`, `count` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.max_length` | error | content | manifest | `limit`; optional: `length` | 1.0 | [MTS-MAN-012](03-manifest.md#mts-man-012), [MTS-MAN-014](03-manifest.md#mts-man-014), [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.max_properties` | error | content | manifest | `limit`, `count` | 1.0 | — |
 | `manifest.maximum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
 | `manifest.min_contains` | error | content | manifest | `limit`, `count` | 1.0 | — |
 | `manifest.min_items` | error | content | manifest | `limit`, `count` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
-| `manifest.min_length` | error | content | manifest | `limit`; optional: `length` | 1.0 | — |
+| `manifest.min_length` | error | content | manifest | `limit`; optional: `length` | 1.0 | [MTS-MAN-012](03-manifest.md#mts-man-012), [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.min_properties` | error | content | manifest | `limit`, `count` | 1.0 | — |
 | `manifest.minimum` | error | content | manifest | `limit`; optional: `value` | 1.0 | — |
 | `manifest.multiple_of` | error | content | manifest | `divisor`; optional: `value` | 1.0 | — |
 | `manifest.not` | error | content | manifest | — | 1.0 | [MTS-MAN-014](03-manifest.md#mts-man-014), [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.number_out_of_range` | error | content | manifest | `reason` | 1.0 | [MTS-MAN-010](03-manifest.md#mts-man-010) |
-| `manifest.one_of` | error | content | manifest | `branch_count` | 1.0 | — |
+| `manifest.one_of` | error | content | manifest | `branch_count` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.one_of.ambiguous` | error | content | manifest | `branches` | 1.0 | — |
 | `manifest.output.duplicate_id` | error | content | manifest | `id` | 1.0 | [MTS-MAN-016](03-manifest.md#mts-man-016) |
 | `manifest.output.nested_for_each` | error | content | manifest | — | 1.0 | [MTS-MAN-016](03-manifest.md#mts-man-016) |
@@ -149,7 +149,7 @@ it, and the statements it reports.
 | `manifest.type` | error | content | manifest | `expected`, `actual` | 1.0 | [MTS-MAN-011](03-manifest.md#mts-man-011), [MTS-MAN-019](03-manifest.md#mts-man-019), [MTS-VER-008](04-versions.md#mts-ver-008) |
 | `manifest.unevaluated_item` | error | content | manifest | `index` | 1.0 | — |
 | `manifest.unevaluated_property` | error | content | manifest | `property`; optional: `suggestion` | 1.0 | — |
-| `manifest.unique_items` | error | content | manifest | `index`, `duplicate_of` | 1.0 | — |
+| `manifest.unique_items` | error | content | manifest | `index`, `duplicate_of` | 1.0 | [MTS-MAN-019](03-manifest.md#mts-man-019) |
 | `manifest.yaml.alias` | error | content | manifest | — | 1.0 | [MTS-MAN-005](03-manifest.md#mts-man-005) |
 | `manifest.yaml.anchor` | error | content | manifest | — | 1.0 | [MTS-MAN-005](03-manifest.md#mts-man-005) |
 | `manifest.yaml.bom` | error | content | manifest | — | 1.0 | [MTS-MAN-003](03-manifest.md#mts-man-003) |

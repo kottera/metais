@@ -79,6 +79,13 @@ at the line where reading stopped, and MUST report every violation of
 [MTS-MAN-003](#mts-man-003) to [MTS-MAN-007](#mts-man-007) in a well-formed
 document at once, each with its line and column.
 
+<a id="mts-man-024"></a>**MTS-MAN-024** A processor MUST judge
+[MTS-MAN-005](#mts-man-005) on the document as it is written, and MUST NOT
+expand an alias, apply a merge key, or give a tag a meaning: so a document
+whose aliases would expand to an exponential size costs no more to refuse
+than to read once, and no tag constructs an object, reads a file or runs
+anything.
+
 ## 3.3 The JSON profile
 
 <a id="mts-man-009"></a>**MTS-MAN-009** A JSON manifest MUST be one

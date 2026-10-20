@@ -1,0 +1,19 @@
+[
+  {
+    "code": "manifest.one_of",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 12,
+      "column": 5,
+      "pointer": "/outputs/0"
+    },
+    "params": {
+      "branch_count": 4
+    }
+  }
+]

@@ -110,6 +110,13 @@ never ends, with `limit.package` located at the file and JSON Pointer of the
 first such reference in the order of MTS-SEC-020, observing the number of
 references when the chain ends, before it compiles any schema.
 
+<a id="mts-sec-035"></a>**MTS-SEC-035** A processor MUST enforce
+`value-depth` and `number-length` while it parses the manifest and each schema
+file: it MUST refuse each array or object nested deeper than `value-depth`
+allows with `limit.package` located at it, reading nothing nested beneath
+it, and each number literal longer than `number-length` bytes with
+`limit.package` located at it, before converting it to a number.
+
 ## 14.2 Entry confinement
 
 <a id="mts-sec-002"></a>**MTS-SEC-002** A processor MUST refuse every entry
@@ -184,6 +191,13 @@ when it is a link.
 text, a file's content, an `--inputs-json` argument and a path set's value,
 as data: `$VAR`, `${VAR}`, `%VAR%`, `~` and `@path` in it are those characters,
 and nothing in it is looked up in the environment or read from a file.
+
+<a id="mts-sec-034"></a>**MTS-SEC-034** A processor MUST take every string a
+package holds, each member of its manifest, each string of its schema files and
+each entry name, as data: `$VAR`, `${VAR}`, `%VAR%` and `~` in it are those
+characters wherever the string appears, in a template's view of it, in an
+output path and in an output's bytes, and nothing in it is looked up in the
+environment or expanded to a home directory.
 
 ## 14.5 Work and output limits
 

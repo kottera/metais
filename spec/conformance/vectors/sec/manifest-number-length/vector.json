@@ -1,0 +1,48 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/manifest-number-length",
+  "title": "number-length bounds a manifest's number literals: one of 1,024 bytes is read, and the schema then refuses the unknown member; one of 1,025 is refused at the limit",
+  "statements": [
+    "MTS-SEC-001",
+    "MTS-SEC-035"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "No member of a 1.0 manifest is a number, so a number literal the limit lets through is refused by the manifest schema instead: the at-the-limit case shows the processing reached that step (MTS-MAN-020).",
+  "cases": [
+    {
+      "name": "at-the-limit",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "at-the-limit"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/at-the-limit.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-limit",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "beyond-the-limit"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/beyond-the-limit.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+[
+  {
+    "code": "manifest.const",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 15,
+      "pointer": "/outputs/0/container/format"
+    },
+    "params": {
+      "expected": "\"zip\""
+    }
+  }
+]

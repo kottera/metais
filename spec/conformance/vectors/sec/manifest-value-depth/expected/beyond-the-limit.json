@@ -1,0 +1,40 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 8,
+      "column": 5,
+      "pointer": "/inputs/0"
+    },
+    "params": {
+      "limit": "value-depth",
+      "bound": 2,
+      "lowered": true
+    }
+  },
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 12,
+      "column": 5,
+      "pointer": "/outputs/0"
+    },
+    "params": {
+      "limit": "value-depth",
+      "bound": 2,
+      "lowered": true
+    }
+  }
+]

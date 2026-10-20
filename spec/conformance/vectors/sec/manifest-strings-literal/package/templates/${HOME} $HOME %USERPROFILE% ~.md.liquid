@@ -1,0 +1,10 @@
+title: {{ package.title }}
+description: {{ package.description }}
+guide: {{ package.guide }}
+author name: {{ package.authors[0].name }}
+author email: {{ package.authors[0].email }}
+author url: {{ package.authors[0].url }}
+homepage: {{ package.homepage }}
+default: {{ inputs.v.s }}
+path: {{ output.path }}
+literal: {{ '$HOME %USERPROFILE% ~' }} ${HOME}

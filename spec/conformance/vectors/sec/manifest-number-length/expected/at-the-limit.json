@@ -1,0 +1,19 @@
+[
+  {
+    "code": "manifest.additional_property",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 14,
+      "column": 1,
+      "pointer": "/n"
+    },
+    "params": {
+      "property": "n"
+    }
+  }
+]

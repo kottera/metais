@@ -1,0 +1,1217 @@
+[
+  {
+    "code": "manifest.yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 15,
+      "column": 6,
+      "pointer": "/lol/a"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 6,
+      "pointer": "/lol/b"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 10,
+      "pointer": "/lol/b/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 14,
+      "pointer": "/lol/b/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 18,
+      "pointer": "/lol/b/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 22,
+      "pointer": "/lol/b/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 26,
+      "pointer": "/lol/b/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 30,
+      "pointer": "/lol/b/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 34,
+      "pointer": "/lol/b/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 38,
+      "pointer": "/lol/b/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 16,
+      "column": 42,
+      "pointer": "/lol/b/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 6,
+      "pointer": "/lol/c"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 10,
+      "pointer": "/lol/c/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 14,
+      "pointer": "/lol/c/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 18,
+      "pointer": "/lol/c/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 22,
+      "pointer": "/lol/c/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 26,
+      "pointer": "/lol/c/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 30,
+      "pointer": "/lol/c/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 34,
+      "pointer": "/lol/c/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 38,
+      "pointer": "/lol/c/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 17,
+      "column": 42,
+      "pointer": "/lol/c/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 6,
+      "pointer": "/lol/d"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 10,
+      "pointer": "/lol/d/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 14,
+      "pointer": "/lol/d/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 18,
+      "pointer": "/lol/d/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 22,
+      "pointer": "/lol/d/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 26,
+      "pointer": "/lol/d/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 30,
+      "pointer": "/lol/d/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 34,
+      "pointer": "/lol/d/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 38,
+      "pointer": "/lol/d/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 18,
+      "column": 42,
+      "pointer": "/lol/d/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 19,
+      "column": 6,
+      "pointer": "/lol/e"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 19,
+      "column": 10,
+      "pointer": "/lol/e/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 19,
+      "column": 14,
+      "pointer": "/lol/e/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 19,
+      "column": 18,
+      "pointer": "/lol/e/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 19,
+      "column": 22,
+      "pointer": "/lol/e/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 19,
+      "column": 26,
+      "pointer": "/lol/e/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 19,
+      "column": 30,
+      "pointer": "/lol/e/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 19,
+      "column": 34,
+      "pointer": "/lol/e/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 19,
+      "column": 38,
+      "pointer": "/lol/e/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 19,
+      "column": 42,
+      "pointer": "/lol/e/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 6,
+      "pointer": "/lol/f"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 10,
+      "pointer": "/lol/f/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 14,
+      "pointer": "/lol/f/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 18,
+      "pointer": "/lol/f/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 22,
+      "pointer": "/lol/f/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 26,
+      "pointer": "/lol/f/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 30,
+      "pointer": "/lol/f/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 34,
+      "pointer": "/lol/f/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 38,
+      "pointer": "/lol/f/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 20,
+      "column": 42,
+      "pointer": "/lol/f/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 6,
+      "pointer": "/lol/g"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 10,
+      "pointer": "/lol/g/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 14,
+      "pointer": "/lol/g/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 18,
+      "pointer": "/lol/g/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 22,
+      "pointer": "/lol/g/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 26,
+      "pointer": "/lol/g/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 30,
+      "pointer": "/lol/g/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 34,
+      "pointer": "/lol/g/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 38,
+      "pointer": "/lol/g/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 21,
+      "column": 42,
+      "pointer": "/lol/g/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 6,
+      "pointer": "/lol/h"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 10,
+      "pointer": "/lol/h/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 14,
+      "pointer": "/lol/h/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 18,
+      "pointer": "/lol/h/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 22,
+      "pointer": "/lol/h/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 26,
+      "pointer": "/lol/h/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 30,
+      "pointer": "/lol/h/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 34,
+      "pointer": "/lol/h/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 38,
+      "pointer": "/lol/h/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 22,
+      "column": 42,
+      "pointer": "/lol/h/8"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.anchor",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 23,
+      "column": 6,
+      "pointer": "/lol/i"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 23,
+      "column": 10,
+      "pointer": "/lol/i/0"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 23,
+      "column": 14,
+      "pointer": "/lol/i/1"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 23,
+      "column": 18,
+      "pointer": "/lol/i/2"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 23,
+      "column": 22,
+      "pointer": "/lol/i/3"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 23,
+      "column": 26,
+      "pointer": "/lol/i/4"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 23,
+      "column": 30,
+      "pointer": "/lol/i/5"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 23,
+      "column": 34,
+      "pointer": "/lol/i/6"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 23,
+      "column": 38,
+      "pointer": "/lol/i/7"
+    },
+    "params": {}
+  },
+  {
+    "code": "manifest.yaml.alias",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 23,
+      "column": 42,
+      "pointer": "/lol/i/8"
+    },
+    "params": {}
+  }
+]

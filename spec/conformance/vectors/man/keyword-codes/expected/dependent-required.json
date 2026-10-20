@@ -1,0 +1,20 @@
+[
+  {
+    "code": "manifest.dependent_required",
+    "severity": "error",
+    "subject": {
+      "kind": "manifest"
+    },
+    "location": {
+      "origin": "package",
+      "file": "metais.yaml",
+      "line": 12,
+      "column": 5,
+      "pointer": "/outputs/0/path"
+    },
+    "params": {
+      "property": "path",
+      "because": "for_each"
+    }
+  }
+]

@@ -2211,7 +2211,9 @@
       "hint": "Write {expected}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.contains",
@@ -2223,7 +2225,9 @@
       "hint": "Add an item that the contains subschema accepts.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.dependent_required",
@@ -2248,7 +2252,9 @@
       "hint": "Add the member `{property}`, or remove `{because}`.",
       "location": "parent",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.enum",
@@ -2365,7 +2371,9 @@
       "hint": "Remove the value.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.format",
@@ -2662,7 +2670,9 @@
       "hint": "Remove items until there are at most {limit}.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.max_length",
@@ -2818,7 +2828,10 @@
       "hint": "Write at least {limit} characters.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-012",
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.min_properties",
@@ -2948,7 +2961,9 @@
       "hint": "Change the value to match one alternative; each alternative's findings are listed under it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.one_of.ambiguous",
@@ -3188,7 +3203,9 @@
       "hint": "Remove the repeated item, or change it.",
       "location": "value",
       "since": "1.0",
-      "statements": []
+      "statements": [
+        "MTS-MAN-019"
+      ]
     },
     {
       "code": "manifest.yaml.alias",

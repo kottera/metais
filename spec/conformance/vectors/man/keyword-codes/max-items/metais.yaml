@@ -1,0 +1,79 @@
+metais: "1.0"
+name: hostile
+version: 1.0.0
+title: Hostile
+description: A package that breaks one rule.
+guide: Supply a report.
+authors:
+  - name: Author 1
+  - name: Author 2
+  - name: Author 3
+  - name: Author 4
+  - name: Author 5
+  - name: Author 6
+  - name: Author 7
+  - name: Author 8
+  - name: Author 9
+  - name: Author 10
+  - name: Author 11
+  - name: Author 12
+  - name: Author 13
+  - name: Author 14
+  - name: Author 15
+  - name: Author 16
+  - name: Author 17
+  - name: Author 18
+  - name: Author 19
+  - name: Author 20
+  - name: Author 21
+  - name: Author 22
+  - name: Author 23
+  - name: Author 24
+  - name: Author 25
+  - name: Author 26
+  - name: Author 27
+  - name: Author 28
+  - name: Author 29
+  - name: Author 30
+  - name: Author 31
+  - name: Author 32
+  - name: Author 33
+  - name: Author 34
+  - name: Author 35
+  - name: Author 36
+  - name: Author 37
+  - name: Author 38
+  - name: Author 39
+  - name: Author 40
+  - name: Author 41
+  - name: Author 42
+  - name: Author 43
+  - name: Author 44
+  - name: Author 45
+  - name: Author 46
+  - name: Author 47
+  - name: Author 48
+  - name: Author 49
+  - name: Author 50
+  - name: Author 51
+  - name: Author 52
+  - name: Author 53
+  - name: Author 54
+  - name: Author 55
+  - name: Author 56
+  - name: Author 57
+  - name: Author 58
+  - name: Author 59
+  - name: Author 60
+  - name: Author 61
+  - name: Author 62
+  - name: Author 63
+  - name: Author 64
+  - name: Author 65
+inputs:
+  - name: report
+    title: Report
+    schema: inputs/report.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid

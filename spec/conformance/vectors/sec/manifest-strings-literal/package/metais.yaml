@@ -1,0 +1,44 @@
+metais: "1.0"
+name: org.example.literal
+version: 1.0.0
+title: ${HOME} $HOME %USERPROFILE% ~
+description: ${HOME} $HOME %USERPROFILE% ~
+guide: ${HOME} $HOME %USERPROFILE% ~
+authors:
+  - name: ${HOME} $HOME %USERPROFILE% ~
+    email: ${HOME}$HOME%USERPROFILE%~@example.com
+    url: https://example.com/$HOME/~
+homepage: https://example.com/~/$HOME
+inputs:
+  - name: v
+    title: ${HOME} $HOME %USERPROFILE% ~
+    description: ${HOME} $HOME %USERPROFILE% ~
+    schema: inputs/${HOME} $HOME %USERPROFILE% ~.schema.json
+    meaning: inputs/${HOME} $HOME %USERPROFILE% ~.md
+input_constraints: inputs/${HOME} $HOME %USERPROFILE% ~.constraints.json
+outputs:
+  - id: report
+    template: ${HOME} $HOME %USERPROFILE% ~.md.liquid
+    path: ${HOME}/$HOME/%USERPROFILE%/~/report.md
+    when: "'${HOME} $HOME %USERPROFILE% ~' != ''"
+  - id: fan
+    template: item.json.liquid
+    for_each: "'${HOME}|$HOME|%USERPROFILE%|~' | split: '|'"
+    path: fan/{{ item }}.json
+    validate: inputs/${HOME} $HOME %USERPROFILE% ~.text.json
+  - id: asset
+    asset: ${HOME} $HOME %USERPROFILE% ~.txt
+    path: asset/${HOME} $HOME %USERPROFILE% ~.txt
+  - id: mirror
+    mirror: ${HOME} $HOME %USERPROFILE% ~
+    path: mirror
+  - id: odt
+    path: ${HOME} $HOME %USERPROFILE% ~.odt
+    container:
+      profile: odf
+      mimetype: ${HOME}/$HOME%USERPROFILE%~
+      entries:
+        - template: content.xml.liquid
+        - template: manifest.xml.liquid
+          path: META-INF/manifest.xml
+          first: true

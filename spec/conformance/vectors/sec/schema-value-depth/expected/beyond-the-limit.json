@@ -1,0 +1,21 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "line": 1,
+      "column": 71,
+      "pointer": "/properties/title/enum"
+    },
+    "params": {
+      "limit": "value-depth",
+      "bound": 3,
+      "lowered": true
+    }
+  }
+]
