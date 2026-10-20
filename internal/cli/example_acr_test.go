@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -180,4 +181,77 @@ func acrReport(t *testing.T, src, edition string) []byte {
 		t.Fatalf("%s/report.yaml has no edition line", src)
 	}
 	return []byte(strings.Join(out, "\n"))
+}
+
+// TestACRCatalogueInStep holds the three copies of each table's catalogue
+// in the §4.1 example to one list, in one order: the criterion numbers
+// its schema's enum allows, the numbers its label partial names, and the
+// numbers its reference file's sections give. The WCAG level partial
+// names each WCAG number once, and the reference gives each the level the
+// partial does.
+func TestACRCatalogueInStep(t *testing.T) {
+	read := func(p string) string {
+		t.Helper()
+		b, err := os.ReadFile(filepath.Join(acrPackage, p))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(b)
+	}
+	whens := regexp.MustCompile(`\{%- when ((?:"[^"]+"(?:, )?)+) -%\}([^\n]*)`)
+	quoted := regexp.MustCompile(`"([^"]+)"`)
+	sections := regexp.MustCompile(`(?m)^## ([0-9.]+) ([^\n]*)$`)
+	levels := map[string]string{}
+	for _, m := range whens.FindAllStringSubmatch(read("templates/criteria/wcag-level.liquid"), -1) {
+		for _, q := range quoted.FindAllStringSubmatch(m[1], -1) {
+			if _, twice := levels[q[1]]; twice {
+				t.Errorf("wcag-level.liquid names %s twice", q[1])
+			}
+			levels[q[1]] = m[2]
+		}
+	}
+	for _, c := range []struct{ input, reference string }{
+		{"wcag", "wcag-2.2.md"},
+		{"section508", "section-508.md"},
+		{"en301549", "en-301-549.md"},
+	} {
+		var schema struct {
+			Items struct {
+				Properties struct {
+					Criterion struct{ Enum []string }
+				}
+			}
+			MaxItems int
+		}
+		if err := json.Unmarshal([]byte(read("inputs/"+c.input+".schema.json")), &schema); err != nil {
+			t.Fatal(err)
+		}
+		enum := schema.Items.Properties.Criterion.Enum
+		if len(enum) == 0 || schema.MaxItems != len(enum) {
+			t.Errorf("%s: the schema allows %d numbers and %d rows", c.input, len(enum), schema.MaxItems)
+		}
+		labels := map[string]string{}
+		var named []string
+		for _, m := range whens.FindAllStringSubmatch(read("templates/criteria/"+c.input+".liquid"), -1) {
+			named = append(named, m[1][1:len(m[1])-1])
+			labels[m[1][1:len(m[1])-1]] = m[2]
+		}
+		var given []string
+		for _, m := range sections.FindAllStringSubmatch(read("references/"+c.reference), -1) {
+			given = append(given, m[1])
+			want := labels[m[1]]
+			if c.input == "wcag" {
+				want += " (Level " + levels[m[1]] + ")"
+			}
+			if m[2] != want {
+				t.Errorf("%s: references/%s names %s %q, and the partials %q", c.input, c.reference, m[1], m[2], want)
+			}
+		}
+		if !slices.Equal(named, enum) || !slices.Equal(given, enum) {
+			t.Errorf("%s: the schema allows %q,\nthe partial names %q,\nand the reference gives %q", c.input, enum, named, given)
+		}
+		if c.input == "wcag" && len(levels) != len(enum) {
+			t.Errorf("wcag-level.liquid names %d numbers, and the schema allows %d", len(levels), len(enum))
+		}
+	}
 }
