@@ -28,7 +28,6 @@ type placed struct {
 // The offsets of the fields of a local header, a central directory header
 // and the end record that a finding names (APPNOTE 4.3.7, 4.3.12, 4.3.16).
 const (
-	lfNeeded = 4
 	lfFlags  = 6
 	lfMethod = 8
 	lfCRC    = 14
@@ -43,12 +42,12 @@ const (
 	cfTime       = 12
 	cfDate       = 14
 	cfCSize      = 20
-	cfUSize      = 24
 	cfCommentLen = 32
 	cfDisk       = 34
 	cfInternal   = 36
 	cfExternal   = 38
 	cfOffset     = 42
+	cfName       = 46
 
 	efDisk   = 4
 	efCDDisk = 6

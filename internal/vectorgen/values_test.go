@@ -86,7 +86,7 @@ func centralField(name string, f int) func(built) int {
 // centralExtra is the extra field of the central directory header of the
 // entry name.
 func centralExtra(name string) func(built) int {
-	return func(b built) int { e := b.at.entry(name); return e.central + 46 + int(e.ch.nameLen) }
+	return func(b built) int { e := b.at.entry(name); return e.central + cfName + int(e.ch.nameLen) }
 }
 
 // central is a field of the central directory header of the entry name,
@@ -98,6 +98,7 @@ func declaredSize(h header) int  { return int(h.usize) }
 func extraLength(h header) int   { return int(h.extraLen) }
 func commentLength(h header) int { return int(h.commentLen) }
 
+// endRecord is the end record, and endField one of its fields.
 var endRecord = endField(0)
 
 func endField(f int) func(built) int { return func(b built) int { return b.at.end + f } }
@@ -114,7 +115,7 @@ func archiveComment(b built) int { return int(b.at.eocd.commentLen) }
 func onDisk(b built) int         { return int(b.at.eocd.onDisk) }
 
 // uncompressed is the sum of every entry's uncompressed size, as its
-// central directory header declares it (ADR-009 D4 item 4).
+// central directory header declares it (chapter 14 §14.2).
 func uncompressed(b built) int {
 	n := 0
 	for _, e := range b.at.entries {

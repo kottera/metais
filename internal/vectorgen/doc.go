@@ -10,6 +10,11 @@
 //
 //	go test ./internal/vectorgen -run TestPackages -args -update
 //
+// It also writes the packages pack's vectors expect (TestPackOutputs), and
+// every number in a vector's hand-written JSON that its package's bytes
+// fix, an offset, a size or a limit lowered to the package's own, from
+// where it placed each record (TestValues). regenerate.sh runs all three.
+//
 // A package is built from source files the way pack builds one: its
 // compiled files are derived by internal/loader, the code every open
 // re-derives them with, its digest file by internal/digest, and its zip
