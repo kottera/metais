@@ -1,0 +1,34 @@
+[
+  {
+    "code": "package.container.field_value",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/dir/"
+    },
+    "params": {
+      "offset": 2612,
+      "record": "central directory header",
+      "header_field": "external file attributes",
+      "value": 1106051088,
+      "expected": 2175008768
+    }
+  },
+  {
+    "code": "package.name.directory_entry",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/dir/"
+    },
+    "params": {
+      "offset": 2574
+    }
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.digest.entries_mismatch",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/digests.json",
+      "pointer": "/entries/templates~1gone.md.liquid"
+    },
+    "params": {
+      "reason": "no_entry"
+    }
+  }
+]

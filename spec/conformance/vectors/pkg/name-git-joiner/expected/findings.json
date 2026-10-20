@@ -1,0 +1,32 @@
+[
+  {
+    "code": "package.name.character",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/.g‌it/config"
+    },
+    "params": {
+      "offset": 2595,
+      "code_point": 8204
+    }
+  },
+  {
+    "code": "package.name.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/.g‌it/config"
+    },
+    "params": {
+      "offset": 2595,
+      "reason": "git"
+    }
+  }
+]

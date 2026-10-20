@@ -92,6 +92,12 @@ package names — a schema's `$ref`, `$schema` or `$id`, a manifest's
 `homepage` — and MUST resolve a schema reference only within the package and
 the 2020-12 meta-schemas.
 
+<a id="mts-sec-028"></a>**MTS-SEC-028** A processor MUST treat an entry's
+content as bytes whatever it holds: it MUST NOT open, list or decompress an
+entry that is itself a zip, a packed package or another archive, so that a
+package can carry such an entry, however far it would expand, at the cost of
+its own bytes.
+
 ## 14.3 Data limits
 
 Every size and count a processor reads from the inputs of one operation is

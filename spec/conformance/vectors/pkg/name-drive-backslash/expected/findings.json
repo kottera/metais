@@ -1,0 +1,32 @@
+[
+  {
+    "code": "package.name.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "C:\\x"
+    },
+    "params": {
+      "offset": 2562,
+      "reason": "backslash"
+    }
+  },
+  {
+    "code": "package.name.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "C:\\x"
+    },
+    "params": {
+      "offset": 2562,
+      "reason": "colon"
+    }
+  }
+]

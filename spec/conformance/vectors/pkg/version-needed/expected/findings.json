@@ -1,0 +1,20 @@
+[
+  {
+    "code": "package.container.field_value",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid"
+    },
+    "params": {
+      "offset": 2586,
+      "record": "central directory header",
+      "header_field": "version needed to extract",
+      "value": 20,
+      "expected": 10
+    }
+  }
+]

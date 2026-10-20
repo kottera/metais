@@ -1,0 +1,67 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/nested-archive",
+  "title": "A zip bomb carried as an asset is bytes: the package opens, validates and renders without opening it",
+  "statements": [
+    "MTS-SEC-028"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "byte-level"
+  ],
+  "requires": [],
+  "notes": "Its package.metais is written by internal/vectorgen (go test ./internal/vectorgen -run TestPackages -args -update), whose test reproduces the committed bytes. assets/bomb.zip is Fifield's simplest overlap: 32 central directory headers naming one deflated local header of 32 MiB of zeros, 1 GiB to a reader that opened it; rss_mib holds each step far below that.",
+  "cases": [
+    {
+      "name": "validate",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package.metais",
+            "set": [
+              "/report/title=Hostile"
+            ]
+          },
+          "expect": {
+            "ok": true
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package.metais",
+            "set": [
+              "/report/title=Hostile"
+            ],
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

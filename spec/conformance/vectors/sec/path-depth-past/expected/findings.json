@@ -1,0 +1,19 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/d/x"
+    },
+    "params": {
+      "limit": "path-depth",
+      "bound": 32,
+      "lowered": false,
+      "observed": 33
+    }
+  }
+]

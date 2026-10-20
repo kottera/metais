@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.name.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "\\\\server\\share\\x"
+    },
+    "params": {
+      "offset": 2589,
+      "reason": "backslash"
+    }
+  }
+]

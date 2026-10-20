@@ -1,0 +1,20 @@
+[
+  {
+    "code": "package.container.field_value",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid"
+    },
+    "params": {
+      "offset": 2592,
+      "record": "central directory header",
+      "header_field": "last mod file time",
+      "value": 24576,
+      "expected": 0
+    }
+  }
+]

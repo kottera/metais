@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.name.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/name "
+    },
+    "params": {
+      "offset": 2577,
+      "reason": "segment_end"
+    }
+  }
+]
