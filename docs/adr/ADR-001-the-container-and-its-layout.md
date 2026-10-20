@@ -960,10 +960,11 @@ digests cover), D8 item 1 (verification), and D9 item 3 (detection).
    package is, and that this file is a zip archive. It says that
    `metais.yaml` inside holds the package's own title, description and
    guide. It says that installing the tool, and getting started, are at
-   `https://metais.org/`. It gives no install command, no command line,
-   and no text from the package: a package packed years ago must never
-   give stale instructions, so the website carries everything that can
-   change. The text for specification 1.0 is:
+   `https://metais.org/`. It gives no install command and no text from
+   the package: a package packed years ago must never give stale
+   instructions, so the website carries everything that can change. It
+   names one command line, `metais inspect` (Amendment A2). The text for
+   specification 1.0 is:
 
    ```markdown
    # This is a METAIS package
@@ -974,7 +975,9 @@ digests cover), D8 item 1 (verification), and D9 item 3 (detection).
    This file is a zip archive. Inside it, metais.yaml holds this package's
    own title, description and guide.
 
-   To use it, you need the metais tool. How to install it and how to
+   To use it, you need the metais tool. With it installed, start by
+   running `metais inspect` on this file: it shows what the package
+   needs and the commands to run next. How to install it and how to
    start: https://metais.org/
 
    This README is the same in every METAIS package.
@@ -1007,6 +1010,37 @@ digests cover), D8 item 1 (verification), and D9 item 3 (detection).
    `file(1)` than the first name alone.
 9. **Zip container outputs are unchanged.** ADR-005's containers are not
    packages, and gain no `README.md`.
+
+### A2 — The README names one command: `metais inspect`
+
+**Status:** Accepted 2026-10-20 by Ed Funnekotter.
+**Amends:** A1 item 3 (what the text says), and the README text of
+specification 1.0.
+
+1. **The text names `metais inspect`.** After saying that the metais
+   tool is needed, the README tells a reader who has it to start by
+   running `metais inspect` on the file, which shows what the package
+   needs and the commands to run next. The install pointer to
+   `https://metais.org/` stays.
+2. **Why.** A fresh agent session asked only to "fill this file:
+   report.metais", with metais installed, read the README from the raw
+   bytes and then unzipped the package to look inside, before it ran the
+   tool. The README had told it what the file was, but not where to
+   start. The tool is missing only the first time a reader meets a
+   package. Every later time, the first command is the instruction that
+   matters.
+3. **Staleness.** A1 item 3 kept command lines out of the README, so that
+   an old package never gives stale instructions. This one command is
+   held instead: **the reference tool, `metais`, provides
+   `metais inspect <package>` for every specification 1.0 package it
+   reads.** A later specification
+   version may define a different README text, as A1 allows, but it
+   never makes a 1.0 package's text wrong. Install commands stay out,
+   because they change with platforms and package managers.
+4. **What else changes.** Specification §2.4.1 carries the new bytes.
+   `internal/specdata`'s copy and every packed package in the conformance
+   vectors are regenerated. The first line, and with it A1 item 8's
+   detection key at offset 39, is unchanged.
 
 ## Implementation log
 

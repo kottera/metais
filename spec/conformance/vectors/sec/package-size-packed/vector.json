@@ -26,7 +26,7 @@
               "/report/title=Hostile"
             ],
             "limits": {
-              "package-size": 3179
+              "package-size": 3308
             }
           },
           "expect": {
@@ -47,7 +47,7 @@
           "args": {
             "package": "package.metais",
             "limits": {
-              "package-size": 3178
+              "package-size": 3307
             }
           },
           "expect": {
