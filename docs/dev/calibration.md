@@ -74,7 +74,7 @@ also proves that one less refuses it.
 | `value-size` | `render` | a string doubled by `append` | refusal |
 | `array-size` | `render` | `split` of a doubled string of `x,` | refusal |
 | `assign-bytes` | `render` | a string of `value-size` bytes, copied by `assign` | refusal |
-| `schema-work` | `validate` | an array input, each item evaluating `items` and an `allOf` of nine, one evaluation past the limit | not reached: see below |
+| `schema-work` | `validate` | an array input, each item evaluating `items` and an `allOf` of nine, exactly the limit's units | accepted at the limit |
 | `regex-work` | `grep` | a pattern of about 4,000 instructions over lines of 999 bytes it never matches | refusal |
 | `outputs` | `render` | a `for_each` of exactly `outputs` outputs, each written | accepted at the limit |
 | `container-depth` | `render` | containers nested `container-depth` deep | accepted at the limit |
@@ -86,13 +86,10 @@ also proves that one less refuses it.
 | `schema-joint-file` | `inspect` | the schema files hold exactly `schema-subschemas`, every leaf's location exactly `schema-location-length` long; they compile, and the combined schema is then refused by its count | the combined schema's refusal |
 | `schema-joint-combined` | `inspect` | the combined schema holds exactly `schema-subschemas`, embedding a file whose leaves' locations are exactly `schema-location-length` long | accepted at the limit |
 
-`schema-work` is measured, but the tool does not count it. The schema
-library has no hook per subschema evaluation, which ADR-010's
-implementation log records from W2-10. The case does one evaluation more
-than the limit allows, so its measurement is the cost of the work the
-default would allow. Its record says `"reached": false` and gives the gap.
-`TestCalibrationLowered` pins it short of its limit, so the change that
-counts `schema-work` turns that test red, and the gap is removed then.
+`schema-work` is counted before a validation evaluates anything
+(MTS-SEC-046), so a validation one unit past the limit is refused at the
+cost of the count alone. Its worst case is therefore the validation of
+exactly the limit's units, which is accepted and does all that work.
 
 ## The record
 
