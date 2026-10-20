@@ -107,6 +107,37 @@ func TestPlanPack(t *testing.T) {
 	}
 }
 
+// TestEntryAt is the entry pack names for a byte of the package it last
+// wrote (R1-014's advice): the entry whose local record or central
+// directory header holds the byte, so the signature of a second end
+// record, in an entry's stored bytes or in its header's CRC or sizes, is
+// traced to the entry an author changes; the end record is no entry's,
+// and before a write nothing is known.
+func TestEntryAt(t *testing.T) {
+	files := packFiles()
+	files["assets/blob.bin"] = []byte("xx\x01\x7fPK\x05\x06\xfe\x80\x00")
+	_, p := planned(t, files, nil, 0)
+	if n, ok := p.EntryAt(0); ok {
+		t.Errorf("before a write, offset 0 is %q's", n)
+	}
+	var b bytes.Buffer
+	if err := p.Write(&b); err != nil {
+		t.Fatal(err)
+	}
+	pkg := b.Bytes()
+	sig := bytes.Index(pkg, []byte("PK\x05\x06"))
+	if n, ok := p.EntryAt(int64(sig)); !ok || n != "assets/blob.bin" {
+		t.Errorf("the signature at %d is %q's (%v), want assets/blob.bin's", sig, n, ok)
+	}
+	last := p.Entries[len(p.Entries)-1]
+	if n, ok := p.EntryAt(int64(len(pkg) - 22 - 1)); !ok || n != last {
+		t.Errorf("the central directory's last byte is %q's (%v), want %q's", n, ok, last)
+	}
+	if n, ok := p.EntryAt(int64(len(pkg) - 22)); ok {
+		t.Errorf("the end record is %q's", n)
+	}
+}
+
 // TestPackMapOrder is the control fault.PackMapOrder is for (ADR-010 D13
 // item 2): under it the digest file's members are a Go map's order, which
 // differs between plans, so the determinism detector that holds pack's

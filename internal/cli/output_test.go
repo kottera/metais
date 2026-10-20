@@ -24,6 +24,7 @@ import (
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/testenv"
 	"github.com/kottera/metais/internal/version"
+	"github.com/kottera/metais/internal/zipfmt"
 )
 
 const sgr = "\x1b["
@@ -475,6 +476,7 @@ func TestRefusalNextPerCause(t *testing.T) {
 		renderSample   = "--data is given with --sample, whose generated data takes the data directory's place."
 		renderArchive  = "--overwrite is given with --out -, and an archive on standard output replaces nothing."
 		packBadValue   = "--out is empty, or names a file whose name metais will not write."
+		packOpened     = "The package is refused (container: second end record)."
 	)
 	cases := []struct {
 		line  []string
@@ -497,6 +499,8 @@ func TestRefusalNextPerCause(t *testing.T) {
 		{[]string{"sample", pkg, "--example", "Not-A-Name"}, finding.CodeUsageBadValue, sampleBadValue},
 		{[]string{"pack", pkg, "--out"}, finding.CodeUsageBadValue, lineBadValue},
 		{[]string{"pack", pkg, "--out", ""}, finding.CodeUsageBadValue, packBadValue},
+		{[]string{"pack", filepath.Join(vectorsDir, "pkg/second-end-record/package.metais"), "--out", to}, zipfmt.CodeSecondEndRecord, packOpened},
+		{[]string{"pack", secondEndSource(t), "--out", to}, zipfmt.CodeSecondEndRecord, packSecondEnd.Cause},
 	}
 	covered := map[string]bool{}
 	for _, tc := range cases {
@@ -511,7 +515,10 @@ func TestRefusalNextPerCause(t *testing.T) {
 			t.Errorf("metais %q: codes %q; want %s", tc.line, r.codes(), tc.code)
 			continue
 		}
-		if want := []Next{c.Refusals[i].Next}; !reflect.DeepEqual(r.doc.Next, want) {
+		want := []Next{c.Refusals[i].Next}
+		// pack's read-back names the entry that holds the signature.
+		want[0].Why = strings.ReplaceAll(want[0].Why, "<entry>", "'assets/my blob.bin'")
+		if !reflect.DeepEqual(r.doc.Next, want) {
 			t.Errorf("metais %q: next %v; its cause declares %v", tc.line, r.doc.Next, want)
 		}
 	}

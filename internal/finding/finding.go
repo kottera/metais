@@ -291,6 +291,7 @@ type Finding struct {
 	via          []Via
 	alternatives []Alternative
 	related      []Related
+	hint         string // a declared hint template in place of the code's; see WithHint
 
 	paramsKey string // the canonical form of params, for Compare and the duplicate key
 }
@@ -303,8 +304,30 @@ func (f Finding) Class() Class       { return f.entry.Class }
 // template (ADR-006 D9).
 func (f Finding) Message() string { return f.mustRender(f.entry.Message) }
 
-// Hint returns the finding's hint, rendered from its code's template.
-func (f Finding) Hint() string                { return f.mustRender(f.entry.Hint) }
+// Hint returns the finding's hint, rendered from its code's template, or
+// from the template WithHint gave it.
+func (f Finding) Hint() string {
+	if f.hint != "" {
+		return f.mustRender(f.hint)
+	}
+	return f.mustRender(f.entry.Hint)
+}
+
+// WithHint returns f with its hint rendered from tmpl in place of its
+// code's template: the hint a command declares for one cause of the code,
+// where the registry's hint, written for every reader of the code, names
+// no step that cause's author can take (ADR-008 D14 item 4). tmpl is
+// static text the tool declares, never a value from the inputs, and
+// follows the registry's templates' rules; WithHint panics when it names a
+// placeholder f cannot fill.
+func (f Finding) WithHint(tmpl string) Finding {
+	if _, err := f.render(tmpl, false); err != nil {
+		panic(fmt.Sprintf("finding: %s declared hint: %v", f.entry.Code, err))
+	}
+	f.hint = tmpl
+	return f
+}
+
 func (f Finding) Subject() Subject            { return f.subject }
 func (f Finding) Via() []Via                  { return slices.Clone(f.via) }
 func (f Finding) Alternatives() []Alternative { return slices.Clone(f.alternatives) }

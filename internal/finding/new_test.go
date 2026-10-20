@@ -159,3 +159,20 @@ func TestLookupAndRegistryCopies(t *testing.T) {
 		t.Error("Lookup found an unregistered code")
 	}
 }
+
+// TestWithHint is a command's declared hint (ADR-008 D14 item 4): it
+// replaces the code's hint, renders its placeholders as the registry's
+// templates do, leaves every member of the finding as it was, and is
+// refused when it names a placeholder the finding cannot fill.
+func TestWithHint(t *testing.T) {
+	withTestCodes(t)
+	f := minLength("name", "inputs/a.json", 2, "/name", 3)
+	g := f.WithHint("Write at least {limit} characters at {field}.")
+	if want := "Write at least 10 characters at `/name`."; g.Hint() != want {
+		t.Errorf("hint %q, want %q", g.Hint(), want)
+	}
+	if f.Hint() == g.Hint() || g.Message() != f.Message() || Compare(f, g) != 0 {
+		t.Errorf("WithHint changed more than the hint: %q, %q", g.Message(), g.Hint())
+	}
+	mustPanic(t, "an unknown placeholder", "declared hint", func() { f.WithHint("Use {nothing}.") })
+}

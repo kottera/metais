@@ -17,6 +17,7 @@ import (
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/loader"
+	"github.com/kottera/metais/internal/zipfmt"
 )
 
 // packResult is metais.pack/1's result (ADR-008 D9 pack item 4, ADR-007
@@ -71,7 +72,9 @@ func packDeclaration() *Command {
 			"mode or owner, the order a directory lists its names in, the platform, the locale or the clock. " +
 			"One build of metais packs a source directory to the same bytes every time. The package is " +
 			"read back as every reader reads one before it is kept, and a limit only its bytes show, such " +
-			"as entry-ratio, refuses it as limit.package.\n\n" +
+			"as entry-ratio, refuses it as limit.package. An entry whose bytes put the end of central " +
+			"directory signature in the package's final 65,557 bytes refuses it as " +
+			"package.container.second_end_record, and the next step names that entry.\n\n" +
 			"--out names the package file. Without it, the file is <name>-<version>.metais, from the " +
 			"manifest, in the working directory; an --out that names an existing directory writes that file " +
 			"inside it. The file is written to a temporary file .metais-tmp-<h> beside it, created " +
@@ -107,6 +110,22 @@ func packDeclaration() *Command {
 	}
 }
 
+// packSecondEnd is the refusal of a second end record in the package pack
+// built (R1-014), which packFailed gives the read-back's finding: the
+// code's own row, written for every reader of a package, says to pack it
+// again, which writes the same bytes. The entry is the one whose records
+// hold the signature, which pack knows and a reader does not; the
+// finding's members stay a reader's.
+var packSecondEnd = Refusal{Code: zipfmt.CodeSecondEndRecord,
+	Cause: "An entry of the package pack built puts the end of central directory signature in the package's final 65,557 bytes, so a reader refuses the package; nothing was written.",
+	Hint:  "Change the entry the next step names, in the source directory, so that its bytes no longer hold 50 4B 05 06, the end of central directory signature; a nested zip can be shipped in another archive format.",
+	Next: Next{Run: "metais pack <dir>",
+		Why: "Packs the source directory again once its entry <entry> no longer holds the signature; packing it unchanged writes the same bytes."},
+	// No other path reports the code as pack's own: the operand's open
+	// keeps the code's own row.
+	match: func(finding.Finding) bool { return false },
+}
+
 // packRefusals are the codes pack declares (ADR-008 D16 item 2): every
 // code check and test report, each pointing at the step whose errors stop
 // pack, and pack's own.
@@ -140,6 +159,7 @@ func packRefusals() []Refusal {
 		out = append(out, r)
 	}
 	return append(out,
+		packSecondEnd,
 		Refusal{Code: finding.CodeUsageNotSourceDir, Cause: "The operand is a packed package, which pack does not read: it packs a source directory.", Next: nextPackUnpack},
 		Refusal{Code: finding.CodeUsageArchiveToTerminal, Cause: "--out - is given, and standard output is a terminal.", Next: nextPackStream},
 		Refusal{Code: finding.CodeUsageBadValue, Cause: "--out is empty, or names a file whose name metais will not write.", Next: nextCommandHelp("pack"),
@@ -232,7 +252,14 @@ func runPack(s *session, p args.Parsed) outcome {
 	verify := func(r io.ReaderAt, size int64) error {
 		vfs, err := author.VerifyPacked(r, size, lim)
 		if err == nil && len(vfs) > 0 {
-			err = &unreadablePackage{vfs}
+			up := &unreadablePackage{fs: vfs}
+			for _, f := range vfs {
+				v, _ := f.Param("offset")
+				if at, ok := v.Int(); ok && f.Code() == zipfmt.CodeSecondEndRecord {
+					up.entry, _ = plan.EntryAt(at)
+				}
+			}
+			err = up
 		}
 		return err
 	}
@@ -320,8 +347,12 @@ func (s *session) badOut(p args.Parsed) finding.Finding {
 }
 
 // unreadablePackage is a package pack built that a reader refuses, with
-// the reader's findings.
-type unreadablePackage struct{ fs []finding.Finding }
+// the reader's findings, and the entry that holds a second end record's
+// signature, when one does.
+type unreadablePackage struct {
+	fs    []finding.Finding
+	entry string
+}
 
 func (e *unreadablePackage) Error() string { return "cli: the package built does not read" }
 
@@ -341,8 +372,20 @@ func (s *session) packFailed(fs []finding.Finding, err error) outcome {
 	var f finding.Finding
 	switch {
 	case errors.As(err, &up):
-		all := append(slices.Clone(fs), up.fs...)
-		return outcome{findings: all, next: s.nextSteps(up.fs)}
+		vfs, next := slices.Clone(up.fs), s.nextSteps(up.fs)
+		if up.entry != "" {
+			// R1-014's refusal stands; the hint and the next step are
+			// the author's (ADR-008 D14).
+			for i, f := range vfs {
+				if f.Code() == packSecondEnd.Code {
+					vfs[i] = f.WithHint(packSecondEnd.Hint)
+				}
+			}
+			n := packSecondEnd.Next
+			n.Why = strings.Replace(n.Why, "<entry>", shellQuote(up.entry), 1)
+			next = []Next{n}
+		}
+		return outcome{findings: append(slices.Clone(fs), vfs...), next: next}
 	case errors.As(err, &re):
 		f = finding.New(loader.CodeNotReadable, finding.Subject{Kind: finding.SubjectPackage}, nil,
 			finding.Params{"reason": finding.String(string(re.Reason))})

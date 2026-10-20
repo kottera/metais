@@ -27,7 +27,7 @@ func TestCheckCommand(t *testing.T) {
 	}{
 		{"clean", []string{"check", "--json", filepath.Join(aut, "check-source/package")}, finding.ExitOK, checkCounts{}, ""},
 		{"packed", []string{"check", "--json", filepath.Join(aut, "check-packed/package.metais")}, finding.ExitOK, checkCounts{}, ""},
-		{"warnings pass", []string{"check", "--json", filepath.Join(aut, "check-source-tree/package")}, finding.ExitOK, checkCounts{Warning: 4}, ""},
+		{"warnings pass", []string{"check", "--json", filepath.Join(aut, "check-source-tree/package")}, finding.ExitOK, checkCounts{Warning: 5}, ""},
 		{"an error fails", []string{"check", "--json", filepath.Join(aut, "check-step-skipped/package")}, finding.ExitFindings, checkCounts{}, "metais check <package>"},
 		{"refused", []string{"check", "--json", filepath.Join(aut, "check-refused/package.metais")}, finding.ExitRefused, checkCounts{}, "metais check <package>"},
 		{"a lowered limit", []string{"check", "--json", "--limit", "entries=4", filepath.Join(aut, "check-limits/package")}, finding.ExitRefused, checkCounts{}, "metais check <package>"},

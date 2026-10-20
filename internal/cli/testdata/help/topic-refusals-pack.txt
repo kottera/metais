@@ -359,6 +359,11 @@ Next: metais pack <dir>
       written.
   output.destination.nothing_written
 
+Next: metais pack <dir>
+      Packs the source directory again once its entry <entry> no longer holds
+      the signature; packing it unchanged writes the same bytes.
+  package.container.second_end_record
+
 Next: metais pack <dir> --out <path>
       Writes the package to a file; or redirect standard output to a file or a
       pipe, since a package is not written to a terminal.
