@@ -144,7 +144,9 @@
           "13.3"
         ],
         "examples": [
-          "4.2.1"
+          "4.2.1",
+          "4.2.2",
+          "4.2.7"
         ]
       },
       "conformance": {
@@ -158,7 +160,9 @@
         "description": "What the evaluation found: where the product meets the criterion, where it does not, and what the reader should know. A line break starts a new paragraph. Left empty, the row has no remarks.",
         "maxLength": 4000,
         "examples": [
-          "Every function can be used with a screen reader."
+          "Every function can be used with a screen reader.",
+          "The product works with browser zoom to 400 percent.",
+          "Every function can be operated from a keyboard, without simultaneous actions."
         ]
       }
     }
