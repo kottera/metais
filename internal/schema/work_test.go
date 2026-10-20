@@ -126,6 +126,13 @@ func TestRefDepthCycle(t *testing.T) {
 	}); len(fs) > 0 {
 		t.Errorf("a recursive schema:\n%s", describe(fs))
 	}
+	// A reference to a meta-schema is followed, and ends the chain there.
+	files := map[string]string{"inputs/s.json": `{"allOf": [{"$ref": "https://json-schema.org/draft/2020-12/schema"}]}`}
+	if _, fs := compileFiles(t, lower(t, "ref-depth=1"), files); len(fs) > 0 {
+		t.Errorf("a meta-schema at the bound:\n%s", describe(fs))
+	}
+	_, fs := compileFiles(t, lower(t, "ref-depth=0"), files)
+	wantBreach(t, fs, "ref-depth", "inputs/s.json", "/allOf/0/$ref", 1)
 }
 
 // workSchema costs 12 units against workInstance: the root (1 unit, and 2
@@ -199,6 +206,7 @@ func TestSchemaWorkCountsEveryBranch(t *testing.T) {
 		{"if true, and then", `{"if": true, "then": {}, "else": {}}`, `1`, 3},
 		{"if false, and else", `{"if": false, "then": {}, "else": {}}`, `1`, 3},
 		{"patternProperties", `{"patternProperties": {"^a": {}, "b": {}}, "additionalProperties": false}`, `{"ab": 1, "c": 2}`, 6},
+		{"a boolean subschema, by the value it applies to", `{"additionalProperties": false, "items": true}`, `{"a": [1, 2]}`, 5},
 		{"unevaluatedProperties", `{"properties": {"a": {}}, "unevaluatedProperties": {}}`, `{"a": 1, "b": 2}`, 5},
 		{"prefixItems, items, contains and unevaluatedItems", `{"prefixItems": [{}], "contains": {}, "unevaluatedItems": {}}`, `[1, 2]`, 7},
 		{"propertyNames", `{"propertyNames": {"maxLength": 3}}`, `{"a": 1, "b": 2}`, 5},

@@ -81,6 +81,18 @@ func (c *Compiler) charge(s *jsonschema.Schema, v value.Value) error {
 	return nil
 }
 
+// cost is the units of one subschema applied to v: one, and one for each
+// member or item v has.
+func cost(v value.Value) int64 {
+	switch v := v.(type) {
+	case value.Object:
+		return 1 + int64(v.Len())
+	case value.Array:
+		return 1 + int64(v.Len())
+	}
+	return 1
+}
+
 // spend takes n units, and reports whether they were there to take.
 func (w *work) spend(n int64) bool {
 	w.left -= n
@@ -90,14 +102,7 @@ func (w *work) spend(n int64) bool {
 // eval counts s applied to v within sc, and reports whether the count is
 // still within the bound.
 func (w *work) eval(s *jsonschema.Schema, v value.Value, sc *scope) bool {
-	units := int64(1)
-	switch v := v.(type) {
-	case value.Object:
-		units += int64(v.Len())
-	case value.Array:
-		units += int64(v.Len())
-	}
-	if !w.spend(units) {
+	if !w.spend(cost(v)) {
 		return false
 	}
 	if s.Bool != nil {
@@ -162,7 +167,7 @@ func (w *work) members(s *jsonschema.Schema, o value.Object, sc *scope) bool {
 			case bool:
 				// A boolean subschema, held as the boolean itself.
 				evaluated = true
-				if !w.spend(1) {
+				if !w.spend(cost(m)) {
 					return false
 				}
 			}
