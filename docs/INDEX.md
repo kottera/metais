@@ -10,7 +10,21 @@
 
 | Plan | Feature | Status |
 |---|---|---|
-| [PLAN-2026-10-metais-v1](plans/PLAN-2026-10-metais-v1.md) | `metais-v1` | Ratified |
+| [PLAN-2026-10-metais-v1](plans/PLAN-2026-10-metais-v1.md) | `metais-v1` | Ratified; §3 gives each wave's status |
+
+Each wave's brief, ending in the closeout its wave orchestrator writes, is under [briefs/](briefs/), named
+`brief-plan-2026-10-metais-v1-wave<N>.md`:
+
+| Brief | Wave |
+|---|---|
+| [wave1](briefs/brief-plan-2026-10-metais-v1-wave1.md) | 1 — the seams |
+| [wave2](briefs/brief-plan-2026-10-metais-v1-wave2.md) | 2 — the leaf libraries and the proof harness |
+| [wave3](briefs/brief-plan-2026-10-metais-v1-wave3.md) | 3 — opening a package, and the composed libraries |
+| [wave4](briefs/brief-plan-2026-10-metais-v1-wave4.md) | 4 — validate, read, the first render, check and unpack |
+| [wave5](briefs/brief-plan-2026-10-metais-v1-wave5.md) | 5 — the render's capabilities, and the rest of authoring |
+| [wave5b](briefs/brief-plan-2026-10-metais-v1-wave5b.md) | 5b — the gate's cost and merge friction |
+| [wave6](briefs/brief-plan-2026-10-metais-v1-wave6.md) | 6 — pack, and hardening |
+| [wave7](briefs/brief-plan-2026-10-metais-v1-wave7.md) | 7 — the example packages and the close-out |
 
 ## Decisions
 
@@ -30,11 +44,17 @@
 
 PRD-001 §27 maps each requirement to the ADR that designs it. [RULINGS-v1](adr/RULINGS-v1.md) records the rulings the v1 ADRs proposed, ratified 2026-10-18.
 
+Each ADR's implementation log is its "Implementation log" section together
+with the entry files under [adr/logs/](adr/logs/)`ADR-<NNN>/`, one file per
+work item (AGENTS.md, "Writing documentation").
+
 ## The command line
 
-The JSON documents each command prints are defined by the schemas under
-[cli/schemas](cli/schemas/). [cli/sample.md](cli/sample.md) states the rules
-of `metais sample` and `render --sample` that only the command line has.
+`metais help` is the command line's authoritative reference.
+[cli/README.md](cli/README.md) is the index of what `docs/cli/` adds to it:
+the schemas under [cli/schemas](cli/schemas/) that define the JSON document
+each command prints, and the pages that state the rules of `pack`, `sample`
+and `render --sample`, and `test` that only the command line has.
 
 ## Development
 
@@ -45,3 +65,6 @@ plan §6's act reports back.
 [dev/benchmarks.md](dev/benchmarks.md) is how the benchmarks of ADR-010 D15
 are run and compared with their committed baselines, and which benchmark
 measures which budget.
+
+[dev/rounds/](dev/rounds/) holds the runbooks of the live rounds of plan §6:
+each note says what its round establishes and what it reports back.
