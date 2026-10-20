@@ -1,0 +1,15 @@
+[
+  {
+    "code": "package.container.overlap_or_gap",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package"
+    },
+    "params": {
+      "offset": 2652
+    }
+  }
+]

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/path-depth",
+  "title": "An entry name of exactly path-depth's default, 32 segments, is accepted",
+  "statements": [
+    "MTS-SEC-001"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "byte-level",
+    "limits"
+  ],
+  "requires": [],
+  "notes": "Its package.metais is written by internal/vectorgen (go test ./internal/vectorgen -run TestPackages -args -update), whose test reproduces the committed bytes.",
+  "cases": [
+    {
+      "name": "at-bound",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package.metais",
+            "set": [
+              "/report/title=Hostile"
+            ]
+          },
+          "expect": {
+            "ok": true
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

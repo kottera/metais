@@ -1,0 +1,36 @@
+[
+  {
+    "code": "package.container.field_value",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package"
+    },
+    "params": {
+      "offset": 2658,
+      "record": "end of central directory record",
+      "header_field": "number of the disk with the start of the central directory",
+      "value": 1,
+      "expected": 0
+    }
+  },
+  {
+    "code": "package.container.field_value",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package"
+    },
+    "params": {
+      "offset": 2656,
+      "record": "end of central directory record",
+      "header_field": "number of this disk",
+      "value": 1,
+      "expected": 0
+    }
+  }
+]

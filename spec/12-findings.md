@@ -232,12 +232,12 @@ it, and the statements it reports.
 | `package.container.encrypted` | error | refused | package | `offset` | 1.0 | [MTS-PKG-007](02-container.md#mts-pkg-007) |
 | `package.container.entry_order` | error | refused | package | `offset` | 1.0 | [MTS-PKG-010](02-container.md#mts-pkg-010) |
 | `package.container.extra_field` | error | refused | package | `offset`, `length` | 1.0 | [MTS-PKG-008](02-container.md#mts-pkg-008) |
-| `package.container.field_value` | error | refused | package | `offset`, `record`, `header_field`, `value`, `expected` | 1.0 | [MTS-PKG-006](02-container.md#mts-pkg-006) |
+| `package.container.field_value` | error | refused | package | `offset`, `record`, `header_field`, `value`, `expected` | 1.0 | [MTS-PKG-006](02-container.md#mts-pkg-006), [MTS-PKG-045](02-container.md#mts-pkg-045) |
 | `package.container.flags` | error | refused | package | `offset`, `value` | 1.0 | [MTS-PKG-007](02-container.md#mts-pkg-007) |
 | `package.container.header_mismatch` | error | refused | package | `offset`, `header_field` | 1.0 | [MTS-PKG-009](02-container.md#mts-pkg-009) |
 | `package.container.method` | error | refused | package | `offset`, `method` | 1.0 | [MTS-PKG-007](02-container.md#mts-pkg-007) |
 | `package.container.not_zip` | error | refused | package | — | 1.0 | [MTS-PKG-003](02-container.md#mts-pkg-003) |
-| `package.container.overlap_or_gap` | error | refused | package | `offset`; optional: `declared` | 1.0 | [MTS-PKG-003](02-container.md#mts-pkg-003) |
+| `package.container.overlap_or_gap` | error | refused | package | `offset`; optional: `declared` | 1.0 | [MTS-PKG-003](02-container.md#mts-pkg-003), [MTS-PKG-045](02-container.md#mts-pkg-045) |
 | `package.container.prepended_data` | error | refused | package | `offset`; optional: `declared` | 1.0 | [MTS-PKG-003](02-container.md#mts-pkg-003) |
 | `package.container.second_end_record` | error | refused | package | `offset` | 1.0 | [MTS-PKG-005](02-container.md#mts-pkg-005) |
 | `package.container.size_mismatch` | error | refused | package | `offset`, `declared` | 1.0 | [MTS-PKG-011](02-container.md#mts-pkg-011) |

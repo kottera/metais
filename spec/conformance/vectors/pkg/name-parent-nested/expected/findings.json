@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.name.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "a/../../x"
+    },
+    "params": {
+      "offset": 2571,
+      "reason": "dot_segment"
+    }
+  }
+]

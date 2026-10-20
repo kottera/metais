@@ -231,7 +231,7 @@ func zipOf(es []zentry) []byte { return archive{entries: es}.bytes() }
 // packageCases is every committed package.
 func packageCases() []pkgCase {
 	signature := []byte("PK\x05\x06")
-	return []pkgCase{
+	return append([]pkgCase{
 		// A valid package, packed from the source directory of
 		// pkg/opens-source: the same package in both forms.
 		{"pkg/opens-packed", func(t testing.TB) []byte { return pack(t, sourceFiles(t, "pkg/opens-source")) }},
@@ -437,7 +437,7 @@ func packageCases() []pkgCase {
 				e.content = bytes.ReplaceAll(e.content, []byte(`,"`), []byte(`, "`))
 			}))
 		}},
-	}
+	}, corpusCases()...)
 }
 
 // centralHeaders is the offset of each central directory header of b, by

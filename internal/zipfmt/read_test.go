@@ -80,6 +80,15 @@ func with(es []rawEntry, i int, f func(*rawEntry)) []rawEntry {
 	return es
 }
 
+// zip64Extra is a zip64 extended information extra field (APPNOTE
+// 4.5.3) giving an entry's uncompressed and compressed sizes, both size.
+func zip64Extra(size int) []byte {
+	b := binary.LittleEndian.AppendUint16(nil, 0x0001)
+	b = binary.LittleEndian.AppendUint16(b, 16)
+	b = binary.LittleEndian.AppendUint64(b, uint64(size))
+	return binary.LittleEndian.AppendUint64(b, uint64(size))
+}
+
 // zip64Locator is the 20 bytes of a zip64 end of central directory
 // locator.
 func zip64Locator() []byte {
@@ -152,6 +161,19 @@ func refusals(t testing.TB) []refusal {
 		{"internal attributes", rawZip{entries: with(two(), 0, func(e *rawEntry) { e.central = func(h *rawHeader) { h.internal = 1 } })}.bytes(), def, []string{"package.container.field_value:internal file attributes"}},
 		{"file comment", rawZip{entries: with(two(), 1, func(e *rawEntry) { e.cdComment = []byte("hi") })}.bytes(), def, []string{"package.container.field_value:file comment length"}},
 		{"central extra field", rawZip{entries: with(two(), 1, func(e *rawEntry) { e.cdExtra = []byte{0x55, 0x54, 1, 0, 0} })}.bytes(), def, []string{"package.container.extra_field"}},
+		// ADR-001 D1 item 2: a zip64 extra field is a zip64 structure, and an
+		// extra field, whatever the sizes beside it hold.
+		{"zip64 extra field", rawZip{entries: with(two(), 1, func(e *rawEntry) {
+			e.cdExtra = zip64Extra(len(e.content))
+			e.localExtra = e.cdExtra
+		})}.bytes(), def, []string{"package.container.extra_field", "package.container.zip64"}},
+		{"zip64 extra field after another", rawZip{entries: with(two(), 1, func(e *rawEntry) {
+			e.cdExtra = append([]byte{0x55, 0x54, 1, 0, 0}, zip64Extra(len(e.content))...)
+			e.localExtra = e.cdExtra
+		})}.bytes(), def, []string{"package.container.extra_field", "package.container.zip64"}},
+		{"extra field not of records", rawZip{entries: with(two(), 1, func(e *rawEntry) {
+			e.cdExtra = []byte{0x01, 0x00, 0xFF}
+		})}.bytes(), def, []string{"package.container.extra_field"}},
 		{"time", rawZip{entries: with(two(), 0, func(e *rawEntry) { e.central = func(h *rawHeader) { h.time = 1 } })}.bytes(), def, []string{"package.container.field_value:last mod file time"}},
 		{"date", rawZip{entries: with(two(), 0, func(e *rawEntry) { e.central = func(h *rawHeader) { h.date = 0x5821 } })}.bytes(), def, []string{"package.container.field_value:last mod file date"}},
 		{"version needed", rawZip{entries: with(two(), 1, func(e *rawEntry) { e.central = func(h *rawHeader) { h.needed = 20 } })}.bytes(), def, []string{"package.container.field_value:version needed to extract"}},

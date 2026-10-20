@@ -1,0 +1,16 @@
+[
+  {
+    "code": "package.container.crc_mismatch",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid"
+    },
+    "params": {
+      "offset": 2149
+    }
+  }
+]

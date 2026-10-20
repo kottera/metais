@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.name.not_portable",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/CON"
+    },
+    "params": {
+      "offset": 2573,
+      "reason": "reserved_name"
+    }
+  }
+]

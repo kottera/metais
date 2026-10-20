@@ -1,0 +1,26 @@
+[
+  {
+    "code": "package.compiled.mismatch",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/references.json"
+    },
+    "params": {}
+  },
+  {
+    "code": "package.compiled.mismatch",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": ".compiled/schema.json"
+    },
+    "params": {}
+  }
+]

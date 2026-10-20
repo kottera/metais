@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.container.deflate_stream",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid"
+    },
+    "params": {
+      "offset": 2149,
+      "reason": "truncated"
+    }
+  }
+]

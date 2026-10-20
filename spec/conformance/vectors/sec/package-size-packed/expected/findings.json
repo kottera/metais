@@ -1,0 +1,18 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package"
+    },
+    "params": {
+      "limit": "package-size",
+      "bound": 2673,
+      "lowered": true,
+      "observed": 2674
+    }
+  }
+]

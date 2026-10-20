@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.name.character",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/a​b"
+    },
+    "params": {
+      "offset": 2577,
+      "code_point": 8203
+    }
+  }
+]

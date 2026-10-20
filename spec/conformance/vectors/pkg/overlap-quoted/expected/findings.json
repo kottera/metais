@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.container.overlap_or_gap",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/b.txt"
+    },
+    "params": {
+      "offset": 1901,
+      "declared": 1853
+    }
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.name.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "C:x"
+    },
+    "params": {
+      "offset": 2559,
+      "reason": "colon"
+    }
+  }
+]

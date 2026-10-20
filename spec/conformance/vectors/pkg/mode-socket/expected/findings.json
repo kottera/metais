@@ -1,0 +1,20 @@
+[
+  {
+    "code": "package.container.field_value",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/socket"
+    },
+    "params": {
+      "offset": 2616,
+      "record": "central directory header",
+      "header_field": "external file attributes",
+      "value": 3248750592,
+      "expected": 2175008768
+    }
+  }
+]

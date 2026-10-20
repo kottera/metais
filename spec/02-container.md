@@ -79,6 +79,13 @@ appears anywhere but at the start of its end record, with
 record and its comment can occupy, so no reader that scans for an end record
 can find a different one.
 
+<a id="mts-pkg-045"></a>**MTS-PKG-045** A processor MUST refuse an end record
+either of whose disk numbers is not 0, or whose count of entries on this disk
+differs from its total count of entries, with
+`package.container.field_value` naming the record and the field; and an end
+record whose total count of entries is not the number of central directory
+headers its central directory holds with `package.container.overlap_or_gap`.
+
 ### 2.2.2 Header fields
 
 Every entry's local file header has these values:

@@ -155,7 +155,7 @@ var packageCodes = []Entry{
 		Hint:       "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-PKG-006"},
+		Statements: []string{"MTS-PKG-006", "MTS-PKG-045"},
 	},
 	{
 		Code:     "package.container.flags",
@@ -226,7 +226,7 @@ var packageCodes = []Entry{
 		Hint:       "Pack the package again with `metais pack` from its source directory, or obtain an intact copy from its publisher.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-PKG-003"},
+		Statements: []string{"MTS-PKG-003", "MTS-PKG-045"},
 	},
 	{
 		Code:     "package.container.prepended_data",

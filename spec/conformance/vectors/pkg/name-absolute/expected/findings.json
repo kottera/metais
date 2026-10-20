@@ -1,0 +1,17 @@
+[
+  {
+    "code": "package.name.shape",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "/etc/x"
+    },
+    "params": {
+      "offset": 2565,
+      "reason": "leading_slash"
+    }
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "code": "package.container.field_value",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/report.md.liquid"
+    },
+    "params": {
+      "offset": 2616,
+      "record": "central directory header",
+      "header_field": "internal file attributes",
+      "value": 1,
+      "expected": 0
+    }
+  }
+]

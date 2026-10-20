@@ -1,0 +1,19 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "assets/k.bin"
+    },
+    "params": {
+      "limit": "entry-size",
+      "bound": 4095,
+      "lowered": true,
+      "observed": 4096
+    }
+  }
+]
