@@ -14,7 +14,7 @@ which a processor verifies before it does anything else with a package.
 A package is given to a processor either packed, as one file, or as a source
 directory, the editable tree an author works in. The two hold the same
 package: the entries of a source directory are exactly the files a packed
-package made from it holds outside `.compiled/`.
+package made from it holds outside `.compiled/` and its `README.md` (§2.4.1).
 
 <a id="mts-pkg-001"></a>**MTS-PKG-001** A processor MUST read a path that
 names a regular file as a packed package and a path that names a directory as
@@ -32,10 +32,11 @@ The media type of a packed package is `application/vnd.metais+zip`. It is a
 vendor-tree type with the `+zip` suffix ([RFC 6838](A-references.md#rfc6838),
 [RFC 6839](A-references.md#rfc6839)); its registration with IANA is not part
 of this revision. A file is a candidate packed package when it begins with the
-bytes `50 4B 03 04` and its first entry's name, at offset 30, begins with
-`.compiled/`, which every packed package's first entry does (§2.4); that is a
-sufficient rule for a file-type detector, and only §2.6 decides whether the
-file is a package.
+bytes `50 4B 03 04`, the name `README.md` at offset 30, and the first line of
+the README text, `# This is a METAIS package`, at offset 39, which every
+packed package of specification 1.0 does (§2.4.1); that is a sufficient rule
+for a file-type detector, and only §2.6 decides whether the file is a
+package.
 
 ## 2.2 The zip profile
 
@@ -149,8 +150,10 @@ in any field the two share, with `package.container.header_mismatch` naming
 the field.
 
 <a id="mts-pkg-010"></a>**MTS-PKG-010** The entries of a packed package MUST
-be in ascending order of their names' UTF-8 bytes, and a processor MUST refuse
-one whose entries are not with `package.container.entry_order`.
+be in ascending order of their names' UTF-8 bytes, but for a first entry
+named `README.md` (§2.4.1), which precedes every other whatever their names,
+and a processor MUST refuse one whose entries are not with
+`package.container.entry_order`.
 
 ### 2.2.3 File data
 
@@ -264,6 +267,7 @@ The top level of a package holds only these names:
 | `assets/` | directory | static files an output copies or a template includes |
 | `examples/` | directory | `examples/<name>/inputs/` and `examples/<name>/expected/` |
 | `.compiled/` | directory | in a packed package only: the compiled files (§2.5) |
+| `README.md` | file | in a packed package only: the specification's README text (§2.4.1) |
 
 A directory exists when at least one entry name begins with it. Beneath the
 top level any name §2.3 admits is allowed, a name beginning with `.` included.
@@ -278,8 +282,10 @@ its top level, and a processor MUST refuse a package without it with
 `package.layout.missing_manifest`.
 
 <a id="mts-pkg-021"></a>**MTS-PKG-021** In a source directory, a processor
-MUST ignore a top-level name beginning with `.` other than `.compiled`, and a
-top-level regular file whose name ends in `.metais`, and MUST treat every other
+MUST ignore a top-level name beginning with `.` other than `.compiled`, the
+top-level name `README.md`, which a repository commonly holds for its own
+authors, and a top-level regular file whose name ends in `.metais`, and MUST
+treat every other
 top-level name §2.4's table does not hold as no part of the package: none of
 them refuses the source directory, and none is an entry of it.
 
@@ -295,6 +301,55 @@ other file that is not a regular file or a directory, with
 `package.layout.non_regular_file`, without following or opening it, and one
 beneath which lies an empty directory, which a packed package cannot carry,
 with `package.layout.empty_directory`.
+
+### 2.4.1 The README
+
+A reader given a packed package with nothing else, whether a person or a
+program, sees its first entry's bytes first: with any tool that shows a
+file's bytes, before anything says the file is a zip archive, and first in
+any zip lister. So every packed package begins with `README.md`, stored,
+holding a text the specification fixes and no author writes. The text says
+what a METAIS package is, that the file is a zip archive, where inside it
+the package describes itself, and where to find the tool. It names no
+command and quotes nothing of the package, so a package packed long ago
+never gives stale instructions: everything that can change is on the
+website it names. It is not part of the package's content: no digest
+covers it (§2.6.1), a source directory does not hold it, and unpacking does
+not write it ([chapter 13](13-authoring.md)).
+
+The **README text** of specification 1.0 is these bytes, UTF-8 with LF line
+endings and ending in one line feed, which are also the file
+`readme/1.0/README.md` of this specification's sources:
+
+```text
+# This is a METAIS package
+
+A METAIS package is a document template. It describes the inputs a
+document needs, checks them, and renders the document from them.
+
+This file is a zip archive. Inside it, metais.yaml holds this package's
+own title, description and guide.
+
+To use it, you need the metais tool. How to install it and how to
+start: https://metais.org/
+
+This README is the same in every METAIS package.
+```
+
+A later minor version may define another text, and then a package's README
+text is that of the version it declares.
+
+<a id="mts-pkg-071"></a>**MTS-PKG-071** A packed package's first entry MUST
+be `README.md`, stored, holding byte for byte the README text of the
+specification version its manifest declares.
+
+<a id="mts-pkg-072"></a>**MTS-PKG-072** A processor MUST refuse a packed
+package, with the layout at step 7 of [MTS-PKG-032](#mts-pkg-032), with
+`package.layout.readme`: whose `reason` is `missing` when it holds no
+top-level `README.md`; and otherwise, one finding for each that applies,
+`not_first` when `README.md` is not its first entry, `compressed` when it is
+not stored, and `altered` when its content is not the README text of the
+declared version.
 
 ## 2.5 The compiled files
 
@@ -314,7 +369,7 @@ At specification version 1.0, `.compiled/` holds exactly:
 | `.compiled/references.json` | the references index (§2.5.1) |
 
 Because `.` sorts before every letter and digit and the top level is closed,
-a packed package's first entry is always one of these.
+the entry after `README.md` is always one of these.
 
 <a id="mts-pkg-024"></a>**MTS-PKG-024** A packed package MUST hold every file
 of §2.5's table and no other file beneath `.compiled/`. A processor MUST
@@ -356,7 +411,8 @@ line break of a setext heading a single space.
 
 The digest file `.compiled/digests.json` is a JSON object with exactly three
 members: `algorithm`, the string `sha256`; `entries`, an object with one
-member per entry of the package other than the digest file itself, named by
+member per entry of the package other than the digest file itself and
+`README.md`, named by
 the entry name and valued by the 64 lowercase hexadecimal digits of the
 SHA-256 ([FIPS 180-4](A-references.md#fips180-4)) of the entry's uncompressed content; and `package`, the 64 lowercase
 hexadecimal digits of the package digest.
@@ -372,8 +428,11 @@ the SHA-256 of the digest list, and is presented as `sha256:` followed by its
 > **Note.** The package digest depends only on the entries' names and
 > contents: not on compression, entry order or the program that packed them.
 > Anyone can check a package with standard tools: extract it, run `sha256sum`
-> over every file but `.compiled/digests.json` in byte order of their names,
-> and hash the output.
+> over every file but `.compiled/digests.json` and `README.md` in byte order
+> of their names, and hash the output. `README.md` is the same in every
+> package of a version and is verified byte for byte (§2.4.1), so no digest
+> needs to cover it, and the package digest is a function of the package's
+> own content alone.
 
 <a id="mts-pkg-027"></a>**MTS-PKG-027** `.compiled/digests.json` MUST be the
 canonical JSON ([chapter 3](03-manifest.md)) of an object of §2.6.1's form,
@@ -383,7 +442,7 @@ value with `package.digest.not_canonical`.
 
 <a id="mts-pkg-028"></a>**MTS-PKG-028** The members of the digest file's
 `entries` MUST be exactly the names of the package's entries other than the
-digest file, and a processor MUST refuse each entry the file does not name and
+digest file and `README.md`, and a processor MUST refuse each entry the file does not name and
 each name the file lists that is no entry with
 `package.digest.entries_mismatch`.
 
@@ -412,7 +471,7 @@ and the names together, and the declared sizes and ratios; (4) every local
 header, walking from offset 0; (5) every entry's data, decoded once, its size,
 CRC-32 and SHA-256 established; (6) the digest file, every digest and the
 package digest; (7) the manifest ([chapter 3](03-manifest.md)), the layout for
-its declared version, every input schema ([chapter 5](05-data-specification.md))
+its declared version, `README.md` included (§2.4.1), every input schema ([chapter 5](05-data-specification.md))
 and the compiled files. A processor MUST report every finding of the first step
 that finds any, and none of a later step: a later step's findings would be
 about a package the earlier one has already shown to be something else.
@@ -440,15 +499,15 @@ with the same entries and the same package digest.
 <a id="mts-pkg-034"></a>**MTS-PKG-034** A packer MUST write a packed
 package that §2.2 to §2.6 accept: every field the profile fixes holding its
 fixed value, every entry's CRC-32 and sizes in its local and central
-headers, no data descriptor, and the digest file and the compiled files
-of §2.5 and §2.6.
+headers, no data descriptor, `README.md` (§2.4.1), and the digest file and
+the compiled files of §2.5 and §2.6.
 
-<a id="mts-pkg-035"></a>**MTS-PKG-035** A packer MUST write the entries in
-ascending order of their names' UTF-8 bytes, so that
-`.compiled/digests.json` is the first.
+<a id="mts-pkg-035"></a>**MTS-PKG-035** A packer MUST write `README.md`
+first, and every other entry after it in ascending order of their names'
+UTF-8 bytes, so that `.compiled/digests.json` is the second.
 
-<a id="mts-pkg-036"></a>**MTS-PKG-036** A packer MUST store an entry whose
-content is empty, and one that deflating does not make strictly shorter;
+<a id="mts-pkg-036"></a>**MTS-PKG-036** A packer MUST store `README.md`, an
+entry whose content is empty, and one that deflating does not make strictly shorter;
 it MUST deflate every other entry, keeping the deflated data only when it
 is strictly shorter than the content.
 

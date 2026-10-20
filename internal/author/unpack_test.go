@@ -25,6 +25,7 @@ var packedFiles = map[string][]byte{
 	".compiled/manifest.json":          []byte("{}\n"),
 	".compiled/references.json":        []byte("[]\n"),
 	".compiled/schema.json":            []byte("{}\n"),
+	"README.md":                        []byte("# This is a METAIS package\n"),
 	"assets/logo.txt":                  []byte("logo\n"),
 	"examples/basic/inputs/r.json":     []byte("{}\n"),
 	"inputs/r.schema.json":             []byte("{\"type\": \"object\"}\n"),
@@ -85,7 +86,7 @@ func checkUnpacked(t *testing.T, dir string, fileMode, dirMode os.FileMode, besi
 }
 
 // TestUnpackedEntries is ADR-007 D8 item 4's entry set: every entry but
-// .compiled/'s, in byte order.
+// .compiled/'s and README.md (ADR-001 A1 item 7), in byte order.
 func TestUnpackedEntries(t *testing.T) {
 	if got := UnpackedEntries(packedTree(t)); !slices.Equal(got, unpackedFiles) {
 		t.Errorf("UnpackedEntries = %q, want %q", got, unpackedFiles)
