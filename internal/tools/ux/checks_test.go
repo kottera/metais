@@ -4,6 +4,7 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"slices"
@@ -312,8 +313,45 @@ func TestAfterChecks(t *testing.T) {
 	// A name that merely holds a memory file's name is no memory read.
 	_, s = testSession(t)
 	tr := h.read([]byte(clean(s) + "\n" + toolLine("Write", `{"file_path":"report-CLAUDE.mdx","content":"x"}`)))
-	if c := checkNoMemoryRead(tr); !c.Pass {
+	if c := checkNoMemoryRead(s, tr); !c.Pass {
 		t.Errorf("report-CLAUDE.mdx: %s", c.Detail)
+	}
+}
+
+// TestSpilledToolOutput: a session reading back a tool output Claude Code
+// spilled to the session's own HOME reads no memory, because that HOME
+// starts empty and so holds only the session's own files. The call is
+// C4-what-it-needs opus of scorecard-2026-10-21-baseline, the run the
+// check recorded invalid, with its run directory as the test's. The same
+// directory beneath another HOME, and a memory directory beneath the
+// session's own, are still memory.
+func TestSpilledToolOutput(t *testing.T) {
+	const project = "/.claude/projects/-ux-run-work/fcdfc775-bf10-4746-aeec-363dd9798095"
+	call := func(path string) string {
+		b, err := json.Marshal(map[string]string{
+			"command": "F=" + path + "\nsed -n '/^{/,/^}/p' \"$F\" | jq '.[\"$defs\"][\"inputs/incident.schema.json\"].properties'; metais ls report.metais examples/initial/ -r",
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return toolLine("Bash", string(b))
+	}
+	h, s := testSession(t)
+	for _, c := range []struct {
+		path string
+		pass bool
+	}{
+		{s.home + project + "/tool-results/bq3tyuh31.txt", true},
+		{"~" + project + "/tool-results/bq3tyuh31.txt", true},
+		{"$HOME" + project + "/tool-results/bq3tyuh31.txt", true},
+		{"/Users/someone" + project + "/tool-results/bq3tyuh31.txt", false},
+		{s.home + project + "/tool-results/../../memory/MEMORY.md", false},
+		{s.home + "/.claude/projects/-ux-run-work/", false},
+	} {
+		tr := h.read([]byte(initLine(s, "2.1.299", "[]", "[]") + "\n" + call(c.path)))
+		if got := checkNoMemoryRead(s, tr); got.Pass != c.pass {
+			t.Errorf("%s: passed is %v, want %v (%s)", c.path, got.Pass, c.pass, got.Detail)
+		}
 	}
 }
 

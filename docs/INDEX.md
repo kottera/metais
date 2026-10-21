@@ -82,3 +82,13 @@ the scorecard's format.
 
 [dev/rounds/](dev/rounds/) holds the runbooks of the live rounds of plan §6:
 each note says what its round establishes and what it reports back.
+
+## UX scorecards
+
+Each scorecard of PLAN-2026-10-metais-ux's fresh agent sessions is under
+[ux/](ux/), named `scorecard-<date>-<name>.md`, in the runner's format of
+[dev/ux-testing.md](dev/ux-testing.md):
+
+| Scorecard | What it measures |
+|---|---|
+| [2026-10-21 baseline](ux/scorecard-2026-10-21-baseline.md) | Wave 1's baseline: every scenario on Opus, Sonnet and Haiku, on the binary before any Wave 2 change, without the skill installed, with the failures as candidates for Wave 2 |

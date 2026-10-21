@@ -186,7 +186,7 @@ func (c *claudeCode) after(s session, version string, t transcript) []check {
 		checkNoMCPServers(t),
 		checkSkillAsDeclared(s, t),
 		checkNoSessionSaved(s.home),
-		checkNoMemoryRead(t),
+		checkNoMemoryRead(s, t),
 	}
 }
 
