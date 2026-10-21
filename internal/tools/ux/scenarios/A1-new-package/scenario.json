@@ -1,0 +1,7 @@
+{
+  "id": "A1",
+  "slug": "new-package",
+  "kind": "authoring",
+  "asks_for_output": false,
+  "fixtures": []
+}

@@ -1,0 +1,7 @@
+{
+  "id": "C1",
+  "slug": "render-real",
+  "kind": "consuming",
+  "asks_for_output": true,
+  "fixtures": [{"example": "dora-incident-report", "as": "report.metais"}]
+}

@@ -1,0 +1,7 @@
+{
+  "id": "C5",
+  "slug": "script",
+  "kind": "consuming",
+  "asks_for_output": true,
+  "fixtures": [{"example": "dora-incident-report", "as": "report.metais"}]
+}
