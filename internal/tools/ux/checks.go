@@ -240,20 +240,20 @@ func checkNoSessionPersistence(inv invocation) check {
 // the directory the runner made, under the harness version recorded.
 func checkSessionReported(s session, version string, t transcript) check {
 	switch {
-	case !t.init.found:
+	case !t.Init.Found:
 		return fail(checkReported, "the transcript has no init event")
-	case t.init.cwd != s.work:
-		return fail(checkReported, "the session reports it ran in %s, not %s", t.init.cwd, s.work)
-	case t.init.version == "" || !strings.HasPrefix(version, t.init.version):
-		return fail(checkReported, "the session reports version %q, not the recorded %q", t.init.version, version)
+	case t.Init.Cwd != s.work:
+		return fail(checkReported, "the session reports it ran in %s, not %s", t.Init.Cwd, s.work)
+	case t.Init.Version == "" || !strings.HasPrefix(version, t.Init.Version):
+		return fail(checkReported, "the session reports version %q, not the recorded %q", t.Init.Version, version)
 	}
 	return pass(checkReported)
 }
 
 // checkNoMCPServers: the transcript's opening lists no MCP server.
 func checkNoMCPServers(t transcript) check {
-	if !t.init.found || t.init.mcpServers != 0 {
-		return fail(checkStrictMCPName, "the session reports %d MCP servers", t.init.mcpServers)
+	if !t.Init.Found || t.Init.MCPServers != 0 {
+		return fail(checkStrictMCPName, "the session reports %d MCP servers", t.Init.MCPServers)
 	}
 	return pass(checkStrictMCPName)
 }
@@ -261,7 +261,7 @@ func checkNoMCPServers(t transcript) check {
 // checkSkillAsDeclared: the session loaded metais's skill exactly when the
 // run installed it.
 func checkSkillAsDeclared(s session, t transcript) check {
-	if loaded := slices.Contains(t.init.skills, "metais"); loaded != s.skill {
+	if loaded := slices.Contains(t.Init.Skills, "metais"); loaded != s.skill {
 		return fail(checkSkill, "the metais skill loaded is %v, installed is %v", loaded, s.skill)
 	}
 	return pass(checkSkill)
@@ -288,14 +288,14 @@ var memoryFile = regexp.MustCompile(`(?:^|[\s/"'=~])(?:CLAUDE(?:\.local)?|MEMORY
 
 // checkNoMemoryRead: no tool call of the session names a memory file.
 func checkNoMemoryRead(t transcript) check {
-	for i, u := range t.toolUses {
+	for i, u := range t.ToolUses {
 		var input any
-		if err := json.Unmarshal(u.input, &input); err != nil {
+		if err := json.Unmarshal(u.Input, &input); err != nil {
 			continue
 		}
 		for _, s := range stringsIn(input) {
 			if m := memoryFile.FindString(s); m != "" {
-				return fail(checkNoMemory, "tool call %d (%s) names a memory file: %q", i+1, u.name, strings.TrimSpace(m))
+				return fail(checkNoMemory, "tool call %d (%s) names a memory file: %q", i+1, u.Name, strings.TrimSpace(m))
 			}
 		}
 	}

@@ -321,15 +321,15 @@ func TestRead(t *testing.T) {
 	h, s := testSession(t)
 	tr := h.read([]byte(strings.Join([]string{initLine(s, "2.1.299", "[]", "[]"), "not json",
 		toolLine("Bash", `{"command":"metais inspect report.metais"}`), resultLine, ""}, "\n")))
-	if !tr.init.found || tr.init.model != "claude-haiku-5-5" || tr.init.cwd != s.work {
-		t.Errorf("init = %+v", tr.init)
+	if !tr.Init.Found || tr.Init.Model != "claude-haiku-5-5" || tr.Init.Cwd != s.work {
+		t.Errorf("init = %+v", tr.Init)
 	}
-	if !tr.result.found || tr.result.turns != 3 || tr.result.costUSD != 0.01 || tr.result.duration != 1200 ||
-		!slices.Equal(tr.result.models, []string{"claude-haiku-5-5"}) {
-		t.Errorf("result = %+v", tr.result)
+	if !tr.Result.Found || tr.Result.Turns != 3 || tr.Result.CostUSD != 0.01 || tr.Result.DurationMS != 1200 ||
+		!slices.Equal(tr.Result.Models, []string{"claude-haiku-5-5"}) {
+		t.Errorf("result = %+v", tr.Result)
 	}
-	if len(tr.toolUses) != 1 || tr.toolUses[0].name != "Bash" || tr.malformed != 1 {
-		t.Errorf("tool uses %v, malformed %d", tr.toolUses, tr.malformed)
+	if len(tr.ToolUses) != 1 || tr.ToolUses[0].Name != "Bash" || tr.Malformed != 1 {
+		t.Errorf("tool uses %v, malformed %d", tr.ToolUses, tr.Malformed)
 	}
 }
 

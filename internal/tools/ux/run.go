@@ -368,9 +368,9 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 		return nil, err
 	}
 	t := c.harness.read(b)
-	r.ModelReported, r.ModelsUsed = t.init.model, t.result.models
-	r.Turns, r.CostUSD, r.DurationMS = t.result.turns, t.result.costUSD, t.result.duration
-	r.IsError, r.Subtype, r.ToolUses = t.result.isError, t.result.subtype, len(t.toolUses)
+	r.ModelReported, r.ModelsUsed = t.Init.Model, t.Result.Models
+	r.Turns, r.CostUSD, r.DurationMS = t.Result.Turns, t.Result.CostUSD, t.Result.DurationMS
+	r.IsError, r.Subtype, r.ToolUses = t.Result.IsError, t.Result.Subtype, len(t.ToolUses)
 	r.Checks = append(r.Checks, c.harness.after(ses, st.rec.Harness.Version, t)...)
 	r.Valid = valid(r.Checks)
 
@@ -380,7 +380,7 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 	case quotaPause(t, stderr.Bytes()):
 		r.Status = statusQuota
 		r.Valid = false
-	case !t.result.found:
+	case !t.Result.Found:
 		r.Status = statusHarnessError
 		r.Valid = false
 		if runErr != nil {

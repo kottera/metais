@@ -4,13 +4,14 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/kottera/metais/internal/tools/ux/streamjson"
 )
 
 // harness is the agent harness a session runs in (R-UX-6): the runner
@@ -189,120 +190,24 @@ func (c *claudeCode) after(s session, version string, t transcript) []check {
 	}
 }
 
-// transcript is what the runner reads from a session's transcript. The
-// scorer reads the transcript itself; this is what the record carries.
-type transcript struct {
-	init struct {
-		found      bool
-		cwd        string
-		model      string
-		version    string
-		mcpServers int
-		skills     []string
-	}
-	result struct {
-		found     bool
-		isError   bool
-		subtype   string
-		apiStatus int
-		text      string
-		turns     int
-		costUSD   float64
-		duration  int64
-		models    []string
-	}
-	// toolUses are the session's tool calls, in order, each its tool's
-	// name and its input as written.
-	toolUses []toolUse
-	// malformed counts lines that are not JSON objects.
-	malformed int
-}
+// transcript is the runner's reading of a session's transcript, the one
+// the scorer reads too.
+type transcript = *streamjson.Transcript
 
-type toolUse struct {
-	name  string
-	input json.RawMessage
-}
-
-// read reads a stream-json transcript: one JSON object per line.
-func (c *claudeCode) read(b []byte) transcript {
-	var t transcript
-	for line := range strings.SplitSeq(string(b), "\n") {
-		if strings.TrimSpace(line) == "" {
-			continue
-		}
-		var ev struct {
-			Type    string `json:"type"`
-			Subtype string `json:"subtype"`
-			// system/init
-			Cwd        string            `json:"cwd"`
-			Model      string            `json:"model"`
-			Version    string            `json:"claude_code_version"`
-			MCPServers []json.RawMessage `json:"mcp_servers"`
-			Skills     []string          `json:"skills"`
-			// assistant
-			Message struct {
-				Content []struct {
-					Type  string          `json:"type"`
-					Name  string          `json:"name"`
-					Input json.RawMessage `json:"input"`
-				} `json:"content"`
-			} `json:"message"`
-			// result
-			IsError    bool                       `json:"is_error"`
-			APIStatus  *int                       `json:"api_error_status"`
-			Result     string                     `json:"result"`
-			NumTurns   int                        `json:"num_turns"`
-			CostUSD    float64                    `json:"total_cost_usd"`
-			DurationMS int64                      `json:"duration_ms"`
-			ModelUsage map[string]json.RawMessage `json:"modelUsage"`
-		}
-		if err := json.Unmarshal([]byte(line), &ev); err != nil {
-			t.malformed++
-			continue
-		}
-		switch {
-		case ev.Type == "system" && ev.Subtype == "init" && !t.init.found:
-			t.init.found = true
-			t.init.cwd, t.init.model, t.init.version = ev.Cwd, ev.Model, ev.Version
-			t.init.mcpServers = len(ev.MCPServers)
-			t.init.skills = ev.Skills
-		case ev.Type == "assistant":
-			for _, part := range ev.Message.Content {
-				if part.Type == "tool_use" {
-					t.toolUses = append(t.toolUses, toolUse{part.Name, part.Input})
-				}
-			}
-		case ev.Type == "result":
-			r := &t.result
-			r.found = true
-			r.isError, r.subtype, r.text = ev.IsError, ev.Subtype, ev.Result
-			if ev.APIStatus != nil {
-				r.apiStatus = *ev.APIStatus
-			}
-			r.turns, r.costUSD, r.duration = ev.NumTurns, ev.CostUSD, ev.DurationMS
-			r.models = slices.Sorted(func(yield func(string) bool) {
-				for m := range ev.ModelUsage {
-					if !yield(m) {
-						return
-					}
-				}
-			})
-		}
-	}
-	return t
-}
+// read reads a stream-json transcript.
+func (c *claudeCode) read(b []byte) transcript { return streamjson.Read(b) }
 
 // quotaPause reports whether a session ended on a quota or rate limit
 // rather than finishing: the seat's quota ran out, and the run is to be
 // run again, not recorded as the session's behaviour (R-UX-7).
 func quotaPause(t transcript, stderr []byte) bool {
-	if t.result.found && !t.result.isError {
+	if t.Result.Found && !t.Result.IsError {
 		return false
 	}
-	if t.result.apiStatus == 429 {
+	if t.Result.APIStatus == 429 {
 		return true
 	}
-	text := strings.ToLower(t.result.text + "\n" + string(stderr))
+	text := strings.ToLower(t.Result.Text + "\n" + string(stderr))
 	for _, s := range []string{"usage limit", "rate limit", "rate_limit", "quota", "429"} {
 		if strings.Contains(text, s) {
 			return true
