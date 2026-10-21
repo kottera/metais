@@ -13,7 +13,13 @@ import (
 	"github.com/kottera/metais/internal/template"
 )
 
-// mirror is the files of the mirror's evaluation at, whose path names
+// mirrorForm is a mirror's (ADR-005 D6).
+type mirrorForm struct{}
+
+// DefaultPath is the mirror's directory beneath templates/.
+func (mirrorForm) DefaultPath(d manifest.Output) string { return d.Source }
+
+// Expand is the files of the mirror's evaluation at, whose path names
 // their destination (ADR-005 D6): every template beneath templates/<dir>,
 // "." naming templates/ itself, in byte order, but one with a name
 // beginning with _ at any depth beneath the mirror's root and one a
@@ -21,7 +27,7 @@ import (
 // relative to the mirror's root, with a final .liquid removed, beneath the
 // destination. A template named exactly .liquid would be written with an
 // empty name, and is refused; a mirror that yields no file is a warning.
-func (p *planner) mirror(at *File) []*File {
+func (mirrorForm) Expand(p *Planner, at *File, _ int) []*File {
 	d := at.decl
 	var out []*File
 	refused := false
@@ -40,12 +46,13 @@ func (p *planner) mirror(at *File) []*File {
 		}
 		pf := *at
 		pf.path, pf.template = Beneath(at.path, strings.TrimSuffix(rel, ".liquid")), name
+		pf.producer = producerOf(byRendering)
 		out = append(out, &pf)
 	}
 	if len(out) == 0 && !refused {
 		p.fs = append(p.fs, finding.New(CodeMirrorEmpty, subj, &loc, finding.Params{"directory": finding.String(d.Source)}))
 	}
-	return out
+	return p.plan(out...)
 }
 
 // The codes of an output declaration a render reports (ADR-005's

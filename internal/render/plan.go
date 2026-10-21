@@ -5,7 +5,6 @@ package render
 
 import (
 	"cmp"
-	"strings"
 
 	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/finding"
@@ -35,7 +34,7 @@ func joinIn(in, p string) string {
 // every evaluation's and every container entry's, to the outputs limit
 // (ADR-009 D3).
 func planOutputs(pkg *loader.Package, lim limits.Set, faults fault.Set, r *template.Renderer) ([]*File, []finding.Finding) {
-	p := &planner{pkg: pkg, lim: lim, faults: faults, r: r, counted: true,
+	p := &Planner{pkg: pkg, lim: lim, faults: faults, r: r, counted: true,
 		entries: pkg.Tree.List(), explicit: ExplicitTemplates(pkg.Manifest.Outputs)}
 	plan := p.tree(pkg.Manifest.Outputs, "", "", 0, nil)
 	if n, bound := int64(len(p.all)), lim.Value(limits.Outputs); n > bound {
@@ -52,8 +51,11 @@ func planOutputs(pkg *loader.Package, lim limits.Set, faults fault.Set, r *templ
 	return plan, p.fs
 }
 
-// planner is one render's phases 1 and 2.
-type planner struct {
+// Planner is one render's phases 1 and 2. It evaluates every
+// declaration's when and for_each, renders its paths and holds the
+// outputs limit; each declaration's form expands its evaluations into
+// files (ADR-010 A7 item 4).
+type Planner struct {
 	pkg    *loader.Package
 	lim    limits.Set
 	faults fault.Set
@@ -70,17 +72,17 @@ type planner struct {
 }
 
 // at is the location of the manifest's value at ptr.
-func (p *planner) at(ptr string) finding.Location { return manifestAt(p.pkg, ptr) }
+func (p *Planner) at(ptr string) finding.Location { return manifestAt(p.pkg, ptr) }
 
 // beyond reports whether the plan already holds more files than outputs.
-func (p *planner) beyond() bool { return int64(len(p.all)) > p.lim.Value(limits.Outputs) }
+func (p *Planner) beyond() bool { return int64(len(p.all)) > p.lim.Value(limits.Outputs) }
 
 // tree plans decls, the declarations of one tree: the output directory's,
 // or the entries of the container at in, which depth containers enclose,
 // in the enclosing container's evaluation fan. owner is the id an entry
 // with none of its own is named by. The output directory's paths are
 // held to D12 together here, and a container's by container.
-func (p *planner) tree(decls []manifest.Output, owner, in string, depth int, fan *template.Fan) []*File {
+func (p *Planner) tree(decls []manifest.Output, owner, in string, depth int, fan *template.Fan) []*File {
 	var tree []*File
 	for _, d := range decls {
 		id := cmp.Or(d.ID, owner)
@@ -109,15 +111,22 @@ func (p *planner) tree(decls []manifest.Output, owner, in string, depth int, fan
 	return tree
 }
 
+// plan records files as planned, in planning order, where the outputs
+// limit counts them, and returns them.
+func (p *Planner) plan(files ...*File) []*File {
+	p.all = append(p.all, files...)
+	return files
+}
+
 // declaration plans the files of the declaration d, whose expressions are
 // x: one per evaluation whose when holds, in the order of the for_each
 // array, or in the enclosing container's evaluation fan, each with its
-// path rendered, or the default path when d gives none (ADR-005 D3, D4),
-// and each container's entries; an asset's or a mirror's path names the
-// destination of the files it expands into (D5, D6). Before each evaluation but the first, a
-// plan already beyond outputs stops the fan-out. The first error of an
-// expression is the declaration's finding, and it plans no file.
-func (p *planner) declaration(d manifest.Output, x *template.Exprs, owner, in string, depth int, fan *template.Fan) []*File {
+// path rendered, or its form's default path when d gives none (ADR-005
+// D3, D4), and each expanded by d's form. Before each evaluation but the
+// first, a plan already beyond outputs stops the fan-out. The first error
+// of an expression is the declaration's finding, and it plans no file.
+func (p *Planner) declaration(d manifest.Output, x *template.Exprs, owner, in string, depth int, fan *template.Fan) []*File {
+	form := formOf(d.Form)
 	fans := []*template.Fan{fan}
 	if x.ForEach != nil {
 		var f *finding.Finding
@@ -135,30 +144,14 @@ func (p *planner) declaration(d manifest.Output, x *template.Exprs, owner, in st
 		}
 		ok, f := p.r.When(x, fan)
 		if f == nil && ok {
-			pf := &File{decl: d, fan: fan, ptr: d.Pointer + "/path", literal: x.Literal, owner: owner, in: in, template: d.Source}
+			pf := &File{decl: d, fan: fan, ptr: d.Pointer + "/path", literal: x.Literal, owner: owner, in: in}
 			if x.Path == nil {
-				pf.path, pf.ptr, pf.literal = d.Source, d.Pointer+"/"+string(d.Form), true
-				if d.Form == manifest.OutputTemplate {
-					pf.path = strings.TrimSuffix(d.Source, ".liquid")
-				}
+				pf.path, pf.ptr, pf.literal = form.DefaultPath(d), d.Pointer+"/"+string(d.Form), true
 			} else {
 				pf.path, f = p.r.Path(x, fan)
 			}
 			if f == nil {
-				switch d.Form {
-				case manifest.OutputAsset:
-					expanded := p.asset(pf)
-					p.all, files = append(p.all, expanded...), append(files, expanded...)
-				case manifest.OutputMirror:
-					expanded := p.mirror(pf)
-					p.all, files = append(p.all, expanded...), append(files, expanded...)
-				default:
-					p.all = append(p.all, pf)
-					if d.Form == manifest.OutputContainer {
-						pf.entries = p.container(pf, depth+1)
-					}
-					files = append(files, pf)
-				}
+				files = append(files, form.Expand(p, pf, depth)...)
 			}
 		}
 		if f != nil {

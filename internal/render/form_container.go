@@ -12,21 +12,41 @@ import (
 	"github.com/kottera/metais/internal/zipfmt"
 )
 
+// containerForm is a container's (ADR-005 D8): each evaluation is one
+// file, the zip of its entries, assembled from them.
+type containerForm struct{}
+
+// DefaultPath is the container's declared path.
+func (containerForm) DefaultPath(d manifest.Output) string { return d.Source }
+
+// Expand is the container at, planned before its entries, which are
+// planned, inside depth+1 containers, as a tree of their own.
+func (containerForm) Expand(p *Planner, at *File, depth int) []*File {
+	at.producer = producerOf(byAssembling)
+	p.plan(at)
+	at.entries = p.container(at, depth+1)
+	return []*File{at}
+}
+
 // container plans the entries of the container pf, the depth-th
 // container on its chain, in pf's evaluation: one tree, held to D12
 // within it and to its profile (D8 items 3 and 8, D9), in the container's
 // order (D8 item 6).
-func (p *planner) container(pf *File, depth int) []*File {
+func (p *Planner) container(pf *File, depth int) []*File {
 	c := pf.decl.Container
 	in := joinIn(pf.in, pf.path)
 	var entries []*File
-	if m, ok := c.ToolMimetype(); ok {
+	var mimetype *File
+	if _, ok := c.ToolMimetype(); ok {
 		// D9 items 2 to 4: the profile's own mimetype entry, which takes
-		// its place in the tree like any other.
-		tool := &File{decl: pf.decl, path: manifest.MimetypeEntry, ptr: pf.decl.Pointer + "/container/profile",
-			literal: true, fan: pf.fan, owner: pf.owner, in: in, bytes: []byte(m), tool: true}
-		p.all = append(p.all, tool)
-		entries = append(entries, tool)
+		// its place in the tree like any other. No declaration writes it
+		// (D16 item 2): it keeps the container's, for its profile and
+		// where a finding about it points, without its id.
+		decl := pf.decl
+		decl.ID = ""
+		mimetype = &File{decl: decl, path: manifest.MimetypeEntry, ptr: pf.decl.Pointer + "/container/profile",
+			literal: true, fan: pf.fan, owner: pf.owner, in: in, producer: producerOf(byLiteral)}
+		entries = append(entries, p.plan(mimetype)...)
 	}
 	for _, e := range p.tree(c.Entries, pf.owner, in, depth, pf.fan) {
 		subj := finding.Subject{Kind: finding.SubjectOutput, Name: e.owner}
@@ -56,7 +76,7 @@ func (p *planner) container(pf *File, depth int) []*File {
 		p.fs = append(p.fs, finding.New(finding.CodeContainerTooManyEntries, subj,
 			ptrTo(p.at(pf.decl.Pointer+"/container/entries")), finding.Params{"count": finding.Int(int64(len(entries)))}))
 	}
-	return containerOrder(c, entries)
+	return containerOrder(c, mimetype, entries)
 }
 
 // containerOrder is ADR-005 D8 item 6's order of a container's entries:
@@ -64,8 +84,8 @@ func (p *planner) container(pf *File, depth int) []*File {
 // author's [Content_Types].xml; then the files of every first: true
 // declaration, in declaration order, each declaration's in byte order of
 // their paths; then every other file in byte order. A file appears once,
-// at its earliest place.
-func containerOrder(c *manifest.Container, entries []*File) []*File {
+// at its earliest place. mimetype is the profile's own, or nil.
+func containerOrder(c *manifest.Container, mimetype *File, entries []*File) []*File {
 	sorted := slices.SortedFunc(slices.Values(entries), func(a, b *File) int { return strings.Compare(a.path, b.path) })
 	out := make([]*File, 0, len(entries))
 	placed := map[*File]bool{}
@@ -77,13 +97,13 @@ func containerOrder(c *manifest.Container, entries []*File) []*File {
 			}
 		}
 	}
-	place(func(e *File) bool { return e.tool })
+	place(func(e *File) bool { return e == mimetype })
 	if first := c.FirstEntry(); first != "" {
 		place(func(e *File) bool { return e.path == first })
 	}
 	for _, d := range c.Entries {
 		if d.First {
-			place(func(e *File) bool { return !e.tool && e.decl.Pointer == d.Pointer })
+			place(func(e *File) bool { return e.decl.Pointer == d.Pointer })
 		}
 	}
 	place(func(*File) bool { return true })

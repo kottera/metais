@@ -126,14 +126,11 @@ func Run(o Options, e Emitter) Result {
 	return res
 }
 
-// walk visits every file of tree but a container, depth first in planning
-// order, a container's entries in its order (ADR-005 D13 item 6).
+// walk visits every file of tree, depth first in planning order, a
+// container before its entries, in its order (ADR-005 D13 item 6).
 func walk(tree []*File, visit func(*File)) {
 	for _, pf := range tree {
-		if pf.IsContainer() {
-			walk(pf.entries, visit)
-			continue
-		}
 		visit(pf)
+		walk(pf.entries, visit)
 	}
 }
