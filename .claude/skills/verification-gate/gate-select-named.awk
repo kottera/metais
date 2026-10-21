@@ -1,10 +1,10 @@
 # Copyright 2026 Kottera
 # SPDX-License-Identifier: Apache-2.0
 #
-# gate-select-named.awk prints the paths the test files of the package in
-# the directory dir (-v dir=<path from the module root>) name, for
-# gate-select.sh's data rule, one per line, each relative to the module
-# root:
+# gate-select-named.awk prints the paths the Go files it reads name, for
+# gate-select.sh's data rule, one per line: the directory of the file that
+# names it (the file's package's, a path from the module root), a kind and
+# the path, relative to the module root, as "<dir><TAB><kind><TAB><path>":
 #
 #   E<TAB><path>    the path, and every path below it
 #   P<TAB><prefix>  every path with the prefix: a glob, a format verb or a
@@ -38,7 +38,7 @@ function clean(s,    n, i, c, kept, k, parts) {
 	return s
 }
 function out(kind, s) {
-	if (s != "") print kind "\t" s
+	if (s != "") print dir "\t" kind "\t" s
 }
 # emit prints what the literal path s names, read from the package's
 # directory and from the module root: "E" a path and everything below it,
@@ -103,7 +103,11 @@ function lit(line, i,    n, c) {
 	}
 	return 0
 }
-FNR == 1 { raw = 0 }
+FNR == 1 {
+	raw = 0
+	dir = FILENAME
+	if (!sub(/\/[^\/]*$/, "", dir)) dir = "."
+}
 # args reads the arguments of the call whose "(" ends just before i in
 # line into a[1..nargs], each from at[] to to[], and returns whether the
 # call closes on the line.
@@ -134,6 +138,7 @@ function unclosed(line,    from, k) {
 	}
 	return 0
 }
+index($0, "\"") == 0 && index($0, "`") == 0 && index($0, "Join(") == 0 { next }
 {
 	line = $0
 	# A Join split over lines is read as one line, up to twenty of them.
@@ -166,14 +171,19 @@ function unclosed(line,    from, k) {
 	# Every other string literal, in code, comments and raw strings alike.
 	comment = 0
 	for (i = 1; i <= n; i++) {
+		if (!match(substr(line, i), /["`'\/]/)) break
+		i += RSTART - 1
 		c = substr(line, i, 1)
-		if (c == "`" && !comment) { raw = !raw; continue }
-		if (c == "/" && substr(line, i + 1, 1) == "/" && !raw) comment = 1
-		if (c == "'" && !raw && !comment) {
+		if (c == "`") { if (!comment) raw = !raw; continue }
+		if (c == "/") {
+			if (substr(line, i + 1, 1) == "/" && !raw) comment = 1
+			continue
+		}
+		if (c == "'") {
+			if (raw || comment) continue
 			for (i++; i <= n; i++) { c = substr(line, i, 1); if (c == "\\") i++; else if (c == "'") break }
 			continue
 		}
-		if (c != "\"") continue
 		e = lit(line, i)
 		if (!e) break
 		s = substr(line, i + 1, e - i - 1)

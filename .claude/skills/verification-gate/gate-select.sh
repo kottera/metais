@@ -180,12 +180,15 @@ done <"$work/rootreaders"
 # name, by a string literal or a run of literal arguments to a Join, as
 # gate-select-named.awk reads them. filepath.Join(root, "docs", "adr") names
 # docs/adr, not every file under docs/.
-: >"$work/named"
-while IFS=$'\t' read -r pkg dir _; do
-	set -- "$dir"/*_test.go
-	[ -e "$1" ] || continue
-	awk -v dir="$dir" -f "$here/gate-select-named.awk" "$@" | sort -u | sed "s|^|$pkg	|" >>"$work/named"
+: >"$work/testfiles"
+while IFS=$'\t' read -r _ dir _; do
+	for f in "$dir"/*_test.go; do
+		[ -e "$f" ] && echo "$f" >>"$work/testfiles"
+	done
 done <"$work/dirs"
+tr '\n' '\0' <"$work/testfiles" | LC_ALL=C xargs -0 awk -f "$here/gate-select-named.awk" |
+	awk -F'\t' 'NR == FNR { pkg[$2] = $1; next } { print pkg[$1] "\t" $2 "\t" $3 }' "$work/dirs" - |
+	sort -u >"$work/named"
 
 # Touched packages, with the path that touched each. "touched" packages have
 # their importers tested too; "direct" ones are tested alone.
