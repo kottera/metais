@@ -19,6 +19,7 @@ import (
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/regexprofile"
+	"github.com/kottera/metais/internal/render"
 	"github.com/kottera/metais/internal/schema"
 )
 
@@ -805,12 +806,12 @@ func (s *session) extractFailed(err error) outcome {
 		// Every file the checks refused, together (ADR-005 D15 item 8).
 		fs := make([]finding.Finding, len(ce.Refused))
 		for i, c := range ce.Refused {
-			fs[i] = pathRefusal(c.Path, c.Err)
+			fs[i] = render.PathRefusal(c.Path, c.Err)
 		}
 		return outcome{findings: fs, next: s.nextSteps(fs)}
 	case errors.As(err, &me):
 		o := s.refuseWith(finding.New(finding.CodeDestinationCommitFailed, invocation, nil, finding.Params{
-			"reason":    finding.String(writeReason(hostfs.Reason(me.Reason))),
+			"reason":    finding.String(render.WriteReason(hostfs.Reason(me.Reason))),
 			"committed": stringList(me.Committed),
 		}))
 		o.human = listing("Moved into place before the failure, with their new bytes:", me.Committed, false)
@@ -826,16 +827,16 @@ func (s *session) extractFailed(err error) outcome {
 		}
 		return o
 	case errors.As(err, &we) && we.Staging:
-		return s.refuseWith(stagingExists())
+		return s.refuseWith(render.StagingExists())
 	case errors.As(err, &we) && !we.Left && len(we.Written) == 0:
-		return s.refuseWith(nothingWritten(hostfs.Reason(we.Reason)))
+		return s.refuseWith(render.NothingWritten(hostfs.Reason(we.Reason)))
 	case errors.As(err, &we):
 		written := we.Written
 		if written == nil {
 			written = []string{}
 		}
 		o := s.refuseWith(finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
-			"reason":  finding.String(writeReason(hostfs.Reason(we.Reason))),
+			"reason":  finding.String(render.WriteReason(hostfs.Reason(we.Reason))),
 			"written": stringList(written),
 		}))
 		if len(written) > 0 {

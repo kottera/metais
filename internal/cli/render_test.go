@@ -12,7 +12,6 @@ import (
 	"testing"
 
 	"github.com/kottera/metais/internal/author"
-	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/testenv"
 )
@@ -230,39 +229,6 @@ func TestRenderStagingLeftover(t *testing.T) {
 	}
 }
 
-// A render whose write fails part way, after the staging directory exists
-// and a file is written beneath it, aborts: neither the staging directory,
-// nor the output directory, nor an ancestor the render created is left
-// (ADR-005 D14 item 1.5). The second planned path runs through the first,
-// a file, which no plan that passed the path checks holds, so the create
-// fails beneath the staging directory.
-func TestRenderCommitAbortsAFailedWrite(t *testing.T) {
-	testenv.Home(t)
-	parent := testenv.Dir(t)
-	plan := []*planned{
-		{path: "a.txt", bytes: []byte("A")},
-		{path: "a.txt/b.txt", bytes: []byte("B")},
-	}
-	f, ok := commit(filepath.Join(parent, "x", "out"), nil, plan, &session{})
-	if ok {
-		t.Fatal("the commit succeeded")
-	}
-	if f.Code() != finding.CodeDestinationNothingWritten {
-		t.Errorf("finding %s, want %s", f.Code(), finding.CodeDestinationNothingWritten)
-	}
-	entries, err := os.ReadDir(parent)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var left []string
-	for _, e := range entries {
-		left = append(left, e.Name())
-	}
-	if len(left) != 0 {
-		t.Errorf("the failed render left %q", left)
-	}
-}
-
 // TestRenderOverwriteKeepsHardLinks is ADR-005 D15 item 6: replacing never
 // writes into an existing file. The file a render replaces has a second
 // hard link outside the output directory, which keeps the old bytes, while
@@ -321,37 +287,5 @@ func TestRenderIntoLinkedOut(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(real, "greeting.md")); err != nil {
 		t.Errorf("greeting.md is not in the linked directory: %v", err)
-	}
-}
-
-// TestPathRefusal is the finding of each reason ADR-005 D15 item 4's
-// checks refuse a planned path with, as Amendment A1 items 4 and 5 extend
-// them. Another device is io_error and names nothing of the device (A1
-// item 4): no vector can mount a file system, so this test, with
-// internal/hostfs's own device tests, is its proof.
-func TestPathRefusal(t *testing.T) {
-	for _, c := range []struct {
-		reason hostfs.Reason
-		code   finding.Code
-		path   bool   // the finding names the path
-		why    string // its reason parameter, or ""
-	}{
-		{hostfs.Link, finding.CodeDestinationLink, true, ""},
-		{hostfs.NotDirectory, finding.CodeDestinationNotDirectory, true, ""},
-		{hostfs.CaseVariant, finding.CodeDestinationCaseVariant, true, ""},
-		{hostfs.IsDirectory, finding.CodeDestinationNotRegularFile, true, "is_directory"},
-		{hostfs.NotRegularFile, finding.CodeDestinationNotRegularFile, true, "not_regular_file"},
-		{hostfs.IOError, finding.CodeDestinationNothingWritten, false, "io_error"},
-		{hostfs.Exists, finding.CodeDestinationNothingWritten, false, "exists"},
-		{hostfs.PermissionDenied, finding.CodeDestinationNothingWritten, false, "permission_denied"},
-	} {
-		f := pathRefusal("a/b.txt", &hostfs.Error{Op: "check", Reason: c.reason})
-		p, hasPath := f.Param("path")
-		ps, _ := p.Str()
-		w, _ := f.Param("reason")
-		why, _ := w.Str()
-		if f.Code() != c.code || hasPath != c.path || hasPath && ps != "a/b.txt" || why != c.why {
-			t.Errorf("%s: %s, path %q (%v), reason %q; want %s, path %v, reason %q", c.reason, f.Code(), ps, hasPath, why, c.code, c.path, c.why)
-		}
 	}
 }

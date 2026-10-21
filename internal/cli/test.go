@@ -29,6 +29,7 @@ import (
 	"github.com/kottera/metais/internal/liquid/value"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
+	"github.com/kottera/metais/internal/render"
 	"github.com/kottera/metais/internal/schema"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/yamlx"
@@ -235,7 +236,7 @@ type exampleRun struct {
 	exec     map[string]bool
 	// containers holds the plan of every container output the render
 	// wrote, by path, which is compared by its entries.
-	containers map[string]*planned
+	containers map[string]*render.File
 	// rewrite holds the paths of the rendered files the comparison found
 	// different from expected/'s or absent from it: those --update writes.
 	rewrite []string
@@ -371,7 +372,7 @@ func runTest(s *session, p args.Parsed) outcome {
 func (s *session) runExamples(pkg *loader.Package, lim limits.Set, selected []*exampleRun) ([]finding.Finding, bool) {
 	ts := template.NewTemplates(pkg.Tree, lim, pkg.Manifest.Inputs)
 	pfs := parseTemplates(pkg.Manifest.Outputs, ts)
-	schemas, sfs := outputSchemas(pkg, lim)
+	schemas, sfs := render.OutputSchemas(pkg, lim)
 	if pfs = append(pfs, sfs...); s.fails(pfs) {
 		return pfs, false
 	}
@@ -468,25 +469,25 @@ func (s *session) runExample(pkg *loader.Package, ts *template.Templates, schema
 		panic("cli: " + err.Error())
 	}
 	r := template.NewRenderer(ts, b, lim, s.inv.Options.Faults)
-	plan, pfs := planOutputs(pkg, lim, s, r)
-	pfs = append(pfs, renderPlan(pkg, plan, ts, r, lim, schemas)...)
+	plan, pfs := render.PlanOutputs(pkg, lim, s.inv.Options.Faults, r)
+	pfs = append(pfs, render.RenderPlan(pkg, plan, ts, r, lim, schemas)...)
 	e.fs = append(e.fs, pfs...)
 	if s.fails(pfs) {
 		return
 	}
-	e.rendered, e.exec, e.containers = map[string][]byte{}, map[string]bool{}, map[string]*planned{}
+	e.rendered, e.exec, e.containers = map[string][]byte{}, map[string]bool{}, map[string]*render.File{}
 	for _, pf := range plan {
-		if pf.isContainer() {
-			e.containers[pf.path] = pf
+		if pf.IsContainer() {
+			e.containers[pf.Path()] = pf
 		}
 		// Each file's bytes as render writes them: a template's, an
 		// asset's from the package, or a container's zip.
-		r, done := content(pf)
+		r, done := pf.Open()
 		b, err := io.ReadAll(r)
 		if derr := done(err); err != nil || derr != nil {
 			panic("cli: a rendered file does not read: " + errors.Join(err, derr).Error())
 		}
-		e.rendered[pf.path], e.exec[pf.path] = b, pf.decl.Executable
+		e.rendered[pf.Path()], e.exec[pf.Path()] = b, pf.Executable()
 	}
 	e.ok = true
 	if !e.hasExpected {
@@ -721,7 +722,7 @@ func (a containerAt) params(name string) finding.Params {
 // method of an entry whose declaration says stored: true, or a profile's
 // mimetype, by example.entry_method. The method of any other entry is the
 // encoder's choice (ADR-005 D8 item 7) and is not compared.
-func (e *exampleRun) compareContainer(want []byte, pf *planned, at containerAt, lim limits.Set) {
+func (e *exampleRun) compareContainer(want []byte, pf *render.File, at containerAt, lim limits.Set) {
 	decoded := map[string]*bytes.Buffer{}
 	a, rfs, err := zipfmt.OpenContainer(bytes.NewReader(want), int64(len(want)), lim, func(name string) io.Writer {
 		b := &bytes.Buffer{}
@@ -742,14 +743,14 @@ func (e *exampleRun) compareContainer(want []byte, pf *planned, at containerAt, 
 		return
 	}
 	expected := a.Entries()
-	rendered := map[string]*planned{}
+	rendered := map[string]*render.File{}
 	var wantNames, gotNames []string
 	deflated := map[string]bool{}
 	for _, x := range expected {
 		wantNames, deflated[x.Name] = append(wantNames, x.Name), x.Deflated
 	}
-	for _, x := range pf.entries {
-		gotNames, rendered[x.path] = append(gotNames, x.path), x
+	for _, x := range pf.Entries() {
+		gotNames, rendered[x.Path()] = append(gotNames, x.Path()), x
 	}
 	expectedAt := func(name string) *finding.Location {
 		return &finding.Location{Origin: finding.OriginPackage, File: at.within(at.file, name)}
@@ -797,12 +798,12 @@ func (e *exampleRun) compareContainer(want []byte, pf *planned, at containerAt, 
 	for _, n := range shared {
 		x := rendered[n]
 		w := decoded[n].Bytes()
-		if x.isContainer() {
+		if x.IsContainer() {
 			inner := at
 			inner.entry = at.within("", n)[1:]
 			e.compareContainer(w, x, inner, lim)
 		} else {
-			r, done := content(x)
+			r, done := x.Open()
 			g, err := io.ReadAll(r)
 			if derr := done(err); err != nil || derr != nil {
 				panic("cli: a rendered entry does not read: " + errors.Join(err, derr).Error())
@@ -811,7 +812,7 @@ func (e *exampleRun) compareContainer(want []byte, pf *planned, at containerAt, 
 				add(describeDifference(w, g, at.path, at.within("", n)[1:], at.subj, *expectedAt(n)))
 			}
 		}
-		if (x.tool || x.decl.Stored) && deflated[n] {
+		if x.Stored() && deflated[n] {
 			p := at.within(at.path, n)
 			ps := at.params(n)
 			ps["expected_method"], ps["rendered_method"] = finding.String("deflated"), finding.String("stored")
@@ -1170,10 +1171,10 @@ func updateFailed(err error, u *testUpdate) finding.Finding {
 	case hostfs.ReasonOf(err) == hostfs.NotDirectory:
 		return finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil)
 	case len(u.Written) == 0 && len(u.Removed) == 0:
-		return stageFailed(err)
+		return render.StageFailed(err)
 	}
 	return finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
-		"reason":  finding.String(writeReason(hostfs.ReasonOf(err))),
+		"reason":  finding.String(render.WriteReason(hostfs.ReasonOf(err))),
 		"written": stringList(u.Written),
 	})
 }

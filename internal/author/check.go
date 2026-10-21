@@ -85,7 +85,7 @@ func ContainerCodes() []finding.Code {
 const (
 	CodeFormShape       finding.Code = "manifest.input.form_shape"
 	CodeCollectionShape finding.Code = "manifest.input.collection_shape"
-	CodeValidateKind    finding.Code = "output.declaration.validate_kind"
+	CodeValidateKind                 = finding.CodeDeclarationValidateKind
 )
 
 // The names of the steps and parts of steps report.step_skipped names

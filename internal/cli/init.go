@@ -12,6 +12,7 @@ import (
 	"github.com/kottera/metais/internal/cli/args"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
+	"github.com/kottera/metais/internal/render"
 )
 
 // initResult is metais.init/1's result: the files init wrote, or with
@@ -135,10 +136,10 @@ func (s *session) initFailed(err error) outcome {
 	case errors.As(err, &we) && we.Op == "open" && we.Reason == hostfs.NotDirectory:
 		return s.refuseWith(finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil))
 	case errors.As(err, &we) && !we.Left && len(we.Written) == 0:
-		return s.refuseWith(nothingWritten(we.Reason))
+		return s.refuseWith(render.NothingWritten(we.Reason))
 	case errors.As(err, &we):
 		o := s.refuseWith(finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
-			"reason":  finding.String(writeReason(we.Reason)),
+			"reason":  finding.String(render.WriteReason(we.Reason)),
 			"written": stringList(we.Written),
 		}))
 		if len(we.Written) > 0 {
@@ -147,19 +148,6 @@ func (s *session) initFailed(err error) outcome {
 		return o
 	}
 	panic("cli: init failed with " + err.Error())
-}
-
-// writeReason is r as output.destination.write_failed's reason: one of
-// ADR-006 D9 item 8's, or exists for a name that appeared where init
-// writes, which it never overwrites.
-func writeReason(r hostfs.Reason) string {
-	switch {
-	case r.IsOS():
-		return string(r)
-	case r == hostfs.Exists, r == hostfs.NotDirectory, r == hostfs.Link:
-		return "exists"
-	}
-	return string(hostfs.IOError)
 }
 
 func stringList(ss []string) finding.Value {

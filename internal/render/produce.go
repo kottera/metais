@@ -1,11 +1,12 @@
 // Copyright 2026 Kottera
 // SPDX-License-Identifier: Apache-2.0
 
-package cli
+package render
 
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"io"
 	"strings"
 
@@ -18,7 +19,7 @@ import (
 	"github.com/kottera/metais/internal/zipfmt"
 )
 
-// renderPlan is ADR-005 D13's phase 4: every template a template output
+// RenderPlan is ADR-005 D13's phase 4: every template a template output
 // reaches, at any depth of containers, is parsed, each once, and every
 // parse finding is reported, whether or not the output plans a file; then
 // every embed of a raw form that does not exist, whose input and item are
@@ -31,7 +32,7 @@ import (
 // tag renders through the plan's placement map (D5 item 6). Then each
 // container whose entries all rendered is measured, and held to
 // output-size.
-func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r *template.Renderer, lim limits.Set, schemas map[string]*schema.Compiler) []finding.Finding {
+func RenderPlan(pkg *loader.Package, plan []*File, ts *template.Templates, r *template.Renderer, lim limits.Set, schemas map[string]*schema.Compiler) []finding.Finding {
 	var fs []finding.Finding
 	reported := map[string]bool{}
 	ready := map[string]bool{}
@@ -62,11 +63,11 @@ func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r 
 	parse(pkg.Manifest.Outputs)
 	// A mirror's templates, and the placement map, from the plan.
 	placed := map[string][]template.Placement{}
-	var walk func(tree []*planned)
-	walk = func(tree []*planned) {
+	var walk func(tree []*File)
+	walk = func(tree []*File) {
 		for _, pf := range tree {
 			switch {
-			case pf.isContainer():
+			case pf.IsContainer():
 				walk(pf.entries)
 			case pf.asset != "":
 				name := strings.TrimPrefix(pf.asset, template.AssetDir)
@@ -108,11 +109,11 @@ func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r 
 			}
 		}
 	}
-	var render func(tree []*planned)
-	render = func(tree []*planned) {
+	var render func(tree []*File)
+	render = func(tree []*File) {
 		for _, pf := range tree {
 			switch {
-			case pf.isContainer():
+			case pf.IsContainer():
 				render(pf.entries)
 				continue
 			case pf.tool:
@@ -140,7 +141,7 @@ func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r 
 	}
 	render(plan)
 	for _, pf := range plan {
-		if !pf.isContainer() || !measure(pf) {
+		if !pf.IsContainer() || !measure(pf) {
 			continue
 		}
 		if pf.size > lim.Value(limits.OutputSize) {
@@ -155,14 +156,14 @@ func renderPlan(pkg *loader.Package, plan []*planned, ts *template.Templates, r 
 // entries, when every entry rendered: the size and digest of the zip it
 // writes, and which of its entries it deflates. It writes the zip to
 // nothing but a hash, so no container is held whole in memory.
-func measure(pf *planned) bool {
+func measure(pf *File) bool {
 	if len(pf.entries) > zipfmt.MaxEntries {
 		// Refused in planning (D8 item 8); a zip cannot hold them.
 		pf.failed = true
 		return false
 	}
 	for _, e := range pf.entries {
-		if e.failed || e.isContainer() && !measure(e) {
+		if e.failed || e.IsContainer() && !measure(e) {
 			pf.failed = true
 			return false
 		}
@@ -171,7 +172,7 @@ func measure(pf *planned) bool {
 	n := &byteCount{}
 	written, err := writeContainer(io.MultiWriter(h, n), pf)
 	if err != nil {
-		panic("cli: a planned container does not write: " + err.Error())
+		panic("render: a planned container does not write: " + err.Error())
 	}
 	for i, w := range written {
 		pf.entries[i].deflated = w.Deflated
@@ -186,4 +187,45 @@ type byteCount struct{ n int64 }
 func (c *byteCount) Write(b []byte) (int, error) {
 	c.n += int64(len(b))
 	return len(b), nil
+}
+
+// writeContainer writes the zip of the container pf to w, assembling it as
+// it is written (ADR-005 D8, D13 item 5): each entry's content is its
+// rendered bytes, or the zip of a container entry, itself written as it
+// is written. stored: true and a profile's mimetype are stored; every
+// other entry is ADR-001 D4's auto (D8 item 7).
+func writeContainer(w io.Writer, pf *File) ([]zipfmt.Written, error) {
+	parts := make([]zipfmt.Part, len(pf.entries))
+	for i, e := range pf.entries {
+		method := zipfmt.Auto
+		if e.tool || e.decl.Stored {
+			method = zipfmt.Store
+		}
+		parts[i] = zipfmt.Part{Name: e.path, Method: method, Content: func(w io.Writer) error {
+			if e.IsContainer() {
+				_, err := writeContainer(w, e)
+				return err
+			}
+			r, done := e.Open()
+			_, err := io.Copy(w, r)
+			return done(err)
+		}}
+	}
+	return zipfmt.WriteParts(w, parts)
+}
+
+// DigestAssets reads every asset of files whose digest is not yet taken,
+// for its digest (ADR-005 D16 item 2). An asset's digest is taken as it is
+// first read; a dry run, the archive and --only read it after the records
+// are made, or never.
+func DigestAssets(files []*File) {
+	for _, pf := range files {
+		if pf.asset != "" && pf.digest == "" {
+			r, done := pf.Open()
+			_, err := io.Copy(io.Discard, r)
+			if derr := done(err); err != nil || derr != nil {
+				panic("render: reading an asset the plan found: " + errors.Join(err, derr).Error())
+			}
+		}
+	}
 }

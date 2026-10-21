@@ -4,9 +4,6 @@
 package cli
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"errors"
 	"io"
 	"slices"
 	"strconv"
@@ -18,6 +15,7 @@ import (
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/inputs"
 	"github.com/kottera/metais/internal/loader"
+	"github.com/kottera/metais/internal/render"
 	"github.com/kottera/metais/internal/sample"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/version"
@@ -144,8 +142,8 @@ func renderDeclaration() *Command {
 			Refusal{Code: finding.CodeDestinationCommitFailed, Cause: "Moving the outputs into an existing --out failed part way; the files already moved are listed, and nothing else was changed.", Next: nextRenderDest},
 			Refusal{Code: finding.CodeUsageFlagExcluded, Cause: "--overwrite is given with --out -, and an archive on standard output replaces nothing.", Next: nextRenderOverwrite,
 				match: flagGiven("--overwrite")},
-			Refusal{Code: codeMirrorEmptyName, Cause: "A mirror would write a template whose file name is exactly .liquid with an empty name.", Next: nextRenderTemplates},
-			Refusal{Code: codeMirrorEmpty, Cause: "A mirror renders no file, and --fail-on warning makes its warning fail the render.", Next: nextRenderTemplates},
+			Refusal{Code: render.CodeMirrorEmptyName, Cause: "A mirror would write a template whose file name is exactly .liquid with an empty name.", Next: nextRenderTemplates},
+			Refusal{Code: render.CodeMirrorEmpty, Cause: "A mirror renders no file, and --fail-on warning makes its warning fail the render.", Next: nextRenderTemplates},
 		),
 		Examples: []Example{
 			{"metais render report-1.0.0.metais --data data --out out", "Renders the package's outputs from the data directory data into the new directory out."},
@@ -366,35 +364,35 @@ func runRender(s *session, p args.Parsed) outcome {
 	// templates share (ADR-009 D11).
 	r := template.NewRenderer(ts, b, lim, s.inv.Options.Faults)
 	// Phases 1 and 2: plan and verify paths.
-	plan, pfs := planOutputs(pkg, lim, s, r)
+	plan, pfs := render.PlanOutputs(pkg, lim, s.inv.Options.Faults, r)
 	fs = append(fs, pfs...)
 	// Phase 3: the destination, when it is a directory, every refusal
 	// reported with the others (ADR-005 D15 item 8).
-	var dest *destination
+	var dest *render.Destination
 	if !toStream {
 		var dfs []finding.Finding
-		dest, dfs = checkDestination(out, p.Has("overwrite"), plan, lim, s.inv.Options.Faults)
-		defer dest.close()
+		dest, dfs = render.CheckDestination(out, p.Has("overwrite"), plan, lim, s.inv.Options.Faults)
+		defer dest.Close()
 		fs = append(fs, dfs...)
 	}
 	// The output validation schemas, compiled before any output is
 	// rendered (ADR-005 D11 item 3).
-	schemas, sfs := outputSchemas(pkg, lim)
+	schemas, sfs := render.OutputSchemas(pkg, lim)
 	fs = append(fs, sfs...)
 	// Phase 4: render every output, each to its first error, and
 	// transform and validate each file that rendered (ADR-005 D13 item 4).
-	fs = append(fs, renderPlan(pkg, plan, ts, r, lim, schemas)...)
+	fs = append(fs, render.RenderPlan(pkg, plan, ts, r, lim, schemas)...)
 	// A warning that --fail-on warning makes a failure fails the render
 	// before it writes anything (ADR-006 D2 item 5).
 	if s.fails(fs) {
 		return outcome{findings: fs, next: s.nextSteps(fs), dataDir: dataDir}
 	}
-	slices.SortFunc(plan, func(a, b *planned) int { return strings.Compare(a.path, b.path) })
+	slices.SortFunc(plan, func(a, b *render.File) int { return strings.Compare(a.Path(), b.Path()) })
 	// --only chooses what is written from the whole render, which has
 	// run and been verified (ADR-005 D18 items 1, 2 and 4).
 	written := plan
 	if hasOnly {
-		i := slices.IndexFunc(plan, func(pf *planned) bool { return pf.path == only })
+		i := slices.IndexFunc(plan, func(pf *render.File) bool { return pf.Path() == only })
 		if i < 0 {
 			fs = append(fs, s.unknownOutput(p, plan))
 			return outcome{findings: fs, next: s.nextSteps(fs), dataDir: dataDir}
@@ -419,27 +417,16 @@ func runRender(s *session, p args.Parsed) outcome {
 	switch {
 	case dryRun:
 	case toStream && hasOnly:
-		stream = func(w io.Writer) { writeContent(w, written[0]) }
+		stream = func(w io.Writer) { render.WriteContent(w, written[0]) }
 	case toStream:
-		stream = func(w io.Writer) { writeArchive(w, written) }
+		stream = func(w io.Writer) { render.WriteArchive(w, written) }
 	default:
-		if f, ok := commit(out, dest, written, s); !ok {
+		if f, ok := render.Commit(out, dest, written, s.inv.Options.Faults); !ok {
 			fs = append(fs, f)
 			return outcome{findings: fs, next: s.nextSteps(fs)}
 		}
 	}
-	// An asset's digest is taken as it is first read; a dry run, the
-	// archive and --only read it after the records are made, or never,
-	// so it is read for its digest here (ADR-005 D16 item 2).
-	for _, pf := range written {
-		if pf.asset != "" && pf.digest == "" {
-			r, done := content(pf)
-			_, err := io.Copy(io.Discard, r)
-			if derr := done(err); err != nil || derr != nil {
-				panic("cli: reading an asset the plan found: " + errors.Join(err, derr).Error())
-			}
-		}
-	}
+	render.DigestAssets(written)
 	if stream != nil {
 		streaming = true
 		emit := stream
@@ -453,21 +440,21 @@ func runRender(s *session, p args.Parsed) outcome {
 		human.WriteString("would write\n")
 	}
 	for _, pf := range written {
-		size, d := pf.measured()
+		size, d := pf.Measured()
 		var entries strings.Builder
 		rf := renderFile{
-			Path: pf.path, Output: pf.decl.ID, Item: pf.item(), Source: pf.source(), Size: size, Digest: d,
-			Executable: pf.decl.Executable, Entries: entryRecords(pf, &entries, 1), Kind: pf.kind(),
+			Path: pf.Path(), Output: pf.Output(), Item: pf.Item(), Source: pf.Source(), Size: size, Digest: d,
+			Executable: pf.Executable(), Entries: entryRecords(pf, &entries, 1), Kind: pf.Kind(),
 		}
 		if !toStream {
 			rf.Status = string(hostfs.Create)
 			if dest != nil {
-				rf.Status = string(dest.status[pf.path])
+				rf.Status = dest.Status(pf.Path())
 			}
 		}
 		result.Files = append(result.Files, rf)
 		human.WriteString(strconv.FormatInt(size, 10) + "\t" + d + "\t")
-		human.Write(finding.AppendText(nil, pf.path))
+		human.Write(finding.AppendText(nil, pf.Path()))
 		human.WriteString("\n" + entries.String())
 	}
 	o := outcome{findings: fs, result: result, dataDir: dataDir, stream: stream}
@@ -485,10 +472,10 @@ const maxOutputsListed = 20
 
 // unknownOutput is usage.unknown_output for --only's value, which no file
 // of plan, in path order, has (ADR-005 D18 item 4).
-func (s *session) unknownOutput(p args.Parsed, plan []*planned) finding.Finding {
+func (s *session) unknownOutput(p args.Parsed, plan []*render.File) finding.Finding {
 	var paths []string
 	for _, pf := range plan[:min(len(plan), maxOutputsListed)] {
-		paths = append(paths, pf.path)
+		paths = append(paths, pf.Path())
 	}
 	return finding.New(finding.CodeUsageUnknownOutput, invocation, nil, finding.Params{
 		"argument":   s.flagValueArg(p, "only"),
@@ -509,36 +496,25 @@ func (s *session) flagValueArg(p args.Parsed, name string) finding.Value {
 	return finding.Int(int64(at))
 }
 
-// measured is pf's size and digest: a container's zip's, an asset's
-// entry's, or its bytes'.
-func (pf *planned) measured() (int64, string) {
-	if pf.isContainer() || pf.asset != "" {
-		return pf.size, pf.digest
-	}
-	sum := sha256.Sum256(pf.bytes)
-	return int64(len(pf.bytes)), "sha256:" + hex.EncodeToString(sum[:])
-}
-
 // entryRecords is the records of pf's entries, when pf is a container,
 // and their human lines, each indented depth levels, written to human.
-func entryRecords(pf *planned, human *strings.Builder, depth int) []renderEntry {
-	if !pf.isContainer() {
+func entryRecords(pf *render.File, human *strings.Builder, depth int) []renderEntry {
+	if !pf.IsContainer() {
 		return nil
 	}
 	var lines strings.Builder
-	out := make([]renderEntry, 0, len(pf.entries))
-	for _, e := range pf.entries {
-		size, d := e.measured()
-		r := renderEntry{Path: e.path, Item: e.item(), Source: e.source(), Kind: e.kind(), Method: "stored", Size: size, Digest: d}
-		if e.decl.ID != "" && !e.tool {
-			id := e.decl.ID
+	out := make([]renderEntry, 0, len(pf.Entries()))
+	for _, e := range pf.Entries() {
+		size, d := e.Measured()
+		r := renderEntry{Path: e.Path(), Item: e.Item(), Source: e.Source(), Kind: e.Kind(), Method: "stored", Size: size, Digest: d}
+		if id := e.Output(); id != "" {
 			r.Output = &id
 		}
-		if e.deflated {
+		if e.Deflated() {
 			r.Method = "deflated"
 		}
 		lines.WriteString(strings.Repeat("  ", depth) + strconv.FormatInt(size, 10) + "\t" + d + "\t")
-		lines.Write(finding.AppendText(nil, e.path))
+		lines.Write(finding.AppendText(nil, e.Path()))
 		lines.WriteString("\n")
 		r.Entries = entryRecords(e, &lines, depth+1)
 		out = append(out, r)

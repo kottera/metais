@@ -16,6 +16,7 @@ import (
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
+	"github.com/kottera/metais/internal/render"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/version"
 )
@@ -305,7 +306,7 @@ func inspectOutcome(pkg *loader.Package, guideOnly bool, t []*Command) outcome {
 	for _, in := range m.Inputs {
 		inputs = append(inputs, inputOf(in, examples))
 	}
-	outputs := outputsOf(m.Outputs, entries, explicitTemplates(m.Outputs))
+	outputs := outputsOf(m.Outputs, entries, render.ExplicitTemplates(m.Outputs))
 	refs := &inspectReferences{Entries: []inspectReference{}}
 	for _, r := range pkg.References {
 		refs.Count++
@@ -527,12 +528,12 @@ func mirrorOf(d manifest.Output, entries []string, explicit map[string]bool) []i
 	}
 	out := []inspectMirror{}
 	for _, e := range entries {
-		rel, ok := strings.CutPrefix(e, treePrefix(template.Dir, d.Source))
+		rel, ok := strings.CutPrefix(e, render.TreePrefix(template.Dir, d.Source))
 		name := strings.TrimPrefix(e, template.Dir)
 		if !ok || explicit[name] || slices.ContainsFunc(strings.Split(rel, "/"), func(s string) bool { return strings.HasPrefix(s, "_") }) {
 			continue
 		}
-		out = append(out, inspectMirror{Template: name, Path: beneath(dest, strings.TrimSuffix(rel, ".liquid"))})
+		out = append(out, inspectMirror{Template: name, Path: render.Beneath(dest, strings.TrimSuffix(rel, ".liquid"))})
 	}
 	return out
 }

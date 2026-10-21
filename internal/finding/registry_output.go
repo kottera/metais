@@ -5,6 +5,7 @@ package finding
 
 // The output codes other packages report by name.
 const (
+	CodeDeclarationValidateKind   Code = "output.declaration.validate_kind"
 	CodeDestinationCaseVariant    Code = "output.destination.case_variant"
 	CodeDestinationCommitFailed   Code = "output.destination.commit_failed"
 	CodeDestinationInPackage      Code = "output.destination.in_package"

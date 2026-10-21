@@ -11,6 +11,7 @@ import (
 	"github.com/kottera/metais/internal/cli/args"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
+	"github.com/kottera/metais/internal/render"
 	"github.com/kottera/metais/internal/skill"
 	"github.com/kottera/metais/internal/version"
 )
@@ -233,10 +234,10 @@ func skillTargetFinding(t skill.Target, written []string) finding.Finding {
 		return finding.New(finding.CodeDestinationNotRegularFile, invocation, nil, finding.Params{"path": path, "reason": finding.String(string(r))}).WithHint(skillNotRegHint)
 	default:
 		if len(written) == 0 {
-			return nothingWritten(r).WithHint(skillWriteHint)
+			return render.NothingWritten(r).WithHint(skillWriteHint)
 		}
 		return finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
-			"reason":  finding.String(writeReason(r)),
+			"reason":  finding.String(render.WriteReason(r)),
 			"written": stringList(written),
 		}).WithHint(skillWriteHint)
 	}
@@ -249,9 +250,9 @@ func (s *session) skillOpenFailed(err error, again Next) outcome {
 	case hostfs.NotDirectory:
 		f = finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil).WithHint(skillNotDirHint)
 	case hostfs.NotFound:
-		f = nothingWritten(r).WithHint(skillOpenNotFound)
+		f = render.NothingWritten(r).WithHint(skillOpenNotFound)
 	default:
-		f = nothingWritten(r).WithHint(skillWriteHint)
+		f = render.NothingWritten(r).WithHint(skillWriteHint)
 	}
 	return outcome{findings: []finding.Finding{f}, next: []Next{again}}
 }
