@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/pkgtree"
@@ -74,19 +75,20 @@ func TestAssetBytesStreamed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	r := template.NewRenderer(ts, b, lim, 0)
-	plan, fs := PlanOutputs(pkg, lim, 0, r)
-	fs = append(fs, RenderPlan(pkg, plan, ts, r, lim, nil)...)
-	if len(fs) != 0 || len(plan) != 3 {
-		t.Fatalf("plan %d files, findings %v", len(plan), fs)
-	}
-	for _, name := range slices.Sorted(maps.Keys(c.opened)) {
-		if strings.HasPrefix(name, "assets/") {
-			t.Errorf("planning and rendering opened %s %d times", name, c.opened[name])
-		}
-	}
-	if f, ok := Commit(filepath.Join(root, "out"), nil, plan, 0); !ok {
-		t.Fatalf("the commit failed: %v", f.Code())
+	res := Run(Options{Package: pkg, Templates: ts, Bindings: b, Limits: lim, Fails: func(fs []finding.Finding) bool { return len(fs) > 0 }},
+		Emitter{Emit: func(files []*File) Emission {
+			for _, name := range slices.Sorted(maps.Keys(c.opened)) {
+				if strings.HasPrefix(name, "assets/") {
+					t.Errorf("planning and rendering opened %s %d times", name, c.opened[name])
+				}
+			}
+			if f, ok := Commit(filepath.Join(root, "out"), nil, files, 0); !ok {
+				return Emission{Failed: &f}
+			}
+			return Emission{}
+		}})
+	if !res.Emitted || len(res.Findings) != 0 || len(res.Files) != 3 {
+		t.Fatalf("render of %d files, emitted %v, findings %v", len(res.Files), res.Emitted, res.Findings)
 	}
 	for _, name := range []string{"assets/big.bin", "assets/static/a.css", "assets/static/b/c.js"} {
 		if c.opened[name] != 1 {

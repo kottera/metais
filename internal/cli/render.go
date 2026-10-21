@@ -360,45 +360,62 @@ func runRender(s *session, p args.Parsed) outcome {
 	if err != nil {
 		panic("cli: " + err.Error())
 	}
-	// One renderer, whose work the manifest's expressions and the
-	// templates share (ADR-009 D11).
-	r := template.NewRenderer(ts, b, lim, s.inv.Options.Faults)
-	// Phases 1 and 2: plan and verify paths.
-	plan, pfs := render.PlanOutputs(pkg, lim, s.inv.Options.Faults, r)
-	fs = append(fs, pfs...)
 	// Phase 3: the destination, when it is a directory, every refusal
-	// reported with the others (ADR-005 D15 item 8).
+	// reported with the others (ADR-005 D15 item 8). Phase 5: emit
+	// (ADR-005 D13 item 5), in exactly one of a dry run, which writes
+	// nothing (D16), the archive (D17), one file's bytes (D18 item 1), and
+	// the directory commit of every file, or of the one selected (D14
+	// item 1, D18 item 3).
+	faults := s.inv.Options.Faults
 	var dest *render.Destination
+	defer func() { dest.Close() }()
+	var e render.Emitter
 	if !toStream {
-		var dfs []finding.Finding
-		dest, dfs = render.CheckDestination(out, p.Has("overwrite"), plan, lim, s.inv.Options.Faults)
-		defer dest.Close()
-		fs = append(fs, dfs...)
-	}
-	// The output validation schemas, compiled before any output is
-	// rendered (ADR-005 D11 item 3).
-	schemas, sfs := render.OutputSchemas(pkg, lim)
-	fs = append(fs, sfs...)
-	// Phase 4: render every output, each to its first error, and
-	// transform and validate each file that rendered (ADR-005 D13 item 4).
-	fs = append(fs, render.RenderPlan(pkg, plan, ts, r, lim, schemas)...)
-	// A warning that --fail-on warning makes a failure fails the render
-	// before it writes anything (ADR-006 D2 item 5).
-	if s.fails(fs) {
-		return outcome{findings: fs, next: s.nextSteps(fs), dataDir: dataDir}
-	}
-	slices.SortFunc(plan, func(a, b *render.File) int { return strings.Compare(a.Path(), b.Path()) })
-	// --only chooses what is written from the whole render, which has
-	// run and been verified (ADR-005 D18 items 1, 2 and 4).
-	written := plan
-	if hasOnly {
-		i := slices.IndexFunc(plan, func(pf *render.File) bool { return pf.Path() == only })
-		if i < 0 {
-			fs = append(fs, s.unknownOutput(p, plan))
-			return outcome{findings: fs, next: s.nextSteps(fs), dataDir: dataDir}
+		overwrite := p.Has("overwrite")
+		e.Check = func(plan []*render.File) []finding.Finding {
+			var dfs []finding.Finding
+			dest, dfs = render.CheckDestination(out, overwrite, plan, lim, faults)
+			return dfs
 		}
-		written = plan[i : i+1]
 	}
+	switch {
+	case dryRun:
+	case toStream && hasOnly:
+		e.Emit = func(files []*render.File) render.Emission {
+			return render.Emission{Stream: func(w io.Writer) { render.WriteContent(w, files[0]) }}
+		}
+	case toStream:
+		e.Emit = func(files []*render.File) render.Emission {
+			return render.Emission{Stream: func(w io.Writer) { render.WriteArchive(w, files) }}
+		}
+	default:
+		e.Emit = func(files []*render.File) render.Emission {
+			if f, ok := render.Commit(out, dest, files, faults); !ok {
+				return render.Emission{Failed: &f}
+			}
+			return render.Emission{}
+		}
+	}
+	// Phases 1 to 5, with --only's choice of what is written made from the
+	// whole render, which has run and been verified (ADR-005 D18 items 1,
+	// 2 and 4).
+	rr := render.Run(render.Options{
+		Package: pkg, Templates: ts, Bindings: b, Limits: lim, Faults: faults,
+		Fails: s.fails, Only: only, HasOnly: hasOnly,
+	}, e)
+	fs = append(fs, rr.Findings...)
+	switch {
+	case !rr.Produced:
+		// A warning that --fail-on warning makes a failure fails the
+		// render before it writes anything (ADR-006 D2 item 5).
+		return outcome{findings: fs, next: s.nextSteps(fs), dataDir: dataDir}
+	case !rr.Selected:
+		fs = append(fs, s.unknownOutput(p, rr.Files))
+		return outcome{findings: fs, next: s.nextSteps(fs), dataDir: dataDir}
+	case !rr.Emitted:
+		return outcome{findings: fs, next: s.nextSteps(fs)}
+	}
+	written, stream := rr.Written, rr.Stream
 	result := &renderResult{Out: "directory", DryRun: dryRun, Files: []renderFile{}}
 	if isSample {
 		result.Sample = &renderSample{Optional: opts.Optional.String(), Seed: opts.Seed, Items: opts.Items}
@@ -409,24 +426,6 @@ func runRender(s *session, p args.Parsed) outcome {
 	if hasOnly {
 		result.Only = &only
 	}
-	// Phase 5: emit (ADR-005 D13 item 5), in exactly one of a dry run,
-	// which writes nothing (D16), the archive (D17), one file's bytes
-	// (D18 item 1), and the directory commit of every file, or of the
-	// one selected (D14 item 1, D18 item 3).
-	var stream func(io.Writer)
-	switch {
-	case dryRun:
-	case toStream && hasOnly:
-		stream = func(w io.Writer) { render.WriteContent(w, written[0]) }
-	case toStream:
-		stream = func(w io.Writer) { render.WriteArchive(w, written) }
-	default:
-		if f, ok := render.Commit(out, dest, written, s.inv.Options.Faults); !ok {
-			fs = append(fs, f)
-			return outcome{findings: fs, next: s.nextSteps(fs)}
-		}
-	}
-	render.DigestAssets(written)
 	if stream != nil {
 		streaming = true
 		emit := stream

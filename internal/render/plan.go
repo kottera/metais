@@ -26,7 +26,7 @@ func joinIn(in, p string) string {
 	return in + "/" + p
 }
 
-// PlanOutputs is ADR-005 D13's phases 1 and 2 for the package's
+// planOutputs is ADR-005 D13's phases 1 and 2 for the package's
 // declarations. Each declaration's for_each gives its evaluations, each
 // evaluation's when decides whether it writes a file, and its path is
 // rendered, or defaulted (D3, D4); a declaration whose expressions fail
@@ -37,7 +37,7 @@ func joinIn(in, p string) string {
 // every path of its tree together (D12), and the count of planned files,
 // every evaluation's and every container entry's, to the outputs limit
 // (ADR-009 D3).
-func PlanOutputs(pkg *loader.Package, lim limits.Set, faults fault.Set, r *template.Renderer) ([]*File, []finding.Finding) {
+func planOutputs(pkg *loader.Package, lim limits.Set, faults fault.Set, r *template.Renderer) ([]*File, []finding.Finding) {
 	p := &planner{pkg: pkg, lim: lim, faults: faults, r: r, counted: true,
 		entries: pkg.Tree.List(), explicit: ExplicitTemplates(pkg.Manifest.Outputs)}
 	plan := p.tree(pkg.Manifest.Outputs, "", "", 0, nil)

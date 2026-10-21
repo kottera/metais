@@ -30,7 +30,6 @@ import (
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/render"
-	"github.com/kottera/metais/internal/schema"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/yamlx"
 	"github.com/kottera/metais/internal/zipfmt"
@@ -440,7 +439,7 @@ func parseTemplates(decls []manifest.Output, ts *template.Templates) []finding.F
 // runExample runs e (ADR-007 D5 item 2): its example.yaml, its inputs,
 // its render into memory under the fixed identity (ADR-004 D15), and its
 // comparison with expected/ (items 3 and 4). Every finding is e's.
-func (s *session) runExample(pkg *loader.Package, ts *template.Templates, schemas map[string]*schema.Compiler, lim limits.Set, e *exampleRun) {
+func (s *session) runExample(pkg *loader.Package, ts *template.Templates, schemas *render.Schemas, lim limits.Set, e *exampleRun) {
 	e.result = testExample{Name: e.name, Status: "fail", Differences: []testDifference{}}
 	now, fs := exampleNow(pkg, e, lim)
 	e.fs = append(e.fs, fs...)
@@ -468,26 +467,13 @@ func (s *session) runExample(pkg *loader.Package, ts *template.Templates, schema
 	if err != nil {
 		panic("cli: " + err.Error())
 	}
-	r := template.NewRenderer(ts, b, lim, s.inv.Options.Faults)
-	plan, pfs := render.PlanOutputs(pkg, lim, s.inv.Options.Faults, r)
-	pfs = append(pfs, render.RenderPlan(pkg, plan, ts, r, lim, schemas)...)
-	e.fs = append(e.fs, pfs...)
-	if s.fails(pfs) {
+	rr := render.Run(render.Options{
+		Package: pkg, Templates: ts, Bindings: b, Limits: lim, Faults: s.inv.Options.Faults,
+		Schemas: schemas, Fails: s.fails,
+	}, render.Emitter{Emit: e.hold})
+	e.fs = append(e.fs, rr.Findings...)
+	if !rr.Produced {
 		return
-	}
-	e.rendered, e.exec, e.containers = map[string][]byte{}, map[string]bool{}, map[string]*render.File{}
-	for _, pf := range plan {
-		if pf.IsContainer() {
-			e.containers[pf.Path()] = pf
-		}
-		// Each file's bytes as render writes them: a template's, an
-		// asset's from the package, or a container's zip.
-		r, done := pf.Open()
-		b, err := io.ReadAll(r)
-		if derr := done(err); err != nil || derr != nil {
-			panic("cli: a rendered file does not read: " + errors.Join(err, derr).Error())
-		}
-		e.rendered[pf.Path()], e.exec[pf.Path()] = b, pf.Executable()
 	}
 	e.ok = true
 	if !e.hasExpected {
@@ -498,6 +484,25 @@ func (s *session) runExample(pkg *loader.Package, ts *template.Templates, schema
 	if len(e.result.Differences) == 0 {
 		e.result.Status = "pass"
 	}
+}
+
+// hold is the emission of e's render into memory: each file's bytes as
+// render writes them, a template's, an asset's from the package, or a
+// container's zip, and the plan of each container, by path.
+func (e *exampleRun) hold(files []*render.File) render.Emission {
+	e.rendered, e.exec, e.containers = map[string][]byte{}, map[string]bool{}, map[string]*render.File{}
+	for _, pf := range files {
+		if pf.IsContainer() {
+			e.containers[pf.Path()] = pf
+		}
+		r, done := pf.Open()
+		b, err := io.ReadAll(r)
+		if derr := done(err); err != nil || derr != nil {
+			panic("cli: a rendered file does not read: " + errors.Join(err, derr).Error())
+		}
+		e.rendered[pf.Path()], e.exec[pf.Path()] = b, pf.Executable()
+	}
+	return render.Emission{}
 }
 
 // exampleNow reads e's example.yaml, when it has one (ADR-007 D5 item 1):

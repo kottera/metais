@@ -14,25 +14,35 @@ import (
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/schema"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/zipfmt"
 )
 
-// RenderPlan is ADR-005 D13's phase 4: every template a template output
+// Producing is what phase 4 needs: the package, its templates, the
+// render's renderer and limits, and the stages' own state.
+type Producing struct {
+	pkg     *loader.Package
+	ts      *template.Templates
+	r       *template.Renderer
+	lim     limits.Set
+	staging *Staging
+}
+
+// produce is ADR-005 D13's phase 4: every template a template output
 // reaches, at any depth of containers, is parsed, each once, and every
 // parse finding is reported, whether or not the output plans a file; then
 // every embed of a raw form that does not exist, whose input and item are
 // known, is reported before anything renders (ADR-004 D12 item 3); then
 // every planned file whose templates parsed and need no such raw form is
-// rendered with r, each to its first error (ADR-004 D16 item 4). The bytes
-// of each file that rendered are held in its planned file; a file copied
-// from an asset is not read, its size counted against the output limits
-// with the bytes of every other file (ADR-005 D13 item 4), and the asset
-// tag renders through the plan's placement map (D5 item 6). Then each
-// container whose entries all rendered is measured, and held to
-// output-size.
-func RenderPlan(pkg *loader.Package, plan []*File, ts *template.Templates, r *template.Renderer, lim limits.Set, schemas map[string]*schema.Compiler) []finding.Finding {
+// rendered with c's renderer, each to its first error (ADR-004 D16 item
+// 4), and its stages run. The bytes of each file that rendered are held in
+// its planned file; a file copied from an asset is not read, its size
+// counted against the output limits with the bytes of every other file
+// (ADR-005 D13 item 4), and the asset tag renders through the plan's
+// placement map (D5 item 6). Then each container whose entries all
+// rendered is measured, and held to output-size.
+func produce(c *Producing, plan []*File) []finding.Finding {
+	ts, r, lim := c.ts, c.r, c.lim
 	var fs []finding.Finding
 	reported := map[string]bool{}
 	ready := map[string]bool{}
@@ -60,38 +70,32 @@ func RenderPlan(pkg *loader.Package, plan []*File, ts *template.Templates, r *te
 			}
 		}
 	}
-	parse(pkg.Manifest.Outputs)
+	parse(c.pkg.Manifest.Outputs)
 	// A mirror's templates, and the placement map, from the plan.
 	placed := map[string][]template.Placement{}
-	var walk func(tree []*File)
-	walk = func(tree []*File) {
-		for _, pf := range tree {
-			switch {
-			case pf.IsContainer():
-				walk(pf.entries)
-			case pf.asset != "":
-				name := strings.TrimPrefix(pf.asset, template.AssetDir)
-				placed[name] = append(placed[name], template.Placement{Tree: pf.in, Path: pf.path})
-			case pf.decl.Form == manifest.OutputMirror:
-				if _, seen := ready[pf.template]; seen {
-					continue
+	walk(plan, func(pf *File) {
+		switch {
+		case pf.asset != "":
+			name := strings.TrimPrefix(pf.asset, template.AssetDir)
+			placed[name] = append(placed[name], template.Placement{Tree: pf.in, Path: pf.path})
+		case pf.decl.Form == manifest.OutputMirror:
+			if _, seen := ready[pf.template]; seen {
+				return
+			}
+			ready[pf.template] = true
+			sources = append(sources, pf.template)
+			for _, name := range ts.Reach(pf.template) {
+				_, pfs := ts.Parse(name)
+				if len(pfs) > 0 {
+					ready[pf.template] = false
 				}
-				ready[pf.template] = true
-				sources = append(sources, pf.template)
-				for _, name := range ts.Reach(pf.template) {
-					_, pfs := ts.Parse(name)
-					if len(pfs) > 0 {
-						ready[pf.template] = false
-					}
-					if !reported[name] {
-						reported[name] = true
-						fs = append(fs, pfs...)
-					}
+				if !reported[name] {
+					reported[name] = true
+					fs = append(fs, pfs...)
 				}
 			}
 		}
-	}
-	walk(plan)
+	})
 	r.PlaceAssets(placed)
 	unavailable := map[string]bool{}
 	for _, source := range sources {
@@ -109,37 +113,30 @@ func RenderPlan(pkg *loader.Package, plan []*File, ts *template.Templates, r *te
 			}
 		}
 	}
-	var render func(tree []*File)
-	render = func(tree []*File) {
-		for _, pf := range tree {
-			switch {
-			case pf.IsContainer():
-				render(pf.entries)
-				continue
-			case pf.tool:
-				continue
-			case pf.asset != "":
-				o := template.Output{ID: pf.owner, Path: pf.path, In: pf.in}
-				if f := r.ChargeAsset(o, pf.size); f != nil {
-					fs = append(fs, *f)
-					pf.failed = true
-				}
-				continue
-			case !ready[pf.template]:
-				pf.failed = true
-				continue
-			}
-			out, f := r.Render(template.Output{ID: pf.owner, Template: pf.template, Path: pf.path, Fan: pf.fan, Kind: kindOf(pf.path, pf.decl.Kind), In: pf.in, HTML: pf.decl.Escape == "html"})
-			if f != nil {
+	walk(plan, func(pf *File) {
+		switch {
+		case pf.tool:
+			return
+		case pf.asset != "":
+			o := template.Output{ID: pf.owner, Path: pf.path, In: pf.in}
+			if f := r.ChargeAsset(o, pf.size); f != nil {
 				fs = append(fs, *f)
 				pf.failed = true
-				continue
 			}
-			pf.bytes = out
-			fs = append(fs, transform(pkg, pf, schemas, lim)...)
+			return
+		case !ready[pf.template]:
+			pf.failed = true
+			return
 		}
-	}
-	render(plan)
+		out, f := r.Render(template.Output{ID: pf.owner, Template: pf.template, Path: pf.path, Fan: pf.fan, Kind: kindOf(pf.path, pf.decl.Kind), In: pf.in, HTML: pf.decl.Escape == "html"})
+		if f != nil {
+			fs = append(fs, *f)
+			pf.failed = true
+			return
+		}
+		pf.bytes = out
+		fs = append(fs, runStages(c.staging, pf)...)
+	})
 	for _, pf := range plan {
 		if !pf.IsContainer() || !measure(pf) {
 			continue
@@ -214,11 +211,11 @@ func writeContainer(w io.Writer, pf *File) ([]zipfmt.Written, error) {
 	return zipfmt.WriteParts(w, parts)
 }
 
-// DigestAssets reads every asset of files whose digest is not yet taken,
+// digestAssets reads every asset of files whose digest is not yet taken,
 // for its digest (ADR-005 D16 item 2). An asset's digest is taken as it is
 // first read; a dry run, the archive and --only read it after the records
 // are made, or never.
-func DigestAssets(files []*File) {
+func digestAssets(files []*File) {
 	for _, pf := range files {
 		if pf.asset != "" && pf.digest == "" {
 			r, done := pf.Open()

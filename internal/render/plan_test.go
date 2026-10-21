@@ -48,7 +48,7 @@ func TestContainerEntryBoundary(t *testing.T) {
 			}
 			r := template.NewRenderer(ts, b, lim, 0)
 			before, measured := selfCPU()
-			plan, fs := PlanOutputs(pkg, lim, 0, r)
+			plan, fs := planOutputs(pkg, lim, 0, r)
 			if after, _ := selfCPU(); measured {
 				t.Logf("planning %d entries took %v of CPU", n, after-before)
 				if after-before > cpuBound {
