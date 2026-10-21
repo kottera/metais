@@ -3,6 +3,21 @@
 
 package render
 
+import (
+	"github.com/kottera/metais/internal/finding"
+	"github.com/kottera/metais/internal/manifest"
+)
+
+// crlfStage is ADR-005 D10: a file declaring newline: crlf has its line
+// endings converted, the growth charged to the output limits.
+var crlfStage = Stage{
+	Name:    "crlf",
+	Applies: func(d manifest.Output) bool { return d.Newline == "crlf" },
+	Run: func(c *Staging, f *File) []finding.Finding {
+		return c.SetBytes(f, crlf(f.bytes))
+	},
+}
+
 // crlf is ADR-005 D10 item 1: every LF not immediately preceded by CR
 // becomes CR LF. A CR LF and a lone CR are left as they are, so the
 // conversion is idempotent.

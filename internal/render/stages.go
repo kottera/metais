@@ -7,8 +7,10 @@ import (
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/loader"
+	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/regexprofile"
 	"github.com/kottera/metais/internal/schema"
+	"github.com/kottera/metais/internal/template"
 )
 
 // Schemas are the output validation schemas of a package's declarations,
@@ -31,25 +33,65 @@ func OutputSchemas(pkg *loader.Package, lim limits.Set) (*Schemas, []finding.Fin
 }
 
 // Staging is what the stages of a render read: the package, its limits
-// and its output validation schemas.
+// and its output validation schemas, and the renderer whose meter charged
+// the bytes each file rendered.
 type Staging struct {
 	pkg     *loader.Package
 	lim     limits.Set
 	schemas *Schemas
+	r       *template.Renderer
+}
+
+// Stage is a transform of a rendered file's bytes, in ADR-005 D13's phase
+// 4 (ADR-010 Amendment A7 item 6): Applies reports whether it runs on a
+// file the declaration d plans, and Run runs it, reading the file's bytes,
+// its declaration and the package and reaching no host. A stage changes
+// the bytes only through Staging.SetBytes.
+type Stage struct {
+	Name    string
+	Applies func(d manifest.Output) bool
+	Run     func(c *Staging, f *File) []finding.Finding
+}
+
+// stages are the stages, in their normative order: D10's CRLF conversion,
+// then D11's validation, which reads the final bytes.
+var stages = []Stage{
+	crlfStage,
+	validateStage,
 }
 
 // runStages is ADR-005 D13 item 4's transforms of f, a file that
-// rendered, top-level or a container's entry: D10's CRLF conversion, then
-// D11's validation of its final bytes against the declaration's schema,
-// every finding of which is reported (D11 item 4). It runs before a
-// container holding f is measured, so the container holds the bytes
-// transformed.
+// rendered, top-level or a container's entry: every stage that applies
+// runs, in order, and every finding of each is reported (D11 item 4); a
+// stage's findings do not stop the stages after it, but a file a stage
+// left unrendered goes no further. It runs before a container holding f
+// is measured, so the container holds the bytes transformed.
 func runStages(c *Staging, f *File) []finding.Finding {
-	if f.decl.Newline == "crlf" {
-		f.bytes = crlf(f.bytes)
+	var fs []finding.Finding
+	for _, s := range stages {
+		if f.failed {
+			break
+		}
+		if s.Applies(f.decl) {
+			fs = append(fs, s.Run(c, f)...)
+		}
 	}
-	if f.decl.Validate == "" {
-		return nil
+	return fs
+}
+
+// SetBytes makes b f's bytes, charging the change in their length against
+// output-size and output-total on the meter that charged f's rendered
+// bytes (ADR-010 Amendment A7 item 8), so the bound holds on the bytes
+// the render writes (ADR-005 D13 item 4, ADR-009 D3). A breach is f's
+// limit.exceeded.output, at its path, a container's entry by its
+// container's path and its own: f did not render, and no later stage
+// runs on it.
+func (c *Staging) SetBytes(f *File, b []byte) []finding.Finding {
+	o := template.Output{ID: f.owner, Path: f.path, In: f.in}
+	if breach := c.r.ChargeChange(o, int64(len(f.bytes)), int64(len(b))); breach != nil {
+		f.bytes, f.failed = nil, true
+		return []finding.Finding{*breach}
 	}
-	return validateOutput(c.pkg, f, c.schemas.byName, c.lim)
+	f.bytes = b
+	return nil
 }

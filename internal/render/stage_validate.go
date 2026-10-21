@@ -19,6 +19,16 @@ import (
 	"github.com/kottera/metais/internal/yamlx"
 )
 
+// validateStage is ADR-005 D11: a file whose declaration names a schema
+// in validate has its final bytes validated against it.
+var validateStage = Stage{
+	Name:    "validate",
+	Applies: func(d manifest.Output) bool { return d.Validate != "" },
+	Run: func(c *Staging, f *File) []finding.Finding {
+		return validateOutput(c.pkg, f, c.schemas.byName, c.lim)
+	},
+}
+
 // bom is the UTF-8 byte order mark a YAML output may begin with.
 var bom = []byte("\uFEFF")
 
