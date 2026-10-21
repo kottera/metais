@@ -32,6 +32,13 @@
       "reason": "ADR-009 D7, ADR-010 D2 item 2: the inputs layer reaches the host only to read the data directory, through hostfs's read side in its single entry point, so no other path of the layer can open a host file or write one"
     },
     {
+      "rule": "single-entry-point",
+      "package": "github.com/kottera/metais/internal/render",
+      "imports": "github.com/kottera/metais/internal/hostfs",
+      "through": "CheckPaths",
+      "reason": "ADR-010 A7 item 11, D2 item 2: internal/render reaches hostfs only through CheckPaths, so no form, producer or stage can touch the host, and only internal/render/sink writes"
+    },
+    {
       "rule": "never-depends",
       "package": "github.com/kottera/metais/internal/skill",
       "imports": "github.com/kottera/metais/internal/loader",
