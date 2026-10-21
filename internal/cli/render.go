@@ -400,7 +400,7 @@ func runRender(s *session, p args.Parsed) outcome {
 	// whole render, which has run and been verified (ADR-005 D18 items 1,
 	// 2 and 4).
 	rr := render.Run(render.Options{
-		Package: pkg, Templates: ts, Bindings: b, Limits: lim, Faults: faults,
+		Package: pkg, Templates: ts, Bindings: b, Limits: lim, Seams: faults,
 		Fails: s.fails, Only: only, HasOnly: hasOnly,
 	}, e)
 	fs = append(fs, rr.Findings...)

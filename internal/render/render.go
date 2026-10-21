@@ -21,14 +21,14 @@ import (
 )
 
 // Options are one render's: the package, its templates and the bindings
-// they see, its limits, and the command's fault set, which the pipeline
-// carries to the seams ADR-010 D13 item 2 names.
+// they see, its limits, and in Seams the command's fault set, which the
+// pipeline carries to the seams ADR-010 D13 item 2 names.
 type Options struct {
 	Package   *loader.Package
 	Templates *template.Templates
 	Bindings  *template.Bindings
 	Limits    limits.Set
-	Faults    fault.Set
+	Seams     fault.Set
 	// Schemas are the output validation schemas, compiled once by a
 	// command that renders more than once; when nil, Run compiles them
 	// after phase 3 (ADR-005 D11 item 3).
@@ -86,8 +86,8 @@ type Result struct {
 // work the manifest's expressions and the templates share (ADR-009 D11).
 func Run(o Options, e Emitter) Result {
 	pkg, lim := o.Package, o.Limits
-	r := template.NewRenderer(o.Templates, o.Bindings, lim, o.Faults)
-	plan, fs := planOutputs(pkg, lim, o.Faults, r)
+	r := template.NewRenderer(o.Templates, o.Bindings, lim, o.Seams)
+	plan, fs := planOutputs(pkg, lim, o.Seams, r)
 	if e.Check != nil {
 		fs = append(fs, e.Check(plan)...)
 	}

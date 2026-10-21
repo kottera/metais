@@ -468,7 +468,7 @@ func (s *session) runExample(pkg *loader.Package, ts *template.Templates, schema
 		panic("cli: " + err.Error())
 	}
 	rr := render.Run(render.Options{
-		Package: pkg, Templates: ts, Bindings: b, Limits: lim, Faults: s.inv.Options.Faults,
+		Package: pkg, Templates: ts, Bindings: b, Limits: lim, Seams: s.inv.Options.Faults,
 		Schemas: schemas, Fails: s.fails,
 	}, render.Emitter{Emit: e.hold})
 	e.fs = append(e.fs, rr.Findings...)
