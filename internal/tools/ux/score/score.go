@@ -310,6 +310,8 @@ type cmd struct {
 	// cwd is the directory it ran in, relative to the run's directory, or
 	// "" when that is outside it.
 	cwd string
+	// seq is its place among the session's commands and writes.
+	seq int
 }
 
 // call is a command that ran metais: its subcommand and the words after.
@@ -325,6 +327,7 @@ type write struct {
 	use  *streamjson.ToolUse
 	file string
 	text string
+	seq  int
 }
 
 func (c *cmd) ok() bool { return c.use.Result != nil && !c.use.Result.IsError }
@@ -385,7 +388,7 @@ func (r *run) read() {
 				}
 				s = s.expand(vars)
 				name, rest := s.name()
-				c := &cmd{use: u, s: s, name: name, rest: rest, cwd: cwd}
+				c := &cmd{use: u, s: s, name: name, rest: rest, cwd: cwd, seq: len(r.cmds) + len(r.writes)}
 				r.cmds = append(r.cmds, c)
 				switch name {
 				case "cd":
@@ -405,7 +408,7 @@ func (r *run) read() {
 				cwd = "work"
 			}
 		case "Write", "Edit", "MultiEdit", "NotebookEdit":
-			w := &write{use: u, file: r.resolve(u.Field("file_path"), "work")}
+			w := &write{use: u, file: r.resolve(u.Field("file_path"), "work"), seq: len(r.cmds) + len(r.writes)}
 			w.text = u.Field("content") + u.Field("new_string")
 			if u.Name == "MultiEdit" {
 				var in struct {

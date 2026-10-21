@@ -37,7 +37,7 @@ var checks = map[string]check{
 	"names-every-input": {namesEveryInput,
 		"An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted."},
 	"script-renders": {scriptRenders,
-		"A script validates and renders through metais when its text names metais, validate and render. Its test run passes when the session runs it and the harness reports no error; the scorer does not run it again."},
+		"A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it and the harness reports no error; the scorer does not run it again."},
 	"new-package": {newPackage,
 		"check passing is seen through pack, which checks and tests the package before it writes it."},
 	"schema-and-template": {schemaAndTemplate,
@@ -109,16 +109,75 @@ func (r *run) succeeded(subs ...string) []*call {
 	return out
 }
 
-// lastWrite is the transcript line of the session's last Write or Edit,
-// or of its last command that edits a file in place, or 0.
+// sourceDirs are the package source directories the session worked in,
+// relative to the run's directory: what it unpacked to or made with init,
+// and what it checked, tested or packed.
+func (r *run) sourceDirs() []string {
+	var dirs []string
+	add := func(p, cwd string) {
+		if d := r.resolve(p, cwd); d != "" && !strings.HasSuffix(d, ".metais") && !slices.Contains(dirs, d) {
+			dirs = append(dirs, d)
+		}
+	}
+	for _, c := range r.calls {
+		switch c.sub {
+		case "unpack":
+			for _, d := range flagValues(c.args, "--to") {
+				add(d, c.cwd)
+			}
+		case "init", "check", "test", "pack":
+			if op := operand(c.args); op != "" {
+				add(op, c.cwd)
+			} else if c.sub != "init" {
+				add(".", c.cwd)
+			}
+		}
+	}
+	return dirs
+}
+
+// operand is a command's first word that is not a flag, or "".
+func operand(args []string) string {
+	for _, a := range args {
+		if !strings.HasPrefix(a, "-") {
+			return a
+		}
+	}
+	return ""
+}
+
+// inSource reports whether a file, relative to the run's directory, is in
+// one of dirs, or in any directory when dirs is empty.
+func inSource(file string, dirs []string) bool {
+	if len(dirs) == 0 {
+		return true
+	}
+	for _, d := range dirs {
+		if d == "." || file == d || strings.HasPrefix(file, d+"/") {
+			return true
+		}
+	}
+	return false
+}
+
+// lastWrite is the place, among the session's commands and writes, of
+// its last Write or Edit of a file of the package's source, or of its
+// last command that edits one in place, or -1.
 func (r *run) lastWrite() int {
-	last := 0
+	dirs := r.sourceDirs()
+	last := -1
 	for _, w := range r.writes {
-		last = max(last, w.use.Line)
+		if inSource(w.file, dirs) {
+			last = max(last, w.seq)
+		}
 	}
 	for _, c := range r.cmds {
 		if (c.name == "sed" || c.name == "perl") && slices.ContainsFunc(c.rest, func(w string) bool { return strings.HasPrefix(w, "-i") }) {
-			last = max(last, c.use.Line)
+			for _, w := range c.rest {
+				if !strings.HasPrefix(w, "-") && inSource(r.resolve(w, c.cwd), dirs) {
+					last = max(last, c.seq)
+				}
+			}
 		}
 	}
 	return last
@@ -137,7 +196,7 @@ func (r *run) accepted() (*call, bool) {
 	if last == nil {
 		return nil, false
 	}
-	return last, last.ok() && last.use.Line > r.lastWrite() && !strings.Contains(last.output(), ": error: ")
+	return last, last.ok() && last.seq > r.lastWrite() && !strings.Contains(last.output(), ": error: ")
 }
 
 // eitherReading is C0's check: either reading of "fill this file" passes,
@@ -373,13 +432,15 @@ func mentions(text, name string) bool {
 }
 
 var (
-	scriptMetais   = regexp.MustCompile(`\bmetais\b`)
-	scriptValidate = regexp.MustCompile(`\bvalidate\b`)
-	scriptRender   = regexp.MustCompile(`\brender\b`)
+	scriptMetais = regexp.MustCompile(`\bmetais\b`)
+	scriptRender = regexp.MustCompile(`\brender\b`)
 )
 
 // scriptRenders is C5's check: the session writes a script that validates
-// and renders through metais, and a test run of it passes.
+// and renders through metais, and a test run of it passes. metais render
+// validates its inputs as metais validate does, and renders nothing when
+// any is in error, so a script that renders through metais validates
+// through it.
 func scriptRenders(r *run) Result {
 	scripts := map[string]int{} // run-relative path: the line that wrote it
 	texts := map[string]string{}
@@ -408,7 +469,7 @@ func scriptRenders(r *run) Result {
 		}
 	}) {
 		t := texts[p]
-		if !scriptMetais.MatchString(t) || !scriptValidate.MatchString(t) || !scriptRender.MatchString(t) {
+		if !scriptMetais.MatchString(t) || !scriptRender.MatchString(t) {
 			continue
 		}
 		base := path.Base(p)
