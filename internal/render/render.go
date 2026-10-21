@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package render is ADR-005 D13's render pipeline: planning, the path
-// checks, producing every file's bytes, the destination check and
-// emission (ADR-010 Amendment A7 item 2). internal/cli keeps each command
-// that runs it: its flags, refusals, help and result records, and the
-// choice of where the render goes.
+// checks and producing every file's bytes, run to a sink, which
+// internal/render/sink holds with the destination checks and emission
+// (ADR-010 Amendment A7 item 2). internal/cli keeps each command that
+// runs it: its flags, refusals, help and result records, and the choice
+// of sink.
 package render
 
 import (
@@ -41,14 +42,15 @@ type Options struct {
 	HasOnly bool
 }
 
-// Emitter is where a render goes, as the command chooses it: Check is
-// ADR-005 D13's phase 3 for the top-level files planned, every refusal a
-// finding reported with the others before anything is written (D15 item
-// 8), or nil for none; Emit is phase 5 for the files selected, in path
-// order, or nil for a dry run, which writes nothing (D16).
-type Emitter struct {
-	Check func(plan []*File) []finding.Finding
-	Emit  func(files []*File) Emission
+// Sink is where a render goes, as the command chooses it: the methods of
+// internal/render/sink's Sink that Run calls, the command calling the
+// others. Check is ADR-005 D13's phase 3 for the paths of the top-level files
+// planned, every refusal a finding reported with the others before
+// anything is written (D15 item 8); Emit is phase 5 for the files
+// selected, in path order.
+type Sink interface {
+	Check(paths []string) []finding.Finding
+	Emit(files []*File) Emission
 }
 
 // Emission is how phase 5 ended: with its finding when it failed, or with
@@ -77,20 +79,22 @@ type Result struct {
 }
 
 // Run is the render's one entry point, ADR-005 D13's phases in order: it
-// plans and checks the paths of every file (phases 1 and 2), runs e's
+// plans and checks the paths of every file (phases 1 and 2), runs s's
 // phase 3, produces every file (phase 4), and, when no finding fails the
 // render, selects what --only names from the whole render, which has run
-// and been verified (D18 items 1, 2 and 4), and emits it by e (phase 5).
+// and been verified (D18 items 1, 2 and 4), and emits it to s (phase 5).
 // It is the only thing that orders the files, sorting the top-level files
 // by path once, and the only thing that constructs the renderer, whose
 // work the manifest's expressions and the templates share (ADR-009 D11).
-func Run(o Options, e Emitter) Result {
+func Run(o Options, s Sink) Result {
 	pkg, lim := o.Package, o.Limits
 	r := template.NewRenderer(o.Templates, o.Bindings, lim, o.Seams)
 	plan, fs := planOutputs(pkg, lim, o.Seams, r)
-	if e.Check != nil {
-		fs = append(fs, e.Check(plan)...)
+	paths := make([]string, len(plan))
+	for i, pf := range plan {
+		paths[i] = pf.path
 	}
+	fs = append(fs, s.Check(paths)...)
 	schemas := o.Schemas
 	if schemas == nil {
 		var sfs []finding.Finding
@@ -113,14 +117,12 @@ func Run(o Options, e Emitter) Result {
 		written = plan[i : i+1]
 	}
 	res.Selected, res.Written = true, written
-	if e.Emit != nil {
-		em := e.Emit(written)
-		if em.Failed != nil {
-			res.Findings = append(res.Findings, *em.Failed)
-			return res
-		}
-		res.Stream = em.Stream
+	em := s.Emit(written)
+	if em.Failed != nil {
+		res.Findings = append(res.Findings, *em.Failed)
+		return res
 	}
+	res.Stream = em.Stream
 	res.Emitted = true
 	digestAssets(written)
 	return res

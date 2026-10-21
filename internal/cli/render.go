@@ -12,7 +12,6 @@ import (
 	"github.com/kottera/metais/internal/cli/args"
 	"github.com/kottera/metais/internal/dates"
 	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/inputs"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/render"
@@ -363,47 +362,31 @@ func runRender(s *session, p args.Parsed) outcome {
 	}
 	// Phase 3: the destination, when it is a directory, every refusal
 	// reported with the others (ADR-005 D15 item 8). Phase 5: emit
-	// (ADR-005 D13 item 5), in exactly one of a dry run, which writes
-	// nothing (D16), the archive (D17), one file's bytes (D18 item 1), and
-	// the directory commit of every file, or of the one selected (D14
-	// item 1, D18 item 3).
+	// (ADR-005 D13 item 5), to exactly one of one file's bytes (D18 item
+	// 1), the archive (D17), and the directory, every file or the one
+	// selected (D14, D18 item 3), or with --dry-run to the sink's checks
+	// alone, which write nothing (D16).
 	faults := s.inv.Options.Faults
-	var dest *sink.Destination
-	defer func() { dest.Close() }()
-	var e render.Emitter
-	if !toStream {
-		overwrite := p.Has("overwrite")
-		e.Check = func(plan []*render.File) []finding.Finding {
-			var dfs []finding.Finding
-			dest, dfs = sink.CheckDestination(out, overwrite, plan, lim, faults)
-			return dfs
-		}
-	}
+	var sk sink.Sink
 	switch {
-	case dryRun:
 	case toStream && hasOnly:
-		e.Emit = func(files []*render.File) render.Emission {
-			return render.Emission{Stream: func(w io.Writer) { sink.WriteContent(w, files[0]) }}
-		}
+		sk = sink.Content()
 	case toStream:
-		e.Emit = func(files []*render.File) render.Emission {
-			return render.Emission{Stream: func(w io.Writer) { sink.WriteArchive(w, files) }}
-		}
+		sk = sink.Archive()
 	default:
-		e.Emit = func(files []*render.File) render.Emission {
-			if f, ok := sink.Commit(out, dest, files, faults); !ok {
-				return render.Emission{Failed: &f}
-			}
-			return render.Emission{}
-		}
+		sk = sink.Directory(out, p.Has("overwrite"), lim, faults)
 	}
+	if dryRun {
+		sk = sink.DryRun(sk)
+	}
+	defer sk.Close()
 	// Phases 1 to 5, with --only's choice of what is written made from the
 	// whole render, which has run and been verified (ADR-005 D18 items 1,
 	// 2 and 4).
 	rr := render.Run(render.Options{
 		Package: pkg, Templates: ts, Bindings: b, Limits: lim, Seams: faults,
 		Fails: s.fails, Only: only, HasOnly: hasOnly,
-	}, e)
+	}, sk)
 	fs = append(fs, rr.Findings...)
 	switch {
 	case !rr.Produced:
@@ -446,12 +429,7 @@ func runRender(s *session, p args.Parsed) outcome {
 			Path: pf.Path(), Output: pf.Output(), Item: pf.Item(), Source: pf.Source(), Size: size, Digest: d,
 			Executable: pf.Executable(), Entries: entryRecords(pf, &entries, 1), Kind: pf.Kind(),
 		}
-		if !toStream {
-			rf.Status = string(hostfs.Create)
-			if dest != nil {
-				rf.Status = dest.Status(pf.Path())
-			}
-		}
+		rf.Status = sk.Status(pf.Path())
 		result.Files = append(result.Files, rf)
 		human.WriteString(strconv.FormatInt(size, 10) + "\t" + d + "\t")
 		human.Write(finding.AppendText(nil, pf.Path()))
