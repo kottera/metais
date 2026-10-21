@@ -45,12 +45,27 @@ type fakeSet struct {
 	session func(inv invocation) string
 }
 
+// fakeRoot is a checkout holding only what the runner reads of one: the
+// module line of go.mod, and the scenario set, copied from this package's
+// directory.
+func fakeRoot(t *testing.T) string {
+	t.Helper()
+	root := testenv.Dir(t)
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module github.com/kottera/metais\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.CopyFS(filepath.Join(root, scenariosDir), os.DirFS("./scenarios")); err != nil {
+		t.Fatal(err)
+	}
+	return root
+}
+
 func newFakeSet(t *testing.T, scenarios ...string) *fakeSet {
 	t.Helper()
 	f := &fakeSet{out: &bytes.Buffer{}, commit: "0123456789abcdef0123456789abcdef01234567", quota: map[string]int{}}
 	clock := time.Date(2026, 10, 21, 12, 0, 0, 0, time.UTC)
 	f.c = &config{
-		root:      filepath.Join("..", "..", ".."),
+		root:      fakeRoot(t),
 		out:       filepath.Join(testenv.Dir(t), "set"),
 		scenarios: scenarios,
 		models:    []string{"haiku", "sonnet"},
@@ -350,7 +365,6 @@ func TestRunRefuses(t *testing.T) {
 		want string
 	}{
 		{"a relative -out", func(c *config) { c.out = "set" }, "not an absolute path"},
-		{"-out inside a repository", func(c *config) { c.out = filepath.Join(c.root, "x") }, "not an absolute path"},
 		{"not the checkout", func(c *config) { c.root = testenv.Dir(t) }, "top of a metais checkout"},
 		{"no model", func(c *config) { c.models = nil }, "no model"},
 		{"a model that is a path", func(c *config) { c.models = []string{"../haiku"} }, "not a model's name"},

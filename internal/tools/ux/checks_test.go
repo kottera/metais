@@ -298,7 +298,7 @@ func TestAfterChecks(t *testing.T) {
 			return clean(*s) + "\n" + toolLine("Grep", `{"pattern":"x","path":"MEMORY.md"}`)
 		}},
 		{"an AGENTS.md read", checkNoMemory, func(s *session) string {
-			return clean(*s) + "\n" + toolLine("Read", `{"file_path":"../AGENTS.md"}`)
+			return clean(*s) + "\n" + toolLine("Bash", `{"command":"cat ../AGENTS.md"}`)
 		}},
 	}
 	for _, c := range cases {
