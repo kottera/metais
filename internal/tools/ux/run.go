@@ -41,8 +41,12 @@ type config struct {
 	quotaWait  time.Duration
 	timeout    time.Duration
 	allowDirty bool
-	environ    []string
-	stdout     io.Writer
+	// host and transcripts are what the scorecard publishes as the host
+	// and as where the transcripts are kept.
+	host        string
+	transcripts string
+	environ     []string
+	stdout      io.Writer
 
 	now   func() time.Time
 	sleep func(time.Duration)
@@ -77,11 +81,8 @@ func (c *config) run() error {
 	if err := c.refuse(); err != nil {
 		return err
 	}
-	set, err := scenario.Load(os.DirFS(filepath.Join(c.root, scenariosDir)))
+	set, err := c.loadSet()
 	if err != nil {
-		return err
-	}
-	if set, err = selectScenarios(set, c.scenarios); err != nil {
 		return err
 	}
 	st, err := c.prepare(set)
@@ -121,7 +122,38 @@ func (c *config) run() error {
 			}
 		}
 	}
-	return c.summary(set)
+	if err := c.summary(set); err != nil {
+		return err
+	}
+	fmt.Fprintln(c.stdout)
+	return c.scoreAndPrint(set)
+}
+
+// loadSet reads the scenario set and selects -scenarios from it.
+func (c *config) loadSet() ([]*scenario.Scenario, error) {
+	set, err := scenario.Load(os.DirFS(filepath.Join(c.root, scenariosDir)))
+	if err != nil {
+		return nil, err
+	}
+	return selectScenarios(set, c.scenarios)
+}
+
+// printScorecard scores the runs already recorded and prints the
+// scorecard, running nothing.
+func (c *config) printScorecard() error {
+	set, err := c.loadSet()
+	if err != nil {
+		return err
+	}
+	return c.scoreAndPrint(set)
+}
+
+func (c *config) scoreAndPrint(set []*scenario.Scenario) error {
+	runs, err := c.scoreSet(set)
+	if err != nil {
+		return err
+	}
+	return c.scorecard(c.stdout, set, runs)
 }
 
 // refuse checks the invocation: root is the top of a metais checkout, the output directory is absolute and outside any repository, and

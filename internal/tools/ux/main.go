@@ -13,7 +13,10 @@
 // and TMPDIR. It makes the isolation checks on every run, writes each
 // run's record beneath -out, paces itself, and prints a summary. Run again
 // with the same -out, it resumes: a run already recorded is kept, and one
-// a quota pause or an interruption left unfinished is run again.
+// a quota pause or an interruption left unfinished is run again. When the
+// set is whole it scores every run (package score) and prints the
+// scorecard; -scorecard scores and prints it without running anything,
+// and -scrub writes a copy of the set fit to publish.
 //
 // The runner is a developer's tool, never linked into metais, and is the
 // one package ADR-009 Amendment A8 lets start a session, read the
@@ -51,11 +54,17 @@ func cli(args []string, stdout, stderr io.Writer, environ []string) int {
 	quotaWait := fs.Duration("quota-wait", 0, "on a quota pause, how long to wait before running the run again; 0 stops the set, to be resumed later")
 	timeout := fs.Duration("timeout", 30*time.Minute, "how long one session may run before it is stopped and recorded as timed out")
 	allowDirty := fs.Bool("allow-dirty", false, "run from a checkout with uncommitted changes, recording the commit as dirty")
+	scorecardOnly := fs.Bool("scorecard", false, "run nothing: score the runs already recorded in -out and print the scorecard")
+	host := fs.String("host", "", "the host the set ran on, as the scorecard publishes it, such as \"tera dispatch, linux/amd64\"")
+	transcripts := fs.String("transcripts", "", "where the set's transcripts are kept, as the scorecard publishes it (default the set's runs/ directory)")
+	scrubTo := fs.String("scrub", "", "run nothing: write a scrubbed copy of the set in -out to this new directory, fit to publish")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
 	if fs.NArg() > 0 || *out == "" {
-		fmt.Fprintln(stderr, "usage: go run ./internal/tools/ux -out <dir> [-scenarios <ids>] [-models <models>] [-harness <name>] [-with-skill] [-pace <d>] [-quota-wait <d>]")
+		fmt.Fprintln(stderr, "usage: go run ./internal/tools/ux -out <dir> [-scenarios <ids>] [-models <models>] [-harness <name>] [-with-skill] [-pace <d>] [-quota-wait <d>] [-host <host>] [-transcripts <where>]")
+		fmt.Fprintln(stderr, "       go run ./internal/tools/ux -out <dir> -scorecard [-scenarios <ids>] [-models <models>] [-host <host>] [-transcripts <where>]")
+		fmt.Fprintln(stderr, "       go run ./internal/tools/ux -out <dir> -scrub <new dir>")
 		return 2
 	}
 	h, err := harnessByName(*harnessName, environ)
@@ -64,22 +73,32 @@ func cli(args []string, stdout, stderr io.Writer, environ []string) int {
 		return 2
 	}
 	c := &config{
-		root:       ".",
-		out:        *out,
-		scenarios:  splitList(*scenarios),
-		models:     splitList(*models),
-		harness:    h,
-		withSkill:  *withSkill,
-		pace:       *pace,
-		quotaWait:  *quotaWait,
-		timeout:    *timeout,
-		allowDirty: *allowDirty,
-		environ:    environ,
-		stdout:     stdout,
-		now:        time.Now,
-		sleep:      time.Sleep,
+		root:        ".",
+		out:         *out,
+		scenarios:   splitList(*scenarios),
+		models:      splitList(*models),
+		harness:     h,
+		withSkill:   *withSkill,
+		pace:        *pace,
+		quotaWait:   *quotaWait,
+		timeout:     *timeout,
+		allowDirty:  *allowDirty,
+		host:        *host,
+		transcripts: *transcripts,
+		environ:     environ,
+		stdout:      stdout,
+		now:         time.Now,
+		sleep:       time.Sleep,
 	}
-	switch err := c.run(); {
+	switch {
+	case *scrubTo != "":
+		err = c.scrubSet(*scrubTo)
+	case *scorecardOnly:
+		err = c.printScorecard()
+	default:
+		err = c.run()
+	}
+	switch {
 	case err == errQuota:
 		fmt.Fprintf(stderr, "ux: a quota pause stopped the set; run the same command again to resume it\n")
 		return 3

@@ -6,6 +6,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	"github.com/kottera/metais/internal/testenv"
+	"github.com/kottera/metais/internal/tools/ux/score"
 )
 
 // The tests in this file run whole sets with every command and every
@@ -55,6 +57,10 @@ func fakeRoot(t *testing.T) string {
 		t.Fatal(err)
 	}
 	if err := os.CopyFS(filepath.Join(root, scenariosDir), os.DirFS("./scenarios")); err != nil {
+		t.Fatal(err)
+	}
+	// The scorer reads the C scenarios' package from its source.
+	if err := os.CopyFS(filepath.Join(root, "examples", "dora-incident-report"), os.DirFS("../../../examples/dora-incident-report")); err != nil {
 		t.Fatal(err)
 	}
 	return root
@@ -175,8 +181,15 @@ func TestRunSet(t *testing.T) {
 	if r.Format != runFormat || r.Scenario.ID != "C1" || !r.Scenario.AsksForOutput || r.Scenario.Prompt != "render this file: report.metais" ||
 		r.ModelRequested != "haiku" || r.ModelReported != "claude-haiku-5-5" || !slices.Equal(r.ModelsUsed, []string{"claude-haiku-5-5"}) ||
 		r.Harness != (harnessRecord{claudeCodeName, fakeVersion}) || r.Commit != f.commit || r.MetaisSHA256 != digest([]byte("metais "+f.commit)) ||
-		r.Turns != 3 || r.CostUSD != 0.01 || r.DurationMS != 1200 || r.WallMS != 1500 || string(r.Outcome) != "null" {
+		r.Turns != 3 || r.CostUSD != 0.01 || r.DurationMS != 1200 || r.WallMS != 1500 {
 		t.Errorf("record %+v", r)
+	}
+	// The scorer wrote its outcome into the record: the fake session ran
+	// no metais, so it fails.
+	var o score.Outcome
+	if err := json.Unmarshal(r.Outcome, &o); err != nil || o.Format != score.Format || !o.Scored || o.Pass ||
+		!slices.Contains(o.Failing(), score.RuleFirstInspect) {
+		t.Errorf("outcome %s: %v", r.Outcome, err)
 	}
 	files := []string{"out.md added", "report.metais unchanged"}
 	var got []string
@@ -212,6 +225,24 @@ func TestRunSet(t *testing.T) {
 	}
 	if !strings.Contains(f.out.String(), "4 runs recorded: 4 valid, 0 invalid; 0 to run") {
 		t.Errorf("summary:\n%s", f.out)
+	}
+	// Then the scorecard.
+	for _, want := range []string{
+		"# METAIS UX scorecard",
+		"| Commit | `" + f.commit + "` |",
+		"| Harness | claude-code " + fakeVersion + " |",
+		"| Models | haiku: claude-haiku-5-5; sonnet: claude-haiku-5-5 |",
+		"| Host | not stated (give -host) |",
+		"| Skill | not installed |",
+		"| C1-render-real | fail: first-metais-is-inspect, outcome (asks-not-invents) |",
+		"| A2-edit-package | fail: outcome (schema-and-template) (recorded) | fail: outcome (schema-and-template) |",
+		"0 of 3 gated runs pass.",
+		"## Prompts reworded under R-UX-9\n\nNone",
+		"## What the outcome checks cannot see",
+	} {
+		if !strings.Contains(f.out.String(), want) {
+			t.Errorf("the scorecard lacks %q:\n%s", want, f.out)
+		}
 	}
 
 	// Run again, the set has nothing left to run.

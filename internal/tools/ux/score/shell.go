@@ -5,6 +5,7 @@ package score
 
 import (
 	"path"
+	"regexp"
 	"strings"
 )
 
@@ -27,6 +28,9 @@ func (s simple) name() (name string, rest []string) {
 		switch {
 		case isAssignment(w[0]):
 			w = w[1:]
+		case w[0] == "command" && len(w) > 1 && (w[1] == "-v" || w[1] == "-V"):
+			// command -v looks a command up and runs nothing.
+			return "command", w[1:]
 		case w[0] == "env" || w[0] == "sudo" || w[0] == "time" || w[0] == "nohup" || w[0] == "exec" || w[0] == "command":
 			w = w[1:]
 			for len(w) > 0 && strings.HasPrefix(w[0], "-") {
@@ -50,6 +54,47 @@ func isAssignment(w string) bool {
 		}
 	}
 	return true
+}
+
+// assignments reports whether every word of s assigns a variable, as
+// M=/path/to/metais does, and the variables it assigns.
+func (s simple) assignments() (map[string]string, bool) {
+	vars := map[string]string{}
+	for _, w := range s.words {
+		if !isAssignment(w) {
+			return nil, false
+		}
+		k, v, _ := strings.Cut(w, "=")
+		vars[k] = v
+	}
+	return vars, len(vars) > 0
+}
+
+// variable is a reference to a shell variable: $NAME or ${NAME}.
+var variable = regexp.MustCompile(`\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))`)
+
+// expand replaces each reference to a variable vars holds in s's words,
+// so a session that runs metais as $M, having set M, is seen to run it.
+// A variable vars does not hold is left as it is.
+func (s simple) expand(vars map[string]string) simple {
+	if len(vars) == 0 {
+		return s
+	}
+	ex := func(ws []string) []string {
+		out := make([]string, len(ws))
+		for i, w := range ws {
+			out[i] = variable.ReplaceAllStringFunc(w, func(m string) string {
+				sub := variable.FindStringSubmatch(m)
+				name := sub[1] + sub[2]
+				if v, ok := vars[name]; ok {
+					return v
+				}
+				return m
+			})
+		}
+		return out
+	}
+	return simple{words: ex(s.words), outs: ex(s.outs), ins: ex(s.ins)}
 }
 
 // parseShell splits a Bash tool call's command line into its simple

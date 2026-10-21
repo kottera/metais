@@ -370,7 +370,20 @@ func (r *run) read() {
 		u := &r.t.ToolUses[i]
 		switch u.Name {
 		case "Bash":
+			// A variable lives as long as the call's shell.
+			vars := map[string]string{}
 			for _, s := range parseShell(u.Command()) {
+				if as, ok := s.assignments(); ok {
+					// A value made by a command substitution is not known: the
+					// parser ends the assignment where the substitution begins.
+					for k, v := range as {
+						if v != "" {
+							vars[k] = simple{words: []string{v}}.expand(vars).words[0]
+						}
+					}
+					continue
+				}
+				s = s.expand(vars)
 				name, rest := s.name()
 				c := &cmd{use: u, s: s, name: name, rest: rest, cwd: cwd}
 				r.cmds = append(r.cmds, c)

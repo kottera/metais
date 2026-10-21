@@ -102,14 +102,26 @@ const unknownCommand = "usage.unknown_command"
 // rule follows the binary as it gains commands.
 func noUnknown(r *run) Result {
 	var ev []Evidence
-	for _, c := range r.calls {
-		if strings.Contains(c.output(), unknownCommand) {
-			e := c.evidence()
-			e.Text = "metais " + orNone(c.sub) + " is refused: " + unknownCommand
-			if len(ev) == 0 || ev[len(ev)-1].Line != e.Line {
-				ev = append(ev, e)
+	for i, c := range r.calls {
+		if !strings.Contains(c.output(), unknownCommand) || i > 0 && r.calls[i-1].use == c.use {
+			continue
+		}
+		// One Bash call may run several metais commands, and its output is
+		// theirs together: each is named, as the scorer cannot tell which
+		// one metais refused.
+		var subs []string
+		for _, o := range r.calls[i:] {
+			if o.use == c.use {
+				subs = append(subs, "metais "+orNone(o.sub))
 			}
 		}
+		e := c.evidence()
+		if len(subs) == 1 {
+			e.Text = subs[0] + " is refused: " + unknownCommand
+		} else {
+			e.Text = "one of " + strings.Join(subs, ", ") + " is refused: " + unknownCommand
+		}
+		ev = append(ev, e)
 	}
 	if len(ev) > 0 {
 		return Result{Detail: "metais refuses a command the session guessed: " + ev[0].Text, Evidence: ev}
