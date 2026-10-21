@@ -105,6 +105,17 @@ Two rules this train adds:
   each item its amendment number, so two items never draft the same
   `A<n>`. The help goldens are a shared seam too: items that change the same
   command's help run in sequence.
+- **This train runs beside [PLAN-2026-10-metais-test-economy](PLAN-2026-10-metais-test-economy.md),
+  and shares two seams with it.**
+  - That plan's W2-3 adds a per-vector record, with a step in
+    `regenerate.sh` and a line in `.gitattributes`. Work Order `01a15ad6`
+    (generated vectors) edits the same three files.
+  - Its W1-4 reworks `internal/cli`'s refusal walks. That is the package
+    where Wave 2's help changes and their goldens land.
+
+  Before breakdown, each wave orchestrator reads that plan's §3 status. An
+  item that would edit a file an in-flight test-economy item edits gets a
+  `depends_on` edge to it, and merges after it.
 - **A UX run is evidence, not a gate.** The harness costs model tokens and
   takes minutes per scenario, so it never runs in `gate.sh`. Its scorer does
   run in the gate, against recorded transcripts committed as fixtures. A
