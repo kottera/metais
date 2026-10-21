@@ -571,4 +571,3 @@ func dataToJS(r *run) Result {
 	}
 	return Result{Detail: "the package renders, but no rendered page holds data in a script element that parses", Evidence: ev}
 }
-
