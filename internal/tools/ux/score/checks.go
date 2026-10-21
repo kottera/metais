@@ -37,7 +37,7 @@ var checks = map[string]check{
 	"names-every-input": {namesEveryInput,
 		"An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted."},
 	"script-renders": {scriptRenders,
-		"A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it and the harness reports no error; the scorer does not run it again."},
+		"A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it, the harness reports no error, and the run renders: render's listing of the files it wrote is in its output, or a file named as one of the package's outputs is left in the session's directory. The scorer does not run the script again."},
 	"new-package": {newPackage,
 		"check passing is seen through pack, which checks and tests the package before it writes it."},
 	"schema-and-template": {schemaAndTemplate,
@@ -504,8 +504,8 @@ func scriptRenders(r *run) Result {
 			if c.name == "chmod" || c.name == "cat" || c.name == "ls" || c.name == "crontab" || c.name == "head" || c.name == "file" {
 				continue
 			}
-			if c.ok() {
-				return Result{Pass: true, Detail: base + " validates and renders through metais, and the session's test run of it passes",
+			if c.ok() && r.rendered(c) {
+				return Result{Pass: true, Detail: base + " validates and renders through metais, and the session's test run of it renders",
 					Evidence: []Evidence{{File: p}, c.evidence()}}
 			}
 			ev = append(ev, c.evidence())
@@ -513,9 +513,34 @@ func scriptRenders(r *run) Result {
 		if len(ev) == 0 {
 			return Result{Detail: base + " validates and renders through metais, but the session never runs it", Evidence: []Evidence{{File: p}}}
 		}
-		return Result{Detail: base + " validates and renders through metais, but its test run fails", Evidence: append([]Evidence{{File: p}}, ev...)}
+		return Result{Detail: base + " validates and renders through metais, but no test run of it renders", Evidence: append([]Evidence{{File: p}}, ev...)}
 	}
 	return Result{Detail: "the session leaves no script that validates and renders through metais"}
+}
+
+// rendered reports whether a command rendered the package: its output
+// lists a file render wrote, or the session's directory holds, added, a
+// file named as one of the package's outputs.
+func (r *run) rendered(c *cmd) bool {
+	if reportedDigest.MatchString(c.output()) {
+		return true
+	}
+	src := r.fixtureSource()
+	if src == nil {
+		return false
+	}
+	names := map[string]bool{}
+	for p := range src.files {
+		if strings.HasPrefix(p, "examples/") && strings.Contains(p, "/expected/") {
+			names[path.Base(p)] = true
+		}
+	}
+	for _, f := range r.rec.Files {
+		if f.Change == "added" && names[path.Base(f.Path)] {
+			return true
+		}
+	}
+	return false
 }
 
 // newPackage is A1's check: the session's package passes check and pack,
