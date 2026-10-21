@@ -2110,8 +2110,8 @@ copy of the parse loop.
       never stops the walk (ADR-005 D13 item 4), so `FirstFinding`'s
       control is unchanged.
     - **One goroutine.** A6 item 1's goroutine moves with the content
-      reader into the `assembled` producer, and its focused race test moves
-      with it.
+      reader into the `assembled` producer, whose file is where A6 item 1's
+      focused race test drives it.
 11. **Tripwires.** Two join D2 item 2's table:
     - a `single-entry-point` rule: `internal/render` reaches
       `internal/hostfs` only through `CheckPaths`, so no form, producer or

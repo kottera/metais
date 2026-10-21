@@ -13,10 +13,12 @@ request and its squash subject, by `kottera/kottera`'s
 **For ADR:** [ADR-010 Amendment A7](../adr/ADR-010-the-implementation.md#amendments).
 **Repository:** `kottera/metais`, branch `main`. The train writes this
 repository only.
-**Depends on:** PLAN-2026-10-metais-test-economy's Wave 1. Its W1-4
-reworks `internal/cli`'s command-line walks and its W1-5 adds the focused
-race test of the render's goroutine at `internal/cli/render_write.go`; this
-train moves both seams, so it starts after they merge.
+**Depends on:** nothing; the first wave can start as soon as this plan
+merges. PLAN-2026-10-metais-test-economy runs after it (R-RS-10): that
+train's W1-4 reworks `internal/cli`'s command-line walks and its W1-5 adds
+the focused race test of the render's goroutine, and both meet this train's
+layout, the race test in the `assembled` producer's file rather than
+`internal/cli/render_write.go`.
 **Blocks:** the v1.0 release (PLAN-2026-10-metais-v1 §6, T-A3). Ed ruled on
 2026-10-21 that v1.0 ships with this work done, so that the release leaves
 no pending work for a 1.1.
@@ -72,7 +74,7 @@ be split by whoever runs it, never merged with another, and never widened.
 | Wave | Objective | Depends on |
 |---|---|---|
 | 0 | ADR-010 A7 and this plan, merged to `main` | — |
-| 1 | **The move**: `internal/render` and its one entry point, used by `render` and `test`, laid out so that Wave 2's items own separate files | 0; PLAN-2026-10-metais-test-economy W1-4 and W1-5 |
+| 1 | **The move**: `internal/render` and its one entry point, used by `render` and `test`, laid out so that Wave 2's items own separate files | 0 |
 | 2 | **The tables**: forms and producers; stages, with item 8's limit; sinks | 1 |
 | 3 | **The tripwires**, then the train's verification | 2 |
 
@@ -132,8 +134,8 @@ ADR-010 A7 items 2 and 3.
 
 - **What proves it:** every vector, untouched; `go test ./internal/cli
   ./internal/render ./internal/guarantees`, the detectors and their
-  controls among them; test-economy W1-5's race test, moved with the
-  goroutine.
+  controls among them; `go test -race` over `internal/render`, which runs
+  the goroutine's container paths.
 - **Log:** ADR-010 and ADR-005.
 
 ## 6. Wave 2 — the tables
@@ -148,10 +150,11 @@ ADR-010 A7 items 4, 5 and 9.
   `literal`, each in a file of its own. The flags `asset != ""`, `tool`
   and `isContainer()` are gone: every phase after planning asks the file's
   producer. The goroutine of ADR-010 A6 item 1 moves into the `assembled`
-  producer's file with its race test. The `rendered` producer calls
-  `runStages`, whose body it does not touch.
+  producer's file, where test-economy W1-5 later adds its focused race
+  test. The `rendered` producer calls `runStages`, whose body it does not
+  touch.
 - **What proves it:** every vector, untouched; the determinism detector
-  and `MapOrder`'s control; the race test.
+  and `MapOrder`'s control; `go test -race` over `internal/render`.
 - **Log:** ADR-010.
 
 ### W2-2 — stages, and their growth charged
@@ -246,3 +249,6 @@ before he ruled:
   edges; no plan orchestrator.
 - **R-RS-9.** The v1.0 release waits for this train, so that v1.0 leaves no
   pending work for a 1.1.
+- **R-RS-10.** This train runs before PLAN-2026-10-metais-test-economy,
+  which does not gate v1.0 and had not started; its W1-4 and W1-5 meet this
+  train's layout.
