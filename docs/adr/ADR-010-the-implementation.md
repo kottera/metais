@@ -17,6 +17,10 @@ awaits Ed Funnekotter's ratification; the passage it changes is marked
 [Amendment A6](#amendments) (the render's one goroutine, the detectors' probes, and race detection) is proposed by
 [ADR-012](ADR-012-test-economy.md) and accepted by Ed Funnekotter on 2026-10-21;
 it takes effect as PLAN-2026-10-metais-test-economy's items land.
+[Amendment A7](#amendments) (the render pipeline's extension points: forms,
+producers, stages and sinks) is accepted by Ed Funnekotter on 2026-10-21; it
+takes effect as PLAN-2026-10-metais-render-seams's items land, and the
+passages it changes are marked *(A7)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R18 item 1 (one static binary, the supported targets,
@@ -357,7 +361,8 @@ internal/
   liquid/ast/                 the AST, walkable                                 ADR-004, ADR-007
   liquid/value/               the value model                                   ADR-003 D8, ADR-004
   template/                   METAIS variables, filters, tags, partials, escape ADR-004
-  render/                     plan, transforms, staging, dry run, stdout        ADR-005
+  render/                     plan, path checks, forms, producers, stages       ADR-005 (A7)
+  render/sink/                destination checks, commit, dry run, stdout       ADR-005 (A7)
   hostfs/                     every host file access: os.Root reads and writes,  ADR-009 D7–D8,
                               no-replace rename, staging names                  ADR-005 D14–D15
   tarw/                       the standard-output archive                       ADR-005 D17
@@ -392,6 +397,9 @@ spec/                         the specification                                 
      files built for darwin and linux: on windows the binary links neither
      module, and both packages use the standard library's `syscall` there
      (D3 item 3). *(A1, proposed)*
+   - `internal/render` reaches `internal/hostfs` only through `CheckPaths`,
+     so only `internal/render/sink` writes; and `internal/render` and its
+     subpackages hold exactly one `go` statement, A6 item 1's. *(A7)*
    - Only `cmd/metais` refers to `os.Args`, `os.Stdin`, `os.Stdout`,
      `os.Stderr` and `os.Exit`; everything else receives them, so the whole
      tool runs in-process under test (D13).
@@ -1924,6 +1932,211 @@ detectors), and D14 item 8.
    release build. No suite process runs a race-built `metais`, since its
    only goroutine is item 1's. `go test -race` still runs every in-process
    test, item 1's among them.
+
+### A7 — The render pipeline's extension points: forms, producers, stages and sinks
+
+**Status:** Accepted 2026-10-21 by Ed Funnekotter, in design session
+`01a15ac4-2353-7576-a889-515c6ad35285`, the follow-up PLAN-2026-10-metais-v1
+§14 names. It takes effect as
+[PLAN-2026-10-metais-render-seams](../plans/PLAN-2026-10-metais-render-seams.md)'s
+items land, before the v1.0 release.
+**Amends:** D2 (the layout's `render/` row, and item 2's layering rules), D2
+item 3 as A6 item 1 amends it (where the one goroutine lives), and D13 item 2
+(whose options struct carries the `fault.Set` into the pipeline).
+
+**Context.** ADR-005 D13 states the render as phases. The code that runs
+them sits in `internal/cli`, split by phase, and decides what a planned file
+is by flags (`asset != ""`, `tool`, `isContainer()`) that every phase tests
+again: the record's source and kind, the parse loop, the asset placement
+map, rendering, measuring, the content reader and the zip method each
+switch on them. A feature therefore edits every phase. In
+PLAN-2026-10-metais-v1 Wave 5 about nine parallel items edited
+`render.go`. `test` calls the same two phase functions and keeps its own
+copy of the parse loop.
+
+1. **What an extension point is.** A seam in the tool's own code, for the
+   people who change the tool. It changes nothing a package or a caller
+   sees: PRD-001 R9's closed set of transforms, ADR-005's normative text,
+   and the exclusion of package code (AGENTS.md, PLAN-2026-10-metais-v1
+   §14) stand. No output byte, finding, exit status or vector changes,
+   except item 8's limit. A later 1.x feature still needs its
+   specification text, its manifest grammar and its vectors; what the
+   seams remove is the edit across every phase. ADR-005's "What this does
+   not decide" names the features they are shaped for: LF conversion and
+   XML validation are stages, another container format is the container
+   producer's, and another way to emit a render is a sink.
+2. **Where it lives.** `internal/render` holds ADR-005 D13's phases 1, 2 and
+   4: planning, the path checks and producing. `internal/render/sink` holds
+   phases 3 and 5: the destination checks and emission. `internal/cli`
+   keeps each command: its flags, refusals and help, the shape of its
+   result records, and the choice of sink. `render` and `test` run the
+   pipeline through one entry point, which plans, produces and emits to the
+   sink the command gives it; `--only`'s selection (ADR-005 D18) is made by
+   the entry point, after producing and before emitting. `test` keeps its
+   own parse of the templates its template outputs name, before any example
+   runs, because that early stop (ADR-007 D5 item 2) is `test`'s
+   behaviour: a mirror's templates are parsed in each example's render, as
+   they are today. The pipeline's options carry the command's `fault.Set`
+   to the seams D13 item 2 names, which stay where they are.
+3. **The planned file.** `render.File` is one planned file: its declaration,
+   path, manifest pointer, owner, the path of the container it is an entry
+   of, its fan-out evaluation, its producer and, for a container, its
+   entries in the container's order. Its bytes are unexported: only its
+   producer and a stage's `SetBytes` (item 6) set them.
+4. **Forms.** A declaration form is how one evaluation of a declaration
+   expands into planned files, and nothing else:
+
+   ```go
+   type Form interface {
+       DefaultPath(d manifest.Output) string           // ADR-005 D4 item 4
+       Expand(p *Planner, at *File, depth int) []*File  // D5, D6, D8: one evaluation's files
+   }
+   ```
+
+   The forms are `template`, `asset`, `mirror` and `container`. A
+   container's `Expand` plans its entries as a tree of their own through the
+   planner, to `container-depth`, held to its profile (D8, D9). The planner
+   evaluates `when` and `for_each`, renders the path and holds the
+   `outputs` limit for every form; a form never does.
+5. **Producers.** A producer is where a planned file's bytes come from.
+   Every phase after planning asks the file's producer, never its form:
+
+   ```go
+   type Producer interface {
+       Record() (source string, hasKind bool)          // ADR-005 D16 item 2, D7 item 3
+       Reach(f *File) []string                         // templates parsed before rendering
+       Produce(c *Producing, f *File) []finding.Finding // render and stage, charge, or measure
+       Open(f *File) (io.Reader, func(error) error)    // the bytes, as they are emitted
+       Method(f *File) zipfmt.Method                   // as a container entry (D8 item 7)
+   }
+   ```
+
+   The producers are `rendered` (a template output's file and a mirror's),
+   `copied` (an asset's, streamed from the package), `assembled` (a
+   container's zip, measured into a hash in phase 4 and written as it is
+   read in phase 5) and `literal` (a profile's `mimetype`). The form that
+   expands a file sets its producer. Forms and producers are separate
+   because they vary separately: a mirror's files are rendered as a
+   template output's are, and a profile's `mimetype` is no declaration
+   form. A container `format` other than `zip` (D8 item 1) is the
+   `assembled` producer's to dispatch on.
+6. **Stages.** A stage is a transform of a rendered file's bytes, in
+   ADR-005 D13 phase 4:
+
+   ```go
+   type Stage struct {
+       Name    string
+       Applies func(d manifest.Output) bool
+       Run     func(c *Staging, f *File) []finding.Finding
+   }
+   ```
+
+   The stages are one ordered list, and its order is normative: CRLF
+   conversion (D10), then output validation (D11), which reads the final
+   bytes. Only the `rendered` producer runs them, so no stage reaches an
+   asset or a container (D10 item 4, D11 item 2). Every stage that applies
+   runs, in order, and every finding of each is reported (D11 item 4); a
+   stage's findings do not stop the stages after it. A stage:
+   - reads the file's bytes, its declaration and the package, and reaches
+     no host: `internal/render` reaches `internal/hostfs` only through
+     `CheckPaths` (item 11);
+   - changes the bytes only through `Staging.SetBytes`, which charges the
+     change in length against `output-size` and `output-total` on the
+     meter `Renderer.Render` charged (item 8). A breach is the file's
+     finding, as a breach in rendering is: the file did not render, and no
+     later stage runs on it.
+7. **Sinks.** A sink is where a render goes, in ADR-005 D13 phases 3 and 5:
+
+   ```go
+   type Sink interface {
+       Check(paths []string) []finding.Finding // phase 3: every refusal, nothing written (D15 item 8)
+       Status(path string) string              // D16 item 2's create or replace, or ""
+       Emit(files []*File) Emission            // phase 5: files in path order
+       Close()
+   }
+   ```
+
+   The sinks are a new directory (D14 item 1, `hostfs.StageNew`), an
+   existing directory (D14 item 2 as ADR-005 A1 amends it,
+   `hostfs.Existing`), the archive on standard output (D17), one file's
+   bytes on standard output (D18 item 1), and `test`'s comparison of an
+   example's render with its expected tree in memory (ADR-007 D5). A dry
+   run wraps any sink: it runs the sink's `Check` and never its `Emit`,
+   which is D16 item 1. An `Emission` either ended, with its finding when
+   it failed, or is a write to standard output that `internal/cli` runs
+   after the report, as `outcome.stream` does today. Whether standard
+   output carries bytes stays decided from the command line before the
+   command runs (ADR-008 D11 items 2 and 4), not by the sink: a refusal
+   made before the pipeline runs must leave standard output empty, and
+   `pack --out -` is no render sink.
+8. **The one change a caller sees: a stage's growth is charged.** CRLF
+   conversion can make a file up to twice as long. Today the bytes are
+   charged against `output-size` and `output-total` as they are rendered,
+   and the conversion's growth is not charged, so a file is written beyond
+   both. Before this amendment, `--limit output-size=700` on a file that
+   renders 601 bytes and converts to 902 wrote 902 bytes with exit status
+   0. ADR-005 D13 item 4 and ADR-009 D3 already bound the file's bytes;
+   the tool was wrong. `SetBytes` makes the bound hold after every stage,
+   and a vector proves it.
+9. **The tables are explicit.** The forms and the producers are each chosen
+   by one function with a `switch`, the stages are one ordered slice, and
+   the sinks are constructed by the command; each lives in one file.
+   Nothing registers itself in `init`, and no table is a map, so nothing
+   ever iterates one. A feature is one new file and one entry. The entry
+   is the one line two parallel items may both touch.
+10. **How the guarantees hold.** Each detector of D13 item 4 drives the
+    command and catches a fault injected at a seam below these extension
+    points, so each holds while every extension goes through the seams:
+    - **Determinism.** The entry point is the only thing that orders files:
+      it sorts the top-level files by path once and hands every sink that
+      list, which no sink reorders. A container's entry order is the
+      `assembled` producer's (ADR-005 D8 item 6); the stages are a slice.
+      Only the entry point constructs the `template.Renderer`, which
+      carries `MapOrder`; a producer given another would blind
+      `MapOrder`'s control, which fails the build. Findings are made in
+      today's order: one depth-first walk of the plan in planning order
+      (ADR-005 D13 item 6).
+    - **Confinement.** Both layers stay where `SkipConfine` reaches them:
+      the path predicate in `hostfs.CheckPaths`, which the planner calls,
+      and the confined write in `hostfs`'s write shapes, which only sinks
+      call. D11 item 9's tripwire already refuses a file function outside
+      `internal/hostfs`, so a sink cannot write any other way.
+    - **Existing destinations.** `ReadExisting` and `RemoveForeign` sit in
+      `hostfs.Existing`, the only way to write into a directory that
+      exists. The existing-directory sink uses it, and
+      `TestExistingDestinationDetector` runs `render --overwrite` through
+      the command, unchanged.
+    - **One pass.** Every form, producer and stage appends its findings and
+      never stops the walk (ADR-005 D13 item 4), so `FirstFinding`'s
+      control is unchanged.
+    - **One goroutine.** A6 item 1's goroutine moves with the content
+      reader into the `assembled` producer, whose file is where A6 item 1's
+      focused race test drives it.
+11. **Tripwires.** Two join D2 item 2's table:
+    - a `single-entry-point` rule: `internal/render` reaches
+      `internal/hostfs` only through `CheckPaths`, so no form, producer or
+      stage can touch the host, and only `internal/render/sink` writes;
+    - a rule that `internal/render` and its subpackages hold exactly one
+      `go` statement, in the `assembled` producer's file (A6 item 1).
+12. **Proving nothing else changed.** Every vector passes with its expected
+    trees unchanged and, once ADR-012 D2's record lands, with the record
+    unchanged. Item 8's vector is the only one added, and no expectation
+    is edited.
+
+**Alternatives rejected.**
+
+- *One handler per declaration form, with no producers.* Every phase after
+  planning would still switch on how the bytes are made, and a mirror would
+  delegate to the template form, or copy it.
+- *Self-registration in `init`.* It removes the one shared line, but the
+  order of the stages is normative and would become the order of file
+  names. A table read in one place is also where review sees the closed
+  set.
+- *Moving the manifest's other readers behind the forms* (`internal/loader`'s
+  existence checks, `internal/xref`, `internal/author`'s `check`,
+  `inspect`). A new declaration form changes the manifest's grammar and
+  the specification, so it edits those readers anyway, and each reads a
+  declaration for its own question. They are left as they are.
 
 ## Implementation log
 
