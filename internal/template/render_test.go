@@ -66,9 +66,9 @@ func TestRenderTagsOfABrokenTemplate(t *testing.T) {
 // length after it rendered is charged against output-size, from the bytes
 // it rendered, and against output-total with every other output's; a
 // breach is the output's, at its path, a container's entry's by its
-// container's path and its own; a shortening gives back what it removed;
-// and once the total is breached every later output's first byte is
-// refused too.
+// container's path and its own; a shortening gives back what it removed,
+// and a change of nothing is never refused; and once the total is
+// breached every later output's first byte is refused too.
 func TestChargeChange(t *testing.T) {
 	lim := limits.Defaults()
 	for _, arg := range []string{"output-size=10", "output-total=15"} {
@@ -115,4 +115,7 @@ func TestChargeChange(t *testing.T) {
 	if e := r.meter.Charge(liquid.WorkOutputBytes, 1); e == nil || e.Args["limit"] != "output-total" {
 		t.Errorf("a later output's first byte after the total's breach: %v, want output-total", e)
 	}
+	// An empty output renders after the breach, and a stage that leaves
+	// its length as it is changes nothing to refuse.
+	change(Output{ID: "e", Path: "e.txt"}, 0, 0, "", "")
 }
