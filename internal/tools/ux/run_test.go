@@ -233,7 +233,7 @@ func TestRunSet(t *testing.T) {
 		"| Harness | claude-code " + fakeVersion + " |",
 		"| Models | haiku: claude-haiku-5-5; sonnet: claude-haiku-5-5 |",
 		"| Host | not stated (give -host) |",
-		"| Skill | not installed |",
+		"| Skill | not installed (-with-skill off) |",
 		"| C1-render-real | fail: first-metais-is-inspect, outcome (asks-not-invents) |",
 		"| A2-edit-package | fail: outcome (schema-and-template) (recorded) | fail: outcome (schema-and-template) |",
 		"0 of 3 gated runs pass.",

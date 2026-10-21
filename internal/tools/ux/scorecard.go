@@ -94,7 +94,7 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 	if transcripts == "" {
 		transcripts = "the set's runs/ directory, each run's transcript.jsonl (not stated: give -transcripts to say where they are kept)"
 	}
-	skill := "not installed"
+	skill := "not installed (-with-skill off)"
 	if st.WithSkill {
 		skill = "installed with metais skill before each session (-with-skill)"
 	}
@@ -110,6 +110,9 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 	p("| Scorer | %s |\n\n", score.Format)
 
 	for _, kind := range []scenario.Kind{scenario.Consuming, scenario.Authoring} {
+		if !slices.ContainsFunc(set, func(s *scenario.Scenario) bool { return s.Kind == kind }) {
+			continue
+		}
 		if kind == scenario.Consuming {
 			p("## Consuming scenarios\n\nGated on every model (R-UX-5).\n\n")
 		} else {
