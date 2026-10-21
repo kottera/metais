@@ -52,7 +52,7 @@ func TestAssembledContainer(t *testing.T) {
 	}
 	var read []byte
 	res := Run(Options{Package: pkg, Templates: ts, Bindings: b, Limits: lim, Fails: func(fs []finding.Finding) bool { return len(fs) > 0 }},
-		Emitter{Emit: func(files []*File) Emission {
+		emitTo(func(files []*File) Emission {
 			r, done := files[0].Open()
 			read, err = io.ReadAll(r)
 			if derr := done(err); err != nil || derr != nil {
@@ -66,7 +66,7 @@ func TestAssembledContainer(t *testing.T) {
 				t.Errorf("a reader that stopped early: %v", err)
 			}
 			return Emission{}
-		}})
+		}))
 	if !res.Emitted || len(res.Findings) != 0 || len(res.Files) != 1 {
 		t.Fatalf("render of %d files, emitted %v, findings %v", len(res.Files), res.Emitted, res.Findings)
 	}

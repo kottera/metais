@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"io/fs"
 	"maps"
-	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"slices"
@@ -17,6 +16,7 @@ import (
 	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostenv"
+	"github.com/kottera/metais/internal/render/sink"
 	"github.com/kottera/metais/internal/testenv"
 )
 
@@ -359,7 +359,7 @@ func TestTestDiffCaps(t *testing.T) {
 	r := runTool(t, "test", src, "--example", "with", "--json")
 	p := r.doc.Findings[0].Params
 	diff, _ := p["diff"].(string)
-	if len(diff) > maxDiffJSON || p["diff_truncated"] != true || !strings.HasSuffix(diff, diffTruncatedNotice) {
+	if len(diff) > sink.MaxDiffJSON || p["diff_truncated"] != true || !strings.HasSuffix(diff, sink.DiffTruncatedNotice) {
 		t.Errorf("the JSON diff: %d bytes, truncated %v", len(diff), p["diff_truncated"])
 	}
 	h := runTool(t, "test", src, "--example", "with")
@@ -368,53 +368,7 @@ func TestTestDiffCaps(t *testing.T) {
 		t.Fatalf("no diff in:\n%s", h.stdout)
 	}
 	shown := strings.SplitAfter(h.stdout[i:], "\n")
-	if len(shown) < maxDiffHuman+1 || shown[maxDiffHuman] != "    "+diffTruncatedNotice {
-		t.Errorf("the human diff is not cut at %d lines with the notice:\n%s", maxDiffHuman, strings.Join(shown[:min(len(shown), maxDiffHuman+2)], ""))
-	}
-}
-
-// TestEditScript holds the diff's edit script to what it must be: the
-// kept and removed lines are the expected file, the kept and added lines
-// the rendered one, for random edits and for edits beyond the search's
-// bound.
-func TestEditScript(t *testing.T) {
-	rng := rand.New(rand.NewPCG(1, 2))
-	for n := range 200 {
-		var a []string
-		for range rng.IntN(40) {
-			a = append(a, string(rune('a'+rng.IntN(4)))+"\n")
-		}
-		b := slices.Clone(a)
-		edits := rng.IntN(10)
-		if n%50 == 0 {
-			edits = 3 * maxEditDistance
-		}
-		for range edits {
-			switch i := rng.IntN(len(b) + 1); rng.IntN(2) {
-			case 0:
-				b = slices.Insert(b, i, string(rune('a'+rng.IntN(4)))+"\n")
-			default:
-				if i < len(b) {
-					b = slices.Delete(b, i, i+1)
-				}
-			}
-		}
-		var gotA, gotB []string
-		for _, e := range editScript(a, b) {
-			if e.op != '+' {
-				gotA = append(gotA, e.line)
-			}
-			if e.op != '-' {
-				gotB = append(gotB, e.line)
-			}
-		}
-		if !slices.Equal(gotA, a) || !slices.Equal(gotB, b) {
-			t.Fatalf("case %d: the script does not rebuild its files", n)
-		}
-	}
-	d, cut := unifiedDiff([]byte("a\nb\nc\n"), []byte("a\nB\nc"), "x", "y", maxDiffJSON)
-	want := "--- x\n+++ y\n@@ -1,3 +1,3 @@\n a\n-b\n-c\n+B\n+c\n\\ No newline at end of file\n"
-	if d != want || cut {
-		t.Errorf("unifiedDiff = %q, want %q", d, want)
+	if len(shown) < sink.MaxDiffHuman+1 || shown[sink.MaxDiffHuman] != "    "+sink.DiffTruncatedNotice {
+		t.Errorf("the human diff is not cut at %d lines with the notice:\n%s", sink.MaxDiffHuman, strings.Join(shown[:min(len(shown), sink.MaxDiffHuman+2)], ""))
 	}
 }

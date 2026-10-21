@@ -51,7 +51,7 @@ func TestStageGrowthCharged(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		return Run(Options{Package: pkg, Templates: ts, Bindings: b, Limits: lim, Fails: func(fs []finding.Finding) bool { return len(fs) > 0 }}, Emitter{}).Findings
+		return Run(Options{Package: pkg, Templates: ts, Bindings: b, Limits: lim, Fails: func(fs []finding.Finding) bool { return len(fs) > 0 }}, discard).Findings
 	}
 
 	fs := render()

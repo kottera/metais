@@ -17,7 +17,7 @@ import (
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/render"
+	"github.com/kottera/metais/internal/render/sink"
 	"github.com/kottera/metais/internal/zipfmt"
 )
 
@@ -403,7 +403,7 @@ func (s *session) packFailed(fs []finding.Finding, err error) outcome {
 			// there is not a regular file.
 			r = hostfs.NotRegularFile
 		}
-		f = render.NothingWritten(r)
+		f = sink.NothingWritten(r)
 	}
 	all := append(slices.Clone(fs), f)
 	o := outcome{findings: all, next: s.nextSteps([]finding.Finding{f})}

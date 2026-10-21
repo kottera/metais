@@ -17,7 +17,7 @@ import (
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostenv"
 	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/render"
+	"github.com/kottera/metais/internal/render/sink"
 	"github.com/kottera/metais/internal/testenv"
 )
 
@@ -343,8 +343,8 @@ func TestInitFailedListing(t *testing.T) {
 		hostfs.Exists: "exists", hostfs.Link: "exists", hostfs.NotDirectory: "exists",
 		hostfs.Changed: "io_error", hostfs.BadName: "io_error",
 	} {
-		if got := render.WriteReason(r); got != want {
-			t.Errorf("render.WriteReason(%s) = %s, want %s", r, got, want)
+		if got := sink.WriteReason(r); got != want {
+			t.Errorf("sink.WriteReason(%s) = %s, want %s", r, got, want)
 		}
 	}
 	// Names found in a directory are host text, neutralised as findings

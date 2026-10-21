@@ -5,17 +5,13 @@ package cli
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"io"
 	"maps"
 	pathpkg "path"
 	"path/filepath"
 	"slices"
-	"strconv"
 	"strings"
-	"unicode/utf8"
 
 	"github.com/kottera/metais/internal/cli/args"
 	"github.com/kottera/metais/internal/dates"
@@ -30,9 +26,9 @@ import (
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/render"
+	"github.com/kottera/metais/internal/render/sink"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/yamlx"
-	"github.com/kottera/metais/internal/zipfmt"
 )
 
 // The example layout (ADR-007 D5 item 1).
@@ -233,9 +229,6 @@ type exampleRun struct {
 	// ok is whether the inputs validated and the render made no error.
 	rendered map[string][]byte
 	exec     map[string]bool
-	// containers holds the plan of every container output the render
-	// wrote, by path, which is compared by its entries.
-	containers map[string]*render.File
 	// rewrite holds the paths of the rendered files the comparison found
 	// different from expected/'s or absent from it: those --update writes.
 	rewrite []string
@@ -337,7 +330,7 @@ func runTest(s *session, p args.Parsed) outcome {
 			// and its differences are the record of what changed.
 			e.fs = slices.DeleteFunc(e.fs, func(f finding.Finding) bool {
 				c := f.Code()
-				return slices.Contains(comparisonCodes, c)
+				return slices.Contains(sink.ComparisonCodes, c)
 			})
 			e.result.Status, e.diffs = "pass", nil
 		}
@@ -437,8 +430,9 @@ func parseTemplates(decls []manifest.Output, ts *template.Templates) []finding.F
 }
 
 // runExample runs e (ADR-007 D5 item 2): its example.yaml, its inputs,
-// its render into memory under the fixed identity (ADR-004 D15), and its
-// comparison with expected/ (items 3 and 4). Every finding is e's.
+// and its render under the fixed identity (ADR-004 D15) to the comparison
+// sink, which holds it in memory and compares it with expected/ (items 3
+// and 4). Every finding is e's.
 func (s *session) runExample(pkg *loader.Package, ts *template.Templates, schemas *render.Schemas, lim limits.Set, e *exampleRun) {
 	e.result = testExample{Name: e.name, Status: "fail", Differences: []testDifference{}}
 	now, fs := exampleNow(pkg, e, lim)
@@ -467,42 +461,28 @@ func (s *session) runExample(pkg *loader.Package, ts *template.Templates, schema
 	if err != nil {
 		panic("cli: " + err.Error())
 	}
+	c := sink.Compare(pkg.Tree, lim, e.name, e.dir+exampleExpected, e.expected, e.hasExpected)
 	rr := render.Run(render.Options{
 		Package: pkg, Templates: ts, Bindings: b, Limits: lim, Seams: s.inv.Options.Faults,
 		Schemas: schemas, Fails: s.fails,
-	}, render.Emitter{Emit: e.hold})
+	}, c)
 	e.fs = append(e.fs, rr.Findings...)
 	if !rr.Produced {
 		return
 	}
-	e.ok = true
+	e.ok, e.rendered, e.exec = true, c.Rendered, c.Executable
 	if !e.hasExpected {
 		e.result.Status = "no-expected"
 		return
 	}
-	e.compare(pkg, lim)
+	e.fs = append(e.fs, c.Findings...)
+	for _, d := range c.Differences {
+		e.result.Differences = append(e.result.Differences, testDifference{Path: d.Path, Kind: d.Kind, Line: d.Line})
+	}
+	e.diffs, e.rewrite = c.Human, c.Rewrite
 	if len(e.result.Differences) == 0 {
 		e.result.Status = "pass"
 	}
-}
-
-// hold is the emission of e's render into memory: each file's bytes as
-// render writes them, a template's, an asset's from the package, or a
-// container's zip, and the plan of each container, by path.
-func (e *exampleRun) hold(files []*render.File) render.Emission {
-	e.rendered, e.exec, e.containers = map[string][]byte{}, map[string]bool{}, map[string]*render.File{}
-	for _, pf := range files {
-		if pf.IsContainer() {
-			e.containers[pf.Path()] = pf
-		}
-		r, done := pf.Open()
-		b, err := io.ReadAll(r)
-		if derr := done(err); err != nil || derr != nil {
-			panic("cli: a rendered file does not read: " + errors.Join(err, derr).Error())
-		}
-		e.rendered[pf.Path()], e.exec[pf.Path()] = b, pf.Executable()
-	}
-	return render.Emission{}
 }
 
 // exampleNow reads e's example.yaml, when it has one (ADR-007 D5 item 1):
@@ -587,26 +567,8 @@ func exampleNow(pkg *loader.Package, e *exampleRun, lim limits.Set) (string, []f
 	return now, nil
 }
 
-// codeExampleMetadata and the comparison's codes (ADR-007 D5 items 1 and 3).
-const (
-	codeExampleMetadata    finding.Code = "example.metadata"
-	codeOutputMissing      finding.Code = "example.output_missing"
-	codeOutputUnexpected   finding.Code = "example.output_unexpected"
-	codeOutputDiffers      finding.Code = "example.output_differs"
-	codeExpectedUnreadable finding.Code = "example.expected_unreadable"
-	codeEntryMissing       finding.Code = "example.entry_missing"
-	codeEntryUnexpected    finding.Code = "example.entry_unexpected"
-	codeEntryOrder         finding.Code = "example.entry_order"
-	codeEntryMethod        finding.Code = "example.entry_method"
-	maxDiffJSON                         = 16 << 10 // a diff's cap in a finding (ADR-007 D5 item 4)
-	maxDiffHuman                        = 40       // and in human output, in lines
-	diffTruncatedNotice                 = "... (the difference is truncated)\n"
-)
-
-// comparisonCodes are the codes of a difference between a render and
-// expected/, which a real --update makes nothing.
-var comparisonCodes = []finding.Code{codeOutputMissing, codeOutputUnexpected, codeOutputDiffers,
-	codeExpectedUnreadable, codeEntryMissing, codeEntryUnexpected, codeEntryOrder, codeEntryMethod}
+// codeExampleMetadata is example.yaml's code (ADR-007 D5 item 1).
+const codeExampleMetadata finding.Code = "example.metadata"
 
 // isJSONText is ADR-002 D11 item 3's test: the first byte other than
 // U+0020, U+0009, U+000A and U+000D is "{".
@@ -628,379 +590,6 @@ func readEntry(pkg *loader.Package, name string, size int64) ([]byte, error) {
 	b := make([]byte, size)
 	_, err = io.ReadFull(r, b)
 	return b, err
-}
-
-// compare compares e's render with its expected/ (ADR-007 D5 items 3 and
-// 4), by path in byte order, directories ignored: a container output by
-// its entries (compareContainer), and every other file byte for byte.
-func (e *exampleRun) compare(pkg *loader.Package, lim limits.Set) {
-	subj := finding.Subject{Kind: finding.SubjectExample, Name: e.name}
-	paths := slices.Clone(e.expected)
-	for p := range e.rendered {
-		if !slices.Contains(e.expected, p) {
-			paths = append(paths, p)
-		}
-	}
-	slices.Sort(paths)
-	for _, p := range paths {
-		entry := e.dir + exampleExpected + p
-		got, written := e.rendered[p]
-		if !slices.Contains(e.expected, p) {
-			l := finding.Location{Origin: finding.OriginOutput, File: p}
-			e.fs = append(e.fs, finding.New(codeOutputUnexpected, subj, &l, finding.Params{"path": finding.String(p)}))
-			e.result.Differences = append(e.result.Differences, testDifference{Path: p, Kind: "unexpected"})
-			e.diffs = append(e.diffs, "  unexpected  "+string(finding.AppendText(nil, p))+"\n")
-			e.rewrite = append(e.rewrite, p)
-			continue
-		}
-		l := finding.Location{Origin: finding.OriginPackage, File: entry}
-		if !written {
-			e.fs = append(e.fs, finding.New(codeOutputMissing, subj, &l, finding.Params{"path": finding.String(p)}))
-			e.result.Differences = append(e.result.Differences, testDifference{Path: p, Kind: "missing"})
-			e.diffs = append(e.diffs, "  missing     "+string(finding.AppendText(nil, p))+"\n")
-			continue
-		}
-		info, err := pkg.Tree.Stat(entry)
-		if err != nil {
-			panic("cli: " + entry + " is listed and not found")
-		}
-		want, err := readEntry(pkg, entry, info.Size)
-		if err != nil {
-			panic("cli: reading " + entry + ": " + err.Error())
-		}
-		before := len(e.result.Differences)
-		if pf := e.containers[p]; pf != nil {
-			e.compareContainer(want, pf, containerAt{subj: subj, path: p, file: entry}, lim)
-		} else if !bytes.Equal(want, got) {
-			f, d, human := describeDifference(want, got, p, "", subj, l)
-			e.fs = append(e.fs, f)
-			e.result.Differences = append(e.result.Differences, d)
-			e.diffs = append(e.diffs, human)
-		}
-		if len(e.result.Differences) > before {
-			e.rewrite = append(e.rewrite, p)
-		}
-	}
-}
-
-// containerAt is where a container compareContainer compares is: the
-// example's subject, the output's path, the expected file it is read
-// from, and, for a container that is an entry of another, its entry path
-// through every enclosing container, joined by "!".
-type containerAt struct {
-	subj  finding.Subject
-	path  string
-	file  string
-	entry string
-}
-
-// within is the location of a's entry name: the output's path, or the
-// expected file's, then each entry path, joined by "!".
-func (a containerAt) within(base, name string) string {
-	if a.entry != "" {
-		base += "!" + a.entry
-	}
-	if name != "" {
-		base += "!" + name
-	}
-	return base
-}
-
-// params is the parameters every finding about a's entry name carries.
-func (a containerAt) params(name string) finding.Params {
-	ps := finding.Params{"path": finding.String(a.path)}
-	if n := a.within("", name); n != "" {
-		ps["entry"] = finding.String(n[1:])
-	}
-	return ps
-}
-
-// compareContainer compares want, a container's zip from expected/, with
-// pf, the container the render wrote, by entries (ADR-007 D5 item 3, R9
-// item 5): want is read with the package reader's bounds, and one that does
-// not read is example.expected_unreadable; then the entry names, an entry
-// expected and not written being example.entry_missing and one written
-// and not expected example.entry_unexpected; the order of the names both
-// hold, example.entry_order at the first index where it differs; and, for
-// each entry both hold, in want's order, its uncompressed content, by
-// example.output_differs, or a container entry's own entries, and the
-// method of an entry whose declaration says stored: true, or a profile's
-// mimetype, by example.entry_method. The method of any other entry is the
-// encoder's choice (ADR-005 D8 item 7) and is not compared.
-func (e *exampleRun) compareContainer(want []byte, pf *render.File, at containerAt, lim limits.Set) {
-	decoded := map[string]*bytes.Buffer{}
-	a, rfs, err := zipfmt.OpenContainer(bytes.NewReader(want), int64(len(want)), lim, func(name string) io.Writer {
-		b := &bytes.Buffer{}
-		decoded[name] = b
-		return b
-	})
-	if err != nil {
-		panic("cli: reading a container from memory: " + err.Error())
-	}
-	here := at.within(at.path, "")
-	if len(rfs) > 0 {
-		l := finding.Location{Origin: finding.OriginPackage, File: at.within(at.file, "")}
-		ps := at.params("")
-		ps["reason"] = finding.String(string(rfs[0].Code()))
-		e.fs = append(e.fs, finding.New(codeExpectedUnreadable, at.subj, &l, ps))
-		e.result.Differences = append(e.result.Differences, testDifference{Path: here, Kind: "differs"})
-		e.diffs = append(e.diffs, "  differs     "+string(finding.AppendText(nil, here))+" (not a readable zip: "+string(rfs[0].Code())+")\n")
-		return
-	}
-	expected := a.Entries()
-	rendered := map[string]*render.File{}
-	var wantNames, gotNames []string
-	deflated := map[string]bool{}
-	for _, x := range expected {
-		wantNames, deflated[x.Name] = append(wantNames, x.Name), x.Deflated
-	}
-	for _, x := range pf.Entries() {
-		gotNames, rendered[x.Path()] = append(gotNames, x.Path()), x
-	}
-	expectedAt := func(name string) *finding.Location {
-		return &finding.Location{Origin: finding.OriginPackage, File: at.within(at.file, name)}
-	}
-	add := func(f finding.Finding, d testDifference, human string) {
-		e.fs = append(e.fs, f)
-		e.result.Differences = append(e.result.Differences, d)
-		e.diffs = append(e.diffs, human)
-	}
-	var shared []string
-	for _, n := range wantNames {
-		if rendered[n] == nil {
-			p := at.within(at.path, n)
-			add(finding.New(codeEntryMissing, at.subj, expectedAt(n), at.params(n)),
-				testDifference{Path: p, Kind: "missing"}, "  missing     "+string(finding.AppendText(nil, p))+"\n")
-			continue
-		}
-		shared = append(shared, n)
-	}
-	var sharedGot []string
-	for _, n := range gotNames {
-		if _, ok := deflated[n]; !ok {
-			p := at.within(at.path, n)
-			l := finding.Location{Origin: finding.OriginOutput, File: p}
-			add(finding.New(codeEntryUnexpected, at.subj, &l, at.params(n)),
-				testDifference{Path: p, Kind: "unexpected"}, "  unexpected  "+string(finding.AppendText(nil, p))+"\n")
-			continue
-		}
-		sharedGot = append(sharedGot, n)
-	}
-	for i := range shared {
-		if shared[i] == sharedGot[i] {
-			continue
-		}
-		ps := at.params("")
-		ps["index"] = finding.Int(int64(i))
-		ps["expected"] = finding.String(shared[i])
-		ps["rendered"] = finding.String(sharedGot[i])
-		add(finding.New(codeEntryOrder, at.subj, expectedAt(shared[i]), ps),
-			testDifference{Path: here, Kind: "differs"},
-			"  differs     "+string(finding.AppendText(nil, here))+" (entry order: at "+strconv.Itoa(i)+
-				" expected "+string(finding.AppendText(nil, shared[i]))+", rendered "+string(finding.AppendText(nil, sharedGot[i]))+")\n")
-		break
-	}
-	for _, n := range shared {
-		x := rendered[n]
-		w := decoded[n].Bytes()
-		if x.IsContainer() {
-			inner := at
-			inner.entry = at.within("", n)[1:]
-			e.compareContainer(w, x, inner, lim)
-		} else {
-			r, done := x.Open()
-			g, err := io.ReadAll(r)
-			if derr := done(err); err != nil || derr != nil {
-				panic("cli: a rendered entry does not read: " + errors.Join(err, derr).Error())
-			}
-			if !bytes.Equal(w, g) {
-				add(describeDifference(w, g, at.path, at.within("", n)[1:], at.subj, *expectedAt(n)))
-			}
-		}
-		if x.Stored() && deflated[n] {
-			p := at.within(at.path, n)
-			ps := at.params(n)
-			ps["expected_method"], ps["rendered_method"] = finding.String("deflated"), finding.String("stored")
-			add(finding.New(codeEntryMethod, at.subj, expectedAt(n), ps),
-				testDifference{Path: p, Kind: "differs"}, "  differs     "+string(finding.AppendText(nil, p))+" (method: expected deflated, rendered stored)\n")
-		}
-	}
-}
-
-// describeDifference is the finding, the result's record and the human
-// lines of the difference between want, the expected file at l, and got,
-// the render's file at p, or its entry entry when entry is not empty
-// (ADR-007 D5 items 3 and 4).
-func describeDifference(want, got []byte, p, entry string, subj finding.Subject, l finding.Location) (finding.Finding, testDifference, string) {
-	cause, crlf := differenceCause(want, got)
-	params := finding.Params{"path": finding.String(p), "cause": finding.String(cause)}
-	if crlf != "" {
-		params["crlf"] = finding.String(crlf)
-	}
-	if entry != "" {
-		params["entry"] = finding.String(entry)
-		p += "!" + entry
-	}
-	d := testDifference{Path: p, Kind: "differs"}
-	human := "  differs     " + string(finding.AppendText(nil, p))
-	if isText(want) && isText(got) {
-		pos := firstDifference(want, got)
-		l = l.At(pos)
-		line := pos.Line
-		d.Line = &line
-		diff, cut := unifiedDiff(want, got, "expected/"+p, "rendered/"+p, maxDiffJSON)
-		params["binary"] = finding.Bool(false)
-		params["diff"] = finding.String(capBytes(diff, maxDiffJSON))
-		params["diff_truncated"] = finding.Bool(cut || len(diff) > maxDiffJSON)
-		human += " (line " + strconv.Itoa(line) + ", " + cause + ")\n" + indent(capLines(diff, maxDiffHuman), "    ")
-	} else {
-		params["binary"] = finding.Bool(true)
-		off := 0
-		for off < len(want) && off < len(got) && want[off] == got[off] {
-			off++
-		}
-		params["offset"] = finding.Int(int64(off))
-		params["expected_size"] = finding.Int(int64(len(want)))
-		params["rendered_size"] = finding.Int(int64(len(got)))
-		params["expected_digest"] = finding.String(sha256Text(want))
-		params["rendered_digest"] = finding.String(sha256Text(got))
-		human += " (binary, first difference at byte " + strconv.Itoa(off) + ", " + cause + ")\n" +
-			"    expected " + strconv.Itoa(len(want)) + " bytes " + sha256Text(want) + "\n" +
-			"    rendered " + strconv.Itoa(len(got)) + " bytes " + sha256Text(got) + "\n"
-	}
-	return finding.New(codeOutputDiffers, subj, &l, params), d, human
-}
-
-// isText reports whether b is text in ADR-007 D5 item 4's sense: valid
-// UTF-8 holding no NUL byte.
-func isText(b []byte) bool { return utf8.Valid(b) && bytes.IndexByte(b, 0) < 0 }
-
-func sha256Text(b []byte) string {
-	sum := sha256.Sum256(b)
-	return "sha256:" + hex.EncodeToString(sum[:])
-}
-
-// differenceCause is the first of ADR-007 D5 item 4's hints that applies
-// to want and got, and for line endings the side that holds CR LF.
-func differenceCause(want, got []byte) (cause, crlf string) {
-	lf := func(b []byte) []byte { return bytes.ReplaceAll(b, []byte("\r\n"), []byte("\n")) }
-	if bytes.Equal(lf(want), lf(got)) {
-		w, g := bytes.Contains(want, []byte("\r\n")), bytes.Contains(got, []byte("\r\n"))
-		switch {
-		case w && g:
-			return "line_endings", "both"
-		case w:
-			return "line_endings", "expected"
-		}
-		return "line_endings", "rendered"
-	}
-	if bytes.Equal(append(slices.Clip(want), '\n'), got) || bytes.Equal(want, append(slices.Clip(got), '\n')) {
-		return "final_newline", ""
-	}
-	bom := []byte("\uFEFF")
-	if bytes.Equal(bytes.TrimPrefix(want, bom), bytes.TrimPrefix(got, bom)) {
-		return "bom", ""
-	}
-	if bytes.Equal(trimLineEnds(want), trimLineEnds(got)) {
-		return "trailing_whitespace", ""
-	}
-	return "none", ""
-}
-
-// trimLineEnds is b with the spaces and tabs ending each line removed.
-func trimLineEnds(b []byte) []byte {
-	lines := bytes.SplitAfter(b, []byte("\n"))
-	var out []byte
-	for _, l := range lines {
-		body, nl := l, []byte(nil)
-		if bytes.HasSuffix(body, []byte("\n")) {
-			body, nl = body[:len(body)-1], []byte("\n")
-			if bytes.HasSuffix(body, []byte("\r")) {
-				body, nl = body[:len(body)-1], []byte("\r\n")
-			}
-		}
-		out = append(append(out, bytes.TrimRight(body, " \t")...), nl...)
-	}
-	return out
-}
-
-// firstDifference is the position in want of the first code point at
-// which want and got differ, its line and column as ADR-006 counts them:
-// columns in code points from 1, a line ended by LF, CR LF or a lone CR.
-// When one is a prefix of the other it is the position just past the
-// shorter's end in want.
-func firstDifference(want, got []byte) finding.Pos {
-	i := 0
-	for i < len(want) && i < len(got) && want[i] == got[i] {
-		i++
-	}
-	// Back to the start of the code point the difference is in.
-	for i > 0 && i < len(want) && !utf8.RuneStart(want[i]) {
-		i--
-	}
-	pos := finding.Pos{Line: 1, Column: 1}
-	for j := 0; j < i; {
-		switch c := want[j]; {
-		case c == '\r' && j+1 < len(want) && want[j+1] == '\n':
-			if j+1 == i {
-				// The difference is inside a CR LF: at the CR.
-				return pos
-			}
-			pos.Line, pos.Column = pos.Line+1, 1
-			j += 2
-		case c == '\r' || c == '\n':
-			pos.Line, pos.Column = pos.Line+1, 1
-			j++
-		default:
-			_, n := utf8.DecodeRune(want[j:])
-			pos.Column++
-			j += n
-		}
-	}
-	return pos
-}
-
-// capBytes is s cut at max bytes, at a code point's start, with the
-// truncation notice when it was cut.
-func capBytes(s string, max int) string {
-	if len(s) <= max {
-		return s
-	}
-	cut := max - len(diffTruncatedNotice)
-	for cut > 0 && !utf8.RuneStart(s[cut]) {
-		cut--
-	}
-	return s[:cut] + diffTruncatedNotice
-}
-
-// capLines is s cut to max lines, with the truncation notice when it was
-// cut.
-func capLines(s string, max int) string {
-	n := 0
-	for i := 0; i < len(s); i++ {
-		if s[i] == '\n' {
-			n++
-			if n == max && i+1 < len(s) {
-				return s[:i+1] + diffTruncatedNotice
-			}
-		}
-	}
-	return s
-}
-
-// indent prefixes every line of s with pre.
-func indent(s, pre string) string {
-	if s == "" {
-		return s
-	}
-	lines := strings.SplitAfter(s, "\n")
-	var b strings.Builder
-	for _, l := range lines {
-		if l != "" {
-			b.WriteString(pre + l)
-		}
-	}
-	return b.String()
 }
 
 // update is --update (ADR-007 D5 item 5): for each of examples that
@@ -1176,10 +765,10 @@ func updateFailed(err error, u *testUpdate) finding.Finding {
 	case hostfs.ReasonOf(err) == hostfs.NotDirectory:
 		return finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil)
 	case len(u.Written) == 0 && len(u.Removed) == 0:
-		return render.StageFailed(err)
+		return sink.StageFailed(err)
 	}
 	return finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
-		"reason":  finding.String(render.WriteReason(hostfs.ReasonOf(err))),
+		"reason":  finding.String(sink.WriteReason(hostfs.ReasonOf(err))),
 		"written": stringList(u.Written),
 	})
 }
