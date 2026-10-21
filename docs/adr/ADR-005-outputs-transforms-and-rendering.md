@@ -4,6 +4,10 @@
 [Amendment A2](#amendments) (repetition is proved by the conformance pass against its record) is proposed by
 [ADR-012](ADR-012-test-economy.md) and accepted by Ed Funnekotter on 2026-10-21;
 it takes effect as PLAN-2026-10-metais-test-economy's items land.
+[ADR-010 Amendment A7](ADR-010-the-implementation.md#amendments) places D13's
+phases behind the tool's extension points (forms, producers, stages and
+sinks). It changes nothing this ADR decides; it makes D13 item 4's output
+bounds hold after D10's conversion too, which the tool did not do.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R8 (items 1–5), R9 (items 1–5), R10 (items 1–4), R12 (items 1–5); the output-count and output-size parts of R14 item 2
