@@ -6,6 +6,7 @@ package score
 import (
 	"path"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -26,7 +27,7 @@ func (s simple) name() (name string, rest []string) {
 	w := s.words
 	for len(w) > 0 {
 		switch {
-		case isAssignment(w[0]):
+		case isAssignment(w[0]), slices.Contains(keywords, w[0]):
 			w = w[1:]
 		case w[0] == "command" && len(w) > 1 && (w[1] == "-v" || w[1] == "-V"):
 			// command -v looks a command up and runs nothing.
@@ -42,6 +43,9 @@ func (s simple) name() (name string, rest []string) {
 	}
 	return "", nil
 }
+
+// keywords are the shell's reserved words that may come before a command.
+var keywords = []string{"do", "then", "else", "elif", "if", "while", "until", "!"}
 
 func isAssignment(w string) bool {
 	k, _, ok := strings.Cut(w, "=")

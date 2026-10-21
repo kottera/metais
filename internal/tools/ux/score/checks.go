@@ -332,14 +332,6 @@ func namesEveryInput(r *run) Result {
 	if src == nil {
 		return Result{Detail: "the scorer was handed no source for the package"}
 	}
-	var ev []Evidence
-	for _, sub := range []string{"inspect", "schema"} {
-		cs := r.succeeded(sub)
-		if len(cs) == 0 {
-			return Result{Detail: "the session did not run metais " + sub + ", where the inputs and their fields are"}
-		}
-		ev = append(ev, cs[0].evidence())
-	}
 	answer := normalize(r.final().Text)
 	var missing []string
 	for _, in := range src.inputs {
@@ -351,6 +343,14 @@ func namesEveryInput(r *run) Result {
 				missing = append(missing, in.name+"."+names[0])
 			}
 		}
+	}
+	var ev []Evidence
+	for _, sub := range []string{"inspect", "schema"} {
+		cs := r.succeeded(sub)
+		if len(cs) == 0 {
+			return Result{Detail: fmt.Sprintf("the session did not run metais %s, where the inputs and their fields are; its answer leaves %d of them unnamed", sub, len(missing))}
+		}
+		ev = append(ev, cs[0].evidence())
 	}
 	ev = append(ev, textEvidence(streamjson.Text{Line: r.final().Line, Text: clip(r.final().Text)}))
 	if len(missing) > 0 {
