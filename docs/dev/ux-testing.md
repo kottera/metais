@@ -459,7 +459,9 @@ go run ./internal/tools/ux -out "$SCRATCH/ux-baseline" -scrub "$SCRATCH/ux-basel
 The copy holds `set.json`, and for each run its record, transcript,
 standard error and the UTF-8 files of 256 KiB or less of its `work/` and
 `tmp/`. It leaves out the session's `HOME`, Claude Code's own files under
-`tmp/`, and every binary file such as a packed package. The record still
+`tmp/`, the skill `-with-skill` installed in `work/.claude/` (a checkout
+holding the copy would offer it to its own sessions), and every binary
+file such as a packed package. The record still
 lists each file with its size and digest. Every file is put through
 `internal/tools/ux/scrub`:
 

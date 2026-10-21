@@ -1,0 +1,22 @@
+{
+  "shows": "the session parses the package with Python's zipfile, and shows a shipped example's expected output instead of rendering one",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "C3-preview/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "expect": {
+    "first-metais-is-inspect": "pass",
+    "no-zip-extraction": "fail",
+    "no-unknown-command": "pass",
+    "package-untouched": "fail",
+    "outcome": "fail"
+  },
+  "reasons": {
+    "no-zip-extraction": "zipfile",
+    "package-untouched": "the package is extracted",
+    "outcome": "shipped example's expected output"
+  }
+}

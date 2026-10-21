@@ -1,0 +1,163 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "C2",
+    "name": "C2-render-new-fictional",
+    "kind": "consuming",
+    "asks_for_output": true,
+    "prompt": "render this file with new fictional data: report.metais"
+  },
+  "model_requested": "sonnet",
+  "model_reported": "claude-sonnet-5-5",
+  "models_used": [
+    "claude-sonnet-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": false,
+  "commit": "c268fb92621a70bcf583263b995462400984a56d",
+  "metais_sha256": "7303b0de8fe9b20b8e4ddca16da9a99d5540de24b6b113762f326c73e2e29a77",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-21T14:07:49.98298541Z",
+  "ended": "2026-10-21T14:08:21.242252993Z",
+  "wall_ms": 31259,
+  "turns": 8,
+  "cost_usd": 0.0971182,
+  "duration_ms": 30939,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 2,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "render this file with new fictional data: report.metais",
+      "--model",
+      "sonnet",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:46565",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": [
+    {
+      "path": "report.metais",
+      "size": 41429,
+      "sha256": "fc5ca09c318af8687e3f26749ddde2a4de0c06cd01581a124367152574b3067b"
+    }
+  ],
+  "files": [
+    {
+      "path": "data/entity.json",
+      "size": 617,
+      "sha256": "753f5a888d43a27a50284fd393f6960fa9441c82c6f3c57ba9cd485134c17b0a",
+      "change": "added"
+    },
+    {
+      "path": "data/incident.json",
+      "size": 3986,
+      "sha256": "bf98ee4c0a7cf1a729e4275714f759eb866c5472b5fcbe61ca8bc28c8e1a2898",
+      "change": "added"
+    },
+    {
+      "path": "data/stage.json",
+      "size": 15,
+      "sha256": "da555b5a203e1b4ca2fb213784f1f89d43bd976d865b1f065ba15a0784f99d08",
+      "change": "added"
+    },
+    {
+      "path": "out/incident-report.md",
+      "size": 6399,
+      "sha256": "4e424b8e0399dd14cf67ff9c9f821867ce28fc42024dfbdac25cb075234b8186",
+      "change": "added"
+    },
+    {
+      "path": "report.metais",
+      "size": 41429,
+      "sha256": "fc5ca09c318af8687e3f26749ddde2a4de0c06cd01581a124367152574b3067b",
+      "change": "unchanged"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": null
+}

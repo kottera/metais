@@ -1,0 +1,208 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "A2",
+    "name": "A2-edit-package",
+    "kind": "authoring",
+    "asks_for_output": false,
+    "prompt": "add a due date to this package's invoice: invoice.metais"
+  },
+  "model_requested": "sonnet",
+  "model_reported": "claude-sonnet-5-5",
+  "models_used": [
+    "claude-sonnet-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": false,
+  "commit": "c268fb92621a70bcf583263b995462400984a56d",
+  "metais_sha256": "7303b0de8fe9b20b8e4ddca16da9a99d5540de24b6b113762f326c73e2e29a77",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-21T14:04:58.119286816Z",
+  "ended": "2026-10-21T14:05:47.941605792Z",
+  "wall_ms": 49822,
+  "turns": 18,
+  "cost_usd": 0.1324258,
+  "duration_ms": 49490,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 17,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "add a due date to this package's invoice: invoice.metais",
+      "--model",
+      "sonnet",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:46565",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": [
+    {
+      "path": "invoice.metais",
+      "size": 9805,
+      "sha256": "6126d5a92e8a5e3812fb766ef5900744694b2f9bdc532d2aa8af87adb65be6c3"
+    }
+  ],
+  "files": [
+    {
+      "path": "invoice.metais",
+      "size": 9960,
+      "sha256": "5b08b6db5f68a703cc183ad409957bd707639f5e6a3928ea48d87835af4107af",
+      "change": "modified"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": {
+    "format": "metais-ux-outcome/1",
+    "scenario": "A2-edit-package",
+    "check": "schema-and-template",
+    "scored": true,
+    "pass": false,
+    "rules": [
+      {
+        "rule": "first-metais-is-inspect",
+        "applies": false,
+        "pass": true,
+        "detail": "does not apply to A2-edit-package"
+      },
+      {
+        "rule": "no-zip-extraction",
+        "applies": true,
+        "pass": true,
+        "detail": "the session extracts no archive with a zip tool or a zip library"
+      },
+      {
+        "rule": "no-unknown-command",
+        "applies": true,
+        "pass": false,
+        "detail": "metais refuses a command the session guessed: one of metais help, metais schema, metais cat is refused: usage.unknown_command",
+        "evidence": [
+          {
+            "turn": 4,
+            "line": 10,
+            "tool": "Bash",
+            "command": "metais --help 2\u003e\u00261 | head -50; metais schema invoice.metais invoice; metais cat invoice.metais templates/invoice.html.liquid 2\u003e\u00261 | head -80",
+            "text": "one of metais help, metais schema, metais cat is refused: usage.unknown_command"
+          }
+        ]
+      },
+      {
+        "rule": "package-untouched",
+        "applies": false,
+        "pass": true,
+        "detail": "does not apply to A2-edit-package"
+      },
+      {
+        "rule": "outcome",
+        "applies": true,
+        "pass": true,
+        "detail": "the schema and the template gain a due date together, and metais pack passes after the last edit",
+        "evidence": [
+          {
+            "turn": 9,
+            "line": 30,
+            "tool": "Edit",
+            "command": "/ux/run/work/src/inputs/invoice.schema.json",
+            "file": "work/src/inputs/invoice.schema.json"
+          },
+          {
+            "turn": 9,
+            "line": 32,
+            "tool": "Edit",
+            "command": "/ux/run/work/src/templates/invoice.html.liquid",
+            "file": "work/src/templates/invoice.html.liquid"
+          },
+          {
+            "turn": 10,
+            "line": 45,
+            "tool": "Bash",
+            "command": "metais pack . --out ../invoice.new.metais 2\u003e\u00261 | tail -20"
+          }
+        ]
+      }
+    ]
+  }
+}

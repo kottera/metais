@@ -60,7 +60,7 @@ var (
 	readingStated = regexp.MustCompile(`(?i)\b(?:interpret(?:ed|ing|ation)?|i\s+(?:took|take|read|understood|treated|am\s+treating|'m\s+treating|chose|went\s+with)\s+(?:it|this|that|the\s+request|your\s+request|"fill|'fill|“fill|` + "`fill" + `|fill)|took\s+["'“` + "`" + `]?fill|read\s+["'“` + "`" + `]?fill|assum(?:ed|ing)\s+(?:you|that\s+you)\s+(?:meant|mean|want|wanted)|(?:two|both)\s+(?:ways|readings|interpretations)|my\s+reading|the\s+reading\s+i)\b`)
 	// renderReading and editReading name the two readings of C0.
 	renderReading = regexp.MustCompile(`(?i)\brender`)
-	editReading   = regexp.MustCompile(`(?i)\b(?:edit|rewr(?:ite|ote|itten)|repack|unpack|updat|chang|modif|regenerat|replac)`)
+	editReading   = regexp.MustCompile(`(?i)\b(?:edit|rewr(?:ite|ote|itten)|repack|unpack|updat|chang|modif|regenerat|replac|the\s+package\s+itself|its\s+examples?\b)`)
 	// madeUp marks data as not real.
 	madeUp = regexp.MustCompile(`(?i)\b(?:fictional|fictitious|made[- ]up|invented|sample|placeholder|dummy|synthetic|illustrative|fake|hypothetical|not\s+real|test\s+data|example\s+data|generated)\b`)
 	// asks is a request for what the session needs.
@@ -187,7 +187,7 @@ func (r *run) lastWrite() int {
 // its commands' together, so a call is judged by its own lines, not by
 // whether some other command of the call reported an error.
 var (
-	packed     = regexp.MustCompile(`(?m)^Packed the package|"format":"metais\.pack/1","ok":true`)
+	packed     = regexp.MustCompile(`(?m)^Packed .*: \d+ bytes, \d+ entries|"format":"metais\.pack/1","ok":true`)
 	testPassed = regexp.MustCompile(`(?m)^[^\s:]+: pass$|"format":"metais\.test/1","ok":true`)
 	testFailed = regexp.MustCompile(`(?m)^[^\s:]+: fail\b|"format":"metais\.test/1","ok":false`)
 	checked    = regexp.MustCompile(`(?m)^check: 0 errors|"format":"metais\.check/1","ok":true`)

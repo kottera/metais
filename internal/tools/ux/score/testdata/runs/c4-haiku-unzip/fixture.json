@@ -1,0 +1,22 @@
+{
+  "shows": "the session runs metais --version first, unzips the package to find its way, and answers from inspect without running metais schema",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-haiku",
+    "run": "C4-what-it-needs/haiku",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-haiku-5-5"
+  },
+  "expect": {
+    "first-metais-is-inspect": "fail",
+    "no-zip-extraction": "fail",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "fail"
+  },
+  "reasons": {
+    "first-metais-is-inspect": "metais version",
+    "no-zip-extraction": "unzip reads the archive",
+    "outcome": "did not run metais schema"
+  }
+}

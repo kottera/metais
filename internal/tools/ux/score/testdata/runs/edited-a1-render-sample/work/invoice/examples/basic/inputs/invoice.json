@@ -1,0 +1,14 @@
+{
+  "number": "INV-2026-014",
+  "issue_date": "2026-10-01",
+  "due_date": "2026-10-31",
+  "currency": "EUR",
+  "seller": { "name": "Example Studio", "address": ["1 Sample Street", "Springfield"], "email": "billing@example.com" },
+  "customer": { "name": "Sample Customer & Co", "address": ["2 Test Road"] },
+  "items": [
+    { "description": "Design work", "quantity": 10, "unit_price": 85 },
+    { "description": "Hosting (monthly)", "quantity": 1, "unit_price": 12.5 }
+  ],
+  "tax_rate": 20,
+  "notes": "Pay by bank transfer."
+}

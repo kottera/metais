@@ -1,0 +1,21 @@
+{
+  "shows": "the session takes the edit reading, but silently: it never says which reading of \"fill\" it took",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "C0-fill-ambiguous/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "edited": "Turns after the session's metais inspect are replaced by the probe's C0-style reading of Work Order 01a15b3b (metais unpack, a rewritten example entity, metais test --update, metais pack and a move over report.metais). Each command's output is the real output of running it, with the set's own metais, on a copy of the session's starting directory; record.json's files are listed from the directory those commands left. The final answer is written to report what it did without saying which reading it took.",
+  "expect": {
+    "first-metais-is-inspect": "pass",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "fail"
+  },
+  "reasons": {
+    "outcome": "a silent reading"
+  }
+}

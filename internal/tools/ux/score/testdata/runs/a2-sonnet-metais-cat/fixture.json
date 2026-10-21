@@ -1,0 +1,20 @@
+{
+  "shows": "the session guesses metais cat, which metais refuses as unknown, then unpacks the package, adds the due date to the schema and the template, and packs it",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "A2-edit-package/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "expect": {
+    "first-metais-is-inspect": "n/a",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "fail",
+    "package-untouched": "n/a",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "no-unknown-command": "metais cat"
+  }
+}

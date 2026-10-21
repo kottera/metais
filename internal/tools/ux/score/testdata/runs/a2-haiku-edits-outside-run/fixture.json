@@ -1,0 +1,20 @@
+{
+  "shows": "the session unzips the package to look, then unpacks it outside its own directory, edits the schema and the template there, and packs it back: edits outside the run's directory still count",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-haiku2",
+    "run": "A2-edit-package/haiku",
+    "date": "2026-10-21",
+    "commit": "049d87c06023d09c414290a2ba28cc48ae76ceec",
+    "model": "claude-haiku-5-5"
+  },
+  "expect": {
+    "first-metais-is-inspect": "n/a",
+    "no-zip-extraction": "fail",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "no-zip-extraction": "unzip reads the archive"
+  }
+}

@@ -24,8 +24,8 @@ const scrubMax = 256 << 10
 // scrubSet writes a scrubbed copy of the set in c.out to dest, which must
 // not exist yet: set.json, and for each run its record, transcript and
 // standard error, and the text files of its work/ and tmp/, every one put
-// through package scrub. The harness's own files under tmp/ and the
-// session's HOME are left out. It is the step a scorer's fixtures are
+// through package scrub. The harness's own files under tmp/, the
+// session's HOME, and its work/.claude/ are left out. It is the step a scorer's fixtures are
 // made by, and the one a scorecard's transcripts go through before they
 // are kept.
 func (c *config) scrubSet(dest string) error {
@@ -73,7 +73,10 @@ func scrubRun(dir, setDir, dest string) error {
 		}
 		top, _, _ := strings.Cut(p, "/")
 		switch {
-		case d.IsDir() && (top == "home" || strings.HasPrefix(p, "tmp/claude-")):
+		case d.IsDir() && (top == "home" || strings.HasPrefix(p, "tmp/claude-") || p == workDir+"/.claude"):
+			// The session's HOME, the harness's own temporary files, and
+			// the skill -with-skill installed, which a checkout holding the
+			// copy would offer its own sessions as a skill.
 			return fs.SkipDir
 		case d.IsDir() || !d.Type().IsRegular():
 			return nil

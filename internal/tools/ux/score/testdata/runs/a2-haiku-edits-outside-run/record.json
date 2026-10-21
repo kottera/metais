@@ -1,0 +1,207 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "A2",
+    "name": "A2-edit-package",
+    "kind": "authoring",
+    "asks_for_output": false,
+    "prompt": "add a due date to this package's invoice: invoice.metais"
+  },
+  "model_requested": "haiku",
+  "model_reported": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": false,
+  "commit": "049d87c06023d09c414290a2ba28cc48ae76ceec",
+  "metais_sha256": "7303b0de8fe9b20b8e4ddca16da9a99d5540de24b6b113762f326c73e2e29a77",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-21T14:18:16.372782948Z",
+  "ended": "2026-10-21T14:18:56.890986379Z",
+  "wall_ms": 40518,
+  "turns": 16,
+  "cost_usd": 0.01466916,
+  "duration_ms": 40168,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 15,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "add a due date to this package's invoice: invoice.metais",
+      "--model",
+      "haiku",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:46565",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": [
+    {
+      "path": "invoice.metais",
+      "size": 9805,
+      "sha256": "6126d5a92e8a5e3812fb766ef5900744694b2f9bdc532d2aa8af87adb65be6c3"
+    }
+  ],
+  "files": [
+    {
+      "path": "invoice.metais",
+      "size": 9935,
+      "sha256": "7b921d29c5091376852785b2dd769f6d4792ac8bb05f70cc0a1392da2ad7b497",
+      "change": "modified"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": {
+    "format": "metais-ux-outcome/1",
+    "scenario": "A2-edit-package",
+    "check": "schema-and-template",
+    "scored": true,
+    "pass": false,
+    "rules": [
+      {
+        "rule": "first-metais-is-inspect",
+        "applies": false,
+        "pass": true,
+        "detail": "does not apply to A2-edit-package"
+      },
+      {
+        "rule": "no-zip-extraction",
+        "applies": true,
+        "pass": false,
+        "detail": "the session reads the archive itself: unzip reads the archive",
+        "evidence": [
+          {
+            "turn": 3,
+            "line": 10,
+            "tool": "Bash",
+            "command": "(which metais || echo \"metais not installed\"); unzip -l invoice.metais 2\u003e\u00261 | head -40",
+            "text": "unzip reads the archive"
+          },
+          {
+            "turn": 5,
+            "line": 22,
+            "tool": "Bash",
+            "command": "M=/ux/set/bin/metais; P=invoice.metais; $M schema $P invoice 2\u003e\u00261; echo ----; unzip -p $P templates/invoice.html.liquid; echo ----; unzip -p $P metais.ya …",
+            "text": "unzip reads the archive"
+          },
+          {
+            "turn": 11,
+            "line": 63,
+            "tool": "Bash",
+            "command": "B=/ux/set; M=$B/bin/metais; T=$B/due-test; rm -rf $T \u0026\u0026 mkdir -p $T/data \u0026\u0026 cp $B/backup/invoice.metais.orig $T/ 2\u003e/dev/null; $M unpack $B/backup/invoice …",
+            "text": "unzip reads the archive"
+          },
+          {
+            "turn": 12,
+            "line": 69,
+            "tool": "Bash",
+            "command": "B=/ux/set; M=$B/bin/metais; W=$(pwd); $M pack $B/invoice-src --out $W/invoice.metais 2\u003e\u00261; echo \"pack exit=$?\"; $M inspect $W/invoice.metais 2\u003e\u00261 | head  …",
+            "text": "unzip reads the archive"
+          }
+        ]
+      },
+      {
+        "rule": "no-unknown-command",
+        "applies": true,
+        "pass": true,
+        "detail": "none of the 15 metais commands is refused as unknown"
+      },
+      {
+        "rule": "package-untouched",
+        "applies": false,
+        "pass": true,
+        "detail": "does not apply to A2-edit-package"
+      },
+      {
+        "rule": "outcome",
+        "applies": true,
+        "pass": false,
+        "detail": "neither an input schema nor a template gains a due date"
+      }
+    ]
+  }
+}

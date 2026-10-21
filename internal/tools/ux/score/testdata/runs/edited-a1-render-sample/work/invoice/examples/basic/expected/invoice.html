@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Invoice INV-2026-014</title>
+<style>
+body { font-family: sans-serif; max-width: 48rem; margin: 2rem auto; color: #222; }
+header { display: flex; justify-content: space-between; }
+table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+th, td { padding: .4rem; border-bottom: 1px solid #ccc; text-align: left; }
+.num { text-align: right; }
+tfoot td { border: 0; }
+tfoot .total { font-weight: bold; border-top: 2px solid #222; }
+</style>
+</head>
+<body>
+<header>
+<div>
+<h1>Invoice INV-2026-014</h1>
+<p>Issued 2026-10-01<br>Due 2026-10-31</p>
+</div>
+<div>
+<strong>Example Studio</strong><br>1 Sample Street<br>Springfield<br>billing@example.com
+</div>
+</header>
+<section>
+<h2>Bill to</h2>
+<p><strong>Sample Customer &amp; Co</strong><br>2 Test Road</p>
+</section>
+<table>
+<thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr></thead>
+<tbody>
+<tr><td>Design work</td><td class="num">10</td><td class="num">85.00</td><td class="num">850.00</td></tr>
+<tr><td>Hosting (monthly)</td><td class="num">1</td><td class="num">12.50</td><td class="num">12.50</td></tr>
+</tbody>
+<tfoot>
+<tr><td colspan="3" class="num">Subtotal</td><td class="num">862.50</td></tr>
+<tr><td colspan="3" class="num">Tax (20%)</td><td class="num">172.50</td></tr>
+<tr><td colspan="3" class="num total">Total EUR</td><td class="num total">1035.00</td></tr>
+</tfoot>
+</table>
+<p>Pay by bank transfer.</p>
+</body>
+</html>

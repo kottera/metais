@@ -1,0 +1,22 @@
+{
+  "shows": "the session adds the due date to the schema and the template, and stops without running metais test or pack",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "A2-edit-package/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "edited": "The real run a2-sonnet-metais-cat, cut off after its last Edit: its metais pack, its move over invoice.metais and its answer are removed, and the answer is written to say it stopped. record.json's files are listed from replaying its metais unpack and its Edit calls on its starting directory.",
+  "expect": {
+    "first-metais-is-inspect": "n/a",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "fail",
+    "package-untouched": "n/a",
+    "outcome": "fail"
+  },
+  "reasons": {
+    "no-unknown-command": "metais cat",
+    "outcome": "no metais test or pack passes after the last edit"
+  }
+}

@@ -1,0 +1,217 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "C1",
+    "name": "C1-render-real",
+    "kind": "consuming",
+    "asks_for_output": true,
+    "prompt": "render this file: report.metais"
+  },
+  "model_requested": "sonnet",
+  "model_reported": "claude-sonnet-5-5",
+  "models_used": [
+    "claude-sonnet-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": false,
+  "commit": "aceb2fab84355878a0ec792a98eaa9be9113041f",
+  "metais_sha256": "7303b0de8fe9b20b8e4ddca16da9a99d5540de24b6b113762f326c73e2e29a77",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-21T14:24:32.028409964Z",
+  "ended": "2026-10-21T14:24:51.982715456Z",
+  "wall_ms": 19954,
+  "turns": 7,
+  "cost_usd": 0.06159630000000001,
+  "duration_ms": 19677,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 6,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "render this file: report.metais",
+      "--model",
+      "sonnet",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:46565",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": [
+    {
+      "path": "report.metais",
+      "size": 41429,
+      "sha256": "fc5ca09c318af8687e3f26749ddde2a4de0c06cd01581a124367152574b3067b"
+    }
+  ],
+  "files": [
+    {
+      "path": "example-data/entity.json",
+      "size": 617,
+      "sha256": "753f5a888d43a27a50284fd393f6960fa9441c82c6f3c57ba9cd485134c17b0a",
+      "change": "added"
+    },
+    {
+      "path": "example-data/incident.json",
+      "size": 3986,
+      "sha256": "bf98ee4c0a7cf1a729e4275714f759eb866c5472b5fcbe61ca8bc28c8e1a2898",
+      "change": "added"
+    },
+    {
+      "path": "example-data/stage.json",
+      "size": 15,
+      "sha256": "da555b5a203e1b4ca2fb213784f1f89d43bd976d865b1f065ba15a0784f99d08",
+      "change": "added"
+    },
+    {
+      "path": "example-out/incident-report.md",
+      "size": 6399,
+      "sha256": "4e424b8e0399dd14cf67ff9c9f821867ce28fc42024dfbdac25cb075234b8186",
+      "change": "added"
+    },
+    {
+      "path": "report.metais",
+      "size": 41429,
+      "sha256": "fc5ca09c318af8687e3f26749ddde2a4de0c06cd01581a124367152574b3067b",
+      "change": "unchanged"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": {
+    "format": "metais-ux-outcome/1",
+    "scenario": "C1-render-real",
+    "check": "asks-not-invents",
+    "scored": true,
+    "pass": false,
+    "rules": [
+      {
+        "rule": "first-metais-is-inspect",
+        "applies": true,
+        "pass": true,
+        "detail": "the first metais command is metais inspect",
+        "evidence": [
+          {
+            "turn": 2,
+            "line": 5,
+            "tool": "Bash",
+            "command": "which metais; metais inspect report.metais 2\u003e\u00261 | head -50"
+          }
+        ]
+      },
+      {
+        "rule": "no-zip-extraction",
+        "applies": true,
+        "pass": true,
+        "detail": "the session extracts no archive with a zip tool or a zip library"
+      },
+      {
+        "rule": "no-unknown-command",
+        "applies": true,
+        "pass": true,
+        "detail": "none of the 7 metais commands is refused as unknown"
+      },
+      {
+        "rule": "package-untouched",
+        "applies": true,
+        "pass": true,
+        "detail": "the package is not extracted, changed or repacked"
+      },
+      {
+        "rule": "outcome",
+        "applies": true,
+        "pass": false,
+        "detail": "the session renders the document from the shipped example final's data, where it has no facts: it invents the report",
+        "evidence": [
+          {
+            "turn": 6,
+            "line": 21,
+            "tool": "Bash",
+            "command": "mkdir -p example-data \u0026\u0026 for f in entity incident stage; do metais read report.metais examples/final/inputs/$f.json \u003e example-data/$f.json 2\u003e/dev/null; done; cat example-data/stage.json; metais render report.metais --data example-data --out …"
+          }
+        ]
+      }
+    ]
+  }
+}

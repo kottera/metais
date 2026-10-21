@@ -1,0 +1,20 @@
+{
+  "shows": "the session parses the package with zipfile, edits a source unpacked under its TMPDIR, and its last metais test passes in a Bash call where another command reports an error: the test is judged by its own lines",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-haiku4",
+    "run": "A2-edit-package/haiku",
+    "date": "2026-10-21",
+    "commit": "4a3294ec72cb1907cbebf7a78f2143baf8ed2b23",
+    "model": "claude-haiku-5-5"
+  },
+  "expect": {
+    "first-metais-is-inspect": "n/a",
+    "no-zip-extraction": "fail",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "no-zip-extraction": "zipfile"
+  }
+}

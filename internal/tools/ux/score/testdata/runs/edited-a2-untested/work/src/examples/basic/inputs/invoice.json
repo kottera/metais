@@ -1,0 +1,12 @@
+{
+  "number": "INV-2026-0042",
+  "issued": "2026-10-21",
+  "due": "2026-11-20",
+  "seller": {"name": "Example Consulting B.V.", "address": "Keizersgracht 1, 1015 CC Amsterdam, Netherlands"},
+  "buyer": {"name": "Sample Retail GmbH", "address": "Hauptstrasse 5, 10115 Berlin, Germany"},
+  "currency": "EUR",
+  "lines": [
+    {"description": "Consulting, October", "quantity": 12, "unit_price": 95},
+    {"description": "Workshop day", "quantity": 1.5, "unit_price": 800}
+  ]
+}

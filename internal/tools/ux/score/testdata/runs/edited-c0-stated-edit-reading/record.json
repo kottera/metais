@@ -1,0 +1,277 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "C0",
+    "name": "C0-fill-ambiguous",
+    "kind": "consuming",
+    "asks_for_output": false,
+    "prompt": "fill this file: report.metais"
+  },
+  "model_requested": "sonnet",
+  "model_reported": "claude-sonnet-5-5",
+  "models_used": [
+    "claude-sonnet-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": false,
+  "commit": "c268fb92621a70bcf583263b995462400984a56d",
+  "metais_sha256": "7303b0de8fe9b20b8e4ddca16da9a99d5540de24b6b113762f326c73e2e29a77",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-21T14:06:50.014976174Z",
+  "ended": "2026-10-21T14:07:00.590801901Z",
+  "wall_ms": 10575,
+  "turns": 3,
+  "cost_usd": 0.0300085,
+  "duration_ms": 10224,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 4,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "fill this file: report.metais",
+      "--model",
+      "sonnet",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:46565",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": [
+    {
+      "path": "report.metais",
+      "size": 41429,
+      "sha256": "fc5ca09c318af8687e3f26749ddde2a4de0c06cd01581a124367152574b3067b"
+    }
+  ],
+  "files": [
+    {
+      "path": "report-src/examples/final/example.yaml",
+      "size": 163,
+      "sha256": "88ecf82a0caa8c054a404d87317c2a46c2147b6de69378fbf55cfcadc6026d07",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/final/expected/incident-report.md",
+      "size": 6399,
+      "sha256": "4e424b8e0399dd14cf67ff9c9f821867ce28fc42024dfbdac25cb075234b8186",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/final/inputs/entity.json",
+      "size": 617,
+      "sha256": "753f5a888d43a27a50284fd393f6960fa9441c82c6f3c57ba9cd485134c17b0a",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/final/inputs/incident.json",
+      "size": 3986,
+      "sha256": "bf98ee4c0a7cf1a729e4275714f759eb866c5472b5fcbe61ca8bc28c8e1a2898",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/final/inputs/stage.json",
+      "size": 15,
+      "sha256": "da555b5a203e1b4ca2fb213784f1f89d43bd976d865b1f065ba15a0784f99d08",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/initial/example.yaml",
+      "size": 158,
+      "sha256": "db6c0515ee51b0916b07112f11fc5661a992969693ffd910a5575b43d51ab517",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/initial/expected/incident-report.md",
+      "size": 2089,
+      "sha256": "dfa377fe63c5ab3b0ee71585a3761d0753acaec04f4e6354b52992363cc034b4",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/initial/inputs/entity.json",
+      "size": 633,
+      "sha256": "3ea4b1b1b3525ab8ee97e2114536eec5e016f9e522b09c4b294e702a7afb61b9",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/initial/inputs/incident.json",
+      "size": 831,
+      "sha256": "8b9bcfc067063bd3e2f8fcd7d760735ffab53dc389c240a05bc41bdbbc68dff7",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/initial/inputs/stage.json",
+      "size": 23,
+      "sha256": "e50837fc9ea9ca4a67812d0c02641daa46697fed1715e1d043e40cf96d5678a3",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/intermediate/example.yaml",
+      "size": 188,
+      "sha256": "9e143eb7fd51254e11c28c6b5731e09d9f00bcb29e1b121566b05922e6c17921",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/intermediate/expected/incident-report.md",
+      "size": 4950,
+      "sha256": "96162379f50f52da204975abdb08ded3520abbf96acb15765f2340deb8547ebb",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/intermediate/inputs/entity.json",
+      "size": 617,
+      "sha256": "753f5a888d43a27a50284fd393f6960fa9441c82c6f3c57ba9cd485134c17b0a",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/intermediate/inputs/incident.json",
+      "size": 2929,
+      "sha256": "8cea282d5073d840e528c591dec494b047e4f1ec63b8f0c44b2a4a7560f36836",
+      "change": "added"
+    },
+    {
+      "path": "report-src/examples/intermediate/inputs/stage.json",
+      "size": 22,
+      "sha256": "501724e4bd941d24ec37ab34b89b98c113dabf5d2cd4468c4ff6f61574331827",
+      "change": "added"
+    },
+    {
+      "path": "report-src/inputs/constraints.schema.json",
+      "size": 13221,
+      "sha256": "2e82c662d55c7c091213b9bcf0f43641565da2797dd457f9cd1089d76e5d5639",
+      "change": "added"
+    },
+    {
+      "path": "report-src/inputs/entity.schema.json",
+      "size": 8769,
+      "sha256": "af2407cce58e177f402770fe41e4aa71c2818dd80593aeb7e7b48ebf01749c89",
+      "change": "added"
+    },
+    {
+      "path": "report-src/inputs/incident.md",
+      "size": 3442,
+      "sha256": "8171009a3c8bf883f30d70270af78954917fe00360d33062ea7c5875649910b4",
+      "change": "added"
+    },
+    {
+      "path": "report-src/inputs/incident.schema.json",
+      "size": 35847,
+      "sha256": "aaebca95a04188e6b458792a2cb51fa2f0342ac3c57c380a6829c0087cac60ba",
+      "change": "added"
+    },
+    {
+      "path": "report-src/inputs/stage.schema.json",
+      "size": 382,
+      "sha256": "bf533b68fd71b79209f31a0a93e1666684e7dfab71e5a3442cb6a7a7696b073d",
+      "change": "added"
+    },
+    {
+      "path": "report-src/metais.yaml",
+      "size": 3404,
+      "sha256": "f5762efefbdbe05b46757650fbac34ddf2d4a00b6b4100f11f306813cdf5c4c4",
+      "change": "added"
+    },
+    {
+      "path": "report-src/references/sources.md",
+      "size": 4964,
+      "sha256": "c2aa70dcb1676153b7329fa59c491678e639fbb259aad93c8e4dc101cf79f58e",
+      "change": "added"
+    },
+    {
+      "path": "report-src/templates/incident-report.md.liquid",
+      "size": 14131,
+      "sha256": "d4e6d2984aae33e0cb28df74a323d5045fd41c87f3262a92ca9f64e6c5b3ad5d",
+      "change": "added"
+    },
+    {
+      "path": "report.metais",
+      "size": 41467,
+      "sha256": "cfc2675182164bd5726ee529711cd405f3d3aab6c571e4958166a63e99198384",
+      "change": "modified"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": null
+}

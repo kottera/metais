@@ -1,0 +1,199 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "A2",
+    "name": "A2-edit-package",
+    "kind": "authoring",
+    "asks_for_output": false,
+    "prompt": "add a due date to this package's invoice: invoice.metais"
+  },
+  "model_requested": "sonnet",
+  "model_reported": "claude-sonnet-5-5",
+  "models_used": [
+    "claude-sonnet-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": false,
+  "commit": "c268fb92621a70bcf583263b995462400984a56d",
+  "metais_sha256": "7303b0de8fe9b20b8e4ddca16da9a99d5540de24b6b113762f326c73e2e29a77",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-21T14:04:58.119286816Z",
+  "ended": "2026-10-21T14:05:47.941605792Z",
+  "wall_ms": 49822,
+  "turns": 18,
+  "cost_usd": 0.1324258,
+  "duration_ms": 49490,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 0,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "add a due date to this package's invoice: invoice.metais",
+      "--model",
+      "sonnet",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:46565",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": [
+    {
+      "path": "invoice.metais",
+      "size": 9805,
+      "sha256": "6126d5a92e8a5e3812fb766ef5900744694b2f9bdc532d2aa8af87adb65be6c3"
+    }
+  ],
+  "files": [
+    {
+      "path": "invoice.metais",
+      "size": 9805,
+      "sha256": "6126d5a92e8a5e3812fb766ef5900744694b2f9bdc532d2aa8af87adb65be6c3",
+      "change": "unchanged"
+    },
+    {
+      "path": "src/examples/basic/example.yaml",
+      "size": 181,
+      "sha256": "a1045b0ae633e1663ee50a3a56201b837ebc830cb0874aed2007effd2149463c",
+      "change": "added"
+    },
+    {
+      "path": "src/examples/basic/expected/invoice.html",
+      "size": 1092,
+      "sha256": "c098ea7de7dba6e2a5c868c3ced6506ab302a7746dd1e4156aa98ad38eeb3b2f",
+      "change": "added"
+    },
+    {
+      "path": "src/examples/basic/inputs/invoice.json",
+      "size": 476,
+      "sha256": "2ecb4b0658d0a6dcdea54d80a3ed48cb7950a19026a8b36a6e5d2883d361ea5d",
+      "change": "added"
+    },
+    {
+      "path": "src/examples/escaping/example.yaml",
+      "size": 143,
+      "sha256": "d9ca0314f1e3ea4d378ae7b2adb35d6d6d14e2561d81dcd992b2000eaaabfdbb",
+      "change": "added"
+    },
+    {
+      "path": "src/examples/escaping/expected/invoice.html",
+      "size": 1103,
+      "sha256": "3debc61f52182bd98607200b63b81bf1261a4db0949dce1a5c4b472a9b24bafe",
+      "change": "added"
+    },
+    {
+      "path": "src/examples/escaping/inputs/invoice.json",
+      "size": 494,
+      "sha256": "9205785847a507b290c3af092008b880a8277173b8df4b16ce3ef341897a4e09",
+      "change": "added"
+    },
+    {
+      "path": "src/inputs/invoice.schema.json",
+      "size": 4001,
+      "sha256": "4120e610920b3a5759819196a47977c184fa0ebeea32f841f199a47b435434cd",
+      "change": "added"
+    },
+    {
+      "path": "src/metais.yaml",
+      "size": 1579,
+      "sha256": "85184dd2efb7ad33294e645539597dbb70ccc2a6c3cca8c037011626771d6051",
+      "change": "added"
+    },
+    {
+      "path": "src/references/sources.md",
+      "size": 771,
+      "sha256": "5dcf28622624d20aaf853cb50a755b48ac2d4d67ce9ca06ac9c22753557b64e0",
+      "change": "added"
+    },
+    {
+      "path": "src/templates/invoice.html.liquid",
+      "size": 1411,
+      "sha256": "7edd5f804ca5405e1a9cfe363d8048935f2646ead51b048b9c3b90a9c87f819a",
+      "change": "added"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": null
+}

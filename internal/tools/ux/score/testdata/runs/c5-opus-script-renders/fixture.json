@@ -1,0 +1,21 @@
+{
+  "shows": "the session tries to extract the package with python3 -m zipfile, then writes a script that renders it through metais render, and its test run renders the report",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-opus",
+    "run": "C5-script/opus",
+    "date": "2026-10-21",
+    "commit": "f9a2b993dd9d2ceeec35d7e604d0cc2171858d96",
+    "model": "claude-opus-5-5"
+  },
+  "expect": {
+    "first-metais-is-inspect": "pass",
+    "no-zip-extraction": "fail",
+    "no-unknown-command": "pass",
+    "package-untouched": "fail",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "no-zip-extraction": "zipfile",
+    "package-untouched": "the package is extracted"
+  }
+}

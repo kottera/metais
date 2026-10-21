@@ -1,0 +1,20 @@
+metais: "1.0"
+name: "invoice"
+version: "0.1.0"
+title: "Invoice"
+description: "Renders an invoice as HTML from line items, computing subtotal, tax and total."
+guide: |-
+  This package produces invoice.html, a single-page HTML invoice.
+  Read [what the invoice means](inputs/invoice.md) before you supply it.
+  Totals are computed; supply only the line items and the tax rate.
+inputs:
+  - name: invoice
+    title: "Invoice"
+    schema: inputs/invoice.schema.json
+    meaning: inputs/invoice.md
+    forms:
+      - json
+      - yaml
+outputs:
+  - id: invoice
+    template: invoice.html.liquid

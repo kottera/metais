@@ -1,0 +1,19 @@
+{
+  "shows": "the session's package escapes its HTML output and writes the numbers into the page with json_script, and the rendered page's array parses",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-skill-sonnet",
+    "run": "A3-data-to-js/sonnet",
+    "date": "2026-10-21",
+    "commit": "3fe173ced5306ecbc103b69f5d28b54dfdb89971",
+    "model": "claude-sonnet-5-5"
+  },
+  "edited": "Recorded with -with-skill. The session wrote its data with json and a replace, under escape: none; after its last tool call, a sed adds escape: html to its output and puts json_script in the template, then metais test, metais pack and metais render --sample run, each with the real output of running it on the directory the session left. Its answer is rewritten to match.",
+  "expect": {
+    "first-metais-is-inspect": "n/a",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "pass"
+  },
+  "reasons": {}
+}

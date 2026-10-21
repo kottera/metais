@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly signups (fictional)</title>
+<style>
+:root { color-scheme: light dark; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --grid:#e4e3df; --s1:#2a78d6; }
+@media (prefers-color-scheme: dark) { :root { --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --grid:#33332f; --s1:#3987e5; } }
+body { margin:0; padding:24px; background:var(--surface); color:var(--ink); font:14px/1.4 system-ui,sans-serif; }
+h1 { font-size:18px; margin:0 0 12px; }
+#chart { position:relative; max-width:900px; }
+svg { width:100%; height:auto; display:block; overflow:visible; }
+svg text { fill:var(--ink2); font-size:11px; }
+.grid { stroke:var(--grid); stroke-width:1; }
+.zero { stroke:var(--ink2); stroke-width:1; }
+.bar { fill:var(--s1); }
+.hit { fill:transparent; }
+.hit:hover + .bar { opacity:.75; }
+#tip { position:absolute; pointer-events:none; background:var(--surface); color:var(--ink); border:1px solid var(--grid); border-radius:6px; padding:4px 8px; font-size:12px; white-space:nowrap; display:none; }
+details { margin-top:16px; max-width:900px; color:var(--ink2); }
+table { border-collapse:collapse; margin-top:8px; color:var(--ink); }
+th, td { text-align:right; padding:2px 12px; border-bottom:1px solid var(--grid); }
+th:first-child, td:first-child { text-align:left; }
+</style>
+</head>
+<body>
+<h1>Weekly signups (fictional)</h1>
+<div id="chart"><div id="tip"></div></div>
+<details><summary>Table view</summary><table id="tbl"></table></details>
+<script>
+var TITLE = "Weekly signups (fictional)";
+var UNIT = "users";
+var LABELS = ["W1","W2","W3","W4","W5","W6","W7","W8"];
+var DATA = [12,19,8,24,31,27,-4,15];
+
+(function () {
+  var NS = "http://www.w3.org/2000/svg";
+  var W = 800, H = 360, L = 48, R = 8, T = 12, B = 28;
+  var n = DATA.length;
+  var names = DATA.map(function (_, i) { return LABELS && LABELS[i] ? LABELS[i] : String(i + 1); });
+  var lo = Math.min(0, Math.min.apply(null, DATA)), hi = Math.max(0, Math.max.apply(null, DATA));
+  if (lo === hi) hi = lo + 1;
+  var step = Math.pow(10, Math.floor(Math.log10((hi - lo) / 4)));
+  [1, 2, 2.5, 5, 10].some(function (m) { if ((hi - lo) / (m * step) <= 5) { step *= m; return true; } });
+  lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+  function y(v) { return T + (hi - v) / (hi - lo) * (H - T - B); }
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    parent.appendChild(e); return e;
+  }
+  var box = document.getElementById("chart"), tip = document.getElementById("tip");
+  var svg = el("svg", { viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": TITLE }, box);
+  for (var v = lo; v <= hi + step / 2; v += step) {
+    el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), "class": Math.abs(v) < step / 2 ? "zero" : "grid" }, svg);
+    el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = +v.toPrecision(12);
+  }
+  var slot = (W - L - R) / n, bw = Math.max(1, slot - 2), every = Math.ceil(n / 12);
+  DATA.forEach(function (d, i) {
+    var x = L + i * slot + (slot - bw) / 2, y0 = y(0), y1 = y(d);
+    var g = el("g", {}, svg);
+    var hit = el("rect", { "class": "hit", x: L + i * slot, y: T, width: slot, height: H - T - B }, g);
+    el("rect", { "class": "bar", x: x, y: Math.min(y0, y1), width: bw, height: Math.max(1, Math.abs(y0 - y1)), rx: Math.min(4, bw / 2) }, g);
+    if (i % every === 0) el("text", { x: x + bw / 2, y: H - 8, "text-anchor": "middle" }, svg).textContent = names[i];
+    hit.addEventListener("mousemove", function (e) {
+      var r = box.getBoundingClientRect();
+      tip.textContent = names[i] + ": " + d + (UNIT ? " " + UNIT : "");
+      tip.style.display = "block";
+      tip.style.left = Math.max(0, Math.min(e.clientX - r.left + 12, r.width - tip.offsetWidth)) + "px";
+      tip.style.top = (e.clientY - r.top - 30) + "px";
+    });
+    hit.addEventListener("mouseleave", function () { tip.style.display = "none"; });
+  });
+  var tbl = document.getElementById("tbl"), head = tbl.insertRow();
+  ["#", UNIT ? "Value (" + UNIT + ")" : "Value"].forEach(function (h) {
+    var c = document.createElement("th"); c.textContent = h; head.appendChild(c);
+  });
+  DATA.forEach(function (d, i) { var r = tbl.insertRow(); r.insertCell().textContent = names[i]; r.insertCell().textContent = d; });
+})();
+</script>
+</body>
+</html>
