@@ -26,6 +26,12 @@ case and the ceiling it broke. A run takes some minutes, and its cases
 write up to `output-total` to the temporary directory, which each case
 removes when it ends.
 
+On a fresh host, run `GOTOOLCHAIN=auto go mod download` first. The suite
+builds the tool with `GOPROXY=off` against the host's module cache, and
+the command above downloads only what `internal/conformance` imports. A
+cache that has never held the tool's modules fails the build with `module
+lookup disabled by GOPROXY=off`.
+
 `-calibration.cases=<name>,<name>` runs only the cases named, which is how
 one case is measured again. `-conformance.tool=<path>` measures another
 build in place of the one the test builds.
