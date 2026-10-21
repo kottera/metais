@@ -7,7 +7,7 @@ train inherits it verbatim: `metais-ux [W2-C3]: <action>` for a Work Order,
 and `<type>(metais-ux): [W2-C3] <change>` for a pull request and its squash
 subject, by `kottera/kottera`'s `docs/dev/work-order-and-pr-naming.md`, which
 AGENTS.md adopts.
-**Status:** Draft, for Ed's rulings (§4).
+**Status:** Ratified 2026-10-21 by Ed Funnekotter, with the rulings of §4.
 **For PRD:** [PRD-001](../prd/PRD-001-metais-v1.md) R17 (the golden paths),
 and its success criteria SC1 (an AI harness, given only the binary and a
 package, produces a valid document) and SC9 (an author working only from the
@@ -115,7 +115,7 @@ Two rules this train adds:
 
 | Wave | Objective | Depends on | Status |
 |---|---|---|---|
-| 0 | This plan, merged to `main` | — | **draft** |
+| 0 | This plan, merged to `main` | — | **authored** |
 | 1 | **The harness and the baseline**: `docs/dev/ux-testing.md`; the scenario set; the runner, with its isolation proof; the transcript scorer with its fixtures; a baseline scorecard on `main` | 0 | — |
 | 2 | **The fixes**: the `templates` and `manifest` help topics; examples first in every command's help; a compact field listing from `schema`; on-the-fly data on `inspect`'s next steps and in the supplier's help; a minimal `init`; the agent skill (`01a15ad7`); generated vectors (`01a15ad6`) | 1 | — |
 | 3 | **Measure, fix, and close**: the scorecard on post-Wave-2 `main`, with and without the skill installed; its comparison with the baseline; a fix item for each failing scenario, then a re-run until §4's thresholds hold; the SC1 and SC9 rounds | 2 | — |
@@ -148,8 +148,9 @@ Made in the 2026-10-20 session:
     authoring scenario passes on Opus and Sonnet. Haiku's authoring results
     are recorded, not gated.
   - *A pass means:* the first `metais` command of a consuming scenario is
-    `inspect`; no zip extraction; no unknown-command error; and the
-    scenario's own outcome check holds. For a real document that check is
+    `inspect`; no zip extraction; no unknown-command error; the package
+    left untouched by a consuming scenario (R-UX-8); and the scenario's own
+    outcome check holds. For a real document that check is
     asking rather than inventing; otherwise it is `validate` with 0 errors
     and a rendered output.
 - **R-UX-6, harnesses beyond Claude Code (Q-UX-3).** The runner takes the
@@ -157,15 +158,29 @@ Made in the 2026-10-20 session:
   on. A `.agents/skills` harness (Codex or OpenCode) is run once in Wave 3
   if one can be installed on a host, and its results recorded.
 
-Open, before this plan merges:
-
-- **Q-UX-2, where the runs happen.** Can a dispatch run a nested `claude -p`
-  with the isolation `docs/dev/ux-testing.md` requires: its own credential,
-  no host memory, no user settings, no MCP? Ed asked for the answer before
-  this plan merges, and Work Order `01a15b3b` is probing it.
-  - If it can, the waves run the harness from dispatches.
-  - If it cannot, each scorecard becomes an off-tera act on Ed's host (§6),
-    and the dispatches build only the runner and the scorer.
+- **R-UX-7, where the runs happen (Q-UX-2).** The scorecards run from
+  dispatches. Work Order `01a15b3b` proved on 2026-10-20 that a dispatch can
+  run a nested, isolated `claude -p`.
+  - A dispatch carries no Claude credential. Its `ANTHROPIC_BASE_URL` points
+    at a loopback proxy that authenticates upstream. A nested `claude`
+    refuses on the client side unless a credential variable is set, so the
+    runner sets `ANTHROPIC_AUTH_TOKEN` to a non-secret placeholder.
+  - Isolation is stronger than on a person's host. `$HOME` is the Work
+    Order's own workspace, the sandbox denies paths outside its volumes, and
+    the run showed no memory paths, no MCP servers and no writes to the
+    repository.
+  - Nested runs spend the dispatch's own seat quota. The probe's seat ran
+    out of quota once, so the runner paces its runs and resumes a partial
+    scorecard rather than restarting it.
+  - If dispatches ever lose the proxy, the scorecards fall back to an
+    off-tera act on Ed's host (§6).
+- **R-UX-8, a consuming run leaves the package alone.** Asked to "fill" a
+  package, the probe's nested Haiku session unpacked it, rewrote its
+  shipped examples with new data, and repacked it over the original. It
+  validated and tested green. For a consuming scenario that is a fail:
+  - extracting the package with `unzip`, `unpack` or `extract` fails;
+  - changing or repacking the package file fails;
+  - the data must be supplied to the package, as a data directory or flags.
 
 ## 5. Wave 1 — the harness and the baseline
 
@@ -210,8 +225,17 @@ a number for today's binary.
 - **The runner** lives outside the binary: never reachable from
   `cmd/metais`, held so by `internal/guarantees`, as ADR-009 A2 holds the
   release builder. It runs scenario × model, writes each run's record, and
-  prints the scorecard. Its first item proves the isolation and Q-UX-2's
-  question before anything else is built on it.
+  prints the scorecard. Under R-UX-7 it:
+  - sets the placeholder `ANTHROPIC_AUTH_TOKEN`;
+  - gives each nested session its own directory and `$TMPDIR`. The sandbox
+    refuses `/tmp`, and a model that hard-codes `/tmp` fails silently, as
+    the probe's session did;
+  - paces its runs and resumes a partial scorecard after a quota pause;
+  - builds `metais` with `-buildvcs=false`, because `git` in the sandbox
+    fails on an `iconv` locale error.
+
+  The probe's transcripts (Work Order `01a15b3b`'s artifacts) are among the
+  scorer's fixtures.
 - **The scorer** reads a stream-json transcript and the run's directory, and
   computes the outcome checks and the pass rules of Q-UX-1. It is unit-tested
   against recorded transcripts committed as fixtures. Those include
@@ -225,9 +249,8 @@ a number for today's binary.
 
 | Act | When | Who | Before | Notes |
 |---|---|---|---|---|
-| Rule Q-UX-2, on probe `01a15b3b`'s verdict | now | Ed | this plan's merge | §4 |
 | Accept ADR-008 A2 and ADR-009 A5 (the skill), drafted in metais#179 | now | Ed | `01a15ad7`'s build | That Work Order is parked on the question, together with whether to install a `.agents/skills` harness on the dispatch host |
-| Run a scorecard on Ed's host | each of Wave 1's baseline and Wave 3's runs, only if Q-UX-2 finds a dispatch cannot | Ed | that wave's verification | The runner and the scenarios are the Wave 1 item's. Ed runs one command and publishes the scorecard. |
+| Run a scorecard on Ed's host | only if dispatches lose the loopback proxy that R-UX-7 relies on | Ed | that wave's verification | The runner and the scenarios are the Wave 1 item's. Ed runs one command and publishes the scorecard. |
 | Add Wave 2's orchestrator to T-A3's `depends_on` | when Wave 2 is filed | the plan orchestrator, or Ed | the v1.0 release | R-UX-1 |
 
 ## 7. Wave 2 — the fixes
