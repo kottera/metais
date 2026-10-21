@@ -76,8 +76,9 @@ the metais.org site, built from `site/`, goes live at the release.
 
 [dev/ux-testing.md](dev/ux-testing.md) is how fresh agent sessions are run
 over the UX scenario set of PLAN-2026-10-metais-ux: the scenarios, the
-isolation checks the runner makes, what each run records, and how a set is
-run, paced and resumed.
+isolation checks the runner makes, what each run records, how a set is
+run, paced and resumed, how each run is scored, how a set is scrubbed, and
+the scorecard's format.
 
 [dev/rounds/](dev/rounds/) holds the runbooks of the live rounds of plan §6:
 each note says what its round establishes and what it reports back.

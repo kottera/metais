@@ -6,8 +6,9 @@ watching fresh agent sessions use the binary
 session starts in an empty directory with a packed package, the `metais`
 under test on `PATH`, and nothing else: no memory, no user settings, no MCP
 server. The runner, `internal/tools/ux`, starts the sessions, isolates
-them, and records each run. The scorer (W1-2) judges the runs from those
-records.
+them, and records each run. The scorer, `internal/tools/ux/score`,
+judges each run from its record, its transcript and the directory the
+session left, and the runner prints the scorecard.
 
 A UX run is evidence, not a gate. It costs model tokens and takes minutes,
 so no `go test` starts a session or touches the network. `gate.sh` runs the
@@ -48,7 +49,8 @@ Each scenario's directory holds:
     "slug": "render-real",
     "kind": "consuming",
     "asks_for_output": true,
-    "fixtures": [{"example": "dora-incident-report", "as": "report.metais"}]
+    "fixtures": [{"example": "dora-incident-report", "as": "report.metais"}],
+    "check": "asks-not-invents"
   }
   ```
 
@@ -65,8 +67,11 @@ Each scenario's directory holds:
     (`as`). The runner packs every fixture with the `metais` under test,
     so a fixture is always what that binary packs. `[]` means the session
     starts from an empty directory.
-  - `check` is the place reserved for the scenario's outcome check, which
-    the scorer defines.
+  - `check` names the scenario's outcome check, one of the scorer's
+    ([Scoring](#scoring-a-run)).
+  - `rewordings` records each change of the prompt under R-UX-9
+    ([Rewording a prompt](#rewording-a-prompt)). It is absent until the
+    prompt first changes.
 - the sources of any `source` fixture.
 
 `internal/tools/ux/scenario` reads the set. It refuses a declaration with
@@ -82,7 +87,9 @@ match its id, an empty prompt, and a fixture that is not exactly one of
 2. Declare `asks_for_output` from the prompt's own words.
 3. Put a `source` fixture's package beside `scenario.json`. It must pass
    `metais check` and `metais test`, because the runner packs it.
-4. Add the scenario's row to `TestTheSet`, to this page's table, and to
+4. Name its outcome check in `check`. A check the scorer does not have
+   yet is added as [Adding a check](#adding-a-check) says.
+5. Add the scenario's row to `TestTheSet`, to this page's table, and to
    the plan's table in the same change.
 
 ### Rewording a prompt
@@ -93,6 +100,24 @@ user wants, never to steer how the session gets there. Each change is
 recorded in the next scorecard, together with the transcript that showed
 the ambiguity. A session that misreads a clear intent is a failure to fix
 in the tool, not in the prompt.
+
+A change is recorded in the scenario's `scenario.json`, beside the new
+`prompt.txt`, in the same change:
+
+```json
+"rewordings": [{
+  "date": "2026-10-28",
+  "was": "fill this file: report.metais",
+  "ambiguity": "whether to fill the package's data or the package itself",
+  "transcript": "scorecard-2026-10-27-baseline, C0 haiku"
+}]
+```
+
+The scenario reader refuses a rewording without a date, the prompt it was,
+the ambiguity or the transcript, and one whose `was` is the prompt as it
+stands. The scorecard's R-UX-9 section lists every rewording of every
+scenario it scores. It also names any run whose recorded prompt is not the
+set's prompt, so a scorecard resumed across a rewording shows it.
 
 ## Isolation: the checks the runner makes
 
@@ -198,7 +223,9 @@ scratch volume is one. The runner then:
 4. writes `<out>/set.json`, and runs each scenario × model as one
    session, waiting `-pace` (30s by default) between two runs;
 5. prints a line per run as it ends, then a summary: every run, its
-   reported model, status, validity, turns, time and cost.
+   reported model, status, validity, turns, time and cost;
+6. scores every recorded run, writes each outcome into its record, and
+   prints the scorecard ([The scorecard](#the-scorecard)).
 
 | Flag | Default | What it does |
 |---|---|---|
@@ -211,6 +238,22 @@ scratch volume is one. The runner then:
 | `-quota-wait` | `0` | on a quota pause, how long to wait before running the run again; `0` stops the set |
 | `-timeout` | `30m` | how long one session may run before it is stopped |
 | `-allow-dirty` | off | run from a checkout with uncommitted changes |
+| `-host` | (none) | the host, as the scorecard publishes it, such as `tera dispatch, linux/amd64` |
+| `-transcripts` | the set's `runs/` | where the transcripts are kept, as the scorecard publishes it, such as a Work Order's artifact handle |
+| `-scorecard` | off | run nothing: score the runs `-out` holds and print the scorecard |
+| `-scrub` | (none) | run nothing: write a scrubbed copy of `-out`'s set to this new directory ([Scrubbing](#scrubbing-a-set)) |
+
+The runner cannot read the host's name or platform (ADR-009 A8 item 2),
+so `-host` says it. A scorecard printed without it says the host is not
+stated.
+
+To print the scorecard of a set already run, or once more after a scorer
+change, without running anything:
+
+```bash
+go run ./internal/tools/ux -out "$SCRATCH/ux-baseline" -scorecard \
+  -host "tera dispatch, linux/amd64" -transcripts "Work Order <id>'s artifacts"
+```
 
 ### Pacing and resuming
 
@@ -282,8 +325,186 @@ A set's directory:
 | `fixtures` | the files the session's directory started with, with sizes and digests |
 | `files` | every file it holds afterwards, each marked `added`, `modified`, `unchanged` or `deleted` |
 | `transcript`, `stderr`, `work` | the paths of the transcript, standard error and directory, relative to the run's |
-| `outcome` | `null`; the place the scorer writes its result |
+| `outcome` | the scorer's outcome, written when the set is scored; `null` until then |
 
 A record holds host paths and the placeholder token. It is not committed
-as it stands. A transcript committed as a scorer's fixture is scrubbed
-first (the Wave 1 brief's ruling).
+or kept as it stands: it is scrubbed first ([Scrubbing](#scrubbing-a-set)),
+the Wave 1 brief's ruling.
+
+## Scoring a run
+
+The scorer, `internal/tools/ux/score`, is handed a run's directory and its
+fixtures' sources as `fs.FS`s. The runner opens them, and the scorer
+uses none of the runner's allowance (ADR-009 A8 item 4). It reads the
+transcript through `internal/tools/ux/streamjson`, the reading the
+runner's isolation checks use. It starts nothing and makes no model or
+network call. Every rule is code over the record, the transcript and the
+directory, so the same run always scores the same.
+
+A run recorded invalid, or one whose status is not `complete`, is not
+scored. Its outcome says why, and the scorecard shows it as invalid.
+
+### The pass rules
+
+R-UX-5's pass rules, in the order an outcome reports them:
+
+| Rule | Applies to | Fails when |
+|---|---|---|
+| `first-metais-is-inspect` | consuming scenarios | the first `metais` command the session runs is not `metais inspect`. Any `metais` command counts, `metais --version` and `metais help` among them. `which metais` and `command -v metais` look it up and run nothing, so they do not count. A session that runs no `metais` fails. |
+| `no-zip-extraction` | every scenario | the session reads a zip archive itself: a zip tool (`unzip`, `zipinfo`, `7z`, `bsdtar`, `ditto`, `jar`, …), `tar` given a `.metais`, a command line that uses a zip library (`zipfile`, `archive/zip`, `JSZip`, …), or a program the session wrote with one and then ran. `metais unpack` and `metais extract` are metais's own reading, not a zip tool's (the plan orchestrator's ruling for this wave, from the amended R-UX-8). |
+| `no-unknown-command` | every scenario | `metais` refuses a command the session ran with `usage.unknown_command`. The binary's own finding decides, so the rule follows the binary as it gains commands. |
+| `package-untouched` | consuming scenarios whose prompt asks for output: C1, C2, C3 and C5 | R-UX-8: the session extracts the package (`metais unpack`, `metais extract`, or any reading the previous rule refuses), changes or deletes the package file, writes it, or runs `metais pack`. |
+| `outcome` | every scenario | the scenario's own outcome check fails. |
+
+A run passes when every rule that applies passes. Each result carries its
+evidence: the turn and the transcript line of the tool call, the command,
+and the file of the run's directory or the session's own words it rests
+on.
+
+The scorer reads each Bash call as a POSIX shell would split it: quoting,
+`&&`, `||`, `;`, pipes, subshells, `$(…)`, here-documents, comments, and
+what `bash -c` runs. A variable the call assigns (`M=/…/metais; $M
+render …`) is expanded. It is not a shell: a value made by a command
+substitution is not known, and a glob is not expanded.
+
+### Each scenario's check
+
+| Scenario | Check | Passes when |
+|---|---|---|
+| C0 fill-ambiguous | `either-reading` | either reading: a render that wrote a document from data supplied to the package, or an edited package that the last `metais test` or `metais pack`, after the last edit of its source, accepts. The session's words say which reading it took, naming it, and mark its data as made up. A session that does either silently fails, and so does one that does neither. |
+| C1 render-real | `asks-not-invents` | the session renders nothing and its last words ask for the facts. A data file it leaves behind is a scaffold. |
+| C2 render-new-fictional | `new-fictional-render` | a render wrote a document from data supplied to the package that is not a shipped example's: from `--sample`, or from data that is not equal, input by input, to an example's and does not render one of an example's expected outputs byte for byte. |
+| C3 preview | `generated-preview` | a render wrote an output from data metais generated: `render --sample`, or a data directory `metais sample` wrote. |
+| C4 what-it-needs | `names-every-input` | the session ran `metais inspect` and `metais schema`, and its last words name every input and every field of each input schema's top-level `required` list, by its name or its title. |
+| C5 script | `script-renders` | the session wrote a script whose text runs `metais render`, which validates its inputs as `metais validate` does and renders nothing when any is in error, and a run of it after it was written ends without error. |
+| A1 new-package | `new-package` | a `metais pack` passed, which checks and tests the package first, and a `render --sample` wrote an output. |
+| A2 edit-package | `schema-and-template` | an input schema and a template both gain a due date, against the package's source, and the last `metais test` or `metais pack`, after the last edit of the source, passes. |
+| A3 data-to-js | `data-to-js` | a `metais.yaml` the session left declares an output with `escape: html`, a template writes its data with `json_script`, a render wrote the page, and a script element of the rendered page holds a JSON array that parses. |
+
+Where the table asks for a judgement, a check is narrower than the
+judgement, never silently: each check states what it cannot see
+(`score.CheckLimits`), and the scorecard prints it. C0 and C1 are the two
+that read the session's words. C0's statement of its reading is a phrase
+such as "I took this to mean…", "I interpreted…" or "assuming you
+meant…" that names the reading, and its marking of data as made up is a
+word such as fictional, sample or placeholder. C1's asking is a question
+mark or a request such as "please provide" or "let me know" in its last
+words.
+
+### Adding a check
+
+1. Write the check in `internal/tools/ux/score/checks.go`: a function from
+   the run to its `Result`, with its detail and evidence, and its entry in
+   `checks` with what it cannot see.
+2. Name it in the scenario's `check`.
+3. Record a run that passes it and one that fails it, and commit both as
+   fixtures ([Fixtures](#fixtures)). `TestFixturesCoverEveryRule` fails
+   until a check has both. `TestEveryScenarioNamesACheck` fails until
+   every check is a scenario's and states its limits.
+
+A check changes only because it mis-scores a transcript, shown by a
+fixture (the Wave 1 brief's ruling).
+
+### Fixtures
+
+The scorer is proved against recorded runs, never against a session it
+starts. `internal/tools/ux/score/testdata/runs/<name>/` holds one run each:
+its record, transcript, standard error and the text files of its `work/`
+and `tmp/`, made by `-scrub`, and its `fixture.json`:
+
+```json
+{
+  "shows": "the session unzips the package to find its way",
+  "recorded": {"set": "ux-haiku", "run": "C4-what-it-needs/haiku", "date": "2026-10-21",
+               "commit": "<the set's commit>", "model": "claude-haiku-5-5"},
+  "expect": {"first-metais-is-inspect": "fail", "no-zip-extraction": "fail",
+             "no-unknown-command": "pass", "package-untouched": "n/a", "outcome": "fail"},
+  "reasons": {"no-zip-extraction": "unzip reads the archive", "…": "…"}
+}
+```
+
+- `expect` is every rule's result, `n/a` for a rule the scenario is not
+  held to. `reasons` holds, for each rule expected to fail, words its
+  detail must hold, so a fixture fails for the reason it is named for.
+- `recorded` names the real run. A fixture whose run was edited to show a
+  behaviour no model would show on demand is named `edited-…`, and its
+  `edited` says what was changed and how.
+
+The tests over them:
+
+- `TestFixtures`: each fixture scores as `expect` says, each failure for
+  its reason.
+- `TestFixturesSeenRed`: with each rule a fixture expects to fail
+  disabled, `TestFixtures` would go red on it.
+- `TestFixturesCoverEveryRule`: every rule and every check has a fixture
+  that passes it and one that fails it.
+- `TestFixturesAreRecorded`: every fixture names its run, and its record
+  agrees.
+- `TestFixturesAreScrubbed`: no committed file holds a credential or a
+  host path.
+
+To add one, record the run with the runner, scrub the set, copy the run's
+directory beneath `testdata/runs/`, and write its `fixture.json` from what
+the run shows.
+
+## Scrubbing a set
+
+A run's files hold host paths, and its record holds the placeholder token.
+Before a transcript is committed or kept as evidence, it is scrubbed:
+
+```bash
+go run ./internal/tools/ux -out "$SCRATCH/ux-baseline" -scrub "$SCRATCH/ux-baseline-scrubbed"
+```
+
+The copy holds `set.json`, and for each run its record, transcript,
+standard error and the UTF-8 files of 256 KiB or less of its `work/` and
+`tmp/`. It leaves out the session's `HOME`, Claude Code's own files under
+`tmp/`, and every binary file such as a packed package. The record still
+lists each file with its size and digest. Every file is put through
+`internal/tools/ux/scrub`:
+
+- the run's directory becomes `/ux/run`, the set's `/ux/set`, also as
+  Claude Code names a project after them (`-ux-run-work`);
+- any other path beneath a directory of users, volumes or temporary files
+  (`/var/lib`, `/home`, `/Users`, `/tmp`, `/private`, …) becomes
+  `/ux/host`;
+- every credential is replaced by `[scrubbed]`, the name of its variable
+  kept: an `ANTHROPIC_AUTH_TOKEN` or API key, an `sk-ant-` key, a GitHub
+  or AWS token, a bearer token, and the runner's placeholder token too, so
+  a later reader never has to decide.
+
+`scrub.Check` names anything a scrub would still remove, and
+`TestFixturesAreScrubbed` holds every committed fixture to it. A user name
+that `ls -l` prints is not a path and is kept. On a person's own host,
+read the scrubbed copy before publishing it.
+
+## The scorecard
+
+The runner prints the scorecard as Markdown, the form it is published in
+as `docs/ux/scorecard-<date>-<name>.md` (plan §2):
+
+1. **The header**: the commit, and whether the checkout was dirty; the
+   `metais` version and digest; the harness and its version; each model
+   as requested and the model IDs its sessions reported; the host
+   (`-host`); where the transcripts are (`-transcripts`); whether the
+   skill was installed; when the set started; and the scorer's outcome
+   format.
+2. **Consuming scenarios** and **Authoring scenarios**, each a table of
+   scenario × model. A cell is `pass`, or `fail:` and the rules that
+   failed, or `invalid` for a run not scored, or `not run`. Haiku's
+   authoring cells are marked `(recorded)`: R-UX-5 records them and does
+   not gate on them.
+3. **Thresholds**: how many gated runs pass, how many runs are invalid or
+   not yet run, and whether R-UX-5's thresholds hold.
+4. **Why each run failed**: for each failing run, each failing rule with
+   its detail and its first piece of evidence, scrubbed; for each invalid
+   run, the isolation check that failed.
+5. **What the outcome checks cannot see**: each scenario's check and its
+   stated limits.
+6. **Prompts reworded under R-UX-9**: each rewording, with the ambiguity
+   and the transcript that showed it, and any run whose prompt is not the
+   set's; or "None".
+
+The scorer writes each run's outcome into its record's `outcome`, in
+format `metais-ux-outcome/1`: whether it was scored and why not, whether
+it passed, and each rule's result, detail and evidence.
