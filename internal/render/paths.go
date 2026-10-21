@@ -14,7 +14,7 @@ import (
 // checkPaths applies the portable-path predicate to the paths of one
 // tree (ADR-005 D12): each path alone, and every path of the tree
 // together.
-func (p *planner) checkPaths(tree []*File) {
+func (p *Planner) checkPaths(tree []*File) {
 	at := func(pf *File) *finding.Location { return ptrTo(p.at(pf.ptr)) }
 	p.fs = append(p.fs, hostfs.CheckPaths(hostfs.WithFaults(p.faults), func() []finding.Finding {
 		return checkPaths(tree, p.lim, at)
