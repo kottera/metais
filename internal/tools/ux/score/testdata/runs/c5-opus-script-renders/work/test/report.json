@@ -1,0 +1,37 @@
+{"stage":"initial notification"
+,"entity":{
+  "submitting_entity_name": "Nordwind Bank AG",
+  "submitting_entity_code": "529900NORDWIND000017",
+  "affected_entity_types": [
+    "credit institution"
+  ],
+  "primary_contact_name": "Lena Hartmann",
+  "primary_contact_email": "lena.hartmann@nordwind-bank.example",
+  "primary_contact_telephone": "+49 69 5550 1201",
+  "second_contact_name": "Tomás Ferreira",
+  "second_contact_email": "tomas.ferreira@nordwind-bank.example",
+  "second_contact_telephone": "+49 69 5550 1202",
+  "parent_undertaking_name": "Nordwind Holding SE",
+  "parent_undertaking_lei": "529900NORDWINDHLD045",
+  "reporting_currency": "EUR"
+}
+,"incident":{
+  "reference_code": "NWB-INC-2026-0042",
+  "detected_at": "2026-03-02T06:40:00Z",
+  "classified_at": "2026-03-02T08:10:00Z",
+  "description": "From 06:15 UTC, card payments by retail clients in Germany and Austria were declined after a scheduled configuration change to the card payment gateway. The change has been rolled back and payments are recovering.",
+  "classification_criteria": [
+    "clients, financial counterparts and transactions affected",
+    "duration and service downtime",
+    "geographical spread",
+    "critical services affected"
+  ],
+  "geographical_spread_countries": [
+    "AT",
+    "DE"
+  ],
+  "discovery": "monitoring systems",
+  "business_continuity_plan_activated": true,
+  "other_information": "Branch staff in Austria are telling clients to pay by bank transfer until the gateway has recovered."
+}
+}

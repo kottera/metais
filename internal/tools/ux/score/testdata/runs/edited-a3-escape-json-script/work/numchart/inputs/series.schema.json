@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Series",
+  "description": "A list of numbers to chart, with a title and optional unit and position labels.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "values"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120,
+      "title": "Title",
+      "description": "What the numbers measure; the page heading.",
+      "examples": ["Weekly signups"]
+    },
+    "unit": {
+      "type": "string",
+      "maxLength": 30,
+      "title": "Unit",
+      "description": "The unit of each value, shown in tooltips and the table. Leaving it out shows none."
+    },
+    "values": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "title": "Values",
+      "description": "The numbers to chart, in drawing order.",
+      "items": { "type": "number" }
+    },
+    "labels": {
+      "type": "array",
+      "maxItems": 500,
+      "title": "Labels",
+      "description": "One name per value. Leaving it out numbers the positions from 1; if given it should have as many entries as values.",
+      "items": { "type": "string", "minLength": 1, "maxLength": 40 }
+    }
+  }
+}

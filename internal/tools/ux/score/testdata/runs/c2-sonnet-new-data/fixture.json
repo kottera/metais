@@ -1,0 +1,18 @@
+{
+  "shows": "the session reads a shipped example for its shape, writes new fictional data of its own, and renders it, leaving the package alone",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "C2-render-new-fictional/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "expect": {
+    "inspect-first": "pass",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "pass",
+    "outcome": "pass"
+  },
+  "reasons": {}
+}

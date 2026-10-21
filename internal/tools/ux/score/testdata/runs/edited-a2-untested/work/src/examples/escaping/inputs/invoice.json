@@ -1,0 +1,12 @@
+{
+  "number": "INV-2026-0043",
+  "issued": "2026-10-21",
+  "seller": {"name": "Smith & Jones <Design>", "address": "1 Market Street, Springfield"},
+  "buyer": {"name": "O'Brien \"Studio\" Ltd", "address": "2 Harbour Road, Shelbyville"},
+  "currency": "USD",
+  "lines": [
+    {"description": "Logo <draft> & revisions", "quantity": 3, "unit_price": 250},
+    {"description": "Print proofs", "quantity": 10, "unit_price": 2.5}
+  ],
+  "notes": "Pay by bank transfer & quote the invoice number."
+}

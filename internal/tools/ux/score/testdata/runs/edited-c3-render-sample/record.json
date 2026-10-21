@@ -1,0 +1,156 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "C3",
+    "name": "C3-preview",
+    "kind": "consuming",
+    "asks_for_output": true,
+    "prompt": "show me what this package produces: report.metais"
+  },
+  "model_requested": "haiku",
+  "model_reported": "claude-haiku-5-5",
+  "models_used": [
+    "claude-haiku-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": true,
+  "commit": "3fe173ced5306ecbc103b69f5d28b54dfdb89971",
+  "metais_sha256": "7303b0de8fe9b20b8e4ddca16da9a99d5540de24b6b113762f326c73e2e29a77",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-21T14:26:27.984417928Z",
+  "ended": "2026-10-21T14:26:38.08928584Z",
+  "wall_ms": 10104,
+  "turns": 6,
+  "cost_usd": 0.00287163,
+  "duration_ms": 9828,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 2,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "show me what this package produces: report.metais",
+      "--model",
+      "haiku",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:46565",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": [
+    {
+      "path": ".claude/skills/metais/SKILL.md",
+      "size": 4926,
+      "sha256": "7833b68a863799b29139f6ef156c409934b7d427291d220b34b2d31bbb9833ae"
+    },
+    {
+      "path": "report.metais",
+      "size": 41429,
+      "sha256": "fc5ca09c318af8687e3f26749ddde2a4de0c06cd01581a124367152574b3067b"
+    }
+  ],
+  "files": [
+    {
+      "path": ".claude/skills/metais/SKILL.md",
+      "size": 4926,
+      "sha256": "7833b68a863799b29139f6ef156c409934b7d427291d220b34b2d31bbb9833ae",
+      "change": "unchanged"
+    },
+    {
+      "path": "preview/incident-report.md",
+      "size": 7771,
+      "sha256": "d541bf06181f2e6ab57c37c38e9fb03b4d1dee7edc5acd3f6b885e4a631ca8db",
+      "change": "added"
+    },
+    {
+      "path": "report.metais",
+      "size": 41429,
+      "sha256": "fc5ca09c318af8687e3f26749ddde2a4de0c06cd01581a124367152574b3067b",
+      "change": "unchanged"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": null
+}

@@ -43,6 +43,7 @@ const (
 	checkReported        = "session-as-started"
 	checkSkill           = "skill-as-declared"
 	checkNoMemory        = "no-memory-read"
+	checkInsideRun       = "writes-inside-run"
 )
 
 // fileEntry is one regular file of a directory: its path, slash-separated
@@ -240,20 +241,20 @@ func checkNoSessionPersistence(inv invocation) check {
 // the directory the runner made, under the harness version recorded.
 func checkSessionReported(s session, version string, t transcript) check {
 	switch {
-	case !t.init.found:
+	case !t.Init.Found:
 		return fail(checkReported, "the transcript has no init event")
-	case t.init.cwd != s.work:
-		return fail(checkReported, "the session reports it ran in %s, not %s", t.init.cwd, s.work)
-	case t.init.version == "" || !strings.HasPrefix(version, t.init.version):
-		return fail(checkReported, "the session reports version %q, not the recorded %q", t.init.version, version)
+	case t.Init.Cwd != s.work:
+		return fail(checkReported, "the session reports it ran in %s, not %s", t.Init.Cwd, s.work)
+	case t.Init.Version == "" || !strings.HasPrefix(version, t.Init.Version):
+		return fail(checkReported, "the session reports version %q, not the recorded %q", t.Init.Version, version)
 	}
 	return pass(checkReported)
 }
 
 // checkNoMCPServers: the transcript's opening lists no MCP server.
 func checkNoMCPServers(t transcript) check {
-	if !t.init.found || t.init.mcpServers != 0 {
-		return fail(checkStrictMCPName, "the session reports %d MCP servers", t.init.mcpServers)
+	if !t.Init.Found || t.Init.MCPServers != 0 {
+		return fail(checkStrictMCPName, "the session reports %d MCP servers", t.Init.MCPServers)
 	}
 	return pass(checkStrictMCPName)
 }
@@ -261,7 +262,7 @@ func checkNoMCPServers(t transcript) check {
 // checkSkillAsDeclared: the session loaded metais's skill exactly when the
 // run installed it.
 func checkSkillAsDeclared(s session, t transcript) check {
-	if loaded := slices.Contains(t.init.skills, "metais"); loaded != s.skill {
+	if loaded := slices.Contains(t.Init.Skills, "metais"); loaded != s.skill {
 		return fail(checkSkill, "the metais skill loaded is %v, installed is %v", loaded, s.skill)
 	}
 	return pass(checkSkill)
@@ -288,14 +289,14 @@ var memoryFile = regexp.MustCompile(`(?:^|[\s/"'=~])(?:CLAUDE(?:\.local)?|MEMORY
 
 // checkNoMemoryRead: no tool call of the session names a memory file.
 func checkNoMemoryRead(t transcript) check {
-	for i, u := range t.toolUses {
+	for i, u := range t.ToolUses {
 		var input any
-		if err := json.Unmarshal(u.input, &input); err != nil {
+		if err := json.Unmarshal(u.Input, &input); err != nil {
 			continue
 		}
 		for _, s := range stringsIn(input) {
 			if m := memoryFile.FindString(s); m != "" {
-				return fail(checkNoMemory, "tool call %d (%s) names a memory file: %q", i+1, u.name, strings.TrimSpace(m))
+				return fail(checkNoMemory, "tool call %d (%s) names a memory file: %q", i+1, u.Name, strings.TrimSpace(m))
 			}
 		}
 	}
@@ -353,6 +354,50 @@ func changes(before, after []fileEntry) []fileEntry {
 	}
 	slices.SortFunc(out, func(a, b fileEntry) int { return strings.Compare(a.Path, b.Path) })
 	return out
+}
+
+// outsideRun lists the files of the set's directory out that are not in
+// the run's own directory, runDir beneath it.
+func outsideRun(out, runDir string) ([]fileEntry, error) {
+	files, err := listFiles(out)
+	rel := strings.TrimPrefix(filepath.ToSlash(strings.TrimPrefix(runDir, out)), "/") + "/"
+	return slices.DeleteFunc(files, func(f fileEntry) bool { return strings.HasPrefix(f.Path, rel) }), err
+}
+
+// writeTools are the tools that write the file their input names.
+var writeTools = []string{"Write", "Edit", "MultiEdit", "NotebookEdit"}
+
+// checkWritesInsideRun: the session wrote nothing outside its own run
+// directory (Ed's ruling, 2026-10-21). The set's directory outside the
+// run's is listed before the session and after it, and must be as it
+// was; and no Write or Edit tool call names a file outside the run's
+// directory. A command line that writes outside the set's directory is
+// not seen: the dispatch's sandbox refuses most such paths.
+func checkWritesInsideRun(runDir, work string, before, after []fileEntry, t transcript) check {
+	for _, f := range changes(before, after) {
+		if f.Change != "unchanged" {
+			return fail(checkInsideRun, "the set's %s is %s outside the run's directory", f.Path, f.Change)
+		}
+	}
+	for i, u := range t.ToolUses {
+		if !slices.Contains(writeTools, u.Name) {
+			continue
+		}
+		p := u.Field("file_path")
+		if p == "" {
+			p = u.Field("notebook_path")
+		}
+		if p == "" {
+			continue
+		}
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(work, p)
+		}
+		if p = filepath.Clean(p); p != runDir && !strings.HasPrefix(p, runDir+string(filepath.Separator)) {
+			return fail(checkInsideRun, "tool call %d (%s) writes %s, outside the run's directory", i+1, u.Name, p)
+		}
+	}
+	return pass(checkInsideRun)
 }
 
 // valid reports whether every check passed.

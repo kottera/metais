@@ -1,0 +1,22 @@
+metais: "1.0"
+name: "numchart"
+version: "0.1.0"
+title: "Numchart"
+description: "A single-page HTML chart of a list of numbers."
+guide: |-
+  This package produces chart.html, a self-contained page that charts a list
+  of numbers as a bar chart with hover values and a table view. The numbers are
+  written into a JavaScript array in the page.
+  Read [what the series means](inputs/series.md) before you supply it.
+inputs:
+  - name: series
+    title: "Series"
+    schema: inputs/series.schema.json
+    meaning: inputs/series.md
+    forms:
+      - json
+      - yaml
+outputs:
+  - id: chart
+    template: chart.html.liquid
+    escape: html

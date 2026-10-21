@@ -1,0 +1,21 @@
+{
+  "shows": "asked for new fictional data, the session re-renders the package's shipped final example: 2026-10-20's copied example",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "C2-render-new-fictional/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "edited": "Turns after the session read the shipped final example's inputs are replaced by copying them out with metais read and rendering them. Each command's output is the real output of running it, with the set's own metais, on a copy of the session's starting directory; record.json's files are listed from the directory those commands left. The real C1 run c1-sonnet-shipped-example shows the same copy under C1's prompt.",
+  "expect": {
+    "inspect-first": "pass",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "pass",
+    "outcome": "fail"
+  },
+  "reasons": {
+    "outcome": "the shipped example final's"
+  }
+}

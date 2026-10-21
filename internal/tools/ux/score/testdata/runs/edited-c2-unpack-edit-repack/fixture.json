@@ -1,0 +1,22 @@
+{
+  "shows": "asked to render with new fictional data, the session unpacks the package, rewrites its example, repacks it over report.metais, and renders: R-UX-8's failure",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "C2-render-new-fictional/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "edited": "Turns after the session's metais inspect are replaced by the probe's unpack, rewrite, test --update and repack, then a metais render of the rewritten example's data. Each command's output is the real output of running it, with the set's own metais, on a copy of the session's starting directory; record.json's files are listed from the directory those commands left. No model unpacked the package under an output-asking prompt in the recorded runs.",
+  "expect": {
+    "inspect-first": "pass",
+    "no-zip-extraction": "fail",
+    "no-unknown-command": "pass",
+    "package-untouched": "fail",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "no-zip-extraction": "metais unpack extracts the package",
+    "package-untouched": "metais unpack extracts the package"
+  }
+}

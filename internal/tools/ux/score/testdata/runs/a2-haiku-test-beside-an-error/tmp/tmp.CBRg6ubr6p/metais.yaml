@@ -1,0 +1,39 @@
+metais: "1.0"
+name: "invoice"
+version: "1.0.0"
+title: "Invoice"
+description: "Renders one HTML invoice, with a line for each item and their total, from a JSON object a program supplies."
+license: "Apache-2.0"
+guide: |-
+  This package renders invoice.html, an HTML page that prints one invoice:
+  its number and the date it was issued, the seller and the buyer, a table
+  of the items invoiced with each line's amount, the total, and optional
+  notes. The page carries class names and no style of its own.
+
+  It is written for a program, not a person. A billing job reads the
+  invoice from wherever it is kept, writes it as invoice.json in a data
+  directory, and runs two commands:
+
+      metais validate invoice --data data
+      metais render invoice --data data --out out
+
+  validate reports every value that does not fit the
+  [invoice schema](inputs/invoice.schema.json), and render writes
+  out/invoice.html. Every value is HTML-escaped, so a name, an address, a
+  description or a note may hold any text.
+
+  Each line's amount is its quantity times its unit price, and the total is
+  the sum of the amounts; the program supplies neither. Every amount is in
+  the invoice's one currency, given as its three-letter ISO 4217 code.
+  Leave notes out when there is nothing to add.
+inputs:
+  - name: invoice
+    title: "Invoice"
+    description: "One invoice, as the billing program that issues it holds it."
+    schema: inputs/invoice.schema.json
+    forms:
+      - json
+outputs:
+  - id: invoice
+    template: invoice.html.liquid
+    escape: html

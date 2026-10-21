@@ -1,0 +1,44 @@
+{%- assign inv = inputs.invoice -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Invoice {{ inv.number }}</title>
+</head>
+<body>
+<article class="invoice">
+  <h1>Invoice {{ inv.number }}</h1>
+  <p class="invoice-issued">Issued <time datetime="{{ inv.issued }}">{{ inv.issued }}</time></p>
+{%- if inv.due %}
+  <p class="invoice-due">Due <time datetime="{{ inv.due }}">{{ inv.due }}</time></p>
+{%- endif %}
+  <section class="invoice-seller">
+    <h2>From</h2>
+    <p>{{ inv.seller.name }}<br>{{ inv.seller.address }}</p>
+  </section>
+  <section class="invoice-buyer">
+    <h2>To</h2>
+    <p>{{ inv.buyer.name }}<br>{{ inv.buyer.address }}</p>
+  </section>
+  <table class="invoice-lines">
+    <thead>
+      <tr><th>Description</th><th>Quantity</th><th>Unit price</th><th>Amount</th></tr>
+    </thead>
+    <tbody>
+{%- assign total = 0 %}
+{%- for line in inv.lines %}
+{%- assign amount = line.quantity | times: line.unit_price %}
+{%- assign total = total | plus: amount %}
+      <tr><td>{{ line.description }}</td><td>{{ line.quantity }}</td><td>{{ line.unit_price }} {{ inv.currency }}</td><td>{{ amount }} {{ inv.currency }}</td></tr>
+{%- endfor %}
+    </tbody>
+    <tfoot>
+      <tr><th colspan="3">Total</th><td>{{ total }} {{ inv.currency }}</td></tr>
+    </tfoot>
+  </table>
+{%- if inv.notes %}
+  <p class="invoice-notes">{{ inv.notes }}</p>
+{%- endif %}
+</article>
+</body>
+</html>

@@ -3,5 +3,6 @@
   "slug": "preview",
   "kind": "consuming",
   "asks_for_output": true,
-  "fixtures": [{"example": "dora-incident-report", "as": "report.metais"}]
+  "fixtures": [{"example": "dora-incident-report", "as": "report.metais"}],
+  "check": "generated-preview"
 }

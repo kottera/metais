@@ -1,0 +1,21 @@
+{
+  "shows": "the session runs metais --version, then metais inspect, which passes inspect-first; later it parses the package with zipfile, and its script's test run renders",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "C5-script/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "expect": {
+    "inspect-first": "pass",
+    "no-zip-extraction": "fail",
+    "no-unknown-command": "pass",
+    "package-untouched": "fail",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "no-zip-extraction": "zipfile",
+    "package-untouched": "the package is extracted"
+  }
+}

@@ -41,8 +41,12 @@ type config struct {
 	quotaWait  time.Duration
 	timeout    time.Duration
 	allowDirty bool
-	environ    []string
-	stdout     io.Writer
+	// host and transcripts are what the scorecard publishes as the host
+	// and as where the transcripts are kept.
+	host        string
+	transcripts string
+	environ     []string
+	stdout      io.Writer
 
 	now   func() time.Time
 	sleep func(time.Duration)
@@ -77,11 +81,8 @@ func (c *config) run() error {
 	if err := c.refuse(); err != nil {
 		return err
 	}
-	set, err := scenario.Load(os.DirFS(filepath.Join(c.root, scenariosDir)))
+	set, err := c.loadSet()
 	if err != nil {
-		return err
-	}
-	if set, err = selectScenarios(set, c.scenarios); err != nil {
 		return err
 	}
 	st, err := c.prepare(set)
@@ -121,7 +122,38 @@ func (c *config) run() error {
 			}
 		}
 	}
-	return c.summary(set)
+	if err := c.summary(set); err != nil {
+		return err
+	}
+	fmt.Fprintln(c.stdout)
+	return c.scoreAndPrint(set)
+}
+
+// loadSet reads the scenario set and selects -scenarios from it.
+func (c *config) loadSet() ([]*scenario.Scenario, error) {
+	set, err := scenario.Load(os.DirFS(filepath.Join(c.root, scenariosDir)))
+	if err != nil {
+		return nil, err
+	}
+	return selectScenarios(set, c.scenarios)
+}
+
+// printScorecard scores the runs already recorded and prints the
+// scorecard, running nothing.
+func (c *config) printScorecard() error {
+	set, err := c.loadSet()
+	if err != nil {
+		return err
+	}
+	return c.scoreAndPrint(set)
+}
+
+func (c *config) scoreAndPrint(set []*scenario.Scenario) error {
+	runs, err := c.scoreSet(set)
+	if err != nil {
+		return err
+	}
+	return c.scorecard(c.stdout, set, runs)
 }
 
 // refuse checks the invocation: root is the top of a metais checkout, the output directory is absolute and outside any repository, and
@@ -342,6 +374,11 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 		return r, writeJSON(filepath.Join(dir, recordFile), r)
 	}
 
+	// The set's directory outside the run's, as the session found it.
+	before, err := outsideRun(c.out, dir)
+	if err != nil {
+		return nil, err
+	}
 	out, err := os.Create(filepath.Join(dir, transcriptFile))
 	if err != nil {
 		return nil, err
@@ -368,10 +405,15 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 		return nil, err
 	}
 	t := c.harness.read(b)
-	r.ModelReported, r.ModelsUsed = t.init.model, t.result.models
-	r.Turns, r.CostUSD, r.DurationMS = t.result.turns, t.result.costUSD, t.result.duration
-	r.IsError, r.Subtype, r.ToolUses = t.result.isError, t.result.subtype, len(t.toolUses)
+	r.ModelReported, r.ModelsUsed = t.Init.Model, t.Result.Models
+	r.Turns, r.CostUSD, r.DurationMS = t.Result.Turns, t.Result.CostUSD, t.Result.DurationMS
+	r.IsError, r.Subtype, r.ToolUses = t.Result.IsError, t.Result.Subtype, len(t.ToolUses)
 	r.Checks = append(r.Checks, c.harness.after(ses, st.rec.Harness.Version, t)...)
+	afterSet, err := outsideRun(c.out, dir)
+	if err != nil {
+		return nil, err
+	}
+	r.Checks = append(r.Checks, checkWritesInsideRun(dir, ses.work, before, afterSet, t))
 	r.Valid = valid(r.Checks)
 
 	switch {
@@ -380,7 +422,7 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 	case quotaPause(t, stderr.Bytes()):
 		r.Status = statusQuota
 		r.Valid = false
-	case !t.result.found:
+	case !t.Result.Found:
 		r.Status = statusHarnessError
 		r.Valid = false
 		if runErr != nil {

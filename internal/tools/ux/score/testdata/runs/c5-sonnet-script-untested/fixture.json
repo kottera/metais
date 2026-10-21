@@ -1,0 +1,20 @@
+{
+  "shows": "the session writes a script that renders through metais, but its only test run is of the script's missing-input error, which renders nothing",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet3",
+    "run": "C5-script/sonnet",
+    "date": "2026-10-21",
+    "commit": "aceb2fab84355878a0ec792a98eaa9be9113041f",
+    "model": "claude-sonnet-5-5"
+  },
+  "expect": {
+    "inspect-first": "pass",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "pass",
+    "outcome": "fail"
+  },
+  "reasons": {
+    "outcome": "no test run of it renders"
+  }
+}

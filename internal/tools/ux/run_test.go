@@ -6,6 +6,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	"github.com/kottera/metais/internal/testenv"
+	"github.com/kottera/metais/internal/tools/ux/score"
 )
 
 // The tests in this file run whole sets with every command and every
@@ -55,6 +57,10 @@ func fakeRoot(t *testing.T) string {
 		t.Fatal(err)
 	}
 	if err := os.CopyFS(filepath.Join(root, scenariosDir), os.DirFS("./scenarios")); err != nil {
+		t.Fatal(err)
+	}
+	// The scorer reads the C scenarios' package from its source.
+	if err := os.CopyFS(filepath.Join(root, "examples", "dora-incident-report"), os.DirFS("../../../examples/dora-incident-report")); err != nil {
 		t.Fatal(err)
 	}
 	return root
@@ -144,6 +150,7 @@ var allChecks = []string{
 	checkOutsideRepo, checkFresh, checkMetaisOnPath,
 	checkCredentialName, checkAutoMemory, checkProjectSettings, checkStrictMCPName, checkNoPersistence,
 	checkReported, checkStrictMCPName, checkSkill, checkNoPersistence, checkNoMemory,
+	checkInsideRun,
 }
 
 func names(checks []check) []string {
@@ -175,8 +182,15 @@ func TestRunSet(t *testing.T) {
 	if r.Format != runFormat || r.Scenario.ID != "C1" || !r.Scenario.AsksForOutput || r.Scenario.Prompt != "render this file: report.metais" ||
 		r.ModelRequested != "haiku" || r.ModelReported != "claude-haiku-5-5" || !slices.Equal(r.ModelsUsed, []string{"claude-haiku-5-5"}) ||
 		r.Harness != (harnessRecord{claudeCodeName, fakeVersion}) || r.Commit != f.commit || r.MetaisSHA256 != digest([]byte("metais "+f.commit)) ||
-		r.Turns != 3 || r.CostUSD != 0.01 || r.DurationMS != 1200 || r.WallMS != 1500 || string(r.Outcome) != "null" {
+		r.Turns != 3 || r.CostUSD != 0.01 || r.DurationMS != 1200 || r.WallMS != 1500 {
 		t.Errorf("record %+v", r)
+	}
+	// The scorer wrote its outcome into the record: the fake session ran
+	// no metais, so it fails.
+	var o score.Outcome
+	if err := json.Unmarshal(r.Outcome, &o); err != nil || o.Format != score.Format || !o.Scored || o.Pass ||
+		!slices.Contains(o.Failing(), score.RuleInspectFirst) {
+		t.Errorf("outcome %s: %v", r.Outcome, err)
 	}
 	files := []string{"out.md added", "report.metais unchanged"}
 	var got []string
@@ -212,6 +226,54 @@ func TestRunSet(t *testing.T) {
 	}
 	if !strings.Contains(f.out.String(), "4 runs recorded: 4 valid, 0 invalid; 0 to run") {
 		t.Errorf("summary:\n%s", f.out)
+	}
+	// Then the scorecard.
+	for _, want := range []string{
+		"# METAIS UX scorecard",
+		"| Commit | `" + f.commit + "` |",
+		"| Harness | claude-code " + fakeVersion + " |",
+		"| Models | haiku: claude-haiku-5-5; sonnet: claude-haiku-5-5 |",
+		"| Host | not stated (give -host) |",
+		"| Skill | not installed (-with-skill off) |",
+		"| C1-render-real | fail: inspect-first, outcome (asks-not-invents) |",
+		"| A2-edit-package | fail: outcome (schema-and-template) (recorded) | fail: outcome (schema-and-template) |",
+		"0 of 3 gated runs pass.",
+		"## Prompts reworded under R-UX-9\n\nNone",
+		"## What the outcome checks cannot see",
+		"## Recorded verdicts",
+		"0 of 2 judged runs carry a verdict. Without one: C1-render-real haiku, C1-render-real sonnet.",
+		"The phrase check and the verdict disagree on no run.",
+		"## Notes\n\nNone.",
+	} {
+		if !strings.Contains(f.out.String(), want) {
+			t.Errorf("the scorecard lacks %q:\n%s", want, f.out)
+		}
+	}
+
+	// A recorded verdict decides C1's check, survives the runner's
+	// rewriting of the record, and its disagreement with the phrase check
+	// is listed.
+	dir1 := filepath.Join(f.c.out, "runs", "C1-render-real", "haiku")
+	rec := f.record(t, "C1-render-real", "haiku")
+	rec.Verdict = json.RawMessage(`{"judge":"Ed","verdict":"pass","rationale":"it asked for the facts"}`)
+	if err := writeJSON(filepath.Join(dir1, recordFile), rec); err != nil {
+		t.Fatal(err)
+	}
+	f.out.Reset()
+	if err := f.c.printScorecard(); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"1 of 2 judged runs carry a verdict. Without one: C1-render-real sonnet.",
+		"- **C1-render-real haiku**: the phrase check says fail (the session renders nothing, and does not ask for the facts); Ed judged it pass: it asked for the facts",
+	} {
+		if !strings.Contains(f.out.String(), want) {
+			t.Errorf("the scorecard lacks %q:\n%s", want, f.out)
+		}
+	}
+	var kept bytes.Buffer
+	if r := f.record(t, "C1-render-real", "haiku"); json.Compact(&kept, r.Verdict) != nil || kept.String() != string(rec.Verdict) {
+		t.Errorf("the verdict was not kept: %s", kept.String())
 	}
 
 	// Run again, the set has nothing left to run.
@@ -317,6 +379,60 @@ func TestRunSetRecordsAnInvalidRun(t *testing.T) {
 	}
 	if !strings.Contains(f.out.String(), "1 runs recorded: 0 valid, 1 invalid") {
 		t.Errorf("summary:\n%s", f.out)
+	}
+}
+
+// TestRunSetRefusesAWriteOutsideTheRun: a session that writes into the
+// set's directory outside its own run's, as a Haiku A2 session did with
+// <set>/invoice-src on 2026-10-21, or names a file outside the run's
+// directory in a Write call, is recorded invalid; one that writes only in
+// its own directory is not.
+func TestRunSetRefusesAWriteOutsideTheRun(t *testing.T) {
+	clean := func(inv invocation) string {
+		return initLine(session{work: inv.dir}, "2.1.299", "[]", "[]") + "\n" + resultLine + "\n"
+	}
+	for _, c := range []struct {
+		name    string
+		session func(inv invocation) string
+		want    string
+	}{
+		{"its own directory", func(inv invocation) string {
+			if err := os.WriteFile(filepath.Join(filepath.Dir(inv.dir), "tmp", "x.json"), []byte("{}"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			return clean(inv)
+		}, ""},
+		{"the set's directory", func(inv invocation) string {
+			set := filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(inv.dir))))
+			if err := os.MkdirAll(filepath.Join(set, "invoice-src"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(set, "invoice-src", "metais.yaml"), []byte("x"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			return clean(inv)
+		}, "the set's invoice-src/metais.yaml is added outside the run's directory"},
+		{"a Write elsewhere", func(inv invocation) string {
+			return initLine(session{work: inv.dir}, "2.1.299", "[]", "[]") + "\n" +
+				toolLine("Write", `{"file_path":"../../../../../elsewhere/a.json","content":"{}"}`) + "\n" + resultLine + "\n"
+		}, "tool call 1 (Write) writes"},
+	} {
+		f := newFakeSet(t, "C4")
+		f.c.models = []string{"haiku"}
+		f.session = c.session
+		if err := f.c.run(); err != nil {
+			t.Fatal(err)
+		}
+		r := f.record(t, "C4-what-it-needs", "haiku")
+		i := slices.IndexFunc(r.Checks, func(ch check) bool { return ch.Name == checkInsideRun })
+		switch {
+		case i < 0:
+			t.Errorf("%s: no %s check", c.name, checkInsideRun)
+		case c.want == "" && (!r.Checks[i].Pass || !r.Valid):
+			t.Errorf("%s: %+v, valid %v", c.name, r.Checks[i], r.Valid)
+		case c.want != "" && (r.Checks[i].Pass || r.Valid || !strings.Contains(r.Checks[i].Detail, c.want)):
+			t.Errorf("%s: %+v, valid %v, want a failure naming %q", c.name, r.Checks[i], r.Valid, c.want)
+		}
 	}
 }
 

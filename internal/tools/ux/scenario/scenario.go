@@ -65,11 +65,29 @@ type Scenario struct {
 	// the scorer defines (PLAN-2026-10-metais-ux W1-2). This package keeps
 	// it as written and does not interpret it.
 	Check json.RawMessage `json:"check,omitempty"`
+	// Rewordings record each change of the prompt under R-UX-9, oldest
+	// first: a prompt may change only to remove ambiguity about what the
+	// user wants, and each change is shown in the next scorecard with the
+	// transcript that showed the ambiguity.
+	Rewordings []Rewording `json:"rewordings,omitempty"`
 
 	// Dir is the scenario's directory in the set.
 	Dir string `json:"-"`
 	// Prompt is prompt.txt without its final newline.
 	Prompt string `json:"-"`
+}
+
+// Rewording is one change of a scenario's prompt under R-UX-9.
+type Rewording struct {
+	// Date is the day of the change, as YYYY-MM-DD.
+	Date string `json:"date"`
+	// Was is the prompt before the change, verbatim.
+	Was string `json:"was"`
+	// Ambiguity says what the user's intent was ambiguous about.
+	Ambiguity string `json:"ambiguity"`
+	// Transcript names the transcript that showed the ambiguity: the
+	// scorecard and run it is kept with.
+	Transcript string `json:"transcript"`
 }
 
 // Name is the scenario's directory name, ID-Slug.
@@ -79,6 +97,7 @@ var (
 	idPattern   = regexp.MustCompile(`^[CA][0-9]+$`)
 	slugPattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 	filePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*\.metais$`)
+	datePattern = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}$`)
 )
 
 // Load reads every scenario of the set fsys holds, one directory per
@@ -189,6 +208,14 @@ func read(fsys fs.FS, dir string) (*Scenario, error) {
 			bad("fixture %d: a second fixture named %s", i, f.As)
 		}
 		names = append(names, f.As)
+	}
+	for i, w := range s.Rewordings {
+		if !datePattern.MatchString(w.Date) || strings.TrimSpace(w.Was) == "" || strings.TrimSpace(w.Ambiguity) == "" || strings.TrimSpace(w.Transcript) == "" {
+			bad("rewording %d needs a date (YYYY-MM-DD), the prompt it was, the ambiguity, and the transcript that showed it (R-UX-9)", i)
+		}
+		if w.Was == s.Prompt {
+			bad("rewording %d: the prompt it was is the prompt it is", i)
+		}
 	}
 	if len(s.Check) > 0 && !json.Valid(s.Check) {
 		bad("check is not JSON")

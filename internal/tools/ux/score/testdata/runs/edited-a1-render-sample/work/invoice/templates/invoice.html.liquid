@@ -1,0 +1,62 @@
+{%- assign inv = inputs.invoice -%}
+{%- assign subtotal = 0.0 -%}
+{%- for item in inv.items -%}
+{%- assign line = item.quantity | times: item.unit_price -%}
+{%- assign subtotal = subtotal | plus: line -%}
+{%- endfor -%}
+{%- assign rate = inv.tax_rate | default: 0 -%}
+{%- assign tax = subtotal | times: rate | divided_by: 100.0 -%}
+{%- assign total = subtotal | plus: tax -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Invoice {{ inv.number | escape }}</title>
+<style>
+body { font-family: sans-serif; max-width: 48rem; margin: 2rem auto; color: #222; }
+header { display: flex; justify-content: space-between; }
+table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+th, td { padding: .4rem; border-bottom: 1px solid #ccc; text-align: left; }
+.num { text-align: right; }
+tfoot td { border: 0; }
+tfoot .total { font-weight: bold; border-top: 2px solid #222; }
+</style>
+</head>
+<body>
+<header>
+<div>
+<h1>Invoice {{ inv.number | escape }}</h1>
+<p>Issued {{ inv.issue_date | escape }}{% if inv.due_date %}<br>Due {{ inv.due_date | escape }}{% endif %}</p>
+</div>
+<div>
+<strong>{{ inv.seller.name | escape }}</strong>
+{%- for line in inv.seller.address %}<br>{{ line | escape }}{% endfor %}
+{%- if inv.seller.email %}<br>{{ inv.seller.email | escape }}{% endif %}
+</div>
+</header>
+<section>
+<h2>Bill to</h2>
+<p><strong>{{ inv.customer.name | escape }}</strong>
+{%- for line in inv.customer.address %}<br>{{ line | escape }}{% endfor %}
+{%- if inv.customer.email %}<br>{{ inv.customer.email | escape }}{% endif %}</p>
+</section>
+<table>
+<thead><tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr></thead>
+<tbody>
+{%- for item in inv.items %}
+<tr><td>{{ item.description | escape }}</td><td class="num">{{ item.quantity }}</td><td class="num">{%- assign c = item.unit_price | times: 100 | round -%}{%- assign f = c | modulo: 100 -%}{{ c | divided_by: 100 }}.{% if f < 10 %}0{% endif %}{{ f }}</td><td class="num">{%- assign c = item.quantity | times: item.unit_price | times: 100 | round -%}{%- assign f = c | modulo: 100 -%}{{ c | divided_by: 100 }}.{% if f < 10 %}0{% endif %}{{ f }}</td></tr>
+{%- endfor %}
+</tbody>
+<tfoot>
+<tr><td colspan="3" class="num">Subtotal</td><td class="num">{%- assign c = subtotal | times: 100 | round -%}{%- assign f = c | modulo: 100 -%}{{ c | divided_by: 100 }}.{% if f < 10 %}0{% endif %}{{ f }}</td></tr>
+{%- if rate > 0 %}
+<tr><td colspan="3" class="num">Tax ({{ rate }}%)</td><td class="num">{%- assign c = tax | times: 100 | round -%}{%- assign f = c | modulo: 100 -%}{{ c | divided_by: 100 }}.{% if f < 10 %}0{% endif %}{{ f }}</td></tr>
+{%- endif %}
+<tr><td colspan="3" class="num total">Total {{ inv.currency | escape }}</td><td class="num total">{%- assign c = total | times: 100 | round -%}{%- assign f = c | modulo: 100 -%}{{ c | divided_by: 100 }}.{% if f < 10 %}0{% endif %}{{ f }}</td></tr>
+</tfoot>
+</table>
+{%- if inv.notes %}
+<p>{{ inv.notes | escape }}</p>
+{%- endif %}
+</body>
+</html>

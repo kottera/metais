@@ -3,5 +3,6 @@
   "slug": "what-it-needs",
   "kind": "consuming",
   "asks_for_output": false,
-  "fixtures": [{"example": "dora-incident-report", "as": "report.metais"}]
+  "fixtures": [{"example": "dora-incident-report", "as": "report.metais"}],
+  "check": "names-every-input"
 }

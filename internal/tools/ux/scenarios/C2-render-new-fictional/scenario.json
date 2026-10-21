@@ -3,5 +3,6 @@
   "slug": "render-new-fictional",
   "kind": "consuming",
   "asks_for_output": true,
-  "fixtures": [{"example": "dora-incident-report", "as": "report.metais"}]
+  "fixtures": [{"example": "dora-incident-report", "as": "report.metais"}],
+  "check": "new-fictional-render"
 }
