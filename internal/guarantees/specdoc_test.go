@@ -129,6 +129,42 @@ func readDocs(root string) ([]*mdDoc, error) {
 	return docs, nil
 }
 
+// mdLink is an inline link of a document: its text, its target, the
+// link as written with each line end read as a space, and the line it
+// begins on.
+type mdLink struct {
+	text, target, link string
+	line               int
+}
+
+// links returns every inline link of d outside its fenced code blocks. A
+// link's text may wrap: each run of lines that holds no blank line and no
+// fence is matched as one text, and its line ends are read as spaces.
+func (d *mdDoc) links() []mdLink {
+	var out []mdLink
+	for start := 0; start < len(d.lines); {
+		if d.fenced[start] || blank(d.lines[start]) {
+			start++
+			continue
+		}
+		end := start
+		for end < len(d.lines) && !d.fenced[end] && !blank(d.lines[end]) {
+			end++
+		}
+		text := strings.Join(d.lines[start:end], "\n")
+		for _, m := range mdLinkRe.FindAllStringSubmatchIndex(text, -1) {
+			out = append(out, mdLink{
+				text:   strings.ReplaceAll(text[m[2]:m[3]], "\n", " "),
+				target: text[m[4]:m[5]],
+				link:   strings.ReplaceAll(text[m[0]:m[1]], "\n", " "),
+				line:   start + strings.Count(text[:m[0]], "\n"),
+			})
+		}
+		start = end
+	}
+	return out
+}
+
 func indentOf(l string) int { return len(l) - len(strings.TrimLeft(l, " ")) }
 
 func blank(l string) bool { return strings.TrimSpace(l) == "" }

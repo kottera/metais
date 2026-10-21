@@ -263,33 +263,28 @@ func citationProblems(docs []*mdDoc, stmts []statement, vs []vector, codes []reg
 		}
 	}
 	for _, d := range docs {
-		for i, l := range d.lines {
-			if d.fenced[i] {
+		for _, m := range d.links() {
+			text, target := m.text, m.target
+			file, frag, _ := strings.Cut(target, "#")
+			isID := stmtIDRe.MatchString(text)
+			if !isID && !strings.HasPrefix(strings.ToLower(frag), "mts-") {
 				continue
 			}
-			for _, m := range mdLinkRe.FindAllStringSubmatch(l, -1) {
-				text, target := m[1], m[2]
-				file, frag, _ := strings.Cut(target, "#")
-				isID := stmtIDRe.MatchString(text)
-				if !isID && !strings.HasPrefix(strings.ToLower(frag), "mts-") {
-					continue
-				}
-				where := fmt.Sprintf("%s:%d", d.path, i+1)
-				if strings.Contains(file, "://") {
-					problems = append(problems, fmt.Sprintf("%s: the link %s to a statement leaves the specification", where, m[0]))
-					continue
-				}
-				if file == "" {
-					file = d.path
-				} else {
-					file = path.Clean(path.Join(path.Dir(d.path), file))
-				}
-				switch {
-				case isID && frag != strings.ToLower(text):
-					problems = append(problems, fmt.Sprintf("%s: the link %s names %s and points at #%s", where, m[0], text, frag))
-				case !anchors[file+"#"+frag]:
-					problems = append(problems, fmt.Sprintf("%s: the link %s does not resolve to a statement", where, m[0]))
-				}
+			where := fmt.Sprintf("%s:%d", d.path, m.line+1)
+			if strings.Contains(file, "://") {
+				problems = append(problems, fmt.Sprintf("%s: the link %s to a statement leaves the specification", where, m.link))
+				continue
+			}
+			if file == "" {
+				file = d.path
+			} else {
+				file = path.Clean(path.Join(path.Dir(d.path), file))
+			}
+			switch {
+			case isID && frag != strings.ToLower(text):
+				problems = append(problems, fmt.Sprintf("%s: the link %s names %s and points at #%s", where, m.link, text, frag))
+			case !anchors[file+"#"+frag]:
+				problems = append(problems, fmt.Sprintf("%s: the link %s does not resolve to a statement", where, m.link))
 			}
 		}
 	}
@@ -317,7 +312,8 @@ func headingSlug(h string) string {
 }
 
 // linkProblems is TestLinksResolve's check: every link of the
-// specification's documents, outside code, that stays in the repository
+// specification's documents, outside code, its text wrapped across lines
+// or not, that stays in the repository
 // names a file or a directory that exists, and its fragment, when it
 // names a document of the specification, an explicit anchor or a heading
 // of that document. A link with a scheme leaves the repository and is
@@ -341,29 +337,24 @@ func linkProblems(root string, docs []*mdDoc) []string {
 	}
 	var problems []string
 	for _, d := range docs {
-		for i, l := range d.lines {
-			if d.fenced[i] {
+		for _, m := range d.links() {
+			target := m.target
+			if target == "" || strings.Contains(target, "://") || strings.HasPrefix(target, "mailto:") {
 				continue
 			}
-			for _, m := range mdLinkRe.FindAllStringSubmatch(l, -1) {
-				target := m[2]
-				if target == "" || strings.Contains(target, "://") || strings.HasPrefix(target, "mailto:") {
-					continue
-				}
-				file, frag, _ := strings.Cut(target, "#")
-				where := fmt.Sprintf("%s:%d", d.path, i+1)
-				if file == "" {
-					file = d.path
-				} else {
-					file = path.Clean(path.Join(path.Dir(d.path), file))
-				}
-				if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(file))); err != nil {
-					problems = append(problems, fmt.Sprintf("%s: the link %s names %s, which does not exist", where, m[0], file))
-					continue
-				}
-				if a, ok := anchors[file]; ok && frag != "" && !a[frag] {
-					problems = append(problems, fmt.Sprintf("%s: the link %s names #%s, which %s has no anchor or heading for", where, m[0], frag, file))
-				}
+			file, frag, _ := strings.Cut(target, "#")
+			where := fmt.Sprintf("%s:%d", d.path, m.line+1)
+			if file == "" {
+				file = d.path
+			} else {
+				file = path.Clean(path.Join(path.Dir(d.path), file))
+			}
+			if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(file))); err != nil {
+				problems = append(problems, fmt.Sprintf("%s: the link %s names %s, which does not exist", where, m.link, file))
+				continue
+			}
+			if a, ok := anchors[file]; ok && frag != "" && !a[frag] {
+				problems = append(problems, fmt.Sprintf("%s: the link %s names #%s, which %s has no anchor or heading for", where, m.link, frag, file))
 			}
 		}
 	}

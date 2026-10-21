@@ -526,9 +526,17 @@ metais pack release-notes --out dist
 
 Given an existing directory, pack writes `<name>-<version>.metais` into it,
 here `dist/release-notes-1.0.0.metais`
-([MTS-AUT-048](13-authoring.md#mts-aut-048)). The package holds every file
-written above, byte for byte, and `.compiled/`, which pack computes from them
-([MTS-AUT-047](13-authoring.md#mts-aut-047)). It is a zip archive, so it is
+([MTS-AUT-048](13-authoring.md#mts-aut-048)). The packed package begins
+with `README.md`, stored, holding the specification's README text
+([§2.4.1](02-container.md#241-the-readme),
+[MTS-PKG-071](02-container.md#mts-pkg-071)). No author writes it and the
+source directory does not hold it; it is there so that a reader given the
+file with nothing else sees, in its first bytes, what the file is and where
+to find the tool. After it come `.compiled/`, which pack computes from the
+files written above, and every one of those files, byte for byte, in
+ascending order of their names
+([MTS-AUT-047](13-authoring.md#mts-aut-047),
+[MTS-PKG-010](02-container.md#mts-pkg-010)). It is a zip archive, so it is
 not shown here; the vector `gen/worked-package` holds it as
 `expected/out/release-notes-1.0.0.metais`, and a processor opens it.
 
