@@ -3,5 +3,6 @@
   "slug": "data-to-js",
   "kind": "authoring",
   "asks_for_output": false,
-  "fixtures": []
+  "fixtures": [],
+  "check": "data-to-js"
 }

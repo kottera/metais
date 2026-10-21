@@ -104,10 +104,18 @@ func TestLoadRefuses(t *testing.T) {
 			return m
 		}(), "a second scenario C1"},
 		{"an empty set", fstest.MapFS{}, "no scenario"},
+		{"a rewording with no transcript", set("C1-render-real", strings.Replace(good, `"fixtures"`, `"rewordings": [{"date": "2026-10-22", "was": "render it", "ambiguity": "which file"}], "fixtures"`, 1), "p"), "rewording 0 needs"},
+		{"a rewording with no date", set("C1-render-real", strings.Replace(good, `"fixtures"`, `"rewordings": [{"date": "soon", "was": "render it", "ambiguity": "which file", "transcript": "t"}], "fixtures"`, 1), "p"), "rewording 0 needs"},
+		{"a rewording to itself", set("C1-render-real", strings.Replace(good, `"fixtures"`, `"rewordings": [{"date": "2026-10-22", "was": "p", "ambiguity": "which file", "transcript": "t"}], "fixtures"`, 1), "p"), "the prompt it was is the prompt it is"},
 	} {
 		if _, err := Load(c.fsys); err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%s: Load = %v, want an error containing %q", c.name, err, c.want)
 		}
+	}
+	// A rewording that says what changed and why loads.
+	rw := strings.Replace(good, `"fixtures"`, `"rewordings": [{"date": "2026-10-22", "was": "render it", "ambiguity": "which file", "transcript": "scorecard-2026-10-22-baseline, C1 haiku"}], "fixtures"`, 1)
+	if s, err := Load(set("C1-render-real", rw, "p")); err != nil || len(s[0].Rewordings) != 1 {
+		t.Errorf("a rewording: %v", err)
 	}
 	// A source with its package loads.
 	src := set("A2-edit-package", `{"id": "A2", "slug": "edit-package", "kind": "authoring", "asks_for_output": false, "fixtures": [{"source": "invoice", "as": "invoice.metais"}]}`, "p", "A2-edit-package/invoice/metais.yaml")

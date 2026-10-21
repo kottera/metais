@@ -3,5 +3,6 @@
   "slug": "new-package",
   "kind": "authoring",
   "asks_for_output": false,
-  "fixtures": []
+  "fixtures": [],
+  "check": "new-package"
 }

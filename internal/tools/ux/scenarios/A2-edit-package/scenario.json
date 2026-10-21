@@ -3,5 +3,6 @@
   "slug": "edit-package",
   "kind": "authoring",
   "asks_for_output": false,
-  "fixtures": [{"source": "invoice", "as": "invoice.metais"}]
+  "fixtures": [{"source": "invoice", "as": "invoice.metais"}],
+  "check": "schema-and-template"
 }
