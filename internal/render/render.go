@@ -97,7 +97,7 @@ func Run(o Options, e Emitter) Result {
 		schemas, sfs = OutputSchemas(pkg, lim)
 		fs = append(fs, sfs...)
 	}
-	fs = append(fs, produce(&Producing{pkg: pkg, ts: o.Templates, r: r, lim: lim, staging: &Staging{pkg: pkg, lim: lim, schemas: schemas}}, plan)...)
+	fs = append(fs, produce(&Producing{pkg: pkg, ts: o.Templates, r: r, lim: lim, staging: &Staging{pkg: pkg, lim: lim, schemas: schemas, r: r}}, plan)...)
 	res := Result{Findings: fs}
 	if o.Fails(fs) {
 		return res

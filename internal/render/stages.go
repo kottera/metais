@@ -4,19 +4,13 @@
 package render
 
 import (
-	"bytes"
-	"errors"
-
 	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/jsonx"
 	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/regexprofile"
 	"github.com/kottera/metais/internal/schema"
-	"github.com/kottera/metais/internal/schemafail"
-	"github.com/kottera/metais/internal/yamlx"
+	"github.com/kottera/metais/internal/template"
 )
 
 // Schemas are the output validation schemas of a package's declarations,
@@ -39,173 +33,65 @@ func OutputSchemas(pkg *loader.Package, lim limits.Set) (*Schemas, []finding.Fin
 }
 
 // Staging is what the stages of a render read: the package, its limits
-// and its output validation schemas.
+// and its output validation schemas, and the renderer whose meter charged
+// the bytes each file rendered.
 type Staging struct {
 	pkg     *loader.Package
 	lim     limits.Set
 	schemas *Schemas
+	r       *template.Renderer
+}
+
+// Stage is a transform of a rendered file's bytes, in ADR-005 D13's phase
+// 4 (ADR-010 Amendment A7 item 6): Applies reports whether it runs on a
+// file the declaration d plans, and Run runs it, reading the file's bytes,
+// its declaration and the package and reaching no host. A stage changes
+// the bytes only through Staging.SetBytes.
+type Stage struct {
+	Name    string
+	Applies func(d manifest.Output) bool
+	Run     func(c *Staging, f *File) []finding.Finding
+}
+
+// stages are the stages, in their normative order: D10's CRLF conversion,
+// then D11's validation, which reads the final bytes.
+var stages = []Stage{
+	crlfStage,
+	validateStage,
 }
 
 // runStages is ADR-005 D13 item 4's transforms of f, a file that
-// rendered, top-level or a container's entry: D10's CRLF conversion, then
-// D11's validation of its final bytes against the declaration's schema,
-// every finding of which is reported (D11 item 4). It runs before a
-// container holding f is measured, so the container holds the bytes
-// transformed.
+// rendered, top-level or a container's entry: every stage that applies
+// runs, in order, and every finding of each is reported (D11 item 4); a
+// stage's findings do not stop the stages after it, but a file a stage
+// left unrendered goes no further. It runs before a container holding f
+// is measured, so the container holds the bytes transformed.
 func runStages(c *Staging, f *File) []finding.Finding {
-	if f.decl.Newline == "crlf" {
-		f.bytes = crlf(f.bytes)
-	}
-	if f.decl.Validate == "" {
-		return nil
-	}
-	return validateOutput(c.pkg, f, c.schemas.byName, c.lim)
-}
-
-// crlf is ADR-005 D10 item 1: every LF not immediately preceded by CR
-// becomes CR LF. A CR LF and a lone CR are left as they are, so the
-// conversion is idempotent.
-func crlf(b []byte) []byte {
-	n := 0
-	for i, c := range b {
-		if c == '\n' && (i == 0 || b[i-1] != '\r') {
-			n++
+	var fs []finding.Finding
+	for _, s := range stages {
+		if f.failed {
+			break
 		}
-	}
-	if n == 0 {
-		return b
-	}
-	out := make([]byte, 0, len(b)+n)
-	for i, c := range b {
-		if c == '\n' && (i == 0 || b[i-1] != '\r') {
-			out = append(out, '\r')
+		if s.Applies(f.decl) {
+			fs = append(fs, s.Run(c, f)...)
 		}
-		out = append(out, c)
-	}
-	return out
-}
-
-// bom is the UTF-8 byte order mark a YAML output may begin with.
-var bom = []byte("\uFEFF")
-
-// validateOutput is ADR-005 D11 items 2 to 4 for pf: its kind is json or
-// yaml, its bytes parse by that kind's rules, and the value validates
-// against the schema validate names. Each finding is about the output,
-// located by its path (a container's entry by the container's path and
-// its own), the JSON Pointer into it, and its line where the parser gives
-// one.
-func validateOutput(pkg *loader.Package, pf *File, schemas map[string]*schema.Compiler, lim limits.Set) []finding.Finding {
-	subj := finding.Subject{Kind: finding.SubjectOutput, Name: pf.owner}
-	kind := kindOf(pf.path, pf.decl.Kind)
-	if kind != "json" && kind != "yaml" {
-		// The kind a path template gives is the render's to judge
-		// (ADR-005 D11 item 2).
-		l := finding.Location{Origin: finding.OriginPackage, File: manifest.ManifestFile}.WithPointer(pf.decl.Pointer + "/validate")
-		if pkg.Positions != nil {
-			if pos, ok := pkg.Positions.Value(pf.decl.Pointer + "/validate"); ok {
-				l = l.At(pos)
-			}
-		}
-		return []finding.Finding{finding.New(finding.CodeDeclarationValidateKind, subj, &l, finding.Params{"kind": finding.String(kind)})}
-	}
-	c, ok := schemas[pf.decl.Validate]
-	if !ok {
-		// The schema did not compile, which refused the render already.
-		return nil
-	}
-	file := pf.path
-	if pf.in != "" {
-		file = pf.in + "/" + pf.path
-	}
-	at := finding.Location{Origin: finding.OriginOutput, File: file}
-	// The readers report in an input's codes, which outputParseFindings makes
-	// the output's.
-	reader := finding.Subject{Kind: finding.SubjectInput, Name: pf.owner}
-	var v value.Value
-	var pos finding.Positions
-	// The values the output decodes to are counted against output-values,
-	// its own and no other output's, since each output's value is released
-	// before the next is validated; a YAML output is bounded by yaml-size
-	// before it is parsed (ADR-009 Amendment A6 item 3).
-	values := lim.Counter(limits.OutputValues)
-	if kind == "json" {
-		doc, fs := jsonx.Parse(pf.bytes, jsonx.Source{Input: reader, At: at, Output: true, Values: values}, lim)
-		if len(fs) > 0 {
-			return outputParseFindings(fs, subj, kind)
-		}
-		v, pos = doc.Value, doc.Positions()
-	} else {
-		if n := int64(len(pf.bytes)); n > lim.Value(limits.YAMLSize) {
-			return []finding.Finding{lim.ExceededOutput(limits.YAMLSize, subj, at, n, true)}
-		}
-		doc, fs := yamlx.Parse(bytes.TrimPrefix(pf.bytes, bom), yamlx.Source{Subject: reader, At: at, Size: limits.YAMLSize, Values: values}, lim)
-		if len(fs) > 0 {
-			return outputParseFindings(fs, subj, kind)
-		}
-		v, pos = doc.Value, doc.Positions()
-	}
-	s, _ := c.Schema(pf.decl.Validate)
-	failures, err := s.Validate(v)
-	var le *regexprofile.LimitError
-	switch {
-	case errors.As(err, &le):
-		// The command's matching budget or its schema-work is spent, so
-		// the output's validation has no answer.
-		return []finding.Finding{lim.ExceededOutput(le.Limit, subj, at.WithPointer(""), 0, false)}
-	case err != nil:
-		panic("render: validating an output: " + err.Error())
-	}
-	fs, err := schemafail.Map(schemafail.Target{
-		Family:  schemafail.FamilyOutput,
-		Subject: subj,
-		Schemas: c,
-		Listed:  int(min(lim.Value(limits.Findings), int64(^uint(0)>>1))),
-		Locate: func(p *finding.Path, key bool) finding.Location {
-			l := at
-			got, ok := finding.ValueAt(pos, p)
-			if key {
-				got, ok = finding.KeyAt(pos, p)
-			}
-			if ok {
-				l = l.At(got)
-			}
-			return l
-		},
-	}, failures...)
-	if err != nil {
-		panic("render: mapping an output's failures: " + err.Error())
 	}
 	return fs
 }
 
-// outputParseFindings makes the findings a reader gave an output's text the
-// output's (ADR-005 D11 item 4): a breach of a limit is
-// limit.exceeded.output, and every other refusal output.parse, naming the
-// code an input breaking the same rule gets. Each keeps its location in
-// the output and its related locations.
-func outputParseFindings(fs []finding.Finding, subj finding.Subject, form string) []finding.Finding {
-	out := make([]finding.Finding, 0, len(fs))
-	for _, f := range fs {
-		loc, _ := f.Location()
-		opts := []finding.Option{finding.WithRelated(f.RelatedAt()...)}
-		if f.Code() == finding.CodeLimitExceeded {
-			p := finding.Params{}
-			for _, n := range []string{"limit", "bound", "lowered", "observed"} {
-				if v, ok := f.Param(n); ok {
-					p[n] = v
-				}
-			}
-			out = append(out, finding.New(finding.CodeLimitExceededOutput, subj, &loc, p, opts...))
-			continue
-		}
-		out = append(out, finding.New(codeOutputParse, subj, &loc, finding.Params{
-			"form": finding.String(form),
-			"rule": finding.String(string(f.Code())),
-		}, opts...))
+// SetBytes makes b f's bytes, charging the change in their length against
+// output-size and output-total on the meter that charged f's rendered
+// bytes (ADR-010 Amendment A7 item 8), so the bound holds on the bytes
+// the render writes (ADR-005 D13 item 4, ADR-009 D3). A breach is f's
+// limit.exceeded.output, at its path, a container's entry by its
+// container's path and its own: f did not render, and no later stage
+// runs on it.
+func (c *Staging) SetBytes(f *File, b []byte) []finding.Finding {
+	o := template.Output{ID: f.owner, Path: f.path, In: f.in}
+	if breach := c.r.ChargeChange(o, int64(len(f.bytes)), int64(len(b))); breach != nil {
+		f.bytes, f.failed = nil, true
+		return []finding.Finding{*breach}
 	}
-	return out
+	f.bytes = b
+	return nil
 }
-
-// codeOutputParse is an output whose text its kind's reader refuses
-// (ADR-005's interfaces name it).
-const codeOutputParse finding.Code = "output.parse"

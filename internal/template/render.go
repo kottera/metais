@@ -104,6 +104,30 @@ func (r *Renderer) ChargeAsset(o Output, size int64) *finding.Finding {
 	return nil
 }
 
+// ChargeChange counts a change in the length of the output o's bytes
+// after it rendered, from from bytes to to, against output-size and
+// output-total with the bytes of every other output (ADR-005 D13 item 4,
+// ADR-009 D3), and returns the finding of the limit it breaches, if any,
+// at o's path, as a breach in rendering is. A change that does not
+// lengthen the bytes is never refused, and a shortening gives back what
+// it removed.
+func (r *Renderer) ChargeChange(o Output, from, to int64) *finding.Finding {
+	r.meter.out = from
+	n := to - from
+	if n <= 0 {
+		r.meter.out += n
+		r.meter.total += n
+		return nil
+	}
+	if e := r.meter.Charge(liquid.WorkOutputBytes, n); e != nil {
+		l, _ := limits.Lookup(e.Args["limit"])
+		f := r.lim.ExceededOutput(l.ID, finding.Subject{Kind: finding.SubjectOutput, Name: o.ID},
+			finding.Location{Origin: finding.OriginOutput, File: o.file()}, 0, false)
+		return &f
+	}
+	return nil
+}
+
 // Render renders o's template, every template it reaches having parsed
 // without a finding, and returns its bytes, or nil and the finding of its
 // first error (ADR-004 D16 items 1, 2 and 4). Nothing of an output with an

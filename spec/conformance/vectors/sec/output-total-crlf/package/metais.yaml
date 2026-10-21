@@ -1,0 +1,13 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: first
+    template: first.txt.liquid
+  - id: lines
+    template: lines.txt.liquid
+    newline: crlf
