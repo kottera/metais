@@ -311,7 +311,9 @@ the limit, at the token that exceeded it.
 <a id="mts-sec-010"></a>**MTS-SEC-010** A processor MUST refuse an output whose
 bytes exceed `output-size`, and the output whose bytes take a render's total
 beyond `output-total`, with `limit.exceeded.output`, naming the output and the
-limit.
+limit. An output's bytes are the bytes the render writes: a file's after every
+transform of [chapter 10](10-transforms.md), the growth of its newline
+conversion included.
 
 <a id="mts-sec-063"></a>**MTS-SEC-063** A processor MUST count against
 `output-values` every value of the data model it decodes from one rendered
