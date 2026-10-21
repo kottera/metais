@@ -7,7 +7,7 @@ train inherits it verbatim: `metais-ux [W2-C3]: <action>` for a Work Order,
 and `<type>(metais-ux): [W2-C3] <change>` for a pull request and its squash
 subject, by `kottera/kottera`'s `docs/dev/work-order-and-pr-naming.md`, which
 AGENTS.md adopts.
-**Status:** Ratified 2026-10-21 by Ed Funnekotter, with the rulings of §4.
+**Status:** Ratified 2026-10-21 by Ed Funnekotter, with the rulings of §4; R-UX-8 amended and R-UX-9 added the same day.
 **For PRD:** [PRD-001](../prd/PRD-001-metais-v1.md) R17 (the golden paths),
 and its success criteria SC1 (an AI harness, given only the binary and a
 package, produces a valid document) and SC9 (an author working only from the
@@ -185,13 +185,24 @@ Made in the 2026-10-20 session:
     scorecard rather than restarting it.
   - If dispatches ever lose the proxy, the scorecards fall back to an
     off-tera act on Ed's host (§6).
-- **R-UX-8, a consuming run leaves the package alone.** Asked to "fill" a
-  package, the probe's nested Haiku session unpacked it, rewrote its
-  shipped examples with new data, and repacked it over the original. It
-  validated and tested green. For a consuming scenario that is a fail:
-  - extracting the package with `unzip`, `unpack` or `extract` fails;
-  - changing or repacking the package file fails;
-  - the data must be supplied to the package, as a data directory or flags.
+- **R-UX-8, a run asked for output leaves the package alone** (amended
+  2026-10-21). A consuming scenario whose prompt asks for output, such as
+  "render this file" or "produce the report from…", fails when the session:
+  - extracts the package with `unzip`, `unpack` or `extract`;
+  - changes or repacks the package file.
+
+  The data must be supplied to the package, as a data directory or flags.
+
+  The rule does not apply to a prompt that leaves the user's intent open.
+  Told to "fill this file … with new fictional data", the probe's nested
+  Haiku session unpacked the package, rewrote its shipped examples, ran
+  `test --update` and repacked it. That is a coherent reading of an
+  ambiguous request, and C0 (§5) scores it as one.
+- **R-UX-9, rewording a scenario's prompt.** A prompt may be changed only to
+  remove ambiguity about what the user wants, never to steer how the
+  session gets there. Each change is recorded in the next scorecard, with
+  the transcript that showed the ambiguity. A session that misreads a clear
+  intent is a failure to fix in the tool, not in the prompt.
 
 ## 5. Wave 1 — the harness and the baseline
 
@@ -224,8 +235,9 @@ a number for today's binary.
 
   | Scenario | Prompt (in substance) | Outcome check |
   |---|---|---|
-  | C1 fill-real | "fill this file: report.metais" | asks for the facts and invents none; at most a scaffold |
-  | C2 fill-new-fictional | "… it needs to be new fictional data" | valid data matching no shipped example; rendered |
+  | C0 fill-ambiguous | "fill this file: report.metais", as people actually say it | either reading passes: a rendered document from data supplied to the package, or an edited package that `check` and `test` accept. The session must say which reading it took, and must invent no facts presented as real. A silent reading fails. |
+  | C1 render-real | "render this file: report.metais" (no data given) | asks for the facts and invents none; at most a scaffold |
+  | C2 render-new-fictional | "render this file with new fictional data" | valid data matching no shipped example, supplied to the package; rendered; the package untouched (R-UX-8) |
   | C3 preview | "show me what this package produces" | an output rendered from generated data; nothing extracted from the zip |
   | C4 what-it-needs | "what does report.metais need from me?" | names every input and its required fields, from `inspect`, `read` and `schema` |
   | C5 script | "write a script that renders this package nightly from a JSON file" | the script validates and renders through `metais`; a test run passes |
@@ -318,8 +330,7 @@ request.
 - **For each scenario below §4's thresholds,** a fix item, and then a
   re-run of that scenario. A failure is root-caused from the transcript:
   which command the session expected and did not find, or what the help or
-  output misled it into. It is never closed by rewording the scenario's
-  prompt.
+  output misled it into. Its prompt is reworded only under R-UX-9.
 - **The SC1 and SC9 rounds** of PLAN-2026-10-metais-v1 (`01a15abf-4d58` and
   `01a15abf-6347`) run on the post-Wave-2 binary. The harness's transcript
   of a C2-shaped run against the §4.1 package is SC1's evidence, and an
