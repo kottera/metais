@@ -56,9 +56,9 @@ type fileEntry struct {
 	Change string `json:"change,omitempty"`
 }
 
-// listFiles lists every file beneath dir. Anything but a regular file or a
-// directory is listed with size -1 and no digest, so a comparison of two
-// listings sees it.
+// listFiles lists every file beneath dir, sorted by path. Anything but a
+// regular file or a directory is listed with size -1 and no digest, so a
+// comparison of two listings sees it.
 func listFiles(dir string) ([]fileEntry, error) {
 	var files []fileEntry
 	err := fs.WalkDir(os.DirFS(dir), ".", func(p string, d fs.DirEntry, err error) error {
@@ -77,6 +77,9 @@ func listFiles(dir string) ([]fileEntry, error) {
 		files = append(files, fileEntry{Path: p, Size: int64(len(b)), SHA256: hex.EncodeToString(sum[:])})
 		return nil
 	})
+	// A walk lists a directory's files before a sibling that sorts
+	// between its name and its files' paths (a/b before a-c).
+	slices.SortFunc(files, func(a, b fileEntry) int { return strings.Compare(a.Path, b.Path) })
 	return files, err
 }
 

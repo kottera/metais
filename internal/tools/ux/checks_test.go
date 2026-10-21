@@ -143,6 +143,21 @@ func TestCheckFreshDirectory(t *testing.T) {
 	if c := checkFreshDirectory(dir, nil); c.Pass {
 		t.Error("a directory that should be empty passed")
 	}
+	// Fixtures in a directory and beside it list in the fixtures' order.
+	write("a/b.metais", "b")
+	write("a-c.metais", "c")
+	if err := os.RemoveAll(filepath.Join(dir, ".claude")); err != nil {
+		t.Fatal(err)
+	}
+	both := []fileEntry{{Path: "a-c.metais", Size: 1, SHA256: digest([]byte("c"))}, {Path: "a/b.metais", Size: 1, SHA256: digest([]byte("b"))}, want[0]}
+	if c := checkFreshDirectory(dir, both); !c.Pass {
+		t.Errorf("fixtures in a directory and beside it: %s", c.Detail)
+	}
+	for _, p := range []string{"a", "a-c.metais"} {
+		if err := os.RemoveAll(filepath.Join(dir, p)); err != nil {
+			t.Fatal(err)
+		}
+	}
 	if err := os.Symlink("report.metais", filepath.Join(dir, "link")); err != nil {
 		t.Fatal(err)
 	}
