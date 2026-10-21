@@ -22,8 +22,8 @@ func TestRenderCommitAbortsAFailedWrite(t *testing.T) {
 	testenv.Home(t)
 	parent := testenv.Dir(t)
 	plan := []*File{
-		{path: "a.txt", bytes: []byte("A")},
-		{path: "a.txt/b.txt", bytes: []byte("B")},
+		{path: "a.txt", bytes: []byte("A"), producer: rendered{}},
+		{path: "a.txt/b.txt", bytes: []byte("B"), producer: rendered{}},
 	}
 	f, ok := Commit(filepath.Join(parent, "x", "out"), nil, plan, 0)
 	if ok {

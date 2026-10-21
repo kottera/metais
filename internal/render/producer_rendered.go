@@ -24,8 +24,15 @@ func (rendered) Record() (string, bool) { return "template", true }
 func (rendered) Reach(f *File) []string { return []string{f.template} }
 
 // Produce renders f, when its template is ready, to its first error
-// (ADR-004 D16 item 4), runs its stages and measures it.
+// (ADR-004 D16 item 4), runs its stages, and measures its bytes.
 func (rendered) Produce(c *Producing, f *File) []finding.Finding {
+	fs := renderFile(c, f)
+	f.size, f.digest = measureBytes(f.bytes)
+	return fs
+}
+
+// renderFile renders f and runs its stages, or marks it failed.
+func renderFile(c *Producing, f *File) []finding.Finding {
 	if !c.ready[f.template] {
 		f.failed = true
 		return nil
@@ -37,9 +44,7 @@ func (rendered) Produce(c *Producing, f *File) []finding.Finding {
 		return []finding.Finding{*fd}
 	}
 	f.bytes = out
-	fs := runStages(c.staging, f)
-	f.size, f.digest = measureBytes(f.bytes)
-	return fs
+	return runStages(c.staging, f)
 }
 
 func (rendered) Open(f *File) (io.Reader, func(error) error) {
