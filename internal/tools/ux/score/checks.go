@@ -183,6 +183,30 @@ func (r *run) lastWrite() int {
 	return last
 }
 
+// Each command's own report that it passed. A Bash call's output is all
+// its commands' together, so a call is judged by its own lines, not by
+// whether some other command of the call reported an error.
+var (
+	packed     = regexp.MustCompile(`(?m)^Packed the package|"format":"metais\.pack/1","ok":true`)
+	testPassed = regexp.MustCompile(`(?m)^[^\s:]+: pass$|"format":"metais\.test/1","ok":true`)
+	testFailed = regexp.MustCompile(`(?m)^[^\s:]+: fail\b|"format":"metais\.test/1","ok":false`)
+	checked    = regexp.MustCompile(`(?m)^check: 0 errors|"format":"metais\.check/1","ok":true`)
+)
+
+// passed reports whether a metais test, pack or check reports it passed.
+func passed(c *call) bool {
+	out := c.output()
+	switch c.sub {
+	case "pack":
+		return packed.MatchString(out)
+	case "test":
+		return testPassed.MatchString(out) && !testFailed.MatchString(out)
+	case "check":
+		return checked.MatchString(out)
+	}
+	return c.ok()
+}
+
 // accepted is the session's last metais test or pack, when it comes after
 // its last edit and the harness reports no error for it: the package as
 // it left it is one test (and pack's check) accepts.
@@ -196,7 +220,7 @@ func (r *run) accepted() (*call, bool) {
 	if last == nil {
 		return nil, false
 	}
-	return last, last.ok() && last.seq > r.lastWrite() && !strings.Contains(last.output(), ": error: ")
+	return last, passed(last) && last.seq > r.lastWrite()
 }
 
 // eitherReading is C0's check: either reading of "fill this file" passes,
@@ -497,21 +521,21 @@ func scriptRenders(r *run) Result {
 // newPackage is A1's check: the session's package passes check and pack,
 // and render --sample renders it.
 func newPackage(r *run) Result {
-	var packed *call
-	for _, c := range r.succeeded("pack") {
-		if !strings.Contains(c.output(), ": error: ") {
-			packed = c
+	var pack *call
+	for _, c := range r.calls {
+		if c.sub == "pack" && passed(c) {
+			pack = c
 		}
 	}
-	if packed == nil {
+	if pack == nil {
 		return Result{Detail: "no metais pack of the session's package passes"}
 	}
 	for _, rd := range r.renders() {
 		if rd.given.sample {
-			return Result{Pass: true, Detail: "the package passes pack, which checks and tests it, and render --sample renders it", Evidence: []Evidence{packed.evidence(), rd.evidence()}}
+			return Result{Pass: true, Detail: "the package passes pack, which checks and tests it, and render --sample renders it", Evidence: []Evidence{pack.evidence(), rd.evidence()}}
 		}
 	}
-	return Result{Detail: "the package passes pack, but the session never renders it with render --sample", Evidence: []Evidence{packed.evidence()}}
+	return Result{Detail: "the package passes pack, but the session never renders it with render --sample", Evidence: []Evidence{pack.evidence()}}
 }
 
 var dueDate = regexp.MustCompile(`(?i)\bdue`)
@@ -521,8 +545,10 @@ var dueDate = regexp.MustCompile(`(?i)\bdue`)
 func schemaAndTemplate(r *run) Result {
 	orig := r.fixtureSource()
 	changed := func(suffix string) (Evidence, bool) {
+		// A session may edit a source outside its own directory, so a
+		// write is read by the path it names.
 		for _, w := range r.writes {
-			if strings.HasSuffix(w.file, suffix) && dueDate.MatchString(w.text) {
+			if strings.HasSuffix(w.use.Field("file_path"), suffix) && dueDate.MatchString(w.text) {
 				return useEvidence(w.use, w.file), true
 			}
 		}
