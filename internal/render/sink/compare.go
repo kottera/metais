@@ -49,6 +49,8 @@ var ComparisonCodes = []finding.Code{codeOutputMissing, codeOutputUnexpected, co
 // nothing, and checks nothing in phase 3. Once Emit has run, its fields
 // are the render and the comparison's account of it.
 type Comparison struct {
+	// tree is the package, dir its example's expected/, and expected and
+	// hasExpected what Compare was given.
 	tree        pkgtree.Tree
 	lim         limits.Set
 	subj        finding.Subject
