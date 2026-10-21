@@ -11,7 +11,7 @@
 | Plan | Feature | Status |
 |---|---|---|
 | [PLAN-2026-10-metais-v1](plans/PLAN-2026-10-metais-v1.md) | `metais-v1` | Ratified; §3 gives each wave's status |
-| [PLAN-2026-10-metais-test-economy](plans/PLAN-2026-10-metais-test-economy.md) | `metais-test-economy` | Proposed |
+| [PLAN-2026-10-metais-test-economy](plans/PLAN-2026-10-metais-test-economy.md) | `metais-test-economy` | Accepted |
 
 Each wave's brief, ending in the closeout its wave orchestrator writes, is under [briefs/](briefs/), named
 `brief-plan-2026-10-metais-v1-wave<N>.md`:
@@ -42,7 +42,7 @@ Each wave's brief, ending in the closeout its wave orchestrator writes, is under
 | [ADR-009](adr/ADR-009-the-security-model.md) | The security model | Accepted |
 | [ADR-010](adr/ADR-010-the-implementation.md) | The implementation | Accepted |
 | [ADR-011](adr/ADR-011-the-specification-document-and-conformance.md) | The specification document and conformance | Accepted |
-| [ADR-012](adr/ADR-012-test-economy.md) | Test economy | Proposed |
+| [ADR-012](adr/ADR-012-test-economy.md) | Test economy | Accepted |
 
 PRD-001 §27 maps each requirement to the ADR that designs it. [RULINGS-v1](adr/RULINGS-v1.md) records the rulings the v1 ADRs proposed, ratified 2026-10-18.
 

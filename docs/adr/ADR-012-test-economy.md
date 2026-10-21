@@ -1,9 +1,9 @@
 # ADR-012: Test economy — each property is proved once, along each of its axes, at the smallest size that can fail it; the reference tool's conformance run is one pass checked against a committed record; and the work a test does is budgeted by count
 
-**Status:** Proposed 2026-10-20 by the `metais-test-economy` design Work
-Order, under Ed Funnekotter's direction of 2026-10-20; awaiting his
-acceptance. Nothing it decides is in force until it merges, and each
-decision takes effect in the tree as the item of
+**Status:** Accepted 2026-10-21 by Ed Funnekotter, every lean of the
+plan's §11 as drafted. It was proposed 2026-10-20 by the
+`metais-test-economy` design Work Order, under his direction of that day.
+Each decision takes effect in the tree as the item of
 [PLAN-2026-10-metais-test-economy](../plans/PLAN-2026-10-metais-test-economy.md)
 that carries it lands.
 **Date:** 2026-10-20
@@ -339,8 +339,8 @@ the runner chooses. Every other security `open` step runs `inspect`.**
 4. **ADR-010 D2 item 3 and the code disagree.** It says that no goroutine
    is started on any path that renders, and `render_write.go:125` starts
    one. This ADR amends D2 item 3 to name that goroutine and its proof
-   (ADR-010 A6). The alternative is to remove the goroutine, and that is
-   Ed's to choose (the plan's question Q4).
+   (ADR-010 A6). Removing the goroutine was the alternative; Ed chose the
+   amendment on 2026-10-21 (the plan's question Q4).
 5. **Calibration's lowered cases** (`calibrate_test.go:423`) run on the
    release build, in parallel. They judge findings at a limit, never a
    time, so neither the race build nor serial running buys anything.

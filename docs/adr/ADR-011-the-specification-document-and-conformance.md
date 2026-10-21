@@ -8,7 +8,7 @@ ratification; the passages it changes are marked *(A1, proposed)*.
 `TMPDIR`) was ruled by Ed Funnekotter on 2026-10-19; the passages it
 changes are marked *(A3)*.
 [Amendment A7](#amendments) (against the reference tool, one pass compared with a committed record) is proposed by
-[ADR-012](ADR-012-test-economy.md) and awaits Ed Funnekotter's acceptance;
+[ADR-012](ADR-012-test-economy.md) and accepted by Ed Funnekotter on 2026-10-21;
 it takes effect as PLAN-2026-10-metais-test-economy's items land.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
@@ -1653,8 +1653,8 @@ requirements), and the vector schema
 
 ### A7 — Against the reference tool, the runner makes one pass and compares it with a committed record; the published method is `-conformance.live`
 
-**Status:** Proposed 2026-10-20 by [ADR-012](ADR-012-test-economy.md) D2,
-D3, D9 and D11, awaiting Ed Funnekotter's acceptance. Each item takes
+**Status:** Accepted 2026-10-21 by Ed Funnekotter; proposed 2026-10-20 by
+[ADR-012](ADR-012-test-economy.md) D2, D3, D9 and D11. Each item takes
 effect when the PLAN-2026-10-metais-test-economy item named in it lands.
 **Amends:** D11 items 2, 7 and 9; D12 items 4 and 5; D14's
 `TestHostileVectorsOpenEverywhere` row; D15 item 1; D16 item 3.

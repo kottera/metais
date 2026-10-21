@@ -8,8 +8,8 @@ train inherits it verbatim: `metais-test-economy [W1-2]: <action>` for a
 Work Order, and `<type>(metais-test-economy): [W1-2] <change>` for a pull
 request and its squash subject, by `kottera/kottera`'s
 `docs/dev/work-order-and-pr-naming.md`, which AGENTS.md adopts.
-**Status:** Proposed; awaiting Ed Funnekotter's acceptance. It is run by a
-plan orchestrator filed separately once it merges.
+**Status:** Accepted 2026-10-21 by Ed Funnekotter, every lean of §11 as
+drafted. It is run by a plan orchestrator filed separately.
 **For ADR:** [ADR-012](../adr/ADR-012-test-economy.md), and the amendments
 it makes: ADR-005 A2, ADR-009 A7, ADR-010 A6 and ADR-011 A7.
 **Repository:** `kottera/metais`, branch `main`. The train writes this
@@ -320,8 +320,8 @@ ADR-012 D4 items 3 and 4.
   - A focused in-process test drives `content()`'s producer through every
     path: a whole container, an error mid-write, and the reader closing
     early.
-  - ADR-010 D2 item 3 is resolved by Ed's answer to Q4: the amendment
-    stands, or the goroutine goes.
+  - The goroutine stays, named by ADR-010 A6's amendment of D2 item 3
+    (Ed's answer to Q4).
 - **What proves it after:** the focused test under `-race`, at every change
   to `internal/cli`. This must land before W2-1 stops race-building the
   tool for the suite.
@@ -527,10 +527,9 @@ Not changed, though the audit named them: `TestUnmetRequirementIsSkippedAndRepor
 `TestBStartsTwoSecondsAfterA`, the Liquid import tests, the `cmd/metais`
 builds, and the runner's machinery for live A/B (ADR-012's ledger says why).
 
-## 11. Questions for Ed before this plan runs
+## 11. Questions for Ed, and his answers
 
-Each is also in the design's pull request. The plan runs on the leans
-unless he rules otherwise.
+Ed accepted every lean below on 2026-10-21.
 
 - **Q1. A committed record per vector (ADR-012 D2).** *Lean: yes.* The
   alternative is one live A/B pass: about twice the processes, and a

@@ -2,7 +2,7 @@
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 [Amendment A7](#amendments) (the SC7 harness is the one pass against a committed record) is proposed by
-[ADR-012](ADR-012-test-economy.md) and awaits Ed Funnekotter's acceptance;
+[ADR-012](ADR-012-test-economy.md) and accepted by Ed Funnekotter on 2026-10-21;
 it takes effect as PLAN-2026-10-metais-test-economy's items land.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
@@ -1826,8 +1826,7 @@ validates a copy of the value tree in its own form.
 
 ### A7 — The SC7 harness is the reference runner's one pass, checked against a committed record of environment B
 
-**Status:** Proposed 2026-10-20 by [ADR-012](ADR-012-test-economy.md) D2,
-awaiting Ed Funnekotter's acceptance. It takes effect when
+**Status:** Accepted 2026-10-21 by Ed Funnekotter; proposed 2026-10-20 by [ADR-012](ADR-012-test-economy.md) D2. It takes effect when
 PLAN-2026-10-metais-test-economy W2-3 lands.
 **Amends:** D16 item 1 (its opening, the two path modes, checks 2 and 3)
 and D16 item 2 (what the canaries are caught by).

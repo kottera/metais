@@ -2,7 +2,7 @@
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 [Amendment A2](#amendments) (repetition is proved by the conformance pass against its record) is proposed by
-[ADR-012](ADR-012-test-economy.md) and awaits Ed Funnekotter's acceptance;
+[ADR-012](ADR-012-test-economy.md) and accepted by Ed Funnekotter on 2026-10-21;
 it takes effect as PLAN-2026-10-metais-test-economy's items land.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
@@ -1358,8 +1358,8 @@ they write into an existing directory too.
 
 ### A2 — Repetition is proved by the conformance pass against its record, and by the detector's probe
 
-**Status:** Proposed 2026-10-20 by [ADR-012](ADR-012-test-economy.md) D7
-item 1, awaiting Ed Funnekotter's acceptance. It takes effect when
+**Status:** Accepted 2026-10-21 by Ed Funnekotter; proposed 2026-10-20 by [ADR-012](ADR-012-test-economy.md) D7
+item 1. It takes effect when
 PLAN-2026-10-metais-test-economy W3-1 lands.
 **Amends:** D19 item 2's "Repetition" proof.
 

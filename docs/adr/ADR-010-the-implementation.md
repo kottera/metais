@@ -15,7 +15,7 @@ names `escape`'s alias `h`) is proposed by PLAN-2026-10-metais-v1 Wave 3 and
 awaits Ed Funnekotter's ratification; the passage it changes is marked
 *(A4, proposed)*.
 [Amendment A6](#amendments) (the render's one goroutine, the detectors' probes, and race detection) is proposed by
-[ADR-012](ADR-012-test-economy.md) and awaits Ed Funnekotter's acceptance;
+[ADR-012](ADR-012-test-economy.md) and accepted by Ed Funnekotter on 2026-10-21;
 it takes effect as PLAN-2026-10-metais-test-economy's items land.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
@@ -1893,8 +1893,8 @@ ruling made by the train and needs no ratification.
 
 ### A6 — The render's one goroutine, the detectors' probes, and race detection where it can find something
 
-**Status:** Proposed 2026-10-20 by [ADR-012](ADR-012-test-economy.md) D4
-and D7, awaiting Ed Funnekotter's acceptance. Item 1 waits on his answer to
+**Status:** Accepted 2026-10-21 by Ed Funnekotter; proposed 2026-10-20 by [ADR-012](ADR-012-test-economy.md) D4
+and D7. Item 1 is his answer to
 PLAN-2026-10-metais-test-economy's Q4. Each item takes effect when the plan
 item named in it lands.
 **Amends:** D2 item 3, D13 item 4 (the determinism and confinement
