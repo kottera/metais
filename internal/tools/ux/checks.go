@@ -281,7 +281,7 @@ func checkNoSessionSaved(home string) check {
 // memoryFile matches a reference to a memory file: an instructions file a
 // harness loads as memory, an auto-memory index or directory, or a saved
 // project's directory.
-var memoryFile = regexp.MustCompile(`(?:^|[^A-Za-z0-9_])(?:CLAUDE(?:\.local)?\.md|MEMORY\.md|AGENTS\.md)|\.claude/(?:projects|memory)\b|/memory/`)
+var memoryFile = regexp.MustCompile(`(?:^|[\s/"'=~])(?:CLAUDE(?:\.local)?|MEMORY|AGENTS)\.md(?:$|[^A-Za-z0-9_-])|\.claude/(?:projects|memory)\b|/memory/`)
 
 // checkNoMemoryRead: no tool call of the session names a memory file.
 func checkNoMemoryRead(t transcript) check {

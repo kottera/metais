@@ -31,6 +31,7 @@ var errQuota = errors.New("quota pause")
 
 // config is one invocation of the runner.
 type config struct {
+	root       string // the top of the checkout, where every command runs
 	out        string
 	scenarios  []string
 	models     []string
@@ -48,8 +49,8 @@ type config struct {
 	// start runs one command to its end, its output to stdout and stderr,
 	// and returns its exit status; nil means exec.
 	start func(ctx context.Context, inv invocation, stdout, stderr io.Writer) (int, error)
-	// command runs a command in the working directory, the checkout, and
-	// returns its standard output; nil means exec.
+	// command runs a command in root, and returns its standard output;
+	// nil means exec.
 	command func(name string, env []string, args ...string) ([]byte, error)
 }
 
@@ -69,12 +70,14 @@ func (c *config) run() error {
 		c.start = execStart
 	}
 	if c.command == nil {
-		c.command = execCommand
+		c.command = func(name string, env []string, args ...string) ([]byte, error) {
+			return execCommand(c.root, name, env, args...)
+		}
 	}
 	if err := c.refuse(); err != nil {
 		return err
 	}
-	set, err := scenario.Load(os.DirFS(scenariosDir))
+	set, err := scenario.Load(os.DirFS(filepath.Join(c.root, scenariosDir)))
 	if err != nil {
 		return err
 	}
@@ -121,11 +124,10 @@ func (c *config) run() error {
 	return c.summary(set)
 }
 
-// refuse checks the invocation: the working directory is the checkout's
-// top, the output directory is absolute and outside any repository, and
+// refuse checks the invocation: root is the top of a metais checkout, the output directory is absolute and outside any repository, and
 // the models are names.
 func (c *config) refuse() error {
-	gomod, err := os.ReadFile("go.mod")
+	gomod, err := os.ReadFile(filepath.Join(c.root, "go.mod"))
 	if err != nil || !bytes.HasPrefix(gomod, []byte("module github.com/kottera/metais\n")) {
 		return errors.New("run from the top of a metais checkout")
 	}
@@ -220,6 +222,7 @@ func (c *config) prepare(set []*scenario.Scenario) (*setState, error) {
 			return nil, err
 		}
 		for _, f := range s.Fixtures {
+			// src is relative to root, where pack runs.
 			src := filepath.Join(scenariosDir, s.Dir, f.Source)
 			if f.Example != "" {
 				src = filepath.Join("examples", f.Example)
@@ -466,11 +469,11 @@ func execStart(ctx context.Context, inv invocation, stdout, stderr io.Writer) (i
 	return -1, err
 }
 
-// execCommand runs name in the working directory, with env (nil: the
-// runner's own), and names it and its standard error when it fails.
-func execCommand(name string, env []string, args ...string) ([]byte, error) {
+// execCommand runs name in dir, with env (nil: the runner's own), and
+// names it and its standard error when it fails.
+func execCommand(dir, name string, env []string, args ...string) ([]byte, error) {
 	cmd := exec.Command(name, args...)
-	cmd.Env = env
+	cmd.Dir, cmd.Env = dir, env
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	if err := cmd.Run(); err != nil {

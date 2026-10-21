@@ -64,6 +64,7 @@ func cli(args []string, stdout, stderr io.Writer, environ []string) int {
 		return 2
 	}
 	c := &config{
+		root:       ".",
 		out:        *out,
 		scenarios:  splitList(*scenarios),
 		models:     splitList(*models),
