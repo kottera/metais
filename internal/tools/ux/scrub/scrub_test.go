@@ -35,6 +35,10 @@ func TestBytes(t *testing.T) {
 		{"home/.claude/projects/-var-lib-runner-volumes-wo-scratch-set-runs-C1-render-real-haiku-work/memory",
 			"home/.claude/projects/-ux-run-work/memory"},
 		{".claude/projects/-Users-ed-src-metais/", ".claude/projects/-ux-host/"},
+		{`total 8\ndrwxr-xr-x 2 tera-runner tera-runner 4096 Oct 21 14:06 .\n-rw-r--r--  1 efunneko staff  41429 Oct 21 14:21 report.metais`,
+			`total 8\ndrwxr-xr-x 2 user group 4096 Oct 21 14:06 .\n-rw-r--r--  1 user group  41429 Oct 21 14:21 report.metais`},
+		{"lrwxr-xr-x@ 1 ed admin 12 Oct 21 x -> y", "lrwxr-xr-x@ 1 user group 12 Oct 21 x -> y"},
+		{"the file -rw-r--r-- is plain", "the file -rw-r--r-- is plain"},
 	} {
 		got := string(s.Bytes([]byte(c.in)))
 		if got != c.want {
@@ -61,6 +65,7 @@ func TestCheck(t *testing.T) {
 		`C:\Users\ed\report.metais`,
 		`"x\n/home/ed/y"`,
 		"-var-lib-tera-runner-volumes-work-order-x",
+		"-rw-r--r-- 1 efunneko staff 41429 Oct 21 14:21 report.metais",
 	} {
 		if found := Check([]byte(in)); len(found) == 0 {
 			t.Errorf("Check(%q) found nothing", in)

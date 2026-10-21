@@ -11,19 +11,49 @@ import (
 	"strings"
 )
 
-// firstInspect: the first metais command a consuming session runs is
-// metais inspect. Any metais command counts, metais --version and
-// metais help among them; a command that only looks metais up, such as
-// which metais, runs no metais and does not.
-func firstInspect(r *run) Result {
-	if len(r.calls) == 0 {
-		return Result{Detail: "the session ran no metais command"}
+// contentReaders are the metais commands that read a package's contents.
+var contentReaders = []string{"ls", "read", "schema", "outline", "grep", "extract", "unpack"}
+
+// inspectFirst: a consuming session reads nothing of the package's
+// contents before metais inspect (Ed's ruling, 2026-10-21). metais
+// --version, metais version and metais help before it are no read and
+// pass. What fails is extracting the package, or metais ls, read, schema,
+// outline, grep, extract or unpack on it, before metais inspect, and a
+// session that never runs metais inspect. Reading files extracted from
+// the package needs the package extracted first, so it fails as that
+// extraction does. A listing of the archive (unzip -l) is a note.
+func inspectFirst(r *run) Result {
+	var inspect *call
+	for _, c := range r.calls {
+		if c.sub == "inspect" {
+			inspect = c
+			break
+		}
 	}
-	c := r.calls[0]
-	if c.sub == "inspect" {
-		return Result{Pass: true, Detail: "the first metais command is metais inspect", Evidence: []Evidence{c.evidence()}}
+	before := func(seq int) bool { return inspect == nil || seq < inspect.seq }
+	var ev []Evidence
+	for _, c := range r.calls {
+		if before(c.seq) && slices.Contains(contentReaders, c.sub) {
+			e := c.evidence()
+			e.Text = "metais " + c.sub + " reads the package's contents"
+			ev = append(ev, e)
+		}
 	}
-	return Result{Detail: fmt.Sprintf("the first metais command is metais %s, not metais inspect", orNone(c.sub)), Evidence: []Evidence{c.evidence()}}
+	for _, z := range r.zipReads() {
+		if !z.listing && before(z.cmd.seq) {
+			ev = append(ev, z.ev)
+		}
+	}
+	slices.SortStableFunc(ev, func(a, b Evidence) int { return lineOrder(a) - lineOrder(b) })
+	switch {
+	case inspect == nil && len(ev) > 0:
+		return Result{Detail: "the session never runs metais inspect, and " + ev[0].Text, Evidence: ev}
+	case inspect == nil:
+		return Result{Detail: "the session never runs metais inspect"}
+	case len(ev) > 0:
+		return Result{Detail: "before metais inspect, " + ev[0].Text, Evidence: append(ev, inspect.evidence())}
+	}
+	return Result{Pass: true, Detail: "the session reads nothing of the package before metais inspect", Evidence: []Evidence{inspect.evidence()}}
 }
 
 func orNone(sub string) string {
@@ -33,50 +63,110 @@ func orNone(sub string) string {
 	return sub
 }
 
-// zipTools are the commands that read a zip archive's entries. metais
-// unpack and metais extract are metais's own reading, not a zip tool's:
-// the plan orchestrator's ruling for this wave, from the amended R-UX-8.
-var zipTools = []string{"unzip", "zipinfo", "funzip", "7z", "7za", "7zr", "bsdtar", "ditto", "jar", "unar", "lsar", "zipdetails", "zipnote"}
+// zipTools are the commands that extract a zip archive's entries, and
+// zipListers those that only list them (Ed's ruling, 2026-10-21: a
+// listing is a note, not a failure).
+var (
+	zipTools   = []string{"unzip", "funzip", "7z", "7za", "7zr", "bsdtar", "ditto", "jar", "unar"}
+	zipListers = []string{"zipinfo", "lsar", "zipdetails", "zipnote"}
+)
 
 // zipLibrary matches a program that parses the archive itself, through a
-// zip library of its language.
-var zipLibrary = regexp.MustCompile(`(?i)\bzipfile\b|archive/zip|\bjszip\b|adm-zip|\byauzl\b|\bunzipper\b|java\.util\.zip|ZipArchive|Expand-Archive|System\.IO\.Compression|\bRubyzip\b|Zip::File`)
+// zip library of its language, and zipLibraryRead one that reads or
+// extracts an entry with it, not only lists them.
+var (
+	zipLibrary     = regexp.MustCompile(`(?i)\bzipfile\b|archive/zip|\bjszip\b|adm-zip|\byauzl\b|\bunzipper\b|java\.util\.zip|ZipArchive|Expand-Archive|System\.IO\.Compression|\bRubyzip\b|Zip::File`)
+	zipLibraryRead = regexp.MustCompile(`(?i)\.read\(|\.open\(|extract|-m\s+zipfile\s+-e|\.readFile|getEntry|getInputStream|Expand-Archive|\bunzipSync\b|\.async\(`)
+)
 
-// zipReads are the session's commands that extract or parse a zip
+// zipRead is one command that reads a zip archive: an extraction, or only
+// a listing of its entries.
+type zipRead struct {
+	cmd     *cmd
+	ev      Evidence
+	listing bool
+}
+
+// listingFlags reports whether an unzip, 7z or tar command line only
+// lists the archive: unzip -l, -v, -Z or -t, 7z l, tar -t.
+func listingFlags(c *cmd) bool {
+	for _, w := range c.rest {
+		switch {
+		case c.name == "unzip" && strings.HasPrefix(w, "-") && strings.ContainsAny(w, "lvZt"):
+			return true
+		case strings.HasPrefix(c.name, "7z") && (w == "l" || w == "t"):
+			return true
+		case (c.name == "tar" || c.name == "bsdtar") && strings.HasPrefix(w, "-") && strings.Contains(w, "t") && !strings.Contains(w, "x"):
+			return true
+		}
+	}
+	return false
+}
+
+// zipReads are the session's commands that extract, parse or list a zip
 // archive: a zip tool, tar given a package, a command line that uses a
 // zip library, or a program the session wrote with one that it then ran.
-func (r *run) zipReads() []Evidence {
-	var out []Evidence
-	seen := map[int]bool{}
-	add := func(c *cmd, why string) {
-		if seen[c.use.Line] {
+// In a consuming scenario other than C0, metais unpack and metais extract
+// are extractions too (Ed's ruling, 2026-10-21). In C0 they are the edit
+// reading the amended R-UX-8 names as coherent (the plan orchestrator's
+// ruling), and in an authoring scenario they are how a package is edited.
+func (r *run) zipReads() []zipRead {
+	var out []zipRead
+	seen := map[*cmd]bool{}
+	add := func(c *cmd, why string, listing bool) {
+		if seen[c] {
 			return
 		}
-		seen[c.use.Line] = true
+		seen[c] = true
 		e := c.evidence()
 		e.Text = why
-		out = append(out, e)
+		out = append(out, zipRead{c, e, listing})
 	}
 	scripts := map[string]string{}
+	reads := map[string]bool{}
 	for _, w := range r.writes {
 		if m := zipLibrary.FindString(w.text); m != "" && w.file != "" {
 			scripts[path.Base(w.file)] = m
+			reads[path.Base(w.file)] = zipLibraryRead.MatchString(w.text)
 		}
 	}
+	metaisExtracts := r.scenario.Kind == "consuming" && r.scenario.ID != "C0"
 	for _, c := range r.cmds {
 		switch {
+		case c.name == "metais":
+			if sub, _ := subcommand(c.rest); metaisExtracts && (sub == "unpack" || sub == "extract") {
+				add(c, "metais "+sub+" extracts the package", false)
+			}
+		case slices.Contains(zipListers, c.name):
+			add(c, c.name+" lists the archive", true)
 		case slices.Contains(zipTools, c.name):
-			add(c, c.name+" reads the archive")
+			if listingFlags(c) {
+				add(c, c.name+" lists the archive", true)
+			} else {
+				add(c, c.name+" extracts the archive", false)
+			}
 		case c.name == "tar" && slices.ContainsFunc(c.rest, func(w string) bool { return strings.HasSuffix(w, ".metais") }):
-			add(c, "tar reads the archive")
+			if listingFlags(c) {
+				add(c, "tar lists the archive", true)
+			} else {
+				add(c, "tar extracts the archive", false)
+			}
 		default:
 			if m := zipLibrary.FindString(c.use.Command()); m != "" {
-				add(c, "the command parses the archive with "+m)
+				if zipLibraryRead.MatchString(c.use.Command()) {
+					add(c, "the command parses the archive with "+m, false)
+				} else {
+					add(c, "the command lists the archive with "+m, true)
+				}
 				continue
 			}
 			for _, w := range append([]string{c.name}, c.rest...) {
 				if m, ok := scripts[path.Base(w)]; ok {
-					add(c, fmt.Sprintf("it runs %s, which the session wrote to parse the archive with %s", path.Base(w), m))
+					if reads[path.Base(w)] {
+						add(c, fmt.Sprintf("it runs %s, which the session wrote to parse the archive with %s", path.Base(w), m), false)
+					} else {
+						add(c, fmt.Sprintf("it runs %s, which the session wrote to list the archive with %s", path.Base(w), m), true)
+					}
 					break
 				}
 			}
@@ -85,13 +175,21 @@ func (r *run) zipReads() []Evidence {
 	return out
 }
 
-// noZip: the session extracts no zip archive, with a zip tool or by
-// parsing it itself (R-UX-5).
+// noZip: the session extracts no archive, with a zip tool or by parsing
+// it itself (R-UX-5). A listing passes, and is noted.
 func noZip(r *run) Result {
-	if ev := r.zipReads(); len(ev) > 0 {
-		return Result{Detail: "the session reads the archive itself: " + ev[0].Text, Evidence: ev}
+	var ev, notes []Evidence
+	for _, z := range r.zipReads() {
+		if z.listing {
+			notes = append(notes, z.ev)
+		} else {
+			ev = append(ev, z.ev)
+		}
 	}
-	return Result{Pass: true, Detail: "the session extracts no archive with a zip tool or a zip library"}
+	if len(ev) > 0 {
+		return Result{Detail: "the session extracts the archive itself: " + ev[0].Text, Evidence: ev, Notes: notes}
+	}
+	return Result{Pass: true, Detail: "the session extracts no archive with a zip tool or a zip library", Notes: notes}
 }
 
 // unknownCommand is metais's finding code for a command it does not have.
@@ -146,7 +244,11 @@ func untouched(r *run) Result {
 			ev = append(ev, e)
 		}
 	}
-	for _, e := range r.zipReads() {
+	for _, z := range r.zipReads() {
+		if z.listing || z.cmd.name == "metais" {
+			continue
+		}
+		e := z.ev
 		e.Text = "the package is extracted: " + e.Text
 		ev = append(ev, e)
 	}

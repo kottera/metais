@@ -79,3 +79,29 @@ func TestExpand(t *testing.T) {
 		t.Error("a command with assignments is read as assignments alone")
 	}
 }
+
+// TestListingFlags: unzip -l, -v, -Z and -t, zipinfo, 7z l and tar -t
+// only list an archive; plain unzip, -o, -x, -p and -d extract it (Ed's
+// ruling, 2026-10-21).
+func TestListingFlags(t *testing.T) {
+	for line, want := range map[string]bool{
+		"unzip -l report.metais":           true,
+		"unzip -v report.metais":           true,
+		"unzip -Z report.metais":           true,
+		"unzip -tq report.metais":          true,
+		"7z l report.metais":               true,
+		"tar -tf report.metais":            true,
+		"unzip report.metais":              false,
+		"unzip -o -q report.metais":        false,
+		"unzip -p report.metais a.md":      false,
+		"unzip report.metais -d out":       false,
+		"unzip report.metais -x README.md": false,
+		"tar -xf report.metais":            false,
+	} {
+		s := parseShell(line)[0]
+		name, rest := s.name()
+		if got := listingFlags(&cmd{name: name, rest: rest}); got != want {
+			t.Errorf("%q lists only: %v, want %v", line, got, want)
+		}
+	}
+}

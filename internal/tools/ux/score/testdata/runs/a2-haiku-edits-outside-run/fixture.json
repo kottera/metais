@@ -8,13 +8,13 @@
     "model": "claude-haiku-5-5"
   },
   "expect": {
-    "first-metais-is-inspect": "n/a",
+    "inspect-first": "n/a",
     "no-zip-extraction": "fail",
     "no-unknown-command": "pass",
     "package-untouched": "n/a",
     "outcome": "pass"
   },
   "reasons": {
-    "no-zip-extraction": "unzip reads the archive"
+    "no-zip-extraction": "unzip extracts the archive"
   }
 }

@@ -9,7 +9,7 @@
   },
   "edited": "Recorded with -with-skill. Its last turn, a metais read of a shipped example's expected output, is replaced by metais render --sample and a look at the result, each with the real output of running it on a copy of the session's starting directory. No session rendered C3 from generated data in the recorded runs, with or without the skill.",
   "expect": {
-    "first-metais-is-inspect": "pass",
+    "inspect-first": "pass",
     "no-zip-extraction": "pass",
     "no-unknown-command": "pass",
     "package-untouched": "pass",

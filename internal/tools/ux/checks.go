@@ -43,6 +43,7 @@ const (
 	checkReported        = "session-as-started"
 	checkSkill           = "skill-as-declared"
 	checkNoMemory        = "no-memory-read"
+	checkInsideRun       = "writes-inside-run"
 )
 
 // fileEntry is one regular file of a directory: its path, slash-separated
@@ -353,6 +354,50 @@ func changes(before, after []fileEntry) []fileEntry {
 	}
 	slices.SortFunc(out, func(a, b fileEntry) int { return strings.Compare(a.Path, b.Path) })
 	return out
+}
+
+// outsideRun lists the files of the set's directory out that are not in
+// the run's own directory, runDir beneath it.
+func outsideRun(out, runDir string) ([]fileEntry, error) {
+	files, err := listFiles(out)
+	rel := strings.TrimPrefix(filepath.ToSlash(strings.TrimPrefix(runDir, out)), "/") + "/"
+	return slices.DeleteFunc(files, func(f fileEntry) bool { return strings.HasPrefix(f.Path, rel) }), err
+}
+
+// writeTools are the tools that write the file their input names.
+var writeTools = []string{"Write", "Edit", "MultiEdit", "NotebookEdit"}
+
+// checkWritesInsideRun: the session wrote nothing outside its own run
+// directory (Ed's ruling, 2026-10-21). The set's directory outside the
+// run's is listed before the session and after it, and must be as it
+// was; and no Write or Edit tool call names a file outside the run's
+// directory. A command line that writes outside the set's directory is
+// not seen: the dispatch's sandbox refuses most such paths.
+func checkWritesInsideRun(runDir, work string, before, after []fileEntry, t transcript) check {
+	for _, f := range changes(before, after) {
+		if f.Change != "unchanged" {
+			return fail(checkInsideRun, "the set's %s is %s outside the run's directory", f.Path, f.Change)
+		}
+	}
+	for i, u := range t.ToolUses {
+		if !slices.Contains(writeTools, u.Name) {
+			continue
+		}
+		p := u.Field("file_path")
+		if p == "" {
+			p = u.Field("notebook_path")
+		}
+		if p == "" {
+			continue
+		}
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(work, p)
+		}
+		if p = filepath.Clean(p); p != runDir && !strings.HasPrefix(p, runDir+string(filepath.Separator)) {
+			return fail(checkInsideRun, "tool call %d (%s) writes %s, outside the run's directory", i+1, u.Name, p)
+		}
+	}
+	return pass(checkInsideRun)
 }
 
 // valid reports whether every check passed.

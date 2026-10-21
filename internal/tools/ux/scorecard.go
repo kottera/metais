@@ -192,6 +192,58 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 	}
 	p("\n")
 
+	p("## Notes\n\n")
+	noted := false
+	for _, r := range runs {
+		if r.outcome == nil || !r.outcome.Scored {
+			continue
+		}
+		sc := scrub.New(filepath.Join(c.out, "runs", r.scenario.Name(), r.model), c.out)
+		for _, res := range r.outcome.Rules {
+			for _, n := range res.Notes {
+				noted = true
+				w.Write(sc.Bytes(fmt.Appendf(nil, "- **%s %s** `%s`: %s — %s\n", r.scenario.Name(), r.model, res.Rule, n.Text, evidence(n))))
+			}
+		}
+	}
+	if !noted {
+		p("None.\n")
+	}
+	p("\n")
+
+	p("## Recorded verdicts\n\n")
+	p("C0's and C1's checks read the session's words by phrase. A run may carry a verdict, from a judge model or a person, which then decides the check. Before a scorecard counts towards R-UX-5's thresholds, every C0 and C1 run carries one.\n\n")
+	var judged, verdicts int
+	var needs, disagree []string
+	for _, r := range runs {
+		if r.outcome == nil || !r.outcome.Judged {
+			continue
+		}
+		judged++
+		name := r.scenario.Name() + " " + r.model
+		switch {
+		case r.outcome.NeedsVerdict:
+			needs = append(needs, name)
+		case r.outcome.Disagree:
+			verdicts++
+			v := r.outcome.Verdict
+			disagree = append(disagree, fmt.Sprintf("- **%s**: the phrase check says %s (%s); %s judged it %s: %s", name,
+				map[bool]string{true: "pass", false: "fail"}[r.outcome.Phrase.Pass], r.outcome.Phrase.Detail, v.Judge, v.Verdict, v.Rationale))
+		default:
+			verdicts++
+		}
+	}
+	p("%d of %d judged runs carry a verdict.", verdicts, judged)
+	if len(needs) > 0 {
+		p(" Without one: %s.", strings.Join(needs, ", "))
+	}
+	p("\n\n")
+	if len(disagree) > 0 {
+		p("Where the phrase check and the verdict disagree:\n\n%s\n\n", strings.Join(disagree, "\n"))
+	} else {
+		p("The phrase check and the verdict disagree on no run.\n\n")
+	}
+
 	p("## What the outcome checks cannot see\n\n")
 	p("Every rule and check is decided by code over the transcript and the run's directory, with no model call. Where the table asks for a judgement, the check is narrower than the judgement, and says so here.\n\n")
 	for _, s := range set {

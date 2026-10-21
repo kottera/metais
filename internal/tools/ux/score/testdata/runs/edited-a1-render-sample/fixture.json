@@ -9,7 +9,7 @@
   },
   "edited": "Recorded with -with-skill. The session made and packed the package and rendered it with --data only; a metais render --sample of its packed package is added after its last turn, with the real output of running it on the directory the session left, and a sentence is added to its answer.",
   "expect": {
-    "first-metais-is-inspect": "n/a",
+    "inspect-first": "n/a",
     "no-zip-extraction": "pass",
     "no-unknown-command": "pass",
     "package-untouched": "n/a",

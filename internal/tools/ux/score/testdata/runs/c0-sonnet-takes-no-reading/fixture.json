@@ -8,7 +8,7 @@
     "model": "claude-sonnet-5-5"
   },
   "expect": {
-    "first-metais-is-inspect": "pass",
+    "inspect-first": "pass",
     "no-zip-extraction": "pass",
     "no-unknown-command": "pass",
     "package-untouched": "n/a",

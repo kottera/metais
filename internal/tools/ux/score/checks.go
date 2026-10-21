@@ -19,29 +19,32 @@ import (
 type check struct {
 	run    func(r *run) Result
 	limits string
+	// judged marks a check that reads the session's words: a recorded
+	// verdict, when the run carries one, decides it.
+	judged bool
 }
 
 // checks are the outcome checks, by the name a scenario's declaration
 // gives as its check.
 var checks = map[string]check{
 	"either-reading": {eitherReading,
-		"Whether the session said which reading it took, and whether it presented invented facts as real, is decided from its words by phrase: a statement of its reading (\"I took this to mean…\", \"I interpreted…\", \"assuming you meant…\") naming what it did, and a word that marks its data as made up (fictional, sample, placeholder…). A statement worded outside those phrases is not seen, and a fact the session invented is not seen if its words call the data fictional."},
+		"Whether the session said which reading it took, and whether it presented invented facts as real, is decided from its words by phrase: a statement of its reading (\"I took this to mean…\", \"I interpreted…\", \"assuming you meant…\") naming what it did, and a word that marks its data as made up (fictional, sample, placeholder…). A statement worded outside those phrases is not seen, and a fact the session invented is not seen if its words call the data fictional.", true},
 	"asks-not-invents": {asksNotInvents,
-		"Invention is seen as a rendered document: a session that renders nothing passes however it fills a data file it leaves behind, which the check counts as a scaffold. Asking is seen as a question mark or a request (\"please provide\", \"send me\", \"let me know\") in the session's last words."},
+		"Invention is seen as a rendered document: a session that renders nothing passes however it fills a data file it leaves behind, which the check counts as a scaffold. Asking is seen as a question mark or a request (\"please provide\", \"send me\", \"let me know\") in the session's last words.", true},
 	"new-fictional-render": {newFictionalRender,
-		"New data is data that is not a shipped example's: equal to one, input by input, or rendering one of its expected outputs byte for byte. A copy with a value changed is new."},
+		"New data is data that is not a shipped example's: equal to one, input by input, or rendering one of its expected outputs byte for byte. A copy with a value changed is new.", false},
 	"generated-preview": {generatedPreview,
-		"Generated data is metais's: render --sample, or a data directory metais sample wrote. Data the session wrote by hand is not generated."},
+		"Generated data is metais's: render --sample, or a data directory metais sample wrote. Data the session wrote by hand is not generated.", false},
 	"names-every-input": {namesEveryInput,
-		"An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted."},
+		"An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted.", false},
 	"script-renders": {scriptRenders,
-		"A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it, the harness reports no error, and the run renders: render's listing of the files it wrote is in its output, or a file named as one of the package's outputs is left in the session's directory. The scorer does not run the script again."},
+		"A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it, the harness reports no error, and the run renders: render's listing of the files it wrote is in its output, or a file named as one of the package's outputs is left in the session's directory. The scorer does not run the script again.", false},
 	"new-package": {newPackage,
-		"check passing is seen through pack, which checks and tests the package before it writes it."},
+		"check passing is seen through pack, which checks and tests the package before it writes it.", false},
 	"schema-and-template": {schemaAndTemplate,
-		"A change is seen in the files the session left, compared with the package's source, or in what its Write and Edit calls wrote: a schema and a template that each gain a due date. A change made by a command line whose files are gone is not seen."},
+		"A change is seen in the files the session left, compared with the package's source, or in what its Write and Edit calls wrote: a schema and a template that each gain a due date. A change made by a command line whose files are gone is not seen.", false},
 	"data-to-js": {dataToJS,
-		"The page's data parses when a script element of a rendered HTML output holds a JSON array. Whether the array is the numbers given is not checked."},
+		"The page's data parses when a script element of a rendered HTML output holds a JSON array. Whether the array is the numbers given is not checked.", false},
 }
 
 // CheckLimits is what a check cannot see, as a scorecard states it.

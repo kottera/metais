@@ -374,6 +374,11 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 		return r, writeJSON(filepath.Join(dir, recordFile), r)
 	}
 
+	// The set's directory outside the run's, as the session found it.
+	before, err := outsideRun(c.out, dir)
+	if err != nil {
+		return nil, err
+	}
 	out, err := os.Create(filepath.Join(dir, transcriptFile))
 	if err != nil {
 		return nil, err
@@ -404,6 +409,11 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 	r.Turns, r.CostUSD, r.DurationMS = t.Result.Turns, t.Result.CostUSD, t.Result.DurationMS
 	r.IsError, r.Subtype, r.ToolUses = t.Result.IsError, t.Result.Subtype, len(t.ToolUses)
 	r.Checks = append(r.Checks, c.harness.after(ses, st.rec.Harness.Version, t)...)
+	afterSet, err := outsideRun(c.out, dir)
+	if err != nil {
+		return nil, err
+	}
+	r.Checks = append(r.Checks, checkWritesInsideRun(dir, ses.work, before, afterSet, t))
 	r.Valid = valid(r.Checks)
 
 	switch {

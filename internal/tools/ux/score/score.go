@@ -34,9 +34,9 @@ const Format = "metais-ux-outcome/1"
 
 // The pass rules of R-UX-5, by the names an outcome reports them under.
 const (
-	// RuleFirstInspect: the first metais command of a consuming scenario
-	// is inspect.
-	RuleFirstInspect = "first-metais-is-inspect"
+	// RuleInspectFirst: a consuming session reads nothing of the package's
+	// contents before metais inspect.
+	RuleInspectFirst = "inspect-first"
 	// RuleNoZip: no zip extraction, by a zip tool or by parsing the
 	// archive itself.
 	RuleNoZip = "no-zip-extraction"
@@ -63,6 +63,16 @@ type Outcome struct {
 	// Pass is true when every rule that applies passes.
 	Pass  bool     `json:"pass"`
 	Rules []Result `json:"rules"`
+	// For a check that reads the session's words (Judged), Verdict is the
+	// recorded verdict the outcome rule follows, Phrase the phrase check's
+	// own result beside it, and Disagree whether the two differ. A judged
+	// check with no verdict follows the phrase check, and NeedsVerdict
+	// says so.
+	Judged       bool     `json:"judged,omitempty"`
+	Verdict      *Verdict `json:"verdict,omitempty"`
+	Phrase       *Result  `json:"phrase,omitempty"`
+	Disagree     bool     `json:"disagree,omitempty"`
+	NeedsVerdict bool     `json:"needs_verdict,omitempty"`
 }
 
 // Result is one rule's result.
@@ -76,6 +86,9 @@ type Result struct {
 	// Detail says why, in a sentence.
 	Detail   string     `json:"detail"`
 	Evidence []Evidence `json:"evidence,omitempty"`
+	// Notes are what the scorecard records beside a result without
+	// failing it, such as a listing of the archive.
+	Notes []Evidence `json:"notes,omitempty"`
 }
 
 // Evidence is what a result rests on: a tool call of the transcript, or a
@@ -91,6 +104,20 @@ type Evidence struct {
 	File string `json:"file,omitempty"`
 	// Text is the session's own words the result rests on.
 	Text string `json:"text,omitempty"`
+}
+
+// Verdict is a judgement of a run recorded in its record, from a judge
+// model or a person, for an outcome check that reads the session's words
+// (Ed's ruling, 2026-10-21). It is optional: the runner never writes one,
+// and Wave 3 records one for every C0 and C1 run before its scorecard
+// counts towards R-UX-5's thresholds.
+type Verdict struct {
+	// Judge names who judged it: a model ID, or a person.
+	Judge string `json:"judge"`
+	// Verdict is pass or fail.
+	Verdict string `json:"verdict"`
+	// Rationale says why, in a sentence or two.
+	Rationale string `json:"rationale"`
 }
 
 // Failing names the rules that apply and fail.
@@ -136,6 +163,7 @@ type record struct {
 	Fixtures   []fileEntry `json:"fixtures"`
 	Files      []fileEntry `json:"files"`
 	Transcript string      `json:"transcript"`
+	Verdict    *Verdict    `json:"verdict"`
 	Checks     []struct {
 		Name   string `json:"name"`
 		Pass   bool   `json:"pass"`
@@ -160,7 +188,7 @@ type rule struct {
 // rules are R-UX-5's, in the order an outcome reports them. The outcome
 // check is last.
 var rules = []rule{
-	{RuleFirstInspect, func(r *run) bool { return r.scenario.Kind == scenario.Consuming }, firstInspect},
+	{RuleInspectFirst, func(r *run) bool { return r.scenario.Kind == scenario.Consuming }, inspectFirst},
 	{RuleNoZip, always, noZip},
 	{RuleNoUnknown, always, noUnknown},
 	{RuleUntouched, func(r *run) bool { return r.scenario.Kind == scenario.Consuming && r.scenario.AsksForOutput }, untouched},
@@ -192,6 +220,9 @@ func Score(in Input) (*Outcome, error) {
 		if ru.applies(r) {
 			res = ru.check(r)
 			res.Rule, res.Applies = ru.name, true
+			if ru.name == RuleOutcome && checks[r.checkName].judged {
+				res = o.judge(r.rec.Verdict, res)
+			}
 		} else {
 			res.Pass, res.Detail = true, "does not apply to "+r.scenario.Name()
 		}
@@ -263,6 +294,21 @@ func load(in Input) (*run, error) {
 	}
 	r.read()
 	return r, nil
+}
+
+// judge applies a recorded verdict to a judged check's phrase result.
+func (o *Outcome) judge(v *Verdict, phrase Result) Result {
+	o.Judged = true
+	if v == nil || v.Verdict != "pass" && v.Verdict != "fail" || v.Judge == "" {
+		o.NeedsVerdict = true
+		return phrase
+	}
+	o.Verdict, o.Phrase = v, &phrase
+	pass := v.Verdict == "pass"
+	o.Disagree = pass != phrase.Pass
+	res := Result{Rule: phrase.Rule, Applies: true, Pass: pass, Evidence: phrase.Evidence, Notes: phrase.Notes,
+		Detail: fmt.Sprintf("judged %s by %s: %s (the phrase check: %s)", v.Verdict, v.Judge, v.Rationale, phrase.Detail)}
+	return res
 }
 
 func (r *run) failedChecks() []string {

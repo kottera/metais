@@ -3,8 +3,9 @@
 
 // Package scrub makes a UX run's files fit to publish (the Wave 1 brief's
 // ruling, PLAN-2026-10-metais-ux W1-2): it takes every credential out of
-// them, the runner's placeholder token included, and every path of the
-// host outside the run's own directory. It is the step a scorer's
+// them, the runner's placeholder token included, every path of the host
+// outside the run's own directory, and the user and group names ls -l
+// prints (Ed's ruling, 2026-10-21). It is the step a scorer's
 // committed fixtures were made by, and the one a baseline's transcripts
 // are put through before they are kept: the runner's -scrub runs it over
 // a set.
@@ -68,6 +69,17 @@ func mangled(p string) string {
 	return regexp.MustCompile(`[^A-Za-z0-9]`).ReplaceAllString(p, "-")
 }
 
+// lsLong matches a line of ls -l: the mode, the link count, then the
+// owner and the group, which name the host's user. Owner and group are
+// replaced, the rest kept.
+var lsLong = regexp.MustCompile(`([-dlcbps][rwxsStT-]{9}[@.+]?[ \t]+[0-9]+[ \t]+)([^ \t\\"]+)([ \t]+)([^ \t\\"]+)([ \t]+[0-9])`)
+
+// The placeholders of an ls -l line's owner and group.
+const (
+	User  = "user"
+	Group = "group"
+)
+
 // Scrubber replaces the paths of one run and every credential.
 type Scrubber struct {
 	dirs []dir
@@ -120,6 +132,14 @@ func scrub(text string) (string, []string) {
 		}
 		found = append(found, "a host path: "+sub[2])
 		return sub[1] + HostPath
+	})
+	text = lsLong.ReplaceAllStringFunc(text, func(m string) string {
+		sub := lsLong.FindStringSubmatch(m)
+		if sub[2] == User && sub[4] == Group {
+			return m
+		}
+		found = append(found, "a user name: "+sub[2]+" "+sub[4])
+		return sub[1] + User + sub[3] + Group + sub[5]
 	})
 	text = hostMangled.ReplaceAllStringFunc(text, func(m string) string {
 		sub := hostMangled.FindStringSubmatch(m)

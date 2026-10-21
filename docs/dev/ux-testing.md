@@ -146,6 +146,7 @@ After the session, the runner reads the transcript and makes these checks:
 | `skill-as-declared` | The `init` event lists the `metais` skill exactly when the run installed it. |
 | `no-session-persistence` | The session's `HOME` holds no saved session (`.claude/projects/**/*.jsonl`). |
 | `no-memory-read` | No tool call names a memory file: `CLAUDE.md`, `CLAUDE.local.md`, `MEMORY.md`, `AGENTS.md`, a `.claude/projects` or `.claude/memory` path, or a `memory/` directory. |
+| `writes-inside-run` | The session wrote nothing outside its own run directory: the set's directory outside the run's is the same after the session as before it, and no Write or Edit tool call names a file outside the run's directory. A command line writing outside the set's directory is not seen; the dispatch's sandbox refuses most such paths. |
 
 Each check has a unit test in `internal/tools/ux` that fails without it.
 
@@ -325,6 +326,7 @@ A set's directory:
 | `fixtures` | the files the session's directory started with, with sizes and digests |
 | `files` | every file it holds afterwards, each marked `added`, `modified`, `unchanged` or `deleted` |
 | `transcript`, `stderr`, `work` | the paths of the transcript, standard error and directory, relative to the run's |
+| `verdict` | absent unless recorded: a judgement of a C0 or C1 run, `{"judge": …, "verdict": "pass" or "fail", "rationale": …}`, written by a judge model or a person ([Recorded verdicts](#recorded-verdicts)). The runner never writes it, and keeps it when it rewrites the record. |
 | `outcome` | the scorer's outcome, written when the set is scored; `null` until then |
 
 A record holds host paths and the placeholder token. It is not committed
@@ -350,8 +352,8 @@ R-UX-5's pass rules, in the order an outcome reports them:
 
 | Rule | Applies to | Fails when |
 |---|---|---|
-| `first-metais-is-inspect` | consuming scenarios | the first `metais` command the session runs is not `metais inspect`. Any `metais` command counts, `metais --version` and `metais help` among them. `which metais` and `command -v metais` look it up and run nothing, so they do not count. A session that runs no `metais` fails. |
-| `no-zip-extraction` | every scenario | the session reads a zip archive itself: a zip tool (`unzip`, `zipinfo`, `7z`, `bsdtar`, `ditto`, `jar`, …), `tar` given a `.metais`, a command line that uses a zip library (`zipfile`, `archive/zip`, `JSZip`, …), or a program the session wrote with one and then ran. `metais unpack` and `metais extract` are metais's own reading, not a zip tool's (the plan orchestrator's ruling for this wave, from the amended R-UX-8). |
+| `inspect-first` | consuming scenarios | the session reads the package's contents before `metais inspect`, or never runs `metais inspect`. Reading the contents is extracting the package (as the next rule reads extraction, `metais unpack` included), or `metais ls`, `read`, `schema`, `outline`, `grep`, `extract` or `unpack` on it. Reading files extracted from it needs it extracted first, so it fails as that does. `metais --version`, `metais version` and `metais help` before `inspect` read nothing and pass, and so does a listing (Ed's ruling, 2026-10-21). |
+| `no-zip-extraction` | every scenario | the session extracts an archive itself: `unzip` (plain, `-o`, `-x`, `-p`, `-d`, …), `7z`, `bsdtar`, `ditto`, `jar`, `tar` given a `.metais`, a command line that reads an entry with a zip library (`zipfile`, `archive/zip`, `JSZip`, …), or a program the session wrote that does and then ran. In a consuming scenario other than C0, `metais unpack` and `metais extract` extract it too (Ed's ruling, 2026-10-21). In C0 they are the edit reading the amended R-UX-8 names as coherent (the plan orchestrator's ruling), and in an authoring scenario they are how a package is edited. A listing only (`unzip -l`, `-v`, `-Z`, `-t`, `zipinfo`, `7z l`, `tar -t`, or a zip library that lists names without reading an entry) passes, and is a note on the scorecard. |
 | `no-unknown-command` | every scenario | `metais` refuses a command the session ran with `usage.unknown_command`. The binary's own finding decides, so the rule follows the binary as it gains commands. |
 | `package-untouched` | consuming scenarios whose prompt asks for output: C1, C2, C3 and C5 | R-UX-8: the session extracts the package (`metais unpack`, `metais extract`, or any reading the previous rule refuses), changes or deletes the package file, writes it, or runs `metais pack`. |
 | `outcome` | every scenario | the scenario's own outcome check fails. |
@@ -391,6 +393,25 @@ word such as fictional, sample or placeholder. C1's asking is a question
 mark or a request such as "please provide" or "let me know" in its last
 words.
 
+### Recorded verdicts
+
+Ed accepted the phrase checks for the baseline (2026-10-21). Before a
+scorecard counts towards R-UX-5's thresholds, which Wave 3's does, every
+C0 and C1 run also carries a recorded verdict, from a judge model or Ed,
+in its record's `verdict`:
+
+```json
+"verdict": {"judge": "claude-opus-5-5", "verdict": "pass", "rationale": "it says it took the edit reading and calls the data fictional"}
+```
+
+When a run carries one, it decides the `outcome` rule, and the outcome
+keeps the phrase check's own result beside it (`phrase`) and says whether
+the two disagree (`disagree`). A run of C0 or C1 without one follows the
+phrase check, and its outcome says it needs a verdict (`needs_verdict`).
+A verdict on any other scenario's run is ignored. The scorecard counts the
+judged runs that carry one, names those that do not, and lists every run
+where the phrase check and the verdict disagree.
+
 ### Adding a check
 
 1. Write the check in `internal/tools/ux/score/checks.go`: a function from
@@ -414,12 +435,12 @@ and `tmp/`, made by `-scrub`, and its `fixture.json`:
 
 ```json
 {
-  "shows": "the session unzips the package to find its way",
-  "recorded": {"set": "ux-haiku", "run": "C4-what-it-needs/haiku", "date": "2026-10-21",
-               "commit": "<the set's commit>", "model": "claude-haiku-5-5"},
-  "expect": {"first-metais-is-inspect": "fail", "no-zip-extraction": "fail",
-             "no-unknown-command": "pass", "package-untouched": "n/a", "outcome": "fail"},
-  "reasons": {"no-zip-extraction": "unzip reads the archive", "…": "…"}
+  "shows": "the session parses the package with Python's zipfile, and shows a shipped example's expected output",
+  "recorded": {"set": "ux-sonnet", "run": "C3-preview/sonnet", "date": "2026-10-21",
+               "commit": "<the set's commit>", "model": "claude-sonnet-5-5"},
+  "expect": {"inspect-first": "fail", "no-zip-extraction": "fail",
+             "no-unknown-command": "pass", "package-untouched": "fail", "outcome": "fail"},
+  "reasons": {"no-zip-extraction": "zipfile", "…": "…"}
 }
 ```
 
@@ -476,9 +497,11 @@ lists each file with its size and digest. Every file is put through
   a later reader never has to decide.
 
 `scrub.Check` names anything a scrub would still remove, and
-`TestFixturesAreScrubbed` holds every committed fixture to it. A user name
-that `ls -l` prints is not a path and is kept. On a person's own host,
-read the scrubbed copy before publishing it.
+`TestFixturesAreScrubbed` holds every committed fixture to it. The owner
+and group of each `ls -l` line become `user` and `group` (Ed's ruling,
+2026-10-21), as transcripts are kept as artifacts. On a person's own host,
+read the scrubbed copy before publishing it: a user name written anywhere
+else is not seen.
 
 ## The scorecard
 
@@ -501,12 +524,17 @@ as `docs/ux/scorecard-<date>-<name>.md` (plan §2):
 4. **Why each run failed**: for each failing run, each failing rule with
    its detail and its first piece of evidence, scrubbed; for each invalid
    run, the isolation check that failed.
-5. **What the outcome checks cannot see**: each scenario's check and its
+5. **Notes**: what a rule records without failing the run, such as a
+   listing of the archive (`unzip -l`), with its evidence.
+6. **Recorded verdicts**: how many C0 and C1 runs carry a verdict, which
+   do not, and each run where the phrase check and the verdict disagree.
+7. **What the outcome checks cannot see**: each scenario's check and its
    stated limits.
-6. **Prompts reworded under R-UX-9**: each rewording, with the ambiguity
+8. **Prompts reworded under R-UX-9**: each rewording, with the ambiguity
    and the transcript that showed it, and any run whose prompt is not the
    set's; or "None".
 
 The scorer writes each run's outcome into its record's `outcome`, in
 format `metais-ux-outcome/1`: whether it was scored and why not, whether
-it passed, and each rule's result, detail and evidence.
+it passed, each rule's result, detail, evidence and notes, and for C0 and
+C1 the verdict it followed and the phrase check's result beside it.

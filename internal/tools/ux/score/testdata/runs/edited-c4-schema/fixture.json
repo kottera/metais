@@ -9,7 +9,7 @@
   },
   "edited": "Recorded with -with-skill. After the session's metais inspect, a metais schema of each input is added, with the real output of running it, and the final answer is written to name each input's required fields from that output. No session ran metais schema for C4 in the recorded runs.",
   "expect": {
-    "first-metais-is-inspect": "pass",
+    "inspect-first": "pass",
     "no-zip-extraction": "pass",
     "no-unknown-command": "pass",
     "package-untouched": "n/a",

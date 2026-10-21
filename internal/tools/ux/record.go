@@ -136,7 +136,12 @@ type runRecord struct {
 	Stderr     string `json:"stderr"`
 	Work       string `json:"work"`
 
-	// Outcome is the scorer's; the runner reserves it.
+	// Verdict is a recorded judgement of a C0 or C1 run (package score's
+	// Verdict), written by a judge model or a person, never by the runner.
+	// The runner keeps it as written when it rewrites the record.
+	Verdict json.RawMessage `json:"verdict,omitempty"`
+
+	// Outcome is the scorer's; the runner writes it when it scores the set.
 	Outcome json.RawMessage `json:"outcome"`
 }
 
