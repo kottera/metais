@@ -1,7 +1,7 @@
 // Copyright 2026 Kottera
 // SPDX-License-Identifier: Apache-2.0
 
-package render
+package sink
 
 import (
 	"errors"
@@ -11,6 +11,7 @@ import (
 	"github.com/kottera/metais/internal/fault"
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
+	"github.com/kottera/metais/internal/render"
 	"github.com/kottera/metais/internal/tarw"
 )
 
@@ -18,40 +19,40 @@ import (
 // built from the rendered bytes and never from disk (item 6). A failed
 // write to w ends it unreported, as every write to standard output is
 // (ADR-006 D12 item 5); any other error is a defect.
-func WriteArchive(w io.Writer, plan []*File) {
+func WriteArchive(w io.Writer, plan []*render.File) {
 	ew := &stickyWriter{w: w}
 	tw := tarw.NewWriter(ew)
 	for _, pf := range plan {
 		size, _ := pf.Measured()
 		r, done := pf.Open()
-		err := tw.Add(pf.path, pf.decl.Executable, size, r)
+		err := tw.Add(pf.Path(), pf.Executable(), size, r)
 		if derr := done(err); err == nil && derr != nil {
-			panic("render: a measured container does not write: " + derr.Error())
+			panic("sink: a measured container does not write: " + derr.Error())
 		}
 		if err != nil {
 			if ew.err != nil {
 				return
 			}
-			panic("render: " + err.Error())
+			panic("sink: " + err.Error())
 		}
 	}
 	if err := tw.Close(); err != nil && ew.err == nil {
-		panic("render: " + err.Error())
+		panic("sink: " + err.Error())
 	}
 }
 
 // WriteContent writes pf's bytes alone to w (ADR-005 D18 item 1): an
 // asset's as the package holds them, and a container's zip as it is
 // assembled. A failed write ends it unreported.
-func WriteContent(w io.Writer, pf *File) {
+func WriteContent(w io.Writer, pf *render.File) {
 	ew := &stickyWriter{w: w}
 	r, done := pf.Open()
 	_, err := io.Copy(ew, r)
 	if derr := done(err); err == nil && derr != nil {
-		panic("render: a measured container does not write: " + derr.Error())
+		panic("sink: a measured container does not write: " + derr.Error())
 	}
 	if err != nil && ew.err == nil {
-		panic("render: " + err.Error())
+		panic("sink: " + err.Error())
 	}
 }
 
@@ -75,7 +76,7 @@ func (sw *stickyWriter) Write(b []byte) (int, error) {
 // beneath a staging directory beside out, renamed to out (item 1). A
 // failure removes what the render created and reports
 // output.destination.nothing_written.
-func Commit(out string, dest *Destination, plan []*File, faults fault.Set) (finding.Finding, bool) {
+func Commit(out string, dest *Destination, plan []*render.File, faults fault.Set) (finding.Finding, bool) {
 	if dest != nil {
 		return commitExisting(dest, plan)
 	}
@@ -104,14 +105,14 @@ func Commit(out string, dest *Destination, plan []*File, faults fault.Set) (find
 // one after is
 // output.destination.commit_failed, listing the paths already committed
 // (item 3).
-func commitExisting(dest *Destination, plan []*File) (finding.Finding, bool) {
+func commitExisting(dest *Destination, plan []*render.File) (finding.Finding, bool) {
 	defer dest.Close()
 	// --only writes the one file selected, by the same rules (ADR-005 D18
 	// item 3); every planned path was checked all the same, so a selected
 	// render is refused exactly when the whole one is (item 2).
 	write := map[string]bool{}
 	for _, pf := range plan {
-		write[pf.path] = true
+		write[pf.Path()] = true
 	}
 	var checks []hostfs.PathCheck
 	for _, c := range dest.checks {
@@ -142,14 +143,14 @@ func commitExisting(dest *Destination, plan []*File) (finding.Finding, bool) {
 
 // prepare writes every file of plan through o, in path order, with every
 // directory it needs. A failure aborts o, which removes what it wrote.
-func prepare(o *hostfs.Output, plan []*File) (finding.Finding, bool) {
+func prepare(o *hostfs.Output, plan []*render.File) (finding.Finding, bool) {
 	for _, pf := range plan {
-		err := o.MkdirAll(pathpkg.Dir(pf.path))
+		err := o.MkdirAll(pathpkg.Dir(pf.Path()))
 		if err == nil {
 			r, done := pf.Open()
-			err = o.Create(pf.path, pf.decl.Executable, r)
+			err = o.Create(pf.Path(), pf.Executable(), r)
 			if derr := done(err); err == nil && derr != nil {
-				panic("render: a measured container does not write: " + derr.Error())
+				panic("sink: a measured container does not write: " + derr.Error())
 			}
 		}
 		if err != nil {

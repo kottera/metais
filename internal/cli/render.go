@@ -16,6 +16,7 @@ import (
 	"github.com/kottera/metais/internal/inputs"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/render"
+	"github.com/kottera/metais/internal/render/sink"
 	"github.com/kottera/metais/internal/sample"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/version"
@@ -367,14 +368,14 @@ func runRender(s *session, p args.Parsed) outcome {
 	// the directory commit of every file, or of the one selected (D14
 	// item 1, D18 item 3).
 	faults := s.inv.Options.Faults
-	var dest *render.Destination
+	var dest *sink.Destination
 	defer func() { dest.Close() }()
 	var e render.Emitter
 	if !toStream {
 		overwrite := p.Has("overwrite")
 		e.Check = func(plan []*render.File) []finding.Finding {
 			var dfs []finding.Finding
-			dest, dfs = render.CheckDestination(out, overwrite, plan, lim, faults)
+			dest, dfs = sink.CheckDestination(out, overwrite, plan, lim, faults)
 			return dfs
 		}
 	}
@@ -382,15 +383,15 @@ func runRender(s *session, p args.Parsed) outcome {
 	case dryRun:
 	case toStream && hasOnly:
 		e.Emit = func(files []*render.File) render.Emission {
-			return render.Emission{Stream: func(w io.Writer) { render.WriteContent(w, files[0]) }}
+			return render.Emission{Stream: func(w io.Writer) { sink.WriteContent(w, files[0]) }}
 		}
 	case toStream:
 		e.Emit = func(files []*render.File) render.Emission {
-			return render.Emission{Stream: func(w io.Writer) { render.WriteArchive(w, files) }}
+			return render.Emission{Stream: func(w io.Writer) { sink.WriteArchive(w, files) }}
 		}
 	default:
 		e.Emit = func(files []*render.File) render.Emission {
-			if f, ok := render.Commit(out, dest, files, faults); !ok {
+			if f, ok := sink.Commit(out, dest, files, faults); !ok {
 				return render.Emission{Failed: &f}
 			}
 			return render.Emission{}

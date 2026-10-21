@@ -23,7 +23,7 @@ import (
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/regexprofile"
-	"github.com/kottera/metais/internal/render"
+	"github.com/kottera/metais/internal/render/sink"
 	"github.com/kottera/metais/internal/sample"
 )
 
@@ -496,28 +496,28 @@ func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool)
 		for _, f := range files {
 			if err := writeFile(o, f); err != nil {
 				o.Abort()
-				return []finding.Finding{render.NothingWritten(hostfs.ReasonOf(err))}
+				return []finding.Finding{sink.NothingWritten(hostfs.ReasonOf(err))}
 			}
 		}
 		if err := o.Commit(); err != nil {
-			return []finding.Finding{render.NothingWritten(hostfs.ReasonOf(err))}
+			return []finding.Finding{sink.NothingWritten(hostfs.ReasonOf(err))}
 		}
 		return nil
 	}
-	entries, err := w.List(".", render.MaxListed+1)
+	entries, err := w.List(".", sink.MaxListed+1)
 	w.Close()
 	if err != nil && hostfs.ReasonOf(err) != hostfs.TooLarge {
-		return []finding.Finding{render.NothingWritten(hostfs.ReasonOf(err))}
+		return []finding.Finding{sink.NothingWritten(hostfs.ReasonOf(err))}
 	}
 	if len(entries) > 0 && !overwrite {
 		var names []string
-		for _, e := range entries[:min(len(entries), render.MaxListed)] {
+		for _, e := range entries[:min(len(entries), sink.MaxListed)] {
 			names = append(names, e.Name)
 		}
 		slices.Sort(names)
 		return []finding.Finding{finding.New(finding.CodeDestinationNotEmpty, invocation, nil, finding.Params{
 			"entries": stringList(names),
-			"more":    finding.Bool(len(entries) > render.MaxListed),
+			"more":    finding.Bool(len(entries) > sink.MaxListed),
 		})}
 	}
 	x, err := hostfs.OpenExisting(to, opt)
@@ -527,9 +527,9 @@ func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool)
 	defer x.Close()
 	var fs []finding.Finding
 	if _, err := x.Lstat(hostfs.StagingDir); err == nil {
-		fs = append(fs, render.StagingExists())
+		fs = append(fs, sink.StagingExists())
 	} else if r := hostfs.ReasonOf(err); r != hostfs.NotFound {
-		fs = append(fs, render.NothingWritten(r))
+		fs = append(fs, sink.NothingWritten(r))
 	}
 	paths := make([]string, len(files))
 	for i, f := range files {
@@ -538,7 +538,7 @@ func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool)
 	checks := x.Check(paths)
 	for _, c := range checks {
 		if c.Err != nil {
-			fs = append(fs, render.PathRefusal(c.Path, c.Err))
+			fs = append(fs, sink.PathRefusal(c.Path, c.Err))
 		}
 	}
 	if len(fs) > 0 || dry {
@@ -546,7 +546,7 @@ func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool)
 	}
 	o, err := x.Stage(checks)
 	if err != nil {
-		return []finding.Finding{render.StageFailed(err)}
+		return []finding.Finding{sink.StageFailed(err)}
 	}
 	for _, f := range files {
 		var err error
@@ -557,7 +557,7 @@ func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool)
 		}
 		if err != nil {
 			o.Abort()
-			return []finding.Finding{render.NothingWritten(hostfs.ReasonOf(err))}
+			return []finding.Finding{sink.NothingWritten(hostfs.ReasonOf(err))}
 		}
 	}
 	err = o.Commit()
@@ -567,11 +567,11 @@ func (s *session) writeData(to string, files []inputs.File, overwrite, dry bool)
 		return nil
 	case errors.As(err, &ce) && len(ce.Committed) > 0:
 		return []finding.Finding{finding.New(finding.CodeDestinationCommitFailed, invocation, nil, finding.Params{
-			"reason":    finding.String(render.WriteReason(hostfs.ReasonOf(err))),
+			"reason":    finding.String(sink.WriteReason(hostfs.ReasonOf(err))),
 			"committed": stringList(ce.Committed),
 		})}
 	}
-	return []finding.Finding{render.NothingWritten(hostfs.ReasonOf(err))}
+	return []finding.Finding{sink.NothingWritten(hostfs.ReasonOf(err))}
 }
 
 // writeExample writes files as the new example directory dest, which must
@@ -585,7 +585,7 @@ func (s *session) writeExample(dest string, files []inputs.File, dry bool) []fin
 	}
 	w.Close()
 	if rest == "." {
-		return []finding.Finding{render.NothingWritten(hostfs.Exists)}
+		return []finding.Finding{sink.NothingWritten(hostfs.Exists)}
 	}
 	if dry {
 		return nil
@@ -597,11 +597,11 @@ func (s *session) writeExample(dest string, files []inputs.File, dry bool) []fin
 	for _, f := range files {
 		if err := writeFile(o, f); err != nil {
 			o.Abort()
-			return []finding.Finding{render.NothingWritten(hostfs.ReasonOf(err))}
+			return []finding.Finding{sink.NothingWritten(hostfs.ReasonOf(err))}
 		}
 	}
 	if err := o.Commit(); err != nil {
-		return []finding.Finding{render.NothingWritten(hostfs.ReasonOf(err))}
+		return []finding.Finding{sink.NothingWritten(hostfs.ReasonOf(err))}
 	}
 	return nil
 }
@@ -625,7 +625,7 @@ func destinationRefusal(err error) finding.Finding {
 	if hostfs.ReasonOf(err) == hostfs.NotDirectory {
 		return finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil)
 	}
-	return render.NothingWritten(hostfs.ReasonOf(err))
+	return sink.NothingWritten(hostfs.ReasonOf(err))
 }
 
 // sampleRefusals adds to sample's declared refusals the codes a supply

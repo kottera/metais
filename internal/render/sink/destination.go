@@ -1,7 +1,7 @@
 // Copyright 2026 Kottera
 // SPDX-License-Identifier: Apache-2.0
 
-package render
+package sink
 
 import (
 	"errors"
@@ -11,6 +11,7 @@ import (
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/limits"
+	"github.com/kottera/metais/internal/render"
 	"github.com/kottera/metais/internal/unitext"
 )
 
@@ -44,7 +45,7 @@ func (d *Destination) Close() {
 // a directory must be, a case variant, a directory or non-regular target,
 // another device, or the staging name refuses it. Nothing in the
 // directory is read: only names and Lstat.
-func CheckDestination(out string, overwrite bool, plan []*File, lim limits.Set, faults fault.Set) (*Destination, []finding.Finding) {
+func CheckDestination(out string, overwrite bool, plan []*render.File, lim limits.Set, faults fault.Set) (*Destination, []finding.Finding) {
 	w, rest, err := hostfs.OpenNearest(out)
 	if err != nil {
 		if hostfs.ReasonOf(err) == hostfs.NotDirectory {
@@ -94,8 +95,8 @@ func CheckDestination(out string, overwrite bool, plan []*File, lim limits.Set, 
 	for _, p := range hostfs.CheckPaths(hostfs.WithFaults(faults), func() []string {
 		var bad []string
 		for _, pf := range plan {
-			if len(unitext.CheckPath(pf.path, lim)) > 0 {
-				bad = append(bad, pf.path)
+			if len(unitext.CheckPath(pf.Path(), lim)) > 0 {
+				bad = append(bad, pf.Path())
 			}
 		}
 		return bad
@@ -104,8 +105,8 @@ func CheckDestination(out string, overwrite bool, plan []*File, lim limits.Set, 
 	}
 	var paths []string
 	for _, pf := range plan {
-		if !bad[pf.path] {
-			paths = append(paths, pf.path)
+		if !bad[pf.Path()] {
+			paths = append(paths, pf.Path())
 		}
 	}
 	d.checks = x.Check(paths)

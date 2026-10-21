@@ -30,6 +30,7 @@ import (
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/render"
+	"github.com/kottera/metais/internal/render/sink"
 	"github.com/kottera/metais/internal/template"
 	"github.com/kottera/metais/internal/yamlx"
 	"github.com/kottera/metais/internal/zipfmt"
@@ -1176,10 +1177,10 @@ func updateFailed(err error, u *testUpdate) finding.Finding {
 	case hostfs.ReasonOf(err) == hostfs.NotDirectory:
 		return finding.New(finding.CodeDestinationNotDirectory, invocation, nil, nil)
 	case len(u.Written) == 0 && len(u.Removed) == 0:
-		return render.StageFailed(err)
+		return sink.StageFailed(err)
 	}
 	return finding.New(finding.CodeDestinationWriteFailed, invocation, nil, finding.Params{
-		"reason":  finding.String(render.WriteReason(hostfs.ReasonOf(err))),
+		"reason":  finding.String(sink.WriteReason(hostfs.ReasonOf(err))),
 		"written": stringList(u.Written),
 	})
 }
