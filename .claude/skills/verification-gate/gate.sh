@@ -19,7 +19,8 @@
 #
 #   <run>.log        everything the run printed; latest.log names the newest
 #   <run>.record     one line per verdict: status, item, the tree it was
-#                    reached on, and the run that reached it
+#                    reached on, the run that reached it, and for a
+#                    package's tests what its run was given (below)
 #   latest-<tier>    the name of the tier's newest run, which --resume reads
 #   pid              the live run's process, while it runs
 #
@@ -41,6 +42,23 @@
 # once. `go test -p` (package binaries at once) and -parallel (parallel tests
 # at once in one binary, and internal/conformance's tool processes) are both
 # the share. METAIS_GATE_P sets the share, and is the one override.
+#
+# The delivered share: every go test runs its test binaries through
+# gate-exec.sh (go test -exec), which records each binary's CPU (user plus
+# system time, its own and every process it waited for), its start and end,
+# and the host's load average when it ended. Measuring runs nothing beside
+# the binary, so it takes no CPU from the host. A package's verdict keeps
+#
+#   cpu=<s> wall=<s> cores=<cpu/wall> beside=<n> p=<share> load=<load>/<cores>
+#
+# where beside is how many other test binaries of the run ran beside it, on
+# average over its wall time. --resume keeps the measure of a verdict it
+# reuses. A red package's FAIL line names the share it got against p, its
+# CPU, the host's load against its cores, and the same package's last green
+# in .local/gate with its CPU, so one run tells a starved red from one that
+# did more work (the root-cause skill reads it). The test step's PASS or
+# FAIL line names the cores the whole go test got, builds included,
+# measured the same way around it.
 #
 # Every run first runs merge-setup.sh, which installs the generated files'
 # merge drivers in this clone's configuration and says so, on the terminal
@@ -117,6 +135,17 @@ ncpu=$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
 third=$((ncpu / 3))
 p=${METAIS_GATE_P:-$((third > 2 ? third : 2))}
 parallel=$p
+gexec="$here/gate-exec.sh"
+cpufile="$state/$run.cpu"
+dirs="$state/$run.dirs"
+: >"$cpufile"
+go list -f '{{.Dir}}{{"\t"}}{{.ImportPath}}' ./... >"$dirs" || exit 2
+# A sandbox can hide /proc/loadavg and uptime; linux still answers
+# sysinfo(2), which loadavg.go reads.
+if [ "$("$gexec" --load)" = "?" ] && [ "$(uname -s)" = Linux ] &&
+	go build -o "$state/loadavg" "$here/loadavg.go"; then
+	export METAIS_GATE_LOADAVG="$state/loadavg"
+fi
 
 # snapshot prints the working tree's git tree id, untracked files included,
 # through a scratch index so the real index is never touched.
@@ -143,13 +172,88 @@ echo "go:   $(go version)"
 echo "head: $(git rev-parse HEAD)"
 echo "tree: $tree ($(git status --porcelain | wc -l | tr -d ' ') uncommitted path(s))"
 echo "cap:  -p $p -parallel $parallel (host has $ncpu cores)"
+echo "load: $("$gexec" --load) on $ncpu cores at the start"
+echo "measure: per package, the CPU of its test binary and every process it waited for (gate-exec.sh)"
 [ -z "$prev" ] || echo "resumes: $prev"
 
 failed=""
 
-# verdict records an item's status against the tree it was reached on.
+# verdict records an item's status against the tree it was reached on, and
+# the measure of the run that reached it, when it has one.
 verdict() {
-	printf '%s\t%s\t%s\t%s\n' "$1" "$2" "${3:-$tree}" "${4:-$run}" >>"$record"
+	printf '%s\t%s\t%s\t%s\t%s\n' "$1" "$2" "${3:-$tree}" "${4:-$run}" "${5:-}" >>"$record"
+}
+
+# gotest is go test under the gate's share, every test binary measured.
+gotest() {
+	METAIS_GATE_CPU=$cpufile go test -race -count=1 -p "$p" -parallel "$parallel" -exec "'$gexec'" "$@"
+}
+
+# cpu_secs prints the reaped children's user plus system seconds from a file
+# bash's times wrote. times runs in the gate's own shell, never in a command
+# substitution, whose fork has no children's times.
+cpu_secs() {
+	LC_ALL=C awk 'NR == 2 {
+		n = 0
+		for (i = 1; i <= 2; i++) {
+			gsub(",", ".", $i)
+			split($i, a, "m")
+			sub("s", "", a[2])
+			n += a[1] * 60 + a[2]
+		}
+		printf "%.1f", n
+	}' "$1"
+}
+
+# measure <pkg> prints the record's measure of the package's newest test
+# binary in this run, or nothing when no binary of it ran.
+measure() {
+	local dir
+	dir=$(awk -F'\t' -v k="$1" '$2 == k {print $1; exit}' "$dirs")
+	[ -n "$dir" ] || return 0
+	LC_ALL=C awk -F'\t' -v d="$dir" -v p="$p" -v n="$ncpu" '
+		{ s[NR] = $2; e[NR] = $3; c[NR] = $4; l[NR] = $6; if ($1 == d) me = NR }
+		END {
+			if (!me) exit
+			w = e[me] - s[me]
+			b = 0
+			for (i = 1; i <= NR; i++) {
+				if (i == me) continue
+				lo = s[i] > s[me] ? s[i] : s[me]
+				hi = e[i] < e[me] ? e[i] : e[me]
+				if (hi > lo) b += hi - lo
+			}
+			if (w > 0) printf "cpu=%.1fs wall=%.1fs cores=%.2f beside=%.1f p=%d load=%s/%d\n", c[me], w, c[me] / w, b / w, p, l[me], n
+			else printf "cpu=%.1fs wall=%.1fs cores=? beside=? p=%d load=%s/%d\n", c[me], w, p, l[me], n
+		}' "$cpufile"
+}
+
+# share_line <item> <measure> prints a red's share, in words: what it got
+# against p, its CPU, the host's load against its cores, and the item's last
+# green in .local/gate, from any run but this one, with its CPU beside this.
+share_line() {
+	local item=$1 m=$2 green
+	if [ -z "$m" ]; then
+		echo "not measured (no test binary of it ran to its end: a build failure, or killed first)"
+		return
+	fi
+	green=$(cat "$state"/*.record 2>/dev/null | awk -F'\t' -v k="$item" -v r="$run" '
+		$1 == "PASS" && $2 == k && $4 != r && $5 ~ /cpu=/ {
+			t = $4; sub(/^[^-]*-/, "", t)
+			if (t > best) { best = t; line = $4 "\t" $5 }
+		}
+		END { if (line != "") print line }')
+	LC_ALL=C awk -v m="$m" -v g="$green" 'BEGIN {
+		split(m, f, " "); for (i in f) { split(f[i], kv, "="); v[kv[1]] = kv[2] }
+		split(v["load"], ld, "/")
+		printf "got %s of %s cores (CPU %s over %s wall, beside %s other test binaries); host load %s on %s cores; ", v["cores"], v["p"], v["cpu"], v["wall"], v["beside"], ld[1], ld[2]
+		if (g == "") { print "no green of it in .local/gate to compare with"; exit }
+		split(g, gr, "\t"); split(gr[2], h, " "); for (i in h) { split(h[i], kv, "="); x[kv[1]] = kv[2] }
+		cn = v["cpu"] + 0; cg = x["cpu"] + 0
+		printf "last green %s got %s of %s cores (CPU %s over %s wall)", gr[1], x["cores"], x["p"], x["cpu"], x["wall"]
+		if (cg > 0) printf ", CPU now %.2fx it", cn / cg
+		print ""
+	}'
 }
 
 # What --resume may reuse: the last verdict for each item in the previous
@@ -172,13 +276,14 @@ fi
 # reusable <item> prints the earlier verdict's tree and run, and succeeds,
 # when that verdict is a PASS the change since it does not reach.
 reusable() {
-	local item=$1 line st t from facts
+	local item=$1 line st t from m facts
 	[ -n "$prev" ] || return 1
 	line=$(awk -F'\t' -v k="$item" '$2 == k' "$reuse")
 	[ -n "$line" ] || return 1
 	st=$(printf '%s' "$line" | cut -f1)
 	t=$(printf '%s' "$line" | cut -f3)
 	from=$(printf '%s' "$line" | cut -f4)
+	m=$(printf '%s' "$line" | cut -f5)
 	[ "$st" = PASS ] || return 1
 	if [ "$t" != "$tree" ]; then
 		[ -f "$state/$run.reach.$t" ] || return 1
@@ -200,7 +305,7 @@ reusable() {
 			;;
 		esac
 	fi
-	printf '%s\t%s\n' "$t" "$from"
+	printf '%s\t%s\t%s\n' "$t" "$from" "$m"
 }
 
 step() {
@@ -208,22 +313,23 @@ step() {
 	shift
 	local prior
 	if prior=$(reusable "$name"); then
-		echo "=== REUSED $name (PASS in ${prior#*	})"
-		verdict PASS "$name" "${prior%%	*}" "${prior#*	}"
+		echo "=== REUSED $name (PASS in $(printf '%s' "$prior" | cut -f2))"
+		verdict PASS "$name" "$(printf '%s' "$prior" | cut -f1)" "$(printf '%s' "$prior" | cut -f2)" "$(printf '%s' "$prior" | cut -f3)"
 		return
 	fi
 	echo "=== STEP $name"
 	local start rc secs
 	start=$(date +%s)
+	step_measure=""
 	"$@"
 	rc=$?
 	secs=$(($(date +%s) - start))
 	if [ "$rc" -eq 0 ]; then
 		echo "=== PASS $name (${secs}s)"
-		verdict PASS "$name"
+		verdict PASS "$name" "" "" "$step_measure"
 	else
 		echo "=== FAIL $name (exit $rc, ${secs}s)"
-		verdict FAIL "$name"
+		verdict FAIL "$name" "" "" "$step_measure"
 		failed="$failed $name"
 	fi
 }
@@ -285,9 +391,11 @@ tripwire() {
 	names=$(tripwire_names "$1")
 	pkg=$(tripwire_pkg "$1")
 	pat="^($(echo $names | tr ' ' '|'))\$"
-	out=$(go test -race -count=1 -p "$p" -parallel "$parallel" -v -run "$pat" "$pkg" 2>&1)
+	out=$(gotest -v -run "$pat" "$pkg" 2>&1)
 	rc=$?
 	printf '%s\n' "$out" | grep -vE '^(=== (RUN|PAUSE|CONT|NAME)|    --- PASS|--- PASS)'
+	step_measure=$(measure "$pkg")
+	[ "$rc" -eq 0 ] || echo "FAIL: $pkg ($1): $(share_line "$1" "$step_measure")"
 	for n in $names; do
 		printf '%s\n' "$out" | grep -qE "^--- (PASS|FAIL|SKIP): $n " || missing="$missing $n"
 	done
@@ -308,10 +416,10 @@ test_packages() {
 	pkgs=$(cat "$1")
 	echo "--- go test -race -count=1 -p $p -parallel $parallel ($(echo "$pkgs" | wc -l | tr -d ' ') package(s))"
 	# shellcheck disable=SC2086
-	go test -race -count=1 -p "$p" -parallel "$parallel" $pkgs 2>&1 | tee "$state/$run.out"
+	gotest $pkgs 2>&1 | tee "$state/$run.out"
 	awk '/^ok  	/ {print "PASS\t" $2} /^FAIL	[^ ]/ {print "FAIL\t" $2} /^\?   	/ {print "PASS\t" $2}' "$state/$run.out" |
 		while IFS=$'\t' read -r st pkg; do
-			verdict "$st" "test $pkg"
+			verdict "$st" "test $pkg" "" "" "$(measure "$pkg")"
 		done
 	rm -f "$state/$run.out"
 }
@@ -320,13 +428,13 @@ test_packages() {
 # passes only when every package it ran has a PASS of its own: a package
 # whose binary was killed before it reported has no verdict, and fails it.
 tests() {
-	local want=$1 pkg todo="$state/$run.todo" rc=0 prior st
+	local want=$1 pkg todo="$state/$run.todo" rc=0 prior st m
 	: >"$todo"
 	while IFS= read -r pkg; do
 		[ -n "$pkg" ] || continue
 		if prior=$(reusable "test $pkg"); then
-			echo "=== REUSED test $pkg (PASS in ${prior#*	})"
-			verdict PASS "test $pkg" "${prior%%	*}" "${prior#*	}"
+			echo "=== REUSED test $pkg (PASS in $(printf '%s' "$prior" | cut -f2))"
+			verdict PASS "test $pkg" "$(printf '%s' "$prior" | cut -f1)" "$(printf '%s' "$prior" | cut -f2)" "$(printf '%s' "$prior" | cut -f3)"
 		else
 			echo "$pkg" >>"$todo"
 		fi
@@ -335,9 +443,14 @@ tests() {
 	while IFS= read -r pkg; do
 		st=$(awk -F'\t' -v k="test $pkg" -v r="$run" '$2 == k && $4 == r {s = $1} END {print s}' "$record")
 		case "$st" in
-		PASS) ;;
-		FAIL) echo "FAIL: $pkg"; rc=1 ;;
-		*) echo "NO VERDICT: $pkg (it never reported)"; verdict FAIL "test $pkg"; rc=1 ;;
+		PASS) m=$(measure "$pkg"); echo "measured $pkg: ${m:-no test binary}" ;;
+		FAIL) echo "FAIL: $pkg: $(share_line "test $pkg" "$(measure "$pkg")")"; rc=1 ;;
+		*)
+			echo "NO VERDICT: $pkg (it never reported)"
+			echo "FAIL: $pkg: $(share_line "test $pkg" "$(measure "$pkg")")"
+			verdict FAIL "test $pkg" "" "" "$(measure "$pkg")"
+			rc=1
+			;;
 		esac
 	done <"$todo"
 	rm -f "$todo"
@@ -371,11 +484,13 @@ reach_groups() {
 reach() {
 	local area=$1 out rc n
 	shift
-	out=$(go test -race -count=1 -p "$p" -parallel "$parallel" -v \
+	out=$(gotest -v \
 		-run "^TestHostIsolation\$/^$area\$/^($(echo "$@" | tr ' ' '|'))\$" \
 		./internal/conformance -args -conformance.reach 2>&1)
 	rc=$?
 	printf '%s\n' "$out" | grep -vE '^(=== (RUN|PAUSE|CONT|NAME)|[[:space:]]*--- PASS)'
+	step_measure=$(measure github.com/kottera/metais/internal/conformance)
+	[ "$rc" -eq 0 ] || echo "FAIL: github.com/kottera/metais/internal/conformance (reach $area $1): $(share_line "reach $area $1" "$step_measure")"
 	n=$(printf '%s\n' "$out" | sed -n 's/.*ran \([0-9][0-9]*\) vectors.*/\1/p' | head -1)
 	if [ "${n:-0}" -ne $# ]; then
 		echo "reach $area ran ${n:-no} vectors of the $# it selects"
@@ -384,19 +499,39 @@ reach() {
 	return $rc
 }
 
+# test_step runs the tier's packages as the step "test". Its PASS or FAIL
+# line names the cores the whole go test got against p, builds included:
+# the CPU of everything the gate's shell reaped while it ran, over its wall
+# time.
+test_step() {
+	local start c0 c1 secs share rc
+	echo "=== STEP test"
+	times >"$state/$run.times"
+	c0=$(cpu_secs "$state/$run.times")
+	start=${EPOCHREALTIME:-$(date +%s)}
+	if tests "$want"; then rc=0; else rc=1; fi
+	secs=$(LC_ALL=C awk -v a="${start/,/.}" -v b="$(e=${EPOCHREALTIME:-$(date +%s)}; echo "${e/,/.}")" 'BEGIN {printf "%.0f", b - a}')
+	times >"$state/$run.times"
+	c1=$(cpu_secs "$state/$run.times")
+	rm -f "$state/$run.times"
+	share=$(LC_ALL=C awk -v c="$c1" -v d="$c0" -v w="$secs" -v p="$p" -v l="$("$gexec" --load)" -v n="$ncpu" 'BEGIN {
+		if (w > 0) printf "the gate got %.2f of %d cores, CPU %.1fs; host load %s on %d cores", (c - d) / w, p, c - d, l, n
+		else printf "CPU %.1fs; host load %s on %d cores", c - d, l, n
+	}')
+	if [ "$rc" -eq 0 ]; then
+		echo "=== PASS test (${secs}s; $share)"
+	else
+		echo "=== FAIL test (${secs}s; $share)"
+		failed="$failed test"
+	fi
+}
+
 want="$state/$run.want"
 if [ "$tier" = wave ]; then
 	go list ./... >"$want" || exit 2
 	step build go build ./...
 	step vet go vet ./...
-	echo "=== STEP test"
-	start=$(date +%s)
-	if tests "$want"; then
-		echo "=== PASS test ($(($(date +%s) - start))s)"
-	else
-		echo "=== FAIL test ($(($(date +%s) - start))s)"
-		failed="$failed test"
-	fi
+	test_step
 	step tidy go mod tidy -diff
 	step gofmt gofmt_clean
 	step static static_build
@@ -429,14 +564,7 @@ else
 	step tidy go mod tidy -diff
 	step static static_build
 	step cross cross
-	echo "=== STEP test"
-	start=$(date +%s)
-	if tests "$want"; then
-		echo "=== PASS test ($(($(date +%s) - start))s)"
-	else
-		echo "=== FAIL test ($(($(date +%s) - start))s)"
-		failed="$failed test"
-	fi
+	test_step
 	for t in tripwire-conformance tripwire-help tripwire-spec; do
 		if grep -qxF "$(tripwire_pkg "$t")" "$want"; then
 			echo "=== COVERED $t (its package is tested whole)"
@@ -447,7 +575,7 @@ else
 	step specdata specdata_fresh
 fi
 
-rm -f "$want" "$state/$run".diff.* "$state/$run".reach.*
+rm -f "$want" "$state/$run".diff.* "$state/$run".reach.* "$dirs"
 
 # A tree that changed while the run was live leaves verdicts that describe no
 # one tree. They stand for this run's report, but --resume never reuses them.
