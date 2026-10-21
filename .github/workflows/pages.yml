@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Publishes metais.org with GitHub Pages from a pushed release tag: the pages
-# of site/public/ and every schema of spec/schemas/ at the path its $id names,
-# built by site/build.sh from the tagged commit.
+# of site/public/, and every schema of spec/schemas/ and docs/cli/schemas/ at
+# the path its $id names, built by site/build.sh from the tagged commit.
 #
 # Inert while the repository is private. GitHub's free plan publishes Pages
 # only from a public repository, so every job is gated on the repository

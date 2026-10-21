@@ -49,7 +49,7 @@
             "default": null,
             "repeatable": false,
             "required": false,
-            "description": "Print only the package's identity and its whole guide."
+            "description": "Print only the whole guide: its Markdown alone, or with --json the package's identity and the guide."
           },
           {
             "name": "--limit",

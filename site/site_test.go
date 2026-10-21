@@ -3,7 +3,8 @@
 
 // Package site holds the tests of the metais.org site, whose source is this
 // directory: the pages under public/, and build.sh, which writes the
-// published tree with every specification schema at the path its $id names.
+// published tree with every specification schema and every CLI output
+// schema at the path its $id names.
 package site
 
 import (
@@ -27,9 +28,21 @@ import (
 // published site serves https://metais.org/<p> from <p> in its tree.
 const origin = "https://metais.org/"
 
-// schemasDir is the specification's schemas, from this directory; the site
-// serves each one under schemas/ at its path below schemasDir.
-const schemasDir = "../spec/schemas"
+// schemaSource is one directory of JSON Schemas the site publishes: dir, from
+// this directory, whose files the site serves at at followed by their path
+// below dir.
+type schemaSource struct {
+	dir string
+	at  string
+}
+
+// sources are the schemas the site publishes: the specification's under
+// schemas/, and the tool's output schemas, which ADR-011 D7 item 5 keeps
+// outside the specification, under cli/schemas/.
+var sources = []schemaSource{
+	{dir: "../spec/schemas", at: "schemas/"},
+	{dir: "../docs/cli/schemas", at: "cli/schemas/"},
+}
 
 // helpGolden is the tool's help as one metais.help/1 document, from this
 // directory. It is generated from the commands' own declarations, so the
@@ -39,18 +52,20 @@ const helpGolden = "../internal/cli/testdata/help/help.json"
 // pages are the site's pages, by their paths in the published tree.
 var pages = []string{"index.html", "install/index.html", "getting-started/index.html"}
 
-// schema is one specification schema: its path below schemasDir, slash
-// separated, its $id, and its bytes.
+// schema is one published schema: its path in the repository, its path below
+// its source's directory, slash separated, its $id, and its bytes.
 type schema struct {
+	name string
 	rel  string
 	id   string
 	data []byte
 }
 
-// specSchemas reads every file below schemasDir.
-func specSchemas(t *testing.T, dir string) []schema {
+// readSchemas reads every file below src's directory.
+func readSchemas(t *testing.T, src schemaSource) []schema {
 	t.Helper()
 	var out []schema
+	dir := filepath.FromSlash(src.dir)
 	err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
@@ -63,20 +78,35 @@ func specSchemas(t *testing.T, dir string) []schema {
 		if err != nil {
 			return err
 		}
+		rel = filepath.ToSlash(rel)
+		name := strings.TrimPrefix(src.dir, "../") + "/" + rel
 		var doc struct {
 			ID string `json:"$id"`
 		}
 		if err := json.Unmarshal(b, &doc); err != nil {
-			t.Errorf("%s: %v", filepath.ToSlash(rel), err)
+			t.Errorf("%s: %v", name, err)
 		}
-		out = append(out, schema{rel: filepath.ToSlash(rel), id: doc.ID, data: b})
+		out = append(out, schema{name: name, rel: rel, id: doc.ID, data: b})
 		return nil
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(out) == 0 {
-		t.Fatalf("no schema under %s", dir)
+		t.Fatalf("no schema under %s", src.dir)
+	}
+	return out
+}
+
+// allSchemas reads every source's schemas.
+func allSchemas(t *testing.T) []schema {
+	t.Helper()
+	var out []schema
+	for _, src := range sources {
+		for _, s := range readSchemas(t, src) {
+			s.rel = src.at + s.rel
+			out = append(out, s)
+		}
 	}
 	return out
 }
@@ -98,18 +128,19 @@ func sitePath(id string) (string, bool) {
 	return p, true
 }
 
-// TestSchemaIDPaths requires every specification schema's $id to name the
-// path build.sh publishes it at, schemas/ and its path below spec/schemas,
-// so that each $id resolves to its own schema.
+// TestSchemaIDPaths requires every published schema's $id to name the path
+// build.sh publishes it at: schemas/ and its path below spec/schemas, or
+// cli/schemas/ and its path below docs/cli/schemas, so that each $id
+// resolves to its own schema.
 func TestSchemaIDPaths(t *testing.T) {
-	for _, s := range specSchemas(t, schemasDir) {
+	for _, s := range allSchemas(t) {
 		p, ok := sitePath(s.id)
 		if !ok {
-			t.Errorf("spec/schemas/%s: $id %q is not a path the site at %s serves", s.rel, s.id, origin)
+			t.Errorf("%s: $id %q is not a path the site at %s serves", s.name, s.id, origin)
 			continue
 		}
-		if want := "schemas/" + s.rel; p != want {
-			t.Errorf("spec/schemas/%s: $id %q resolves to %s on the site, but the site publishes this file at %s", s.rel, s.id, p, want)
+		if p != s.rel {
+			t.Errorf("%s: $id %q resolves to %s on the site, but the site publishes this file at %s", s.name, s.id, p, s.rel)
 		}
 	}
 }
@@ -150,8 +181,9 @@ func build(t *testing.T) string {
 }
 
 // TestBuild builds the site and requires the published tree to hold the
-// pages, the CNAME, and every specification schema byte for byte at the path
-// its $id names, and nothing else under schemas/.
+// pages, the CNAME, and every specification schema and every CLI output
+// schema byte for byte at the path its $id names, and nothing else under
+// schemas/ or cli/.
 func TestBuild(t *testing.T) {
 	out := build(t)
 
@@ -167,37 +199,39 @@ func TestBuild(t *testing.T) {
 	}
 
 	published := map[string]bool{}
-	for _, s := range specSchemas(t, schemasDir) {
+	for _, s := range allSchemas(t) {
 		p, ok := sitePath(s.id)
 		if !ok {
-			t.Errorf("spec/schemas/%s: $id %q is not a path the site serves", s.rel, s.id)
+			t.Errorf("%s: $id %q is not a path the site serves", s.name, s.id)
 			continue
 		}
 		published[p] = true
 		b, err := os.ReadFile(filepath.Join(out, filepath.FromSlash(p)))
 		if err != nil {
-			t.Errorf("spec/schemas/%s: $id %q: %v", s.rel, s.id, err)
+			t.Errorf("%s: $id %q: %v", s.name, s.id, err)
 			continue
 		}
 		if !bytes.Equal(b, s.data) {
-			t.Errorf("spec/schemas/%s: the site's %s, which its $id %q names, differs from the specification's", s.rel, p, s.id)
+			t.Errorf("%s: the site's %s, which its $id %q names, differs from %s", s.name, p, s.id, s.name)
 		}
 	}
-	err := filepath.WalkDir(filepath.Join(out, "schemas"), func(p string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return err
-		}
-		rel, err := filepath.Rel(out, p)
+	for _, dir := range []string{"schemas", "cli"} {
+		err := filepath.WalkDir(filepath.Join(out, dir), func(p string, d fs.DirEntry, err error) error {
+			if err != nil || d.IsDir() {
+				return err
+			}
+			rel, err := filepath.Rel(out, p)
+			if err != nil {
+				return err
+			}
+			if rel = filepath.ToSlash(rel); !published[rel] {
+				t.Errorf("the site publishes %s, which no schema's $id names", rel)
+			}
+			return nil
+		})
 		if err != nil {
-			return err
+			t.Error(err)
 		}
-		if rel = filepath.ToSlash(rel); !published[rel] {
-			t.Errorf("the site publishes %s, which no specification schema's $id names", rel)
-		}
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
 	}
 }
 

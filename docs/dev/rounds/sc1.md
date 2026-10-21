@@ -40,13 +40,18 @@ criterion is met is a judgement the round records but does not grade.
 
 ## What the harness is given
 
-Three things, the first two from the commit the act names as its `build`:
+Three things, the first two from the commit the act names as its `build`.
+The runner prepares them at the root of a clone of this repository, with
+the harness directory, the harness's working directory, named by an
+absolute path that does not exist yet:
 
 1. **A built `metais` binary of that commit**, built by the runner:
 
    ```bash
    git checkout <commit>
+   mkdir <harness directory>
    CGO_ENABLED=0 go build -trimpath -o <harness directory>/metais ./cmd/metais
+   <harness directory>/metais version
    ```
 
    The runner records the binary's SHA-256 and the output of
@@ -55,7 +60,7 @@ Three things, the first two from the commit the act names as its `build`:
    tool:
 
    ```bash
-   ./metais pack examples/accessibility-conformance-report \
+   <harness directory>/metais pack examples/accessibility-conformance-report \
      --out <harness directory>/accessibility-conformance-report.metais
    ```
 
@@ -73,7 +78,7 @@ The task the harness is set, in these words:
 > Produce an accessibility conformance report for <product, version, and
 > how to reach it>, using the METAIS package
 > `accessibility-conformance-report.metais` and the `metais` binary in your
-> working directory. Start with `metais inspect
+> working directory. Start with `./metais inspect
 > accessibility-conformance-report.metais`, and learn what to do only from
 > what it prints and from the commands it tells you to run. Report against
 > the <edition> edition. Evaluate the product yourself for each criterion
@@ -107,16 +112,19 @@ meaningless.
 
 ## The commands that judge the result
 
-The runner runs these with the binary the harness was given, on the data
-directory the harness supplied and on its `report` directory:
+The runner runs these in the harness directory, with the binary the
+harness was given, on the data directory the harness supplied and on its
+`report` directory. The judging render writes into `judged`, a directory
+that does not exist yet:
 
 ```bash
-metais validate accessibility-conformance-report.metais --data <data directory>
-metais render accessibility-conformance-report.metais --data <data directory> --out <empty directory>
-cmp <empty directory>/acr.json report/acr.json
+cd <harness directory>
+./metais validate accessibility-conformance-report.metais --data <data directory>
+./metais render accessibility-conformance-report.metais --data <data directory> --out judged
+cmp judged/acr.json report/acr.json
 ```
 
-and opens `acr.docx` in a word processor, Microsoft Word where one is
+and opens `judged/acr.docx` in a word processor, Microsoft Word where one is
 available, to confirm that it opens without a repair prompt and shows every
 table the edition holds.
 

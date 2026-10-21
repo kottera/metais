@@ -109,7 +109,7 @@ path step by step.
 
 ## Example packages
 
-The example packages live under `examples/`, one source
+The example packages live under [`examples/`](examples/), one source
 directory each, `examples/<name>/`. Each package's guide in its
 `metais.yaml` and its meaning documents under `inputs/` are its
 documentation, and its `references/` records the sources it was written

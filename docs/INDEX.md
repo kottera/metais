@@ -70,5 +70,5 @@ measures which budget.
 with the release builder of ADR-010 D12, and what it refuses, and how
 the metais.org site, built from `site/`, goes live at the release.
 
-`dev/rounds/` holds the runbooks of the live rounds of plan §6:
+[dev/rounds/](dev/rounds/) holds the runbooks of the live rounds of plan §6:
 each note says what its round establishes and what it reports back.

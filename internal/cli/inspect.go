@@ -61,7 +61,7 @@ func inspectDeclaration() *Command {
 		Role:     finding.RoleConsumer,
 		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file, or a source directory; - is refused, since a package is read with random access."}},
 		Flags: []args.Flag{
-			{Name: "guide", Description: "Print only the package's identity and its whole guide."},
+			{Name: "guide", Description: "Print only the whole guide: its Markdown alone, or with --json the package's identity and the guide."},
 			limitFlag,
 			failOnFlag,
 		},
