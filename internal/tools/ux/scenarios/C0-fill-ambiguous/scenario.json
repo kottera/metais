@@ -1,0 +1,7 @@
+{
+  "id": "C0",
+  "slug": "fill-ambiguous",
+  "kind": "consuming",
+  "asks_for_output": false,
+  "fixtures": [{"example": "dora-incident-report", "as": "report.metais"}]
+}

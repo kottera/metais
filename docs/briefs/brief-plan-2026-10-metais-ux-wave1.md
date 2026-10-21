@@ -93,14 +93,18 @@ From the plan, ratified 2026-10-21:
 - R-UX-5: the pass rules — first `metais` command of a consuming scenario
   is `inspect`; no zip extraction; no unknown-command error; the package
   untouched by a consuming scenario; the scenario's own outcome check. For
-  a real document (C1), the check is asking rather than inventing.
+  a real document (C1 render-real, "render this file", no data given), the
+  check is asking rather than inventing.
 - R-UX-6: the runner takes the harness as a parameter; Claude Code is the
   only one implemented and gated on in this train.
 - R-UX-7: the runs happen from dispatches, through the loopback proxy, with
   the placeholder `ANTHROPIC_AUTH_TOKEN`, per-session directory and
   `$TMPDIR`, pacing and resume, and `metais` built with `-buildvcs=false`.
-- R-UX-8: in a consuming scenario, extracting the package (`unzip`,
-  `unpack`, `extract`), changing it or repacking it fails the run.
+- R-UX-8 (amended 2026-10-21): in a consuming scenario whose prompt asks
+  for output ("render…", "produce the report from…"), extracting the
+  package (`unzip`, `unpack`, `extract`), changing it or repacking it fails
+  the run. It does not apply to a prompt that leaves the user's intent
+  open, such as C0's "fill this file".
 - "A UX run is evidence, not a gate": nested runs never execute in
   `gate.sh`. The scorer's unit tests over committed fixtures do.
 
@@ -130,8 +134,11 @@ Rulings made by the plan orchestrator for this wave:
   artifacts among the scorer's fixtures, and asks for 2026-10-20's runs
   "re-recorded". This train was handed no artifact handles. Re-record the
   failing shapes with the runner — the unzip, `metais cat`, the copied
-  shipped example, and the probe's unpack-rewrite-repack of R-UX-8 — and
-  commit those as fixtures, each seen red. A recorded fixture must show
+  shipped example, and an R-UX-8 failure from a prompt that asks for
+  output — and commit those as fixtures, each seen red. The probe's
+  unpack-rewrite-repack, made under "fill this file … with new fictional
+  data", is not a failure fixture: it is C0's pass path once the session
+  states the reading it took. A recorded fixture must show
   the behaviour it is named for; where a model will not reproduce one on
   demand, a fixture edited to show it is acceptable only if its file says
   so and names the real run it was derived from.
@@ -149,8 +156,10 @@ Rulings made by the plan orchestrator for this wave:
   many scenarios — that is what Wave 2 is for. No item of this wave
   changes `metais`, its help, its specification or its scaffolds to make a
   scenario pass, and no scenario's prompt or check is reworded to make one
-  pass. A check is changed only because it mis-scores a transcript, shown
-  by a fixture.
+  pass. A prompt is reworded only under R-UX-9: to remove ambiguity about
+  what the user wants, recorded in the next scorecard with the transcript
+  that showed it. A check is changed only because it mis-scores a
+  transcript, shown by a fixture.
 
 ## Scope — what belongs to a later wave
 

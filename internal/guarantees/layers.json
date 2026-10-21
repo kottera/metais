@@ -15,7 +15,7 @@
       "rule": "never-depends",
       "package": "github.com/kottera/metais/cmd/metais",
       "imports": "github.com/kottera/metais/internal/tools/...",
-      "reason": "ADR-009 A2 item 4: the binary never reaches the release builder, which is why the builder may run commands, read the environment and write files"
+      "reason": "ADR-009 A2 item 4: the binary never reaches the release builder, which is why the builder may run commands, read the environment and write files; ADR-009 A8 item 3: nor the UX runner, which is why the runner may start sessions, read the environment, write files and read the clock"
     },
     {
       "rule": "single-entry-point",
@@ -165,8 +165,8 @@
     {
       "rule": "only-referrers",
       "symbols": ["os.Args", "os.Stdin", "os.Stdout", "os.Stderr", "os.Exit"],
-      "packages": ["github.com/kottera/metais/cmd/metais", "github.com/kottera/metais/internal/tools/release"],
-      "reason": "ADR-010 D2 item 2, ADR-009 D14 item 4: everything else receives the arguments and streams, so the whole tool runs in-process under test; ADR-009 A2 item 5: the release builder is a main package run with go run"
+      "packages": ["github.com/kottera/metais/cmd/metais", "github.com/kottera/metais/internal/tools/release", "github.com/kottera/metais/internal/tools/ux"],
+      "reason": "ADR-010 D2 item 2, ADR-009 D14 item 4: everything else receives the arguments and streams, so the whole tool runs in-process under test; ADR-009 A2 item 5: the release builder is a main package run with go run; ADR-009 A8 item 1: so is the UX runner"
     }
   ]
 }

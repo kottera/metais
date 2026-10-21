@@ -1860,6 +1860,79 @@ and D16 item 2 (what the canaries are caught by).
    command. The release act runs the reference tool that way on each
    matrix target.
 
+### A8 — The UX runner is allowed host access in its own package, and the binary can never reach it
+
+**Status:** Accepted 2026-10-21 under PLAN-2026-10-metais-ux's
+ratification, by the plan orchestrator's ruling in the
+[Wave 1 brief](../briefs/brief-plan-2026-10-metais-ux-wave1.md)
+(PLAN-2026-10-metais-ux, W1-1).
+**Amends:** D16 item 3's symbol rule (one allow-list entry), and the
+`only-referrers` rule of `internal/guarantees/layers.json` (one package
+added). A2's `never-depends` rule already covers the runner, and its
+reason now names this amendment too.
+
+1. **The allowance.** The symbol rule's allow-list gains
+   `internal/tools/ux`, the UX runner of PLAN-2026-10-metais-ux §5, for
+   exactly the symbols it uses, and for its own package only:
+   - `os/exec`, to build `metais` from the commit under test, to pack each
+     scenario's fixtures and install the skill with it, to ask `git` for
+     the commit, and to start each nested `claude -p` session;
+   - `os.Environ`, the environment read whole. The runner hands each
+     session an environment it builds itself, holding only the runner's
+     `PATH` and `ANTHROPIC_BASE_URL` of its own environment;
+   - the file functions `os.ReadFile`, `os.WriteFile`, `os.Create`,
+     `os.Rename`, `os.MkdirAll`, `os.RemoveAll`, `os.Stat`, `os.Lstat`
+     and `os.DirFS`, to lay out each session's directories, write each
+     run's record, and list what a session wrote;
+   - `time.Now`, the clock. Unlike the release builder, the runner needs
+     it, because each run's record holds when the session started and
+     ended and how long it took, and the runner paces its runs and waits
+     out a quota pause (`time.Sleep`, which is no symbol of the rule);
+   - `os.Args`, `os.Stdout`, `os.Stderr` and `os.Exit`, because the runner
+     is a `main` package run with `go run`.
+2. **What it does not allow.** Everything else stays refused in the
+   runner as it is everywhere else:
+   - the environment's other readers and every setter (`os.Getenv`,
+     `os.LookupEnv`, `os.Setenv`, …);
+   - the clock's other symbols (`time.Since`, `time.Until`, timers and
+     tickers) and the time zone;
+   - every other file function, the temporary directory's symbols, and
+     the working-directory symbols, so `-out` must be absolute and the
+     runner reads the checkout by relative paths from where it is run;
+   - standard input, the host name, the user, the process identity, the
+     home directory, the platform, `os.StartProcess`, and every random
+     source, which D12 refuses with no exception.
+3. **Why the runner may have it, and why the binary can never reach it.**
+   The runner is a developer's tool, run with `go run` from a checkout,
+   and is never linked into `metais`. It lives under `internal/tools/`,
+   so A2 item 4's `never-depends` rule holds it away from `cmd/metais`:
+   `github.com/kottera/metais/cmd/metais` depends on nothing matching
+   `github.com/kottera/metais/internal/tools/...`. `TestLayersControl`
+   proves the rule sees it: its fixture module's binary imports a package
+   beneath the runner, and the rule refuses it. Nothing the runner reads
+   reaches a template, an output or a finding of `metais`, because the
+   runner never runs inside `metais`. It runs `metais` as a subprocess of
+   a nested session, with the session's own arguments and environment,
+   and reads back only what that subprocess wrote.
+4. **The scorer gets none of it.** The entry covers `internal/tools/ux`
+   itself, not the packages beneath it. The scenario set's reader,
+   `internal/tools/ux/scenario`, is handed the set as an `fs.FS`. The
+   scorer (PLAN-2026-10-metais-ux W1-2) is handed what it reads in the
+   same way, and runs in the gate with no host symbol. If the scorer
+   ever needs one, that is a further amendment, not a widening of this
+   entry.
+5. **The `only-referrers` rule** for `os.Args`, `os.Stdin`, `os.Stdout`,
+   `os.Stderr` and `os.Exit` names `internal/tools/ux` beside
+   `cmd/metais` and `internal/tools/release`, for the same reason as
+   item 1's last entry.
+6. **The allow-list stays exact.** `TestModuleAllowListIsR2143` pins the
+   module allow-list to R2-143, A2's entry and this amendment's entry. It
+   spells out item 1's symbols, so the entry cannot grow without the
+   test changing. `TestSymbolRule` holds the boundary from both sides:
+   - the runner's symbols are refused in a package beneath it, in a
+     sibling named like it, in its parent, and elsewhere in the module;
+   - inside it, the symbols item 2 keeps refused are refused.
+
 ## Implementation log
 
 This log is this section together with the entry files in

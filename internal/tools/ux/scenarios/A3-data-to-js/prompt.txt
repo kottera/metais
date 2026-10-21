@@ -1,0 +1,1 @@
+make a .metais package whose HTML page charts a list of numbers it is given, writing them into a JavaScript array in the page

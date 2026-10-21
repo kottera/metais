@@ -258,8 +258,9 @@ type moduleAllowance struct {
 }
 
 // moduleAllowList is RULINGS-v1 R2-143's allow-list, exactly: ADR-009 D16
-// item 3's four entries, each with its reason, and ADR-009 Amendment A2's
-// one entry for the release builder. No entry is added to make the
+// item 3's four entries, each with its reason, ADR-009 Amendment A2's one
+// entry for the release builder, and Amendment A8's one entry for the UX
+// runner. No entry is added to make the
 // tripwire pass; a package that cannot pass without one is a finding.
 // internal/hostfs and internal/dates are named before they exist, so the
 // seams they fill are fixed before their code lands.
@@ -299,6 +300,28 @@ var moduleAllowList = []moduleAllowance{
 			"the clock, random sources, the user, the host name, the process and the working directory " +
 			"stay refused (ADR-009 A2 items 1 to 3, ADR-010 D12 items 4 and 5)",
 	},
+	{
+		pkg:     "internal/tools/ux",
+		symbols: uxRunnerSymbols,
+		reason: "the UX runner, a developer's tool run with go run and never linked into metais, " +
+			"builds metais, starts each nested session in its own directories, hands it an environment " +
+			"built from its own, writes each run's record and times and paces the runs; nothing it reads " +
+			"reaches a template, an output or a finding, because it never runs inside metais, and the " +
+			"packages beneath it, the scorer's among them, get none of this (ADR-009 A8 items 1 to 4)",
+	},
+}
+
+// uxRunnerSymbols are exactly ADR-009 Amendment A8 item 1's symbols, the
+// ones the runner uses: the environment, read whole; the file functions it
+// calls; the clock's time.Now; and a main package's arguments, standard
+// output and error, and exit. os/exec, the item's first entry, is no
+// symbol of hostSymbols, as for the release builder.
+var uxRunnerSymbols = []string{
+	"os.Environ",
+	"os.Create", "os.DirFS", "os.Lstat", "os.MkdirAll", "os.ReadFile",
+	"os.RemoveAll", "os.Rename", "os.Stat", "os.WriteFile",
+	"time.Now",
+	"os.Args", "os.Stdout", "os.Stderr", "os.Exit",
 }
 
 // releaseBuilderSymbols are exactly ADR-009 Amendment A2 item 1's symbols:

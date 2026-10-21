@@ -73,5 +73,10 @@ measures which budget.
 with the release builder of ADR-010 D12, and what it refuses, and how
 the metais.org site, built from `site/`, goes live at the release.
 
+[dev/ux-testing.md](dev/ux-testing.md) is how fresh agent sessions are run
+over the UX scenario set of PLAN-2026-10-metais-ux: the scenarios, the
+isolation checks the runner makes, what each run records, and how a set is
+run, paced and resumed.
+
 [dev/rounds/](dev/rounds/) holds the runbooks of the live rounds of plan §6:
 each note says what its round establishes and what it reports back.

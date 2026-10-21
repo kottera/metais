@@ -241,13 +241,14 @@ func TestLayersControl(t *testing.T) {
 	slices.Sort(got)
 	want := []string{
 		"github.com/kottera/metais/cmd/metais depends on github.com/kottera/metais/internal/tools/release/archive",
+		"github.com/kottera/metais/cmd/metais depends on github.com/kottera/metais/internal/tools/ux/scenario",
 		"github.com/kottera/metais/internal/author/ooxml depends on github.com/kottera/metais/internal/manifest",
 		"github.com/kottera/metais/internal/browse/browse.go:15: refers to github.com/kottera/metais/internal/hostfs.Write in List, not in Extract",
 		"github.com/kottera/metais/internal/browse/browse.go:23: refers to github.com/kottera/metais/internal/hostfs.Write in T.Extract, not in Extract",
 		"github.com/kottera/metais/internal/browse/browse.go:25: refers to github.com/kottera/metais/internal/hostfs.Write outside any function, not in Extract",
 		"github.com/kottera/metais/internal/cli imports golang.org/x/sys/unix, which only github.com/kottera/metais/internal/hostfs may",
 		"github.com/kottera/metais/internal/cli imports golang.org/x/term, which only github.com/kottera/metais/internal/hostenv may",
-		"github.com/kottera/metais/internal/cli/cli.go:19: refers to os.Stdout, which only github.com/kottera/metais/cmd/metais, github.com/kottera/metais/internal/tools/release may",
+		"github.com/kottera/metais/internal/cli/cli.go:19: refers to os.Stdout, which only github.com/kottera/metais/cmd/metais, github.com/kottera/metais/internal/tools/release, github.com/kottera/metais/internal/tools/ux may",
 		"github.com/kottera/metais/internal/liquid depends on github.com/kottera/metais/internal/finding, outside the standard library",
 		"github.com/kottera/metais/internal/liquid/value depends on golang.org/x/sys/unix, outside the standard library",
 		"github.com/kottera/metais/internal/liquid/value depends on golang.org/x/term, outside the standard library",
@@ -257,7 +258,7 @@ func TestLayersControl(t *testing.T) {
 		"github.com/kottera/metais/internal/render imports github.com/kottera/metais/internal/xref, which only github.com/kottera/metais/internal/author may",
 		"github.com/kottera/metais/internal/render imports go.yaml.in/yaml/v3, which only github.com/kottera/metais/internal/yamlx may",
 		"github.com/kottera/metais/internal/render imports golang.org/x/text/cases, which only github.com/kottera/metais/internal/unitext may",
-		"github.com/kottera/metais/internal/tools/release/archive/archive.go:13: refers to os.Stdout, which only github.com/kottera/metais/cmd/metais, github.com/kottera/metais/internal/tools/release may",
+		"github.com/kottera/metais/internal/tools/release/archive/archive.go:13: refers to os.Stdout, which only github.com/kottera/metais/cmd/metais, github.com/kottera/metais/internal/tools/release, github.com/kottera/metais/internal/tools/ux may",
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("the layering rules over testdata/layers reported\n\t%s\nwant\n\t%s", strings.Join(got, "\n\t"), strings.Join(want, "\n\t"))

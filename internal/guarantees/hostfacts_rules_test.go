@@ -231,6 +231,78 @@ func f() string { return os.Getenv("X") }`, []string{"os.Getenv"}},
 		{"the release builder's parent", "internal/tools", "", `package tools
 import "os"
 func f() string { return os.Getenv("X") }`, []string{"os.Getenv"}},
+		{"the UX runner starts sessions, reads the environment and the clock, and writes", "internal/tools/ux", "", `package main
+import ("os"; "os/exec"; "time")
+func main() { _ = exec.Command("claude"); _ = os.Environ(); _ = time.Now(); _, _ = os.ReadFile("x"); _ = os.WriteFile("x", nil, 0o644); _, _ = os.Create("x"); _ = os.Rename("x", "y"); _ = os.MkdirAll("x", 0o755); _ = os.RemoveAll("x"); _, _ = os.Stat("x"); _, _ = os.Lstat("x"); _ = os.DirFS("x"); os.Stdout.Write(nil); os.Stderr.Write(nil); os.Exit(len(os.Args)) }`, nil},
+		{"a package beneath the UX runner", "internal/tools/ux/scenario", "", `package scenario
+import "os"
+func f() ([]byte, error) { return os.ReadFile("x") }`, []string{"os.ReadFile"}},
+		{"the scorer beneath the UX runner reads the clock", "internal/tools/ux/score", "", `package score
+import "time"
+func f() time.Time { return time.Now() }`, []string{"time.Now"}},
+		{"a sibling named like the UX runner", "internal/tools/uxx", "", `package main
+import "time"
+func f() time.Time { return time.Now() }`, []string{"time.Now"}},
+		{"the UX runner's clock outside it", "internal/render", "", `package render
+import "time"
+func f() time.Time { return time.Now() }`, []string{"time.Now"}},
+		{"the UX runner reads one variable", "internal/tools/ux", "", `package main
+import "os"
+func f() string { return os.Getenv("HOME") }`, []string{"os.Getenv"}},
+		{"the UX runner looks a variable up", "internal/tools/ux", "", `package main
+import "os"
+func f() bool { _, ok := os.LookupEnv("HOME"); return ok }`, []string{"os.LookupEnv"}},
+		{"the UX runner sets the environment", "internal/tools/ux", "", `package main
+import "os"
+func f() { os.Setenv("X", "y") }`, []string{"os.Setenv"}},
+		{"the UX runner measures with time.Since", "internal/tools/ux", "", `package main
+import "time"
+func f(t time.Time) time.Duration { return time.Since(t) }`, []string{"time.Since"}},
+		{"the UX runner starts a timer", "internal/tools/ux", "", `package main
+import "time"
+func f() { <-time.After(0) }`, []string{"time.After"}},
+		{"the UX runner uses the local zone", "internal/tools/ux", "", `package main
+import "time"
+func f(t time.Time) time.Time { return t.In(time.Local) }`, []string{"time.Local"}},
+		{"the UX runner reads the working directory", "internal/tools/ux", "", `package main
+import "os"
+func f() (string, error) { return os.Getwd() }`, []string{"os.Getwd"}},
+		{"the UX runner makes a path absolute", "internal/tools/ux", "", `package main
+import "path/filepath"
+func f() (string, error) { return filepath.Abs("x") }`, []string{"path/filepath.Abs"}},
+		{"the UX runner walks with path/filepath", "internal/tools/ux", "", `package main
+import "path/filepath"
+func f() { filepath.WalkDir(".", nil) }`, []string{"path/filepath.WalkDir"}},
+		{"the UX runner opens a file", "internal/tools/ux", "", `package main
+import "os"
+func f() { os.Open("x"); os.Remove("x") }`, []string{"os.Open"}},
+		{"the UX runner uses the temporary directory", "internal/tools/ux", "", `package main
+import "os"
+func f() (string, error) { _ = os.TempDir(); return os.MkdirTemp("", "x") }`, []string{"os.TempDir"}},
+		{"the UX runner reads its standard input", "internal/tools/ux", "", `package main
+import "os"
+var in = os.Stdin`, []string{"os.Stdin"}},
+		{"the UX runner reads the host name", "internal/tools/ux", "", `package main
+import "os"
+func f() (string, error) { return os.Hostname() }`, []string{"os.Hostname"}},
+		{"the UX runner reads the process", "internal/tools/ux", "", `package main
+import "os"
+func f() (string, error) { _ = os.Getpid(); return os.Executable() }`, []string{"os.Getpid"}},
+		{"the UX runner reads the home directory", "internal/tools/ux", "", `package main
+import "os"
+func f() (string, error) { return os.UserHomeDir() }`, []string{"os.UserHomeDir"}},
+		{"the UX runner starts a process without os/exec", "internal/tools/ux", "", `package main
+import "os"
+func f() { os.StartProcess("x", nil, nil) }`, []string{"os.StartProcess"}},
+		{"the UX runner reads the platform", "internal/tools/ux", "", `package main
+import "runtime"
+var w = runtime.GOOS == "windows"`, []string{"runtime.GOOS"}},
+		{"the UX runner imports os/user", "internal/tools/ux", "", `package main
+import "os/user"
+func f() { user.Current() }`, []string{"imports os/user"}},
+		{"the UX runner imports a random source", "internal/tools/ux", "", `package main
+import "math/rand/v2"
+func f() int { return rand.Int() }`, []string{"imports math/rand/v2"}},
 		{"strings.Index is no host fact", "internal/cli", "", `package cli
 import ("os"; "strings")
 var _ = strings.Index("", ""); var _ os.FileMode`, nil},
@@ -370,7 +442,8 @@ func f() { o.Getenv("X"); o.Getenv("Y"); o.Stdout.Write(nil); _ = strings.Index;
 func TestModuleAllowListIsR2143(t *testing.T) {
 	// RULINGS-v1 R2-143 and ADR-009 D16 item 3: these four, each with its
 	// reason; ADR-009 Amendment A2 item 6: and the release builder's one
-	// entry; and no other.
+	// entry; Amendment A8 item 5: and the UX runner's one entry, for its
+	// own package and none beneath it; and no other.
 	var got []string
 	for _, a := range moduleAllowList {
 		got = append(got, a.pkg+"."+a.fn)
@@ -381,9 +454,9 @@ func TestModuleAllowListIsR2143(t *testing.T) {
 			t.Errorf("allow-list entry %s: beneath is %v; only A2's entry covers the packages beneath it", a.pkg, a.beneath)
 		}
 	}
-	want := []string{"internal/hostenv.Isolate", "internal/hostfs.", "cmd/metais.", "internal/dates.", "internal/tools/release."}
+	want := []string{"internal/hostenv.Isolate", "internal/hostfs.", "cmd/metais.", "internal/dates.", "internal/tools/release.", "internal/tools/ux."}
 	if !slices.Equal(got, want) {
-		t.Errorf("the module allow-list is %q, want R2-143's and A2's %q", got, want)
+		t.Errorf("the module allow-list is %q, want R2-143's, A2's and A8's %q", got, want)
 	}
 
 	// A2 item 1's symbols, spelled out, so the entry cannot grow with
@@ -408,5 +481,30 @@ func TestModuleAllowListIsR2143(t *testing.T) {
 		if !slices.Equal(syms, builder) || a.fn != "" || a.onlyArg != nil {
 			t.Errorf("A2's entry allows %q (function %q, arguments %v), want exactly %q", syms, a.fn, a.onlyArg, builder)
 		}
+	}
+
+	// A8 item 1's symbols, spelled out: the symbols the runner uses, and no
+	// other. os/exec, the item's first entry, is no symbol of hostSymbols.
+	runner := []string{
+		"os.Environ",
+		"os.Create", "os.DirFS", "os.Lstat", "os.MkdirAll", "os.ReadFile",
+		"os.RemoveAll", "os.Rename", "os.Stat", "os.WriteFile",
+		"time.Now",
+		"os.Args", "os.Stdout", "os.Stderr", "os.Exit",
+	}
+	slices.Sort(runner)
+	found := false
+	for _, a := range moduleAllowList {
+		if a.pkg != "internal/tools/ux" {
+			continue
+		}
+		found = true
+		syms := slices.Sorted(slices.Values(a.symbols))
+		if !slices.Equal(syms, runner) || a.fn != "" || a.onlyArg != nil || a.beneath {
+			t.Errorf("A8's entry allows %q (function %q, arguments %v, beneath %v), want exactly %q for its own package", syms, a.fn, a.onlyArg, a.beneath, runner)
+		}
+	}
+	if !found {
+		t.Error("the module allow-list has no entry for A8's UX runner")
 	}
 }
