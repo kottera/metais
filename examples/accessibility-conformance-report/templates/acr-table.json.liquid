@@ -1,9 +1,19 @@
 {%- comment -%}
-One table of the JSON report: its standard, then a criterion object per
-entry of rows, in the order supplied.
+One table of the JSON report: its standard; for WCAG 2.2, whose criterion
+names and levels are excerpts of W3C's document, the source W3C's terms
+require with them: its title, link, status and copyright notice; then a
+criterion object per entry of rows, in the order supplied.
 {%- endcomment -%}
 {
       "standard": {{ standard | json }},
+{%- if standard == "wcag" %}
+      "source": {
+        "title": "Web Content Accessibility Guidelines (WCAG) 2.2",
+        "url": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/",
+        "status": "W3C Recommendation 12 December 2024",
+        "notice": "Copyright © 2020-2024 World Wide Web Consortium. W3C® liability, trademark and document use rules apply."
+      },
+{%- endif %}
       "criteria": [
 {%- for row in rows %}
         {

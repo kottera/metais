@@ -65,6 +65,18 @@
       "required": ["standard", "criteria"],
       "properties": {
         "standard": { "enum": ["wcag", "section508", "en301549"] },
+        "source": {
+          "description": "The document the table's criterion numbers, names and levels are excerpts of, with the link, status and copyright notice its terms require on every copy. Only the WCAG 2.2 table holds it.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["title", "url", "status", "notice"],
+          "properties": {
+            "title": { "const": "Web Content Accessibility Guidelines (WCAG) 2.2" },
+            "url": { "const": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/" },
+            "status": { "const": "W3C Recommendation 12 December 2024" },
+            "notice": { "const": "Copyright © 2020-2024 World Wide Web Consortium. W3C® liability, trademark and document use rules apply." }
+          }
+        },
         "criteria": {
           "type": "array",
           "minItems": 1,
@@ -72,8 +84,8 @@
         }
       },
       "if": { "properties": { "standard": { "const": "wcag" } } },
-      "then": { "properties": { "criteria": { "items": { "required": ["wcag_level"] } } } },
-      "else": { "properties": { "criteria": { "items": { "properties": { "wcag_level": false } } } } }
+      "then": { "required": ["source"], "properties": { "criteria": { "items": { "required": ["wcag_level"] } } } },
+      "else": { "properties": { "source": false, "criteria": { "items": { "properties": { "wcag_level": false } } } } }
     },
     "criterion": {
       "type": "object",
