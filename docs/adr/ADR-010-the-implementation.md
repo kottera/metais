@@ -1685,26 +1685,57 @@ ruling made by the train and needs no ratification.
      base is the merge base of `HEAD` with `origin/main`, so the change is
      the branch's own whatever `main` has gained since; `--base` names
      another.
-   - **A path inside a package's directory** (its Go files, its `testdata/`,
-     its embedded files) touches that package: the one whose directory is
-     the longest prefix of the path.
-   - **A path in no package's directory** (`spec/`, `docs/`, a file at the
-     root) is data, and only tests read it: the binary never reads the
-     repository, and `//go:embed` cannot reach outside a package's
-     directory. It touches every package whose test files name its
-     top-level entry as a path literal (`"spec/…"`, `"../../spec"`,
-     `"NOTICE"`). A change under `spec/` therefore touches, at this writing,
-     `internal/cli`, `conformance`, `finding`, `guarantees`, `liquidspec`,
-     `loader`, `specdata`, `template` and `vectorgen`.
+   - **A path inside a package's directory** touches that package: the
+     one whose directory is the longest prefix of the path. A non-test file
+     there (its Go files, its embedded files, any file outside `testdata/`)
+     is code: its importers are tested too (the last rule). A test file
+     (`_test.go`), and a file under `testdata/` that the build does not
+     embed, has its own package tested alone. No other test binary compiles
+     a test file. A test of another package that reads the testdata names
+     it, and the next rule finds it.
+   - **Any path is data to the tests that name it.** A path in no
+     package's directory (`spec/`, `docs/`, a file at the root) is data
+     and nothing else: the binary never reads the repository, and
+     `//go:embed` cannot reach outside a package's directory. A package is
+     tested alone when its test files name the path, or a directory above
+     it. They may name it as a string literal, or as a run of literal
+     arguments to a `Join` (`filepath.Join(root, "docs", "adr")` names
+     `docs/adr`). Each is read both from the package's directory, where
+     `go test` runs it, and from the module root, where a test's `go`
+     command or a helper may resolve it. `.claude/skills/verification-gate/
+     gate-select-named.awk` reads the literals. A name that a glob, a
+     format verb or a concatenation follows names every path it is a prefix
+     of. A run that climbs out of a computed base
+     (`filepath.Join(suite, "..", "statements.json")`) names any path that
+     ends in it, since the base is a value the selector cannot see. A
+     literal of one name, written without `./` or `../` and outside a
+     `Join` (`"docs"`, `"internal"`), names only the root's file of that
+     name: such a word is an exit class, a JSON field or an entry name far
+     more often than a directory. Inside a package's directory, a directory
+     above the package's own is not enough: naming `internal/` is how a
+     test walks the module, and the module walkers' rule covers it. A name
+     that only looks like one of the module's paths reaches only that path:
+     `"docs/guide.MARKDOWN"` is an entry of a package `internal/conformance`'s
+     tests write, and `"docs/guide/index.html"` one of a tar
+     `internal/tarw`'s tests write. Measured on `main` at `7c3b362`: an ADR's log
+     alone reached 24 packages by the top-level entry `docs`. By this rule
+     it reaches none.
    - **A Go file in no package's directory** (build-ignored, under a
      directory `go list ./...` does not list, or one the `go` command
      ignores) is read only by the tests that walk the module's tree:
      `internal/guarantees`' licence-header and build-directive checks read
-     every Go file below the root, whatever `go list` sees. It also touches
-     every package whose test files name the module root itself, by as many
-     `..` as the package's directory is deep (`"../.."`,
+     every Go file below the root, whatever `go list` sees. It has tested
+     alone every package whose test files name the module root itself, by
+     as many `..` as the package's directory is deep (`"../.."`,
      `filepath.Join("..", "..")`), since naming the root is how a test
-     reads the tree whole. Their importers are not tested for it.
+     reads the tree whole.
+   - **The module walkers** are the root readers whose test files also
+     name Go files by a pattern or a suffix (`"*.go"`, `"_test.go"`). Today
+     they are `internal/guarantees`, `internal/loader` and
+     `internal/manifest`. Every path inside a package's directory has them
+     tested alone. `internal/guarantees` reads every package's files,
+     their test files and benchmark baselines included, and lists every
+     package's test imports.
    - **A generated file** is a path like any other. The specdata tree lies
      in `internal/specdata`'s directory, and the help goldens in
      `internal/cli`'s, so a change to one touches its package; `spec/`'s
@@ -1715,9 +1746,15 @@ ruling made by the train and needs no ratification.
      tests run the `go` command (`internal/conformance` and
      `internal/version` build `./cmd/metais`; `internal/guarantees` builds
      it and lists the whole module; `internal/pkgtree` lists packages) is
-     touched by every path inside any package's directory, and by `go.mod`
-     and `go.sum`. Go's test cache cannot see the binary or listing such a
-     test builds: it keys on the test binary, which does not link the tool.
+     tested alone for every build input of the module, and for `go.mod`
+     and `go.sum`. A build input is a non-test file in a package's
+     directory, by the first rule. A test file, or testdata the build does
+     not embed, is no build input: `go build` compiles neither, and the
+     non-test `go list` these tests run reads neither. A malformed test
+     file that would break a listing breaks `go vet ./...`, which the tier
+     runs whatever the change. Go's test cache cannot see the binary or
+     listing such a test builds: it keys on the test binary, which does not
+     link the tool.
      Measured on `main` at `c3620dd`: after an edit to a file of
      `internal/cli`, `go test -race ./internal/conformance ./internal/version`
      reported both `(cached)`. Both tiers therefore run every package they
@@ -1814,11 +1851,15 @@ ruling made by the train and needs no ratification.
    higher cap.
 
 8. **What the scoped tier cannot catch, and why the wave tier does.**
-   - **Data read by a path the selector cannot see.** A test that builds a
-     path to module data without naming its top-level entry as a literal,
-     or whose inputs reach it through a child process or a tool other than
-     `go`, is not found as a reader, and a change to that data does not
-     select it. The wave tier runs every package.
+   - **Data read by a path the selector cannot see.** Some tests are not
+     found as readers, and a change to their data does not select them:
+     - a test that builds a path to module data without naming the path or
+       a directory above it, as item 3's data rule reads names (from
+       `filepath.Dir` of a named file, or from a value it reads);
+     - a test whose inputs reach the data through a child process or a
+       tool other than `go`.
+
+     The wave tier runs every package.
    - **Interference between packages.** The scoped tier runs fewer
      packages at once. Shared temporary space, the host's open-file and
      process limits, and timing under the whole suite's load are exercised

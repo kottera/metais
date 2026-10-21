@@ -15,10 +15,13 @@ import (
 	"github.com/kottera/metais/internal/testenv"
 )
 
+// gateScripts is the gate's scripts' directory. Naming it here is also what
+// has a change to any of them, gate-select.sh, the awk program it runs and
+// the git environment it sources, reach these tests.
+const gateScripts = "../../.claude/skills/verification-gate"
+
 // gateSelect is the scoped tier's selector (ADR-010 Amendment A5 item 3).
-// Naming it here is also what has a change to the gate's scripts reach
-// these tests.
-const gateSelect = "../../.claude/skills/verification-gate/gate-select.sh"
+const gateSelect = gateScripts + "/gate-select.sh"
 
 // needGateTools skips a test of the gate's scripts where they cannot run:
 // they are bash over git, on the hosts that run the gate.
@@ -70,10 +73,12 @@ func tested(facts []string, pkg string) bool {
 }
 
 // reachProbe is one line of testdata/gateselect/reach.txt: a changed path,
-// the packages whose tests it reaches, and lines the output must hold.
+// the packages whose tests it reaches, the packages whose tests it must not
+// reach (each written !<package>), and lines the output must hold.
 type reachProbe struct {
 	path  string
 	test  []string
+	not   []string
 	facts []string
 }
 
@@ -95,7 +100,13 @@ func reachProbes(t *testing.T) []reachProbe {
 		}
 		p := reachProbe{path: f[0], facts: f[2:]}
 		if f[1] != "-" {
-			p.test = strings.Fields(f[1])
+			for _, pkg := range strings.Fields(f[1]) {
+				if not, ok := strings.CutPrefix(pkg, "!"); ok {
+					p.not = append(p.not, not)
+				} else {
+					p.test = append(p.test, pkg)
+				}
+			}
 		}
 		probes = append(probes, p)
 	}
@@ -122,7 +133,12 @@ func TestGateSelectReach(t *testing.T) {
 					t.Errorf("%s does not reach %s:\n%s", c.path, pkg, strings.Join(facts, "\n"))
 				}
 			}
-			if c.test == nil {
+			for _, pkg := range c.not {
+				if tested(facts, pkg) {
+					t.Errorf("%s reaches %s:\n%s", c.path, pkg, strings.Join(facts, "\n"))
+				}
+			}
+			if c.test == nil && c.not == nil {
 				for _, f := range facts {
 					if strings.HasPrefix(f, "test ") || strings.HasPrefix(f, "blind ") {
 						t.Errorf("%s reaches a package: %s", c.path, f)
