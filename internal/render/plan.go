@@ -5,8 +5,6 @@ package render
 
 import (
 	"cmp"
-	pathpkg "path"
-	"slices"
 	"strings"
 
 	"github.com/kottera/metais/internal/fault"
@@ -15,7 +13,6 @@ import (
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/template"
-	"github.com/kottera/metais/internal/zipfmt"
 )
 
 // joinIn is the path p within the tree of the container at in.
@@ -174,78 +171,6 @@ func (p *planner) declaration(d manifest.Output, x *template.Exprs, owner, in st
 	return files
 }
 
-// asset is the files of the asset declaration's evaluation at, whose path
-// names their destination (ADR-005 D5): the file assets/<path>, copied to
-// the path; or every file beneath the directory assets/<path>, "."
-// naming assets/ itself, each at its path relative to that directory
-// beneath the destination, "." being the root of the tree. Each file's
-// size is the entry's, and its bytes are not read. The loader has refused
-// an asset that names no entry.
-func (p *planner) asset(at *File) []*File {
-	src := at.decl.Source
-	file := func(entry, path string) *File {
-		info, err := p.pkg.Tree.Stat(entry)
-		if err != nil {
-			panic("render: an entry the plan names has no Stat: " + entry)
-		}
-		pf := *at
-		pf.path, pf.template, pf.asset, pf.tree, pf.size = path, "", entry, p.pkg.Tree, info.Size
-		return &pf
-	}
-	if _, err := p.pkg.Tree.Stat(template.AssetDir + src); err == nil {
-		return []*File{file(template.AssetDir+src, at.path)}
-	}
-	var out []*File
-	for _, e := range p.entries {
-		if rel, ok := strings.CutPrefix(e, TreePrefix(template.AssetDir, src)); ok {
-			out = append(out, file(e, Beneath(at.path, rel)))
-		}
-	}
-	return out
-}
-
-// mirror is the files of the mirror's evaluation at, whose path names
-// their destination (ADR-005 D6): every template beneath templates/<dir>,
-// "." naming templates/ itself, in byte order, but one with a name
-// beginning with _ at any depth beneath the mirror's root and one a
-// template field names anywhere in the manifest, each rendered to its path
-// relative to the mirror's root, with a final .liquid removed, beneath the
-// destination. A template named exactly .liquid would be written with an
-// empty name, and is refused; a mirror that yields no file is a warning.
-func (p *planner) mirror(at *File) []*File {
-	d := at.decl
-	var out []*File
-	refused := false
-	subj := finding.Subject{Kind: finding.SubjectOutput, Name: at.owner}
-	loc := p.at(d.Pointer + "/mirror")
-	for _, e := range p.entries {
-		rel, ok := strings.CutPrefix(e, TreePrefix(template.Dir, d.Source))
-		name := strings.TrimPrefix(e, template.Dir)
-		if !ok || p.explicit[name] || slices.ContainsFunc(strings.Split(rel, "/"), func(seg string) bool { return strings.HasPrefix(seg, "_") }) {
-			continue
-		}
-		if pathpkg.Base(rel) == ".liquid" {
-			refused = true
-			p.fs = append(p.fs, finding.New(CodeMirrorEmptyName, subj, &loc, finding.Params{"template": finding.String(name)}))
-			continue
-		}
-		pf := *at
-		pf.path, pf.template = Beneath(at.path, strings.TrimSuffix(rel, ".liquid")), name
-		out = append(out, &pf)
-	}
-	if len(out) == 0 && !refused {
-		p.fs = append(p.fs, finding.New(CodeMirrorEmpty, subj, &loc, finding.Params{"directory": finding.String(d.Source)}))
-	}
-	return out
-}
-
-// The codes of an output declaration a render reports (ADR-005's
-// interfaces name the family output.declaration).
-const (
-	CodeMirrorEmptyName finding.Code = "output.declaration.empty_name"
-	CodeMirrorEmpty     finding.Code = "output.declaration.empty_mirror"
-)
-
 // TreePrefix is the prefix of every entry beneath the directory rel of the
 // layout directory dir, "." naming dir itself.
 func TreePrefix(dir, rel string) string {
@@ -265,105 +190,8 @@ func Beneath(dest, rel string) string {
 	return dest + "/" + rel
 }
 
-// ExplicitTemplates is every template a template output names, at any
-// depth of a container: no mirror renders one (ADR-005 D6 item 3).
-func ExplicitTemplates(decls []manifest.Output) map[string]bool {
-	out := map[string]bool{}
-	var walk func([]manifest.Output)
-	walk = func(ds []manifest.Output) {
-		for _, d := range ds {
-			switch d.Form {
-			case manifest.OutputTemplate:
-				out[d.Source] = true
-			case manifest.OutputContainer:
-				walk(d.Container.Entries)
-			}
-		}
-	}
-	walk(decls)
-	return out
-}
-
-// container plans the entries of the container pf, the depth-th
-// container on its chain, in pf's evaluation: one tree, held to D12
-// within it and to its profile (D8 items 3 and 8, D9), in the container's
-// order (D8 item 6).
-func (p *planner) container(pf *File, depth int) []*File {
-	c := pf.decl.Container
-	in := joinIn(pf.in, pf.path)
-	var entries []*File
-	if m, ok := c.ToolMimetype(); ok {
-		// D9 items 2 to 4: the profile's own mimetype entry, which takes
-		// its place in the tree like any other.
-		tool := &File{decl: pf.decl, path: manifest.MimetypeEntry, ptr: pf.decl.Pointer + "/container/profile",
-			literal: true, fan: pf.fan, owner: pf.owner, in: in, bytes: []byte(m), tool: true}
-		p.all = append(p.all, tool)
-		entries = append(entries, tool)
-	}
-	for _, e := range p.tree(c.Entries, pf.owner, in, depth, pf.fan) {
-		subj := finding.Subject{Kind: finding.SubjectOutput, Name: e.owner}
-		params := pathParams(e)
-		params["profile"] = finding.String(c.Profile)
-		switch c.CheckEntry(e.path) {
-		case manifest.EntryReserved:
-			p.fs = append(p.fs, finding.New(finding.CodeContainerReservedEntry, subj, ptrTo(p.at(e.ptr)), params))
-			continue
-		case manifest.EntryNonASCII:
-			p.fs = append(p.fs, finding.New(finding.CodeContainerNonASCII, subj, ptrTo(p.at(e.ptr)), params))
-		case manifest.EntrySpace:
-			p.fs = append(p.fs, finding.New(finding.CodeContainerSpace, subj, ptrTo(p.at(e.ptr)), params))
-		}
-		entries = append(entries, e)
-	}
-	p.checkPaths(entries)
-	subj := finding.Subject{Kind: finding.SubjectOutput, Name: pf.owner}
-	if req := c.RequiredEntry(); req != "" && !slices.ContainsFunc(entries, func(e *File) bool { return e.path == req }) {
-		params := finding.Params{"entry": finding.String(req), "profile": finding.String(c.Profile)}
-		if i := pf.Item(); i != nil {
-			params["item"] = finding.Int(int64(*i))
-		}
-		p.fs = append(p.fs, finding.New(finding.CodeContainerMissingEntry, subj, ptrTo(p.at(pf.decl.Pointer+"/container/profile")), params))
-	}
-	if len(entries) > zipfmt.MaxEntries {
-		p.fs = append(p.fs, finding.New(finding.CodeContainerTooManyEntries, subj,
-			ptrTo(p.at(pf.decl.Pointer+"/container/entries")), finding.Params{"count": finding.Int(int64(len(entries)))}))
-	}
-	return containerOrder(c, entries)
-}
-
 // ptrTo is a pointer to a copy of l.
 func ptrTo(l finding.Location) *finding.Location { return &l }
-
-// containerOrder is ADR-005 D8 item 6's order of a container's entries:
-// the profile's first entries, the profile's own mimetype before the
-// author's [Content_Types].xml; then the files of every first: true
-// declaration, in declaration order, each declaration's in byte order of
-// their paths; then every other file in byte order. A file appears once,
-// at its earliest place.
-func containerOrder(c *manifest.Container, entries []*File) []*File {
-	sorted := slices.SortedFunc(slices.Values(entries), func(a, b *File) int { return strings.Compare(a.path, b.path) })
-	out := make([]*File, 0, len(entries))
-	placed := map[*File]bool{}
-	place := func(keep func(e *File) bool) {
-		for _, e := range sorted {
-			if !placed[e] && keep(e) {
-				placed[e] = true
-				out = append(out, e)
-			}
-		}
-	}
-	place(func(e *File) bool { return e.tool })
-	if first := c.FirstEntry(); first != "" {
-		place(func(e *File) bool { return e.path == first })
-	}
-	for _, d := range c.Entries {
-		if d.First {
-			place(func(e *File) bool { return !e.tool && e.decl.Pointer == d.Pointer })
-		}
-	}
-	place(func(*File) bool { return true })
-	return out
-}
 
 // manifestAt is the location of the manifest value at ptr, with its line
 // and column when the manifest has them.
