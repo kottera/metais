@@ -1711,7 +1711,7 @@ past the 1 GiB ceiling at the defaults that no calibration case covered:
 
 | Path | Bound before A6 | Peak |
 |---|---|---|
-| Output validation, JSON (`internal/cli/transform.go`) | `output-size` | about 287 B a value; 5,000,000 values in a 10 MB output, 1347 MiB |
+| Output validation, JSON (`internal/render/stages.go`) | `output-size` | about 287 B a value; 5,000,000 values in a 10 MB output, 1347 MiB |
 | Output validation, YAML | `output-size`; `yaml-size` not applied | about 360 B a value; 5,000,000, 1755 to 1811 MiB |
 | A YAML schema file | `schema-size` | a 4 MiB file, 1372 MiB, against 880 MiB as JSON |
 | Schema files together, input and output schemas | `schema-size` per file only | about 390 MiB a 4 MiB file, with no bound on the sum |
