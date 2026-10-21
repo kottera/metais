@@ -44,8 +44,8 @@ type Options struct {
 
 // Sink is where a render goes, as the command chooses it: the methods of
 // internal/render/sink's Sink that Run calls, the command calling the
-// others. Check is ADR-005 D13's phase 3 for the paths of the top-level files
-// planned, every refusal a finding reported with the others before
+// others. Check is ADR-005 D13's phase 3 for the paths of the top-level
+// files planned, every refusal a finding reported with the others before
 // anything is written (D15 item 8); Emit is phase 5 for the files
 // selected, in path order.
 type Sink interface {

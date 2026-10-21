@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/kottera/metais/internal/finding"
 )
 
 // writeSourcePackage writes a source directory below root, its manifest's
@@ -28,3 +30,13 @@ func writeSourcePackage(t *testing.T, root, outputs string, files map[string]str
 	}
 	return pkg
 }
+
+// emitTo is the sink whose phase 3 checks nothing and whose phase 5 is
+// emit.
+type emitTo func(files []*File) Emission
+
+func (emitTo) Check([]string) []finding.Finding { return nil }
+func (e emitTo) Emit(files []*File) Emission    { return e(files) }
+
+// discard is the sink that checks nothing and writes nothing.
+var discard = emitTo(func([]*File) Emission { return Emission{} })
