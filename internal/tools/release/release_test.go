@@ -30,7 +30,7 @@ import (
 // version a release sets and the implements its implements.go states, so
 // a build costs seconds rather than the real tool's minutes.
 const (
-	fakeGoMod   = "module github.com/kottera/metais\n\ngo 1.26.0\n"
+	fakeGoMod   = "module github.com/kottera/metais\n\ngo 1.26.0\n\ntoolchain %s\n"
 	fakeVersion = `// Copyright 2026 Kottera
 // SPDX-License-Identifier: Apache-2.0
 
@@ -115,14 +115,15 @@ func implementsGo(revs []string, reported string) string {
 }
 
 // fakeRepo makes a temporary repository holding the fake module, whose
-// tool implements 1.0, with 1.0 released as ADR-011 D5 item 2 releases a
+// go.mod names the host's toolchain (hostToolchain) and whose tool
+// implements 1.0, with 1.0 released as ADR-011 D5 item 2 releases a
 // revision (an annotated tag spec-1.0 and its released list), and HEAD
 // tagged v1.0.0. It gives the test a fresh HOME and returns the work tree.
 func fakeRepo(t *testing.T) string {
 	t.Helper()
 	testenv.Home(t)
 	dir := testenv.Dir(t)
-	write(t, dir, "go.mod", fakeGoMod)
+	write(t, dir, "go.mod", fmt.Sprintf(fakeGoMod, hostToolchain(t)))
 	write(t, dir, "internal/version/version.go", fakeVersion)
 	write(t, dir, "cmd/metais/main.go", fakeMain)
 	write(t, dir, "cmd/metais/implements.go", implementsGo([]string{"1.0"}, "v"))
@@ -146,13 +147,30 @@ func commit(t *testing.T, dir, msg string) {
 	gitIn(t, dir, "commit", "--quiet", "-m", msg)
 }
 
+// hostToolchain is the go version of the host's toolchain, which the fake
+// module's go.mod names, so the builder's builds never switch toolchain.
+func hostToolchain(t testing.TB) string {
+	t.Helper()
+	out, err := goCommand(t, "env", "GOVERSION").Output()
+	if err != nil {
+		t.Fatalf("go env GOVERSION: %v", err)
+	}
+	return strings.TrimSpace(string(out))
+}
+
 // runIn runs the builder over the work tree dir for version, in hostlessEnv's
-// environment, so its go commands take nothing from the host but its
-// toolchain and caches.
+// environment and with no proxy, so its go commands take nothing from the
+// host but its toolchain and caches, and never reach the network.
 func runIn(t *testing.T, dir, version string, tamper func(buildline.Target, int, string) error) (string, error) {
 	t.Helper()
+	return runInEnv(t, dir, version, hostlessEnv(t), tamper)
+}
+
+// runInEnv is runIn in the environment environ.
+func runInEnv(t *testing.T, dir, version string, environ []string, tamper func(buildline.Target, int, string) error) (string, error) {
+	t.Helper()
 	var out bytes.Buffer
-	c := config{dir: dir, version: version, stdout: &out, environ: hostlessEnv(t), tamper: tamper}
+	c := config{dir: dir, version: version, stdout: &out, environ: environ, proxy: "off", tamper: tamper}
 	err := c.run()
 	return out.String(), err
 }
@@ -285,7 +303,7 @@ func checkArchive(t *testing.T, name string, b []byte, tg buildline.Target, head
 			if err := os.WriteFile(bin, content, 0o755); err != nil {
 				t.Fatal(err)
 			}
-			if err := checkSettings(goVersionM(t, bin), tg, head); err != nil {
+			if err := checkSettings(goVersionM(t, bin), tg, head, hostToolchain(t)); err != nil {
 				t.Errorf("%s: the archived binary: %v", name, err)
 			}
 		} else if string(content) != fakeNotices[h.Name] {
@@ -495,7 +513,7 @@ func TestCheckSettings(t *testing.T) {
 			"\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\t-trimpath=true\n" +
 			"\tbuild\tCGO_ENABLED=0\n\tbuild\tGOARCH=" + tg.Arch + "\n\tbuild\tGOOS=" + tg.OS + "\n" + level +
 			"\tbuild\tvcs=git\n\tbuild\tvcs.revision=" + head + "\n\tbuild\tvcs.time=2026-01-01T00:00:00Z\n\tbuild\tvcs.modified=false\n"
-		if err := checkSettings(good[tg], tg, head); err != nil {
+		if err := checkSettings(good[tg], tg, head, "go1.26.9"); err != nil {
 			t.Errorf("%s: a release's settings were refused: %v", tg, err)
 		}
 	}
@@ -523,9 +541,12 @@ func TestCheckSettings(t *testing.T) {
 		{"the race detector", linux, good[linux] + "\tbuild\t-race=true\n", "has -race=true, which a release does not set"},
 		{"an experiment", linux, good[linux] + "\tbuild\tGOEXPERIMENT=foo\n", "has GOEXPERIMENT=foo, which a release does not set"},
 		{"a quoted value", linux, good[linux] + "\tbuild\t-ldflags=\"-X a=b\"\n", "has -ldflags=-X a=b, which a release does not set"},
+		{"another toolchain", linux, strings.Replace(good[linux], ": go1.26.9\n", ": go1.26.2\n", 1), "was built by go1.26.2, not go.mod's go1.26.9"},
+		{"a toolchain with an experiment", linux, strings.Replace(good[linux], ": go1.26.9\n", ": go1.26.9 X:jsonv2\n", 1), "was built by go1.26.9 X:jsonv2, not go.mod's go1.26.9"},
+		{"no toolchain line", linux, good[linux][strings.Index(good[linux], "\n")+1:], "was built by , not go.mod's go1.26.9"},
 	}
 	for _, c := range cases {
-		err := checkSettings(c.info, c.tg, head)
+		err := checkSettings(c.info, c.tg, head, "go1.26.9")
 		if !errors.Is(err, errSettings) || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%s: checkSettings returned %v, want a refusal saying %q", c.name, err, c.want)
 		}
@@ -536,8 +557,11 @@ func TestGoEnvSetsTheReleaseSettings(t *testing.T) {
 	host := []string{
 		"PATH=/bin", "CGO_ENABLED=1", "GOAMD64=v3", "GOARM64=v9.0", "GOFLAGS=-race -tags=x",
 		"GOCACHE=/host/cache", "GOOS=windows", "GIT_DIR=/elsewhere", "GOCACHEPROG=x",
+		"GOTOOLCHAIN=local", "GOWORK=/host/go.work", "GOENV=/host/go.env",
+		"GOPROXY=https://proxy.host.example", "GOSUMDB=off", "GOPRIVATE=*", "GONOPROXY=*",
+		"GONOSUMDB=*", "GOINSECURE=*",
 	}
-	env := goEnv(host, []string{"GOOS=linux", "GOARCH=arm64", "GOCACHE=/fresh"})
+	env := goEnv(host, "go1.26.9", "https://proxy.release.example", []string{"GOOS=linux", "GOARCH=arm64", "GOCACHE=/fresh"})
 	value := func(name string) []string {
 		var vs []string
 		for _, kv := range env {
@@ -551,6 +575,11 @@ func TestGoEnvSetsTheReleaseSettings(t *testing.T) {
 		"CGO_ENABLED": "0", "GOAMD64": "v1", "GOARM64": "v8.0", "GOFLAGS": "-mod=readonly",
 		"GOCACHE": "/fresh", "GOOS": "linux", "GOARCH": "arm64", "PATH": "/bin",
 		"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.DevNull,
+		// W7-NB1.A: go.mod's toolchain, no workspace and no go env file,
+		// and the builder's own proxy and checksum database.
+		"GOTOOLCHAIN": "go1.26.9", "GOWORK": "off", "GOENV": "off",
+		"GOPROXY": "https://proxy.release.example", "GOSUMDB": "sum.golang.org",
+		"GOPRIVATE": "", "GONOPROXY": "", "GONOSUMDB": "", "GOINSECURE": "",
 	} {
 		if got := value(name); !slices.Equal(got, []string{want}) {
 			t.Errorf("%s is %q, want exactly %q", name, got, want)
@@ -558,6 +587,62 @@ func TestGoEnvSetsTheReleaseSettings(t *testing.T) {
 	}
 	if got := value("GIT_DIR"); got != nil {
 		t.Errorf("GIT_DIR is %q, want it dropped", got)
+	}
+}
+
+// TestReleaseTakesNoHostGoConfiguration runs the builder in a developer's
+// environment that names another toolchain, a workspace and a go env
+// file, each of which would change or break the build (W7-NB1.A). The
+// builder must build with go.mod's toolchain anyway, and every archived
+// binary must say so.
+func TestReleaseTakesNoHostGoConfiguration(t *testing.T) {
+	dir := fakeRepo(t)
+	host := testenv.Dir(t)
+	write(t, host, "go.env", "GOEXPERIMENT=jsonv2\n")
+	environ := append(hostlessEnv(t),
+		"GOTOOLCHAIN=go1.26.1",
+		"GOWORK="+filepath.Join(host, "absent", "go.work"),
+		"GOENV="+filepath.Join(host, "go.env"),
+		"GOPROXY=file:///absent/proxy",
+	)
+	if _, err := runInEnv(t, dir, "1.0.0", environ, nil); err != nil {
+		t.Fatalf("the builder took the developer's go configuration: %v", err)
+	}
+	head := gitIn(t, dir, "rev-parse", "HEAD")
+	for _, tg := range buildline.Shipped {
+		name := archiveName("1.0.0", tg)
+		checkArchive(t, name, []byte(readFile(t, filepath.Join(dir, "dist", name))), tg, head)
+	}
+}
+
+func TestReleaseRefusesAGoModWithoutAToolchain(t *testing.T) {
+	dir := fakeRepo(t)
+	write(t, dir, "go.mod", "module github.com/kottera/metais\n\ngo 1.26.0\n")
+	commit(t, dir, "no toolchain line")
+	gitIn(t, dir, "tag", "-f", "v1.0.0")
+	refused(t, dir, "1.0.0", errNoToolchain, nil)
+}
+
+func TestGoModToolchain(t *testing.T) {
+	for _, c := range []struct{ gomod, want string }{
+		{"module m\n\ngo 1.26.0\n\ntoolchain go1.26.9\n", "go1.26.9"},
+		{"module m\ngo 1.26.0\ntoolchain go1.26.9 // the release's\n", "go1.26.9"},
+		{"module m\r\ngo 1.26.0\r\ntoolchain\tgo1.26.9\r\n", "go1.26.9"},
+	} {
+		if got, err := goModToolchain([]byte(c.gomod)); err != nil || got != c.want {
+			t.Errorf("goModToolchain(%q) = %q, %v; want %q", c.gomod, got, err, c.want)
+		}
+	}
+	for _, gomod := range []string{
+		"module m\ngo 1.26.0\n",
+		"module m\n// toolchain go1.26.9\n",
+		"module m\ntoolchain default\n",
+		"module m\ntoolchain go1.26.9 go1.26.8\n",
+		"module m\ntoolchain go1.26.9\ntoolchain go1.26.8\n",
+	} {
+		if got, err := goModToolchain([]byte(gomod)); !errors.Is(err, errNoToolchain) {
+			t.Errorf("goModToolchain(%q) = %q, %v; want %v", gomod, got, err, errNoToolchain)
+		}
 	}
 }
 

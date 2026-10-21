@@ -7,8 +7,10 @@
 //
 // run from a clean checkout whose HEAD is the tag v<semver>. It builds each
 // shipped target twice, in two fresh clones of HEAD with separate GOCACHEs,
-// and refuses unless the two binaries are equal byte for byte and go
-// version -m shows the release's build settings. It refuses a tool whose
+// with go.mod's toolchain whatever the developer's GOTOOLCHAIN, and with
+// no workspace, go env file, proxy or flags of the developer's. It refuses
+// unless the two binaries are equal byte for byte and go version -m shows
+// go.mod's toolchain and the release's build settings. It refuses a tool whose
 // implements names an unreleased specification revision (ADR-011 D5 item
 // 6). It then writes dist/ at the work tree's root: one
 // metais_<version>_<os>_<arch>.tar.gz per shipped target and SHA256SUMS.
@@ -43,7 +45,7 @@ func cli(args []string, stdout, stderr io.Writer, environ []string) int {
 		fmt.Fprintln(stderr, "usage: go run ./internal/tools/release -version <semver>")
 		return 2
 	}
-	c := config{version: *version, stdout: stdout, environ: environ}
+	c := config{version: *version, stdout: stdout, environ: environ, proxy: releaseProxy}
 	if err := c.run(); err != nil {
 		fmt.Fprintln(stderr, "release:", err)
 		return 1

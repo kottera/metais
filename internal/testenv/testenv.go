@@ -189,7 +189,14 @@ func (h GoHost) Go() string {
 //     tree's state reaches the binary;
 //   - CGO_ENABLED=0, which a caller that builds with the race detector
 //     overrides by appending CGO_ENABLED=1: the last value of a variable
-//     is the one a command sees.
+//     is the one a command sees;
+//   - GO_TELEMETRY_CHILD=2, the mark golang.org/x/telemetry gives a
+//     process its telemetry sidecar started, so the go command forks no
+//     sidecar of its own. In a fresh HOME it otherwise takes the day's
+//     upload token and forks one, detached, which writes under HOME after
+//     the command exits and races the caller's removal of dir. The mode
+//     `go telemetry off` sets is a file under HOME, which this package
+//     cannot write.
 func GoEnv(h GoHost, dir string) []string {
 	env := []string{
 		"HOME=" + dir,
@@ -209,6 +216,7 @@ func GoEnv(h GoHost, dir string) []string {
 		"GOMODCACHE=" + h.GOMODCACHE,
 		"GOCACHE=" + h.GOCACHE,
 		"CGO_ENABLED=0",
+		"GO_TELEMETRY_CHILD=2",
 	}
 	return append(env, h.CToolchain...)
 }
