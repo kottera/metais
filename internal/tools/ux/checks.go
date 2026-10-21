@@ -287,15 +287,26 @@ func checkNoSessionSaved(home string) check {
 // project's directory.
 var memoryFile = regexp.MustCompile(`(?:^|[\s/"'=~])(?:CLAUDE(?:\.local)?|MEMORY|AGENTS)\.md(?:$|[^A-Za-z0-9_-])|\.claude/(?:projects|memory)\b|/memory/`)
 
-// checkNoMemoryRead: no tool call of the session names a memory file.
-func checkNoMemoryRead(t transcript) check {
+// spilledOutput matches a tool output Claude Code spilled to a file of the
+// session's project beneath home, which a session reads back when a result
+// is too large to show whole. The session's HOME starts empty, so such a
+// file is the session's own output and no memory.
+func spilledOutput(home string) *regexp.Regexp {
+	return regexp.MustCompile(`(?:` + regexp.QuoteMeta(home) + `|~|\$HOME|\$\{HOME\})/\.claude/projects/-[^/\s"'\\]*/` +
+		`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/tool-results/[A-Za-z0-9_-][A-Za-z0-9_.-]*`)
+}
+
+// checkNoMemoryRead: no tool call of the session names a memory file. A
+// tool output the session spilled to its own HOME is not one.
+func checkNoMemoryRead(s session, t transcript) check {
+	spilled := spilledOutput(s.home)
 	for i, u := range t.ToolUses {
 		var input any
 		if err := json.Unmarshal(u.Input, &input); err != nil {
 			continue
 		}
-		for _, s := range stringsIn(input) {
-			if m := memoryFile.FindString(s); m != "" {
+		for _, str := range stringsIn(input) {
+			if m := memoryFile.FindString(spilled.ReplaceAllString(str, "")); m != "" {
 				return fail(checkNoMemory, "tool call %d (%s) names a memory file: %q", i+1, u.Name, strings.TrimSpace(m))
 			}
 		}
