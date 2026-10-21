@@ -14,6 +14,9 @@ marked *(A3, proposed)*. [Amendment A4](#amendments) (`Core()`'s filter list
 names `escape`'s alias `h`) is proposed by PLAN-2026-10-metais-v1 Wave 3 and
 awaits Ed Funnekotter's ratification; the passage it changes is marked
 *(A4, proposed)*.
+[Amendment A6](#amendments) (the render's one goroutine, the detectors' probes, and race detection) is proposed by
+[ADR-012](ADR-012-test-economy.md) and accepted by Ed Funnekotter on 2026-10-21;
+it takes effect as PLAN-2026-10-metais-test-economy's items land.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R18 item 1 (one static binary, the supported targets,
@@ -1887,6 +1890,40 @@ ruling made by the train and needs no ratification.
    live has verdicts that describe no single tree, and none of them is
    reused. The cheap steps (gofmt, tidiness, the specdata drift) run again
    whenever the tree changed at all.
+
+### A6 — The render's one goroutine, the detectors' probes, and race detection where it can find something
+
+**Status:** Accepted 2026-10-21 by Ed Funnekotter; proposed 2026-10-20 by [ADR-012](ADR-012-test-economy.md) D4
+and D7. Item 1 is his answer to
+PLAN-2026-10-metais-test-economy's Q4. Each item takes effect when the plan
+item named in it lands.
+**Amends:** D2 item 3, D13 item 4 (the determinism and confinement
+detectors), and D14 item 8.
+
+1. **D2 item 3: the render starts one goroutine** (W1-5). Rendering a
+   container writes its zip into an `io.Pipe` from a goroutine, and the
+   commit reads it in order (`internal/cli/render_write.go:122-136`). That
+   is one producer and one consumer in a fixed order, so no output depends
+   on scheduling. A focused test under `-race` drives every path of it,
+   the early close included. No other goroutine is started on any path
+   that reads a package, validates or renders.
+2. **D13 item 4, determinism** (W3-1). The detector renders its control's
+   probe, a 20-member object, clean and under `MapOrder`, up to 20 times
+   in one process. Repetition across processes, environments and days,
+   for every vector, is the conformance pass's comparison with its record
+   (ADR-005 A2). Its fresh process under umask `077` renders the probe and
+   every vector with an executable file in its expected trees.
+   `TestPackDeterminism` keeps the changed file times and
+   modes, which no vector varies.
+3. **D13 item 4, confinement** (W3-1). The conformance pass snapshots the
+   whole sandbox, the parent of the work directory included, before and
+   after every step of every vector, through the binary. The detector
+   keeps the in-process proof over the hostile corpus's traversal
+   members, with `SkipConfine` as its control.
+4. **D14 item 8, race detection** (W2-1). The conformance suite runs the
+   release build. No suite process runs a race-built `metais`, since its
+   only goroutine is item 1's. `go test -race` still runs every in-process
+   test, item 1's among them.
 
 ## Implementation log
 

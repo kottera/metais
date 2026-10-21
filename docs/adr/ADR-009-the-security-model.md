@@ -1,6 +1,9 @@
 # ADR-009: The security model — the package and its inputs are hostile, the host is invisible to them, every resource has a number, and anything out of spec is refused
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
+[Amendment A7](#amendments) (the SC7 harness is the one pass against a committed record) is proposed by
+[ADR-012](ADR-012-test-economy.md) and accepted by Ed Funnekotter on 2026-10-21;
+it takes effect as PLAN-2026-10-metais-test-economy's items land.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R14 (items 1 to 4); the security halves of R10 item 1, R11
@@ -1820,6 +1823,42 @@ validates a copy of the value tree in its own form.
    takes the new rows and defaults, citing the calibration record. The
    calibration suite gains item 4's and item 5's cases and a case for each
    path of item 2, and the four-target re-run A3 requires covers them.
+
+### A7 — The SC7 harness is the reference runner's one pass, checked against a committed record of environment B
+
+**Status:** Accepted 2026-10-21 by Ed Funnekotter; proposed 2026-10-20 by [ADR-012](ADR-012-test-economy.md) D2. It takes effect when
+PLAN-2026-10-metais-test-economy W2-3 lands.
+**Amends:** D16 item 1 (its opening, the two path modes, checks 2 and 3)
+and D16 item 2 (what the canaries are caught by).
+
+1. **The harness runs every case once per change**, as `TestConformance`'s
+   pass against the release build (ADR-012 D2 item 1). It runs in
+   environment A, with this item's added variables and decoy trees, and
+   with the data and output paths absolute under a sentinel-named
+   directory. Checks 1, 2 and 4 apply to every step, check 4 over the whole
+   sandbox. `TestHostIsolation` runs only the every-command reach, under
+   `-conformance.reach`, in the wave tier.
+2. **Check 3 compares A with a committed record of B.** B is the plain
+   environment with relative paths, recorded per vector by the regenerate
+   step, which also applies checks 2 and 4 to B. The record was made by
+   another process, at another time, and its digests cover every stream
+   and tree. So a process id, a time zone, a locale, an environment
+   variable, or the clock at any resolution down to the record's age shows
+   as a difference, as does the binary's own path. A case whose
+   requirement the recording host did not meet runs B live, two seconds
+   after A.
+3. **The relative path mode is environment B's.** A tool that makes a
+   relative path absolute is caught by check 2 over B at regeneration. A
+   tool that prints a caller's path is caught by check 1 in A.
+4. **The canaries.** `pid`, `tz` and `clock` must each be caught both by the
+   record comparison and by live A/B with B two seconds after A. The
+   others keep the checks item 2's table names. The release binary's clean
+   result is the pass's.
+5. **The published method is unchanged.** Under `-conformance.live`, the
+   default for any tool but the reference build from source, every case
+   runs in both path modes, in A and in B live, with every opening
+   command. The release act runs the reference tool that way on each
+   matrix target.
 
 ## Implementation log
 
