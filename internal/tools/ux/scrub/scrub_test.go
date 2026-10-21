@@ -31,6 +31,10 @@ func TestBytes(t *testing.T) {
 		{"Authorization: Bearer abcdefghijklmnopqrstuvwxyz", "Authorization: Bearer [scrubbed]"},
 		{"GH_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz0123", "GH_TOKEN=[scrubbed]"},
 		{"apiKeySource ANTHROPIC_AUTH_TOKEN", "apiKeySource ANTHROPIC_AUTH_TOKEN"},
+		{`"No module named 'liquid'\n/var/lib/runner/toolchain/node/bin/node"`, `"No module named 'liquid'\n/ux/host"`},
+		{"home/.claude/projects/-var-lib-runner-volumes-wo-scratch-set-runs-C1-render-real-haiku-work/memory",
+			"home/.claude/projects/-ux-run-work/memory"},
+		{".claude/projects/-Users-ed-src-metais/", ".claude/projects/-ux-host/"},
 	} {
 		got := string(s.Bytes([]byte(c.in)))
 		if got != c.want {
@@ -55,6 +59,8 @@ func TestCheck(t *testing.T) {
 		"/var/lib/tera-runner/volumes/work_order/x/scratch",
 		"/home/ed/report.metais",
 		`C:\Users\ed\report.metais`,
+		`"x\n/home/ed/y"`,
+		"-var-lib-tera-runner-volumes-work-order-x",
 	} {
 		if found := Check([]byte(in)); len(found) == 0 {
 			t.Errorf("Check(%q) found nothing", in)

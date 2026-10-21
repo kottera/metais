@@ -56,7 +56,17 @@ var credentials = []*regexp.Regexp{
 // keeps its users', volumes' or temporary files, which names the host,
 // its user or its job. A system path such as /usr/bin/env or
 // /etc/bash.bashrc names none of them and is kept.
-var hostRoot = regexp.MustCompile(`(^|[^A-Za-z0-9._~/-])((?:/(?:var/lib|var/folders|home|Users|private|tmp|root|opt|nix|mnt|srv|Volumes|workspace|data|scratch)\b(?:/[^\s"'\\:;,|()<>{}\[\]` + "`" + `*?]*)?)|(?:\b[A-Za-z]:\\(?:Users|ProgramData)\\[^\s"']*))`)
+var hostRoot = regexp.MustCompile(`(^|\\[nrt]|[^A-Za-z0-9._~/-])((?:/(?:var/lib|var/folders|home|Users|private|tmp|root|opt|nix|mnt|srv|Volumes|workspace|data|scratch)\b(?:/[^\s"'\\:;,|()<>{}\[\]` + "`" + `*?]*)?)|(?:\b[A-Za-z]:\\(?:Users|ProgramData)\\[^\s"']*))`)
+
+// hostMangled matches a host path as Claude Code names a project's
+// directory after it, every character that is not a letter or a digit
+// made a hyphen: -var-lib-runner-volumes-….
+var hostMangled = regexp.MustCompile(`(^|[^A-Za-z0-9-])(-(?:var-lib|var-folders|home|Users|private|tmp|root|opt|nix|mnt|srv|Volumes|workspace|data|scratch)-[A-Za-z0-9-]*)`)
+
+// mangled is p as Claude Code names a project's directory after it.
+func mangled(p string) string {
+	return regexp.MustCompile(`[^A-Za-z0-9]`).ReplaceAllString(p, "-")
+}
 
 // Scrubber replaces the paths of one run and every credential.
 type Scrubber struct {
@@ -71,7 +81,7 @@ func New(runDir, setDir string) *Scrubber {
 	s := &Scrubber{}
 	for _, d := range []dir{{runDir, RunDir}, {setDir, SetDir}} {
 		if d.from = strings.TrimRight(d.from, "/"); d.from != "" {
-			s.dirs = append(s.dirs, d)
+			s.dirs = append(s.dirs, d, dir{mangled(d.from), mangled(d.to)})
 		}
 	}
 	// The longer first: the run's directory is beneath the set's.
@@ -110,6 +120,11 @@ func scrub(text string) (string, []string) {
 		}
 		found = append(found, "a host path: "+sub[2])
 		return sub[1] + HostPath
+	})
+	text = hostMangled.ReplaceAllStringFunc(text, func(m string) string {
+		sub := hostMangled.FindStringSubmatch(m)
+		found = append(found, "a host path: "+sub[2])
+		return sub[1] + mangled(HostPath)
 	})
 	for _, re := range credentials {
 		text = re.ReplaceAllStringFunc(text, func(m string) string {
