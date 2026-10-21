@@ -7,6 +7,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"go/ast"
+	"go/token"
 	"os"
 	"path/filepath"
 	"slices"
@@ -29,13 +31,17 @@ type layerRule struct {
 	Packages json.RawMessage `json:"packages,omitempty"`
 
 	// single-entry-point: Package's non-test files refer to Imports only
-	// inside its top-level function Function.
+	// inside its top-level function Function; or, with Through instead,
+	// only to call Imports's function Through, or inside that call's
+	// arguments but not inside a function literal among them, so
+	// everything Package takes from Imports is for that one call.
 	// test-only: no package but Package imports Package in its non-test
 	// files; tests may.
 	// never-depends: Package does not depend, directly or through another
 	// package, on a package matching Imports.
 	Package  string `json:"package,omitempty"`
 	Function string `json:"function,omitempty"`
+	Through  string `json:"through,omitempty"`
 
 	// only-importers: only Importers import a package matching Imports,
 	// tests included. single-entry-point and never-depends use Imports
@@ -73,16 +79,16 @@ func readLayers(path string) ([]layerRule, error) {
 			var p string
 			ok = json.Unmarshal(r.Packages, &p) == nil && p != "" && r.Package == "" && r.Imports == "" && r.Importers == nil && r.Symbols == nil
 		case "single-entry-point":
-			ok = r.Package != "" && r.Imports != "" && r.Function != "" && r.Packages == nil && r.Importers == nil && r.Symbols == nil
+			ok = r.Package != "" && r.Imports != "" && (r.Function == "") != (r.Through == "") && r.Packages == nil && r.Importers == nil && r.Symbols == nil
 		case "test-only":
-			ok = r.Package != "" && r.Packages == nil && r.Imports == "" && r.Function == "" && r.Importers == nil && r.Symbols == nil
+			ok = r.Package != "" && r.Packages == nil && r.Imports == "" && r.Function == "" && r.Through == "" && r.Importers == nil && r.Symbols == nil
 		case "never-depends":
-			ok = r.Package != "" && r.Imports != "" && r.Function == "" && r.Packages == nil && r.Importers == nil && r.Symbols == nil
+			ok = r.Package != "" && r.Imports != "" && r.Function == "" && r.Through == "" && r.Packages == nil && r.Importers == nil && r.Symbols == nil
 		case "only-importers":
-			ok = r.Imports != "" && len(r.Importers) > 0 && r.Packages == nil && r.Package == "" && r.Symbols == nil
+			ok = r.Imports != "" && len(r.Importers) > 0 && r.Packages == nil && r.Package == "" && r.Through == "" && r.Symbols == nil
 		case "only-referrers":
 			var ps []string
-			ok = len(r.Symbols) > 0 && json.Unmarshal(r.Packages, &ps) == nil && len(ps) > 0 && r.Package == "" && r.Imports == "" && r.Importers == nil
+			ok = len(r.Symbols) > 0 && json.Unmarshal(r.Packages, &ps) == nil && len(ps) > 0 && r.Package == "" && r.Imports == "" && r.Through == "" && r.Importers == nil
 		}
 		if !ok {
 			return nil, fmt.Errorf("%s: rule %d is not a well-formed rule of a known kind: %+v", path, i, r)
@@ -169,6 +175,10 @@ func layerViolations(rules []layerRule, pkgs []*listedPackage, files []*sourceFi
 				if f.pkg != r.Package {
 					continue
 				}
+				if r.Through != "" {
+					bad = append(bad, throughViolations(r, f)...)
+					continue
+				}
 				for _, ref := range f.references() {
 					if ref.path == r.Imports && ref.fn != r.Function {
 						where := "outside any function"
@@ -180,6 +190,47 @@ func layerViolations(rules []layerRule, pkgs []*listedPackage, files []*sourceFi
 				}
 			}
 		}
+	}
+	return bad
+}
+
+// throughViolations is every reference f makes to r.Imports that is not
+// a call of r.Through or inside such a call's arguments, outside any
+// function literal there: a literal is code of its own, which the call
+// may run, so a reference inside one is not for the call.
+func throughViolations(r layerRule, f *sourceFile) []string {
+	refs := f.references()
+	type span struct{ pos, end token.Pos }
+	var args, lits []span
+	for _, ref := range refs {
+		if ref.path != r.Imports || ref.name != r.Through || ref.call == nil {
+			continue
+		}
+		for _, a := range ref.call.Args {
+			args = append(args, span{a.Pos(), a.End()})
+			ast.Inspect(a, func(n ast.Node) bool {
+				if l, ok := n.(*ast.FuncLit); ok {
+					lits = append(lits, span{l.Pos(), l.End()})
+				}
+				return true
+			})
+		}
+	}
+	within := func(spans []span, p token.Pos) bool {
+		return slices.ContainsFunc(spans, func(s span) bool { return s.pos <= p && p < s.end })
+	}
+	var bad []string
+	for _, ref := range refs {
+		if ref.path != r.Imports {
+			continue
+		}
+		if ref.name == r.Through && ref.call != nil {
+			continue
+		}
+		if p := ref.sel.Pos(); within(args, p) && !within(lits, p) {
+			continue
+		}
+		bad = append(bad, fmt.Sprintf("%s: refers to %s, not for a call of %s.%s (%s)", f.at(ref.sel), ref.symbol(), r.Imports, r.Through, r.Reason))
 	}
 	return bad
 }
@@ -258,6 +309,9 @@ func TestLayersControl(t *testing.T) {
 		"github.com/kottera/metais/internal/render imports github.com/kottera/metais/internal/xref, which only github.com/kottera/metais/internal/author may",
 		"github.com/kottera/metais/internal/render imports go.yaml.in/yaml/v3, which only github.com/kottera/metais/internal/yamlx may",
 		"github.com/kottera/metais/internal/render imports golang.org/x/text/cases, which only github.com/kottera/metais/internal/unitext may",
+		"github.com/kottera/metais/internal/render/paths.go:18: refers to github.com/kottera/metais/internal/hostfs.Write, not for a call of github.com/kottera/metais/internal/hostfs.CheckPaths",
+		"github.com/kottera/metais/internal/render/paths.go:24: refers to github.com/kottera/metais/internal/hostfs.Write, not for a call of github.com/kottera/metais/internal/hostfs.CheckPaths",
+		"github.com/kottera/metais/internal/render/paths.go:27: refers to github.com/kottera/metais/internal/hostfs.CheckPaths, not for a call of github.com/kottera/metais/internal/hostfs.CheckPaths",
 		"github.com/kottera/metais/internal/tools/release/archive/archive.go:13: refers to os.Stdout, which only github.com/kottera/metais/cmd/metais, github.com/kottera/metais/internal/tools/release, github.com/kottera/metais/internal/tools/ux may",
 	}
 	if !slices.Equal(got, want) {
@@ -276,6 +330,8 @@ func TestReadLayersRefusesMalformedRules(t *testing.T) {
 		"wrong shape":            `{"rules": [{"rule": "standard-library-only", "packages": ["a"], "reason": "r"}]}`,
 		"test-only with imports": `{"rules": [{"rule": "test-only", "package": "a", "imports": "b", "reason": "r"}]}`,
 		"never-depends unnamed":  `{"rules": [{"rule": "never-depends", "imports": "b", "reason": "r"}]}`,
+		"function and through":   `{"rules": [{"rule": "single-entry-point", "package": "a", "imports": "b", "function": "F", "through": "G", "reason": "r"}]}`,
+		"through elsewhere":      `{"rules": [{"rule": "never-depends", "package": "a", "imports": "b", "through": "G", "reason": "r"}]}`,
 	} {
 		path := filepath.Join(testenv.Dir(t), "layers.json")
 		if err := os.WriteFile(path, []byte(table), 0o644); err != nil {
