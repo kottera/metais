@@ -4,18 +4,21 @@
 package score
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/fs"
 	"path"
-	"reflect"
 	"regexp"
 	"slices"
 	"strings"
 
-	"go.yaml.in/yaml/v3"
+	"github.com/kottera/metais/internal/finding"
+	"github.com/kottera/metais/internal/jsonx"
+	"github.com/kottera/metais/internal/limits"
+	"github.com/kottera/metais/internal/yamlx"
 )
 
 // source is what the scorer knows of a fixture from its source directory:
@@ -46,14 +49,40 @@ type example struct {
 // manifest is what the scorer reads of a metais.yaml.
 type manifest struct {
 	Inputs []struct {
-		Name   string `yaml:"name"`
-		Schema string `yaml:"schema"`
-	} `yaml:"inputs"`
+		Name   string `json:"name"`
+		Schema string `json:"schema"`
+	} `json:"inputs"`
 	Outputs []struct {
-		Path     string `yaml:"path"`
-		Template string `yaml:"template"`
-		Escape   string `yaml:"escape"`
-	} `yaml:"outputs"`
+		Path     string `json:"path"`
+		Template string `json:"template"`
+		Escape   string `json:"escape"`
+	} `json:"outputs"`
+}
+
+// readManifest reads a metais.yaml, as metais reads one.
+func readManifest(b []byte) (manifest, bool) {
+	var m manifest
+	v, ok := readYAML(b, finding.SubjectManifest, limits.ManifestSize)
+	if !ok {
+		return m, false
+	}
+	j, _ := json.Marshal(v)
+	return m, json.Unmarshal(j, &m) == nil
+}
+
+// readYAML reads a YAML document through metais's own reading of YAML,
+// internal/yamlx (ADR-010 D6 item 5), as the value JSON would decode it
+// to.
+func readYAML(b []byte, kind finding.SubjectKind, size limits.ID) (any, bool) {
+	doc, fs := yamlx.Parse(bytes.TrimPrefix(b, []byte("\uFEFF")), yamlx.Source{Subject: finding.Subject{Kind: kind}, Size: size}, limits.Defaults())
+	if len(fs) > 0 {
+		return nil, false
+	}
+	var v any
+	if json.Unmarshal(jsonx.Canonical(doc.Value), &v) != nil {
+		return nil, false
+	}
+	return v, true
 }
 
 func readSource(fsys fs.FS) (*source, error) {
@@ -69,9 +98,9 @@ func readSource(fsys fs.FS) (*source, error) {
 	if err != nil {
 		return nil, err
 	}
-	var m manifest
-	if err := yaml.Unmarshal(s.files["metais.yaml"], &m); err != nil {
-		return nil, fmt.Errorf("metais.yaml: %w", err)
+	m, ok := readManifest(s.files["metais.yaml"])
+	if !ok {
+		return nil, fmt.Errorf("metais.yaml is not a manifest metais reads")
 	}
 	for _, in := range m.Inputs {
 		i := input{name: in.Name}
@@ -140,11 +169,8 @@ func parseData(ext string, b []byte) (any, bool) {
 			return nil, false
 		}
 	case ".yaml", ".yml":
-		if yaml.Unmarshal(b, &v) != nil {
-			return nil, false
-		}
-		j, err := json.Marshal(v)
-		if err != nil || json.Unmarshal(j, &v) != nil {
+		var ok bool
+		if v, ok = readYAML(b, finding.SubjectInput, limits.InputSize); !ok {
 			return nil, false
 		}
 	default:
@@ -223,7 +249,7 @@ func (src *source) shipped(s *supplied) string {
 		if len(s.inputs) > 0 && s.sets == 0 {
 			same := true
 			for k, v := range s.inputs {
-				if !reflect.DeepEqual(e.inputs[k], v) {
+				if !sameValue(e.inputs[k], v) {
 					same = false
 					break
 				}
@@ -239,6 +265,14 @@ func (src *source) shipped(s *supplied) string {
 		}
 	}
 	return ""
+}
+
+// sameValue reports whether two decoded JSON values are equal: their
+// encodings are, as encoding/json writes an object's members in key order.
+func sameValue(a, b any) bool {
+	ja, errA := json.Marshal(a)
+	jb, errB := json.Marshal(b)
+	return errA == nil && errB == nil && string(ja) == string(jb)
 }
 
 // renderedShipped is the shipped example whose expected output a render

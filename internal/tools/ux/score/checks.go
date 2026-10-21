@@ -11,8 +11,6 @@ import (
 	"slices"
 	"strings"
 
-	"go.yaml.in/yaml/v3"
-
 	"github.com/kottera/metais/internal/tools/ux/streamjson"
 )
 
@@ -633,8 +631,8 @@ func dataToJS(r *run) Result {
 			continue
 		}
 		b, _ := r.file(p)
-		var m manifest
-		if yaml.Unmarshal(b, &m) != nil {
+		m, ok := readManifest(b)
+		if !ok {
 			continue
 		}
 		for _, o := range m.Outputs {
