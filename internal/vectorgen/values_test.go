@@ -244,6 +244,7 @@ var packageValues = map[string][]value{
 	"sec/package-size-packed":        {limit(0, "package-size", packageSize), limit(1, "package-size", below(packageSize)), param(0, "bound", below(packageSize)), param(0, "observed", packageSize)},
 	"sec/package-uncompressed":       {limit(0, "package-uncompressed", uncompressed), limit(1, "package-uncompressed", below(uncompressed)), param(0, "bound", below(uncompressed)), param(0, "observed", uncompressed)},
 	"pkg/prepended-data":             {param(0, "offset", start), param(0, "declared", localHeader(zipfmt.ReadmeName))},
+	"pkg/digest-values":              {limit(0, "entries", func(b built) int { return entryCount(b) + 1 }), limit(1, "entries", entryCount)},
 	"sec/entries-packed":             {limit(0, "entries", entryCount), limit(1, "entries", below(entryCount)), param(0, "bound", below(entryCount)), param(0, "observed", entryCount)},
 	"sec/entry-size":                 {limit(0, "entry-size", central("assets/k.bin", declaredSize)), limit(1, "entry-size", below(central("assets/k.bin", declaredSize))), param(0, "bound", below(central("assets/k.bin", declaredSize))), param(0, "observed", central("assets/k.bin", declaredSize))},
 	"sec/entry-ratio":                {limit(0, "entry-ratio", ratioBound("assets/k.bin")), limit(1, "entry-ratio", below(ratioBound("assets/k.bin"))), param(0, "bound", below(ratioBound("assets/k.bin"))), param(0, "observed", ratio("assets/k.bin"))},

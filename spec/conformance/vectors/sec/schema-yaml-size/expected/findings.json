@@ -1,0 +1,19 @@
+[
+  {
+    "code": "limit.package",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.yaml"
+    },
+    "params": {
+      "limit": "schema-yaml-size",
+      "bound": 12,
+      "lowered": true,
+      "observed": 13
+    }
+  }
+]

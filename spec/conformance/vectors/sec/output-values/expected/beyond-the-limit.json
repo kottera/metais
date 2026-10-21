@@ -1,0 +1,42 @@
+[
+  {
+    "code": "limit.exceeded.output",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "a"
+    },
+    "location": {
+      "origin": "output",
+      "file": "a.json",
+      "line": 1,
+      "column": 8,
+      "pointer": "/2"
+    },
+    "params": {
+      "limit": "output-values",
+      "bound": 3,
+      "lowered": true
+    }
+  },
+  {
+    "code": "limit.exceeded.output",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "b"
+    },
+    "location": {
+      "origin": "output",
+      "file": "b.yaml",
+      "line": 3,
+      "column": 3,
+      "pointer": "/2"
+    },
+    "params": {
+      "limit": "output-values",
+      "bound": 3,
+      "lowered": true
+    }
+  }
+]

@@ -14,7 +14,7 @@ import (
 )
 
 // adr009 is ADR-009 D3's three tables as the ADR writes them, with
-// Amendment A1's two package limits: name, default and table, in order.
+// the limits its amendments add: name, default and table, in order.
 var adr009 = []struct{ name, def, class string }{
 	{"package-size", "256 MiB", "package"},
 	{"package-uncompressed", "512 MiB", "package"},
@@ -25,6 +25,7 @@ var adr009 = []struct{ name, def, class string }{
 	{"path-depth", "32 components", "package"},
 	{"manifest-size", "1 MiB", "package"},
 	{"schema-size", "4 MiB", "package"},
+	{"schema-yaml-size", "1 MiB", "package"},
 	{"combined-schema-size", "16 MiB", "package"},
 	{"schema-depth", "64", "package"},
 	{"schema-subschemas", "20,000", "package"},
@@ -40,7 +41,7 @@ var adr009 = []struct{ name, def, class string }{
 
 	{"input-size", "32 MiB", "data"},
 	{"inputs-total", "128 MiB", "data"},
-	{"input-values", "1,000,000", "data"},
+	{"input-values", "500,000", "data"},
 	{"yaml-size", "1 MiB", "data"},
 	{"csv-rows", "1,000,000", "data"},
 	{"csv-columns", "1,024", "data"},
@@ -58,7 +59,8 @@ var adr009 = []struct{ name, def, class string }{
 	{"outputs", "100,000", "work"},
 	{"container-depth", "3", "work"},
 	{"output-size", "128 MiB", "work"},
-	{"output-total", "512 MiB", "work"},
+	{"output-total", "256 MiB", "work"},
+	{"output-values", "400,000", "work"},
 	{"findings", "100,000", "work"},
 	{"grep-matches", "10,000", "work"},
 	{"grep-context", "7 lines", "work"},
@@ -145,8 +147,8 @@ func TestLower(t *testing.T) {
 		{"entry-size=64MiB", EntrySize, 64 << 20},
 		{"path-length=2KiB" /* above 512 */, PathLength, -1},
 		{"path-length=511", PathLength, 511},
-		{"output-total=512MiB", OutputTotal, 512 << 20},
-		{"output-total=1GiB" /* above 512 MiB */, OutputTotal, -1},
+		{"output-total=256MiB", OutputTotal, 256 << 20},
+		{"output-total=1GiB" /* above 256 MiB */, OutputTotal, -1},
 		{"regex-work=8589934592", RegexWork, 1 << 33},
 		{"entry-ratio=100", EntryRatio, 100},
 	}
@@ -206,7 +208,7 @@ func TestLowerRefuses(t *testing.T) {
 		// A raise.
 		{"findings=100001", want{ReasonAboveDefault, findingsLimit + `,"value":100001`}},
 		{"entry-size=65MiB", want{ReasonAboveDefault, `"name":"entry-size","default":67108864,"unit":"bytes","value":68157440`}},
-		{"output-total=2GiB", want{ReasonAboveDefault, `"name":"output-total","default":536870912,"unit":"bytes","value":2147483648`}},
+		{"output-total=2GiB", want{ReasonAboveDefault, `"name":"output-total","default":268435456,"unit":"bytes","value":2147483648`}},
 		{"findings=9007199254740993", want{ReasonAboveDefault, findingsLimit}},
 		{"findings=99999999999999999999999", want{ReasonAboveDefault, findingsLimit}},
 		// Amendment A1's two, each one above its default.

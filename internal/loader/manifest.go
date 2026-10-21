@@ -5,6 +5,7 @@ package loader
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"slices"
@@ -15,6 +16,7 @@ import (
 	"github.com/kottera/metais/internal/limits"
 	"github.com/kottera/metais/internal/liquid/value"
 	"github.com/kottera/metais/internal/manifest"
+	"github.com/kottera/metais/internal/regexprofile"
 	"github.com/kottera/metais/internal/schema"
 	"github.com/kottera/metais/internal/schemafail"
 	"github.com/kottera/metais/internal/specdata"
@@ -179,7 +181,16 @@ func (o *opening) validate(p *Package) []finding.Finding {
 	c := manifestSchemaCompiler()
 	s, _ := c.Schema(manifestSchemaEntry)
 	failures, err := s.Validate(o.doc.root)
-	if err != nil {
+	var le *regexprofile.LimitError
+	switch {
+	case errors.As(err, &le):
+		// The manifest schema is compiled under the defaults, and a
+		// manifest within manifest-size can still cost its validation
+		// more than schema-work: an unknown member holding a long array.
+		// The package is refused naming the limit, as a breach of its own
+		// content (ADR-009 Amendment A6 item 2).
+		return []finding.Finding{limits.Defaults().Breached(le.Limit, manifestLocation, 0, false)}
+	case err != nil:
 		panic(fmt.Sprintf("loader: validating the manifest: %v", err))
 	}
 	for i := range failures {
@@ -302,7 +313,7 @@ func decodeSchema(entry string, src []byte, lim limits.Set) (value.Value, []find
 		v, fs = doc.Value, f
 	} else {
 		form = "yaml"
-		doc, f := yamlx.Parse(bytes.TrimPrefix(src, []byte("\uFEFF")), yamlx.Source{Subject: subject, At: at, Size: limits.SchemaSize}, lim)
+		doc, f := yamlx.Parse(bytes.TrimPrefix(src, []byte("\uFEFF")), yamlx.Source{Subject: subject, At: at, Size: limits.SchemaYAMLSize}, lim)
 		v, fs = doc.Value, f
 	}
 	if len(fs) == 0 {
@@ -350,7 +361,10 @@ func (p *Package) SchemaPositions(lim limits.Set) func(entry string) finding.Pos
 			return nil
 		}
 		info, err := p.Tree.Stat(entry)
-		if err != nil || info.Size > lim.Value(limits.SchemaSize) {
+		if err != nil {
+			return nil
+		}
+		if _, over := schema.SizeBreached(entry, info.Size, lim); over {
 			return nil
 		}
 		r, err := p.Tree.Open(entry)
@@ -370,7 +384,7 @@ func (p *Package) SchemaPositions(lim limits.Set) func(entry string) finding.Pos
 				pos = doc.Positions()
 			}
 		} else {
-			doc, fs := yamlx.Parse(bytes.TrimPrefix(src, []byte("\uFEFF")), yamlx.Source{Subject: subject, At: entryLocation(entry), Size: limits.SchemaSize}, lim)
+			doc, fs := yamlx.Parse(bytes.TrimPrefix(src, []byte("\uFEFF")), yamlx.Source{Subject: subject, At: entryLocation(entry), Size: limits.SchemaYAMLSize}, lim)
 			if len(fs) == 0 {
 				pos = doc.Positions()
 			}

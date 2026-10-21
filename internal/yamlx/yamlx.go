@@ -41,7 +41,8 @@ type Source struct {
 	// argument ordinal. Its Line, Column and Pointer are ignored.
 	At finding.Location
 	// Size is the limit on the document's length in bytes: ManifestSize,
-	// InputSize or FrontmatterSize.
+	// SchemaYAMLSize, InputSize, FrontmatterSize, or YAMLSize for a
+	// validated output.
 	Size limits.ID
 	// FirstLine is the line of the file the document's first byte is on,
 	// so a frontmatter's positions count from the first line of its file

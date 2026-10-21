@@ -1,0 +1,63 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "pkg/digest-values",
+  "title": "A digest file is decoded to at most the entries limit plus 4 values: at that count it is read and its names compared, and one value more is refused as not in its form",
+  "statements": [
+    "MTS-PKG-073"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "byte-level",
+    "limits"
+  ],
+  "requires": [],
+  "notes": "The digest file lists the package's entries and three names that are no entry. Its package.metais is written by internal/vectorgen (go test ./internal/vectorgen -run TestPackages -args -update), whose test reproduces the committed bytes, and its limits by TestValues.",
+  "cases": [
+    {
+      "name": "at-bound",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package.metais",
+            "limits": {
+              "entries": 9
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/at-bound.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "one-value-over",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package.metais",
+            "limits": {
+              "entries": 8
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/one-value-over.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

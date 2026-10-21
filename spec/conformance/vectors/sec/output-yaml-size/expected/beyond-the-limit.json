@@ -1,0 +1,20 @@
+[
+  {
+    "code": "limit.exceeded.output",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "b"
+    },
+    "location": {
+      "origin": "output",
+      "file": "b.yaml"
+    },
+    "params": {
+      "limit": "yaml-size",
+      "bound": 11,
+      "lowered": true,
+      "observed": 12
+    }
+  }
+]

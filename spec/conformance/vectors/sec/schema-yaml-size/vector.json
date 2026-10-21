@@ -1,0 +1,64 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sec/schema-yaml-size",
+  "title": "A YAML schema file as long as a lowered schema-yaml-size is accepted, and one byte past it is refused before it is read; a JSON schema file is not bounded by it",
+  "statements": [
+    "MTS-SEC-061"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "security",
+    "limits"
+  ],
+  "requires": [],
+  "notes": "inputs/report.schema.yaml is 13 bytes and inputs/note.schema.json 19.",
+  "cases": [
+    {
+      "name": "at-the-limit",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "set_json": [
+              "/report={}"
+            ],
+            "limits": {
+              "schema-yaml-size": 13
+            }
+          },
+          "expect": {
+            "ok": true
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    },
+    {
+      "name": "beyond-the-limit",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package",
+            "limits": {
+              "schema-yaml-size": 12
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "bounds": {
+            "cpu_ms": 500,
+            "rss_mib": 64
+          }
+        }
+      ]
+    }
+  ]
+}

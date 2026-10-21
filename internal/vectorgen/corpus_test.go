@@ -422,6 +422,18 @@ func corpusCases() []pkgCase {
 			gone := digest.Entry{Name: "templates/gone.md.liquid", Sum: sha256.Sum256([]byte("gone\n"))}
 			return zipped(edit(es, digest.File, func(e *zentry) { e.content = digestsOf(es, "", gone) }))
 		}},
+		{"pkg/digest-values", func(t testing.TB) built {
+			// A digest file listing three names that are no entry, so
+			// that it decodes to entries plus 4 values at an entries limit
+			// one above the package's count, and to one more than that at
+			// the package's count (ADR-009 Amendment A6 item 2).
+			es := hostile(t)
+			var gone []digest.Entry
+			for _, n := range []string{"templates/gone-a.md.liquid", "templates/gone-b.md.liquid", "templates/gone-c.md.liquid"} {
+				gone = append(gone, digest.Entry{Name: n, Sum: sha256.Sum256([]byte(n))})
+			}
+			return zipped(edit(es, digest.File, func(e *zentry) { e.content = digestsOf(es, "", gone...) }))
+		}},
 		{"pkg/digest-entry-added", func(t testing.TB) built {
 			// An entry added after packing, beside the digest file it
 			// predates.

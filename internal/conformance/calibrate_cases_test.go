@@ -16,8 +16,9 @@ import (
 // schema file and in the combined schema. Each is either refused by its
 // limit, having done the work the limit allows, or accepted exactly at its
 // limit where that does more work than the refusal would, and none is
-// refused from metadata. docs/dev/calibration.md describes each.
-var calCases = []calCase{
+// refused from metadata. Amendment A6's cases follow them
+// (calibrate_bounds_test.go). docs/dev/calibration.md describes each.
+var calCases = append([]calCase{
 	{
 		// The cheapest node over and over, so the most nodes run: 32 empty
 		// if tags an iteration charge 512 units, so render-work runs out
@@ -349,13 +350,14 @@ var calCases = []calCase{
 	},
 	{
 		// One YAML document of exactly yaml-size bytes, in its costliest
-		// shape: a flow sequence of zeros, a value for every two bytes. It
-		// is read, and a byte less is refused before it is parsed
-		// (ADR-009 Amendment A4 item 2).
+		// shape: a flow sequence of zeros, a value for every two bytes, as
+		// many as input-values allows (Amendment A6 item 4). It is read,
+		// and a byte less is refused before it is parsed (ADR-009
+		// Amendment A4 item 2).
 		name: "yaml-size", limit: "yaml-size",
-		lowered: calLimits{"yaml-size": 64 << 10},
+		lowered: calLimits{"yaml-size": 64 << 10, "input-values": 30_000},
 		build: func(dir string, lim calLimits) ([]string, error) {
-			doc, _ := yamlZeros(lim["yaml-size"])
+			doc, _ := yamlZerosAtMost(lim["yaml-size"], lim["input-values"])
 			return loadInputs(dir, []loadInput{{name: "y", form: "yaml", files: map[string]string{"y.yaml": doc}}})
 		},
 		reached: notRefusedLoading,
@@ -364,7 +366,9 @@ var calCases = []calCase{
 	jointCase("json"),
 	jointCase("csv"),
 	jointCase("yaml"),
-}
+	renderJointCase("json"),
+	renderJointCase("yaml"),
+}, a6Cases...)
 
 // schemaWorkAnyOf is an input schema whose validation of 5 costs exactly
 // units of schema-work, and fails at every unit: an allOf of $refs to
@@ -598,6 +602,17 @@ func yamlZeros(size int64) (string, int64) {
 	return doc, k + 1
 }
 
+// yamlZerosAtMost is yamlZeros of size bytes, holding at most values
+// values: the array and values-1 zeros, padded with spaces to size.
+func yamlZerosAtMost(size, values int64) (string, int64) {
+	doc, v := yamlZeros(size)
+	if v <= values {
+		return doc, v
+	}
+	zeros := values - 1
+	return "[" + strings.Repeat("0,", int(zeros-1)) + "0" + strings.Repeat(" ", int(size-2*zeros-1)) + "]", values
+}
+
 // notRefusedLoading is a reached that wants the inputs loaded whole: no
 // data limit refused them. The validation that follows may still be
 // refused by schema-work, which a loading case's values pass.
@@ -615,13 +630,16 @@ func notRefusedLoading(r *calResult, _ calLimits) error {
 // form's costliest shape decoded to the values input-values leaves, the
 // rest of inputs-total as long strings in plain text files of input-size
 // at most, and a last YAML document at yaml-size, the values of all of
-// them together exactly input-values. One value more is refused.
+// them together exactly input-values. One value more is refused. Since
+// Amendment A6 item 4 halved input-values, a document at yaml-size holds
+// more zeros than input-values allows, so the last document holds at most
+// half of input-values, padded to yaml-size.
 func jointCase(form string) calCase {
 	return calCase{
 		name: "input-values-" + form, limit: "input-values",
-		lowered: calLimits{"input-values": 60_000, "yaml-size": 64 << 10, "inputs-total": 1 << 20, "input-size": 256 << 10},
+		lowered: calLimits{"input-values": 30_000, "yaml-size": 64 << 10, "inputs-total": 1 << 20, "input-size": 256 << 10},
 		build: func(dir string, lim calLimits) ([]string, error) {
-			last, lastValues := yamlZeros(lim["yaml-size"])
+			last, lastValues := yamlZerosAtMost(lim["yaml-size"], lim["input-values"]/2)
 			z := loadInput{name: "z", form: "yaml", files: map[string]string{"z.yaml": last}}
 			// The form's shape, first sized for the values the strings
 			// leave, then the strings sized for the bytes the shape leaves.

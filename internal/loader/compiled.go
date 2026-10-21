@@ -123,18 +123,23 @@ func (o *opening) references() []Reference {
 		if r.Text {
 			r.Lines = s.lines()
 			if isMarkdown(n) {
-				for _, h := range markdown.Outline(o.c.bytes(n)) {
-					if h.Level == 1 {
-						t := h.Text
-						r.Title = &t
-						break
-					}
-				}
+				r.Title = referenceTitle(o.c.bytes(n))
 			}
 		}
 		out = append(out, r)
 	}
 	return out
+}
+
+// referenceTitle is the plain text of the first level-1 heading of src, a
+// Markdown entry's bytes, and nil when it has none. The open needs only
+// the title, so it keeps no other heading (ADR-009 Amendment A6 item 2);
+// metais outline reads the whole outline.
+func referenceTitle(src []byte) *string {
+	if t, ok := markdown.Title(src); ok {
+		return &t
+	}
+	return nil
 }
 
 // encodeReferences is .compiled/references.json for refs, in ADR-002 D9's
