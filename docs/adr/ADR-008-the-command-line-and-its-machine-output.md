@@ -2170,6 +2170,38 @@ unchanged.
    example; the skill's route for what a package needs, its script-testing
    rule and section, and its `check` step.
 
+### A12 — inspect's check step says what MTS-AUT-003 does, and grep's and unpack's help say an example's inputs are never a real document's data
+
+**Status:** Accepted on merge. It carries PLAN-2026-10-metais-ux Wave 3's
+non-blocking item W3-NB2, from the wave's verification, under the plan's
+ruling R-W3-4. It needs no ratification.
+**Amends:** A8 item 2 (`inspect`'s step to editing a source directory)
+and A11 item 1 (the commands whose help says what an example's inputs
+are). `metais.inspect/1`, the steps' command lines and order, and every
+command's behaviour and machine output are unchanged.
+
+1. **`inspect`'s check step says what MTS-AUT-003 does.** For a source
+   directory, the reason of `inspect`'s step `metais check <package>` is
+   "The source directory is the package's editable source: edit its files,
+   then check them. check reports every defect without data, or only the
+   refusal of a source it cannot read." The step is printed only for a
+   source directory `inspect` read, but it sends the caller to edit the
+   files first, and an edit can leave a source the check refuses with the
+   refusal's findings alone. It says so, as W3-11 made `metais help check`
+   say and A11 item 4 the skill's check step.
+2. **`grep` and `unpack` say what an example's inputs are.** `grep`
+   prints the lines of an example's entries and `unpack` writes them to
+   disk, so each reaches an example's inputs as `ls`, `read` and `extract`
+   do. The help of each ends with A11 item 1's paragraph: "The entries
+   under examples/ are the package's examples.", then A8 item 3's sentence
+   and A11 item 1's.
+3. **What this does not change.** R-UX-2, A8, A10 and A11 hold. The
+   specification describes neither the help nor `inspect`'s next steps, so
+   no chapter, published schema or vector changes.
+4. **D16's tests prove it**: `inspect`'s check step for a source directory,
+   and the help of `grep` and `unpack` beside that of `inspect`, `ls`,
+   `read` and `extract`.
+
 ## Implementation log
 
 This log is this section together with the entry files in

@@ -39,6 +39,14 @@ findings: a package that fails to open, a source directory, a <dir> that is not
 empty or not a directory, and a staging directory left beside a <dir> that does
 not exist. What only writing finds out, such as a full disk, it cannot report.
 
+The entries under examples/ are the package's examples. An example is the
+author's illustration of the inputs, and of the outputs a render of them should
+produce, kept in the package to test it: not your data, and not a preview of
+what the package produces, which is a render from generated data with metais
+render --sample. An example's inputs are the author's illustration, never a real
+document's data: render a real document only from the facts the person supplies,
+and without them ask the person for them, never taking them from an example.
+
 Operands:
   <package>
       A packed package file; - is refused, since a package is read with random

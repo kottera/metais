@@ -152,7 +152,8 @@ func readingDeclarations() []*Command {
 				"skipped and listed.\n\n" +
 				"--max-results bounds the matching lines reported, from 1 to the grep-matches limit; the " +
 				"search still runs to the end, and counts every matching line. A line longer than 1024 bytes " +
-				"is shown cut, and read --lines gives it whole. No match is not a failure: grep exits 0.",
+				"is shown cut, and read --lines gives it whole. No match is not a failure: grep exits 0.\n\n" +
+				examplesEntries,
 			Operands: []args.Operand{
 				{Name: "<pattern>", Required: true, Description: "A regular expression in RE2 syntax; write -- before one that begins with -."},
 				{Name: "<glob>", Repeatable: true, Description: "A glob selecting the entries to search; every entry when none is given."},
