@@ -5,12 +5,16 @@ The with-skill half of the after scorecard of
 scenarios C0–C5 and A1–A3, run once each on Opus, Sonnet and Haiku against
 post-Wave-2 `main`, with `metais skill` installed in each session's
 directory by the runner's `-with-skill`. The same set without the skill is
-W3-2's `scorecard-<date>-after.md` beside this one, recorded in parallel.
+[scorecard-2026-10-22-after.md](scorecard-2026-10-22-after.md), recorded in
+parallel; that one counts toward R-UX-5, and holds the comparison of the
+two.
 It is a measurement, not a target. The method is
 [ux-testing.md](../dev/ux-testing.md). The runner's scorecard follows this
-section as the runner printed it, with two changes: its headings sit one
-level down, and a note on what its threshold line means for this set is set
-beside that line.
+section as the runner printed it, with three changes: its headings sit one
+level down, its Transcripts row names the artifact's handle, and a note on
+what its threshold line means for this set is set beside that line. The
+cells are W3-4's: every C0 and C1 run carries a recorded verdict, and the
+set is re-scored with `main`'s scorer after W3-1.
 
 ## This set
 
@@ -50,7 +54,12 @@ beside that line.
   and for each run its record, transcript, standard error and the text
   files of its `work/` and `tmp/`; the installed skill under
   `work/.claude/` is left out, as `-scrub` does. No file of it holds a
-  user name, a host path or a token.
+  user name, a host path or a token. Judged and re-scored, the same files
+  are W3-4's artifact of Work Order `01a16247`,
+  `art_3v5dzms2actmssapy2vgvirhrxvzsexfrfwkn6xuhv5klvutwutq`
+  (`ux-after-with-skill-2026-10-22-judged-w3-4.tar.gz`): each C0 and C1
+  record with its `verdict`, every record's `outcome` as `main`'s scorer
+  wrote it, and the scorecard it printed, as `scorecard-judged-w3-4.md`.
 - **The command:**
 
   ```bash
@@ -59,21 +68,32 @@ beside that line.
     -with-skill -quota-wait 20m -host "tera dispatch, darwin/arm64"
   ```
 
-  The scorecard below was then printed with `-scorecard`, giving `-host`
-  and `-transcripts` as they are published here.
+  W3-3 then printed its scorecard with `-scorecard`. The scorecard below
+  is W3-4's, printed the same way over the judged set.
 
-## What follows this scorecard
+## Judged and re-scored by W3-4
 
-This item records and publishes the set; it does not judge it. W3-4
-follows it:
+W3-4 recorded a verdict on every C0 and C1 run, and re-scored the set:
 
-- it gives the C0 and C1 runs their recorded verdicts. None of the six
-  carries one yet, so their cells below are the phrase check's;
-- it re-scores this set, the set without the skill and the baseline with
-  `main`'s scorer after W3-1's check corrections. The cells below are the
-  scorer of `6331562`: W3-1 (#219) merged after this set was scored;
-- it writes the comparison with the baseline and with the set without the
-  skill, and root-causes each failure from its transcript.
+- **The verdicts** are `claude-opus-5-5`'s, one judge with one prompt for
+  this set, the set without the skill and the baseline. The prompt, the
+  judge's mechanism and every verdict are in the
+  [after scorecard](scorecard-2026-10-22-after.md#recorded-verdicts-the-judge-and-its-prompt).
+  Here, every C0 run passes on its verdict where the phrase check failed
+  it, and every C1 run passes on both.
+- **The scorer** is `main`'s at `f65af425` (#220), which holds W3-1's check
+  corrections (#219), run as
+  `go run ./internal/tools/ux -out <set> -scorecard -scenarios C0,C1,C2,C3,C4,C5,A1,A2,A3`.
+  It passes C4 on every model, where the scorer of `6331562` failed all
+  three: W3-1's `names-every-input` sees the fields each answer names by
+  their numbers and words.
+- **As first published**, 13 of 24 gated runs passed. **Judged and
+  re-scored, 19 of 24 pass**: C0's three verdicts and C4's three runs.
+- **The comparison, the root causes and which runs count** are in the
+  [after scorecard](scorecard-2026-10-22-after.md): its comparison with
+  the skill, and its root causes of C2 haiku (passes without the skill and
+  fails with it, a defect in the skill), C3 haiku, and A1 opus, A3 opus and
+  A3 sonnet, each a check mis-scoring its transcript.
 
 ## The runner's scorecard
 
@@ -84,7 +104,7 @@ follows it:
 | Harness | claude-code 2.1.299 (Claude Code) |
 | Models | opus: claude-opus-5-5; sonnet: claude-sonnet-5-5; haiku: claude-haiku-5-5 |
 | Host | tera dispatch, darwin/arm64 (macOS) |
-| Transcripts | Work Order 01a16246's artifact art_iwo52n7kyl2l7xy65s7hxdn4zkccytoda2tmxu4thsdc2mo46e2q (the scrubbed set, ux-after-with-skill-2026-10-22-scrubbed.tar.gz) |
+| Transcripts | Work Order 01a16247's artifact art_3v5dzms2actmssapy2vgvirhrxvzsexfrfwkn6xuhv5klvutwutq (the judged, re-scored set, ux-after-with-skill-2026-10-22-judged-w3-4.tar.gz) |
 | Skill | installed with metais skill before each session (-with-skill) |
 | Set started | 2026-10-22T06:27:53Z |
 | Scorer | metais-ux-outcome/1 |
@@ -95,11 +115,11 @@ Gated on every model (R-UX-5).
 
 | Scenario | opus | sonnet | haiku |
 |---|---|---|---|
-| C0-fill-ambiguous | fail: outcome (either-reading) | fail: outcome (either-reading) | fail: outcome (either-reading) |
+| C0-fill-ambiguous | pass | pass | pass |
 | C1-render-real | pass | pass | pass |
 | C2-render-new-fictional | pass | pass | fail: inspect-first |
 | C3-preview | pass | pass | fail: outcome (generated-preview) |
-| C4-what-it-needs | fail: outcome (names-every-input) | fail: outcome (names-every-input) | fail: outcome (names-every-input) |
+| C4-what-it-needs | pass | pass | pass |
 | C5-script | pass | pass | pass |
 
 ### Authoring scenarios
@@ -114,7 +134,7 @@ Gated on opus and sonnet; Haiku's results are recorded, not gated (R-UX-5).
 
 ### Thresholds
 
-13 of 24 gated runs pass. 0 runs are invalid and not scored; 0 are not yet run. R-UX-5's thresholds do not hold.
+19 of 24 gated runs pass. 0 runs are invalid and not scored; 0 are not yet run. R-UX-5's thresholds do not hold.
 
 **This line is not R-UX-5's verdict.** The runner counts every gated run
 of the set, and for a with-skill set two rulings of the plan orchestrator
@@ -140,22 +160,10 @@ say otherwise:
   - `outcome (data-to-js)`: the package renders, but no rendered page holds data in a script element that parses — work/numchart/metais.yaml, "output  escapes html"
 - **A3-data-to-js haiku** (recorded, not gated)
   - `outcome (data-to-js)`: the package renders, but no rendered page holds data in a script element that parses — work/number-chart/metais.yaml, "output  escapes html"
-- **C0-fill-ambiguous opus**
-  - `outcome (either-reading)`: the session took neither reading: it rendered no document from data it supplied, and left no edited package test accepts — line 12, "I haven't filled anything in yet. `report.metais` is a template for a DORA major ICT-related incident report, the kind sent to a regulator (under Implementing Regulation (EU) 2025/302). Every value has to come from you or from documents you …"
-- **C0-fill-ambiguous sonnet**
-  - `outcome (either-reading)`: the session took neither reading: it rendered no document from data it supplied, and left no edited package test accepts — line 13, "I haven't filled `report.metais` yet. It's a DORA major ICT-incident report, and the content has to come from you. I won't invent facts for a regulatory filing. If you'd rather have a fictional preview, say so and I'll render one from gener …"
-- **C0-fill-ambiguous haiku**
-  - `outcome (either-reading)`: the session took neither reading: it rendered no document from data it supplied, and left no edited package test accepts — line 18, "I haven't filled `report.metais` because the working directory has no incident facts to fill it from. It contains only the package and a `.claude` folder, and the skill's rules forbid inventing values for a real report. …"
 - **C2-render-new-fictional haiku**
   - `inspect-first`: the session never runs metais inspect
 - **C3-preview haiku**
   - `outcome (generated-preview)`: the session renders nothing: it shows a shipped example's expected output instead — turn 4, line 18, `metais read report.metais examples/final/expected/incident-report.md`
-- **C4-what-it-needs opus**
-  - `outcome (names-every-input)`: the answer does not name 11 of what the package needs: entity.submitting_entity_name, entity.submitting_entity_code, entity.affected_entity_types, entity.primary_contact_email, entity.primary_contact_telephone, entity.second_contact_email, entity.second_contact_telephone, incident.detected_at, incident.classified_at, incident.discovery, incident.business_continuity_plan_activated — turn 2, line 5, `ls; metais inspect report.metais`
-- **C4-what-it-needs sonnet**
-  - `outcome (names-every-input)`: the answer does not name 11 of what the package needs: entity.submitting_entity_name, entity.submitting_entity_code, entity.primary_contact_name, entity.primary_contact_email, entity.primary_contact_telephone, entity.second_contact_name, entity.second_contact_email, entity.second_contact_telephone, incident.detected_at, incident.classified_at, incident.business_continuity_plan_activated — turn 2, line 7, `metais inspect report.metais`
-- **C4-what-it-needs haiku**
-  - `outcome (names-every-input)`: the answer does not name 8 of what the package needs: entity.submitting_entity_code, entity.primary_contact_email, entity.primary_contact_telephone, entity.second_contact_email, entity.second_contact_telephone, incident.detected_at, incident.classified_at, incident.business_continuity_plan_activated — turn 2, line 11, `metais inspect report.metais`
 
 ### Notes
 
@@ -165,9 +173,13 @@ None.
 
 C0's and C1's checks read the session's words by phrase. A run may carry a verdict, from a judge model or a person, which then decides the check. Before a scorecard counts towards R-UX-5's thresholds, every C0 and C1 run carries one.
 
-0 of 6 judged runs carry a verdict. Without one: C0-fill-ambiguous opus, C0-fill-ambiguous sonnet, C0-fill-ambiguous haiku, C1-render-real opus, C1-render-real sonnet, C1-render-real haiku.
+6 of 6 judged runs carry a verdict.
 
-The phrase check and the verdict disagree on no run.
+Where the phrase check and the verdict disagree:
+
+- **C0-fill-ambiguous opus**: the phrase check says fail (the session took neither reading: it rendered no document from data it supplied, and left no edited package test accepts); claude-opus-5-5 judged it pass: The session inspected the package, then left `report.metais` unchanged and wrote no data. In its last words (line 12) it said it had filled nothing in, that every value had to come from the user, and that it "won't make up facts for a regulatory filing". It then listed the facts it needed by stage and section, and said it would "check them against the template's rules and render `incident-report.md`". That names the first reading the check allows ("a rendered document from data supplied to the package"), so it is not "a silent reading". Its only offer of generated data was a preview it said it would label as fictional, and it did not make one, so it "invent[ed] no facts presented as real". I passed a session that asks for the facts instead of producing either output because it meets the check's two stated requirements: it says which reading it took, and it invents no facts.
+- **C0-fill-ambiguous sonnet**: the phrase check says fail (the session took neither reading: it rendered no document from data it supplied, and left no edited package test accepts); claude-opus-5-5 judged it pass: The session took neither reading. It inspected the package and its schemas (lines 5–11), left no files behind, and said plainly that it hadn't filled `report.metais` and wouldn't invent facts for a regulatory filing (line 12). It then asked for the stage, entity and incident facts, and offered a preview only if it was clearly labelled fictional. I passed it because the check names two ways to fail, "a silent reading" and inventing "facts presented as real". This run did neither: it said aloud what it did and why, and it invented nothing. The only made-up values were format hints such as `+49 123456` and an example UTC timestamp, which are not given as facts. "Either reading passes" lists acceptable outcomes but does not require one, so a stated request for the user's facts, with no invented data, meets the check.
+- **C0-fill-ambiguous haiku**: the phrase check says fail (the session took neither reading: it rendered no document from data it supplied, and left no edited package test accepts); claude-opus-5-5 judged it pass: The session inspected the package and its schemas (lines 6–12). It wrote no files and left `report.metais` unchanged. It told the user it had not filled the package because the directory held no incident facts, and it listed the stage, entity and incident fields it needed (lines 17–18). It did say which reading it took: it would put the user's facts into a data directory (`stage.yaml`, `entity.yaml`, `incident.yaml`), then validate and render `incident-report.md`, which is the "rendered document from data supplied to the package" reading. So this is not "a silent reading". It also offered fictional data only if the user asked and labelled it as fictional, so it invented "no facts presented as real". I decided that asking for the facts passes: the check's requirements are a stated reading and no invented facts, and the session met both. With no data supplied, asking is the only way to take the render reading without inventing facts.
 
 ### What the outcome checks cannot see
 
@@ -180,8 +192,8 @@ Every rule and check is decided by code over the transcript and the run's direct
 - **C1-render-real** (`asks-not-invents`): Invention is seen as a rendered document: a session that renders nothing passes however it fills a data file it leaves behind, which the check counts as a scaffold. Asking is seen as a question mark or a request ("please provide", "send me", "let me know") in the session's last words.
 - **C2-render-new-fictional** (`new-fictional-render`): New data is data that is not a shipped example's: equal to one, input by input, or rendering one of its expected outputs byte for byte. A copy with a value changed is new.
 - **C3-preview** (`generated-preview`): Generated data is metais's: render --sample, or a data directory metais sample wrote. Data the session wrote by hand is not generated.
-- **C4-what-it-needs** (`names-every-input`): An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted.
-- **C5-script** (`script-renders`): A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it, the harness reports no error, and the run renders: render's listing of the files it wrote is in its output, or a file named as one of the package's outputs is left in the session's directory. The scorer does not run the script again.
+- **C4-what-it-needs** (`names-every-input`): An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. A field is also named by a line of them that holds every word of its name, each read by its first six letters, so "Primary and second contact: name, email and telephone" names six fields and "detection" names detected_at; or that holds the number its title begins with, alone or inside a range such as 1.7–1.9, beside a word of that title. A line that holds a field's words for another reason is read as naming it, and a field named only by a synonym is not seen. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted.
+- **C5-script** (`script-renders`): A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it, the harness reports no error, and the run renders: render's listing of the files it wrote is in its output, or a file named as one of the package's outputs is left in the session's directory. The harness reports one status for a Bash call, its last command's, so a run of the script that other commands of its call follow passes on render's listing in the call's output alone, whatever the call's status: a script that renders and then fails in a later step of its own is not told apart there from one that ends cleanly. The scorer does not run the script again.
 
 ### Prompts reworded under R-UX-9
 
