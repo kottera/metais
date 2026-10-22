@@ -12,7 +12,7 @@ changes are marked *(A3)*.
 it takes effect as PLAN-2026-10-metais-test-economy's items land.
 [Amendment A8](#amendments) (the specification's home is
 `metais.org/spec/<M>.<m>/`, and a prerelease of the tool may implement a
-draft revision) is proposed by
+draft revision) is accepted by Ed Funnekotter on 2026-10-22, proposed by
 [ADR-013](ADR-013-the-public-project-and-its-distribution.md); it takes
 effect as PLAN-2026-10-metais-public's items land.
 **Date:** 2026-10-18
@@ -1711,7 +1711,7 @@ effect when the PLAN-2026-10-metais-test-economy item named in it lands.
 
 ### A8 — The specification's home is `metais.org/spec/<M>.<m>/`, and a prerelease of the tool may implement a draft revision
 
-**Status:** Proposed 2026-10-22 by [ADR-013](ADR-013-the-public-project-and-its-distribution.md),
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, proposed by [ADR-013](ADR-013-the-public-project-and-its-distribution.md),
 with it. Each item takes effect as the
 [PLAN-2026-10-metais-public](../plans/PLAN-2026-10-metais-public.md) item
 that carries it lands.

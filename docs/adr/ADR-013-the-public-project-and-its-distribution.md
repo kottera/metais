@@ -1,6 +1,6 @@
 # ADR-013: The public project and its distribution — `kottera/metais` under the module path `metais.org/metais`, one approval that publishes every route, four install routes to the same reproducible archives, and a site the binary writes
 
-**Status:** Proposed 2026-10-22 by the `metais-public` design session with
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, with the drafting decisions of the plan's §4. It was proposed the same day by the `metais-public` design session with
 Ed Funnekotter. Every decision states a ruling he made in that session
 (R-PUB-1 to R-PUB-14, in
 [PLAN-2026-10-metais-public](../plans/PLAN-2026-10-metais-public.md) §4).

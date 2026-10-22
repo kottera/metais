@@ -6,7 +6,7 @@
 this train inherits it verbatim: `metais-public [W2-C3]: <action>` for a
 Work Order, and `<type>(metais-public): [W2-C3] <change>` for a pull
 request and its squash subject, by the naming rules AGENTS.md adopts.
-**Status:** Proposed 2026-10-22, with Ed Funnekotter's rulings of §4.
+**Status:** Ratified 2026-10-22 by Ed Funnekotter, with the rulings and drafting decisions of §4.
 **For PRD:** [PRD-001](../prd/PRD-001-metais-v1.md) R17 (the golden paths),
 for installing the tool, and SC1, which presumes a harness can get the
 binary.
@@ -96,7 +96,7 @@ Rules this train adds:
 
 | Wave | Objective | Depends on | Status |
 |---|---|---|---|
-| 0 | ADR-013, its amendments and this plan, merged to `main` | — | proposed |
+| 0 | ADR-013, its amendments and this plan, merged to `main` | — | **complete** (#240) |
 | 1 | **Foundations**: the module path; the history scan and the tree's internal details; the community files and contributor guide; CI on GitHub-hosted runners; `--version`'s maker line | 0 | — |
 | 2 | **The site and distribution**: the site as a METAIS package with generated reference pages, the guides and the specification; `install.sh` and its tests; `release.yml`, the tap formula and the tap's CI; the builder's prerelease rule; the kottera.com page; UX scenarios I1 and I2 | 1 | — |
 | 3 | **Rehearsal**: the name search, Ed's settings and DNS, the flip; `v1.0.0-rc.1` end to end; I1 against the live site; a fix item for each defect, and a new candidate until it is clean | 2 | — |

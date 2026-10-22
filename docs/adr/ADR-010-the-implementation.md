@@ -22,7 +22,7 @@ producers, stages and sinks) is accepted by Ed Funnekotter on 2026-10-21; it
 takes effect as PLAN-2026-10-metais-render-seams's items land, and the
 passages it changes are marked *(A7)*.
 [Amendment A8](#amendments) (the module is `metais.org/metais`, publishing
-is ADR-013's, and CI is a third gate tier) is proposed by
+is ADR-013's, and CI is a third gate tier) is accepted by Ed Funnekotter on 2026-10-22, proposed by
 [ADR-013](ADR-013-the-public-project-and-its-distribution.md); it takes
 effect as PLAN-2026-10-metais-public's items land.
 **Date:** 2026-10-18
@@ -282,7 +282,7 @@ the `liquid` tag in `block_body.rb`; `Block::MAX_DEPTH = 100`; and
 
 ## Decision
 
-### D1 — Toolchain and module *(A8, proposed)*
+### D1 — Toolchain and module *(A8)*
 
 **One module, `github.com/kottera/metais`, on the Go 1.26 toolchain, with
 everything under `internal/`.**
@@ -896,7 +896,7 @@ not used to read inputs.**
     why D3 item 3 links neither `golang.org/x/sys` nor `golang.org/x/term`
     there. *(A1, proposed)*
 
-### D12 — Build, release and the tool's version *(A8, proposed)*
+### D12 — Build, release and the tool's version *(A8)*
 
 1. **Static build**: `CGO_ENABLED=0 go build -trimpath -buildvcs=true
    -ldflags "-s -w -X github.com/kottera/metais/internal/version.release=<semver>"
@@ -1066,7 +1066,7 @@ the detector must fail on, and both run in every `go test`.**
    (D15). The tool has no concurrency of its own (D2 item 3), so `-race`
    chiefly guards the test harness.
 
-### D15 — Benchmarks and the gate *(A5; A8, proposed)*
+### D15 — Benchmarks and the gate *(A5, A8)*
 
 1. **Benchmarks** (`Benchmark…` with `b.ReportAllocs()`) exist for: Liquid
    parse and render over fixtures in `internal/liquid/testdata/bench/` (a
@@ -2144,7 +2144,7 @@ copy of the parse loop.
 
 ### A8 — The module is `metais.org/metais`, publishing is ADR-013's, and CI on GitHub-hosted runners is a third gate tier
 
-**Status:** Proposed 2026-10-22 by [ADR-013](ADR-013-the-public-project-and-its-distribution.md),
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, proposed by [ADR-013](ADR-013-the-public-project-and-its-distribution.md),
 with it. Each item takes effect as the
 [PLAN-2026-10-metais-public](../plans/PLAN-2026-10-metais-public.md) item
 that carries it lands.

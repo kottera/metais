@@ -2,7 +2,7 @@
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 [Amendment A13](#amendments) (the help and the skill are the source of
-metais.org's reference pages) is proposed by
+metais.org's reference pages) is accepted by Ed Funnekotter on 2026-10-22, proposed by
 [ADR-013](ADR-013-the-public-project-and-its-distribution.md); it takes
 effect as PLAN-2026-10-metais-public's items land.
 **Date:** 2026-10-18
@@ -2208,7 +2208,7 @@ command's behaviour and machine output are unchanged.
 
 ### A13 — The help and the skill are the source of metais.org's reference pages
 
-**Status:** Proposed 2026-10-22 by [ADR-013](ADR-013-the-public-project-and-its-distribution.md),
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, proposed by [ADR-013](ADR-013-the-public-project-and-its-distribution.md),
 with it. It takes effect as the
 [PLAN-2026-10-metais-public](../plans/PLAN-2026-10-metais-public.md) item
 that generates the site's reference pages lands.
