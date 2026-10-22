@@ -1,0 +1,22 @@
+{
+  "shows": "the session's test run of its script renders, and render lists the file it wrote, but later commands of the same Bash call fail, so the harness reports the call as an error",
+  "recorded": {
+    "set": "the metais-ux baseline of Work Order 01a15f30 (artifact art_boccbn5awud7um657vbfnsbezoefmdmkajnhk4tslubk6l3w27fq)",
+    "run": "C5-script/sonnet",
+    "date": "2026-10-21",
+    "commit": "5e64a4cb47701e29037b79c12ea29bd2c105cd7f",
+    "model": "claude-sonnet-5-5"
+  },
+  "expect": {
+    "inspect-first": "fail",
+    "no-zip-extraction": "fail",
+    "no-unknown-command": "pass",
+    "package-untouched": "fail",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "inspect-first": "before metais inspect, unzip extracts the archive",
+    "no-zip-extraction": "unzip extracts the archive",
+    "package-untouched": "the package is extracted"
+  }
+}

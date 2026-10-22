@@ -1,0 +1,279 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "C5",
+    "name": "C5-script",
+    "kind": "consuming",
+    "asks_for_output": true,
+    "prompt": "write a script that renders report.metais nightly from a JSON file"
+  },
+  "model_requested": "sonnet",
+  "model_reported": "claude-sonnet-5-5",
+  "models_used": [
+    "claude-sonnet-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": false,
+  "commit": "5e64a4cb47701e29037b79c12ea29bd2c105cd7f",
+  "metais_sha256": "9310969b947f1ce54d7731cd6dbfee16aacda666db415b723057c39be3ad7fb5",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    },
+    {
+      "name": "writes-inside-run",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-21T18:04:59.414536Z",
+  "ended": "2026-10-21T18:05:38.647622Z",
+  "wall_ms": 39233,
+  "turns": 12,
+  "cost_usd": 0.1218486,
+  "duration_ms": 38487,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 11,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "write a script that renders report.metais nightly from a JSON file",
+      "--model",
+      "sonnet",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:55520",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": [
+    {
+      "path": "report.metais",
+      "size": 41429,
+      "sha256": "fc5ca09c318af8687e3f26749ddde2a4de0c06cd01581a124367152574b3067b"
+    }
+  ],
+  "files": [
+    {
+      "path": "render-report.sh",
+      "size": 1196,
+      "sha256": "67aa7df6fa98bb5501669eb30813843d5c5d58219360846394afb46b97e97329",
+      "change": "added"
+    },
+    {
+      "path": "report.metais",
+      "size": 41429,
+      "sha256": "fc5ca09c318af8687e3f26749ddde2a4de0c06cd01581a124367152574b3067b",
+      "change": "unchanged"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": {
+    "format": "metais-ux-outcome/1",
+    "scenario": "C5-script",
+    "check": "script-renders",
+    "scored": true,
+    "pass": false,
+    "rules": [
+      {
+        "rule": "inspect-first",
+        "applies": true,
+        "pass": false,
+        "detail": "before metais inspect, unzip extracts the archive",
+        "evidence": [
+          {
+            "turn": 3,
+            "line": 10,
+            "tool": "Bash",
+            "command": "which metais; metais --help 2\u003e\u00261 | head -30; mkdir -p /ux/host \u0026\u0026 cd /ux/host \u0026\u0026 unzip -o -q \"$OLDPWD/report.metais\" metais.yaml \u0026\u0026 cat metais.yaml",
+            "text": "unzip extracts the archive"
+          },
+          {
+            "turn": 4,
+            "line": 13,
+            "tool": "Bash",
+            "command": "metais inspect report.metais 2\u003e\u00261 | head -80"
+          }
+        ]
+      },
+      {
+        "rule": "no-zip-extraction",
+        "applies": true,
+        "pass": false,
+        "detail": "the session extracts the archive itself: unzip extracts the archive",
+        "evidence": [
+          {
+            "turn": 3,
+            "line": 10,
+            "tool": "Bash",
+            "command": "which metais; metais --help 2\u003e\u00261 | head -30; mkdir -p /ux/host \u0026\u0026 cd /ux/host \u0026\u0026 unzip -o -q \"$OLDPWD/report.metais\" metais.yaml \u0026\u0026 cat metais.yaml",
+            "text": "unzip extracts the archive"
+          },
+          {
+            "turn": 5,
+            "line": 21,
+            "tool": "Bash",
+            "command": "mkdir -p ../ex \u0026\u0026 metais extract report.metais 'examples/initial/**' --out ../ex 2\u003e\u00261 | tail -3; find ../ex -type f | head;",
+            "text": "metais extract extracts the package"
+          },
+          {
+            "turn": 6,
+            "line": 23,
+            "tool": "Bash",
+            "command": "metais extract --help 2\u003e\u00261 | sed -n 1,25p; metais ls report.metais examples/initial/ -r 2\u003e\u00261 | head -20",
+            "text": "metais extract extracts the package"
+          },
+          {
+            "turn": 7,
+            "line": 25,
+            "tool": "Bash",
+            "command": "metais extract report.metais 'examples/initial/inputs/*' --to ../ex \u0026\u0026 cd ../ex/examples/initial/inputs \u0026\u0026 cat stage.json entity.json incident.json",
+            "text": "metais extract extracts the package"
+          }
+        ]
+      },
+      {
+        "rule": "no-unknown-command",
+        "applies": true,
+        "pass": true,
+        "detail": "none of the 9 metais commands is refused as unknown"
+      },
+      {
+        "rule": "package-untouched",
+        "applies": true,
+        "pass": false,
+        "detail": "the prompt asks for output, and the package is extracted: unzip extracts the archive (R-UX-8)",
+        "evidence": [
+          {
+            "turn": 3,
+            "line": 10,
+            "tool": "Bash",
+            "command": "which metais; metais --help 2\u003e\u00261 | head -30; mkdir -p /ux/host \u0026\u0026 cd /ux/host \u0026\u0026 unzip -o -q \"$OLDPWD/report.metais\" metais.yaml \u0026\u0026 cat metais.yaml",
+            "text": "the package is extracted: unzip extracts the archive"
+          },
+          {
+            "turn": 5,
+            "line": 21,
+            "tool": "Bash",
+            "command": "mkdir -p ../ex \u0026\u0026 metais extract report.metais 'examples/initial/**' --out ../ex 2\u003e\u00261 | tail -3; find ../ex -type f | head;",
+            "text": "metais extract extracts the package"
+          },
+          {
+            "turn": 6,
+            "line": 23,
+            "tool": "Bash",
+            "command": "metais extract --help 2\u003e\u00261 | sed -n 1,25p; metais ls report.metais examples/initial/ -r 2\u003e\u00261 | head -20",
+            "text": "metais extract extracts the package"
+          },
+          {
+            "turn": 7,
+            "line": 25,
+            "tool": "Bash",
+            "command": "metais extract report.metais 'examples/initial/inputs/*' --to ../ex \u0026\u0026 cd ../ex/examples/initial/inputs \u0026\u0026 cat stage.json entity.json incident.json",
+            "text": "metais extract extracts the package"
+          }
+        ]
+      },
+      {
+        "rule": "outcome",
+        "applies": true,
+        "pass": false,
+        "detail": "render-report.sh validates and renders through metais, but no test run of it renders",
+        "evidence": [
+          {
+            "file": "work/render-report.sh"
+          },
+          {
+            "turn": 10,
+            "line": 35,
+            "tool": "Bash",
+            "command": "chmod +x render-report.sh …"
+          },
+          {
+            "turn": 10,
+            "line": 35,
+            "tool": "Bash",
+            "command": "chmod +x render-report.sh …"
+          }
+        ]
+      }
+    ]
+  }
+}

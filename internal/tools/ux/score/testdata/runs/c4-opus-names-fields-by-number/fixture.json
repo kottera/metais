@@ -1,0 +1,21 @@
+{
+  "shows": "the session runs metais inspect and metais schema, and its answer names every required field by its glossary number with the template's own words (**1.7–1.9** Primary contact's name, email and telephone), after an unzip that the sandbox stopped before it ran, which is the choice no-zip-extraction and inspect-first read",
+  "recorded": {
+    "set": "the metais-ux baseline of Work Order 01a15f30 (artifact art_boccbn5awud7um657vbfnsbezoefmdmkajnhk4tslubk6l3w27fq)",
+    "run": "C4-what-it-needs/opus",
+    "date": "2026-10-21",
+    "commit": "5e64a4cb47701e29037b79c12ea29bd2c105cd7f",
+    "model": "claude-opus-5-5"
+  },
+  "expect": {
+    "inspect-first": "fail",
+    "no-zip-extraction": "fail",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "inspect-first": "before metais inspect, unzip extracts the archive",
+    "no-zip-extraction": "unzip extracts the archive"
+  }
+}

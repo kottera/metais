@@ -353,7 +353,7 @@ R-UX-5's pass rules, in the order an outcome reports them:
 | Rule | Applies to | Fails when |
 |---|---|---|
 | `inspect-first` | consuming scenarios | the session reads the package's contents before `metais inspect`, or never runs `metais inspect`. Reading the contents is extracting the package (as the next rule reads extraction, `metais unpack` included), or `metais ls`, `read`, `schema`, `outline`, `grep`, `extract` or `unpack` on it. Reading files extracted from it needs it extracted first, so it fails as that does. `metais --version`, `metais version` and `metais help` before `inspect` read nothing and pass, and so does a listing (Ed's ruling, 2026-10-21). |
-| `no-zip-extraction` | every scenario | the session extracts an archive itself: `unzip` (plain, `-o`, `-x`, `-p`, `-d`, …), `7z`, `bsdtar`, `ditto`, `jar`, `tar` given a `.metais`, a command line that reads an entry with a zip library (`zipfile`, `archive/zip`, `JSZip`, …), or a program the session wrote that does and then ran. In a consuming scenario other than C0, `metais unpack` and `metais extract` extract it too (Ed's ruling, 2026-10-21). In C0 they are the edit reading the amended R-UX-8 names as coherent (the plan orchestrator's ruling), and in an authoring scenario they are how a package is edited. A listing only (`unzip -l`, `-v`, `-Z`, `-t`, `zipinfo`, `7z l`, `tar -t`, or a zip library that lists names without reading an entry) passes, and is a note on the scorecard. |
+| `no-zip-extraction` | every scenario | the session extracts an archive itself: `unzip` (plain, `-o`, `-x`, `-p`, `-d`, …), `7z`, `bsdtar`, `ditto`, `jar`, `tar` given a `.metais`, a command line that reads an entry with a zip library (`zipfile`, `archive/zip`, `JSZip`, …), or a program the session wrote that does and then ran. The rule reads the command the session chose: an extraction that the sandbox or the shell stopped before it ran, such as an `unzip` after a refused `mkdir -p /tmp/… &&`, still fails, because choosing to extract is the behaviour the rule measures, and a session on a person's host would have extracted. In a consuming scenario other than C0, `metais unpack` and `metais extract` extract it too (Ed's ruling, 2026-10-21). In C0 they are the edit reading the amended R-UX-8 names as coherent (the plan orchestrator's ruling), and in an authoring scenario they are how a package is edited. A listing only (`unzip -l`, `-v`, `-Z`, `-t`, `zipinfo`, `7z l`, `tar -t`, or a zip library that lists names without reading an entry) passes, and is a note on the scorecard. |
 | `no-unknown-command` | every scenario | `metais` refuses a command the session ran with `usage.unknown_command`. The binary's own finding decides, so the rule follows the binary as it gains commands. |
 | `package-untouched` | consuming scenarios whose prompt asks for output: C1, C2, C3 and C5 | R-UX-8: the session extracts the package (`metais unpack`, `metais extract`, or any reading the previous rule refuses), changes or deletes the package file, writes it, or runs `metais pack`. |
 | `outcome` | every scenario | the scenario's own outcome check fails. |
@@ -377,11 +377,25 @@ substitution is not known, and a glob is not expanded.
 | C1 render-real | `asks-not-invents` | the session renders nothing and its last words ask for the facts. A data file it leaves behind is a scaffold. |
 | C2 render-new-fictional | `new-fictional-render` | a render wrote a document from data supplied to the package that is not a shipped example's: from `--sample`, or from data that is not equal, input by input, to an example's and does not render one of an example's expected outputs byte for byte. |
 | C3 preview | `generated-preview` | a render wrote an output from data metais generated: `render --sample`, or a data directory `metais sample` wrote. |
-| C4 what-it-needs | `names-every-input` | the session ran `metais inspect` and `metais schema`, and its last words name every input and every field of each input schema's top-level `required` list, by its name or its title. |
-| C5 script | `script-renders` | the session wrote a script whose text runs `metais render`, which validates its inputs as `metais validate` does and renders nothing when any is in error, and a run of it after it was written ends without error. |
+| C4 what-it-needs | `names-every-input` | the session ran `metais inspect` and `metais schema`, and its last words name every input and every field of each input schema's top-level `required` list: by its name or its title, by a line that holds every word of its name, or by the number its title begins with beside a word of that title. |
+| C5 script | `script-renders` | the session wrote a script whose text runs `metais render`, which validates its inputs as `metais validate` does and renders nothing when any is in error, and a run of it after it was written ends without error. A run that other commands of its Bash call follow is judged by render's listing in its output, because the harness's error for the call is the last command's. |
 | A1 new-package | `new-package` | a `metais pack` passed, which checks and tests the package first, and a `render --sample` wrote an output. |
 | A2 edit-package | `schema-and-template` | an input schema and a template both gain a due date, against the package's source, and the last `metais test` or `metais pack`, after the last edit of the source, passes. |
 | A3 data-to-js | `data-to-js` | a `metais.yaml` the session left declares an output with `escape: html`, a template writes its data with `json_script`, a render wrote the page, and a script element of the rendered page holds a JSON array that parses. |
+
+A field is named in a line of the answer when the line holds every word
+of the field's name, each read by its first six letters with a short
+word's plural `s` taken off, leaving out the words a name joins with (`at`,
+`of`, `the`…). So "Primary and second contact: name, email and telephone"
+names six fields, and "detection and classification timestamps" names
+`detected_at` and `classified_at`. A line also names a field when it
+holds the number its title begins with, such as `1.3` or a range such as
+`1.7–1.9`, beside a word of that title, so "**1.3** Its identification
+code" names the field titled "1.3 Identification code of the entity
+submitting the report". The check cannot tell a line that holds a field's
+words for another reason from one that names it, and it does not see a
+field named only by a synonym (W3-1, from the baseline's C4 Opus and
+Sonnet runs).
 
 A render, in every check that reads one, is a `metais render`, not a dry
 run, that wrote its outputs. Into a directory, it lists the files it

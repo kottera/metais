@@ -44,6 +44,9 @@ this scorecard can be trusted.
   artifact holds `set.json`, and for each run its record, transcript,
   standard error and the text files of its `work/` and `tmp/`. No file of
   it holds a user name, a host path or a token.
+- **Wave 3 re-scored the set** with the checks W3-1 corrected
+  ([below](#re-scored-by-wave-3s-scorer)), beside the runner's scorecard,
+  which stays as published.
 - **One isolation check was corrected and the set re-scored**
   ([below](#the-check-corrected-in-this-scorecard)). As first recorded, C4
   Opus was invalid. After the correction it is valid and scored.
@@ -206,6 +209,85 @@ Every rule and check is decided by code over the transcript and the run's direct
 ### Prompts reworded under R-UX-9
 
 None: every run ran its scenario's prompt as the set holds it.
+
+## Re-scored by Wave 3's scorer
+
+Wave 3's item W3-1 settled the
+[suspected mis-scores](#suspected-mis-scores-not-corrected) below, by the
+Wave 3 brief's ruling: a check changes only where a committed fixture
+shows it mis-scoring a transcript, and a changed check is applied to this
+baseline too, so that it and the after scorecard are read by one scorer.
+The runner's scorecard above stays as it was published. This section is
+the same 27 transcripts scored again.
+
+- **The scorer** is W3-1's, commit
+  `0549d8b3977fc19b2b9b95e317f7269caa6aa089` of its pull request,
+  rebased as `ca35b2f3` with `internal/tools/ux` unchanged. Run again at
+  the rebased head, it printed the same scorecard byte for byte. It was run as
+  `go run ./internal/tools/ux -out <set> -scorecard -scenarios C0,C1,C2,C3,C4,C5,A1,A2,A3`
+  over the scrubbed set. It holds W1-NB1's reading of a render to
+  `--out -` (#204) as well.
+- **The re-scored set** is Work Order artifact
+  `art_27fm7gwyart6vddog7djobzk72wpngxc2xs32shbzn3fmvxspbua`
+  (`ux-baseline-2026-10-21-rescored-w3-1.tar.gz`): the same scrubbed
+  files, each record's `outcome` as this scorer wrote it, and the
+  scorecard it printed, as `scorecard-rescored-w3-1.md`.
+
+How each suspected mis-score was settled:
+
+- **`names-every-input`, C4 Opus and C4 Sonnet: the check changed.** Both
+  answers name every required field, and the check did not see it. A
+  field is now also named by a line of the answer that holds every word
+  of its name, each read by its first six letters ("Primary and second
+  contact: name, email and telephone" names six fields, and "detection
+  and classification timestamps" names `detected_at` and
+  `classified_at`), or by the number its title begins with, alone or in a
+  range, beside a word of that title ("**1.3** Its identification code",
+  "**1.7–1.9** Primary contact's name, email and telephone"). Fixtures
+  `c4-opus-names-fields-by-number` and `c4-sonnet-names-fields-in-its-words`
+  are the two runs, red before the change. `edited-c4-sonnet-contacts-unnamed`
+  is Sonnet's run with its contact line cut to "Whom to contact", and it
+  still fails for exactly the six contact fields.
+- **`no-zip-extraction` on an `unzip` the sandbox stopped: the check
+  reads the transcript correctly, and did not change.** The rule reads
+  the command the session chose. Choosing `unzip` over `metais inspect`
+  is what the rule measures. On a person's host the same command would
+  have extracted the package, and the after runs meet the same sandbox.
+  So a sandbox-stopped `unzip` still fails, as this scorecard first
+  argued. `docs/dev/ux-testing.md` now states the reading, and fixture
+  `c4-opus-names-fields-by-number` pins it: that session's only `unzip`
+  followed a refused `mkdir`, and the fixture expects it to fail
+  `no-zip-extraction` and `inspect-first`.
+- **`script-renders`, C5 Sonnet: the check changed.** The harness reports
+  one status for a Bash call, its last command's. Sonnet's script ran,
+  rendered, and printed render's listing and `exit 0`, and a later `ls`
+  of the same call failed. A run of the script that other commands of its
+  call follow is now judged by render's listing in the call's output. A
+  run that is its call's last command is judged as before. Fixture
+  `c5-sonnet-renders-before-an-error` is the run, red before the change.
+- **`new-package`, A1 Opus: settled by W1-NB1 (#204), and confirmed
+  here.** Its render to `--out -` is a render, and the run fails only
+  `no-zip-extraction`.
+
+Every cell that changed:
+
+| Run | Published | Re-scored |
+|---|---|---|
+| C4-what-it-needs opus | fail: inspect-first, no-zip-extraction, outcome (names-every-input) | fail: inspect-first, no-zip-extraction |
+| C4-what-it-needs sonnet | fail: outcome (names-every-input) | pass |
+| C5-script sonnet | fail: inspect-first, no-zip-extraction, package-untouched, outcome (script-renders) | fail: inspect-first, no-zip-extraction, package-untouched |
+| A1-new-package opus | fail: no-zip-extraction, outcome (new-package) | fail: no-zip-extraction |
+
+No other cell changed. C4 Haiku still fails `names-every-input` because
+it never ran `metais schema`. Its detail now counts 16 unnamed fields,
+not 17: the line "the entity's name and identifiers, and the submitter"
+holds every word of `submitting_entity_name`.
+
+**The re-scored threshold count: 7 of 24 gated runs pass** (6 as
+published). 0 runs are invalid and not scored, and 0 are not yet run.
+R-UX-5's thresholds do not hold. By model, Sonnet's consuming passes
+rise from 2 of 6 to 3 of 6 (C1, C2, C4). Opus's and Haiku's counts
+are unchanged.
 
 ## Pass counts by model
 

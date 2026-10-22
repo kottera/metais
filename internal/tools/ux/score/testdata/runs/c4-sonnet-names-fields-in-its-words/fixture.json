@@ -1,0 +1,18 @@
+{
+  "shows": "the session runs metais inspect and metais schema, and its answer names every required field in its own words, several to a line (Primary and second contact: name, email and telephone; detection and classification timestamps)",
+  "recorded": {
+    "set": "the metais-ux baseline of Work Order 01a15f30 (artifact art_boccbn5awud7um657vbfnsbezoefmdmkajnhk4tslubk6l3w27fq)",
+    "run": "C4-what-it-needs/sonnet",
+    "date": "2026-10-21",
+    "commit": "5e64a4cb47701e29037b79c12ea29bd2c105cd7f",
+    "model": "claude-sonnet-5-5"
+  },
+  "expect": {
+    "inspect-first": "pass",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "pass"
+  },
+  "reasons": {}
+}

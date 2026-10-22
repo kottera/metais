@@ -1,0 +1,223 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "C4",
+    "name": "C4-what-it-needs",
+    "kind": "consuming",
+    "asks_for_output": false,
+    "prompt": "what does report.metais need from me?"
+  },
+  "model_requested": "opus",
+  "model_reported": "claude-opus-5-5",
+  "models_used": [
+    "claude-opus-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": false,
+  "commit": "5e64a4cb47701e29037b79c12ea29bd2c105cd7f",
+  "metais_sha256": "9310969b947f1ce54d7731cd6dbfee16aacda666db415b723057c39be3ad7fb5",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    },
+    {
+      "name": "writes-inside-run",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-21T18:00:26.790744Z",
+  "ended": "2026-10-21T18:01:06.511276Z",
+  "wall_ms": 39720,
+  "turns": 10,
+  "cost_usd": 0.21021499999999996,
+  "duration_ms": 39433,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 9,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "what does report.metais need from me?",
+      "--model",
+      "opus",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:55520",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": [
+    {
+      "path": "report.metais",
+      "size": 41429,
+      "sha256": "fc5ca09c318af8687e3f26749ddde2a4de0c06cd01581a124367152574b3067b"
+    }
+  ],
+  "files": [
+    {
+      "path": "report.metais",
+      "size": 41429,
+      "sha256": "fc5ca09c318af8687e3f26749ddde2a4de0c06cd01581a124367152574b3067b",
+      "change": "unchanged"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": {
+    "format": "metais-ux-outcome/1",
+    "scenario": "C4-what-it-needs",
+    "check": "names-every-input",
+    "scored": true,
+    "pass": false,
+    "rules": [
+      {
+        "rule": "inspect-first",
+        "applies": true,
+        "pass": false,
+        "detail": "before metais inspect, unzip extracts the archive",
+        "evidence": [
+          {
+            "turn": 3,
+            "line": 7,
+            "tool": "Bash",
+            "command": "which metais; mkdir -p /ux/host \u0026\u0026 cd /ux/host \u0026\u0026 unzip -o -q \"$OLDPWD/report.metais\" 2\u003e\u00261; find /ux/host -type f | xargs ls -la",
+            "text": "unzip extracts the archive"
+          },
+          {
+            "turn": 4,
+            "line": 10,
+            "tool": "Bash",
+            "command": "metais inspect report.metais"
+          }
+        ]
+      },
+      {
+        "rule": "no-zip-extraction",
+        "applies": true,
+        "pass": false,
+        "detail": "the session extracts the archive itself: unzip extracts the archive",
+        "evidence": [
+          {
+            "turn": 3,
+            "line": 7,
+            "tool": "Bash",
+            "command": "which metais; mkdir -p /ux/host \u0026\u0026 cd /ux/host \u0026\u0026 unzip -o -q \"$OLDPWD/report.metais\" 2\u003e\u00261; find /ux/host -type f | xargs ls -la",
+            "text": "unzip extracts the archive"
+          }
+        ]
+      },
+      {
+        "rule": "no-unknown-command",
+        "applies": true,
+        "pass": true,
+        "detail": "none of the 8 metais commands is refused as unknown"
+      },
+      {
+        "rule": "package-untouched",
+        "applies": false,
+        "pass": true,
+        "detail": "does not apply to C4-what-it-needs"
+      },
+      {
+        "rule": "outcome",
+        "applies": true,
+        "pass": false,
+        "detail": "the answer does not name 11 of what the package needs: entity.submitting_entity_code, entity.primary_contact_name, entity.primary_contact_email, entity.primary_contact_telephone, entity.second_contact_name, entity.second_contact_email, entity.second_contact_telephone, incident.detected_at, incident.classified_at, incident.discovery, incident.business_continuity_plan_activated",
+        "evidence": [
+          {
+            "turn": 4,
+            "line": 10,
+            "tool": "Bash",
+            "command": "metais inspect report.metais"
+          },
+          {
+            "turn": 6,
+            "line": 16,
+            "tool": "Bash",
+            "command": "metais schema report.metais stage; echo \"-----\"; metais schema report.metais entity"
+          },
+          {
+            "line": 28,
+            "text": "`report.metais` is a template for a **DORA major ICT-related incident report**. DORA is the EU's Digital Operational Resilience Act, and the report follows the template in Implementing Regulation (EU) 2025/302. You report one incident three …"
+          }
+        ]
+      }
+    ]
+  }
+}
