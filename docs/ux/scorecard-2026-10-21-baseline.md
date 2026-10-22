@@ -221,7 +221,9 @@ The runner's scorecard above stays as it was published. This section is
 the same 27 transcripts scored again.
 
 - **The scorer** is W3-1's, commit
-  `0549d8b3977fc19b2b9b95e317f7269caa6aa089` of its pull request, run as
+  `0549d8b3977fc19b2b9b95e317f7269caa6aa089` of its pull request,
+  rebased as `ca35b2f3` with `internal/tools/ux` unchanged. Run again at
+  the rebased head, it printed the same scorecard byte for byte. It was run as
   `go run ./internal/tools/ux -out <set> -scorecard -scenarios C0,C1,C2,C3,C4,C5,A1,A2,A3`
   over the scrubbed set. It holds W1-NB1's reading of a render to
   `--out -` (#204) as well.
