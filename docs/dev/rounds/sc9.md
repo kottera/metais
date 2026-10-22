@@ -140,3 +140,100 @@ tell the author what to do becomes a fix item against the specification,
 or is recorded as a ruling that the text is enough. A finding about the
 tool becomes a fix item against the tool. The round is rerun when a fix
 changes `spec/B-worked-package.md` or the authoring chapter.
+
+## Evidence on the post-Wave-2 binary (PLAN-2026-10-metais-ux W3-5)
+
+This is the harness's evidence for the round, recorded for whoever takes it
+(PLAN-2026-10-metais-ux §8). It is not the round. The round is Work Order
+`01a15abf-6347` of PLAN-2026-10-metais-v1, and it is not done until Ed
+confirms it.
+
+**What ran.** Scenario A4 of the UX set (`docs/dev/ux-testing.md`), an
+A1-shaped run. Its prompt is this page's task, minus the request to keep a
+record of every command, which the transcript keeps, and plus the words
+"starting at spec/B-worked-package.md". The session ran in a fresh directory
+holding only `spec/`, as `git archive` of the commit gives it, with the
+binary under test first on `PATH`. It had no tool source, no `docs/`, no
+`examples/` and no repository above it. The runner isolates the session as
+the method's isolation checks say, and every one of them passed on both
+runs.
+
+| | |
+|---|---|
+| Commit | `29f077f3edbadb5f99ec3998f66803e99103a0f3`, on branch `feat/metais-ux-w3-5-sc1-sc9-evidence`. Its binary closure and its `spec/` are `main`'s at `63315621`: the branch changes only `internal/tools/ux` and documents |
+| metais | `metais 0.0.0-devel`, `specification 1.0`; SHA-256 `6d0d8c1e7082cc5e5e191c08689cf512c6eeb153e2e529f4b553073ecdfff9ca` |
+| Host | a tera dispatch, darwin/arm64, go1.26.2 |
+| Harness | Claude Code 2.1.299, `claude -p`, no skill installed |
+| Models | `opus` (claude-opus-5-5) and `sonnet` (claude-sonnet-5-5), one run each, 2026-10-22 |
+| Transcripts | artifact `art_nof7la4jhanh3k5z3kfxevib4dujterdjhwhtq2ewli7cy2bsa2q`: the scrubbed set `ux-w3-5`, `runs/A4-spec-only-package/<model>/`, which holds the package source the session wrote under `work/recipe-card/`, and `judging/A4-<model>.log`, the judging commands below with their full output |
+
+**The judging commands**, run as this page says, on a fresh copy of each
+session's package source:
+
+| | opus | sonnet |
+|---|---|---|
+| Package | `recipe-card`: one input, `recipe`, with its schema and meaning document; two templates, a recipe card and a shopping list; the example `pancakes` with both expected outputs | `recipe-card`: one input, `recipe`, with its schema and meaning document; one template, a recipe card; the example `soup` with its expected output |
+| `check package` (human and `--json`) | exit 0; `check: 0 errors, 0 warnings, 0 notes` | exit 0; `check: 0 errors, 0 warnings, 0 notes` |
+| `test package` (human and `--json`) | exit 0; `pancakes: pass` | exit 0; `soup: pass` |
+| `pack package --out packed` (human and `--json`) | exit 0; `Packed recipe-card-1.0.0.metais: 7137 bytes, 14 entries` | exit 0; `Packed recipe-card-1.0.0.metais: 5207 bytes, 11 entries` |
+| Package digest | `sha256:b5772c41173587075c77b63c3b665267de3266ac21c02a994309287f96f7334b` | `sha256:ce055db664b6527dbdac71815a68ce6d80983918196eb0b9b4f776a6a702aefc` |
+| `.metais` SHA-256 | `1a16e8882a4bfa8ff9c3c779515967b6a08d5bdf7c29ddc94681a76673fabf2d` | `864084687ac1f8e505beb05d300326b61fc87cc506a2b14983dc7b15b881dc1d` |
+
+No command reported a warning.
+
+**What the transcripts show against the round's bar:**
+
+- **`check`, `test` and `pack`.** Both runs pass, by the table above. Each
+  session's own last `test`, `pack` and `check` passed after its last edit
+  (opus turn 11, line 58; sonnet turn 16, line 63). The UX scorer's
+  `checks-tests-packs` check passes on both.
+- **Every part the task asks for.** Both packages have a manifest, an input
+  with its schema and meaning document, a template, and an example with its
+  expected outputs. Neither is the worked package with its names changed:
+  each is a recipe card, not release notes, with its own schema, templates
+  and example.
+- **What the author read.** Each session read `spec/B-worked-package.md`
+  first (opus turn 1, line 3; sonnet turn 2, line 4), then `metais help`
+  pages (opus `help`, `help check`, `help test` and `help pack`, turn 2,
+  line 8; sonnet `help`, turn 2, line 4, and `help render`, turn 14,
+  line 55). Opus also searched chapters 5, 7 and 8 (turn 3, line 14), and
+  read MTS-SUP-007 in chapter 6 (turn 8, line 48). No tool call names a
+  file outside the session's directory, and neither session read anything
+  but `spec/`, the binary's help and output, and its own files.
+- **Where the text did not tell the author what to do.** Each session's
+  last words list such points (opus line 66; sonnet line 65):
+  - **Whether a bare number in YAML is a string** (B.7). Both met it. Opus
+    found the answer in MTS-SUP-007, and sonnet found it when `render`
+    refused `amount: 1` as `input.type` (turn 10, line 40).
+  - **An `expected/` directory made before its files** (B.7, B.8). Both
+    made one, and `check` (opus) or `render` (sonnet) refused the source as
+    `package.layout.empty_directory`. Sonnet asks for B.8 to say that the
+    directory must not exist before the first render.
+  - **Check reports one finding where B.6 says every step's.** Opus's first
+    `check` (turn 4, line 17) ran on a source whose files were all empty,
+    because here-documents failed. It reported only the empty directory,
+    and nothing of the empty `metais.yaml`. B.6 says check "reports every
+    finding of every step in one run". MTS-AUT-003 says a refused walk of
+    a source directory gets only its own findings, so the binary does what
+    chapter 13 says, and B.6's sentence is what misled.
+  - **Check accepts an example whose data its schema refuses** (sonnet, its
+    point 3). Only `render` and `test` read the example's data.
+  - Opus also lists loop counters (B.5), arrays of plain values (B.4), a
+    path built from an input (B.3) and recording the expected files (B.8).
+    Sonnet lists the whitespace of a `for` loop (B.5) and what `render`
+    prints.
+
+**What a transcript cannot show:**
+
+- **Whether the text alone was enough for a person.** These are two
+  harness runs, not an author's.
+- **The runbook's exact set-up.** The author was not given `./metais` in
+  its directory: it had `metais` on `PATH`. Its sandbox refused shell
+  here-documents, which left every file opus and sonnet first wrote empty
+  (opus turn 4, line 17; sonnet turn 3, line 9). Both rewrote the files with
+  the Write tool. A person's host would not refuse them.
+
+**Findings for the wave.** Neither run fails the round's bar. The points
+above are the round's to rule on, by "What happens next". One of them is a
+candidate fix against the text: B.6's "reports every finding of every step
+in one run" against MTS-AUT-003.
