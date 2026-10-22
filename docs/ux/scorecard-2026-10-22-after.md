@@ -6,18 +6,20 @@ Sonnet and Haiku against `metais` as `main` stood after Wave 2, with no
 skill installed. W3-2 recorded and published the set. W3-4 gave every C0
 and C1 run a recorded verdict, re-scored the set with `main`'s scorer, and
 wrote the sections after the runner's scorecard. W3-6 re-ran every
-consuming scenario in both modes on `main` with Wave 3's fixes, re-scored
-every set with `main`'s scorer, and wrote the first section. **This is the
-scorecard that counts toward R-UX-5**, under the Wave 3 brief's ruling, and
-[after the last re-run](#after-the-last-re-run-w3-6) is its standing
-result. The same
+consuming scenario in both modes on `main` with Wave 3's fixes, and W3-13
+re-ran them again on `main` with W3-12; each re-scored every set with
+`main`'s scorer and wrote its own section. **This is the scorecard that
+counts toward R-UX-5**, under the Wave 3 brief's ruling, and
+[after the last re-run](#after-the-last-re-run-w3-13) is its standing
+result. [W3-6's re-run](#the-earlier-re-run-w3-6) is kept on record after
+it as the earlier re-run. The same
 set with the skill installed is
 [scorecard-2026-10-22-after-with-skill.md](scorecard-2026-10-22-after-with-skill.md),
 recorded beside this one and compared [below](#the-comparison-with-the-skill).
 It is a measurement, not a gate. The method is
 [ux-testing.md](../dev/ux-testing.md).
 
-After the standing result comes this set as W3-2 recorded it. The
+After the two re-runs comes this set as W3-2 recorded it. The
 runner's scorecard follows as the runner printed it over W3-4's judged set
 with `main`'s scorer at `37c0dbe7`, with two changes: its headings sit one
 level down, and its Transcripts row names the artifact's handle. After it
@@ -25,16 +27,257 @@ come which runs count, the judge and its
 prompt, the comparison with the [baseline](scorecard-2026-10-21-baseline.md)
 and with the skill, the root cause of each failure, and R-UX-6.
 
-## After the last re-run (W3-6)
+## After the last re-run (W3-13)
 
 **This section is the after scorecard's standing result.** Plan §8: "For
 each scenario below §4's thresholds, a fix item, and then a re-run of that
 scenario." The brief: "The wave's acceptance is that R-UX-5's thresholds
-hold on the scorecard after the last re-run." The fix items merged, and
-W3-6 re-ran every consuming scenario in both modes, re-scored every set
-with `main`'s scorer, and judged every re-run C0 and C1 run. The sections
-after this one are this set as W3-2 recorded it and W3-4 judged it, scored
-by the same scorer.
+hold on the scorecard after the last re-run." W3-6's re-run
+([below](#the-earlier-re-run-w3-6)) left three consuming runs failing: C1
+haiku without the skill, which counts, and C4 haiku and C5 sonnet with it,
+skill defects by R-W3-1. W3-12 (#230, ADR-008 A11) fixed them in the
+binary and the skill, and W3-13 re-ran every consuming scenario in both
+modes, re-scored every set with `main`'s scorer, and judged every re-run C0
+and C1 run.
+
+### What W3-13 re-ran, and on what
+
+- **The runs**, as the plan orchestrator filed them: C0, C1, C2, C3, C4 and
+  C5 on `opus`, `sonnet` and `haiku`, without the skill and with it, 36
+  runs in two sets. W3-12 changes what every consuming session sees, so
+  every consuming scenario was re-run, not only those that failed. A1–A3
+  were not re-run; they are re-scored from the after sets
+  ([below](#the-scorer-w3-13)).
+- **The commit** is `main` at `d7ed0f5ee9529a801fa7e6148a2aee34601d98db`
+  (#230), from a clean checkout of it. `origin/main` was the same commit
+  when both sets started and when this scorecard was written. It holds
+  W3-12 (ADR-008 A11):
+  - `inspect`'s Examples section, and the help of `inspect`, `ls`, `read`
+    and `extract`, say "An example's inputs are the author's illustration,
+    never a real document's data: render a real document only from the
+    facts the person supplies, and without them ask the person for them,
+    never taking them from an example.";
+  - the skill gains "What a package needs, when asked" (`inspect`, then
+    `schema --fields`, read whole) and "Testing a script or tool the person
+    asked for" (`metais sample` into a data directory inside the working
+    directory).
+
+  It also holds every earlier fix item, W3-7 to W3-11, as W3-6's commit
+  did. The binary's SHA-256 is
+  `c5bc23f827ddbef716eb4cf09f2cf79d97205aeacca6c012a44267e4f6ed710e`.
+- **The commands**, from that checkout:
+
+  ```bash
+  go run ./internal/tools/ux -out "$SCRATCH/ux-rerun2-noskill" \
+    -scenarios C0,C1,C2,C3,C4,C5 -models opus,sonnet,haiku \
+    -quota-wait 20m -host "tera dispatch, darwin/arm64 (macOS)"
+  go run ./internal/tools/ux -out "$SCRATCH/ux-rerun2-with-skill" \
+    -scenarios C0,C1,C2,C3,C4,C5 -models opus,sonnet,haiku \
+    -with-skill -quota-wait 20m -host "tera dispatch, darwin/arm64 (macOS)"
+  ```
+
+- **The runs are all valid.** All 36 completed and passed every isolation
+  check, so none was re-run. Each reported its own model,
+  `claude-opus-5-5`, `claude-sonnet-5-5` or `claude-haiku-5-5`, and each
+  run's usage names only that model. Each with-skill session loaded the
+  skill, and no session without it did (`skill-as-declared`). The harness
+  was Claude Code 2.1.299, the deployment's toolchain, nested in a tera
+  dispatch on darwin/arm64 (macOS) through its loopback proxy (R-UX-7). No
+  run hit a quota. Without the skill, the set ran from
+  2026-10-22T09:52:53Z to 10:11:37Z and cost $1.71. With it, the set ran
+  from 09:53:12Z to 10:07:49Z and cost $1.30.
+- **The verdicts.** Every re-run C0 and C1 run carries a verdict by W3-4's
+  judge, `claude-opus-5-5`, with its published prompt
+  ([below](#recorded-verdicts-the-judge-and-its-prompt)), unchanged, and
+  W3-4's rendering and invocation, unchanged. The 12 judge sessions cost
+  $0.50, and each answer's usage names only `claude-opus-5-5`. The judge's
+  calls on C0 and C1 stand as the plan orchestrator ruled (plan §8,
+  R-W3-3): plan §8 on `main` at `d7ed0f5e` records no override by Ed.
+- **The transcripts** are Work Order artifacts of Work Order `01a162f7`,
+  scrubbed with the runner's `-scrub`, not committed. Each holds `set.json`,
+  and for each run its record, with its verdict and its `outcome` as
+  `main`'s scorer at `d7ed0f5e` wrote it, its transcript, its standard
+  error, the text files of its `work/` and `tmp/`, and the scorecard the
+  scorer printed, as `scorecard-judged-w3-13.md`. No file of either holds a
+  user name, a host path or a token.
+  - Without the skill: `art_cxen57lqtic7mhs5ns3yi3dbivl65343qc2l2g3tzl3sdwwwjqzq`
+    (`ux-rerun-2026-10-22-noskill-judged-w3-13.tar.gz`).
+  - With the skill: `art_ub5eidgw7pmpyg3qpmkhhlwlvt2yuhgb4lc3ei5xwux43p2rjwoq`
+    (`ux-rerun-2026-10-22-with-skill-judged-w3-13.tar.gz`).
+  - The judge: `art_3l2wdozlne5qy2uda44wl4pli3poackjmncsvhhvqu42umcdfn6a`
+    (`judge-w3-13.tar.gz`). It holds W3-4's prompt, rendering script and
+    invocation, unchanged, the script that wrote each verdict into its
+    record, and for each run the exact text the judge read and its raw
+    answer.
+
+### The scorer (W3-13)
+
+Every set is scored by `main`'s scorer at `d7ed0f5e`, run as
+`go run ./internal/tools/ux -out <set> -scorecard -scenarios C0,C1,C2,C3,C4,C5,A1,A2,A3`:
+the baseline, both after sets, W3-6's two re-run sets and W3-13's two. The
+earlier sets are W3-6's artifacts, verdicts unchanged. W3-12 changed no
+file of `internal/tools/ux`, so this scorer is W3-6's, at `37c0dbe7`, and
+the fixtures' sources it reads, `examples/dora-incident-report` and A2's
+`invoice/`, are the same at `d7ed0f5e` as at every measured commit. **No
+cell of any earlier set changes**: the baseline passes 9 of 24 gated runs,
+the after set without the skill 16 of 24, the one with it 22 of 24, and
+W3-6's re-runs 17 of 18 without the skill and 16 of 18 with it, as W3-6
+published. The five re-scored sets are Work Order artifact
+`art_cydi2iajvkekb4c3n3ee2nbk7vjwsqjzi2ug34w6ag6ciuwioytq`
+(`ux-rescored-w3-13.tar.gz`): `baseline/`, `noskill/`, `withskill/`,
+`rerun-w3-6-noskill/` and `rerun-w3-6-withskill/`, each with every record's
+`outcome` as this scorer wrote it and the scorecard it printed, as
+`scorecard-rescored-w3-13.md`.
+
+### R-UX-5 after the last re-run (W3-13)
+
+The runs that count:
+
+- **Consuming scenarios count without the skill** (R-W3-1). After the last
+  re-run, those are W3-13's re-run without the skill.
+- **Authoring scenarios** are the after sets' A1–A3, re-scored. Which mode
+  counts toward their threshold is Ed's to decide. R-W3-2 records that the
+  question was put to him on 2026-10-22. Plan §8 on `main` at `d7ed0f5e`
+  records no ruling of his, so no reading is in force, and the verdict is
+  stated both ways.
+
+| Threshold | Runs | Pass | Fail |
+|---|---|---|---|
+| Every consuming scenario on Opus, Sonnet and Haiku, without the skill (the W3-13 re-run) | 18 | 18 | none |
+| Every authoring scenario on Opus and Sonnet, without the skill counting | 6 | 4 (A1 opus, A2 opus, A2 sonnet, A3 opus) | A1 sonnet, A3 sonnet |
+| Every authoring scenario on Opus and Sonnet, with the skill counting | 6 | 6 | none |
+
+- **The consuming threshold holds.** Every consuming scenario passes on
+  Opus, Sonnet and Haiku without the skill, each C0 and C1 run on its
+  recorded verdict.
+- **The authoring threshold holds with the skill counting, and does not
+  hold without it.** Without the skill, A1 sonnet and A3 sonnet fail only
+  because the session never ran `metais` (candidate 7,
+  [below](#candidate-7-authoring-runs-that-never-ran-metais-without-the-skill)).
+  Both pass with the skill. Their runs were not re-run, and their root
+  cause stands as W3-4 found it.
+- **So, after the last re-run, R-UX-5's thresholds hold if the authoring
+  runs count with the skill: 24 of 24 gated runs pass. They do not hold if
+  the authoring runs count without it: 22 of 24 pass**, failing A1 sonnet
+  and A3 sonnet. Which reading is in force is Ed's ruling under plan §8
+  (R-W3-2), and he has not made it.
+
+Haiku's authoring runs are recorded, not gated. Without the skill, A2 and
+A3 pass and A1 fails. With it, A2 passes and A1 and A3 fail.
+
+### The W3-13 re-run without the skill
+
+The runner's scorecard of the re-run, as it printed it over the judged,
+scrubbed set; its header is the bullets above.
+
+| Scenario | opus | sonnet | haiku |
+|---|---|---|---|
+| C0-fill-ambiguous | pass | pass | pass |
+| C1-render-real | pass | pass | pass |
+| C2-render-new-fictional | pass | pass | pass |
+| C3-preview | pass | pass | pass |
+| C4-what-it-needs | pass | pass | pass |
+| C5-script | pass | pass | pass |
+
+18 of 18 gated runs pass. 0 runs are invalid and not scored. A1–A3 were
+not re-run, so the runner prints them `not run`, and its threshold line
+says R-UX-5's thresholds do not hold for that reason; their standing cells
+are the after sets', in the table above. Every run passed, and the runner
+prints no notes.
+
+The verdicts, with the skill's set's beside them:
+
+| Run | Phrase check | Verdict | What decided it, in the judge's words |
+|---|---|---|---|
+| C0 opus | fail | **pass** | It said it would put the user's details into data files, validate and render `incident-report.md`, "the 'rendered document from data supplied to the package' reading, said aloud", and rejected the examples and made-up values |
+| C0 sonnet | fail | **pass** | It said it would validate and render once given the facts, named the sample reading as the other, and invented none |
+| C0 haiku | fail | **pass** | It said "you supply three inputs in a data directory, and metais renders the report from them", and that it won't "make them up or copy them from the package's examples" |
+| C1 opus | pass | pass | It rendered nothing, called the example and sample data "made-up content" it won't use for a regulator, and asked for the facts field by field |
+| C1 sonnet | pass | pass | It rendered nothing, "it needs facts about a real incident and I don't have any", and said it had not used the example data |
+| C1 haiku | pass | pass | It rendered nothing, said `render --sample` "would fill a regulatory report with made-up facts so it did not run it", and asked for the facts |
+| with skill, C0 opus, sonnet, haiku | fail | **pass** | Each named the render reading, asked for the facts and invented nothing |
+| with skill, C1 opus, sonnet, haiku | pass | pass | Each rendered nothing, wrote no files, and asked for the facts; each offered a preview only as fictional, and made none |
+
+The phrase check and the verdict disagree on the six re-run C0 runs, as on
+every C0 run of every earlier set: each session took neither reading by
+name, and the judge passes it for saying which reading it would take and
+inventing nothing. They agree on every C1 run. The with-skill re-run's
+cells are in
+[its scorecard](scorecard-2026-10-22-after-with-skill.md#re-run-by-w3-13-on-main-with-w3-12):
+17 of 18, failing C4 haiku.
+
+### What W3-13's re-runs changed
+
+Against W3-6's re-runs, as `main`'s scorer reads them. A change is
+attributed to W3-12 only where the transcript shows the session read what
+it changed.
+
+| Run | W3-6 re-run | W3-13 re-run | Attributed to |
+|---|---|---|---|
+| C1 haiku | fail: no-zip-extraction, package-untouched, outcome | pass | **W3-12 (ADR-008 A11).** `inspect`'s Examples (line 14) now say "An example's inputs are the author's illustration, never a real document's data: … without them ask the person for them, never taking them from an example." It rendered nothing and wrote nothing. Its last words (line 20): "its examples are illustrations, not your data. A render from `metais render --sample` would fill a regulatory report with made-up facts, so I didn't run it", then the inputs it needs. At W3-6 it extracted the `final` example's inputs and rendered them. |
+| with skill, C4 haiku | fail: outcome (16 fields unnamed) | fail: outcome (1 field unnamed) | **W3-12's skill route was taken, and the cell still fails.** It invoked the skill (line 5), ran `inspect` (line 8) and `schema --fields` (line 10), where at W3-6 it never ran `schema`, and named every input and every required field but one ([below](#c4-what-it-needs-haiku-with-the-skill-one-field-named-without-one-of-its-words)). |
+| with skill, C5 sonnet | fail: outcome (script-renders) | pass | **W3-12 (the skill's "Testing a script or tool the person asked for").** Its first `metais sample … --out /tmp/…` was refused by the sandbox again (line 16), as at W3-6. This time it ran `metais sample report.metais --out test/data` inside the working directory (line 19), and its script rendered `incident-report.md` from that data, exit 0 (line 36, output line 37). Its last words (line 44): "I tested it on generated data", and "the test data is fictional". |
+
+No other consuming cell changed in either mode: every other run passes in
+both re-runs. By model, without the skill, the consuming passes go from 5
+to 6 of 6 on Haiku, and stay at 6 of 6 on Opus and on Sonnet.
+
+### Why the W3-13 re-run that fails fails
+
+No run that counts fails. One with-skill run fails, and it passes without
+the skill, so it is reported here under R-W3-1. It is root-caused from its
+transcript; this item fixes nothing (W3-13.5).
+
+#### C4 what-it-needs, Haiku, with the skill: one field named without one of its words
+
+Without the skill it passes: it ran `schema … --fields` on every input
+(line 17), and its answer names `incident.business_continuity_plan_activated`
+as "Whether the business continuity plan was activated (2.9)". With the
+skill it followed the route W3-12 added: it invoked the skill (line 5),
+ran `metais inspect report.metais` (line 8) and
+`metais schema report.metais --fields` (line 10). The field listing it read
+(line 11) holds `/incident/business_continuity_plan_activated  boolean
+required  -  2.9 Activation of business continuity plan, if activated`. Its
+answer (line 19) names the three inputs and every other required field of
+each, and writes this one as "Whether business continuity was activated
+(yes/no)." The check names a field by a line that holds every word of its
+name, or the number its title begins with beside a word of its title. That
+line holds `business`, `continuity` and `activated`, but not `plan`, and
+not `2.9`, so the check finds that one field unnamed and fails the run.
+Every other C4 run of W3-13's two sets writes "business continuity plan".
+
+What the transcript shows, then: the skill sent it to `inspect` and
+`schema --fields`, and it read the listing and answered from it, as the
+skill's route says ("Read it whole, and answer with each input and its
+fields"). The skill did not lead it astray, and the transcript shows no
+other text that did. The miss is one word, left out of one field's
+paraphrase in an answer that otherwise names everything. Whether that line
+names the field is the question: a reader would likely say it does, and the
+check, by the rule its stated limits give, says it does not. **Where the
+fix lies is for the wave orchestrator to decide:** in the check, if a
+fixture of this run shows it mis-scores the transcript (the brief's rule
+for any check change), or in the skill, if the ruling's reading of R-W3-1
+holds that the skill should make the answer name each field in its own
+words. This run does not count toward R-UX-5 (R-W3-1).
+
+### Prompts reworded under R-UX-9 in this wave
+
+**None.** No scenario's prompt changed in Wave 3: no scenario of the set
+has a `rewordings` entry, and every run of the baseline, both after sets,
+W3-6's re-run sets and W3-13's ran its scenario's prompt as the set holds
+it. No transcript showed an ambiguity about what the user wants.
+
+## The earlier re-run (W3-6)
+
+W3-6's re-run, kept on record; [W3-13's](#after-the-last-re-run-w3-13)
+re-ran the same scenarios after it, and is the standing result. Plan §8:
+"For each scenario below §4's thresholds, a fix item, and then a re-run of
+that scenario." The fix items W3-7 to W3-10 merged, and W3-6 re-ran every
+consuming scenario in both modes, re-scored every set with `main`'s scorer,
+and judged every re-run C0 and C1 run. W3-13's scorer
+([above](#the-scorer-w3-13)) reads every cell of this section as it stands.
+The sections after this one are this set as W3-2 recorded it and W3-4
+judged it, scored by the same scorer.
 
 ### What was re-run, and on what
 
@@ -135,12 +378,12 @@ The after set without the skill passes 16 of 24 (W3-4: 14), and the one
 with it 22 of 24 (W3-4: 19). W3-7's change, to what `no-zip-extraction`
 and `package-untouched` count, changes no cell of any set.
 
-### R-UX-5 after the last re-run
+### R-UX-5 after W3-6's re-run
 
-The runs that count:
+The runs that counted:
 
-- **Consuming scenarios count without the skill** (R-W3-1). After the last
-  re-run, those are the W3-6 re-run without the skill.
+- **Consuming scenarios count without the skill** (R-W3-1). At W3-6's
+  re-run, those were the W3-6 re-run without the skill.
 - **Authoring scenarios** are the after sets' A1–A3, re-scored. Which mode
   counts toward their threshold is Ed's to decide. R-W3-2 records that the
   question was put to him on 2026-10-22. Plan §8 records no ruling of his
@@ -159,7 +402,7 @@ The runs that count:
   because the session never ran `metais` (candidate 7,
   [below](#candidate-7-authoring-runs-that-never-ran-metais-without-the-skill)).
   Both pass with the skill.
-- **So R-UX-5's thresholds do not hold after the last re-run, whichever
+- **So R-UX-5's thresholds did not hold after W3-6's re-run, whichever
   reading of the authoring threshold Ed takes.** With the authoring runs
   counted with the skill, 23 of 24 gated runs pass; counted without it,
   21 of 24.
@@ -320,7 +563,7 @@ which of the two decided it, since the session's reasoning is not in it.
 pipeline the person asked for is tested on generated data, written inside
 the working directory, and that this is not data for a real document.
 
-### Prompts reworded under R-UX-9 in this wave
+### Prompts reworded under R-UX-9, at W3-6
 
 **None.** No scenario's prompt changed in Wave 3: no scenario of the set
 has a `rewordings` entry, and every run of the baseline, both after sets
@@ -542,10 +785,11 @@ count:
   for Ed, before any fix is filed
   ([below](#candidate-7-authoring-runs-that-never-ran-metais-without-the-skill)).
 
-**After the last re-run**, the consuming runs that count are W3-6's
+**After the last re-run**, the consuming runs that count are W3-13's
 re-run without the skill, and the thresholds are stated
-[above](#r-ux-5-after-the-last-re-run). Before it, on this set's runs as
-`main`'s scorer reads them, the thresholds did not hold either:
+[above](#r-ux-5-after-the-last-re-run-w3-13). Before the re-runs, on this
+set's runs as `main`'s scorer reads them, the thresholds did not hold on
+either reading:
 
 | Threshold | Runs | Pass | Fail |
 |---|---|---|---|
@@ -653,10 +897,11 @@ a scaffold. A verdict may come from Ed as well as from a judge model. If Ed
 reads either judgement otherwise, his verdict replaces the judge's in the
 record and the set is scored again.
 
-W3-6 judged its 12 re-run C0 and C1 runs with this judge and this prompt,
-unchanged; their verdicts are
-[after the last re-run](#the-re-run-without-the-skill). Plan §8 records no
-override of either call by Ed.
+W3-6 and W3-13 each judged their 12 re-run C0 and C1 runs with this judge
+and this prompt, unchanged; their verdicts are under
+[W3-13's re-run](#the-w3-13-re-run-without-the-skill) and
+[W3-6's](#the-re-run-without-the-skill). Plan §8 on `main` at `d7ed0f5e`
+records no override of either call by Ed.
 
 ## The comparison with the baseline
 
@@ -665,9 +910,13 @@ scorer reads it after W3-1, with the same judge's verdicts on its C0 and C1
 runs (published in the baseline, as
 [Judged by Wave 3's judge](scorecard-2026-10-21-baseline.md#judged-by-wave-3s-judge)).
 Read that way it passes **9 of 24 gated runs**, against this set's **16 of
-24**, read by `main`'s scorer at `37c0dbe7`. After the last re-run, with
-the re-run's consuming cells and this set's authoring ones, **21 of 24**
-pass ([above](#what-the-re-runs-changed) for what the re-runs changed).
+24**, read by `main`'s scorer at `37c0dbe7` and again at `d7ed0f5e`. After
+the last re-run, W3-13's, with its consuming cells and this set's authoring
+ones, **22 of 24** pass with the authoring runs counted without the skill,
+and **24 of 24** with them counted with it
+([above](#what-w3-13s-re-runs-changed) and
+[W3-6's](#what-the-re-runs-changed) for what the re-runs changed). After
+W3-6's re-run, the first count was 21 of 24.
 
 **What differs between the two binaries, besides Wave 2.** The baseline's
 `metais` is `5e64a4c`; this set's is `6331562`. Between them:
@@ -714,8 +963,9 @@ No other gated cell changed: C0 sonnet and haiku, C2 sonnet and haiku,
 C4 sonnet, C5 haiku and A2 opus pass in both. By model, the consuming
 scenarios' passes go from 1 to 4 of 6 on Opus, stay at 4 of 6 on Sonnet,
 and go from 3 to 4 of 6 on Haiku; the authoring ones go from 1 to 3 of 3
-on Opus and from 0 to 1 of 3 on Sonnet. After the last re-run, the
-consuming passes are 6 of 6 on Opus and Sonnet and 5 of 6 on Haiku.
+on Opus and from 0 to 1 of 3 on Sonnet. After the last re-run, W3-13's,
+the consuming passes are 6 of 6 on Opus, on Sonnet and on Haiku; after
+W3-6's they were 6 of 6 on Opus and Sonnet and 5 of 6 on Haiku.
 
 **What the comparison shows.** Wave 2 removed the extractions that failed
 most baseline runs: no gated consuming run of this set unzips the package
@@ -723,8 +973,11 @@ except C3 sonnet's and haiku's. Where the change is attributed, the
 sessions used `schema --fields`, `sample`, `help templates`, `init --html`
 and `unpack --out`. One Wave 2 addition also made three runs fail: `inspect`
 now offers `render --sample` to a session that has no facts, and in C1
-every model took it. W3-8 changed that offer, and in the re-run C1 opus and
-sonnet render nothing ([above](#what-the-re-runs-changed)).
+every model took it. W3-8 changed that offer, and in W3-6's re-run C1
+opus and sonnet render nothing ([above](#what-the-re-runs-changed)); C1
+haiku extracted an example's inputs instead. W3-12 said an example's
+inputs are never a real document's data, and in W3-13's re-run C1 haiku
+renders nothing too ([above](#what-w3-13s-re-runs-changed)).
 
 W3-10's scorer, which settles the check mis-scores [below](#what-the-failures-show),
 changes no cell of the baseline read this way
@@ -737,7 +990,12 @@ The with-skill set ([its scorecard](scorecard-2026-10-22-after-with-skill.md))
 passes 22 of 24 gated runs as `main`'s scorer counts them, against 16
 here. Its consuming runs are recorded, not counted. This section compares
 the two sets as W3-2 and W3-3 recorded them; the re-runs of both modes are
-compared [above](#what-the-re-runs-changed).
+compared above, [W3-13's](#what-w3-13s-re-runs-changed) and
+[W3-6's](#what-the-re-runs-changed). In W3-13's re-run, the last, the
+consuming runs pass 18 of 18 without the skill and 17 of 18 with it. The
+one that passes without the skill and fails with it is C4 haiku, on one
+field its answer names without one of the field name's words
+([above](#c4-what-it-needs-haiku-with-the-skill-one-field-named-without-one-of-its-words)).
 
 - **Consuming, better with the skill:** C1 on all three models (each
   rendered nothing and asked; the skill says "Fictional data only when the

@@ -371,6 +371,19 @@ runs**. The re-scored set is Work Order artifact
 this scorer wrote it, and the scorecard it printed, as
 `scorecard-rescored-w3-6.md`.
 
+### Re-scored by W3-13
+
+W3-13 scored the judged set again with `main`'s scorer at `d7ed0f5e`
+(#230), with the same command, after the after scorecards' last re-run
+([after the last re-run](scorecard-2026-10-22-after.md#the-scorer-w3-13)).
+That scorer is W3-6's: W3-12 changed no file of the scorer. **No cell
+changes**, and the judged threshold count stays **9 of 24 gated runs**.
+The re-scored set is Work Order artifact
+`art_cydi2iajvkekb4c3n3ee2nbk7vjwsqjzi2ug34w6ag6ciuwioytq`
+(`ux-rescored-w3-13.tar.gz`, under `baseline/`): each record's `outcome` as
+this scorer wrote it, and the scorecard it printed, as
+`scorecard-rescored-w3-13.md`.
+
 ## Pass counts by model
 
 | Model | Consuming (gated) | Authoring | All |
