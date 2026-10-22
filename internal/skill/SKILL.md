@@ -19,8 +19,10 @@ it, checks inputs against it and renders it.
   person or from the sources they name. A value nobody supplied is asked
   for, not guessed, and not filled with a placeholder.
 - **Fictional data only when the person asks for it** ("example data",
-  "sample", "demo"). Then generate it with `metais sample`, or start from a
-  shipped example's inputs; never hand-write placeholder values.
+  "sample", "demo", "a preview"). Then generate it with
+  `metais render <package> --sample` or `metais sample`; never copy a
+  package's examples, and never hand-write placeholder values. An example
+  is the author's illustration of the inputs, not the person's data.
 - **Follow `next`.** Every command ends with the commands to run next
   (`Next:` in text, `next` in JSON). `<package>`, `<dir>` and `<data dir>`
   there are placeholders for your own paths.
@@ -33,9 +35,6 @@ it, checks inputs against it and renders it.
    guide was cut, `metais inspect report.metais --guide`.
 2. Run what "Read next" lists, in order:
    - `metais read report.metais <entry>` for each input's meaning document;
-   - `metais ls report.metais examples/<name>/ -r`, then
-     `metais read report.metais examples/<name>/inputs/<file>`, to see a
-     filled-in value;
    - `metais grep report.metais <pattern> references/` for the references.
 3. `metais schema report.metais <input>` — the fields of one input, as one
    JSON Schema document. Read it whole, or write it to a file:
@@ -53,12 +52,12 @@ it, checks inputs against it and renders it.
    what it would write.
 
 **Fictional data, when asked for:**
+`metais render report.metais --sample --out <new dir>` renders an example
+of the document from generated data, in one step.
 `metais sample report.metais --out <data dir>` writes valid generated data
-(`--seed <n>` varies it); then `validate` and `render` as above. Or start
-from an example's inputs:
-`metais extract report.metais 'examples/<name>/inputs/**' --out <dir>`, then
-use `<dir>/examples/<name>/inputs` as the data directory. Say in your
-answer that the data is fictional.
+to start from (`--seed <n>` varies it); then `validate` and `render` as
+above. Say in your answer that the data is fictional. Never use generated
+data for a real document.
 
 ## Writing a package
 
