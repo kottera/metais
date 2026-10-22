@@ -45,6 +45,8 @@ type topic struct {
 
 var topics = []topic{
 	{"inputs", "Supplying a package's inputs, and which source wins.", inputsTopic, ""},
+	{"templates", "Writing templates: the environment, every filter, and escaping.", templatesTopic, ""},
+	{"manifest", "Every field of metais.yaml, inputs and outputs included.", manifestTopic, ""},
 	{"globs", "The patterns that select a package's entries.", globsTopic, ""},
 	{"json", "The JSON document every command prints with --json.", jsonTopic, ""},
 	{"exit-codes", "What each exit status means.", exitCodesTopic, ""},
