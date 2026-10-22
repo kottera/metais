@@ -1,0 +1,113 @@
+# Copyright 2026 Kottera
+# SPDX-License-Identifier: Apache-2.0
+#
+# CI, the gate of an outside pull request (ADR-013 D5, ADR-010 Amendment
+# A8 item 4): the third tier beside the scoped tier and the wave tier
+# (AGENTS.md, Development). It runs on GitHub-hosted runners only, and
+# internal/guarantees' TestWorkflows holds every workflow to that.
+#
+# While the repository is private it runs only when dispatched by hand
+# (ADR-013 D5 item 5), so private minutes are spent only on proving runs.
+# The jobs input runs one job, so a red is proved fixed without paying for
+# the others: debug a red that is not platform-specific on Linux, and prove
+# the macOS job once. From the flip it runs on every pull request and every
+# push to main.
+name: ci
+
+on:
+  workflow_dispatch:
+    inputs:
+      jobs:
+        description: The job to run, or all of them
+        type: choice
+        options: [all, wave, macos, dco, shell, site]
+        default: all
+      base:
+        description: The DCO check's base; it checks the commits not on it, or the dispatched commit alone when that is on it
+        type: string
+        default: origin/main
+
+permissions:
+  contents: read
+
+jobs:
+  # The wave tier's list (ADR-010 Amendment A5) on linux/amd64: gate.sh
+  # wave, which runs AGENTS.md's list, at the runner's whole share, since a
+  # hosted runner runs nothing else.
+  wave:
+    if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'wave' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: go mod download
+      - name: gate.sh wave
+        run: |
+          rc=0
+          METAIS_GATE_P=$(nproc) .claude/skills/verification-gate/gate.sh wave || rc=$?
+          cat .local/gate/latest.log
+          exit $rc
+
+  # The race-enabled tests and the build steps on darwin/arm64.
+  macos:
+    if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'macos' }}
+    runs-on: macos-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: go mod download
+      - run: go build ./...
+      - run: go vet ./...
+      - run: CGO_ENABLED=0 go build -trimpath ./cmd/metais
+      - run: go test -race -count=1 ./...
+
+  # The DCO check (ADR-013 D3 item 2): every commit of the change carries
+  # Signed-off-by:, with no exemption list.
+  dco:
+    if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'dco' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: every commit is signed off
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || inputs.base || github.event.before }}
+        run: .github/scripts/dco.sh "$BASE" HEAD
+
+  # shellcheck over the repository's shell scripts. Fixtures are data, not
+  # scripts the repository runs: a conformance vector's or an example's
+  # expected output, and testdata. The install script's tests (ADR-013 D6
+  # item 8) are a step of this job.
+  shell:
+    if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'shell' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: shellcheck
+        run: |
+          shellcheck --version
+          git ls-files -z -- '*.sh' ':(exclude,glob)**/testdata/**' ':(exclude)spec/conformance/vectors' ':(exclude,glob)examples/**/expected/**' |
+            xargs -0 shellcheck
+
+  # The site's build and its tests (ADR-013 D8).
+  site:
+    if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'site' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: site/build.sh "$RUNNER_TEMP/site"
+      - run: go test -race -count=1 ./site/...
