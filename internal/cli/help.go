@@ -53,6 +53,16 @@ var topics = []topic{
 	{"refusals", "Every code a command may refuse with: metais help refusals <command>.", refusalsTopic, ""},
 }
 
+// topicNames is every topic's name, in the table's order, as help's
+// operand names them: "a, b and c".
+func topicNames() string {
+	names := make([]string, len(topics))
+	for i, tp := range topics {
+		names[i] = tp.Name
+	}
+	return strings.Join(names[:len(names)-1], ", ") + " and " + names[len(names)-1]
+}
+
 func lookupTopic(name string) (topic, bool) {
 	i := slices.IndexFunc(topics, func(t topic) bool { return t.Name == name })
 	if i < 0 {
