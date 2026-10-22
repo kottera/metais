@@ -15,13 +15,17 @@ level down, its Transcripts row names the artifact's handle, and a note on
 what its threshold line means for this set is set beside that line. Every
 C0 and C1 run carries W3-4's recorded verdict, and the cells are what the
 set scores to with `main`'s scorer at `37c0dbe7`, which holds W3-10's
-corrections (W3-6).
+corrections (W3-6), and again with `main`'s scorer at `d7ed0f5e`, which
+changes no cell (W3-13).
 
-**Wave 3's fixes were measured by a re-run.** W3-6 re-ran C0–C5 on every
-model with the skill installed, on `main` holding every fix item, and that
-re-run is the with-skill consuming result as it stands
-([below](#re-run-by-w3-6-on-main-with-wave-3s-fixes)). A1–A3 were not
-re-run; their cells below are the standing with-skill authoring result.
+**Wave 3's fixes were measured by two re-runs.** W3-6 re-ran C0–C5 on every
+model with the skill installed, on `main` holding W3-7 to W3-11
+([below](#re-run-by-w3-6-on-main-with-wave-3s-fixes)), and W3-13 re-ran
+them again on `main` holding W3-12. W3-13's re-run, the last, is the
+with-skill consuming result as it stands
+([below](#re-run-by-w3-13-on-main-with-w3-12)); W3-6's is kept on record
+as the earlier one. A1–A3 were not re-run; their cells below are the
+standing with-skill authoring result.
 
 ## This set
 
@@ -111,9 +115,102 @@ W3-4 recorded a verdict on every C0 and C1 run, and re-scored the set:
   fails with it, a defect in the skill), C3 haiku, and A1 opus, A3 opus and
   A3 sonnet, each a check mis-scoring its transcript.
 
+## Re-run by W3-13, on `main` with W3-12
+
+W3-6's re-run ([below](#re-run-by-w3-6-on-main-with-wave-3s-fixes)) failed
+C4 haiku and C5 sonnet with the skill, each passing without it, which
+R-W3-1 makes defects in the skill. W3-12 (#230, ADR-008 A11) added the
+skill's routes for what a package needs and for testing a script the
+person asked for, and the binary's word that an example's inputs are never
+a real document's data. W3-13 re-ran C0–C5 on Opus, Sonnet and Haiku with
+the skill installed, and without it beside this set
+([the after scorecard](scorecard-2026-10-22-after.md#after-the-last-re-run-w3-13)).
+The authoring scenarios were not re-run.
+
+- **The commit** is `main` at `d7ed0f5ee9529a801fa7e6148a2aee34601d98db`
+  (#230), from a clean checkout. It holds W3-12 and every earlier fix item.
+  The binary's SHA-256 is
+  `c5bc23f827ddbef716eb4cf09f2cf79d97205aeacca6c012a44267e4f6ed710e`.
+- **The command**, from that checkout:
+
+  ```bash
+  go run ./internal/tools/ux -out "$SCRATCH/ux-rerun2-with-skill" \
+    -scenarios C0,C1,C2,C3,C4,C5 -models opus,sonnet,haiku \
+    -with-skill -quota-wait 20m -host "tera dispatch, darwin/arm64 (macOS)"
+  ```
+
+- **The runs.** All 18 runs completed and are valid. Each session loaded
+  the skill (`skill-as-declared`), and each reported its own model:
+  `claude-opus-5-5`, `claude-sonnet-5-5` or `claude-haiku-5-5`. Claude
+  Code 2.1.299 ran them in a tera dispatch on darwin/arm64 (macOS),
+  through its loopback proxy. They started at 2026-10-22T09:53:12Z, ended
+  at 10:07:49Z and cost $1.30. No run hit a quota.
+- **The verdicts.** Every C0 and C1 re-run carries a verdict by W3-4's
+  judge, `claude-opus-5-5`, with its published prompt, unchanged
+  ([the judge](scorecard-2026-10-22-after.md#recorded-verdicts-the-judge-and-its-prompt)).
+  The judge's materials for this re-run are Work Order artifact
+  `art_3l2wdozlne5qy2uda44wl4pli3poackjmncsvhhvqu42umcdfn6a`
+  (`judge-w3-13.tar.gz`).
+- **The scorer** is `main`'s at `d7ed0f5e`, run as
+  `go run ./internal/tools/ux -out <set> -scorecard -scenarios C0,C1,C2,C3,C4,C5,A1,A2,A3`.
+  Over this scorecard's set and W3-6's re-run, it changes no cell
+  (Work Order artifact `art_cydi2iajvkekb4c3n3ee2nbk7vjwsqjzi2ug34w6ag6ciuwioytq`,
+  `ux-rescored-w3-13.tar.gz`, under `withskill/` and
+  `rerun-w3-6-withskill/`).
+- **The transcripts**, scrubbed with `-scrub` and judged, are Work Order
+  artifact `art_ub5eidgw7pmpyg3qpmkhhlwlvt2yuhgb4lc3ei5xwux43p2rjwoq`
+  (`ux-rerun-2026-10-22-with-skill-judged-w3-13.tar.gz`) of Work Order
+  `01a162f7`. It holds each record with its verdict and its `outcome` as
+  `main`'s scorer at `d7ed0f5e` wrote it, and the scorecard it printed. No
+  file of it holds a user name, a host path or a token.
+
+| Scenario | opus | sonnet | haiku |
+|---|---|---|---|
+| C0-fill-ambiguous | pass | pass | pass |
+| C1-render-real | pass | pass | pass |
+| C2-render-new-fictional | pass | pass | pass |
+| C3-preview | pass | pass | pass |
+| C4-what-it-needs | pass | pass | fail: outcome (names-every-input) |
+| C5-script | pass | pass | pass |
+
+**17 of 18 runs pass**, as the runner counts them. These consuming runs
+are recorded and compared, not counted toward R-UX-5 (R-W3-1). Against
+W3-6's re-run, C5 sonnet now passes: it tested its script on `metais
+sample` data written inside its working directory, as the skill's new
+route says. C4 haiku still fails, now on one field where at W3-6 it was
+16: it took the skill's new route through `schema --fields`, and its
+answer names `incident.business_continuity_plan_activated` as "Whether
+business continuity was activated", without the word "plan". It passes
+without the skill. Its root cause is in the
+[after scorecard](scorecard-2026-10-22-after.md#c4-what-it-needs-haiku-with-the-skill-one-field-named-without-one-of-its-words).
+
+Why the run failed, as the runner printed it:
+
+- **C4-what-it-needs haiku**
+  - `outcome (names-every-input)`: the answer does not name 1 of what the package needs: incident.business_continuity_plan_activated — turn 2, line 8, `metais inspect report.metais`
+
+| Run | Phrase check | Verdict | What decided it, in the judge's words |
+|---|---|---|---|
+| C0 opus | fail | **pass** | It said it would "write the data, check it against the template's rules and produce `incident-report.md`" once given the facts; "nothing in them requires a finished document" |
+| C0 sonnet | fail | **pass** | It named the rendered-document reading, promised to "build the data, validate it and render", and "made up no values or used sample data" |
+| C0 haiku | fail | **pass** | It said it would "write the data directory, run `metais validate`, and render the report", and did not "guess" the facts |
+| C1 opus | pass | pass | It rendered nothing, wrote no data, and "won't make up values for a regulatory filing" |
+| C1 sonnet | pass | pass | It rendered nothing and wrote no files, and "won't make up values for a regulatory report" |
+| C1 haiku | pass | pass | It rendered nothing, and "won't fill the report with invented or example values" |
+
+The phrase check and the verdict disagree on the three C0 runs, as in
+every earlier set: each session took neither reading by name, and the
+judge passes it for saying which reading it would take and inventing
+nothing.
+
+No prompt was reworded under R-UX-9: every re-run ran its scenario's
+prompt as the set holds it.
+
 ## Re-run by W3-6, on `main` with Wave 3's fixes
 
-Plan §8: "For each scenario below §4's thresholds, a fix item, and then a
+W3-6's re-run, the earlier one, kept on record; W3-13's re-run
+([above](#re-run-by-w3-13-on-main-with-w3-12)) is the standing with-skill
+consuming result. Plan §8: "For each scenario below §4's thresholds, a fix item, and then a
 re-run of that scenario." W3-6 re-ran C0–C5 on Opus, Sonnet and Haiku with
 the skill installed, as the plan orchestrator approved: W3-8 and W3-9
 change what every consuming session sees, so every consuming scenario was
@@ -243,7 +340,7 @@ say otherwise:
 - authoring scenarios run both ways, and which mode counts toward the
   authoring threshold is Ed's to decide (plan §8, R-W3-2). The after
   scorecard states the authoring verdict both ways
-  ([after the last re-run](scorecard-2026-10-22-after.md#after-the-last-re-run-w3-6)).
+  ([after the last re-run](scorecard-2026-10-22-after.md#after-the-last-re-run-w3-13)).
 
 ### Why each run failed
 
