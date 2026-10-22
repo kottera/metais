@@ -50,8 +50,19 @@ var checks = map[string]check{
 		"The page's data parses when a script element of a rendered HTML output holds a JSON array. Whether the array is the numbers given is not checked.", false},
 }
 
-// CheckLimits is what a check cannot see, as a scorecard states it.
-func CheckLimits(name string) string { return checks[name].limits }
+// CheckLimits is what an outcome check, or a pass rule, cannot see, as a
+// scorecard states it: "" for a rule that states nothing.
+func CheckLimits(name string) string {
+	if c, ok := checks[name]; ok {
+		return c.limits
+	}
+	for _, ru := range rules {
+		if ru.name == name {
+			return ru.limits
+		}
+	}
+	return ""
+}
 
 // outcome runs the scenario's check.
 func outcome(r *run) Result { return checks[r.checkName].run(r) }

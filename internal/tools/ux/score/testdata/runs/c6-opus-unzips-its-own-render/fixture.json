@@ -1,0 +1,18 @@
+{
+  "shows": "the session renders the report with data it wrote, then reads its own rendered docx with unzip -p to preview it: an archive the session rendered, not the package, so neither no-zip-extraction nor package-untouched fails",
+  "recorded": {
+    "set": "Work Order 01a16246's recording set ux-w3-5 (artifact art_nof7la4jhanh3k5z3kfxevib4dujterdjhwhtq2ewli7cy2bsa2q)",
+    "run": "C6-render-acr-fictional/opus",
+    "date": "2026-10-22",
+    "commit": "29f077f3edbadb5f99ec3998f66803e99103a0f3",
+    "model": "claude-opus-5-5"
+  },
+  "expect": {
+    "inspect-first": "pass",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "pass",
+    "outcome": "pass"
+  },
+  "reasons": {}
+}

@@ -252,6 +252,8 @@ func TestRunSet(t *testing.T) {
 		"0 of 3 gated runs pass.",
 		"## Prompts reworded under R-UX-9\n\nNone",
 		"## What the outcome checks cannot see",
+		"- **The pass rule `no-zip-extraction`**: The archive the rule measures is the package",
+		"- **The pass rule `package-untouched`**: The archive the rule measures is the package",
 		"## Recorded verdicts",
 		"0 of 2 judged runs carry a verdict. Without one: C1-render-real haiku, C1-render-real sonnet.",
 		"The phrase check and the verdict disagree on no run.",

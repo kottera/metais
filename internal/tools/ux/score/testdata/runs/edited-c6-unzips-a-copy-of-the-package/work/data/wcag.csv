@@ -1,0 +1,56 @@
+criterion,conformance,remarks
+1.1.1,Partially Supports,"Icons and images have text alternatives. The hours-served chart on the coordinator dashboard has no text alternative or data table, so its figures are not available to screen reader users."
+1.2.1,Not Applicable,The product has no audio-only or video-only content.
+1.2.2,Not Applicable,The product has no prerecorded video.
+1.2.3,Not Applicable,The product has no prerecorded video.
+1.2.4,Not Applicable,The product has no live audio or video.
+1.2.5,Not Applicable,The product has no prerecorded video.
+1.3.1,Partially Supports,"Headings, lists, landmarks and form labels are marked up correctly. The shift calendar's month grid is built from generic elements without table or grid semantics, so day and column headers are not announced."
+1.3.2,Supports,The reading order in the markup matches the visual order on every page tested.
+1.3.3,Supports,"Instructions do not rely on shape, position or sound alone; for example, ""Use the Swap button in the shift details"" names the control."
+1.3.4,Supports,Every page works in portrait and landscape orientation.
+1.3.5,Supports,"Profile and sign-up fields carry the matching autocomplete values (name, email, tel, street-address)."
+1.4.1,Partially Supports,"Most status is shown in text as well as colour. On the shift calendar, full shifts are distinguished from open shifts by colour alone."
+1.4.2,Not Applicable,The product plays no audio.
+1.4.3,Supports,Text meets a contrast ratio of at least 4.5:1 (3:1 for large text) in the default theme.
+1.4.4,Supports,Text resizes to 200% without loss of content or function.
+1.4.5,Supports,The product uses no images of text other than the logo.
+1.4.10,Partially Supports,"Pages reflow at 320 CSS pixels without horizontal scrolling, except the coordinator dashboard's roster table, which scrolls in two directions."
+1.4.11,Supports,"Form field borders, focus indicators and icons meet a contrast ratio of at least 3:1."
+1.4.12,Supports,No content is lost or clipped when text spacing is overridden as the criterion describes.
+1.4.13,Supports,"Tooltips stay visible while hovered, can be dismissed with Escape, and remain until the pointer or focus leaves."
+2.1.1,Partially Supports,"All functions work from a keyboard except moving a shift on the coordinator calendar, which needs drag and drop. Coordinators can move a shift from the keyboard through the shift's Edit form instead, but the drag handle itself is not keyboard operable."
+2.1.2,Supports,No keyboard trap was found; focus leaves every dialog with Escape or the Close button.
+2.1.4,Supports,The product has no single-character keyboard shortcuts.
+2.2.1,Supports,"The session warns two minutes before it times out after 30 minutes of inactivity, and lets the user extend it with a single action."
+2.2.2,Supports,"The product has no moving or auto-updating content other than the sign-up confirmation banner, which stays until dismissed."
+2.3.1,Supports,No content flashes.
+2.4.1,Supports,A Skip to main content link is the first focusable element on every page.
+2.4.2,Supports,Every page has a title that names the page and the product.
+2.4.3,Supports,Focus moves in a logical order; dialogs take focus on opening and return it to the triggering control on closing.
+2.4.4,Supports,"Link text, together with its context, says where each link goes."
+2.4.5,Supports,"Pages are reached through the main navigation, the search box and the site map."
+2.4.6,Supports,Headings and labels describe their topic or purpose.
+2.4.7,Supports,Every focusable element shows a visible focus outline.
+2.4.11,Partially Supports,"On narrow screens, the sticky footer bar can hide the focused field at the bottom of the shift sign-up form."
+2.5.1,Supports,Every multipoint or path-based gesture has a single-pointer alternative.
+2.5.2,Supports,Actions run on the up event.
+2.5.3,Supports,The accessible names of controls contain their visible labels.
+2.5.4,Not Applicable,No function is operated by device motion.
+2.5.7,Partially Supports,"Moving a shift on the coordinator calendar needs a dragging movement. The shift's Edit form offers a single-pointer alternative, but the calendar gives no hint of it."
+2.5.8,Supports,Targets are at least 24 by 24 CSS pixels or have enough spacing.
+3.1.1,Supports,Every page declares its language.
+3.1.2,Supports,"Passages in another language, such as the Spanish welcome text, are marked with their language."
+3.2.1,Supports,Receiving focus does not change the context.
+3.2.2,Supports,Changing a setting does not change the context until the user selects Save.
+3.2.3,Supports,The navigation appears in the same order on every page.
+3.2.4,Supports,Components with the same function are labelled the same way throughout.
+3.2.6,Supports,The Help link appears in the same place in the header on every page.
+3.3.1,Supports,"Errors are described in text next to the field, and summarised at the top of the form."
+3.3.2,Supports,"Every field has a visible label, and required fields are marked in text."
+3.3.3,Supports,"Error messages suggest a correction where one is known, such as the expected date format."
+3.3.4,Not Applicable,"The product makes no legal commitments or financial transactions, and does not modify or delete user data in storage without confirmation."
+3.3.7,Supports,"Information entered earlier in a process, such as the volunteer's contact details, is filled in again or offered for selection."
+3.3.8,Supports,Sign-in allows password managers and pasting; a one-time email link is offered as an alternative.
+4.1.2,Partially Supports,"Standard controls expose their name, role and value. The custom shift-type picker does not expose its expanded state or the selected option."
+4.1.3,Partially Supports,Saving the profile announces a status message. Signing up for a shift shows a confirmation banner that screen readers do not announce.
