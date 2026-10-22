@@ -228,6 +228,21 @@ Made by the plan orchestrator in answer to the wave's breakdown
   (`01a16409-e851`) and the T-A3 confirmation (`01a16409-f3eb`) are the
   plan orchestrator's own children, filed early for Ed's lead time. No
   wave waits on them. Wave 3's flip waits on the name search.
+- **R-W1-4, CI's tests on a 2-core runner.** CI runs the wave tier's
+  list (ADR-010 A8 item 4): every test, under `-race`, with `go test`'s
+  default timeout. A package whose one binary cannot finish within that
+  timeout on a GitHub-hosted runner is split into several invocations by
+  `-run`, as R-W6-3 split the SC7 reach. Today that package is
+  `internal/conformance`, split by area. The split lives in `ci.yml`
+  alone. `gate.sh`, its two tiers and AGENTS.md's tier rules do not
+  change, and no timeout is raised. The groups are derived when the job
+  runs, or a test holds them to the full set, so an area added later is
+  never silently skipped. No larger runner is bought. The split is not
+  held open waiting for PLAN-2026-10-metais-test-economy, which has not
+  started. When that train's Wave 2 changes the runner, the item that
+  changes it keeps `ci.yml` true and may remove the split. The reason it
+  cannot wait: Wave 3's branch protection requires CI, so a job that
+  cannot go green would block every pull request after the flip.
 
 ## 6. Out-of-band acts
 
