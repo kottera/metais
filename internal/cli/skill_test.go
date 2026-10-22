@@ -206,3 +206,16 @@ func TestSkillCommandsParse(t *testing.T) {
 		}
 	}
 }
+
+// TestSkillSchemaStepNamesFields is ADR-008 A7 item 8: the skill's schema
+// step sends a session to the field listing before the whole schema, and
+// before anything it says of the schema's $defs.
+func TestSkillSchemaStepNamesFields(t *testing.T) {
+	text := strings.Join(strings.Fields(string(skill.Source())), " ")
+	fields := strings.Index(text, "`metais schema report.metais <input> --fields`")
+	whole := strings.Index(text, "`metais schema report.metais <input>`")
+	defs := strings.Index(text, "$defs")
+	if fields < 0 || whole < fields || defs < fields {
+		t.Errorf("the skill names the field listing at %d, the whole schema at %d and $defs at %d", fields, whole, defs)
+	}
+}
