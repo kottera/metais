@@ -14,12 +14,15 @@ import (
 	"github.com/kottera/metais/internal/testenv"
 )
 
-// The wording ADR-008 A8 gives what an example is (item 3), and the
-// supplier a generated-data route serves (item 4).
+// The wording ADR-008 A8 gives what an example is (item 3), and A10 the
+// person a generated-data route serves and what generated data never
+// does (item 1), and that an example is no preview (item 2).
 const (
 	exampleIsWords = "An example is the author's illustration of the inputs"
 	notYourData    = "not your data"
-	supplierWords  = "a supplier who wants an example, a preview or data to start from"
+	notAPreview    = "not a preview of what the package produces, which is a render from generated data"
+	supplierWords  = "a person who asked for an example, sample data or a preview of what the package produces"
+	neverFacts     = "Generated data never stands in for the facts a real document needs: without them, ask the person for them."
 )
 
 // stepAt is the index in next of the step whose command line is run, or -1.
@@ -27,12 +30,14 @@ func stepAt(next []Next, run string) int {
 	return slices.IndexFunc(next, func(n Next) bool { return n.Run == run })
 }
 
-// TestInspectNextOnTheFly is ADR-008 A8 items 1 and 2: inspect's next
-// steps offer render --sample and sample, both before the step that lists
-// a shipped example, and a route to editing the package — unpack for a
-// packed package, check for a source directory, which is already the tree
-// unpack writes. Neither step says that generated data is a document's
-// facts.
+// TestInspectNextOnTheFly is ADR-008 A8 items 1 and 2 as A10 amends
+// them: inspect's next steps offer render --sample and sample after the
+// real document's path, each only to a person who asked for an example,
+// sample data or a preview, each saying that generated data never stands
+// in for a real document's facts; no step names a shipped example; and
+// the last is the route to editing the package — unpack for a packed
+// package, check for a source directory, which is already the tree unpack
+// writes.
 func TestInspectNextOnTheFly(t *testing.T) {
 	testenv.Home(t)
 	for _, c := range []struct {
@@ -46,31 +51,53 @@ func TestInspectNextOnTheFly(t *testing.T) {
 			t.Fatalf("metais inspect %s: %s", c.pkg, r.stdout)
 		}
 		next := r.doc.Next
+		real := stepAt(next, "metais render <package> --data <dir> --out <dir>")
 		preview := stepAt(next, "metais render <package> --sample --out <dir>")
 		start := stepAt(next, "metais sample <package> --out <dir>")
-		example := slices.IndexFunc(next, func(n Next) bool { return strings.HasPrefix(n.Run, "metais ls <package> examples/") })
-		if preview < 0 || start < 0 || example < 0 {
-			t.Fatalf("%s: next %v lacks render --sample, sample or the example listing", c.pkg, next)
+		if real < 0 || preview < 0 || start < 0 {
+			t.Fatalf("%s: next %v lacks render --data, render --sample or sample", c.pkg, next)
 		}
-		if preview > example || start > example {
-			t.Errorf("%s: render --sample (%d) and sample (%d) come after the example listing (%d)", c.pkg, preview, start, example)
+		if preview < real || start < real {
+			t.Errorf("%s: render --sample (%d) and sample (%d) come before render --data (%d)", c.pkg, preview, start, real)
 		}
-		if why := next[preview].Why; !strings.HasPrefix(why, "Renders an example from generated data") {
+		if why := next[preview].Why; !strings.HasPrefix(why, "Only for a person who asked for an example or a preview of what the package produces:") {
 			t.Errorf("%s: render --sample's step says %q", c.pkg, why)
 		}
-		if why := next[start].Why; !strings.Contains(why, "data to start from") {
+		if why := next[start].Why; !strings.HasPrefix(why, "Only for a person who asked for sample data or data to start from:") {
 			t.Errorf("%s: sample's step says %q", c.pkg, why)
 		}
 		for _, i := range []int{preview, start} {
-			if why := next[i].Why; !strings.Contains(why, "never a real document's facts") {
-				t.Errorf("%s: %q does not say generated data is no real document's facts", c.pkg, why)
+			if why := next[i].Why; !strings.HasSuffix(why, neverFacts) {
+				t.Errorf("%s: %q does not say generated data never stands in for a real document's facts", c.pkg, why)
 			}
 		}
-		if why := next[example].Why; !strings.Contains(why, exampleIsWords) || !strings.Contains(why, notYourData) {
-			t.Errorf("%s: the example listing's step says %q", c.pkg, why)
+		for _, n := range next {
+			if strings.Contains(n.Run, "examples") || strings.Contains(n.Why, "expected output") {
+				t.Errorf("%s: the step %q — %q routes to a shipped example", c.pkg, n.Run, n.Why)
+			}
 		}
-		if stepAt(next, c.edit) < 0 || stepAt(next, c.notEdit) >= 0 {
-			t.Errorf("%s: next %v, want %q and no %q", c.pkg, next, c.edit, c.notEdit)
+		if next[len(next)-1].Run != c.edit || stepAt(next, c.notEdit) >= 0 {
+			t.Errorf("%s: next %v, want %q last and no %q", c.pkg, next, c.edit, c.notEdit)
+		}
+	}
+}
+
+// TestInspectPreviewIsARender is ADR-008 A10 item 2 over everything
+// inspect prints in text, of a package with examples that have expected
+// outputs: every line that says "preview" says it is a render from
+// generated data, and no line offers an example's files as one.
+func TestInspectPreviewIsARender(t *testing.T) {
+	testenv.Home(t)
+	r := runTool(t, "inspect", filepath.Join(vectorsDir, "pkg/opens-source/package"))
+	if !strings.Contains(r.stdout, "(with expected outputs)") {
+		t.Fatalf("the package shows no example with expected outputs:\n%s", r.stdout)
+	}
+	for _, line := range strings.Split(r.stdout, "\n") {
+		if strings.Contains(line, "preview") && !strings.Contains(line, "generated data") {
+			t.Errorf("a preview that is not a render from generated data: %q", line)
+		}
+		if strings.Contains(line, "examples/") {
+			t.Errorf("inspect routes to a shipped example: %q", line)
 		}
 	}
 }
@@ -86,7 +113,7 @@ func TestInspectExamplesSay(t *testing.T) {
 		t.Fatalf("no Examples section:\n%s", r.stdout)
 	}
 	first, _, _ := strings.Cut(examples, "\n")
-	if !strings.HasPrefix(first, "  "+exampleIsWords) || !strings.Contains(first, notYourData) {
+	if !strings.HasPrefix(first, "  "+exampleIsWords) || !strings.Contains(first, notYourData) || !strings.Contains(first, notAPreview) {
 		t.Errorf("the Examples section begins %q", first)
 	}
 	if strings.Contains(strings.ToLower(r.stdout), "fictional") {
@@ -94,16 +121,19 @@ func TestInspectExamplesSay(t *testing.T) {
 	}
 }
 
-// TestSupplierHelp is ADR-008 A8 items 3 to 5: render's and sample's help
-// say they serve a supplier who wants an example, a preview or data to
-// start from; sample's, which names examples, says what one is; sample is
+// TestSupplierHelp is ADR-008 A8 items 3 to 5 as A10 item 1 amends them:
+// render's and sample's help say they serve a person who asked for an
+// example, sample data or a preview, and that generated data never stands
+// in for a real document's facts; sample's, which names examples, says what one is; sample is
 // listed under Supplying and rendering; and no command's help calls an
 // example fictional or sends a supplier to copy one.
 func TestSupplierHelp(t *testing.T) {
 	for _, name := range []string{"render", "sample"} {
-		text := string(commandText(lookup(table, name)))
-		if !strings.Contains(strings.Join(strings.Fields(text), " "), supplierWords) {
-			t.Errorf("metais help %s does not name %q", name, supplierWords)
+		text := strings.Join(strings.Fields(string(commandText(lookup(table, name)))), " ")
+		for _, want := range []string{supplierWords, neverFacts} {
+			if !strings.Contains(text, want) {
+				t.Errorf("metais help %s does not say %q", name, want)
+			}
 		}
 	}
 	if text := strings.Join(strings.Fields(string(commandText(lookup(table, "sample")))), " "); !strings.Contains(text, exampleIsWords) {
@@ -121,9 +151,11 @@ func TestSupplierHelp(t *testing.T) {
 }
 
 // TestSkillSendsNoSupplierToAnExample is ADR-008 A8 item 6 for the skill
-// (R-UX-2): its fictional-data rule and section name render --sample and
-// sample, and no command line of the skill copies or reads an example's
-// files.
+// (R-UX-2), as A10 item 3 amends it: its fictional-data rule and section
+// name inspect before render --sample and sample, the rule counts a
+// request to see what the package produces as asking for a preview, the
+// skill never shows an example's expected outputs as one, and no command
+// line of the skill copies or reads an example's files.
 func TestSkillSendsNoSupplierToAnExample(t *testing.T) {
 	src := string(skill.Source())
 	for _, m := range skillCommand.FindAllStringSubmatch(src, -1) {
@@ -134,14 +166,42 @@ func TestSkillSendsNoSupplierToAnExample(t *testing.T) {
 	if regexp.MustCompile(`(?i)shipped example|example's inputs`).MatchString(src) {
 		t.Errorf("the skill sends a session to an example's inputs")
 	}
-	_, section, ok := strings.Cut(src, "**Fictional data, when asked for:**")
+	flat := strings.Join(strings.Fields(src), " ")
+	_, rule, ok := strings.Cut(flat, "**Fictional data only when the person asks for it**")
+	if !ok {
+		t.Fatal("the skill has no fictional-data rule")
+	}
+	rule, _, _ = strings.Cut(rule, "- **Follow")
+	_, section, ok := strings.Cut(flat, "**Fictional data or a preview, when asked for**")
 	if !ok {
 		t.Fatal("the skill has no fictional-data section")
 	}
-	section, _, _ = strings.Cut(section, "\n## ")
-	for _, want := range []string{"metais render report.metais --sample --out", "metais sample report.metais --out"} {
-		if !strings.Contains(strings.Join(strings.Fields(section), " "), want) {
-			t.Errorf("the fictional-data section names no %q", want)
+	section, _, _ = strings.Cut(section, "## ")
+	for _, c := range []struct {
+		name, text, inspect string
+	}{
+		{"rule", rule, "`metais inspect <package>`"},
+		{"section", section, "`metais inspect report.metais`"},
+	} {
+		at := strings.Index(c.text, c.inspect)
+		preview := strings.Index(c.text, "--sample")
+		start := strings.Index(c.text, "` or `metais sample")
+		if c.name == "section" {
+			start = strings.Index(c.text, "`metais sample report.metais --out")
 		}
+		if at < 0 || preview < at || start < at {
+			t.Errorf("the fictional-data %s names inspect at %d, render --sample at %d and sample at %d", c.name, at, preview, start)
+		}
+	}
+	if !strings.Contains(rule, `"show me what it produces"`) {
+		t.Errorf("the fictional-data rule does not count a request to see what the package produces: %s", rule)
+	}
+	for _, want := range []string{"never show an example's expected outputs as what the package produces", "not a preview"} {
+		if !strings.Contains(rule, want) {
+			t.Errorf("the fictional-data rule does not say %q", want)
+		}
+	}
+	if !strings.Contains(section, "That render is the preview: show it, and never an example's `expected/` outputs.") {
+		t.Errorf("the fictional-data section does not make the render the preview: %s", section)
 	}
 }

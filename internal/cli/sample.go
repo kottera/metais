@@ -85,9 +85,9 @@ func sampleDeclaration() *Command {
 		Name: "sample", Group: "Supplying and rendering",
 		Synopsis:    "sample [<package>] (--out <dir> | --example <name>) [--optional <mode>] [--seed <n>] [--items <n>] [supply flags] [--overwrite] [--dry-run] [--json]",
 		Description: "Generate sample data from the inputs' schemas, and keep it as a data directory or an example.",
-		Detail: "sample serves a supplier who wants an example, a preview or data to start from, as it serves " +
-			"an author: metais render --data reads the data directory it writes, and metais render --sample " +
-			"renders from the same data without keeping it. Generated data is never a real document's facts.\n\n" +
+		Detail: "sample serves an author, and " + generatedServes + ": metais render --data reads the data " +
+			"directory it writes, and metais render --sample renders from the same data without keeping it. " +
+			generatedNever + "\n\n" +
 			"The generator makes a value for every input from its schema: the schema's const, examples, " +
 			"default or enum where it has one, and otherwise placeholder text, numbers and dates of its own. " +
 			"Values given with --set, --set-json and --inputs-json are fixed points: they are kept as given, " +

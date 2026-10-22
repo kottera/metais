@@ -288,8 +288,7 @@ func TestInspectOpensTheScaffold(t *testing.T) {
 
 // TestInspectExamplesInNameOrder is ADR-008 D6 items 7 and 8 (W7-C3):
 // inspect lists a package's examples in name order, names compared by code
-// point as ADR-004 compares strings, every run alike, and the Next:
-// block's example step names the first of them. The package has seven examples, so a list built
+// point as ADR-004 compares strings, every run alike. The package has seven examples, so a list built
 // in map order differs from name order within a few runs.
 func TestInspectExamplesInNameOrder(t *testing.T) {
 	testenv.Home(t)
@@ -312,10 +311,6 @@ func TestInspectExamplesInNameOrder(t *testing.T) {
 		}
 		if !slices.Equal(got, want) {
 			t.Fatalf("run %d: examples %q, want %q", i, got, want)
-		}
-		step := "metais ls <package> examples/" + want[0] + "/ -r"
-		if !slices.ContainsFunc(r.doc.Next, func(n Next) bool { return n.Run == step }) {
-			t.Fatalf("run %d: next %v names no %q", i, r.doc.Next, step)
 		}
 	}
 }

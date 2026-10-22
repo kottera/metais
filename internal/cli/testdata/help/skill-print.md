@@ -19,10 +19,13 @@ it, checks inputs against it and renders it.
   person or from the sources they name. A value nobody supplied is asked
   for, not guessed, and not filled with a placeholder.
 - **Fictional data only when the person asks for it** ("example data",
-  "sample", "demo", "a preview"). Then generate it with
-  `metais render <package> --sample` or `metais sample`; never copy a
-  package's examples, and never hand-write placeholder values. An example
-  is the author's illustration of the inputs, not the person's data.
+  "sample", "demo", "a preview", "show me what it produces"). Then run
+  `metais inspect <package>` first, and generate it with
+  `metais render <package> --sample` or `metais sample`. Never copy a
+  package's examples, never show an example's expected outputs as what
+  the package produces, and never hand-write placeholder values. An
+  example is the author's illustration of the inputs, kept to test the
+  package: not the person's data, and not a preview.
 - **Follow `next`.** Every command ends with the commands to run next
   (`Next:` in text, `next` in JSON). `<package>`, `<dir>` and `<data dir>`
   there are placeholders for your own paths.
@@ -56,13 +59,20 @@ it, checks inputs against it and renders it.
    document. `--out` must be a new or empty directory; `--dry-run` lists
    what it would write.
 
-**Fictional data, when asked for:**
-`metais render report.metais --sample --out <new dir>` renders an example
-of the document from generated data, in one step.
-`metais sample report.metais --out <data dir>` writes valid generated data
-to start from (`--seed <n>` varies it); then `validate` and `render` as
-above. Say in your answer that the data is fictional. Never use generated
-data for a real document.
+**Fictional data or a preview, when asked for** (such as "show me what it
+produces"):
+
+1. `metais inspect report.metais` — what the package is and produces, as
+   above.
+2. `metais render report.metais --sample --out <new dir>` renders the
+   document from generated data. That render is the preview: show it, and
+   never an example's `expected/` outputs.
+3. Or `metais sample report.metais --out <data dir>` writes valid generated
+   data to start from (`--seed <n>` varies it); then `validate` and
+   `render` as above.
+
+Say in your answer that the data is fictional. Never use generated data
+for a real document: without its facts, ask for them.
 
 ## Writing a package
 
@@ -106,4 +116,4 @@ a `message` and a `hint`. `metais help json` lists every format.
 This skill was installed by `metais skill`. If `metais version` is newer
 than the version in the last line, `metais skill --dry-run` says whether to
 refresh it.
-<!-- metais skill: version 1.2.3, sha256 54baf84c2fceff48c076466e99f2d67ac638132b47c94fee72e790f10aec250b -->
+<!-- metais skill: version 1.2.3, sha256 e8dac958e791fe95f293c74ae051eeb2f3f221fcfc2734aaef2b09632d71af87 -->
