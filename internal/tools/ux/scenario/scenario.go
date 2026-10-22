@@ -35,16 +35,26 @@ const (
 )
 
 // Fixture is one package the runner packs, with the metais under test,
-// into the session's directory before it starts. Exactly one of Example
-// and Source is set.
+// into the session's directory before it starts, or one directory of the
+// commit under test it copies there. Exactly one of Example, Source and
+// Tree is set.
 type Fixture struct {
 	// Example names a directory of the repository's examples/.
 	Example string `json:"example,omitempty"`
 	// Source names a directory beside scenario.json.
 	Source string `json:"source,omitempty"`
-	// As is the file name the package is written under.
+	// Tree names a top-level directory of the commit under test, which
+	// the session's directory starts with as the commit holds it: its
+	// tracked files and nothing else, unpacked.
+	Tree string `json:"tree,omitempty"`
+	// As is the file name the package is written under, or for a tree
+	// the directory name it is copied to.
 	As string `json:"as"`
 }
+
+// Package reports whether the fixture is a package the runner packs,
+// rather than a tree it copies.
+func (f Fixture) Package() bool { return f.Tree == "" }
 
 // Scenario is one scenario's declaration and prompt.
 type Scenario struct {
@@ -140,6 +150,17 @@ func Load(fsys fs.FS) ([]*Scenario, error) {
 	return set, nil
 }
 
+// count is how many of vs are not empty.
+func count(vs ...string) int {
+	n := 0
+	for _, v := range vs {
+		if v != "" {
+			n++
+		}
+	}
+	return n
+}
+
 // read reads and checks the scenario in directory dir.
 func read(fsys fs.FS, dir string) (*Scenario, error) {
 	b, err := fs.ReadFile(fsys, path.Join(dir, "scenario.json"))
@@ -190,8 +211,8 @@ func read(fsys fs.FS, dir string) (*Scenario, error) {
 	var names []string
 	for i, f := range s.Fixtures {
 		switch {
-		case (f.Example == "") == (f.Source == ""):
-			bad("fixture %d names neither or both of example and source", i)
+		case count(f.Example, f.Source, f.Tree) != 1:
+			bad("fixture %d names not exactly one of example, source and tree", i)
 		case f.Example != "" && !slugPattern.MatchString(f.Example):
 			bad("fixture %d: example %q is not a directory name of examples/", i, f.Example)
 		case f.Source != "":
@@ -201,7 +222,12 @@ func read(fsys fs.FS, dir string) (*Scenario, error) {
 				bad("fixture %d: source %s holds no metais.yaml", i, f.Source)
 			}
 		}
-		if !filePattern.MatchString(f.As) {
+		switch {
+		case f.Tree != "" && !slugPattern.MatchString(f.Tree):
+			bad("fixture %d: tree %q is not a top-level directory name of the repository", i, f.Tree)
+		case f.Tree != "" && !slugPattern.MatchString(f.As):
+			bad("fixture %d: as %q is not a directory name", i, f.As)
+		case f.Tree == "" && !filePattern.MatchString(f.As):
 			bad("fixture %d: as %q is not a file name ending .metais", i, f.As)
 		}
 		if slices.Contains(names, f.As) {

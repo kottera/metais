@@ -42,6 +42,8 @@ var checks = map[string]check{
 		"A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it, the harness reports no error, and the run renders: render's listing of the files it wrote is in its output, or a file named as one of the package's outputs is left in the session's directory. The harness reports one status for a Bash call, its last command's, so a run of the script that other commands of its call follow passes on render's listing in the call's output alone, whatever the call's status: a script that renders and then fails in a later step of its own is not told apart there from one that ends cleanly. The scorer does not run the script again.", false},
 	"new-package": {newPackage,
 		"check passing is seen through pack, which checks and tests the package before it writes it.", false},
+	"checks-tests-packs": {checksTestsPacks,
+		"A command passes by its own report: check's 0 errors, test's pass with no example failing, pack's Packed line. Whether the package holds every part the task asks for, whether it is the worked package with its names changed, and what the session read are not checked: SC9's round judges those from the package and the transcript.", false},
 	"schema-and-template": {schemaAndTemplate,
 		"A change is seen in the files the session left, compared with the package's source, or in what its Write and Edit calls wrote: a schema and a template that each gain a due date. A change made by a command line whose files are gone is not seen.", false},
 	"data-to-js": {dataToJS,
@@ -684,6 +686,33 @@ func newPackage(r *run) Result {
 		}
 	}
 	return Result{Detail: "the package passes pack, but the session never renders it with render --sample", Evidence: []Evidence{pack.evidence()}}
+}
+
+// checksTestsPacks is A4's check, SC9's bar as a run shows it: the
+// session's last metais check, its last metais test and its last metais
+// pack each pass, and each comes after its last edit of the package's
+// source.
+func checksTestsPacks(r *run) Result {
+	edit := r.lastWrite()
+	var ev []Evidence
+	for _, sub := range []string{"check", "test", "pack"} {
+		var last *call
+		for _, c := range r.calls {
+			if c.sub == sub {
+				last = c
+			}
+		}
+		switch {
+		case last == nil:
+			return Result{Detail: "the session never runs metais " + sub, Evidence: ev}
+		case !passed(last):
+			return Result{Detail: "the session's last metais " + sub + " does not pass", Evidence: append(ev, last.evidence())}
+		case last.seq < edit:
+			return Result{Detail: "the session edits its package after its last metais " + sub, Evidence: append(ev, last.evidence())}
+		}
+		ev = append(ev, last.evidence())
+	}
+	return Result{Pass: true, Detail: "the session's last metais check, test and pack each pass, after its last edit of the package", Evidence: ev}
 }
 
 var dueDate = regexp.MustCompile(`(?i)\bdue`)

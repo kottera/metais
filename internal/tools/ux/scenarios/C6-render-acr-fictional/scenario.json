@@ -1,0 +1,8 @@
+{
+  "id": "C6",
+  "slug": "render-acr-fictional",
+  "kind": "consuming",
+  "asks_for_output": true,
+  "fixtures": [{"example": "accessibility-conformance-report", "as": "accessibility-conformance-report.metais"}],
+  "check": "new-fictional-render"
+}

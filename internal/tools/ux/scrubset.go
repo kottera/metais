@@ -25,7 +25,8 @@ const scrubMax = 256 << 10
 // not exist yet: set.json, and for each run its record, transcript and
 // standard error, and the text files of its work/ and tmp/, every one put
 // through package scrub. The harness's own files under tmp/, the
-// session's HOME, and its work/.claude/ are left out. It is the step a scorer's fixtures are
+// session's HOME, its work/.claude/, and every fixture of work/ the
+// session left unchanged are left out. It is the step a scorer's fixtures are
 // made by, and the one a scorecard's transcripts go through before they
 // are kept.
 func (c *config) scrubSet(dest string) error {
@@ -67,6 +68,19 @@ func (c *config) scrubSet(dest string) error {
 func scrubRun(dir, setDir, dest string) error {
 	s := scrub.New(dir, setDir)
 	run := os.DirFS(dir)
+	// A fixture the session left as it started is the commit's or the
+	// runner's, not the session's: the record lists it, and the copy
+	// leaves it out, so a tree such as spec/ is not copied into every run.
+	var rec runRecord
+	if err := readJSON(filepath.Join(dir, recordFile), &rec); err != nil {
+		return err
+	}
+	unchanged := map[string]bool{}
+	for _, f := range rec.Files {
+		if f.Change == "unchanged" {
+			unchanged[workDir+"/"+f.Path] = true
+		}
+	}
 	return fs.WalkDir(run, ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -80,7 +94,7 @@ func scrubRun(dir, setDir, dest string) error {
 			return fs.SkipDir
 		case d.IsDir() || !d.Type().IsRegular():
 			return nil
-		case top != workDir && top != "tmp" && p != recordFile && p != transcriptFile && p != stderrFile:
+		case top != workDir && top != "tmp" && p != recordFile && p != transcriptFile && p != stderrFile, unchanged[p]:
 			return nil
 		}
 		b, err := fs.ReadFile(run, p)

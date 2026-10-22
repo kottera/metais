@@ -12,9 +12,10 @@ import (
 	"testing/fstest"
 )
 
-// TestTheSet holds the committed set to plan §5's amended table: its nine
-// scenarios, each prompt's declaration under the Wave 1 brief's ruling on
-// R-UX-8, and the fixtures each starts from.
+// TestTheSet holds the committed set to plan §5's amended table, and the
+// two evidence scenarios of SC1's and SC9's rounds (C6 and A4,
+// PLAN-2026-10-metais-ux W3-5): each prompt's declaration under the Wave
+// 1 brief's ruling on R-UX-8, and the fixtures each starts from.
 func TestTheSet(t *testing.T) {
 	set, err := Load(os.DirFS(filepath.Join("..", "scenarios")))
 	if err != nil {
@@ -31,12 +32,14 @@ func TestTheSet(t *testing.T) {
 		{"A1-new-package", Authoring, false, nil},
 		{"A2-edit-package", Authoring, false, []string{"invoice.metais"}},
 		{"A3-data-to-js", Authoring, false, nil},
+		{"A4-spec-only-package", Authoring, false, []string{"spec"}},
 		{"C0-fill-ambiguous", Consuming, false, report},
 		{"C1-render-real", Consuming, true, report},
 		{"C2-render-new-fictional", Consuming, true, report},
 		{"C3-preview", Consuming, true, report},
 		{"C4-what-it-needs", Consuming, false, report},
 		{"C5-script", Consuming, true, report},
+		{"C6-render-acr-fictional", Consuming, true, []string{"accessibility-conformance-report.metais"}},
 	}
 	var got []row
 	for _, s := range set {
@@ -46,6 +49,11 @@ func TestTheSet(t *testing.T) {
 			if f.Example != "" {
 				if _, err := os.Stat(filepath.Join("..", "..", "..", "..", "examples", f.Example, "metais.yaml")); err != nil {
 					t.Errorf("%s: example %s: %v", s.Name(), f.Example, err)
+				}
+			}
+			if f.Tree != "" {
+				if st, err := os.Stat(filepath.Join("..", "..", "..", "..", f.Tree)); err != nil || !st.IsDir() {
+					t.Errorf("%s: tree %s is not a directory of the repository: %v", s.Name(), f.Tree, err)
 				}
 			}
 		}
@@ -91,12 +99,15 @@ func TestLoadRefuses(t *testing.T) {
 		{"a kind against its id", set("C1-render-real", strings.Replace(good, "consuming", "authoring", 1), "p"), "does not match id"},
 		{"an unknown kind", set("C1-render-real", strings.Replace(good, "consuming", "reading", 1), "p"), "neither"},
 		{"no fixtures field", set("C1-render-real", strings.Replace(good, `"fixtures": [{"example": "dora-incident-report", "as": "report.metais"}]`, `"fixtures": null`, 1), "p"), "fixtures is missing"},
-		{"a fixture naming both", set("C1-render-real", strings.Replace(good, `"as"`, `"source": "x", "as"`, 1), "p"), "neither or both"},
-		{"a fixture naming neither", set("C1-render-real", strings.Replace(good, `"example": "dora-incident-report", `, "", 1), "p"), "neither or both"},
+		{"a fixture naming both", set("C1-render-real", strings.Replace(good, `"as"`, `"source": "x", "as"`, 1), "p"), "not exactly one of"},
+		{"a fixture naming neither", set("C1-render-real", strings.Replace(good, `"example": "dora-incident-report", `, "", 1), "p"), "not exactly one of"},
 		{"a source with no package", set("C1-render-real", strings.Replace(good, `"example"`, `"source"`, 1), "p"), "holds no metais.yaml"},
 		{"a path for an example", set("C1-render-real", strings.Replace(good, "dora-incident-report", "../dora", 1), "p"), "not a directory name"},
 		{"a fixture's file name", set("C1-render-real", strings.Replace(good, "report.metais", "../report.metais", 1), "p"), "not a file name ending .metais"},
 		{"a file at the root", set("C1-render-real", good, "p", "README.md"), "not a scenario directory"},
+		{"a fixture naming a source and a tree", set("C1-render-real", strings.Replace(good, `"as"`, `"tree": "spec", "as"`, 1), "p"), "not exactly one of"},
+		{"a path for a tree", set("A4-spec-only-package", `{"id": "A4", "slug": "spec-only-package", "kind": "authoring", "asks_for_output": false, "fixtures": [{"tree": "spec/conformance", "as": "spec"}]}`, "p"), "not a top-level directory name"},
+		{"a tree as a package's file name", set("A4-spec-only-package", `{"id": "A4", "slug": "spec-only-package", "kind": "authoring", "asks_for_output": false, "fixtures": [{"tree": "spec", "as": "spec.metais"}]}`, "p"), "not a directory name"},
 		{"two scenarios with one id", func() fstest.MapFS {
 			m := set("C1-render-real", good, "p")
 			m["C1-other/scenario.json"] = &fstest.MapFile{Data: []byte(strings.Replace(good, "render-real", "other", 1))}
@@ -121,5 +132,10 @@ func TestLoadRefuses(t *testing.T) {
 	src := set("A2-edit-package", `{"id": "A2", "slug": "edit-package", "kind": "authoring", "asks_for_output": false, "fixtures": [{"source": "invoice", "as": "invoice.metais"}]}`, "p", "A2-edit-package/invoice/metais.yaml")
 	if _, err := Load(src); err != nil {
 		t.Errorf("a source fixture: %v", err)
+	}
+	// A tree of the commit loads, and is no package.
+	tree := set("A4-spec-only-package", `{"id": "A4", "slug": "spec-only-package", "kind": "authoring", "asks_for_output": false, "fixtures": [{"tree": "spec", "as": "spec"}]}`, "p")
+	if s, err := Load(tree); err != nil || s[0].Fixtures[0].Package() {
+		t.Errorf("a tree fixture: %v", err)
 	}
 }

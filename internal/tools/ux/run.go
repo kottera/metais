@@ -4,6 +4,7 @@
 package main
 
 import (
+	"archive/tar"
 	"bytes"
 	"context"
 	"crypto/sha256"
@@ -254,6 +255,14 @@ func (c *config) prepare(set []*scenario.Scenario) (*setState, error) {
 			return nil, err
 		}
 		for _, f := range s.Fixtures {
+			if !f.Package() {
+				sum, err := c.unpackTree(r.Commit, f.Tree, filepath.Join(dir, f.As))
+				if err != nil {
+					return nil, err
+				}
+				r.Fixtures = append(r.Fixtures, fixtureRecord{s.Name(), f.As + "/", sum})
+				continue
+			}
 			// src is relative to root, where pack runs.
 			src := filepath.Join(scenariosDir, s.Dir, f.Source)
 			if f.Example != "" {
@@ -312,6 +321,56 @@ func sameSet(prev, cur setRecord) string {
 	return ""
 }
 
+// unpackTree writes the tracked files of the directory tree of commit
+// into dst, as git archive gives them, and returns the tree's digest: the
+// SHA-256 of its files' paths and digests, one line each, in order. A
+// tree holding anything but directories and regular files is refused.
+func (c *config) unpackTree(commit, tree, dst string) (string, error) {
+	b, err := c.command("git", gitEnv(c.environ), "archive", "--format=tar", commit, "--", tree)
+	if err != nil {
+		return "", err
+	}
+	var lines []string
+	tr := tar.NewReader(bytes.NewReader(b))
+	for {
+		h, err := tr.Next()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			return "", fmt.Errorf("git archive of %s: %w", tree, err)
+		}
+		switch h.Typeflag {
+		case tar.TypeXGlobalHeader, tar.TypeDir:
+			continue
+		case tar.TypeReg:
+		default:
+			return "", fmt.Errorf("git archive of %s: %s is not a regular file", tree, h.Name)
+		}
+		rel, ok := strings.CutPrefix(h.Name, tree+"/")
+		if !ok || !filepath.IsLocal(rel) {
+			return "", fmt.Errorf("git archive of %s: %s is outside it", tree, h.Name)
+		}
+		data, err := io.ReadAll(tr)
+		if err != nil {
+			return "", err
+		}
+		out := filepath.Join(dst, filepath.FromSlash(rel))
+		if err := os.MkdirAll(filepath.Dir(out), 0o755); err != nil {
+			return "", err
+		}
+		if err := os.WriteFile(out, data, 0o644); err != nil {
+			return "", err
+		}
+		lines = append(lines, rel+" "+digest(data)+"\n")
+	}
+	if len(lines) == 0 {
+		return "", fmt.Errorf("git archive of %s: the commit holds no file beneath it", tree)
+	}
+	slices.Sort(lines)
+	return digest([]byte(strings.Join(lines, ""))), nil
+}
+
 func digest(b []byte) string {
 	sum := sha256.Sum256(b)
 	return hex.EncodeToString(sum[:])
@@ -343,6 +402,17 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 	r.Scenario.AsksForOutput, r.Scenario.Prompt = s.AsksForOutput, s.Prompt
 
 	for _, f := range s.Fixtures {
+		if !f.Package() {
+			tree, err := copyTree(filepath.Join(st.fixtures, s.Name(), f.As), filepath.Join(ses.work, f.As))
+			if err != nil {
+				return nil, err
+			}
+			for _, e := range tree {
+				e.Path = f.As + "/" + e.Path
+				r.Fixtures = append(r.Fixtures, e)
+			}
+			continue
+		}
 		b, err := os.ReadFile(filepath.Join(st.fixtures, s.Name(), f.As))
 		if err != nil {
 			return nil, err
@@ -437,6 +507,29 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 	}
 	r.Files = changes(r.Fixtures, after)
 	return r, writeJSON(filepath.Join(dir, recordFile), r)
+}
+
+// copyTree copies every file of the directory src into dst, and lists
+// them.
+func copyTree(src, dst string) ([]fileEntry, error) {
+	files, err := listFiles(src)
+	if err != nil {
+		return nil, err
+	}
+	for _, f := range files {
+		b, err := os.ReadFile(filepath.Join(src, filepath.FromSlash(f.Path)))
+		if err != nil {
+			return nil, err
+		}
+		out := filepath.Join(dst, filepath.FromSlash(f.Path))
+		if err := os.MkdirAll(filepath.Dir(out), 0o755); err != nil {
+			return nil, err
+		}
+		if err := os.WriteFile(out, b, 0o644); err != nil {
+			return nil, err
+		}
+	}
+	return files, nil
 }
 
 // installSkill writes metais's skill for the harness beneath work, with
