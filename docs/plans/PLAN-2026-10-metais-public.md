@@ -203,6 +203,32 @@ contribute to, with nothing yet published.
 - **`--version`'s maker line** (ADR-013 D2 item 2), under an ADR-008
   amendment allotted at breakdown, with its help golden.
 
+### Rulings made during Wave 1
+
+Made by the plan orchestrator in answer to the wave's breakdown
+(2026-10-22). They bind later items of their kind:
+
+- **R-W1-1, contact addresses.** No item invents an address. Ed names
+  the Code of Conduct's report address in the act that creates the two
+  repositories, and the wave answers W1-3 from his report.
+  `SECURITY.md` names no email. Its route is GitHub's private
+  vulnerability reporting (ADR-013 D3 item 3), which Ed turns on in
+  Wave 3.
+- **R-W1-2, proving a workflow while private.** No job runs on its own
+  before the flip: no `push`, `pull_request` or `schedule` trigger
+  (plan §2, ADR-013 D5 item 5). The only runs are deliberate dispatches,
+  each proving a job, and every job a workflow defines is proved by a
+  linked run before its wave closes. The run is linked in the pull
+  request where it can be. GitHub dispatches only a workflow that exists
+  on the default branch. Where that rule forbids a run before merge, the
+  item merges the workflow and then dispatches it, links the runs on its
+  merged pull request and in its report, and fixes a red in a follow-up
+  pull request of the same item before it reports complete.
+- **R-W1-3, acts filed by the plan orchestrator.** The name search
+  (`01a16409-e851`) and the T-A3 confirmation (`01a16409-f3eb`) are the
+  plan orchestrator's own children, filed early for Ed's lead time. No
+  wave waits on them. Wave 3's flip waits on the name search.
+
 ## 6. Out-of-band acts
 
 Each is filed as an off-tera Work Order, placed where **Before** says, and
