@@ -515,6 +515,6 @@ does not exist. The skill is installed in Wave 3's with-skill runs.
 - **T-A3's edge.** Adding this wave's orchestrator to T-A3's `depends_on`
   (R-UX-1) is the plan orchestrator's act, through Ed. This wave does not
   file it.
-- **The scorecard fallback.** The `manual-qa-pass`, run by hand outside the dispatch sandbox, applies
-  only if dispatches lose the loopback proxy. This wave ran no scorecard,
-  so it was not filed.
+- **The scorecard fallback.** The `manual-qa-pass`, run by hand outside
+  the dispatch sandbox, applies only if dispatches lose the loopback
+  proxy. This wave ran no scorecard, so it was not filed.

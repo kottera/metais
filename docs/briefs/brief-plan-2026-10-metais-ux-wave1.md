@@ -443,7 +443,8 @@ finding went to the janitorial backlog, because none was prose-only.
 
 ### 5. Out-of-band acts
 
-The brief's one act was a `manual-qa-pass` run by hand outside the dispatch sandbox, to be filed only
-if dispatches lost the loopback proxy. **It was not filed**: every nested
-session of this wave, including all 27 baseline runs, ran through the
-dispatch's proxy. No child needed an act. No act is open from this wave.
+The brief's one act was a `manual-qa-pass` run by hand outside the
+dispatch sandbox, to be filed only if dispatches lost the loopback proxy.
+**It was not filed**: every nested session of this wave, including all 27
+baseline runs, ran through the dispatch's proxy. No child needed an act.
+No act is open from this wave.

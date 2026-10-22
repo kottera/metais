@@ -299,7 +299,8 @@ with nothing published.
   should fail. The scenarios can only run once the site is live, so they
   run in Wave 3. The item finds out whether a nested session in a dispatch
   can reach the network for `curl` and `brew`. If it cannot, the runs
-  become an off-tera act run by hand outside the dispatch sandbox, and the item says so.
+  become an off-tera act run by hand outside the dispatch sandbox, and the
+  item says so.
 
 ## 8. Wave 3 — rehearsal
 

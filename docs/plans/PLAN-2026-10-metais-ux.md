@@ -312,9 +312,9 @@ a number for today's binary.
     `cmd/metais`'s render pipeline after the baseline's build. The
     comparison with the baseline therefore measures more than Wave 2's
     fixes.
-  - **§6's fallback, a run by hand outside the dispatch sandbox:** it needs a credential route the runner
-    does not build. The proxy held for every run, so the act was not
-    filed.
+  - **§6's fallback, a run by hand outside the dispatch sandbox:** it
+    needs a credential route the runner does not build. The proxy held for
+    every run, so the act was not filed.
 
 ## 6. Out-of-band acts
 
