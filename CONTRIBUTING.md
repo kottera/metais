@@ -63,15 +63,16 @@ every generated file from its sources; commit what it changes.
 CI is defined in `.github/workflows/ci.yml` and runs on GitHub-hosted
 runners only. On a pull request and on a push to `main` it runs:
 
-- the full check list on `ubuntu-latest` (linux/amd64): build, vet,
+- the full check list on `ubuntu-latest` (linux/amd64), by
+  `.claude/skills/verification-gate/gate.sh wave`: build, vet,
   `gofmt`, `go mod tidy -diff`, `go test -race -count=1 ./...`, the static
   build, the cross vet and build for darwin, linux and windows on amd64
   and arm64, the generated-data drift, and the conformance suite's
   host-isolation reach over every vector;
-- `go test -race -count=1 ./...` and the build steps on `macos-latest`
-  (darwin/arm64);
+- build, vet, the static build and `go test -race -count=1 ./...` on
+  `macos-latest` (darwin/arm64);
 - the DCO check of every commit in the pull request (below);
-- `shellcheck`, and the install script's tests;
+- `shellcheck` over the repository's shell scripts;
 - the site's build and its tests.
 
 **While the repository is private, CI runs only when it is dispatched by
@@ -163,8 +164,10 @@ A few rules hold for every change, and a review checks them:
 - Work on a branch, and keep a pull request to one change.
 - Title the pull request, and its commits, `<type>(<area>): <change>`,
   for example `fix(render): refuse an output path that names a device`.
-  The type says what kind of change it is: `feat`, `fix`, `docs`,
-  `test` or `refactor`.
+  The type is one of `feat` (a new capability), `fix` (a defect
+  repaired, with its regression test), `refactor` (no behaviour changed),
+  `perf`, `test` (tests only), `docs`, `build`, `ci`, `chore` or
+  `revert`.
 - Fill in the pull request template: what changed, why, how you tested
   it, and the specification and vectors it changes.
 - Pass a multi-paragraph commit message by file (`git commit -s -F <file>`)
