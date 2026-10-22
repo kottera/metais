@@ -285,4 +285,6 @@ fixed here.
   reads the session's own rendered `.docx`, not the package. R-UX-8's
   "extracts the package" does not describe it, and `package-untouched`'s
   detail says "the package is extracted". `no-zip-extraction`'s wording,
-  "an archive", does cover a `.docx`. Sonnet's run scores pass.
+  "an archive", does cover a `.docx`. The scorer at `dae1ef72`, which
+  holds W3-1's settlement of the baseline's mis-scores, still scores it so.
+  Sonnet's run scores pass.
