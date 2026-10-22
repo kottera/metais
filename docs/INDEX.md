@@ -14,6 +14,7 @@
 | [PLAN-2026-10-metais-test-economy](plans/PLAN-2026-10-metais-test-economy.md) | `metais-test-economy` | Accepted |
 | [PLAN-2026-10-metais-ux](plans/PLAN-2026-10-metais-ux.md) | `metais-ux` | Complete 2026-10-22; §10 is the train closeout |
 | [PLAN-2026-10-metais-render-seams](plans/PLAN-2026-10-metais-render-seams.md) | `metais-render-seams` | Accepted; §3 gives each wave's status |
+| [PLAN-2026-10-metais-public](plans/PLAN-2026-10-metais-public.md) | `metais-public` | Proposed |
 
 Each wave's brief, ending in the closeout its wave orchestrator writes, is under [briefs/](briefs/), named
 `brief-plan-2026-10-metais-v1-wave<N>.md`:
@@ -45,6 +46,7 @@ Each wave's brief, ending in the closeout its wave orchestrator writes, is under
 | [ADR-010](adr/ADR-010-the-implementation.md) | The implementation | Accepted |
 | [ADR-011](adr/ADR-011-the-specification-document-and-conformance.md) | The specification document and conformance | Accepted |
 | [ADR-012](adr/ADR-012-test-economy.md) | Test economy | Accepted |
+| [ADR-013](adr/ADR-013-the-public-project-and-its-distribution.md) | The public project and its distribution | Proposed |
 
 PRD-001 §27 maps each requirement to the ADR that designs it. [RULINGS-v1](adr/RULINGS-v1.md) records the rulings the v1 ADRs proposed, ratified 2026-10-18.
 
