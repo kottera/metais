@@ -1,0 +1,79 @@
+{
+  "reference_code": "VMF-INC-2026-0117",
+  "detected_at": "2026-05-18T13:20:00Z",
+  "classified_at": "2026-05-18T15:00:00Z",
+  "description": "From 12:50 UTC on 18 May, policyholders in Sweden and Finland could not log in to the claims portal after an expired TLS certificate on the identity provider blocked authentication. The certificate was replaced at 16:40 UTC and the portal was fully available again at 17:05 UTC.",
+  "classification_criteria": [
+    "clients, financial counterparts and transactions affected",
+    "reputational impact",
+    "duration and service downtime",
+    "geographical spread",
+    "critical services affected"
+  ],
+  "geographical_spread_countries": [
+    "FI",
+    "SE"
+  ],
+  "discovery": "monitoring systems",
+  "business_continuity_plan_activated": true,
+  "authority_reference_code": "FI-FSA-DORA-2026-088",
+  "occurred_at": "2026-05-18T12:50:00Z",
+  "restored_at": "2026-05-18T17:05:00Z",
+  "clients_affected": 9300,
+  "clients_affected_percentage": 6.1,
+  "financial_counterparts_affected": 0,
+  "financial_counterparts_affected_percentage": 0,
+  "relevant_clients_or_counterparts_impacted": false,
+  "transactions_affected": 5400,
+  "transactions_affected_percentage": 8.8,
+  "transactions_affected_value": 1240,
+  "impact_figures_basis": [
+    "actual figures for clients affected",
+    "estimates for transactions affected",
+    "no impact on financial counterparts"
+  ],
+  "reputational_impact": [
+    "the major ICT-related incident has been reflected in the media",
+    "the major ICT-related incident has resulted in repetitive complaints from different clients or financial counterparts on client-facing services or critical business relationships"
+  ],
+  "reputational_impact_context": "A trade publication reported the outage, and the service desk received about 700 complaints.",
+  "duration": "00:04:15",
+  "service_downtime": "00:04:15",
+  "duration_figures_basis": "Actual figures",
+  "member_state_impact_types": [
+    "clients",
+    "branch of the financial entity"
+  ],
+  "member_state_impact_description": "Policyholders of the Helsinki branch could not file or track claims for the whole of the incident.",
+  "critical_services_affected": "Online claims filing and tracking for policyholders.",
+  "incident_types": [
+    "Process failure",
+    "System failure"
+  ],
+  "affected_functional_areas": "The claims portal, and the service desk, which handled the complaints.",
+  "infrastructure_components_affected": "Yes",
+  "infrastructure_components_description": "The identity provider and the certificate store that feeds the portal gateway.",
+  "client_financial_interest_impact": "No",
+  "other_authorities_informed": [
+    "None"
+  ],
+  "temporary_actions": true,
+  "temporary_actions_description": "The expired certificate was replaced by hand, and the portal gateway was put under manual certificate checks until automatic renewal is in place.",
+  "root_cause_categories": [
+    "process failure"
+  ],
+  "root_cause_details": [
+    "process failure: insufficient or failure of ICT operations and ICT security operations"
+  ],
+  "root_cause_information": "The identity provider certificate was not on the renewal calendar after a migration, so nobody renewed it before it expired.",
+  "resolution_summary": "Automatic renewal is now active for every certificate, and an inventory check runs weekly against the renewal calendar.",
+  "root_cause_addressed_at": "2026-05-25T14:00:00Z",
+  "resolved_at": "2026-05-26T08:30:00Z",
+  "gross_costs_and_losses": 95,
+  "financial_recoveries": 0,
+  "additional_root_causes": [
+    "ICT asset management and information classification"
+  ],
+  "resolution_date_difference": "The permanent fix was put in place on 25 May, the date planned in the intermediate report.",
+  "economic_impact_threshold": "The gross costs and losses stayed well below the economic impact threshold."
+}

@@ -1,0 +1,21 @@
+{
+  "shows": "the session never runs metais inspect, which fails inspect-first, and reads nothing else of the package through metais or a zip tool; it renders nothing and asks for the facts",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "C1-render-real/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "edited": "The session's second command, which metais && metais inspect report.metais, is replaced by which metais, and its output by the first two lines of the recorded output, which are which's. The rest of the run is as recorded, so the final answer still names what the package needs. No recorded consuming session left metais inspect out without also extracting the package.",
+  "expect": {
+    "inspect-first": "fail",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "pass",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "inspect-first": "the session never runs metais inspect"
+  }
+}

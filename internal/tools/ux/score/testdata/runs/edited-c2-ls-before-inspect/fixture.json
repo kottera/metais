@@ -1,0 +1,21 @@
+{
+  "shows": "the session lists the package's contents with metais ls before it runs metais inspect, which fails inspect-first; it then renders new fictional data and leaves the package alone",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "C2-render-new-fictional/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "edited": "The session's first command, ls -la && file report.metais && head -c 3000 report.metais, is replaced by ls -la && metais ls report.metais, and its output by the real output of running that, with metais built from this change's base (9b71496), on report.metais packed from examples/dora-incident-report (41429 bytes, as the recorded run's). The rest of the run is as recorded. No recorded session ran a metais content reader before metais inspect: every recorded run that fails inspect-first fails it through zip extraction.",
+  "expect": {
+    "inspect-first": "fail",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "pass",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "inspect-first": "before metais inspect, metais ls reads the package's contents"
+  }
+}

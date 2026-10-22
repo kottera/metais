@@ -1,0 +1,14 @@
+{
+  "submitting_entity_name": "Vastmark Försäkring AB",
+  "submitting_entity_code": "894500VASTMARK000031",
+  "affected_entity_types": ["insurance and reinsurance undertaking"],
+  "primary_contact_name": "Astrid Lindqvist",
+  "primary_contact_email": "astrid.lindqvist@vastmark.example",
+  "primary_contact_telephone": "+46 8 5550 3301",
+  "second_contact_name": "Mattias Holm",
+  "second_contact_email": "mattias.holm@vastmark.example",
+  "second_contact_telephone": "+46 8 5550 3302",
+  "parent_undertaking_name": "Vastmark Group Oy",
+  "parent_undertaking_lei": "894500VASTMARKGRP158",
+  "reporting_currency": "SEK"
+}
