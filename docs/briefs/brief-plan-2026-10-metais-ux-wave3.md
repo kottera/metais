@@ -239,7 +239,7 @@ Rulings made by the plan orchestrator for this wave:
 
 | Act | Off-tera type | When | Before | Notes |
 |---|---|---|---|---|
-| Run a scorecard on Ed's host | `manual-qa-pass` (inputs `build`: the commit; `focus`: which scorecard to run and publish) | only if dispatches lose the loopback proxy that R-UX-7 relies on | this wave's verification | Plan §6. Wave 1 found that the runner refuses to start without `ANTHROPIC_BASE_URL`, so this route needs a credential path the runner does not build. If the proxy is lost, park and ask me before filing it. |
+| Run a scorecard by hand outside the dispatch sandbox | `manual-qa-pass` (inputs `build`: the commit; `focus`: which scorecard to run and publish) | only if dispatches lose the loopback proxy that R-UX-7 relies on | this wave's verification | Plan §6. Wave 1 found that the runner refuses to start without `ANTHROPIC_BASE_URL`, so this route needs a credential path the runner does not build. If the proxy is lost, park and ask me before filing it. |
 
 Plan §6's other two rows are discharged:
 - the skill's ADRs, accepted in #179;
@@ -540,7 +540,7 @@ on them. No finding went to the janitorial backlog: none is prose-only.
 
 **This wave filed none, and no child needed one.**
 
-- **The scorecard fallback on Ed's host** (`manual-qa-pass`). The loopback
+- **The scorecard fallback run by hand** (`manual-qa-pass`). The loopback
   proxy held for every run, so it was not filed.
 - **The SC1 and SC9 rounds** are PLAN-2026-10-metais-v1's acts
   (`01a15abf-4d58`, `01a15abf-6347`), as the brief rules. This wave filed

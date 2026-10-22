@@ -193,7 +193,7 @@ of the host's:
 
 The runner refuses to start without `ANTHROPIC_BASE_URL`. A host with no
 loopback proxy needs a credential route of its own, which this runner does
-not build. When dispatches lose the proxy, plan §6's act on Ed's host is
+not build. When dispatches lose the proxy, plan §6's act, a run by hand outside the dispatch sandbox, is
 the fallback, and that act has to provide the route.
 
 The flags and variables were confirmed against **Claude Code 2.1.299**,

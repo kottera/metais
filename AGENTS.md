@@ -283,9 +283,8 @@ there as its own work.
 
 - Work on a branch; every change reaches `main` through a pull request.
 - Name commits and pull requests `<type>(<feature>): [W<wave>-<item>] <change>`,
-  following `docs/dev/work-order-and-pr-naming.md` in `kottera/kottera`; omit
-  the bracketed address for work outside a train. Preserve the approved title
-  as the merge subject.
+  and a train's Work Orders `<feature> [W<wave>-<item>]: <action>`, by the
+  naming rules below. Preserve the approved title as the merge subject.
 - **Sign off every commit** under the Developer Certificate of Origin
   (ADR-013 D3 item 2): `git commit -s` adds the `Signed-off-by:` trailer
   that certifies you may contribute the change under the project's
@@ -299,3 +298,59 @@ there as its own work.
   `${TMPDIR:-/tmp}` with a unique name, never through a heredoc. Leave the
   file there afterwards.
 - Add files by name, never `git add -A`.
+
+### Naming
+
+These rules name Work Orders, pull requests and merge subjects, squash
+merges included. Follow them, never recent titles as precedent.
+
+```text
+Work Order:  <feature> [W<wave>-<item>]: <action>
+PR / merge:  <type>(<feature>): [W<wave>-<item>] <change>
+```
+
+- **Feature:** a short lowercase kebab-case name aligned with the owning
+  document's name. A plan declares it once as `**Feature:** <feature>`,
+  and its briefs, Work Orders and pull requests carry it verbatim. Declare
+  an abbreviation explicitly rather than inventing one per item. Work
+  outside a train uses the owning feature's or subsystem's established
+  name, and records a new name in its owning document when there is one.
+- **Train address:** exactly as the breakdown assigned it, wave and item
+  (`W1-2`, `W5b-NB1`). Assign it before filing an implementation Work
+  Order, and carry it into the pull request and the merge subject. A retry
+  or rework of that Work Order keeps it. A separately filed correction gets
+  its own item address and links the original in its body; its merge
+  carries the correction's address, not the verifier's. An address is
+  never reused for another Work Order, nor renumbered to follow merge
+  order.
+- **Scope:** work outside a train omits the bracketed address, and so
+  does plan orchestration. A wave's derivation, supervision, verification
+  and closeout use `[W<wave>]` with no item, and say which activity in the
+  prose:
+
+  ```text
+  metais-public [W1-2]: scan the history for secrets
+  docs(metais-public): [W1-2] clear the tree of internal details
+  metais-public [W1]: verify the completed wave
+  docs(metais-public): [W1] record the wave's closeout
+  metais-ux: orchestrate the plan
+  ```
+
+- **Type:** one of `feat` (a new capability), `fix` (a defect repaired),
+  `refactor` (restructured, no behaviour changed), `perf`, `test` (tests
+  only), `docs`, `build`, `ci`, `chore` (other maintenance) or `revert`.
+  Classify the final change: a fix with its regression test is `fix`, not
+  `test`. A Work Order's title has no type, because discovery may change
+  its outcome.
+- **The prose:** start with a concrete imperative verb and name the
+  resulting behaviour or deliverable, never "address review feedback",
+  "finish W1-2" or "improve handling". Aim for 90 characters before the
+  appended pull request number; clarity wins over the limit. Identifiers,
+  ADR references, dependencies and acceptance details go in the body.
+  When the scope changes, rewrite the prose and the type, and keep the
+  feature and the address.
+- **When they apply:** check the title when filing a Work Order, when
+  opening or updating a pull request, and before merging. The merge keeps
+  the approved pull request title as its subject, with the pull request
+  number appended once. A commit already in history, or a finished Work
+  Order, is never renamed for these rules.

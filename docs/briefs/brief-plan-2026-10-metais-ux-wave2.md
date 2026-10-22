@@ -243,7 +243,7 @@ From plan §6:
 | Act | Off-tera type | When | Before | Notes |
 |---|---|---|---|---|
 | Add Wave 2's orchestrator to T-A3's `depends_on` (R-UX-1) | none: the plan orchestrator asks Ed directly | when Wave 2 is filed | the v1.0 release | The plan orchestrator does this, not this wave. It cannot edit T-A3 (`01a15ac4-4d4e`), which is outside this train, so it asks Ed. Nothing in this wave waits on it. |
-| Run a scorecard on Ed's host | `manual-qa-pass` | only if dispatches lose the loopback proxy | — | Not expected in this wave, which runs no scorecard. |
+| Run a scorecard by hand outside the dispatch sandbox | `manual-qa-pass` | only if dispatches lose the loopback proxy | — | Not expected in this wave, which runs no scorecard. |
 
 No other out-of-band act belongs to this wave.
 
@@ -515,6 +515,6 @@ does not exist. The skill is installed in Wave 3's with-skill runs.
 - **T-A3's edge.** Adding this wave's orchestrator to T-A3's `depends_on`
   (R-UX-1) is the plan orchestrator's act, through Ed. This wave does not
   file it.
-- **The scorecard fallback.** The `manual-qa-pass` on Ed's host applies
+- **The scorecard fallback.** The `manual-qa-pass`, run by hand outside the dispatch sandbox, applies
   only if dispatches lose the loopback proxy. This wave ran no scorecard,
   so it was not filed.

@@ -198,7 +198,7 @@ From plan §6:
 
 | Act | Off-tera type | When | Before | Notes |
 |---|---|---|---|---|
-| Run a scorecard on Ed's host | `manual-qa-pass` (inputs `build`: the commit; `focus`: "run the UX runner's baseline scorecard on this host and publish it as `docs/ux/scorecard-<date>-baseline.md`, with the transcripts kept") | only if dispatches lose the loopback proxy that R-UX-7 relies on | this wave's verification | The runner and the scenarios are this wave's. Ed runs one command and publishes the scorecard. File it only if the baseline item finds the proxy gone; then the verification waits on it. |
+| Run a scorecard by hand outside the dispatch sandbox | `manual-qa-pass` (inputs `build`: the commit; `focus`: "run the UX runner's baseline scorecard on this host and publish it as `docs/ux/scorecard-<date>-baseline.md`, with the transcripts kept") | only if dispatches lose the loopback proxy that R-UX-7 relies on | this wave's verification | The runner and the scenarios are this wave's. Ed runs one command and publishes the scorecard. File it only if the baseline item finds the proxy gone; then the verification waits on it. |
 
 The other two rows of §6 are not this wave's: the skill's acceptance is
 discharged, and T-A3's edge comes with Wave 2.
@@ -306,10 +306,10 @@ conformance run of `51b2c9e` on another host.
 
 ### 2. What children flagged, declined or discovered
 
-- **Fallback on Ed's host.** The runner refuses to start without
-  `ANTHROPIC_BASE_URL` (W1-1). So plan §6's fallback, a scorecard run on
-  Ed's host, needs a credential route the runner does not build.
-  `docs/dev/ux-testing.md` says so.
+- **Fallback outside the dispatch sandbox.** The runner refuses to start
+  without `ANTHROPIC_BASE_URL` (W1-1). So plan §6's fallback, a scorecard
+  run by hand outside the dispatch sandbox, needs a credential route the
+  runner does not build. `docs/dev/ux-testing.md` says so.
 - **C0 and C1 checks.** These are scored by phrase checks whose limits the
   scorecard prints (Ed's ruling). The C0 and C1 rows carry no recorded
   verdicts.
@@ -443,7 +443,7 @@ finding went to the janitorial backlog, because none was prose-only.
 
 ### 5. Out-of-band acts
 
-The brief's one act was a `manual-qa-pass` on Ed's host, to be filed only
+The brief's one act was a `manual-qa-pass` run by hand outside the dispatch sandbox, to be filed only
 if dispatches lost the loopback proxy. **It was not filed**: every nested
 session of this wave, including all 27 baseline runs, ran through the
 dispatch's proxy. No child needed an act. No act is open from this wave.

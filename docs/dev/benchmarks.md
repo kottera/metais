@@ -18,16 +18,17 @@ each, one package at a time (`-p 1`, so that no two packages' benchmarks
 share the cores), and writes `bench.txt` in benchstat's input format. It
 runs under the `go.mod` toolchain, which `GOTOOLCHAIN=auto` fetches, and
 the command sets it because a host may set `GOTOOLCHAIN=local`: a run on
-the host's own toolchain measures a different compiler and runtime. Record the host, its CPU, `go version`, GOOS and GOARCH
-beside the file.
+the host's own toolchain measures a different compiler and runtime.
+Record the host beside the file by its platform (OS, architecture, CPU
+class), never by its name, with its CPU, `go version`, GOOS and GOARCH.
 
 ## Comparing with the baselines
 
 Each package with benchmarks commits `testdata/bench/baseline.txt` beside
 them: the raw output of
 `go test -run '^$' -bench . -benchmem -count 6` for that package. Its
-leading comment lines name the host, the CPU, `go version`, GOOS and
-GOARCH, and say `sandbox figure, not a budget`: a baseline is what the
+leading comment lines describe the host by its platform, name the CPU,
+`go version`, GOOS and GOARCH, and say `sandbox figure, not a budget`: a baseline is what the
 benchmark gave where its work item landed, for benchstat to compare
 against, and never a measurement of a budget.
 
