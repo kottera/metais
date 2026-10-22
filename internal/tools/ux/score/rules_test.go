@@ -80,3 +80,26 @@ func TestOwnRender(t *testing.T) {
 		}
 	}
 }
+
+// TestZipLibraryCallNotedOnce: a zip library on a command line is read
+// from the whole Bash call, so a call of several commands that uses one
+// is one read of the archive, noted or counted once: the recorded C3
+// haiku call of the after scorecard (W3-2), and its extracting form.
+func TestZipLibraryCallNotedOnce(t *testing.T) {
+	for _, c := range []struct {
+		command string
+		listing bool
+	}{
+		{`which metais; python3 -I -c "import zipfile,sys; z=zipfile.ZipFile('report.metais'); [print(i.filename, i.file_size) for i in z.infolist()]"`, true},
+		{`which metais; cd .; python3 -I -c "import zipfile; zipfile.ZipFile('report.metais').extractall('x')"`, false},
+	} {
+		res := noZip(synthetic(t, "C3", nil, step{command: c.command}))
+		reads := res.Notes
+		if !c.listing {
+			reads = res.Evidence
+		}
+		if res.Pass != c.listing || len(res.Notes)+len(res.Evidence) != 1 || len(reads) != 1 {
+			t.Errorf("%s: %+v, want one %s", c.command, res, map[bool]string{true: "note", false: "extraction"}[c.listing])
+		}
+	}
+}
