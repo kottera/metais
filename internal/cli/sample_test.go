@@ -584,6 +584,17 @@ func TestSampleUnsatisfiable(t *testing.T) {
 		if _, err := os.Lstat(to); !os.IsNotExist(err) {
 			t.Errorf("metais %q wrote %s", line, to)
 		}
+		// The next step is the input's field listing (W2-NB1).
+		if len(r.doc.Next) != 1 || r.doc.Next[0].Run != "metais schema <package> <name> --fields" {
+			t.Errorf("metais %q: next %v", line, r.doc.Next)
+		}
+	}
+	// The listing's line for the field the finding names gives the
+	// constraints no value meets, which is what an examples value must
+	// meet.
+	fields := runTool(t, "schema", pkg, "vendor", "--fields")
+	if !strings.Contains(fields.stdout, "/vendor/name\tstring\trequired\tmaxLength=3 minLength=5\t") {
+		t.Errorf("the field listing does not give the unsatisfiable field's constraints:\n%s", fields.stdout)
 	}
 
 	broken := filepath.Join(root, "broken")
