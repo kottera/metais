@@ -32,11 +32,16 @@ type specificationVersion struct {
 // provenance tag records it (ADR-004 D14 item 2).
 const toolName = "metais"
 
+// makerLine is the last line of metais version's text output, the one
+// place metais names its maker (ADR-008 A14, ADR-013 D2 item 2). The JSON
+// form carries no member for it.
+const makerLine = "METAIS is made by Kottera."
+
 // runVersion is metais version: the tool's version, from internal/version,
-// and every specification version it implements.
+// every specification version it implements and, in text, its maker line.
 func runVersion(*session, args.Parsed) outcome {
 	v, impl := version.String(), version.Implements()
-	human := toolName + " " + v + "\nspecification " + strings.Join(impl, ", ") + "\n"
+	human := toolName + " " + v + "\nspecification " + strings.Join(impl, ", ") + "\n" + makerLine + "\n"
 	return outcome{
 		result: &versionResult{toolVersion{toolName, v}, specificationVersion{impl}},
 		human:  []byte(human),

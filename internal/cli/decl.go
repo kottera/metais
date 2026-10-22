@@ -285,7 +285,7 @@ func declarations() []*Command {
 				"metais --version, before any command, is this command.",
 			Role:   finding.RoleNoPackage,
 			Format: "metais.version/1",
-			Prints: "Two lines: metais and the tool's version, then the specification versions it implements.",
+			Prints: "Three lines: metais and the tool's version, the specification versions it implements, then who makes METAIS.",
 			Examples: []Example{
 				{"metais version", "Prints the tool's version and the specification versions it implements."},
 				{"metais version --json", "Prints the same as one metais.version/1 document."},

@@ -29,8 +29,8 @@ Flags:
       Print help to standard output and exit 0; nothing else runs.
 
 Prints:
-  Two lines: metais and the tool's version, then the specification versions it
-  implements. With --json, one metais.version/1 document.
+  Three lines: metais and the tool's version, the specification versions it
+  implements, then who makes METAIS. With --json, one metais.version/1 document.
 
 Refusals:
   usage.bad_value
