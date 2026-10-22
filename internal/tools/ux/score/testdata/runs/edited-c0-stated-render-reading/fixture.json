@@ -7,7 +7,7 @@
     "commit": "c268fb92621a70bcf583263b995462400984a56d",
     "model": "claude-sonnet-5-5"
   },
-  "edited": "After the session's metais inspect, one command is added, metais sample report.metais --to data && metais render report.metais --data data --out out, with the real output of running it, with metais built from this change's base (9b71496), on report.metais packed from examples/dora-incident-report (41429 bytes, as the recorded run's); record.json lists, and work/ holds, the files it wrote. The final answer is written to state the render reading and to mark the data as not real. No model took either reading of C0 on demand in the recorded runs.",
+  "edited": "After the session's metais inspect, one command is added, metais sample report.metais --to data && metais render report.metais --data data --out out, with the real output of running it, with metais built from this branch (at c168ebf), which changes nothing metais is built from, on report.metais packed from examples/dora-incident-report (41429 bytes, as the recorded run's); record.json lists, and work/ holds, the files it wrote. The final answer is written to state the render reading and to mark the data as not real. No model took either reading of C0 on demand in the recorded runs.",
   "expect": {
     "inspect-first": "pass",
     "no-zip-extraction": "pass",
