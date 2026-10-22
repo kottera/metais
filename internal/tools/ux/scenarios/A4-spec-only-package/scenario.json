@@ -1,0 +1,8 @@
+{
+  "id": "A4",
+  "slug": "spec-only-package",
+  "kind": "authoring",
+  "asks_for_output": false,
+  "fixtures": [{"tree": "spec", "as": "spec"}],
+  "check": "checks-tests-packs"
+}

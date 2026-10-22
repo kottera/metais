@@ -1,0 +1,18 @@
+name: Buttermilk pancakes
+slug: buttermilk-pancakes
+serves: 4
+minutes: 25
+tip: Let the batter rest for five minutes so the pancakes rise evenly.
+ingredients:
+  - amount: 200 g
+    item: plain flour
+  - amount: 2 tsp
+    item: baking powder
+  - amount: "2"
+    item: eggs
+  - amount: 300 ml
+    item: buttermilk
+steps:
+  - Mix the flour and the baking powder in a large bowl.
+  - Whisk the eggs into the buttermilk, then stir it into the flour.
+  - Fry a ladle of batter at a time in a hot pan until golden on both sides.

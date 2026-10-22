@@ -1,0 +1,21 @@
+{
+  "shows": "the session's last metais check refuses its package, so the check, test and pack the task asks for do not all pass",
+  "recorded": {
+    "set": "the W3-5 evidence set ux-w3-5 of Work Order 01a16246 (artifact art_nof7la4jhanh3k5z3kfxevib4dujterdjhwhtq2ewli7cy2bsa2q)",
+    "run": "A4-spec-only-package/opus",
+    "date": "2026-10-22",
+    "commit": "29f077f3edbadb5f99ec3998f66803e99103a0f3",
+    "model": "claude-opus-5-5"
+  },
+  "expect": {
+    "inspect-first": "n/a",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "fail"
+  },
+  "reasons": {
+    "outcome": "last metais check does not pass"
+  },
+  "edited": "The session's transcript is cut after its first Bash call, whose metais check refuses the package as an empty directory, and its result line is kept; the record's lists of the unchanged spec/ files it started with, and of its work/ files, are left out, with the outcome reset."
+}

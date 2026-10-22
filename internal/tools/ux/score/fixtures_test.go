@@ -105,6 +105,9 @@ func loadFixtures(t *testing.T) []loaded {
 func sources(s *scenario.Scenario) map[string]fs.FS {
 	m := map[string]fs.FS{}
 	for _, f := range s.Fixtures {
+		if !f.Package() {
+			continue
+		}
 		dir := filepath.Join(repoRoot, "examples", f.Example)
 		if f.Source != "" {
 			dir = filepath.Join("..", "scenarios", s.Dir, f.Source)

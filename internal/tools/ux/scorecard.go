@@ -34,6 +34,9 @@ func (c *config) scoreSet(set []*scenario.Scenario) ([]scored, error) {
 	for _, s := range set {
 		sources := map[string]fs.FS{}
 		for _, f := range s.Fixtures {
+			if !f.Package() {
+				continue
+			}
 			dir := filepath.Join(c.root, "examples", f.Example)
 			if f.Source != "" {
 				dir = filepath.Join(c.root, scenariosDir, s.Dir, f.Source)

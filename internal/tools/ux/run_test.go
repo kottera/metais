@@ -4,6 +4,7 @@
 package main
 
 import (
+	"archive/tar"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -42,6 +43,8 @@ type fakeSet struct {
 	// builds are the arguments of each go build the runner ran.
 	builds [][]string
 	commit string
+	// archive is what git archive writes; nil writes treeTar(t, nil).
+	archive []byte
 	// quota makes a session of this scenario directory end on a quota
 	// pause, as many times as it says.
 	quota map[string]int
@@ -98,6 +101,11 @@ func (f *fakeSet) command(name string, env []string, args ...string) ([]byte, er
 		return []byte(f.commit + "\n"), nil
 	case name == "git" && args[0] == "status":
 		return nil, nil
+	case name == "git" && args[0] == "archive":
+		if !slices.Equal(args, []string{"archive", "--format=tar", f.commit, "--", "spec"}) {
+			return nil, fmt.Errorf("unexpected git %q", args)
+		}
+		return f.archive, nil
 	case name == "go" && args[0] == "build":
 		f.builds = append(f.builds, args)
 		return nil, os.WriteFile(args[slices.Index(args, "-o")+1], []byte("metais "+f.commit), 0o755)
@@ -362,6 +370,131 @@ func TestRunSetWithSkill(t *testing.T) {
 	r := f.record(t, "C4-what-it-needs", "haiku")
 	if !r.Valid || !r.WithSkill || !slices.ContainsFunc(r.Fixtures, func(e fileEntry) bool { return e.Path == ".claude/skills/metais/SKILL.md" }) {
 		t.Errorf("valid %v, with skill %v, fixtures %v, checks %+v", r.Valid, r.WithSkill, r.Fixtures, r.Checks)
+	}
+}
+
+// treeTar is a tar of the tree spec as git archive writes one: its pax
+// global header naming the commit, its directories, then its files, and
+// each extra entry after them.
+func treeTar(t *testing.T, extra ...*tar.Header) []byte {
+	t.Helper()
+	var b bytes.Buffer
+	w := tar.NewWriter(&b)
+	entries := []struct {
+		h    *tar.Header
+		data string
+	}{
+		{&tar.Header{Typeflag: tar.TypeXGlobalHeader, Name: "pax_global_header", PAXRecords: map[string]string{"comment": "0123456789abcdef0123456789abcdef01234567"}}, ""},
+		{&tar.Header{Typeflag: tar.TypeDir, Name: "spec/", Mode: 0o755}, ""},
+		{&tar.Header{Typeflag: tar.TypeReg, Name: "spec/B-worked-package.md", Mode: 0o644}, "# The worked package\n"},
+		{&tar.Header{Typeflag: tar.TypeDir, Name: "spec/schemas/", Mode: 0o755}, ""},
+		{&tar.Header{Typeflag: tar.TypeReg, Name: "spec/schemas/manifest.schema.json", Mode: 0o644}, "{}\n"},
+	}
+	for _, h := range extra {
+		entries = append(entries, struct {
+			h    *tar.Header
+			data string
+		}{h, ""})
+	}
+	for _, e := range entries {
+		e.h.Size = int64(len(e.data))
+		if err := w.WriteHeader(e.h); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := io.WriteString(w, e.data); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return b.Bytes()
+}
+
+// TestRunSetCopiesATree: A4's session starts with the commit's spec/ as
+// git archive gives it, every file of it a fixture the fresh-directory
+// check holds the session's directory to; set.json records the tree's
+// digest; and a scrubbed copy leaves out the files the session left
+// unchanged, keeping what it wrote.
+func TestRunSetCopiesATree(t *testing.T) {
+	f := newFakeSet(t, "A4")
+	f.c.models = []string{"opus"}
+	f.archive = treeTar(t)
+	if err := f.c.run(); err != nil {
+		t.Fatalf("run: %v\n%s", err, f.out)
+	}
+	r := f.record(t, "A4-spec-only-package", "opus")
+	if !r.Valid || r.Status != statusComplete {
+		t.Errorf("status %s, valid %v: %+v", r.Status, r.Valid, r.Checks)
+	}
+	var fixtures []string
+	for _, e := range r.Fixtures {
+		fixtures = append(fixtures, e.Path)
+	}
+	if want := []string{"spec/B-worked-package.md", "spec/schemas/manifest.schema.json"}; !slices.Equal(fixtures, want) {
+		t.Errorf("fixtures %q, want %q", fixtures, want)
+	}
+	work := filepath.Join(f.c.out, "runs", "A4-spec-only-package", "opus", workDir)
+	if b, err := os.ReadFile(filepath.Join(work, "spec", "B-worked-package.md")); err != nil || string(b) != "# The worked package\n" {
+		t.Errorf("the session's spec/: %q, %v", b, err)
+	}
+	var st setRecord
+	if err := readJSON(filepath.Join(f.c.out, setFile), &st); err != nil {
+		t.Fatal(err)
+	}
+	sum := digest([]byte("B-worked-package.md " + digest([]byte("# The worked package\n")) + "\n" +
+		"schemas/manifest.schema.json " + digest([]byte("{}\n")) + "\n"))
+	if !slices.Equal(st.Fixtures, []fixtureRecord{{"A4-spec-only-package", "spec/", sum}}) {
+		t.Errorf("set.json's fixtures %+v, want the tree spec/ at %s", st.Fixtures, sum)
+	}
+
+	// A tree of another commit is another set.
+	f.archive = treeTar(t, &tar.Header{Typeflag: tar.TypeReg, Name: "spec/new.md", Mode: 0o644})
+	if err := f.c.run(); err == nil || !strings.Contains(err.Error(), "fixture A4-spec-only-package/spec/") {
+		t.Errorf("a changed tree resumed: %v", err)
+	}
+
+	dest := filepath.Join(testenv.Dir(t), "scrubbed")
+	if err := f.c.scrubSet(dest); err != nil {
+		t.Fatal(err)
+	}
+	run := filepath.Join(dest, "runs", "A4-spec-only-package", "opus", workDir)
+	if _, err := os.Stat(filepath.Join(run, "spec")); err == nil {
+		t.Error("the scrubbed copy holds the spec/ the session left unchanged")
+	}
+	if _, err := os.Stat(filepath.Join(run, "out.md")); err != nil {
+		t.Errorf("the scrubbed copy lacks the file the session wrote: %v", err)
+	}
+}
+
+// TestRunSetRefusesATreeOfOtherEntries: a tree whose archive holds a
+// link, or a path outside the tree, is refused before any session runs.
+func TestRunSetRefusesATreeOfOtherEntries(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		h    *tar.Header
+		want string
+	}{
+		{"a link", &tar.Header{Typeflag: tar.TypeSymlink, Name: "spec/l", Linkname: "../../etc"}, "not a regular file"},
+		{"a path outside", &tar.Header{Typeflag: tar.TypeReg, Name: "spec/../x", Mode: 0o644}, "outside it"},
+		{"another tree", &tar.Header{Typeflag: tar.TypeReg, Name: "docs/x", Mode: 0o644}, "outside it"},
+	} {
+		f := newFakeSet(t, "A4")
+		f.c.models = []string{"opus"}
+		f.archive = treeTar(t, c.h)
+		if err := f.c.run(); err == nil || !strings.Contains(err.Error(), c.want) || len(f.sessions) != 0 {
+			t.Errorf("%s: run = %v, %d sessions, want an error containing %q", c.name, err, len(f.sessions), c.want)
+		}
+	}
+	f := newFakeSet(t, "A4")
+	f.c.models = []string{"opus"}
+	var empty bytes.Buffer
+	if err := tar.NewWriter(&empty).Close(); err != nil {
+		t.Fatal(err)
+	}
+	f.archive = empty.Bytes()
+	if err := f.c.run(); err == nil || !strings.Contains(err.Error(), "holds no file") {
+		t.Errorf("an empty tree: %v", err)
 	}
 }
 
