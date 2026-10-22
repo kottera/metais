@@ -128,7 +128,7 @@ Two rules this train adds:
 |---|---|---|---|
 | 0 | This plan, merged to `main` | — | **authored** |
 | 1 | **The harness and the baseline**: `docs/dev/ux-testing.md`; the scenario set; the runner, with its isolation proof; the transcript scorer with its fixtures; a baseline scorecard on `main` | 0 | **complete** (see §5, Wave 1 verdict) |
-| 2 | **The fixes**: the `templates` and `manifest` help topics; examples first in every command's help; a compact field listing from `schema`; on-the-fly data on `inspect`'s next steps and in the supplier's help; a minimal `init`; the agent skill (`01a15ad7`); generated vectors (`01a15ad6`) | 1 | — |
+| 2 | **The fixes**: the `templates` and `manifest` help topics; examples first in every command's help; a compact field listing from `schema`; on-the-fly data on `inspect`'s next steps and in the supplier's help; a minimal `init`; the agent skill (`01a15ad7`); generated vectors (`01a15ad6`) | 1 | **complete** (see §7, Wave 2 verdict) |
 | 3 | **Measure, fix, and close**: the scorecard on post-Wave-2 `main`, with and without the skill installed; its comparison with the baseline; a fix item for each failing scenario, then a re-run until §4's thresholds hold; the SC1 and SC9 rounds | 2 | — |
 
 Wave 1 comes before the fixes so that the baseline measures today's binary.
@@ -375,6 +375,52 @@ request.
   in the scorer, the runner or the scenarios changes, because recognising
   a flag's spelling changes no check's meaning. A refusal hint that names
   `--to` needs no scorer change.
+
+### Wave 2 verdict
+
+**Complete, 2026-10-22.** Brief and closeout:
+[brief-plan-2026-10-metais-ux-wave2.md](../briefs/brief-plan-2026-10-metais-ux-wave2.md)
+(brief [#206](https://github.com/kottera/metais/pull/206), closeout
+[#214](https://github.com/kottera/metais/pull/214)). Wave orchestrator
+`01a16126-9e41-7d52-af7e-15e1c4b64e57`. Under R-UX-1, T-A3 depends on it,
+and Ed added that edge on 2026-10-22.
+
+- **What landed.** It matches this section and the baseline's binary-side
+  candidates 1 to 6, 8 and 9:
+  - examples first in every command's help, with every command that writes
+    a directory taking `--out` (ADR-008 A3 and A4, #208);
+  - the first things a session sees send it to `inspect` and `read`,
+    never `unzip` (ADR-008 A5 and ADR-001 A3, #209);
+  - `metais help templates` and `metais help manifest`, each held to its
+    source by a drift test (ADR-008 A6, #210);
+  - `metais schema … --fields` (ADR-008 A7, #211);
+  - `inspect`'s next steps offer `render --sample` and `sample`, and say
+    what an example is (ADR-008 A8, #212);
+  - `init --minimal` and `--html` (ADR-007 A1 and ADR-008 A9, #213).
+
+  ADR-007 A2 was allotted and not used.
+- **The verification.** One round, `01a1622a-8c58`, passed with nothing
+  blocking. All six items were checked at depth `mutated`, with 30
+  mutations, every one of them red. The wave tier ran green on a fresh
+  clone at `590c3c0`, including `internal/conformance` on its own merits.
+- **Non-blocking findings.** W2-NB1 (`01a1623d-55fc`) carries three small
+  wording fixes and runs beside Wave 3:
+  - "Read next" against `Next:` in `inspect`'s help and the skill;
+  - `sample`'s refusal not naming `--fields`;
+  - `init` not naming the topics.
+- **A correction to the closeout.** R-W2-1, the scorer reading the shipped
+  flag, was the plan orchestrator's ruling in the breakdown answer, not
+  Ed's. Ed made none in this wave.
+- **What changes Wave 3:**
+  - **Candidates not fixed:** candidate 10 is not fixed, and candidate 7
+    (no package, so no `metais`) is Wave 3's.
+  - **What the topics miss:** they are not named in the repository README
+    or on the site.
+  - **What the comparison measures:** the after binary differs from the
+    baseline's by this wave, by render-seams' render pipeline, and by a
+    new README in every package.
+  - **The host:** every item lost gate time to starved packages, so
+    budget it per item.
 
 ## 8. Wave 3 — measure, fix, and close
 
