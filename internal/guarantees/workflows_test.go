@@ -33,6 +33,9 @@ const ciWorkflow = "../../.github/workflows/ci.yml"
 // dcoScript is CI's DCO check (ADR-013 D3 item 2).
 const dcoScript = "../../.github/scripts/dco.sh"
 
+// conformanceScript is how CI splits internal/conformance's tests (R-W1-4).
+const conformanceScript = "../../.github/scripts/conformance.sh"
+
 // TestWorkflows is ADR-013 D5 item 1's tripwire and ADR-010 Amendment A8
 // item 5's: every file under .github/workflows/ runs its jobs on
 // GitHub-hosted runners only, never on the pull_request_target trigger,
@@ -225,7 +228,10 @@ func quote(s string) string { return `"` + s + `"` }
 // TestCIWorkflow holds ci.yml to ADR-013 D5: while the repository is
 // private it runs only when dispatched (item 5), its token is read-only
 // (ADR-013 D5 item 4's default, declared in the workflow itself), and its
-// jobs are item 2's, each on the platform it names, running what it names.
+// jobs are item 2's, each on the platform it names, running what it names,
+// with internal/conformance's tests split out of the run of the others and
+// run on their own, as R-W1-4 splits them: a job that skipped them and did
+// not run them would run them nowhere.
 // The flip adds pull_request and push to main, and changes this test.
 func TestCIWorkflow(t *testing.T) {
 	src, err := os.ReadFile(ciWorkflow)
@@ -252,8 +258,8 @@ func TestCIWorkflow(t *testing.T) {
 		job, runsOn string
 		runs        []string
 	}{
-		{"wave", "ubuntu-latest", []string{".claude/skills/verification-gate/gate.sh wave"}},
-		{"macos", "macos-latest", []string{"go build ./...", "CGO_ENABLED=0 go build -trimpath ./cmd/metais", "go test -race -count=1 ./..."}},
+		{"wave", "ubuntu-latest", []string{"skip=$(.github/scripts/conformance.sh skip)", `GOFLAGS="-skip=$skip" METAIS_GATE_P=$(nproc) .claude/skills/verification-gate/gate.sh wave`, ".github/scripts/conformance.sh run"}},
+		{"macos", "macos-latest", []string{"go build ./...", "CGO_ENABLED=0 go build -trimpath ./cmd/metais", "skip=$(.github/scripts/conformance.sh skip)", `go test -race -count=1 ./... -skip "$skip"`, ".github/scripts/conformance.sh run"}},
 		{"dco", "ubuntu-latest", []string{".github/scripts/dco.sh"}},
 		{"shell", "ubuntu-latest", []string{"xargs -0 shellcheck"}},
 		{"site", "ubuntu-latest", []string{"site/build.sh", "go test -race -count=1 ./site/..."}},
@@ -307,7 +313,7 @@ func must(v value.Value, ok bool) value.Value {
 // TestDCOCheck runs CI's DCO check over a repository of signed and
 // unsigned commits (ADR-013 D3 item 2). Every commit of the change must
 // carry a Signed-off-by: trailer naming a person and an email address, a
-// merge commit included; when the change has no commit of its own, the
+// merge commit included, whoever the commit's author is; when the change has no commit of its own, the
 // commit checked is its head.
 func TestDCOCheck(t *testing.T) {
 	if runtime.GOOS == "windows" {
@@ -350,6 +356,8 @@ func TestDCOCheck(t *testing.T) {
 	unsignedHead := commit("three, unsigned")
 	git("checkout", "--quiet", "-b", "nameless", signedHead)
 	namelessHead := commit("four" + "\n\nSigned-off-by: A Contributor")
+	git("checkout", "--quiet", "-b", "otherperson", signedHead)
+	otherHead := commit("six\n\nSigned-off-by: B Maintainer <b@example.invalid>")
 	git("checkout", "--quiet", "-b", "inbody", signedHead)
 	inBodyHead := commit("five\n\nSigned-off-by: A Contributor <a@example.invalid>\n\nis not a trailer here.")
 	git("checkout", "--quiet", "-b", "merge", signedHead)
@@ -368,6 +376,7 @@ func TestDCOCheck(t *testing.T) {
 		{"every commit signed off", base, signedHead, 0, "all 2 commit(s) are signed off"},
 		{"one commit unsigned", base, unsignedHead, 1, "three, unsigned carries no Signed-off-by"},
 		{"a sign-off with no address", base, namelessHead, 1, "four carries no Signed-off-by"},
+		{"a sign-off by someone other than the author", signedHead, otherHead, 0, "all 1 commit(s) are signed off"},
 		{"a sign-off that is not a trailer", base, inBodyHead, 1, "five carries no Signed-off-by"},
 		{"an unsigned merge", base, unsignedMerge, 1, "an unsigned merge carries no Signed-off-by"},
 		{"a signed merge of an unsigned commit", base, "signedmerge", 1, "four carries no Signed-off-by"},
@@ -389,5 +398,133 @@ func TestDCOCheck(t *testing.T) {
 		if code != c.code || !strings.Contains(string(out), c.says) {
 			t.Errorf("%s: dco.sh exited %d saying\n%s\nwant exit %d saying %q", c.name, code, out, c.code, c.says)
 		}
+	}
+}
+
+// conformanceStub stands in for the go command in TestConformanceSplit.
+// -list prints the file list; -run records its selection in runs and
+// prints the file out/<selection, its punctuation as _>, exiting 1 when a
+// .fail file sits beside it.
+const conformanceStub = `#!/bin/sh
+while [ $# -gt 0 ]; do
+	case $1 in
+	-list) cat "$STUB/list"; exit 0 ;;
+	-run)
+		shift
+		printf '%s\n' "$1" >>"$STUB/runs"
+		f="$STUB/out/$(printf '%s' "$1" | tr -c 'A-Za-z0-9' _)"
+		[ -f "$f" ] && cat "$f"
+		[ -f "$f.fail" ] && exit 1
+		exit 0 ;;
+	esac
+	shift
+done
+exit 2
+`
+
+// TestConformanceSplit runs CI's split of internal/conformance (R-W1-4)
+// over a stand-in go command and a suite of two areas. skip names every
+// test the package lists but TestHostIsolation, and refuses a name another
+// package declares; run runs each in its own invocation, TestConformance
+// once per area, and fails on an invocation that fails or that did not run
+// what it selects, after running the rest.
+func TestConformanceSplit(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the split runs on CI's linux and macOS runners")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skipf("the split reads git: %v", err)
+	}
+	script, err := filepath.Abs(conformanceScript)
+	if err != nil {
+		t.Fatal(err)
+	}
+	outName := func(sel string) string {
+		return regexp.MustCompile(`[^A-Za-z0-9]`).ReplaceAllString(sel, "_")
+	}
+	passing := map[string]string{
+		"^TestConformance$/^a$": "    --- PASS: TestConformance/a (0.00s)\n",
+		"^TestConformance$/^b$": "    --- PASS: TestConformance/b (0.00s)\n",
+		"^TestOther$":           "--- PASS: TestOther (0.00s)\n",
+		"^ExampleX$":            "--- PASS: ExampleX (0.00s)\n",
+	}
+	allRuns := []string{"^TestConformance$/^a$", "^TestConformance$/^b$", "^TestOther$", "^ExampleX$"}
+	for _, c := range []struct {
+		name, mode string
+		edit       func(repo, stub string)
+		code       int
+		says       string
+		runs       []string
+	}{
+		{"skip names every test but TestHostIsolation", "skip", nil, 0, "^(TestConformance|TestOther|ExampleX)$", nil},
+		{"skip refuses a name another package declares", "skip", func(repo, _ string) {
+			write(t, filepath.Join(repo, "internal", "other", "other_test.go"), "package other\n\nfunc TestOther(t *testing.T) {}\n")
+		}, 1, "another package declares TestOther", nil},
+		{"run runs each test, and TestConformance per area", "run", nil, 0, "=== TestConformance/b", allRuns},
+		{"run fails on an area that did not run", "run", func(_, stub string) {
+			write(t, filepath.Join(stub, "out", outName("^TestConformance$/^b$")), "ok\n")
+		}, 1, "conformance: TestConformance/b did not run", allRuns},
+		{"run fails on a failing test, and runs the rest", "run", func(_, stub string) {
+			f := filepath.Join(stub, "out", outName("^TestOther$"))
+			write(t, f, "--- FAIL: TestOther (0.00s)\n")
+			write(t, f+".fail", "")
+		}, 1, "--- FAIL: TestOther", allRuns},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			repo, stub := testenv.Dir(t), testenv.Dir(t)
+			write(t, filepath.Join(stub, "go"), conformanceStub)
+			if err := os.Chmod(filepath.Join(stub, "go"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			write(t, filepath.Join(stub, "list"), "TestConformance\nTestHostIsolation\nTestOther\nExampleX\nok  \tmetais.org/metais/internal/conformance\t0.01s\n")
+			for sel, out := range passing {
+				write(t, filepath.Join(stub, "out", outName(sel)), out)
+			}
+			for _, v := range []string{"a/one", "b/two"} {
+				write(t, filepath.Join(repo, "spec", "conformance", "vectors", filepath.FromSlash(v), "vector.json"), "{}\n")
+			}
+			write(t, filepath.Join(repo, "internal", "conformance", "x_test.go"), "package conformance\n\nfunc TestOther(t *testing.T) {}\n")
+			if c.edit != nil {
+				c.edit(repo, stub)
+			}
+			env := append(testenv.GitEnv(os.Environ()), "STUB="+stub, "PATH="+stub+string(os.PathListSeparator)+os.Getenv("PATH"))
+			for _, args := range [][]string{{"init", "--quiet", "."}, {"add", "."}} {
+				cmd := exec.Command("git", args...)
+				cmd.Dir = repo
+				cmd.Env = env
+				if out, err := cmd.CombinedOutput(); err != nil {
+					t.Fatalf("git %s: %v\n%s", strings.Join(args, " "), err, out)
+				}
+			}
+			cmd := exec.Command("sh", script, c.mode)
+			cmd.Dir = repo
+			cmd.Env = env
+			out, err := cmd.CombinedOutput()
+			code := 0
+			var exit *exec.ExitError
+			if errors.As(err, &exit) {
+				code = exit.ExitCode()
+			} else if err != nil {
+				t.Fatal(err)
+			}
+			if code != c.code || !strings.Contains(string(out), c.says) {
+				t.Errorf("conformance.sh %s exited %d saying\n%s\nwant exit %d saying %q", c.mode, code, out, c.code, c.says)
+			}
+			runs, _ := os.ReadFile(filepath.Join(stub, "runs"))
+			if got := strings.Fields(string(runs)); !slices.Equal(got, c.runs) {
+				t.Errorf("conformance.sh %s ran %q, want %q", c.mode, got, c.runs)
+			}
+		})
+	}
+}
+
+// write writes a file, and the directories above it.
+func write(t *testing.T, name, data string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(name), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(name, []byte(data), 0o644); err != nil {
+		t.Fatal(err)
 	}
 }
