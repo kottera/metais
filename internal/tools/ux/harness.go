@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/kottera/metais/internal/tools/ux/scrub"
 	"github.com/kottera/metais/internal/tools/ux/streamjson"
 )
 
@@ -67,8 +68,9 @@ func lookup(env []string, name string) (string, bool) {
 // placeholderToken is R-UX-7's non-secret credential. A dispatch's
 // ANTHROPIC_BASE_URL is a loopback proxy that authenticates upstream; a
 // nested claude refuses on the client side unless some credential variable
-// is set, so the runner sets this one.
-const placeholderToken = "metais-ux-placeholder"
+// is set, so the runner sets this one. The scrub declares it, so what a
+// session is given is what a scrub removes.
+const placeholderToken = scrub.PlaceholderToken
 
 // claudeCodeName is the Claude Code harness's name.
 const claudeCodeName = "claude-code"

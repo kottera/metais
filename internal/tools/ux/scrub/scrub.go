@@ -34,10 +34,11 @@ const (
 	Removed = "[scrubbed]"
 )
 
-// placeholderToken is the runner's ANTHROPIC_AUTH_TOKEN (R-UX-7). It is
+// PlaceholderToken is the runner's ANTHROPIC_AUTH_TOKEN (R-UX-7), declared
+// here alone so the runner sets the very token the scrub removes. It is
 // no secret, but it is removed anyway, so a later reader never has to
 // decide whether a token in a fixture is one.
-const placeholderToken = "metais-ux-placeholder"
+const PlaceholderToken = "metais-ux-placeholder"
 
 // credentials match a credential's value. Each is replaced whole.
 var credentials = []*regexp.Regexp{
@@ -50,7 +51,7 @@ var credentials = []*regexp.Regexp{
 	regexp.MustCompile(`\bAKIA[0-9A-Z]{16}\b`),
 	regexp.MustCompile(`\bxox[abprs]-[A-Za-z0-9-]{10,}`),
 	regexp.MustCompile(`(?i)(\bbearer\s+)[A-Za-z0-9._~+/=-]{16,}`),
-	regexp.MustCompile(regexp.QuoteMeta(placeholderToken)),
+	regexp.MustCompile(regexp.QuoteMeta(PlaceholderToken)),
 }
 
 // hostRoot matches an absolute path beneath a directory where a host
