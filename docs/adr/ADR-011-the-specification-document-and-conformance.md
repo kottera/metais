@@ -10,6 +10,11 @@ changes are marked *(A3)*.
 [Amendment A7](#amendments) (against the reference tool, one pass compared with a committed record) is proposed by
 [ADR-012](ADR-012-test-economy.md) and accepted by Ed Funnekotter on 2026-10-21;
 it takes effect as PLAN-2026-10-metais-test-economy's items land.
+[Amendment A8](#amendments) (the specification's home is
+`metais.org/spec/<M>.<m>/`, and a prerelease of the tool may implement a
+draft revision) is accepted by Ed Funnekotter on 2026-10-22, proposed by
+[ADR-013](ADR-013-the-public-project-and-its-distribution.md); it takes
+effect as PLAN-2026-10-metais-public's items land.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R16 (items 1–3); the document side of R15 (items 1 and
@@ -1703,6 +1708,43 @@ effect when the PLAN-2026-10-metais-test-economy item named in it lands.
    path order. Any other security `open` step runs `inspect`. Under
    `-conformance.live`, every security `open` step runs every opening
    command.
+
+### A8 — The specification's home is `metais.org/spec/<M>.<m>/`, and a prerelease of the tool may implement a draft revision
+
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, proposed by [ADR-013](ADR-013-the-public-project-and-its-distribution.md),
+with it. Each item takes effect as the
+[PLAN-2026-10-metais-public](../plans/PLAN-2026-10-metais-public.md) item
+that carries it lands.
+**Amends:** D5 item 6, D7 item 7, and "What this does not decide" (where
+the specification is published).
+
+1. **The specification's canonical home is
+   `https://metais.org/spec/<M>.<m>/`**, which serves the text released at
+   the tag `spec-<M>.<m>` as HTML, one page per chapter. The site is built
+   from that tag's files, and an erratum (D6) is published by rebuilding
+   it. `https://metais.org/spec/` leads to the latest released revision.
+   The repository's `spec/` stays the source; the site is its rendering.
+2. **The draft is published apart from the releases.** Until `spec-1.0`
+   exists, and afterwards whenever `main` holds additions for the next
+   minor, the site serves `main`'s text, as of the release being
+   published, at `https://metais.org/spec/draft/`. Every page there says
+   it is a draft, and asks search engines not to index it.
+3. **D7 item 7 becomes:** `https://metais.org/` hosts the schemas at their
+   `$id`s and the specification's text, as ADR-013 D8 builds them. No tool
+   or runner fetches anything from it. A schema's `$id` is still an
+   identifier first, and the tool still validates against its embedded
+   copies (D7 item 6).
+4. **The licence does not change.** The specification's text, its schemas
+   and its vectors stay under Apache-2.0, like the code (ADR-013 D3 item
+   1).
+5. **D5 item 6 holds for a release, not a prerelease.** The release
+   builder refuses a tool whose version has no prerelease suffix and whose
+   `implements` names an unreleased revision, as today. A version with a
+   prerelease suffix (`1.0.0-rc.1`) may implement a revision that is not
+   yet released. A release candidate can then be rehearsed end to end
+   (ADR-013 D7 item 8) before the specification's release commit freezes
+   the text, and a defect the rehearsal finds in the text is an edit, not
+   an erratum. The builder's test pins both sides.
 
 ## Implementation log
 

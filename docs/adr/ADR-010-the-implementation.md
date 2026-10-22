@@ -21,6 +21,10 @@ it takes effect as PLAN-2026-10-metais-test-economy's items land.
 producers, stages and sinks) is accepted by Ed Funnekotter on 2026-10-21; it
 takes effect as PLAN-2026-10-metais-render-seams's items land, and the
 passages it changes are marked *(A7)*.
+[Amendment A8](#amendments) (the module is `metais.org/metais`, publishing
+is ADR-013's, and CI is a third gate tier) is accepted by Ed Funnekotter on 2026-10-22, proposed by
+[ADR-013](ADR-013-the-public-project-and-its-distribution.md); it takes
+effect as PLAN-2026-10-metais-public's items land.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R18 item 1 (one static binary, the supported targets,
@@ -278,7 +282,7 @@ the `liquid` tag in `block_body.rb`; `Block::MAX_DEPTH = 100`; and
 
 ## Decision
 
-### D1 — Toolchain and module
+### D1 — Toolchain and module *(A8)*
 
 **One module, `github.com/kottera/metais`, on the Go 1.26 toolchain, with
 everything under `internal/`.**
@@ -892,7 +896,7 @@ not used to read inputs.**
     why D3 item 3 links neither `golang.org/x/sys` nor `golang.org/x/term`
     there. *(A1, proposed)*
 
-### D12 — Build, release and the tool's version
+### D12 — Build, release and the tool's version *(A8)*
 
 1. **Static build**: `CGO_ENABLED=0 go build -trimpath -buildvcs=true
    -ldflags "-s -w -X github.com/kottera/metais/internal/version.release=<semver>"
@@ -1062,7 +1066,7 @@ the detector must fail on, and both run in every `go test`.**
    (D15). The tool has no concurrency of its own (D2 item 3), so `-race`
    chiefly guards the test harness.
 
-### D15 — Benchmarks and the gate *(A5)*
+### D15 — Benchmarks and the gate *(A5, A8)*
 
 1. **Benchmarks** (`Benchmark…` with `b.ReportAllocs()`) exist for: Liquid
    parse and render over fixtures in `internal/liquid/testdata/bench/` (a
@@ -2137,6 +2141,50 @@ copy of the parse loop.
   `inspect`). A new declaration form changes the manifest's grammar and
   the specification, so it edits those readers anyway, and each reads a
   declaration for its own question. They are left as they are.
+
+### A8 — The module is `metais.org/metais`, publishing is ADR-013's, and CI on GitHub-hosted runners is a third gate tier
+
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, proposed by [ADR-013](ADR-013-the-public-project-and-its-distribution.md),
+with it. Each item takes effect as the
+[PLAN-2026-10-metais-public](../plans/PLAN-2026-10-metais-public.md) item
+that carries it lands.
+**Amends:** D1 (the module path), D12 items 1, 3 and 5 (the path in the
+`-X` flag and in `go install`, and publishing), and D15 (a third tier).
+
+1. **The module path is `metais.org/metais`** (ADR-013 D1 item 2). D1's
+   `go.mod` begins `module metais.org/metais`. D12 item 1's flag is
+   `-X metais.org/metais/internal/version.release=<semver>`. D12 item
+   3's example is `go install metais.org/metais/cmd/metais@v1.0.0`,
+   which reports `1.0.0`. Every import, every `go.mod` under `testdata/`,
+   `internal/guarantees/layers.json` and every committed baseline that
+   names a package path change with it, in one change that runs alone.
+   ADR-009 A2 and A8's `never-depends` rules name the same packages under
+   the new path.
+2. **Publishing is ADR-013 D7's.** D12 item 5's sentence "Publishing (a
+   GitHub release or otherwise) is outside this ADR; the repository is
+   private" no longer holds. The builder's artefacts are unchanged. The
+   release procedure creates the tag in its own clone, builds and
+   compares, and attaches `dist/` to a draft GitHub release. The tag is
+   pushed by `release.yml` after Ed's approval, never by the procedure.
+3. **The Homebrew formula is generated from `SHA256SUMS`** by a tool under
+   `internal/tools/`, never reachable from `cmd/metais` (ADR-009 A2's
+   rule), with a golden test of the formula it writes.
+4. **D15 gains a third tier, CI** (ADR-013 D5). CI runs on GitHub-hosted
+   runners, on every pull request and every push to `main` once the
+   repository is public:
+   - the wave tier's list (A5) on linux/amd64;
+   - the race-enabled tests and the build steps on darwin/arm64;
+   - the DCO check, `shellcheck` and the install script's tests, and the
+     site's build and tests.
+
+   It is the gate of an outside pull request. A train item still runs the
+   scoped tier before it merges, and a wave still runs the wave tier at its
+   verification. AGENTS.md's "There is no CI" changes to state the three
+   tiers, in the change that adds the workflow.
+5. **No workflow names a self-hosted runner** or uses the
+   `pull_request_target` trigger, and every workflow declares its
+   `permissions`. A tripwire in `internal/guarantees` reads
+   `.github/workflows/` and fails on any of the three.
 
 ## Implementation log
 

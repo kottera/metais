@@ -1,6 +1,10 @@
 # ADR-008: The command line and its machine output — named commands over a package file or a source directory, one versioned JSON document per run, standard output for the result alone, and help that cannot drift from the code
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
+[Amendment A13](#amendments) (the help and the skill are the source of
+metais.org's reference pages) is accepted by Ed Funnekotter on 2026-10-22, proposed by
+[ADR-013](ADR-013-the-public-project-and-its-distribution.md); it takes
+effect as PLAN-2026-10-metais-public's items land.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R2 (items 1–4) and R17 (items 1–3); the command-line
@@ -2201,6 +2205,39 @@ command's behaviour and machine output are unchanged.
 4. **D16's tests prove it**: `inspect`'s check step for a source directory,
    and the help of `grep` and `unpack` beside that of `inspect`, `ls`,
    `read` and `extract`.
+
+### A13 — The help and the skill are the source of metais.org's reference pages
+
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, proposed by [ADR-013](ADR-013-the-public-project-and-its-distribution.md),
+with it. It takes effect as the
+[PLAN-2026-10-metais-public](../plans/PLAN-2026-10-metais-public.md) item
+that generates the site's reference pages lands.
+**Amends:** D15 (where the help is read) and D16 item 1 (what a drift test
+protects). Every command's behaviour, its help text and `metais.help/1`
+are unchanged.
+
+1. **metais.org's reference pages are generated from the binary**
+   (ADR-013 D8 item 2): one page per command, from that command's
+   declaration as `metais help --json` gives it; one page per topic,
+   `templates` and `manifest` included; and one page for the agent skill,
+   from `metais skill --print`. The binary is the one built from the commit
+   being published. Nothing on those pages is written by hand except the
+   site's layout.
+2. **D15's rule reaches the site.** Help is authoritative because it is
+   the declaration, so a reference page says what the help says and
+   nothing else. A command, flag or topic missing from the site is a defect
+   of the generator, never fixed by editing a page.
+3. **The drift tests now protect public documents.** A6 item 3's topic
+   tests, A2's skill tests and the help goldens hold the help to its
+   sources. The site's own test holds each reference page to the help it
+   came from. A change that would make the site disagree with the binary
+   therefore fails before it merges, and the site is rebuilt from the tag
+   at every release (ADR-013 D7 item 3).
+4. **What `metais help --json` must carry.** Whatever a reference page
+   shows comes from `metais help --json` (or `metais skill --print`), never
+   from parsing the text help. If the generator needs something the JSON
+   does not carry, that is an amendment to this ADR, adding it to
+   `metais.help/1` with its schema, and not a scrape.
 
 ## Implementation log
 
