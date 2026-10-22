@@ -45,10 +45,22 @@ type topic struct {
 
 var topics = []topic{
 	{"inputs", "Supplying a package's inputs, and which source wins.", inputsTopic, ""},
+	{"templates", "Writing templates: the environment, every filter, and escaping.", templatesTopic, ""},
+	{"manifest", "Every field of metais.yaml, inputs and outputs included.", manifestTopic, ""},
 	{"globs", "The patterns that select a package's entries.", globsTopic, ""},
 	{"json", "The JSON document every command prints with --json.", jsonTopic, ""},
 	{"exit-codes", "What each exit status means.", exitCodesTopic, ""},
 	{"refusals", "Every code a command may refuse with: metais help refusals <command>.", refusalsTopic, ""},
+}
+
+// topicNames is every topic's name, in the table's order, as help's
+// operand names them: "a, b and c".
+func topicNames() string {
+	names := make([]string, len(topics))
+	for i, tp := range topics {
+		names[i] = tp.Name
+	}
+	return strings.Join(names[:len(names)-1], ", ") + " and " + names[len(names)-1]
 }
 
 func lookupTopic(name string) (topic, bool) {

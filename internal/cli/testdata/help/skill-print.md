@@ -71,7 +71,10 @@ data for a real document.
    example to learn from. Add `--html` for an HTML output: it declares
    `escape: html`, and its template writes data into a `<script>` with
    `json_script`, never `json`.
-2. Edit `metais.yaml`, `inputs/`, `templates/` and `examples/`. Preview
+2. Edit `metais.yaml`, `inputs/`, `templates/` and `examples/`.
+   `metais help manifest` gives every field of `metais.yaml` with an
+   example; `metais help templates` gives the template language, every
+   filter, and escaping, a URL component's `url_encode` included. Preview
    with `metais render <dir> --sample --out <preview dir>`.
 3. `metais check <dir>` — every defect, without data.
 4. `metais test <dir>` — renders each example and compares it with its
@@ -94,6 +97,8 @@ a `message` and a `hint`. `metais help json` lists every format.
 - `metais help <command>` — a command's operands, flags, refusals and
   examples.
 - `metais help inputs` — supplying inputs, and which source wins.
+- `metais help templates` and `metais help manifest` — writing templates
+  and `metais.yaml`.
 - `metais help refusals <command>` — every code a command can report, with
   the next step.
 - A finding's `hint` says what to do; its code is stable.
@@ -101,4 +106,4 @@ a `message` and a `hint`. `metais help json` lists every format.
 This skill was installed by `metais skill`. If `metais version` is newer
 than the version in the last line, `metais skill --dry-run` says whether to
 refresh it.
-<!-- metais skill: version 1.2.3, sha256 1f93d9c25bd328e543f8840852f26d45173b256706f69bf39d3e7549c1fe4c8e -->
+<!-- metais skill: version 1.2.3, sha256 d97de984dd6a7d9c1eba9e6f60ca8a2ff0f910bb38d8d1c7a58c5a9a7ecc5e8a -->

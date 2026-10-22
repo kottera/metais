@@ -454,8 +454,17 @@ func TestHTMLNotEscaped(t *testing.T) {
 		t.Errorf("writeJSON wrote %q", got)
 	}
 	r := runTool(t, "help", "--json")
-	if strings.Contains(r.stdout, `\u003c`) || !strings.Contains(r.stdout, "<command>") {
-		t.Error("help --json escapes HTML")
+	// A text that holds a backslash before u003c, as json_script's example
+	// in metais help templates does, is written \\u003c; only an escape
+	// the encoder made is one not preceded by an escaped backslash.
+	unescaped := strings.ReplaceAll(r.stdout, `\\`, "")
+	for _, esc := range []string{`\u003c`, `\u003e`, `\u0026`} {
+		if strings.Contains(unescaped, esc) {
+			t.Errorf("help --json escapes HTML: %s", esc)
+		}
+	}
+	if !strings.Contains(r.stdout, "<command>") {
+		t.Error("help --json does not write <command> as it is")
 	}
 }
 

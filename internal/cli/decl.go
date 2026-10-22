@@ -323,7 +323,7 @@ func declarations() []*Command {
 				"declaration and every topic for the overview, or the one command or topic asked for.",
 			Role: finding.RoleNoPackage,
 			Operands: []args.Operand{
-				{Name: "<command> | <topic>", Description: "A command's name, or one of the topics inputs, globs, json, exit-codes and refusals."},
+				{Name: "<command> | <topic>", Description: "A command's name, or one of the topics " + topicNames() + "."},
 				{Name: "<command>", Description: "After the topic refusals, the command whose codes are listed; no other topic takes one."},
 			},
 			Format:   "metais.help/1",
@@ -331,8 +331,8 @@ func declarations() []*Command {
 			Refusals: []Refusal{{Code: finding.CodeUsageUnknownTopic, Cause: "The operand names no command and no topic, or the operand after refusals names no command.", Next: nextHelp}},
 			Examples: []Example{
 				{"metais help", "Prints the overview."},
-				{"metais help limits", "Prints the help of metais limits."},
-				{"metais help exit-codes", "Prints what each exit status means."},
+				{"metais help templates", "Prints the template language, every filter with an example, and escaping."},
+				{"metais help manifest", "Prints every field of metais.yaml with an example."},
 				{"metais help refusals render", "Lists every code metais render may refuse with, by its next step."},
 				{"metais help --json", "Prints every command's declaration and every topic as one document."},
 			},

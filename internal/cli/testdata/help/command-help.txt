@@ -6,10 +6,10 @@ Usage:
 Examples:
   metais help
       Prints the overview.
-  metais help limits
-      Prints the help of metais limits.
-  metais help exit-codes
-      Prints what each exit status means.
+  metais help templates
+      Prints the template language, every filter with an example, and escaping.
+  metais help manifest
+      Prints every field of metais.yaml with an example.
   metais help refusals render
       Lists every code metais render may refuse with, by its next step.
   metais help --json
@@ -27,8 +27,8 @@ for.
 
 Operands:
   <command> | <topic>
-      A command's name, or one of the topics inputs, globs, json, exit-codes and
-      refusals.
+      A command's name, or one of the topics inputs, templates, manifest, globs,
+      json, exit-codes and refusals.
   <command>
       After the topic refusals, the command whose codes are listed; no other
       topic takes one.

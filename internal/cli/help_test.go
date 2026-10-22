@@ -18,6 +18,7 @@ import (
 
 	"github.com/kottera/metais/internal/finding"
 	"github.com/kottera/metais/internal/hostenv"
+	"github.com/kottera/metais/internal/skill"
 	"github.com/kottera/metais/internal/version"
 )
 
@@ -584,6 +585,44 @@ func TestHelpExamplesFirst(t *testing.T) {
 					t.Errorf("metais %q: example %q is not listed under Examples:", argv, e.Run)
 				}
 			}
+		}
+	}
+}
+
+// TestAuthoringTopicsReachable is ADR-008 A6 item 4: the templates and
+// manifest topics are where a session looks for them — the overview's
+// topics, help --json, help's own operand text and examples, and the
+// skill wherever it concerns an author.
+func TestAuthoringTopicsReachable(t *testing.T) {
+	overview := runTool(t, "help").stdout
+	var res helpResult
+	if err := json.Unmarshal(runTool(t, "help", "--json").doc.Result, &res); err != nil {
+		t.Fatal(err)
+	}
+	own := runTool(t, "help", "help").stdout
+	operand := lookup(table, "help").Operands[0].Description
+	for _, name := range []string{"templates", "manifest"} {
+		if _, ok := lookupTopic(name); !ok {
+			t.Errorf("there is no topic %s", name)
+			continue
+		}
+		if !strings.Contains(overview, "\n  "+name+" ") {
+			t.Errorf("the overview does not list the topic %s", name)
+		}
+		if !slices.ContainsFunc(res.Topics, func(j topicJSON) bool { return j.Name == name && j.Text != "" }) {
+			t.Errorf("help --json does not carry the topic %s", name)
+		}
+		if !strings.Contains(own, "\n  metais help "+name+"\n") {
+			t.Errorf("metais help help has no example of metais help %s", name)
+		}
+		if !strings.Contains(string(skill.Source()), "`metais help "+name+"`") {
+			t.Errorf("the skill does not name metais help %s", name)
+		}
+	}
+	// help's operand names every topic, so none is found only by listing.
+	for _, tp := range topics {
+		if !strings.Contains(operand, " "+tp.Name) {
+			t.Errorf("help's operand does not name the topic %s: %q", tp.Name, operand)
 		}
 	}
 }
