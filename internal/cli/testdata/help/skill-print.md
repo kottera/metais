@@ -36,11 +36,16 @@ it, checks inputs against it and renders it.
 2. Run what "Read next" lists, in order:
    - `metais read report.metais <entry>` for each input's meaning document;
    - `metais grep report.metais <pattern> references/` for the references.
-3. `metais schema report.metais <input>` — the fields of one input, as one
-   JSON Schema document. Read it whole, or write it to a file:
-   `metais schema report.metais <input> > <input>.schema.json`. With
-   `--json` the schema is the `result.schema` member of one JSON document;
-   parse it with a JSON parser, never with `grep` or `sed`.
+3. `metais schema report.metais <input> --fields` — the fields of one
+   input, one line each: its pointer (as `--set` takes it), its type,
+   `required` or `optional`, its constraints and its title. Read it whole.
+   A line that ends `when …` applies only under that condition, such as a
+   field another field's value makes required. With no input it lists
+   every input's fields; with `--json` they are `result.fields`. Only
+   after it, for a field's description, read the whole schema:
+   `metais schema report.metais <input>`, or write it to a file with
+   `> <input>.schema.json`. Never dig fields out of its `$defs`: the
+   listing has already followed every `$ref`.
 4. Write a data directory: one file per input, named as `inspect` shows
    (`<input>.json`, `<input>.csv`, …), or one directory per collection
    input. `metais help inputs` explains `--set` and `--inputs-json`, which
@@ -96,4 +101,4 @@ a `message` and a `hint`. `metais help json` lists every format.
 This skill was installed by `metais skill`. If `metais version` is newer
 than the version in the last line, `metais skill --dry-run` says whether to
 refresh it.
-<!-- metais skill: version 1.2.3, sha256 cb8515970cf68360c04af4d2b03886adac31c10248bca82ba538d87871a3611d -->
+<!-- metais skill: version 1.2.3, sha256 1f93d9c25bd328e543f8840852f26d45173b256706f69bf39d3e7549c1fe4c8e -->

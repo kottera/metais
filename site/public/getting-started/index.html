@@ -43,10 +43,13 @@ commands to run next. Read the guide: it is the author's instructions.</p>
 <h3>2. Read what each input means</h3>
 
 <pre><code>metais read report.metais inputs/greeting.md
-metais schema report.metais greeting</code></pre>
+metais schema report.metais greeting --fields</code></pre>
 
 <p>Each input has a meaning document, which says what the data is and what
 good data looks like, and a JSON Schema, which says its exact shape.
+<code>schema --fields</code> lists the input's fields, one line each, with
+its type, whether it is required, its constraints and its title; without
+<code>--fields</code>, <code>schema</code> prints the whole schema.
 <code>read</code> prints any entry of the package; <code>ls</code>,
 <code>outline</code> and <code>grep</code> list, outline and search its
 entries. The package's examples are complete, valid inputs you can copy

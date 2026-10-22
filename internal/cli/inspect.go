@@ -562,7 +562,7 @@ func inspectNext(res *inspectResult, t []*Command) []Next {
 		}
 	}
 	for _, in := range *res.Inputs {
-		out = append(out, Next{"metais schema <package> " + shellQuote(in.Name), "Prints the schema the input " + in.Name + " is validated against."})
+		out = append(out, Next{"metais schema <package> " + shellQuote(in.Name) + " --fields", "Lists the fields of the input " + in.Name + ", one line each with its type, whether it is required, its constraints and title; without --fields, metais schema prints the whole schema it is validated against."})
 	}
 	if res.References.Count > 0 {
 		out = append(out, Next{"metais grep <package> <pattern> references/", "Searches the package's references."})
