@@ -24,8 +24,12 @@ model with the skill installed, on `main` holding W3-7 to W3-11
 them again on `main` holding W3-12. W3-13's re-run, the last, is the
 with-skill consuming result as it stands
 ([below](#re-run-by-w3-13-on-main-with-w3-12)); W3-6's is kept on record
-as the earlier one. A1–A3 were not re-run; their cells below are the
-standing with-skill authoring result.
+as the earlier one. W3-13's re-run failed C4 haiku, which passes without
+the skill; W3-14 fixed the skill and re-ran C4 on every model
+([below](#re-run-of-c4-by-w3-14-on-main-with-w3-14)), so C4's with-skill
+cells stand as W3-14's re-run left them, and every other consuming cell as
+W3-13's did. A1–A3 were not re-run; their cells below are the standing
+with-skill authoring result.
 
 ## This set
 
@@ -114,6 +118,74 @@ W3-4 recorded a verdict on every C0 and C1 run, and re-scored the set:
   the skill, and its root causes of C2 haiku (passes without the skill and
   fails with it, a defect in the skill), C3 haiku, and A1 opus, A3 opus and
   A3 sonnet, each a check mis-scoring its transcript.
+
+## Re-run of C4 by W3-14, on `main` with W3-14
+
+W3-13's re-run ([below](#re-run-by-w3-13-on-main-with-w3-12)) failed C4
+haiku with the skill, on one field its answer wrote as "Whether business
+continuity was activated (yes/no)", and C4 haiku passes without the skill.
+R-W3-1 makes that a defect in the skill, and the wave orchestrator placed
+the fix there rather than in `names-every-input`. W3-14 (#232) added a
+third step to the skill's "What a package needs, when asked": name every
+required field as `schema --fields` lists it, by its name or by its title
+with its number, never by a paraphrase alone. It refines ADR-008 A11
+item 2's route and amends no ADR. W3-14 then re-ran C4 on Opus, Sonnet and
+Haiku with the skill installed. No other scenario was re-run, and no
+scenario's cells without the skill change.
+
+- **The commit** is `dd9c3db6c26b28a53eacb722e194a08827277401`, from a
+  clean checkout of it: W3-14's skill change as one commit on `main` at
+  `be1c74b5` (#231), the tip of `main` when the set ran. Its binary closure
+  is `main`'s with W3-14's change: what W3-14's pull request adds after it
+  is this scorecard's and the after scorecard's text. The binary's SHA-256
+  is `c0b73aaacad424fd09064d60a67a6c5e8dae4f4b3b53841d89e3ddb3b262ea10`.
+- **The command**, from that checkout:
+
+  ```bash
+  go run ./internal/tools/ux -out "$SCRATCH/ux-w3-14-c4-with-skill" \
+    -scenarios C4 -models opus,sonnet,haiku \
+    -with-skill -quota-wait 20m -host "tera dispatch, darwin/arm64 (macOS)"
+  ```
+
+- **The runs.** All three completed. Each session loaded the skill
+  (`skill-as-declared`) and reported its own model, `claude-opus-5-5`,
+  `claude-sonnet-5-5` or `claude-haiku-5-5`, and each run's usage names only
+  that model. Claude Code 2.1.299 ran them in a tera dispatch on
+  darwin/arm64 (macOS), through its loopback proxy. No run hit a quota. The
+  set started at 2026-10-22T10:57:36Z and its last run ended at 11:02:31Z;
+  the three valid runs cost $0.36.
+- **One run was invalid and re-run.** Sonnet's first run failed
+  `no-memory-read`: its fourth tool call read its own spilled tool output
+  as `$HOME/.claude/projects/*/*/tool-results/…`, a glob the check's
+  exception for a spilled output does not match, so the check read it as a
+  memory file. The run was moved out of the set and the same command
+  resumed it; the second run is valid. The first is kept in the artifact,
+  not scored. The check was not changed (W3-14.5).
+- **The scorer** is `main`'s at `be1c74b5`; W3-14 changes no file of
+  `internal/tools/ux`.
+- **The transcripts**, scrubbed with `-scrub`, are Work Order artifact
+  `art_yewidpk6crt7jkxavavcyle5lkthqj3dcau72nexao5l54ct4ota`
+  (`ux-w3-14-c4-with-skill-scrubbed.tar.gz`) of W3-14's Work Order. It holds
+  the set under `ux-w3-14-c4-with-skill/`, with each record and its
+  `outcome` and the scorecard the scorer printed (`scorecard-w3-14.md`),
+  and Sonnet's invalid first run under `invalid-sonnet-first-run/`. No file
+  of it holds a user name, a host path or a token.
+
+| Scenario | opus | sonnet | haiku |
+|---|---|---|---|
+| C4-what-it-needs | pass | pass | pass |
+
+**3 of 3 runs pass.** Each session invoked the skill, ran `metais inspect`
+and `metais schema report.metais --fields`, and answered from the listing.
+Haiku's skill text (transcript line 7) holds the new step, and its answer
+names every required field by its title's number and words; the field
+W3-13's run missed it writes "2.9 Whether the business continuity plan was
+activated (true/false)". Opus writes it "2.9 Activation of business
+continuity plan, if activated", and Sonnet the same with "(yes/no)".
+
+**With C4 re-run, the with-skill consuming result is 18 of 18**: W3-14's C4
+cells and W3-13's re-run of C0–C3 and C5. No consuming scenario passes
+without the skill and fails with it.
 
 ## Re-run by W3-13, on `main` with W3-12
 
