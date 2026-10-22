@@ -365,6 +365,17 @@ request.
 
   Each joins the wave's verification by a `depends_on` edge.
 
+### Rulings made during Wave 2
+
+- **R-W2-1 (plan orchestrator, 2026-10-22), the scorer reads the flag
+  the binary ships.** If W2-1 makes the directory flag agree across
+  commands, by a rename or an accepted alias, it updates the UX scorer's
+  reading of that flag (`internal/tools/ux/score`) in the same pull
+  request. A fixture shows the new spelling read correctly. Nothing else
+  in the scorer, the runner or the scenarios changes, because recognising
+  a flag's spelling changes no check's meaning. A refusal hint that names
+  `--to` needs no scorer change.
+
 ## 8. Wave 3 — measure, fix, and close
 
 **Goal:** the evidence that the fixes work.
