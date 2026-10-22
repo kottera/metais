@@ -1,6 +1,9 @@
 # ADR-003: The data specification — named inputs declared in the manifest, JSON Schema 2020-12 with every used format asserted and every reference confined to the package, one parse rule per form, schema-directed coercion, and a data directory overridden by whole-input JSON and then by JSON Pointer path sets
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
+[Amendment A1](#amendments) (a duplicated member name is one finding) is
+accepted by Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's
+ratification; the passage it changes is marked *(A1)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R3 (items 1 to 5), R4 (items 1 to 4), R5 (items 1 to 4), and
@@ -378,8 +381,10 @@ listed under References:
 
 1. **A file is one RFC 8259 JSON text**, any value at the top level;
    whitespace-only or trailing content is a finding.
-2. **A duplicate member name in any object is a finding**, every occurrence
-   reported. Names are compared after escapes are decoded (RFC 7493 §2.3).
+2. **A duplicate member name in any object is a finding**, one per
+   duplicated name in an object, under ADR-006 D8 item 3's de-duplication
+   key. Names are compared after escapes are decoded (RFC 7493 §2.3).
+   *(A1)*
 3. Numbers follow D8 item 5.
 
 ### D10 — YAML
@@ -1109,6 +1114,25 @@ unambiguous; `--inputs-json` remains the whole-array route.
 - Jekyll front matter — https://jekyllrb.com/docs/front-matter/
 - Helm `install` flags (`--set`, `--set-string`, `--set-json`) —
   https://helm.sh/docs/helm/helm_install
+
+## Amendments
+
+### A1 — A duplicated member name is one finding
+
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4). It records the reading W3-9 took where this
+ADR and ADR-006 disagreed on reporting (plan §9).
+**Amends:** D9 item 2 (how many findings a duplicate gives), marked *(A1)*
+in place.
+
+1. **A name repeated in one object is reported once.** ADR-006 owns the
+   report, and D8 item 3's de-duplication key has no line or column, so
+   the findings for every repeat of one name in one object are
+   duplicates and one is kept. A name repeated in two objects gives one
+   finding for each object. `json.duplicate_name` keeps its `name`
+   parameter: a member name is not a value under ADR-006 D9 item 4.
+2. **What is accepted does not change.** A file with a duplicate name gives
+   a finding as before; only the count of findings follows ADR-006.
 
 ## Implementation log
 

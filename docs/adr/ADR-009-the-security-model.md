@@ -4,6 +4,10 @@
 [Amendment A7](#amendments) (the SC7 harness is the one pass against a committed record) is proposed by
 [ADR-012](ADR-012-test-economy.md) and accepted by Ed Funnekotter on 2026-10-21;
 it takes effect as PLAN-2026-10-metais-test-economy's items land.
+[Amendment A9](#amendments) (D8 item 3's code is `output.destination.link`,
+and A2's "`os` file function" is a function of package `os`) is accepted by
+Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's ratification; the
+passages it changes are marked *(A9)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R14 (items 1 to 4); the security halves of R10 item 1, R11
@@ -506,7 +510,7 @@ a write is confined, for `render`, `unpack`, `extract` and `init` alike.
    `../../.ssh/authorized_keys` is refused, never cleaned.
 3. **No symbolic link is written through or replaced.** Each existing component
    of an output path is examined with `Lstat` under the root; a link, even one
-   pointing inside, is refused (`output.link`). An existing non-regular file at
+   pointing inside, is refused (`output.destination.link`) *(A9)*. An existing non-regular file at
    the final path is refused. With `--overwrite`, an existing regular file is
    replaced by renaming the staged file over it, which replaces the directory
    entry and never writes through it.
@@ -841,7 +845,7 @@ that could ask for a host fact appears.
      `net/netip` are parsers and do not import `net`; they are allowed.
      Because `golang.org/x/sys/windows` imports `net`, this rule keeps
      `golang.org/x/sys` and `golang.org/x/term` out of the windows binary
-     (ADR-010 Amendment A1, proposed).
+     (ADR-010 Amendment A1).
    - **Symbol rule, module code**: in every non-test file of the module, a
      selector resolving (through that file's imports) to a symbol of D12's
      tripwire lists, ADR-010 D11 item 9's additions (`runtime.GOOS`,
@@ -1446,7 +1450,7 @@ unchanged: the builder stays at `internal/tools/release`, in the module.
      to hand each build its own `GOCACHE`, `GOOS`, `GOARCH`, `GOAMD64`,
      `GOARM64` and `CGO_ENABLED`;
    - every `os` file function, `os.TempDir` and `os.MkdirTemp`, to build
-     in fresh directories and to write `dist/`;
+     in fresh directories and to write `dist/` *(A9)*;
    - `os.Args`, `os.Stdin`, `os.Stdout`, `os.Stderr` and `os.Exit`, because
      the builder is a `main` package run with `go run`.
 2. **What it does not allow.** The clock (`time.Now`, `time.Since`,
@@ -1932,6 +1936,25 @@ reason now names this amendment too.
    - the runner's symbols are refused in a package beneath it, in a
      sibling named like it, in its parent, and elsewhere in the module;
    - inside it, the symbols item 2 keeps refused are refused.
+
+### A9 — D8 item 3's code is `output.destination.link`, and an `os` file function is one of package `os`
+
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4). It writes into the decision text what the
+train read and its logs record (W5-8, W7-R).
+**Amends:** D8 item 3 (the code it names) and A2 item 1 (which file
+functions it allows), marked *(A9)* in place.
+
+1. **A symbolic link on an output path is refused with
+   `output.destination.link`.** D19's table, ADR-005's interfaces and the
+   registry give that name, and the `output.destination` family is the
+   one D8's refusals of an existing destination belong to; W5-8 shipped
+   it. D8 item 3 names the same code.
+2. **A2 item 1's "every `os` file function" means the file functions of
+   package `os`.** The `io/ioutil` and `path/filepath` file functions,
+   which D16 item 3's symbol rule also counts as file access, are not
+   among them, so the release builder stays refused them (W7-R). It is
+   the narrower reading of the allowance.
 
 ## Implementation log
 

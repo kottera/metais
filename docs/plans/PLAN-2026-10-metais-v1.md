@@ -7,8 +7,12 @@ train inherits it verbatim: `metais-v1 [W2-C3]: <action>` for a Work Order,
 and `<type>(metais-v1): [W2-C3] <change>` for a pull request and its squash
 subject, by `kottera/kottera`'s `docs/dev/work-order-and-pr-naming.md`, which
 AGENTS.md adopts.
-**Status:** Ratified 2026-10-18 under Ed Funnekotter's direction to merge this
-plan and start its train.
+**Status:** Done 2026-10-22: Ed Funnekotter ratified the train's outcome
+([§15](#15-ratification-of-the-outcome)). Still open from §6: the SC1 and
+SC9 rounds, `govulncheck`, and the v1.0 release, which waits on
+[PLAN-2026-10-metais-public](PLAN-2026-10-metais-public.md)'s Wave 3.
+Ratified 2026-10-18 under Ed Funnekotter's direction to merge this plan and
+start its train.
 **For PRD:** [PRD-001](../prd/PRD-001-metais-v1.md) R1 to R18, and the success
 criteria SC1 to SC9 of its §26.
 **For ADR:** [ADR-001](../adr/ADR-001-the-container-and-its-layout.md) to
@@ -144,7 +148,7 @@ another harness's type to get past a capacity wait.** Park on
 | 5b | **The gate's cost and merge friction** (inserted by Ed, 2026-10-19): the two-tier gate and its scripts; the shared-host cap; the skills; the `hostfs` limit tests; self-merging generated files; per-item ADR logs; one edit per finding code; help refusals by family; `render.go` split by phase | 5 | **complete** — [verdict](#11b-wave-5b--the-gates-cost-and-merge-friction-inserted-by-ed-2026-10-19) |
 | 6 | **Pack, and hardening**: `pack` with the example-package harness; `test`'s container comparison; the hostile corpus in full; the SC7 harness's full reach; limit calibration; benchmark budgets; the release builder | 5b | **complete**, release builder carried to Wave 7 — [verdict](#12-wave-6--pack-and-hardening) |
 | 7 | **The example packages and the close-out**: the packages of PRD §4.1 to §4.5; the worked package of `B-worked-package.md`; the specification's 1.0 text complete; the README, documentation and ADR implementation logs | 6 | **complete** — [verdict](#13-wave-7--the-example-packages-and-the-close-out) |
-| — | **The out-of-band acts**: §6 | — | — |
+| — | **The out-of-band acts**: §6 | — | the outcome is ratified ([§15](#15-ratification-of-the-outcome)); the SC1 and SC9 rounds, `govulncheck` and the v1.0 release are open |
 
 Two chains set the wave count:
 
@@ -271,7 +275,7 @@ need it a `depends_on` edge to it.
 | SC9 round: an author working only from `spec/`, with no access to the tool's source, writes a package that `check`, `test` and `pack` accept cleanly | Wave 7, after the worked package merges | Ed | the v1.0 release | `B-worked-package.md` is where the author starts (ADR-011 D4 item 4). |
 | `govulncheck ./...` | before the release | Ed | the v1.0 release | ADR-010 D3 item 5. |
 | The v1.0 release: the specification first, then the tool | after the train | Ed | — | Specification: one commit that dates the `1.0` changelog section, sets the front page to `Released`, writes `spec/conformance/released/1.0.sha256` and records the matrix's pass, tagged `spec-1.0` (ADR-011 D5 item 2). Tool: `go run ./internal/tools/release -version 1.0.0` on the tag, built twice and compared (ADR-010 D12). The specification is released no later than the tool that implements it (ADR-011 D5 item 6). Publishing is [PLAN-2026-10-metais-public](PLAN-2026-10-metais-public.md)'s (ADR-013 D7): this act tags `v1.0.0` and `spec-1.0` in its own clone only, attaches `dist/` to a draft release, and pushes nothing. `release.yml` pushes both tags after Ed approves (R-PUB-14). This act waits for that plan's Wave 3 (R-PUB-12). |
-| Ratify the outcome | after the train | Ed | — | Mark the plan `Done`. Ratify any decision this train made under §7 to §13 that is not yet an ADR text: the code exemptions of Wave 2, the placement of `date`, ADR-010 Amendment A1 (`golang.org/x/sys` and `golang.org/x/term` on unix only, W1-F2), and any calibration amendment. A decision the train changed is superseded by a new ADR or an amendment. |
+| Ratify the outcome | after the train | Ed | — | Mark the plan `Done`. Ratify any decision this train made under §7 to §13 that is not yet an ADR text: the code exemptions of Wave 2, the placement of `date`, ADR-010 Amendment A1 (`golang.org/x/sys` and `golang.org/x/term` on unix only, W1-F2), and any calibration amendment. A decision the train changed is superseded by a new ADR or an amendment. Done 2026-10-22 (T-A4): [§15](#15-ratification-of-the-outcome). |
 
 ## 7. Wave 1 — the seams
 
@@ -1776,6 +1780,118 @@ the render pipeline. Output forms become handlers, post-render transforms an
 ordered table of stages, and destinations sinks, so that a new feature is
 one new file and one table entry. It is filed at the train's close as a
 design item for Ed, and it is not built in this train.
+
+## 15. Ratification of the outcome
+
+Ed Funnekotter ratified the train's outcome on 2026-10-22, through Work
+Order T-A4 (`01a15ac4-7f0f-7ad1-8b4a-7c3f0ba24a60`), from a digest of every
+amendment and ruling §7 to §13 record. The plan is `Done`.
+
+**Accepted amendments.** Each Status line now reads Accepted 2026-10-22:
+
+| Amendment | What it decides | Written in place |
+|---|---|---|
+| ADR-010 A1 | `golang.org/x/sys` and `golang.org/x/term` on unix targets only (W1-F2) | its *(A1)* passages, and the cross-references in ADR-005 D14 item 1.4, ADR-008's *Interfaces* and ADR-009 D16 item 3 |
+| ADR-010 A3 | `outline` is METAIS's own CommonMark reading; goldmark leaves the module (W2-9) | its *(A3)* passages, ADR-008's *Interfaces*, and RULINGS-v1 R2-156, whose library choice it supersedes. The ruling was the plan orchestrator's, under §4 |
+| ADR-010 A4 | `Core()` names `escape`'s alias `h`, and `date` is registered outside it by `internal/template` (W3-NB1, and §8's placement of `date`) | D4 item 2 |
+| ADR-011 A1 | chapter 2's area is `PKG` (W3-1F) | D1 item 2, D16 item 2 and the promise to ADR-001 |
+| ADR-011 A2 | an unwritable directory in the setup, behind `unwritable-dirs` (W4-5) | D9 items 4 and 6 |
+| ADR-011 A3 | the temporary directory is the step's `TMPDIR` (Ed's ruling of 2026-10-19, its Status normalised) | D10 item 4 and D16 item 4 |
+| ADR-011 A6 | run-time `renames` and `file_size_limit` in the setup (W7-1, Q1) | in the amendment |
+
+**Decisions written into ADR text.** The train's decisions that were not
+yet ADR text are now amendments, each accepted 2026-10-22:
+
+- ADR-003 A1: a duplicated member name is one finding (Wave 3's
+  de-duplication reading).
+- ADR-005 A3: the standard-output archive is written by `internal/tarw`.
+- ADR-006 A3: A1's tripwire reads each keyword where it stands (W7-1,
+  W7-NB2), which takes `manifest.any_of` and `manifest.one_of.ambiguous`
+  out of the registry; the inputs object as a whole is the invocation;
+  `check`'s suggestions follow ADR-007 D3; exit statuses 2 and 3 are proved
+  by `internal/cli` tests.
+- ADR-008 A15: the envelope carries `summary` after `findings` (Wave 2).
+- ADR-009 A9: D8 item 3's code is `output.destination.link` (W5-8), and A2's
+  "`os` file function" is one of package `os` (W7-R).
+- ADR-010 A9: D13's table lists every fault, bits 5 to 10 included; the tar
+  writer is `internal/tarw` (W5-9, W7-R); a gate resumed after its host
+  starved is the same gate.
+- ADR-011 A9: content-class hostile packages are proved by `validate` and
+  `check` steps (R-W6-9b); the opening commands are the declared ones; an
+  area's statement numbers may have gaps (§11b); codes of class `usage` and
+  `internal` are proved by `internal/cli` tests (§8); D11 item 9's 60 s
+  binds `TestConformance` (Wave 4).
+
+**Ratified as recorded.** Every other ruling §7 to §13 record, and each
+wave's readings in its ADR's log, stands as recorded. Where a later act
+changed one:
+
+- Wave 4's reading that an existing empty `--out` is
+  `output.destination.write_failed`, reason `exists`, was replaced by Wave
+  5's reading (a): an existing empty directory is an existing destination.
+- Wave 5's readings (a) and (b) read `sample --out` for `sample --to`
+  (ADR-008 A4). Readings (c) and (d), R-W5-12, R-W6-14, the release
+  builder's move to Wave 7, and the process rulings of each wave are spent.
+- R-W6-3 and D11 item 9's 60 s hold until PLAN-2026-10-metais-test-economy
+  W2-3 lands; ADR-009 A7 item 1 and ADR-011 A7 item 3 then replace them.
+- R-W7-4 stays rescinded.
+- W3-3's and W5-1's charge readings (the renderer's units for range
+  elements, array writes and string size, partial entry counted as
+  `WorkPartials`, and every filter-built string charged to
+  `assign-bytes`) are ratified as readings. They are written into
+  ADR-009 D11's work charges at that table's next amendment.
+
+**Ed Funnekotter's rulings at the ratification:**
+
+- **R-W6-9b is accepted.** ADR-011 D16 item 3 is amended (A9) so that
+  content-class hostile cases (manifest or YAML profile defects) are proved
+  through `validate` and `check` steps only, and the ADR and MTS-AUT-002
+  stop disagreeing. D16 item 3's list of opening commands is brought up to
+  date.
+- **The Wave 7 ruling "On gate re-runs" is ratified, scoped to resume
+  only.** Resuming a gate's unverified tiers after the host starved is a
+  legitimate re-run of the same gate; a lone re-run of a red test still
+  closes nothing (ADR-010 A9 item 3).
+- **The `Co-authored-by` trailers on `main` are not rewritten.** ADR-013 D4
+  item 1 keeps the history. A CI check that fails a pull request carrying
+  the trailer was filed as its own follow-on item by the ratifying session;
+  it is not part of this act.
+
+**Still open from §6:**
+
+- the SC1 round, W7-A2 (`01a15abf-4d58-7c58-94ca-f4833e218555`);
+- the SC9 round, W7-A3 (`01a15abf-6347-7520-8a58-1b9ab5f65180`);
+- `govulncheck ./...`;
+- the v1.0 release, T-A3, which waits on PLAN-2026-10-metais-public's
+  Wave 3 (R-PUB-12, R-PUB-14). That plan's close marks §6's release row
+  done.
+
+**Discharged:** the four-target matrix rehearsal W6-A1
+(`01a15822-b803-7c96-9673-42aaf46e69b5`, passed 2026-10-20, with the
+pseudo-terminal proof, the three `hostfs` device tests and W6-14's darwin
+half); the calibration re-run at ADR-009 A3, A4 and A6's defaults (T-A2,
+[#193](https://github.com/kottera/metais/pull/193)); ADR-009 A6, built in
+[#187](https://github.com/kottera/metais/pull/187) and
+[#190](https://github.com/kottera/metais/pull/190); the liquid-spec runs
+W4-A1R and W5-A1; `metais.org` (R-PUB-5); and the terms checks W7-A1 and
+W7-A1b.
+
+**Where earlier sections no longer describe the tree:**
+
+- §12's "Some proofs have run on no host" was discharged by W6-A1. Its
+  first real pseudo-terminal run found `inspect --json` building
+  `examples` from a Go map, which W7-C3
+  ([#159](https://github.com/kottera/metais/pull/159)) fixed.
+- §14's "Publishing the specification or the tool outside this private
+  repository", "Hosting anything at `https://metais.org/`" and "Continuous
+  integration" are superseded by ADR-013 and PLAN-2026-10-metais-public.
+- §14's follow-up, the render pipeline's extension points, is ADR-010 A7
+  (accepted 2026-10-21), built by PLAN-2026-10-metais-render-seams.
+
+**Left for their own work:** ADR-004 D10 item 6 applies its letter table
+before NFKD, so `slug` turns `"Ǿrsted"` into `"rsted"` (W5-1). That is a
+specification defect, not a ruling, and needs its own Work Order before
+`spec-1.0` freezes the vectors (R2-170).
 
 ## Appendix A — where each requirement and success criterion is proved
 

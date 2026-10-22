@@ -1,12 +1,18 @@
 # ADR-011: The specification document and conformance — Markdown chapters under `spec/` whose every normative sentence is an `MTS-` statement, one living text per major released by tag, and a black-box suite of vectors that each cite the statements they prove, run in a sentinel sandbox on every target
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
-[Amendment A1](#amendments) (chapter 2's statement area is `PKG`, not `CON`)
-is proposed by PLAN-2026-10-metais-v1 Wave 3 and awaits Ed Funnekotter's
-ratification; the passages it changes are marked *(A1, proposed)*.
+[Amendment A1](#amendments) (chapter 2's statement area is `PKG`, not
+`CON`), [Amendment A2](#amendments) (an unwritable directory in the setup)
+and [Amendment A6](#amendments) (a renamed path and a file-size limit in
+the setup), proposed by PLAN-2026-10-metais-v1 Waves 3, 4 and 7, are
+accepted by Ed Funnekotter on 2026-10-22, at the train's ratification; the
+passages A1 and A2 change are marked *(A1)* and *(A2)*.
 [Amendment A3](#amendments) (the temporary directory is the step's
-`TMPDIR`) was ruled by Ed Funnekotter on 2026-10-19; the passages it
+`TMPDIR`) and [Amendment A4](#amendments) (an absent and an unreadable path
+in the setup) are accepted by Ed Funnekotter on 2026-10-19; the passages A3
 changes are marked *(A3)*.
+[Amendment A5](#amendments) (generated files merge themselves) records Ed
+Funnekotter's ruling of 2026-10-19 and is accepted on merge.
 [Amendment A7](#amendments) (against the reference tool, one pass compared with a committed record) is proposed by
 [ADR-012](ADR-012-test-economy.md) and accepted by Ed Funnekotter on 2026-10-21;
 it takes effect as PLAN-2026-10-metais-test-economy's items land.
@@ -15,6 +21,11 @@ it takes effect as PLAN-2026-10-metais-test-economy's items land.
 draft revision) is accepted by Ed Funnekotter on 2026-10-22, proposed by
 [ADR-013](ADR-013-the-public-project-and-its-distribution.md); it takes
 effect as PLAN-2026-10-metais-public's items land.
+[Amendment A9](#amendments) (content-class hostile packages are proved by
+`validate` and `check` steps, the opening commands are the declared ones,
+and the train's other readings) is accepted by Ed Funnekotter on
+2026-10-22, at PLAN-2026-10-metais-v1's ratification; the passages it
+changes are marked *(A9)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R16 (items 1–3); the document side of R15 (items 1 and
@@ -187,7 +198,7 @@ generated statement index.**
    | File | Subject | Areas | Designed by |
    |---|---|---|---|
    | `01-introduction.md` | scope, conformance classes, terminology, notation, the BCP 14 statement | `GEN` | ADR-011 |
-   | `02-container.md` | the zip profile, entry names, the layout, `.compiled/`, digests and their verification | `CON` *(A1, proposed)* | ADR-001 |
+   | `02-container.md` | the zip profile, entry names, the layout, `.compiled/`, digests and their verification | `PKG` *(A1)* | ADR-001 |
    | `03-manifest.md` | the manifest's structure and fields, the YAML and JSON profiles, the canonical form | `MAN` | ADR-002 |
    | `04-versions.md` | specification and package versions, compatibility, what a tool states | `VER` | ADR-002 |
    | `05-data-specification.md` | the `inputs` section, the JSON Schema dialect and asserted keywords and formats, meaning documents, the combined schema | `DAT` | ADR-003 |
@@ -314,7 +325,9 @@ that is assigned once, never reused and never renumbered.**
 3. **Numbers are assigned in order of addition within an area**, never by
    position, so inserting a statement mid-section takes the next free number
    and renumbers nothing. A number is never reused, even after its statement
-   is withdrawn.
+   is withdrawn. An area's numbers may have gaps: a number allotted to a
+   statement that is never written is never assigned, and nothing requires
+   the numbers to be contiguous. *(A9)*
 4. **`since`** names the minor that introduced the statement (ADR-002 D7
    item 3); absent, it is `1.0`. Within a major a statement's meaning never
    changes; its text changes only by an erratum (D6), which adds `amended by`.
@@ -569,7 +582,7 @@ each an ordered list of steps.**
 1. **Location and identity.** `spec/conformance/vectors/<area>/<slug>/`,
    where `<area>` is the lower-cased area of the vector's first statement and
    `<slug>` matches `[a-z0-9]+(-[a-z0-9]+)*` in at most 64 characters. The
-   vector's `id` is `<area>/<slug>`, and equals its path. *(A1, proposed)*
+   vector's `id` is `<area>/<slug>`, and equals its path. *(A1)*
 2. **Contents:**
 
    ```
@@ -636,7 +649,7 @@ each an ordered list of steps.**
    These hold what git cannot: empty directories, links and FIFOs. Then the
    runner copies the package and every tree or file the steps' arguments name
    to the same relative paths, and last makes the `unwritable` directories
-   unwritable. *(A2, proposed)* Steps of one case share the work directory, in
+   unwritable. *(A2)* Steps of one case share the work directory, in
    order; cases never share one.
 5. **Tags** (closed; adding one edits the vector schema):
 
@@ -657,7 +670,7 @@ each an ordered list of steps.**
    counted as a pass. Linux meets both, so every vector runs on at least one
    platform of the matrix (D15). `unwritable-dirs` (the setup makes a
    directory unwritable) is met where a directory of mode 0555 refuses the
-   runner's own process a write. *(A2, proposed)*
+   runner's own process a write. *(A2)*
 7. **Packed packages are committed bytes**, used only where the case is about
    bytes — the zip profile, digests, a hostile container. Everything else uses
    a source directory, so a change to the packer does not churn the suite.
@@ -827,9 +840,10 @@ protocol for any other implementation.**
    lines for text, a 64-byte hexadecimal window for binary, the expected and
    actual finding projections side by side, or the entry that differs in a
    container.
-9. **Budget.** The default run (both environments, D12) takes at most 60
-   seconds on an Apple M-series developer machine with the v1 suite; a vector
-   that needs more is tagged `limits` and justified in its `notes`.
+9. **Budget.** The default run, `TestConformance` (both environments, D12),
+   and not every test of its package, takes at most 60 seconds on an Apple
+   M-series developer machine with the v1 suite; a vector that needs more
+   is tagged `limits` and justified in its `notes`. *(A9)*
 
 ### D12 — Host isolation: the sentinel environment (SC7)
 
@@ -920,7 +934,7 @@ The tests, in ADR-010's place for them:
 | `TestVectorsWellFormed` | a `vector.json` fails its schema; `id` differs from its path; the area is not its first statement's; `since` is not its statements' highest; a referenced file is missing or a file is unreferenced; a `package.metais` lacks `byte-level` |
 | `TestCitationsResolve` | a vector cites an unknown or withdrawn identifier; a prose link to a statement does not resolve |
 | `TestFindingCatalog` | the code catalog in `12-findings.md` differs from what `spec/findings/registry.json` generates |
-| `TestFindingCodesCovered` | a registered, unretired code appears in no vector's expected findings, or names no statement |
+| `TestFindingCodesCovered` | a registered, unretired code of class `refused`, `content` or `destination` appears in no vector's expected findings, or names no statement; a code of class `usage` or `internal`, which `internal/cli` tests prove, names a statement *(A9)* |
 | `TestExamplesMatchVectors` | an example block (D4) differs from its vector file, or names a missing vector or file |
 | `TestSuiteTreePortable` | a path under `spec/conformance/` breaks D9 item 8, or `.gitattributes` lacks the `-text` line |
 | `TestNoSentinelInSuite` | any suite file contains `MTSSENTINEL` (case-insensitive) |
@@ -978,16 +992,23 @@ exact findings and to write nothing anywhere.**
 1. **Content** — which hostile packages and inputs exist, and the codes they
    are refused with — is ADR-009's (with ADR-001's container cases and
    ADR-005's path cases). This decision fixes their form.
-2. **Placement.** A traversal entry is `con/…`, a reserved output name
+2. **Placement.** A traversal entry is `pkg/…`, a reserved output name
    `pth/…`, an exhausted limit `sec/…`: the area of the first statement the
-   vector proves. *(A1, proposed)* The corpus is the set selected by `-conformance.tags=security`.
-3. **Every opening path refuses.** A vector whose hostility is in the package
-   has an `open` step; the `cli` adapter runs it as each of ADR-008's commands
-   that opens a package — `inspect`, `ls --recursive`, `schema`, `validate`,
-   `render --out out` and `unpack --out unpacked` — and each must give
-   `ok: false` and the same findings. Hostility in inputs or in the render
-   (an output path built from an input, a YAML alias bomb in a data file, a
-   pathological `pattern`) uses `validate` or `render` steps.
+   vector proves. *(A1)* The corpus is the set selected by `-conformance.tags=security`.
+3. **Every opening path refuses.** A vector whose hostility refuses the
+   package's read has an `open` step; the `cli` adapter runs it as every
+   command the tool's declarations mark as opening a package — at 1.0
+   `inspect`, `ls --recursive`, `read`, `outline`, `grep`, `schema`,
+   `extract`, `check`, `test`, `validate`, `render --out out`,
+   `unpack --out unpacked`, `sample --out sampled` and
+   `pack --out packed.metais` — and each must give `ok: false` and the same
+   findings. A hostile package whose defect is of class `content`, in the
+   manifest or its YAML profile, has `validate` and `check` steps instead,
+   each with its exact findings, because `check` reports such a defect with
+   `report.step_skipped` beside it (MTS-AUT-002). Hostility in inputs or in
+   the render (an output path built from an input, a YAML alias bomb in a
+   data file, a pathological `pattern`) uses `validate` or `render` steps.
+   *(A9)*
 4. **Expectations**: `ok: false`; the exact findings; no `trees`, so nothing
    is written in the work directory, the home directory or the temporary
    directory — the step's `TMPDIR`, `<sandbox>/tmp/` (D10 item 4) *(A3)* — stronger than SC6's "nothing outside the output
@@ -1084,7 +1105,7 @@ the package digest being content-defined (so provenance that records it, and
 where the specification fixes it" (its D4 item 6), which D10's `methods`
 expresses; the `.compiled/` file names (`digests.json`, `manifest.json`,
 `schema.json`, `references.json`); its Conformance list, which becomes
-`con/` vectors *(A1, proposed)*. I promise: a vector can say "refused with these findings"
+`pkg/` vectors *(A1)*. I promise: a vector can say "refused with these findings"
 and "packs to these entries, in this order, with these methods and this
 package digest" — the digest is inside `digests.json`, compared as entry
 content.
@@ -1421,10 +1442,11 @@ project has; when CI exists it runs the same commands.
 
 ### A1 — Chapter 2's statement area is `PKG`, not `CON`
 
-**Status:** Proposed 2026-10-19 by PLAN-2026-10-metais-v1 Wave 3 (W3-1F,
-from W3-1's finding, ruled by the plan orchestrator in plan §9's "Rulings
-made during the wave"); awaiting ratification by Ed Funnekotter at the
-train's close.
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4); proposed 2026-10-19 by the plan's Wave 3
+(W3-1F, from W3-1's finding, ruled by the plan orchestrator in plan §9's
+"Rulings made during the wave"). D1 item 2, D16 item 2 and the promise to
+ADR-001 now read `PKG`, `pkg/…` and `pkg/` vectors in place.
 **Amends:** D1 item 2 (the `02-container.md` row's area), D9 item 1 (the
 vector directory of a chapter 2 statement), D16 item 2 (`con/…`), and the
 promise to ADR-001 under *Interfaces with sibling ADRs* (`con/` vectors).
@@ -1454,10 +1476,10 @@ Cross-referenced from ADR-001's implementation log.
 
 ### A2 — An unwritable directory in the setup, behind `unwritable-dirs`
 
-**Status:** Proposed 2026-10-19 by PLAN-2026-10-metais-v1 Wave 4 (W4-5,
-from Wave 3's closeout, question 3, which the wave 4 brief carries as
-runner work); awaiting ratification by Ed Funnekotter at the train's
-close.
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4); proposed 2026-10-19 by the plan's Wave 4
+(W4-5, from Wave 3's closeout, question 3, which the wave 4 brief carries
+as runner work).
 **Amends:** D9 item 4 (the setup), D9 item 6 (the closed set of
 requirements), and the vector schema
 `spec/schemas/conformance/1/vector.schema.json`.
@@ -1496,7 +1518,7 @@ requirements), and the vector schema
 
 ### A3 — The temporary directory is the step's `TMPDIR`
 
-**Status:** Ruled 2026-10-19 by Ed Funnekotter (PLAN-2026-10-metais-v1
+**Status:** Accepted 2026-10-19 by Ed Funnekotter (PLAN-2026-10-metais-v1
 W3-NB2, option D of the question W3-NB2 raised).
 **Amends:** D10 item 4 and D16 item 4, which now say so in place.
 
@@ -1593,10 +1615,11 @@ is not a ruling made by the train and needs no ratification.
 
 ### A6 — A renamed path and a file-size limit in the setup, behind `nonportable-names` and `file-size-limit`
 
-**Status:** Proposed 2026-10-20 by PLAN-2026-10-metais-v1 Wave 7 (W7-1),
-under the plan orchestrator's ruling of 2026-10-20 recorded in plan §13's
-"Rulings made during the wave" (Q1 at the breakdown review); awaiting
-ratification by Ed Funnekotter at the train's close. It follows Ed's A4,
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4); proposed 2026-10-20 by the plan's Wave 7
+(W7-1), under the plan orchestrator's ruling of 2026-10-20 recorded in
+plan §13's "Rulings made during the wave" (Q1 at the breakdown review). It
+follows Ed's A4,
 which settled the same kind of case: a code the tool emits whose pre-state
 the committed tree cannot hold.
 **Amends:** D9 item 4 (the setup), D9 item 6 (the closed set of
@@ -1745,6 +1768,62 @@ the specification is published).
    (ADR-013 D7 item 8) before the specification's release commit freezes
    the text, and a defect the rehearsal finds in the text is an edit, not
    an erratum. The builder's test pins both sides.
+
+### A9 — Content-class hostile packages are proved by `validate` and `check` steps; the opening commands are the declared ones; the train's other readings
+
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4). Item 1 is his acceptance of the wave
+orchestrator's ruling R-W6-9b (plan §12). Items 2 to 5 write into the
+decision text what the train decided under plan §4 and its logs record.
+**Amends:** D3 item 3 (gaps), D11 item 9 (the run its budget binds), D14's
+`TestFindingCodesCovered` row, and D16 item 3 (the opening commands, and
+which hostile packages have an `open` step). Each passage is marked
+*(A9)* in place.
+
+1. **A hostile package whose defect is content-class, in the manifest or
+   its YAML profile, is proved by `validate` and `check` steps, not by an
+   `open` step.** Such a defect is an error of class `content`, and `check`
+   reports it with `report.step_skipped` beside it, because MTS-AUT-002
+   skips every step that needs the manifest's model. The opening commands
+   therefore cannot all give the same findings, which D16 item 3 asked of
+   an `open` step. The vector is tagged `security` like every hostile
+   vector, and has a `validate` step and a `check` step, each with its
+   exact expected findings and nothing written. A hostile package whose
+   defect refuses its read (the container, an entry's name or type, a
+   digest, a limit on reading) keeps its `open` step, and every opening
+   command must still give `ok: false` and the same findings: MTS-AUT-003
+   makes `check` report exactly those. This keeps D16 item 3 and
+   MTS-AUT-002 in agreement. The content-class cases lose the reach through
+   every opening command, and `validate` and `check` are the commands that
+   report a manifest's content.
+2. **The opening commands are the ones the tool declares.** An `open` step
+   runs as every command whose declaration marks it as opening a package,
+   which the `cli` adapter reads from `metais help --json`, so a command
+   added later joins the set without an edit here. D16 item 3 names the
+   set at 1.0. A command whose operand must be of one kind, as `unpack`'s
+   must be a packed file and `pack`'s a source directory, opens the operand
+   first and refuses the wrong kind only after, so a hostile package is
+   refused by its read whichever command opens it (W4-5, W6-1).
+   `TestHostileVectorsOpenEverywhere` holds the adapter to the declared
+   set, and A7 item 7 decides how many `open` steps run it against the
+   reference tool.
+3. **An area's statement numbers may have gaps.** D3 item 3's rules (never
+   by position, never reused, never renumbered) hold whether or not every
+   allotted number is written, so a number allotted and never used is
+   never assigned, and no check asks for contiguous numbers (plan §11b).
+4. **Codes of class `usage` and `internal` are proved by `internal/cli`
+   tests, not vectors.** The `cli` adapter fails a step on exit 2 or 3
+   (ADR-006 D12), so no vector can produce them, and the command line has
+   no chapter. ADR-008 D16 item 2's test for each refusal code proves
+   them, and ADR-006 A3 item 4 takes exit-table rows 2 and 3 from the
+   same tests. Their registry entries name no statement.
+   `TestFindingCodesCovered` exempts the two classes, and no code by name
+   (plan §8, "Decisions settled before filing").
+5. **D11 item 9's 60 seconds bind `TestConformance`**, the default run,
+   and not the package's other tests, some of which run a suite again
+   (`TestDriverProtocol`, `TestRecordAndCompare`). A7 item 3 replaces the
+   time with a count of processes when PLAN-2026-10-metais-test-economy's
+   W2-3 lands.
 
 ## Implementation log
 

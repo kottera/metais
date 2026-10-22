@@ -381,7 +381,7 @@ Lean is "yes" (adopt as written) unless stated.
 | R2-153 | PR5 — `go.yaml.in/yaml/v3` v3.0.5 node trees | yes |
 | R2-154 | PR6 — own strict JSON reader; `gowebpki/jcs` v1.0.2 | yes |
 | R2-155 | PR7 — own CSV reader | yes |
-| R2-156 | PR8 — goldmark v2.1.6 for outline; own frontmatter split | v2 |
+| R2-156 | PR8 — goldmark v2.1.6 for outline; own frontmatter split. The library choice is superseded by [ADR-010 Amendment A3](ADR-010-the-implementation.md#amendments) (accepted 2026-10-22): `outline` is METAIS's own CommonMark reading; the frontmatter split stands | v2 |
 | R2-157 | PR9 — RE2 the only regex engine | yes |
 | R2-158 | PR10 — own argument parser | yes |
 | R2-159 | PR11 — own strict zip reader | yes |

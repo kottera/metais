@@ -1,6 +1,14 @@
 # ADR-006: Validation and findings — one finding model for every command, with registered dotted codes whose meaning never changes within a major, locations as JSON Pointer plus line and column, every finding in one deterministic pass, and a fixed exit-code table
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
+[Amendment A1](#amendments) (the `manifest` family registers only the
+keyword codes the manifest schema can produce) is accepted by Ed
+Funnekotter on 2026-10-19. [Amendment A2](#amendments) (the registry file
+is generated from the tool's table) records his ruling of 2026-10-19 and is
+accepted on merge. [Amendment A3](#amendments) (A1's tripwire reads each
+keyword where it stands, and the train's reporting readings) is accepted
+by Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's ratification;
+the passages it changes are marked *(A3)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R6 (items 1 to 4); the finding half of R14 item 3 (a
@@ -278,7 +286,8 @@ meaning, severity and failure class never change within a major version.**
 **Every finding names the kind of thing it is about, and every located finding
 names where the value came from.**
 
-1. `subject.kind` is one of: `invocation` (the command line), `package` (the
+1. `subject.kind` is one of: `invocation` (the command line, and the inputs
+   object as a whole when a finding names no one input *(A3)*), `package` (the
    package as a whole, or one of its entries as a file), `manifest`, `schema`
    (an input's or an output's schema as a document), `input` (a supplied
    value), `template`, `asset`, `reference`, `output`, `example`, `report`.
@@ -640,7 +649,9 @@ next, and neither ever repeats a string value from the inputs.**
    are the schema's allowed strings (for `enum`, at most 1000 candidates of
    at most 256 code points each, else no suggestion) or its declared member
    names. The same rule serves ADR-002's unknown manifest member and
-   ADR-003's unknown input name.
+   ADR-003's unknown input name. `check`'s cross-reference suggestions
+   follow ADR-007 D3's own rule instead: the nearest name within edit
+   distance 2. *(A3)*
 8. **Operating-system errors are mapped, never quoted.** A failure to read or
    write a file is reported with `params.reason` from a closed set —
    `not_found`, `permission_denied`, `is_directory`, `not_regular_file`,
@@ -1012,9 +1023,10 @@ Each of these is observable and needs vectors (ADR-011 owns their format):
   is not echoed; a `suggestion` names an allowed value only.
 - **Neutralisation.** A schema description holding ESC and U+202E appears as
   `\u001b` and `\u202e` in the JSON report.
-- **Exit codes.** One vector per row of D12's table, the role rule for a
-  manifest defect under `validate` (4) and under `check` (1), and the
-  precedence of item 3.
+- **Exit codes.** One vector per row of D12's table but rows 2 and 3, which
+  `internal/cli` tests prove because no vector step can exit with them
+  *(A3)*; the role rule for a manifest defect under `validate` (4) and under
+  `check` (1); and the precedence of item 3.
 
 ## Alternatives rejected
 
@@ -1273,7 +1285,9 @@ changes the exit status and nothing in the report.
 5. **D3 item 4 is not broken.** Its rule binds a registry that has been
    released: a released code is never removed. No specification has been
    released, so these codes leave a draft. The registry that 1.0 publishes
-   lists only codes the 1.0 tool can emit.
+   lists only codes the 1.0 tool can emit. A3 item 1 reads item 4 where
+   each keyword stands, which takes `manifest.any_of` and
+   `manifest.one_of.ambiguous` out of the 1.0 registry too.
 
 ### A2 — The registry file is generated from the tool's table
 
@@ -1305,6 +1319,47 @@ file is produced.
    change to the table that changes what a code means changes the
    generated registry file in the same change. That is a change to the
    specification, and it is reviewed as one.
+
+### A3 — A1's tripwire reads each keyword where it stands; the train's reporting readings
+
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4). It writes into the decision text readings
+the train took and its logs record: item 1 from W7-1 and W7-NB2, items 2
+and 3 from Wave 3 (plan §9), item 4 from plan §8.
+**Amends:** A1 (items 1 and 4), D4 item 1, D9 item 7 and *Conformance*'s
+exit codes, marked *(A3)* in place.
+
+1. **A1 item 4's tripwire applies D6's mapping where each keyword
+   stands.** A keyword whose failure the mapping never reports maps to no
+   code: the walk does not enter the subschema of `not`, the `if`
+   subschema or the subschema of `propertyNames` (D6 items 7 and 10). A
+   `oneOf` maps to `manifest.one_of`, and to `manifest.one_of.ambiguous`
+   only when two of its branches could both match. Two branches are
+   exclusive only when one allows only an object (`type` is `object`, or
+   a list of it alone) and requires a member the other, a closed object,
+   does not allow; every other pair counts as able to match together,
+   the stricter reading. In the 1.0 manifest schema the one `anyOf` is
+   beneath the name's `not`, and both `oneOf`s are over exclusive
+   branches, so `manifest.any_of` and `manifest.one_of.ambiguous` are not
+   registered either, beside the codes A1 item 1 names. A minor that
+   moves the `anyOf` or gives a `oneOf` branches that can overlap makes
+   `TestManifestKeywordCodes` require the code back, and
+   `TestFindingCodesCovered` then requires its vector.
+2. **Subjects: the inputs object as a whole is the invocation.** D4 has
+   no subject for a failure at the root of the inputs object that names
+   no one input, so `input.constraints_failed` (an input constraint other
+   than `required` or `dependentRequired`) and `input.json_arg_invalid`
+   (an `--inputs-json` finding outside every member) are about the
+   invocation.
+3. **Suggestions: `check`'s cross-reference follows ADR-007 D3.** Its
+   edit distance 2 is the specific rule for a template's unknown names,
+   and D9 item 7's `max(1, ⌊n/3⌋)` stays the rule for every other
+   suggestion.
+4. **Exit statuses 2 and 3, and codes of class `usage` and `internal`,
+   are proved by `internal/cli` tests, not vectors.** The conformance
+   adapter fails a step that exits 2 or 3, and the command line has no
+   chapter, so ADR-008 D16 item 2's test for each refusal code proves
+   them (ADR-011 A9 item 4).
 
 ## Implementation log
 
