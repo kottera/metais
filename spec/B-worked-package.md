@@ -53,8 +53,12 @@ beginning with `.`, such as `.git`, is no part of the package
 
 > **Note.** `metais init release-notes` writes a smaller package of the same
 > shape, with a greeting in place of the release, for an author who would
-> rather edit than start from nothing. This appendix writes every file
-> itself, so that each byte it shows is one a vector proves.
+> rather edit than start from nothing. `metais init release-notes --minimal`
+> writes only the layout, one input and one template to replace, and
+> `--html` makes either one's output an HTML page that declares
+> `escape: html` and writes its data into a `<script>` with `json_script`.
+> This appendix writes every file itself, so that each byte it shows is one
+> a vector proves.
 
 ## B.3 The manifest
 

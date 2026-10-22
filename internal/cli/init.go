@@ -38,7 +38,7 @@ var (
 
 // runInit is metais init (ADR-007 D1, ADR-008 D9): it takes the name from
 // --name or from the last element of <dir> as written, and writes the
-// scaffold into <dir>.
+// scaffold --minimal and --html choose into <dir> (ADR-007 A1).
 func runInit(s *session, p args.Parsed) outcome {
 	dir, dirGiven := "", len(p.Operands) > 0
 	if dirGiven {
@@ -57,7 +57,8 @@ func runInit(s *session, p args.Parsed) outcome {
 		return s.refuseInvalidName(p, name, source)
 	}
 	dryRun := p.Has("dry-run")
-	files, err := author.Init(dir, name, dryRun)
+	form := author.Form{Minimal: p.Has("minimal"), HTML: p.Has("html")}
+	files, err := author.Init(dir, name, form, dryRun)
 	if err != nil {
 		return s.initFailed(err)
 	}

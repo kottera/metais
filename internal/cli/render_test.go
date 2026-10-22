@@ -21,7 +21,7 @@ import (
 func renderPackage(t *testing.T, root string) (pkg, data string) {
 	t.Helper()
 	pkg = filepath.Join(root, "pkg")
-	if _, err := author.Init(pkg, "pkg", false); err != nil {
+	if _, err := author.Init(pkg, "pkg", author.Form{}, false); err != nil {
 		t.Fatal(err)
 	}
 	return pkg, filepath.Join(pkg, "examples", "basic", "inputs")

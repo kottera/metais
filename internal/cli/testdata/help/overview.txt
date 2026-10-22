@@ -33,8 +33,8 @@ Commands:
     render    Render the package's outputs from the inputs supplied, into a
               directory or to standard output.
   Authoring:
-    init      Write a new package's source directory, with an input, a template
-              and an example.
+    init      Write a new package's source directory: a greeting to learn from,
+              or with --minimal one input and one template to replace.
     check     Check a package without data, and report every finding of every
               step at once.
     sample    Generate sample data from the inputs' schemas, and keep it as a

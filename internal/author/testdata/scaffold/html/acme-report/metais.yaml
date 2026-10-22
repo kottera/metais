@@ -1,0 +1,20 @@
+metais: "1.0"
+name: "acme-report"
+version: "0.1.0"
+title: "Acme Report"
+description: "Replace this line with what the package produces, in a sentence."
+guide: |-
+  This package produces greeting.html, an HTML page greeting for one person.
+  Read [what the greeting means](inputs/greeting.md) before you supply it.
+inputs:
+  - name: greeting
+    title: "Greeting"
+    schema: inputs/greeting.schema.json
+    meaning: inputs/greeting.md
+    forms:
+      - json
+      - yaml
+outputs:
+  - id: greeting
+    template: greeting.html.liquid
+    escape: html

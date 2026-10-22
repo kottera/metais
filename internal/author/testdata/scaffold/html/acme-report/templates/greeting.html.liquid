@@ -1,0 +1,19 @@
+{%- comment %}
+metais.yaml declares this output's escape: html, so every value written
+with {{ }} is HTML-escaped. Data a script reads goes inside a <script>
+element through json_script, which no value can break out of; never json.
+{% endcomment -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hello, {{ inputs.greeting.name }}</title>
+</head>
+<body>
+<h1>Hello, {{ inputs.greeting.name }}</h1>
+{%- if inputs.greeting.note %}
+<p>{{ inputs.greeting.note }}</p>
+{%- endif %}
+<script type="application/json" id="greeting">{{ inputs.greeting | json_script }}</script>
+</body>
+</html>

@@ -105,9 +105,9 @@ func (e *WriteError) Error() string {
 	return "author: the write stopped at " + e.Op + ": " + string(e.Reason)
 }
 
-// Init writes the scaffold for a package called name into dir, the
-// caller's own path for it, and returns the paths it wrote, relative to
-// dir (ADR-007 D1). With dryRun it writes nothing and returns the paths it
+// Init writes the scaffold of form for a package called name into dir,
+// the caller's own path for it, and returns the paths it wrote, relative
+// to dir (ADR-007 D1, A1). With dryRun it writes nothing and returns the paths it
 // would write.
 //
 // dir is created, with its missing parents, when it does not exist. An
@@ -116,8 +116,8 @@ func (e *WriteError) Error() string {
 // directory, or that cannot be opened or listed, is a *WriteError with
 // nothing written. Init never overwrites, and it removes nothing, even
 // after a failed write: what it wrote is in the *WriteError.
-func Init(dir, name string, dryRun bool) ([]string, error) {
-	files := Scaffold(name)
+func Init(dir, name string, form Form, dryRun bool) ([]string, error) {
+	files := Scaffold(name, form)
 	if dir == "" {
 		dir = "."
 	}

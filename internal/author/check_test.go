@@ -124,7 +124,7 @@ func TestCheckClean(t *testing.T) {
 	}
 	testenv.Home(t)
 	dir := filepath.Join(testenv.Dir(t), "scaffold")
-	if _, err := Init(dir, "scaffold", false); err != nil {
+	if _, err := Init(dir, "scaffold", Form{}, false); err != nil {
 		t.Fatal(err)
 	}
 	if fs := Check(dir, limits.Defaults(), 0); len(fs) > 0 {
