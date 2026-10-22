@@ -303,6 +303,9 @@ type render struct {
 	// files are the files of the run's directory it wrote, as far as the
 	// directory still holds them.
 	files []string
+	// readBack is the command of its own Bash call that read back a file
+	// it wrote, when the render is seen to have written by that alone.
+	readBack *cmd
 }
 
 // reportedDigest is a file render lists as written: a line of its human
@@ -350,11 +353,42 @@ func (r *run) renders() []*render {
 			}
 		}
 		if len(rd.digests) == 0 && len(rd.files) == 0 && !rd.stdout {
-			continue
+			if rd.readBack = r.readBack(c.cmd, rd.out); rd.readBack == nil {
+				continue
+			}
 		}
 		out = append(out, rd)
 	}
 	return out
+}
+
+// readers are the commands that print what a file holds.
+var readers = []string{"cat", "head", "tail", "sed", "grep", "awk", "less", "more", "wc", "diff", "cmp", "od", "xxd", "hexdump", "jq", "shasum", "sha256sum", "md5sum"}
+
+// missing is a reader's report that a file it was given is not there.
+var missing = regexp.MustCompile(`(?i)no such file`)
+
+// readBack is the later command of a render's own Bash call that read a
+// file beneath the render's output directory, out, when the call's output
+// shows the read found it: it holds no refusal and no report of a missing
+// file. A render whose listing went elsewhere and whose files the session
+// deleted is seen to have written by that read, and only by it.
+func (r *run) readBack(c *cmd, out string) *cmd {
+	text := c.output()
+	if out == "" || refused.MatchString(text) || missing.MatchString(text) {
+		return nil
+	}
+	for _, o := range r.cmds {
+		if o.use != c.use || o.seq <= c.seq || !slices.Contains(readers, o.name) {
+			continue
+		}
+		for _, w := range append(slices.Clone(o.rest), o.s.ins...) {
+			if p := r.resolve(w, o.cwd); strings.HasPrefix(p, out+"/") {
+				return o
+			}
+		}
+	}
+	return nil
 }
 
 // fixtureSource is the source of the scenario's first fixture, or nil.

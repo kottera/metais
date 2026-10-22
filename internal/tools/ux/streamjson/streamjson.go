@@ -71,6 +71,10 @@ type ToolResult struct {
 	IsError bool
 	// Text is the result's content, its text parts joined by newlines.
 	Text string
+	// Interpreted is the harness's reading of a Bash call's exit status
+	// that was not 0 and that it did not report as an error, such as
+	// grep's "No matches found"; "" when it exited 0 or was reported so.
+	Interpreted string
 }
 
 // Text is one part of text the session wrote.
@@ -135,6 +139,8 @@ func Read(b []byte) *Transcript {
 			CostUSD    float64                    `json:"total_cost_usd"`
 			DurationMS int64                      `json:"duration_ms"`
 			ModelUsage map[string]json.RawMessage `json:"modelUsage"`
+			// user: the harness's own record of a tool call's result
+			ToolUseResult json.RawMessage `json:"tool_use_result"`
 		}
 		if err := json.Unmarshal([]byte(line), &ev); err != nil {
 			t.Malformed++
@@ -164,7 +170,14 @@ func Read(b []byte) *Transcript {
 		case ev.Type == "user":
 			for _, part := range parts(ev.Message.Content) {
 				if part.Type == "tool_result" && part.ToolUseID != "" {
-					byID[part.ToolUseID] = &ToolResult{Line: n, IsError: part.IsError, Text: contentText(part.Content)}
+					tr := &ToolResult{Line: n, IsError: part.IsError, Text: contentText(part.Content)}
+					var rec struct {
+						Interpretation string `json:"returnCodeInterpretation"`
+					}
+					if json.Unmarshal(ev.ToolUseResult, &rec) == nil {
+						tr.Interpreted = rec.Interpretation
+					}
+					byID[part.ToolUseID] = tr
 				}
 			}
 		case ev.Type == "result":

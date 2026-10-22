@@ -1,0 +1,25 @@
+metais: "1.0"
+name: "number-chart"
+version: "0.1.0"
+title: "Number Chart"
+description: "An HTML page that charts a list of numbers as bars, drawn from a JavaScript array written into the page."
+guide: |-
+  Supply one input, `data`: a title and the list of numbers to chart, in the
+  order they should appear from left to right. The page writes the numbers into
+  a JavaScript array and draws one bar per number, measured from zero, so a
+  negative number points down.
+
+  Read [what the data means](inputs/data.md) before you supply it.
+inputs:
+  - name: data
+    title: "The numbers to chart"
+    schema: inputs/data.schema.json
+    meaning: inputs/data.md
+    forms:
+      - json
+      - yaml
+outputs:
+  - id: page
+    template: page.html.liquid
+    path: "index.html"
+    escape: html

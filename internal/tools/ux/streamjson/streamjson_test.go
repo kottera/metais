@@ -18,7 +18,7 @@ func TestRead(t *testing.T) {
 		`{"type":"assistant","message":{"id":"m1","content":[{"type":"text","text":"I'll look."}]}}`,
 		`{"type":"assistant","message":{"id":"m1","content":[{"type":"tool_use","id":"t1","name":"Bash","input":{"command":"metais inspect report.metais"}}]}}`,
 		`not json`,
-		`{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"t1","content":"Package dora"}]}}`,
+		`{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"t1","content":"Package dora"}]},"tool_use_result":{"stdout":"Package dora","returnCodeInterpretation":"No matches found"}}`,
 		`{"type":"assistant","message":{"id":"m2","content":[{"type":"tool_use","id":"t2","name":"Write","input":{"file_path":"/ux/run/work/a.json","content":"{}"}}]}}`,
 		`{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"t2","is_error":true,"content":[{"type":"text","text":"Exit code 3"},{"type":"text","text":"no"}]}]}}`,
 		`{"type":"result","subtype":"success","is_error":false,"num_turns":3,"total_cost_usd":0.01,"duration_ms":1200,"result":"Done?","modelUsage":{"claude-haiku-5-5":{}}}`,
@@ -34,11 +34,11 @@ func TestRead(t *testing.T) {
 	}
 	u := tr.ToolUses[0]
 	if u.Name != "Bash" || u.Command() != "metais inspect report.metais" || u.Line != 3 || u.Turn != 1 ||
-		u.Result == nil || u.Result.IsError || u.Result.Text != "Package dora" || u.Result.Line != 5 {
+		u.Result == nil || u.Result.IsError || u.Result.Text != "Package dora" || u.Result.Line != 5 || u.Result.Interpreted != "No matches found" {
 		t.Errorf("first tool use = %+v, result %+v", u, u.Result)
 	}
 	u = tr.ToolUses[1]
-	if u.Command() != "" || u.Field("file_path") != "/ux/run/work/a.json" || u.Turn != 2 || u.Result == nil || !u.Result.IsError || u.Result.Text != "Exit code 3\nno" {
+	if u.Command() != "" || u.Field("file_path") != "/ux/run/work/a.json" || u.Turn != 2 || u.Result == nil || !u.Result.IsError || u.Result.Text != "Exit code 3\nno" || u.Result.Interpreted != "" {
 		t.Errorf("second tool use = %+v, result %+v", u, u.Result)
 	}
 	if len(tr.Texts) != 1 || tr.Texts[0].Text != "I'll look." || tr.Texts[0].Turn != 1 {

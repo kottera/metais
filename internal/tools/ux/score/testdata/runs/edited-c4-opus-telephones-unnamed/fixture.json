@@ -1,0 +1,21 @@
+{
+  "shows": "the session runs metais inspect and metais schema --fields, but its answer names the two contacts by their names and emails only: no word of the telephone fields' names, whole or as its end, is in the line",
+  "recorded": {
+    "set": "the after set without the skill, as W3-4 judged it in Work Order 01a16247 (artifact art_jox6rno2yfupoma55hqdka7n5m3focir2cgtbnpocoejjkh7pvyq)",
+    "run": "C4-what-it-needs/opus",
+    "date": "2026-10-22",
+    "commit": "633156212b7912b70aeec2b845fed7ab15fb6549",
+    "model": "claude-opus-5-5"
+  },
+  "edited": "The answer's \"name, email and phone for each. Phones must be in international format, like `+49 30 1234567`.\" is replaced by \"name and email for each.\", in the final assistant message and in the result, with sed. Nothing else is changed.",
+  "expect": {
+    "inspect-first": "pass",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "fail"
+  },
+  "reasons": {
+    "outcome": "does not name 2 of what the package needs: entity.primary_contact_telephone, entity.second_contact_telephone"
+  }
+}

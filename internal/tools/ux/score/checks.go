@@ -37,17 +37,17 @@ var checks = map[string]check{
 	"generated-preview": {generatedPreview,
 		"Generated data is metais's: render --sample, or a data directory metais sample wrote. Data the session wrote by hand is not generated.", false},
 	"names-every-input": {namesEveryInput,
-		"An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. A field is also named by a line of them that holds every word of its name, each read by its first six letters, so \"Primary and second contact: name, email and telephone\" names six fields and \"detection\" names detected_at; or that holds the number its title begins with, alone or inside a range such as 1.7–1.9, beside a word of that title. A line that holds a field's words for another reason is read as naming it, and a field named only by a synonym is not seen. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted.", false},
+		"An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. A field is also named by a line of them that holds every word of its name, each read by its first six letters or by a word of the line, plural or not, of five letters or more that is its end, so \"Primary and second contact: name, email and telephone\" names six fields, \"detection\" names detected_at and \"phone\" names telephone; or that holds the number its title begins with, alone or inside a range such as 1.7–1.9, beside a word of that title. A line that holds a field's words for another reason is read as naming it, as is one whose word ends a word of the name by chance (\"count\" ends account), and a field named only by a synonym is not seen. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted.", false},
 	"script-renders": {scriptRenders,
 		"A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it, the harness reports no error, and the run renders: render's listing of the files it wrote is in its output, or a file named as one of the package's outputs is left in the session's directory. The harness reports one status for a Bash call, its last command's, so a run of the script that other commands of its call follow passes on render's listing in the call's output alone, whatever the call's status: a script that renders and then fails in a later step of its own is not told apart there from one that ends cleanly. The scorer does not run the script again.", false},
 	"new-package": {newPackage,
-		"check passing is seen through pack, which checks and tests the package before it writes it.", false},
+		"check passing is seen through pack, which checks and tests the package before it writes it. A render --sample is seen when it lists the files it wrote or leaves them in the run's directory; when its listing went elsewhere, such as to /dev/null, and its files are gone, it is seen when a later command of its own Bash call that prints a file (cat, head, sed, grep…) names a file beneath its output directory and the call's output holds no refusal and no missing file. A file its output directory held before it rendered is read there as its own. A for loop's body is read once for each word the loop names, its variable expanded; a loop over a command substitution or another variable is read once, its variable unexpanded.", false},
 	"checks-tests-packs": {checksTestsPacks,
 		"A command passes by its own report: check's 0 errors, test's pass with no example failing, pack's Packed line. Whether the package holds every part the task asks for, whether it is the worked package with its names changed, and what the session read are not checked: SC9's round judges those from the package and the transcript.", false},
 	"schema-and-template": {schemaAndTemplate,
 		"A change is seen in the files the session left, compared with the package's source, or in what its Write and Edit calls wrote: a schema and a template that each gain a due date. A change made by a command line whose files are gone is not seen.", false},
 	"data-to-js": {dataToJS,
-		"The page's data parses when a script element of a rendered HTML output holds a JSON array. Whether the array is the numbers given is not checked.", false},
+		"The page's data parses when a script element of a rendered HTML output holds a JSON array: a page the render wrote that the run leaves, or a file the run leaves with the bytes the render's listing reports writing, such as an example's expected output metais test --update wrote from the same data. A rendered page the session deleted with no copy of its bytes left is not read, even when the call's output shows its script. Whether the array is the numbers given is not checked. A command's directory follows the session's cd, $PWD read as the directory it runs in, and a cd carries to the session's next call only when its call exits 0, as the harness records the directory then alone; within a call, a cd that failed is still followed.", false},
 }
 
 // CheckLimits is what an outcome check, or a pass rule, cannot see, as a
@@ -483,6 +483,7 @@ func mentions(text, name string) bool {
 // its own words: the stems of its words, and the field numbers it holds.
 type answerLine struct {
 	stems   map[string]bool
+	words   []string
 	numbers []string
 	ranges  [][2]string
 }
@@ -519,6 +520,7 @@ func answerLines(text string) []answerLine {
 		al := answerLine{stems: map[string]bool{}, numbers: fieldNumber.FindAllString(l, -1)}
 		for _, w := range answerWord.FindAllString(l, -1) {
 			al.stems[stem(w)] = true
+			al.words = append(al.words, w)
 		}
 		for _, m := range fieldRange.FindAllStringSubmatch(l, -1) {
 			al.ranges = append(al.ranges, [2]string{m[1], m[2]})
@@ -555,10 +557,25 @@ func words(text string) []string {
 	return slices.DeleteFunc(answerWord.FindAllString(strings.ToLower(text), -1), func(w string) bool { return slices.Contains(joining, w) })
 }
 
-// holdsAll reports whether the line holds every word of text, by its stem.
+// holdsAll reports whether the line holds every word of text, by its
+// stem or by its end.
 func (l answerLine) holdsAll(text string) bool {
 	ws := words(text)
-	return len(ws) > 0 && !slices.ContainsFunc(ws, func(w string) bool { return !l.stems[stem(w)] })
+	return len(ws) > 0 && !slices.ContainsFunc(ws, func(w string) bool { return !l.stems[stem(w)] && !l.ends(w) })
+}
+
+// ends reports whether a word of the line of five letters or more, or
+// that word without its plural s, is the end of w, as phone and phones
+// are of telephone: the short form a person writes for a word.
+func (l answerLine) ends(w string) bool {
+	return slices.ContainsFunc(l.words, func(lw string) bool {
+		for _, f := range []string{lw, strings.TrimSuffix(lw, "s")} {
+			if len(f) >= 5 && len(f) < len(w) && strings.HasSuffix(w, f) {
+				return true
+			}
+		}
+		return false
+	})
 }
 
 // holdsAny reports whether the line holds a word of text, by its stem.
@@ -826,7 +843,15 @@ func dataToJS(r *run) Result {
 		return Result{Detail: "the session never renders the package", Evidence: ev}
 	}
 	for _, rd := range rds {
-		for _, f := range rd.files {
+		// A file the run leaves with bytes the render reported writing is
+		// the rendered page, wherever the session's later commands put it.
+		files := slices.Clone(rd.files)
+		for _, f := range r.rec.Files {
+			if p := path.Join("work", f.Path); f.Change != "deleted" && slices.Contains(rd.digests, f.SHA256) && !slices.Contains(files, p) {
+				files = append(files, p)
+			}
+		}
+		for _, f := range files {
 			if !strings.HasSuffix(f, ".html") {
 				continue
 			}
