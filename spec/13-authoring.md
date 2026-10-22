@@ -16,7 +16,10 @@ Checking is how an author hears, before any data exists, everything a
 package's supplier and its render would trip over. It reports every finding
 of every step in one run, because an author fixing one finding at a time
 would run it once per defect. Each step runs whatever the steps before it
-found, so a broken manifest does not hide a broken template.
+found, so a broken manifest does not hide a broken template. A package
+whose read is refused is the exception: its entries could not be read, so it
+gets only the findings of the refusal, and no other finding
+([MTS-AUT-003](#mts-aut-003)).
 
 <a id="mts-aut-001"></a>**MTS-AUT-001** An authoring tool's check MUST
 accept a source directory ([chapter 2](02-container.md)) or a packed

@@ -237,3 +237,26 @@ No command reported a warning.
 above are the round's to rule on, by "What happens next". One of them is a
 candidate fix against the text: B.6's "reports every finding of every step
 in one run" against MTS-AUT-003.
+
+## §B.6 corrected after the evidence run (PLAN-2026-10-metais-ux W3-11)
+
+The evidence run above was made against the old text of
+`spec/B-worked-package.md` §B.6. It said that check "reports every finding
+of every step in one run", with no word on a package whose read is refused,
+and opus's first `check` showed that sentence misleading an author. The plan
+orchestrator ruled that MTS-AUT-003 governs, and W3-11 corrected the text to
+agree with it. No normative statement, behaviour or vector changed:
+
+- **§B.6** now says that a package whose read is refused, such as a source
+  holding an empty directory, gets only the findings of that refusal, so a
+  check that reports only a refusal has not yet looked at the manifest, the
+  schemas or the templates.
+- **§13.1's opening** says the same, citing MTS-AUT-003.
+- **`metais help check`'s summary** and **`metais help manifest`** say it
+  too.
+
+Whoever takes the round gives the author the `spec/` of a commit that holds
+W3-11, and reads §B.6 there rather than the text the evidence run saw. The
+evidence above stands for what it shows of the binary; its point on B.6 is
+answered by this correction. The round is still not done: it is Work Order
+`01a15abf-6347`, and it is done when Ed confirms it.

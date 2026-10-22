@@ -302,7 +302,8 @@ func manifestTopic(h *helpText, _ []*Command) {
 	}
 	h.blank()
 	h.para("metais check [<dir>] checks a package's manifest against these rules, with "+
-		"every other step, and reports every finding at once. metais init writes a "+
+		"every other step, and reports every finding at once; a package that cannot be "+
+		"read at all gets only the findings of that refusal. metais init writes a "+
 		"package to start from. metais help templates covers the template language a "+
 		"template, path, when and for_each are written in. The specification's chapter 3 "+
 		"(the manifest), chapter 5 (inputs), chapter 9 (outputs) and chapter 10 (containers "+
