@@ -70,6 +70,10 @@ me"):
    each, `required` or `optional`, with the conditions that make a field
    required. Read it whole, and answer with each input and its fields, not
    from `inspect` alone.
+3. In the answer, name every required field as the listing names it: by its
+   name, or by its title, with its number when the title has one. Add what
+   it means if that helps, but never by a paraphrase alone: one that drops
+   a word of the name can name a different field, or none.
 
 **Fictional data or a preview, when asked for** (such as "show me what it
 produces"):
@@ -136,4 +140,4 @@ a `message` and a `hint`. `metais help json` lists every format.
 This skill was installed by `metais skill`. If `metais version` is newer
 than the version in the last line, `metais skill --dry-run` says whether to
 refresh it.
-<!-- metais skill: version 1.2.3, sha256 a7d85557dc5695129c07459a325dcb44535bd579cee9068f9e8af6965fef063b -->
+<!-- metais skill: version 1.2.3, sha256 3ded0b457f1849f479711de040badcc38f6c16ee663386cdb13b489c780b8cf6 -->
