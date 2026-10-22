@@ -567,7 +567,8 @@ everything they write.**
 
 #### `init`
 
-`metais init [<dir>] [--name <name>] [--dry-run]`
+`metais init [<dir>] [--name <name>] [--minimal] [--html] [--dry-run]`
+(A9)
 
 1. Writes ADR-007's minimal scaffold into `<dir>` (default `.`), creating it
    and its missing parents.
@@ -1697,6 +1698,29 @@ command's own help are unchanged.
    so no chapter changes with it. The package's README, the first thing
    of all that a reader sees, is ADR-001 A3's.
 
+
+### A9 — `init` takes `--minimal` and `--html`, and its help leads with the minimal form
+
+**Status:** Accepted on merge, as PLAN-2026-10-metais-ux W2-6, with
+ADR-007 A1, whose scaffolds it gives a command line. It needs no
+ratification.
+**Amends:** D9 (`init`'s synopsis and items). `init`'s refusals, next
+steps and machine output are unchanged.
+
+1. **The synopsis is
+   `metais init [<dir>] [--name <name>] [--minimal] [--html] [--dry-run]`.**
+   `--minimal` writes ADR-007 A1 item 1's scaffold and `--html` gives the
+   scaffold A1 item 2's HTML output. Each is a switch, and they combine.
+   Neither changes which directory `init` writes into, how it takes the
+   name, or what it refuses.
+2. **`init`'s examples lead with the forms a person types**:
+   `metais init acme-report --minimal` first, then
+   `metais init acme-report` for the greeting to learn from, then
+   `metais init acme-report --minimal --html`. Its one-line description
+   names both scaffolds, so the overview offers the minimal one too.
+3. **`metais.init/1` is unchanged.** Its result is still `dry_run` and
+   `files`, the files written in order; the forms differ only in which
+   paths `files` lists, which the schema already allows.
 
 ## Implementation log
 

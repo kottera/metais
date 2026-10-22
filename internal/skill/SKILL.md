@@ -62,8 +62,11 @@ answer that the data is fictional.
 
 ## Writing a package
 
-1. `metais init <dir>` — a new source directory with an input, a template
-   and an example.
+1. `metais init <dir> --minimal` — a new source directory with one input
+   and one template to replace; without `--minimal`, a greeting with an
+   example to learn from. Add `--html` for an HTML output: it declares
+   `escape: html`, and its template writes data into a `<script>` with
+   `json_script`, never `json`.
 2. Edit `metais.yaml`, `inputs/`, `templates/` and `examples/`. Preview
    with `metais render <dir> --sample --out <preview dir>`.
 3. `metais check <dir>` — every defect, without data.

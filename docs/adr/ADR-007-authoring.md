@@ -1323,6 +1323,90 @@ directory.
   https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html
 - Lorem ipsum (the standard passage): https://en.wikipedia.org/wiki/Lorem_ipsum
 
+## Amendments
+
+### A1 — `init --minimal` writes one input and one template to replace, and `init --html` starts an author on an escaped HTML output
+
+**Status:** Accepted on merge, as PLAN-2026-10-metais-ux W2-6 under the
+plan's Wave 2 brief, whose ruling leaves to the item whether a minimal
+`init` is a flag or a slimmer default. It needs no ratification.
+**Amends:** D1 items 1, 4, 5 and 7 (the command line, what `init` writes,
+what it prints and the test that pins it). D1 items 2, 3 and 6 are
+unchanged, and so is the scaffold D1 item 4 lists, which `init` still
+writes when given neither flag.
+
+1. **`metais init <dir> --minimal`** writes the layout, one input and one
+   template, each a placeholder to replace, and nothing else, in this
+   order:
+
+   ```
+   <dir>/
+     .gitattributes
+     metais.yaml
+     inputs/data.schema.json
+     inputs/data.md
+     templates/document.md.liquid
+   ```
+
+   - **`.gitattributes`** is D1 item 4's.
+   - **`metais.yaml`** is D1 item 4's manifest with its placeholders in
+     place of the greeting: a guide of two sentences that says to replace
+     it and points to the input's meaning document; one input `data` with
+     `title`, schema `inputs/data.schema.json`, `meaning` `inputs/data.md`
+     and forms `json` and `yaml`; one output, `id: document` and
+     `template: document.md.liquid`.
+   - **`inputs/data.schema.json`**: `$schema` 2020-12; a `title`; a
+     `description` that says to replace the schema; `type: object`;
+     `additionalProperties: false`; one required field `title`
+     (`type: string`, `minLength: 1`, `maxLength: 200`, `title`,
+     `description`).
+   - **`inputs/data.md`**: a meaning document that says to replace it and
+     what `title` holds.
+   - **`templates/document.md.liquid`**: `# {{ inputs.data.title }}`.
+
+   It writes no example: an example is the author's illustration of the
+   inputs, which a placeholder cannot give. `test` then has nothing to
+   compare until the author adds one, and `pack` packs without one.
+2. **`--html` makes the scaffold's output an HTML page.** It combines with
+   `--minimal` and without it:
+   - **The output declares `escape: html`**, so every value the template
+     writes with `{{ }}` is HTML-escaped (spec §7, MTS-TPL-059).
+   - **The template is `<id>.html.liquid`**, whose path defaults to
+     `<id>.html`: `templates/page.html.liquid` with output `id: page` under
+     `--minimal`, and `templates/greeting.html.liquid` without it. It is a
+     whole HTML document whose heading writes the input's text, and which
+     writes the whole input into
+     `<script type="application/json" id="…">{{ … | json_script }}</script>`
+     (spec §8.1.3).
+   - **It opens with a Liquid comment saying both**: the output's
+     `escape: html` escapes every `{{ }}`, and data a script reads goes
+     inside a `<script>` through `json_script`, never `json`. The comment
+     renders as nothing.
+   - **Without `--minimal`**, the guide and the meaning document name
+     `greeting.html`, the expected file is
+     `examples/basic/expected/greeting.html`, and the example's `note` is
+     `Welcome to R&D.`, so the expected page shows both escapes: `&amp;`
+     in the text and `\u0026` in the script.
+3. **Neither flag is today's scaffold, which stays the default.** The
+   greeting is the package to learn from: its example is what `test`
+   compares, and appendix B and the `pkg/pack-round-trip` vector are built
+   on it. An author who wants to start from their own design rather than
+   delete most of the greeting gives `--minimal`, which `init`'s help
+   leads with (ADR-008 A9). A slimmer default was rejected: it would leave
+   `init` → `check` → `test` → `pack` with nothing for `test` to show a
+   newcomer, and a flag costs the author who wants less one word.
+4. **D1 item 7's pin covers every form.** The tool's suite runs `init` in
+   each of the four forms, then `check` (no findings at all),
+   `render --sample --out <new dir>` and `pack`. Each form's files are
+   pinned byte for byte by their golden files under
+   `internal/author/testdata/scaffold/`.
+5. **Why.** The 2026-10-20 authoring session deleted most of the greeting
+   scaffold before it started (PLAN-2026-10-metais-ux §7). In the
+   2026-10-21 baseline an author built, tested and packed an HTML output
+   that declared no `escape` and wrote its numbers into the page with
+   `json`, not `json_script`: `init` offered only Markdown, so nothing an
+   author started from showed how an HTML output is escaped (candidate 8).
+
 ## Implementation log
 
 This log is this section together with the entry files in

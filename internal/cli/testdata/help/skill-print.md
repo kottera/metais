@@ -62,8 +62,11 @@ answer that the data is fictional.
 
 ## Writing a package
 
-1. `metais init <dir>` — a new source directory with an input, a template
-   and an example.
+1. `metais init <dir> --minimal` — a new source directory with one input
+   and one template to replace; without `--minimal`, a greeting with an
+   example to learn from. Add `--html` for an HTML output: it declares
+   `escape: html`, and its template writes data into a `<script>` with
+   `json_script`, never `json`.
 2. Edit `metais.yaml`, `inputs/`, `templates/` and `examples/`. Preview
    with `metais render <dir> --sample --out <preview dir>`.
 3. `metais check <dir>` — every defect, without data.
@@ -94,4 +97,4 @@ a `message` and a `hint`. `metais help json` lists every format.
 This skill was installed by `metais skill`. If `metais version` is newer
 than the version in the last line, `metais skill --dry-run` says whether to
 refresh it.
-<!-- metais skill: version 1.2.3, sha256 1c47a5e9b42c40a69080366fde56c78733788e5c93bcd87f5abd03a7e25e113f -->
+<!-- metais skill: version 1.2.3, sha256 156b3cc58ccb053a69cacb7762d168ba70bc0d2bce9dbd4720ae9ce110a9d70b -->
