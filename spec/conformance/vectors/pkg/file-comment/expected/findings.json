@@ -10,7 +10,7 @@
       "file": "templates/report.md.liquid"
     },
     "params": {
-      "offset": 3246,
+      "offset": 3348,
       "record": "central directory header",
       "header_field": "file comment length",
       "value": 14,

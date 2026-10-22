@@ -10,8 +10,8 @@
       "file": "assets/b.txt"
     },
     "params": {
-      "offset": 2436,
-      "declared": 2390
+      "offset": 2538,
+      "declared": 2492
     }
   },
   {
@@ -25,8 +25,8 @@
       "file": "inputs/report.schema.json"
     },
     "params": {
-      "offset": 2436,
-      "declared": 2482
+      "offset": 2538,
+      "declared": 2584
     }
   }
 ]

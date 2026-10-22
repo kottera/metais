@@ -9,7 +9,9 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/kottera/metais/internal/testenv"
@@ -135,6 +137,30 @@ func TestReadmeMatchesChapter(t *testing.T) {
 	}
 	if !bytes.HasPrefix(Readme10, []byte("# This is a METAIS package\n")) {
 		t.Errorf("the README text does not begin with the line a detector keys on (A1 item 8): %q", Readme10)
+	}
+}
+
+// TestReadmeReadsInPlace is ADR-001 A3: the README tells a reader that
+// the file is read in place with the metais tool and not unzipped, to
+// start with metais inspect, and that metais read reads a file inside
+// it. It names those two commands and no other, the two the reference
+// tool keeps for every package of the version (A3 item 3).
+func TestReadmeReadsInPlace(t *testing.T) {
+	text := string(Readme10)
+	for _, want := range []string{"do not unzip it: the metais tool reads\nit in place", "`metais inspect`", "`metais read`"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("the README text does not say %q:\n%s", want, text)
+		}
+	}
+	if strings.Index(text, "`metais inspect`") > strings.Index(text, "`metais read`") {
+		t.Errorf("the README text names read before inspect:\n%s", text)
+	}
+	var named []string
+	for _, m := range regexp.MustCompile("`metais ([a-z-]+)").FindAllStringSubmatch(text, -1) {
+		named = append(named, m[1])
+	}
+	if !slices.Equal(named, []string{"inspect", "read"}) {
+		t.Errorf("the README text names the commands %v, want inspect and read alone", named)
 	}
 }
 
