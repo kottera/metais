@@ -1,0 +1,293 @@
+metais help templates — Writing templates: the environment, every filter, and
+escaping.
+
+A template is Liquid, in the dialect spec chapter 7 pins. The examples on this
+page read these inputs:
+
+  inputs.rows   [{"name": "b", "n": 2, "tag": "new"}, {"name": "a", "n": 1,
+                "tag": null}]
+  inputs.note   "line 1\nline 2"
+  inputs.title  null: declared by the schema, and not supplied
+
+  A loop over an input, with forloop:
+
+    {% for row in inputs.rows -%}
+    {{ forloop.index }} of {{ forloop.length }}: {{ row.name }}
+    {% endfor -%}
+  gives
+    1 of 2: b
+    2 of 2: a
+
+  assign, a filter chain, and a test for nil:
+
+    {% assign names = inputs.rows | map: "name" | sort -%}
+    {% if inputs.title %}{{ inputs.title }}{% else %}Untitled{% endif %}
+    {{ names | join: ", " }}
+  gives
+    Untitled
+    a, b
+
+  A partial, rendered once per element:
+
+  templates/row.md holds
+    - {{ row.name }} ({{ row.n }})
+  and the template
+    {% render "row.md" for inputs.rows as row %}
+  gives
+    - b (2)
+    - a (1)
+
+The environment:
+  inputs   One member per declared input: its validated value, defaults applied.
+           An optional input not supplied is nil.
+  package  The manifest's metais, name, version, title, description, guide,
+           authors, license and homepage, and digest, the package digest.
+  output   In a template body: path, the output's path, and root, the relative
+           prefix from its directory to the root of its tree ("", "../", ...).
+  now      The render time the caller supplied, in UTC (2026-10-18T09:30:00Z),
+           or nil. It is a template's only clock.
+  sources  Where each input came from: origin is file, command-line or default;
+           for a collection, each item's file name, stem and form.
+  item     In an output with for_each only: the element being rendered.
+  fan_out  Beside item: index, index0, rindex, rindex0, first, last, length,
+           previous and next.
+
+Names are strict. A name nothing binds is an error
+(template.undefined_variable), and so is a property the schema does not declare
+and the data does not hold (template.undefined_property), never an empty string.
+A property the schema declares and the data omits is nil, and nil writes
+nothing. Reading a property of nil is an error (template.nil_property), whatever
+filter follows, default included; {% if a and a.b %} reads safely. Only nil and
+false are false: 0, "", [] and {} are true, so {% if inputs.x %} asks whether x
+was supplied. x == empty holds for an empty string, array or object; x == blank
+also for nil, false and whitespace.
+
+for loops over an array, a range (1..3) or an object, whose members it visits in
+name order as [name, value] pairs; it takes limit:, offset: and reversed, and
+else for an empty collection, and break and continue. Inside it, forloop has
+index and index0 (from 1 and 0), rindex and rindex0 (from the end), first, last,
+length, parentloop and name. {%- and -%} remove the whitespace before and after
+a tag; nothing else is trimmed, so a tag alone on its line leaves its line feed.
+
+assign binds a value and capture binds the text its block writes, for the rest
+of the template; neither may take a global's name, forloop or tablerowloop
+(template.reserved_name).
+
+render "<path>" renders a partial: a template under templates/, named by its
+full path there as a string literal ("parts/row.md"). It takes k: v parameters,
+with x [as n], or for xs [as n], which renders it once per element and binds
+forloop. A partial sees its parameters, its own bindings and the globals, and
+none of its caller's assign, capture or loop variables. include is refused.
+
+METAIS adds three tags, whose text is never escaped:
+  embed       {% embed "<input>" %} writes an input's bytes exactly as its
+              data-directory file holds them; index: n names an item of a
+              collection.
+  asset       {% asset "<path>" %} writes the relative path from the file being
+              rendered to where the render copies an asset under assets/; as:
+              "contents" writes its text, as: "base64" its bytes.
+  provenance  {% provenance all %} writes one comment line naming the package,
+              its version and digest, the inputs' digests, the tool and the
+              render time when one was given; name parts to write fewer.
+
+Filters:
+Every filter of the dialect, with an example and what it gives. A filter's
+keyword argument follows its positional ones: csv: "name", delimiter: ";". In
+what an example gives, \n is a line feed.
+
+Strings:
+  append          Adds text at the end. {{ "doc" | append: ".md" }} gives doc.md
+  prepend         Adds text at the start. {{ "md" | prepend: "." }} gives .md
+  capitalize      Upper-cases the first character and lower-cases the rest.
+                  {{ "hELLO" | capitalize }} gives Hello
+  downcase        Lower-cases every letter, by Unicode's simple case mapping.
+                  {{ "AbC" | downcase }} gives abc
+  upcase          Upper-cases every letter, by Unicode's simple case mapping.
+                  {{ "abc" | upcase }} gives ABC
+  strip           Removes the whitespace at both ends.
+                  {{ " a b " | strip }} gives a b
+  lstrip          Removes the whitespace at the start.
+                  {{ " a " | lstrip | append: "]" }} gives a ]
+  rstrip          Removes the whitespace at the end.
+                  {{ " a " | rstrip | prepend: "[" }} gives [ a
+  squish          Strips both ends and makes each run of whitespace one space.
+                  {{ inputs.note | squish }} gives line 1 line 2
+  strip_html      Removes HTML tags.
+                  {{ "<b>bold</b> text" | strip_html }} gives bold text
+  strip_newlines  Removes every line break.
+                  {{ inputs.note | strip_newlines }} gives line 1line 2
+  newline_to_br   Writes <br /> before each line break.
+                  {{ inputs.note | newline_to_br }} gives line 1<br />\nline 2
+  remove          Removes every occurrence of a text.
+                  {{ "a-b-c" | remove: "-" }} gives abc
+  remove_first    Removes the first occurrence.
+                  {{ "a-b-c" | remove_first: "-" }} gives ab-c
+  remove_last     Removes the last occurrence.
+                  {{ "a-b-c" | remove_last: "-" }} gives a-bc
+  replace         Replaces every occurrence of a text with another.
+                  {{ "a-b-c" | replace: "-", "+" }} gives a+b+c
+  replace_first   Replaces the first occurrence.
+                  {{ "a-b-c" | replace_first: "-", "+" }} gives a+b-c
+  replace_last    Replaces the last occurrence.
+                  {{ "a-b-c" | replace_last: "-", "+" }} gives a-b+c
+  split           Splits a string into an array at each separator.
+                  {{ "a,b,c" | split: "," | join: " " }} gives a b c
+  truncate        Cuts a string to a number of characters, the ellipsis (...
+                  unless given) included.
+                  {{ "abcdefgh" | truncate: 6 }} gives abc...
+  truncatewords   Keeps a number of words, then the ellipsis (... unless given).
+                  {{ "one two three" | truncatewords: 2 }} gives one two...
+
+Numbers (integers give an integer):
+  abs             The absolute value. {{ -3 | abs }} gives 3
+  ceil            Rounds up to an integer. {{ 1.2 | ceil }} gives 2
+  floor           Rounds down to an integer. {{ 1.8 | floor }} gives 1
+  round           Rounds half away from zero, to a number of decimal places when
+                  given. {{ 2.5 | round }} gives 3
+  plus            Adds; a float adds as the decimal it is written as.
+                  {{ 0.1 | plus: 0.2 }} gives 0.3
+  minus           Subtracts. {{ 5 | minus: 7 }} gives -2
+  times           Multiplies. {{ 3 | times: 1.5 }} gives 4.5
+  divided_by      Divides; two integers give the quotient rounded down.
+                  {{ 7 | divided_by: 2 }} gives 3
+  modulo          The remainder of the division rounded down.
+                  {{ -7 | modulo: 2 }} gives 1
+  at_least        The larger of the value and the argument.
+                  {{ 3 | at_least: 5 }} gives 5
+  at_most         The smaller of the value and the argument.
+                  {{ 3 | at_most: 2 }} gives 2
+
+Arrays:
+  size            The length of a string, array or object; 0 for a number, a
+                  boolean and nil. {{ "abc" | size }} gives 3
+  first           The first element. {{ "a,b,c" | split: "," | first }} gives a
+  last            The last element. {{ "a,b,c" | split: "," | last }} gives c
+  join            The elements' texts, with a separator between them (a space
+                  unless given).
+                  {{ "a,b" | split: "," | join: " + " }} gives a + b
+  reverse         The elements in reverse order.
+                  {{ "a,b,c" | split: "," | reverse | join: "," }} gives c,b,a
+  concat          The elements of both arrays.
+                  {{ (1..2) | concat: (3..4) | join: "," }} gives 1,2,3,4
+  compact         Drops nil elements, or the elements whose property is nil.
+                  {{ inputs.rows | map: "tag" | compact | join: "," }} gives new
+  uniq            Drops repeated elements.
+                  {{ "a,b,a" | split: "," | uniq | join: "," }} gives a,b
+  map             Each element's property.
+                  {{ inputs.rows | map: "name" | join: "," }} gives b,a
+  sort            Sorts, by a property when given.
+                  {{ inputs.rows | sort: "n" | map: "name" | join: "," }}
+                  gives a,b
+  sort_natural    Sorts ignoring case.
+                  {{ "b,C,a" | split: "," | sort_natural | join: "," }}
+                  gives a,b,C
+  slice           The element or character at an offset, or as many as a length
+                  gives. {{ "abcdef" | slice: 1, 3 }} gives bcd
+  sum             Adds the elements, or their property.
+                  {{ inputs.rows | sum: "n" }} gives 3
+  where           Keeps the elements whose property is truthy, or equals a
+                  value.
+                  {{ inputs.rows | where: "n", 1 | map: "name" | join }} gives a
+  reject          Drops the elements whose property is truthy, or equals a
+                  value.
+                  {{ inputs.rows | reject: "tag" | map: "name" | join }} gives a
+  has             Whether an element's property is truthy, or equals a value.
+                  {{ inputs.rows | has: "name", "a" }} gives true
+  find            The first element whose property is truthy, or equals a value.
+                  {{ inputs.rows | find: "n", 1 | json }}
+                  gives {"n":1,"name":"a","tag":null}
+  find_index      The position of that element, from 0.
+                  {{ inputs.rows | find_index: "name", "a" }} gives 1
+  default         The value, or its argument when the value is nil, false, or an
+                  empty string, array or object; allow_false: true keeps false.
+                  {{ inputs.title | default: "Untitled" }} gives Untitled
+
+Encoding (escape, h and escape_once give a safe value):
+  escape          Writes & < > " and ' as HTML character references.
+                  {{ "a < b" | escape }} gives a &lt; b
+  h               escape, by another name. {{ "a & b" | h }} gives a &amp; b
+  escape_once     escape, but leaves an & that already begins a character
+                  reference.
+                  {{ "&lt; & <" | escape_once }} gives &lt; &amp; &lt;
+  url_encode      Percent-encodes a URL component; a space is +.
+                  {{ "a b&c" | url_encode }} gives a+b%26c
+  url_decode      Decodes what url_encode writes.
+                  {{ "a+b%26c" | url_decode }} gives a b&c
+  base64_encode   Base64. {{ "hi?" | base64_encode }} gives aGk/
+  base64_decode   Decodes base64. {{ "aGk/" | base64_decode }} gives hi?
+  base64_url_safe_encode
+                  Base64 with - and _ for + and /.
+                  {{ "hi?" | base64_url_safe_encode }} gives aGk_
+  base64_url_safe_decode
+                  Decodes URL-safe base64.
+                  {{ "aGk_" | base64_url_safe_decode }} gives hi?
+
+METAIS's own (spec chapter 8):
+  json            RFC 8785 JSON: members in name order, no whitespace; indent: n
+                  (1 to 8) pretty-prints.
+                  {{ inputs.rows | last | json }}
+                  gives {"n":1,"name":"a","tag":null}
+  yaml            A YAML block document, members in name order, with no final
+                  line feed; a string YAML could read otherwise, such as n, is
+                  quoted.
+                  {{ inputs.rows | first | yaml }}
+                  gives "n": 2\nname: b\ntag: new
+  csv             An array of objects as CSV, of the columns named or else every
+                  member; header: false, headers: and delimiter: change it.
+                  {{ inputs.rows | csv: "name", "n" }} gives name,n\nb,2\na,1\n
+  markdown_table  An array of objects as a Markdown table, with the columns and
+                  headers: of csv.
+                  {{ inputs.rows | markdown_table: "name", "n" }}
+                  gives | name | n |\n| --- | --- |\n| b | 2 |\n| a | 1 |\n
+  json_script     json for a <script> element: < > & U+2028 and U+2029 written
+                  as \u escapes; safe.
+                  {{ "a&b" | json_script }} gives "a\u0026b"
+  safe            Marks a value safe from escaping; only as the last filter of
+                  {{ }} or echo. {{ "<b>" | safe }} gives <b>
+  slug            Lower-case ASCII letters and digits joined by -; accents are
+                  dropped, and a string with no slug is an error.
+                  {{ "Hello, World!" | slug }} gives hello-world
+  date            Formats an RFC 3339 date or date-time, or Unix seconds, in its
+                  own offset, with a strftime format; spec chapter 8 lists the
+                  directives.
+                  {{ "2026-10-18T09:30:00+02:00" | date: "%Y-%m-%d %H:%M %z" }}
+                  gives 2026-10-18 09:30 +0200
+
+Escaping:
+An output's escape is none, the default, or html, set in metais.yaml beside its
+template (escape: html); nothing is escaped unless it is set. In an html output,
+the text of every value {{ }}, echo or cycle writes has & < > " and ' written as
+character references; the template's own text, and what raw, embed, asset and
+provenance write, are never escaped. A value is safe, and written as it is, when
+its last filter is safe, escape, escape_once or json_script, or it is a capture
+made in an html output. Safety does not pass through a later filter. A partial
+is escaped as the output it renders into is.
+
+Escaping does not make text safe inside a <script> element or a URL: data in a
+<script> element goes through json_script, whose text can neither close the
+element nor open an HTML comment, and a URL component through url_encode; the
+dialect offers nothing else for those contexts. In an html output:
+
+    <p>{{ "Fish & <Chips>" }}</p>
+  gives
+    <p>Fish &amp; &lt;Chips&gt;</p>
+
+    {{ "<b>bold</b>" | safe }} {{ "<b>" | escape }}
+  gives
+    <b>bold</b> &lt;b&gt;
+
+    {{ inputs.note | escape | newline_to_br | safe }}
+  gives
+    line 1<br />
+    line 2
+
+    <a href="/find?q={{ "a b&c" | url_encode }}">
+  gives
+    <a href="/find?q=a+b%26c">
+
+    <script type="application/json">{{ "a</script>" | json_script }}</script>
+  gives
+    <script type="application/json">"a\u003c/script\u003e"</script>
+
+'metais help manifest' gives the fields of metais.yaml; spec chapters 7, 8 and 9
+give the environment, the filters and tags, and the outputs in full.
