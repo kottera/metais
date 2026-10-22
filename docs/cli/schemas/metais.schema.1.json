@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://metais.org/cli/schemas/metais.schema.1.json",
   "title": "metais.schema/1",
-  "description": "What metais schema prints with --json: the combined input schema, or one input's schema as a self-contained Compound Schema Document (ADR-008 D5, schema).",
+  "description": "What metais schema prints with --json: the combined input schema, or one input's schema as a self-contained Compound Schema Document (ADR-008 D5, schema); or, with --fields, the compact field listing in the schema's place (ADR-008 A7).",
   "$ref": "metais.envelope.1.json",
   "properties": {
     "format": {
@@ -15,6 +15,9 @@
         },
         {
           "$ref": "#/$defs/result"
+        },
+        {
+          "$ref": "#/$defs/fields-result"
         }
       ]
     }
@@ -38,6 +41,102 @@
         "schema": {
           "description": "The schema, a JSON Schema 2020-12 document, its members in canonical key order.",
           "type": "object"
+        }
+      }
+    },
+    "fields-result": {
+      "description": "With --fields: one entry per field, in the order the text listing prints them (ADR-008 A7).",
+      "type": "object",
+      "required": [
+        "input",
+        "fields"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "description": "The input's name, or null for every input's fields.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field"
+          }
+        }
+      }
+    },
+    "field": {
+      "description": "One declaration of a field: what the schemas that declare it at its pointer, under its conditions, say of its value.",
+      "type": "object",
+      "required": [
+        "pointer",
+        "type",
+        "required",
+        "constraints",
+        "title",
+        "when",
+        "same_as",
+        "beyond_value_depth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "pointer": {
+          "description": "The field's JSON Pointer, its first token the input's name, as --set takes it; the token * stands for every element of an array, or every member of an object its schema does not name.",
+          "type": "string"
+        },
+        "type": {
+          "description": "The declared type names, in the order type gives them; empty when no declaring schema names a type.",
+          "type": "array",
+          "items": {
+            "enum": [
+              "null",
+              "boolean",
+              "object",
+              "array",
+              "number",
+              "string",
+              "integer"
+            ]
+          }
+        },
+        "required": {
+          "description": "Whether an object declaring the field, under the field's conditions, requires it.",
+          "type": "boolean"
+        },
+        "constraints": {
+          "description": "Each assertion and default the declaring schemas make, as keyword=<canonical JSON>, in their order; name-matches=<JSON string> for a member patternProperties selects; false for a false schema; a value longer than 1024 bytes is cut and ends […+N bytes], and a last entry […] says the line's constraints were cut at 4096 bytes.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "title": {
+          "description": "The first title of the declaring schemas, cut as a constraint is, or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "when": {
+          "description": "The conditions the declaration applies under, outermost first; empty when it always applies.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "same_as": {
+          "description": "The pointer where the fields beneath a schema that also declares this field were listed, or null.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "beyond_value_depth": {
+          "description": "True when fields beneath this one are declared and not listed, since they lie deeper than value-depth beneath the input.",
+          "type": "boolean"
         }
       }
     }

@@ -777,9 +777,10 @@ func (s *session) schemaFields(res *schemaResult, doc value.Object, in *manifest
 		// walker indexes is one the compiler accepted.
 		panic("cli: walking a compiled schema: " + err.Error())
 	}
-	name, required, whole := "", false, "metais schema <package> <input>"
+	name, required, whole := "", false, Next{Run: "metais schema <package>", Why: "Prints the combined schema, with each field's description."}
 	if in != nil {
-		name, required, whole = in.Name, in.Required, "metais schema <package> "+shellQuote(in.Name)
+		whole = Next{Run: "metais schema <package> " + shellQuote(in.Name), Why: "Prints the whole schema, with each field's description."}
+		name, required = in.Name, in.Required
 	}
 	fs := w.Fields(name, required, int(s.lim.Value(limits.ValueDepth)))
 	rows := make([]schemaField, len(fs))
@@ -805,8 +806,7 @@ func (s *session) schemaFields(res *schemaResult, doc value.Object, in *manifest
 	}
 	res.Fields = &rows
 	return outcome{result: res, human: []byte(b.String()), next: declaredSteps([]Next{
-		{Run: whole, Why: "Prints the whole schema, with each field's description."},
-		validate,
+		whole, validate,
 	}, s.table)}
 }
 

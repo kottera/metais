@@ -140,7 +140,7 @@ func (l *lister) summary(ptr string) *summary {
 				s.types, s.typed = declaredNames(m), true
 			case kw == "title":
 				if t, ok := m.(value.String); ok {
-					title := t.Text()
+					title := shown(t.Text())
 					s.title = &title
 				}
 			case walkedSchemas[kw]:

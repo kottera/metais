@@ -1,16 +1,19 @@
 metais schema — Print the package's combined input schema, or one input's
-schema.
+schema, or list their fields.
 
 Usage:
-  metais schema <package> [<input>] [--limit <name>=<value>]... [--json]
+  metais schema <package> [<input>] [--fields] [--limit <name>=<value>]...
+                [--json]
 
 Examples:
+  metais schema report-1.0.0.metais product --fields
+      Lists the fields of the input product, one line each.
+  metais schema report-1.0.0.metais product > product.json
+      Writes the schema of the input product to a file.
+  metais schema report-1.0.0.metais --fields --json
+      Lists every input's fields as one metais.schema/1 document.
   metais schema report-1.0.0.metais
       Prints the combined input schema.
-  metais schema report-1.0.0.metais product
-      Prints the schema of the input product.
-  metais schema report-1.0.0.metais product --json
-      Prints it as one metais.schema/1 document.
 
 With no input, prints the combined input schema: one JSON Schema 2020-12
 document with a property per input, which is what the inputs are validated
@@ -22,14 +25,33 @@ the array's, whose items each file must satisfy.
 The schema is printed in canonical key order, indented by two spaces, so metais
 schema <package> <input> > <input>.json writes a usable schema file.
 
+--fields lists the fields instead, one line per field, to read whole: the
+input's, or with no input every input's. A field's pointer begins with its
+input's name, as --set takes it, and * stands for every element of an array, or
+every member of an object its schema does not name. Each line gives the field's
+type (any when none is declared), whether the object holding it requires it, its
+constraints as keyword=JSON, and its title. The listing follows $ref and allOf
+into the field's own line, and properties, patternProperties,
+additionalProperties, prefixItems, items and their unevaluated forms to the
+fields beneath. A field that anyOf, oneOf, if with then or else, or
+dependentSchemas declares is listed again with a last column, when, naming the
+condition. A schema's fields are listed once, where it is first met; another
+field it declares says (fields as at <pointer>). No field deeper beneath its
+input than value-depth is listed. A title, a condition or a constraint longer
+than 1024 bytes is cut, and a line's constraints at 4096 bytes; the schema
+itself has them whole, with each field's description.
+
 Operands:
   <package>
       A packed package file, or a source directory; - is refused, since a
       package is read with random access. Required.
   <input>
-      An input's name; the combined schema when omitted.
+      An input's name; the combined schema, or every input's fields, when
+      omitted.
 
 Flags:
+  --fields
+      List the fields, one line each, in place of the schema.
   --limit <name>=<value>
       Lower one resource limit for this run, to a whole number no higher than
       its default (a size may end in KiB, MiB or GiB). metais limits lists them.
@@ -48,8 +70,10 @@ Flags:
       Print help to standard output and exit 0; nothing else runs.
 
 Prints:
-  The schema alone, indented by two spaces; never coloured. With --json, one
-  metais.schema/1 document.
+  The schema alone, indented by two spaces; with --fields, one line per field:
+  its pointer, type, required or optional, constraints and title, and the
+  condition of one declared under a condition, separated by tabs. Never
+  coloured. With --json, one metais.schema/1 document.
 
 Refusals:
   limit.invalid
