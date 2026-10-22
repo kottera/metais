@@ -9,6 +9,7 @@ import (
 	"path"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/kottera/metais/internal/tools/ux/streamjson"
@@ -36,9 +37,9 @@ var checks = map[string]check{
 	"generated-preview": {generatedPreview,
 		"Generated data is metais's: render --sample, or a data directory metais sample wrote. Data the session wrote by hand is not generated.", false},
 	"names-every-input": {namesEveryInput,
-		"An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted.", false},
+		"An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. A field is also named by a line of them that holds every word of its name, each read by its first six letters, so \"Primary and second contact: name, email and telephone\" names six fields and \"detection\" names detected_at; or that holds the number its title begins with, alone or inside a range such as 1.7–1.9, beside a word of that title. A line that holds a field's words for another reason is read as naming it, and a field named only by a synonym is not seen. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted.", false},
 	"script-renders": {scriptRenders,
-		"A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it, the harness reports no error, and the run renders: render's listing of the files it wrote is in its output, or a file named as one of the package's outputs is left in the session's directory. The scorer does not run the script again.", false},
+		"A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it, the harness reports no error, and the run renders: render's listing of the files it wrote is in its output, or a file named as one of the package's outputs is left in the session's directory. The harness reports one status for a Bash call, its last command's, so a run of the script that other commands of its call follow passes on render's listing in the call's output alone, whatever the call's status: a script that renders and then fails in a later step of its own is not told apart there from one that ends cleanly. The scorer does not run the script again.", false},
 	"new-package": {newPackage,
 		"check passing is seen through pack, which checks and tests the package before it writes it.", false},
 	"schema-and-template": {schemaAndTemplate,
@@ -425,13 +426,14 @@ func namesEveryInput(r *run) Result {
 		return Result{Detail: "the scorer was handed no source for the package"}
 	}
 	answer := normalize(r.final().Text)
+	lines := answerLines(r.final().Text)
 	var missing []string
 	for _, in := range src.inputs {
 		if !strings.Contains(answer, normalize(in.name)) {
 			missing = append(missing, "input "+in.name)
 		}
 		for _, names := range in.required {
-			if !slices.ContainsFunc(names, func(n string) bool { return mentions(answer, n) }) {
+			if !slices.ContainsFunc(names, func(n string) bool { return mentions(answer, n) }) && !slices.ContainsFunc(lines, func(l answerLine) bool { return l.names(names) }) {
 				missing = append(missing, in.name+"."+names[0])
 			}
 		}
@@ -462,6 +464,110 @@ func normalize(s string) string {
 func mentions(text, name string) bool {
 	n := normalize(name)
 	return n != "" && strings.Contains(text, n)
+}
+
+// answerLine is one line of an answer, read for the fields it names in
+// its own words: the stems of its words, and the field numbers it holds.
+type answerLine struct {
+	stems   map[string]bool
+	numbers []string
+	ranges  [][2]string
+}
+
+var (
+	answerWord = regexp.MustCompile(`[a-z]+`)
+	// fieldNumber is a numbered field, such as 1.7 or 3.15: a title that
+	// begins with one, and an answer that names it so.
+	fieldNumber = regexp.MustCompile(`\d+(?:\.\d+)+`)
+	// fieldRange is a run of numbered fields: 1.7–1.9, 1.10-1.12, 2.1 to 2.4.
+	fieldRange = regexp.MustCompile(`(\d+(?:\.\d+)+)\s*(?:–|—|-|to)\s*(\d+(?:\.\d+)+)`)
+	// joining are the words a field's name joins its words with, which a
+	// line need not repeat: detected_at is named by "detection".
+	joining = []string{"a", "an", "and", "at", "by", "for", "in", "is", "of", "on", "or", "the", "to"}
+)
+
+// stem is the part of a word a line and a field's name are compared by:
+// its first six letters, or a shorter word without its plural s, so that
+// detected and detection, and name and names, are one word.
+func stem(w string) string {
+	if len(w) > 6 {
+		return w[:6]
+	}
+	if len(w) > 3 {
+		return strings.TrimSuffix(w, "s")
+	}
+	return w
+}
+
+// answerLines reads each line of an answer.
+func answerLines(text string) []answerLine {
+	var out []answerLine
+	for _, l := range strings.Split(strings.ToLower(text), "\n") {
+		al := answerLine{stems: map[string]bool{}, numbers: fieldNumber.FindAllString(l, -1)}
+		for _, w := range answerWord.FindAllString(l, -1) {
+			al.stems[stem(w)] = true
+		}
+		for _, m := range fieldRange.FindAllStringSubmatch(l, -1) {
+			al.ranges = append(al.ranges, [2]string{m[1], m[2]})
+		}
+		out = append(out, al)
+	}
+	return out
+}
+
+// names reports whether the line names a field, given its property name
+// and title: every word of its name is in the line, by its stem, or the
+// line holds the number its title begins with, alone or inside a range,
+// beside a word of that title.
+func (l answerLine) names(names []string) bool {
+	if l.holdsAll(strings.ReplaceAll(names[0], "_", " ")) {
+		return true
+	}
+	if len(names) < 2 {
+		return false
+	}
+	num := fieldNumber.FindString(names[1])
+	if num == "" || !strings.HasPrefix(names[1], num) || !l.holdsAny(strings.TrimPrefix(names[1], num)) {
+		return false
+	}
+	if slices.Contains(l.numbers, num) {
+		return true
+	}
+	return slices.ContainsFunc(l.ranges, func(rg [2]string) bool { return inRange(num, rg[0], rg[1]) })
+}
+
+// words are the words of a name or title the line is read for, without
+// the joining words.
+func words(text string) []string {
+	return slices.DeleteFunc(answerWord.FindAllString(strings.ToLower(text), -1), func(w string) bool { return slices.Contains(joining, w) })
+}
+
+// holdsAll reports whether the line holds every word of text, by its stem.
+func (l answerLine) holdsAll(text string) bool {
+	ws := words(text)
+	return len(ws) > 0 && !slices.ContainsFunc(ws, func(w string) bool { return !l.stems[stem(w)] })
+}
+
+// holdsAny reports whether the line holds a word of text, by its stem.
+func (l answerLine) holdsAny(text string) bool {
+	return slices.ContainsFunc(words(text), func(w string) bool { return l.stems[stem(w)] })
+}
+
+// inRange reports whether a field number falls in a range of them that
+// differ only in their last part: 1.8 is in 1.7–1.9.
+func inRange(num, lo, hi string) bool {
+	cut := func(s string) (string, int) {
+		i := strings.LastIndexByte(s, '.')
+		n, err := strconv.Atoi(s[i+1:])
+		if err != nil {
+			return "", -1
+		}
+		return s[:i], n
+	}
+	p, n := cut(num)
+	lp, l := cut(lo)
+	hp, h := cut(hi)
+	return n >= 0 && p == lp && p == hp && l <= n && n <= h
 }
 
 var (
@@ -513,7 +619,10 @@ func scriptRenders(r *run) Result {
 			if c.name == "chmod" || c.name == "cat" || c.name == "ls" || c.name == "crontab" || c.name == "head" || c.name == "file" {
 				continue
 			}
-			if c.ok() && r.rendered(c) {
+			// The harness reports one status for a Bash call, its last
+			// command's. A run of the script that other commands follow
+			// is judged by render's own listing in the call's output.
+			if c.ok() && r.rendered(c) || !c.ok() && !r.lastOfCall(c) && reportedDigest.MatchString(c.output()) {
 				return Result{Pass: true, Detail: base + " validates and renders through metais, and the session's test run of it renders",
 					Evidence: []Evidence{{File: p}, c.evidence()}}
 			}
@@ -525,6 +634,11 @@ func scriptRenders(r *run) Result {
 		return Result{Detail: base + " validates and renders through metais, but no test run of it renders", Evidence: append([]Evidence{{File: p}}, ev...)}
 	}
 	return Result{Detail: "the session leaves no script that validates and renders through metais"}
+}
+
+// lastOfCall reports whether c is the last command of its Bash call.
+func (r *run) lastOfCall(c *cmd) bool {
+	return !slices.ContainsFunc(r.cmds, func(o *cmd) bool { return o.use == c.use && o.seq > c.seq })
 }
 
 // rendered reports whether a command rendered the package: its output
