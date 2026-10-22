@@ -70,7 +70,7 @@
           }
         ],
         "format": "metais.version/1",
-        "prints": "Two lines: metais and the tool's version, then the specification versions it implements.",
+        "prints": "Three lines: metais and the tool's version, the specification versions it implements, then who makes METAIS.",
         "refusals": [
           {
             "code": "usage.bad_value",

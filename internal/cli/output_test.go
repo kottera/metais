@@ -161,14 +161,39 @@ func TestVersion(t *testing.T) {
 	if !r.doc.OK || len(r.doc.Findings) != 0 || len(r.doc.Next) != 0 {
 		t.Errorf("version --json: %+v", r.doc)
 	}
-	h := runTool(t, "version")
-	if h.stdout != "metais 1.2.3-rc.1+build.5\nspecification 1.0\n" {
-		t.Errorf("metais version printed %q", h.stdout)
+	// The text output ends with its maker line (ADR-008 A14), and metais
+	// --version is metais version (ADR-008 D1 item 4), so both print it.
+	const text = "metais 1.2.3-rc.1+build.5\nspecification 1.0\nMETAIS is made by Kottera.\n"
+	for _, argv := range [][]string{{"version"}, {"--version"}} {
+		if h := runTool(t, argv...); h.stdout != text {
+			t.Errorf("metais %s printed %q, want %q", strings.Join(argv, " "), h.stdout, text)
+		}
 	}
-	// The document's bytes, member for member.
+	// The document's bytes, member for member: the maker line gains it no
+	// member (ADR-008 A14 item 2).
 	const doc = `{"format":"metais.version/1","ok":true,"findings":[],"summary":{"errors":0,"warnings":0,"info":0,"listed":0,"omitted":0,"by_code":{}},"result":{"tool":{"name":"metais","version":"1.2.3-rc.1+build.5"},"specification":{"implements":["1.0"]}},"next":[]}` + "\n"
-	if r.stdout != doc {
-		t.Errorf("version --json is\n%s\nwant\n%s", r.stdout, doc)
+	for _, argv := range [][]string{{"version", "--json"}, {"--version", "--json"}, {"--json", "--version"}} {
+		if j := runTool(t, argv...); j.stdout != doc {
+			t.Errorf("metais %s is\n%s\nwant\n%s", strings.Join(argv, " "), j.stdout, doc)
+		}
+	}
+}
+
+// TestVendorNeutral is ADR-013 D2 item 2: the version's maker line is the
+// one place metais names its maker. No help topic, no command's help, the
+// help document and the agent skill name Kottera or tera.
+func TestVendorNeutral(t *testing.T) {
+	maker := regexp.MustCompile(`(?i)kottera|\btera\b`)
+	for file, argv := range helpGolden() {
+		if out := runTool(t, argv...).stdout; maker.MatchString(out) {
+			t.Errorf("metais %s (%s) names %q", strings.Join(argv, " "), file, maker.FindString(out))
+		}
+	}
+	lines := strings.Split(strings.TrimSuffix(runTool(t, "version").stdout, "\n"), "\n")
+	for i, l := range lines {
+		if maker.MatchString(l) != (i == len(lines)-1) {
+			t.Errorf("metais version's line %d %q: only its last line names its maker", i+1, l)
+		}
 	}
 }
 

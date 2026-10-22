@@ -2239,6 +2239,42 @@ are unchanged.
    does not carry, that is an amendment to this ADR, adding it to
    `metais.help/1` with its schema, and not a scrape.
 
+### A14 — `metais version`'s text output ends with its maker line
+
+**Status:** Accepted on merge, under
+[ADR-013](ADR-013-the-public-project-and-its-distribution.md) D2 item 2,
+which makes the line the binary's one exception to vendor neutrality and
+leaves its wording and this amendment to
+[PLAN-2026-10-metais-public](../plans/PLAN-2026-10-metais-public.md) W1-5.
+**Amends:** D1 item 4 (what `metais version` prints). The version string,
+its resolution, `metais.version/1` and every other command are unchanged.
+
+1. **The line.** `metais version`'s text output is three lines: `metais`
+   and the tool's version, the specification versions it implements, and
+   last, exactly `METAIS is made by Kottera.` The line names Kottera and
+   nothing else: no product and no URL.
+2. **`--json` gains no member.** `metais version --json` prints the same
+   `metais.version/1` document, byte for byte, as before this amendment.
+   Attribution is for a person reading the text; a harness reading the
+   document has no use for it, and a member would change a schema every
+   caller validates against.
+3. **`metais version` and `metais --version` print the same line.** D1
+   item 4 makes `--version` the `version` command, not a second command
+   with its own output, so the line belongs to the command and both
+   spellings print it.
+4. **The wording.** `METAIS is made by Kottera.` is the site's footer
+   sentence (ADR-013 D2 item 1) without its link: one fact, stated the
+   way the project states it everywhere else, with nothing an agent reading
+   the output would act on. It is the output's last line so the first two
+   keep the meaning and the positions every reader of them has relied on.
+5. **The one place.** No other output, no help topic, no command's help,
+   `metais help --json` and the agent skill name Kottera or tera.
+   `version`'s help says its output ends with who makes METAIS without
+   naming the maker. `internal/cli`'s `TestVendorNeutral` holds every help
+   output and the skill to this, and `metais version`'s output to naming
+   its maker on its last line only; `TestVersion` pins the line and the
+   document's bytes.
+
 ## Implementation log
 
 This log is this section together with the entry files in
