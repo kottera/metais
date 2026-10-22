@@ -23,7 +23,7 @@ func checkDeclaration() *Command {
 	return &Command{
 		Name: "check", Group: "Authoring",
 		Synopsis:    "check [<package>] [--limit <name>=<value>]... [--json]",
-		Description: "Check a package without data, and report every finding of every step at once.",
+		Description: "Check a package without data, and report every finding of every step at once, or only the refusal of a package that cannot be read.",
 		Detail: "The package is a source directory, the current directory when omitted, or a packed package " +
 			"file. check reads nothing but the package and writes nothing. It runs every step in order: the " +
 			"source tree, the entries, the limits of the package pack would write, the manifest and its " +

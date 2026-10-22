@@ -1,5 +1,5 @@
 metais check — Check a package without data, and report every finding of every
-step at once.
+step at once, or only the refusal of a package that cannot be read.
 
 Usage:
   metais check [<package>] [--limit <name>=<value>]... [--json]

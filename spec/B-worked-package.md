@@ -291,7 +291,14 @@ Read the release notes: release-{{ inputs.release.version }}.md
 
 The package is complete enough to check. Checking needs no data: it reads
 every template against the schemas, and reports every finding of every step
-in one run ([MTS-AUT-001](13-authoring.md#mts-aut-001)).
+in one run ([MTS-AUT-001](13-authoring.md#mts-aut-001),
+[MTS-AUT-002](13-authoring.md#mts-aut-002)). That holds for a package whose
+entries could be read. A package whose read is refused — an empty
+directory in the source, say, which is `package.layout.empty_directory` —
+gets only the findings of that refusal, and no other finding
+([MTS-AUT-003](13-authoring.md#mts-aut-003)). So a check that reports
+only a refusal has not yet looked at the manifest, the schemas or the
+templates: fix the refusal and check again.
 
 ```sh
 metais check release-notes
