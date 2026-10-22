@@ -30,9 +30,18 @@ var nextInspectAgain = Next{Run: "metais inspect <package>", Why: "Opens the pac
 
 // exampleIs is what the specification says an example is (spec §13.7),
 // as the tool says it wherever it shows a package's examples (ADR-008 A8
-// item 3). It says nothing of whether an example's facts are real, which
-// the tool cannot know.
-const exampleIs = "An example is the author's illustration of the inputs, and of the outputs a render of them should produce, kept in the package to test it: not your data."
+// item 3), and that it is not a preview (A10 item 2). It says nothing of
+// whether an example's facts are real, which the tool cannot know.
+const exampleIs = "An example is the author's illustration of the inputs, and of the outputs a render of them should produce, kept in the package to test it: not your data, and not a preview of what the package produces, which is a render from generated data with metais render --sample."
+
+// generatedServes is whom generated data serves, and generatedNever that
+// it never takes the place of a real document's facts, as inspect's next
+// steps and the help of render --sample and sample say them (ADR-008 A10
+// item 1).
+const (
+	generatedServes = "a person who asked for an example, sample data or a preview of what the package produces"
+	generatedNever  = "Generated data never stands in for the facts a real document needs: without them, ask the person for them."
+)
 
 var nextLimits = Next{Run: "metais limits", Why: "Lists every limit with its default; a limit can be lowered and never raised."}
 
@@ -65,11 +74,11 @@ func inspectDeclaration() *Command {
 			"computed in memory; nothing is written.\n\n" +
 			"A guide of more than 60 lines or 6144 bytes is cut to its first 40 lines, within 4096 bytes; " +
 			"--guide prints it whole, and nothing else.\n\n" +
-			"The Next: block lists the commands that fill in and render the package, then metais render --sample " +
-			"and metais sample, which serve a supplier who wants an example, a preview or data to start from " +
-			"with data generated from the inputs' schemas, then the first of the package's examples, and last " +
-			"the way to edit the package: metais unpack for a packed package, metais check for a source " +
-			"directory. " + exampleIs,
+			"The Next: block lists the commands that fill in and render the package from the facts a person " +
+			"supplies, then metais render --sample and metais sample, which serve only " + generatedServes +
+			", with data generated from the inputs' schemas, and last the way to edit the package: metais " +
+			"unpack for a packed package, metais check for a source directory. " + generatedNever + " " +
+			exampleIs,
 		Role:     finding.RoleConsumer,
 		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file, or a source directory; - is refused, since a package is read with random access."}},
 		Flags: []args.Flag{
@@ -570,16 +579,12 @@ func inspectNext(res *inspectResult, t []*Command) []Next {
 	out = append(out,
 		Next{"metais validate <package> --data <dir>", "Validates the inputs you gathered in a data directory."},
 		Next{"metais render <package> --data <dir> --out <dir>", "Renders the outputs from the validated inputs into a new directory."},
-		// A supplier who asks for an example, a preview or data to start
-		// from is served by the generator, before any route to a shipped
-		// example's files (ADR-008 A8 item 1, R-UX-2).
-		Next{"metais render <package> --sample --out <dir>", "Renders an example from generated data, to preview the outputs; generated data is never a real document's facts."},
-		Next{"metais sample <package> --out <dir>", "Writes generated data as a data directory, data to start from; generated data is never a real document's facts."},
+		// The generator serves only a person who asked for an example,
+		// sample data or a preview, and no step names a shipped example:
+		// its expected outputs are no preview (ADR-008 A10, R-UX-2).
+		Next{"metais render <package> --sample --out <dir>", "Only for a person who asked for an example or a preview of what the package produces: renders the outputs from generated data into a new directory. " + generatedNever},
+		Next{"metais sample <package> --out <dir>", "Only for a person who asked for sample data or data to start from: writes generated data as a data directory. " + generatedNever},
 	)
-	if len(*res.Examples) > 0 {
-		first := (*res.Examples)[0].Name
-		out = append(out, Next{"metais ls <package> " + shellQuote("examples/"+first+"/") + " -r", "Lists the first example's inputs and expected outputs. " + exampleIs})
-	}
 	// The route to editing the package (ADR-008 A8 item 2): a source
 	// directory is already the tree unpack writes.
 	if res.Package.Source == "directory" {

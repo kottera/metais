@@ -99,8 +99,7 @@ func renderDeclaration() *Command {
 			"element of its array, which its when, its path and its template see as item, with its position " +
 			"as fan_out; an output, or an element, whose when is false writes no file.\n\n" +
 			"--sample renders from sample data: a preview, for an author before any real data exists and for " +
-			"a supplier who wants an example, a preview or data to start from. Generated data is never a real " +
-			"document's facts. The generator makes every input from its " +
+			generatedServes + ". " + generatedNever + " The generator makes every input from its " +
 			"schema, as metais sample does, in the data directory's place, so --data is refused with it. Values " +
 			"given with --set, --set-json and --inputs-json are kept as given and the rest is made around them, " +
 			"conditionals included, so one value can be pinned to see one branch. The data is validated as " +

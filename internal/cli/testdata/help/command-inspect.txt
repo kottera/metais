@@ -28,14 +28,17 @@ write from it, computed in memory; nothing is written.
 A guide of more than 60 lines or 6144 bytes is cut to its first 40 lines, within
 4096 bytes; --guide prints it whole, and nothing else.
 
-The Next: block lists the commands that fill in and render the package, then
-metais render --sample and metais sample, which serve a supplier who wants an
-example, a preview or data to start from with data generated from the inputs'
-schemas, then the first of the package's examples, and last the way to edit the
-package: metais unpack for a packed package, metais check for a source
-directory. An example is the author's illustration of the inputs, and of the
-outputs a render of them should produce, kept in the package to test it: not
-your data.
+The Next: block lists the commands that fill in and render the package from the
+facts a person supplies, then metais render --sample and metais sample, which
+serve only a person who asked for an example, sample data or a preview of what
+the package produces, with data generated from the inputs' schemas, and last the
+way to edit the package: metais unpack for a packed package, metais check for a
+source directory. Generated data never stands in for the facts a real document
+needs: without them, ask the person for them. An example is the author's
+illustration of the inputs, and of the outputs a render of them should produce,
+kept in the package to test it: not your data, and not a preview of what the
+package produces, which is a render from generated data with metais render
+--sample.
 
 Operands:
   <package>

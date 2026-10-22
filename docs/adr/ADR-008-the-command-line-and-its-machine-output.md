@@ -2028,6 +2028,77 @@ steps and machine output are unchanged.
    `files`, the files written in order; the forms differ only in which
    paths `files` lists, which the schema already allows.
 
+### A10 — Generated data serves only a person who asked for an example, sample data or a preview, and a preview is a render, never an example's expected outputs
+
+**Status:** Accepted on merge. It carries PLAN-2026-10-metais-ux Wave 3's
+item W3-8, from the 2026-10-22 after scorecard's failures of C1 (every
+model, without the skill), C3 (Opus and Sonnet without the skill, Haiku
+with it) and C2 (Haiku with the skill), under the plan's ruling R-UX-2 and
+R-W3-3's call on C1. It needs no ratification.
+**Amends:** D6 item 8 as A8 item 1 gives it (`inspect`'s `Next:` block),
+A8 item 3 (what an example is), A8 item 4 (the help of `render --sample`
+and of `sample`) and A8 item 6 (the skill). `metais.inspect/1`, the
+generator, `render --sample` and `sample` are unchanged.
+
+1. **Generated data is offered only to a person who asked for it.**
+   `inspect`'s step for `metais render <package> --sample --out <dir>`
+   begins "Only for a person who asked for an example or a preview of what
+   the package produces", and its step for `metais sample <package> --out
+   <dir>` "Only for a person who asked for sample data or data to start
+   from". The help of `render --sample` and of `sample` says each serves
+   "a person who asked for an example, sample data or a preview of what the
+   package produces", beside an author. Each of the four ends with the same
+   sentence: "Generated data never stands in for the facts a real document
+   needs: without them, ask the person for them." So a session asked to
+   render a real document with no data is told to ask, and is offered
+   generated data as no way to render it.
+2. **Nothing `inspect` prints offers a shipped example as a preview.** The
+   `Next:` block no longer lists `metais ls <package> examples/<first
+   example>/ -r`: its list is A8 item 1's steps 1 to 8 and 10. Where
+   `inspect` names the examples — its Examples section and its help — A8
+   item 3's sentence now ends: "not your data, and not a preview of what the
+   package produces, which is a render from generated data with metais
+   render --sample." `sample`'s help, which writes examples, prints the
+   same sentence.
+3. **The skill's fictional-data route begins with `inspect`, and a preview
+   is the render.** Its rule counts "show me what it produces" among the
+   requests for fictional data, says to run `metais inspect <package>`
+   first, and says never to show an example's expected outputs as what the
+   package produces: an example is the author's test of the package, not
+   the person's data and not a preview. Its section, "Fictional data or a
+   preview, when asked for", is three steps — `inspect`, then
+   `render --sample`, whose render is the preview, or `sample` — and ends
+   with "Never use generated data for a real document: without its facts,
+   ask for them."
+4. **Why.** In the 2026-10-22 after scorecard, every C1 session without the
+   skill ran `inspect`, read the `render --sample` step as the one render
+   it could make without data, and rendered generated data; a rendered
+   document is more than C1's "at most a scaffold" (R-W3-3). The skill's
+   "Fictional data only when the person asks for it" held every with-skill
+   C1 run, and the binary said nothing like it. C3 Opus and Sonnet without
+   the skill took `inspect`'s example step, "the outputs a render of them
+   should produce", and showed an example's expected output as what the
+   package produces; C3 Haiku with the skill did the same, because the
+   skill's list of preview requests did not cover "show me what it
+   produces". C2 Haiku with the skill went straight to `render --sample`,
+   which the skill's fictional-data section named as its one step, and
+   never ran `inspect`.
+5. **What this does not change.** R-UX-2 holds as A8 gives it: no route
+   from `inspect`, the help or the skill lists, reads or copies an
+   example's files, and a person who asks for an example is still sent to
+   `render --sample` and `sample`. The specification describes neither the
+   help nor `inspect`'s next steps, and §13.7's account of an example is
+   unchanged, so no chapter, published schema or vector changes. A
+   package's examples stay listed in `inspect`'s result and its Examples
+   section, and `metais ls <package> examples/ -r` still lists them.
+6. **D16's tests prove it**: `inspect`'s next steps over a packed package
+   and a source directory (the two generated-data steps' conditions and
+   closing sentence, their place after the real document's path, and no
+   step naming an example); every line of `inspect`'s text that says
+   "preview" saying it is a render from generated data; the Examples
+   section's sentence; the help of `render` and `sample`; and the skill's
+   fictional-data rule and section.
+
 ## Implementation log
 
 This log is this section together with the entry files in
