@@ -79,8 +79,16 @@ func TestInspectNextOnTheFly(t *testing.T) {
 		if next[len(next)-1].Run != c.edit || stepAt(next, c.notEdit) >= 0 {
 			t.Errorf("%s: next %v, want %q last and no %q", c.pkg, next, c.edit, c.notEdit)
 		}
+		if i := stepAt(next, "metais check <package>"); i >= 0 && next[i].Why != checkStepWords {
+			t.Errorf("%s: check's step says %q, want %q", c.pkg, next[i].Why, checkStepWords)
+		}
 	}
 }
+
+// checkStepWords is inspect's check step for a source directory, which
+// says what MTS-AUT-003 does: every defect, or only the refusal of a
+// source check cannot read (ADR-008 A12 item 1, R-W3-4).
+const checkStepWords = "The source directory is the package's editable source: edit its files, then check them. check reports every defect without data, or only the refusal of a source it cannot read."
 
 // TestInspectPreviewIsARender is ADR-008 A10 item 2 over everything
 // inspect prints in text, of a package with examples that have expected
@@ -213,9 +221,10 @@ const exampleNotFactsWords = "An example's inputs are the author's illustration,
 
 // TestExampleInputsAreNeverFacts is ADR-008 A11 item 1 (R-UX-2): where
 // inspect shows a package's examples, and in the help of every command
-// that reaches an example's entries, the tool says an example's inputs are
-// never a real document's data and that its facts are asked for; and
-// extract's example that writes an example says so too.
+// that reaches an example's entries — ls, read, extract and grep, and
+// unpack, which writes them (A12 item 2) — the tool says an example's
+// inputs are never a real document's data and that its facts are asked
+// for; and extract's example that writes an example says so too.
 func TestExampleInputsAreNeverFacts(t *testing.T) {
 	testenv.Home(t)
 	r := runTool(t, "inspect", filepath.Join(vectorsDir, "pkg/opens-source/package"))
@@ -227,7 +236,7 @@ func TestExampleInputsAreNeverFacts(t *testing.T) {
 	if len(lines) < 2 || lines[1] != "  "+exampleNotFactsWords {
 		t.Errorf("the Examples section's second line is not what an example's inputs are:\n%s", examples)
 	}
-	for _, name := range []string{"inspect", "extract", "read", "ls"} {
+	for _, name := range []string{"inspect", "extract", "read", "ls", "grep", "unpack"} {
 		text := strings.Join(strings.Fields(string(commandText(lookup(table, name)))), " ")
 		if !strings.Contains(text, exampleNotFactsWords) {
 			t.Errorf("metais help %s does not say an example's inputs are never a real document's data", name)

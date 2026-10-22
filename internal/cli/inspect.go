@@ -37,11 +37,17 @@ const exampleIs = "An example is the author's illustration of the inputs, and of
 // exampleNotFacts is that an example's inputs are never a real document's
 // data, whose facts are asked of the person (ADR-008 A11 item 1, R-UX-2),
 // and examplesEntries what the help of every command that reaches an
-// example's entries says of them.
+// example's entries says of them: ls, read, extract and grep, and unpack,
+// which writes them (A11 item 1, A12 item 2).
 const (
 	exampleNotFacts = "An example's inputs are the author's illustration, never a real document's data: render a real document only from the facts the person supplies, and without them ask the person for them, never taking them from an example."
 	examplesEntries = "The entries under examples/ are the package's examples. " + exampleIs + " " + exampleNotFacts
 )
+
+// checkStep is inspect's next step for a source directory: what check
+// reports, as MTS-AUT-003 and metais help check say it (ADR-008 A12 item
+// 1).
+const checkStep = "The source directory is the package's editable source: edit its files, then check them. check reports every defect without data, or only the refusal of a source it cannot read."
 
 // generatedServes is whom generated data serves, and generatedNever that
 // it never takes the place of a real document's facts, as inspect's next
@@ -595,9 +601,11 @@ func inspectNext(res *inspectResult, t []*Command) []Next {
 		Next{"metais sample <package> --out <dir>", "Only for a person who asked for sample data or data to start from: writes generated data as a data directory. " + generatedNever},
 	)
 	// The route to editing the package (ADR-008 A8 item 2): a source
-	// directory is already the tree unpack writes.
+	// directory is already the tree unpack writes. The step says what
+	// check reports as MTS-AUT-003 has it (A12 item 1): an edit can leave
+	// a source the check cannot read.
 	if res.Package.Source == "directory" {
-		out = append(out, Next{"metais check <package>", "Reports every defect of the source directory, which is the package's editable source: edit its files, then check them."})
+		out = append(out, Next{"metais check <package>", checkStep})
 	} else {
 		out = append(out, Next{"metais unpack <package> --out <dir>", "Writes the package's source directory, to edit it and pack it again."})
 	}

@@ -76,7 +76,8 @@ func unpackDeclaration() *Command {
 			"refused exactly when unpack would be refused before writing, with the same findings: " +
 			"a package that fails to open, a source directory, a <dir> that is not empty or not a " +
 			"directory, and a staging directory left beside a <dir> that does not exist. What only " +
-			"writing finds out, such as a full disk, it cannot report.",
+			"writing finds out, such as a full disk, it cannot report.\n\n" +
+			examplesEntries,
 		Role:     finding.RoleAuthoring,
 		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file; - is refused, since a package is read with random access."}},
 		Flags: []args.Flag{
