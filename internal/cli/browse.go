@@ -222,9 +222,10 @@ func readingDeclarations() []*Command {
 			Format: "metais.extract/1",
 			Prints: "The files written, or that would be, each with its size, relative to <dir>.",
 			Examples: []Example{
-				{"metais extract report-1.0.0.metais 'examples/basic/**' --out basic", "Writes the example basic into the new directory basic."},
+				{"metais extract report-1.0.0.metais 'references/**' --out refs", "Writes the package's references into the new directory refs."},
 				{"metais extract report-1.0.0.metais references --out refs --dry-run", "Lists the references it would write."},
 				{"metais extract report-1.0.0.metais 'templates/**' --out . --overwrite", "Writes the templates into the current directory, replacing the files already there."},
+				{"metais extract report-1.0.0.metais 'examples/basic/**' --out basic", "Writes the example basic into the new directory basic."},
 			},
 			run: runExtract,
 		},

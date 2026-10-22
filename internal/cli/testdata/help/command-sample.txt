@@ -7,6 +7,9 @@ Usage:
                 [--dry-run] [--json]
 
 Examples:
+  metais sample report-1.0.0.metais --out data
+      Writes sample data for the package into the new directory data, which
+      render --data data reads.
   metais sample --out data
       Writes sample data for the source directory in the working directory into
       the new directory data.

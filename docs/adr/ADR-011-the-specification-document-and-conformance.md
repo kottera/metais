@@ -779,8 +779,8 @@ protocol for any other implementation.**
    | `validate` | `validate <package> [--data D] [--set S]… [--set-json S]… [--inputs-json -] [--limit N=V]…` (the `inputs_json` file on standard input) |
    | `render` | `render <package> --out <dir>` or `--out -` `[--only P] [--overwrite] [--dry-run] [--now T] [--sample --optional O --seed N --items K]` plus the supply flags; the stream is standard output and the document standard error (ADR-008 D11 item 2) |
    | `check`, `test` | `check <source>`, `test <source> [--example E]…` |
-   | `pack`, `unpack` | `pack <source> --out <file>`, `unpack <package> --to <dir>` |
-   | `sample` | `sample <source> --to <dir>` or `--example <name>`, with `--optional`, `--seed`, `--items` and the supply flags |
+   | `pack`, `unpack` | `pack <source> --out <file>`, `unpack <package> --out <dir>` |
+   | `sample` | `sample <source> --out <dir>` or `--example <name>`, with `--optional`, `--seed`, `--items` and the supply flags |
    | the tool's identity | `version` (ADR-002 D8's `tool` object) |
 
    The adapter also checks ADR-008 D13's mapping onto ADR-006 D12's table —
@@ -979,7 +979,7 @@ exact findings and to write nothing anywhere.**
 3. **Every opening path refuses.** A vector whose hostility is in the package
    has an `open` step; the `cli` adapter runs it as each of ADR-008's commands
    that opens a package — `inspect`, `ls --recursive`, `schema`, `validate`,
-   `render --out out` and `unpack --to unpacked` — and each must give
+   `render --out out` and `unpack --out unpacked` — and each must give
    `ok: false` and the same findings. Hostility in inputs or in the render
    (an output path built from an input, a YAML alias bomb in a data file, a
    pathological `pattern`) uses `validate` or `render` steps.

@@ -394,7 +394,7 @@ Two rules are shared:
 
 #### `extract`
 
-`metais extract <package> <glob>… --to <dir> [--overwrite] [--dry-run]`
+`metais extract <package> <glob>… --out <dir> [--overwrite] [--dry-run]`
 
 1. Writes every entry any glob selects to `<dir>/<entry path>`. `<dir>` and its
    missing parents are created.
@@ -405,7 +405,7 @@ Two rules are shared:
    meaning: a file at the same path is replaced, nothing is deleted. Writes
    are confined to `<dir>` under ADR-009's rules.
 4. `--dry-run` lists the files it would write and writes nothing.
-5. `--to` is required; there is no default directory.
+5. `--out` is required; there is no default directory.
 6. JSON result: `dry_run`, `files` (each `path`, `size`). The destination
    is not echoed (D11 item 5).
 
@@ -614,7 +614,7 @@ everything they write.**
 
 #### `sample`
 
-`metais sample [<package>] (--to <dir> | --example <name>) [--optional all|none|mixed] [--seed <n>] [--items <n>] [--set …] [--set-json …] [--inputs-json …] [--overwrite] [--dry-run]`
+`metais sample [<package>] (--out <dir> | --example <name>) [--optional all|none|mixed] [--seed <n>] [--items <n>] [--set …] [--set-json …] [--inputs-json …] [--overwrite] [--dry-run]`
 
 1. Generates sample data (ADR-007 D9), with the supplied values as fixed
    points, validates it, and writes it as a data directory — one file per
@@ -623,8 +623,8 @@ everything they write.**
 2. **`--example <name>`** (source directory only) writes it as
    `examples/<name>/inputs/` with an `example.yaml` — R13.6's "saved as an
    example's inputs" — and is refused when `examples/<name>/` exists at all
-   (ADR-007 D9 item 21). Exactly one of `--to` and `--example` is required.
-3. With `--to`, a non-empty destination is refused unless `--overwrite`
+   (ADR-007 D9 item 21). Exactly one of `--out` and `--example` is required.
+3. With `--out`, a non-empty destination is refused unless `--overwrite`
    (replace, never delete); `--overwrite` with `--example` is a usage error.
    A field the generator cannot satisfy is ADR-007's
    `schema.sample_unsatisfiable`, and nothing is written.
@@ -653,10 +653,10 @@ everything they write.**
 
 #### `unpack`
 
-`metais unpack <package> --to <dir> [--dry-run]`
+`metais unpack <package> --out <dir> [--dry-run]`
 
 1. Runs ADR-007's unpack. The operand must be a packed package; a directory is
-   refused. `--to` is required; a non-empty `<dir>` is refused, with no
+   refused. `--out` is required; a non-empty `<dir>` is refused, with no
    `--overwrite`, because files left in it would join the unpacked source
    and be packed with it (ADR-007 D8 item 3).
 2. JSON result: `files`. Next: `metais check <dir>`.
@@ -734,7 +734,7 @@ carries everything about the result; standard input is read only when asked.**
 5. **Paths in any output** are entry paths, output paths relative to `--out`,
    and paths relative to a data directory or another destination the caller
    named. **No path the caller gave is ever printed** — not the package
-   operand, `--data`, `--out`, `--to` or `--inputs-json`'s file — in human
+   operand, `--data`, `--out` or `--inputs-json`'s file — in human
    output, in a JSON document, in a finding or in `next` (ADR-009 D15 item 1,
    ADR-006 D9 item 2): a caller's path may carry anything, and SC7 requires
    that no sentinel planted in a path reaches a message. Where a command
@@ -970,7 +970,7 @@ references from a JSON parser alone.**
   offset, and nothing when `--now` is absent.
 - **ADR-005** — I rely on: staging that completes before the first byte
   reaches standard output; the tar profile; the overwrite rule (reused by
-  `extract` and `sample --to`); ADR-005 D16's dry-run records, which are
+  `extract` and `sample --out`); ADR-005 D16's dry-run records, which are
   `render`'s `result.files`; output identity by rendered path (for
   `--only`, ADR-005 D18); mirror expansion (for `inspect`); file modes
   (reused by `extract`); staging beside the output directory (inside an
@@ -988,7 +988,7 @@ references from a JSON parser alone.**
   `usage.archive_to_terminal`, `usage.binary_to_terminal`,
   `usage.name_required`, `usage.not_a_source_directory` (class `usage`);
   `package.not_found`, `package.not_readable` (class `refused`); and, for
-  `extract`, `unpack` and `sample --to`, ADR-005's
+  `extract`, `unpack` and `sample --out`, ADR-005's
   `output.destination.not_empty` (class `destination`). The next step lives
   in the envelope's `next`, not in the finding, so ADR-006 need not add a
   field for it.
@@ -1147,7 +1147,7 @@ document.
 ## Proposed rulings
 
 1. **The sample preview is `render --sample`; saving sample data is
-   `sample --to <dir> | --example <name>`.** Lean: yes — previewing is
+   `sample --out <dir> | --example <name>`.** Lean: yes — previewing is
    rendering, saving data is not. Alternative: one `sample` command that also
    renders.
 2. **The supply flags are one family: `--set <pointer>=<text>`,
@@ -1536,7 +1536,7 @@ mention it.
      - **never invent facts for a real document**: data comes from the
        person or from sources they name; a value nobody supplied is asked
        for, not guessed. Fictional data only when the person asks for it,
-       and then `metais sample --to <dir>` or a shipped example's
+       and then `metais sample --out <dir>` or a shipped example's
        `inputs/`, never hand-made placeholders;
      - the authoring path: `init`, `render --sample`, `check`, `test`,
        `pack`, and `unpack` to edit a packed package;

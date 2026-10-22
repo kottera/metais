@@ -147,13 +147,13 @@ func renderDeclaration() *Command {
 		),
 		Examples: []Example{
 			{"metais render report-1.0.0.metais --data data --out out", "Renders the package's outputs from the data directory data into the new directory out."},
+			{"metais render report-1.0.0.metais --sample --out preview", "Previews the package's outputs, rendered from sample data generated from the inputs' schemas, in the new directory preview."},
+			{"metais render report.metais --data data --out - --only report.md > report.md", "Renders the whole package and writes the bytes of report.md alone to standard output, which the shell writes to the file report.md."},
 			{"metais render report.metais --data data --set /vendor/name=Acme --out out", "Renders with one value set over the data directory's."},
+			{"metais render report-1.0.0.metais --data data --out out --dry-run", "Lists every file the render would write into out, with its size and digest, and writes nothing."},
 			{"metais render . --data data --out out --now 2026-10-19T09:30:00+02:00 --json", "Renders the source directory in the working directory with a render time, and prints the files as one metais.render/1 document."},
-			{"metais render report.metais --data data --out out --dry-run", "Lists every file the render would write into out, with its size and digest, and writes nothing."},
-			{"metais render report.metais --data data --out - --only report.md", "Renders the whole package and writes the bytes of report.md alone to standard output."},
-			{"metais render . --sample --out preview", "Previews the source directory's outputs from sample data."},
-			{"metais render . --sample --set /incident/stage=final --seed 7 --out preview", "Previews them with one value pinned and other generated values."},
-			{"metais render report.metais --data data --out site --overwrite", "Renders into the existing directory site, replacing the files the render writes there and leaving every other one."},
+			{"metais render . --sample --set /incident/stage=final --seed 7 --out preview", "Previews the source directory's outputs from sample data, with one value pinned and other generated values."},
+			{"metais render report-1.0.0.metais --data data --out site --overwrite", "Renders into the existing directory site, replacing the files the render writes there and leaving every other one."},
 		},
 		run: runRender,
 	}

@@ -300,7 +300,7 @@ the runner chooses. Every other security `open` step runs `inspect`.**
    - the directory form has its own paths (`loader.go:220`, `check.go:150`).
 
    ADR-011 D16 item 3's per-command facts are only observable through the
-   binary: nothing written before the open (a `--to` created early), the
+   binary: nothing written before the open (a `--out` created early), the
    exit mapping, and the bounds before verification.
 3. **Why per code, not per family.** Commands differ in how they reach
    the opener, and a family shares one check function. Per family would

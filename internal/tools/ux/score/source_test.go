@@ -5,7 +5,10 @@ package score
 
 import (
 	"encoding/json"
+	"slices"
+	"strconv"
 	"testing"
+	"testing/fstest"
 
 	"github.com/kottera/metais/internal/tools/ux/streamjson"
 )
@@ -40,4 +43,41 @@ func TestRenderToStandardOutput(t *testing.T) {
 			t.Errorf("%s: %q, output %q: counted as a render %v, want %v", c.name, c.command, c.output, got, c.want)
 		}
 	}
+}
+
+// TestDirectoryFlagSpellings: what unpack and sample write is read from
+// --out, the flag every command that writes a directory takes (ADR-008
+// A4), and from --to, which unpack and sample took when the baseline's
+// runs were recorded.
+func TestDirectoryFlagSpellings(t *testing.T) {
+	for _, flag := range []string{"--out", "--to"} {
+		r := scriptedRun(t,
+			[2]string{"metais unpack r.metais " + flag + " src", "src/metais.yaml\n"},
+			[2]string{"metais sample r.metais " + flag + " data", "data/order.json\n"},
+			[2]string{"metais render r.metais --data data --out - --only invoice.html", "<html><body>Invoice</body></html>\n"},
+		)
+		if got := r.sourceDirs(); !slices.Equal(got, []string{"work/src"}) {
+			t.Errorf("unpack %s src: the source directories are %q, want [work/src]", flag, got)
+		}
+		if got := generatedPreview(r); !got.Pass {
+			t.Errorf("sample %s data, then render --data data: %s, want it generated", flag, got.Detail)
+		}
+	}
+}
+
+// scriptedRun is a run of Bash calls, each a command line and its
+// output, in a run directory of /ux/run.
+func scriptedRun(t *testing.T, calls ...[2]string) *run {
+	t.Helper()
+	var tr string
+	for i, c := range calls {
+		id := "t" + strconv.Itoa(i)
+		in, _ := json.Marshal(map[string]string{"command": c[0]})
+		res, _ := json.Marshal(map[string]any{"type": "tool_result", "tool_use_id": id, "content": c[1], "is_error": false})
+		tr += `{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"` + id + `","name":"Bash","input":` + string(in) + `}]}}` + "\n" +
+			`{"type":"user","message":{"role":"user","content":[` + string(res) + `]}}` + "\n"
+	}
+	r := &run{t: streamjson.Read([]byte(tr)), runDir: "/ux/run", fsys: fstest.MapFS{}}
+	r.read()
+	return r
 }

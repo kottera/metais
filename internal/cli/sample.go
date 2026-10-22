@@ -122,6 +122,7 @@ func sampleDeclaration() *Command {
 		Prints:   "The files written, relative to <dir> or to examples/<name>/, in path order; an empty directory, a collection with no item, is listed with a trailing /.",
 		Refusals: refusals,
 		Examples: []Example{
+			{"metais sample report-1.0.0.metais --out data", "Writes sample data for the package into the new directory data, which render --data data reads."},
 			{"metais sample --out data", "Writes sample data for the source directory in the working directory into the new directory data."},
 			{"metais sample report-1.0.0.metais --out data --seed 7 --optional mixed", "Writes other data, with some optional fields left out."},
 			{"metais sample --example staged --set /incident/stage=final", "Saves data whose stage is final as the example staged."},
