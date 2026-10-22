@@ -28,6 +28,12 @@ const packagePlaceholder = "<package>"
 // nothing to do with a refused package but fix or replace it.
 var nextInspectAgain = Next{Run: "metais inspect <package>", Why: "Opens the package again once it is fixed or replaced; nothing of a refused package is used."}
 
+// exampleIs is what the specification says an example is (spec §13.7),
+// as the tool says it wherever it shows a package's examples (ADR-008 A8
+// item 3). It says nothing of whether an example's facts are real, which
+// the tool cannot know.
+const exampleIs = "An example is the author's illustration of the inputs, and of the outputs a render of them should produce, kept in the package to test it: not your data."
+
 var nextLimits = Next{Run: "metais limits", Why: "Lists every limit with its default; a limit can be lowered and never raised."}
 
 // failOnFlag is --fail-on, which every command that reports findings
@@ -58,7 +64,12 @@ func inspectDeclaration() *Command {
 			"The digest of a source directory is the digest of the package metais pack would write from it, " +
 			"computed in memory; nothing is written.\n\n" +
 			"A guide of more than 60 lines or 6144 bytes is cut to its first 40 lines, within 4096 bytes; " +
-			"--guide prints it whole, and nothing else.",
+			"--guide prints it whole, and nothing else.\n\n" +
+			"Read next lists the commands that fill in and render the package, then metais render --sample " +
+			"and metais sample, which serve a supplier who wants an example, a preview or data to start from " +
+			"with data generated from the inputs' schemas, then the first of the package's examples, and last " +
+			"the way to edit the package: metais unpack for a packed package, metais check for a source " +
+			"directory. " + exampleIs,
 		Role:     finding.RoleConsumer,
 		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file, or a source directory; - is refused, since a package is read with random access."}},
 		Flags: []args.Flag{
@@ -553,17 +564,29 @@ func inspectNext(res *inspectResult, t []*Command) []Next {
 	for _, in := range *res.Inputs {
 		out = append(out, Next{"metais schema <package> " + shellQuote(in.Name), "Prints the schema the input " + in.Name + " is validated against."})
 	}
-	if len(*res.Examples) > 0 {
-		first := (*res.Examples)[0].Name
-		out = append(out, Next{"metais ls <package> " + shellQuote("examples/"+first+"/") + " -r", "Lists the first example's inputs and expected outputs."})
-	}
 	if res.References.Count > 0 {
 		out = append(out, Next{"metais grep <package> <pattern> references/", "Searches the package's references."})
 	}
 	out = append(out,
 		Next{"metais validate <package> --data <dir>", "Validates the inputs you gathered in a data directory."},
 		Next{"metais render <package> --data <dir> --out <dir>", "Renders the outputs from the validated inputs into a new directory."},
+		// A supplier who asks for an example, a preview or data to start
+		// from is served by the generator, before any route to a shipped
+		// example's files (ADR-008 A8 item 1, R-UX-2).
+		Next{"metais render <package> --sample --out <dir>", "Renders an example from generated data, to preview the outputs; generated data is never a real document's facts."},
+		Next{"metais sample <package> --out <dir>", "Writes generated data as a data directory, data to start from; generated data is never a real document's facts."},
 	)
+	if len(*res.Examples) > 0 {
+		first := (*res.Examples)[0].Name
+		out = append(out, Next{"metais ls <package> " + shellQuote("examples/"+first+"/") + " -r", "Lists the first example's inputs and expected outputs. " + exampleIs})
+	}
+	// The route to editing the package (ADR-008 A8 item 2): a source
+	// directory is already the tree unpack writes.
+	if res.Package.Source == "directory" {
+		out = append(out, Next{"metais check <package>", "Reports every defect of the source directory, which is the package's editable source: edit its files, then check them."})
+	} else {
+		out = append(out, Next{"metais unpack <package> --out <dir>", "Writes the package's source directory, to edit it and pack it again."})
+	}
 	// A step names a command this tool has, or it is not one a caller can
 	// take: the reading, supplying and rendering commands join the list
 	// as they are declared.
@@ -667,6 +690,7 @@ func inspectHuman(res *inspectResult) []byte {
 	}
 	if len(*res.Examples) > 0 {
 		section("Examples")
+		b.WriteString("  " + exampleIs + "\n")
 		for _, ex := range *res.Examples {
 			line := "  " + ex.Name + ": " + strings.Join(ex.Inputs, ", ")
 			if ex.Expected {

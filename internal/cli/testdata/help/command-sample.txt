@@ -21,6 +21,11 @@ Examples:
       Replaces the data files in data, and lists them as one metais.sample/1
       document.
 
+sample serves a supplier who wants an example, a preview or data to start from,
+as it serves an author: metais render --data reads the data directory it writes,
+and metais render --sample renders from the same data without keeping it.
+Generated data is never a real document's facts.
+
 The generator makes a value for every input from its schema: the schema's const,
 examples, default or enum where it has one, and otherwise placeholder text,
 numbers and dates of its own. Values given with --set, --set-json and
@@ -49,7 +54,9 @@ refused, all of them together, before anything is written.
 With --example, the source directory's examples/<name>/ is written: its inputs/
 holds the data, and its example.yaml records how it was made. It is refused with
 a packed package, and when examples/<name>/ exists at all; nothing in an example
-is ever replaced. --dry-run lists the files and writes nothing.
+is ever replaced. An example is the author's illustration of the inputs, and of
+the outputs a render of them should produce, kept in the package to test it: not
+your data. --dry-run lists the files and writes nothing.
 
 Operands:
   <package>

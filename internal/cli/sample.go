@@ -81,10 +81,14 @@ func sampleDeclaration() *Command {
 		Refusal{Code: finding.CodeDestinationCommitFailed, Cause: "Moving the files into an existing <dir> failed part way; the files already moved are listed, and nothing else was changed.", Next: nextSampleOut},
 	)
 	return &Command{
-		Name: "sample", Group: "Authoring",
+		// A supplier's command as much as an author's (ADR-008 A8 item 5).
+		Name: "sample", Group: "Supplying and rendering",
 		Synopsis:    "sample [<package>] (--out <dir> | --example <name>) [--optional <mode>] [--seed <n>] [--items <n>] [supply flags] [--overwrite] [--dry-run] [--json]",
 		Description: "Generate sample data from the inputs' schemas, and keep it as a data directory or an example.",
-		Detail: "The generator makes a value for every input from its schema: the schema's const, examples, " +
+		Detail: "sample serves a supplier who wants an example, a preview or data to start from, as it serves " +
+			"an author: metais render --data reads the data directory it writes, and metais render --sample " +
+			"renders from the same data without keeping it. Generated data is never a real document's facts.\n\n" +
+			"The generator makes a value for every input from its schema: the schema's const, examples, " +
 			"default or enum where it has one, and otherwise placeholder text, numbers and dates of its own. " +
 			"Values given with --set, --set-json and --inputs-json are fixed points: they are kept as given, " +
 			"conditionals evaluated against them, and only what they leave out is made. The same package, " +
@@ -104,7 +108,7 @@ func sampleDeclaration() *Command {
 			"in case from one it writes are each refused, all of them together, before anything is written.\n\n" +
 			"With --example, the source directory's examples/<name>/ is written: its inputs/ holds the data, " +
 			"and its example.yaml records how it was made. It is refused with a packed package, and when " +
-			"examples/<name>/ exists at all; nothing in an example is ever replaced. --dry-run lists the files " +
+			"examples/<name>/ exists at all; nothing in an example is ever replaced. " + exampleIs + " --dry-run lists the files " +
 			"and writes nothing.",
 		Role: finding.RoleAuthoring,
 		Operands: []args.Operand{{Name: "<package>",

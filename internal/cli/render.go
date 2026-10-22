@@ -98,7 +98,9 @@ func renderDeclaration() *Command {
 			"Each output's path is a Liquid template too. An output with for_each is rendered once for each " +
 			"element of its array, which its when, its path and its template see as item, with its position " +
 			"as fan_out; an output, or an element, whose when is false writes no file.\n\n" +
-			"--sample renders from sample data, the author's preview: the generator makes every input from its " +
+			"--sample renders from sample data: a preview, for an author before any real data exists and for " +
+			"a supplier who wants an example, a preview or data to start from. Generated data is never a real " +
+			"document's facts. The generator makes every input from its " +
 			"schema, as metais sample does, in the data directory's place, so --data is refused with it. Values " +
 			"given with --set, --set-json and --inputs-json are kept as given and the rest is made around them, " +
 			"conditionals included, so one value can be pinned to see one branch. The data is validated as " +
@@ -296,7 +298,7 @@ func runRender(s *session, p args.Parsed) outcome {
 			}))
 		}
 	}
-	// A render from sample data is the author's preview, an authoring
+	// A render from sample data is a preview, run as an authoring
 	// command (ADR-008 D8 item 8, ADR-006 D12 item 2).
 	isSample := p.Has(sampleFlag.Name)
 	var opts sample.Options

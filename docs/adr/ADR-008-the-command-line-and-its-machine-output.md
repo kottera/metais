@@ -1699,6 +1699,89 @@ command's own help are unchanged.
    of all that a reader sees, is ADR-001 A3's.
 
 
+### A8 — A supplier who wants an example, a preview or data to start from is sent to `render --sample` and `sample`, and an example is said to be the author's
+
+**Status:** Accepted on merge. It carries PLAN-2026-10-metais-ux Wave 2's
+item W2-5, from the baseline scorecard's candidates 3, 4, 5 and 9, under
+the plan's ruling R-UX-2 and the wave brief's ruling "the binary says only
+what it knows". It needs no ratification.
+**Amends:** D1 item 1 (`sample`'s group), D6 item 8 (`inspect`'s Read next)
+and item 10 (its Examples section), D8 item 8 and D9 (the help of
+`render --sample` and of `sample`), and A2's skill text. ADR-007 and the
+specification are unchanged: the generator, `render --sample` and
+`sample` behave as they did, and the help says only what §13.7 says an
+example is.
+
+1. **`inspect`'s Read next offers the generator before any shipped
+   example.** D6 item 8's list is, in this order:
+   1. `metais inspect <package> --guide`, if the guide was cut;
+   2. `metais read <package> <meaning entry>` for each input that has a
+      meaning document, in input order;
+   3. `metais schema <package> <input>` for each input;
+   4. `metais grep <package> <pattern> references/`, if there are
+      references;
+   5. `metais validate <package> --data <dir>`;
+   6. `metais render <package> --data <dir> --out <dir>`;
+   7. `metais render <package> --sample --out <dir>`, which "renders an
+      example from generated data", a preview of the outputs;
+   8. `metais sample <package> --out <dir>`, which writes generated data as
+      a data directory to start from;
+   9. `metais ls <package> examples/<first example>/ -r`, if there is an
+      example;
+   10. the route to editing the package (item 2).
+
+   The real document's path comes first, as the consuming golden path
+   (A5 item 3) gives it. Steps 7 and 8 each say that generated data is
+   never a real document's facts, so neither stands in for data a person
+   must supply.
+2. **Read next ends with the route to editing the package.** A packed
+   package's is `metais unpack <package> --out <dir>`, which writes its
+   source directory to edit and pack again. A source directory is already
+   the tree `unpack` writes, and `unpack` refuses it, so its step is
+   `metais check <package>`, which reports every defect of the files an
+   author edits.
+3. **Where the tool shows a package's examples, it says what an example
+   is**, in the words of §13.7 and the wave's ruling: "An example is the
+   author's illustration of the inputs, and of the outputs a render of them
+   should produce, kept in the package to test it: not your data." It is
+   the first line of `inspect`'s Examples section (D6 item 10), the end of
+   the example step's reason in Read next, and a sentence of `sample`'s
+   help, which writes examples, and of `inspect`'s. It never says that an
+   example's facts are fictional or real: the tool cannot know which.
+   `metais.inspect/1` is unchanged; the sentence is text output's.
+4. **The help of `render --sample` and of `sample` says whom they serve**:
+   an author before any real data exists, and a supplier who wants an
+   example, a preview or data to start from. Each says that generated data
+   is never a real document's facts. `render --sample` is no longer called
+   "the author's preview"; it is still an authoring run, in which a
+   package's defect fails the render with exit status 1 (D8 item 8).
+5. **`sample` is listed under "Supplying and rendering"**, after `render`,
+   in the overview and in `help --json`'s `group`. A supplier reads that
+   group, and a command listed only under "Authoring" is one a supplier
+   does not look for. Its `--example` mode is still an author's, and its
+   findings keep the authoring role.
+6. **The skill sends no supplier to a shipped example** (R-UX-2). Its rule
+   on fictional data and its section "Fictional data, when asked for" name
+   `render --sample` and `sample`, and none of its command lines lists,
+   reads or extracts an example's files.
+7. **Why.** In the 2026-10-21 baseline, `inspect`'s Read next named
+   `metais ls <package> examples/<name>/ -r` and no generator. Sessions
+   asked to show what a package produces followed it to a shipped
+   example's expected output and showed that as the preview (candidate 3);
+   sessions that wanted data to test a script extracted an example's
+   inputs (candidate 4); one rendered a regulator's report from an
+   example's inputs, taking them for the person's own (candidate 5); and
+   sessions that meant to edit a package unzipped it, finding `unpack`
+   only afterwards (candidate 9). The help filed `sample` under authoring
+   and called `--sample` the author's preview, and the skill said to start
+   from a shipped example's inputs.
+8. **D16's tests prove it**: Read next's order and reasons over a packed
+   package and a source directory, the Examples section's first line, the
+   help of `render` and `sample`, `sample`'s group, that no command's help
+   calls anything fictional, and the skill's fictional-data section and
+   command lines.
+
+
 ### A9 — `init` takes `--minimal` and `--html`, and its help leads with the minimal form
 
 **Status:** Accepted on merge, as PLAN-2026-10-metais-ux W2-6, with

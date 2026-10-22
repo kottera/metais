@@ -32,13 +32,13 @@ Commands:
               once.
     render    Render the package's outputs from the inputs supplied, into a
               directory or to standard output.
+    sample    Generate sample data from the inputs' schemas, and keep it as a
+              data directory or an example.
   Authoring:
     init      Write a new package's source directory: a greeting to learn from,
               or with --minimal one input and one template to replace.
     check     Check a package without data, and report every finding of every
               step at once.
-    sample    Generate sample data from the inputs' schemas, and keep it as a
-              data directory or an example.
     test      Render every example of a package and compare it with the outputs
               it should produce.
     pack      Check and test a source directory, then write it as one package
