@@ -25,7 +25,8 @@ Commands:
     outline   List the headings of a Markdown entry, each with the lines of its
               section.
     grep      Search a package's entries for a regular expression, with context.
-    schema    Print the package's combined input schema, or one input's schema.
+    schema    Print the package's combined input schema, or one input's schema,
+              or list their fields.
     extract   Write the entries the globs select to a directory.
   Supplying and rendering:
     validate  Validate inputs against a package, and report every finding at
