@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Recipe",
+  "description": "One recipe: what it makes, what it needs, and how to cook it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "slug", "serves", "minutes", "ingredients", "steps"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "title": "Name",
+      "description": "The dish's name, as a cook would say it."
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "title": "Short name",
+      "description": "Lower-case letters and digits joined by hyphens; names the card's file.",
+      "examples": ["buttermilk-pancakes"]
+    },
+    "serves": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50,
+      "title": "Serves",
+      "description": "How many people the recipe feeds."
+    },
+    "minutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1440,
+      "title": "Minutes",
+      "description": "Total time from start to table, in minutes."
+    },
+    "tip": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 400,
+      "title": "Tip",
+      "description": "One or two sentences of advice that makes the dish turn out well."
+    },
+    "ingredients": {
+      "type": "array",
+      "minItems": 1,
+      "title": "Ingredients",
+      "description": "Everything the recipe uses, in the order it is used.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["amount", "item"],
+        "properties": {
+          "amount": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "title": "Amount",
+            "description": "How much, with its unit, such as \"200 g\" or \"2\"."
+          },
+          "item": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "title": "Item",
+            "description": "What to buy, such as \"plain flour\"."
+          }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "title": "Steps",
+      "description": "The method, one instruction per step, in order.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 400,
+        "title": "Step",
+        "description": "One instruction, saying what to do with what."
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+Shopping list for {{ inputs.recipe.name }} ({{ inputs.recipe.ingredients | size }} items, serves {{ inputs.recipe.serves }}):
+{%- for ingredient in inputs.recipe.ingredients %}
+[ ] {{ ingredient.amount }} {{ ingredient.item }}
+{%- endfor %}

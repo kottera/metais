@@ -17,8 +17,9 @@ faked, and the scorer's tests over committed transcripts.
 
 ## The scenarios
 
-The set is plan §5's table, one directory per scenario under
-`internal/tools/ux/scenarios/`, named `<id>-<slug>`:
+The set is plan §5's table and the two rounds' evidence scenarios, one
+directory per scenario under `internal/tools/ux/scenarios/`, named
+`<id>-<slug>`:
 
 | Scenario | Prompt | Asks for output | Fixtures |
 |---|---|---|---|
@@ -31,12 +32,23 @@ The set is plan §5's table, one directory per scenario under
 | A1 new-package | make a .metais that renders an invoice as HTML from line items | no | none |
 | A2 edit-package | add a due date to this package's invoice: invoice.metais | no | `invoice.metais` |
 | A3 data-to-js | make a .metais package whose HTML page charts a list of numbers it is given, writing them into a JavaScript array in the page | no | none |
+| C6 render-acr-fictional | render this file with new fictional data: accessibility-conformance-report.metais | yes | `accessibility-conformance-report.metais` |
+| A4 spec-only-package | Write a METAIS package of your own choosing, on a subject that is not the release notes of spec/B-worked-package.md, starting at spec/B-worked-package.md. […] When metais check, metais test and metais pack all accept the package, stop. […] | no | `spec/` |
 
 C scenarios consume a package someone else wrote. A scenarios author or
 edit one. `report.metais` is `examples/dora-incident-report`.
 `invoice.metais` is the invoice package whose source is
 `A2-edit-package/invoice/`: no example package holds an invoice, so A2's
 source lives with its scenario.
+
+C6 and A4 are the evidence scenarios of the SC1 and SC9 rounds
+([sc1.md](rounds/sc1.md), [sc9.md](rounds/sc9.md)), not plan §5's: C6
+is C2's prompt against `examples/accessibility-conformance-report`, and
+A4 is SC9's task, its `prompt.txt` whole, for a session that starts with
+the commit's `spec/` and no tool source. Each is judged by its round's
+own bar, which its round's runbook records; R-UX-5's thresholds are for
+the scorecard of plan §5's scenarios, so a scorecard of those names them
+with `-scenarios`.
 
 Each scenario's directory holds:
 
@@ -64,8 +76,13 @@ Each scenario's directory holds:
     question, and C0 leaves the user's intent open.
   - Each fixture names a directory of `examples/` (`example`) or one
     beside `scenario.json` (`source`), and the file it is packed as
-    (`as`). The runner packs every fixture with the `metais` under test,
-    so a fixture is always what that binary packs. `[]` means the session
+    (`as`). The runner packs every such fixture with the `metais` under
+    test, so a fixture is always what that binary packs. A fixture may
+    instead name a top-level directory of the repository (`tree`), which
+    the session starts with unpacked, as the commit under test holds it,
+    under the directory name `as`: the runner takes it from `git archive`
+    of that commit, so it holds the commit's tracked files and nothing
+    else, and refuses a tree holding a link. `[]` means the session
     starts from an empty directory.
   - `check` names the scenario's outcome check, one of the scorer's
     ([Scoring](#scoring-a-run)).
@@ -77,7 +94,7 @@ Each scenario's directory holds:
 `internal/tools/ux/scenario` reads the set. It refuses a declaration with
 an unknown field, a directory not named `<id>-<slug>`, a kind that does not
 match its id, an empty prompt, and a fixture that is not exactly one of
-`example` and `source`. Its test holds the set to the table above.
+`example`, `source` and `tree`. Its test holds the set to the table above.
 
 ### Adding a scenario
 
@@ -220,7 +237,8 @@ scratch volume is one. The runner then:
    `<out>/bin/`. `git` in the sandbox fails on an iconv locale error when
    the go command stamps the build, so it records the commit from
    `git rev-parse HEAD` instead;
-3. packs every fixture with that binary into `<out>/fixtures/`;
+3. packs every package fixture with that binary into `<out>/fixtures/`,
+   and writes each tree fixture there from `git archive` of the commit;
 4. writes `<out>/set.json`, and runs each scenario × model as one
    session, waiting `-pace` (30s by default) between two runs;
 5. prints a line per run as it ends, then a summary: every run, its
@@ -308,7 +326,8 @@ A set's directory:
 - the binary's SHA-256 and `metais version`;
 - the harness's name and version;
 - the skill mode;
-- each fixture's digest, by scenario;
+- each fixture's digest, by scenario: a tree's is the SHA-256 of its
+  files' paths and digests, one line each, in order;
 - when the set started.
 
 `record.json` (format `metais-ux-run/1`) holds:
@@ -382,6 +401,8 @@ substitution is not known, and a glob is not expanded.
 | A1 new-package | `new-package` | a `metais pack` passed, which checks and tests the package first, and a `render --sample` wrote an output. |
 | A2 edit-package | `schema-and-template` | an input schema and a template both gain a due date, against the package's source, and the last `metais test` or `metais pack`, after the last edit of the source, passes. |
 | A3 data-to-js | `data-to-js` | a `metais.yaml` the session left declares an output with `escape: html`, a template writes its data with `json_script`, a render wrote the page, and a script element of the rendered page holds a JSON array that parses. |
+| C6 render-acr-fictional | `new-fictional-render` | as C2's. |
+| A4 spec-only-package | `checks-tests-packs` | the session's last `metais check`, its last `metais test` and its last `metais pack` each pass, and each comes after its last edit of the package's source. |
 
 A field is named in a line of the answer when the line holds every word
 of the field's name, each read by its first six letters with a short
@@ -504,8 +525,9 @@ The copy holds `set.json`, and for each run its record, transcript,
 standard error and the UTF-8 files of 256 KiB or less of its `work/` and
 `tmp/`. It leaves out the session's `HOME`, Claude Code's own files under
 `tmp/`, the skill `-with-skill` installed in `work/.claude/` (a checkout
-holding the copy would offer it to its own sessions), and every binary
-file such as a packed package. The record still
+holding the copy would offer it to its own sessions), every fixture file
+the session left unchanged (a tree such as A4's `spec/` is the commit's,
+not the session's), and every binary file such as a packed package. The record still
 lists each file with its size and digest. Every file is put through
 `internal/tools/ux/scrub`:
 

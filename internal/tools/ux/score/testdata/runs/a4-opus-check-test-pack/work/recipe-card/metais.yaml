@@ -1,0 +1,23 @@
+metais: "1.0"
+name: "recipe-card"
+version: "1.0.0"
+title: "Recipe Card"
+description: "Writes a recipe card and a shopping list for one recipe."
+guide: |-
+  This package writes two files for one recipe: a recipe card in
+  Markdown, named after the recipe's short name, and a plain-text
+  shopping list to take to the shop.
+
+  Supply one input, the recipe. Read
+  [what the recipe means](inputs/recipe.md) before you write it.
+inputs:
+  - name: recipe
+    title: "Recipe"
+    schema: inputs/recipe.schema.json
+    meaning: inputs/recipe.md
+outputs:
+  - id: card
+    template: card.md.liquid
+    path: "{{ inputs.recipe.slug }}.md"
+  - id: shopping
+    template: shopping-list.txt.liquid

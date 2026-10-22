@@ -1,0 +1,17 @@
+# {{ inputs.recipe.name }}
+
+Serves {{ inputs.recipe.serves }}. Ready in {{ inputs.recipe.minutes }} minutes.
+
+## Ingredients
+{% for ingredient in inputs.recipe.ingredients %}
+- {{ ingredient.amount }} {{ ingredient.item }}
+{%- endfor %}
+
+## Method
+{% for step in inputs.recipe.steps %}
+{{ forloop.index }}. {{ step }}
+{%- endfor %}
+{%- if inputs.recipe.tip %}
+
+Tip: {{ inputs.recipe.tip }}
+{%- endif %}

@@ -1,0 +1,191 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "A4",
+    "name": "A4-spec-only-package",
+    "kind": "authoring",
+    "asks_for_output": false,
+    "prompt": "Write a METAIS package of your own choosing, on a subject that is not the release notes of spec/B-worked-package.md, starting at spec/B-worked-package.md. It must have a manifest, at least one input with its schema and its meaning document, at least one template, and at least one example with its expected outputs. Work only from spec/ and the metais binary; metais help is part of the binary. When metais check, metais test and metais pack all accept the package, stop. Each time the text did not tell you what to do, note where you were reading, what you needed, and what you did instead."
+  },
+  "model_requested": "opus",
+  "model_reported": "claude-opus-5-5",
+  "models_used": [
+    "claude-opus-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": false,
+  "commit": "29f077f3edbadb5f99ec3998f66803e99103a0f3",
+  "metais_sha256": "6d0d8c1e7082cc5e5e191c08689cf512c6eeb153e2e529f4b553073ecdfff9ca",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    },
+    {
+      "name": "writes-inside-run",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-22T06:29:49.945801Z",
+  "ended": "2026-10-22T06:31:21.55186Z",
+  "wall_ms": 91605,
+  "turns": 18,
+  "cost_usd": 0.49714819999999993,
+  "duration_ms": 91450,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 17,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "Write a METAIS package of your own choosing, on a subject that is not the release notes of spec/B-worked-package.md, starting at spec/B-worked-package.md. It must have a manifest, at least one input with its schema and its meaning document, at least one template, and at least one example with its expected outputs. Work only from spec/ and the metais binary; metais help is part of the binary. When metais check, metais test and metais pack all accept the package, stop. Each time the text did not tell you what to do, note where you were reading, what you needed, and what you did instead.",
+      "--model",
+      "opus",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:62366",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": [],
+  "files": [
+    {
+      "path": "dist/recipe-card-1.0.0.metais",
+      "size": 7137,
+      "sha256": "1a16e8882a4bfa8ff9c3c779515967b6a08d5bdf7c29ddc94681a76673fabf2d",
+      "change": "added"
+    },
+    {
+      "path": "recipe-card/examples/pancakes/example.yaml",
+      "size": 95,
+      "sha256": "5f138f0bac1a3c317354abf11c3f50cbfa119190dafeadf3f8c94368edb98fc1",
+      "change": "added"
+    },
+    {
+      "path": "recipe-card/examples/pancakes/expected/buttermilk-pancakes.md",
+      "size": 426,
+      "sha256": "1d450cf7fc88639de81a39bcfd8da21e4853968964e13f68aba58fc6c1ebac90",
+      "change": "added"
+    },
+    {
+      "path": "recipe-card/examples/pancakes/expected/shopping-list.txt",
+      "size": 138,
+      "sha256": "4dc988a515ebdfcdbf93096c700b63d24b23881ba24e331ec4d8b870023d34a9",
+      "change": "added"
+    },
+    {
+      "path": "recipe-card/examples/pancakes/inputs/recipe.yaml",
+      "size": 521,
+      "sha256": "af66c637281e4d289f11fc79259e60bd90718e27496c0fcb8bfa9d6dfaf21f27",
+      "change": "added"
+    },
+    {
+      "path": "recipe-card/inputs/recipe.md",
+      "size": 1227,
+      "sha256": "87e08411f15e3660114697a31361e7a1eb47b690aea399feb75f5cdea6079421",
+      "change": "added"
+    },
+    {
+      "path": "recipe-card/inputs/recipe.schema.json",
+      "size": 2462,
+      "sha256": "9c84c5ac46e80f7f4f6ee62e0862dfc021945797d6888aff1e651f1ff8a7c10b",
+      "change": "added"
+    },
+    {
+      "path": "recipe-card/metais.yaml",
+      "size": 685,
+      "sha256": "e5005498088f418c5e02868464744e67fb83d8f10f241decf77fd7c54159c7b3",
+      "change": "added"
+    },
+    {
+      "path": "recipe-card/templates/card.md.liquid",
+      "size": 403,
+      "sha256": "c67f21437245be1219662c05de28555e04331e5f9f18bb8c4c5f85d7966f70c2",
+      "change": "added"
+    },
+    {
+      "path": "recipe-card/templates/shopping-list.txt.liquid",
+      "size": 241,
+      "sha256": "4607e8326a191acccaf30c57a489eb66330c0733569f11f8e0363bd55593732a",
+      "change": "added"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": null
+}
