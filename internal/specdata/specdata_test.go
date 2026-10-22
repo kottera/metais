@@ -140,15 +140,22 @@ func TestReadmeMatchesChapter(t *testing.T) {
 	}
 }
 
-// TestReadmeReadsInPlace is ADR-001 A3: the README tells a reader that
-// the file is read in place with the metais tool and not unzipped, to
-// start with metais inspect, and that metais read reads a file inside
-// it. It names those two commands and no other, the two the reference
-// tool keeps for every package of the version (A3 item 3).
+// TestReadmeReadsInPlace is ADR-001 A3 and A4: the README tells a reader
+// that the file is read only with the metais tool, in place, and neither
+// unzipped nor opened with another zip tool or library, not even to read
+// one file in memory (A4 item 1), to start with metais inspect, and that
+// metais read reads a file inside it. It names those two commands and no
+// other, the two the reference tool keeps for every package of the
+// version (A3 item 3).
 func TestReadmeReadsInPlace(t *testing.T) {
 	text := string(Readme10)
-	for _, want := range []string{"do not unzip it: the metais tool reads\nit in place", "`metais inspect`", "`metais read`"} {
-		if !strings.Contains(text, want) {
+	flat := strings.Join(strings.Fields(text), " ")
+	for _, want := range []string{
+		"it is read only with the metais tool, which reads it in place",
+		"Do not unzip it, and do not open it with any other zip tool or library, not even to read one file in memory.",
+		"`metais inspect`", "`metais read`",
+	} {
+		if !strings.Contains(flat, want) {
 			t.Errorf("the README text does not say %q:\n%s", want, text)
 		}
 	}

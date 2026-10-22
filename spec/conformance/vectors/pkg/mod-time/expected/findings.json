@@ -10,7 +10,7 @@
       "file": "templates/report.md.liquid"
     },
     "params": {
-      "offset": 3328,
+      "offset": 3448,
       "record": "central directory header",
       "header_field": "last mod file time",
       "value": 24576,

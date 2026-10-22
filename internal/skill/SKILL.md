@@ -12,9 +12,10 @@ it, checks inputs against it and renders it.
 
 ## Rules
 
-- **Read a package with `metais`, in place.** Never unzip it, never read
-  its raw bytes, never `cat` its README. Every command below takes the
-  `.metais` file, or a source directory, as it is.
+- **Read a package only with `metais`, in place.** Never unzip it, never
+  open it with any other zip tool or library, not even to read one file
+  in memory, never read its raw bytes, never `cat` its README. Every
+  command below takes the `.metais` file, or a source directory, as it is.
 - **Never invent facts for a real document.** The inputs come from the
   person or from the sources they name. A value nobody supplied is asked
   for, not guessed, and not filled with a placeholder.

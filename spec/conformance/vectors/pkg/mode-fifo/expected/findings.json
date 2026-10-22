@@ -10,7 +10,7 @@
       "file": "assets/fifo"
     },
     "params": {
-      "offset": 3348,
+      "offset": 3468,
       "record": "central directory header",
       "header_field": "external file attributes",
       "value": 295960576,

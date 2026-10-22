@@ -10,7 +10,7 @@
       "file": "templates/report.md.liquid"
     },
     "params": {
-      "offset": 2796,
+      "offset": 2916,
       "header_field": "uncompressed size"
     }
   }

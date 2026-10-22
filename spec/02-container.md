@@ -309,12 +309,13 @@ program, sees its first entry's bytes first: with any tool that shows a
 file's bytes, before anything says the file is a zip archive, and first in
 any zip lister. So every packed package begins with `README.md`, stored,
 holding a text the specification fixes and no author writes. The text says
-what a METAIS package is, that the file is a zip archive which the tool
-reads in place and a reader does not unzip, where inside it the package
-describes itself, where to find the tool, the command to start with,
-`metais inspect`, and the command that reads a file inside it,
-`metais read`. The reference tool keeps both commands for every package
-of this version. It gives no install command and quotes
+what a METAIS package is, that the file is a zip archive which is read
+only with the tool, in place, and never with a zip tool or library,
+whether by extracting it or by reading a file inside it in memory, where
+inside it the package describes itself, where to find the tool, the
+command to start with, `metais inspect`, and the command that reads a
+file inside it, `metais read`. The reference tool keeps both commands for
+every package of this version. It gives no install command and quotes
 nothing of the package, so a package packed long ago never gives stale
 instructions: everything that can change is on the website it names. It
 is not part of the package's content: no digest covers it (§2.6.1), a
@@ -331,9 +332,11 @@ endings and ending in one line feed, which are also the file
 A METAIS package is a document template. It describes the inputs a
 document needs, checks them, and renders the document from them.
 
-This file is a zip archive, but do not unzip it: the metais tool reads
-it in place. Inside it, metais.yaml holds this package's own title,
-description and guide.
+This file is a zip archive, but it is read only with the metais tool,
+which reads it in place. Do not unzip it, and do not open it with any
+other zip tool or library, not even to read one file in memory.
+Inside it, metais.yaml holds this package's own title, description
+and guide.
 
 To use it, you need the metais tool. With it installed, start by
 running `metais inspect` on this file: it shows what the package

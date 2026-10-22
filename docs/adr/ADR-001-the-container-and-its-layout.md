@@ -1076,6 +1076,44 @@ of specification 1.0.
    with it A1 item 8's detection key at offset 39, is unchanged, and so is
    the last line.
 
+### A4 — The README says the package is read only with `metais`, never with a zip tool or library
+
+**Status:** Accepted on merge. It carries PLAN-2026-10-metais-ux Wave 3's
+item W3-9, from the after scorecard of 2026-10-22, under the plan's
+rulings that Ed Funnekotter ratified on 2026-10-21.
+**Amends:** A3 item 1 (the text says the archive is not unzipped), and the
+README text of specification 1.0.
+
+1. **The text says the package is read only with the metais tool.** The
+   sentence saying the file is a zip archive now says that it is read
+   only with the metais tool, which reads it in place, and that it is
+   neither unzipped nor opened with any other zip tool or library, not
+   even to read one file in memory. A reader who sees a zip archive is
+   told that reading an entry with a zip tool, to disk or in memory, is
+   not how a package is read.
+2. **What stays.** The text still names `metais inspect` first and
+   `metais read` second, and no other command and no flag (A3 item 3).
+   It stays fixed, stored and first, and it is still written for a reader
+   with no context (A1). It names no zip tool or library by name, so it
+   gives no command that could go stale.
+3. **Why.** After A3, the 2026-10-22 after scorecard found two C3 sessions
+   without the skill that read the README in the raw bytes and still read
+   the archive with a zip tool. Sonnet ran `unzip -p` and `unzip -l` and
+   said it had not unzipped the file, reading "do not unzip it" as "do not
+   extract it to disk". Haiku found `metais` on `PATH` and read the archive
+   with Python's `zipfile`, saying it had read it "in place without
+   extracting it, as its README asks". "Reads it in place" read as leave
+   to read the zip in memory.
+4. **What else changes.** Specification §2.4.1's block and its prose carry
+   the new bytes, which grow from 642 to 762. `internal/specdata`'s copy
+   and every packed package in the conformance vectors are regenerated, and
+   every finding offset or size past the README, and every limit lowered to
+   a package's own size, moves by the same 120 bytes. The first line, and
+   with it A1 item 8's detection key at offset 39, is unchanged, and so is
+   the last line. The help overview, the hint of `usage.missing_command`
+   and the skill's rule, which quote the README's wording about unzipping,
+   say the same.
+
 ## Implementation log
 
 This log is this section together with the entry files in

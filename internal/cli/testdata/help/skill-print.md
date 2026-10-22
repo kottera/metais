@@ -12,9 +12,10 @@ it, checks inputs against it and renders it.
 
 ## Rules
 
-- **Read a package with `metais`, in place.** Never unzip it, never read
-  its raw bytes, never `cat` its README. Every command below takes the
-  `.metais` file, or a source directory, as it is.
+- **Read a package only with `metais`, in place.** Never unzip it, never
+  open it with any other zip tool or library, not even to read one file
+  in memory, never read its raw bytes, never `cat` its README. Every
+  command below takes the `.metais` file, or a source directory, as it is.
 - **Never invent facts for a real document.** The inputs come from the
   person or from the sources they name. A value nobody supplied is asked
   for, not guessed, and not filled with a placeholder.
@@ -116,4 +117,4 @@ a `message` and a `hint`. `metais help json` lists every format.
 This skill was installed by `metais skill`. If `metais version` is newer
 than the version in the last line, `metais skill --dry-run` says whether to
 refresh it.
-<!-- metais skill: version 1.2.3, sha256 e8dac958e791fe95f293c74ae051eeb2f3f221fcfc2734aaef2b09632d71af87 -->
+<!-- metais skill: version 1.2.3, sha256 c1e2973b67eaa3b6a87d3f364ead628f398dfb08b6fc6f1c03d649ee1fcf2023 -->

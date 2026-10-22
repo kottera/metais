@@ -573,7 +573,8 @@ func TestMemoryStop(t *testing.T) {
 // TestFirstSightReadsInPlace is ADR-008 A5 items 1 and 2: metais alone,
 // metais --help and metais help each say, before the usage line, that a
 // package's contents are read in place with metais, inspect first, then
-// read, ls and grep, and not by unzipping it. metais alone says it on
+// read, ls and grep, and not by unzipping it or with another zip tool or
+// library (in the README's words of ADR-001 A4). metais alone says it on
 // the line under its refusal too, the second line a session reads.
 func TestFirstSightReadsInPlace(t *testing.T) {
 	for _, c := range []struct {
@@ -590,17 +591,19 @@ func TestFirstSightReadsInPlace(t *testing.T) {
 			t.Errorf("metais %q prints no usage line:\n%s", c.args, out)
 			continue
 		}
-		for _, want := range []string{"metais inspect <package>", "metais read ", "metais ls ", "metais grep ", "unzip"} {
-			if !strings.Contains(strings.ReplaceAll(head, "\n", " "), want) {
+		// The overview is wrapped, so a command may break across lines.
+		flat := strings.ReplaceAll(head, "\n", " ")
+		for _, want := range []string{"metais inspect <package>", "metais read ", "metais ls ", "metais grep ", "unzip", "zip tool or library"} {
+			if !strings.Contains(flat, want) {
 				t.Errorf("metais %q does not say %q before its usage line:\n%s", c.args, want, head)
 			}
 		}
-		if strings.Index(head, "metais inspect") > strings.Index(head, "metais read ") {
+		if strings.Index(flat, "metais inspect") > strings.Index(flat, "metais read ") {
 			t.Errorf("metais %q names read before inspect:\n%s", c.args, head)
 		}
 	}
 	lines := strings.SplitN(runTool(t).stderr, "\n", 3)
-	if len(lines) < 2 || !strings.Contains(lines[1], "metais inspect <package>") || !strings.Contains(lines[1], "unzip") {
+	if len(lines) < 2 || !strings.Contains(lines[1], "metais inspect <package>") || !strings.Contains(lines[1], "unzip") || !strings.Contains(lines[1], "zip tool or library") {
 		t.Errorf("metais alone: the line under its refusal does not send a package to inspect:\n%q", lines)
 	}
 }
