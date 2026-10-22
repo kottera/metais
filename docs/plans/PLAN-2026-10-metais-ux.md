@@ -467,6 +467,21 @@ and Ed added that edge on 2026-10-22.
   `sc9.md` is corrected with it. The SC9 evidence run was made against
   the old text, and the closeout says so.
 
+- **R-W3-5 (Ed, 2026-10-22), which runs count toward the authoring
+  threshold.** This answers R-W3-2.
+  - R-UX-5's authoring threshold counts runs with metais's agent skill
+    installed (`metais skill`), because the plan's "Done means" includes
+    metais installing its own agent skill.
+  - Consuming scenarios still count without the skill.
+  - The final scorecard publishes the without-skill authoring result
+    beside the verdict.
+  - Sonnet's A1 and A3 without-skill misses, where the session never ran
+    `metais`, are a discovery and distribution question for a later plan:
+    the website and the like. They do not reopen this train.
+  - Ed keeps both of R-W3-3's judge calls: C0 passes a session that asks
+    for the real facts and invents nothing, and C1 fails one that renders
+    generated sample data, even data it labels as not real.
+
 ## 9. What this plan does not cover
 
 - metais.org going live, and the website's content.
