@@ -160,7 +160,7 @@ runs.
 
 | | |
 |---|---|
-| Commit | `29f077f3edbadb5f99ec3998f66803e99103a0f3`, on branch `feat/metais-ux-w3-5-sc1-sc9-evidence`. Its binary closure and its `spec/` are `main`'s at `63315621`: the branch changes only `internal/tools/ux` and documents |
+| Commit | `29f077f3edbadb5f99ec3998f66803e99103a0f3`, on branch `feat/metais-ux-w3-5-sc1-sc9-evidence`. Its binary closure and its `spec/` are `main`'s at `63315621`: the branch changes only `internal/tools/ux` and documents. It precedes W2-NB1 (#217), which changed three of the binary's sentences, among them the name of `inspect`'s next-step section |
 | metais | `metais 0.0.0-devel`, `specification 1.0`; SHA-256 `6d0d8c1e7082cc5e5e191c08689cf512c6eeb153e2e529f4b553073ecdfff9ca` |
 | Host | a tera dispatch, darwin/arm64, go1.26.2 |
 | Harness | Claude Code 2.1.299, `claude -p`, no skill installed |
