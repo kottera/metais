@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Line items",
+  "description": "What is billed, one item per element, in the order printed.",
+  "type": "array",
+  "minItems": 1,
+  "maxItems": 500,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["description", "quantity", "unit_price"],
+    "properties": {
+      "description": {
+        "type": "string", "minLength": 1, "maxLength": 500,
+        "title": "Description",
+        "description": "What the item is, as the customer should read it."
+      },
+      "quantity": {
+        "type": "number", "exclusiveMinimum": 0, "maximum": 1000000,
+        "title": "Quantity",
+        "description": "How many units are billed; fractions are allowed, such as 1.5 hours."
+      },
+      "unit": {
+        "type": "string", "minLength": 1, "maxLength": 20,
+        "title": "Unit",
+        "description": "What one unit is, such as hours or pcs. Printed after the quantity."
+      },
+      "unit_price": {
+        "type": "number", "multipleOf": 0.01, "minimum": -1000000, "maximum": 1000000,
+        "title": "Unit price",
+        "description": "The price of one unit in the invoice's currency, to the cent. A negative price is a discount or credit."
+      }
+    }
+  }
+}

@@ -1,0 +1,2 @@
+title: Sample data
+description: "Made by metais sample with --seed 0, --optional all and --items 3. Replace the placeholder values in inputs/ with real ones, then run metais test --example signups --update to record the outputs they render."

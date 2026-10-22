@@ -1,0 +1,35 @@
+metais: "1.0"
+name: "invoice"
+version: "0.1.0"
+title: "Invoice"
+description: "An invoice as a single self-contained HTML page, totalled from its line items."
+guide: |-
+  This package renders invoice.html: one invoice, with its line items,
+  subtotal, tax and amount due, computed from the items.
+
+  Supply two inputs:
+
+  1. **invoice**: who bills whom, the invoice number and dates, the
+     currency and the tax rate. Read [what the invoice means](inputs/invoice.md).
+  2. **line_items**: what is billed, one row per item, as JSON, YAML or
+     CSV. Read [what a line item means](inputs/line_items.md).
+
+  Amounts are computed in the currency's minor unit (cents) and rounded
+  half away from zero: each line to the cent, then tax on the subtotal.
+inputs:
+  - name: invoice
+    title: "The invoice"
+    description: "Seller, customer, number, dates, currency and tax rate."
+    schema: inputs/invoice.schema.json
+    meaning: inputs/invoice.md
+    forms: [json, yaml]
+  - name: line_items
+    title: "The line items"
+    description: "What is billed, one item per row, in the order printed."
+    schema: inputs/line_items.schema.json
+    meaning: inputs/line_items.md
+    forms: [json, yaml, csv]
+outputs:
+  - id: page
+    template: invoice.html.liquid
+    escape: html

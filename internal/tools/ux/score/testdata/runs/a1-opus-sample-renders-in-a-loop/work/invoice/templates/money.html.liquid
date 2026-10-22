@@ -1,0 +1,21 @@
+{%- comment %}
+Writes an integer number of cents as 1,234,567.89, with a leading minus
+sign when negative. Takes cents:.
+{% endcomment -%}
+{%- assign c = cents | abs -%}
+{%- assign whole = c | divided_by: 100 -%}
+{%- assign frac = c | modulo: 100 | prepend: "0" | slice: -2, 2 -%}
+{%- assign grouped = "" -%}
+{%- for i in (1..5) -%}
+  {%- assign group = whole | modulo: 1000 -%}
+  {%- assign whole = whole | divided_by: 1000 -%}
+  {%- if whole > 0 -%}
+    {%- assign group = group | prepend: "00" | slice: -3, 3 -%}
+    {%- assign grouped = group | prepend: "," | append: grouped -%}
+  {%- else -%}
+    {%- assign grouped = group | append: grouped -%}
+    {%- break -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- if cents < 0 %}&minus;{% endif -%}
+{{- grouped }}.{{ frac -}}

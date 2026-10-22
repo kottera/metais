@@ -1,0 +1,122 @@
+{%- comment %}
+Every amount is computed in integer cents: a line's is its quantity times
+its unit price, rounded; the tax is the subtotal times the rate, rounded.
+{% endcomment -%}
+{%- assign inv = inputs.invoice -%}
+{%- assign subtotal = 0 -%}
+{%- for item in inputs.line_items -%}
+  {%- assign line = item.unit_price | times: 100 | times: item.quantity | round -%}
+  {%- assign subtotal = subtotal | plus: line -%}
+{%- endfor -%}
+{%- assign tax = subtotal | times: inv.tax_rate | divided_by: 100.0 | round -%}
+{%- assign total = subtotal | plus: tax -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoice {{ inv.number }} — {{ inv.seller.name }}</title>
+<style>
+  :root { --ink: #1f2328; --muted: #656d76; --rule: #d0d7de; --band: #f6f8fa; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 2.5rem 1rem; background: #eef1f4; color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .sheet { max-width: 52rem; margin: 0 auto; background: #fff; padding: 3rem;
+           border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  header { display: flex; justify-content: space-between; gap: 2rem; align-items: flex-start; }
+  h1 { margin: 0; font-size: 2rem; letter-spacing: .04em; text-transform: uppercase; }
+  .meta { margin: .5rem 0 0; display: grid; grid-template-columns: auto auto; gap: .1rem 1rem; }
+  .meta dt { color: var(--muted); }
+  .meta dd { margin: 0; font-variant-numeric: tabular-nums; }
+  header .party { text-align: right; }
+  .parties { margin: 2.5rem 0 2rem; }
+  .party h2 { margin: 0 0 .25rem; font-size: .75rem; letter-spacing: .08em;
+              text-transform: uppercase; color: var(--muted); }
+  .party p { margin: 0; }
+  .party .name { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: .75rem; letter-spacing: .06em; text-transform: uppercase;
+       color: var(--muted); background: var(--band); padding: .6rem .75rem; }
+  td { padding: .6rem .75rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .totals { margin-left: auto; width: min(100%, 22rem); margin-top: 1rem; }
+  .totals td { border: 0; padding: .3rem .75rem; }
+  .totals .due td { border-top: 2px solid var(--ink); font-weight: 700; font-size: 1.1rem; padding-top: .6rem; }
+  footer { margin-top: 2.5rem; color: var(--muted); }
+  footer h2 { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; margin: 1.25rem 0 .25rem; }
+  footer p { margin: 0; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .sheet { box-shadow: none; border-radius: 0; padding: 0; max-width: none; }
+  }
+</style>
+</head>
+<body>
+<main class="sheet">
+<header>
+  <div>
+    <h1>Invoice</h1>
+    <dl class="meta">
+      <dt>Number</dt><dd>{{ inv.number }}</dd>
+      <dt>Issued</dt><dd><time datetime="{{ inv.issue_date }}">{{ inv.issue_date | date: "%B %-d, %Y" }}</time></dd>
+{%- if inv.due_date %}
+      <dt>Due</dt><dd><time datetime="{{ inv.due_date }}">{{ inv.due_date | date: "%B %-d, %Y" }}</time></dd>
+{%- endif %}
+      <dt>Currency</dt><dd>{{ inv.currency }}</dd>
+    </dl>
+  </div>
+  <div class="party">
+    <p class="name">{{ inv.seller.name }}</p>
+{%- render "party.html.liquid", party: inv.seller %}
+  </div>
+</header>
+
+<section class="parties">
+  <div class="party">
+    <h2>Bill to</h2>
+    <p class="name">{{ inv.bill_to.name }}</p>
+{%- render "party.html.liquid", party: inv.bill_to %}
+  </div>
+</section>
+
+<table>
+  <thead>
+    <tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr>
+  </thead>
+  <tbody>
+{%- for item in inputs.line_items %}
+{%- assign price = item.unit_price | times: 100 | round %}
+{%- assign line = item.unit_price | times: 100 | times: item.quantity | round %}
+    <tr>
+      <td>{{ item.description }}</td>
+      <td class="num">{{ item.quantity }}{% if item.unit %} {{ item.unit }}{% endif %}</td>
+      <td class="num">{% render "money.html.liquid", cents: price %}</td>
+      <td class="num">{% render "money.html.liquid", cents: line %}</td>
+    </tr>
+{%- endfor %}
+  </tbody>
+</table>
+
+<table class="totals">
+  <tr><td>Subtotal</td><td class="num">{% render "money.html.liquid", cents: subtotal %}</td></tr>
+{%- if inv.tax_rate > 0 %}
+  <tr><td>{{ inv.tax_label }} ({{ inv.tax_rate }}%)</td><td class="num">{% render "money.html.liquid", cents: tax %}</td></tr>
+{%- endif %}
+  <tr class="due"><td>Amount due</td><td class="num">{{ inv.currency }} {% render "money.html.liquid", cents: total %}</td></tr>
+</table>
+
+{%- if inv.payment_terms or inv.notes %}
+<footer>
+{%- if inv.payment_terms %}
+  <h2>Payment terms</h2>
+  <p>{{ inv.payment_terms | escape | newline_to_br | safe }}</p>
+{%- endif %}
+{%- if inv.notes %}
+  <h2>Notes</h2>
+  <p>{{ inv.notes | escape | newline_to_br | safe }}</p>
+{%- endif %}
+</footer>
+{%- endif %}
+</main>
+</body>
+</html>

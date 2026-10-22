@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoice INV-0042 — Example Studio LLC</title>
+<style>
+  :root { --ink: #1f2328; --muted: #656d76; --rule: #d0d7de; --band: #f6f8fa; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 2.5rem 1rem; background: #eef1f4; color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .sheet { max-width: 52rem; margin: 0 auto; background: #fff; padding: 3rem;
+           border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  header { display: flex; justify-content: space-between; gap: 2rem; align-items: flex-start; }
+  h1 { margin: 0; font-size: 2rem; letter-spacing: .04em; text-transform: uppercase; }
+  .meta { margin: .5rem 0 0; display: grid; grid-template-columns: auto auto; gap: .1rem 1rem; }
+  .meta dt { color: var(--muted); }
+  .meta dd { margin: 0; font-variant-numeric: tabular-nums; }
+  header .party { text-align: right; }
+  .parties { margin: 2.5rem 0 2rem; }
+  .party h2 { margin: 0 0 .25rem; font-size: .75rem; letter-spacing: .08em;
+              text-transform: uppercase; color: var(--muted); }
+  .party p { margin: 0; }
+  .party .name { font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: .75rem; letter-spacing: .06em; text-transform: uppercase;
+       color: var(--muted); background: var(--band); padding: .6rem .75rem; }
+  td { padding: .6rem .75rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .totals { margin-left: auto; width: min(100%, 22rem); margin-top: 1rem; }
+  .totals td { border: 0; padding: .3rem .75rem; }
+  .totals .due td { border-top: 2px solid var(--ink); font-weight: 700; font-size: 1.1rem; padding-top: .6rem; }
+  footer { margin-top: 2.5rem; color: var(--muted); }
+  footer h2 { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; margin: 1.25rem 0 .25rem; }
+  footer p { margin: 0; }
+  @media print {
+    body { background: #fff; padding: 0; }
+    .sheet { box-shadow: none; border-radius: 0; padding: 0; max-width: none; }
+  }
+</style>
+</head>
+<body>
+<main class="sheet">
+<header>
+  <div>
+    <h1>Invoice</h1>
+    <dl class="meta">
+      <dt>Number</dt><dd>INV-0042</dd>
+      <dt>Issued</dt><dd><time datetime="2026-10-01">October 1, 2026</time></dd>
+      <dt>Due</dt><dd><time datetime="2026-10-31">October 31, 2026</time></dd>
+      <dt>Currency</dt><dd>USD</dd>
+    </dl>
+  </div>
+  <div class="party">
+    <p class="name">Example Studio LLC</p>
+    <p>1 Example Way<br />
+Springfield</p>
+    <p><a href="mailto:billing@example.com">billing@example.com</a></p>
+    <p>Tax ID: US-00-0000000</p>
+  </div>
+</header>
+
+<section class="parties">
+  <div class="party">
+    <h2>Bill to</h2>
+    <p class="name">Example Customer Inc.</p>
+    <p>2 Sample Street<br />
+Shelbyville</p>
+  </div>
+</section>
+
+<table>
+  <thead>
+    <tr><th>Description</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Website redesign &amp; &lt;build&gt;</td>
+      <td class="num">1</td>
+      <td class="num">12,500.00</td>
+      <td class="num">12,500.00</td>
+    </tr>
+    <tr>
+      <td>Consulting</td>
+      <td class="num">7.5 hours</td>
+      <td class="num">145.33</td>
+      <td class="num">1,089.98</td>
+    </tr>
+    <tr>
+      <td>Hosting (annual)</td>
+      <td class="num">1 yr</td>
+      <td class="num">999,999.99</td>
+      <td class="num">999,999.99</td>
+    </tr>
+    <tr>
+      <td>Loyalty discount</td>
+      <td class="num">1</td>
+      <td class="num">&minus;500.00</td>
+      <td class="num">&minus;500.00</td>
+    </tr>
+  </tbody>
+</table>
+
+<table class="totals">
+  <tr><td>Subtotal</td><td class="num">1,013,089.97</td></tr>
+  <tr><td>Sales tax (8.25%)</td><td class="num">83,579.92</td></tr>
+  <tr class="due"><td>Amount due</td><td class="num">USD 1,096,669.89</td></tr>
+</table>
+<footer>
+  <h2>Payment terms</h2>
+  <p>Net 30, by bank transfer.</p>
+  <h2>Notes</h2>
+  <p>Thank you for your business.</p>
+</footer>
+</main>
+</body>
+</html>

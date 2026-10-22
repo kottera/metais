@@ -1,0 +1,22 @@
+metais: "1.0"
+name: "numchart"
+version: "0.1.0"
+title: "Numchart"
+description: "An HTML page that charts a list of numbers as a line chart."
+guide: |-
+  Produces one HTML page that charts a list of numbers as a line chart.
+  The numbers are written into a JavaScript array in the page. A supplier
+  gives a title, the numbers, and optionally a unit. Read
+  [what the data means](inputs/data.md) before you supply it.
+inputs:
+  - name: data
+    title: "Data"
+    schema: inputs/data.schema.json
+    meaning: inputs/data.md
+    forms:
+      - json
+      - yaml
+outputs:
+  - id: page
+    template: page.html.liquid
+    escape: html
