@@ -10,7 +10,7 @@
       "file": "templates/report.md.liquid"
     },
     "params": {
-      "offset": 3354,
+      "offset": 3474,
       "record": "central directory header",
       "header_field": "external file attributes",
       "value": 2717843456,

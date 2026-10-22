@@ -10,7 +10,7 @@
       "file": "templates/report.md.liquid"
     },
     "params": {
-      "offset": 3322,
+      "offset": 3442,
       "record": "central directory header",
       "header_field": "version needed to extract",
       "value": 20,
