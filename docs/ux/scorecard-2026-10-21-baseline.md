@@ -357,6 +357,20 @@ scorer with the same command, **changes no cell**: every run passes and
 fails the rules it did, for the same reasons. The judged threshold count
 stays **9 of 24 gated runs**.
 
+### Re-scored by W3-6
+
+W3-6 scored the judged set again with `main`'s scorer at `37c0dbe7`
+(#226), which holds W3-1's, W3-7's and W3-10's changes, with the same
+command, so that it is read by the scorer the after scorecards' standing
+result is read by
+([after the last re-run](scorecard-2026-10-22-after.md#the-scorer-and-what-it-changes)).
+**No cell changes**, and the judged threshold count stays **9 of 24 gated
+runs**. The re-scored set is Work Order artifact
+`art_ibe7au4gryf352vp7w4hafyierh2jdeh5wyasjuaslzbhzi2oklq`
+(`ux-rescored-w3-6.tar.gz`, under `baseline/`): each record's `outcome` as
+this scorer wrote it, and the scorecard it printed, as
+`scorecard-rescored-w3-6.md`.
+
 ## Pass counts by model
 
 | Model | Consuming (gated) | Authoring | All |

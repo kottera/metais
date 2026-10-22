@@ -5,20 +5,329 @@ Wave 3: every scenario of the set, C0–C5 and A1–A3, run once on Opus,
 Sonnet and Haiku against `metais` as `main` stood after Wave 2, with no
 skill installed. W3-2 recorded and published the set. W3-4 gave every C0
 and C1 run a recorded verdict, re-scored the set with `main`'s scorer, and
-wrote the sections after the runner's scorecard. **This is the scorecard
-that counts toward R-UX-5**, under the Wave 3 brief's ruling
-([below](#which-runs-count-and-whether-r-ux-5s-thresholds-hold)). The same
+wrote the sections after the runner's scorecard. W3-6 re-ran every
+consuming scenario in both modes on `main` with Wave 3's fixes, re-scored
+every set with `main`'s scorer, and wrote the first section. **This is the
+scorecard that counts toward R-UX-5**, under the Wave 3 brief's ruling, and
+[after the last re-run](#after-the-last-re-run-w3-6) is its standing
+result. The same
 set with the skill installed is
 [scorecard-2026-10-22-after-with-skill.md](scorecard-2026-10-22-after-with-skill.md),
 recorded beside this one and compared [below](#the-comparison-with-the-skill).
 It is a measurement, not a gate. The method is
 [ux-testing.md](../dev/ux-testing.md).
 
-The runner's scorecard follows this section as the runner printed it, with
-two changes: its headings sit one level down, and its Transcripts row names
-the artifact's handle. After it come which runs count, the judge and its
+After the standing result comes this set as W3-2 recorded it. The
+runner's scorecard follows as the runner printed it over W3-4's judged set
+with `main`'s scorer at `37c0dbe7`, with two changes: its headings sit one
+level down, and its Transcripts row names the artifact's handle. After it
+come which runs count, the judge and its
 prompt, the comparison with the [baseline](scorecard-2026-10-21-baseline.md)
 and with the skill, the root cause of each failure, and R-UX-6.
+
+## After the last re-run (W3-6)
+
+**This section is the after scorecard's standing result.** Plan §8: "For
+each scenario below §4's thresholds, a fix item, and then a re-run of that
+scenario." The brief: "The wave's acceptance is that R-UX-5's thresholds
+hold on the scorecard after the last re-run." The fix items merged, and
+W3-6 re-ran every consuming scenario in both modes, re-scored every set
+with `main`'s scorer, and judged every re-run C0 and C1 run. The sections
+after this one are this set as W3-2 recorded it and W3-4 judged it, scored
+by the same scorer.
+
+### What was re-run, and on what
+
+- **The runs**, approved by the plan orchestrator: C0, C1, C2, C3, C4 and
+  C5 on `opus`, `sonnet` and `haiku`, without the skill and with it, 36
+  runs in two sets. W3-8 and W3-9 change what every consuming session
+  sees, so every consuming scenario was re-run, not only those that
+  failed. A1–A3 were not re-run: their failures were check mis-scores,
+  which W3-10 settled, and candidate 7. They are re-scored from the after
+  sets ([below](#the-scorer-and-what-it-changes)).
+- **The commit** is `main` at `37c0dbe7fe5174691db9274d60de1dce21911655`
+  (#226), from a clean checkout of it. `origin/main` was the same commit
+  when both sets started. It holds every fix item:
+  - W3-7 (#222): the scorer does not count reading back the session's own
+    rendered output as extracting the package;
+  - W3-8 (#225, ADR-008 A10): `inspect`, the help of `render` and `sample`,
+    and the skill offer generated data only to a person who asked for an
+    example or a preview, and a preview is a render;
+  - W3-9 (#226, ADR-001 A4): the package README and the overview say the
+    package is read only with `metais`, never with a zip tool or library;
+  - W3-10 (#228): five check mis-scores settled in the scorer.
+
+  It also holds W3-11 (#227, spec §B.6's prose), which changes nothing a
+  session or the scorer reads. The binary's SHA-256 is
+  `ad8cb3806b0130b39d64563b24713921a6042918cf2be553e5a2350e15ab2f9c`.
+- **The commands**, from that checkout:
+
+  ```bash
+  go run ./internal/tools/ux -out "$SCRATCH/ux-rerun-noskill" \
+    -scenarios C0,C1,C2,C3,C4,C5 -models opus,sonnet,haiku \
+    -quota-wait 20m -host "tera dispatch, darwin/arm64 (macOS)"
+  go run ./internal/tools/ux -out "$SCRATCH/ux-rerun-with-skill" \
+    -scenarios C0,C1,C2,C3,C4,C5 -models opus,sonnet,haiku \
+    -with-skill -quota-wait 20m -host "tera dispatch, darwin/arm64 (macOS)"
+  ```
+
+- **The runs are all valid.** All 36 completed and passed every isolation
+  check, so none was re-run. Each reported its own model,
+  `claude-opus-5-5`, `claude-sonnet-5-5` or `claude-haiku-5-5`, and each
+  with-skill session loaded the skill. The harness was Claude Code
+  2.1.299, the deployment's toolchain, nested in a tera dispatch on
+  darwin/arm64 (macOS) through its loopback proxy (R-UX-7). No run hit a
+  quota. Without the skill, the set ran from 2026-10-22T08:54:18Z to
+  09:12:55Z and cost $1.71. With it, the set ran from 08:54:40Z to
+  09:08:45Z and cost $1.19.
+- **The verdicts.** Every re-run C0 and C1 run carries a verdict by W3-4's
+  judge, `claude-opus-5-5`, with its published prompt
+  ([below](#recorded-verdicts-the-judge-and-its-prompt)), unchanged, and
+  W3-4's rendering and invocation. The 12 judge sessions cost $0.53, and
+  each answer's usage names only `claude-opus-5-5`. The judge's calls on C0
+  and C1 stand as the plan orchestrator ruled (plan §8, R-W3-3): plan §8
+  records no override by Ed.
+- **The transcripts** are Work Order artifacts of Work Order `01a16247`,
+  scrubbed with the runner's `-scrub`, not committed. Each holds `set.json`,
+  and for each run its record, with its verdict and its `outcome` as
+  `main`'s scorer at `37c0dbe7` wrote it, its transcript, its standard
+  error, the text files of its `work/` and `tmp/`, and the scorecard the
+  scorer printed. No file of either holds a user name, a host path or a
+  token.
+  - Without the skill: `art_o6akph2gjo72la6hhr2hst3cmrvme37anuclhuj7mmd6x642qmza`
+    (`ux-rerun-2026-10-22-noskill-judged-w3-6.tar.gz`).
+  - With the skill: `art_gunqdti3kjlnybilgkpd6pkw4wur3tw6sje2dv7ps7dnajebvaza`
+    (`ux-rerun-2026-10-22-with-skill-judged-w3-6.tar.gz`).
+  - The judge: `art_wtzkarpwtuxnxyo5bhnzbpsbb5mubhcykpghdxtvynh5wwszhxxq`
+    (`judge-w3-6.tar.gz`). It holds W3-4's prompt, rendering script and
+    invocation, unchanged, the script that wrote each verdict into its
+    record, and for each run the exact text the judge read and its raw
+    answer.
+
+### The scorer, and what it changes
+
+Every set is scored by `main`'s scorer at `37c0dbe7`, run as
+`go run ./internal/tools/ux -out <set> -scorecard -scenarios C0,C1,C2,C3,C4,C5,A1,A2,A3`:
+the baseline, both after sets, and both re-run sets. That scorer holds
+W3-1's, W3-7's and W3-10's changes. The baseline and the after sets are
+W3-4's judged artifacts, verdicts unchanged. The fixtures' sources it
+reads, `examples/dora-incident-report` and A2's `invoice/`, are the same at
+`37c0dbe7` as at both measured commits. The three re-scored sets are Work
+Order artifact `art_ibe7au4gryf352vp7w4hafyierh2jdeh5wyasjuaslzbhzi2oklq`
+(`ux-rescored-w3-6.tar.gz`): `baseline/`, `noskill/` and `withskill/`,
+each with every record's `outcome` as this scorer wrote it and the
+scorecard it printed.
+
+Against W3-4's scorer, `8c45e2bd`, which already held W3-7, these cells
+change. Each is a check mis-score W3-4 root-caused and W3-10 settled
+([below](#what-the-failures-show)):
+
+| Set | Run | W3-4 | `main` at `37c0dbe7` |
+|---|---|---|---|
+| after, without the skill | C4 opus | fail: outcome (names-every-input) | pass |
+| after, without the skill | A3 opus | fail: outcome (data-to-js) | pass |
+| after, with the skill | A1 opus | fail: outcome (new-package) | pass |
+| after, with the skill | A3 opus | fail: outcome (data-to-js) | pass |
+| after, with the skill | A3 sonnet | fail: outcome (data-to-js) | pass |
+
+No baseline cell changes: it passes 9 of 24 gated runs, as W3-4 published.
+The after set without the skill passes 16 of 24 (W3-4: 14), and the one
+with it 22 of 24 (W3-4: 19). W3-7's change, to what `no-zip-extraction`
+and `package-untouched` count, changes no cell of any set.
+
+### R-UX-5 after the last re-run
+
+The runs that count:
+
+- **Consuming scenarios count without the skill** (R-W3-1). After the last
+  re-run, those are the W3-6 re-run without the skill.
+- **Authoring scenarios** are the after sets' A1–A3, re-scored. Which mode
+  counts toward their threshold is Ed's to decide. R-W3-2 records that the
+  question was put to him on 2026-10-22. Plan §8 records no ruling of his
+  yet, so no reading is in force, and the verdict is stated both ways.
+
+| Threshold | Runs | Pass | Fail |
+|---|---|---|---|
+| Every consuming scenario on Opus, Sonnet and Haiku, without the skill (the W3-6 re-run) | 18 | 17 | C1 haiku |
+| Every authoring scenario on Opus and Sonnet, without the skill counting | 6 | 4 (A1 opus, A2 opus, A2 sonnet, A3 opus) | A1 sonnet, A3 sonnet |
+| Every authoring scenario on Opus and Sonnet, with the skill counting | 6 | 6 | none |
+
+- **The consuming threshold does not hold.** One run fails: C1 haiku
+  without the skill ([below](#why-the-re-runs-that-fail-fail)).
+- **The authoring threshold holds with the skill counting, and does not
+  hold without it.** Without the skill, A1 sonnet and A3 sonnet fail only
+  because the session never ran `metais` (candidate 7,
+  [below](#candidate-7-authoring-runs-that-never-ran-metais-without-the-skill)).
+  Both pass with the skill.
+- **So R-UX-5's thresholds do not hold after the last re-run, whichever
+  reading of the authoring threshold Ed takes.** With the authoring runs
+  counted with the skill, 23 of 24 gated runs pass; counted without it,
+  21 of 24.
+
+Haiku's authoring runs are recorded, not gated. Without the skill, A2 and
+A3 pass and A1 fails. With it, A2 passes and A1 and A3 fail.
+
+### The re-run without the skill
+
+The runner's scorecard of the re-run, as it printed it over the judged,
+scrubbed set; its header is the bullets above.
+
+| Scenario | opus | sonnet | haiku |
+|---|---|---|---|
+| C0-fill-ambiguous | pass | pass | pass |
+| C1-render-real | pass | pass | fail: no-zip-extraction, package-untouched, outcome (asks-not-invents) |
+| C2-render-new-fictional | pass | pass | pass |
+| C3-preview | pass | pass | pass |
+| C4-what-it-needs | pass | pass | pass |
+| C5-script | pass | pass | pass |
+
+17 of 18 gated runs pass. 0 runs are invalid and not scored. A1–A3 were
+not re-run, so the runner prints them `not run`; their standing cells are
+the after set's, in the table above.
+
+Why the run failed, as the runner printed it, with the evidence it repeats for each rule shortened to "the same call":
+
+- **C1-render-real haiku**
+  - `no-zip-extraction`: the session extracts the archive itself: metais extract extracts the package — turn 4, line 20, `mkdir -p /ux/run/work/example-final-data && metais extract report.metais 'examples/final/inputs/*' --out example-final-data && metais validate report.metais --data example-final-data && metais render report.metais --data example-final-data  …`
+  - `package-untouched`: the prompt asks for output, and metais extract extracts the package (R-UX-8) — the same call
+  - `outcome (asks-not-invents)`: judged fail by claude-opus-5-5 (below); the phrase check agrees: the session renders the document from the shipped example final's data, where it has no facts: it invents the report — the same call
+
+Notes: none.
+
+The verdicts, with the skill's set's beside them:
+
+| Run | Phrase check | Verdict | What decided it, in the judge's words |
+|---|---|---|---|
+| C0 opus | fail | **pass** | It said it would "validate and render `incident-report.md`" once given the facts; "the check does not require a finished document when no data was given" |
+| C0 sonnet | fail | **pass** | It said it "won't invent them", and named both readings; "either reading passes" lists ways to pass, not the only ones |
+| C0 haiku | fail | **pass** | It said it would write the user's data into a data directory, validate and render, and invented nothing |
+| C1 opus | pass | pass | It wrote no files, and "won't make up facts for a filing that goes to a regulator" |
+| C1 sonnet | pass | pass | It rendered nothing, listed the three inputs, and asked for the facts |
+| C1 haiku | fail | fail | It called the example fictional and asked for the facts, but rendered the `final` example into a full report, beyond "at most a scaffold" |
+| with skill, C0 opus, sonnet, haiku | fail | **pass** | Each named the render reading, asked for the facts and invented nothing |
+| with skill, C1 opus, sonnet, haiku | pass | pass | Each rendered nothing and asked for the facts |
+
+The phrase check and the verdict disagree on the six re-run C0 runs, as on
+every C0 run of every earlier set: each session took neither reading by
+name, and the judge passes it for saying which reading it would take and
+inventing nothing. They agree on every C1 run. The with-skill re-run's
+cells are in
+[its scorecard](scorecard-2026-10-22-after-with-skill.md#re-run-by-w3-6-on-main-with-wave-3s-fixes):
+16 of 18, failing C4 haiku and C5 sonnet.
+
+### What the re-runs changed
+
+Against the after sets, as `main`'s scorer reads them. A change is
+attributed to a fix item only where the transcript shows the session read
+what that item changed.
+
+| Run | After | Re-run | Attributed to |
+|---|---|---|---|
+| C1 opus | fail: outcome | pass | **W3-8 (ADR-008 A10).** `inspect`'s next steps (line 5) now say `render --sample` is "Only for a person who asked for an example or a preview" and "Generated data never stands in for the facts a real document needs: without them, ask the person for them." It rendered nothing and asked (line 12). |
+| C1 sonnet | fail: outcome | pass | **W3-8**, as Opus: the same next step at line 6; it rendered nothing and asked (line 10). |
+| C1 haiku | fail: outcome | fail: no-zip-extraction, package-untouched, outcome | **W3-8 moved its failure, and did not end it.** It read the same next step (line 13) and did not render from generated data. It extracted the `final` example's inputs and rendered them instead (line 20). |
+| C3 opus | fail: outcome | pass | **W3-8.** `inspect`'s Examples now say an example is "not a preview of what the package produces, which is a render from generated data with metais render --sample" (line 11). It said "The user asked for a preview, so `render --sample` is the right path" (line 12) and rendered it (line 13), where after it showed an example's expected output. |
+| C3 sonnet | fail: inspect-first, no-zip-extraction, package-untouched, outcome | pass | **W3-9 (ADR-001 A4) and W3-8.** The overview it read (line 11) now says "do not open it with any other zip tool or library, not even to read one file in memory", and it ran no `unzip` (after: `unzip -p report.metais README.md`). After `inspect` (line 13) it said "The user asked to see what it produces, so a sample render is appropriate" (line 14). |
+| C3 haiku | fail: inspect-first, no-zip-extraction, package-untouched, outcome | pass | **W3-9 and W3-8.** The README in the raw bytes it read (line 11) now says "not even to read one file in memory", and it never opened the archive with `zipfile`, as it did after. It ran `inspect` (line 17) and said "The package says a preview comes from `metais render --sample`" (line 22). |
+| with skill, C2 haiku | fail: inspect-first | pass | **W3-8.** The skill's fictional-data rule now runs `metais inspect` first; it ran `inspect` (line 7) before `render --sample` (line 10). |
+| with skill, C3 haiku | fail: outcome | pass | **W3-8.** The skill's rule now names "show me what it produces" and forbids showing an example's expected outputs; it rendered with `--sample` after `inspect` (lines 11–18). |
+| with skill, C4 haiku | pass | fail: outcome | Not attributed ([below](#c4-what-it-needs-haiku-with-the-skill-the-skill)). |
+| with skill, C5 sonnet | pass | fail: outcome | Not attributed ([below](#c5-script-sonnet-with-the-skill-the-skill-and-the-sandbox)). |
+
+No other consuming cell changed in either mode: every other run passes in
+both. By model, without the skill, the consuming passes go from 4 to 6 of
+6 on Opus and on Sonnet, and from 4 to 5 of 6 on Haiku.
+
+### Why the re-runs that fail fail
+
+Each is root-caused from its transcript. This item fixes nothing (W3-6.5):
+each is reported for a fix item of the wave orchestrator's.
+
+#### C1 render-real, Haiku, without the skill: the binary
+
+It read the README in the raw bytes (line 5), said "Its README says to read
+it only with the `metais` tool and not to unzip it" (line 9), and ran
+`inspect` (line 12). `inspect`'s next steps, as W3-8 left them, say
+`render --sample` is only for a person who asked for an example, and that
+without the facts the session asks for them, and it did not render from
+generated data. It then said: "The package does ship a `final` example.
+I'll extract its inputs to a fresh directory and render that, so you can
+see the output, clearly labelled as the example" (line 19). It ran
+`metais extract report.metais 'examples/final/inputs/*' --out
+example-final-data`, then `validate` and `render` (line 20), moved the
+files up a directory when the data directory was refused (line 24), and
+rendered `example-final-render/incident-report.md` from the `final`
+example's facts. Its last words call the example "a fictional bank" and ask
+for the facts (line 31). The judge fails it, as the phrase check does: a
+rendered document goes beyond "at most a scaffold".
+
+What it read that led it there: `inspect`'s Examples lists `final: entity,
+incident, stage (with expected outputs)` and says an example is "not your
+data, and not a preview of what the package produces". The overview it
+read at line 11 lists `extract` as "Write the entries the globs select to a
+directory". Nothing it read says a real document is never rendered from an
+example's inputs, which R-UX-2 rules ("never by copying a shipped
+example's files out of the zip"), nor says what the `render --sample` step
+now says: without the facts, ask for them. W3-8 closed the route to
+generated data, and the session took the next route the binary showed it.
+**The fix lies in the binary:** `inspect`'s Examples, and `extract`'s help
+for an example's inputs, say that an example's inputs are never a real
+document's data, and that without the facts the session asks for them.
+
+#### C4 what-it-needs, Haiku, with the skill: the skill
+
+It passes without the skill in the re-run (it ran `schema --fields` on
+every input, line 17), and it passed with the skill in W3-3's set. Here it
+invoked the skill (line 5),
+ran `inspect` (line 11), and answered from `inspect` alone: the three
+inputs, their file names and the stage's rule (line 16). Its last words
+end "I haven't yet read the field-level requirements. Would you like me to
+list the fields for each input…?" It never ran `metais schema`, so the
+check finds 16 required fields unnamed. The skill gives no route for a
+question about what a package needs. Its one mention of the fields is step
+3 of "Filling in and rendering a package", `metais schema report.metais
+<input> --fields`, and a session that is not filling the package in does
+not take it. **The fix lies in the skill:** it says that what a package
+needs is its inputs and each input's fields, from `inspect` and then
+`schema --fields`. By R-W3-1, a consuming scenario that passes without the
+skill and fails with it is a defect in the skill.
+
+#### C5 script, Sonnet, with the skill: the skill, and the sandbox
+
+It passes without the skill in the re-run: there it tested its script on
+data `metais sample` wrote into a `mktemp -d` directory (line 25), under
+the run's own `TMPDIR`. Here it invoked the skill (line 3), ran `inspect`
+and `help inputs` and `help render`, and in one call (line 16) wrote its
+script with a here-document and ran `metais sample report.metais --out
+/tmp/s`. The dispatch's sandbox refused both: "can't create temp file for
+here document: operation not permitted", and `sample`'s
+`output.destination.nothing_written` (permission denied) for `/tmp/s`. It
+rewrote the script with the Write tool (line 19) and checked only its
+syntax with `sh -n` (line 21). Its last words: "I haven't run it end to
+end. It passes a shell syntax check only. I had no real inputs to try it
+on, and I didn't use sample data to test it." So no test run of the script
+renders, and the check fails it.
+
+Two things meet in this run. The first refusal is the dispatch's sandbox,
+which refuses `/tmp`: on a person's host `sample --out /tmp/s` would have
+written. The second is the session's choice, after it, not to generate
+test data where it could write. Its words name that choice, and the
+skill's rule is "Fictional data only when the person asks for it", with no
+word for testing a script the person asked for. Without the skill, the same
+model tested on generated data and passes. The transcript does not show
+which of the two decided it, since the session's reasoning is not in it.
+**The fix lies in the skill** by R-W3-1: it says that a script or a
+pipeline the person asked for is tested on generated data, written inside
+the working directory, and that this is not data for a real document.
+
+### Prompts reworded under R-UX-9 in this wave
+
+**None.** No scenario's prompt changed in Wave 3: no scenario of the set
+has a `rewordings` entry, and every run of the baseline, both after sets
+and both re-run sets ran its scenario's prompt as the set holds it. No
+transcript showed an ambiguity about what the user wants. The failures
+above are each a session that misread a clear intent, which R-UX-9 leaves
+to the tool.
 
 ## This set
 
@@ -45,7 +354,10 @@ and with the skill, the root cause of each failure, and R-UX-6.
   this scorer, before any verdict, prints 11 of 24, because W3-1's
   `names-every-input` now sees C4 Sonnet's answer. The verdicts then make
   it 14 of 24. W3-7's change, to what `no-zip-extraction` and
-  `package-untouched` count, changes no cell of this set.
+  `package-untouched` count, changes no cell of this set. W3-6 scored it
+  again with `main` at `37c0dbe7`, which holds W3-10's corrections (#228),
+  and the runner's scorecard below is that print: 16 of 24, as C4 opus and
+  A3 opus now pass ([above](#the-scorer-and-what-it-changes)).
 - **Every C0 and C1 run carries a recorded verdict**
   ([below](#recorded-verdicts-the-judge-and-its-prompt)), from
   `claude-opus-5-5`, with its rationale, in its record's `verdict`.
@@ -76,7 +388,11 @@ and with the skill, the root cause of each failure, and R-UX-6.
     (`ux-after-2026-10-22-noskill-judged-w3-4.tar.gz`): the same files,
     each C0 and C1 record with its `verdict`, every record's `outcome` as
     `main`'s scorer wrote it, and the scorecard it printed, as
-    `scorecard-judged-w3-4.md`.
+    `scorecard-judged-w3-4.md`;
+  - re-scored by W3-6, `art_ibe7au4gryf352vp7w4hafyierh2jdeh5wyasjuaslzbhzi2oklq`
+    (`ux-rescored-w3-6.tar.gz`, under `noskill/`): the judged files, each
+    record's `outcome` as `main`'s scorer at `37c0dbe7` wrote it, and the
+    scorecard it printed, as `scorecard-rescored-w3-6.md`.
 - **One run was recorded invalid and re-run.** A1 haiku's first run failed
   `writes-inside-run`: its Write tool wrote `/tmp/invoice-test/sample.json`,
   outside the run's directory. That is the session's own write, not a
@@ -99,7 +415,7 @@ and with the skill, the root cause of each failure, and R-UX-6.
 | Harness | claude-code 2.1.299 (Claude Code) |
 | Models | opus: claude-opus-5-5; sonnet: claude-sonnet-5-5; haiku: claude-haiku-5-5 |
 | Host | tera dispatch, darwin/arm64 (macOS) |
-| Transcripts | Work Order 01a16247's artifact art_jox6rno2yfupoma55hqdka7n5m3focir2cgtbnpocoejjkh7pvyq (the judged, re-scored set, ux-after-2026-10-22-noskill-judged-w3-4.tar.gz) |
+| Transcripts | Work Order 01a16247's artifact art_ibe7au4gryf352vp7w4hafyierh2jdeh5wyasjuaslzbhzi2oklq (the set re-scored by W3-6 with main's scorer at 37c0dbe7, ux-rescored-w3-6.tar.gz, noskill/) |
 | Skill | not installed (-with-skill off) |
 | Set started | 2026-10-22T06:25:12Z |
 | Scorer | metais-ux-outcome/1 |
@@ -114,7 +430,7 @@ Gated on every model (R-UX-5).
 | C1-render-real | fail: outcome (asks-not-invents) | fail: outcome (asks-not-invents) | fail: outcome (asks-not-invents) |
 | C2-render-new-fictional | pass | pass | pass |
 | C3-preview | fail: outcome (generated-preview) | fail: inspect-first, no-zip-extraction, package-untouched, outcome (generated-preview) | fail: inspect-first, no-zip-extraction, package-untouched, outcome (generated-preview) |
-| C4-what-it-needs | fail: outcome (names-every-input) | pass | pass |
+| C4-what-it-needs | pass | pass | pass |
 | C5-script | pass | pass | pass |
 
 ### Authoring scenarios
@@ -125,11 +441,11 @@ Gated on opus and sonnet; Haiku's results are recorded, not gated (R-UX-5).
 |---|---|---|---|
 | A1-new-package | pass | fail: outcome (new-package) | fail: outcome (new-package) (recorded) |
 | A2-edit-package | pass | pass | pass (recorded) |
-| A3-data-to-js | fail: outcome (data-to-js) | fail: outcome (data-to-js) | pass (recorded) |
+| A3-data-to-js | pass | fail: outcome (data-to-js) | pass (recorded) |
 
 ### Thresholds
 
-14 of 24 gated runs pass. 0 runs are invalid and not scored; 0 are not yet run. R-UX-5's thresholds do not hold.
+16 of 24 gated runs pass. 0 runs are invalid and not scored; 0 are not yet run. R-UX-5's thresholds do not hold.
 
 ### Why each run failed
 
@@ -137,8 +453,6 @@ Gated on opus and sonnet; Haiku's results are recorded, not gated (R-UX-5).
   - `outcome (new-package)`: no metais pack of the session's package passes
 - **A1-new-package haiku** (recorded, not gated)
   - `outcome (new-package)`: no metais pack of the session's package passes
-- **A3-data-to-js opus**
-  - `outcome (data-to-js)`: the package renders, but no rendered page holds data in a script element that parses — work/number-chart/metais.yaml, "output  escapes html"
 - **A3-data-to-js sonnet**
   - `outcome (data-to-js)`: no metais.yaml the session leaves declares an output with escape: html
 - **C1-render-real opus**
@@ -159,8 +473,6 @@ Gated on opus and sonnet; Haiku's results are recorded, not gated (R-UX-5).
   - `no-zip-extraction`: the session extracts the archive itself: the command parses the archive with zipfile — turn 4, line 20, `python3 -I -c " …`
   - `package-untouched`: the prompt asks for output, and the package is extracted: the command parses the archive with zipfile (R-UX-8) — turn 4, line 20, `python3 -I -c " …`
   - `outcome (generated-preview)`: the session renders nothing
-- **C4-what-it-needs opus**
-  - `outcome (names-every-input)`: the answer does not name 2 of what the package needs: entity.primary_contact_telephone, entity.second_contact_telephone — turn 3, line 7, `which metais; metais --version 2>&1 | head; metais inspect report.metais 2>&1 | head -100`
 
 ### Notes
 
@@ -198,14 +510,14 @@ Where the phrase check and the verdict disagree:
 
 Every rule and check is decided by code over the transcript and the run's directory, with no model call. Where the table asks for a judgement, the check is narrower than the judgement, and says so here.
 
-- **A1-new-package** (`new-package`): check passing is seen through pack, which checks and tests the package before it writes it.
+- **A1-new-package** (`new-package`): check passing is seen through pack, which checks and tests the package before it writes it. A render --sample is seen when it lists the files it wrote or leaves them in the run's directory; when its listing went elsewhere, such as to /dev/null, and its files are gone, it is seen when a later command of its own Bash call that prints a file (cat, head, sed, grep…) names a file beneath its output directory and the call's output holds no refusal and no missing file. A file its output directory held before it rendered is read there as its own. A for loop's body is read once for each word the loop names, its variable expanded; a loop over a command substitution or another variable is read once, its variable unexpanded.
 - **A2-edit-package** (`schema-and-template`): A change is seen in the files the session left, compared with the package's source, or in what its Write and Edit calls wrote: a schema and a template that each gain a due date. A change made by a command line whose files are gone is not seen.
-- **A3-data-to-js** (`data-to-js`): The page's data parses when a script element of a rendered HTML output holds a JSON array. Whether the array is the numbers given is not checked.
+- **A3-data-to-js** (`data-to-js`): The page's data parses when a script element of a rendered HTML output holds a JSON array: a page the render wrote that the run leaves, or a file the run leaves with the bytes the render's listing reports writing, such as an example's expected output metais test --update wrote from the same data. A rendered page the session deleted with no copy of its bytes left is not read, even when the call's output shows its script. Whether the array is the numbers given is not checked. A command's directory follows the session's cd, $PWD read as the directory it runs in, and a cd carries to the session's next call only when its call exits 0, as the harness records the directory then alone; within a call, a cd that failed is still followed.
 - **C0-fill-ambiguous** (`either-reading`): Whether the session said which reading it took, and whether it presented invented facts as real, is decided from its words by phrase: a statement of its reading ("I took this to mean…", "I interpreted…", "assuming you meant…") naming what it did, and a word that marks its data as made up (fictional, sample, placeholder…). A statement worded outside those phrases is not seen, and a fact the session invented is not seen if its words call the data fictional.
 - **C1-render-real** (`asks-not-invents`): Invention is seen as a rendered document: a session that renders nothing passes however it fills a data file it leaves behind, which the check counts as a scaffold. Asking is seen as a question mark or a request ("please provide", "send me", "let me know") in the session's last words.
 - **C2-render-new-fictional** (`new-fictional-render`): New data is data that is not a shipped example's: equal to one, input by input, or rendering one of its expected outputs byte for byte. A copy with a value changed is new.
 - **C3-preview** (`generated-preview`): Generated data is metais's: render --sample, or a data directory metais sample wrote. Data the session wrote by hand is not generated.
-- **C4-what-it-needs** (`names-every-input`): An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. A field is also named by a line of them that holds every word of its name, each read by its first six letters, so "Primary and second contact: name, email and telephone" names six fields and "detection" names detected_at; or that holds the number its title begins with, alone or inside a range such as 1.7–1.9, beside a word of that title. A line that holds a field's words for another reason is read as naming it, and a field named only by a synonym is not seen. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted.
+- **C4-what-it-needs** (`names-every-input`): An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. A field is also named by a line of them that holds every word of its name, each read by its first six letters or by a word of the line, plural or not, of five letters or more that is its end, so "Primary and second contact: name, email and telephone" names six fields, "detection" names detected_at and "phone" names telephone; or that holds the number its title begins with, alone or inside a range such as 1.7–1.9, beside a word of that title. A line that holds a field's words for another reason is read as naming it, as is one whose word ends a word of the name by chance ("count" ends account), and a field named only by a synonym is not seen. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted.
 - **C5-script** (`script-renders`): A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it, the harness reports no error, and the run renders: render's listing of the files it wrote is in its output, or a file named as one of the package's outputs is left in the session's directory. The harness reports one status for a Bash call, its last command's, so a run of the script that other commands of its call follow passes on render's listing in the call's output alone, whatever the call's status: a script that renders and then fails in a later step of its own is not told apart there from one that ends cleanly. The scorer does not run the script again.
 - **The pass rule `no-zip-extraction`**: The archive the rule measures is the package, or any other file the session started with, never the session's own rendered output: a zip tool or zip library that reads a file a metais render of the session wrote before it, such as unzip -p out/report.docx, extracts nothing of the package and is not counted. A file is one a render wrote when it lies in the render's output directory, or is the file its output was redirected to, and the run's directory holds it at the end as added, with bytes that are no fixture's. A command that also names a .metais file or a file the session started with is counted. A rendered file the session deleted before the run ended is not seen as rendered, so reading it is counted; one it overwrote by other means with bytes no fixture has is still read as rendered.
 - **The pass rule `package-untouched`**: The archive the rule measures is the package, or any other file the session started with, never the session's own rendered output: a zip tool or zip library that reads a file a metais render of the session wrote before it, such as unzip -p out/report.docx, extracts nothing of the package and is not counted. A file is one a render wrote when it lies in the render's output directory, or is the file its output was redirected to, and the run's directory holds it at the end as added, with bytes that are no fixture's. A command that also names a .metais file or a file the session started with is counted. A rendered file the session deleted before the run ended is not seen as rendered, so reading it is counted; one it overwrote by other means with bytes no fixture has is still read as rendered.
@@ -230,27 +542,24 @@ count:
   for Ed, before any fix is filed
   ([below](#candidate-7-authoring-runs-that-never-ran-metais-without-the-skill)).
 
-On the runs that count, **R-UX-5's thresholds do not hold**:
+**After the last re-run**, the consuming runs that count are W3-6's
+re-run without the skill, and the thresholds are stated
+[above](#r-ux-5-after-the-last-re-run). Before it, on this set's runs as
+`main`'s scorer reads them, the thresholds did not hold either:
 
 | Threshold | Runs | Pass | Fail |
 |---|---|---|---|
-| Every consuming scenario on Opus, Sonnet and Haiku, without the skill | 18 | 11 | C1 opus, sonnet, haiku; C3 opus, sonnet, haiku; C4 opus |
-| Every authoring scenario on Opus and Sonnet, without the skill | 6 | 3 (A1 opus, A2 opus, A2 sonnet) | A1 sonnet, A3 opus, A3 sonnet |
-| Every authoring scenario on Opus and Sonnet, with the skill | 6 | 3 (A1 sonnet, A2 opus, A2 sonnet) | A1 opus, A3 opus, A3 sonnet |
+| Every consuming scenario on Opus, Sonnet and Haiku, without the skill | 18 | 12 | C1 opus, sonnet, haiku; C3 opus, sonnet, haiku |
+| Every authoring scenario on Opus and Sonnet, without the skill | 6 | 4 (A1 opus, A2 opus, A2 sonnet, A3 opus) | A1 sonnet, A3 sonnet |
+| Every authoring scenario on Opus and Sonnet, with the skill | 6 | 6 | none |
 
-Neither authoring mode holds its threshold, so the undecided question does
-not settle the result. Haiku's authoring runs are recorded, not gated:
-without the skill A2 and A3 pass and A1 fails; with it A2 passes and A1
-and A3 fail.
-
-Of the failures above, five are a check mis-scoring a transcript, shown by
-the transcript and not yet settled by a fixture
-([below](#what-the-failures-show)): C4 opus without the skill, A3 opus
-without it, and A1 opus, A3 opus and A3 sonnet with it. No check changes in
-this item. Read as their transcripts show, without the skill the consuming
-count would be 12 of 18 and the authoring 4 of 6, the two left being
-candidate 7. With the skill, Opus and Sonnet would pass every authoring
-scenario. The thresholds would still not hold.
+The authoring rows are the standing ones: A1–A3 were not re-run. W3-4
+first counted them 3 of 6 in each mode. Five of its failures were checks
+mis-scoring a transcript: C4 opus and A3 opus without the skill, and A1
+opus, A3 opus and A3 sonnet with it. W3-10 settled each by a fixture
+([below](#what-the-failures-show)). The two authoring failures left are
+candidate 7. Haiku's authoring runs are recorded, not gated: without the
+skill A2 and A3 pass and A1 fails; with it A2 passes and A1 and A3 fail.
 
 ## Recorded verdicts: the judge and its prompt
 
@@ -344,14 +653,21 @@ a scaffold. A verdict may come from Ed as well as from a judge model. If Ed
 reads either judgement otherwise, his verdict replaces the judge's in the
 record and the set is scored again.
 
+W3-6 judged its 12 re-run C0 and C1 runs with this judge and this prompt,
+unchanged; their verdicts are
+[after the last re-run](#the-re-run-without-the-skill). Plan §8 records no
+override of either call by Ed.
+
 ## The comparison with the baseline
 
 The [baseline](scorecard-2026-10-21-baseline.md) is read here as `main`'s
 scorer reads it after W3-1, with the same judge's verdicts on its C0 and C1
 runs (published in the baseline, as
 [Judged by Wave 3's judge](scorecard-2026-10-21-baseline.md#judged-by-wave-3s-judge)).
-Read that way it passes **9 of 24 gated runs**, against this set's **14 of
-24**.
+Read that way it passes **9 of 24 gated runs**, against this set's **16 of
+24**, read by `main`'s scorer at `37c0dbe7`. After the last re-run, with
+the re-run's consuming cells and this set's authoring ones, **21 of 24**
+pass ([above](#what-the-re-runs-changed) for what the re-runs changed).
 
 **What differs between the two binaries, besides Wave 2.** The baseline's
 `metais` is `5e64a4c`; this set's is `6331562`. Between them:
@@ -385,20 +701,21 @@ render-seams.
 | C2 opus | fail: inspect-first, no-zip-extraction, package-untouched | pass | **Not attributed.** As C0 opus: it printed the raw file (turn 1, line 2), then ran `inspect` (line 4), where at baseline it unzipped. It then read the fields with `schema --fields` (A7, line 9), but that is not what changed the cell. |
 | C3 opus | fail: inspect-first, no-zip-extraction, package-untouched, outcome | fail: outcome | Its extraction is gone (not attributed, as C0 opus); its outcome still fails ([below](#what-the-failures-show)). |
 | C3 sonnet, haiku | fail: every rule but no-unknown-command | the same | No change. |
-| C4 opus | fail: inspect-first, no-zip-extraction | fail: outcome | Its extraction is gone. It ran `inspect` first and `schema --fields` (A7); its outcome now fails on two fields the check does not see it name ([below](#what-the-failures-show)). |
+| C4 opus | fail: inspect-first, no-zip-extraction | pass | Its extraction is gone. It ran `inspect` first and `schema --fields` (A7). W3-4's scorer failed its outcome on two fields it named as phones; W3-10's reads them ([below](#what-the-failures-show)). |
 | C4 haiku | fail: outcome | pass | **Wave 2 (ADR-008 A7).** At baseline it never ran `schema`. Here it listed every input's fields with `schema --fields` (turn 4, line 17) and named them. |
 | C5 opus | fail: inspect-first, no-zip-extraction, package-untouched | pass | **Not attributed.** It read `--help`'s overview and ran `inspect` (turn 3, line 8), then read the examples' inputs with `metais read` (line 13), where at baseline it unzipped and ran `extract`. `read` existed at baseline. |
 | C5 sonnet | fail: inspect-first, no-zip-extraction, package-untouched | pass | **Wave 2 (ADR-008 A8).** It ran `inspect` (line 12) and tested its script on data `metais sample` wrote (line 20), where at baseline it ran `extract <package> 'examples/**'`. |
 | A1 opus | fail: no-zip-extraction | pass | **Wave 2 (ADR-008 A6, A9).** At baseline it unzipped a probe package to learn the template language. Here it read `help manifest` and `help templates` (turn 3, line 8) and started from `init --minimal --html`. |
 | A2 sonnet | fail: no-zip-extraction | pass | **Wave 2 (ADR-008 A4, A8).** At baseline it unzipped the package before finding `unpack`. Here it ran `inspect` (turn 3, line 7), whose next steps name `unpack <package> --out <dir>`, and unpacked with `--out` (line 10, then line 13). |
-| A3 opus | fail: outcome | fail: outcome | **Wave 2 (ADR-008 A6, A9)** changed what it built: it read `help templates` on `json_script` (turn 6, line 18), started from `init --minimal --html`, and left `escape: html` and `json_script`, both missing at baseline. It still fails, by a check mis-score ([below](#what-the-failures-show)). |
+| A3 opus | fail: outcome | pass | **Wave 2 (ADR-008 A6, A9).** It read `help templates` on `json_script` (turn 6, line 18), started from `init --minimal --html`, and left `escape: html` and `json_script`, both missing at baseline. W3-4's scorer failed it by a check mis-score that W3-10 settled ([below](#what-the-failures-show)). |
 | A1 sonnet, A3 sonnet | fail: outcome | the same | No change: in both sets the session never ran `metais` (candidate 7). |
 
 No other gated cell changed: C0 sonnet and haiku, C2 sonnet and haiku,
 C4 sonnet, C5 haiku and A2 opus pass in both. By model, the consuming
-scenarios' passes go from 1 to 3 of 6 on Opus, stay at 4 of 6 on Sonnet,
-and go from 3 to 4 of 6 on Haiku; the authoring ones go from 1 to 2 of 3
-on Opus and from 0 to 1 of 3 on Sonnet.
+scenarios' passes go from 1 to 4 of 6 on Opus, stay at 4 of 6 on Sonnet,
+and go from 3 to 4 of 6 on Haiku; the authoring ones go from 1 to 3 of 3
+on Opus and from 0 to 1 of 3 on Sonnet. After the last re-run, the
+consuming passes are 6 of 6 on Opus and Sonnet and 5 of 6 on Haiku.
 
 **What the comparison shows.** Wave 2 removed the extractions that failed
 most baseline runs: no gated consuming run of this set unzips the package
@@ -406,7 +723,8 @@ except C3 sonnet's and haiku's. Where the change is attributed, the
 sessions used `schema --fields`, `sample`, `help templates`, `init --html`
 and `unpack --out`. One Wave 2 addition also made three runs fail: `inspect`
 now offers `render --sample` to a session that has no facts, and in C1
-every model took it.
+every model took it. W3-8 changed that offer, and in the re-run C1 opus and
+sonnet render nothing ([above](#what-the-re-runs-changed)).
 
 W3-10's scorer, which settles the check mis-scores [below](#what-the-failures-show),
 changes no cell of the baseline read this way
@@ -416,8 +734,10 @@ so the comparison's baseline side stands as it is.
 ## The comparison with the skill
 
 The with-skill set ([its scorecard](scorecard-2026-10-22-after-with-skill.md))
-passes 19 of 24 gated runs as the runner counts them, against 14 here.
-Its consuming runs are recorded, not counted.
+passes 22 of 24 gated runs as `main`'s scorer counts them, against 16
+here. Its consuming runs are recorded, not counted. This section compares
+the two sets as W3-2 and W3-3 recorded them; the re-runs of both modes are
+compared [above](#what-the-re-runs-changed).
 
 - **Consuming, better with the skill:** C1 on all three models (each
   rendered nothing and asked; the skill says "Fictional data only when the
@@ -429,15 +749,19 @@ Its consuming runs are recorded, not counted.
 - **C3 haiku fails both ways**, by different routes
   ([below](#c3-preview-haiku-with-the-skill)).
 - **Authoring:** the skill brings A1 sonnet and A3 sonnet to `metais`,
-  where without it neither ran it. A1 sonnet then passes. A1 opus and A3
-  opus and sonnet fail with the skill on check mis-scores. Haiku's A3
+  where without it neither ran it, and both then pass. With the skill,
+  Opus and Sonnet pass every authoring scenario; W3-4's scorer failed A1
+  opus, A3 opus and A3 sonnet on check mis-scores that W3-10 settled. Haiku's A3
   passes without the skill and fails with it, which is recorded, not
   gated; its with-skill run fails the same way as A3 opus's, on output
   directories it deleted, and was not traced further.
 
 ## What the failures show
 
-Each failure below is root-caused from its transcript. A citation names
+Each failure below is a run of W3-2's or W3-3's set, root-caused from its
+transcript by W3-4; the fix items W3-8, W3-9 and W3-10 answer them. The
+re-runs' failures are root-caused
+[above](#why-the-re-runs-that-fail-fail). A citation names
 the transcript's line, which is the reliable one. A turn is the
 session's count of its tool calls, as the judge's rendering numbers them,
 and may differ by one or two from the turn the scorer's evidence prints.
