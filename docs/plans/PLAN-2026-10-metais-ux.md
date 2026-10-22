@@ -7,7 +7,7 @@ train inherits it verbatim: `metais-ux [W2-C3]: <action>` for a Work Order,
 and `<type>(metais-ux): [W2-C3] <change>` for a pull request and its squash
 subject, by `kottera/kottera`'s `docs/dev/work-order-and-pr-naming.md`, which
 AGENTS.md adopts.
-**Status:** Ratified 2026-10-21 by Ed Funnekotter, with the rulings of §4; R-UX-8 amended and R-UX-9 added the same day.
+**Status:** Complete 2026-10-22: every wave complete, R-UX-5 holding under R-W3-5, and the train closeout in §10. Ratified 2026-10-21 by Ed Funnekotter, with the rulings of §4; R-UX-8 amended and R-UX-9 added the same day.
 **For PRD:** [PRD-001](../prd/PRD-001-metais-v1.md) R17 (the golden paths),
 and its success criteria SC1 (an AI harness, given only the binary and a
 package, produces a valid document) and SC9 (an author working only from the
@@ -126,7 +126,7 @@ Two rules this train adds:
 
 | Wave | Objective | Depends on | Status |
 |---|---|---|---|
-| 0 | This plan, merged to `main` | — | **authored** |
+| 0 | This plan, merged to `main` | — | **complete** (#183) |
 | 1 | **The harness and the baseline**: `docs/dev/ux-testing.md`; the scenario set; the runner, with its isolation proof; the transcript scorer with its fixtures; a baseline scorecard on `main` | 0 | **complete** (see §5, Wave 1 verdict) |
 | 2 | **The fixes**: the `templates` and `manifest` help topics; examples first in every command's help; a compact field listing from `schema`; on-the-fly data on `inspect`'s next steps and in the supplier's help; a minimal `init`; the agent skill (`01a15ad7`); generated vectors (`01a15ad6`) | 1 | **complete** (see §7, Wave 2 verdict) |
 | 3 | **Measure, fix, and close**: the scorecard on post-Wave-2 `main`, with and without the skill installed; its comparison with the baseline; a fix item for each failing scenario, then a re-run until §4's thresholds hold; the SC1 and SC9 rounds | 2 | **complete** (see §8, Wave 3 verdict) |
@@ -566,3 +566,147 @@ credential for one.
 - Changes to the specification's normative behaviour, beyond what the help,
   `schema`'s listing, `init` and the skill need under their amendments.
 - Gating on harnesses other than Claude Code (Q-UX-3).
+
+## 10. Train closeout
+
+*Written 2026-10-22 by the plan orchestrator (Work Order `01a15e87`). It
+is not a correctness verdict. I read the closeouts, the verifiers' reports
+as relayed in them, the published scorecards and the merged diffs' parts
+named in each verdict. I mutated nothing, ran no session, and re-scored no
+transcript myself. Where something below is verified, the verifier that
+verified it is named.*
+
+### Did the plan deliver what it set out to?
+
+Against §1's "Done means":
+
+- **A session with only the binary learns what it needs from the
+  binary.** Delivered:
+  - `metais help templates` and `metais help manifest` (ADR-008 A6), each
+    held to its source by a drift test;
+  - `schema --fields`, a compact field listing (ADR-008 A7).
+- **On-the-fly data, and examples first.** Delivered:
+  - `inspect` and the help put `render --sample` and `sample` in front of
+    a supplier (ADR-008 A8), and offer generated data only to a person
+    who asked for an example or a preview (ADR-008 A10);
+  - every command's help leads with examples (ADR-008 A3).
+- **The skill.** Delivered: `metais skill` merged before the train began
+  (#185), and the train kept its text true of the help.
+- **Generated vectors.** Delivered before the train began (#181).
+- **A UX harness, and a green scorecard.** Delivered:
+  - the runner, the scorer and the scenarios (Wave 1);
+  - under Ed's ruling R-W3-5, R-UX-5's thresholds hold after the last
+    re-run. Consuming scenarios without the skill pass 18 of 18, and
+    authoring on Opus and Sonnet with the skill passes 6 of 6;
+  - the comparison with the baseline is recorded, at 9 of 24 re-read by
+    the same scorer and judge.
+
+  The verifier `01a1632a-d8a5` re-scored every published set from its
+  artifacts and found them identical.
+- **The SC1 and SC9 rounds.** **Not delivered by this train**, and not
+  this train's to deliver. They are PLAN-2026-10-metais-v1's acts
+  (`01a15abf-4d58` and `01a15abf-6347`), and Ed takes them. This train
+  produced their evidence (below). Neither round is done.
+
+### What each wave contributed
+
+- **Wave 1**
+  ([brief](../briefs/brief-plan-2026-10-metais-ux-wave1.md)): the runner
+  under ADR-009 A8, the nine scenarios, the scorer with its fixtures, the
+  method in `docs/dev/ux-testing.md`, and the baseline at 6 of 24.
+- **Wave 2**
+  ([brief](../briefs/brief-plan-2026-10-metais-ux-wave2.md)): the fixes.
+  They are examples-first help, `--out` everywhere, and what a session
+  sees first sending it to `inspect`. They also add the two topics,
+  `schema --fields`, the supplier's routes, and `init --minimal` and
+  `--html`. Amendments: ADR-008 A3 to A9, ADR-007 A1 and ADR-001 A3.
+- **Wave 3**
+  ([brief](../briefs/brief-plan-2026-10-metais-ux-wave3.md)): the
+  after scorecards, with and without the skill; one judge for C0 and C1;
+  two fix rounds (ADR-008 A10 and A11, ADR-001 A4, §B.6, the skill); eight
+  scorer corrections; and the SC1 and SC9 evidence.
+
+### What the train did not establish
+
+- **Unaided discovery.** A session given a `.metais` task with no package
+  in front of it and no skill does not find `metais`. A1 and A3 on Sonnet
+  never ran it. R-W3-5 carries this to a later plan (the website,
+  distribution).
+- **SC1's bar.** It was not met by the evidence. Both C6 sessions passed
+  `validate` and `render`, but read the package's raw bytes once before
+  `inspect`. Three things differ from the round itself:
+  - C6's prompt lacks the round's "Start with `./metais inspect`";
+  - the runs predate W2-NB1 and Wave 3's README fix (ADR-001 A4), which
+    targets exactly that read;
+  - so whether the round's own task, on today's binary, reads only through
+    `metais` is what the round itself will show.
+- **SC9's evidence** passed `check`, `test` and `pack`, but was made
+  against §B.6's old text, corrected afterwards.
+- **Haiku's authoring** is recorded, not gated (R-UX-5). The with-skill A3
+  Haiku run still fails.
+- **Other harnesses.** R-UX-6's run was not made: no Codex or OpenCode,
+  and no credential for one, was available to a dispatch. The runner
+  implements Claude Code only.
+- **One fix was not re-verified.** W3-14, the fix for the verification's
+  one blocking finding, was not re-verified. Its own re-run passes C4 3 of
+  3 with the skill.
+- **Some scorer guards are unpinned.**
+  - Of Wave 3's 41 mutations, 18 stayed green, most of them unpinned
+    scorer guards.
+  - W3-NB1 pins the ones raised as findings. The rest are named in the
+    verifier's output as low-risk or equivalent.
+  - A later loosening of a check could cross them unnoticed.
+- **The scorecard is not a gate.** It is evidence from sessions on one
+  harness version (Claude Code 2.1.299), three model IDs, and a dispatch
+  host. A model or harness change can move it. Nothing re-runs it
+  automatically.
+- **C0's measure.** C0 passes on the judge's reading that asking for the
+  facts, naming a reading and inventing nothing is a pass (R-W3-3, kept by
+  Ed). The phrase check disagrees on every C0 run. The judge's verdicts,
+  not the phrase check, carry C0.
+
+### What is still running
+
+- W3-NB1 (`01a16351-ed1b`): scorer and runner pins.
+- W3-NB2 (`01a16352-2b89`): two `internal/cli` help sentences, under
+  ADR-008 A12 if needed.
+
+Both are non-blocking, and nothing waits on them. W1-NB1 (#204) and W2-NB1
+(#217) have merged.
+
+### How many times a person was consulted
+
+**Ed was consulted three times by this train, and steered it once
+unprompted:**
+
+1. **W1-2's scorer questions**, which Ed answered directly on 2026-10-21:
+   - the phrase checks with recorded verdicts;
+   - the inspect-first relaxations;
+   - `unzip -l` as a note;
+   - the write-outside-run-directory isolation check.
+2. **R-UX-1's edge** (the plan orchestrator): Ed added Wave 2 to T-A3's
+   `depends_on`.
+3. **The authoring threshold's mode** (the plan orchestrator, R-W3-2):
+   Ed ruled R-W3-5 and kept both judge calls.
+
+**Unprompted:** Ed's amendment #192 (C0, R-UX-8 scoped, R-UX-9), merged
+during Wave 1.
+
+Each wave's breakdown review was answered by the plan orchestrator, not a
+person.
+
+### The out-of-band acts
+
+Of §6's rows:
+
+- **Accepting ADR-008 A2 and ADR-009 A5.** Ed did this in #179, before the
+  train began.
+- **The scorecard on Ed's host.** It was never needed: the loopback proxy
+  held for every run of every wave, so no `manual-qa-pass` was filed.
+- **T-A3's `depends_on`.** Ed added it on 2026-10-22, on
+  `01a15ac4-4d4e-775e-9989-615255b813b7`.
+
+The train filed no off-tera Work Order. The SC1 and SC9 rounds belong to
+PLAN-2026-10-metais-v1. Their evidence is in `docs/dev/rounds/sc1.md` and
+`sc9.md`, and they remain Ed's.
+
