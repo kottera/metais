@@ -75,7 +75,7 @@ func TestInitWrites(t *testing.T) {
 	root := testenv.Dir(t)
 	fileMode, dirMode := probeModes(t, testenv.Dir(t))
 	dir := filepath.Join(root, "a", "b", goldenName)
-	got, err := Init(dir, goldenName, false)
+	got, err := Init(dir, goldenName, Form{}, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func TestInitWrites(t *testing.T) {
 	if tr := tree(t, dir); !slices.Equal(tr, scaffoldTree) {
 		t.Errorf("Init left %q, want %q", tr, scaffoldTree)
 	}
-	for _, f := range readGolden(t) {
+	for _, f := range readGolden(t, goldenForms[0].dir, scaffoldOrder) {
 		p := filepath.Join(dir, filepath.FromSlash(f.Path))
 		b, err := os.ReadFile(p)
 		if err != nil || string(b) != string(f.Data) {
@@ -116,7 +116,7 @@ func TestInitQuiet(t *testing.T) {
 	dir := testenv.Dir(t)
 	quiet := []string{".DS_Store", ".git/", ".git/HEAD", ".gitignore", "old-0.1.0.metais"}
 	plant(t, dir, quiet...)
-	if _, err := Init(dir, goldenName, false); err != nil {
+	if _, err := Init(dir, goldenName, Form{}, false); err != nil {
 		t.Fatal(err)
 	}
 	want := slices.Sorted(slices.Values(append(slices.Clone(scaffoldTree), quiet...)))
@@ -168,7 +168,7 @@ func TestInitNotEmpty(t *testing.T) {
 			dir := testenv.Dir(t)
 			plant(t, dir, c.planted...)
 			before := tree(t, dir)
-			files, err := Init(dir, goldenName, dry)
+			files, err := Init(dir, goldenName, Form{}, dry)
 			var ne *NotEmptyError
 			if !errors.As(err, &ne) {
 				t.Errorf("%s (dry run %v): Init = %q, %v; want a refusal", c.name, dry, files, err)
@@ -189,14 +189,14 @@ func TestInitNotEmpty(t *testing.T) {
 func TestInitDryRun(t *testing.T) {
 	root := testenv.Dir(t)
 	absent := filepath.Join(root, "a", "b")
-	got, err := Init(absent, goldenName, true)
+	got, err := Init(absent, goldenName, Form{}, true)
 	if err != nil || !slices.Equal(got, scaffoldOrder) {
 		t.Errorf("Init dry run = %q, %v", got, err)
 	}
 	if tr := tree(t, root); len(tr) != 0 {
 		t.Errorf("a dry run wrote %q", tr)
 	}
-	got, err = Init(root, goldenName, true)
+	got, err = Init(root, goldenName, Form{}, true)
 	if err != nil || !slices.Equal(got, scaffoldOrder) {
 		t.Errorf("Init dry run = %q, %v", got, err)
 	}
@@ -211,7 +211,7 @@ func TestInitNotDirectory(t *testing.T) {
 	root := testenv.Dir(t)
 	plant(t, root, "file")
 	for _, dir := range []string{"file", "file/below"} {
-		_, err := Init(filepath.Join(root, filepath.FromSlash(dir)), goldenName, false)
+		_, err := Init(filepath.Join(root, filepath.FromSlash(dir)), goldenName, Form{}, false)
 		var we *WriteError
 		if !errors.As(err, &we) || we.Op != "open" || we.Reason != hostfs.NotDirectory || we.Written != nil {
 			t.Errorf("Init into %s = %v, want a refusal of a non-directory", dir, err)
@@ -233,7 +233,7 @@ func TestInitFailedWriteLeavesNothing(t *testing.T) {
 		}
 	}
 	t.Cleanup(func() { beforeCreate = nil })
-	_, err := Init(dir, goldenName, false)
+	_, err := Init(dir, goldenName, Form{}, false)
 	var we *WriteError
 	if !errors.As(err, &we) || we.Reason != hostfs.Exists || len(we.Written) != 0 || we.Left {
 		t.Fatalf("Init = %#v, want a write error that left nothing", err)
@@ -253,7 +253,7 @@ func TestInitFailedWrite(t *testing.T) {
 				plant(t, dir, stop)
 			}
 		}
-		written, err := Init(dir, goldenName, false)
+		written, err := Init(dir, goldenName, Form{}, false)
 		beforeCreate = nil
 		var we *WriteError
 		if !errors.As(err, &we) || we.Reason != hostfs.Exists || !we.Left {
@@ -264,7 +264,7 @@ func TestInitFailedWrite(t *testing.T) {
 		if want := scaffoldOrder[:i]; !slices.Equal(we.Written, want) || !slices.Equal(written, want) {
 			t.Errorf("a failed create of %s reports %q written, want %q", stop, we.Written, want)
 		}
-		for _, f := range readGolden(t)[:i] {
+		for _, f := range readGolden(t, goldenForms[0].dir, scaffoldOrder)[:i] {
 			if b, err := os.ReadFile(filepath.Join(dir, filepath.FromSlash(f.Path))); err != nil || string(b) != string(f.Data) {
 				t.Errorf("after a failed create of %s, %s was removed or changed", stop, f.Path)
 			}

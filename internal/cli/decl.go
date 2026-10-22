@@ -218,12 +218,19 @@ func declarations() []*Command {
 		validateDeclaration(),
 		renderDeclaration(),
 		{
-			Name: "init", Group: "Authoring", Synopsis: "init [<dir>] [--name <name>] [--dry-run] [--json]",
-			Description: "Write a new package's source directory, with an input, a template and an example.",
-			Detail: "Writes eight files into <dir>: metais.yaml, one input with its schema and meaning " +
-				"document, one template, one example with its inputs and expected output, and a " +
-				".gitattributes that keeps git from converting line endings. The scaffold is a " +
-				"small package to edit rather than an empty one.\n\n" +
+			Name: "init", Group: "Authoring", Synopsis: "init [<dir>] [--name <name>] [--minimal] [--html] [--dry-run] [--json]",
+			Description: "Write a new package's source directory: a greeting to learn from, or with --minimal one input and one template to replace.",
+			Detail: "Without --minimal, writes eight files into <dir>: metais.yaml, one input with its " +
+				"schema and meaning document, one template, one example with its inputs and expected " +
+				"output, and a .gitattributes that keeps git from converting line endings. The " +
+				"scaffold is a small package, a greeting, to learn from and edit.\n\n" +
+				"With --minimal, writes five: .gitattributes, metais.yaml, one input, data, with its " +
+				"schema and meaning document, and one template, each a placeholder to replace. It has " +
+				"no example, so test has nothing to compare until you add one.\n\n" +
+				"With --html, the output is an HTML page in place of Markdown: the output declares " +
+				"escape: html, so every value the template writes with {{ }} is HTML-escaped, and the " +
+				"template writes its data into a <script> element with json_script. Either scaffold " +
+				"checks, renders with render --sample and packs as written.\n\n" +
 				"The package's name is --name, or else the last element of <dir> as written. When " +
 				"<dir> is omitted or ends in . or .., --name is required: metais never looks up the " +
 				"working directory's name. The name must satisfy the package name rule.\n\n" +
@@ -238,6 +245,8 @@ func declarations() []*Command {
 				Description: "The directory to write into, created when absent; the current directory when omitted."}},
 			Flags: []args.Flag{
 				{Name: "name", Value: "<name>", Description: "The package's name. It is required when <dir> is omitted or its last element is . or ..; otherwise it defaults to that element."},
+				{Name: "minimal", Description: "Write the layout, one input and one template to replace, without the greeting and its example."},
+				{Name: "html", Description: "Make the output an HTML page that declares escape: html, and whose template writes its data into a <script> with json_script."},
 				{Name: "dry-run", Description: "Report the files init would write, and write nothing."},
 				failOnFlag,
 			},
@@ -252,8 +261,10 @@ func declarations() []*Command {
 				{Code: finding.CodeDestinationNothingWritten, Cause: "A write failed before init had created anything; nothing was written.", Next: nextInitAgain},
 			},
 			Examples: []Example{
-				{"metais init acme-report", "Writes the scaffold of a package called acme-report into the directory acme-report."},
-				{"metais init --name acme-report", "Writes it into the current directory, which must be empty."},
+				{"metais init acme-report --minimal", "Writes a package called acme-report into the directory acme-report: the layout, one input and one template, to replace with your own."},
+				{"metais init acme-report", "Writes the greeting scaffold instead, with an example, to learn from and edit."},
+				{"metais init acme-report --minimal --html", "Writes the minimal package with an HTML output that escapes for HTML and writes its data into a <script> with json_script."},
+				{"metais init --name acme-report --minimal", "Writes it into the current directory, which must be empty."},
 				{"metais init acme-report --dry-run --json", "Lists the files it would write, as one metais.init/1 document."},
 			},
 			run: runInit,

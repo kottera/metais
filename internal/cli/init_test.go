@@ -112,6 +112,55 @@ func TestInitScaffoldPinned(t *testing.T) {
 	}
 }
 
+// TestInitForms is W2-6.2 under ADR-007 A1 item 4: what init writes, in
+// every form its flags choose, checks with no finding, renders from sample
+// data into a new directory, and packs. The HTML forms render a page whose
+// data reaches its script through json_script.
+func TestInitForms(t *testing.T) {
+	testenv.Home(t)
+	for _, form := range []struct {
+		flags  []string
+		output string
+		files  int
+	}{
+		{nil, "greeting.md", 8},
+		{[]string{"--html"}, "greeting.html", 8},
+		{[]string{"--minimal"}, "document.md", 5},
+		{[]string{"--minimal", "--html"}, "page.html", 5},
+	} {
+		dir := filepath.Join(testenv.Dir(t), "report")
+		preview := filepath.Join(testenv.Dir(t), "preview")
+		out := testenv.Dir(t)
+		steps := [][]string{
+			append([]string{"init", dir}, form.flags...),
+			{"check", dir},
+			{"render", dir, "--sample", "--out", preview},
+			{"pack", dir, "--out", out},
+		}
+		for _, argv := range steps {
+			r := runTool(t, append(argv, "--json")...)
+			if r.status != finding.ExitOK || r.doc == nil || !r.doc.OK || len(r.doc.Findings) != 0 {
+				t.Fatalf("%q: metais %s: status %d, findings %q", form.flags, argv[0], r.status, r.codes())
+			}
+			if argv[0] == "init" {
+				if res := readInit(t, r); len(res.Files) != form.files {
+					t.Errorf("%q: init wrote %q", form.flags, res.Files)
+				}
+			}
+		}
+		page, err := os.ReadFile(filepath.Join(preview, form.output))
+		if err != nil {
+			t.Fatalf("%q: render --sample: %v", form.flags, err)
+		}
+		if strings.HasSuffix(form.output, ".html") && !bytes.Contains(page, []byte(`<script type="application/json" id=`)) {
+			t.Errorf("%q: the page writes no data into a <script>:\n%s", form.flags, page)
+		}
+		if _, err := os.Stat(filepath.Join(out, "report-0.1.0.metais")); err != nil {
+			t.Errorf("%q: pack wrote no package: %v", form.flags, err)
+		}
+	}
+}
+
 // TestInitCurrentDirectory is init with no operand: into the working
 // directory, with --name, and nothing echoed of where that is.
 func TestInitCurrentDirectory(t *testing.T) {

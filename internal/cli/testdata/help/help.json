@@ -11363,9 +11363,9 @@
       {
         "name": "init",
         "group": "Authoring",
-        "synopsis": "metais init [<dir>] [--name <name>] [--dry-run] [--json]",
-        "description": "Write a new package's source directory, with an input, a template and an example.",
-        "detail": "Writes eight files into <dir>: metais.yaml, one input with its schema and meaning document, one template, one example with its inputs and expected output, and a .gitattributes that keeps git from converting line endings. The scaffold is a small package to edit rather than an empty one.\n\nThe package's name is --name, or else the last element of <dir> as written. When <dir> is omitted or ends in . or .., --name is required: metais never looks up the working directory's name. The name must satisfy the package name rule.\n\n<dir> is created, with its missing parents, when it does not exist. An existing <dir> must be empty, apart from names beginning with . (such as .git) other than .compiled and .gitattributes, and files ending .metais; init never overwrites, and refuses anything else, listing up to ten of the entries it found. A failed write stops init, which lists the files it wrote and removes none of them.",
+        "synopsis": "metais init [<dir>] [--name <name>] [--minimal] [--html] [--dry-run] [--json]",
+        "description": "Write a new package's source directory: a greeting to learn from, or with --minimal one input and one template to replace.",
+        "detail": "Without --minimal, writes eight files into <dir>: metais.yaml, one input with its schema and meaning document, one template, one example with its inputs and expected output, and a .gitattributes that keeps git from converting line endings. The scaffold is a small package, a greeting, to learn from and edit.\n\nWith --minimal, writes five: .gitattributes, metais.yaml, one input, data, with its schema and meaning document, and one template, each a placeholder to replace. It has no example, so test has nothing to compare until you add one.\n\nWith --html, the output is an HTML page in place of Markdown: the output declares escape: html, so every value the template writes with {{ }} is HTML-escaped, and the template writes its data into a <script> element with json_script. Either scaffold checks, renders with render --sample and packs as written.\n\nThe package's name is --name, or else the last element of <dir> as written. When <dir> is omitted or ends in . or .., --name is required: metais never looks up the working directory's name. The name must satisfy the package name rule.\n\n<dir> is created, with its missing parents, when it does not exist. An existing <dir> must be empty, apart from names beginning with . (such as .git) other than .compiled and .gitattributes, and files ending .metais; init never overwrites, and refuses anything else, listing up to ten of the entries it found. A failed write stops init, which lists the files it wrote and removes none of them.",
         "opens_package": false,
         "role": "authoring",
         "operands": [
@@ -11386,6 +11386,26 @@
             "repeatable": false,
             "required": false,
             "description": "The package's name. It is required when <dir> is omitted or its last element is . or ..; otherwise it defaults to that element."
+          },
+          {
+            "name": "--minimal",
+            "short": null,
+            "value": null,
+            "values": null,
+            "default": null,
+            "repeatable": false,
+            "required": false,
+            "description": "Write the layout, one input and one template to replace, without the greeting and its example."
+          },
+          {
+            "name": "--html",
+            "short": null,
+            "value": null,
+            "values": null,
+            "default": null,
+            "repeatable": false,
+            "required": false,
+            "description": "Make the output an HTML page that declares escape: html, and whose template writes its data into a <script> with json_script."
           },
           {
             "name": "--dry-run",
@@ -11531,11 +11551,19 @@
         ],
         "examples": [
           {
-            "run": "metais init acme-report",
-            "why": "Writes the scaffold of a package called acme-report into the directory acme-report."
+            "run": "metais init acme-report --minimal",
+            "why": "Writes a package called acme-report into the directory acme-report: the layout, one input and one template, to replace with your own."
           },
           {
-            "run": "metais init --name acme-report",
+            "run": "metais init acme-report",
+            "why": "Writes the greeting scaffold instead, with an example, to learn from and edit."
+          },
+          {
+            "run": "metais init acme-report --minimal --html",
+            "why": "Writes the minimal package with an HTML output that escapes for HTML and writes its data into a <script> with json_script."
+          },
+          {
+            "run": "metais init --name acme-report --minimal",
             "why": "Writes it into the current directory, which must be empty."
           },
           {

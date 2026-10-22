@@ -1,0 +1,19 @@
+metais: "1.0"
+name: "acme-report"
+version: "0.1.0"
+title: "Acme Report"
+description: "Replace this line with what the package produces, in a sentence."
+guide: |-
+  Replace this guide with what the package produces and what a supplier
+  gives it. Read [what the data means](inputs/data.md) before you supply it.
+inputs:
+  - name: data
+    title: "Data"
+    schema: inputs/data.schema.json
+    meaning: inputs/data.md
+    forms:
+      - json
+      - yaml
+outputs:
+  - id: document
+    template: document.md.liquid
