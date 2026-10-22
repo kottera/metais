@@ -65,7 +65,7 @@ func inspectDeclaration() *Command {
 			"computed in memory; nothing is written.\n\n" +
 			"A guide of more than 60 lines or 6144 bytes is cut to its first 40 lines, within 4096 bytes; " +
 			"--guide prints it whole, and nothing else.\n\n" +
-			"Read next lists the commands that fill in and render the package, then metais render --sample " +
+			"The Next: block lists the commands that fill in and render the package, then metais render --sample " +
 			"and metais sample, which serve a supplier who wants an example, a preview or data to start from " +
 			"with data generated from the inputs' schemas, then the first of the package's examples, and last " +
 			"the way to edit the package: metais unpack for a packed package, metais check for a source " +
@@ -79,7 +79,7 @@ func inspectDeclaration() *Command {
 		},
 		Format:       "metais.inspect/1",
 		NextToStdout: true,
-		Prints:       "The package's summary: its title, name and version, description, specification version, form and digest, then the sections Guide, Inputs, Outputs, References, Assets, Examples and Read next; with --guide, the guide's Markdown alone.",
+		Prints:       "The package's summary: its title, name and version, description, specification version, form and digest, then the sections Guide, Inputs, Outputs, References, Assets and Examples, then the Next: block; with --guide, the guide's Markdown alone.",
 		Refusals:     packageRefusals("inspect"),
 		Examples: []Example{
 			{"metais inspect report-1.0.0.metais", "Prints the summary of a packed package."},
@@ -549,7 +549,7 @@ func mirrorOf(d manifest.Output, entries []string, explicit map[string]bool) []i
 	return out
 }
 
-// inspectNext is the summary's Read next list (ADR-008 D6 item 8), of the
+// inspectNext is the summary's Next: block (ADR-008 D6 item 8), of the
 // commands t declares.
 func inspectNext(res *inspectResult, t []*Command) []Next {
 	var out []Next

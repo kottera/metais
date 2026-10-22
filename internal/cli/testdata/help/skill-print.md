@@ -31,9 +31,9 @@ it, checks inputs against it and renders it.
 
 1. `metais inspect report.metais` — what the package is, its guide, every
    input (with the file name it takes in a data directory, such as
-   `status.json`), every output, and "Read next". Read all of it. If the
+   `status.json`), every output, and `Next:`. Read all of it. If the
    guide was cut, `metais inspect report.metais --guide`.
-2. Run what "Read next" lists, in order:
+2. Run what `Next:` lists, in order:
    - `metais read report.metais <entry>` for each input's meaning document;
    - `metais grep report.metais <pattern> references/` for the references.
 3. `metais schema report.metais <input> --fields` — the fields of one
@@ -106,4 +106,4 @@ a `message` and a `hint`. `metais help json` lists every format.
 This skill was installed by `metais skill`. If `metais version` is newer
 than the version in the last line, `metais skill --dry-run` says whether to
 refresh it.
-<!-- metais skill: version 1.2.3, sha256 d97de984dd6a7d9c1eba9e6f60ca8a2ff0f910bb38d8d1c7a58c5a9a7ecc5e8a -->
+<!-- metais skill: version 1.2.3, sha256 54baf84c2fceff48c076466e99f2d67ac638132b47c94fee72e790f10aec250b -->
