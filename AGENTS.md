@@ -61,9 +61,11 @@ say so, and split the prerequisite into its own work item.
 
 The module is `metais.org/metais`. Its `go.mod` `toolchain` line
 names the exact toolchain every build and test uses, fetched under the
-default `GOTOOLCHAIN=auto` (ADR-010 D1). There is no CI. The gate is two
-tiers (ADR-010 D15 item 3, as Amendment A5 divides it), and
-`.claude/skills/verification-gate/gate.sh` runs either one:
+default `GOTOOLCHAIN=auto` (ADR-010 D1). The gate is three tiers
+(ADR-010 D15 item 3, as Amendments A5 and A8 divide it). The first two run
+on the hosts the work is done on, and
+`.claude/skills/verification-gate/gate.sh` runs either one; the third is
+CI:
 
 - **The scoped tier, before every change merges:** `gate.sh`. It runs
   build, vet and gofmt over the whole module, `go mod tidy -diff`, the
@@ -82,6 +84,21 @@ tiers (ADR-010 D15 item 3, as Amendment A5 divides it), and
   wave, at the wave's verification, on a fresh clone of the merged tree.
   It also runs before merging any change to a shared seam: `go.mod`,
   `go.sum`, `internal/fault`, `internal/testenv`, or the gate's own scripts.
+- **CI, the gate of an outside pull request:** `.github/workflows/ci.yml`,
+  on GitHub-hosted runners only (ADR-013 D5). It runs the wave tier's list
+  on linux/amd64, the race-enabled tests and the build steps on
+  darwin/arm64, the DCO check, `shellcheck` over the repository's shell
+  scripts, and the site's build and tests. Its linux job runs `gate.sh
+  wave` with `METAIS_GATE_P` at the runner's cores, since a hosted runner
+  runs nothing else. While the repository is
+  private it runs only when dispatched by hand, and a dispatch is spent
+  only on proving a workflow. CI does not replace the other two: a train
+  item still runs the scoped tier before it merges, and a wave still runs
+  the wave tier at its verification, because they select what a change
+  reaches. No workflow runs on a self-hosted runner or on the
+  `pull_request_target` trigger, and every workflow declares a top-level
+  `permissions` block; `internal/guarantees`' `TestWorkflows` holds each
+  one to that.
 
 ```bash
 go build ./...
@@ -269,6 +286,12 @@ there as its own work.
   following `docs/dev/work-order-and-pr-naming.md` in `kottera/kottera`; omit
   the bracketed address for work outside a train. Preserve the approved title
   as the merge subject.
+- **Sign off every commit** under the Developer Certificate of Origin
+  (ADR-013 D3 item 2): `git commit -s` adds the `Signed-off-by:` trailer
+  that certifies you may contribute the change under the project's
+  licence. A squash merge keeps the trailer in its commit's body. CI's DCO
+  check fails a pull request with any commit that lacks one, and there is
+  no exemption.
 - Never include `Co-Authored-By` lines in commit messages or pull request
   descriptions.
 - Pass a multi-paragraph commit or pull request message by file
