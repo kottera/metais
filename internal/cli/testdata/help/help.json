@@ -29,7 +29,7 @@
         "group": "Reading a package",
         "synopsis": "metais inspect <package> [--guide] [--limit <name>=<value>]... [--json]",
         "description": "Print what a supplier reads first: the package's identity, its guide, its inputs, outputs, references and examples, and the commands to run next.",
-        "detail": "The package is a packed package file or a source directory. Before it prints anything, inspect verifies the whole package: every entry's name and data, the digest of every entry and of the package, the manifest under the specification version it declares, every schema, and each compiled file against the sources it is derived from. A package that fails any check is refused with every finding of the check, and nothing of it is printed.\n\nThe digest of a source directory is the digest of the package metais pack would write from it, computed in memory; nothing is written.\n\nA guide of more than 60 lines or 6144 bytes is cut to its first 40 lines, within 4096 bytes; --guide prints it whole, and nothing else.\n\nRead next lists the commands that fill in and render the package, then metais render --sample and metais sample, which serve a supplier who wants an example, a preview or data to start from with data generated from the inputs' schemas, then the first of the package's examples, and last the way to edit the package: metais unpack for a packed package, metais check for a source directory. An example is the author's illustration of the inputs, and of the outputs a render of them should produce, kept in the package to test it: not your data.",
+        "detail": "The package is a packed package file or a source directory. Before it prints anything, inspect verifies the whole package: every entry's name and data, the digest of every entry and of the package, the manifest under the specification version it declares, every schema, and each compiled file against the sources it is derived from. A package that fails any check is refused with every finding of the check, and nothing of it is printed.\n\nThe digest of a source directory is the digest of the package metais pack would write from it, computed in memory; nothing is written.\n\nA guide of more than 60 lines or 6144 bytes is cut to its first 40 lines, within 4096 bytes; --guide prints it whole, and nothing else.\n\nThe Next: block lists the commands that fill in and render the package, then metais render --sample and metais sample, which serve a supplier who wants an example, a preview or data to start from with data generated from the inputs' schemas, then the first of the package's examples, and last the way to edit the package: metais unpack for a packed package, metais check for a source directory. An example is the author's illustration of the inputs, and of the outputs a render of them should produce, kept in the package to test it: not your data.",
         "opens_package": true,
         "role": "consumer",
         "operands": [
@@ -110,7 +110,7 @@
           }
         ],
         "format": "metais.inspect/1",
-        "prints": "The package's summary: its title, name and version, description, specification version, form and digest, then the sections Guide, Inputs, Outputs, References, Assets, Examples and Read next; with --guide, the guide's Markdown alone.",
+        "prints": "The package's summary: its title, name and version, description, specification version, form and digest, then the sections Guide, Inputs, Outputs, References, Assets and Examples, then the Next: block; with --guide, the guide's Markdown alone.",
         "refusals": [
           {
             "code": "limit.invalid",
@@ -10838,16 +10838,16 @@
             "code": "schema.sample_invalid",
             "cause": "With --sample, the generated data cannot be made or does not validate (sample invalid).",
             "next": {
-              "run": "metais schema <package> <name>",
-              "why": "Prints the schema of the input named in the finding; add an examples value to the field named, and the generator uses it."
+              "run": "metais schema <package> <name> --fields",
+              "why": "Lists the fields of the input named in the finding, one line each with its constraints; add an examples value they allow to the field named, in the schema file the finding locates, and the generator uses it."
             }
           },
           {
             "code": "schema.sample_unsatisfiable",
             "cause": "With --sample, the generated data cannot be made or does not validate (sample unsatisfiable).",
             "next": {
-              "run": "metais schema <package> <name>",
-              "why": "Prints the schema of the input named in the finding; add an examples value to the field named, and the generator uses it."
+              "run": "metais schema <package> <name> --fields",
+              "why": "Lists the fields of the input named in the finding, one line each with its constraints; add an examples value they allow to the field named, in the schema file the finding locates, and the generator uses it."
             }
           },
           {
@@ -14666,16 +14666,16 @@
             "code": "schema.sample_invalid",
             "cause": "The generated data cannot be made or does not validate (sample invalid).",
             "next": {
-              "run": "metais schema <package> <name>",
-              "why": "Prints the schema of the input named in the finding; add an examples value to the field named, and the generator uses it."
+              "run": "metais schema <package> <name> --fields",
+              "why": "Lists the fields of the input named in the finding, one line each with its constraints; add an examples value they allow to the field named, in the schema file the finding locates, and the generator uses it."
             }
           },
           {
             "code": "schema.sample_unsatisfiable",
             "cause": "The generated data cannot be made or does not validate (sample unsatisfiable).",
             "next": {
-              "run": "metais schema <package> <name>",
-              "why": "Prints the schema of the input named in the finding; add an examples value to the field named, and the generator uses it."
+              "run": "metais schema <package> <name> --fields",
+              "why": "Lists the fields of the input named in the finding, one line each with its constraints; add an examples value they allow to the field named, in the schema file the finding locates, and the generator uses it."
             }
           },
           {

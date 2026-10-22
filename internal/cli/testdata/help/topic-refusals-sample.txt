@@ -231,9 +231,10 @@ Next: metais sample <package> --out <dir> --overwrite
       leaving every other file as it is.
   output.destination.not_empty
 
-Next: metais schema <package> <name>
-      Prints the schema of the input named in the finding; add an examples value
-      to the field named, and the generator uses it.
+Next: metais schema <package> <name> --fields
+      Lists the fields of the input named in the finding, one line each with its
+      constraints; add an examples value they allow to the field named, in the
+      schema file the finding locates, and the generator uses it.
   schema.sample_invalid
   schema.sample_unsatisfiable
 

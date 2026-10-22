@@ -58,8 +58,8 @@ var (
 		Why: "Writes the packed package's source directory, which sample --example can save an example into."}
 	nextSampleInputs = Next{Run: "metais inspect <package>",
 		Why: "Lists the inputs the package takes; a value given with --set, --set-json or --inputs-json is kept as given and must be one the schema allows."}
-	nextSampleSchema = Next{Run: "metais schema <package> <name>",
-		Why: "Prints the schema of the input named in the finding; add an examples value to the field named, and the generator uses it."}
+	nextSampleSchema = Next{Run: "metais schema <package> <name> --fields",
+		Why: "Lists the fields of the input named in the finding, one line each with its constraints; add an examples value they allow to the field named, in the schema file the finding locates, and the generator uses it."}
 )
 
 // sampleDeclaration is metais sample (ADR-008 D9, ADR-007 D9).

@@ -448,9 +448,9 @@ references, the examples, and an ordered list of commands to run next.**
 6. **Assets**: count and total size only; `ls` lists them.
 7. **Examples**: each `name`, the inputs it supplies, and whether it has
    expected outputs.
-8. **Read next** — the envelope's `next` (D14), in this order, each a full
-   command line with the package operand written as the placeholder
-   `<package>` (D14 item 2):
+8. **Next** — the envelope's `next` (D14), printed under `Next:` (D14 item
+   1), in this order, each a full command line with the package operand
+   written as the placeholder `<package>` (D14 item 2):
    1. `metais inspect <package> --guide`, if the guide was cut;
    2. `metais read <package> <meaning entry>` for each input that has a
       meaning document, in input order;
@@ -469,9 +469,9 @@ references, the examples, and an ordered list of commands to run next.**
 10. Human layout, top to bottom: a title line `<title> — <name> <version>`,
     the description, a line with the specification version, `packed` or
     `source directory` and the digest, then the sections **Guide**, **Inputs**,
-    **Outputs**, **References**, **Assets**, **Examples** and **Read next**, in
-    that order, each omitted when empty except Inputs and Outputs. Sizes in
-    human output are bytes below 1024 and otherwise one decimal place of KiB,
+    **Outputs**, **References**, **Assets** and **Examples**, then the `Next:`
+    block, in that order, each omitted when empty except Inputs and Outputs.
+    Sizes in human output are bytes below 1024 and otherwise one decimal place of KiB,
     MiB or GiB; JSON sizes are always bytes.
 
 ### D7 — Supplying inputs, and `validate`
@@ -1526,7 +1526,7 @@ mention it.
      - what a `.metais` file is, and that it is read in place with
        `metais`: never unzipped, never read from its raw bytes;
      - the consuming path, command by command: `metais inspect`, then the
-       `read`s, `schema`s and example listings its "Read next" names, then
+       `read`s, `schema`s and example listings its `Next:` block names, then
        `validate --data`, then `render --data --out`;
      - how to get the fields: `metais schema <package> <input>` prints a
        JSON Schema to write to a file or read whole; with `--json` the
@@ -1928,14 +1928,14 @@ D10 and D14 are unchanged.
 item W2-5, from the baseline scorecard's candidates 3, 4, 5 and 9, under
 the plan's ruling R-UX-2 and the wave brief's ruling "the binary says only
 what it knows". It needs no ratification.
-**Amends:** D1 item 1 (`sample`'s group), D6 item 8 (`inspect`'s Read next)
+**Amends:** D1 item 1 (`sample`'s group), D6 item 8 (`inspect`'s `Next:` block)
 and item 10 (its Examples section), D8 item 8 and D9 (the help of
 `render --sample` and of `sample`), and A2's skill text. ADR-007 and the
 specification are unchanged: the generator, `render --sample` and
 `sample` behave as they did, and the help says only what §13.7 says an
 example is.
 
-1. **`inspect`'s Read next offers the generator before any shipped
+1. **`inspect`'s `Next:` block offers the generator before any shipped
    example.** D6 item 8's list is, in this order:
    1. `metais inspect <package> --guide`, if the guide was cut;
    2. `metais read <package> <meaning entry>` for each input that has a
@@ -1957,7 +1957,7 @@ example is.
    (A5 item 3) gives it. Steps 7 and 8 each say that generated data is
    never a real document's facts, so neither stands in for data a person
    must supply.
-2. **Read next ends with the route to editing the package.** A packed
+2. **The `Next:` block ends with the route to editing the package.** A packed
    package's is `metais unpack <package> --out <dir>`, which writes its
    source directory to edit and pack again. A source directory is already
    the tree `unpack` writes, and `unpack` refuses it, so its step is
@@ -1968,7 +1968,7 @@ example is.
    author's illustration of the inputs, and of the outputs a render of them
    should produce, kept in the package to test it: not your data." It is
    the first line of `inspect`'s Examples section (D6 item 10), the end of
-   the example step's reason in Read next, and a sentence of `sample`'s
+   the example step's reason in the `Next:` block, and a sentence of `sample`'s
    help, which writes examples, and of `inspect`'s. It never says that an
    example's facts are fictional or real: the tool cannot know which.
    `metais.inspect/1` is unchanged; the sentence is text output's.
@@ -1987,7 +1987,7 @@ example is.
    on fictional data and its section "Fictional data, when asked for" name
    `render --sample` and `sample`, and none of its command lines lists,
    reads or extracts an example's files.
-7. **Why.** In the 2026-10-21 baseline, `inspect`'s Read next named
+7. **Why.** In the 2026-10-21 baseline, `inspect`'s `Next:` block named
    `metais ls <package> examples/<name>/ -r` and no generator. Sessions
    asked to show what a package produces followed it to a shipped
    example's expected output and showed that as the preview (candidate 3);
@@ -1998,7 +1998,7 @@ example is.
    only afterwards (candidate 9). The help filed `sample` under authoring
    and called `--sample` the author's preview, and the skill said to start
    from a shipped example's inputs.
-8. **D16's tests prove it**: Read next's order and reasons over a packed
+8. **D16's tests prove it**: the `Next:` block's order and reasons over a packed
    package and a source directory, the Examples section's first line, the
    help of `render` and `sample`, `sample`'s group, that no command's help
    calls anything fictional, and the skill's fictional-data section and

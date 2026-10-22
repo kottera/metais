@@ -8,12 +8,14 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"slices"
 	"strings"
 	"testing"
 
 	"github.com/kottera/metais/internal/finding"
+	"github.com/kottera/metais/internal/skill"
 	"github.com/kottera/metais/internal/testenv"
 )
 
@@ -286,8 +288,8 @@ func TestInspectOpensTheScaffold(t *testing.T) {
 
 // TestInspectExamplesInNameOrder is ADR-008 D6 items 7 and 8 (W7-C3):
 // inspect lists a package's examples in name order, names compared by code
-// point as ADR-004 compares strings, every run alike, and the Read next
-// list's example step names the first of them. The package has seven examples, so a list built
+// point as ADR-004 compares strings, every run alike, and the Next:
+// block's example step names the first of them. The package has seven examples, so a list built
 // in map order differs from name order within a few runs.
 func TestInspectExamplesInNameOrder(t *testing.T) {
 	testenv.Home(t)
@@ -345,6 +347,75 @@ func TestInspectInputExamplesInNameOrder(t *testing.T) {
 		}
 		if got := res.Inputs[0].Examples; !slices.Equal(got, want) {
 			t.Fatalf("run %d: report's examples %q, want %q", i, got, want)
+		}
+	}
+}
+
+// sectionName is a phrase that names a section of inspect's summary: a
+// quoted phrase, a code span that ends in a colon, as a heading is
+// printed, the X of "the X block", or a list after "the sections".
+var sectionName = regexp.MustCompile("\"([^\"]+)\"|`([^`]+:)`|\\b[Tt]he (\\S+) block\\b|\\bthe sections ([^;]+?)(?:, then |;)")
+
+// TestInspectSectionsAsPrinted holds every text that names a section of
+// inspect's summary to the heading the binary prints (W2-NB1): the skill's
+// inspect steps, and inspect's own Detail and Prints, which the help and
+// the help goldens print. Each names the next-step section as it is
+// printed, and names no section the summary does not print.
+func TestInspectSectionsAsPrinted(t *testing.T) {
+	testenv.Home(t)
+	r := runTool(t, "inspect", filepath.Join(vectorsDir, "pkg/opens-source/package"))
+	if r.status != 0 {
+		t.Fatalf("status %d, stderr %q", r.status, r.stderr)
+	}
+	// The package has every section. The guide's heading follows the
+	// identity's three lines and a blank one; every other heading follows
+	// a blank line and is followed by its section's indented lines, which
+	// no line of the guide is. The next-step section is the last.
+	lines := strings.Split(strings.TrimSuffix(r.stdout, "\n"), "\n")
+	printed := map[string]bool{lines[4]: true}
+	var next string
+	for i := 5; i+1 < len(lines); i++ {
+		if lines[i-1] == "" && strings.HasPrefix(lines[i+1], "  ") {
+			printed[lines[i]] = true
+			next = lines[i]
+		}
+	}
+	if len(printed) != 7 || next != "Next:" {
+		t.Fatalf("the summary's headings are %v, the last %q:\n%s", printed, next, r.stdout)
+	}
+
+	skillText := string(skill.Source())
+	from := strings.Index(skillText, "1. `metais inspect report.metais`")
+	to := strings.Index(skillText, "3. `metais schema report.metais")
+	if from < 0 || to < from {
+		t.Fatalf("the skill's inspect steps are not where this test reads them")
+	}
+	inspect := lookup(table, "inspect")
+	places := map[string]string{
+		"the skill's inspect steps": skillText[from:to],
+		"inspect's detail":          inspect.Detail,
+		"inspect's prints":          inspect.Prints,
+	}
+	for place, text := range places {
+		text = strings.Join(strings.Fields(text), " ")
+		named := map[string]bool{}
+		for _, m := range sectionName.FindAllStringSubmatch(text, -1) {
+			names := slices.DeleteFunc(m[1:4], func(s string) bool { return s == "" })
+			if m[4] != "" {
+				names = strings.Split(strings.ReplaceAll(m[4], " and ", ", "), ", ")
+			}
+			for _, n := range names {
+				named[n] = true
+				if !printed[n] {
+					t.Errorf("%s names the section %q, which inspect does not print; it prints %v", place, n, printed)
+				}
+			}
+		}
+		if !named[next] {
+			t.Errorf("%s does not name the next-step section %q:\n%s", place, next, text)
+		}
+		if place == "inspect's prints" && len(named) != len(printed) {
+			t.Errorf("%s names the sections %v, and inspect prints %v", place, named, printed)
 		}
 	}
 }

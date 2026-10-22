@@ -9,6 +9,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -157,6 +158,38 @@ func TestInitForms(t *testing.T) {
 		}
 		if _, err := os.Stat(filepath.Join(out, "report-0.1.0.metais")); err != nil {
 			t.Errorf("%q: pack wrote no package: %v", form.flags, err)
+		}
+	}
+}
+
+// TestInitHTMLNamesHelpTopics is W2-NB1: the HTML template init writes, in
+// both forms that write one, sends its author to metais help templates and
+// metais help manifest, and each topic it names is one the help prints.
+func TestInitHTMLNamesHelpTopics(t *testing.T) {
+	testenv.Home(t)
+	topic := regexp.MustCompile(`metais help (\S+)`)
+	for _, flags := range [][]string{{"--html"}, {"--minimal", "--html"}} {
+		dir := filepath.Join(testenv.Dir(t), "report")
+		if r := runTool(t, append([]string{"init", dir}, flags...)...); r.status != finding.ExitOK {
+			t.Fatalf("%q: metais init: status %d, %s", flags, r.status, r.stderr)
+		}
+		tpls, _ := filepath.Glob(filepath.Join(dir, "templates", "*.html.liquid"))
+		if len(tpls) != 1 {
+			t.Fatalf("%q: init wrote the HTML templates %q", flags, tpls)
+		}
+		b, err := os.ReadFile(tpls[0])
+		if err != nil {
+			t.Fatal(err)
+		}
+		var named []string
+		for _, m := range topic.FindAllStringSubmatch(string(b), -1) {
+			named = append(named, m[1])
+			if r := runTool(t, "help", m[1]); r.status != finding.ExitOK || r.stdout == "" {
+				t.Errorf("%q: the template names metais help %s, which prints no topic: status %d, %s", flags, m[1], r.status, r.stderr)
+			}
+		}
+		if !slices.Equal(named, []string{"templates", "manifest"}) {
+			t.Errorf("%q: the template names the help topics %q, want templates and manifest:\n%s", flags, named, b)
 		}
 	}
 }
