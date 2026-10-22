@@ -34,6 +34,14 @@ jobs:
   # The wave tier's list (ADR-010 Amendment A5) on linux/amd64: gate.sh
   # wave, which runs AGENTS.md's list, at the runner's whole share, since a
   # hosted runner runs nothing else.
+  #
+  # internal/conformance's one test binary cannot finish TestConformance
+  # within go test's timeout on a 2-core runner, so the job splits it by
+  # area, one invocation each, as R-W6-3 split the SC7 reach (R-W1-4, plan
+  # orchestrator, 2026-10-22). gate.sh runs every other test with
+  # TestConformance skipped, and the next step runs TestConformance once per
+  # area of the suite, each area derived from the vectors when the job runs
+  # and each required to have run, so an area added later is never skipped.
   wave:
     if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'wave' }}
     runs-on: ubuntu-latest
@@ -44,14 +52,30 @@ jobs:
         with:
           go-version-file: go.mod
       - run: go mod download
-      - name: gate.sh wave
+      - name: gate.sh wave, TestConformance aside
         run: |
           rc=0
-          METAIS_GATE_P=$(nproc) .claude/skills/verification-gate/gate.sh wave || rc=$?
+          GOFLAGS='-skip=^TestConformance$' METAIS_GATE_P=$(nproc) .claude/skills/verification-gate/gate.sh wave || rc=$?
           cat .local/gate/latest.log
           exit $rc
+      - name: TestConformance, one area at a time
+        if: ${{ !cancelled() }}
+        run: |
+          rc=0
+          for d in spec/conformance/vectors/*/; do
+            area=$(basename "$d")
+            echo "=== TestConformance/$area"
+            out=$(go test -race -count=1 -v -run "^TestConformance\$/^$area\$" ./internal/conformance 2>&1) || rc=1
+            printf '%s\n' "$out" | grep -vE '^(=== (RUN|PAUSE|CONT|NAME)|[[:space:]]*--- PASS)' || true
+            if ! printf '%s\n' "$out" | grep -qE "^    --- (PASS|FAIL|SKIP): TestConformance/$area "; then
+              echo "TestConformance/$area did not run"
+              rc=1
+            fi
+          done
+          exit $rc
 
-  # The race-enabled tests and the build steps on darwin/arm64.
+  # The race-enabled tests and the build steps on darwin/arm64, with
+  # TestConformance split by area as in the wave job (R-W1-4).
   macos:
     if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'macos' }}
     runs-on: macos-latest
@@ -65,7 +89,22 @@ jobs:
       - run: go build ./...
       - run: go vet ./...
       - run: CGO_ENABLED=0 go build -trimpath ./cmd/metais
-      - run: go test -race -count=1 ./...
+      - run: go test -race -count=1 ./... -skip '^TestConformance$'
+      - name: TestConformance, one area at a time
+        if: ${{ !cancelled() }}
+        run: |
+          rc=0
+          for d in spec/conformance/vectors/*/; do
+            area=$(basename "$d")
+            echo "=== TestConformance/$area"
+            out=$(go test -race -count=1 -v -run "^TestConformance\$/^$area\$" ./internal/conformance 2>&1) || rc=1
+            printf '%s\n' "$out" | grep -vE '^(=== (RUN|PAUSE|CONT|NAME)|[[:space:]]*--- PASS)' || true
+            if ! printf '%s\n' "$out" | grep -qE "^    --- (PASS|FAIL|SKIP): TestConformance/$area "; then
+              echo "TestConformance/$area did not run"
+              rc=1
+            fi
+          done
+          exit $rc
 
   # The DCO check (ADR-013 D3 item 2): every commit of the change carries
   # Signed-off-by:, with no exemption list.

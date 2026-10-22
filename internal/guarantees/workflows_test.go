@@ -222,10 +222,21 @@ func text(v value.Value) string {
 
 func quote(s string) string { return `"` + s + `"` }
 
+// conformanceByArea is what a job that skips TestConformance runs instead:
+// TestConformance once per area of the suite, the areas read from the
+// vectors when the job runs, each required to have run (R-W1-4). A job
+// without it would skip TestConformance and run it nowhere.
+var conformanceByArea = []string{
+	"for d in spec/conformance/vectors/*/; do",
+	`go test -race -count=1 -v -run "^TestConformance\$/^$area\$" ./internal/conformance`,
+	`grep -qE "^    --- (PASS|FAIL|SKIP): TestConformance/$area "`,
+}
+
 // TestCIWorkflow holds ci.yml to ADR-013 D5: while the repository is
 // private it runs only when dispatched (item 5), its token is read-only
 // (ADR-013 D5 item 4's default, declared in the workflow itself), and its
-// jobs are item 2's, each on the platform it names, running what it names.
+// jobs are item 2's, each on the platform it names, running what it names,
+// with TestConformance split by area where R-W1-4 splits it.
 // The flip adds pull_request and push to main, and changes this test.
 func TestCIWorkflow(t *testing.T) {
 	src, err := os.ReadFile(ciWorkflow)
@@ -252,8 +263,8 @@ func TestCIWorkflow(t *testing.T) {
 		job, runsOn string
 		runs        []string
 	}{
-		{"wave", "ubuntu-latest", []string{".claude/skills/verification-gate/gate.sh wave"}},
-		{"macos", "macos-latest", []string{"go build ./...", "CGO_ENABLED=0 go build -trimpath ./cmd/metais", "go test -race -count=1 ./..."}},
+		{"wave", "ubuntu-latest", append([]string{"GOFLAGS='-skip=^TestConformance$' METAIS_GATE_P=$(nproc) .claude/skills/verification-gate/gate.sh wave"}, conformanceByArea...)},
+		{"macos", "macos-latest", append([]string{"go build ./...", "CGO_ENABLED=0 go build -trimpath ./cmd/metais", "go test -race -count=1 ./... -skip '^TestConformance$'"}, conformanceByArea...)},
 		{"dco", "ubuntu-latest", []string{".github/scripts/dco.sh"}},
 		{"shell", "ubuntu-latest", []string{"xargs -0 shellcheck"}},
 		{"site", "ubuntu-latest", []string{"site/build.sh", "go test -race -count=1 ./site/..."}},
