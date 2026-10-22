@@ -297,6 +297,9 @@ type render struct {
 	// out is its output directory relative to the run's directory, or ""
 	// for standard output or a directory outside the run's.
 	out string
+	// stdout marks a render to standard output (--out -) that wrote
+	// there: its bytes are in the call's output, not in a file.
+	stdout bool
 	// files are the files of the run's directory it wrote, as far as the
 	// directory still holds them.
 	files []string
@@ -306,9 +309,17 @@ type render struct {
 // listing, or a file of its JSON result.
 var reportedDigest = regexp.MustCompile(`(?m)(?:^\d+\t|"digest":")sha256:([0-9a-f]{64})`)
 
+// refused is a metais refusal in a command's output: its human report's
+// error line, or its JSON result's ok of false.
+var refused = regexp.MustCompile(`(?m)^metais: error:|"ok":false`)
+
 // renders are the renders that wrote their outputs: metais render, not a
 // dry run, that lists the files it wrote or left them in the run's
-// directory. A refused render writes nothing and lists nothing.
+// directory, or that rendered to standard output (--out -) and wrote
+// there. A refused render writes nothing and lists nothing, and to
+// standard output it writes nothing at all (MTS-RND-011), so a render
+// there wrote when the harness reports no error for its call and the
+// call's output is not empty and holds no refusal.
 func (r *run) renders() []*render {
 	var out []*render
 	for _, c := range r.calls {
@@ -327,6 +338,8 @@ func (r *run) renders() []*render {
 					rd.files = append(rd.files, p)
 				}
 			}
+			text := c.output()
+			rd.stdout = len(o) > 0 && c.ok() && strings.TrimSpace(text) != "" && !refused.MatchString(text)
 		}
 		if rd.out != "" {
 			rd.files = append(rd.files, r.filesUnder(rd.out)...)
@@ -336,7 +349,7 @@ func (r *run) renders() []*render {
 				}
 			}
 		}
-		if len(rd.digests) == 0 && len(rd.files) == 0 {
+		if len(rd.digests) == 0 && len(rd.files) == 0 && !rd.stdout {
 			continue
 		}
 		out = append(out, rd)

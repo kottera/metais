@@ -1,0 +1,25 @@
+number: INV-2026-0042
+issue_date: "2026-10-21"
+due_date: "2026-11-20"
+currency: GBP
+seller:
+  name: Northwind Studio Ltd
+  address:
+    - 12 Harbour Street
+    - Bristol BS1 4XY
+    - United Kingdom
+  email: accounts@northwind.example
+  tax_id: GB123456789
+buyer:
+  name: Fabrikam & Sons
+  address:
+    - 88 Mill Lane
+    - Leeds LS2 7EW
+  email: payables@fabrikam.example
+tax:
+  label: VAT
+  rate: 20
+payment_terms: |-
+  Net 30. Bank transfer to Northwind Studio Ltd
+  Sort code 00-00-00, account 00000000, reference INV-2026-0042.
+notes: Thank you for your business.

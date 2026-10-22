@@ -18,6 +18,7 @@ import (
 
 	"github.com/kottera/metais/internal/testenv"
 	"github.com/kottera/metais/internal/tools/ux/score"
+	"github.com/kottera/metais/internal/tools/ux/scrub"
 )
 
 // The tests in this file run whole sets with every command and every
@@ -38,7 +39,9 @@ type fakeSet struct {
 	out      *bytes.Buffer
 	sessions []invocation
 	sleeps   []time.Duration
-	commit   string
+	// builds are the arguments of each go build the runner ran.
+	builds [][]string
+	commit string
 	// quota makes a session of this scenario directory end on a quota
 	// pause, as many times as it says.
 	quota map[string]int
@@ -96,6 +99,7 @@ func (f *fakeSet) command(name string, env []string, args ...string) ([]byte, er
 	case name == "git" && args[0] == "status":
 		return nil, nil
 	case name == "go" && args[0] == "build":
+		f.builds = append(f.builds, args)
 		return nil, os.WriteFile(args[slices.Index(args, "-o")+1], []byte("metais "+f.commit), 0o755)
 	case filepath.Base(name) == "metais" && args[0] == "version":
 		return []byte("metais 0.0.0-devel\n"), nil
@@ -358,6 +362,41 @@ func TestRunSetWithSkill(t *testing.T) {
 	r := f.record(t, "C4-what-it-needs", "haiku")
 	if !r.Valid || !r.WithSkill || !slices.ContainsFunc(r.Fixtures, func(e fileEntry) bool { return e.Path == ".claude/skills/metais/SKILL.md" }) {
 		t.Errorf("valid %v, with skill %v, fixtures %v, checks %+v", r.Valid, r.WithSkill, r.Fixtures, r.Checks)
+	}
+}
+
+// TestRunSetBuildsMetaisUnstamped: the runner builds the metais under
+// test with -trimpath and -buildvcs=false. git in the sandbox fails on an
+// iconv locale error when the go command stamps the build (R-UX-7), so
+// the build must not ask it to.
+func TestRunSetBuildsMetaisUnstamped(t *testing.T) {
+	f := newFakeSet(t, "C4")
+	f.c.models = []string{"haiku"}
+	if err := f.c.run(); err != nil {
+		t.Fatal(err)
+	}
+	if len(f.builds) != 1 {
+		t.Fatalf("go build ran %d times, want once: %q", len(f.builds), f.builds)
+	}
+	for _, flag := range []string{"-trimpath", "-buildvcs=false"} {
+		if !slices.Contains(f.builds[0], flag) {
+			t.Errorf("go %q builds metais without %s", f.builds[0], flag)
+		}
+	}
+}
+
+// TestPlaceholderIsScrubbed: the token the runner gives a session as its
+// credential is one the scrub removes, so a fixture recorded with it can
+// never hold it.
+func TestPlaceholderIsScrubbed(t *testing.T) {
+	c := &claudeCode{hostPath: "/usr/bin:/bin", baseURL: "http://127.0.0.1:9", binary: "/opt/claude/bin/claude"}
+	inv := c.invocation(session{work: "/run/work", home: "/run/home", tmp: "/run/tmp", bin: "/set/bin", model: "haiku", prompt: "p"})
+	tok, ok := lookup(inv.env, "ANTHROPIC_AUTH_TOKEN")
+	if !ok || tok == "" {
+		t.Fatalf("the session's environment holds no ANTHROPIC_AUTH_TOKEN: %q", inv.env)
+	}
+	if got := string(scrub.New("/run", "/set").Bytes([]byte(tok))); strings.Contains(got, tok) || len(scrub.Check([]byte(tok))) == 0 {
+		t.Errorf("the scrub keeps the runner's placeholder %q: %q", tok, got)
 	}
 }
 

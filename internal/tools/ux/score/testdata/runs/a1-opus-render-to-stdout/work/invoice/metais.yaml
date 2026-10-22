@@ -1,0 +1,42 @@
+metais: "1.0"
+name: "invoice"
+version: "0.1.0"
+title: "Invoice"
+description: "Renders a self-contained, printable HTML invoice from its line items, with subtotal, tax and total computed."
+guide: |-
+  This package produces invoice.html, one self-contained HTML page (inline
+  styles, no scripts, no external files) that prints cleanly on A4 or Letter.
+
+  It takes two inputs:
+
+  - **invoice** — who bills whom, the invoice number and dates, the currency,
+    and an optional tax rate and notes. Read
+    [what the invoice means](inputs/invoice.md).
+  - **line_items** — one row per thing billed: a description, a quantity and
+    a unit price. A CSV with a header row is the easiest form. Read
+    [what the line items mean](inputs/line_items.md).
+
+  Every amount is computed by the template, in whole cents and rounded half
+  away from zero: each line's amount, the subtotal, the tax and the total.
+  Supply prices, never totals. A negative unit price is a discount line.
+inputs:
+  - name: invoice
+    title: "Invoice"
+    schema: inputs/invoice.schema.json
+    meaning: inputs/invoice.md
+    forms:
+      - json
+      - yaml
+  - name: line_items
+    title: "Line items"
+    schema: inputs/line_items.schema.json
+    meaning: inputs/line_items.md
+    forms:
+      - csv
+      - json
+      - yaml
+outputs:
+  - id: invoice
+    path: invoice.html
+    template: invoice.html.liquid
+    escape: html

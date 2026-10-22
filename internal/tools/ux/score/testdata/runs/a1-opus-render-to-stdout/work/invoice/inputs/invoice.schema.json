@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Invoice",
+  "description": "The invoice's identity, its parties, its dates and currency, and an optional tax and notes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["number", "issue_date", "currency", "seller", "buyer"],
+  "$defs": {
+    "party": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120,
+          "title": "Name",
+          "description": "The legal or trading name, as printed.",
+          "examples": ["Northwind Studio Ltd"]
+        },
+        "address": {
+          "type": "array",
+          "title": "Address",
+          "description": "The postal address, one printed line per element.",
+          "maxItems": 8,
+          "items": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "examples": [["12 Harbour Street", "Bristol BS1 4XY", "United Kingdom"]]
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "maxLength": 254,
+          "title": "Email",
+          "description": "The address invoices are sent from or to."
+        },
+        "tax_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "title": "Tax ID",
+          "description": "A VAT, GST or other tax registration number, printed as given."
+        }
+      }
+    }
+  },
+  "properties": {
+    "number": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "title": "Invoice number",
+      "description": "The invoice's unique reference, as printed.",
+      "examples": ["INV-2026-0042"]
+    },
+    "issue_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Issue date",
+      "description": "The date the invoice is issued, as YYYY-MM-DD."
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Due date",
+      "description": "The date payment is due, as YYYY-MM-DD. Leave it out to print no due date."
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "description": "The ISO 4217 code every amount is in, such as USD, EUR or GBP.",
+      "examples": ["USD"]
+    },
+    "seller": {
+      "$ref": "#/$defs/party",
+      "title": "Seller",
+      "description": "Who issues the invoice and is paid."
+    },
+    "buyer": {
+      "$ref": "#/$defs/party",
+      "title": "Buyer",
+      "description": "Who the invoice is billed to."
+    },
+    "tax": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rate"],
+      "title": "Tax",
+      "description": "One tax applied to the subtotal. Leave it out to print no tax line.",
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30,
+          "title": "Label",
+          "description": "The tax's name on the invoice, such as VAT or Sales tax. Tax when left out."
+        },
+        "rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "title": "Rate",
+          "description": "The rate as a percentage of the subtotal: 20 means 20%."
+        }
+      }
+    },
+    "payment_terms": {
+      "type": "string",
+      "maxLength": 400,
+      "title": "Payment terms",
+      "description": "How to pay: bank details, a payment link's text, or terms such as Net 30."
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 1000,
+      "title": "Notes",
+      "description": "A short message printed at the foot of the invoice."
+    }
+  }
+}
