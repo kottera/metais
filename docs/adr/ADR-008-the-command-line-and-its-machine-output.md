@@ -1774,8 +1774,10 @@ D10 and D14 are unchanged.
      `dependentSchemas` member. A conditional line lists only what its
      branch declares, and a branch that declares nothing of a location but
      fields beneath it gives a line only for those fields;
-   - **as constraints, not walked:** `not`, `contains`, `propertyNames`,
-     `dependentRequired` and the `if` itself, each as its canonical JSON.
+   - **as constraints, not walked:** `not`, `contains`, `propertyNames`
+     and `dependentRequired`, each as its canonical JSON. An `if` is
+     listed only in the conditions of its `then` and `else`; one with
+     neither constrains nothing, and is not listed.
      A `$ref` that names a schema the document does not hold, such as a
      2020-12 meta-schema, is listed as the constraint `$ref=<JSON>`.
 5. **Bounded like every other output.** The listing is a function of the
