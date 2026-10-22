@@ -441,6 +441,32 @@ and Ed added that edge on 2026-10-22.
 - **Close:** the plan's status and `docs/INDEX.md`, and an implementation-log
   entry in ADR-008 and ADR-007 for each amendment the train made.
 
+### Rulings made during Wave 3
+
+- **R-W3-1 (plan orchestrator, 2026-10-22), runs that count.** Consuming
+  scenarios count toward R-UX-5 without the skill installed. With-skill
+  runs are recorded and compared. If a consuming scenario passes without
+  the skill and fails with it, the skill has a defect, and it is fixed.
+- **R-W3-2 (plan orchestrator, 2026-10-22), the authoring threshold's
+  mode.** Ed decides this, and the question was put to him on 2026-10-22.
+  Until he rules, the final scorecard states the authoring verdict both
+  ways: with the skill counting, and without it. A1 and A3 on Sonnet fail
+  without the skill only because the session never ran `metais`
+  (candidate 7), and pass with it.
+- **R-W3-3 (plan orchestrator, 2026-10-22), the judge's calls, open to
+  Ed's override.**
+  - C0 passes a session that asks for the facts, names the render reading
+    and invents nothing.
+  - C1 fails a session that renders generated data, even data it labels
+    as not real, because that is more than "at most a scaffold".
+  - One judge model, with one published prompt, judges every set.
+- **R-W3-4 (plan orchestrator, 2026-10-22), §B.6 against MTS-AUT-003.**
+  The normative statement governs. §B.6's claim that `check` reports
+  every finding of every step in one run is corrected to agree with
+  MTS-AUT-003 for a refused source, with no change of behaviour.
+  `sc9.md` is corrected with it. The SC9 evidence run was made against
+  the old text, and the closeout says so.
+
 ## 9. What this plan does not cover
 
 - metais.org going live, and the website's content.
