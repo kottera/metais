@@ -1,0 +1,20 @@
+{
+  "affected_entity_lei": "529900EXAMPLE0000034",
+  "affected_entity_name": "Example Payments GmbH",
+  "affected_entity_types": [
+    "credit institution",
+    "payment institution",
+    "exempted payment institution"
+  ],
+  "parent_undertaking_lei": "529900EXAMPLE0000056",
+  "parent_undertaking_name": "Example Holding SE",
+  "primary_contact_email": "alex.example@example.com",
+  "primary_contact_name": "Alex Example",
+  "primary_contact_telephone": "+49 69 1234567",
+  "reporting_currency": "EUR",
+  "second_contact_email": "sam.example@example.com",
+  "second_contact_name": "Sam Example",
+  "second_contact_telephone": "+49 69 7654321",
+  "submitting_entity_code": "529900EXAMPLE0000012",
+  "submitting_entity_name": "Example Bank AG"
+}

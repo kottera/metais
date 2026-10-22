@@ -1,0 +1,16 @@
+{
+  "submitting_entity_name": "Kestrel Savings Bank plc",
+  "submitting_entity_code": "213800KESTRELSB00042",
+  "affected_entity_types": [
+    "credit institution"
+  ],
+  "primary_contact_name": "Maeve Gallagher",
+  "primary_contact_email": "maeve.gallagher@kestrel-savings.example",
+  "primary_contact_telephone": "+353 1 555 0142",
+  "second_contact_name": "Ruairi Byrne",
+  "second_contact_email": "ruairi.byrne@kestrel-savings.example",
+  "second_contact_telephone": "+353 1 555 0143",
+  "parent_undertaking_name": "Kestrel Group Holdings plc",
+  "parent_undertaking_lei": "213800KESTRELGRP0071",
+  "reporting_currency": "EUR"
+}

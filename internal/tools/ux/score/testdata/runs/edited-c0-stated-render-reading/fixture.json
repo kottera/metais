@@ -1,0 +1,19 @@
+{
+  "shows": "told to fill the package, the session takes the render reading: it renders the report from sample data metais generates, says which reading it took, and marks the data as not real",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "C0-fill-ambiguous/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "edited": "After the session's metais inspect, one command is added, metais sample report.metais --to data && metais render report.metais --data data --out out, with the real output of running it, with metais built from this change's base (9b71496), on report.metais packed from examples/dora-incident-report (41429 bytes, as the recorded run's); record.json lists, and work/ holds, the files it wrote. The final answer is written to state the render reading and to mark the data as not real. No model took either reading of C0 on demand in the recorded runs.",
+  "expect": {
+    "inspect-first": "pass",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "pass"
+  },
+  "reasons": {}
+}

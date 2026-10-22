@@ -1,0 +1,111 @@
+{
+  "additional_root_causes": [
+    "monitoring of policy adherence",
+    "monitoring of third-party service providers",
+    "monitoring and verification of remediation of vulnerabilities"
+  ],
+  "affected_functional_areas": "Retail payments and the client service desk.",
+  "authority_reference_code": "CA-2026-117",
+  "business_continuity_plan_activated": true,
+  "classification_criteria": [
+    "clients, financial counterparts and transactions affected",
+    "reputational impact",
+    "duration and service downtime"
+  ],
+  "classified_at": "2026-03-02T08:10:00Z",
+  "client_financial_interest_impact": "Yes",
+  "clients_affected": 18500,
+  "clients_affected_percentage": 4.2,
+  "critical_services_affected": "Card payment processing for retail clients.",
+  "data_losses": [
+    "availability",
+    "authenticity",
+    "integrity"
+  ],
+  "data_losses_description": "Payment records for the affected window were written incompletely.",
+  "description": "Card payments failed for clients of the bank after a configuration change to the payment gateway.",
+  "detected_at": "2026-03-02T06:40:00Z",
+  "discovery": "IT Security",
+  "duration": "00:05:15",
+  "duration_figures_basis": "Actual figures",
+  "economic_impact_threshold": "The costs and losses stayed below the economic impact threshold.",
+  "financial_counterparts_affected": 3,
+  "financial_counterparts_affected_percentage": 0.5,
+  "financial_recoveries": 40,
+  "geographical_spread_countries": [
+    "AT",
+    "BE",
+    "BG"
+  ],
+  "gross_costs_and_losses": 180,
+  "impact_figures_basis": [
+    "actual figures for clients affected",
+    "actual figures for financial counterparts affected",
+    "actual figures for transactions affected"
+  ],
+  "incident_types": [
+    "Cybersecurity-related",
+    "Process failure",
+    "System failure"
+  ],
+  "indicators_of_compromise": "198.51.100.23; sha256:3f1d...",
+  "infrastructure_components_affected": "Yes",
+  "infrastructure_components_description": "The payment gateway cluster and its configuration service.",
+  "member_state_impact_description": "Clients of the Austrian branch could not pay by card.",
+  "member_state_impact_types": [
+    "clients",
+    "financial counterparts",
+    "branch of the financial entity"
+  ],
+  "occurred_at": "2026-03-02T06:15:00Z",
+  "originating_provider": "Example Cloud Ltd;529900EXAMPLE0000078;LEI",
+  "other_authorities": "The national consumer protection agency.",
+  "other_authorities_informed": [
+    "Police/Law Enforcement",
+    "CSIRT",
+    "Data Protection Authority"
+  ],
+  "other_incident_types": "Failed vendor upgrade.",
+  "other_information": "The gateway's previous configuration has been restored.",
+  "other_root_causes": "An undocumented dependency between two configuration keys.",
+  "other_techniques": "Credential stuffing against the administration portal.",
+  "recurring_incidents": "Two earlier failures of the same gateway, each below the thresholds.",
+  "recurring_incidents_occurred_at": "2026-01-14T10:20:00Z",
+  "reference_code": "INC-2026-0042",
+  "relevant_clients_or_counterparts_impacted": false,
+  "reputational_impact": [
+    "the major ICT-related incident has been reflected in the media",
+    "the major ICT-related incident has resulted in repetitive complaints from different clients or financial counterparts on client-facing services or critical business relationships",
+    "the financial entity will not be able to or is likely not to be able to meet regulatory requirements as a result of the major ICT-related incident"
+  ],
+  "reputational_impact_context": "Two national newspapers reported the failed payments.",
+  "resolution_authority_information": "None.",
+  "resolution_date_difference": "The fix waited for the vendor's patch.",
+  "resolution_risk_assessment": "No critical function for resolution purposes was at risk.",
+  "resolution_summary": "The change was reverted and configuration changes now need two reviewers.",
+  "resolved_at": "2026-03-10T09:00:00Z",
+  "restored_at": "2026-03-02T11:30:00Z",
+  "root_cause_addressed_at": "2026-03-09T16:00:00Z",
+  "root_cause_categories": [
+    "malicious actions",
+    "process failure",
+    "system failure / malfunction"
+  ],
+  "root_cause_details": [
+    "malicious actions: deliberate internal actions",
+    "malicious actions: deliberate physical damage/manipulation/theft",
+    "malicious actions: fraudulent actions"
+  ],
+  "root_cause_information": "A configuration change disabled the gateway's fallback route.",
+  "service_downtime": "00:04:50",
+  "temporary_actions": true,
+  "temporary_actions_description": "The previous gateway configuration was restored and changes were frozen.",
+  "threats_and_techniques": [
+    "Social engineering (including phishing)",
+    "(D)DoS",
+    "Identity theft"
+  ],
+  "transactions_affected": 41000,
+  "transactions_affected_percentage": 12.5,
+  "transactions_affected_value": 2350
+}

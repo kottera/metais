@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "1.1 Type of submission",
+  "description": "Which of the three reports on the incident this is. It decides which fields of the entity and the incident are mandatory.",
+  "x-field": "1.1",
+  "x-field-type": "Choice",
+  "enum": [
+    "initial notification",
+    "intermediate report",
+    "final report"
+  ]
+}
