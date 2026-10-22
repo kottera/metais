@@ -264,6 +264,58 @@ func parseShell(src string) []simple {
 
 type heredoc struct{ delim string }
 
+// lead is a command's words without the reserved words a list begins
+// with inside a compound command, such as the do of do for f in …, or
+// its last word when it is nothing else.
+func lead(w []string) []string {
+	for len(w) > 1 && slices.Contains([]string{"do", "then", "else", "elif", "!"}, w[0]) {
+		w = w[1:]
+	}
+	return w
+}
+
+// unroll reads each for loop of a command line, for NAME in WORD…; do …;
+// done, as its body once for each word, with $NAME expanded to the word,
+// so a command that names a directory through the loop's variable is
+// seen to name it. A loop whose words the line does not hold, such as
+// for f in $(ls), is left as it is, its body read once with $NAME
+// unexpanded.
+func unroll(ss []simple) []simple {
+	var out []simple
+	for i := 0; i < len(ss); i++ {
+		w := lead(ss[i].words)
+		if len(w) < 4 || w[0] != "for" || w[2] != "in" || !isAssignment(w[1]+"=") {
+			out = append(out, ss[i])
+			continue
+		}
+		end, depth := -1, 0
+		for j := i + 1; j < len(ss) && end < 0; j++ {
+			switch lead(ss[j].words)[0] {
+			case "for", "while", "until":
+				depth++
+			case "done":
+				if depth == 0 {
+					end = j
+				}
+				depth--
+			}
+		}
+		if end < 0 {
+			out = append(out, ss[i])
+			continue
+		}
+		for _, v := range w[3:] {
+			var body []simple
+			for _, b := range ss[i+1 : end] {
+				body = append(body, b.expand(map[string]string{w[1]: v}))
+			}
+			out = append(out, unroll(body)...)
+		}
+		i = end
+	}
+	return out
+}
+
 func isDigits(s string) bool {
 	if s == "" {
 		return false

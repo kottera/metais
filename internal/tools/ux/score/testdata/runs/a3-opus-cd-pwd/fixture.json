@@ -1,0 +1,18 @@
+{
+  "shows": "early on the session runs cd \"$PWD\", the directory it is already in, and later renders its example to ../preview from its package's directory: work/preview/page.html survives and its script holds a JSON array",
+  "recorded": {
+    "set": "the after set without the skill, as W3-4 judged it in Work Order 01a16247 (artifact art_jox6rno2yfupoma55hqdka7n5m3focir2cgtbnpocoejjkh7pvyq)",
+    "run": "A3-data-to-js/opus",
+    "date": "2026-10-22",
+    "commit": "633156212b7912b70aeec2b845fed7ab15fb6549",
+    "model": "claude-opus-5-5"
+  },
+  "expect": {
+    "inspect-first": "n/a",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "pass"
+  },
+  "reasons": {}
+}

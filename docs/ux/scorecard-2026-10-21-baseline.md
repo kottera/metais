@@ -344,6 +344,19 @@ Every cell that changed, against the previous section's:
 **The judged threshold count: 9 of 24 gated runs pass** (7 re-scored, 6 as
 published). R-UX-5's thresholds do not hold.
 
+### Re-scored by W3-10's scorer
+
+Wave 3's item W3-10 corrected the scorer's readings that runs of the
+after sets showed it mis-scoring
+([docs/dev/ux-testing.md](../dev/ux-testing.md#scoring-a-run)): `$PWD`,
+`for` loops, a `cd` in a call that exits other than 0, a render read back
+from a directory the session then deleted, a rendered page that survives
+only as a copy of its bytes, and a field's word written as its end, such as
+"phone" for "telephone". The judged set above, scored again by W3-10's
+scorer with the same command, **changes no cell**: every run passes and
+fails the rules it did, for the same reasons. The judged threshold count
+stays **9 of 24 gated runs**.
+
 ## Pass counts by model
 
 | Model | Consuming (gated) | Authoring | All |

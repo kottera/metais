@@ -1,0 +1,251 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "A3",
+    "name": "A3-data-to-js",
+    "kind": "authoring",
+    "asks_for_output": false,
+    "prompt": "make a .metais package whose HTML page charts a list of numbers it is given, writing them into a JavaScript array in the page"
+  },
+  "model_requested": "opus",
+  "model_reported": "claude-opus-5-5",
+  "models_used": [
+    "claude-opus-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": true,
+  "commit": "633156212b7912b70aeec2b845fed7ab15fb6549",
+  "metais_sha256": "6d0d8c1e7082cc5e5e191c08689cf512c6eeb153e2e529f4b553073ecdfff9ca",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    },
+    {
+      "name": "writes-inside-run",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-22T06:39:43.692031Z",
+  "ended": "2026-10-22T06:41:06.203116Z",
+  "wall_ms": 82510,
+  "turns": 16,
+  "cost_usd": 0.363091,
+  "duration_ms": 82354,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 14,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "make a .metais package whose HTML page charts a list of numbers it is given, writing them into a JavaScript array in the page",
+      "--model",
+      "opus",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:62356",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": [
+    {
+      "path": ".claude/skills/metais/SKILL.md",
+      "size": 5783,
+      "sha256": "2f17e7bf3f0c6745a9c1a9a0a2d7220ea49cf96ecb811a0f30c8c562857ab1f9"
+    }
+  ],
+  "files": [
+    {
+      "path": ".claude/skills/metais/SKILL.md",
+      "size": 5783,
+      "sha256": "2f17e7bf3f0c6745a9c1a9a0a2d7220ea49cf96ecb811a0f30c8c562857ab1f9",
+      "change": "unchanged"
+    },
+    {
+      "path": "number-chart-0.1.0.metais",
+      "size": 8372,
+      "sha256": "2f2a877d4a15bba3f54b52fa472dd5312cdaaca1efb72d51e5e5fb37b3f28519",
+      "change": "added"
+    },
+    {
+      "path": "number-chart/.gitattributes",
+      "size": 8,
+      "sha256": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+      "change": "added"
+    },
+    {
+      "path": "number-chart/examples/basic/expected/index.html",
+      "size": 3815,
+      "sha256": "cded904fdd90010e9398e357cf87f98589f87a08fd3e2eec06284d4394914b6c",
+      "change": "added"
+    },
+    {
+      "path": "number-chart/examples/basic/inputs/data.json",
+      "size": 129,
+      "sha256": "723ebc7e73b27564cc14676e349de9f6f7877c88197389104cd93100494021f2",
+      "change": "added"
+    },
+    {
+      "path": "number-chart/inputs/data.md",
+      "size": 581,
+      "sha256": "ac60bad145274cb9a3ac367bd586c56a628a6027c97f15ba20f01ceeaf983c79",
+      "change": "added"
+    },
+    {
+      "path": "number-chart/inputs/data.schema.json",
+      "size": 904,
+      "sha256": "06f46a9080fa4ae26c001a6219fd1462ab2e29fe2043299de6d6518db7359968",
+      "change": "added"
+    },
+    {
+      "path": "number-chart/metais.yaml",
+      "size": 787,
+      "sha256": "84ce89da3e3d3d53b8f812c79b079cf43c2aee813b20dac88b876aa26bc7314f",
+      "change": "added"
+    },
+    {
+      "path": "number-chart/templates/page.html.liquid",
+      "size": 4053,
+      "sha256": "06730db4bad133fce9b87474782e27978a8032e846411428ffa565bc75a9c191",
+      "change": "added"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": {
+    "format": "metais-ux-outcome/1",
+    "scenario": "A3-data-to-js",
+    "check": "data-to-js",
+    "scored": true,
+    "pass": false,
+    "rules": [
+      {
+        "rule": "inspect-first",
+        "applies": false,
+        "pass": true,
+        "detail": "does not apply to A3-data-to-js"
+      },
+      {
+        "rule": "no-zip-extraction",
+        "applies": true,
+        "pass": true,
+        "detail": "the session extracts no archive with a zip tool or a zip library"
+      },
+      {
+        "rule": "no-unknown-command",
+        "applies": true,
+        "pass": true,
+        "detail": "none of the 12 metais commands is refused as unknown"
+      },
+      {
+        "rule": "package-untouched",
+        "applies": false,
+        "pass": true,
+        "detail": "does not apply to A3-data-to-js"
+      },
+      {
+        "rule": "outcome",
+        "applies": true,
+        "pass": false,
+        "detail": "the package renders, but no rendered page holds data in a script element that parses",
+        "evidence": [
+          {
+            "file": "work/number-chart/metais.yaml",
+            "text": "output index.html escapes html"
+          },
+          {
+            "file": "work/number-chart/templates/page.html.liquid",
+            "text": "the template writes its data with json_script"
+          },
+          {
+            "turn": 8,
+            "line": 38,
+            "tool": "Bash",
+            "command": "cd ..; metais render number-chart --data number-chart/examples/basic/inputs --out preview \u0026\u0026 grep -n \"^const \" preview/index.html; metais render number-chart --data number-chart/examples/basic/inputs --set 'data/title=\u003c/script\u003e\u003cb\u003ex' --out p …"
+          },
+          {
+            "turn": 8,
+            "line": 38,
+            "tool": "Bash",
+            "command": "cd ..; metais render number-chart --data number-chart/examples/basic/inputs --out preview \u0026\u0026 grep -n \"^const \" preview/index.html; metais render number-chart --data number-chart/examples/basic/inputs --set 'data/title=\u003c/script\u003e\u003cb\u003ex' --out p …"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+metais: "1.0"
+name: "number-chart"
+version: "0.1.0"
+title: "Number Chart"
+description: "An HTML page that charts a list of numbers as bars."
+guide: |-
+  Renders one HTML page that draws a bar chart of a list of numbers. The
+  numbers are written into the page as a JavaScript array, which a script
+  in the page draws as an SVG bar chart with hover tooltips and a table
+  view. Read [what the data means](inputs/data.md) before you supply it.
+inputs:
+  - name: data
+    title: "Data"
+    schema: inputs/data.schema.json
+    meaning: inputs/data.md
+    forms:
+      - json
+      - yaml
+outputs:
+  - id: page
+    template: page.html.liquid
+    escape: html

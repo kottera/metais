@@ -1,0 +1,21 @@
+{
+  "shows": "the session's three render --sample calls in its loop are refused, each printing metais: error: and FAIL, and its read of ../.s2/invoice.html finds no file: a render that wrote nothing, which the read-back does not count",
+  "recorded": {
+    "set": "the after set with the skill, as W3-4 judged it in Work Order 01a16247 (artifact art_osahi7tvsdumtonxng7fbnmb3gjo2qsy2rtpweeoha5c5cr2fslq)",
+    "run": "A1-new-package/opus",
+    "date": "2026-10-22",
+    "commit": "633156212b7912b70aeec2b845fed7ab15fb6549",
+    "model": "claude-opus-5-5"
+  },
+  "edited": "Turn 11's tool result (line 115) is edited: the sample-filled table sed printed from ../.s2/invoice.html is replaced by three refusals of metais render, each followed by its FAIL line, and sed's report that ../.s2/invoice.html does not exist, in the message and in tool_use_result's stdout, with a Python script. Nothing else is changed.",
+  "expect": {
+    "inspect-first": "n/a",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "fail"
+  },
+  "reasons": {
+    "outcome": "the session never renders it with render --sample"
+  }
+}

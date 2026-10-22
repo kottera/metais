@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Invoice",
+  "description": "The invoice's header: who bills whom, when, and on what terms.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["number", "issue_date", "currency", "seller", "bill_to"],
+  "properties": {
+    "number": {
+      "type": "string", "minLength": 1, "maxLength": 64,
+      "title": "Invoice number",
+      "description": "The invoice's identifier, as the seller numbers invoices."
+    },
+    "issue_date": {
+      "type": "string", "format": "date",
+      "title": "Issue date",
+      "description": "The date the invoice is issued, YYYY-MM-DD."
+    },
+    "due_date": {
+      "type": "string", "format": "date",
+      "title": "Due date",
+      "description": "The date payment is due, YYYY-MM-DD. Omit it when the payment terms say instead."
+    },
+    "currency": {
+      "type": "string", "pattern": "^[A-Z]{3}$",
+      "title": "Currency",
+      "description": "The ISO 4217 code of the currency every amount is in, such as USD or EUR. Amounts are printed with two decimal places."
+    },
+    "tax_rate": {
+      "type": "number", "minimum": 0, "maximum": 100, "default": 0,
+      "title": "Tax rate (percent)",
+      "description": "The tax charged on the subtotal, as a percentage: 8.25 for 8.25%. 0, the default, prints no tax line."
+    },
+    "tax_label": {
+      "type": "string", "minLength": 1, "maxLength": 40, "default": "Tax",
+      "title": "Tax label",
+      "description": "What the tax is called on the invoice, such as VAT or Sales tax."
+    },
+    "seller": { "$ref": "#/$defs/party", "title": "Seller", "description": "Who issues the invoice and is paid." },
+    "bill_to": { "$ref": "#/$defs/party", "title": "Bill to", "description": "Who the invoice is addressed to and who pays it." },
+    "payment_terms": {
+      "type": "string", "minLength": 1, "maxLength": 500,
+      "title": "Payment terms",
+      "description": "How and when to pay, such as \"Net 30, by bank transfer\". Line breaks are kept."
+    },
+    "notes": {
+      "type": "string", "minLength": 1, "maxLength": 2000,
+      "title": "Notes",
+      "description": "Anything else printed at the foot of the invoice. Line breaks are kept."
+    }
+  },
+  "$defs": {
+    "party": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 200, "title": "Name", "description": "The person's or organization's name." },
+        "address": { "type": "string", "minLength": 1, "maxLength": 500, "title": "Address", "description": "The postal address, one line per line of the address." },
+        "email": { "type": "string", "format": "email", "maxLength": 254, "title": "Email", "description": "An email address for billing." },
+        "tax_id": { "type": "string", "minLength": 1, "maxLength": 64, "title": "Tax ID", "description": "A VAT or other tax registration number, printed as given." }
+      }
+    }
+  }
+}

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly signups &lt;&amp;&gt;</title>
+<style>
+.viz-root {
+  color-scheme: light;
+  --page:           #f9f9f7;
+  --surface-1:      #fcfcfb;
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #898781;
+  --grid:           #e1e0d9;
+  --baseline:       #c3c2b7;
+  --border:         rgba(11,11,11,0.10);
+  --series-1:       #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --page:           #0d0d0d;
+    --surface-1:      #1a1a19;
+    --text-primary:   #f0efec;
+    --text-secondary: #c3c2b7;
+    --grid:           #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-1:       #3987e5;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --page:           #0d0d0d;
+  --surface-1:      #1a1a19;
+  --text-primary:   #f0efec;
+  --text-secondary: #c3c2b7;
+  --grid:           #2c2c2a;
+  --baseline:       #383835;
+  --border:         rgba(255,255,255,0.10);
+  --series-1:       #3987e5;
+}
+html, body { margin: 0; }
+.viz-root {
+  min-height: 100vh;
+  padding: 24px;
+  box-sizing: border-box;
+  background: var(--page);
+  color: var(--text-primary);
+  font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.card {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 24px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+.summary { margin: 0 0 16px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.plot { position: relative; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+.grid line { stroke: var(--grid); stroke-width: 1; }
+.baseline { stroke: var(--baseline); stroke-width: 1; }
+.tick { fill: var(--text-muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.bar { fill: var(--series-1); }
+.hit { fill: transparent; cursor: default; }
+.hit:hover + .bar, .bar.active { opacity: 0.8; }
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  padding: 6px 10px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 8px));
+}
+.tooltip .label { color: var(--text-secondary); font-size: 12px; }
+details { margin-top: 16px; color: var(--text-secondary); }
+summary { cursor: pointer; }
+table { margin-top: 8px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { padding: 4px 16px 4px 0; text-align: right; border-bottom: 1px solid var(--grid); }
+th { color: var(--text-secondary); font-weight: 500; }
+td { color: var(--text-primary); }
+</style>
+</head>
+<body class="viz-root">
+<main class="card">
+<h1>Weekly signups &lt;&amp;&gt;</h1>
+<p class="summary" id="summary"></p>
+<div class="plot" id="plot">
+<div class="tooltip" id="tooltip" hidden></div>
+</div>
+<details>
+<summary>Show as a table</summary>
+<table id="table"><thead><tr><th scope="col">#</th><th scope="col">Value</th></tr></thead><tbody></tbody></table>
+</details>
+</main>
+<script>
+const values = [12,18,9,24,31,27,-4,15.5,22,40];
+
+(function () {
+  const SVG = "http://www.w3.org/2000/svg";
+  const W = 880, H = 360;
+  const M = { top: 12, right: 8, bottom: 28, left: 48 };
+  const fmt = new Intl.NumberFormat(undefined, { maximumSignificantDigits: 6 });
+
+  function el(name, attrs, parent) {
+    const node = document.createElementNS(SVG, name);
+    for (const k in attrs) node.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(node);
+    return node;
+  }
+
+  // A "nice" y-scale that always includes zero, so bars grow from a true baseline.
+  function niceTicks(lo, hi, count) {
+    if (lo === hi) { hi = lo + 1; }
+    const raw = (hi - lo) / count;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw);
+    const start = Math.floor(lo / step) * step;
+    const end = Math.ceil(hi / step) * step;
+    const ticks = [];
+    for (let v = start; v <= end + step / 2; v += step) ticks.push(+v.toPrecision(12));
+    return ticks;
+  }
+
+  const min = Math.min(0, ...values), max = Math.max(0, ...values);
+  const ticks = niceTicks(min, max, 5);
+  const y0 = ticks[0], y1 = ticks[ticks.length - 1];
+  const iw = W - M.left - M.right, ih = H - M.top - M.bottom;
+  const y = v => M.top + ih - ((v - y0) / (y1 - y0)) * ih;
+  const band = iw / values.length;
+  const gap = values.length > 1 ? Math.min(2 + band * 0.25, band * 0.5) : band * 0.6;
+  const bw = Math.max(band - gap, 1);
+  const r = Math.min(4, bw / 2);
+
+  const total = values.reduce((a, b) => a + b, 0);
+  document.getElementById("summary").textContent =
+    values.length + (values.length === 1 ? " value" : " values") +
+    " · min " + fmt.format(Math.min(...values)) +
+    " · max " + fmt.format(Math.max(...values)) +
+    " · mean " + fmt.format(total / values.length);
+
+  const plot = document.getElementById("plot");
+  const tooltip = document.getElementById("tooltip");
+  const svg = el("svg", { viewBox: "0 0 " + W + " " + H, role: "img",
+    "aria-label": document.querySelector("h1").textContent + ": bar chart of " + values.length + " values" });
+  plot.insertBefore(svg, tooltip);
+
+  const grid = el("g", { class: "grid" }, svg);
+  for (const t of ticks) {
+    if (t !== 0) el("line", { x1: M.left, x2: W - M.right, y1: y(t), y2: y(t) }, grid);
+    const label = el("text", { class: "tick", x: M.left - 8, y: y(t), "text-anchor": "end", "dominant-baseline": "middle" }, svg);
+    label.textContent = fmt.format(t);
+  }
+
+  // X labels: show at most ~12, evenly spaced, 1-based positions.
+  const every = Math.max(1, Math.ceil(values.length / 12));
+  values.forEach((v, i) => {
+    if (i % every !== 0 && i !== values.length - 1) return;
+    const label = el("text", { class: "tick", x: M.left + band * (i + 0.5), y: H - M.bottom + 18, "text-anchor": "middle" }, svg);
+    label.textContent = i + 1;
+  });
+
+  // Bar with 4px rounding on the data end only; the baseline end stays square.
+  function barPath(x, w, from, to) {
+    const h = Math.abs(to - from);
+    const rr = Math.min(r, h);
+    if (to <= from) { // grows upward (positive)
+      return "M" + x + "," + from + "V" + (to + rr) + "Q" + x + "," + to + " " + (x + rr) + "," + to +
+        "H" + (x + w - rr) + "Q" + (x + w) + "," + to + " " + (x + w) + "," + (to + rr) + "V" + from + "Z";
+    }
+    return "M" + x + "," + from + "V" + (to - rr) + "Q" + x + "," + to + " " + (x + rr) + "," + to +
+      "H" + (x + w - rr) + "Q" + (x + w) + "," + to + " " + (x + w) + "," + (to - rr) + "V" + from + "Z";
+  }
+
+  const bars = el("g", {}, svg);
+  values.forEach((v, i) => {
+    const x = M.left + band * i + (band - bw) / 2;
+    const hit = el("rect", { class: "hit", x: M.left + band * i, y: M.top, width: band, height: ih }, bars);
+    const bar = el("path", { class: "bar", d: barPath(x, bw, y(0), y(v)) }, bars);
+    const show = () => {
+      bar.classList.add("active");
+      tooltip.innerHTML = "";
+      const lab = document.createElement("div");
+      lab.className = "label";
+      lab.textContent = "#" + (i + 1);
+      const val = document.createElement("div");
+      val.textContent = fmt.format(v);
+      tooltip.append(lab, val);
+      const box = svg.getBoundingClientRect(), s = box.width / W;
+      tooltip.style.left = (M.left + band * (i + 0.5)) * s + "px";
+      tooltip.style.top = Math.min(y(v), y(0)) * s + "px";
+      tooltip.hidden = false;
+    };
+    const hide = () => { bar.classList.remove("active"); tooltip.hidden = true; };
+    hit.addEventListener("mouseenter", show);
+    hit.addEventListener("mouseleave", hide);
+  });
+
+  el("line", { class: "baseline", x1: M.left, x2: W - M.right, y1: y(0), y2: y(0) }, svg);
+
+  const tbody = document.querySelector("#table tbody");
+  values.forEach((v, i) => {
+    const tr = document.createElement("tr");
+    const a = document.createElement("td"); a.textContent = i + 1;
+    const b = document.createElement("td"); b.textContent = fmt.format(v);
+    tr.append(a, b);
+    tbody.appendChild(tr);
+  });
+})();
+</script>
+</body>
+</html>

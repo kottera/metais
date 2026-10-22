@@ -1,0 +1,18 @@
+{
+  "shows": "the session renders its page to preview, whose listing reports index.html's digest, then deletes preview and runs test --update, which writes the same bytes to examples/basic/expected/index.html, where they survive",
+  "recorded": {
+    "set": "the after set with the skill, as W3-4 judged it in Work Order 01a16247 (artifact art_osahi7tvsdumtonxng7fbnmb3gjo2qsy2rtpweeoha5c5cr2fslq)",
+    "run": "A3-data-to-js/opus",
+    "date": "2026-10-22",
+    "commit": "633156212b7912b70aeec2b845fed7ab15fb6549",
+    "model": "claude-opus-5-5"
+  },
+  "expect": {
+    "inspect-first": "n/a",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "pass"
+  },
+  "reasons": {}
+}

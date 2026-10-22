@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Data",
+  "description": "A list of numbers to chart, in order, with a title.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "values"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "title": "Title",
+      "description": "The heading of the page; it names what the numbers measure."
+    },
+    "unit": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20,
+      "title": "Unit",
+      "description": "What one number counts, such as \"ms\" or \"orders\". Shown in the tooltip and table header."
+    },
+    "values": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5000,
+      "title": "Values",
+      "description": "The numbers to chart, in the order they are plotted from left to right.",
+      "items": { "type": "number" }
+    }
+  }
+}

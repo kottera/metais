@@ -436,7 +436,14 @@ func (r *run) read() {
 		case "Bash":
 			// A variable lives as long as the call's shell.
 			vars := map[string]string{}
-			for _, s := range parseShell(u.Command()) {
+			start := cwd
+			for _, s := range unroll(parseShell(u.Command())) {
+				// $PWD is the directory the command runs in.
+				if cwd != "" && path.IsAbs(r.runDir) {
+					vars["PWD"] = path.Join(r.runDir, cwd)
+				} else {
+					delete(vars, "PWD")
+				}
 				if as, ok := s.assignments(); ok {
 					// A value made by a command substitution is not known: the
 					// parser ends the assignment where the substitution begins.
@@ -463,6 +470,13 @@ func (r *run) read() {
 					r.calls = append(r.calls, &call{cmd: c, sub: sub, args: args})
 				}
 			}
+			// The harness records the shell's directory for the next call
+			// with pwd -P after the call's command line and &&, so a call
+			// that exits other than 0 leaves the directory where it found
+			// it, whatever it changed to within the call.
+			if exitedNonZero(u) {
+				cwd = start
+			}
 			// The harness keeps the shell's directory between calls only
 			// within the session's own.
 			if cwd != "work" && !strings.HasPrefix(cwd, "work/") {
@@ -485,6 +499,13 @@ func (r *run) read() {
 			r.writes = append(r.writes, w)
 		}
 	}
+}
+
+// exitedNonZero reports whether a tool call's command exited other than
+// 0, as its result shows: the harness reports it as an error, or reads its
+// status as something else, such as grep's "No matches found".
+func exitedNonZero(u *streamjson.ToolUse) bool {
+	return u.Result != nil && (u.Result.IsError || u.Result.Interpreted != "")
 }
 
 // subcommand is a metais command line's command, after the global flags,

@@ -8,12 +8,14 @@ import "testing"
 // TestAnswerLineNames: a line of a C4 answer names a field by every word
 // of its name, or by its title's number beside a word of that title, and
 // by nothing less: a bare number, a range that stops short, or some of
-// the name's words are not a field named.
+// the name's words are not a field named. A word of the line may be a
+// word of the name's end, as phone is of telephone.
 func TestAnswerLineNames(t *testing.T) {
 	contactName := []string{"primary_contact_name", "1.7 Primary contact person name"}
 	secondEmail := []string{"second_contact_email", "1.11 Second contact person email"}
 	detected := []string{"detected_at", "2.2 Date and time of detection of the ICT-related incident"}
 	code := []string{"submitting_entity_code", "1.3 Identification code of the entity submitting the report"}
+	phone := []string{"primary_contact_telephone", "1.9 Primary contact person telephone"}
 	for _, c := range []struct {
 		line  string
 		field []string
@@ -26,9 +28,19 @@ func TestAnswerLineNames(t *testing.T) {
 		{"**1.3** Its identification code (its LEI)", code, true},
 		{"**1.10–1.12** Second contact's name, email and telephone", secondEmail, true},
 		{"**1.7-1.9** Primary contact's name, email and telephone", contactName, true},
+		// A word of five letters or more that ends a word of the name is
+		// that word, plural or not (W3-10).
+		{"**Primary and second contact:** name, email and phone for each.", phone, true},
+		{"Primary contact: phones must be international", phone, true},
 		// Some of the name's words are not the field.
 		{"Primary contact: email", contactName, false},
 		{"Whom to contact", secondEmail, false},
+		{"Primary and second contact: name and email for each", phone, false},
+		{"Phones must be in international format", phone, false},
+		// A shorter end, or a word that is not an end, is not the word.
+		{"Primary contact: name, email and tel", phone, false},
+		{"Primary contact: name, email and one fax", phone, false},
+		{"Primary contact: name, email and telephones", phone, true},
 		// A number with no word of its title is not the field.
 		{"Fields 1.2 to 1.15", secondEmail, false},
 		{"**1.3**", code, false},

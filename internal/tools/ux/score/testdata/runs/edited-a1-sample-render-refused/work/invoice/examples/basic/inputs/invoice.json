@@ -1,0 +1,12 @@
+{
+  "number": "INV-0042",
+  "issue_date": "2026-10-01",
+  "due_date": "2026-10-31",
+  "currency": "USD",
+  "tax_rate": 8.25,
+  "tax_label": "Sales tax",
+  "seller": {"name": "Example Studio LLC", "address": "1 Example Way\nSpringfield", "email": "billing@example.com", "tax_id": "US-00-0000000"},
+  "bill_to": {"name": "Example Customer Inc.", "address": "2 Sample Street\nShelbyville"},
+  "payment_terms": "Net 30, by bank transfer.",
+  "notes": "Thank you for your business."
+}

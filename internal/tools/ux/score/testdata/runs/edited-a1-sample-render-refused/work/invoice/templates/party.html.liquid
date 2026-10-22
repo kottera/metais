@@ -1,0 +1,10 @@
+{%- comment %} A party's address, email and tax ID, each when given. Takes party:. {% endcomment -%}
+{%- if party.address %}
+    <p>{{ party.address | escape | newline_to_br | safe }}</p>
+{%- endif %}
+{%- if party.email %}
+    <p><a href="mailto:{{ party.email }}">{{ party.email }}</a></p>
+{%- endif %}
+{%- if party.tax_id %}
+    <p>Tax ID: {{ party.tax_id }}</p>
+{%- endif -%}

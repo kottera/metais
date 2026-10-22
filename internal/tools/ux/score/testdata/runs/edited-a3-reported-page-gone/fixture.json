@@ -1,0 +1,21 @@
+{
+  "shows": "the session renders its page to preview and deletes preview, and no file the run leaves has the bytes the render's listing reports for index.html: the rendered page survives nowhere, so the check reads no page",
+  "recorded": {
+    "set": "the after set with the skill, as W3-4 judged it in Work Order 01a16247 (artifact art_osahi7tvsdumtonxng7fbnmb3gjo2qsy2rtpweeoha5c5cr2fslq)",
+    "run": "A3-data-to-js/opus",
+    "date": "2026-10-22",
+    "commit": "633156212b7912b70aeec2b845fed7ab15fb6549",
+    "model": "claude-opus-5-5"
+  },
+  "edited": "The digest turn 12's render lists for index.html (line 39, in the message and in tool_use_result's stdout) has its last hex digit changed from c to d, with sed, so it is no longer the digest of examples/basic/expected/index.html. Nothing else is changed.",
+  "expect": {
+    "inspect-first": "n/a",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "fail"
+  },
+  "reasons": {
+    "outcome": "no rendered page holds data in a script element that parses"
+  }
+}

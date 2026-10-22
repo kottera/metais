@@ -1,0 +1,18 @@
+{
+  "shows": "the session's cd numchart in a call that exits 1 (turn 8, line 21) does not carry to its next call, as the harness records the shell's directory only after a call that exits 0; its later cd numchart && … render --sample --out ../preview writes work/preview/page.html",
+  "recorded": {
+    "set": "the after set with the skill, as W3-4 judged it in Work Order 01a16247 (artifact art_osahi7tvsdumtonxng7fbnmb3gjo2qsy2rtpweeoha5c5cr2fslq)",
+    "run": "A3-data-to-js/sonnet",
+    "date": "2026-10-22",
+    "commit": "633156212b7912b70aeec2b845fed7ab15fb6549",
+    "model": "claude-sonnet-5-5"
+  },
+  "expect": {
+    "inspect-first": "n/a",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "pass"
+  },
+  "reasons": {}
+}
