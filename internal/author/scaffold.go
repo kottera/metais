@@ -200,12 +200,14 @@ const exampleInputs = `{
 
 const exampleExpected = "# Hello, Ada Lovelace\n\nWelcome.\n"
 
-// htmlComment opens each HTML template: what escape: html does, and how
-// data reaches a script (A1 item 2).
+// htmlComment opens each HTML template: what escape: html does, how data
+// reaches a script (A1 item 2), and the help topics an author reads next.
 const htmlComment = `{%- comment %}
 metais.yaml declares this output's escape: html, so every value written
 with {{ }} is HTML-escaped. Data a script reads goes inside a <script>
 element through json_script, which no value can break out of; never json.
+metais help templates shows every filter and how escaping works, and
+metais help manifest what an output in metais.yaml can declare.
 {% endcomment -%}
 `
 
