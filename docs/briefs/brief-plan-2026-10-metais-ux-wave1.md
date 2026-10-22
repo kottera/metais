@@ -205,5 +205,245 @@ discharged, and T-A3's edge comes with Wave 2.
 
 ## Closeout
 
-*Not yet written. The wave orchestrator replaces this line with the wave's
-closeout.*
+*Written 2026-10-22 by the wave orchestrator (Work Order `01a15e89`), from
+`main` at `51b2c9e`. This records what landed and what carries forward. It
+is not a verdict on whether the work is correct: the verification below is
+the verifier's, attributed to it, and nothing here is my own test of the
+code.*
+
+**The breakdown.** Three items, run in sequence, each on a real dependency:
+
+- the scorer's fixtures had to be recorded with the runner;
+- the baseline needed both the runner and the scorer.
+
+Ed approved the breakdown on 2026-10-21. Ed amended the plan in #192
+(`929c974`) after this brief merged: C0 was added, C1 and C2 became
+"render" prompts, R-UX-8 was scoped and R-UX-9 added. The items were
+derived from the plan as amended, and W1-1 corrected this brief to match.
+
+| Item | Work Order | PR | Merge |
+|---|---|---|---|
+| W1-1 the runner, its isolation checks, the scenario set, ADR-009 A8 | `01a15e8e-b007` | #194 | `c268fb9` |
+| W1-2 the scorer, each scenario's check, the fixtures, the scorecard | `01a15e8f-0e54` | #196 | `5e64a4c` |
+| W1-3 the baseline scorecard | `01a15f30-58a0` | #199 | `51b2c9e` |
+| verification | `01a16049-f594` | — | — |
+| W1-NB1 five non-blocking findings (not waited on) | `01a160f8-151a` | — | — |
+
+Work Order `01a15e8f-5ef3` was the first filing of W1-3. I cancelled it
+before it ever ran: Ed's answer to W1-2 held W1-3 until a new isolation
+check had merged, and `recall` is not open to this worker. It was re-filed
+as `01a15f30` with Ed's rulings in its task.
+
+### 1. What landed, against what was asked
+
+- **W1-1 (#194).**
+  - **The runner** is `internal/tools/ux`, a main package run with
+    `go run`. It runs scenario × model as nested `claude -p` sessions. Each
+    session gets its own directory, `HOME` and `TMPDIR`, and the placeholder
+    `ANTHROPIC_AUTH_TOKEN`.
+  - It builds metais with `-trimpath -buildvcs=false`, paces its runs, and
+    resumes a partial set.
+  - It takes `-harness`, with Claude Code the only harness implemented, and
+    `-with-skill` for Wave 3.
+  - **The isolation checks**: §5's list became 13 checks per run, plus
+    W1-2's `writes-inside-run`. A run failing a check is recorded invalid,
+    or `not-run` when the check comes before the session.
+  - **ADR-009 A8** allows `os/exec`, the environment, the file functions,
+    `time.Now` and a main's process symbols. It covers `internal/tools/ux`
+    alone, not the packages beneath it. The existing `never-depends` rule
+    holds `cmd/metais` away from it.
+  - **The scenarios**: nine directories under
+    `internal/tools/ux/scenarios/`. Each declares `asks_for_output`. A2's
+    invoice source lives with its scenario.
+  - **Docs**: `docs/dev/ux-testing.md`, named in `docs/INDEX.md`. The flags
+    were confirmed against `claude` 2.1.299.
+  - This matches the ask.
+- **W1-2 (#196).**
+  - **Where it lives**: the scorer is `internal/tools/ux/score`. The
+    transcript reader is `streamjson`, used by both the runner and the
+    scorer, and the scrub is `scrub`. None of them imports `os` or `time`.
+  - **The fixtures**: 23 committed runs. 14 are real; the other 9,
+    `edited-*`, each name the real run they came from.
+  - **The scorecard**: `-scorecard` prints it.
+  - It applied Ed's rulings, listed below, and added the `verdict` field
+    for C0 and C1. This matches the ask, as amended by those rulings.
+- **W1-3 (#199).**
+  - **The scorecard** is `docs/ux/scorecard-2026-10-21-baseline.md`, built
+    from `5e64a4c`. No file in `cmd/metais`'s closure differs from
+    `6827a6b`.
+  - **The runs**: all 27 were made (C0–C5 and A1–A3, on
+    `claude-opus-5-5`, `claude-sonnet-5-5` and `claude-haiku-5-5`), without
+    the skill installed. All 27 are valid.
+  - **The result**: **6 of 24 gated runs pass**, 2 of 9 on each model, so
+    R-UX-5's thresholds do not hold, as expected of a baseline.
+  - **The transcripts** are artifact
+    `art_boccbn5awud7um657vbfnsbezoefmdmkajnhk4tslubk6l3w27fq`.
+  - **A check correction**: it corrected `no-memory-read`, which had
+    recorded C4 opus invalid for reading back Claude Code's own spilled tool
+    output. The fixture `TestSpilledToolOutput` was seen red against the old
+    check. This matches the ask.
+
+**The gate.** #199 merged over a scoped gate whose only reds were two
+starved timeouts, by ruling R-g below. The wave tier on the merged tree is
+**red on one step only**: `internal/conformance` timed out at 0.52, and
+then 0.39, of 4 cores. It passed alone in 807 s under a raised timeout.
+Every other step and package of `gate.sh wave` passed, including
+`internal/guarantees` and every `internal/tools/ux` package.
+
+So the brief's "Both gate tiers stay green" is **not met literally**. The
+one red is a host that cannot give conformance its share inside go test's
+ten minutes. No change of this wave reaches conformance's code: it builds
+`cmd/metais`, whose closure this wave left untouched. I filed no child for
+it, for these reasons:
+
+- The defect is the package's runtime against the bound on a shared host.
+- That runtime is PLAN-2026-10-metais-test-economy's Wave 2 (§8, the
+  conformance runner), another train's work.
+- The verifier's run is the evidence.
+
+The plan orchestrator should decide whether it wants a full-share
+conformance run of `51b2c9e` on another host.
+
+### 2. What children flagged, declined or discovered
+
+- **Fallback on Ed's host.** The runner refuses to start without
+  `ANTHROPIC_BASE_URL` (W1-1). So plan §6's fallback, a scorecard run on
+  Ed's host, needs a credential route the runner does not build.
+  `docs/dev/ux-testing.md` says so.
+- **C0 and C1 checks.** These are scored by phrase checks whose limits the
+  scorecard prints (Ed's ruling). The C0 and C1 rows carry no recorded
+  verdicts.
+- **Suspected mis-scores.** W1-3 found four. One, the scorer's reading of a
+  render ignoring `--out -`, is mechanical and is carried by W1-NB1. The
+  other three carry to Wave 3:
+  - **`names-every-input`.** It fails C4 opus and C4 sonnet, whose answers
+    name every required field in the template's own terms. Sonnet's run
+    would otherwise pass. Whether a field named in another wording counts is
+    a judgement for Wave 3's recorded verdicts.
+  - **`no-zip-extraction`.** It counts an `unzip` the sandbox stopped
+    before it ran. W1-3 reads this as the rule's limit, not a mis-score: the
+    rule measures what the session chose.
+  - **`script-renders`, C5 sonnet.** The script did render. A later `diff`
+    in the same tool call failed on the sandbox, and the harness then
+    reported the whole call as an error. The run fails three other rules
+    regardless.
+- **A sibling train moved the binary.** PLAN-2026-10-metais-render-seams
+  merged changes to the render pipeline in `cmd/metais`'s closure (W1-1,
+  W2-1 and W2-2: `598443a`, `84c2f83`, `c202db5`). They landed after the
+  baseline's build at `5e64a4c`. The baseline still measures this wave's
+  starting binary. But **Wave 3's "after" binary will differ from it by
+  more than Wave 2's fixes.** The verifier re-scored the baseline
+  transcripts with `main`'s scorer and got the same tables.
+
+### 3. What carries to the next wave
+
+- **The candidates for Wave 2** are the scorecard's "What the failures
+  show" section, ten items. The largest:
+  - nothing a session sees first sends it to `inspect`, so it reaches for
+    `unzip` (nearly every failing run);
+  - `inspect`'s next steps offer no preview (`render --sample`) and no
+    `sample` (C3 failed on every model);
+  - `--out` against `--to` for `unpack` and `extract`;
+  - no help topic on templates, filters or escaping (A3);
+  - nothing marks an example's data as fictional (C1 haiku).
+- **Not reachable from the binary.** A session with no package in its
+  directory never runs `metais` (A1 and A3, sonnet and haiku). The binary
+  cannot fix that. It is the skill's, Wave 3's, or the first place a
+  newcomer is told about the tool.
+- **C0 failed on every model**, because every session asked for the facts
+  instead of taking a reading. Whether asking should pass C0 is for the
+  recorded verdicts Wave 3 needs. The prompt was not reworded (R-UX-9), and
+  no R-UX-9 rewording was made in this wave.
+- **Before Wave 3's scorecard counts**: a recorded verdict on every C0 and
+  C1 run, by a judge model or Ed, with a disagreement report (Ed's ruling).
+- **The host.** The shared host starves the gate's heavy packages often
+  enough that two of this wave's gate runs went red on starvation. Plan the
+  next wave's gate time with that in mind.
+- **What I would do differently.** I would capture the scorer's
+  run-time-verdict question in the brief, so that W1-2 did not have to park
+  on it. I would also have checked before filing that `recall` is open to
+  this worker: holding W1-3 cost a cancel and a re-file.
+
+**Rulings made during this wave.** R-a to R-d and R-g are the
+orchestrator's; R-e is Ed's; R-f is W1-2's reconciliation.
+
+- **R-a.** Each scenario declares whether its prompt asks for output.
+  R-UX-8 applies to C1, C2, C3 and C5, not to C4 or C0. This follows from
+  the amended R-UX-8's own wording.
+- **R-b.** In C0, raw zip extraction fails R-UX-5. `metais unpack` on C0's
+  edit path does not.
+- **R-c.** A2's invoice source lives with its scenario, because no example
+  holds an invoice.
+- **R-d.** The runner's amendment is ADR-009 A8.
+- **R-e (Ed, 2026-10-21, answering W1-2):**
+  - C0 and C1 use a narrower mechanical check whose limits are stated. A
+    recorded verdict and a disagreement report are required before Wave 3's
+    scorecard counts.
+  - `--version` and `help` before `inspect` do not break inspect-first; a
+    read of the package's contents does.
+  - `unzip -l` is a note, not a failure.
+  - A run that writes outside its own run directory is invalid. This check
+    was required before W1-3 and landed in #196.
+  - Usernames in `ls -l` output are scrubbed.
+- **R-f.** `metais unpack` and `extract` count as extraction in consuming
+  scenarios other than C0. Authoring scenarios unpack to edit.
+- **R-g.** #199 may merge over a scoped gate red only on starved timeouts,
+  because each red package passed alone with the change. This covers #199
+  only.
+
+### 4. What the verification found, and where each finding went
+
+Verifier `01a16049` returned **pass, with nothing blocking**.
+
+- **Every item it was sent came back, each at depth `mutated`**: the ids it
+  returned are the three I sent.
+- **The audit.** It checked that each merge commit is an ancestor of `main`
+  and matches its item. It compared each commit's diff with
+  `go list -deps ./cmd/metais`: no non-test file changed.
+- **The transcripts.** It fetched the transcript artifact: 27 valid runs,
+  holding no token and no host path. Re-scored with `main`'s scorer, they
+  reproduce the published tables and the 6 of 24.
+- **Its 30 mutations**, all reverted:
+  - **W1-1**: each isolation check disabled in turn (strict MCP,
+    credential, metais first on PATH, project settings only, session as
+    started, outside a repository), and `TMPDIR` and `CLAUDE_CODE_TMPDIR`
+    set to `/tmp`. Every one went red.
+  - **The guarantee on the real tree**: a `cmd/metais` file importing
+    `internal/tools/ux/scenario` was refused, red.
+  - **W1-1's claimed reds**, spot-checked: the `never-depends` rule
+    narrowed, and the allow-list given `beneath: true`. Both red.
+  - **W1-2**: R-UX-8 applied to every consuming scenario, the C0 `unpack`
+    exception removed, unpack counted in authoring scenarios, and the edit
+    reading passed without a stated reading. All red. The scrub's token
+    regex dropped went red in the scrub's own test.
+  - **The scorer under A8**: a scorer file calling `time.Now` was refused
+    by `TestNoHostFacts`, red.
+  - **W1-3**: three ways of widening the spilled-output regex, and the
+    producer's claimed red. All red.
+
+Its findings, each with where it went:
+
+| Finding | Where it went |
+|---|---|
+| W1-1: `-buildvcs=false` and `-trimpath` in the runner's build are pinned by no test | `01a160f8-151a` (W1-NB1, member 1) |
+| W1-2: inspect-first's half about metais commands before `inspect`, and its never-inspected branch, have no fixture | `01a160f8-151a` (W1-NB1, member 2) |
+| W1-2: C0's "invents no facts presented as real" clause and its render reading are unpinned | `01a160f8-151a` (W1-NB1, member 3) |
+| W1-2: the placeholder token is declared twice, with nothing tying the two together | `01a160f8-151a` (W1-NB1, member 4) |
+| W1-3's own suspected mis-score: the render reading ignores `--out -` | `01a160f8-151a` (W1-NB1, member 5) |
+| Cross-item: the wave tier is red only on `internal/conformance`'s starved timeout | **Not filed**: another train's scope; reasons in §1 |
+| Cross-item: the runner's and the scorer's interfaces held across the three items | **Not filed**: a confirmation, not a defect |
+| W1-3: W1-3.4 verified by fetching the artifact | **Not filed**: a confirmation, not a defect |
+
+**One child carries all five members.** Each repair is a test or fixture
+pin under `internal/tools/ux/...`, the scoped gate selects those packages
+together, and no member's decision changes another's. Its task says the
+members are severable. **The wave completed without waiting for W1-NB1, by
+design**: it is not re-verified in this wave, and nothing waits on it. No
+finding went to the janitorial backlog, because none was prose-only.
+
+### 5. Out-of-band acts
+
+The brief's one act was a `manual-qa-pass` on Ed's host, to be filed only
+if dispatches lost the loopback proxy. **It was not filed**: every nested
+session of this wave, including all 27 baseline runs, ran through the
+dispatch's proxy. No child needed an act. No act is open from this wave.
