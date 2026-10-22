@@ -311,7 +311,7 @@ func reachWant(entries []string) map[string]int {
 	lines = append(lines,
 		"grep <path> . ** .compiled/**",
 		"schema <path>",
-		"extract <path> ** --to <path>",
+		"extract <path> ** --out <path>",
 		"render <path> --out <path> --dry-run",
 		"render <path> --out -",
 	)

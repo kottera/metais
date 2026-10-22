@@ -5,6 +5,18 @@ Usage:
   metais test [<package>] [--example <name>]... [--update [--dry-run]]
               [--limit <name>=<value>]... [--json]
 
+Examples:
+  metais test
+      Tests every example of the source directory in the working directory.
+  metais test report-1.0.0.metais --example basic
+      Tests the example basic of a packed package.
+  metais test --update --dry-run
+      Lists what --update would write into and remove from each example's
+      expected/.
+  metais test --json
+      Prints every finding and each example's result as one metais.test/1
+      document.
+
 The package is a source directory, the current directory when omitted, or a
 packed package file, whose examples are read in place. The package is opened and
 verified whole, and every template is parsed; an error there is reported and no
@@ -174,15 +186,3 @@ Refusals:
                         Next: metais test <package>
   yaml.* (13)           An example's inputs are refused.
                         Next: metais test <package>
-
-Examples:
-  metais test
-      Tests every example of the source directory in the working directory.
-  metais test report-1.0.0.metais --example basic
-      Tests the example basic of a packed package.
-  metais test --update --dry-run
-      Lists what --update would write into and remove from each example's
-      expected/.
-  metais test --json
-      Prints every finding and each example's result as one metais.test/1
-      document.

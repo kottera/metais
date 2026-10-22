@@ -4,6 +4,12 @@ its section.
 Usage:
   metais outline <package> <path> [--limit <name>=<value>]... [--json]
 
+Examples:
+  metais outline report-1.0.0.metais references/wcag/1.1.1.md
+      Lists the reference's sections.
+  metais outline report-1.0.0.metais inputs/product.md --json
+      Prints the headings as one metais.outline/1 document.
+
 Reads a text entry as CommonMark 0.31.2 and lists its ATX and setext headings,
 levels 1 to 6, in document order. A leading frontmatter block is skipped, and
 its lines still count. What CommonMark does not make a heading, such as a # line
@@ -66,7 +72,7 @@ Refusals:
       Next: metais outline --help
   usage.not_text
       The entry is binary.
-      Next: metais extract <package> <path> --to <dir>
+      Next: metais extract <package> <path> --out <dir>
   usage.package_from_stdin
       The package operand is -, standard input.
       Next: metais outline --help
@@ -91,9 +97,3 @@ Refusals:
   schema.* (10)    An input schema is refused. Next: metais inspect <package>
   template.* (9)   An output's path, when or for_each does not parse.
                    Next: metais inspect <package>
-
-Examples:
-  metais outline report-1.0.0.metais references/wcag/1.1.1.md
-      Lists the reference's sections.
-  metais outline report-1.0.0.metais inputs/product.md --json
-      Prints the headings as one metais.outline/1 document.

@@ -538,3 +538,52 @@ func TestTopicJSONNamesEveryFormat(t *testing.T) {
 		t.Errorf("help json does not name %s", usageFormat)
 	}
 }
+
+// TestHelpExamplesFirst is ADR-008 Amendment A3: a command's help shows
+// its examples straight after its usage, before its detail, operands,
+// flags, prints and refusals, by both of the routes that print it.
+func TestHelpExamplesFirst(t *testing.T) {
+	for _, c := range table {
+		if len(c.Examples) == 0 {
+			t.Errorf("metais %s declares no example", c.Name)
+			continue
+		}
+		for _, argv := range [][]string{{c.Name, "--help"}, {"help", c.Name}} {
+			text := runTool(t, argv...).stdout
+			usage := strings.Index(text, "\nUsage:\n")
+			examples := strings.Index(text, "\nExamples:\n")
+			if usage < 0 || examples < usage {
+				t.Errorf("metais %q: no Examples: heading after Usage:\n%s", argv, text)
+				continue
+			}
+			// The heading after Usage: is Examples:, and every example
+			// is listed beneath it before the next heading.
+			if next := strings.Index(text[usage+1:], "\n\n"); next < 0 || usage+2+next != examples {
+				t.Errorf("metais %q: Examples: does not follow the usage lines:\n%s", argv, text)
+			}
+			end := len(text)
+			for _, h := range []string{"Operands:", "Flags:", "Prints:", "Refusals:"} {
+				if i := strings.Index(text, "\n"+h+"\n"); i >= 0 {
+					end = min(end, i)
+					if i < examples {
+						t.Errorf("metais %q: %s comes before Examples:", argv, h)
+					}
+				}
+			}
+			if end < examples {
+				continue
+			}
+			if c.Detail != "" {
+				first, _, _ := strings.Cut(c.Detail, " ")
+				if i := strings.Index(text[examples:], "\n\n"+first); i < 0 || examples+i > end {
+					t.Errorf("metais %q: the detail does not follow the examples", argv)
+				}
+			}
+			for _, e := range c.Examples {
+				if !strings.Contains(text[examples:end], "  "+e.Run+"\n") {
+					t.Errorf("metais %q: example %q is not listed under Examples:", argv, e.Run)
+				}
+			}
+		}
+	}
+}

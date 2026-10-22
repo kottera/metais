@@ -7,7 +7,7 @@ Next: metais limits
   limit.invalid
   limit.package
 
-Next: metais unpack <package> --to <dir>
+Next: metais unpack <package> --out <dir>
       Unpacks the package once it is fixed or replaced; nothing of a refused
       package is written.
   manifest.additional_property
@@ -121,13 +121,13 @@ Next: metais unpack <package> --to <dir>
   template.tag_context
   template.unknown_filter
 
-Next: metais unpack <package> --to <dir>
+Next: metais unpack <package> --out <dir>
       Unpacks into a directory that is empty or does not exist yet; nothing in a
       directory is ever overwritten.
   output.destination.not_directory
   output.destination.not_empty
 
-Next: metais unpack <package> --to <dir>
+Next: metais unpack <package> --out <dir>
       Unpacks again, into an empty directory, once the cause is fixed.
   output.destination.nothing_written
   output.destination.write_failed

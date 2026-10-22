@@ -5,6 +5,16 @@ next.
 Usage:
   metais inspect <package> [--guide] [--limit <name>=<value>]... [--json]
 
+Examples:
+  metais inspect report-1.0.0.metais
+      Prints the summary of a packed package.
+  metais inspect .
+      Prints the summary of the source directory in the working directory.
+  metais inspect report-1.0.0.metais --guide
+      Prints the package's whole guide.
+  metais inspect report-1.0.0.metais --json
+      Prints the summary as one metais.inspect/1 document.
+
 The package is a packed package file or a source directory. Before it prints
 anything, inspect verifies the whole package: every entry's name and data, the
 digest of every entry and of the package, the manifest under the specification
@@ -88,13 +98,3 @@ Refusals:
   schema.* (10)    An input schema is refused. Next: metais inspect <package>
   template.* (9)   An output's path, when or for_each does not parse.
                    Next: metais inspect <package>
-
-Examples:
-  metais inspect report-1.0.0.metais
-      Prints the summary of a packed package.
-  metais inspect .
-      Prints the summary of the source directory in the working directory.
-  metais inspect report-1.0.0.metais --guide
-      Prints the package's whole guide.
-  metais inspect report-1.0.0.metais --json
-      Prints the summary as one metais.inspect/1 document.

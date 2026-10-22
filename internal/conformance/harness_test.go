@@ -430,7 +430,7 @@ func (r *runner) reachCommands(sb *sandbox, t reachTarget, i int, owner string) 
 		lines = append(lines,
 			line{args: []string{"grep", pkg, ".", "**", ".compiled/**"}},
 			line{args: []string{"schema", pkg}},
-			line{args: []string{"extract", pkg, "**", "--to"}, extract: "extract"},
+			line{args: []string{"extract", pkg, "**", "--out"}, extract: "extract"},
 		)
 	}
 	data := ""

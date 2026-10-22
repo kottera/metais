@@ -102,8 +102,8 @@ func readingLines(t *testing.T, pkg, out string, faults fault.Set) [][]string {
 		{"ls", pkg}, {"ls", "--json", "-r", pkg},
 		{"grep", pkg, "e", "-C", "2"}, {"grep", "--json", pkg, "."}, {"grep", "--json", pkg, "{", ".compiled/**"},
 		{"schema", pkg}, {"schema", "--json", pkg},
-		{"extract", "--json", pkg, "**", "--to", filepath.Join(out, "all")},
-		{"extract", pkg, "**", "--to", filepath.Join(out, "dry"), "--dry-run"},
+		{"extract", "--json", pkg, "**", "--out", filepath.Join(out, "all")},
+		{"extract", pkg, "**", "--out", filepath.Join(out, "dry"), "--dry-run"},
 	}
 	for _, e := range listing.Result.Entries {
 		if e.Type != "file" {

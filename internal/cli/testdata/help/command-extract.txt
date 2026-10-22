@@ -1,8 +1,17 @@
 metais extract — Write the entries the globs select to a directory.
 
 Usage:
-  metais extract <package> <glob>... --to <dir> [--overwrite] [--dry-run]
+  metais extract <package> <glob>... --out <dir> [--overwrite] [--dry-run]
                  [--limit <name>=<value>]... [--json]
+
+Examples:
+  metais extract report-1.0.0.metais 'examples/basic/**' --out basic
+      Writes the example basic into the new directory basic.
+  metais extract report-1.0.0.metais references --out refs --dry-run
+      Lists the references it would write.
+  metais extract report-1.0.0.metais 'templates/**' --out . --overwrite
+      Writes the templates into the current directory, replacing the files
+      already there.
 
 Writes every entry any glob selects to <dir>/<entry path>, as stored (metais
 help globs). Every glob must select at least one entry, or nothing is written: a
@@ -35,7 +44,7 @@ Operands:
       A glob selecting entries to write. Required.
 
 Flags:
-  --to <dir>
+  --out <dir>
       The directory to write into: a new one, or an existing one that is empty,
       or holds entries with --overwrite; required.
   --overwrite
@@ -74,39 +83,39 @@ Refusals:
   output.destination.case_variant
       In <dir>, an entry's name differs only in case or normalization from a
       name an entry's path holds.
-      Next: metais extract <package> <glob> --to <dir>
+      Next: metais extract <package> <glob> --out <dir>
   output.destination.commit_failed
       Moving the files into an existing <dir> failed part way; the files already
       moved are listed, and nothing else was changed.
-      Next: metais extract <package> <glob> --to <dir>
+      Next: metais extract <package> <glob> --out <dir>
   output.destination.link
       In <dir>, an entry's path runs through, or ends at, a symbolic link, a
       junction or another reparse point, which is never followed.
-      Next: metais extract <package> <glob> --to <dir>
+      Next: metais extract <package> <glob> --out <dir>
   output.destination.not_directory
       <dir>, or a directory above it, exists and is not a directory; or, in
       <dir>, a file stands where an entry's path needs a directory.
-      Next: metais extract <package> <glob> --to <dir>
+      Next: metais extract <package> <glob> --out <dir>
   output.destination.not_empty
       <dir> holds entries, and --overwrite is not given.
-      Next: metais extract <package> <glob> --to <dir> --overwrite
+      Next: metais extract <package> <glob> --out <dir> --overwrite
   output.destination.not_regular_file
       In <dir>, a directory, a named pipe, a socket or a device stands at an
       entry's path.
-      Next: metais extract <package> <glob> --to <dir>
+      Next: metais extract <package> <glob> --out <dir>
   output.destination.nothing_written
       A write failed and nothing was left: <dir> could not be created, or, in an
       existing one, a write failed before the commit, another file system is
       mounted inside it, or an entry lies beneath the staging name.
-      Next: metais extract <package> <glob> --to <dir>
+      Next: metais extract <package> <glob> --out <dir>
   output.destination.staging_exists
       An existing <dir> holds .metais-staging, left by a killed write or in use
       by another; nothing is written.
-      Next: metais extract <package> <glob> --to <dir>
+      Next: metais extract <package> <glob> --out <dir>
   output.destination.write_failed
       A write into a new <dir> failed after creating it; the files already
       written are listed and left in place.
-      Next: metais extract <package> <glob> --to <dir>
+      Next: metais extract <package> <glob> --out <dir>
   usage.bad_glob
       A glob does not satisfy the glob grammar.
       Next: metais help globs
@@ -144,12 +153,3 @@ Refusals:
   schema.* (10)    An input schema is refused. Next: metais inspect <package>
   template.* (9)   An output's path, when or for_each does not parse.
                    Next: metais inspect <package>
-
-Examples:
-  metais extract report-1.0.0.metais 'examples/basic/**' --to basic
-      Writes the example basic into the new directory basic.
-  metais extract report-1.0.0.metais references --to refs --dry-run
-      Lists the references it would write.
-  metais extract report-1.0.0.metais 'templates/**' --to . --overwrite
-      Writes the templates into the current directory, replacing the files
-      already there.

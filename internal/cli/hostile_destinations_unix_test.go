@@ -64,7 +64,7 @@ func TestHostileUnpackPlantedLink(t *testing.T) {
 			root := testenv.Dir(t)
 			plant(t, root, c.links, map[string]string{"victim.txt": "theirs\n", "elsewhere/keep.txt": "theirs\n"})
 			before := snapshot(t, root)
-			r := runTool(t, "unpack", "--json", pkg, "--to", filepath.Join(root, "src"))
+			r := runTool(t, "unpack", "--json", pkg, "--out", filepath.Join(root, "src"))
 			want := []string{`output.destination.not_empty {"entries":["` + c.want + `"],"more":false}`}
 			if got := findingParams(r); r.status != finding.ExitDestination || !slices.Equal(got, want) {
 				t.Errorf("exit %d, findings %q, want %q", r.status, got, want)
@@ -102,7 +102,7 @@ func TestHostileExtractPlantedLink(t *testing.T) {
 			root := testenv.Dir(t)
 			plant(t, root, c.links, map[string]string{"victim.txt": "theirs\n", "elsewhere/keep.txt": "theirs\n"})
 			before := snapshot(t, root)
-			argv := []string{"extract", "--json", pkg, "metais.yaml", "references/*.txt", "--to", filepath.Join(root, "to")}
+			argv := []string{"extract", "--json", pkg, "metais.yaml", "references/*.txt", "--out", filepath.Join(root, "to")}
 			if overwrite {
 				argv = append(argv, "--overwrite")
 			}

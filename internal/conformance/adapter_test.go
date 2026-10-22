@@ -105,13 +105,13 @@ var openingCommands = map[string][]string{
 	"outline":  {"outline", "--json", "{package}", "metais.yaml"},
 	"grep":     {"grep", "--json", "{package}", "metais"},
 	"schema":   {"schema", "--json", "{package}"},
-	"extract":  {"extract", "--json", "{package}", "**", "--to", "extracted"},
+	"extract":  {"extract", "--json", "{package}", "**", "--out", "extracted"},
 	"check":    {"check", "--json", "{package}"},
 	"test":     {"test", "--json", "{package}"},
 	"validate": {"validate", "--json", "{package}"},
 	"render":   {"render", "--json", "{package}", "--out", "out"},
-	"unpack":   {"unpack", "--json", "{package}", "--to", "unpacked"},
-	"sample":   {"sample", "--json", "{package}", "--to", "sampled"},
+	"unpack":   {"unpack", "--json", "{package}", "--out", "unpacked"},
+	"sample":   {"sample", "--json", "{package}", "--out", "sampled"},
 	"pack":     {"pack", "--json", "{package}", "--out", "packed.metais"},
 }
 
@@ -135,7 +135,7 @@ func openPlan(set []string, pkg string, dir func(string) string) ([]command, err
 			switch {
 			case a == "{package}":
 				args[i] = pkg
-			case i > 0 && (args[i-1] == "--out" || args[i-1] == "--to"):
+			case i > 0 && args[i-1] == "--out":
 				args[i] = dir(a)
 			}
 		}
@@ -265,13 +265,13 @@ func (a *cliAdapter) commands(v *vector, sb *sandbox, st *step) ([]command, erro
 	case "pack":
 		return []command{{args: []string{"pack", "--json", sb.path(x.Source), "--out", sb.path(x.To)}, authoring: true}}, nil
 	case "unpack":
-		return []command{{args: []string{"unpack", "--json", sb.path(x.Package), "--to", sb.path(x.To)}, authoring: true}}, nil
+		return []command{{args: []string{"unpack", "--json", sb.path(x.Package), "--out", sb.path(x.To)}, authoring: true}}, nil
 	case "sample":
 		args := []string{"sample", "--json", sb.path(x.Source)}
 		if x.Example != "" {
 			args = append(args, "--example", x.Example)
 		} else {
-			args = append(args, "--to", sb.path(x.To))
+			args = append(args, "--out", sb.path(x.To))
 		}
 		args = sampleFlags(args, x.Optional, x.Seed, x.Items)
 		args, stdin, err := supply(args)

@@ -2,9 +2,21 @@ metais sample — Generate sample data from the inputs' schemas, and keep it as 
 data directory or an example.
 
 Usage:
-  metais sample [<package>] (--to <dir> | --example <name>) [--optional <mode>]
+  metais sample [<package>] (--out <dir> | --example <name>) [--optional <mode>]
                 [--seed <n>] [--items <n>] [supply flags] [--overwrite]
                 [--dry-run] [--json]
+
+Examples:
+  metais sample --out data
+      Writes sample data for the source directory in the working directory into
+      the new directory data.
+  metais sample report-1.0.0.metais --out data --seed 7 --optional mixed
+      Writes other data, with some optional fields left out.
+  metais sample --example staged --set /incident/stage=final
+      Saves data whose stage is final as the example staged.
+  metais sample --out data --overwrite --json
+      Replaces the data files in data, and lists them as one metais.sample/1
+      document.
 
 The generator makes a value for every input from its schema: the schema's const,
 examples, default or enum where it has one, and otherwise placeholder text,
@@ -20,7 +32,7 @@ cannot make a valid value for is schema.sample_unsatisfiable, and data that
 fails its schema, such as a supplied value the schema refuses, is
 schema.sample_invalid; with any error nothing is written.
 
-With --to, the data directory is <dir>: a <dir> that does not exist is created,
+With --out, the data directory is <dir>: a <dir> that does not exist is created,
 with its missing parents, beside it and renamed into place; an empty one is
 written into. A <dir> that holds any entry, a hidden one included, is refused
 unless --overwrite is given, and then each file sample writes replaces the file
@@ -38,12 +50,12 @@ is ever replaced. --dry-run lists the files and writes nothing.
 
 Operands:
   <package>
-      A source directory, or a packed package file with --to; the current
+      A source directory, or a packed package file with --out; the current
       directory when omitted. - is refused, since a package is read with random
       access.
 
 Flags:
-  --to <dir>
+  --out <dir>
       The directory to write the data directory into: one that does not exist
       yet, or an empty one, or with --overwrite any directory.
   --example <name>
@@ -73,7 +85,7 @@ Flags:
       value; - reads it from standard input, once. Applied after --data, in
       command-line order. May be given more than once.
   --overwrite
-      With --to, write into a directory that holds entries, replacing the files
+      With --out, write into a directory that holds entries, replacing the files
       sample writes and nothing else.
   --dry-run
       Generate and validate the data, list the files sample would write, and
@@ -110,34 +122,34 @@ Refusals:
   output.destination.case_variant
       In <dir>, an entry's name differs only in case or normalization from a
       name a path sample writes holds.
-      Next: metais sample <package> --to <dir>
+      Next: metais sample <package> --out <dir>
   output.destination.commit_failed
       Moving the files into an existing <dir> failed part way; the files already
       moved are listed, and nothing else was changed.
-      Next: metais sample <package> --to <dir>
+      Next: metais sample <package> --out <dir>
   output.destination.link
       In <dir>, a path sample writes runs through, or ends at, a symbolic link,
       a junction or another reparse point, which is never followed.
-      Next: metais sample <package> --to <dir>
+      Next: metais sample <package> --out <dir>
   output.destination.not_directory
-      --to, or a directory above it, exists and is not a directory; or, in
+      --out, or a directory above it, exists and is not a directory; or, in
       <dir>, a file stands where a path sample writes needs a directory.
-      Next: metais sample <package> --to <dir>
+      Next: metais sample <package> --out <dir>
   output.destination.not_empty
-      --to names a directory that holds entries, and --overwrite is not given.
-      Next: metais sample <package> --to <dir> --overwrite
+      --out names a directory that holds entries, and --overwrite is not given.
+      Next: metais sample <package> --out <dir> --overwrite
   output.destination.not_regular_file
       In <dir>, a directory, a named pipe, a socket or a device stands where
       sample writes a file.
-      Next: metais sample <package> --to <dir>
+      Next: metais sample <package> --out <dir>
   output.destination.nothing_written
       A write failed, another file system is mounted on a path sample writes, or
       the example already exists; nothing is left written.
-      Next: metais sample <package> --to <dir>
+      Next: metais sample <package> --out <dir>
   output.destination.staging_exists
       <dir> holds .metais-staging, left by a killed write or in use by another;
       nothing is written.
-      Next: metais sample <package> --to <dir>
+      Next: metais sample <package> --out <dir>
   usage.bad_value
       A flag's value is missing, or is not one the flag accepts, or a flag that
       takes no value is given one.
@@ -150,14 +162,15 @@ Refusals:
       --inputs-json - is given twice, and standard input is read once.
       Next: metais help inputs
   usage.flag_excluded
-      --to and --example are both given, or --overwrite is given with --example.
+      --out and --example are both given, or --overwrite is given with
+      --example.
       Next: metais sample --help
   usage.missing_operand
       The package operand is not given.
       Next: metais sample --help
   usage.not_a_source_directory
       --example is given with a packed package, whose examples are not edited.
-      Next: metais unpack <package> --to <dir>
+      Next: metais unpack <package> --out <dir>
   usage.package_from_stdin
       The package operand is -, standard input.
       Next: metais sample --help
@@ -198,15 +211,3 @@ Refusals:
                       Next: metais inspect <package>
   yaml.* (13)         A value given with --set, --set-json or --inputs-json is
                       refused. Next: metais inspect <package>
-
-Examples:
-  metais sample --to data
-      Writes sample data for the source directory in the working directory into
-      the new directory data.
-  metais sample report-1.0.0.metais --to data --seed 7 --optional mixed
-      Writes other data, with some optional fields left out.
-  metais sample --example staged --set /incident/stage=final
-      Saves data whose stage is final as the example staged.
-  metais sample --to data --overwrite --json
-      Replaces the data files in data, and lists them as one metais.sample/1
-      document.

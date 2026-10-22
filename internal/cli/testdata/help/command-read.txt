@@ -4,6 +4,14 @@ Usage:
   metais read <package> <path> [--lines <range>] [--number]
               [--limit <name>=<value>]... [--json]
 
+Examples:
+  metais read report-1.0.0.metais inputs/product.md
+      Prints what the input product means.
+  metais read report-1.0.0.metais references/wcag/1.1.1.md --lines 40-72
+      Prints one section of a reference, as metais outline numbers it.
+  metais read report-1.0.0.metais .compiled/schema.json --json
+      Prints the combined schema's entry as one metais.read/1 document.
+
 Prints the entry's bytes exactly as stored. An entry is text when it is valid
 UTF-8 and holds no NUL byte, and binary otherwise. A line ends at an LF; an
 entry has as many lines as LFs, plus one when it is not empty and does not end
@@ -65,7 +73,7 @@ Refusals:
       Next: metais read --help
   usage.binary_to_terminal
       The entry is binary and standard output is a terminal.
-      Next: metais extract <package> <path> --to <dir>
+      Next: metais extract <package> <path> --out <dir>
   usage.entry_not_found
       The path names no entry and no directory of the package.
       Next: metais ls <package> <path>
@@ -80,7 +88,7 @@ Refusals:
       Next: metais read --help
   usage.not_text
       --lines or --number is given for a binary entry.
-      Next: metais extract <package> <path> --to <dir>
+      Next: metais extract <package> <path> --out <dir>
   usage.package_from_stdin
       The package operand is -, standard input.
       Next: metais read --help
@@ -105,11 +113,3 @@ Refusals:
   schema.* (10)    An input schema is refused. Next: metais inspect <package>
   template.* (9)   An output's path, when or for_each does not parse.
                    Next: metais inspect <package>
-
-Examples:
-  metais read report-1.0.0.metais inputs/product.md
-      Prints what the input product means.
-  metais read report-1.0.0.metais references/wcag/1.1.1.md --lines 40-72
-      Prints one section of a reference, as metais outline numbers it.
-  metais read report-1.0.0.metais .compiled/schema.json --json
-      Prints the combined schema's entry as one metais.read/1 document.

@@ -4,6 +4,15 @@ and an example.
 Usage:
   metais init [<dir>] [--name <name>] [--dry-run] [--json]
 
+Examples:
+  metais init acme-report
+      Writes the scaffold of a package called acme-report into the directory
+      acme-report.
+  metais init --name acme-report
+      Writes it into the current directory, which must be empty.
+  metais init acme-report --dry-run --json
+      Lists the files it would write, as one metais.init/1 document.
+
 Writes eight files into <dir>: metais.yaml, one input with its schema and
 meaning document, one template, one example with its inputs and expected output,
 and a .gitattributes that keeps git from converting line endings. The scaffold
@@ -82,12 +91,3 @@ Refusals:
       An argument that is not a flag the command accepts, an abbreviated flag,
       or one-letter aliases written together.
       Next: metais init --help
-
-Examples:
-  metais init acme-report
-      Writes the scaffold of a package called acme-report into the directory
-      acme-report.
-  metais init --name acme-report
-      Writes it into the current directory, which must be empty.
-  metais init acme-report --dry-run --json
-      Lists the files it would write, as one metais.init/1 document.

@@ -7,6 +7,29 @@ Usage:
                 [--sample [--optional <mode>] [--seed <n>] [--items <n>]]
                 [--json]
 
+Examples:
+  metais render report-1.0.0.metais --data data --out out
+      Renders the package's outputs from the data directory data into the new
+      directory out.
+  metais render report.metais --data data --set /vendor/name=Acme --out out
+      Renders with one value set over the data directory's.
+  metais render . --data data --out out --now 2026-10-19T09:30:00+02:00 --json
+      Renders the source directory in the working directory with a render time,
+      and prints the files as one metais.render/1 document.
+  metais render report.metais --data data --out out --dry-run
+      Lists every file the render would write into out, with its size and
+      digest, and writes nothing.
+  metais render report.metais --data data --out - --only report.md
+      Renders the whole package and writes the bytes of report.md alone to
+      standard output.
+  metais render . --sample --out preview
+      Previews the source directory's outputs from sample data.
+  metais render . --sample --set /incident/stage=final --seed 7 --out preview
+      Previews them with one value pinned and other generated values.
+  metais render report.metais --data data --out site --overwrite
+      Renders into the existing directory site, replacing the files the render
+      writes there and leaving every other one.
+
 The package is opened and verified whole, and the inputs are supplied and
 validated, as metais inspect and metais validate do; an input that fails ends
 the render with every finding of the inputs. Then every output is planned, an
@@ -280,26 +303,3 @@ Refusals:
   template.* (9)        An output's path, when or for_each does not parse.
                         Next: metais inspect <package>
   yaml.* (13)           An input is refused. Next: metais inspect <package>
-
-Examples:
-  metais render report-1.0.0.metais --data data --out out
-      Renders the package's outputs from the data directory data into the new
-      directory out.
-  metais render report.metais --data data --set /vendor/name=Acme --out out
-      Renders with one value set over the data directory's.
-  metais render . --data data --out out --now 2026-10-19T09:30:00+02:00 --json
-      Renders the source directory in the working directory with a render time,
-      and prints the files as one metais.render/1 document.
-  metais render report.metais --data data --out out --dry-run
-      Lists every file the render would write into out, with its size and
-      digest, and writes nothing.
-  metais render report.metais --data data --out - --only report.md
-      Renders the whole package and writes the bytes of report.md alone to
-      standard output.
-  metais render . --sample --out preview
-      Previews the source directory's outputs from sample data.
-  metais render . --sample --set /incident/stage=final --seed 7 --out preview
-      Previews them with one value pinned and other generated values.
-  metais render report.metais --data data --out site --overwrite
-      Renders into the existing directory site, replacing the files the render
-      writes there and leaving every other one.

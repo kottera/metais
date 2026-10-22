@@ -26,13 +26,13 @@ type unpackResult struct {
 // The steps unpack's refusals point to. No path the caller gave is
 // echoed: the directory is <dir> (ADR-008 D14 item 2).
 var (
-	nextUnpackEmpty = Next{Run: "metais unpack <package> --to <dir>",
+	nextUnpackEmpty = Next{Run: "metais unpack <package> --out <dir>",
 		Why: "Unpacks into a directory that is empty or does not exist yet; nothing in a directory is ever overwritten."}
-	nextUnpackAgain = Next{Run: "metais unpack <package> --to <dir>",
+	nextUnpackAgain = Next{Run: "metais unpack <package> --out <dir>",
 		Why: "Unpacks again, into an empty directory, once the cause is fixed."}
 	nextUnpackPacked = Next{Run: "metais inspect <package>",
 		Why: "Reads the source directory as it is: it is already the editable tree unpack writes."}
-	nextUnpackWrite = Next{Run: "metais unpack <package> --to <dir>",
+	nextUnpackWrite = Next{Run: "metais unpack <package> --out <dir>",
 		Why: "Writes the files listed; the dry run wrote nothing."}
 )
 
@@ -41,7 +41,7 @@ func unpackDeclaration() *Command {
 	refusals := packageRefusals("unpack")
 	for i := range refusals {
 		if refusals[i].Next == nextInspectAgain {
-			refusals[i].Next = Next{Run: "metais unpack <package> --to <dir>", Why: "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."}
+			refusals[i].Next = Next{Run: "metais unpack <package> --out <dir>", Why: "Unpacks the package once it is fixed or replaced; nothing of a refused package is written."}
 		}
 	}
 	refusals = append(refusals,
@@ -53,7 +53,7 @@ func unpackDeclaration() *Command {
 	)
 	return &Command{
 		Name: "unpack", Group: "Authoring",
-		Synopsis:    "unpack <package> --to <dir> [--dry-run] [--limit <name>=<value>]... [--json]",
+		Synopsis:    "unpack <package> --out <dir> [--dry-run] [--limit <name>=<value>]... [--json]",
 		Description: "Write a packed package's source directory, to edit it.",
 		Detail: "Writes every entry of the packed package into <dir>, as the source directory it was " +
 			"packed from: the manifest as its author wrote it, the inputs, templates, references, " +
@@ -65,7 +65,7 @@ func unpackDeclaration() *Command {
 			"digests included, and refuses a package that fails, writing nothing. It does not run " +
 			"check: a package with check errors is the one an author needs to unpack and fix. A " +
 			"source directory is refused: it is already what unpack would write.\n\n" +
-			"--to is required. A <dir> that does not exist is created, with its missing parents, " +
+			"--out is required. A <dir> that does not exist is created, with its missing parents, " +
 			"by writing beside it and renaming the whole directory into place, so a failed write " +
 			"leaves nothing. An existing <dir> must be empty, apart from names beginning with . " +
 			"(such as .git) other than .compiled, and files ending .metais; it is written in place, " +
@@ -80,7 +80,7 @@ func unpackDeclaration() *Command {
 		Role:     finding.RoleAuthoring,
 		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file; - is refused, since a package is read with random access."}},
 		Flags: []args.Flag{
-			{Name: "to", Value: "<dir>", Required: true, Description: "The directory to write the source directory into: one that does not exist yet, or an empty one."},
+			{Name: "out", Value: "<dir>", Required: true, Description: "The directory to write the source directory into: one that does not exist yet, or an empty one."},
 			{Name: "dry-run", Description: "List the files unpack would write, and write nothing."},
 			limitFlag,
 			failOnFlag,
@@ -89,9 +89,9 @@ func unpackDeclaration() *Command {
 		Prints:   "The files written, or with --dry-run that would be, relative to <dir>, in the order written.",
 		Refusals: refusals,
 		Examples: []Example{
-			{"metais unpack report-1.0.0.metais --to report", "Writes the package's source directory into the new directory report."},
-			{"metais unpack report-1.0.0.metais --to . --json", "Writes it into the current directory, which must be empty, and lists the files as one metais.unpack/1 document."},
-			{"metais unpack report-1.0.0.metais --to report --dry-run", "Lists the files it would write into report, and writes nothing."},
+			{"metais unpack report-1.0.0.metais --out report", "Writes the package's source directory into the new directory report."},
+			{"metais unpack report-1.0.0.metais --out . --json", "Writes it into the current directory, which must be empty, and lists the files as one metais.unpack/1 document."},
+			{"metais unpack report-1.0.0.metais --out report --dry-run", "Lists the files it would write into report, and writes nothing."},
 		},
 		run: runUnpack,
 	}
@@ -106,14 +106,14 @@ func runUnpack(s *session, p args.Parsed) outcome {
 		return s.refuseWith(finding.New(finding.CodeUsagePackageFromStdin, invocation, nil,
 			finding.Params{"argument": finding.Int(int64(s.line.at[p.OperandArgs[0]] + 1))}))
 	}
-	to, _ := p.Value("to")
+	to, _ := p.Value("out")
 	if to == "" {
 		// An empty name names no directory; it is never read as the
 		// working directory.
-		i, _ := p.Arg("to")
+		i, _ := p.Arg("out")
 		return s.refuseWith(finding.New(finding.CodeUsageBadValue, invocation, nil, finding.Params{
 			"argument": finding.Int(int64(s.line.at[i] + 1)),
-			"flag":     finding.String("--to"),
+			"flag":     finding.String("--out"),
 			"reason":   finding.String("value_not_allowed"),
 		}))
 	}

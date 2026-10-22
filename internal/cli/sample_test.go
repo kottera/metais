@@ -74,7 +74,7 @@ func equalTrees(a, b map[string]string) bool {
 	return true
 }
 
-// TestSampleTo is W5-10.1 and W5-10.6: sample --to writes a data directory
+// TestSampleTo is W5-10.1 and W5-10.6: sample --out writes a data directory
 // in each input's first form, its JSON result names the options and every
 // file relative to the destination, the data renders under render --data,
 // and what render --sample previews is exactly what that render gives.
@@ -82,7 +82,7 @@ func TestSampleTo(t *testing.T) {
 	root := testenv.Dir(t)
 	pkg := samplePackage(t, root)
 	data := filepath.Join(root, "data")
-	r := runTool(t, "sample", pkg, "--to", data, "--json")
+	r := runTool(t, "sample", pkg, "--out", data, "--json")
 	if r.status != 0 || !r.doc.OK {
 		t.Fatalf("metais sample: status %d, %s", r.status, r.stdout)
 	}
@@ -123,7 +123,7 @@ func TestSampleTo(t *testing.T) {
 	}
 
 	// Human mode lists the files on standard output.
-	r = runTool(t, "sample", pkg, "--to", filepath.Join(root, "human"))
+	r = runTool(t, "sample", pkg, "--out", filepath.Join(root, "human"))
 	if r.status != 0 || !strings.HasPrefix(r.stdout, "Wrote 6 files:\n  events/001.yaml\n") {
 		t.Errorf("human: status %d, stdout %q", r.status, r.stdout)
 	}
@@ -137,7 +137,7 @@ func TestSampleOptions(t *testing.T) {
 	pkg := samplePackage(t, root)
 	run := func(dir string, extra ...string) map[string]string {
 		t.Helper()
-		r := runTool(t, append([]string{"sample", pkg, "--to", filepath.Join(root, dir), "--json"}, extra...)...)
+		r := runTool(t, append([]string{"sample", pkg, "--out", filepath.Join(root, dir), "--json"}, extra...)...)
 		if r.status != 0 {
 			t.Fatalf("metais sample %q: %s", extra, r.stdout)
 		}
@@ -172,7 +172,7 @@ func TestSampleFixedPoints(t *testing.T) {
 	root := testenv.Dir(t)
 	pkg := samplePackage(t, root)
 	data := filepath.Join(root, "data")
-	r := runTool(t, "sample", pkg, "--to", data, "--set", "/vendor/kind=company", "--set-json", `/vendor/name="Acme"`, "--json")
+	r := runTool(t, "sample", pkg, "--out", data, "--set", "/vendor/kind=company", "--set-json", `/vendor/name="Acme"`, "--json")
 	if r.status != 0 {
 		t.Fatalf("metais sample: %s", r.stdout)
 	}
@@ -193,7 +193,7 @@ func TestSampleFixedPoints(t *testing.T) {
 	// The lines are a CSV table; an object given for them is kept, and no
 	// CSV can hold it.
 	nothing := filepath.Join(root, "nothing")
-	r = runTool(t, "sample", pkg, "--to", nothing, "--set-json", "/lines/0/qty=0", "--json")
+	r = runTool(t, "sample", pkg, "--out", nothing, "--set-json", "/lines/0/qty=0", "--json")
 	if r.status != 1 || len(r.doc.Findings) != 1 || r.doc.Findings[0].Code != "schema.sample_invalid" || r.doc.Findings[0].Params["code"] != "form" {
 		t.Errorf("an object for a CSV input: status %d, %s", r.status, r.stdout)
 	}
@@ -222,7 +222,7 @@ func TestSampleOverwrite(t *testing.T) {
 		}
 	}
 	before := hostTree(t, data)
-	r := runTool(t, "sample", pkg, "--to", data, "--json")
+	r := runTool(t, "sample", pkg, "--out", data, "--json")
 	if r.status != 5 || len(r.doc.Findings) != 1 || r.doc.Findings[0].Code != "output.destination.not_empty" {
 		t.Fatalf("without --overwrite: status %d, %s", r.status, r.stdout)
 	}
@@ -236,11 +236,11 @@ func TestSampleOverwrite(t *testing.T) {
 	if err := os.MkdirAll(filepath.Join(hidden, ".git"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if r := runTool(t, "sample", pkg, "--to", hidden, "--json"); r.status != 5 || r.doc.Findings[0].Code != "output.destination.not_empty" {
+	if r := runTool(t, "sample", pkg, "--out", hidden, "--json"); r.status != 5 || r.doc.Findings[0].Code != "output.destination.not_empty" {
 		t.Errorf("a hidden entry: status %d, %s", r.status, r.stdout)
 	}
 
-	r = runTool(t, "sample", pkg, "--to", data, "--overwrite", "--json")
+	r = runTool(t, "sample", pkg, "--out", data, "--overwrite", "--json")
 	if r.status != 0 {
 		t.Fatalf("with --overwrite: %s", r.stdout)
 	}
@@ -271,7 +271,7 @@ func TestSampleOverwrite(t *testing.T) {
 	if err := os.Symlink(filepath.Join(root, "elsewhere"), filepath.Join(linked, "vendor.json")); err != nil {
 		t.Skipf("no symbolic link here: %v", err)
 	}
-	r = runTool(t, "sample", pkg, "--to", linked, "--overwrite", "--json")
+	r = runTool(t, "sample", pkg, "--out", linked, "--overwrite", "--json")
 	if r.status != 5 || len(r.doc.Findings) != 1 || r.doc.Findings[0].Code != "output.destination.link" || r.doc.Findings[0].Params["path"] != "vendor.json" {
 		t.Errorf("a link in the way: status %d, %s", r.status, r.stdout)
 	}
@@ -291,7 +291,7 @@ func TestSampleEmptyCollection(t *testing.T) {
 	want := []string{"events/", "lines.csv", "summary.txt", "vendor.json"}
 	for _, dir := range []string{"new", "empty", "full"} {
 		data := filepath.Join(root, dir)
-		line := []string{"sample", pkg, "--to", data, "--items", "0", "--json"}
+		line := []string{"sample", pkg, "--out", data, "--items", "0", "--json"}
 		if dir != "new" {
 			if err := os.Mkdir(data, 0o755); err != nil {
 				t.Fatal(err)
@@ -342,7 +342,7 @@ func TestSampleEmptyCollection(t *testing.T) {
 	}
 	before := hostTree(t, in)
 	for _, dry := range []bool{true, false} {
-		line := []string{"sample", pkg, "--to", in, "--items", "0", "--overwrite", "--json"}
+		line := []string{"sample", pkg, "--out", in, "--items", "0", "--overwrite", "--json"}
 		if dry {
 			line = append(line, "--dry-run")
 		}
@@ -371,7 +371,7 @@ func TestSampleReportsEveryRefusal(t *testing.T) {
 	}
 	before := hostTree(t, data)
 	for _, dry := range []bool{false, true} {
-		line := []string{"sample", pkg, "--to", data, "--overwrite", "--json"}
+		line := []string{"sample", pkg, "--out", data, "--overwrite", "--json"}
 		if dry {
 			line = append(line, "--dry-run")
 		}
@@ -402,10 +402,10 @@ func TestSampleReportsEveryRefusal(t *testing.T) {
 func TestSampleHumanCount(t *testing.T) {
 	pkg, _ := declarationPackage(t, "  - id: t\n    template: t.txt.liquid\n")
 	to := filepath.Join(testenv.Dir(t), "data")
-	if r := runTool(t, "sample", pkg, "--to", to, "--dry-run"); r.status != 0 || r.stdout != "Would write 1 file:\n  pages.json\n" {
+	if r := runTool(t, "sample", pkg, "--out", to, "--dry-run"); r.status != 0 || r.stdout != "Would write 1 file:\n  pages.json\n" {
 		t.Errorf("dry run: status %d, %q", r.status, r.stdout)
 	}
-	if r := runTool(t, "sample", pkg, "--to", to); r.status != 0 || r.stdout != "Wrote 1 file:\n  pages.json\n" {
+	if r := runTool(t, "sample", pkg, "--out", to); r.status != 0 || r.stdout != "Wrote 1 file:\n  pages.json\n" {
 		t.Errorf("status %d, %q", r.status, r.stdout)
 	}
 }
@@ -478,7 +478,7 @@ func TestSampleDryRun(t *testing.T) {
 	pkg := samplePackage(t, root)
 	before := hostTree(t, root)
 	for _, line := range [][]string{
-		{"sample", pkg, "--to", filepath.Join(root, "data"), "--dry-run", "--json"},
+		{"sample", pkg, "--out", filepath.Join(root, "data"), "--dry-run", "--json"},
 		{"sample", pkg, "--example", "dry", "--dry-run", "--json"},
 	} {
 		r := runTool(t, line...)
@@ -487,7 +487,7 @@ func TestSampleDryRun(t *testing.T) {
 			t.Errorf("metais %q: status %d, %+v", line, r.status, res)
 		}
 	}
-	r := runTool(t, "sample", pkg, "--to", filepath.Join(root, "data"), "--dry-run")
+	r := runTool(t, "sample", pkg, "--out", filepath.Join(root, "data"), "--dry-run")
 	if !strings.HasPrefix(r.stdout, "Would write 6 files:\n") {
 		t.Errorf("human: %q", r.stdout)
 	}
@@ -511,8 +511,8 @@ func TestSampleDryRun(t *testing.T) {
 		line []string
 		code string
 	}{
-		{[]string{"sample", pkg, "--to", full, "--dry-run"}, "output.destination.not_empty"},
-		{[]string{"sample", pkg, "--to", full, "--overwrite", "--dry-run"}, "output.destination.not_regular_file"},
+		{[]string{"sample", pkg, "--out", full, "--dry-run"}, "output.destination.not_empty"},
+		{[]string{"sample", pkg, "--out", full, "--overwrite", "--dry-run"}, "output.destination.not_regular_file"},
 		{[]string{"sample", pkg, "--example", "taken", "--dry-run"}, "output.destination.nothing_written"},
 	} {
 		r := runTool(t, append(tc.line, "--json")...)
@@ -538,16 +538,16 @@ func TestSampleRefusals(t *testing.T) {
 		code   string
 	}{
 		{[]string{"sample", pkg}, 3, "usage.missing_operand"},
-		{[]string{"sample", pkg, "--to", to, "--example", "x"}, 3, "usage.flag_excluded"},
+		{[]string{"sample", pkg, "--out", to, "--example", "x"}, 3, "usage.flag_excluded"},
 		{[]string{"sample", pkg, "--example", "x", "--overwrite"}, 3, "usage.flag_excluded"},
-		{[]string{"sample", pkg, "--to", ""}, 3, "usage.bad_value"},
+		{[]string{"sample", pkg, "--out", ""}, 3, "usage.bad_value"},
 		{[]string{"sample", pkg, "--example", "Not-A-Name"}, 3, "usage.bad_value"},
-		{[]string{"sample", pkg, "--to", to, "--seed", "18446744073709551616"}, 3, "usage.bad_value"},
-		{[]string{"sample", pkg, "--to", to, "--seed=+1"}, 3, "usage.bad_value"},
-		{[]string{"sample", pkg, "--to", to, "--items", "-1"}, 3, "usage.bad_value"},
-		{[]string{"sample", pkg, "--to", to, "--optional", "some"}, 3, "usage.bad_value"},
-		{[]string{"sample", "-", "--to", to}, 3, "usage.package_from_stdin"},
-		{[]string{"sample", pkg, "--to", to, "--set", "/nothing=1"}, 1, "input.set_pointer_invalid"},
+		{[]string{"sample", pkg, "--out", to, "--seed", "18446744073709551616"}, 3, "usage.bad_value"},
+		{[]string{"sample", pkg, "--out", to, "--seed=+1"}, 3, "usage.bad_value"},
+		{[]string{"sample", pkg, "--out", to, "--items", "-1"}, 3, "usage.bad_value"},
+		{[]string{"sample", pkg, "--out", to, "--optional", "some"}, 3, "usage.bad_value"},
+		{[]string{"sample", "-", "--out", to}, 3, "usage.package_from_stdin"},
+		{[]string{"sample", pkg, "--out", to, "--set", "/nothing=1"}, 1, "input.set_pointer_invalid"},
 		{[]string{"render", pkg, "--sample", "--data", to, "--out", to}, 3, "usage.flag_excluded"},
 		{[]string{"render", pkg, "--seed", "1", "--out", to}, 3, "usage.flag_requires"},
 		{[]string{"render", pkg, "--optional", "none", "--out", to}, 3, "usage.flag_requires"},
@@ -576,7 +576,7 @@ func TestSampleUnsatisfiable(t *testing.T) {
 		t.Fatal(err)
 	}
 	to := filepath.Join(root, "data")
-	for _, line := range [][]string{{"sample", pkg, "--to", to}, {"render", pkg, "--sample", "--out", to}} {
+	for _, line := range [][]string{{"sample", pkg, "--out", to}, {"render", pkg, "--sample", "--out", to}} {
 		r := runTool(t, append(line, "--json")...)
 		if r.status != 1 || !slices.Equal(r.codes(), []string{"schema.sample_unsatisfiable", "schema.sample_unsatisfiable"}) {
 			t.Errorf("metais %q: status %d, %s", line, r.status, r.stdout)
@@ -599,7 +599,7 @@ func TestSampleUnsatisfiable(t *testing.T) {
 		t.Errorf("render --sample of a template defect: status %d, %s", r.status, r.stdout)
 	}
 	data := filepath.Join(root, "broken-data")
-	if r := runTool(t, "sample", broken, "--to", data); r.status != 0 {
+	if r := runTool(t, "sample", broken, "--out", data); r.status != 0 {
 		t.Fatalf("metais sample: %s", r.stderr)
 	}
 	if r := runTool(t, "render", broken, "--data", data, "--out", to, "--json"); r.status != 4 {
@@ -621,7 +621,7 @@ func TestSampleWriteFailed(t *testing.T) {
 		f.Close()
 		t.Skip("this process writes into a directory of mode 0555")
 	}
-	r := runTool(t, "sample", pkg, "--to", filepath.Join(parent, "data"), "--json")
+	r := runTool(t, "sample", pkg, "--out", filepath.Join(parent, "data"), "--json")
 	if r.status != 5 || r.codes()[0] != "output.destination.nothing_written" {
 		t.Errorf("status %d, %s", r.status, r.stdout)
 	}

@@ -121,7 +121,7 @@ Next: metais inspect <package>
   template.tag_context
   template.unknown_filter
 
-Next: metais extract <package> <glob> --to <dir>
+Next: metais extract <package> <glob> --out <dir>
       Extracts again once what stands in the way in <dir> is moved or removed,
       or into a directory that does not exist yet.
   output.destination.case_variant
@@ -129,14 +129,14 @@ Next: metais extract <package> <glob> --to <dir>
   output.destination.not_directory
   output.destination.not_regular_file
 
-Next: metais extract <package> <glob> --to <dir>
+Next: metais extract <package> <glob> --out <dir>
       Writes into a directory that does not exist yet, or an empty one.
   output.destination.commit_failed
   output.destination.nothing_written
   output.destination.staging_exists
   output.destination.write_failed
 
-Next: metais extract <package> <glob> --to <dir> --overwrite
+Next: metais extract <package> <glob> --out <dir> --overwrite
       Writes into the directory, replacing a file at a path extract writes and
       deleting nothing.
   output.destination.not_empty

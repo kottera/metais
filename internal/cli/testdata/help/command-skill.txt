@@ -5,6 +5,22 @@ Usage:
   metais skill [--harness <name>]... [--dir <dir>] [--overwrite] [--dry-run]
                [--print] [--json]
 
+Examples:
+  metais skill --harness claude
+      Writes .claude/skills/metais/SKILL.md beneath the current directory, for
+      Claude Code.
+  metais skill
+      Writes the skill for the harness the current directory shows, .claude/ or
+      .agents/.
+  metais skill --harness claude --harness codex
+      Writes it for Claude Code and for the harnesses that read .agents/skills.
+  metais skill --harness claude --dir ~
+      Writes it to ~/.claude/skills, for every project of yours.
+  metais skill --dry-run
+      Reports whether the skill is current, and writes nothing.
+  metais skill --print
+      Prints the skill, for a harness that reads skills from somewhere else.
+
 Writes SKILL.md, the skill a coding agent's harness loads before its first
 command, to .claude/skills/metais/ for Claude Code, or to .agents/skills/metais/
 for Codex, Gemini CLI, Cursor and OpenCode, beneath the directory --dir names:
@@ -102,19 +118,3 @@ Refusals:
       An argument that is not a flag the command accepts, an abbreviated flag,
       or one-letter aliases written together.
       Next: metais skill --help
-
-Examples:
-  metais skill --harness claude
-      Writes .claude/skills/metais/SKILL.md beneath the current directory, for
-      Claude Code.
-  metais skill
-      Writes the skill for the harness the current directory shows, .claude/ or
-      .agents/.
-  metais skill --harness claude --harness codex
-      Writes it for Claude Code and for the harnesses that read .agents/skills.
-  metais skill --harness claude --dir ~
-      Writes it to ~/.claude/skills, for every project of yours.
-  metais skill --dry-run
-      Reports whether the skill is current, and writes nothing.
-  metais skill --print
-      Prints the skill, for a harness that reads skills from somewhere else.

@@ -138,6 +138,6 @@ Next: metais ls <package> <path>
       Lists the entries beneath the directory.
   usage.is_a_directory
 
-Next: metais extract <package> <path> --to <dir>
+Next: metais extract <package> <path> --out <dir>
       Writes the entry, as stored, to a file beneath a new directory.
   usage.not_text

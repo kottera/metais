@@ -27,7 +27,7 @@ import (
 // existing-destination detector runs it: files are the paths it writes
 // beneath the output directory, "/"-separated, dirs the empty directories
 // it creates there, and run makes the write into out under faults. A command that writes into an existing directory
-// under ADR-005 Amendment A1 — render, extract --overwrite, sample --to,
+// under ADR-005 Amendment A1 — render, extract --overwrite, sample --out,
 // test --update — is run through the detector by giving it one of these,
 // whose run invokes the command with out as its destination.
 type existingWrite struct {
@@ -74,7 +74,7 @@ func runExtractOverwrite(t *testing.T, out string, faults fault.Set) error {
 		t.Fatal(err)
 	}
 	args := append([]string{"extract", "--json", pkg}, extractFiles...)
-	args = append(args, "--to", out, "--overwrite")
+	args = append(args, "--out", out, "--overwrite")
 	var stdout, stderr bytes.Buffer
 	cli.Run(context.Background(), cli.Invocation{
 		Args: args, Stdin: strings.NewReader(""), Stdout: &stdout, Stderr: &stderr,
