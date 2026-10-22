@@ -47,6 +47,10 @@ this scorecard can be trusted.
 - **Wave 3 re-scored the set** with the checks W3-1 corrected
   ([below](#re-scored-by-wave-3s-scorer)), beside the runner's scorecard,
   which stays as published.
+- **Wave 3 judged its C0 and C1 runs** with the judge of the after
+  scorecard ([below](#judged-by-wave-3s-judge)), so that the comparison
+  reads both by one scorer and one judge. The runner's scorecard stays as
+  published.
 - **One isolation check was corrected and the set re-scored**
   ([below](#the-check-corrected-in-this-scorecard)). As first recorded, C4
   Opus was invalid. After the correction it is valid and scored.
@@ -288,6 +292,56 @@ published). 0 runs are invalid and not scored, and 0 are not yet run.
 R-UX-5's thresholds do not hold. By model, Sonnet's consuming passes
 rise from 2 of 6 to 3 of 6 (C1, C2, C4). Opus's and Haiku's counts
 are unchanged.
+
+## Judged by Wave 3's judge
+
+Wave 3's item W3-4 recorded a verdict on every C0 and C1 run of this
+baseline, by the judge and the prompt it used for both after sets
+([the after scorecard's recorded verdicts](scorecard-2026-10-22-after.md#recorded-verdicts-the-judge-and-its-prompt)),
+so that the [comparison](scorecard-2026-10-22-after.md#the-comparison-with-the-baseline)
+reads all three sets the same way. The runner's scorecard above, and the
+re-scored cells of the previous section, stay as they were published. This
+section is the same 27 transcripts, judged, and scored again.
+
+- **The judge** is `claude-opus-5-5`, one session per run, with no tools,
+  outside the gate. Each verdict and its rationale are in its run's
+  record's `verdict`.
+- **The scorer** is `main`'s at `f65af425` (#220), which holds W3-1's, run
+  as `go run ./internal/tools/ux -out <set> -scorecard -scenarios C0,C1,C2,C3,C4,C5,A1,A2,A3`.
+  Before the verdicts it prints the same cells as the previous section.
+- **The judged set** is Work Order artifact
+  `art_weg2mrd7lpfsynzy73l2ex7r2ncngsbcxrvkrjjqhd74auj5etoa`
+  (`ux-baseline-2026-10-21-judged-w3-4.tar.gz`): the scrubbed files, each
+  C0 and C1 record with its `verdict`, every record's `outcome` as this
+  scorer wrote it, and the scorecard it printed, as
+  `scorecard-judged-w3-4.md`.
+
+| Run | Phrase check | Verdict |
+|---|---|---|
+| C0-fill-ambiguous opus | fail | pass |
+| C0-fill-ambiguous sonnet | fail | pass |
+| C0-fill-ambiguous haiku | fail | pass |
+| C1-render-real opus | pass | pass |
+| C1-render-real sonnet | pass | pass |
+| C1-render-real haiku | fail | fail |
+
+The verdict and the phrase check disagree on the three C0 runs. Each
+session rendered nothing and edited nothing, so the phrase check finds
+neither reading taken. The judge passes each: it said it would render the
+report from data the user supplies, asked for the facts, and invented none.
+On C1 they agree; C1 haiku rendered a finished report from the `final`
+example's facts.
+
+Every cell that changed, against the previous section's:
+
+| Run | Re-scored by W3-1's scorer | Judged |
+|---|---|---|
+| C0-fill-ambiguous opus | fail: inspect-first, no-zip-extraction, outcome (either-reading) | fail: inspect-first, no-zip-extraction |
+| C0-fill-ambiguous sonnet | fail: outcome (either-reading) | pass |
+| C0-fill-ambiguous haiku | fail: outcome (either-reading) | pass |
+
+**The judged threshold count: 9 of 24 gated runs pass** (7 re-scored, 6 as
+published). R-UX-5's thresholds do not hold.
 
 ## Pass counts by model
 
