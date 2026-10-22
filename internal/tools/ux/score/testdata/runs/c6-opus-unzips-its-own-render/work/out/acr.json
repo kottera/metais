@@ -1,0 +1,416 @@
+{
+  "format": "metais-example-acr/1",
+  "product": {
+    "name": "ShiftHarbor",
+    "version": "3.1",
+    "description": "A web application that community food banks use to publish volunteer shifts, let volunteers sign up for and swap shifts, and track hours served. This report covers the volunteer portal and the coordinator dashboard."
+  },
+  "vendor": {
+    "name": "Lanternfish Civic Software (fictional)",
+    "contact": "Accessibility office",
+    "email": "a11y@lanternfish.example.org",
+    "website": "https://lanternfish.example.org/accessibility"
+  },
+  "date": "2026-10-15",
+  "edition": "wcag",
+  "methods": "Tested by Lanternfish's in-house accessibility team between 14 September and 9 October 2026 against ShiftHarbor 3.1 on the staging environment.\nManual testing: keyboard-only operation; NVDA 2026.3 with Firefox 141 and JAWS 2026 with Chrome 140 on Windows 11; VoiceOver with Safari 19 on macOS 16 and iOS 20; TalkBack with Chrome on Android 16; 200% and 400% browser zoom; Windows high-contrast mode.\nAutomated testing: axe-core 4.11 on every page template, and a colour-contrast analyser on the design tokens.\nIn scope: sign-in, the shift calendar, shift sign-up and swap, the hours log, profile settings and the coordinator dashboard. Out of scope: the CSV export files and the printable rota.",
+  "notes": "This report, its product, its vendor and its findings are fictional, written to illustrate the template.\nThe calendar drag-and-drop and dashboard chart issues described below are scheduled to be fixed in release 3.2.",
+  "tables": [
+    {
+      "standard": "wcag",
+      "source": {
+        "title": "Web Content Accessibility Guidelines (WCAG) 2.2",
+        "url": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/",
+        "status": "W3C Recommendation 12 December 2024",
+        "notice": "Copyright © 2020-2024 World Wide Web Consortium. W3C® liability, trademark and document use rules apply."
+      },
+      "criteria": [
+        {
+          "criterion": "1.1.1",
+          "label": "Non-text Content",
+          "wcag_level": "A",
+          "conformance": "Partially Supports",
+          "remarks": "Icons and images have text alternatives. The hours-served chart on the coordinator dashboard has no text alternative or data table, so its figures are not available to screen reader users."
+        },
+        {
+          "criterion": "1.2.1",
+          "label": "Audio-only and Video-only (Prerecorded)",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no audio-only or video-only content."
+        },
+        {
+          "criterion": "1.2.2",
+          "label": "Captions (Prerecorded)",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no prerecorded video."
+        },
+        {
+          "criterion": "1.2.3",
+          "label": "Audio Description or Media Alternative (Prerecorded)",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no prerecorded video."
+        },
+        {
+          "criterion": "1.2.4",
+          "label": "Captions (Live)",
+          "wcag_level": "AA",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no live audio or video."
+        },
+        {
+          "criterion": "1.2.5",
+          "label": "Audio Description (Prerecorded)",
+          "wcag_level": "AA",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no prerecorded video."
+        },
+        {
+          "criterion": "1.3.1",
+          "label": "Info and Relationships",
+          "wcag_level": "A",
+          "conformance": "Partially Supports",
+          "remarks": "Headings, lists, landmarks and form labels are marked up correctly. The shift calendar's month grid is built from generic elements without table or grid semantics, so day and column headers are not announced."
+        },
+        {
+          "criterion": "1.3.2",
+          "label": "Meaningful Sequence",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "The reading order in the markup matches the visual order on every page tested."
+        },
+        {
+          "criterion": "1.3.3",
+          "label": "Sensory Characteristics",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Instructions do not rely on shape, position or sound alone; for example, \"Use the Swap button in the shift details\" names the control."
+        },
+        {
+          "criterion": "1.3.4",
+          "label": "Orientation",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Every page works in portrait and landscape orientation."
+        },
+        {
+          "criterion": "1.3.5",
+          "label": "Identify Input Purpose",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Profile and sign-up fields carry the matching autocomplete values (name, email, tel, street-address)."
+        },
+        {
+          "criterion": "1.4.1",
+          "label": "Use of Color",
+          "wcag_level": "A",
+          "conformance": "Partially Supports",
+          "remarks": "Most status is shown in text as well as colour. On the shift calendar, full shifts are distinguished from open shifts by colour alone."
+        },
+        {
+          "criterion": "1.4.2",
+          "label": "Audio Control",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "The product plays no audio."
+        },
+        {
+          "criterion": "1.4.3",
+          "label": "Contrast (Minimum)",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Text meets a contrast ratio of at least 4.5:1 (3:1 for large text) in the default theme."
+        },
+        {
+          "criterion": "1.4.4",
+          "label": "Resize Text",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Text resizes to 200% without loss of content or function."
+        },
+        {
+          "criterion": "1.4.5",
+          "label": "Images of Text",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "The product uses no images of text other than the logo."
+        },
+        {
+          "criterion": "1.4.10",
+          "label": "Reflow",
+          "wcag_level": "AA",
+          "conformance": "Partially Supports",
+          "remarks": "Pages reflow at 320 CSS pixels without horizontal scrolling, except the coordinator dashboard's roster table, which scrolls in two directions."
+        },
+        {
+          "criterion": "1.4.11",
+          "label": "Non-text Contrast",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Form field borders, focus indicators and icons meet a contrast ratio of at least 3:1."
+        },
+        {
+          "criterion": "1.4.12",
+          "label": "Text Spacing",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "No content is lost or clipped when text spacing is overridden as the criterion describes."
+        },
+        {
+          "criterion": "1.4.13",
+          "label": "Content on Hover or Focus",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Tooltips stay visible while hovered, can be dismissed with Escape, and remain until the pointer or focus leaves."
+        },
+        {
+          "criterion": "2.1.1",
+          "label": "Keyboard",
+          "wcag_level": "A",
+          "conformance": "Partially Supports",
+          "remarks": "All functions work from a keyboard except moving a shift on the coordinator calendar, which needs drag and drop. Coordinators can move a shift from the keyboard through the shift's Edit form instead, but the drag handle itself is not keyboard operable."
+        },
+        {
+          "criterion": "2.1.2",
+          "label": "No Keyboard Trap",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "No keyboard trap was found; focus leaves every dialog with Escape or the Close button."
+        },
+        {
+          "criterion": "2.1.4",
+          "label": "Character Key Shortcuts",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "The product has no single-character keyboard shortcuts."
+        },
+        {
+          "criterion": "2.2.1",
+          "label": "Timing Adjustable",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "The session warns two minutes before it times out after 30 minutes of inactivity, and lets the user extend it with a single action."
+        },
+        {
+          "criterion": "2.2.2",
+          "label": "Pause, Stop, Hide",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "The product has no moving or auto-updating content other than the sign-up confirmation banner, which stays until dismissed."
+        },
+        {
+          "criterion": "2.3.1",
+          "label": "Three Flashes or Below Threshold",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "No content flashes."
+        },
+        {
+          "criterion": "2.4.1",
+          "label": "Bypass Blocks",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "A Skip to main content link is the first focusable element on every page."
+        },
+        {
+          "criterion": "2.4.2",
+          "label": "Page Titled",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Every page has a title that names the page and the product."
+        },
+        {
+          "criterion": "2.4.3",
+          "label": "Focus Order",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Focus moves in a logical order; dialogs take focus on opening and return it to the triggering control on closing."
+        },
+        {
+          "criterion": "2.4.4",
+          "label": "Link Purpose (In Context)",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Link text, together with its context, says where each link goes."
+        },
+        {
+          "criterion": "2.4.5",
+          "label": "Multiple Ways",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Pages are reached through the main navigation, the search box and the site map."
+        },
+        {
+          "criterion": "2.4.6",
+          "label": "Headings and Labels",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Headings and labels describe their topic or purpose."
+        },
+        {
+          "criterion": "2.4.7",
+          "label": "Focus Visible",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Every focusable element shows a visible focus outline."
+        },
+        {
+          "criterion": "2.4.11",
+          "label": "Focus Not Obscured (Minimum)",
+          "wcag_level": "AA",
+          "conformance": "Partially Supports",
+          "remarks": "On narrow screens, the sticky footer bar can hide the focused field at the bottom of the shift sign-up form."
+        },
+        {
+          "criterion": "2.5.1",
+          "label": "Pointer Gestures",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Every multipoint or path-based gesture has a single-pointer alternative."
+        },
+        {
+          "criterion": "2.5.2",
+          "label": "Pointer Cancellation",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Actions run on the up event."
+        },
+        {
+          "criterion": "2.5.3",
+          "label": "Label in Name",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "The accessible names of controls contain their visible labels."
+        },
+        {
+          "criterion": "2.5.4",
+          "label": "Motion Actuation",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "No function is operated by device motion."
+        },
+        {
+          "criterion": "2.5.7",
+          "label": "Dragging Movements",
+          "wcag_level": "AA",
+          "conformance": "Partially Supports",
+          "remarks": "Moving a shift on the coordinator calendar needs a dragging movement. The shift's Edit form offers a single-pointer alternative, but the calendar gives no hint of it."
+        },
+        {
+          "criterion": "2.5.8",
+          "label": "Target Size (Minimum)",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Targets are at least 24 by 24 CSS pixels or have enough spacing."
+        },
+        {
+          "criterion": "3.1.1",
+          "label": "Language of Page",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Every page declares its language."
+        },
+        {
+          "criterion": "3.1.2",
+          "label": "Language of Parts",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Passages in another language, such as the Spanish welcome text, are marked with their language."
+        },
+        {
+          "criterion": "3.2.1",
+          "label": "On Focus",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Receiving focus does not change the context."
+        },
+        {
+          "criterion": "3.2.2",
+          "label": "On Input",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Changing a setting does not change the context until the user selects Save."
+        },
+        {
+          "criterion": "3.2.3",
+          "label": "Consistent Navigation",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "The navigation appears in the same order on every page."
+        },
+        {
+          "criterion": "3.2.4",
+          "label": "Consistent Identification",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Components with the same function are labelled the same way throughout."
+        },
+        {
+          "criterion": "3.2.6",
+          "label": "Consistent Help",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "The Help link appears in the same place in the header on every page."
+        },
+        {
+          "criterion": "3.3.1",
+          "label": "Error Identification",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Errors are described in text next to the field, and summarised at the top of the form."
+        },
+        {
+          "criterion": "3.3.2",
+          "label": "Labels or Instructions",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Every field has a visible label, and required fields are marked in text."
+        },
+        {
+          "criterion": "3.3.3",
+          "label": "Error Suggestion",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Error messages suggest a correction where one is known, such as the expected date format."
+        },
+        {
+          "criterion": "3.3.4",
+          "label": "Error Prevention (Legal, Financial, Data)",
+          "wcag_level": "AA",
+          "conformance": "Not Applicable",
+          "remarks": "The product makes no legal commitments or financial transactions, and does not modify or delete user data in storage without confirmation."
+        },
+        {
+          "criterion": "3.3.7",
+          "label": "Redundant Entry",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Information entered earlier in a process, such as the volunteer's contact details, is filled in again or offered for selection."
+        },
+        {
+          "criterion": "3.3.8",
+          "label": "Accessible Authentication (Minimum)",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Sign-in allows password managers and pasting; a one-time email link is offered as an alternative."
+        },
+        {
+          "criterion": "4.1.2",
+          "label": "Name, Role, Value",
+          "wcag_level": "A",
+          "conformance": "Partially Supports",
+          "remarks": "Standard controls expose their name, role and value. The custom shift-type picker does not expose its expanded state or the selected option."
+        },
+        {
+          "criterion": "4.1.3",
+          "label": "Status Messages",
+          "wcag_level": "AA",
+          "conformance": "Partially Supports",
+          "remarks": "Saving the profile announces a status message. Signing up for a shift shows a confirmation banner that screen readers do not announce."
+        }
+      ]
+    }
+  ]
+}
