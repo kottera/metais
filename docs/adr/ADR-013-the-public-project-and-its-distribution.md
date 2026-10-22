@@ -44,8 +44,9 @@ repository is private.
   A1 and A3 never ran it (R-W3-5). A site that search engines index, and
   that says what agents read, is the answer that train deferred here.
 - **Outside contributors.** There is no contributor guide, no code of
-  conduct, no security policy and no CI. The gate runs on Ed's hosts, and
-  his self-hosted runner must never run a stranger's code.
+  conduct, no security policy and no CI. The gate runs on the
+  maintainers' own hosts, and a self-hosted runner must never run a
+  stranger's code.
 - **The maker.** METAIS is Kottera's. Kottera builds tera, a work engine
   for AI agents, and a developer who likes METAIS is someone Kottera would
   like to meet. AGENTS.md's rule "METAIS knows nothing about tera" must
@@ -172,8 +173,8 @@ repository is private.
    **rotated**, not rewritten out of history: once a secret has been in a
    repository, rotation is what makes it harmless.
 3. **The current tree is cleared of internal details:** dogfood host
-   names, the tailnet URL, and notes such as "Ed's laptop" that describe a
-   person's machine rather than a procedure. Older commits keep them. A
+   names, the tailnet URL, and notes that name a person's machine
+   rather than describe a procedure. Older commits keep them. A
    tailnet name is unreachable without the tailnet's authentication.
    **Work Order IDs stay**: they are opaque, and they are the trail that
    ties each change to its decision.
@@ -188,9 +189,9 @@ repository is private.
 ### D5 — CI for outside pull requests
 
 1. **CI runs on GitHub-hosted runners only.** No workflow names a
-   self-hosted runner. Ed's runner is shared with other work and holds
-   credentials, and must never run code from a stranger's pull request. A
-   tripwire test reads every workflow under `.github/workflows/` and fails
+   self-hosted runner. The project's self-hosted runner is shared with
+   other work and holds credentials, and must never run code from a
+   stranger's pull request. A tripwire test reads every workflow under `.github/workflows/` and fails
    on `runs-on` naming `self-hosted`, on the `pull_request_target`
    trigger, and on a workflow without a top-level `permissions` block.
 2. **What CI runs, on `pull_request` and on pushes to `main`:**

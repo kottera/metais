@@ -351,19 +351,19 @@ func TestRefDriverForwardsCrash(t *testing.T) {
 func TestFactAt(t *testing.T) {
 	facts := addPath(addPath([]hostFact{
 		{what: "the host name", value: "buildhost"},
-		{what: "the user name", value: "edwardf"},
-	}, "the real home directory", "/home/edwardf"), "the test's temporary root", "/tmp/TestX123/001")
+		{what: "the user name", value: "someuser"},
+	}, "the real home directory", "/home/someuser"), "the test's temporary root", "/tmp/TestX123/001")
 	for _, c := range []struct{ in, want string }{
 		{"rendered on buildhost.", "the host name"},
 		{"rendered on BuildHost", "the host name"},
 		{"rendered on buildhosts", ""},
-		{"by edwardf", "the user name"},
-		{`{"path":"/home/edwardf/x.json"}`, "the user name"},
-		{"file:///home/edwardf", "the user name"},
+		{"by someuser", "the user name"},
+		{`{"path":"/home/someuser/x.json"}`, "the user name"},
+		{"file:///home/someuser", "the user name"},
 		{"/tmp/TestX123/001/MTSSENTINELPATH-1/work", "the test's temporary root"},
 		{"/tmp/TestX123/0011", ""},
 		{"/tmp/TestX123/001.bak", ""},
-		{"an edwardfs value", ""},
+		{"an someusers value", ""},
 		{"", ""},
 	} {
 		if got := factAt([]byte(c.in), facts); got != c.want {

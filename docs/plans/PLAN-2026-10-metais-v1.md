@@ -1253,7 +1253,7 @@ What changes later waves:
 ## 11b. Wave 5b — the gate's cost and merge friction (inserted by Ed, 2026-10-19)
 
 **Why it exists.** Wave 5's items spent longer in the gate than in their
-work. Seven full gates ran at once on two laptops, packages timed out under
+work. Seven full gates ran at once on two hosts, packages timed out under
 load in items that never touched them, and every sibling merge forced a
 rebase and another full gate. Most rebase conflicts came from file layout,
 not from overlapping code. Ed ruled the fixes by guidance on 2026-10-19,

@@ -1,6 +1,6 @@
 # ADR-010 D15 item 1's benchmarks of ./internal/liquid, in benchstat's input format.
 # sandbox figure, not a budget
-# host: MacBook-Pro, a contended Work Order sandbox
+# host: macOS on Apple silicon (darwin/arm64), a contended Work Order sandbox
 # cpu: Apple M2 Max
 # go version go1.26.9 darwin/arm64
 # GOOS=darwin GOARCH=arm64

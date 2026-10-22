@@ -242,7 +242,7 @@ the items that need it get a `depends_on` edge to it.
 | Approve the kottera.com page's copy, and the landing page's and guides' prose | Wave 2 | Ed | those items' merge | §2 |
 | USPTO and EUIPO knockout search for METAIS, classes 9 and 42 | any time before the flip | Ed | the flip | R-PUB-8. A live conflict in software stops the train. |
 | GitHub settings on `kottera/metais`: Pages from Actions with the custom domain `metais.org`; branch protection on `main`; private vulnerability reporting; approval for first-time contributors' workflows; read-only default token; the `release` environment with Ed as required reviewer, holding `TAP_TOKEN` | Wave 3 | Ed | `v1.0.0-rc.1` | ADR-013 D5 item 4, D7 items 3 and 5. `TAP_TOKEN` is a fine-grained token with contents write on `kottera/homebrew-tap` only. Pages on `kottera/kottera.com` likewise. |
-| DNS: metais.org's apex `A` and `AAAA` records and `www` to Pages; kottera.com's Pages records and its organization verification `TXT` | Wave 3 | Ed (the `kottera-dns` profile on his laptop) | `v1.0.0-rc.1` | `docs/dev/release.md`. Record each change where Kottera records its DNS. Leave every existing record, mail included. |
+| DNS: metais.org's apex `A` and `AAAA` records and `www` to Pages; kottera.com's Pages records and its organization verification `TXT` | Wave 3 | Ed, with Kottera's DNS credentials | `v1.0.0-rc.1` | `docs/dev/release.md`. Record each change where Kottera records its DNS. Leave every existing record, mail included. |
 | Make `kottera/metais` public | Wave 3, after the name search, the settings and Wave 2's verification | Ed | the release candidate | The train's first irreversible act |
 | Approve the `release` environment for `v1.0.0-rc.1` | Wave 3 | Ed | the rehearsal's checks | R-PUB-11 |
 | T-A3, then approve the `release` environment for `v1.0.0` | Wave 4 | Ed | the launch checks | R-PUB-12, R-PUB-14 |
@@ -299,7 +299,8 @@ with nothing published.
   should fail. The scenarios can only run once the site is live, so they
   run in Wave 3. The item finds out whether a nested session in a dispatch
   can reach the network for `curl` and `brew`. If it cannot, the runs
-  become an off-tera act on Ed's host, and the item says so.
+  become an off-tera act run by hand outside the dispatch sandbox, and the
+  item says so.
 
 ## 8. Wave 3 — rehearsal
 

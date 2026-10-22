@@ -184,7 +184,7 @@ Made in the 2026-10-20 session:
     out of quota once, so the runner paces its runs and resumes a partial
     scorecard rather than restarting it.
   - If dispatches ever lose the proxy, the scorecards fall back to an
-    off-tera act on Ed's host (§6).
+    off-tera act, a run by hand outside the dispatch sandbox (§6).
 - **R-UX-8, a run asked for output leaves the package alone** (amended
   2026-10-21). A consuming scenario whose prompt asks for output, such as
   "render this file" or "produce the report from…", fails when the session:
@@ -312,16 +312,16 @@ a number for today's binary.
     `cmd/metais`'s render pipeline after the baseline's build. The
     comparison with the baseline therefore measures more than Wave 2's
     fixes.
-  - **§6's fallback on Ed's host:** it needs a credential route the runner
-    does not build. The proxy held for every run, so the act was not
-    filed.
+  - **§6's fallback, a run by hand outside the dispatch sandbox:** it
+    needs a credential route the runner does not build. The proxy held for
+    every run, so the act was not filed.
 
 ## 6. Out-of-band acts
 
 | Act | When | Who | Before | Notes |
 |---|---|---|---|---|
 | Accept ADR-008 A2 and ADR-009 A5 (the skill), drafted in metais#179 | now | Ed | `01a15ad7`'s build | That Work Order is parked on the question, together with whether to install a `.agents/skills` harness on the dispatch host |
-| Run a scorecard on Ed's host | only if dispatches lose the loopback proxy that R-UX-7 relies on | Ed | that wave's verification | The runner and the scenarios are the Wave 1 item's. Ed runs one command and publishes the scorecard. |
+| Run a scorecard by hand outside the dispatch sandbox | only if dispatches lose the loopback proxy that R-UX-7 relies on | Ed | that wave's verification | The runner and the scenarios are the Wave 1 item's. Ed runs one command and publishes the scorecard. |
 | Add Wave 2's orchestrator to T-A3's `depends_on` | when Wave 2 is filed | the plan orchestrator, or Ed | the v1.0 release | R-UX-1 |
 
 ## 7. Wave 2 — the fixes
@@ -701,7 +701,7 @@ Of §6's rows:
 
 - **Accepting ADR-008 A2 and ADR-009 A5.** Ed did this in #179, before the
   train began.
-- **The scorecard on Ed's host.** It was never needed: the loopback proxy
+- **The scorecard run by hand.** It was never needed: the loopback proxy
   held for every run of every wave, so no `manual-qa-pass` was filed.
 - **T-A3's `depends_on`.** Ed added it on 2026-10-22, on
   `01a15ac4-4d4e-775e-9989-615255b813b7`.

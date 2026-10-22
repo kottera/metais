@@ -20,7 +20,7 @@ func TestBytes(t *testing.T) {
 		{"/var/lib/runner/volumes/wo/scratch/set/bin/metais", "/ux/set/bin/metais"},
 		{"PATH=/var/lib/runner/volumes/wo/scratch/set/bin:/var/lib/runner/toolchain/go/bin:/usr/bin",
 			"PATH=/ux/set/bin:/ux/host:/usr/bin"},
-		{"cd /Users/ed/src/metais && ls", "cd /ux/host && ls"},
+		{"cd /Users/someone/src/metais && ls", "cd /ux/host && ls"},
 		{"cat /tmp/x.json", "cat /ux/host"},
 		{"/tmpfoo and report/data/x and /etc/bash.bashrc and /usr/bin/env", "/tmpfoo and report/data/x and /etc/bash.bashrc and /usr/bin/env"},
 		{run + "/tmp/data.json", "/ux/run/tmp/data.json"},
@@ -34,10 +34,10 @@ func TestBytes(t *testing.T) {
 		{`"No module named 'liquid'\n/var/lib/runner/toolchain/node/bin/node"`, `"No module named 'liquid'\n/ux/host"`},
 		{"home/.claude/projects/-var-lib-runner-volumes-wo-scratch-set-runs-C1-render-real-haiku-work/memory",
 			"home/.claude/projects/-ux-run-work/memory"},
-		{".claude/projects/-Users-ed-src-metais/", ".claude/projects/-ux-host/"},
-		{`total 8\ndrwxr-xr-x 2 tera-runner tera-runner 4096 Oct 21 14:06 .\n-rw-r--r--  1 efunneko staff  41429 Oct 21 14:21 report.metais`,
+		{".claude/projects/-Users-someone-src-metais/", ".claude/projects/-ux-host/"},
+		{`total 8\ndrwxr-xr-x 2 tera-runner tera-runner 4096 Oct 21 14:06 .\n-rw-r--r--  1 someuser staff  41429 Oct 21 14:21 report.metais`,
 			`total 8\ndrwxr-xr-x 2 user group 4096 Oct 21 14:06 .\n-rw-r--r--  1 user group  41429 Oct 21 14:21 report.metais`},
-		{"lrwxr-xr-x@ 1 ed admin 12 Oct 21 x -> y", "lrwxr-xr-x@ 1 user group 12 Oct 21 x -> y"},
+		{"lrwxr-xr-x@ 1 someone admin 12 Oct 21 x -> y", "lrwxr-xr-x@ 1 user group 12 Oct 21 x -> y"},
 		{"the file -rw-r--r-- is plain", "the file -rw-r--r-- is plain"},
 	} {
 		got := string(s.Bytes([]byte(c.in)))
@@ -61,11 +61,11 @@ func TestCheck(t *testing.T) {
 		"metais-ux-placeholder",
 		"sk-ant-api03-abcdefghijkl",
 		"/var/lib/tera-runner/volumes/work_order/x/scratch",
-		"/home/ed/report.metais",
-		`C:\Users\ed\report.metais`,
-		`"x\n/home/ed/y"`,
+		"/home/someone/report.metais",
+		`C:\Users\someone\report.metais`,
+		`"x\n/home/someone/y"`,
 		"-var-lib-tera-runner-volumes-work-order-x",
-		"-rw-r--r-- 1 efunneko staff 41429 Oct 21 14:21 report.metais",
+		"-rw-r--r-- 1 someuser staff 41429 Oct 21 14:21 report.metais",
 	} {
 		if found := Check([]byte(in)); len(found) == 0 {
 			t.Errorf("Check(%q) found nothing", in)
