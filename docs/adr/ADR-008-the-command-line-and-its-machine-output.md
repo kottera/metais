@@ -1588,6 +1588,51 @@ mention it.
     writing under `.gemini/skills`, `.cursor/skills` or `.opencode/skills`,
     which each harness reads but none needs.
 
+### A5 — What a session sees first sends a package to `inspect` and `read`, never to `unzip`; the consuming path offers on-the-fly data
+
+**Status:** Accepted on merge. It carries PLAN-2026-10-metais-ux Wave 2's
+item W2-2, from the baseline scorecard's candidates 1 and 3, under the
+plan's rulings that Ed Funnekotter ratified on 2026-10-21.
+**Amends:** D1 item 4 (what `metais` with no command prints), D15 item 2
+(the overview and its consuming golden path) and the `usage.missing_command`
+hint (ADR-006's registry). D14, D15 items 1 and 3 to 6, and every
+command's own help are unchanged.
+
+1. **The overview says how a package is read, under its description.**
+   `metais --help`, `metais help` and `metais` with no command each print,
+   between the one-line description and the usage line, one paragraph:
+   a package is a zip archive that metais reads in place, so it is not
+   unzipped; a reader starts with `metais inspect <package>`, then
+   `metais read` prints an entry, `metais ls` lists them and `metais grep`
+   searches them. It names no flag.
+2. **The line that names no command says it too.** `metais` with no
+   command is refused with `usage.missing_command` (D1 item 4), and the
+   finding's hint, the second line such a session reads, is: "To read a
+   package, run `metais inspect <package>`: metais reads it in place, so do
+   not unzip it. `metais help` lists every command." The refusal's next
+   step stays `metais help`, and the overview still follows the finding on
+   standard error.
+3. **The consuming golden path offers a supplier data made on the fly.**
+   It reads: `inspect` → `read` → `schema` → `validate` → `render`; preview
+   from generated data with `render --sample`, or start from data generated
+   by `sample`. It is shown once `sample` is declared, like every command
+   it names. No route on it goes through a package's shipped examples
+   (R-UX-2): an example is the author's illustration of the inputs, not a
+   supplier's data.
+4. **Why.** In the 2026-10-21 baseline nearly every failing run read the
+   raw file, saw a zip whose first entry is `README.md`, and ran `unzip`
+   before it ran `metais`. One session ran `metais --help` and still
+   unzipped `metais.yaml` next. The overview's golden path began with
+   `inspect`, but nothing a session read first said that reading a
+   package's contents is `inspect`'s and `read`'s job (candidate 1). And
+   the consuming path had no preview: `render --sample` appeared only on
+   the authoring path (candidate 3).
+5. **What this does not change.** `help --json` carries the consuming path
+   as its `paths` member already, and gains no member: the paragraph of
+   item 1 is text help's. The specification does not describe the help,
+   so no chapter changes with it. The package's README, the first thing
+   of all that a reader sees, is ADR-001 A3's.
+
 ## Implementation log
 
 This log is this section together with the entry files in

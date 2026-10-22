@@ -1042,6 +1042,40 @@ specification 1.0.
    vectors are regenerated. The first line, and with it A1 item 8's
    detection key at offset 39, is unchanged.
 
+### A3 — The README says the package is read in place, and names `metais read` beside `metais inspect`
+
+**Status:** Accepted on merge. It carries PLAN-2026-10-metais-ux Wave 2's
+item W2-2, from the baseline scorecard's candidate 1, under the plan's
+rulings that Ed Funnekotter ratified on 2026-10-21.
+**Amends:** A1 item 3 (what the text says), A2 items 1 and 3 (the one
+command named, and the staleness rule that holds it), and the README text
+of specification 1.0.
+
+1. **The text says the archive is not unzipped.** The sentence saying the
+   file is a zip archive now says, in the same breath, not to unzip it,
+   because the metais tool reads it in place.
+2. **The text names two commands, not one.** A reader starts with
+   `metais inspect` on the file, as A2 has it, and then `metais read`
+   prints any file inside it. A2's "names one command" becomes "names two
+   commands": the one to start with and the one that reads an entry.
+3. **Staleness.** A2 item 3's rule now holds both: **the reference tool,
+   `metais`, provides `metais inspect <package>` and
+   `metais read <package> <entry>` for every specification 1.0 package it
+   reads.** The README names no other command and no flag, and install
+   commands stay out. A test holds the text to exactly these two.
+4. **Why.** After A2, a fresh session still read the README from the raw
+   bytes, saw that the file is a zip archive holding `metais.yaml`, and
+   unzipped it before running the tool. In the 2026-10-21 baseline, C0,
+   C2, C3, C4, C5 and A2 each had runs that did, on every model for C3. The README said where to start but
+   not that the contents are the tool's to read.
+5. **What else changes.** Specification §2.4.1's block and its prose carry
+   the new bytes, which grow from 540 to 642. `internal/specdata`'s copy
+   and every packed package in the conformance vectors are regenerated, and
+   every finding offset or size past the README, and every limit lowered to
+   a package's own size, moves by the same 102 bytes. The first line, and
+   with it A1 item 8's detection key at offset 39, is unchanged, and so is
+   the last line.
+
 ## Implementation log
 
 This log is this section together with the entry files in
