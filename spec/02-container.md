@@ -312,11 +312,10 @@ holding a text the specification fixes and no author writes. The text says
 what a METAIS package is, that the file is a zip archive which is read
 only with the tool, in place, and never with a zip tool or library,
 whether by extracting it or by reading a file inside it in memory, where
-inside it the package
-describes itself, where to find the tool, the command to start with,
-`metais inspect`, and the command that reads a file inside it,
-`metais read`. The reference tool keeps both commands for every package
-of this version. It gives no install command and quotes
+inside it the package describes itself, where to find the tool, the
+command to start with, `metais inspect`, and the command that reads a
+file inside it, `metais read`. The reference tool keeps both commands for
+every package of this version. It gives no install command and quotes
 nothing of the package, so a package packed long ago never gives stale
 instructions: everything that can change is on the website it names. It
 is not part of the package's content: no digest covers it (§2.6.1), a
