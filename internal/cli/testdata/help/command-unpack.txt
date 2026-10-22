@@ -1,8 +1,17 @@
 metais unpack — Write a packed package's source directory, to edit it.
 
 Usage:
-  metais unpack <package> --to <dir> [--dry-run] [--limit <name>=<value>]...
+  metais unpack <package> --out <dir> [--dry-run] [--limit <name>=<value>]...
                 [--json]
+
+Examples:
+  metais unpack report-1.0.0.metais --out report
+      Writes the package's source directory into the new directory report.
+  metais unpack report-1.0.0.metais --out . --json
+      Writes it into the current directory, which must be empty, and lists the
+      files as one metais.unpack/1 document.
+  metais unpack report-1.0.0.metais --out report --dry-run
+      Lists the files it would write into report, and writes nothing.
 
 Writes every entry of the packed package into <dir>, as the source directory it
 was packed from: the manifest as its author wrote it, the inputs, templates,
@@ -16,7 +25,7 @@ its digests included, and refuses a package that fails, writing nothing. It does
 not run check: a package with check errors is the one an author needs to unpack
 and fix. A source directory is refused: it is already what unpack would write.
 
---to is required. A <dir> that does not exist is created, with its missing
+--out is required. A <dir> that does not exist is created, with its missing
 parents, by writing beside it and renaming the whole directory into place, so a
 failed write leaves nothing. An existing <dir> must be empty, apart from names
 beginning with . (such as .git) other than .compiled, and files ending .metais;
@@ -36,7 +45,7 @@ Operands:
       access. Required.
 
 Flags:
-  --to <dir>
+  --out <dir>
       The directory to write the source directory into: one that does not exist
       yet, or an empty one. Required.
   --dry-run
@@ -71,18 +80,18 @@ Refusals:
       Next: metais limits
   output.destination.not_directory
       <dir>, or a directory above it, exists and is not a directory.
-      Next: metais unpack <package> --to <dir>
+      Next: metais unpack <package> --out <dir>
   output.destination.not_empty
       <dir> holds an entry other than the quiet ones.
-      Next: metais unpack <package> --to <dir>
+      Next: metais unpack <package> --out <dir>
   output.destination.nothing_written
       A write failed and nothing was left: into a new directory, at any point;
       into an existing one, before it created anything.
-      Next: metais unpack <package> --to <dir>
+      Next: metais unpack <package> --out <dir>
   output.destination.write_failed
       A write into an existing directory failed after it had created something
       there; the files already written are listed and left in place.
-      Next: metais unpack <package> --to <dir>
+      Next: metais unpack <package> --out <dir>
   usage.bad_value
       A flag's value is missing, or is not one the flag accepts, or a flag that
       takes no value is given one.
@@ -113,19 +122,10 @@ Refusals:
   --json gives each code's own cause.
 
   manifest.* (44)  The manifest breaks one of its rules.
-                   Next: metais unpack <package> --to <dir>
+                   Next: metais unpack <package> --out <dir>
   package.* (47)   The package is refused.
-                   Next: metais unpack <package> --to <dir>
+                   Next: metais unpack <package> --out <dir>
   schema.* (10)    An input schema is refused.
-                   Next: metais unpack <package> --to <dir>
+                   Next: metais unpack <package> --out <dir>
   template.* (9)   An output's path, when or for_each does not parse.
-                   Next: metais unpack <package> --to <dir>
-
-Examples:
-  metais unpack report-1.0.0.metais --to report
-      Writes the package's source directory into the new directory report.
-  metais unpack report-1.0.0.metais --to . --json
-      Writes it into the current directory, which must be empty, and lists the
-      files as one metais.unpack/1 document.
-  metais unpack report-1.0.0.metais --to report --dry-run
-      Lists the files it would write into report, and writes nothing.
+                   Next: metais unpack <package> --out <dir>

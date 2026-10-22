@@ -123,7 +123,7 @@ func (r *run) sourceDirs() []string {
 	for _, c := range r.calls {
 		switch c.sub {
 		case "unpack":
-			for _, d := range flagValues(c.args, "--to") {
+			for _, d := range outDirs(c.args) {
 				add(d, c.cwd)
 			}
 		case "init", "check", "test", "pack":
@@ -135,6 +135,14 @@ func (r *run) sourceDirs() []string {
 		}
 	}
 	return dirs
+}
+
+// outDirs are the directories a command line names for unpack, extract
+// or sample to write: --out, which every command that writes a
+// directory takes (ADR-008 A4), and --to, which those three took
+// when the baseline's runs were recorded.
+func outDirs(args []string) []string {
+	return append(flagValues(args, "--out"), flagValues(args, "--to")...)
 }
 
 // operand is a command's first word that is not a flag, or "".
@@ -379,7 +387,7 @@ func newFictionalRender(r *run) Result {
 func generatedPreview(r *run) Result {
 	sampled := map[string]bool{}
 	for _, c := range r.succeeded("sample") {
-		for _, d := range flagValues(c.args, "--to") {
+		for _, d := range outDirs(c.args) {
 			if p := r.resolve(d, c.cwd); p != "" {
 				sampled[p] = true
 			}

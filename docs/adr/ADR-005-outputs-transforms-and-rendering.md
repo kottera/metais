@@ -1283,7 +1283,7 @@ removes), D15 item 4 (two further per-file checks), and the alternative
 rejected as *Staging inside the output directory*, which now argues D14
 item 1 only. Amends ADR-009 D8 items 1 and 5 to match, and is
 cross-referenced from ADR-009's implementation log. ADR-008 reuses the
-overwrite rule for `extract --overwrite` and `sample --to`, so A1 is how
+overwrite rule for `extract --overwrite` and `sample --out`, so A1 is how
 they write into an existing directory too.
 
 1. **Prepare.** A render into an existing directory (D14 item 2) first

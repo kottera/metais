@@ -4,6 +4,14 @@ schema.
 Usage:
   metais schema <package> [<input>] [--limit <name>=<value>]... [--json]
 
+Examples:
+  metais schema report-1.0.0.metais
+      Prints the combined input schema.
+  metais schema report-1.0.0.metais product
+      Prints the schema of the input product.
+  metais schema report-1.0.0.metais product --json
+      Prints it as one metais.schema/1 document.
+
 With no input, prints the combined input schema: one JSON Schema 2020-12
 document with a property per input, which is what the inputs are validated
 against. With an input, prints that input's schema as one self-contained
@@ -84,11 +92,3 @@ Refusals:
   schema.* (10)    An input schema is refused. Next: metais inspect <package>
   template.* (9)   An output's path, when or for_each does not parse.
                    Next: metais inspect <package>
-
-Examples:
-  metais schema report-1.0.0.metais
-      Prints the combined input schema.
-  metais schema report-1.0.0.metais product
-      Prints the schema of the input product.
-  metais schema report-1.0.0.metais product --json
-      Prints it as one metais.schema/1 document.

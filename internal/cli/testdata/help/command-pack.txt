@@ -5,6 +5,20 @@ Usage:
   metais pack [<dir>] [--out <file>|-] [--dry-run] [--limit <name>=<value>]...
               [--json]
 
+Examples:
+  metais pack
+      Checks, tests and packs the source directory in the working directory into
+      <name>-<version>.metais there.
+  metais pack report --out dist
+      Packs the source directory report into dist/<name>-<version>.metais, dist
+      being an existing directory.
+  metais pack --out -
+      Writes the package to standard output, which must be a file or a pipe, not
+      a terminal.
+  metais pack --dry-run --json
+      Checks, tests and builds the package, writes nothing, and prints its size
+      and digest as one metais.pack/1 document.
+
 Runs metais check on the source directory, the current directory when omitted.
 Any error stops pack: every finding is reported and nothing is written. With no
 error it runs metais test over every example; an example that fails stops it the
@@ -116,7 +130,7 @@ Refusals:
   usage.not_a_source_directory
       The operand is a packed package, which pack does not read: it packs a
       source directory.
-      Next: metais unpack <package> --to <dir>
+      Next: metais unpack <package> --out <dir>
   usage.package_from_stdin
       The package operand is -, standard input.
       Next: metais pack --help
@@ -191,17 +205,3 @@ Refusals:
                             Next: metais check <dir>
   yaml.* (13)               An example's inputs are refused.
                             Next: metais test <dir>
-
-Examples:
-  metais pack
-      Checks, tests and packs the source directory in the working directory into
-      <name>-<version>.metais there.
-  metais pack report --out dist
-      Packs the source directory report into dist/<name>-<version>.metais, dist
-      being an existing directory.
-  metais pack --out -
-      Writes the package to standard output, which must be a file or a pipe, not
-      a terminal.
-  metais pack --dry-run --json
-      Checks, tests and builds the package, writes nothing, and prints its size
-      and digest as one metais.pack/1 document.

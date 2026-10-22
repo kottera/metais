@@ -114,7 +114,7 @@ func fakeMain(fault string, args []string) int {
 	}
 	for i := 1; i < len(args); i++ {
 		switch a := args[i]; {
-		case a == "--out" || a == "--to":
+		case a == "--out":
 			i++
 			if args[i] == "-" {
 				call.archive = true

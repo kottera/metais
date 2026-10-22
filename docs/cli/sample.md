@@ -6,7 +6,7 @@ rules below are the reference tool's command line, which no conformance
 operation can express, so they live here and in `metais help sample` and
 `metais help render` rather than in `spec/` (R1-020, ADR-011 D1 item 2).
 
-- **`sample --to <dir> --overwrite`** writes into a directory that holds
+- **`sample --out <dir> --overwrite`** writes into a directory that holds
   entries, a hidden one included. Each file `sample` writes replaces the
   file of that name by a rename, without reading or writing into it; every
   other file in `<dir>` is left as it was, and nothing is removed. The
@@ -27,7 +27,7 @@ operation can express, so they live here and in `metais help sample` and
   `--overwrite`, a directory that holds any entry is
   `output.destination.not_empty`, and an empty one is written into.
 - **`--overwrite` with `--example`** is `usage.flag_excluded`: an example is
-  never merged into or replaced. So is giving both `--to` and `--example`;
+  never merged into or replaced. So is giving both `--out` and `--example`;
   giving neither is `usage.missing_operand`.
 - **`--example` with a packed package** is `usage.not_a_source_directory`;
   the next step is `metais unpack`.

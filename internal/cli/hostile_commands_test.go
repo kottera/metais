@@ -264,13 +264,13 @@ func TestHostileLimitFlag(t *testing.T) {
 	} {
 		for _, argv := range [][]string{
 			{"inspect"}, {"ls"}, {"read", "metais.yaml"}, {"outline", "metais.yaml"}, {"grep", "match"}, {"schema"},
-			{"extract", "**", "--to", "extracted"}, {"check"}, {"test"}, {"validate"}, {"render", "--out", "out"},
-			{"unpack", "--to", "unpacked"}, {"sample", "--to", "sampled"}, {"pack", "--out", "packed.metais"},
+			{"extract", "**", "--out", "extracted"}, {"check"}, {"test"}, {"validate"}, {"render", "--out", "out"},
+			{"unpack", "--out", "unpacked"}, {"sample", "--out", "sampled"}, {"pack", "--out", "packed.metais"},
 		} {
 			work := testenv.Dir(t)
 			line := append([]string{argv[0], "--json", pkg}, argv[1:]...)
 			for i, a := range line {
-				if i > 0 && (line[i-1] == "--to" || line[i-1] == "--out") {
+				if i > 0 && line[i-1] == "--out" {
 					line[i] = filepath.Join(work, a)
 				}
 			}

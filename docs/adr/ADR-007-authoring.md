@@ -661,7 +661,7 @@ result is the result the author's `pack` saw.
 
 ### D8 — `unpack` writes the authored entries and nothing derived
 
-1. **`metais unpack <pkg> --to <dir>`** (ADR-008 D9); `--to` is required.
+1. **`metais unpack <pkg> --out <dir>`** (ADR-008 D9); `--out` is required.
 2. It reads the package through ADR-001's reader, so digests are verified
    and a mismatch is refused before anything is written. It does not run
    `check`: a package with check errors is exactly the one an author needs
@@ -690,8 +690,8 @@ result is the result the author's `pack` saw.
      generates a value for every input, validates it (item 22) and renders
      it with every option `render` has — `--dry-run`, `--overwrite`,
      `--only`, standard output and `--now`.
-   - **`metais sample [<pkg>] (--to <dir> | --example <name>)`** keeps the
-     data: it writes it as a data directory (`--to`, which `render --data`
+   - **`metais sample [<pkg>] (--out <dir> | --example <name>)`** keeps the
+     data: it writes it as a data directory (`--out`, which `render --data`
      then reads) or as an example's inputs (`--example`, item 21).
 
    Both take the generator's options:
@@ -897,7 +897,7 @@ result is the result the author's `pack` saw.
       the width of the count, so that file order is item order, each with
       its form's extension (`001.json`, `001.md`; ADR-003 D15 item 4).
 
-    **`sample --to <dir>`** writes these files as a data directory; a
+    **`sample --out <dir>`** writes these files as a data directory; a
     non-empty `<dir>` is refused unless `--overwrite` (ADR-008 D9).
     **`sample --example <name>`** writes them as `examples/<name>/inputs/`
     and writes `examples/<name>/example.yaml` with `title` "Sample data" and
@@ -992,9 +992,9 @@ tree, `manifest.*`, `schema.*` (including `schema.sample_unsatisfiable` and
 
 **ADR-008 (command line).** Relied on: `init [<dir>] [--name] [--dry-run]`,
 `check [<pkg>]`, `test [<pkg>] [--example <name>]… [--update] [--dry-run]`,
-`pack [<dir>] [--out <file>|-] [--dry-run]`, `unpack <pkg> --to <dir>
+`pack [<dir>] [--out <file>|-] [--dry-run]`, `unpack <pkg> --out <dir>
 [--dry-run]`, `render <pkg> --sample [--optional] [--seed] [--items] --out
-<dir|->` and `sample [<pkg>] (--to <dir> | --example <name>) [--optional]
+<dir|->` and `sample [<pkg>] (--out <dir> | --example <name>) [--optional]
 [--seed] [--items] [--overwrite] [--dry-run]`, with the supply flags of
 ADR-008 D7; the JSON envelope for each; and refusals that name the next
 step. Promised: the behaviour behind each. `inspect` may list examples with
@@ -1232,7 +1232,7 @@ directory.
     existing file unless `--overwrite`, as a render's directory is.
 13. **The quiet list, warning on other top-level entries, and packing
     dotfiles inside layout trees.** Lean: yes.
-14. **`unpack` drops `.compiled/`, takes a required `--to`, refuses a
+14. **`unpack` drops `.compiled/`, takes a required `--out`, refuses a
     non-empty target with no `--overwrite`, does not run check.** Lean: yes.
     Why: stale files in the target would be packed with the source.
 15. **`init` defaults `--name` to the last element of `<dir>` as written,
@@ -1250,7 +1250,7 @@ directory.
 19. **Supplied inputs are fixed points for `sample`.** Lean: yes.
 20. **Saved data uses the first declared form and declaration order;
     `sample --example` refuses an existing example directory.** Lean: yes.
-21. **The preview is `render --sample`; keeping the data is `sample --to
+21. **The preview is `render --sample`; keeping the data is `sample --out
     <dir>` or `sample --example <name>`** (ADR-008's names). Lean: yes.
     Why: previewing is rendering and shares its flags; keeping data has a
     different destination. Alternative: one `sample` command that prints

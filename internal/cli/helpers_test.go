@@ -293,6 +293,11 @@ func runIn(t testing.TB, d hostenv.Display, stdin io.Reader, faults fault.Set, a
 // (ADR-008 D14 item 2) and each single-quoted word unquoted as a POSIX
 // shell unquotes it.
 func parsesAsLine(line string) error {
+	// A redirection of standard output into a file is the shell's, not
+	// metais's: render --out - --only <path> > <file> (ADR-008 A3).
+	if i := strings.LastIndex(line, " > "); i >= 0 && !strings.ContainsAny(line[i+3:], " <>") {
+		line = line[:i]
+	}
 	sub := strings.NewReplacer("<package>", "pkg.metais", "<data dir>", "data",
 		"<your --set, --set-json and --inputs-json flags>", "--set /a=1 --set-json /b=2 --inputs-json {}", "<dir>", "some-dir", "<name>", "some-name", "<pattern>", "x",
 		"<path>", "some/path", "<glob>", "some/**", "<total>", "3")

@@ -3,6 +3,18 @@ metais help — Print the overview, a command's help, or a topic.
 Usage:
   metais help [<command> | <topic> [<command>]] [--json]
 
+Examples:
+  metais help
+      Prints the overview.
+  metais help limits
+      Prints the help of metais limits.
+  metais help exit-codes
+      Prints what each exit status means.
+  metais help refusals render
+      Lists every code metais render may refuse with, by its next step.
+  metais help --json
+      Prints every command's declaration and every topic as one document.
+
 With no operand, prints the overview: the commands by group, the global flags,
 the topics and the exit codes. With a command's name, prints that command's
 help, as metais <command> --help does. With a topic, prints the topic; the topic
@@ -54,15 +66,3 @@ Refusals:
       The operand names no command and no topic, or the operand after refusals
       names no command.
       Next: metais help
-
-Examples:
-  metais help
-      Prints the overview.
-  metais help limits
-      Prints the help of metais limits.
-  metais help exit-codes
-      Prints what each exit status means.
-  metais help refusals render
-      Lists every code metais render may refuse with, by its next step.
-  metais help --json
-      Prints every command's declaration and every topic as one document.

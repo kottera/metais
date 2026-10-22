@@ -487,6 +487,12 @@ func commandText(c *Command) []byte {
 	b.para("metais "+c.Name+" — "+c.Description, "")
 	b.heading("Usage:")
 	b.b = append(b.b, usageLines(c)...)
+	// The examples lead, before the normative text (ADR-008 A3).
+	b.heading("Examples:")
+	for _, e := range c.Examples {
+		b.line("  " + e.Run)
+		b.para(e.Why, "      ")
+	}
 	if c.Detail != "" {
 		b.blank()
 		b.para(c.Detail, "")
@@ -536,11 +542,6 @@ func commandText(c *Command) []byte {
 			b.item(names[i], width, cause)
 			b.join("Next: "+f.next.Run, width)
 		}
-	}
-	b.heading("Examples:")
-	for _, e := range c.Examples {
-		b.line("  " + e.Run)
-		b.para(e.Why, "      ")
 	}
 	return b.bytes()
 }

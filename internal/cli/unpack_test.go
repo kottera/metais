@@ -57,7 +57,7 @@ func TestUnpackRoundTrip(t *testing.T) {
 		t.Run(v, func(t *testing.T) {
 			pkg := filepath.Join(vectorsDir, filepath.FromSlash(v))
 			to := filepath.Join(testenv.Dir(t), "src")
-			r := runTool(t, "unpack", "--json", pkg, "--to", to)
+			r := runTool(t, "unpack", "--json", pkg, "--out", to)
 			if !r.doc.OK || r.status != 0 {
 				t.Fatalf("metais unpack: %s", r.stdout)
 			}
@@ -99,12 +99,12 @@ func TestUnpackRoundTrip(t *testing.T) {
 func TestUnpackOutput(t *testing.T) {
 	testenv.Home(t)
 	pkg := filepath.Join(vectorsDir, "pkg/opens-packed/package.metais")
-	r := runTool(t, "unpack", pkg, "--to", filepath.Join(testenv.Dir(t), "src"))
+	r := runTool(t, "unpack", pkg, "--out", filepath.Join(testenv.Dir(t), "src"))
 	if r.status != 0 || !strings.HasPrefix(r.stdout, "Wrote 13 files:\n  assets/static/logo.txt\n") {
 		t.Errorf("metais unpack: status %d, stdout %q, stderr %q", r.status, r.stdout, r.stderr)
 	}
 	wantNext := lookup(table, "check") != nil
-	r = runTool(t, "unpack", "--json", pkg, "--to", filepath.Join(testenv.Dir(t), "src"))
+	r = runTool(t, "unpack", "--json", pkg, "--out", filepath.Join(testenv.Dir(t), "src"))
 	if got := len(r.doc.Next) == 1 && r.doc.Next[0].Run == "metais check <dir>"; got != wantNext {
 		t.Errorf("next %v, with check declared %v", r.doc.Next, wantNext)
 	}
@@ -134,18 +134,18 @@ func TestUnpackRefusals(t *testing.T) {
 		status int
 		params string
 	}{
-		{"no --to", []string{"unpack", "--json", pkg}, finding.CodeUsageMissingOperand, finding.ExitUsage,
-			`{"command":"unpack","operand":"--to <dir>"}`},
-		{"an empty --to", []string{"unpack", "--json", pkg, "--to="}, finding.CodeUsageBadValue, finding.ExitUsage,
-			`{"argument":4,"flag":"--to","reason":"value_not_allowed"}`},
-		{"standard input", []string{"unpack", "--json", "-", "--to", "x"}, finding.CodeUsagePackageFromStdin, finding.ExitUsage,
+		{"no --out", []string{"unpack", "--json", pkg}, finding.CodeUsageMissingOperand, finding.ExitUsage,
+			`{"command":"unpack","operand":"--out <dir>"}`},
+		{"an empty --out", []string{"unpack", "--json", pkg, "--out="}, finding.CodeUsageBadValue, finding.ExitUsage,
+			`{"argument":4,"flag":"--out","reason":"value_not_allowed"}`},
+		{"standard input", []string{"unpack", "--json", "-", "--out", "x"}, finding.CodeUsagePackageFromStdin, finding.ExitUsage,
 			`{"argument":3}`},
-		{"a source directory", []string{"unpack", "--json", filepath.Join(vectorsDir, "pkg/opens-source/package"), "--to", filepath.Join(root, "x")},
+		{"a source directory", []string{"unpack", "--json", filepath.Join(vectorsDir, "pkg/opens-source/package"), "--out", filepath.Join(root, "x")},
 			finding.CodeUsageNotPackedPackage, finding.ExitUsage, `{"argument":3}`},
-		{"a non-empty directory", []string{"unpack", "--json", pkg, "--to", full}, finding.CodeDestinationNotEmpty, finding.ExitDestination,
+		{"a non-empty directory", []string{"unpack", "--json", pkg, "--out", full}, finding.CodeDestinationNotEmpty, finding.ExitDestination,
 			`{"entries":["notes.txt"],"more":false}`},
-		{"a file", []string{"unpack", "--json", pkg, "--to", file}, finding.CodeDestinationNotDirectory, finding.ExitDestination, `{}`},
-		{"beneath a file", []string{"--json", "unpack", pkg, "--to", filepath.Join(file, "src")}, finding.CodeDestinationNotDirectory, finding.ExitDestination, `{}`},
+		{"a file", []string{"unpack", "--json", pkg, "--out", file}, finding.CodeDestinationNotDirectory, finding.ExitDestination, `{}`},
+		{"beneath a file", []string{"--json", "unpack", pkg, "--out", filepath.Join(file, "src")}, finding.CodeDestinationNotDirectory, finding.ExitDestination, `{}`},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			before := snapshot(t, root)
@@ -181,7 +181,7 @@ func TestUnpackRefusesAPackageAsTheOpenDoes(t *testing.T) {
 		p := filepath.Join(vectorsDir, filepath.FromSlash(v))
 		to := filepath.Join(testenv.Dir(t), "src")
 		want := runTool(t, "inspect", "--json", p)
-		got := runTool(t, "unpack", "--json", p, "--to", to)
+		got := runTool(t, "unpack", "--json", p, "--out", to)
 		if got.doc.OK || !slices.Equal(got.codes(), want.codes()) || got.status == 0 {
 			t.Errorf("%s: unpack refused %q with %d; inspect %q with %d", v, got.codes(), got.status, want.codes(), want.status)
 		}
@@ -234,7 +234,7 @@ func TestUnpackRefusalsTriggered(t *testing.T) {
 func TestUnpackDryRun(t *testing.T) {
 	testenv.Home(t)
 	pkg := filepath.Join(vectorsDir, "pkg/opens-packed/package.metais")
-	written := runTool(t, "unpack", "--json", pkg, "--to", filepath.Join(testenv.Dir(t), "src"))
+	written := runTool(t, "unpack", "--json", pkg, "--out", filepath.Join(testenv.Dir(t), "src"))
 	var want unpackResult
 	if err := json.Unmarshal(written.doc.Result, &want); err != nil || written.status != 0 {
 		t.Fatalf("metais unpack: %v, %s", err, written.stdout)
@@ -250,7 +250,7 @@ func TestUnpackDryRun(t *testing.T) {
 			}
 			to := filepath.Join(root, filepath.FromSlash(c.to))
 			before := snapshot(t, root)
-			r := runTool(t, "unpack", "--json", pkg, "--to", to, "--dry-run")
+			r := runTool(t, "unpack", "--json", pkg, "--out", to, "--dry-run")
 			var res unpackResult
 			if err := json.Unmarshal(r.doc.Result, &res); err != nil || r.status != 0 || !r.doc.OK {
 				t.Fatalf("metais unpack --dry-run: %v, %s", err, r.stdout)
@@ -261,7 +261,7 @@ func TestUnpackDryRun(t *testing.T) {
 			if len(r.doc.Next) != 1 || r.doc.Next[0] != nextUnpackWrite {
 				t.Errorf("next %v", r.doc.Next)
 			}
-			h := runTool(t, "unpack", pkg, "--to", to, "--dry-run")
+			h := runTool(t, "unpack", pkg, "--out", to, "--dry-run")
 			if h.status != 0 || !strings.HasPrefix(h.stdout, "Would write 13 files; --dry-run wrote nothing:\n  assets/static/logo.txt\n") {
 				t.Errorf("human: status %d, stdout %q, stderr %q", h.status, h.stdout, h.stderr)
 			}
@@ -300,22 +300,22 @@ func TestUnpackDryRunRefusesAsUnpackDoes(t *testing.T) {
 		name string
 		args func(root string) []string
 	}{
-		{"no --to", func(string) []string { return []string{pkg} }},
-		{"an empty --to", func(string) []string { return []string{pkg, "--to="} }},
-		{"standard input", func(string) []string { return []string{"-", "--to", "x"} }},
+		{"no --out", func(string) []string { return []string{pkg} }},
+		{"an empty --out", func(string) []string { return []string{pkg, "--out="} }},
+		{"standard input", func(string) []string { return []string{"-", "--out", "x"} }},
 		{"a source directory", func(root string) []string {
-			return []string{filepath.Join(vectorsDir, "pkg/opens-source/package"), "--to", filepath.Join(root, "x")}
+			return []string{filepath.Join(vectorsDir, "pkg/opens-source/package"), "--out", filepath.Join(root, "x")}
 		}},
 		{"a package the open refuses", func(root string) []string {
-			return []string{filepath.Join(vectorsDir, "pkg/digest-mismatch/package.metais"), "--to", filepath.Join(root, "x")}
+			return []string{filepath.Join(vectorsDir, "pkg/digest-mismatch/package.metais"), "--out", filepath.Join(root, "x")}
 		}},
 		{"a source directory the open refuses", func(root string) []string {
-			return []string{filepath.Join(vectorsDir, "dat/schema-ref-escapes/package"), "--to", filepath.Join(root, "x")}
+			return []string{filepath.Join(vectorsDir, "dat/schema-ref-escapes/package"), "--out", filepath.Join(root, "x")}
 		}},
-		{"a non-empty directory", func(root string) []string { return []string{pkg, "--to", filepath.Join(root, "full")} }},
-		{"a file", func(root string) []string { return []string{pkg, "--to", filepath.Join(root, "file")} }},
-		{"beneath a file", func(root string) []string { return []string{pkg, "--to", filepath.Join(root, "file", "src")} }},
-		{"a staging leftover", func(root string) []string { return []string{pkg, "--to", filepath.Join(root, "left")} }},
+		{"a non-empty directory", func(root string) []string { return []string{pkg, "--out", filepath.Join(root, "full")} }},
+		{"a file", func(root string) []string { return []string{pkg, "--out", filepath.Join(root, "file")} }},
+		{"beneath a file", func(root string) []string { return []string{pkg, "--out", filepath.Join(root, "file", "src")} }},
+		{"a staging leftover", func(root string) []string { return []string{pkg, "--out", filepath.Join(root, "left")} }},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			dry, wet := host(t), host(t)

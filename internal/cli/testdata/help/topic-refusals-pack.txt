@@ -354,6 +354,6 @@ Next: metais pack <dir> --out <path>
       pipe, since a package is not written to a terminal.
   usage.archive_to_terminal
 
-Next: metais unpack <package> --to <dir>
+Next: metais unpack <package> --out <dir>
       Writes the packed package's source directory, which pack reads.
   usage.not_a_source_directory

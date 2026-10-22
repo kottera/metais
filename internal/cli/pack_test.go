@@ -270,7 +270,7 @@ func TestPackRoundTripBytes(t *testing.T) {
 			first := filepath.Join(testenv.Dir(t), "first.metais")
 			_, a := packOf(t, src, "--out", first)
 			to := filepath.Join(testenv.Dir(t), "src")
-			if r := runTool(t, "unpack", first, "--to", to); r.status != 0 {
+			if r := runTool(t, "unpack", first, "--out", to); r.status != 0 {
 				t.Fatalf("unpack: %s", r.stderr)
 			}
 			again := filepath.Join(testenv.Dir(t), "again.metais")

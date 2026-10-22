@@ -29,14 +29,14 @@ import (
 var (
 	nextLsNearest        = Next{Run: "metais ls <package> <path>", Why: "Lists the nearest directory above the path that exists."}
 	nextLsDir            = Next{Run: "metais ls <package> <path>", Why: "Lists the entries beneath the directory."}
-	nextExtract          = Next{Run: "metais extract <package> <path> --to <dir>", Why: "Writes the entry, as stored, to a file beneath a new directory."}
+	nextExtract          = Next{Run: "metais extract <package> <path> --out <dir>", Why: "Writes the entry, as stored, to a file beneath a new directory."}
 	nextReadLines        = Next{Run: "metais read <package> <path> --lines 1-<total>", Why: "Reads the entry's lines, from its first to its last."}
 	nextGlobs            = Next{Run: "metais help globs", Why: "Prints the glob grammar."}
 	nextPattern          = Next{Run: "metais limits", Why: "Lists the limits a grep pattern is held to: pattern-length, regex-program and regex-work."}
 	nextLsAll            = Next{Run: "metais ls <package> -r", Why: "Lists every entry, so a glob can be written against them."}
-	nextExtractTo        = Next{Run: "metais extract <package> <glob> --to <dir>", Why: "Writes into a directory that does not exist yet, or an empty one."}
-	nextExtractInTheWay  = Next{Run: "metais extract <package> <glob> --to <dir>", Why: "Extracts again once what stands in the way in <dir> is moved or removed, or into a directory that does not exist yet."}
-	nextExtractOverwrite = Next{Run: "metais extract <package> <glob> --to <dir> --overwrite", Why: "Writes into the directory, replacing a file at a path extract writes and deleting nothing."}
+	nextExtractOut       = Next{Run: "metais extract <package> <glob> --out <dir>", Why: "Writes into a directory that does not exist yet, or an empty one."}
+	nextExtractInTheWay  = Next{Run: "metais extract <package> <glob> --out <dir>", Why: "Extracts again once what stands in the way in <dir> is moved or removed, or into a directory that does not exist yet."}
+	nextExtractOverwrite = Next{Run: "metais extract <package> <glob> --out <dir> --overwrite", Why: "Writes into the directory, replacing a file at a path extract writes and deleting nothing."}
 	nextInspect          = Next{Run: "metais inspect <package>", Why: "Lists the package's inputs, each with how to supply it."}
 )
 
@@ -194,7 +194,7 @@ func readingDeclarations() []*Command {
 			run: runSchema,
 		}, Refusal{Code: finding.CodeUsageUnknownInput, Cause: "The operand names no input of the package; the finding lists them.", Next: nextInspect}),
 		readingCommand(&Command{
-			Name: "extract", Synopsis: "extract <package> <glob>... --to <dir> [--overwrite] [--dry-run] [--limit <name>=<value>]... [--json]",
+			Name: "extract", Synopsis: "extract <package> <glob>... --out <dir> [--overwrite] [--dry-run] [--limit <name>=<value>]... [--json]",
 			Description: "Write the entries the globs select to a directory.",
 			Detail: "Writes every entry any glob selects to <dir>/<entry path>, as stored (metais help globs). " +
 				"Every glob must select at least one entry, or nothing is written: a glob that selects nothing " +
@@ -215,16 +215,17 @@ func readingDeclarations() []*Command {
 				"--dry-run lists the files extract would write, makes every check, and writes nothing.",
 			Operands: []args.Operand{{Name: "<glob>", Required: true, Repeatable: true, Description: "A glob selecting entries to write."}},
 			Flags: []args.Flag{
-				{Name: "to", Value: "<dir>", Description: "The directory to write into: a new one, or an existing one that is empty, or holds entries with --overwrite; required."},
+				{Name: "out", Value: "<dir>", Description: "The directory to write into: a new one, or an existing one that is empty, or holds entries with --overwrite; required."},
 				{Name: "overwrite", Description: "Write into a <dir> that holds entries, replacing a file at a path extract writes; nothing is deleted."},
 				{Name: "dry-run", Description: "List the files extract would write, and write nothing."},
 			},
 			Format: "metais.extract/1",
 			Prints: "The files written, or that would be, each with its size, relative to <dir>.",
 			Examples: []Example{
-				{"metais extract report-1.0.0.metais 'examples/basic/**' --to basic", "Writes the example basic into the new directory basic."},
-				{"metais extract report-1.0.0.metais references --to refs --dry-run", "Lists the references it would write."},
-				{"metais extract report-1.0.0.metais 'templates/**' --to . --overwrite", "Writes the templates into the current directory, replacing the files already there."},
+				{"metais extract report-1.0.0.metais 'references/**' --out refs", "Writes the package's references into the new directory refs."},
+				{"metais extract report-1.0.0.metais references --out refs --dry-run", "Lists the references it would write."},
+				{"metais extract report-1.0.0.metais 'templates/**' --out . --overwrite", "Writes the templates into the current directory, replacing the files already there."},
+				{"metais extract report-1.0.0.metais 'examples/basic/**' --out basic", "Writes the example basic into the new directory basic."},
 			},
 			run: runExtract,
 		},
@@ -235,10 +236,10 @@ func readingDeclarations() []*Command {
 			Refusal{Code: finding.CodeDestinationLink, Cause: "In <dir>, an entry's path runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed.", Next: nextExtractInTheWay},
 			Refusal{Code: finding.CodeDestinationCaseVariant, Cause: "In <dir>, an entry's name differs only in case or normalization from a name an entry's path holds.", Next: nextExtractInTheWay},
 			Refusal{Code: finding.CodeDestinationNotRegularFile, Cause: "In <dir>, a directory, a named pipe, a socket or a device stands at an entry's path.", Next: nextExtractInTheWay},
-			Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A write into a new <dir> failed after creating it; the files already written are listed and left in place.", Next: nextExtractTo},
-			Refusal{Code: finding.CodeDestinationNothingWritten, Cause: "A write failed and nothing was left: <dir> could not be created, or, in an existing one, a write failed before the commit, another file system is mounted inside it, or an entry lies beneath the staging name.", Next: nextExtractTo},
-			Refusal{Code: finding.CodeDestinationStagingExists, Cause: "An existing <dir> holds .metais-staging, left by a killed write or in use by another; nothing is written.", Next: nextExtractTo},
-			Refusal{Code: finding.CodeDestinationCommitFailed, Cause: "Moving the files into an existing <dir> failed part way; the files already moved are listed, and nothing else was changed.", Next: nextExtractTo},
+			Refusal{Code: finding.CodeDestinationWriteFailed, Cause: "A write into a new <dir> failed after creating it; the files already written are listed and left in place.", Next: nextExtractOut},
+			Refusal{Code: finding.CodeDestinationNothingWritten, Cause: "A write failed and nothing was left: <dir> could not be created, or, in an existing one, a write failed before the commit, another file system is mounted inside it, or an entry lies beneath the staging name.", Next: nextExtractOut},
+			Refusal{Code: finding.CodeDestinationStagingExists, Cause: "An existing <dir> holds .metais-staging, left by a killed write or in use by another; nothing is written.", Next: nextExtractOut},
+			Refusal{Code: finding.CodeDestinationCommitFailed, Cause: "Moving the files into an existing <dir> failed part way; the files already moved are listed, and nothing else was changed.", Next: nextExtractOut},
 		),
 	}
 }
@@ -746,10 +747,10 @@ type extractFile struct {
 
 // runExtract is metais extract.
 func runExtract(s *session, p args.Parsed) outcome {
-	to, ok := p.Value("to")
+	to, ok := p.Value("out")
 	if !ok {
 		return s.refuseWith(finding.New(finding.CodeUsageMissingOperand, invocation, nil, finding.Params{
-			"command": finding.String("extract"), "operand": finding.String("--to <dir>"),
+			"command": finding.String("extract"), "operand": finding.String("--out <dir>"),
 		}))
 	}
 	globs, refused := s.globs(p, 1)

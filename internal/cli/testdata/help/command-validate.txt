@@ -4,6 +4,17 @@ once.
 Usage:
   metais validate <package> [<supply flags>] [--resolved] [--json]
 
+Examples:
+  metais validate report-1.0.0.metais --data data
+      Validates the inputs in the directory data.
+  metais validate report-1.0.0.metais --data data --set /vendor/name=Acme
+      Validates them with one value replaced.
+  metais validate report-1.0.0.metais --inputs-json - --json
+      Validates the inputs object read from standard input, and prints one
+      metais.validate/1 document.
+  metais validate report-1.0.0.metais --data data --resolved
+      Validates them and prints the inputs as templates would see them.
+
 Opens and verifies the package as inspect does, then assembles the inputs
 object: each file of the data directory, then each --inputs-json in command-line
 order, then each --set and --set-json in command-line order, each replacing what
@@ -112,14 +123,3 @@ Refusals:
   schema.* (10)    An input schema is refused. Next: metais inspect <package>
   template.* (9)   An output's path, when or for_each does not parse.
                    Next: metais inspect <package>
-
-Examples:
-  metais validate report-1.0.0.metais --data data
-      Validates the inputs in the directory data.
-  metais validate report-1.0.0.metais --data data --set /vendor/name=Acme
-      Validates them with one value replaced.
-  metais validate report-1.0.0.metais --inputs-json - --json
-      Validates the inputs object read from standard input, and prints one
-      metais.validate/1 document.
-  metais validate report-1.0.0.metais --data data --resolved
-      Validates them and prints the inputs as templates would see them.

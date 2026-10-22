@@ -167,7 +167,7 @@ func exampleHarness(t *testing.T, src string) []string {
 			add("render --sample --optional "+mode, "%s", d)
 		}
 		data := filepath.Join(work, "data-"+mode)
-		if _, ok := green("sample --optional "+mode, "sample", src, "--optional", mode, "--to", data); !ok {
+		if _, ok := green("sample --optional "+mode, "sample", src, "--optional", mode, "--out", data); !ok {
 			continue
 		}
 		if _, ok := green("validate of sample --optional "+mode, "validate", src, "--data", data); !ok {

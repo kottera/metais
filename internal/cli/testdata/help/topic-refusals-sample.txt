@@ -211,7 +211,7 @@ Next: metais inspect <package>
   template.tag_context
   template.unknown_filter
 
-Next: metais sample <package> --to <dir>
+Next: metais sample <package> --out <dir>
       Writes again once what stands in the way in <dir> is moved or removed, or
       into a directory that does not exist yet.
   output.destination.case_variant
@@ -219,14 +219,14 @@ Next: metais sample <package> --to <dir>
   output.destination.not_directory
   output.destination.not_regular_file
 
-Next: metais sample <package> --to <dir>
+Next: metais sample <package> --out <dir>
       Writes the sample data as a data directory into a directory that is empty
       or does not exist yet.
   output.destination.commit_failed
   output.destination.nothing_written
   output.destination.staging_exists
 
-Next: metais sample <package> --to <dir> --overwrite
+Next: metais sample <package> --out <dir> --overwrite
       Writes into the directory anyway, replacing the files sample writes and
       leaving every other file as it is.
   output.destination.not_empty
@@ -253,7 +253,7 @@ Next: metais help inputs
       and --set-json.
   usage.conflicting_flags
 
-Next: metais unpack <package> --to <dir>
+Next: metais unpack <package> --out <dir>
       Writes the packed package's source directory, which sample --example can
       save an example into.
   usage.not_a_source_directory

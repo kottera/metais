@@ -44,7 +44,7 @@ var (
 		Why: "Packs the source directory again once the cause is fixed; nothing was written."}
 	nextPackOut = Next{Run: "metais pack <dir> --out <path>",
 		Why: "Writes the package to a file outside the layout trees: in the source directory itself, or anywhere outside it."}
-	nextPackUnpack = Next{Run: "metais unpack <package> --to <dir>",
+	nextPackUnpack = Next{Run: "metais unpack <package> --out <dir>",
 		Why: "Writes the packed package's source directory, which pack reads."}
 	nextPackStream = Next{Run: "metais pack <dir> --out <path>",
 		Why: "Writes the package to a file; or redirect standard output to a file or a pipe, since a package is not written to a terminal."}

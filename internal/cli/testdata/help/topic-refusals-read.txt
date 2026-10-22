@@ -130,7 +130,7 @@ Next: metais read --help
   usage.unexpected_operand
   usage.unknown_flag
 
-Next: metais extract <package> <path> --to <dir>
+Next: metais extract <package> <path> --out <dir>
       Writes the entry, as stored, to a file beneath a new directory.
   usage.binary_to_terminal
   usage.not_text

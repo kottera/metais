@@ -4,6 +4,14 @@ step at once.
 Usage:
   metais check [<package>] [--limit <name>=<value>]... [--json]
 
+Examples:
+  metais check
+      Checks the source directory in the working directory.
+  metais check report-1.0.0.metais
+      Checks a packed package.
+  metais check --json
+      Prints every finding as one metais.check/1 document.
+
 The package is a source directory, the current directory when omitted, or a
 packed package file. check reads nothing but the package and writes nothing. It
 runs every step in order: the source tree, the entries, the limits of the
@@ -112,11 +120,3 @@ Refusals:
                             Next: metais check <package>
   template.* (11)           A template or a manifest expression, an error.
                             Next: metais check <package>
-
-Examples:
-  metais check
-      Checks the source directory in the working directory.
-  metais check report-1.0.0.metais
-      Checks a packed package.
-  metais check --json
-      Prints every finding as one metais.check/1 document.

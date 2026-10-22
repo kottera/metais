@@ -3,6 +3,12 @@ metais limits — List every resource limit, with its default, unit and class.
 Usage:
   metais limits [--json]
 
+Examples:
+  metais limits
+      Prints the table of limits.
+  metais limits --json
+      Prints it as one metais.limits/1 document.
+
 Every size, count and ratio metais reads, computes or writes is bounded, and
 every bound has a name and a default. A package within every package limit is
 portable: every conforming tool accepts it at the defaults. A limit may be
@@ -42,9 +48,3 @@ Refusals:
       An argument that is not a flag the command accepts, an abbreviated flag,
       or one-letter aliases written together.
       Next: metais limits --help
-
-Examples:
-  metais limits
-      Prints the table of limits.
-  metais limits --json
-      Prints it as one metais.limits/1 document.

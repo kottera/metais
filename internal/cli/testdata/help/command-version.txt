@@ -4,6 +4,12 @@ implements.
 Usage:
   metais version [--json]
 
+Examples:
+  metais version
+      Prints the tool's version and the specification versions it implements.
+  metais version --json
+      Prints the same as one metais.version/1 document.
+
 The tool's version is a semantic version. Its version is independent of the
 specification's: a release may implement a new minor version of the
 specification without a new major version of the tool. Every specification
@@ -41,9 +47,3 @@ Refusals:
       An argument that is not a flag the command accepts, an abbreviated flag,
       or one-letter aliases written together.
       Next: metais version --help
-
-Examples:
-  metais version
-      Prints the tool's version and the specification versions it implements.
-  metais version --json
-      Prints the same as one metais.version/1 document.

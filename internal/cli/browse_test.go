@@ -154,15 +154,15 @@ func TestReadingRefusalsTriggered(t *testing.T) {
 		{"schema", "--json", "-"},
 		{"schema", "--json"},
 		{"schema", "--json", pkg, "--limit", "nope=1"},
-		{"extract", "--json", pkg, "[x", "--to", filepath.Join(dest, "a")},
-		{"extract", "--json", pkg, "nope/**", "--to", filepath.Join(dest, "a")},
-		{"extract", "--json", pkg, "**", "--to", dest},
-		{"extract", "--json", pkg, "**", "--to", file},
-		{"extract", "--json", pkg, "**", "--to", filepath.Join(ro, "out")},
-		{"extract", "--json", "-", "x", "--to", filepath.Join(dest, "a")},
+		{"extract", "--json", pkg, "[x", "--out", filepath.Join(dest, "a")},
+		{"extract", "--json", pkg, "nope/**", "--out", filepath.Join(dest, "a")},
+		{"extract", "--json", pkg, "**", "--out", dest},
+		{"extract", "--json", pkg, "**", "--out", file},
+		{"extract", "--json", pkg, "**", "--out", filepath.Join(ro, "out")},
+		{"extract", "--json", "-", "x", "--out", filepath.Join(dest, "a")},
 		{"extract", "--json", pkg, "**"},
 		{"extract", "--json", pkg},
-		{"extract", "--json", pkg, "**", "--to", filepath.Join(dest, "a"), "--limit", "nope=1"},
+		{"extract", "--json", pkg, "**", "--out", filepath.Join(dest, "a"), "--limit", "nope=1"},
 	} {
 		if r := run(argv...); r.status == 0 {
 			t.Errorf("metais %q was not refused", argv)
@@ -182,7 +182,7 @@ func TestReadingRefusalsTriggered(t *testing.T) {
 		if c.runsHere() {
 			to := testenv.Dir(t)
 			c.setup(t, to)
-			run("extract", "--json", pkg2, "metais.yaml", "references/*.txt", "--to", to, "--overwrite")
+			run("extract", "--json", pkg2, "metais.yaml", "references/*.txt", "--out", to, "--overwrite")
 		} else {
 			// Proved where it can be set up: a link, or a directory the
 			// user cannot write.
@@ -280,7 +280,7 @@ func extractTo(t *testing.T, cmd string) []string {
 	if cmd != "extract" {
 		return nil
 	}
-	return []string{"**", "--to", filepath.Join(testenv.Dir(t), "never")}
+	return []string{"**", "--out", filepath.Join(testenv.Dir(t), "never")}
 }
 
 // TestReadingRefusalExits is ADR-008 D13 for the reading commands: a
@@ -299,8 +299,8 @@ func TestReadingRefusalExits(t *testing.T) {
 	}{
 		{[]string{"read", "--json", pkg, "references/nope"}, "usage.entry_not_found", finding.ExitUsage},
 		{[]string{"read", "--json", pkg, "references/nolf.txt", "--lines", "4"}, "usage.line_out_of_range", finding.ExitUsage},
-		{[]string{"extract", "--json", pkg, "nope", "--to", filepath.Join(dest, "x")}, "usage.no_match", finding.ExitUsage},
-		{[]string{"extract", "--json", pkg, "**", "--to", dest}, "output.destination.not_empty", finding.ExitDestination},
+		{[]string{"extract", "--json", pkg, "nope", "--out", filepath.Join(dest, "x")}, "usage.no_match", finding.ExitUsage},
+		{[]string{"extract", "--json", pkg, "**", "--out", dest}, "output.destination.not_empty", finding.ExitDestination},
 		{[]string{"grep", "--json", pkg, "("}, "usage.bad_pattern", finding.ExitUsage},
 	} {
 		r := runTool(t, c.argv...)
@@ -326,7 +326,7 @@ func TestReadingNextSteps(t *testing.T) {
 		{[]string{"outline", "--json", pkg, "."}, "metais ls <package> ."},
 		{[]string{"read", "--json", pkg, "references/nolf.txt", "--lines", "9-"}, "metais read <package> references/nolf.txt --lines 1-3"},
 		{[]string{"read", "--json", pkg, "references/empty.txt", "--lines", "1"}, "metais read <package> references/empty.txt"},
-		{[]string{"outline", "--json", pkg, "references/bin.dat"}, "metais extract <package> references/bin.dat --to <dir>"},
+		{[]string{"outline", "--json", pkg, "references/bin.dat"}, "metais extract <package> references/bin.dat --out <dir>"},
 	} {
 		r := runTool(t, c.argv...)
 		if len(r.doc.Next) == 0 || r.doc.Next[0].Run != c.run {
@@ -547,7 +547,7 @@ func TestExtractCommand(t *testing.T) {
 	base := testenv.Dir(t)
 	to := filepath.Join(base, "new", "dir")
 	var res extractResult
-	result(t, runTool(t, "extract", "--json", pkg, "references/*.txt", "metais.yaml", "--to", to), &res)
+	result(t, runTool(t, "extract", "--json", pkg, "references/*.txt", "metais.yaml", "--out", to), &res)
 	var got []string
 	for _, f := range res.Files {
 		got = append(got, f.Path)
@@ -558,19 +558,19 @@ func TestExtractCommand(t *testing.T) {
 	if b, err := os.ReadFile(filepath.Join(to, "references", "crlf.txt")); err != nil || string(b) != "a\r\nb\r\nc\r\n" {
 		t.Errorf("the file written: %q %v", b, err)
 	}
-	r := runTool(t, "extract", pkg, "references/bin.dat", "--to", to)
+	r := runTool(t, "extract", pkg, "references/bin.dat", "--out", to)
 	if r.status != finding.ExitDestination || !strings.Contains(r.stderr, "Found in the directory:\n  metais.yaml\n  references\n") {
 		t.Errorf("an existing destination: %d %q", r.status, r.stderr)
 	}
 	if _, err := os.Stat(filepath.Join(to, "references", "bin.dat")); err == nil {
 		t.Error("extract wrote into an existing directory without --overwrite")
 	}
-	if r := runTool(t, "extract", "--json", pkg, "references/bin.dat", "--to", to); !slices.Contains(r.doc.Next, nextExtractOverwrite) {
+	if r := runTool(t, "extract", "--json", pkg, "references/bin.dat", "--out", to); !slices.Contains(r.doc.Next, nextExtractOverwrite) {
 		t.Errorf("the refusal does not name --overwrite as its next step: %v", r.doc.Next)
 	}
 	empty := filepath.Join(base, "empty")
 	os.Mkdir(empty, 0o755)
-	result(t, runTool(t, "extract", "--json", pkg, "metais.yaml", "--to", empty), &res)
+	result(t, runTool(t, "extract", "--json", pkg, "metais.yaml", "--out", empty), &res)
 	if res.DryRun || len(res.Files) != 1 {
 		t.Errorf("an existing empty destination: %+v", res)
 	}
@@ -578,14 +578,14 @@ func TestExtractCommand(t *testing.T) {
 		t.Errorf("extract did not write into an existing empty directory: %v", err)
 	}
 	dry := filepath.Join(base, "dry")
-	result(t, runTool(t, "extract", "--json", pkg, "references", "--to", dry, "--dry-run"), &res)
+	result(t, runTool(t, "extract", "--json", pkg, "references", "--out", dry, "--dry-run"), &res)
 	if !res.DryRun || len(res.Files) != 8 {
 		t.Errorf("a dry run: %+v", res)
 	}
 	if _, err := os.Stat(dry); err == nil {
 		t.Error("a dry run wrote")
 	}
-	if r := runTool(t, "extract", pkg, "metais.yaml", "--to", filepath.Join(base, "h")); !strings.HasPrefix(r.stdout, "Wrote 1 file:\n  metais.yaml\n") || strings.Contains(r.stdout+r.stderr, base) {
+	if r := runTool(t, "extract", pkg, "metais.yaml", "--out", filepath.Join(base, "h")); !strings.HasPrefix(r.stdout, "Wrote 1 file:\n  metais.yaml\n") || strings.Contains(r.stdout+r.stderr, base) {
 		t.Errorf("extract's human result: %q %q", r.stdout, r.stderr)
 	}
 }
@@ -709,7 +709,7 @@ func TestExtractOverwrite(t *testing.T) {
 	dry := host(t)
 	before := snapshot(t, dry)
 	var res extractResult
-	result(t, runTool(t, "extract", "--json", pkg, "metais.yaml", "references/*.txt", "--to", dry, "--overwrite", "--dry-run"), &res)
+	result(t, runTool(t, "extract", "--json", pkg, "metais.yaml", "references/*.txt", "--out", dry, "--overwrite", "--dry-run"), &res)
 	if !res.DryRun || len(res.Files) != 6 {
 		t.Errorf("a dry run with --overwrite: %+v", res)
 	}
@@ -718,7 +718,7 @@ func TestExtractOverwrite(t *testing.T) {
 	}
 
 	to := host(t)
-	r := runTool(t, "extract", pkg, "metais.yaml", "references/*.txt", "--to", to, "--overwrite")
+	r := runTool(t, "extract", pkg, "metais.yaml", "references/*.txt", "--out", to, "--overwrite")
 	if r.status != 0 || !strings.HasPrefix(r.stdout, "Wrote 6 files:\n  metais.yaml\n") {
 		t.Fatalf("extract --overwrite: %d %q %q", r.status, r.stdout, r.stderr)
 	}
@@ -772,7 +772,7 @@ func TestExtractFailedFindings(t *testing.T) {
 	}
 }
 
-// extractDestinationCase is one existing --to that extract --overwrite
+// extractDestinationCase is one existing --out that extract --overwrite
 // refuses: the host beneath it, made by setup, and the findings it
 // reports, in order, each as its code and parameters.
 type extractDestinationCase struct {
@@ -851,7 +851,7 @@ func (c extractDestinationCase) runsHere() bool {
 // finding before anything is written, and A1 item 3's commit failure,
 // through the command line: each case reports its findings, all of them
 // together, with the exit status of a refused destination, names a next
-// step, and changes nothing in --to but what a commit already moved.
+// step, and changes nothing in --out but what a commit already moved.
 func TestExtractDestinationRefusals(t *testing.T) {
 	testenv.Home(t)
 	pkg := browsePackage(t)
@@ -864,7 +864,7 @@ func TestExtractDestinationRefusals(t *testing.T) {
 				to := testenv.Dir(t)
 				c.setup(t, to)
 				before := snapshot(t, to)
-				argv := []string{"extract", "--json", pkg, "metais.yaml", "references/*.txt", "--to", to, "--overwrite"}
+				argv := []string{"extract", "--json", pkg, "metais.yaml", "references/*.txt", "--out", to, "--overwrite"}
 				if dry {
 					argv = append(argv, "--dry-run")
 				}

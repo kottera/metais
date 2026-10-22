@@ -46,15 +46,15 @@ var generatorFlags = []args.Flag{optionalFlag, seedFlag, itemsFlag}
 // The steps sample's refusals point to. No path the caller gave is echoed
 // (ADR-008 D14 item 2).
 var (
-	nextSampleTo = Next{Run: "metais sample <package> --to <dir>",
+	nextSampleOut = Next{Run: "metais sample <package> --out <dir>",
 		Why: "Writes the sample data as a data directory into a directory that is empty or does not exist yet."}
-	nextSampleInTheWay = Next{Run: "metais sample <package> --to <dir>",
+	nextSampleInTheWay = Next{Run: "metais sample <package> --out <dir>",
 		Why: "Writes again once what stands in the way in <dir> is moved or removed, or into a directory that does not exist yet."}
-	nextSampleOverwrite = Next{Run: "metais sample <package> --to <dir> --overwrite",
+	nextSampleOverwrite = Next{Run: "metais sample <package> --out <dir> --overwrite",
 		Why: "Writes into the directory anyway, replacing the files sample writes and leaving every other file as it is."}
 	nextSampleExample = Next{Run: "metais sample --example <name>",
 		Why: "Saves the sample data as a new example of the source directory, under a name no example has yet."}
-	nextSampleUnpack = Next{Run: "metais unpack <package> --to <dir>",
+	nextSampleUnpack = Next{Run: "metais unpack <package> --out <dir>",
 		Why: "Writes the packed package's source directory, which sample --example can save an example into."}
 	nextSampleInputs = Next{Run: "metais inspect <package>",
 		Why: "Lists the inputs the package takes; a value given with --set, --set-json or --inputs-json is kept as given and must be one the schema allows."}
@@ -69,20 +69,20 @@ func sampleDeclaration() *Command {
 		Refusal{Code: finding.CodeUsageBadValue, Cause: "--seed or --items is not a whole number in range, or --example is not a name an example can have.", Next: nextCommandHelp("sample"),
 			match: valueRefused("--seed", "--items", "--example")},
 		Refusal{Code: finding.CodeUsageConflictingFlags, Cause: "--inputs-json - is given twice, and standard input is read once.", Next: nextInputsHelp},
-		Refusal{Code: finding.CodeUsageFlagExcluded, Cause: "--to and --example are both given, or --overwrite is given with --example.", Next: nextCommandHelp("sample")},
+		Refusal{Code: finding.CodeUsageFlagExcluded, Cause: "--out and --example are both given, or --overwrite is given with --example.", Next: nextCommandHelp("sample")},
 		Refusal{Code: finding.CodeUsageNotSourceDir, Cause: "--example is given with a packed package, whose examples are not edited.", Next: nextSampleUnpack},
-		Refusal{Code: finding.CodeDestinationNotEmpty, Cause: "--to names a directory that holds entries, and --overwrite is not given.", Next: nextSampleOverwrite},
-		Refusal{Code: finding.CodeDestinationNotDirectory, Cause: "--to, or a directory above it, exists and is not a directory; or, in <dir>, a file stands where a path sample writes needs a directory.", Next: nextSampleInTheWay},
+		Refusal{Code: finding.CodeDestinationNotEmpty, Cause: "--out names a directory that holds entries, and --overwrite is not given.", Next: nextSampleOverwrite},
+		Refusal{Code: finding.CodeDestinationNotDirectory, Cause: "--out, or a directory above it, exists and is not a directory; or, in <dir>, a file stands where a path sample writes needs a directory.", Next: nextSampleInTheWay},
 		Refusal{Code: finding.CodeDestinationLink, Cause: "In <dir>, a path sample writes runs through, or ends at, a symbolic link, a junction or another reparse point, which is never followed.", Next: nextSampleInTheWay},
 		Refusal{Code: finding.CodeDestinationCaseVariant, Cause: "In <dir>, an entry's name differs only in case or normalization from a name a path sample writes holds.", Next: nextSampleInTheWay},
 		Refusal{Code: finding.CodeDestinationNotRegularFile, Cause: "In <dir>, a directory, a named pipe, a socket or a device stands where sample writes a file.", Next: nextSampleInTheWay},
-		Refusal{Code: finding.CodeDestinationNothingWritten, Cause: "A write failed, another file system is mounted on a path sample writes, or the example already exists; nothing is left written.", Next: nextSampleTo},
-		Refusal{Code: finding.CodeDestinationStagingExists, Cause: "<dir> holds .metais-staging, left by a killed write or in use by another; nothing is written.", Next: nextSampleTo},
-		Refusal{Code: finding.CodeDestinationCommitFailed, Cause: "Moving the files into an existing <dir> failed part way; the files already moved are listed, and nothing else was changed.", Next: nextSampleTo},
+		Refusal{Code: finding.CodeDestinationNothingWritten, Cause: "A write failed, another file system is mounted on a path sample writes, or the example already exists; nothing is left written.", Next: nextSampleOut},
+		Refusal{Code: finding.CodeDestinationStagingExists, Cause: "<dir> holds .metais-staging, left by a killed write or in use by another; nothing is written.", Next: nextSampleOut},
+		Refusal{Code: finding.CodeDestinationCommitFailed, Cause: "Moving the files into an existing <dir> failed part way; the files already moved are listed, and nothing else was changed.", Next: nextSampleOut},
 	)
 	return &Command{
 		Name: "sample", Group: "Authoring",
-		Synopsis:    "sample [<package>] (--to <dir> | --example <name>) [--optional <mode>] [--seed <n>] [--items <n>] [supply flags] [--overwrite] [--dry-run] [--json]",
+		Synopsis:    "sample [<package>] (--out <dir> | --example <name>) [--optional <mode>] [--seed <n>] [--items <n>] [supply flags] [--overwrite] [--dry-run] [--json]",
 		Description: "Generate sample data from the inputs' schemas, and keep it as a data directory or an example.",
 		Detail: "The generator makes a value for every input from its schema: the schema's const, examples, " +
 			"default or enum where it has one, and otherwise placeholder text, numbers and dates of its own. " +
@@ -94,7 +94,7 @@ func sampleDeclaration() *Command {
 			"anything is written. A field the generator cannot make a valid value for is " +
 			"schema.sample_unsatisfiable, and data that fails its schema, such as a supplied value the schema " +
 			"refuses, is schema.sample_invalid; with any error nothing is written.\n\n" +
-			"With --to, the data directory is <dir>: a <dir> that does not exist is created, with its missing " +
+			"With --out, the data directory is <dir>: a <dir> that does not exist is created, with its missing " +
 			"parents, beside it and renamed into place; an empty one is written into. A <dir> that holds any " +
 			"entry, a hidden one included, is refused unless --overwrite is given, and then each file sample " +
 			"writes replaces the file of that name, and nothing else in <dir> is read, changed or removed. " +
@@ -108,13 +108,13 @@ func sampleDeclaration() *Command {
 			"and writes nothing.",
 		Role: finding.RoleAuthoring,
 		Operands: []args.Operand{{Name: "<package>",
-			Description: "A source directory, or a packed package file with --to; the current directory when omitted. - is refused, since a package is read with random access."}},
+			Description: "A source directory, or a packed package file with --out; the current directory when omitted. - is refused, since a package is read with random access."}},
 		Flags: append([]args.Flag{
-			{Name: "to", Value: "<dir>", Description: "The directory to write the data directory into: one that does not exist yet, or an empty one, or with --overwrite any directory."},
+			{Name: "out", Value: "<dir>", Description: "The directory to write the data directory into: one that does not exist yet, or an empty one, or with --overwrite any directory."},
 			{Name: "example", Value: "<name>", Description: "Save the data as the inputs of a new example, examples/<name>/, of the source directory."},
 		}, slices.Concat(generatorFlags, []args.Flag{setFlag, setJSONFlag, inputsJSONFlag},
 			[]args.Flag{
-				{Name: "overwrite", Description: "With --to, write into a directory that holds entries, replacing the files sample writes and nothing else."},
+				{Name: "overwrite", Description: "With --out, write into a directory that holds entries, replacing the files sample writes and nothing else."},
 				{Name: "dry-run", Description: "Generate and validate the data, list the files sample would write, and write nothing."},
 				limitFlag, failOnFlag,
 			})...),
@@ -122,10 +122,11 @@ func sampleDeclaration() *Command {
 		Prints:   "The files written, relative to <dir> or to examples/<name>/, in path order; an empty directory, a collection with no item, is listed with a trailing /.",
 		Refusals: refusals,
 		Examples: []Example{
-			{"metais sample --to data", "Writes sample data for the source directory in the working directory into the new directory data."},
-			{"metais sample report-1.0.0.metais --to data --seed 7 --optional mixed", "Writes other data, with some optional fields left out."},
+			{"metais sample report-1.0.0.metais --out data", "Writes sample data for the package into the new directory data, which render --data data reads."},
+			{"metais sample --out data", "Writes sample data for the source directory in the working directory into the new directory data."},
+			{"metais sample report-1.0.0.metais --out data --seed 7 --optional mixed", "Writes other data, with some optional fields left out."},
 			{"metais sample --example staged --set /incident/stage=final", "Saves data whose stage is final as the example staged."},
-			{"metais sample --to data --overwrite --json", "Replaces the data files in data, and lists them as one metais.sample/1 document."},
+			{"metais sample --out data --overwrite --json", "Replaces the data files in data, and lists them as one metais.sample/1 document."},
 		},
 		run: runSample,
 	}
@@ -343,22 +344,22 @@ func runSample(s *session, p args.Parsed) outcome {
 		return s.refuseWith(finding.New(finding.CodeUsagePackageFromStdin, invocation, nil,
 			finding.Params{"argument": finding.Int(int64(s.line.at[p.OperandArgs[0]] + 1))}))
 	}
-	to, hasTo := p.Value("to")
+	to, hasOut := p.Value("out")
 	name, hasExample := p.Value("example")
 	switch {
-	case hasTo && hasExample:
-		return s.refuseWith(s.excluded(p, "example", "to"))
-	case !hasTo && !hasExample:
+	case hasOut && hasExample:
+		return s.refuseWith(s.excluded(p, "example", "out"))
+	case !hasOut && !hasExample:
 		return s.refuseWith(finding.New(finding.CodeUsageMissingOperand, invocation, nil, finding.Params{
 			"command": finding.String("sample"),
-			"operand": finding.String("(--to <dir> | --example <name>)"),
+			"operand": finding.String("(--out <dir> | --example <name>)"),
 		}))
 	case hasExample && p.Has("overwrite"):
 		return s.refuseWith(s.excluded(p, "overwrite", "example"))
-	case hasTo && to == "":
+	case hasOut && to == "":
 		// An empty name names no directory; it is never read as the
 		// working directory.
-		return s.refuseWith(s.badValue(p, "to"))
+		return s.refuseWith(s.badValue(p, "out"))
 	case hasExample && !manifest.ValidInputName(name):
 		return s.refuseWith(s.badValue(p, "example"))
 	}
