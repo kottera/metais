@@ -13,7 +13,7 @@ import (
 
 	"github.com/gowebpki/jcs"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // The examples of RFC 8785, transcribed from the RFC: §3.2.2's

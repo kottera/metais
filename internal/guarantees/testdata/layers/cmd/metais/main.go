@@ -8,9 +8,9 @@ package main
 import (
 	"os"
 
-	"github.com/kottera/metais/internal/cli"
-	"github.com/kottera/metais/internal/tools/release/archive"
-	"github.com/kottera/metais/internal/tools/ux/scenario"
+	"metais.org/metais/internal/cli"
+	"metais.org/metais/internal/tools/release/archive"
+	"metais.org/metais/internal/tools/ux/scenario"
 )
 
 func main() {

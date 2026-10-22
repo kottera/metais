@@ -7,7 +7,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestConstructs: every construct the lexer finds, with its delimiters and

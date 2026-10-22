@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // forkStarts is whether Go starts a process here by fork(2), so that the

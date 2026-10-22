@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // manyOutputs writes, below dir, a package of n template outputs spread

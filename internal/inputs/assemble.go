@@ -4,9 +4,9 @@
 package inputs
 
 import (
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/schema"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/schema"
 )
 
 // state is one input while the inputs object is assembled.

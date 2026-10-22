@@ -12,11 +12,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/inputs"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/inputs"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/testenv"
 )
 
 // vectors is the conformance suite's vectors, from this package's

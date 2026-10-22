@@ -11,8 +11,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/tools/ux/scrub"
-	"github.com/kottera/metais/internal/tools/ux/streamjson"
+	"metais.org/metais/internal/tools/ux/scrub"
+	"metais.org/metais/internal/tools/ux/streamjson"
 )
 
 // harness is the agent harness a session runs in (R-UX-6): the runner

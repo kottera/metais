@@ -14,9 +14,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // packSource copies the source directory of the vector id's tree dir into

@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/schema"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/schema"
 )
 
 // walker is the static walk of ADR-003 D14 item 1 over the combined

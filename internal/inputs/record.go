@@ -7,9 +7,9 @@ import (
 	"crypto/sha256"
 	"slices"
 
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/manifest"
 )
 
 // Record is what a render is given for one declared input (ADR-003 D21).

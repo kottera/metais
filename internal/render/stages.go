@@ -4,13 +4,13 @@
 package render
 
 import (
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/regexprofile"
-	"github.com/kottera/metais/internal/schema"
-	"github.com/kottera/metais/internal/template"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/regexprofile"
+	"metais.org/metais/internal/schema"
+	"metais.org/metais/internal/template"
 )
 
 // Schemas are the output validation schemas of a package's declarations,

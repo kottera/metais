@@ -7,8 +7,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestTruthiness: only nil and false are falsy; 0, "", [] and {} are

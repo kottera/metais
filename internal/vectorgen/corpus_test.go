@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/digest"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/digest"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // This file is the hostile corpus of ADR-009 D17 items 1 to 4 and ADR-001's

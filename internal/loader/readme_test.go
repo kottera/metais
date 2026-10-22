@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/digest"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/specdata"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/digest"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/specdata"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // readmeCase is how a packed package carries its README.md: its content,

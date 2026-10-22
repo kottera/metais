@@ -7,7 +7,7 @@
 # command: go test -run '^$' -bench . -benchmem -count 6 ./internal/cli
 goos: linux
 goarch: amd64
-pkg: github.com/kottera/metais/internal/cli
+pkg: metais.org/metais/internal/cli
 cpu: AMD Ryzen 5 3600 6-Core Processor              
 BenchmarkInspect-12     	       3	 397430829 ns/op	 557088333 cpu-ns/op	586770858 B/op	 1434987 allocs/op
 BenchmarkInspect-12     	       3	 473697182 ns/op	 732985333 cpu-ns/op	586757426 B/op	 1434971 allocs/op
@@ -34,4 +34,4 @@ BenchmarkPack/fixture-12          	      22	  45689916 ns/op	  57708682 cpu-ns/o
 BenchmarkPack/fixture-12          	      25	  46908566 ns/op	  57714000 cpu-ns/op	12659549 B/op	  108690 allocs/op
 BenchmarkPack/fixture-12          	      34	  45681516 ns/op	  52970235 cpu-ns/op	12646849 B/op	  108691 allocs/op
 PASS
-ok  	github.com/kottera/metais/internal/cli	61.347s
+ok  	metais.org/metais/internal/cli	61.347s

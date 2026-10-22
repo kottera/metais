@@ -6,10 +6,10 @@ package filters
 import (
 	"strings"
 
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // noArgs refuses an application of name that has an argument, naming the

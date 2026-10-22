@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/template"
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/template"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // W5-6.2, MTS-TRN-007: a container is planned with at most

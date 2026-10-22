@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // childEnv marks the re-executed test binary that calls Isolate. Isolate

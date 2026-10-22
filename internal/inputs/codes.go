@@ -6,9 +6,9 @@ package inputs
 import (
 	"fmt"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/inputs/csv"
-	"github.com/kottera/metais/internal/jsonx"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/inputs/csv"
+	"metais.org/metais/internal/jsonx"
 )
 
 // The codes the inputs layer reports itself (ADR-003 Interfaces, ADR-009

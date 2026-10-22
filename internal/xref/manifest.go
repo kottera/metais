@@ -6,11 +6,11 @@ package xref
 import (
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/schema"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/schema"
 )
 
 // run analyses every output in the manifest's order, then every template

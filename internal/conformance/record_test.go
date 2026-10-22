@@ -20,7 +20,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // recordFormat names the record's format, the $id of its schema.

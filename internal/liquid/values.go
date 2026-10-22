@@ -6,7 +6,7 @@ package liquid
 import (
 	"strconv"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // A template's values are the data model's (ADR-004 D4 item 1), with one

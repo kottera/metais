@@ -7,11 +7,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/inputs/csv"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/sample"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/inputs/csv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/sample"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestSampleDataValidates is where W3-5 meets W3-2: the data the sample

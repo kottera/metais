@@ -13,9 +13,9 @@ import (
 	"io"
 	pathpkg "path"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/render"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/render"
 )
 
 // Sink is where a render goes, in ADR-005 D13's phases 3 and 5. render.Run

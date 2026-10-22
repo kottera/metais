@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/inputs/csv"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/schema"
-	"github.com/kottera/metais/internal/yamlx"
+	"metais.org/metais/internal/inputs/csv"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/schema"
+	"metais.org/metais/internal/yamlx"
 )
 
 // File is one file, or one directory, of a data directory (ADR-003 D16).

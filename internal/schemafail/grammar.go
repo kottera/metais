@@ -6,7 +6,7 @@ package schemafail
 import (
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // argKind is what follows a keyword that holds subschemas, in a schema

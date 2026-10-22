@@ -4,11 +4,11 @@
 package render
 
 import (
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/limits"
-	templates "github.com/kottera/metais/internal/template"
-	"github.com/kottera/metais/internal/unitext"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/limits"
+	templates "metais.org/metais/internal/template"
+	"metais.org/metais/internal/unitext"
 )
 
 // checkPaths applies the portable-path predicate to the paths of one

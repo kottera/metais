@@ -8,8 +8,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/liquid"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/liquid"
 )
 
 // FuzzScan runs the scan over arbitrary bytes as a template and as a

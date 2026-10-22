@@ -8,7 +8,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 // FuzzZipRead runs the strict reader over arbitrary bytes (ADR-010 D14

@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/author"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/author"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/testenv"
 )
 
 // renderPackage writes init's scaffold below root and returns its path and

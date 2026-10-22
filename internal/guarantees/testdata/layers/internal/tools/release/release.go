@@ -7,7 +7,7 @@ package main
 import (
 	"os"
 
-	"github.com/kottera/metais/internal/tools/release/archive"
+	"metais.org/metais/internal/tools/release/archive"
 )
 
 func main() {

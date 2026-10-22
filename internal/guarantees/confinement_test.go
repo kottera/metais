@@ -8,8 +8,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/testenv"
 )
 
 // confine renders st under faults in <tmp>/parent and returns every path

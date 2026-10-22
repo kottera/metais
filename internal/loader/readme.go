@@ -7,10 +7,10 @@ import (
 	"io"
 	"slices"
 
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/specdata"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/specdata"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // Readme is the README text of the specification version spec (ADR-001

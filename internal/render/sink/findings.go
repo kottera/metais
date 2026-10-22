@@ -6,8 +6,8 @@ package sink
 import (
 	"errors"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostfs"
 )
 
 // PathRefusal is the finding of err, the refusal of ADR-005 D15 item 4's

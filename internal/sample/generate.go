@@ -10,9 +10,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/regexprofile"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/regexprofile"
 )
 
 // The generator's fixed bounds (ADR-007 D9 items 9, 10 and 16): passes

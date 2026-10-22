@@ -7,9 +7,9 @@ import (
 	"errors"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/regexprofile"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/regexprofile"
 )
 
 // MaxDisplayed is the most bytes of a line grep displays (ADR-008 D5, grep

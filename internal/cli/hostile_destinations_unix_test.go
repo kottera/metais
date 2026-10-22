@@ -11,8 +11,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/testenv"
 )
 
 // plant makes each link of links, by path beneath root, pointing at its

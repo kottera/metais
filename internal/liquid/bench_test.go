@@ -12,13 +12,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/template"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/template"
+	"metais.org/metais/internal/testenv"
 )
 
 // The benchmarks below are ADR-010 D15 item 1's for Liquid: the parse and

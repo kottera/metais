@@ -13,9 +13,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/unitext"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/unitext"
 )
 
 // suiteRoot is the conformance tree, relative to the repository root.

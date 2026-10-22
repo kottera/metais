@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 // TestWriteGolden pins the csv filter's bytes (ADR-004 D10 item 3): a

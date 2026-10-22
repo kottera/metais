@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/unitext"
+	"metais.org/metais/internal/unitext"
 )
 
 // maxLabel is the most characters a link label holds (§4.7).

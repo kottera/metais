@@ -7,9 +7,9 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/unitext"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/unitext"
 )
 
 // slugFilter is ADR-004 D10 item 6: a string as a URL-safe slug, in

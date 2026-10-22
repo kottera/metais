@@ -7,10 +7,10 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/kottera/metais/internal/inputs"
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/inputs"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/manifest"
 )
 
 // renderTagsWith renders text in a renderer whose package declares decls,

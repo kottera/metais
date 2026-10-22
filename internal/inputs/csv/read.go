@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
 )
 
 // Read reads src, one CSV file's text, under delim and lim (ADR-003 D11,

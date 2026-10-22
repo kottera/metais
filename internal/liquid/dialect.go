@@ -9,8 +9,8 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // Dialect is the set of names a template may use beyond the grammar

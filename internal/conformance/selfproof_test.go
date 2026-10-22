@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // fixtureIDs are every fixture vector.

@@ -17,8 +17,8 @@
 package template
 
 import (
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/template/filters"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/template/filters"
 )
 
 // The globals of ADR-004 D7, and the loop objects Liquid binds, which no

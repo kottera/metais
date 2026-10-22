@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/testenv"
 )
 
 // The hostile corpus's Markdown cases (ADR-009 D17 item 10): every case

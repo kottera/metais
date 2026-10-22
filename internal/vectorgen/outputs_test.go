@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // packOutputs are the packages pack's vectors expect it to write: each is

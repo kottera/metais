@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/testenv"
 )
 
 // benchSize is ADR-010 D15 item 1's input: 10 MiB.

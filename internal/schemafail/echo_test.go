@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // sentinel is every string value of the instance the echo cases validate

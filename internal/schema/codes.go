@@ -4,9 +4,9 @@
 package schema
 
 import (
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/regexprofile"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/regexprofile"
 )
 
 // The codes the compiler reports about a schema file, ADR-003's and

@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/schemafail"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/schemafail"
 )
 
 // The compiler is the schemafail.Schemas of its package: it holds every

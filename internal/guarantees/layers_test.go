@@ -15,7 +15,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // layerRule is one row of layers.json, the table of ADR-010 D2 item 2's
@@ -291,28 +291,28 @@ func TestLayersControl(t *testing.T) {
 	}
 	slices.Sort(got)
 	want := []string{
-		"github.com/kottera/metais/cmd/metais depends on github.com/kottera/metais/internal/tools/release/archive",
-		"github.com/kottera/metais/cmd/metais depends on github.com/kottera/metais/internal/tools/ux/scenario",
-		"github.com/kottera/metais/internal/author/ooxml depends on github.com/kottera/metais/internal/manifest",
-		"github.com/kottera/metais/internal/browse/browse.go:15: refers to github.com/kottera/metais/internal/hostfs.Write in List, not in Extract",
-		"github.com/kottera/metais/internal/browse/browse.go:23: refers to github.com/kottera/metais/internal/hostfs.Write in T.Extract, not in Extract",
-		"github.com/kottera/metais/internal/browse/browse.go:25: refers to github.com/kottera/metais/internal/hostfs.Write outside any function, not in Extract",
-		"github.com/kottera/metais/internal/cli imports golang.org/x/sys/unix, which only github.com/kottera/metais/internal/hostfs may",
-		"github.com/kottera/metais/internal/cli imports golang.org/x/term, which only github.com/kottera/metais/internal/hostenv may",
-		"github.com/kottera/metais/internal/cli/cli.go:19: refers to os.Stdout, which only github.com/kottera/metais/cmd/metais, github.com/kottera/metais/internal/tools/release, github.com/kottera/metais/internal/tools/ux may",
-		"github.com/kottera/metais/internal/liquid depends on github.com/kottera/metais/internal/finding, outside the standard library",
-		"github.com/kottera/metais/internal/liquid/value depends on golang.org/x/sys/unix, outside the standard library",
-		"github.com/kottera/metais/internal/liquid/value depends on golang.org/x/term, outside the standard library",
-		"github.com/kottera/metais/internal/liquid/value imports golang.org/x/term, which only github.com/kottera/metais/internal/hostenv may",
-		"github.com/kottera/metais/internal/render imports archive/zip, which only github.com/kottera/metais/internal/zipfmt may",
-		"github.com/kottera/metais/internal/render imports github.com/kottera/metais/internal/pkgtree/pkgtreetest outside its tests",
-		"github.com/kottera/metais/internal/render imports github.com/kottera/metais/internal/xref, which only github.com/kottera/metais/internal/author may",
-		"github.com/kottera/metais/internal/render imports go.yaml.in/yaml/v3, which only github.com/kottera/metais/internal/yamlx may",
-		"github.com/kottera/metais/internal/render imports golang.org/x/text/cases, which only github.com/kottera/metais/internal/unitext may",
-		"github.com/kottera/metais/internal/render/paths.go:18: refers to github.com/kottera/metais/internal/hostfs.Write, not for a call of github.com/kottera/metais/internal/hostfs.CheckPaths",
-		"github.com/kottera/metais/internal/render/paths.go:24: refers to github.com/kottera/metais/internal/hostfs.Write, not for a call of github.com/kottera/metais/internal/hostfs.CheckPaths",
-		"github.com/kottera/metais/internal/render/paths.go:27: refers to github.com/kottera/metais/internal/hostfs.CheckPaths, not for a call of github.com/kottera/metais/internal/hostfs.CheckPaths",
-		"github.com/kottera/metais/internal/tools/release/archive/archive.go:13: refers to os.Stdout, which only github.com/kottera/metais/cmd/metais, github.com/kottera/metais/internal/tools/release, github.com/kottera/metais/internal/tools/ux may",
+		"metais.org/metais/cmd/metais depends on metais.org/metais/internal/tools/release/archive",
+		"metais.org/metais/cmd/metais depends on metais.org/metais/internal/tools/ux/scenario",
+		"metais.org/metais/internal/author/ooxml depends on metais.org/metais/internal/manifest",
+		"metais.org/metais/internal/browse/browse.go:15: refers to metais.org/metais/internal/hostfs.Write in List, not in Extract",
+		"metais.org/metais/internal/browse/browse.go:23: refers to metais.org/metais/internal/hostfs.Write in T.Extract, not in Extract",
+		"metais.org/metais/internal/browse/browse.go:25: refers to metais.org/metais/internal/hostfs.Write outside any function, not in Extract",
+		"metais.org/metais/internal/cli imports golang.org/x/sys/unix, which only metais.org/metais/internal/hostfs may",
+		"metais.org/metais/internal/cli imports golang.org/x/term, which only metais.org/metais/internal/hostenv may",
+		"metais.org/metais/internal/cli/cli.go:19: refers to os.Stdout, which only metais.org/metais/cmd/metais, metais.org/metais/internal/tools/release, metais.org/metais/internal/tools/ux may",
+		"metais.org/metais/internal/liquid depends on metais.org/metais/internal/finding, outside the standard library",
+		"metais.org/metais/internal/liquid/value depends on golang.org/x/sys/unix, outside the standard library",
+		"metais.org/metais/internal/liquid/value depends on golang.org/x/term, outside the standard library",
+		"metais.org/metais/internal/liquid/value imports golang.org/x/term, which only metais.org/metais/internal/hostenv may",
+		"metais.org/metais/internal/render imports archive/zip, which only metais.org/metais/internal/zipfmt may",
+		"metais.org/metais/internal/render imports go.yaml.in/yaml/v3, which only metais.org/metais/internal/yamlx may",
+		"metais.org/metais/internal/render imports golang.org/x/text/cases, which only metais.org/metais/internal/unitext may",
+		"metais.org/metais/internal/render imports metais.org/metais/internal/pkgtree/pkgtreetest outside its tests",
+		"metais.org/metais/internal/render imports metais.org/metais/internal/xref, which only metais.org/metais/internal/author may",
+		"metais.org/metais/internal/render/paths.go:18: refers to metais.org/metais/internal/hostfs.Write, not for a call of metais.org/metais/internal/hostfs.CheckPaths",
+		"metais.org/metais/internal/render/paths.go:24: refers to metais.org/metais/internal/hostfs.Write, not for a call of metais.org/metais/internal/hostfs.CheckPaths",
+		"metais.org/metais/internal/render/paths.go:27: refers to metais.org/metais/internal/hostfs.CheckPaths, not for a call of metais.org/metais/internal/hostfs.CheckPaths",
+		"metais.org/metais/internal/tools/release/archive/archive.go:13: refers to os.Stdout, which only metais.org/metais/cmd/metais, metais.org/metais/internal/tools/release, metais.org/metais/internal/tools/ux may",
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("the layering rules over testdata/layers reported\n\t%s\nwant\n\t%s", strings.Join(got, "\n\t"), strings.Join(want, "\n\t"))

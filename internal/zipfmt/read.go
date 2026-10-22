@@ -13,9 +13,9 @@ import (
 	"io"
 	"slices"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/unitext"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/unitext"
 )
 
 // Open reads the packed package r, of size bytes, and applies ADR-001 D8's

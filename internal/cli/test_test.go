@@ -13,11 +13,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostenv"
-	"github.com/kottera/metais/internal/render/sink"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostenv"
+	"metais.org/metais/internal/render/sink"
+	"metais.org/metais/internal/testenv"
 )
 
 // copyTree copies the tree at src into a new directory and returns it.

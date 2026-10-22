@@ -15,7 +15,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 // canaryDigest is the SHA-256 of the package Write makes of

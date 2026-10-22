@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // TestManifestSchemaWork is ADR-009 Amendment A6 item 2, pinned false

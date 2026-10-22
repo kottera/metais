@@ -6,8 +6,8 @@ package sink
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostfs"
 )
 
 // TestPathRefusal is the finding of each reason ADR-005 D15 item 4's

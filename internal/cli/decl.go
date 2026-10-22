@@ -7,8 +7,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/finding"
 )
 
 // Command is one command's declaration (ADR-008 D15 item 1). The parser,

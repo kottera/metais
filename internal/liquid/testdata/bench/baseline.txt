@@ -7,7 +7,7 @@
 # command: go test -run '^$' -bench . -benchmem -count 6 ./internal/liquid
 goos: darwin
 goarch: arm64
-pkg: github.com/kottera/metais/internal/liquid
+pkg: metais.org/metais/internal/liquid
 cpu: Apple M2 Max
 BenchmarkParse/table-12         	   23130	     47309 ns/op	    7536 B/op	      78 allocs/op
 BenchmarkParse/table-12         	   32574	     45774 ns/op	    7536 B/op	      78 allocs/op
@@ -46,4 +46,4 @@ BenchmarkRender/nested-12       	      31	  36289132 ns/op	   1.34 MB/s	   73915
 BenchmarkRender/nested-12       	     100	  29418011 ns/op	   1.66 MB/s	   8126350 cpu-ns/op	 1066242 B/op	   38411 allocs/op
 BenchmarkRender/nested-12       	      49	  25577441 ns/op	   1.91 MB/s	   9323224 cpu-ns/op	 1066240 B/op	   38411 allocs/op
 PASS
-ok  	github.com/kottera/metais/internal/liquid	108.708s
+ok  	metais.org/metais/internal/liquid	108.708s

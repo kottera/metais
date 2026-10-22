@@ -9,11 +9,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/regexprofile"
-	"github.com/kottera/metais/internal/schemafail"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/regexprofile"
+	"metais.org/metais/internal/schemafail"
 )
 
 // Result is what a supply gave: each declared input's record, and every

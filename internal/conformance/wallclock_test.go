@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // The self-proof's rows met their 5 s wall clock under the full parallel

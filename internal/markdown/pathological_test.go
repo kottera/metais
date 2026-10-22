@@ -15,8 +15,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/testenv"
 )
 
 // cmarkFile is cmark's pathological suite, vendored from its source with

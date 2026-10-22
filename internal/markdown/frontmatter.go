@@ -6,8 +6,8 @@ package markdown
 import (
 	"bytes"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
 )
 
 // delimiter is the whole of the line that opens a frontmatter block and

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/pkgtree"
+	"metais.org/metais/internal/pkgtree"
 )
 
 // fake is a Tree that answers as the in-memory tree over its files does,

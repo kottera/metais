@@ -18,11 +18,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostenv"
-	"github.com/kottera/metais/internal/tarw"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostenv"
+	"metais.org/metais/internal/tarw"
+	"metais.org/metais/internal/testenv"
 )
 
 // streamDecls are the outputs of the stream tests' package: a fan-out of

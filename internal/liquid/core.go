@@ -9,8 +9,8 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // Core returns the dialect of ADR-004's core set: every core tag of D2,

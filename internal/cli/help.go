@@ -9,8 +9,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/finding"
 )
 
 // helpWidth is the column help is wrapped at (ADR-008 D11 item 7).

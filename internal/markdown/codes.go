@@ -3,7 +3,7 @@
 
 package markdown
 
-import "github.com/kottera/metais/internal/finding"
+import "metais.org/metais/internal/finding"
 
 // The codes SplitFrontmatter reports (ADR-003 Interfaces, ADR-009 D19).
 // Each is class content, about an input.

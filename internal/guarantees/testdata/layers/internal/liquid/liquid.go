@@ -5,7 +5,7 @@
 // internal package.
 package liquid
 
-import "github.com/kottera/metais/internal/finding"
+import "metais.org/metais/internal/finding"
 
 // Code is a finding code, which the engine must not know.
 var Code finding.Code

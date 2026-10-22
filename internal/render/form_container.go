@@ -7,9 +7,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // containerForm is a container's (ADR-005 D8): each evaluation is one

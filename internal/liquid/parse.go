@@ -11,7 +11,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/liquid/ast"
+	"metais.org/metais/internal/liquid/ast"
 )
 
 // Source is a template's text and the name errors give it: for a package's

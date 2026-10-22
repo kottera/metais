@@ -11,12 +11,12 @@ import (
 	"io"
 	"slices"
 
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostenv"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/version"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/version"
 )
 
 // outcome is what a command produced, before it is written.

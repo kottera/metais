@@ -3,7 +3,7 @@
 
 package yamlx
 
-import "github.com/kottera/metais/internal/finding"
+import "metais.org/metais/internal/finding"
 
 // rule is one of the profile's refusals. Each has a code in the manifest's
 // family and one in an input's (ADR-006 D3 item 2: manifest.yaml.* is

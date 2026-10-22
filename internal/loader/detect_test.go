@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/specdata"
+	"metais.org/metais/internal/specdata"
 )
 
 // detectionKey is the leading bytes every METAIS 1.0 package shares

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/schema"
+	"metais.org/metais/internal/schema"
 )
 
 // maxAlternatives is the most alternatives a set holds; a larger one

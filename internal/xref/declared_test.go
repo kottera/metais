@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/manifest"
 )
 
 // metricsSchema is the worked resolution's schema (ADR-007 D3): metrics

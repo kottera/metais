@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/schema"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/schema"
 )
 
 // declarations is the loader's step from a model to bundling: the inputs

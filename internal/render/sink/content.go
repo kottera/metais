@@ -6,8 +6,8 @@ package sink
 import (
 	"io"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/render"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/render"
 )
 
 // Content is the sink of one file's bytes on standard output, which

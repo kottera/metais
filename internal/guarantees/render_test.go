@@ -18,8 +18,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/cli"
-	"github.com/kottera/metais/internal/fault"
+	"metais.org/metais/internal/cli"
+	"metais.org/metais/internal/fault"
 )
 
 // renderStep is one render step of the conformance suite, as the

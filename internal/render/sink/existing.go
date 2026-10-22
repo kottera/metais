@@ -7,12 +7,12 @@ import (
 	"errors"
 	"slices"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/render"
-	"github.com/kottera/metais/internal/unitext"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/render"
+	"metais.org/metais/internal/unitext"
 )
 
 // existingDir is the sink of an --out that is an existing directory, x,

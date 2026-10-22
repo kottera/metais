@@ -8,8 +8,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/testenv"
 )
 
 // recordPkg declares vendor, an object with a defaulted member, and

@@ -17,9 +17,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/tools/ux/score"
-	"github.com/kottera/metais/internal/tools/ux/scrub"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/tools/ux/score"
+	"metais.org/metais/internal/tools/ux/scrub"
 )
 
 // The tests in this file run whole sets with every command and every
@@ -59,7 +59,7 @@ type fakeSet struct {
 func fakeRoot(t *testing.T) string {
 	t.Helper()
 	root := testenv.Dir(t)
-	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module github.com/kottera/metais\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module metais.org/metais\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.CopyFS(filepath.Join(root, scenariosDir), os.DirFS("./scenarios")); err != nil {

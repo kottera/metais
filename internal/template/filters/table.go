@@ -8,8 +8,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // csv and markdown_table write an array of objects as a table (ADR-004 D10

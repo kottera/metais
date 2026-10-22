@@ -16,10 +16,10 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostenv"
-	"github.com/kottera/metais/internal/skill"
-	"github.com/kottera/metais/internal/version"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostenv"
+	"metais.org/metais/internal/skill"
+	"metais.org/metais/internal/version"
 )
 
 var update = flag.Bool("update", false, "rewrite the help golden files")

@@ -7,7 +7,7 @@ import (
 	"regexp/syntax"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 // FuzzRegexProfile (ADR-010 D14 item 6) holds the profile to its contract

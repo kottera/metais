@@ -9,16 +9,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/dates"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/inputs"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/render"
-	"github.com/kottera/metais/internal/render/sink"
-	"github.com/kottera/metais/internal/sample"
-	"github.com/kottera/metais/internal/template"
-	"github.com/kottera/metais/internal/version"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/dates"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/inputs"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/render"
+	"metais.org/metais/internal/render/sink"
+	"metais.org/metais/internal/sample"
+	"metais.org/metais/internal/template"
+	"metais.org/metais/internal/version"
 )
 
 // The steps render's refusals point to.

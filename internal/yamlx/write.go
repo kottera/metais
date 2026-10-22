@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // Write is v as the `yaml` filter writes it (ADR-004 D10 item 2): a YAML

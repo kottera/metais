@@ -6,11 +6,11 @@ package inputs
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/schema"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/schema"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestInputValuesCount is ADR-009 Amendment A4 item 1's count for the

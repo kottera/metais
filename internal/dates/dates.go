@@ -20,7 +20,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // Time is an instant together with the offset it was written in, which is

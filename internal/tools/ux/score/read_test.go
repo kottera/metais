@@ -13,7 +13,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/kottera/metais/internal/tools/ux/scenario"
+	"metais.org/metais/internal/tools/ux/scenario"
 )
 
 // step is one Bash call of a made-up transcript: its command line, the

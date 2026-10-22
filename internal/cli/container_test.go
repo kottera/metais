@@ -9,8 +9,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/testenv"
 )
 
 // manifestHead is a manifest up to its outputs, which a fixture appends.

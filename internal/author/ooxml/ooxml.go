@@ -32,8 +32,8 @@ package ooxml
 import (
 	"slices"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/liquid"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/liquid"
 )
 
 // The scan's codes (ADR-007 D4 items 4 and 5). Each is an error of class

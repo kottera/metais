@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // The env canary (ADR-009 D16 item 2): the binding set gains env, the

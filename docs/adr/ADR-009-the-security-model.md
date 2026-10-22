@@ -1462,9 +1462,9 @@ unchanged: the builder stays at `internal/tools/release`, in the module.
    what ADR-010 D12 item 4 requires: build twice, compare, and refuse a
    dirty tree.
 4. **The proof that the binary cannot reach it.** `layers.json` gains a
-   `never-depends` rule: `github.com/kottera/metais/cmd/metais` depends,
+   `never-depends` rule: `metais.org/metais/cmd/metais` depends,
    directly or through another package, on nothing matching
-   `github.com/kottera/metais/internal/tools/...`. The import rule already
+   `metais.org/metais/internal/tools/...`. The import rule already
    covers only `cmd/metais`'s closure, so it was never at risk. This rule
    makes the reason the allowance is safe a test, so it can never become
    false unnoticed.
@@ -1906,8 +1906,8 @@ reason now names this amendment too.
    The runner is a developer's tool, run with `go run` from a checkout,
    and is never linked into `metais`. It lives under `internal/tools/`,
    so A2 item 4's `never-depends` rule holds it away from `cmd/metais`:
-   `github.com/kottera/metais/cmd/metais` depends on nothing matching
-   `github.com/kottera/metais/internal/tools/...`. `TestLayersControl`
+   `metais.org/metais/cmd/metais` depends on nothing matching
+   `metais.org/metais/internal/tools/...`. `TestLayersControl`
    proves the rule sees it: its fixture module's binary imports a package
    beneath the runner, and the rule refuses it. Nothing the runner reads
    reaches a template, an output or a finding of `metais`, because the

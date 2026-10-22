@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // The tests below hold each tag of ADR-004 D2 to the text of its row.

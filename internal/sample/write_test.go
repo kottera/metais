@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/inputs/csv"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/inputs/csv"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/testenv"
 )
 
 // files writes v as in, failing t on an error.

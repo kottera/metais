@@ -10,9 +10,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/ast"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/ast"
 )
 
 // AssetDir is the directory of a package's assets (ADR-001 D5). An asset's

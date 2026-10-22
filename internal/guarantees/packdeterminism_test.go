@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/cli"
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/cli"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/testenv"
 )
 
 // packSources returns the source directory of every pack step of the

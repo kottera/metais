@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // adr009 is ADR-009 D3's three tables as the ADR writes them, with

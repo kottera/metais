@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // rssHeld is what TestRSSIsTheProcessAlone makes this test process hold.

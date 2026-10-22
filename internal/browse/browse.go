@@ -21,8 +21,8 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/pkgtree"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/pkgtree"
 )
 
 // NotFoundError is a path that names no entry and no directory of the

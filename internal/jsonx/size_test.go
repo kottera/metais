@@ -6,8 +6,8 @@ package jsonx
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
 )
 
 // TestSizeNamesTheLimit is ADR-009 D3's division of the limits for one

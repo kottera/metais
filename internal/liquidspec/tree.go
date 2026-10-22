@@ -10,8 +10,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/template"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/template"
 )
 
 // tree is a compile request's package: its file system as the package's

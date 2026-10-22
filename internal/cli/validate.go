@@ -10,13 +10,13 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/inputs"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/loader"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/inputs"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/loader"
 )
 
 // The supply flags of validate and render (ADR-008 D7).

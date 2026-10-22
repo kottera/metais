@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // The expression lexer splits markup into Shopify's strict2 tokens:

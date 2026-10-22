@@ -7,10 +7,10 @@ import (
 	"crypto/sha256"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/schema"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/schema"
 )
 
 // FuzzForms reads data as a file of each form (ADR-003 D9 to D13): it

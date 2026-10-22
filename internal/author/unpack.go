@@ -9,11 +9,11 @@ import (
 	"path"
 	"strings"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // compiledPrefix is the derived directory unpack never writes (ADR-007 D8

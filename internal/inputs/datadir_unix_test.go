@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestDataDirOpensOnlyCandidates: in a data directory the tool "lists the

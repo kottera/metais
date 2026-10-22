@@ -4,8 +4,8 @@
 package sink
 
 import (
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/render"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/render"
 )
 
 // DryRun is s as --dry-run runs it (ADR-005 D16 item 1): every check of

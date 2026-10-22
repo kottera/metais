@@ -9,12 +9,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // liquidPrefix is internal/liquid/..., whose packages may import each
 // other and nothing else outside the standard library.
-const liquidPrefix = "github.com/kottera/metais/internal/liquid/"
+const liquidPrefix = "metais.org/metais/internal/liquid/"
 
 // foreignImports returns every import of the non-test Go files in dir, on
 // every platform, that is neither a standard-library package nor a
@@ -64,7 +64,7 @@ func TestStandardLibraryOnlyControl(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"github.com/kottera/metais/internal/testenv", "golang.org/x/term"}
+	want := []string{"golang.org/x/term", "metais.org/metais/internal/testenv"}
 	if !slices.Equal(bad, want) {
 		t.Errorf("control fixture flagged %q, want %q", bad, want)
 	}

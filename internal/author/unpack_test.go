@@ -12,10 +12,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/pkgtree/pkgtreetest"
+	"metais.org/metais/internal/testenv"
 )
 
 // packedFiles are a packed package's entries, .compiled/ included, as

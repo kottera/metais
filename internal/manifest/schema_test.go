@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/specdata"
+	"metais.org/metais/internal/specdata"
 )
 
 // schemaTree is the embedded manifest schema decoded as plain JSON.

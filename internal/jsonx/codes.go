@@ -4,8 +4,8 @@
 package jsonx
 
 import (
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
 )
 
 // The codes Parse reports (ADR-003 Interfaces, ADR-009 D19). Each is class

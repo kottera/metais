@@ -11,8 +11,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/liquid"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/liquid"
 )
 
 // cause is a set of the reasons ADR-007 D4 item 6 names for a run ending

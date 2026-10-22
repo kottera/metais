@@ -3,7 +3,7 @@
 
 package liquid
 
-import "github.com/kottera/metais/internal/liquid/ast"
+import "metais.org/metais/internal/liquid/ast"
 
 // Construct is one Liquid construct of a template's source, as the lexer
 // finds it: an output "{{ … }}" or a tag "{% … %}", delimiters and

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 func TestPathError(t *testing.T) {
@@ -68,7 +68,7 @@ func TestNoHostAccess(t *testing.T) {
 // TestNoHostAccessControl runs the same check over packages that do reach
 // the host, so a check gone blind fails the build.
 func TestNoHostAccessControl(t *testing.T) {
-	for _, pkg := range []string{"io/fs", "github.com/kottera/metais/internal/testenv"} {
+	for _, pkg := range []string{"io/fs", "metais.org/metais/internal/testenv"} {
 		if found := hostDeps(t, pkg); len(found) == 0 {
 			t.Errorf("the check found no host package below %s", pkg)
 		}

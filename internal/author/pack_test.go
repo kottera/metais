@@ -13,15 +13,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/digest"
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
-	"github.com/kottera/metais/internal/specdata"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/digest"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/pkgtree/pkgtreetest"
+	"metais.org/metais/internal/specdata"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // packFiles is a source directory's entries: a manifest, a schema, a

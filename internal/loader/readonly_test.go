@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	modulePath = "github.com/kottera/metais/"
+	modulePath = "metais.org/metais/"
 	hostfsPath = modulePath + "internal/hostfs"
 )
 

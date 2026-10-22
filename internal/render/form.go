@@ -3,7 +3,7 @@
 
 package render
 
-import "github.com/kottera/metais/internal/manifest"
+import "metais.org/metais/internal/manifest"
 
 // Form is a declaration form: how one evaluation of a declaration expands
 // into planned files, and nothing else (ADR-010 A7 item 4). The planner

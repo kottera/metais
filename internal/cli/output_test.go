@@ -18,13 +18,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostenv"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/version"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/version"
+	"metais.org/metais/internal/zipfmt"
 )
 
 const sgr = "\x1b["

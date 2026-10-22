@@ -8,12 +8,12 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/render/sink"
-	"github.com/kottera/metais/internal/skill"
-	"github.com/kottera/metais/internal/version"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/render/sink"
+	"metais.org/metais/internal/skill"
+	"metais.org/metais/internal/version"
 )
 
 // skillResult is metais.skill/1's result (ADR-008 A2 item 8): what was

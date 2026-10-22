@@ -6,9 +6,9 @@ package yamlx
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/testenv"
 )
 
 // FuzzYAMLProfile is ADR-010 D14 item 6's target: whatever the bytes,

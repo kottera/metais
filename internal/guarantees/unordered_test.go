@@ -66,22 +66,22 @@ func TestUnorderedObjectsOnlyInTemplate(t *testing.T) {
 func TestUnorderedObjectsRule(t *testing.T) {
 	cases := []ruleCase{
 		{"internal/template sets it", "internal/template", "", `package template
-import "github.com/kottera/metais/internal/liquid"
+import "metais.org/metais/internal/liquid"
 var e = liquid.Env{UnorderedObjects: true}`, nil},
 		{"the engine reads it", "internal/liquid", "", `package liquid
 type Env struct{ UnorderedObjects bool }
 func f(e *Env) bool { return e.UnorderedObjects }`, nil},
 		{"cli keys it", "internal/cli", "", `package cli
-import "github.com/kottera/metais/internal/liquid"
+import "metais.org/metais/internal/liquid"
 var e = liquid.Env{UnorderedObjects: true}`, []string{"sets UnorderedObjects in a composite literal"}},
 		{"another package assigns it", "internal/author", "", `package author
-import "github.com/kottera/metais/internal/liquid"
+import "metais.org/metais/internal/liquid"
 func f(e *liquid.Env) { e.UnorderedObjects = true }`, []string{"assigns UnorderedObjects"}},
 		{"the engine assigns it", "internal/liquid", "", `package liquid
 type Env struct{ UnorderedObjects bool }
 func f(e *Env) { e.UnorderedObjects = true }`, []string{"assigns UnorderedObjects"}},
 		{"its address taken", "internal/cli", "", `package cli
-import "github.com/kottera/metais/internal/liquid"
+import "metais.org/metais/internal/liquid"
 func f(e *liquid.Env) *bool { return &e.UnorderedObjects }`, []string{"takes the address of UnorderedObjects"}},
 	}
 	checkRule(t, cases, func(f *sourceFile) []string {

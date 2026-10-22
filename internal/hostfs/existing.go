@@ -14,8 +14,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/unitext"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/unitext"
 )
 
 // StagingDir is the one staging directory a write into an existing output

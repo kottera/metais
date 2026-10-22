@@ -14,8 +14,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/testenv"
 )
 
 const v1, v2 = "1.2.3", "1.3.0"

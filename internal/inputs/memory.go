@@ -7,8 +7,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // File is one entry of a data directory built in memory: a regular file

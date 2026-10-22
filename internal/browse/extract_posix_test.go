@@ -12,8 +12,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestExtractRefusesALink is ADR-005 D15 item 4 for extract: a symbolic

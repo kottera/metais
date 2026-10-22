@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/pkgtree/pkgtreetest"
 )
 
 // sourceOptions are the defaults with a name rule that admits every name,

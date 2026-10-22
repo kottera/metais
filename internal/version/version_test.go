@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestResolve covers each branch of ADR-010 D12 item 3's rule.
@@ -83,7 +83,7 @@ func TestReleaseFlag(t *testing.T) {
 	}
 	bin := filepath.Join(testenv.Dir(t), "printversion")
 	build := goCommand(t, "build", "-trimpath", "-o", bin,
-		"-ldflags", "-X github.com/kottera/metais/internal/version.release=1.2.3-rc.1",
+		"-ldflags", "-X metais.org/metais/internal/version.release=1.2.3-rc.1",
 		"./testdata/printversion")
 	if out, err := build.CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)

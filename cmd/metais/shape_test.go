@@ -15,7 +15,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // mainShape is the whole of main, one statement a line, as ADR-010 D2's
@@ -90,7 +90,7 @@ func checkMainShape(dir string) string {
 // reordered, with one after the call, with an init function or a package
 // variable, and a second release file.
 func TestMainShapeControl(t *testing.T) {
-	const head = "package main\n\nimport (\n\t\"os\"\n\n\t\"github.com/kottera/metais/internal/cli\"\n\t\"github.com/kottera/metais/internal/hostenv\"\n)\n\n"
+	const head = "package main\n\nimport (\n\t\"os\"\n\n\t\"metais.org/metais/internal/cli\"\n\t\"metais.org/metais/internal/hostenv\"\n)\n\n"
 	const body = "\td := hostenv.Isolate()\n\tos.Exit(cli.Main(os.Args[1:], os.Stdin, os.Stdout, os.Stderr, d))\n"
 	for name, files := range map[string]map[string]string{
 		"args cut before Isolate": {"main.go": head + "func main() {\n\tos.Args = os.Args[:1]\n" + body + "}\n"},

@@ -3,7 +3,7 @@
 
 package render
 
-import "github.com/kottera/metais/internal/hostfs"
+import "metais.org/metais/internal/hostfs"
 
 // Paths keeps single-entry-point's exception: it calls hostfs.CheckPaths,
 // with an option of hostfs among its arguments.

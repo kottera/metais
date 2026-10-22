@@ -8,7 +8,7 @@ package pkgtree_test
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
+	"metais.org/metais/internal/pkgtree/pkgtreetest"
 )
 
 func TestNew(t *testing.T) { _ = pkgtreetest.New() }

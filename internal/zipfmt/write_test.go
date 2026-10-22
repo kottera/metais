@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/pkgtree/pkgtreetest"
 )
 
 // sample is a package-shaped set of entries in ADR-001 D1 item 7's order:

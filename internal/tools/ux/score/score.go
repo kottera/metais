@@ -24,8 +24,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/tools/ux/scenario"
-	"github.com/kottera/metais/internal/tools/ux/streamjson"
+	"metais.org/metais/internal/tools/ux/scenario"
+	"metais.org/metais/internal/tools/ux/streamjson"
 )
 
 // Format is an outcome's format. A change to what an outcome means

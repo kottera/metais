@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // The suite's tripwires of ADR-011 D14 that read the vectors:
@@ -521,7 +521,7 @@ func TestHostileVectorsOpenEverywhereControl(t *testing.T) {
 // closure of this package, that the runner may not link: anything but
 // the runner itself and internal/testenv (ADR-011 D11 item 2, R2-166).
 func blackBoxViolations(deps []string) []string {
-	const module = "github.com/kottera/metais"
+	const module = "metais.org/metais"
 	allowed := []string{module + "/internal/conformance", module + "/internal/testenv"}
 	var bad []string
 	for _, d := range deps {
@@ -552,7 +552,7 @@ func TestBlackBox(t *testing.T) {
 	for _, b := range blackBoxViolations(deps) {
 		t.Error(b)
 	}
-	if bad := blackBoxViolations(append(deps, "github.com/kottera/metais/internal/cli")); len(bad) != 1 {
+	if bad := blackBoxViolations(append(deps, "metais.org/metais/internal/cli")); len(bad) != 1 {
 		t.Errorf("a closure linking internal/cli: reported %q", bad)
 	}
 }

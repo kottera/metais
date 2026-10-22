@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/specdata"
+	"metais.org/metais/internal/specdata"
 )
 
 // TestManifestKeywordCodes is ADR-006 A1 item 4's tripwire. It walks the

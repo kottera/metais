@@ -7,10 +7,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/inputs/csv"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/inputs/csv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // coerced describes a coerced value for comparison: its kind and, for a

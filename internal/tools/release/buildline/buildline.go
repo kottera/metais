@@ -13,7 +13,7 @@ const Package = "./cmd/metais"
 
 // versionVar is the variable a release build sets to its version
 // (ADR-010 D12 item 3).
-const versionVar = "github.com/kottera/metais/internal/version.release"
+const versionVar = "metais.org/metais/internal/version.release"
 
 // Target is one GOOS/GOARCH pair.
 type Target struct {

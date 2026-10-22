@@ -14,8 +14,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/manifest"
 )
 
 // everyConstruct is a template with a variable path in every place the
@@ -104,14 +104,14 @@ func TestNoParserOfItsOwn(t *testing.T) {
 	allowed := map[string]bool{
 		"errors": true, "fmt": true, "maps": true, "net/url": true, "slices": true, "strconv": true,
 		"strings": true, "unicode/utf8": true,
-		"github.com/kottera/metais/internal/finding":      true,
-		"github.com/kottera/metais/internal/limits":       true,
-		"github.com/kottera/metais/internal/liquid":       true,
-		"github.com/kottera/metais/internal/liquid/ast":   true,
-		"github.com/kottera/metais/internal/liquid/value": true,
-		"github.com/kottera/metais/internal/manifest":     true,
-		"github.com/kottera/metais/internal/regexprofile": true,
-		"github.com/kottera/metais/internal/schema":       true,
+		"metais.org/metais/internal/finding":      true,
+		"metais.org/metais/internal/limits":       true,
+		"metais.org/metais/internal/liquid":       true,
+		"metais.org/metais/internal/liquid/ast":   true,
+		"metais.org/metais/internal/liquid/value": true,
+		"metais.org/metais/internal/manifest":     true,
+		"metais.org/metais/internal/regexprofile": true,
+		"metais.org/metais/internal/schema":       true,
 	}
 	fset := token.NewFileSet()
 	calls := map[string]bool{}

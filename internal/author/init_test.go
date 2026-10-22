@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/testenv"
 )
 
 // tree returns every entry beneath dir, "/"-separated, directories with a

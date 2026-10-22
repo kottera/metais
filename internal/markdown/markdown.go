@@ -15,7 +15,7 @@
 // Markdown is rendered (ADR-010 D9 item 3).
 package markdown
 
-import "github.com/kottera/metais/internal/finding"
+import "metais.org/metais/internal/finding"
 
 // Source is the file SplitFrontmatter reads, so that its findings can name
 // it: the input it is part of, and where its text came from.

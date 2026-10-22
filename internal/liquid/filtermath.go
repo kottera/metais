@@ -7,7 +7,7 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // The arithmetic filters (ADR-004 D4 item 3). Each coerces its input and

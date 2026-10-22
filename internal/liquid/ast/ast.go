@@ -25,7 +25,7 @@
 // D2 item 2).
 package ast
 
-import "github.com/kottera/metais/internal/liquid/value"
+import "metais.org/metais/internal/liquid/value"
 
 // Span is where a node's text lies in its source: the bytes [Start, End),
 // and the line and column of Start. Line and Col are 1-based; Col counts

@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // The two sizes each hostile template is scanned at, eight times apart. A

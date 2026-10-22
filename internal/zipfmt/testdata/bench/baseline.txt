@@ -7,7 +7,7 @@
 # command: go test -run '^$' -bench . -benchmem -count 6 ./internal/zipfmt
 goos: darwin
 goarch: arm64
-pkg: github.com/kottera/metais/internal/zipfmt
+pkg: metais.org/metais/internal/zipfmt
 cpu: Apple M2 Max
 BenchmarkOpen-12    	       3	 367253306 ns/op	   7.33 MB/s	420620808 B/op	  238869 allocs/op
 BenchmarkOpen-12    	       5	 203450275 ns/op	  13.23 MB/s	420619288 B/op	  238856 allocs/op
@@ -16,4 +16,4 @@ BenchmarkOpen-12    	      18	  78935447 ns/op	  34.09 MB/s	420620302 B/op	  238
 BenchmarkOpen-12    	      18	  79752273 ns/op	  33.74 MB/s	420617573 B/op	  238849 allocs/op
 BenchmarkOpen-12    	      19	  61047730 ns/op	  44.08 MB/s	420621664 B/op	  238846 allocs/op
 PASS
-ok  	github.com/kottera/metais/internal/zipfmt	13.690s
+ok  	metais.org/metais/internal/zipfmt	13.690s

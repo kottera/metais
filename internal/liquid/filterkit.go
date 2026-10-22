@@ -6,7 +6,7 @@ package liquid
 import (
 	"math/bits"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // This file is what a FilterDef defined outside this package shares with

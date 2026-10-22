@@ -4,8 +4,8 @@
 package manifest
 
 import (
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // Check returns the findings of the manifest rules for root that the

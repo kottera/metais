@@ -6,8 +6,8 @@ package schema
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/pkgtree/pkgtreetest"
 )
 
 // TestOutputCompiler is ADR-005 D11 item 3's $ref resolution for an output

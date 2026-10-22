@@ -21,16 +21,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/tools/release/buildline"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/tools/release/buildline"
 )
 
-// The fake module every test builds: a github.com/kottera/metais whose
+// The fake module every test builds: a metais.org/metais whose
 // ./cmd/metais answers version --json as the real one does, with the
 // version a release sets and the implements its implements.go states, so
 // a build costs seconds rather than the real tool's minutes.
 const (
-	fakeGoMod   = "module github.com/kottera/metais\n\ngo 1.26.0\n\ntoolchain %s\n"
+	fakeGoMod   = "module metais.org/metais\n\ngo 1.26.0\n\ntoolchain %s\n"
 	fakeVersion = `// Copyright 2026 Kottera
 // SPDX-License-Identifier: Apache-2.0
 
@@ -48,7 +48,7 @@ package main
 import (
 	"os"
 
-	"github.com/kottera/metais/internal/version"
+	"metais.org/metais/internal/version"
 )
 
 func main() {
@@ -508,8 +508,8 @@ func TestCheckSettings(t *testing.T) {
 		if tg.Arch == "arm64" {
 			level = "\tbuild\tGOARM64=v8.0\n"
 		}
-		good[tg] = "metais: go1.26.9\n\tpath\tgithub.com/kottera/metais/cmd/metais\n" +
-			"\tmod\tgithub.com/kottera/metais\t(devel)\t\n" +
+		good[tg] = "metais: go1.26.9\n\tpath\tmetais.org/metais/cmd/metais\n" +
+			"\tmod\tmetais.org/metais\t(devel)\t\n" +
 			"\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\t-trimpath=true\n" +
 			"\tbuild\tCGO_ENABLED=0\n\tbuild\tGOARCH=" + tg.Arch + "\n\tbuild\tGOOS=" + tg.OS + "\n" + level +
 			"\tbuild\tvcs=git\n\tbuild\tvcs.revision=" + head + "\n\tbuild\tvcs.time=2026-01-01T00:00:00Z\n\tbuild\tvcs.modified=false\n"
@@ -617,7 +617,7 @@ func TestReleaseTakesNoHostGoConfiguration(t *testing.T) {
 
 func TestReleaseRefusesAGoModWithoutAToolchain(t *testing.T) {
 	dir := fakeRepo(t)
-	write(t, dir, "go.mod", "module github.com/kottera/metais\n\ngo 1.26.0\n")
+	write(t, dir, "go.mod", "module metais.org/metais\n\ngo 1.26.0\n")
 	commit(t, dir, "no toolchain line")
 	gitIn(t, dir, "tag", "-f", "v1.0.0")
 	refused(t, dir, "1.0.0", errNoToolchain, nil)

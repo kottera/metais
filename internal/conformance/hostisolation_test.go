@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // canary is one of ADR-009 D16 item 2's canary builds: the leak its build
@@ -170,7 +170,7 @@ func releaseBuild(t *testing.T) string {
 // it states the line itself, and the release builder's
 // TestHarnessBuildsByTheReleaseLine holds the two to each other.
 var (
-	releaseFlags    = []string{"-trimpath", "-buildvcs=true", "-ldflags", "-s -w -X github.com/kottera/metais/internal/version.release=0.0.0-sc7"}
+	releaseFlags    = []string{"-trimpath", "-buildvcs=true", "-ldflags", "-s -w -X metais.org/metais/internal/version.release=0.0.0-sc7"}
 	releaseSettings = []string{"CGO_ENABLED=0", "GOAMD64=v1", "GOARM64=v8.0"}
 )
 

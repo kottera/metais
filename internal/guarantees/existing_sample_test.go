@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kottera/metais/internal/cli"
-	"github.com/kottera/metais/internal/fault"
+	"metais.org/metais/internal/cli"
+	"metais.org/metais/internal/fault"
 )
 
 // sampleFiles are the files metais sample writes for the SMP vectors'

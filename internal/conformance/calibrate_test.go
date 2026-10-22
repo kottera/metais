@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // The limit-calibration suite of ADR-009 D3 item 3 and D18 item 4: the
