@@ -372,15 +372,34 @@ R-UX-5's pass rules, in the order an outcome reports them:
 | Rule | Applies to | Fails when |
 |---|---|---|
 | `inspect-first` | consuming scenarios | the session reads the package's contents before `metais inspect`, or never runs `metais inspect`. Reading the contents is extracting the package (as the next rule reads extraction, `metais unpack` included), or `metais ls`, `read`, `schema`, `outline`, `grep`, `extract` or `unpack` on it. Reading files extracted from it needs it extracted first, so it fails as that does. `metais --version`, `metais version` and `metais help` before `inspect` read nothing and pass, and so does a listing (Ed's ruling, 2026-10-21). |
-| `no-zip-extraction` | every scenario | the session extracts an archive itself: `unzip` (plain, `-o`, `-x`, `-p`, `-d`, …), `7z`, `bsdtar`, `ditto`, `jar`, `tar` given a `.metais`, a command line that reads an entry with a zip library (`zipfile`, `archive/zip`, `JSZip`, …), or a program the session wrote that does and then ran. The rule reads the command the session chose: an extraction that the sandbox or the shell stopped before it ran, such as an `unzip` after a refused `mkdir -p /tmp/… &&`, still fails, because choosing to extract is the behaviour the rule measures, and a session on a person's host would have extracted. In a consuming scenario other than C0, `metais unpack` and `metais extract` extract it too (Ed's ruling, 2026-10-21). In C0 they are the edit reading the amended R-UX-8 names as coherent (the plan orchestrator's ruling), and in an authoring scenario they are how a package is edited. A listing only (`unzip -l`, `-v`, `-Z`, `-t`, `zipinfo`, `7z l`, `tar -t`, or a zip library that lists names without reading an entry) passes, and is a note on the scorecard. |
+| `no-zip-extraction` | every scenario | the session extracts an archive itself: `unzip` (plain, `-o`, `-x`, `-p`, `-d`, …), `7z`, `bsdtar`, `ditto`, `jar`, `tar` given a `.metais`, a command line that reads an entry with a zip library (`zipfile`, `archive/zip`, `JSZip`, …), or a program the session wrote that does and then ran. The rule reads the command the session chose: an extraction that the sandbox or the shell stopped before it ran, such as an `unzip` after a refused `mkdir -p /tmp/… &&`, still fails, because choosing to extract is the behaviour the rule measures, and a session on a person's host would have extracted. In a consuming scenario other than C0, `metais unpack` and `metais extract` extract it too (Ed's ruling, 2026-10-21). In C0 they are the edit reading the amended R-UX-8 names as coherent (the plan orchestrator's ruling), and in an authoring scenario they are how a package is edited. A listing only (`unzip -l`, `-v`, `-Z`, `-t`, `zipinfo`, `7z l`, `tar -t`, or a zip library that lists names without reading an entry) passes, and is a note on the scorecard. The archive the rule measures is the package, or any other file the session started with, never the session's own rendered output: reading back a file an earlier `metais render` of the session wrote, such as `unzip -p out/acr.docx` to preview a rendered `.docx`, extracts nothing of the package, and is neither a failure nor a note (W3-7). |
 | `no-unknown-command` | every scenario | `metais` refuses a command the session ran with `usage.unknown_command`. The binary's own finding decides, so the rule follows the binary as it gains commands. |
-| `package-untouched` | consuming scenarios whose prompt asks for output: C1, C2, C3, C5 and C6 | R-UX-8: the session extracts the package (`metais unpack`, `metais extract`, or any reading the previous rule refuses), changes or deletes the package file, writes it, or runs `metais pack`. |
+| `package-untouched` | consuming scenarios whose prompt asks for output: C1, C2, C3, C5 and C6 | R-UX-8: the session extracts the package (`metais unpack`, `metais extract`, or any reading the previous rule refuses), changes or deletes the package file, writes it, or runs `metais pack`. A read of the session's own rendered output is not the package, and passes as it does in the previous rule. |
 | `outcome` | every scenario | the scenario's own outcome check fails. |
 
 A run passes when every rule that applies passes. Each result carries its
 evidence: the turn and the transcript line of the tool call, the command,
 and the file of the run's directory or the session's own words it rests
 on.
+
+Why the two rules measure the package and not every archive (W3-7):
+R-UX-5 lists "no zip extraction" among the pass rules that hold a
+session to reaching the package's contents through `metais`, beside
+`inspect` first and the package left untouched, and R-UX-8 names what a
+run asked for output must not do as extracting **the package**. A
+rendered `.docx` is a zip archive too, but it is the session's output,
+and reading it back is checking the work, not going around `metais` to
+the package. So an archive is the session's own when an earlier
+`metais render` of the session wrote it: it lies in the render's output
+directory, or is the file the render's output was redirected to, and the
+run's directory holds it at the end as added, with bytes that are no
+fixture's. Anything else stays counted: an archive named by a `.metais`
+file or by a file the session started with, a copy of the package under
+another name, a file whose origin the scorer cannot tie to a render, and
+a rendered file the session deleted before the run ended. A rendered
+file the session overwrote by other means with bytes no fixture has is
+still read as rendered. Both rules state this as their limits
+(`score.CheckLimits`), and the scorecard prints it.
 
 The scorer reads each Bash call as a POSIX shell would split it: quoting,
 `&&`, `||`, `;`, pipes, subshells, `$(…)`, here-documents, comments, and
@@ -574,7 +593,7 @@ as `docs/ux/scorecard-<date>-<name>.md` (plan §2):
 6. **Recorded verdicts**: how many C0 and C1 runs carry a verdict, which
    do not, and each run where the phrase check and the verdict disagree.
 7. **What the outcome checks cannot see**: each scenario's check and its
-   stated limits.
+   stated limits, then each pass rule that states limits.
 8. **Prompts reworded under R-UX-9**: each rewording, with the ambiguity
    and the transcript that showed it, and any run whose prompt is not the
    set's; or "None".

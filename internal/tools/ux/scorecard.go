@@ -256,6 +256,11 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 		}
 		p("- **%s** (`%s`): %s\n", s.Name(), name, score.CheckLimits(name))
 	}
+	for _, name := range score.RuleNames() {
+		if l := score.CheckLimits(name); l != "" {
+			p("- **The pass rule `%s`**: %s\n", name, l)
+		}
+	}
 	p("\n")
 
 	p("## Prompts reworded under R-UX-9\n\n")

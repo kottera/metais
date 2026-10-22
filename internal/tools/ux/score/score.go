@@ -178,21 +178,36 @@ type fileEntry struct {
 	Change string `json:"change"`
 }
 
-// rule is one pass rule: whether a run is held to it, and its result.
+// rule is one pass rule: whether a run is held to it, its result, and
+// what it cannot see, which a scorecard states, or "".
 type rule struct {
 	name    string
 	applies func(r *run) bool
 	check   func(r *run) Result
+	limits  string
 }
+
+// ownRenderLimits is what no-zip-extraction and package-untouched cannot
+// see of an archive the session rendered (W3-7).
+const ownRenderLimits = "The archive the rule measures is the package, or any other file the session started with, never the session's own rendered output: a zip tool or zip library that reads a file a metais render of the session wrote before it, such as unzip -p out/report.docx, extracts nothing of the package and is not counted. A file is one a render wrote when it lies in the render's output directory, or is the file its output was redirected to, and the run's directory holds it at the end as added, with bytes that are no fixture's. A command that also names a .metais file or a file the session started with is counted. A rendered file the session deleted before the run ended is not seen as rendered, so reading it is counted; one it overwrote by other means with bytes no fixture has is still read as rendered."
 
 // rules are R-UX-5's, in the order an outcome reports them. The outcome
 // check is last.
 var rules = []rule{
-	{RuleInspectFirst, func(r *run) bool { return r.scenario.Kind == scenario.Consuming }, inspectFirst},
-	{RuleNoZip, always, noZip},
-	{RuleNoUnknown, always, noUnknown},
-	{RuleUntouched, func(r *run) bool { return r.scenario.Kind == scenario.Consuming && r.scenario.AsksForOutput }, untouched},
-	{RuleOutcome, always, outcome},
+	{RuleInspectFirst, func(r *run) bool { return r.scenario.Kind == scenario.Consuming }, inspectFirst, ""},
+	{RuleNoZip, always, noZip, ownRenderLimits},
+	{RuleNoUnknown, always, noUnknown, ""},
+	{RuleUntouched, func(r *run) bool { return r.scenario.Kind == scenario.Consuming && r.scenario.AsksForOutput }, untouched, ownRenderLimits},
+	{RuleOutcome, always, outcome, ""},
+}
+
+// RuleNames are the pass rules, in the order an outcome reports them.
+func RuleNames() []string {
+	var names []string
+	for _, ru := range rules {
+		names = append(names, ru.name)
+	}
+	return names
 }
 
 func always(*run) bool { return true }

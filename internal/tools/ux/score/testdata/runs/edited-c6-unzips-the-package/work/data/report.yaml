@@ -1,0 +1,19 @@
+product:
+  name: ShiftHarbor
+  version: "3.1"
+  description: A web application that community food banks use to publish volunteer shifts, let volunteers sign up for and swap shifts, and track hours served. This report covers the volunteer portal and the coordinator dashboard.
+vendor:
+  name: Lanternfish Civic Software (fictional)
+  contact: Accessibility office
+  email: a11y@lanternfish.example.org
+  website: https://lanternfish.example.org/accessibility
+date: 2026-10-15
+edition: wcag
+methods: |-
+  Tested by Lanternfish's in-house accessibility team between 14 September and 9 October 2026 against ShiftHarbor 3.1 on the staging environment.
+  Manual testing: keyboard-only operation; NVDA 2026.3 with Firefox 141 and JAWS 2026 with Chrome 140 on Windows 11; VoiceOver with Safari 19 on macOS 16 and iOS 20; TalkBack with Chrome on Android 16; 200% and 400% browser zoom; Windows high-contrast mode.
+  Automated testing: axe-core 4.11 on every page template, and a colour-contrast analyser on the design tokens.
+  In scope: sign-in, the shift calendar, shift sign-up and swap, the hours log, profile settings and the coordinator dashboard. Out of scope: the CSV export files and the printable rota.
+notes: |-
+  This report, its product, its vendor and its findings are fictional, written to illustrate the template.
+  The calendar drag-and-drop and dashboard chart issues described below are scheduled to be fixed in release 3.2.

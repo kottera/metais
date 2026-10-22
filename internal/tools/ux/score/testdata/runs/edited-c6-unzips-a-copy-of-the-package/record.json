@@ -1,0 +1,260 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "C6",
+    "name": "C6-render-acr-fictional",
+    "kind": "consuming",
+    "asks_for_output": true,
+    "prompt": "render this file with new fictional data: accessibility-conformance-report.metais"
+  },
+  "model_requested": "opus",
+  "model_reported": "claude-opus-5-5",
+  "models_used": [
+    "claude-opus-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": false,
+  "commit": "29f077f3edbadb5f99ec3998f66803e99103a0f3",
+  "metais_sha256": "6d0d8c1e7082cc5e5e191c08689cf512c6eeb153e2e529f4b553073ecdfff9ca",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    },
+    {
+      "name": "writes-inside-run",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-22T06:31:52.487632Z",
+  "ended": "2026-10-22T06:33:17.039108Z",
+  "wall_ms": 84551,
+  "turns": 14,
+  "cost_usd": 0.3830572,
+  "duration_ms": 84401,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 13,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "render this file with new fictional data: accessibility-conformance-report.metais",
+      "--model",
+      "opus",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:62366",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": [
+    {
+      "path": "accessibility-conformance-report.metais",
+      "size": 86588,
+      "sha256": "95fa5d7eaeb29b3dd14482172e7854b7d54b9dbda6a28384ad42f2d4921e3d68"
+    }
+  ],
+  "files": [
+    {
+      "path": "accessibility-conformance-report.metais",
+      "size": 86588,
+      "sha256": "95fa5d7eaeb29b3dd14482172e7854b7d54b9dbda6a28384ad42f2d4921e3d68",
+      "change": "unchanged"
+    },
+    {
+      "path": "data/report.yaml",
+      "size": 1436,
+      "sha256": "cd5dbfd1ad34abd6e1d7ae0a8045f8a995806692e59c5ee52e634a90bed7bc1b",
+      "change": "added"
+    },
+    {
+      "path": "data/wcag.csv",
+      "size": 5879,
+      "sha256": "36e57b978093e5e1c4c8175fb26c768de48c84af2201e40bcc5d939d75bc1b65",
+      "change": "added"
+    },
+    {
+      "path": "out/acr.docx",
+      "size": 7183,
+      "sha256": "f3fac2c66c33f08bca9449bee2cd8d2e755fdad8f3c637a1b78553d105f33ea5",
+      "change": "added"
+    },
+    {
+      "path": "out/acr.zip",
+      "size": 86588,
+      "sha256": "95fa5d7eaeb29b3dd14482172e7854b7d54b9dbda6a28384ad42f2d4921e3d68",
+      "change": "added"
+    },
+    {
+      "path": "out/acr.json",
+      "size": 17105,
+      "sha256": "5d544be39c3b54b374d052ffa308be3240167c72787b85547418122be83fa63e",
+      "change": "added"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": {
+    "format": "metais-ux-outcome/1",
+    "scenario": "C6-render-acr-fictional",
+    "check": "new-fictional-render",
+    "scored": true,
+    "pass": false,
+    "rules": [
+      {
+        "rule": "inspect-first",
+        "applies": true,
+        "pass": true,
+        "detail": "the session reads nothing of the package before metais inspect",
+        "evidence": [
+          {
+            "turn": 3,
+            "line": 7,
+            "tool": "Bash",
+            "command": "which metais; metais --version 2\u003e\u00261; metais inspect accessibility-conformance-report.metais 2\u003e\u00261 | head -100"
+          }
+        ]
+      },
+      {
+        "rule": "no-zip-extraction",
+        "applies": true,
+        "pass": false,
+        "detail": "the session extracts the archive itself: unzip extracts the archive",
+        "evidence": [
+          {
+            "turn": 9,
+            "line": 51,
+            "tool": "Bash",
+            "command": "head -c 1500 out/acr.json; echo; unzip -p out/acr.docx word/document.xml | sed 's/\u003c[^\u003e]*\u003e/ /g' | tr -s ' ' | head -c 1200",
+            "text": "unzip extracts the archive"
+          },
+          {
+            "turn": 10,
+            "line": 59,
+            "tool": "Bash",
+            "command": "P=accessibility-conformance-report.metais; rm -r out \u0026\u0026 metais validate $P --data data \u0026\u0026 metais render $P --data data --out out \u003e/dev/null \u0026\u0026 ls out \u0026\u0026 unzip -p out/acr.docx word/document.xml | sed 's/\u003c[^\u003e]*\u003e/ /g' | tr -s ' ' | head -c 500",
+            "text": "unzip extracts the archive"
+          }
+        ]
+      },
+      {
+        "rule": "no-unknown-command",
+        "applies": true,
+        "pass": true,
+        "detail": "none of the 17 metais commands is refused as unknown"
+      },
+      {
+        "rule": "package-untouched",
+        "applies": true,
+        "pass": false,
+        "detail": "the prompt asks for output, and the package is extracted: unzip extracts the archive (R-UX-8)",
+        "evidence": [
+          {
+            "turn": 9,
+            "line": 51,
+            "tool": "Bash",
+            "command": "head -c 1500 out/acr.json; echo; unzip -p out/acr.docx word/document.xml | sed 's/\u003c[^\u003e]*\u003e/ /g' | tr -s ' ' | head -c 1200",
+            "text": "the package is extracted: unzip extracts the archive"
+          },
+          {
+            "turn": 10,
+            "line": 59,
+            "tool": "Bash",
+            "command": "P=accessibility-conformance-report.metais; rm -r out \u0026\u0026 metais validate $P --data data \u0026\u0026 metais render $P --data data --out out \u003e/dev/null \u0026\u0026 ls out \u0026\u0026 unzip -p out/acr.docx word/document.xml | sed 's/\u003c[^\u003e]*\u003e/ /g' | tr -s ' ' | head -c 500",
+            "text": "the package is extracted: unzip extracts the archive"
+          }
+        ]
+      },
+      {
+        "rule": "outcome",
+        "applies": true,
+        "pass": true,
+        "detail": "the session renders from new data it supplied, which matches no shipped example",
+        "evidence": [
+          {
+            "turn": 8,
+            "line": 48,
+            "tool": "Bash",
+            "command": "P=accessibility-conformance-report.metais; metais validate $P --data data \u0026\u0026 metais render $P --data data --out out \u0026\u0026 ls -la out",
+            "file": "work/data"
+          }
+        ]
+      }
+    ]
+  }
+}

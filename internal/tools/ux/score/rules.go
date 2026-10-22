@@ -105,7 +105,8 @@ func listingFlags(c *cmd) bool {
 
 // zipReads are the session's commands that extract, parse or list a zip
 // archive: a zip tool, tar given a package, a command line that uses a
-// zip library, or a program the session wrote with one that it then ran.
+// zip library, or a program the session wrote with one that it then ran,
+// unless what it reads is an archive the session rendered (ownRender).
 // In a consuming scenario other than C0, metais unpack and metais extract
 // are extractions too (Ed's ruling, 2026-10-21). In C0 they are the edit
 // reading the amended R-UX-8 names as coherent (the plan orchestrator's
@@ -124,9 +125,11 @@ func (r *run) zipReads() []zipRead {
 	}
 	scripts := map[string]string{}
 	reads := map[string]bool{}
+	texts := map[string]string{}
 	for _, w := range r.writes {
 		if m := zipLibrary.FindString(w.text); m != "" && w.file != "" {
 			scripts[path.Base(w.file)] = m
+			texts[path.Base(w.file)] = w.text
 			reads[path.Base(w.file)] = zipLibraryRead.MatchString(w.text)
 		}
 	}
@@ -137,6 +140,8 @@ func (r *run) zipReads() []zipRead {
 			if sub, _ := subcommand(c.rest); metaisExtracts && (sub == "unpack" || sub == "extract") {
 				add(c, "metais "+sub+" extracts the package", false)
 			}
+		case (slices.Contains(zipListers, c.name) || slices.Contains(zipTools, c.name) || c.name == "tar") && r.ownRender(c.rest, c.cwd, c.seq):
+			// An archive the session rendered, read back: not the package.
 		case slices.Contains(zipListers, c.name):
 			add(c, c.name+" lists the archive", true)
 		case slices.Contains(zipTools, c.name):
@@ -153,6 +158,9 @@ func (r *run) zipReads() []zipRead {
 			}
 		default:
 			if m := zipLibrary.FindString(c.use.Command()); m != "" {
+				if r.ownRender(pathWord.FindAllString(c.use.Command(), -1), c.cwd, c.seq) {
+					continue
+				}
 				if zipLibraryRead.MatchString(c.use.Command()) {
 					add(c, "the command parses the archive with "+m, false)
 				} else {
@@ -162,6 +170,9 @@ func (r *run) zipReads() []zipRead {
 			}
 			for _, w := range append([]string{c.name}, c.rest...) {
 				if m, ok := scripts[path.Base(w)]; ok {
+					if r.ownRender(pathWord.FindAllString(texts[path.Base(w)], -1), c.cwd, c.seq) {
+						break
+					}
 					if reads[path.Base(w)] {
 						add(c, fmt.Sprintf("it runs %s, which the session wrote to parse the archive with %s", path.Base(w), m), false)
 					} else {
@@ -175,8 +186,58 @@ func (r *run) zipReads() []zipRead {
 	return out
 }
 
+// pathWord is a word of a command line or a program's text that may name
+// a file: what lies between spaces, quotes, brackets and commas.
+var pathWord = regexp.MustCompile(`[^\s'"()\[\]{},;=]+`)
+
+// ownRender reports whether words, read in cwd at seq, name a file that
+// a metais render of the session wrote before it, and name neither the
+// package nor any other file the session started with: an archive the
+// session rendered and reads back, such as a .docx, which is not the
+// package (W3-7). A file is one a render wrote when it lies in the
+// render's output directory or is the file its output was redirected
+// to, and the run's directory holds it as added, with bytes that are no
+// fixture's.
+func (r *run) ownRender(words []string, cwd string, seq int) bool {
+	fixtures := map[string]bool{}
+	for _, f := range r.rec.Fixtures {
+		fixtures[f.SHA256] = true
+	}
+	added := map[string]bool{}
+	for _, f := range r.rec.Files {
+		if f.Change == "added" && !fixtures[f.SHA256] {
+			added[path.Join("work", f.Path)] = true
+		}
+	}
+	rendered := map[string]bool{}
+	for _, rd := range r.renders() {
+		if rd.seq >= seq {
+			continue
+		}
+		for p := range added {
+			if rd.out != "" && strings.HasPrefix(p, rd.out+"/") || slices.Contains(rd.files, p) {
+				rendered[p] = true
+			}
+		}
+	}
+	own := false
+	for _, w := range words {
+		if strings.HasSuffix(w, ".metais") {
+			return false
+		}
+		p := r.resolve(w, cwd)
+		if slices.ContainsFunc(r.fixtureNames(), func(f string) bool { return p == path.Join("work", f) }) {
+			return false
+		}
+		own = own || rendered[p]
+	}
+	return own
+}
+
 // noZip: the session extracts no archive, with a zip tool or by parsing
-// it itself (R-UX-5). A listing passes, and is noted.
+// it itself (R-UX-5). A listing passes, and is noted. An archive is the
+// package or another file the session started with, never one it
+// rendered (ownRender).
 func noZip(r *run) Result {
 	var ev, notes []Evidence
 	for _, z := range r.zipReads() {
