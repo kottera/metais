@@ -55,7 +55,7 @@ func TestStandardLibraryOnlyControl(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"metais.org/metais/internal/testenv", "golang.org/x/term"}
+	want := []string{"golang.org/x/term", "metais.org/metais/internal/testenv"}
 	if strings.Join(bad, " ") != strings.Join(want, " ") {
 		t.Errorf("control fixture flagged %q, want %q", bad, want)
 	}
