@@ -1698,6 +1698,164 @@ command's own help are unchanged.
    so no chapter changes with it. The package's README, the first thing
    of all that a reader sees, is ADR-001 A3's.
 
+### A7 — `metais schema --fields` lists the fields an agent reads whole, and `inspect` says the fields are there
+
+**Status:** Accepted on merge. It carries PLAN-2026-10-metais-ux Wave 2's
+item W2-4, from plan §7's compact field listing and the baseline
+scorecard's candidate 6, under the plan's rulings that Ed Funnekotter
+ratified on 2026-10-21, which make the listing's form this item's design.
+**Amends:** D5 (`schema`: a flag, its human output and its JSON result),
+D6 item 8 step 3 (`inspect`'s next step for an input's schema) and A2's
+skill text (its schema step). D5's other commands, `schema`'s items 1 to 4,
+D10 and D14 are unchanged.
+
+1. **How it is asked for.** `metais schema <package> <input> --fields`
+   lists the input's fields in place of its schema, and
+   `metais schema <package> --fields` lists every input's. Without
+   `--fields`, `schema` prints what D5 items 1 to 3 say, byte for byte:
+   `metais schema <package> <input> > <input>.json` still writes a usable
+   schema file. The listing is an addition, never a replacement.
+2. **What a field is.** A field is a location in an input's value that a
+   schema declares, named by a JSON Pointer whose first token is the
+   input's name, as `--set` takes it (ADR-003 D17). The token `*` stands
+   for every element of an array, or for every member of an object its
+   schema does not name; the line above it, the array's or the object's,
+   says which. Each line is one *declaration* of a field: what the schemas
+   that declare it there, under one set of conditions, say of its value.
+   With an input, the first line is the input itself, required as the
+   manifest declares it. With no input, the combined schema's root is not
+   listed and each input is a field beneath it.
+3. **The text.** One line per declaration, its columns separated by tabs
+   and each neutralised as D11 neutralises package text, a tab within one
+   written `\u0009`:
+   1. the pointer;
+   2. the type: the declared type names joined by `|`, or `any` when no
+      declaring schema names a type;
+   3. `required` when an object declaring the field requires it under the
+      line's conditions, and `optional` otherwise;
+   4. the constraints, separated by spaces, or `-`: every assertion and
+      `default` the declaring schemas make, as `keyword=<canonical JSON>`
+      in their order, without `title`, `description`, `examples` and the
+      other annotations, the identifiers and `x-` keywords. A member that
+      `patternProperties` selects carries `name-matches=<JSON string>`, and
+      a `false` schema, which no value satisfies, carries `false`. Two
+      marks may end the column: `(fields as at <pointer>)` (item 5) and
+      `(fields beneath deeper than value-depth)`;
+   5. the first `title` of the declaring schemas, or `-`;
+   6. only on a declaration made under a condition, `when` and its
+      conditions, outermost first, joined by ` and `.
+
+   A condition names the instance location it is evaluated at, with the
+   combined schema's root written `""`: `<pointer> matches <if>` for
+   `then`, `<pointer> does not match <if>` for `else`, the `if` written as
+   its canonical JSON; `<pointer> matches anyOf/<i>` and
+   `<pointer> matches oneOf/<i>` for a branch; and
+   `<pointer>/<name> is present` for `dependentSchemas`. The declarations
+   are listed depth first: a field, then the fields beneath it in member
+   order, then the declarations its conditional branches make. Lines are
+   in the same order on every platform, a packed package's and its source
+   directory's alike.
+4. **What it reaches.** Every field the schema declares, statically, as
+   ADR-003 D14's walk reads a schema, nothing evaluated:
+   - **into a field's own line:** `$ref` and `$dynamicRef`, the latter to
+     its initial target, and every `allOf` branch, each of which always
+     applies. The first `type` met, the field's own and then its chain's
+     in order, is the type column; a different `type` later in the chain
+     is listed as a constraint;
+   - **to the fields beneath:** `properties`; a name `required` lists that
+     no schema declares, as `any`; `patternProperties`;
+     `additionalProperties`, `unevaluatedProperties`, `items` and
+     `unevaluatedItems` when their value is a schema object, as `*` (a
+     `false` value is the constraint `<keyword>=false`); and
+     `prefixItems`, by index. An element of an array is `optional`: the
+     array's `minItems` says how many must be present;
+   - **as declarations under a condition:** each `anyOf` and `oneOf`
+     branch, `then` and `else` where an `if` is present, and each
+     `dependentSchemas` member. A conditional line lists only what its
+     branch declares, and a branch that declares nothing of a location but
+     fields beneath it gives a line only for those fields;
+   - **as constraints, not walked:** `not`, `contains`, `propertyNames`,
+     `dependentRequired` and the `if` itself, each as its canonical JSON.
+     A `$ref` that names a schema the document does not hold, such as a
+     2020-12 meta-schema, is listed as the constraint `$ref=<JSON>`.
+5. **Bounded like every other output.** The listing is a function of the
+   package's schemas, which opening the package already held to
+   `schema-size`, `combined-schema-size`, `schema-depth`, `schema-subschemas`
+   and `ref-depth`, and of value-depth; no new limit is needed:
+   - **each schema is expanded once.** The fields beneath a schema are
+     listed where it is first met. A later declaration it also makes is
+     listed with `(fields as at <pointer>)`, naming that place, and the
+     fields beneath are not listed again. So a recursive schema ends at its
+     second occurrence, and a schema many fields share is listed once, not
+     once per path, which along a chain of shared schemas would double at
+     each link. The listing has at most one line per subschema of the
+     document and per name a `required` array lists;
+   - **no field deeper than value-depth beneath its input is listed**,
+     since no input nested that deep is accepted (spec §14.4). A field at
+     that depth whose schemas declare fields beneath it says
+     `(fields beneath deeper than value-depth)`. `--limit value-depth=<n>`
+     lowers it, as for every command;
+   - **a line's width is bounded.** A title, a condition and one
+     constraint longer than 1024 bytes are each cut, on a character
+     boundary, and end `[…+N bytes]`, as `grep` cuts a line. A line's
+     constraints together stop at 4096 bytes, and the column then ends
+     `[…]`. The whole schema has every value whole.
+6. **With `--json`,** the result of `metais.schema/1` is `input` and
+   `fields`, and has no `schema` member: a consumer that asked for the
+   listing reads `fields`, and no document of an invocation that existed
+   before this amendment changes (D10 item 4). Each entry of `fields`
+   holds, in this order:
+   - `pointer`;
+   - `type`, an array of type names, empty for `any`;
+   - `required`, a boolean;
+   - `constraints`, an array of the column's strings, the two marks not
+     among them;
+   - `title`, a string or `null`;
+   - `when`, an array of the conditions, empty for none;
+   - `same_as`, the pointer of item 5's mark, or `null`;
+   - `beyond_value_depth`, a boolean.
+
+   Text and JSON are one listing: each entry gives its text line exactly.
+   `docs/cli/schemas/metais.schema.1.json` defines both results at its
+   `$id`.
+7. **`inspect` says the fields are there.** D6 item 8 step 3 becomes
+   `metais schema <package> <input> --fields` for each input, whose reason
+   says that it lists the input's fields, one line each with its type,
+   whether it is required, its constraints and title, and that without
+   `--fields` `schema` prints the whole schema. `inspect`'s other next
+   steps are not changed by this amendment. `schema --fields` names next
+   the whole schema, for each field's description, and then `validate`.
+8. **The skill's schema step names the listing** (A2): a session runs
+   `schema <input> --fields` and reads it whole before it reads the whole
+   schema, and never digs fields out of the schema's `$defs`.
+9. **Why.** In the 2026-10-20 runs `metais schema` printed about 39 KB of
+   nested JSON for one input of the DORA package, more than an agent
+   reads at once. Three of the four models worked around it, one by
+   unzipping the package and parsing the raw schema file, and every
+   extraction script had to find that the fields sit under
+   `result.schema.$defs["inputs/<name>.schema.json"]` (plan §1). In the
+   2026-10-21 baseline, C4 haiku named the three inputs from `inspect`
+   and never ran `metais schema`, leaving 17 required fields unnamed:
+   `inspect` lists inputs, not their fields, and said nothing of where the
+   fields are (candidate 6). The listing of every DORA input's fields is
+   about 25 KB, one line each, including every field the stage makes
+   mandatory; one input's is a fraction of that.
+10. **Alternatives rejected.**
+    - *A tree of nested JSON in place of lines.* It is the schema's own
+      shape again, which is what an agent could not read whole.
+    - *Merging every declaration of a field into one line.* A condition's
+      requiredness is not the field's: `/incident/resolved_at` is required
+      only in the final report. A merged line would have to say `required`
+      or `optional`, and either is false.
+    - *Expanding a shared schema at every path.* It is exact and it is
+      exponential: a chain of schemas each naming the next twice doubles
+      the listing at each link, and a recursive schema never ends.
+    - *A new limit on the listing.* The schemas are already bounded, and
+      listing each schema once keeps the listing within them.
+11. **What this does not change.** The specification does not describe
+    the command line's output, so no chapter changes; the help, the CLI
+    schema and the skill carry the listing. No conformance vector runs
+    `schema`, so none changes.
 
 ### A8 — A supplier who wants an example, a preview or data to start from is sent to `render --sample` and `sample`, and an example is said to be the author's
 
