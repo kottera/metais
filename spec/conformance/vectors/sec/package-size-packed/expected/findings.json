@@ -10,9 +10,9 @@
     },
     "params": {
       "limit": "package-size",
-      "bound": 3307,
+      "bound": 3409,
       "lowered": true,
-      "observed": 3308
+      "observed": 3410
     }
   }
 ]

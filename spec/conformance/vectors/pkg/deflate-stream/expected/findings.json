@@ -10,7 +10,7 @@
       "file": "templates/report.md.liquid"
     },
     "params": {
-      "offset": 2728,
+      "offset": 2830,
       "reason": "trailing_bytes"
     }
   }

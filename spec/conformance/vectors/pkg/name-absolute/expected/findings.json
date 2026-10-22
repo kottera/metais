@@ -10,7 +10,7 @@
       "file": "/etc/x"
     },
     "params": {
-      "offset": 3199,
+      "offset": 3301,
       "reason": "leading_slash"
     }
   }
