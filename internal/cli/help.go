@@ -24,6 +24,14 @@ const familyWidth = 28
 // overview.
 const description = "metais reads, validates and renders METAIS packages, and helps author them."
 
+// readInPlace follows the description: a package's contents are read in
+// place with metais, inspect first, and never by unzipping it (ADR-008
+// A5 item 1).
+const readInPlace = "A package (a .metais file) is a zip archive that metais reads in place: do not unzip it. " +
+	"Start with 'metais inspect <package>', which shows what the package needs and the commands to run next. " +
+	"Then 'metais read <package> <entry>' prints an entry, 'metais ls <package>' lists them and " +
+	"'metais grep <package> <pattern>' searches them."
+
 // topic is one help topic (ADR-008 D15 item 4). Its body is written by
 // the help printer, and help --json carries the same text.
 type topic struct {
@@ -426,6 +434,8 @@ func declaredPaths(t []*Command) []path {
 func overviewText(t []*Command) []byte {
 	var b helpText
 	b.para(description, "")
+	b.blank()
+	b.para(readInPlace, "")
 	b.heading("Usage:")
 	b.line("  metais <command> [operands] [flags]")
 	if ps := declaredPaths(t); len(ps) > 0 {

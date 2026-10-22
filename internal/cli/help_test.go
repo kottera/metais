@@ -486,7 +486,7 @@ func TestGoldenPaths(t *testing.T) {
 		t.Errorf("the table shows the paths %v, want the consuming path and the authoring path", got)
 	}
 	var fake []*Command
-	for _, name := range []string{"inspect", "read", "schema", "validate", "render"} {
+	for _, name := range []string{"inspect", "read", "schema", "validate", "render", "sample"} {
 		fake = append(fake, &Command{Name: name, Group: "Reading a package", Description: "D."})
 	}
 	got := declaredPaths(fake)
@@ -495,6 +495,33 @@ func TestGoldenPaths(t *testing.T) {
 	}
 	if !strings.Contains(string(overviewText(fake)), "Golden paths:\n  Consuming a package: inspect → read") {
 		t.Errorf("the overview does not show the path:\n%s", overviewText(fake))
+	}
+}
+
+// TestConsumingPathOnTheFly is ADR-008 A5 item 3: the consuming path
+// offers a supplier a preview from generated data, render --sample, and
+// data to start from, sample, and no route through a shipped example
+// (R-UX-2).
+func TestConsumingPathOnTheFly(t *testing.T) {
+	ps := declaredPaths(table)
+	i := slices.IndexFunc(ps, func(p path) bool { return p.Title == "Consuming a package" })
+	if i < 0 {
+		t.Fatal("the table shows no consuming path")
+	}
+	steps := ps[i].Steps
+	if !strings.HasPrefix(steps, "inspect → read → schema → validate → render") {
+		t.Errorf("the consuming path is %q, want it to begin inspect → read → schema → validate → render", steps)
+	}
+	for _, want := range []string{"render --sample", "sample"} {
+		if !strings.Contains(strings.TrimPrefix(steps, "inspect → read → schema → validate → render"), want) {
+			t.Errorf("the consuming path %q offers no %s", steps, want)
+		}
+	}
+	if !slices.Contains(ps[i].requires, "sample") {
+		t.Errorf("the consuming path names sample but requires %v", ps[i].requires)
+	}
+	if strings.Contains(steps, "example") || strings.Contains(steps, "extract") {
+		t.Errorf("the consuming path %q routes through a shipped example", steps)
 	}
 }
 

@@ -569,3 +569,38 @@ func TestMemoryStop(t *testing.T) {
 		}
 	}
 }
+
+// TestFirstSightReadsInPlace is ADR-008 A5 items 1 and 2: metais alone,
+// metais --help and metais help each say, before the usage line, that a
+// package's contents are read in place with metais, inspect first, then
+// read, ls and grep, and not by unzipping it. metais alone says it on
+// the line under its refusal too, the second line a session reads.
+func TestFirstSightReadsInPlace(t *testing.T) {
+	for _, c := range []struct {
+		args []string
+		out  func(r ran) string
+	}{
+		{nil, func(r ran) string { return r.stderr }},
+		{[]string{"--help"}, func(r ran) string { return r.stdout }},
+		{[]string{"help"}, func(r ran) string { return r.stdout }},
+	} {
+		out := c.out(runTool(t, c.args...))
+		head, _, ok := strings.Cut(out, "\nUsage:\n")
+		if !ok {
+			t.Errorf("metais %q prints no usage line:\n%s", c.args, out)
+			continue
+		}
+		for _, want := range []string{"metais inspect <package>", "metais read ", "metais ls ", "metais grep ", "unzip"} {
+			if !strings.Contains(strings.ReplaceAll(head, "\n", " "), want) {
+				t.Errorf("metais %q does not say %q before its usage line:\n%s", c.args, want, head)
+			}
+		}
+		if strings.Index(head, "metais inspect") > strings.Index(head, "metais read ") {
+			t.Errorf("metais %q names read before inspect:\n%s", c.args, head)
+		}
+	}
+	lines := strings.SplitN(runTool(t).stderr, "\n", 3)
+	if len(lines) < 2 || !strings.Contains(lines[1], "metais inspect <package>") || !strings.Contains(lines[1], "unzip") {
+		t.Errorf("metais alone: the line under its refusal does not send a package to inspect:\n%q", lines)
+	}
+}
