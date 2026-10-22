@@ -1,0 +1,303 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "A1",
+    "name": "A1-new-package",
+    "kind": "authoring",
+    "asks_for_output": false,
+    "prompt": "make a .metais that renders an invoice as HTML from line items"
+  },
+  "model_requested": "opus",
+  "model_reported": "claude-opus-5-5",
+  "models_used": [
+    "claude-opus-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": false,
+  "commit": "5e64a4cb47701e29037b79c12ea29bd2c105cd7f",
+  "metais_sha256": "9310969b947f1ce54d7731cd6dbfee16aacda666db415b723057c39be3ad7fb5",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-first-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    },
+    {
+      "name": "writes-inside-run",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-21T17:26:04.231044Z",
+  "ended": "2026-10-21T17:33:15.830101Z",
+  "wall_ms": 431650,
+  "turns": 54,
+  "cost_usd": 1.212736,
+  "duration_ms": 431408,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 53,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "make a .metais that renders an invoice as HTML from line items",
+      "--model",
+      "opus",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/set/bin:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:55520",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": null,
+  "files": [
+    {
+      "path": "invoice-0.1.0.metais",
+      "size": 15811,
+      "sha256": "445559fa71fcd10597208e1dd5ba897cb913b3efcccaf6c5b1941006379efc18",
+      "change": "added"
+    },
+    {
+      "path": "invoice/.gitattributes",
+      "size": 8,
+      "sha256": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+      "change": "added"
+    },
+    {
+      "path": "invoice/examples/basic/example.yaml",
+      "size": 111,
+      "sha256": "2afebf6f84b0015535898780e6307b40a78bd39c515f35cf097c5764bb3d8192",
+      "change": "added"
+    },
+    {
+      "path": "invoice/examples/basic/expected/invoice.html",
+      "size": 4769,
+      "sha256": "a58cdfb91ab8f6d3e865fb8cda920ade16d963b95ddc060b7972a95a3cab9453",
+      "change": "added"
+    },
+    {
+      "path": "invoice/examples/basic/inputs/invoice.yaml",
+      "size": 569,
+      "sha256": "2155348b6a3925834f68a8ca61aa59752c62729285f918330e4ff15c1d4152de",
+      "change": "added"
+    },
+    {
+      "path": "invoice/examples/basic/inputs/line_items.csv",
+      "size": 211,
+      "sha256": "e69cdb265166fa138d94ab152436afde896fda0d66b48c3808a897eb57a594e8",
+      "change": "added"
+    },
+    {
+      "path": "invoice/examples/minimal/example.yaml",
+      "size": 82,
+      "sha256": "87ba4fc8b3668c1a562265773802afd711331f6837a81e9758eafb973e0bed6a",
+      "change": "added"
+    },
+    {
+      "path": "invoice/examples/minimal/expected/invoice.html",
+      "size": 3423,
+      "sha256": "0fd306c5ac9add7010b598204b7c72c89a79af712c9267a6efdb69de9f210004",
+      "change": "added"
+    },
+    {
+      "path": "invoice/examples/minimal/inputs/invoice.json",
+      "size": 159,
+      "sha256": "c67ac5667c05966070455f072d381a74246ccd79f0fe5a43de7647ed1302f26e",
+      "change": "added"
+    },
+    {
+      "path": "invoice/examples/minimal/inputs/line_items.json",
+      "size": 87,
+      "sha256": "a18eb03701aa4ab424d0229e670979db6b848c3f6b1fecc027fa2897cafcbf2a",
+      "change": "added"
+    },
+    {
+      "path": "invoice/inputs/invoice.md",
+      "size": 1322,
+      "sha256": "13d0e8323bcbb6ca64b811a4a0e83883b786b318b0a023bf4fadff8690fa53b4",
+      "change": "added"
+    },
+    {
+      "path": "invoice/inputs/invoice.schema.json",
+      "size": 3723,
+      "sha256": "b546d77295b29358331b662b555643854afbcce33b6eacbdf2d9b5f6549fda78",
+      "change": "added"
+    },
+    {
+      "path": "invoice/inputs/line_items.md",
+      "size": 847,
+      "sha256": "6182bfd232246980f80175b43c837a0fbc59d54ceb1a56b5939fc0dde68b8f46",
+      "change": "added"
+    },
+    {
+      "path": "invoice/inputs/line_items.schema.json",
+      "size": 1456,
+      "sha256": "da9b2858e414e0c8cdaa703faeb25ee29f2055b2f49fc6fe0e66ecdb17ab2703",
+      "change": "added"
+    },
+    {
+      "path": "invoice/metais.yaml",
+      "size": 1399,
+      "sha256": "570fa2c25de6507d6bcf6acf2f8be9e8a6900e60595689ce192a1d669b4d6f6c",
+      "change": "added"
+    },
+    {
+      "path": "invoice/templates/invoice.html.liquid",
+      "size": 5772,
+      "sha256": "d923732c44b9712da52c07f9d192f7594573774fd3541796992b26cfec23c539",
+      "change": "added"
+    },
+    {
+      "path": "invoice/templates/money.liquid",
+      "size": 801,
+      "sha256": "eb7ed84e383f7a0b54de2d8fc0c88197146ddea6ffcd69c92fb4f4e56ba6b6bd",
+      "change": "added"
+    },
+    {
+      "path": "rendered/invoice.html",
+      "size": 4769,
+      "sha256": "a58cdfb91ab8f6d3e865fb8cda920ade16d963b95ddc060b7972a95a3cab9453",
+      "change": "added"
+    }
+  ],
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": {
+    "format": "metais-ux-outcome/1",
+    "scenario": "A1-new-package",
+    "check": "new-package",
+    "scored": true,
+    "pass": false,
+    "rules": [
+      {
+        "rule": "inspect-first",
+        "applies": false,
+        "pass": true,
+        "detail": "does not apply to A1-new-package"
+      },
+      {
+        "rule": "no-zip-extraction",
+        "applies": true,
+        "pass": false,
+        "detail": "the session extracts the archive itself: unzip extracts the archive",
+        "evidence": [
+          {
+            "turn": 22,
+            "line": 73,
+            "tool": "Bash",
+            "command": "unzip -p ../probe.metais README.md | head -60; unzip -l ../probe.metais",
+            "text": "unzip extracts the archive"
+          }
+        ],
+        "notes": [
+          {
+            "turn": 22,
+            "line": 73,
+            "tool": "Bash",
+            "command": "unzip -p ../probe.metais README.md | head -60; unzip -l ../probe.metais",
+            "text": "unzip lists the archive"
+          }
+        ]
+      },
+      {
+        "rule": "no-unknown-command",
+        "applies": true,
+        "pass": true,
+        "detail": "none of the 55 metais commands is refused as unknown"
+      },
+      {
+        "rule": "package-untouched",
+        "applies": false,
+        "pass": true,
+        "detail": "does not apply to A1-new-package"
+      },
+      {
+        "rule": "outcome",
+        "applies": true,
+        "pass": false,
+        "detail": "the package passes pack, but the session never renders it with render --sample",
+        "evidence": [
+          {
+            "turn": 43,
+            "line": 227,
+            "tool": "Bash",
+            "command": "mkdir -p examples/minimal/inputs …"
+          }
+        ]
+      }
+    ]
+  }
+}

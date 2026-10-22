@@ -1,0 +1,17 @@
+{%- comment -%}
+  Prints a whole number of cents as an amount with two decimals and
+  thousands separators: 123450 prints 1,234.50, and -500 prints −5.00.
+{%- endcomment -%}
+{%- assign whole = cents | abs | divided_by: 100 | append: "" -%}
+{%- assign frac = cents | abs | modulo: 100 | prepend: "0" | slice: -2, 2 -%}
+{%- assign digits = whole | size -%}
+{%- assign grouped = "" -%}
+{%- for i in (1..digits) -%}
+  {%- assign at = i | minus: 1 -%}
+  {%- assign digit = whole | slice: at, 1 -%}
+  {%- assign grouped = grouped | append: digit -%}
+  {%- assign left = digits | minus: i -%}
+  {%- assign place = left | modulo: 3 -%}
+  {%- if left > 0 and place == 0 -%}{%- assign grouped = grouped | append: "," -%}{%- endif -%}
+{%- endfor -%}
+{%- if cents < 0 -%}−{%- endif -%}{{ grouped }}.{{ frac }}

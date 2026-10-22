@@ -1,0 +1,20 @@
+{
+  "shows": "the session renders its package with render --sample to standard output (--out -), which is a render: it passes pack and renders, and fails only no-zip-extraction, for unzip -p on a package it packed",
+  "recorded": {
+    "set": "the metais-ux baseline of Work Order 01a15f30 (artifact art_boccbn5awud7um657vbfnsbezoefmdmkajnhk4tslubk6l3w27fq)",
+    "run": "A1-new-package/opus",
+    "date": "2026-10-21",
+    "commit": "5e64a4cb47701e29037b79c12ea29bd2c105cd7f",
+    "model": "claude-opus-5-5"
+  },
+  "expect": {
+    "inspect-first": "n/a",
+    "no-zip-extraction": "fail",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "no-zip-extraction": "unzip extracts the archive"
+  }
+}

@@ -383,6 +383,15 @@ substitution is not known, and a glob is not expanded.
 | A2 edit-package | `schema-and-template` | an input schema and a template both gain a due date, against the package's source, and the last `metais test` or `metais pack`, after the last edit of the source, passes. |
 | A3 data-to-js | `data-to-js` | a `metais.yaml` the session left declares an output with `escape: html`, a template writes its data with `json_script`, a render wrote the page, and a script element of the rendered page holds a JSON array that parses. |
 
+A render, in every check that reads one, is a `metais render`, not a dry
+run, that wrote its outputs. Into a directory, it lists the files it
+wrote, or leaves them in the run's directory. To standard output
+(`--out -`), it wrote there: the harness reports no error for its call,
+and the call's output is not empty and holds no refusal (`metais: error:`
+or a JSON result's `"ok":false`). metais writes nothing to standard output
+unless the render succeeds (MTS-RND-011). A render to standard output
+redirected to a file is one into that file.
+
 Where the table asks for a judgement, a check is narrower than the
 judgement, never silently: each check states what it cannot see
 (`score.CheckLimits`), and the scorecard prints it. C0 and C1 are the two

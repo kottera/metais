@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Line items",
+  "description": "The things billed, one per row, in the order they are printed.",
+  "type": "array",
+  "minItems": 1,
+  "maxItems": 500,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["description", "quantity", "unit_price"],
+    "properties": {
+      "description": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300,
+        "title": "Description",
+        "description": "What is billed, as printed.",
+        "examples": ["Website design, phase 1"]
+      },
+      "quantity": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "maximum": 1000000,
+        "title": "Quantity",
+        "description": "How many units: hours, items or days. Fractions such as 2.5 are allowed.",
+        "examples": [3]
+      },
+      "unit": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 20,
+        "title": "Unit",
+        "description": "What one unit is, such as hour or day, printed after the unit price, as in 95.00 / hour."
+      },
+      "unit_price": {
+        "type": "number",
+        "multipleOf": 0.01,
+        "minimum": -100000000,
+        "maximum": 100000000,
+        "title": "Unit price",
+        "description": "The price of one unit in the invoice's currency, to the cent. A negative price is a discount.",
+        "examples": [120]
+      }
+    }
+  }
+}
