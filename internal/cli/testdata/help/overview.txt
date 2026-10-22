@@ -3,8 +3,8 @@ metais reads, validates and renders METAIS packages, and helps author them.
 A package (a .metais file) is a zip archive that metais reads in place: do not
 unzip it. Start with 'metais inspect <package>', which shows what the package
 needs and the commands to run next. Then 'metais read <package> <entry>' prints
-an entry, 'metais ls <package>' lists them and 'metais grep <package> <pattern>'
-searches them.
+one of its entries, 'metais ls <package>' lists them and 'metais grep <package>
+<pattern>' searches them.
 
 Usage:
   metais <command> [operands] [flags]

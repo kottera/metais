@@ -29,7 +29,7 @@ const description = "metais reads, validates and renders METAIS packages, and he
 // A5 item 1).
 const readInPlace = "A package (a .metais file) is a zip archive that metais reads in place: do not unzip it. " +
 	"Start with 'metais inspect <package>', which shows what the package needs and the commands to run next. " +
-	"Then 'metais read <package> <entry>' prints an entry, 'metais ls <package>' lists them and " +
+	"Then 'metais read <package> <entry>' prints one of its entries, 'metais ls <package>' lists them and " +
 	"'metais grep <package> <pattern>' searches them."
 
 // topic is one help topic (ADR-008 D15 item 4). Its body is written by
