@@ -33,13 +33,14 @@ set -u
 
 name=${1:-}
 pkg=${2:-}
-[ -n "$name" ] && [ -n "$pkg" ] || {
+if [ -z "$name" ] || [ -z "$pkg" ]; then
 	echo "usage: gate-why.sh <TestName[/subtest]> <package> [go test flags...]" >&2
 	exit 2
-}
+fi
 shift 2
 
 here=$(cd "$(dirname "$0")" && pwd) || exit 2
+# shellcheck source=git-env.sh
 . "$here/git-env.sh" || exit 2
 root=$(git rev-parse --show-toplevel 2>/dev/null) || {
 	echo "gate-why: not inside a git checkout" >&2

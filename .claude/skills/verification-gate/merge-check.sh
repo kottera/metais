@@ -50,6 +50,7 @@ case "${1:-}" in
 	;;
 esac
 
+# shellcheck source=git-env.sh
 . "$(dirname "$0")/git-env.sh" || exit 2
 root=$(git rev-parse --show-toplevel 2>/dev/null) || {
 	echo "merge-check: not inside a git checkout" >&2
@@ -203,9 +204,9 @@ prose_two() { sed -i.bak 's/^the one source of this table\./the one source of th
 # regenerates, so both branches rewrite the same offsets; the second also
 # edits the hand-written line beside pkg/count-disk's generated offset.
 readme() { # readme <sed expression>
-	sed -i.bak "$1" spec/readme/1.0/README.md spec/02-container.md &&
-		rm -f spec/readme/1.0/README.md.bak spec/02-container.md.bak &&
-		"$skills/regenerate.sh" >"$work/regen.branch" 2>&1 || {
+	sed -i.bak "$1" spec/readme/1.0/README.md spec/02-container.md || return 1
+	rm -f spec/readme/1.0/README.md.bak spec/02-container.md.bak
+	"$skills/regenerate.sh" >"$work/regen.branch" 2>&1 || {
 		cat "$work/regen.branch"
 		return 1
 	}

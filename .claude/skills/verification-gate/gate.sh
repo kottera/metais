@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2317 # step runs each step's function through "$@", which shellcheck cannot follow
 # Copyright 2026 Kottera
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -69,6 +70,7 @@
 set -u
 
 here=$(cd "$(dirname "$0")" && pwd) || exit 2
+# shellcheck source=git-env.sh
 . "$here/git-env.sh" || exit 2
 root=$(git rev-parse --show-toplevel 2>/dev/null) || {
 	echo "gate: not inside a git checkout" >&2
@@ -109,10 +111,10 @@ fi
 prev=""
 if [ -n "$resume" ]; then
 	prev=$(cat "$state/latest-$tier" 2>/dev/null)
-	[ -n "$prev" ] && { [ -f "$state/$prev.record" ] || [ -f "$state/$prev.reuse" ]; } || {
+	if [ -z "$prev" ] || { [ ! -f "$state/$prev.record" ] && [ ! -f "$state/$prev.reuse" ]; }; then
 		echo "gate: --resume found no earlier $tier run to resume; start a plain run" >&2
 		exit 2
-	}
+	fi
 fi
 
 setup=$("$here/merge-setup.sh" 2>&1)
@@ -157,7 +159,7 @@ snapshot() {
 		GIT_INDEX_FILE=$idx git write-tree
 	local rc=$?
 	rm -f "$idx"
-	return $rc
+	return "$rc"
 }
 
 tree=$(snapshot) || {
@@ -265,11 +267,12 @@ reuse="$state/$run.reuse"
 if [ -n "$prev" ]; then
 	cat "$state/$prev.reuse" "$state/$prev.record" 2>/dev/null |
 		awk -F'\t' '{last[$2] = $0} END {for (k in last) print last[k]}' >"$reuse"
-	for t in $(cut -f3 "$reuse" | sort -u); do
+	cut -f3 "$reuse" | sort -u | while read -r t; do
 		[ "$t" = "$tree" ] && continue
-		git diff-tree -r --name-only --no-renames "$t" "$tree" >"$state/$run.diff.$t" 2>/dev/null &&
-			"$here/gate-select.sh" --paths "$state/$run.diff.$t" >"$state/$run.reach.$t" ||
+		if ! { git diff-tree -r --name-only --no-renames "$t" "$tree" >"$state/$run.diff.$t" 2>/dev/null &&
+			"$here/gate-select.sh" --paths "$state/$run.diff.$t" >"$state/$run.reach.$t"; }; then
 			: >"$state/$run.reach.$t.unknown"
+		fi
 	done
 fi
 
@@ -358,7 +361,7 @@ cross() {
 			rc=1
 		fi
 	done
-	return $rc
+	return "$rc"
 }
 
 specdata_fresh() {
@@ -390,7 +393,7 @@ tripwire() {
 	local names pkg pat n out missing="" rc
 	names=$(tripwire_names "$1")
 	pkg=$(tripwire_pkg "$1")
-	pat="^($(echo $names | tr ' ' '|'))\$"
+	pat="^($(echo "$names" | tr ' ' '|'))\$"
 	out=$(gotest -v -run "$pat" "$pkg" 2>&1)
 	rc=$?
 	printf '%s\n' "$out" | grep -vE '^(=== (RUN|PAUSE|CONT|NAME)|    --- PASS|--- PASS)'
@@ -403,7 +406,7 @@ tripwire() {
 		echo "tripwire $1 ran none of:$missing (renamed or removed? update gate.sh with the tier's amendment)"
 		return 1
 	fi
-	return $rc
+	return "$rc"
 }
 
 # test_packages runs `go test -race -count=1` over the packages listed in $1
@@ -454,7 +457,7 @@ tests() {
 		esac
 	done <"$todo"
 	rm -f "$todo"
-	return $rc
+	return "$rc"
 }
 
 # The SC7 reach (R-W6-3, plan orchestrator, 2026-10-20, extending ADR-010
@@ -496,7 +499,7 @@ reach() {
 		echo "reach $area ran ${n:-no} vectors of the $# it selects"
 		return 1
 	fi
-	return $rc
+	return "$rc"
 }
 
 # test_step runs the tier's packages as the step "test". Its PASS or FAIL

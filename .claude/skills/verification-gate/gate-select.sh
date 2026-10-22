@@ -73,6 +73,7 @@
 set -u
 
 here=$(cd "$(dirname "$0")" && pwd) || exit 2
+# shellcheck source=git-env.sh
 . "$here/git-env.sh" || exit 2
 root=$(git rev-parse --show-toplevel 2>/dev/null) || {
 	echo "gate-select: not inside a git checkout" >&2

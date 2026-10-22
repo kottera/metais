@@ -1,0 +1,6 @@
+# shellcheck's configuration for every script in the repository, which CI's
+# shell job checks. A script sources its neighbours by a path it computes
+# from its own location, so a source directive names the file and shellcheck
+# looks for it beside the script.
+source-path=SCRIPTDIR
+external-sources=true

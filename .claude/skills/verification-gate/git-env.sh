@@ -1,3 +1,4 @@
+# shellcheck shell=sh
 # Copyright 2026 Kottera
 # SPDX-License-Identifier: Apache-2.0
 #
