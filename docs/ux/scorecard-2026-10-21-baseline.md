@@ -306,11 +306,12 @@ section is the same 27 transcripts, judged, and scored again.
 - **The judge** is `claude-opus-5-5`, one session per run, with no tools,
   outside the gate. Each verdict and its rationale are in its run's
   record's `verdict`.
-- **The scorer** is `main`'s at `f65af425` (#220), which holds W3-1's, run
+- **The scorer** is `main`'s at `8c45e2bd` (#222), which holds W3-1's and
+  W3-7's (#222), run
   as `go run ./internal/tools/ux -out <set> -scorecard -scenarios C0,C1,C2,C3,C4,C5,A1,A2,A3`.
   Before the verdicts it prints the same cells as the previous section.
 - **The judged set** is Work Order artifact
-  `art_weg2mrd7lpfsynzy73l2ex7r2ncngsbcxrvkrjjqhd74auj5etoa`
+  `art_nikpllw4xbljttkcfww74wzielr7pthaqdxkphzkqoz7uvf7th2q`
   (`ux-baseline-2026-10-21-judged-w3-4.tar.gz`): the scrubbed files, each
   C0 and C1 record with its `verdict`, every record's `outcome` as this
   scorer wrote it, and the scorecard it printed, as

@@ -36,15 +36,16 @@ and with the skill, the root cause of each failure, and R-UX-6.
   used them. The only `[W2-NB1]` commit in the measured history is
   PLAN-2026-10-metais-v1's (`0061c500`), which is another train's.
 - **The scorer is `main`'s, after W3-1.** W3-4 scored the set with the
-  runner of `main` at `f65af425` (#220), which holds W3-1's check
-  corrections (#219), as
+  runner of `main` at `8c45e2bd` (#222), which holds W3-1's check
+  corrections (#219) and W3-7's (#222), as
   `go run ./internal/tools/ux -out <set> -scorecard -scenarios C0,C1,C2,C3,C4,C5,A1,A2,A3`.
   The fixtures' sources it reads, `examples/dora-incident-report` and
-  A2's `invoice/`, are the same at `f65af425` as at the measured commit.
+  A2's `invoice/`, are the same at `8c45e2bd` as at the measured commit.
   W3-2 published the cells the measured commit's scorer printed (10 of 24);
   this scorer, before any verdict, prints 11 of 24, because W3-1's
   `names-every-input` now sees C4 Sonnet's answer. The verdicts then make
-  it 14 of 24.
+  it 14 of 24. W3-7's change, to what `no-zip-extraction` and
+  `package-untouched` count, changes no cell of this set.
 - **Every C0 and C1 run carries a recorded verdict**
   ([below](#recorded-verdicts-the-judge-and-its-prompt)), from
   `claude-opus-5-5`, with its rationale, in its record's `verdict`.
@@ -71,7 +72,7 @@ and with the skill, the root cause of each failure, and R-UX-6.
     and the text files of its `work/` and `tmp/`. No file of it holds a
     user name, a host path or a token;
   - judged and re-scored, W3-4's artifact of Work Order `01a16247`,
-    `art_mv4n6szbs3ns44e6pi744qlnc7i4jqozonycfsdw5tjcy6kkoybq`
+    `art_jox6rno2yfupoma55hqdka7n5m3focir2cgtbnpocoejjkh7pvyq`
     (`ux-after-2026-10-22-noskill-judged-w3-4.tar.gz`): the same files,
     each C0 and C1 record with its `verdict`, every record's `outcome` as
     `main`'s scorer wrote it, and the scorecard it printed, as
@@ -98,7 +99,7 @@ and with the skill, the root cause of each failure, and R-UX-6.
 | Harness | claude-code 2.1.299 (Claude Code) |
 | Models | opus: claude-opus-5-5; sonnet: claude-sonnet-5-5; haiku: claude-haiku-5-5 |
 | Host | tera dispatch, darwin/arm64 (macOS) |
-| Transcripts | Work Order 01a16247's artifact art_mv4n6szbs3ns44e6pi744qlnc7i4jqozonycfsdw5tjcy6kkoybq (the judged, re-scored set, ux-after-2026-10-22-noskill-judged-w3-4.tar.gz) |
+| Transcripts | Work Order 01a16247's artifact art_jox6rno2yfupoma55hqdka7n5m3focir2cgtbnpocoejjkh7pvyq (the judged, re-scored set, ux-after-2026-10-22-noskill-judged-w3-4.tar.gz) |
 | Skill | not installed (-with-skill off) |
 | Set started | 2026-10-22T06:25:12Z |
 | Scorer | metais-ux-outcome/1 |
@@ -206,6 +207,8 @@ Every rule and check is decided by code over the transcript and the run's direct
 - **C3-preview** (`generated-preview`): Generated data is metais's: render --sample, or a data directory metais sample wrote. Data the session wrote by hand is not generated.
 - **C4-what-it-needs** (`names-every-input`): An input or a required field is named when its name, spelt with underscores, spaces or hyphens, or its schema title appears in the session's last words. A field is also named by a line of them that holds every word of its name, each read by its first six letters, so "Primary and second contact: name, email and telephone" names six fields and "detection" names detected_at; or that holds the number its title begins with, alone or inside a range such as 1.7–1.9, beside a word of that title. A line that holds a field's words for another reason is read as naming it, and a field named only by a synonym is not seen. The required fields are each input schema's top-level required list; a field the stage makes mandatory through a condition is not counted.
 - **C5-script** (`script-renders`): A script validates and renders through metais when its text names metais and render: metais render validates the inputs as metais validate does and refuses on any error, so a separate validate is not required. Its test run passes when the session runs it, the harness reports no error, and the run renders: render's listing of the files it wrote is in its output, or a file named as one of the package's outputs is left in the session's directory. The harness reports one status for a Bash call, its last command's, so a run of the script that other commands of its call follow passes on render's listing in the call's output alone, whatever the call's status: a script that renders and then fails in a later step of its own is not told apart there from one that ends cleanly. The scorer does not run the script again.
+- **The pass rule `no-zip-extraction`**: The archive the rule measures is the package, or any other file the session started with, never the session's own rendered output: a zip tool or zip library that reads a file a metais render of the session wrote before it, such as unzip -p out/report.docx, extracts nothing of the package and is not counted. A file is one a render wrote when it lies in the render's output directory, or is the file its output was redirected to, and the run's directory holds it at the end as added, with bytes that are no fixture's. A command that also names a .metais file or a file the session started with is counted. A rendered file the session deleted before the run ended is not seen as rendered, so reading it is counted; one it overwrote by other means with bytes no fixture has is still read as rendered.
+- **The pass rule `package-untouched`**: The archive the rule measures is the package, or any other file the session started with, never the session's own rendered output: a zip tool or zip library that reads a file a metais render of the session wrote before it, such as unzip -p out/report.docx, extracts nothing of the package and is not counted. A file is one a render wrote when it lies in the render's output directory, or is the file its output was redirected to, and the run's directory holds it at the end as added, with bytes that are no fixture's. A command that also names a .metais file or a file the session started with is counted. A rendered file the session deleted before the run ended is not seen as rendered, so reading it is counted; one it overwrote by other means with bytes no fixture has is still read as rendered.
 
 ### Prompts reworded under R-UX-9
 
