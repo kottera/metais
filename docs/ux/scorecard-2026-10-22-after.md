@@ -408,6 +408,11 @@ and `unpack --out`. One Wave 2 addition also made three runs fail: `inspect`
 now offers `render --sample` to a session that has no facts, and in C1
 every model took it.
 
+W3-10's scorer, which settles the check mis-scores [below](#what-the-failures-show),
+changes no cell of the baseline read this way
+([re-scored by W3-10's scorer](scorecard-2026-10-21-baseline.md#re-scored-by-w3-10s-scorer)),
+so the comparison's baseline side stands as it is.
+
 ## The comparison with the skill
 
 The with-skill set ([its scorecard](scorecard-2026-10-22-after-with-skill.md))
@@ -509,8 +514,9 @@ each. Phones must be in international format, like `+49 30 1234567`." A
 reader counts both fields named. The check reads each word by its first six
 letters, so "phone" never matches "teleph", and it states that a field
 named only by a synonym is not seen. The run passes every other rule.
-**The fix lies in the check**, shown by this transcript, to be settled by a
-fixture of this run.
+**The fix lies in the check**, shown by this transcript. W3-10 settled it
+with a fixture of this run: a word of five letters or more that ends a word
+of a field's name reads as that word.
 
 ### C2 render-new-fictional, Haiku, with the skill: a defect in the skill
 
@@ -550,7 +556,8 @@ session it ran `cd "$PWD"` (turn 5, line 13). The scorer does not know
 `$PWD`, so it moves the session into a directory named `$PWD` and resolves
 every later relative path beneath it, and `../preview` beneath it holds
 nothing. **The fix lies in the check**, the scorer's shell reading: `$PWD`
-is the directory the call already runs in.
+is the directory the call already runs in. W3-10 settled it with a fixture
+of this run.
 
 ### A1 new-package, Opus, with the skill: a check that mis-scores the transcript
 
@@ -563,7 +570,9 @@ and no `FAIL`. The scorer sees the render, but it does not expand the loop
 variable, the listing went to `/dev/null`, and the call deleted the
 directories at its end, so it finds no file the render wrote. **The fix
 lies in the check:** a `--sample` render the same call shows wrote, by
-reading its output back, is a render.
+reading its output back, is a render. W3-10 settled it with a fixture of
+this run: the loop's body is read once for each of its words, and the read
+of `../.s2/invoice.html` shows the render into `../.s2` wrote.
 
 ### A3 data-to-js, Opus, with the skill: a check that mis-scores the transcript
 
@@ -576,20 +585,29 @@ which wrote the same bytes, by digest, to
 `number-chart/examples/basic/expected/index.html`, where they survive. The
 check reads only the rendered files still at the path the render wrote.
 **The fix lies in the check:** a page the render reported, whose bytes
-survive in the run's directory, is the rendered page.
+survive in the run's directory, is the rendered page. W3-10 settled it with
+a fixture of this run.
 
 ### A3 data-to-js, Sonnet, with the skill: a check that mis-scores the transcript
 
 Its template and manifest are right, as Opus's. At turn 10, line 32 it ran
 `cd numchart && python3 -I - <<'EOF' …`; the here-document failed in the
-sandbox, so the `cd` never ran, and the same call rendered
-`--sample --out ../preview`, listing `page.html` with
-`const values = [66,6.31,23.76];` in its output. `work/preview/page.html`
-survives and parses. The scorer applied the failed `cd`, so it resolved
-`../preview` one directory too deep. The next `cd numchart` (line 38) fails
-with "no such file or directory: numchart", which shows the session was
-still in `numchart`. **The fix lies in the check:** a `cd` the transcript
-shows failing does not move the session.
+sandbox, and the same call rendered `--sample --out ../preview`, listing
+`page.html` with `const values = [66,6.31,23.76];` in its output.
+`work/preview/page.html` survives and parses. The scorer resolved
+`../preview` one directory too deep, in `numchart/numchart`, because it
+carried an earlier `cd numchart` (line 21) into this call. That call exited
+1: its result reads the status as "No matches found". The harness records
+the shell's directory for the next call with `pwd -P` after the call and
+`&&`, so a call that exits otherwise leaves the session where it started:
+the session was in `work` at line 32, whose `cd numchart` ran and printed
+no error, and in `numchart` after it, as the next `cd numchart` (line 38)
+shows, failing with "no such file or directory: numchart". **The fix lies
+in the check**, the scorer's shell reading: a `cd` carries to the next call
+only when its call exits 0. W3-10 settled it with a fixture of this run,
+which its reading of a page's surviving bytes passes too, since the
+listing's digest is `work/preview/page.html`'s; a unit test on the same
+transcript proves the directory.
 
 ### Candidate 7: authoring runs that never ran `metais` without the skill
 

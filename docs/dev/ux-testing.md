@@ -404,8 +404,28 @@ still read as rendered. Both rules state this as their limits
 The scorer reads each Bash call as a POSIX shell would split it: quoting,
 `&&`, `||`, `;`, pipes, subshells, `$(…)`, here-documents, comments, and
 what `bash -c` runs. A variable the call assigns (`M=/…/metais; $M
-render …`) is expanded. It is not a shell: a value made by a command
-substitution is not known, and a glob is not expanded.
+render …`) is expanded, and so is `$PWD`, as the directory the command
+runs in, so `cd "$PWD"` stays where it is. A `for NAME in WORD…; do …;
+done` loop's body is read once for each word, with `$NAME` expanded to
+it, so `for s in 1 2 3; do metais render … --out ../.s$s; done` is three
+renders, into `../.s1`, `../.s2` and `../.s3`. It is not a shell: a value
+made by a command substitution is not known, a loop over one (`for f in
+$(ls)`) or over a variable is read once with its variable unexpanded,
+and a glob is not expanded.
+
+A `cd` moves the commands after it in its call. It carries to the
+session's next call only when the call exits 0, because the harness
+records the shell's directory for the next call with `pwd -P` after the
+call's command line and `&&` (Claude Code runs `eval <command> && pwd -P
+>| <file>`): a call that exits otherwise leaves the session in the
+directory it started in. A call exits otherwise when the harness reports
+it as an error, or reads its status as something other than an error,
+such as grep's "No matches found", which the transcript records as the
+result's `returnCodeInterpretation`. So A3 sonnet's `cd numchart` at line
+21 of the after set with the skill, in a call that exits 1, leaves the
+session in `work`, and its `cd numchart && …` at line 32 takes it into
+`numchart`, not one directory deeper (W3-10). Within a call, a `cd` that
+failed is still followed.
 
 ### Each scenario's check
 
@@ -419,7 +439,7 @@ substitution is not known, and a glob is not expanded.
 | C5 script | `script-renders` | the session wrote a script whose text runs `metais render`, which validates its inputs as `metais validate` does and renders nothing when any is in error, and a run of it after it was written ends without error. A run that other commands of its Bash call follow is judged by render's listing in its output, because the harness's error for the call is the last command's. |
 | A1 new-package | `new-package` | a `metais pack` passed, which checks and tests the package first, and a `render --sample` wrote an output. |
 | A2 edit-package | `schema-and-template` | an input schema and a template both gain a due date, against the package's source, and the last `metais test` or `metais pack`, after the last edit of the source, passes. |
-| A3 data-to-js | `data-to-js` | a `metais.yaml` the session left declares an output with `escape: html`, a template writes its data with `json_script`, a render wrote the page, and a script element of the rendered page holds a JSON array that parses. |
+| A3 data-to-js | `data-to-js` | a `metais.yaml` the session left declares an output with `escape: html`, a template writes its data with `json_script`, a render wrote the page, and a script element of the rendered page holds a JSON array that parses. The rendered page is a page the render wrote that the run leaves, or a file the run leaves with the bytes the render's listing reports writing, such as the expected output `metais test --update` writes from the same data. |
 | C6 render-acr-fictional | `new-fictional-render` | as C2's. |
 | A4 spec-only-package | `checks-tests-packs` | the session's last `metais check`, its last `metais test` and its last `metais pack` each pass, and each comes after its last edit of the package's source. |
 
@@ -428,14 +448,19 @@ of the field's name, each read by its first six letters with a short
 word's plural `s` taken off, leaving out the words a name joins with (`at`,
 `of`, `the`…). So "Primary and second contact: name, email and telephone"
 names six fields, and "detection and classification timestamps" names
-`detected_at` and `classified_at`. A line also names a field when it
+`detected_at` and `classified_at`. A word of the line of five letters or
+more, plural or not, that is the end of a word of the name reads as that
+word, the short form a person writes for it: "Primary and second contact:
+name, email and phone for each" names the two telephone fields too (W3-10,
+from the after set's C4 Opus run). A line also names a field when it
 holds the number its title begins with, such as `1.3` or a range such as
 `1.7–1.9`, beside a word of that title, so "**1.3** Its identification
 code" names the field titled "1.3 Identification code of the entity
 submitting the report". The check cannot tell a line that holds a field's
-words for another reason from one that names it, and it does not see a
-field named only by a synonym (W3-1, from the baseline's C4 Opus and
-Sonnet runs).
+words for another reason from one that names it, nor a word that ends a
+word of a name by chance ("count" ends "account") from its short form,
+and it does not see a field named only by a synonym (W3-1, from the
+baseline's C4 Opus and Sonnet runs).
 
 A render, in every check that reads one, is a `metais render`, not a dry
 run, that wrote its outputs. Into a directory, it lists the files it
@@ -444,7 +469,16 @@ wrote, or leaves them in the run's directory. To standard output
 and the call's output is not empty and holds no refusal (`metais: error:`
 or a JSON result's `"ok":false`). metais writes nothing to standard output
 unless the render succeeds (MTS-RND-011). A render to standard output
-redirected to a file is one into that file.
+redirected to a file is one into that file. A render into a directory
+whose listing went elsewhere (`>/dev/null`) and whose files the session
+deleted wrote, when a later command of its own Bash call that prints a
+file (`cat`, `head`, `sed`, `grep`…) names a file beneath its output
+directory, and the call's output holds no refusal and no report of a
+missing file ("No such file"): reading the output back shows it was
+there (W3-10, from A1 Opus's run with the skill, which rendered with
+`--sample` three times in a loop, read `../.s2/invoice.html` back, and
+deleted the directories). The scorer cannot tell such a read from one of
+a file the directory held before the render.
 
 Where the table asks for a judgement, a check is narrower than the
 judgement, never silently: each check states what it cannot see
