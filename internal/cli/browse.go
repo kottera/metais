@@ -16,6 +16,7 @@ import (
 	"github.com/kottera/metais/internal/hostfs"
 	"github.com/kottera/metais/internal/jsonx"
 	"github.com/kottera/metais/internal/limits"
+	"github.com/kottera/metais/internal/liquid/value"
 	"github.com/kottera/metais/internal/loader"
 	"github.com/kottera/metais/internal/manifest"
 	"github.com/kottera/metais/internal/regexprofile"
@@ -174,22 +175,39 @@ func readingDeclarations() []*Command {
 			Refusal{Code: finding.CodeUsageBadPattern, Cause: "The pattern is not RE2 syntax, or breaches pattern-length, regex-program or regex-work.", Next: nextPattern},
 		),
 		readingCommand(&Command{
-			Name: "schema", Synopsis: "schema <package> [<input>] [--limit <name>=<value>]... [--json]",
-			Description: "Print the package's combined input schema, or one input's schema.",
+			Name: "schema", Synopsis: "schema <package> [<input>] [--fields] [--limit <name>=<value>]... [--json]",
+			Description: "Print the package's combined input schema, or one input's schema, or list their fields.",
 			Detail: "With no input, prints the combined input schema: one JSON Schema 2020-12 document with a " +
 				"property per input, which is what the inputs are validated against. With an input, prints " +
 				"that input's schema as one self-contained document: the input's title and description beside " +
 				"a $ref to its schema, with $defs embedding every schema resource the $ref reaches. A " +
 				"collection's schema is the array's, whose items each file must satisfy.\n\n" +
 				"The schema is printed in canonical key order, indented by two spaces, so " +
-				"metais schema <package> <input> > <input>.json writes a usable schema file.",
-			Operands: []args.Operand{{Name: "<input>", Description: "An input's name; the combined schema when omitted."}},
+				"metais schema <package> <input> > <input>.json writes a usable schema file.\n\n" +
+				"--fields lists the fields instead, one line per field, to read whole: the input's, or with " +
+				"no input every input's. A field's pointer begins with its input's name, as --set takes it, " +
+				"and * stands for every element of an array, or every member of an object its schema does " +
+				"not name. Each line gives the field's type (any when none is declared), whether the object " +
+				"holding it requires it, its constraints as keyword=JSON, and its title. The listing follows " +
+				"$ref and allOf into the field's own line, and properties, patternProperties, " +
+				"additionalProperties, prefixItems, items and their unevaluated forms to the fields beneath. " +
+				"A field that anyOf, oneOf, if with then or else, or dependentSchemas declares is listed " +
+				"again with a last column, when, naming the condition. A schema's fields are listed once, " +
+				"where it is first met; another field it declares says (fields as at <pointer>). No field " +
+				"deeper beneath its input than value-depth is listed. A title, a condition or a constraint " +
+				"longer than 1024 bytes is cut, and a line's constraints at 4096 bytes; the schema itself " +
+				"has them whole, with each field's description.",
+			Operands: []args.Operand{{Name: "<input>", Description: "An input's name; the combined schema, or every input's fields, when omitted."}},
+			Flags:    []args.Flag{{Name: "fields", Description: "List the fields, one line each, in place of the schema."}},
 			Format:   "metais.schema/1",
-			Prints:   "The schema alone, indented by two spaces; never coloured.",
+			Prints: "The schema alone, indented by two spaces; with --fields, one line per field: its pointer, type, " +
+				"required or optional, constraints and title, and the condition of one declared under a " +
+				"condition, separated by tabs. Never coloured.",
 			Examples: []Example{
+				{"metais schema report-1.0.0.metais product --fields", "Lists the fields of the input product, one line each."},
+				{"metais schema report-1.0.0.metais product > product.json", "Writes the schema of the input product to a file."},
+				{"metais schema report-1.0.0.metais --fields --json", "Lists every input's fields as one metais.schema/1 document."},
 				{"metais schema report-1.0.0.metais", "Prints the combined input schema."},
-				{"metais schema report-1.0.0.metais product", "Prints the schema of the input product."},
-				{"metais schema report-1.0.0.metais product --json", "Prints it as one metais.schema/1 document."},
 			},
 			run: runSchema,
 		}, Refusal{Code: finding.CodeUsageUnknownInput, Cause: "The operand names no input of the package; the finding lists them.", Next: nextInspect}),
@@ -689,10 +707,24 @@ func grepHuman(r browse.GrepResult) []byte {
 }
 
 // schemaResult is metais.schema/1's result (ADR-008 D5, schema item 3):
-// the schema's data, in canonical key order.
+// the schema's data, in canonical key order, or with --fields the field
+// listing in its place (ADR-008 A7).
 type schemaResult struct {
 	Input  *string         `json:"input"`
-	Schema json.RawMessage `json:"schema"`
+	Schema json.RawMessage `json:"schema,omitempty"`
+	Fields *[]schemaField  `json:"fields,omitempty"`
+}
+
+// schemaField is one line of the field listing (ADR-008 A7 item 6).
+type schemaField struct {
+	Pointer          string   `json:"pointer"`
+	Type             []string `json:"type"`
+	Required         bool     `json:"required"`
+	Constraints      []string `json:"constraints"`
+	Title            *string  `json:"title"`
+	When             []string `json:"when"`
+	SameAs           *string  `json:"same_as"`
+	BeyondValueDepth bool     `json:"beyond_value_depth"`
 }
 
 // runSchema is metais schema.
@@ -704,6 +736,7 @@ func runSchema(s *session, p args.Parsed) outcome {
 	defer pkg.Close()
 	doc := pkg.CombinedValue
 	res := &schemaResult{}
+	var in *manifest.Input
 	if len(p.Operands) > 1 {
 		name := p.Operands[1]
 		i := slices.IndexFunc(pkg.Manifest.Inputs, func(in manifest.Input) bool { return in.Name == name })
@@ -718,19 +751,99 @@ func runSchema(s *session, p args.Parsed) outcome {
 			o.human = listing("The package's inputs:", names, false)
 			return o
 		}
-		in := pkg.Manifest.Inputs[i]
+		in = &pkg.Manifest.Inputs[i]
 		res.Input = &in.Name
 		doc = schema.InputDocument(doc, in.Name)
+	}
+	validate := Next{Run: "metais validate <package> --data <dir>", Why: "Validates the inputs you gathered in a data directory against this schema."}
+	if p.Has("fields") {
+		return s.schemaFields(res, doc, in, validate)
 	}
 	res.Schema = json.RawMessage(jsonx.Canonical(doc))
 	human, err := jsonx.Encode(doc, 2)
 	if err != nil {
 		panic("cli: encoding a schema: " + err.Error())
 	}
-	next := slices.DeleteFunc([]Next{
-		{Run: "metais validate <package> --data <dir>", Why: "Validates the inputs you gathered in a data directory against this schema."},
-	}, func(n Next) bool { return lookup(s.table, "validate") == nil })
-	return outcome{result: res, human: append(human, '\n'), next: next}
+	return outcome{result: res, human: append(human, '\n'), next: declaredSteps([]Next{validate}, s.table)}
+}
+
+// schemaFields is metais schema --fields: the field listing of doc, the
+// input in's document or, when in is nil, the combined schema (ADR-008
+// A7).
+func (s *session) schemaFields(res *schemaResult, doc value.Object, in *manifest.Input, validate Next) outcome {
+	w, err := schema.NewWalker(doc, schema.CombinedURI)
+	if err != nil {
+		// The package compiled when it opened, and every schema the
+		// walker indexes is one the compiler accepted.
+		panic("cli: walking a compiled schema: " + err.Error())
+	}
+	name, required, whole := "", false, "metais schema <package> <input>"
+	if in != nil {
+		name, required, whole = in.Name, in.Required, "metais schema <package> "+shellQuote(in.Name)
+	}
+	fs := w.Fields(name, required, int(s.lim.Value(limits.ValueDepth)))
+	rows := make([]schemaField, len(fs))
+	var b strings.Builder
+	for i, f := range fs {
+		row := schemaField{Pointer: f.Pointer, Type: f.Type, Required: f.Required, Constraints: f.Constraints,
+			Title: f.Title, When: f.When, BeyondValueDepth: f.BeyondValueDepth}
+		if row.Type == nil {
+			row.Type = []string{}
+		}
+		if row.Constraints == nil {
+			row.Constraints = []string{}
+		}
+		if row.When == nil {
+			row.When = []string{}
+		}
+		if f.SameAs != "" {
+			same := f.SameAs
+			row.SameAs = &same
+		}
+		rows[i] = row
+		b.WriteString(fieldLine(row))
+	}
+	res.Fields = &rows
+	return outcome{result: res, human: []byte(b.String()), next: declaredSteps([]Next{
+		{Run: whole, Why: "Prints the whole schema, with each field's description."},
+		validate,
+	}, s.table)}
+}
+
+// fieldLine is one field as text (ADR-008 A7 item 3): its columns
+// separated by tabs, each neutralised and with no tab of its own.
+func fieldLine(f schemaField) string {
+	typ := "any"
+	if len(f.Type) > 0 {
+		typ = strings.Join(f.Type, "|")
+	}
+	req := "optional"
+	if f.Required {
+		req = "required"
+	}
+	cs := slices.Clone(f.Constraints)
+	if f.SameAs != nil {
+		cs = append(cs, "(fields as at "+*f.SameAs+")")
+	}
+	if f.BeyondValueDepth {
+		cs = append(cs, "(fields beneath deeper than value-depth)")
+	}
+	cons := "-"
+	if len(cs) > 0 {
+		cons = strings.Join(cs, " ")
+	}
+	title := "-"
+	if f.Title != nil {
+		title = *f.Title
+	}
+	cols := []string{f.Pointer, typ, req, cons, title}
+	if len(f.When) > 0 {
+		cols = append(cols, "when "+strings.Join(f.When, " and "))
+	}
+	for i, c := range cols {
+		cols[i] = strings.ReplaceAll(browse.Neutralise(c), "\t", `\u0009`)
+	}
+	return strings.Join(cols, "\t") + "\n"
 }
 
 // extractResult is metais.extract/1's result (ADR-008 D5, extract item 6).
