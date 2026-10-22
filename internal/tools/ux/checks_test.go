@@ -355,6 +355,50 @@ func TestSpilledToolOutput(t *testing.T) {
 	}
 }
 
+// TestSpilledToolOutputGlob: a session that reads its own spilled tool
+// output through a glob of its project and session directories, or the
+// tool-results directory itself, reads no memory. The call is W3-14's
+// first C4-what-it-needs sonnet run with the skill, which the check
+// recorded invalid (artifact
+// art_yewidpk6crt7jkxavavcyle5lkthqj3dcau72nexao5l54ct4ota). A glob does
+// not reach memory: a memory directory, MEMORY.md or CLAUDE.md beneath
+// the session's HOME, or tool-results beneath another HOME, is still
+// memory, glob or not.
+func TestSpilledToolOutputGlob(t *testing.T) {
+	h, s := testSession(t)
+	recorded := "cd $HOME/.claude/projects/*/*/tool-results/ && wc -l bej46zbp2.txt && sed -n 1,400p bej46zbp2.txt | cut -c1-260"
+	for _, c := range []struct {
+		command string
+		pass    bool
+	}{
+		{recorded, true},
+		{"cd " + s.home + "/.claude/projects/*/*/tool-results && wc -l bej46zbp2.txt", true},
+		{"sed -n 1,40p ~/.claude/projects/-ux-run-work/*/tool-results/*.txt", true},
+		{"cat '$HOME/.claude/projects/-ux-run-*/fcdfc775-*/tool-results/bej46zbp2.txt'", true},
+		{"cat $HOME/.claude/projects/*/memory/MEMORY.md", false},
+		{"ls $HOME/.claude/projects/*/memory/", false},
+		{"cat $HOME/.claude/projects/*/*/tool-results/../memory/MEMORY.md", false},
+		{"cat $HOME/.claude/projects/*/*/tool-results/../../memory/x.md", false},
+		{"ls $HOME/.claude/projects/*/*/tool-results/../..", false},
+		{"cat $HOME/.claude/projects/*/*/tool-results/x.txt $HOME/.claude/projects/*/CLAUDE.md", false},
+		{"cat $HOME/.claude/projects/*/*/tool-results/ MEMORY.md", false},
+		{"cat $HOME/.claude/projects/*/*/CLAUDE.md", false},
+		{"cat $HOME/.claude/projects/*/memory*/tool-results/x.txt", false},
+		{"cd /Users/someone/.claude/projects/*/*/tool-results/ && wc -l bej46zbp2.txt", false},
+		{"cd /Users/*/.claude/projects/*/*/tool-results/ && wc -l bej46zbp2.txt", false},
+		{"ls $HOME/.claude/projects/*/*", false},
+	} {
+		b, err := json.Marshal(map[string]string{"command": c.command})
+		if err != nil {
+			t.Fatal(err)
+		}
+		tr := h.read([]byte(initLine(s, "2.1.299", "[]", "[]") + "\n" + toolLine("Bash", string(b))))
+		if got := checkNoMemoryRead(s, tr); got.Pass != c.pass {
+			t.Errorf("%s: passed is %v, want %v (%s)", c.command, got.Pass, c.pass, got.Detail)
+		}
+	}
+}
+
 func TestRead(t *testing.T) {
 	h, s := testSession(t)
 	tr := h.read([]byte(strings.Join([]string{initLine(s, "2.1.299", "[]", "[]"), "not json",

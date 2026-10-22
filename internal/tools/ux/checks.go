@@ -289,11 +289,17 @@ var memoryFile = regexp.MustCompile(`(?:^|[\s/"'=~])(?:CLAUDE(?:\.local)?|MEMORY
 
 // spilledOutput matches a tool output Claude Code spilled to a file of the
 // session's project beneath home, which a session reads back when a result
-// is too large to show whole. The session's HOME starts empty, so such a
-// file is the session's own output and no memory.
+// is too large to show whole, or the directory of them. The session's HOME
+// starts empty, so such a file is the session's own output and no memory.
+// The project and the session may be globs, and the file a glob of its
+// name: a project's directory begins with a dash, and a glob of the
+// session's is of a session's id, so neither reaches the project's memory
+// directory or a file beside it. A path that ends at the tool-results
+// directory is the session's output too; one that leaves it is not.
 func spilledOutput(home string) *regexp.Regexp {
-	return regexp.MustCompile(`(?:` + regexp.QuoteMeta(home) + `|~|\$HOME|\$\{HOME\})/\.claude/projects/-[^/\s"'\\]*/` +
-		`[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/tool-results/[A-Za-z0-9_-][A-Za-z0-9_.-]*`)
+	return regexp.MustCompile(`(?:` + regexp.QuoteMeta(home) + `|~|\$HOME|\$\{HOME\})/\.claude/projects/[-*][^/\s"'\\]*/` +
+		`(?:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[0-9a-f-]*\*[0-9a-f*-]*)/tool-results` +
+		`(?:/[A-Za-z0-9_*-][A-Za-z0-9_.*-]*|/?(?:$|[\s"';&|)]))`)
 }
 
 // checkNoMemoryRead: no tool call of the session names a memory file. A
@@ -306,7 +312,7 @@ func checkNoMemoryRead(s session, t transcript) check {
 			continue
 		}
 		for _, str := range stringsIn(input) {
-			if m := memoryFile.FindString(spilled.ReplaceAllString(str, "")); m != "" {
+			if m := memoryFile.FindString(spilled.ReplaceAllString(str, " ")); m != "" {
 				return fail(checkNoMemory, "tool call %d (%s) names a memory file: %q", i+1, u.Name, strings.TrimSpace(m))
 			}
 		}

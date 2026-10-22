@@ -55,3 +55,52 @@ func TestAnswerLineNames(t *testing.T) {
 		}
 	}
 }
+
+// TestScriptRunEndsItsCall: the harness reports one status for a Bash
+// call, its last command's, so a test run of the script that ends a call
+// the harness reports as an error has failed, whatever its output lists.
+// Only a run that other commands follow is judged by render's listing
+// (W3-1). The probe is c5-sonnet-renders-before-an-error with its line-35
+// call reduced to the script's run, its output and error kept.
+func TestScriptRunEndsItsCall(t *testing.T) {
+	f := fixtureNamed(t, "c5-sonnet-renders-before-an-error")
+	for _, c := range []struct {
+		name string
+		edit func([]string) []string
+		pass bool
+	}{
+		{"as recorded", func(l []string) []string { return l }, true},
+		{"the run ends its call", func(l []string) []string {
+			l[35] = withCommand(t, l[35], "./render-report.sh ../ex/inputs.json ../ex/reports")
+			return l
+		}, false},
+	} {
+		o, err := Score(probe(t, f, c.edit))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if res := ruleResult(t, o, RuleOutcome); res.Pass != c.pass {
+			t.Errorf("%s: outcome %+v, want pass %v", c.name, res, c.pass)
+		}
+	}
+}
+
+// TestFieldWordEndsAtFiveLetters: a word of the line is read as the end
+// of a field's word only from five letters, so a shorter word that ends
+// it does not name the field (W3-10).
+func TestFieldWordEndsAtFiveLetters(t *testing.T) {
+	phone := []string{"primary_contact_telephone", "1.9 Primary contact person telephone"}
+	for _, c := range []struct {
+		line string
+		want bool
+	}{
+		{"Primary contact: phone", true},
+		{"Primary contact: hone", false},
+		{"Primary contact: one", false},
+		{"Primary contact: ne", false},
+	} {
+		if got := answerLines(c.line)[0].names(phone); got != c.want {
+			t.Errorf("%q names %s: %v, want %v", c.line, phone[0], got, c.want)
+		}
+	}
+}

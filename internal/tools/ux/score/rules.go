@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+
+	"github.com/kottera/metais/internal/tools/ux/streamjson"
 )
 
 // contentReaders are the metais commands that read a package's contents.
@@ -114,6 +116,10 @@ func listingFlags(c *cmd) bool {
 func (r *run) zipReads() []zipRead {
 	var out []zipRead
 	seen := map[*cmd]bool{}
+	// libraryCalls are the Bash calls a zip library was read from: it is
+	// read from a call's whole command line, so once for the call, not
+	// once for each of its commands.
+	libraryCalls := map[*streamjson.ToolUse]bool{}
 	add := func(c *cmd, why string, listing bool) {
 		if seen[c] {
 			return
@@ -158,9 +164,10 @@ func (r *run) zipReads() []zipRead {
 			}
 		default:
 			if m := zipLibrary.FindString(c.use.Command()); m != "" {
-				if r.ownRender(pathWord.FindAllString(c.use.Command(), -1), c.cwd, c.seq) {
+				if libraryCalls[c.use] || r.ownRender(pathWord.FindAllString(c.use.Command(), -1), c.cwd, c.seq) {
 					continue
 				}
+				libraryCalls[c.use] = true
 				if zipLibraryRead.MatchString(c.use.Command()) {
 					add(c, "the command parses the archive with "+m, false)
 				} else {

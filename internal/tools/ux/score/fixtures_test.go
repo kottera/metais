@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -320,8 +321,8 @@ func TestNotScored(t *testing.T) {
 	}
 }
 
-// withVerdict is a fixture's run with a verdict written into its record.
-func withVerdict(t *testing.T, f loaded, v string) Input {
+// runCopy is a copy of a fixture's run that a test may change.
+func runCopy(t *testing.T, f loaded) fstest.MapFS {
 	t.Helper()
 	m := fstest.MapFS{}
 	err := fs.WalkDir(f.in.Run, ".", func(p string, d fs.DirEntry, err error) error {
@@ -335,6 +336,63 @@ func withVerdict(t *testing.T, f loaded, v string) Input {
 	if err != nil {
 		t.Fatal(err)
 	}
+	return m
+}
+
+// fixtureNamed is the committed fixture of that name.
+func fixtureNamed(t *testing.T, name string) loaded {
+	t.Helper()
+	for _, f := range loadFixtures(t) {
+		if f.name == name {
+			return f
+		}
+	}
+	t.Fatalf("no fixture %s", name)
+	return loaded{}
+}
+
+// probe is a fixture's run with its transcript's lines changed by edit,
+// which is handed them numbered from 1 as the scorer's evidence numbers
+// them: a recorded run brought to an edge of a rule that no model showed
+// on demand, which the test names beside the rule it pins.
+func probe(t *testing.T, f loaded, edit func(lines []string) []string) Input {
+	t.Helper()
+	m := runCopy(t, f)
+	lines := strings.Split(strings.TrimSuffix(string(m["transcript.jsonl"].Data), "\n"), "\n")
+	lines = edit(append([]string{""}, lines...))[1:]
+	m["transcript.jsonl"] = &fstest.MapFile{Data: []byte(strings.Join(lines, "\n") + "\n")}
+	in := f.in
+	in.Run = m
+	return in
+}
+
+// commandField is a Bash call's command in a transcript line.
+var commandField = regexp.MustCompile(`"command":"(?:[^"\\]|\\.)*"`)
+
+// withCommand is a transcript line with its Bash call's command replaced.
+func withCommand(t *testing.T, line, command string) string {
+	t.Helper()
+	if !commandField.MatchString(line) {
+		t.Fatalf("no command in %.200s", line)
+	}
+	b, _ := json.Marshal(command)
+	return commandField.ReplaceAllLiteralString(line, `"command":`+string(b))
+}
+
+// ruleResult is an outcome's result for a rule.
+func ruleResult(t *testing.T, o *Outcome, rule string) Result {
+	t.Helper()
+	i := slices.IndexFunc(o.Rules, func(r Result) bool { return r.Rule == rule })
+	if i < 0 {
+		t.Fatalf("no result for %s: %+v", rule, o)
+	}
+	return o.Rules[i]
+}
+
+// withVerdict is a fixture's run with a verdict written into its record.
+func withVerdict(t *testing.T, f loaded, v string) Input {
+	t.Helper()
+	m := runCopy(t, f)
 	var rec map[string]any
 	if err := json.Unmarshal(m["record.json"].Data, &rec); err != nil {
 		t.Fatal(err)

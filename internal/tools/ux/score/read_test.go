@@ -201,7 +201,10 @@ func TestReadBack(t *testing.T) {
 		{render + "rm -rf ../o", "", false},
 		{render + "ls ../o; rm -rf ../o", "page.html", false},
 		{render + "cat ../other/page.html", "<p>x</p>", false},
-		{render + "cat ../o/page.html", "metais: error: The package cannot be rendered. [x]\ncat: ../o/page.html: No such file or directory", false},
+		// A refusal, though the read printed a file a render before it
+		// left there.
+		{render + "cat ../o/page.html", "metais: error: The package cannot be rendered. [x]\n<p>x</p>", false},
+		{render + "cat ../o/page.html", `{"ok":false}` + "\n<p>x</p>", false},
 		{render + "cat ../o/page.html", "cat: ../o/page.html: No such file or directory", false},
 		{"cat ../o/page.html; " + render, "<p>x</p>", false},
 	} {
@@ -209,5 +212,11 @@ func TestReadBack(t *testing.T) {
 		if got := len(r.renders()) > 0; got != c.want {
 			t.Errorf("%q, output %q: rendered %v, want %v", c.line, c.output, got, c.want)
 		}
+	}
+	// A read in a later call is not the render's: the files it reads may
+	// be any command's in between.
+	r := synthetic(t, "A1", nil, step{command: "cd pkg"}, step{command: render + "true"}, step{command: "cat ../o/page.html", output: "<p>x</p>"})
+	if len(r.renders()) > 0 {
+		t.Error("a read in the next call is seen as the render's")
 	}
 }
