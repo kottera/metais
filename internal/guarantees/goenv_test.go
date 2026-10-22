@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestGoCommandTakesNoHostGoEnv holds the go command a test runs to taking

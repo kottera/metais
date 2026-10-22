@@ -13,7 +13,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // Dialect is the one `$schema` value METAIS accepts (ADR-003 D3 item 2).

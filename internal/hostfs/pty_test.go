@@ -16,10 +16,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/kottera/metais/internal/cli"
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/hostenv"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/cli"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/hostenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // The variables that make this test binary the tool: the arguments, as a

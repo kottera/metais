@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 func str(t *testing.T, s string) value.Value {

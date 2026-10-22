@@ -17,10 +17,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/cli"
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/cli"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/testenv"
 )
 
 // existingWrite is one writer of an existing output directory, as the

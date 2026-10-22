@@ -4,8 +4,8 @@
 package render
 
 import (
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/manifest"
 )
 
 // crlfStage is ADR-005 D10: a file declaring newline: crlf has its line

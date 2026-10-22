@@ -11,8 +11,8 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/schema"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/schema"
 )
 
 // each generates schema's value under seeds 0 to n−1, each validated.

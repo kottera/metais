@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/manifest"
 )
 
 // TestBudgetConstants pins ADR-007 D3 item 13's bounds.

@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // ID names one limit.

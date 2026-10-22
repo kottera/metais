@@ -13,9 +13,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/cli"
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/cli"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/testenv"
 )
 
 // onePassVector is the SC8 vector: errors planted in several inputs,

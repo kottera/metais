@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // node is one value of the inputs object while it is assembled (ADR-003

@@ -9,8 +9,8 @@ package main
 import (
 	"os"
 
-	"github.com/kottera/metais/internal/cli"
-	"github.com/kottera/metais/internal/hostenv"
+	"metais.org/metais/internal/cli"
+	"metais.org/metais/internal/hostenv"
 )
 
 func main() {

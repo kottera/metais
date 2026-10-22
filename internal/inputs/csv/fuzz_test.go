@@ -10,8 +10,8 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
 )
 
 var delimiters = [...]Delimiter{Comma, Semicolon, Pipe, Tab}

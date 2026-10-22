@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/testenv"
 )
 
 // hostileMembers returns at least n bytes of distinct names each given

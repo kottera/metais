@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestStubIsItsOwnProgram pins what every measured process pays beside

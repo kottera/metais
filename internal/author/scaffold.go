@@ -8,7 +8,7 @@ package author
 import (
 	"strings"
 
-	"github.com/kottera/metais/internal/version"
+	"metais.org/metais/internal/version"
 )
 
 // File is one file the scaffold writes: its "/"-separated path relative to

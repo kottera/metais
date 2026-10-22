@@ -8,7 +8,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 // FuzzPortablePath runs the predicate and the collision set over arbitrary

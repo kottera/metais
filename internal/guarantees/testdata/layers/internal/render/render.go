@@ -5,7 +5,7 @@
 // helper. It breaks only-importers twice too, in text.go.
 package render
 
-import "github.com/kottera/metais/internal/pkgtree/pkgtreetest"
+import "metais.org/metais/internal/pkgtree/pkgtreetest"
 
 // Tree is a tree built by the helper.
 var Tree = pkgtreetest.New()

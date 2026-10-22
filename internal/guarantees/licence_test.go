@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // licenceHeader is the first two lines of every Go file (AGENTS.md,

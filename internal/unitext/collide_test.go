@@ -9,7 +9,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 func collisionText(cs []Collision) []string {

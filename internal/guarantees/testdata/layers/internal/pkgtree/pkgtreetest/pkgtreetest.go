@@ -4,7 +4,7 @@
 // Package pkgtreetest is the test-only helper package.
 package pkgtreetest
 
-import "github.com/kottera/metais/internal/pkgtree"
+import "metais.org/metais/internal/pkgtree"
 
 // New returns an in-memory tree.
 func New() pkgtree.Tree { return nil }

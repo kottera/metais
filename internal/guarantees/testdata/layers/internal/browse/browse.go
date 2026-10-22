@@ -5,7 +5,7 @@
 // once.
 package browse
 
-import "github.com/kottera/metais/internal/hostfs"
+import "metais.org/metais/internal/hostfs"
 
 // Extract is the single entry point, which may write.
 func Extract() error { return hostfs.Write() }

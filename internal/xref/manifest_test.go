@@ -6,8 +6,8 @@ package xref
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/manifest"
 )
 
 // TestManifestExpressions holds path, when and for_each to ADR-007 D3 item

@@ -7,9 +7,9 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/testenv"
 )
 
 // dialect is the core catalog with every METAIS filter.

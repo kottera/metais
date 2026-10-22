@@ -12,10 +12,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/skill"
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/version"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/skill"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/version"
 )
 
 // skillDoc is a metais.skill/1 result as a test reads it.

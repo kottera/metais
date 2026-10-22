@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // maxRefs bounds how many $ref steps a title is looked for through. A

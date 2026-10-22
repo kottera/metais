@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // nonStandardImports returns every import of the non-test Go files in dir,
@@ -55,7 +55,7 @@ func TestStandardLibraryOnlyControl(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"github.com/kottera/metais/internal/testenv", "golang.org/x/term"}
+	want := []string{"metais.org/metais/internal/testenv", "golang.org/x/term"}
 	if strings.Join(bad, " ") != strings.Join(want, " ") {
 		t.Errorf("control fixture flagged %q, want %q", bad, want)
 	}

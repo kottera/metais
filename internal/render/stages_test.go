@@ -7,11 +7,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/template"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/template"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestStageGrowthCharged is ADR-010 Amendment A7 items 6 and 8 on a

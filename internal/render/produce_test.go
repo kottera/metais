@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // writeSourcePackage writes a source directory below root, its manifest's

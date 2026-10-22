@@ -14,7 +14,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // hostEnviron is the environment this test binary started with, taken

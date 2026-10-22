@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // writeSourcePackage writes a source directory below root, its manifest's

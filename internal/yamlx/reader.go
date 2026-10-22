@@ -11,8 +11,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
 )
 
 // reader is one Parse: the document's bytes, its lines, and what has been

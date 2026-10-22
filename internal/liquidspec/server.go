@@ -12,11 +12,11 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/template"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/template"
 )
 
 // The protocol's error codes. A Liquid parse error is not one of them: it

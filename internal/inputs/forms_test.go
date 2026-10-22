@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/testenv"
 )
 
 // formsPkg declares one input per form: doc in JSON or YAML, rows in CSV,

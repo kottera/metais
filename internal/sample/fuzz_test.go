@@ -8,12 +8,12 @@ import (
 	"regexp/syntax"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/inputs/csv"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/regexprofile"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/inputs/csv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/regexprofile"
+	"metais.org/metais/internal/testenv"
 )
 
 // FuzzRoundTrip is W3-5.4's property over any schema: whatever the schema

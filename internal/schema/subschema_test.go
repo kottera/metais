@@ -6,8 +6,8 @@ package schema
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/testenv"
 )
 
 // subFiles is a package whose schemas the tests below read in pieces.

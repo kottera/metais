@@ -11,15 +11,15 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/kottera/metais/internal/digest"
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/digest"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // LayoutEntries are the top-level entries of ADR-001 D5's layout that

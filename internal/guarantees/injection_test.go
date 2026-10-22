@@ -172,22 +172,22 @@ func TestVersionOverrideOnlyInTests(t *testing.T) {
 func TestFaultRule(t *testing.T) {
 	cases := []ruleCase{
 		{"the Set type anywhere", "internal/cli", "", `package cli
-import "github.com/kottera/metais/internal/fault"
+import "metais.org/metais/internal/fault"
 type Options struct{ Faults fault.Set }`, nil},
 		{"a fault outside its seam", "internal/render", "", `package render
-import "github.com/kottera/metais/internal/fault"
+import "metais.org/metais/internal/fault"
 func f(s fault.Set) bool { return s.Has(fault.SkipConfine) }`, []string{"names fault.SkipConfine"}},
 		{"a fault at its seam", "internal/hostfs", "", `package hostfs
-import "github.com/kottera/metais/internal/fault"
+import "metais.org/metais/internal/fault"
 func f(s fault.Set) bool { return s.Has(fault.SkipConfine) }`, nil},
 		{"another seam's fault", "internal/hostfs", "", `package hostfs
-import "github.com/kottera/metais/internal/fault"
+import "metais.org/metais/internal/fault"
 func f(s fault.Set) bool { return s.Has(fault.SkipDigest) }`, []string{"names fault.SkipDigest"}},
 		{"a fault the table does not name", "internal/finding", "", `package finding
-import "github.com/kottera/metais/internal/fault"
+import "metais.org/metais/internal/fault"
 var all = fault.All`, []string{"names fault.All"}},
 		{"an aliased fault import", "internal/render", "", `package render
-import f "github.com/kottera/metais/internal/fault"
+import f "metais.org/metais/internal/fault"
 var x = f.MapOrder`, []string{"names fault.MapOrder"}},
 		{"internal/fault itself", "internal/fault", "", `package fault
 const SkipConfine Set = 1`, nil},
@@ -206,7 +206,7 @@ var o = Options{Faults: 1}`, []string{"sets Faults in a composite literal"}},
 		{"cli builds options by position", "internal/cli", "", `package cli
 var o = Options{d, 1}`, []string{"builds Options without field names"}},
 		{"cli's subpackage assigns the field", "internal/cli/args", "", `package args
-import "github.com/kottera/metais/internal/cli"
+import "metais.org/metais/internal/cli"
 var o = cli.Options{Faults: 1}`, []string{"sets Faults"}},
 		{"cli reads the field", "internal/cli", "", `package cli
 func f(o Options) bool { return o.Faults != 0 }`, nil},
@@ -219,13 +219,13 @@ func f(o Options) bool { return o.Faults != 0 }`, nil},
 func TestVersionRule(t *testing.T) {
 	cases := []ruleCase{
 		{"a call of version.String", "internal/cli", "", `package cli
-import "github.com/kottera/metais/internal/version"
+import "metais.org/metais/internal/version"
 var v = version.String()`, nil},
 		{"a call of version.Override", "internal/cli", "", `package cli
-import "github.com/kottera/metais/internal/version"
+import "metais.org/metais/internal/version"
 func f() { version.Override("1.2.3") }`, []string{"refers to version.Override"}},
 		{"version.Override as a value", "internal/render", "", `package render
-import v "github.com/kottera/metais/internal/version"
+import v "metais.org/metais/internal/version"
 var set = v.Override`, []string{"refers to version.Override"}},
 		{"Override's own declaration", "internal/version", "", `package version
 var override string
@@ -281,7 +281,7 @@ func TestVersionRuleMeetsVersionPackage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	callerSrc := strings.Replace(string(src(caller)), "import (", "import (\n\t\"github.com/kottera/metais/internal/version\"", 1)
+	callerSrc := strings.Replace(string(src(caller)), "import (", "import (\n\t\"metais.org/metais/internal/version\"", 1)
 	fromCaller, err := parseSource(caller.pkg, caller.name, []byte(callerSrc+"\nvar _ = version.Override\n"))
 	if err != nil {
 		t.Fatal(err)

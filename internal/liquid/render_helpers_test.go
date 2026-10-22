@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // fnFilter is a test-only FilterDef defined by a function. The standard

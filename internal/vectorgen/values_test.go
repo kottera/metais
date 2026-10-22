@@ -17,8 +17,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // This file writes every number of a vector's expectations that the bytes

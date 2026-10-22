@@ -9,10 +9,10 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/loader"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/loader"
 )
 
 // ParseEntry is the one parse of a package's template, which render and

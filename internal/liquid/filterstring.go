@@ -11,7 +11,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // The string filters. Each works on its input's text, and its string

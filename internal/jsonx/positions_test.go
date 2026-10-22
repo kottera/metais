@@ -7,7 +7,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // TestPositions: every value and every member name has a byte offset, and

@@ -7,10 +7,10 @@ import (
 	"errors"
 	"path"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/pkgtree"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/pkgtree"
 )
 
 // ExtractOptions is what Extract takes beside the tree, the entries and

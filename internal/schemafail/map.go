@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // Family is the code family a document's failures are reported in

@@ -3,7 +3,7 @@
 
 package manifest
 
-import "github.com/kottera/metais/internal/finding"
+import "metais.org/metais/internal/finding"
 
 // The version gate's codes (ADR-002 D7 items 1, 7, 8 and 11; ADR-006's
 // package.version family). Each is class refused, about the package.

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // The Walker also answers what ADR-007 D3's cross-reference reads of a

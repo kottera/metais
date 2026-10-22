@@ -14,9 +14,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/schemafail"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/schemafail"
+	"metais.org/metais/internal/testenv"
 )
 
 // The JSON-Schema-Test-Suite (ADR-010 D5 item 7, D14 item 4), vendored

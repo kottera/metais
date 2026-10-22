@@ -21,11 +21,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // modulePath is the module's import path.
-const modulePath = "github.com/kottera/metais"
+const modulePath = "metais.org/metais"
 
 // target is one GOOS and GOARCH the tripwires read the tree under.
 type target struct{ goos, goarch string }

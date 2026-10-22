@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid"
 )
 
 // TestMeterOutputBytes is the meter's own count of output bytes (ADR-009

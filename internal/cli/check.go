@@ -7,10 +7,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/author"
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/finding"
-	templates "github.com/kottera/metais/internal/template"
+	"metais.org/metais/internal/author"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/finding"
+	templates "metais.org/metais/internal/template"
 )
 
 var (

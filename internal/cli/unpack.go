@@ -7,12 +7,12 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/kottera/metais/internal/author"
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/render/sink"
+	"metais.org/metais/internal/author"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/render/sink"
 )
 
 // unpackResult is metais.unpack/1's result: the files unpack wrote, or

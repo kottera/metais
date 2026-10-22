@@ -6,7 +6,7 @@ package xref
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/manifest"
 )
 
 // TestMetaisTags holds embed, asset and provenance to ADR-007 D3 item 12:

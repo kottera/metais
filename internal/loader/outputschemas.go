@@ -7,12 +7,12 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/regexprofile"
-	"github.com/kottera/metais/internal/schema"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/regexprofile"
+	"metais.org/metais/internal/schema"
 )
 
 // OutputSchemas compiles every output validation schema the declarations

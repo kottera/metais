@@ -6,7 +6,7 @@ package xref
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/manifest"
 )
 
 // partials is a fixture whose output renders main.md.liquid, with the

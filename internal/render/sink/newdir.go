@@ -4,10 +4,10 @@
 package sink
 
 import (
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/render"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/render"
 )
 
 // newDir is the sink of an --out that does not exist (ADR-005 D14 item

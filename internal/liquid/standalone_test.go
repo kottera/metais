@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestParseValue pins ADR-005 D3 item 2: a value expression is exactly

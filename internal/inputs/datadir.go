@@ -11,12 +11,12 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/schema"
-	"github.com/kottera/metais/internal/unitext"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/schema"
+	"metais.org/metais/internal/unitext"
 )
 
 // ErrDataDir is wrapped by ReadDataDir's refusal of the data directory

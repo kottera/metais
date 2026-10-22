@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // FuzzJSONParse is ADR-010 D14 item 6's target: whatever the bytes, Parse

@@ -11,7 +11,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 const godebugChildEnv = "METAIS_TARW_GODEBUG_CHILD"

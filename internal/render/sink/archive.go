@@ -6,9 +6,9 @@ package sink
 import (
 	"io"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/render"
-	"github.com/kottera/metais/internal/tarw"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/render"
+	"metais.org/metais/internal/tarw"
 )
 
 // Archive is the sink of ADR-005 D17's archive on standard output: it

@@ -7,9 +7,9 @@
 package author
 
 import (
-	"github.com/kottera/metais/internal/author/ooxml"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/xref"
+	"metais.org/metais/internal/author/ooxml"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/xref"
 )
 
 // Check stands for check.

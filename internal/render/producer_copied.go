@@ -10,9 +10,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/template"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/template"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // copied is the producer of an asset's file (ADR-005 D5): its bytes are

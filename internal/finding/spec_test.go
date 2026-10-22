@@ -16,7 +16,7 @@ import (
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 
-	"github.com/kottera/metais/internal/specdata"
+	"metais.org/metais/internal/specdata"
 )
 
 const (

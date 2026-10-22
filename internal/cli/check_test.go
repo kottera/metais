@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestCheckCommand is metais check (ADR-008 D9): the operand's forms, the

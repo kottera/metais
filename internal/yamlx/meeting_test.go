@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestSameTreeAsJSON is where yamlx meets jsonx (ADR-010 D7 item 1): the

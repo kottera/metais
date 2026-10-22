@@ -20,8 +20,8 @@
 package csv
 
 import (
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
 )
 
 // Delimiter is the byte that separates the fields of a record: one of

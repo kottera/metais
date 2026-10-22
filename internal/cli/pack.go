@@ -11,14 +11,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/author"
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/digest"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/render/sink"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/author"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/digest"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/render/sink"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // packResult is metais.pack/1's result (ADR-008 D9 pack item 4, ADR-007

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // gitEnvScript is what the gate's scripts source before they run git.

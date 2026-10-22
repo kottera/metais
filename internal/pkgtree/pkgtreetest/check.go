@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/pkgtree"
+	"metais.org/metais/internal/pkgtree"
 )
 
 // Check holds t to the pkgtree.Tree contract, given want, the entries t

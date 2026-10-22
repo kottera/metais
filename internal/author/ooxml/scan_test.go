@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/testenv"
 )
 
 // The main namespaces of ADR-007 D4 item 1.

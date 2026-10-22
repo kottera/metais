@@ -6,8 +6,8 @@ package render
 import (
 	"strings"
 
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/template"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/template"
 )
 
 // assetForm is an asset declaration's (ADR-005 D5).

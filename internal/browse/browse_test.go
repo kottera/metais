@@ -13,13 +13,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
-	"github.com/kottera/metais/internal/regexprofile"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/pkgtree/pkgtreetest"
+	"metais.org/metais/internal/regexprofile"
+	"metais.org/metais/internal/testenv"
 )
 
 func tree(t *testing.T, files map[string]string) pkgtree.Tree {

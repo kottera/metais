@@ -4,9 +4,9 @@
 package zipfmt
 
 import (
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/unitext"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/unitext"
 )
 
 // The codes the reader reports, ADR-001's refusals (ADR-001 Interfaces,

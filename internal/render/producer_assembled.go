@@ -9,9 +9,9 @@ import (
 	"io"
 	"slices"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // assembled is the producer of a container (ADR-005 D8): its bytes are

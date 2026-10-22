@@ -6,13 +6,13 @@ package manifest
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
-	"github.com/kottera/metais/internal/schema"
-	"github.com/kottera/metais/internal/specdata"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/pkgtree/pkgtreetest"
+	"metais.org/metais/internal/schema"
+	"metais.org/metais/internal/specdata"
 )
 
 // wrappedEntry is where the manifest schema is placed in the tree the

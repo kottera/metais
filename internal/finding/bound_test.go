@@ -8,7 +8,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/fault"
+	"metais.org/metais/internal/fault"
 )
 
 // TestMessagesWithinTheBound is ADR-006 D9 items 1 and 2: a message and a

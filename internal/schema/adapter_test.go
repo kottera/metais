@@ -16,10 +16,10 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/regexprofile"
-	"github.com/kottera/metais/internal/schemafail"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/regexprofile"
+	"metais.org/metais/internal/schemafail"
 )
 
 // loud is an error kind whose text cannot be rendered: it embeds a nil

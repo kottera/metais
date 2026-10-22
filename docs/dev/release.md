@@ -50,7 +50,7 @@ CGO_ENABLED=0 GOAMD64=v1 GOARM64=v8.0 GOFLAGS=-mod=readonly GOOS=<os> GOARCH=<ar
   GOPROXY=https://proxy.golang.org,direct GOSUMDB=sum.golang.org \
   GOPRIVATE= GONOPROXY= GONOSUMDB= GOINSECURE= \
   go build -trimpath -buildvcs=true \
-  -ldflags "-s -w -X github.com/kottera/metais/internal/version.release=<version>" \
+  -ldflags "-s -w -X metais.org/metais/internal/version.release=<version>" \
   -o <dir>/metais ./cmd/metais
 ```
 

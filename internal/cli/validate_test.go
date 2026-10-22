@@ -13,10 +13,10 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostenv"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // writeTree writes files, by slash-separated path, under a new directory

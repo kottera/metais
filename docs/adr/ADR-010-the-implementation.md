@@ -284,13 +284,13 @@ the `liquid` tag in `block_body.rb`; `Block::MAX_DEPTH = 100`; and
 
 ### D1 — Toolchain and module *(A8)*
 
-**One module, `github.com/kottera/metais`, on the Go 1.26 toolchain, with
+**One module, `metais.org/metais`, on the Go 1.26 toolchain, with
 everything under `internal/`.**
 
 1. **`go.mod`** begins:
 
    ```
-   module github.com/kottera/metais
+   module metais.org/metais
 
    go 1.26.0
 
@@ -899,7 +899,7 @@ not used to read inputs.**
 ### D12 — Build, release and the tool's version *(A8)*
 
 1. **Static build**: `CGO_ENABLED=0 go build -trimpath -buildvcs=true
-   -ldflags "-s -w -X github.com/kottera/metais/internal/version.release=<semver>"
+   -ldflags "-s -w -X metais.org/metais/internal/version.release=<semver>"
    ./cmd/metais`. `-trimpath` keeps file paths of the build machine out of the
    binary (and so out of any panic text a finding could carry); `-s -w` drop
    the symbol table and DWARF, keeping the function table panics need.
@@ -914,7 +914,7 @@ not used to read inputs.**
      without its `v`;
    - otherwise `version.String()` takes `runtime/debug.ReadBuildInfo().Main.Version`
      when it is a semantic version and has no `+dirty` suffix (so `go install
-     github.com/kottera/metais/cmd/metais@v1.0.0` reports `1.0.0`);
+     metais.org/metais/cmd/metais@v1.0.0` reports `1.0.0`);
    - otherwise `0.0.0-devel`.
    The provenance tag records this string (ADR-004), and `test` records
    `test` instead (ADR-004 D15). The conformance runner drives the built

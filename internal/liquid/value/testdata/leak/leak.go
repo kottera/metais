@@ -9,8 +9,8 @@ package leak
 import (
 	"fmt"
 
-	_ "github.com/kottera/metais/internal/testenv"
 	_ "golang.org/x/term"
+	_ "metais.org/metais/internal/testenv"
 )
 
 var _ = fmt.Sprint

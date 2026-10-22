@@ -16,9 +16,9 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"github.com/santhosh-tekuri/jsonschema/v6/kind"
 
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/schemafail"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/schemafail"
 )
 
 // The adapter turns the library's *jsonschema.ValidationError tree into

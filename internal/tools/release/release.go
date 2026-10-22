@@ -19,8 +19,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/tarw"
-	"github.com/kottera/metais/internal/tools/release/buildline"
+	"metais.org/metais/internal/tarw"
+	"metais.org/metais/internal/tools/release/buildline"
 )
 
 // The builder's refusals, each wrapped with what was found.

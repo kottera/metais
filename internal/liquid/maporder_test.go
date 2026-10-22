@@ -16,11 +16,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // liquidPath is internal/liquid's import path.
-const liquidPath = "github.com/kottera/metais/internal/liquid"
+const liquidPath = "metais.org/metais/internal/liquid"
 
 // typeChecker type-checks a directory of internal/liquid/... from source,
 // with the standard library type-checked from GOROOT's source, so the

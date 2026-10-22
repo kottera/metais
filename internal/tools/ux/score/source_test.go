@@ -10,7 +10,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/kottera/metais/internal/tools/ux/streamjson"
+	"metais.org/metais/internal/tools/ux/streamjson"
 )
 
 // TestRenderToStandardOutput: a render to standard output (--out -) is a

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/manifest"
 )
 
 // catalog is ADR-010 D4 item 2's list of the standard filters, Shopify's

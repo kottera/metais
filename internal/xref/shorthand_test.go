@@ -8,9 +8,9 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // shorthandSchema declares an array, a string, an object with no member

@@ -13,8 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/testenv"
 )
 
 // hostileText is what a hostile supplier writes into a name or a value:

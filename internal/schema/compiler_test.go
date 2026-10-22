@@ -14,12 +14,12 @@ import (
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
-	"github.com/kottera/metais/internal/schemafail"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/pkgtree/pkgtreetest"
+	"metais.org/metais/internal/schemafail"
+	"metais.org/metais/internal/testenv"
 )
 
 // bare compiles schema with the library as it comes, configured by

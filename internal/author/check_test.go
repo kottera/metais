@@ -13,13 +13,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/loader"
-	templates "github.com/kottera/metais/internal/template"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/loader"
+	templates "metais.org/metais/internal/template"
+	"metais.org/metais/internal/testenv"
 )
 
 const checkManifest = `metais: "1.0"

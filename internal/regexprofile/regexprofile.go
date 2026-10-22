@@ -22,7 +22,7 @@ import (
 	"regexp"
 	"regexp/syntax"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 // Construct names what a refused pattern holds. Its values are fixed

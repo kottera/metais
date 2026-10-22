@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/specdata"
+	"metais.org/metais/internal/specdata"
 )
 
 // spec/findings/registry.json is generated from the tool's table by

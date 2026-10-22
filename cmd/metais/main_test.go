@@ -16,8 +16,8 @@ import (
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 
-	"github.com/kottera/metais/internal/specdata"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/specdata"
+	"metais.org/metais/internal/testenv"
 )
 
 // noLoader refuses every URL: every schema is given to the compiler.

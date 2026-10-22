@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // Manifest is a package's manifest under METAIS 1.0 (ADR-002 D4). Text

@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 func TestStepLimits(t *testing.T) {

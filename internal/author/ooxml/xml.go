@@ -6,7 +6,7 @@ package ooxml
 import (
 	"strings"
 
-	"github.com/kottera/metais/internal/liquid"
+	"metais.org/metais/internal/liquid"
 )
 
 // The lenient XML tokenizer of ADR-007 D4 item 3. It reads a template's

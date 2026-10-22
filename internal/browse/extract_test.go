@@ -11,8 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/testenv"
 )
 
 // seed writes files beneath root, each holding "theirs " and its path; a

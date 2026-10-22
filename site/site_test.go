@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"html"
 	"io/fs"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,7 +22,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // origin is the site's address. Every schema's $id is beneath it, and the
@@ -364,4 +365,92 @@ func TestWorkflow(t *testing.T) {
 	if jobs == 0 || jobs != gates {
 		t.Errorf(".github/workflows/pages.yml has %d jobs and %d of them gated on a public repository and a v tag", jobs, gates)
 	}
+}
+
+// goImport is the content of every go-import page's go-import meta tag
+// (ADR-013 D1 item 2): the module's path, its VCS, and the repository that
+// holds it.
+const goImport = "metais.org/metais git https://github.com/kottera/metais"
+
+// goImportDir is the directory, in the published tree as under public/, of
+// the module's go-import pages (ADR-013 D1 item 5): the page for the package
+// path metais.org/<p> is <p>/index.html, served at /<p>/.
+const goImportDir = "metais"
+
+// goPackages are the package paths a user can name, each of which the site
+// serves a go-import page for (ADR-013 D1 item 2), and no other.
+var goPackages = []string{"metais.org/metais", "metais.org/metais/cmd/metais"}
+
+// metaTag matches one meta tag with a name and a content, in that order.
+var metaTag = regexp.MustCompile(`<meta name="([^"]*)" content="([^"]*)">`)
+
+// goImportPages reads the go-import pages below root and returns each one's
+// bytes by the package path it serves. A file below goImportDir that is not
+// a directory's index.html is an error: every page there is a package's.
+func goImportPages(t *testing.T, root string) map[string][]byte {
+	t.Helper()
+	out := map[string][]byte{}
+	dir := filepath.Join(root, goImportDir)
+	err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		rel, err := filepath.Rel(root, p)
+		if err != nil {
+			return err
+		}
+		rel = filepath.ToSlash(rel)
+		pkg, ok := strings.CutSuffix(rel, "/index.html")
+		if !ok {
+			t.Errorf("%s is under %s/ but is not a package's index.html", rel, goImportDir)
+			return nil
+		}
+		b, err := os.ReadFile(p)
+		if err != nil {
+			return err
+		}
+		out["metais.org/"+pkg] = b
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// checkGoImportPages requires the pages to serve exactly goPackages, each
+// with one go-import tag whose content is goImport and one go-source tag for
+// the same module and repository.
+func checkGoImportPages(t *testing.T, where string, got map[string][]byte) {
+	t.Helper()
+	paths := slices.Sorted(maps.Keys(got))
+	if !slices.Equal(paths, goPackages) {
+		t.Errorf("%s: the go-import pages serve the package paths %q, want exactly %q", where, paths, goPackages)
+	}
+	for _, pkg := range paths {
+		tags := map[string][]string{}
+		for _, m := range metaTag.FindAllSubmatch(got[pkg], -1) {
+			tags[string(m[1])] = append(tags[string(m[1])], html.UnescapeString(string(m[2])))
+		}
+		if imp := tags["go-import"]; len(imp) != 1 || imp[0] != goImport {
+			t.Errorf("%s: the page for %s has go-import %q, want exactly one, %q", where, pkg, imp, goImport)
+		}
+		src := tags["go-source"]
+		if len(src) != 1 {
+			t.Errorf("%s: the page for %s has %d go-source tags, want one", where, pkg, len(src))
+			continue
+		}
+		if f := strings.Fields(src[0]); len(f) != 4 || f[0] != "metais.org/metais" || f[1] != "https://github.com/kottera/metais" {
+			t.Errorf("%s: the page for %s has go-source %q, want the module, its repository, and its directory and file templates", where, pkg, src[0])
+		}
+	}
+}
+
+// TestGoImportPages holds the module's go-import pages to ADR-013 D1 item 2,
+// in public/ and in the tree build.sh publishes: one page for each package
+// path a user can name and no other, each with the go-import content that
+// resolves metais.org/metais to its repository, and a go-source tag.
+func TestGoImportPages(t *testing.T) {
+	checkGoImportPages(t, "public", goImportPages(t, "public"))
+	checkGoImportPages(t, "the built site", goImportPages(t, build(t)))
 }

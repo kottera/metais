@@ -11,12 +11,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/specdata"
-	"github.com/kottera/metais/internal/yamlx"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/specdata"
+	"metais.org/metais/internal/yamlx"
 )
 
 // entryPrefix is the path of a container entry's fields. An entry takes

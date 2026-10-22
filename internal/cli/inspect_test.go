@@ -14,9 +14,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/skill"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/skill"
+	"metais.org/metais/internal/testenv"
 )
 
 // vectorsDir is the conformance suite's vectors, from this package.

@@ -18,9 +18,9 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/version"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/version"
 )
 
 // outputs returns the SHA-256 of every file below dir, by its path

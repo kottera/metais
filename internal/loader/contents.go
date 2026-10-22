@@ -11,11 +11,11 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/digest"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/schema"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/digest"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/schema"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // contents is what the open keeps of the entries as they are read, the one

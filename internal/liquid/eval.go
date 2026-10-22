@@ -8,8 +8,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // expr evaluates a value expression: its primary, then each filter in

@@ -12,7 +12,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // refDriverMain is the reference driver (ADR-011 D11 item 7): it serves

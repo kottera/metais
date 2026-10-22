@@ -4,8 +4,8 @@
 package liquid_test
 
 import (
-	"github.com/kottera/metais/internal/dates"
-	"github.com/kottera/metais/internal/liquid"
+	"metais.org/metais/internal/dates"
+	"metais.org/metais/internal/liquid"
 )
 
 // Golden Liquid's date cases run with the date filter of internal/dates,

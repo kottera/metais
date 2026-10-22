@@ -13,8 +13,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/pkgtree"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/pkgtree"
 )
 
 // The layout's roots: the top-level names of ADR-001 D5 item 1 a source

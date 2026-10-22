@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // dir gives t a temporary HOME and returns a fresh, empty directory.

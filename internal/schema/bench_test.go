@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // benchSchema is a collection's schema, as a package declares one: an

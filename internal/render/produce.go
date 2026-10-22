@@ -7,11 +7,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/template"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/template"
 )
 
 // Producing is what phase 4 needs: the package, its templates, the

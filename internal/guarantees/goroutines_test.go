@@ -13,8 +13,8 @@ import (
 // container into a pipe as it is read (ADR-010 A6 item 1); every other
 // path of the render is single-threaded (D2 item 3).
 const (
-	renderPackages = "github.com/kottera/metais/internal/render/..."
-	goroutinePkg   = "github.com/kottera/metais/internal/render"
+	renderPackages = "metais.org/metais/internal/render/..."
+	goroutinePkg   = "metais.org/metais/internal/render"
 	goroutineFile  = "producer_assembled.go"
 )
 
@@ -76,25 +76,25 @@ func TestRenderOneGoStatementControl(t *testing.T) {
 		{"the one", []*sourceFile{parse(goroutinePkg, goroutineFile, one)}, nil},
 		{"outside render", []*sourceFile{
 			parse(goroutinePkg, goroutineFile, one),
-			parse("github.com/kottera/metais/internal/cli", "run.go", "package cli\n\nfunc run() { go run() }\n"),
+			parse("metais.org/metais/internal/cli", "run.go", "package cli\n\nfunc run() { go run() }\n"),
 		}, nil},
 		{"none", []*sourceFile{parse(goroutinePkg, "plan.go", "package render\n")}, []string{
-			"github.com/kottera/metais/internal/render/producer_assembled.go: no go statement, where the assembled producer's one should be",
+			"metais.org/metais/internal/render/producer_assembled.go: no go statement, where the assembled producer's one should be",
 		}},
 		{"a second in the file", []*sourceFile{parse(goroutinePkg, goroutineFile, one+"\nfunc again() {\n\tgo open()\n}\n")}, []string{
-			"github.com/kottera/metais/internal/render/producer_assembled.go:6: a go statement beyond the assembled producer's one",
+			"metais.org/metais/internal/render/producer_assembled.go:6: a go statement beyond the assembled producer's one",
 		}},
 		{"one in a sink", []*sourceFile{
 			parse(goroutinePkg, goroutineFile, one),
-			parse("github.com/kottera/metais/internal/render/sink", "archive.go", "package sink\n\nfunc emit() {\n\tgo emit()\n}\n"),
+			parse("metais.org/metais/internal/render/sink", "archive.go", "package sink\n\nfunc emit() {\n\tgo emit()\n}\n"),
 		}, []string{
-			"github.com/kottera/metais/internal/render/sink/archive.go:4: a go statement beyond the assembled producer's one",
+			"metais.org/metais/internal/render/sink/archive.go:4: a go statement beyond the assembled producer's one",
 		}},
 		{"one in another file of render", []*sourceFile{
 			parse(goroutinePkg, "producer_rendered.go", one),
 		}, []string{
-			"github.com/kottera/metais/internal/render/producer_rendered.go:3: a go statement beyond the assembled producer's one",
-			"github.com/kottera/metais/internal/render/producer_assembled.go: no go statement, where the assembled producer's one should be",
+			"metais.org/metais/internal/render/producer_rendered.go:3: a go statement beyond the assembled producer's one",
+			"metais.org/metais/internal/render/producer_assembled.go: no go statement, where the assembled producer's one should be",
 		}},
 	} {
 		got := renderGoStatements(c.files)

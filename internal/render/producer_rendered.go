@@ -7,9 +7,9 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/template"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/template"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // rendered is the producer of a template output's file and a mirror's

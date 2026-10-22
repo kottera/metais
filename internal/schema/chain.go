@@ -6,7 +6,7 @@ package schema
 import (
 	"fmt"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // Chain returns s and every schema its `$ref` chain reaches, in order:

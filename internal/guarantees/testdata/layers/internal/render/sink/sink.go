@@ -5,7 +5,7 @@
 // single-entry-point rule does not bind: it may write.
 package sink
 
-import "github.com/kottera/metais/internal/hostfs"
+import "metais.org/metais/internal/hostfs"
 
 // Emit writes.
 func Emit() error { return hostfs.Write() }

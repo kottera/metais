@@ -14,7 +14,7 @@ import (
 
 	"github.com/gowebpki/jcs"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // MaxIndent is the largest indent the json filter takes (ADR-004 D10 item

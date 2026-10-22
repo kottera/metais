@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 // FuzzFrontmatter runs SplitFrontmatter over arbitrary bytes (ADR-010 D14

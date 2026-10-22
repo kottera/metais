@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/tools/ux/streamjson"
+	"metais.org/metais/internal/tools/ux/streamjson"
 )
 
 // check is one scenario's outcome check (plan §5's table), and what it

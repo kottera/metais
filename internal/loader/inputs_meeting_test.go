@@ -8,9 +8,9 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/inputs"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/inputs"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/testenv"
 )
 
 // TestInputsOverTheLoader is W3-1's meeting with W3-2: a package opened

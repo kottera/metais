@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // TestLicenseGrammar is ADR-002 D4 item 11: SPDX 2.3.1 Annex D's grammar,

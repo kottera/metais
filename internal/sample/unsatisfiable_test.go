@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // TestUnsatisfiable is W3-5.2: each reason of schema.sample_unsatisfiable

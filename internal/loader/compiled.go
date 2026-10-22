@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/markdown"
-	"github.com/kottera/metais/internal/schema"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/markdown"
+	"metais.org/metais/internal/schema"
 )
 
 // compile is ADR-003 D22 item 1 at open: every schema file under inputs/

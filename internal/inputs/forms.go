@@ -10,15 +10,15 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/inputs/csv"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/markdown"
-	"github.com/kottera/metais/internal/schema"
-	"github.com/kottera/metais/internal/yamlx"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/inputs/csv"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/markdown"
+	"metais.org/metais/internal/schema"
+	"metais.org/metais/internal/yamlx"
 )
 
 // bodyField is the member a Markdown file's text after its frontmatter is

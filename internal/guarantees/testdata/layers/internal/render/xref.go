@@ -3,7 +3,7 @@
 
 package render
 
-import "github.com/kottera/metais/internal/xref"
+import "metais.org/metais/internal/xref"
 
 // Check breaks only-importers: the cross-reference reached around check.
 var Check = xref.Analyze

@@ -6,8 +6,8 @@ package inputs
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/testenv"
 )
 
 // defaultsPkg holds a default for every case of ADR-003 D19: an optional

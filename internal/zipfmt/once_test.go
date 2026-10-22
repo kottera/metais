@@ -9,7 +9,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 // counting is an io.ReaderAt that counts how many times each byte of b is

@@ -19,11 +19,11 @@ import (
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostenv"
-	"github.com/kottera/metais/internal/specdata"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostenv"
+	"metais.org/metais/internal/specdata"
 )
 
 // schemaDir is docs/cli/schemas, from this package's directory.

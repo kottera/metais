@@ -9,8 +9,8 @@ import (
 	"runtime/debug"
 	"strconv"
 
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // Partials is where a render tag finds its partial (ADR-004 D8). Partial

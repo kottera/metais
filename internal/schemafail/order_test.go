@@ -8,7 +8,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // orderCase is a target and the failures validated against it.

@@ -7,16 +7,16 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/regexprofile"
-	"github.com/kottera/metais/internal/schema"
-	"github.com/kottera/metais/internal/schemafail"
-	"github.com/kottera/metais/internal/yamlx"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/regexprofile"
+	"metais.org/metais/internal/schema"
+	"metais.org/metais/internal/schemafail"
+	"metais.org/metais/internal/yamlx"
 )
 
 // validateStage is ADR-005 D11: a file whose declaration names a schema

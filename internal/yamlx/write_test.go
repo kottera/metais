@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/testenv"
 )
 
 var update = flag.Bool("update", false, "rewrite testdata/write's golden files")

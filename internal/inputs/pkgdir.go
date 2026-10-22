@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/kottera/metais/internal/pkgtree"
+	"metais.org/metais/internal/pkgtree"
 )
 
 // ReadPackageDir reads the directory dir of the package tree t as a data

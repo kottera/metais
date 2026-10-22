@@ -6,7 +6,7 @@ package render
 import (
 	"strings"
 
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/manifest"
 )
 
 // templateForm is a template output's (ADR-005 D4): each evaluation is

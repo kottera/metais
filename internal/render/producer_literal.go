@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"io"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // literal is the producer of a profile's own mimetype entry (ADR-005 D9

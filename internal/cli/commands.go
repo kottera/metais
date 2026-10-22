@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/version"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/version"
 )
 
 // versionResult is metais.version/1's result: ADR-002 D8 item 1's content.

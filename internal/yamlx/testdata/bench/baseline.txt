@@ -7,7 +7,7 @@
 # command: go test -run '^$' -bench . -benchmem -count 6 ./internal/yamlx
 goos: darwin
 goarch: arm64
-pkg: github.com/kottera/metais/internal/yamlx
+pkg: metais.org/metais/internal/yamlx
 cpu: Apple M2 Max
 BenchmarkParse-12    	       1	2705159209 ns/op	   3.88 MB/s	498467104 B/op	 8118699 allocs/op
 BenchmarkParse-12    	       1	2624138042 ns/op	   4.00 MB/s	498401696 B/op	 8118665 allocs/op
@@ -16,4 +16,4 @@ BenchmarkParse-12    	       1	1860177292 ns/op	   5.64 MB/s	498401632 B/op	 811
 BenchmarkParse-12    	       1	1888266875 ns/op	   5.55 MB/s	498477608 B/op	 8118673 allocs/op
 BenchmarkParse-12    	       1	1649835875 ns/op	   6.36 MB/s	498459560 B/op	 8118673 allocs/op
 PASS
-ok  	github.com/kottera/metais/internal/yamlx	13.459s
+ok  	metais.org/metais/internal/yamlx	13.459s

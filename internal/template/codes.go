@@ -6,9 +6,9 @@ package template
 import (
 	"strconv"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid"
 )
 
 // The template family's codes this package reports (ADR-004 D16 item 1).

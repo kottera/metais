@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // walker indexes the JSON schema text src as the file inputs/s.json.

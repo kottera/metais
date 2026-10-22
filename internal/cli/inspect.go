@@ -9,16 +9,16 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/author"
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/digest"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/render"
-	"github.com/kottera/metais/internal/template"
-	"github.com/kottera/metais/internal/version"
+	"metais.org/metais/internal/author"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/digest"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/render"
+	"metais.org/metais/internal/template"
+	"metais.org/metais/internal/version"
 )
 
 // The package operand's placeholder in a next step (ADR-008 D14 item 2).

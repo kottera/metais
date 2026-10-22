@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // testMeter is a Meter with a limit per kind of work, none when 0. It
@@ -214,7 +214,7 @@ func TestFiltersReadNothingElse(t *testing.T) {
 	allowed := []string{
 		"encoding/base64", "fmt", "maps", "math", "math/big", "math/bits", "regexp", "slices",
 		"strconv", "strings", "unicode", "unicode/utf8",
-		"github.com/kottera/metais/internal/liquid/ast", "github.com/kottera/metais/internal/liquid/value",
+		"metais.org/metais/internal/liquid/ast", "metais.org/metais/internal/liquid/value",
 	}
 	files, err := filepath.Glob("filter*.go")
 	if err != nil {
@@ -259,7 +259,7 @@ func TestEngineReadsNothingElse(t *testing.T) {
 		"regexp", "slices", "sort", "strconv", "strings", "unicode", "unicode/utf8",
 		// A recovered panic's stack, for CodeInternal's detail alone.
 		"runtime/debug",
-		"github.com/kottera/metais/internal/liquid/ast", "github.com/kottera/metais/internal/liquid/value",
+		"metais.org/metais/internal/liquid/ast", "metais.org/metais/internal/liquid/value",
 	}
 	var seen []string
 	err := filepath.WalkDir(".", func(path string, d os.DirEntry, err error) error {

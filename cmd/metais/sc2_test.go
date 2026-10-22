@@ -14,7 +14,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // incidentReport is the package of PRD §4.2, as a source directory.

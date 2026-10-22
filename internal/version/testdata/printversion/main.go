@@ -8,7 +8,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/kottera/metais/internal/version"
+	"metais.org/metais/internal/version"
 )
 
 func main() {

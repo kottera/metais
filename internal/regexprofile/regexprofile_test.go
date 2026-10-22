@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 func mustCompile(t *testing.T, pattern string) *Regexp {

@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/regexprofile"
-	"github.com/kottera/metais/internal/schema"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/regexprofile"
+	"metais.org/metais/internal/schema"
 )
 
 // allTypes is every JSON type: the types of a schema with no `type`.

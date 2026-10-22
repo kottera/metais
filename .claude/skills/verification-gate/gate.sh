@@ -380,9 +380,9 @@ tripwire_names() {
 
 tripwire_pkg() {
 	case "$1" in
-	tripwire-conformance) echo github.com/kottera/metais/internal/conformance ;;
-	tripwire-help) echo github.com/kottera/metais/internal/cli ;;
-	tripwire-spec) echo github.com/kottera/metais/internal/guarantees ;;
+	tripwire-conformance) echo metais.org/metais/internal/conformance ;;
+	tripwire-help) echo metais.org/metais/internal/cli ;;
+	tripwire-spec) echo metais.org/metais/internal/guarantees ;;
 	esac
 }
 
@@ -489,8 +489,8 @@ reach() {
 		./internal/conformance -args -conformance.reach 2>&1)
 	rc=$?
 	printf '%s\n' "$out" | grep -vE '^(=== (RUN|PAUSE|CONT|NAME)|[[:space:]]*--- PASS)'
-	step_measure=$(measure github.com/kottera/metais/internal/conformance)
-	[ "$rc" -eq 0 ] || echo "FAIL: github.com/kottera/metais/internal/conformance (reach $area $1): $(share_line "reach $area $1" "$step_measure")"
+	step_measure=$(measure metais.org/metais/internal/conformance)
+	[ "$rc" -eq 0 ] || echo "FAIL: metais.org/metais/internal/conformance (reach $area $1): $(share_line "reach $area $1" "$step_measure")"
 	n=$(printf '%s\n' "$out" | sed -n 's/.*ran \([0-9][0-9]*\) vectors.*/\1/p' | head -1)
 	if [ "${n:-0}" -ne $# ]; then
 		echo "reach $area ran ${n:-no} vectors of the $# it selects"
@@ -555,8 +555,8 @@ else
 	fi
 	{
 		grep -E '^(test|blind) ' "$sel" | cut -d' ' -f2
-		echo github.com/kottera/metais/internal/finding
-		echo github.com/kottera/metais/internal/specdata
+		echo metais.org/metais/internal/finding
+		echo metais.org/metais/internal/specdata
 	} | sort -u >"$want"
 	step build go build ./...
 	step vet go vet ./...

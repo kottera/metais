@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/testenv"
 )
 
 // everyConstruct uses every node type the parser builds.

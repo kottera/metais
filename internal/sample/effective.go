@@ -8,8 +8,8 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // node is one schema in a package: a schema file and the JSON Pointer of

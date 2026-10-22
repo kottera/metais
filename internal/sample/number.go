@@ -6,8 +6,8 @@ package sample
 import (
 	"math/big"
 
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/liquid/value"
 )
 
 var (

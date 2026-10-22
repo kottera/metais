@@ -15,8 +15,8 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/kottera/metais/internal/tools/ux/scenario"
-	"github.com/kottera/metais/internal/tools/ux/scrub"
+	"metais.org/metais/internal/tools/ux/scenario"
+	"metais.org/metais/internal/tools/ux/scrub"
 )
 
 // The scorer is proved against recorded runs: each directory of

@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // FuzzLiquidParse is ADR-010 D14 item 6's target: whatever the bytes,

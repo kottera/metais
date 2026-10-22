@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 // W5-0.9: a write into an existing directory of as many files as ADR-009

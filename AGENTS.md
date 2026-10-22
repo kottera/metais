@@ -59,7 +59,7 @@ say so, and split the prerequisite into its own work item.
 
 ## Development
 
-The module is `github.com/kottera/metais`. Its `go.mod` `toolchain` line
+The module is `metais.org/metais`. Its `go.mod` `toolchain` line
 names the exact toolchain every build and test uses, fetched under the
 default `GOTOOLCHAIN=auto` (ADR-010 D1). There is no CI. The gate is two
 tiers (ADR-010 D15 item 3, as Amendment A5 divides it), and

@@ -6,7 +6,7 @@ package schema
 import (
 	"fmt"
 
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // Coerce returns the value of text coerced to the declared type set t

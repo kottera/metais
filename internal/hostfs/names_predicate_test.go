@@ -12,10 +12,10 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
-	"github.com/kottera/metais/internal/unitext"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/pkgtree/pkgtreetest"
+	"metais.org/metais/internal/unitext"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // The meeting of W2-4 and W2-5 (PLAN-2026-10-metais-v1 §8): the

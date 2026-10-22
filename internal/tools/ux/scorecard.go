@@ -13,9 +13,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/tools/ux/scenario"
-	"github.com/kottera/metais/internal/tools/ux/score"
-	"github.com/kottera/metais/internal/tools/ux/scrub"
+	"metais.org/metais/internal/tools/ux/scenario"
+	"metais.org/metais/internal/tools/ux/score"
+	"metais.org/metais/internal/tools/ux/scrub"
 )
 
 // scored is one run of a scorecard: its record and its outcome, or nil

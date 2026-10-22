@@ -9,9 +9,9 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // parser is one reading of one text: a recursive descent over RFC 8259's

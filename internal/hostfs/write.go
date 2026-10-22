@@ -13,7 +13,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/kottera/metais/internal/fault"
+	"metais.org/metais/internal/fault"
 )
 
 // The modes ADR-005 D14 item 4 creates with, less the process umask.

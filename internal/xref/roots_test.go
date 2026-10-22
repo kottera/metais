@@ -6,7 +6,7 @@ package xref
 import (
 	"testing"
 
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/manifest"
 )
 
 const objectAB = `{"type": "object", "properties": {"a": {"type": "string"}, "b": {"type": "array", "items": {"type": "object", "properties": {"v": {}}}}}}`

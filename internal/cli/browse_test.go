@@ -15,11 +15,11 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kottera/metais/internal/browse"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostenv"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/browse"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostenv"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/testenv"
 )
 
 // readingCommands are ADR-008 D5's commands, in the table's order.

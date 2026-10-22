@@ -12,7 +12,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/fault"
+	"metais.org/metais/internal/fault"
 )
 
 // Report gathers one command's findings (ADR-006 D8): it removes

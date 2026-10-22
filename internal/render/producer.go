@@ -6,8 +6,8 @@ package render
 import (
 	"io"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // Producer is where a planned file's bytes come from (ADR-010 A7 item 5).

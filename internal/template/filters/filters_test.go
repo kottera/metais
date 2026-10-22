@@ -8,13 +8,13 @@ import (
 	"testing"
 	"unicode"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/unitext"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/unitext"
 )
 
 // data reads src, JSON, as a render's globals.

@@ -19,7 +19,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/kottera/metais/internal/fault"
+	"metais.org/metais/internal/fault"
 )
 
 // A Tree is a package, opened: a fixed set of regular files, each addressed

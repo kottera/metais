@@ -6,12 +6,12 @@ package render
 import (
 	"cmp"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/template"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/template"
 )
 
 // joinIn is the path p within the tree of the container at in.

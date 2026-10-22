@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // keywordSchema is the schema the keyword cases are written in.

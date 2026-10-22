@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
 )
 
 // codes lists the findings' codes, each with its distinguishing parameter

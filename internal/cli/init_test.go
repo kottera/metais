@@ -14,12 +14,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/author"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostenv"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/render/sink"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/author"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostenv"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/render/sink"
+	"metais.org/metais/internal/testenv"
 )
 
 // scaffoldFiles is what init reports writing, in order.

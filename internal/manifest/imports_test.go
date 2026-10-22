@@ -13,10 +13,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
-const modulePath = "github.com/kottera/metais"
+const modulePath = "metais.org/metais"
 
 // validators are the packages that validate against a JSON Schema: the
 // library ADR-010 D5 admits, and the module's schema layer, where the

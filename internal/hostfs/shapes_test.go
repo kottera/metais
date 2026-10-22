@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/fault"
+	"metais.org/metais/internal/fault"
 )
 
 // shape is one of the write shapes, opened on the output directory out,

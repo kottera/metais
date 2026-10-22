@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // skillHarnesses are the harnesses metais skill writes for, and the

@@ -132,7 +132,7 @@ measuring runs nothing beside the test. A red package's `FAIL:` line in
 the gate's output carries what it got:
 
 ```
-FAIL: github.com/kottera/metais/internal/conformance: got 1.30 of 4 cores (CPU 812.4s over 615.0s wall, beside 0.2 other test binaries); host load 25.31 on 16 cores; last green scoped-20261020T101500Z got 4.10 of 4 cores (CPU 2350.1s over 493.0s wall), CPU now 0.35x it
+FAIL: metais.org/metais/internal/conformance: got 1.30 of 4 cores (CPU 812.4s over 615.0s wall, beside 0.2 other test binaries); host load 25.31 on 16 cores; last green scoped-20261020T101500Z got 4.10 of 4 cores (CPU 2350.1s over 493.0s wall), CPU now 0.35x it
 ```
 
 - **got … of p cores** is the package's CPU over its wall time, against

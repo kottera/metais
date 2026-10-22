@@ -21,7 +21,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/hostfs"
+	"metais.org/metais/internal/hostfs"
 )
 
 // source is the skill's text, without its stamp.

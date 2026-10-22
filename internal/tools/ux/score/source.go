@@ -15,10 +15,10 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/yamlx"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/yamlx"
 )
 
 // source is what the scorer knows of a fixture from its source directory:

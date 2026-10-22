@@ -14,11 +14,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/hostenv"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/hostenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // The benchmarks below are the commands ADR-010 D15 item 2's CPU budgets

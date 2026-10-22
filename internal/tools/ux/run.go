@@ -21,7 +21,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/kottera/metais/internal/tools/ux/scenario"
+	"metais.org/metais/internal/tools/ux/scenario"
 )
 
 // scenariosDir is the scenario set, relative to the top of the checkout.
@@ -161,7 +161,7 @@ func (c *config) scoreAndPrint(set []*scenario.Scenario) error {
 // the models are names.
 func (c *config) refuse() error {
 	gomod, err := os.ReadFile(filepath.Join(c.root, "go.mod"))
-	if err != nil || !bytes.HasPrefix(gomod, []byte("module github.com/kottera/metais\n")) {
+	if err != nil || !bytes.HasPrefix(gomod, []byte("module metais.org/metais\n")) {
 		return errors.New("run from the top of a metais checkout")
 	}
 	if ch := checkOutsideRepository(c.out); !ch.Pass {

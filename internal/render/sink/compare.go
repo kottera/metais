@@ -14,11 +14,11 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/render"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/render"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // The comparison's codes (ADR-007 D5 item 3), and its caps on a diff

@@ -28,12 +28,12 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/inputs/csv"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/regexprofile"
-	"github.com/kottera/metais/internal/schema"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/inputs/csv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/regexprofile"
+	"metais.org/metais/internal/schema"
 )
 
 // Mode is the optional-field mode (ADR-007 D9 items 1, 14 and 15).

@@ -30,12 +30,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/manifest"
 )
 
 // The analysis's bounds (ADR-007 D3 item 13). They are constants of the

@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/schema"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/schema"
 )
 
 // maxDeclared is how many declared names template.xref.unknown_field

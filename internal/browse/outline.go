@@ -3,7 +3,7 @@
 
 package browse
 
-import "github.com/kottera/metais/internal/markdown"
+import "metais.org/metais/internal/markdown"
 
 // Heading is one heading of an outline (ADR-008 D5, outline item 2).
 type Heading struct {

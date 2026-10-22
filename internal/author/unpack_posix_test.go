@@ -15,11 +15,11 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/pkgtree/pkgtreetest"
+	"metais.org/metais/internal/testenv"
 )
 
 // openFiles is the open-file soft limit W4-5.3's test unpacks under: far

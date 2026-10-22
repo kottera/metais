@@ -10,15 +10,15 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/digest"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/inputs"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid"
-	"github.com/kottera/metais/internal/liquid/ast"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/manifest"
+	"metais.org/metais/internal/digest"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/inputs"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/liquid/ast"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/manifest"
 )
 
 // The engine codes of METAIS's tags, which their definitions report and

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // gateScripts is the gate's scripts' directory. Naming it here is also what

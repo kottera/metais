@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/testenv"
 )
 
 // refusedBy is the limit the first finding of r names, with its code, or

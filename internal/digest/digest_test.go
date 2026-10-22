@@ -7,7 +7,7 @@ import (
 	"crypto/sha256"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 // TestVerifyValues holds the digest file to the values its form can hold,

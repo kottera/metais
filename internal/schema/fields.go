@@ -9,8 +9,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/liquid/value"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/liquid/value"
 )
 
 // Field is one line of the compact field listing (ADR-008 A7): one

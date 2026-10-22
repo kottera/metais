@@ -15,12 +15,12 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/backstop"
-	"github.com/kottera/metais/internal/cli/args"
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostenv"
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/backstop"
+	"metais.org/metais/internal/cli/args"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostenv"
+	"metais.org/metais/internal/limits"
 )
 
 // Options is what an invocation carries besides its arguments and streams.

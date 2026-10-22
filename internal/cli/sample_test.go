@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/testenv"
 )
 
 // samplePackage copies the SMP vectors' package below root and returns

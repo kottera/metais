@@ -8,10 +8,10 @@ import (
 	pathpkg "path"
 	"strings"
 
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/template"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/template"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // File is one file a render plans (ADR-005 D13 phase 1): its

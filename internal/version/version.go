@@ -13,7 +13,7 @@ import (
 )
 
 // release is set by a release build with
-// -ldflags "-X github.com/kottera/metais/internal/version.release=<semver>",
+// -ldflags "-X metais.org/metais/internal/version.release=<semver>",
 // to the release's tag without its leading v. It is empty in every other
 // build.
 var release string
@@ -36,7 +36,7 @@ var implements = []string{"1.0"}
 //   - the release variable, when a release build set it;
 //   - otherwise the main module's version from the build information, without
 //     its leading v, when it is a semantic version with no +dirty suffix, so
-//     go install github.com/kottera/metais/cmd/metais@v1.0.0 reports 1.0.0;
+//     go install metais.org/metais/cmd/metais@v1.0.0 reports 1.0.0;
 //   - otherwise 0.0.0-devel.
 //
 // No flag or environment variable sets it.

@@ -12,14 +12,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/fault"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/pkgtree"
-	"github.com/kottera/metais/internal/render"
-	"github.com/kottera/metais/internal/template"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/fault"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/pkgtree"
+	"metais.org/metais/internal/render"
+	"metais.org/metais/internal/template"
+	"metais.org/metais/internal/testenv"
 )
 
 // writeSourcePackage writes a source directory below root, its manifest's

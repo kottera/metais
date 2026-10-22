@@ -11,17 +11,17 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/regexprofile"
-	"github.com/kottera/metais/internal/schema"
-	"github.com/kottera/metais/internal/schemafail"
-	"github.com/kottera/metais/internal/specdata"
-	"github.com/kottera/metais/internal/yamlx"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/regexprofile"
+	"metais.org/metais/internal/schema"
+	"metais.org/metais/internal/schemafail"
+	"metais.org/metais/internal/specdata"
+	"metais.org/metais/internal/yamlx"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // manifestLocation is the location in metais.yaml.

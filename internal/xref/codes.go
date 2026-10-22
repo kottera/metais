@@ -3,7 +3,7 @@
 
 package xref
 
-import "github.com/kottera/metais/internal/finding"
+import "metais.org/metais/internal/finding"
 
 // The cross-reference's codes (ADR-007 D3, ADR-006's template family).
 // Each is class content. A finding about a template, a partial or a

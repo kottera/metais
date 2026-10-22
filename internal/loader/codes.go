@@ -7,11 +7,11 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/hostfs"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/unitext"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/hostfs"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/unitext"
+	"metais.org/metais/internal/zipfmt"
 )
 
 // The codes the loader reports beside its libraries' (ADR-001 Interfaces,

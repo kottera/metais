@@ -8,9 +8,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/manifest"
-	"github.com/kottera/metais/internal/template"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/template"
 )
 
 // mirrorForm is a mirror's (ADR-005 D6).

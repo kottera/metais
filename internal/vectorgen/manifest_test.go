@@ -13,9 +13,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/testenv"
 )
 
 // This file is the program of the hostile corpus's manifests too large to

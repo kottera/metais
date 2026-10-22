@@ -10,7 +10,7 @@ import (
 	"io"
 	"slices"
 
-	"github.com/kottera/metais/internal/pkgtree"
+	"metais.org/metais/internal/pkgtree"
 )
 
 // Archive is a packed package that passed ADR-001 D8's steps 1 to 5: the

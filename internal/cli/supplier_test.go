@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/skill"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/skill"
+	"metais.org/metais/internal/testenv"
 )
 
 // The wording ADR-008 A8 gives what an example is (item 3), and A10 the

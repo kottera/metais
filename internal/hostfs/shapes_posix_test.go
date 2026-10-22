@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"testing"
 
-	"github.com/kottera/metais/internal/limits"
+	"metais.org/metais/internal/limits"
 )
 
 // openFiles is the open-file soft limit the W4-0.1 test runs under: far

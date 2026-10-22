@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
+	"metais.org/metais/internal/finding"
 )
 
 // docs is a set of schema entries, decoded, that Schemas reads.

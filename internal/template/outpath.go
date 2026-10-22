@@ -4,9 +4,9 @@
 package template
 
 import (
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/unitext"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/unitext"
 )
 
 // The output path codes (ADR-005 D12; ADR-005's interfaces name the

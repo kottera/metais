@@ -12,7 +12,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/tools/ux/scrub"
+	"metais.org/metais/internal/tools/ux/scrub"
 )
 
 // scrubMax is the largest file of a session's directory a scrubbed copy

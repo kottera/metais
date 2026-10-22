@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/regexprofile"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/regexprofile"
+	"metais.org/metais/internal/testenv"
 )
 
 // The hostile corpus's command cases (ADR-009 D17 item 11) and grep's

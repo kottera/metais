@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/testenv"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/testenv"
 )
 
 // Go reads TZ once, when time.Local is first used, so a test cannot change

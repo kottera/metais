@@ -17,12 +17,12 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/digest"
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/loader"
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/zipfmt"
+	"metais.org/metais/internal/digest"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/loader"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/zipfmt"
 )
 
 var update = flag.Bool("update", false, "write every committed package's bytes into its vector")

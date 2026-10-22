@@ -46,7 +46,7 @@ func TestReadsHostOnlyThroughReadSide(t *testing.T) {
 		}
 		local := ""
 		for _, imp := range f.Imports {
-			if p, _ := strconv.Unquote(imp.Path.Value); p == "github.com/kottera/metais/internal/hostfs" {
+			if p, _ := strconv.Unquote(imp.Path.Value); p == "metais.org/metais/internal/hostfs" {
 				local = "hostfs"
 				if imp.Name != nil {
 					local = imp.Name.Name

@@ -19,7 +19,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kottera/metais/internal/pkgtree"
+	"metais.org/metais/internal/pkgtree"
 )
 
 // tree is the in-memory Tree New builds.

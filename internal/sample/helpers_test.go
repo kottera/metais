@@ -10,16 +10,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kottera/metais/internal/finding"
-	"github.com/kottera/metais/internal/inputs/csv"
-	"github.com/kottera/metais/internal/jsonx"
-	"github.com/kottera/metais/internal/limits"
-	"github.com/kottera/metais/internal/liquid/value"
-	"github.com/kottera/metais/internal/markdown"
-	"github.com/kottera/metais/internal/pkgtree/pkgtreetest"
-	"github.com/kottera/metais/internal/schema"
-	"github.com/kottera/metais/internal/testenv"
-	"github.com/kottera/metais/internal/yamlx"
+	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/inputs/csv"
+	"metais.org/metais/internal/jsonx"
+	"metais.org/metais/internal/limits"
+	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/markdown"
+	"metais.org/metais/internal/pkgtree/pkgtreetest"
+	"metais.org/metais/internal/schema"
+	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/yamlx"
 )
 
 // entry is the schema file a test's one input names.
