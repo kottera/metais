@@ -36,7 +36,7 @@ type Flag struct {
 	// Repeatable is set for a flag that may be given more than once.
 	Repeatable bool
 	// Required is set for a flag that must be given, such as unpack's
-	// --to. Its absence is a MissingOperand that names the flag as the
+	// --out. Its absence is a MissingOperand that names the flag as the
 	// usage line writes it, --name <value> (ADR-008 D13: a missing
 	// operand or required flag).
 	Required bool
@@ -116,7 +116,7 @@ type Error struct {
 	// abbreviates, or "" when it names none.
 	Flag string
 	// Operand is the name of the operand missing, for MissingOperand; a
-	// required flag's is its usage, such as --to <dir>.
+	// required flag's is its usage, such as --out <dir>.
 	Operand string
 }
 
