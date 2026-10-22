@@ -127,7 +127,7 @@ Two rules this train adds:
 | Wave | Objective | Depends on | Status |
 |---|---|---|---|
 | 0 | This plan, merged to `main` | — | **authored** |
-| 1 | **The harness and the baseline**: `docs/dev/ux-testing.md`; the scenario set; the runner, with its isolation proof; the transcript scorer with its fixtures; a baseline scorecard on `main` | 0 | — |
+| 1 | **The harness and the baseline**: `docs/dev/ux-testing.md`; the scenario set; the runner, with its isolation proof; the transcript scorer with its fixtures; a baseline scorecard on `main` | 0 | **complete** (see §5, Wave 1 verdict) |
 | 2 | **The fixes**: the `templates` and `manifest` help topics; examples first in every command's help; a compact field listing from `schema`; on-the-fly data on `inspect`'s next steps and in the supplier's help; a minimal `init`; the agent skill (`01a15ad7`); generated vectors (`01a15ad6`) | 1 | — |
 | 3 | **Measure, fix, and close**: the scorecard on post-Wave-2 `main`, with and without the skill installed; its comparison with the baseline; a fix item for each failing scenario, then a re-run until §4's thresholds hold; the SC1 and SC9 rounds | 2 | — |
 
@@ -267,6 +267,52 @@ a number for today's binary.
 - **The baseline:** every scenario × Opus, Sonnet, Haiku on `main` at the
   wave's start, published as `docs/ux/scorecard-<date>-baseline.md`. The
   transcripts are kept as Work Order artifacts, not committed.
+
+### Wave 1 verdict
+
+**Complete, 2026-10-22.** Brief and closeout:
+[brief-plan-2026-10-metais-ux-wave1.md](../briefs/brief-plan-2026-10-metais-ux-wave1.md)
+(brief [#191](https://github.com/kottera/metais/pull/191), closeout
+[#203](https://github.com/kottera/metais/pull/203)). Wave orchestrator
+`01a15e89-cf78-78c2-8ace-c9849a67e9bc`.
+
+- **What landed.** It matches this section:
+  - the runner, `internal/tools/ux`, under ADR-009 A8 and held away from
+    `cmd/metais` by the `never-depends` rule, with the nine scenarios and
+    `docs/dev/ux-testing.md` (#194);
+  - the scorer, with 23 committed fixtures (#196);
+  - the baseline, [scorecard-2026-10-21-baseline.md](../ux/scorecard-2026-10-21-baseline.md)
+    (#199). All 27 runs were valid, and **6 of 24 gated runs pass**, two
+    per model. The transcripts are in Work Order artifact
+    `art_boccbn5awud7um657vbfnsbezoefmdmkajnhk4tslubk6l3w27fq`.
+- **The verification.** One round, `01a16049`, passed with nothing
+  blocking. All three items were checked at depth `mutated`, with 30
+  mutations, every one of them red.
+- **Non-blocking findings.** Five test pins are carried by W1-NB1
+  (`01a160f8-151a`). One of them is the scorer's reading of a render to
+  `--out -`. W1-NB1 runs beside Wave 2.
+- **The wave tier.** It was red only on `internal/conformance`'s
+  ten-minute timeout, at under half the gate's share of a starved host.
+  The package passed when run alone, and nothing of this wave reaches it.
+  No full-share re-run of `51b2c9e` is needed. The runtime is
+  PLAN-2026-10-metais-test-economy's Wave 2. Wave 2 of this train does
+  reach `cmd/metais`, so its own wave tier must pass that step.
+- **What changes later waves:**
+  - **Wave 2:** the scorecard's ten "What the failures show" candidates.
+  - **Wave 2 and Wave 3:** Ed's rulings made during the wave (the
+    closeout's R-e). These are:
+    - `--version` and `help` before `inspect` do not fail inspect-first;
+    - `unzip -l` is a note;
+    - a write outside the run directory is invalid;
+    - every C0 and C1 run carries a recorded verdict, with a disagreement
+      report, before Wave 3's scorecard counts.
+  - **Wave 3's comparison:** PLAN-2026-10-metais-render-seams changed
+    `cmd/metais`'s render pipeline after the baseline's build. The
+    comparison with the baseline therefore measures more than Wave 2's
+    fixes.
+  - **§6's fallback on Ed's host:** it needs a credential route the runner
+    does not build. The proxy held for every run, so the act was not
+    filed.
 
 ## 6. Out-of-band acts
 
