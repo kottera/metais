@@ -205,3 +205,112 @@ func TestSkillSendsNoSupplierToAnExample(t *testing.T) {
 		t.Errorf("the fictional-data section does not make the render the preview: %s", section)
 	}
 }
+
+// exampleNotFactsWords is the wording ADR-008 A11 item 1 gives an
+// example's inputs: never a real document's data, whose facts are asked
+// for.
+const exampleNotFactsWords = "An example's inputs are the author's illustration, never a real document's data: render a real document only from the facts the person supplies, and without them ask the person for them, never taking them from an example."
+
+// TestExampleInputsAreNeverFacts is ADR-008 A11 item 1 (R-UX-2): where
+// inspect shows a package's examples, and in the help of every command
+// that reaches an example's entries, the tool says an example's inputs are
+// never a real document's data and that its facts are asked for; and
+// extract's example that writes an example says so too.
+func TestExampleInputsAreNeverFacts(t *testing.T) {
+	testenv.Home(t)
+	r := runTool(t, "inspect", filepath.Join(vectorsDir, "pkg/opens-source/package"))
+	_, examples, ok := strings.Cut(r.stdout, "\nExamples\n")
+	if !ok {
+		t.Fatalf("no Examples section:\n%s", r.stdout)
+	}
+	lines := strings.Split(examples, "\n")
+	if len(lines) < 2 || lines[1] != "  "+exampleNotFactsWords {
+		t.Errorf("the Examples section's second line is not what an example's inputs are:\n%s", examples)
+	}
+	for _, name := range []string{"inspect", "extract", "read", "ls"} {
+		text := strings.Join(strings.Fields(string(commandText(lookup(table, name)))), " ")
+		if !strings.Contains(text, exampleNotFactsWords) {
+			t.Errorf("metais help %s does not say an example's inputs are never a real document's data", name)
+		}
+	}
+	for _, ex := range lookup(table, "extract").Examples {
+		if strings.Contains(ex.Run, "examples/") && !strings.Contains(ex.Why, "never a real document's data") {
+			t.Errorf("extract's example %q says %q", ex.Run, ex.Why)
+		}
+	}
+}
+
+// skillSection is the flattened text of the skill from the bold heading
+// head to the next bold heading or section, or "" when it has none.
+func skillSection(flat, head string) string {
+	_, s, ok := strings.Cut(flat, head)
+	if !ok {
+		return ""
+	}
+	if i := strings.Index(s, " **"); i >= 0 {
+		s = s[:i]
+	}
+	s, _, _ = strings.Cut(s, "## ")
+	return s
+}
+
+// TestSkillRoutesWhatAPackageNeeds is ADR-008 A11 item 2: the skill has a
+// route for a person who asks what a package needs, and it leads from
+// inspect to every input's fields, not to inspect alone.
+func TestSkillRoutesWhatAPackageNeeds(t *testing.T) {
+	flat := strings.Join(strings.Fields(string(skill.Source())), " ")
+	s := skillSection(flat, "**What a package needs, when asked**")
+	if s == "" {
+		t.Fatal("the skill has no route for what a package needs")
+	}
+	inspect := strings.Index(s, "`metais inspect report.metais`")
+	fields := strings.Index(s, "`metais schema report.metais --fields`")
+	if inspect < 0 || fields < inspect {
+		t.Errorf("the route names inspect at %d and every input's fields at %d: %s", inspect, fields, s)
+	}
+	if !strings.Contains(s, "not from `inspect` alone") {
+		t.Errorf("the route does not say inspect alone is not the answer: %s", s)
+	}
+}
+
+// TestSkillTestsAScriptOnGeneratedData is ADR-008 A11 item 3: the skill
+// lets a session test a script or tool the person asked for on data
+// metais sample writes inside its working directory, and keeps generated
+// data from standing in for a real document's facts.
+func TestSkillTestsAScriptOnGeneratedData(t *testing.T) {
+	flat := strings.Join(strings.Fields(string(skill.Source())), " ")
+	_, rule, _ := strings.Cut(flat, "**Fictional data only when the person asks for it**")
+	rule, _, _ = strings.Cut(rule, "- **Follow")
+	if !strings.Contains(rule, "or to test a script or tool the person asked for") {
+		t.Errorf("the fictional-data rule makes no room for testing a script: %s", rule)
+	}
+	s := skillSection(flat, "**Testing a script or tool the person asked for**")
+	if s == "" {
+		t.Fatal("the skill has no route for testing a script")
+	}
+	for _, want := range []string{
+		"`metais sample report.metais --out <data dir>`",
+		"inside your working directory",
+		"never the person's document",
+		"without them, ask for them",
+	} {
+		if !strings.Contains(s, want) {
+			t.Errorf("the script-testing route does not say %q: %s", want, s)
+		}
+	}
+}
+
+// TestSkillCheckSaysTheRefusal is MTS-AUT-003 as W3-11 applied it to the
+// help: the skill's check step does not claim every defect of a package
+// whose read is refused.
+func TestSkillCheckSaysTheRefusal(t *testing.T) {
+	flat := strings.Join(strings.Fields(string(skill.Source())), " ")
+	_, step, ok := strings.Cut(flat, "`metais check <dir>` — ")
+	if !ok {
+		t.Fatal("the skill has no check step")
+	}
+	step, _, _ = strings.Cut(step, ". ")
+	if !strings.Contains(step, "only the refusal of a package it cannot read") {
+		t.Errorf("the skill's check step says %q", step)
+	}
+}

@@ -34,6 +34,15 @@ var nextInspectAgain = Next{Run: "metais inspect <package>", Why: "Opens the pac
 // whether an example's facts are real, which the tool cannot know.
 const exampleIs = "An example is the author's illustration of the inputs, and of the outputs a render of them should produce, kept in the package to test it: not your data, and not a preview of what the package produces, which is a render from generated data with metais render --sample."
 
+// exampleNotFacts is that an example's inputs are never a real document's
+// data, whose facts are asked of the person (ADR-008 A11 item 1, R-UX-2),
+// and examplesEntries what the help of every command that reaches an
+// example's entries says of them.
+const (
+	exampleNotFacts = "An example's inputs are the author's illustration, never a real document's data: render a real document only from the facts the person supplies, and without them ask the person for them, never taking them from an example."
+	examplesEntries = "The entries under examples/ are the package's examples. " + exampleIs + " " + exampleNotFacts
+)
+
 // generatedServes is whom generated data serves, and generatedNever that
 // it never takes the place of a real document's facts, as inspect's next
 // steps and the help of render --sample and sample say them (ADR-008 A10
@@ -78,7 +87,7 @@ func inspectDeclaration() *Command {
 			"supplies, then metais render --sample and metais sample, which serve only " + generatedServes +
 			", with data generated from the inputs' schemas, and last the way to edit the package: metais " +
 			"unpack for a packed package, metais check for a source directory. " + generatedNever + " " +
-			exampleIs,
+			exampleIs + " " + exampleNotFacts,
 		Role:     finding.RoleConsumer,
 		Operands: []args.Operand{{Name: "<package>", Required: true, Description: "A packed package file, or a source directory; - is refused, since a package is read with random access."}},
 		Flags: []args.Flag{
@@ -696,6 +705,7 @@ func inspectHuman(res *inspectResult) []byte {
 	if len(*res.Examples) > 0 {
 		section("Examples")
 		b.WriteString("  " + exampleIs + "\n")
+		b.WriteString("  " + exampleNotFacts + "\n")
 		for _, ex := range *res.Examples {
 			line := "  " + ex.Name + ": " + strings.Join(ex.Inputs, ", ")
 			if ex.Expected {

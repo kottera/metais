@@ -22,6 +22,14 @@ specification's text, not; a source directory's are the files metais pack would
 write from it, without .compiled/. Paths use / on every platform and are matched
 byte for byte, case-sensitively; the root is . or omitted.
 
+The entries under examples/ are the package's examples. An example is the
+author's illustration of the inputs, and of the outputs a render of them should
+produce, kept in the package to test it: not your data, and not a preview of
+what the package produces, which is a render from generated data with metais
+render --sample. An example's inputs are the author's illustration, never a real
+document's data: render a real document only from the facts the person supplies,
+and without them ask the person for them, never taking them from an example.
+
 Operands:
   <package>
       A packed package file, or a source directory; - is refused, since a

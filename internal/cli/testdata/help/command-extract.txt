@@ -13,7 +13,8 @@ Examples:
       Writes the templates into the current directory, replacing the files
       already there.
   metais extract report-1.0.0.metais 'examples/basic/**' --out basic
-      Writes the example basic into the new directory basic.
+      Writes the example basic into the new directory basic, to see how the
+      package is tested; its inputs are never a real document's data.
 
 Writes every entry any glob selects to <dir>/<entry path>, as stored (metais
 help globs). Every glob must select at least one entry, or nothing is written: a
@@ -37,6 +38,14 @@ leaves <dir> as it was, and one while moving them lists the files already moved.
 
 --dry-run lists the files extract would write, makes every check, and writes
 nothing.
+
+The entries under examples/ are the package's examples. An example is the
+author's illustration of the inputs, and of the outputs a render of them should
+produce, kept in the package to test it: not your data, and not a preview of
+what the package produces, which is a render from generated data with metais
+render --sample. An example's inputs are the author's illustration, never a real
+document's data: render a real document only from the facts the person supplies,
+and without them ask the person for them, never taking them from an example.
 
 Operands:
   <package>

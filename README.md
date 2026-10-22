@@ -87,7 +87,7 @@ once its checks and examples pass.
 metais init my-report                             # a source directory that already checks, tests and packs
 # edit metais.yaml, inputs/ and templates/
 metais render my-report --sample --out preview/   # preview from data generated from the schemas
-metais check my-report                            # every finding of every step, without data
+metais check my-report                            # every finding of every step, without data (only the refusal, for a package it cannot read)
 metais test my-report                             # render each example and compare it with expected/
 metais pack my-report                             # check, test, then write my-report-<version>.metais
 ```
