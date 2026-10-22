@@ -139,15 +139,17 @@ strip() {
 # whole_text gives the whole file git's three-way merge, and its verdict.
 whole_text() {
 	echo "merge-generated: $path: $1; merging the whole file as text." >&2
-	git merge-file --marker-size="$size" -L ours -L base -L theirs "$ours" "$base" "$theirs"
-	[ $? -eq 0 ] || exit 1
+	git merge-file --marker-size="$size" -L ours -L base -L theirs "$ours" "$base" "$theirs" || exit 1
 	exit 0
 }
 
 n=$(regions "$ours")
-[ "$n" != bad ] && [ "$n" != 0 ] || whole_text "this side's generated-region markers are not well formed"
-[ "$(regions "$base")" = "$n" ] && [ "$(regions "$theirs")" = "$n" ] ||
+if [ "$n" = bad ] || [ "$n" = 0 ]; then
+	whole_text "this side's generated-region markers are not well formed"
+fi
+if [ "$(regions "$base")" != "$n" ] || [ "$(regions "$theirs")" != "$n" ]; then
 	whole_text "the three versions do not hold the same generated regions"
+fi
 
 work=$(mktemp -d "${TMPDIR:-/tmp}/merge-generated.XXXXXX") || exit 2
 trap 'rm -rf "$work"' EXIT
