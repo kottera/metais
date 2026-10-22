@@ -314,3 +314,29 @@ func TestSkillCheckSaysTheRefusal(t *testing.T) {
 		t.Errorf("the skill's check step says %q", step)
 	}
 }
+
+// TestSkillNamesEachFieldAsListed is W3-14's refinement of ADR-008 A11
+// item 2: the route for what a package needs tells the session to name
+// each required field in its answer as `schema --fields` lists it, by its
+// name or by its title with its number, so a paraphrase that drops the word
+// telling two fields apart is not the answer.
+func TestSkillNamesEachFieldAsListed(t *testing.T) {
+	flat := strings.Join(strings.Fields(string(skill.Source())), " ")
+	s := skillSection(flat, "**What a package needs, when asked**")
+	fields := strings.Index(s, "`metais schema report.metais --fields`")
+	if fields < 0 {
+		t.Fatalf("the route does not list every input's fields: %s", s)
+	}
+	answer := s[fields:]
+	for _, want := range []string{
+		"name every required field",
+		"as the listing names it",
+		"by its name",
+		"by its title, with its number",
+		"never by a paraphrase",
+	} {
+		if !strings.Contains(answer, want) {
+			t.Errorf("the route's answer does not say %q: %s", want, answer)
+		}
+	}
+}

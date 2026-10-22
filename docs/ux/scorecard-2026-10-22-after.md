@@ -204,7 +204,9 @@ name, and the judge passes it for saying which reading it would take and
 inventing nothing. They agree on every C1 run. The with-skill re-run's
 cells are in
 [its scorecard](scorecard-2026-10-22-after-with-skill.md#re-run-by-w3-13-on-main-with-w3-12):
-17 of 18, failing C4 haiku.
+17 of 18, failing C4 haiku. W3-14 fixed the skill and re-ran C4 with it on
+every model, which passes 3 of 3, so the with-skill consuming result
+stands at 18 of 18 ([below](#c4-with-the-skill-re-run-by-w3-14)).
 
 ### What W3-13's re-runs changed
 
@@ -253,12 +255,40 @@ fields"). The skill did not lead it astray, and the transcript shows no
 other text that did. The miss is one word, left out of one field's
 paraphrase in an answer that otherwise names everything. Whether that line
 names the field is the question: a reader would likely say it does, and the
-check, by the rule its stated limits give, says it does not. **Where the
-fix lies is for the wave orchestrator to decide:** in the check, if a
+check, by the rule its stated limits give, says it does not. The wave
+orchestrator placed the fix in the skill, and W3-14 made it
+([below](#c4-with-the-skill-re-run-by-w3-14)). As W3-13 left it, **where the
+fix lies was for the wave orchestrator to decide:** in the check, if a
 fixture of this run shows it mis-scores the transcript (the brief's rule
 for any check change), or in the skill, if the ruling's reading of R-W3-1
 holds that the skill should make the answer name each field in its own
 words. This run does not count toward R-UX-5 (R-W3-1).
+
+### C4 with the skill, re-run by W3-14
+
+The wave orchestrator placed the fix for C4 haiku's with-skill failure in
+the skill, not the check: `names-every-input` had been corrected twice in
+this wave, and the brief forbids weakening a check to make a scenario pass.
+W3-14 (#232) added a third step to the skill's "What a package needs, when
+asked": name every required field as `metais schema <package> --fields`
+lists it, by its name or by its title with its number, never by a
+paraphrase alone. It refines ADR-008 A11 item 2's route and amends no ADR.
+
+W3-14 re-ran C4 on Opus, Sonnet and Haiku with the skill installed, from
+commit `dd9c3db6`, W3-14's skill change on `main` at `be1c74b5`. All three
+pass. Haiku's answer names every required field by its title's number and
+words, and writes the field it missed at W3-13 as "2.9 Whether the business
+continuity plan was activated (true/false)". One Sonnet run was recorded
+invalid by `no-memory-read` and re-run. The set, its record and the
+invalid run are in the
+[with-skill scorecard](scorecard-2026-10-22-after-with-skill.md#re-run-of-c4-by-w3-14-on-main-with-w3-14)
+(Work Order artifact `art_yewidpk6crt7jkxavavcyle5lkthqj3dcau72nexao5l54ct4ota`).
+
+**With it, every consuming scenario passes on Opus, Sonnet and Haiku both
+with the skill and without it: 18 of 18 in each mode**, the with-skill
+count being W3-13's re-run with C4's cells from W3-14's. No run of either
+mode changes what counts toward R-UX-5, which is the W3-13 re-run without
+the skill, above.
 
 ### Prompts reworded under R-UX-9 in this wave
 
@@ -996,6 +1026,9 @@ consuming runs pass 18 of 18 without the skill and 17 of 18 with it. The
 one that passes without the skill and fails with it is C4 haiku, on one
 field its answer names without one of the field name's words
 ([above](#c4-what-it-needs-haiku-with-the-skill-one-field-named-without-one-of-its-words)).
+W3-14 fixed the skill and re-ran C4 with it, which passes on every model,
+so the with-skill consuming runs stand at 18 of 18
+([above](#c4-with-the-skill-re-run-by-w3-14)).
 
 - **Consuming, better with the skill:** C1 on all three models (each
   rendered nothing and asked; the skill says "Fictional data only when the

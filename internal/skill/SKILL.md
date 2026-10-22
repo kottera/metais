@@ -70,6 +70,10 @@ me"):
    each, `required` or `optional`, with the conditions that make a field
    required. Read it whole, and answer with each input and its fields, not
    from `inspect` alone.
+3. In the answer, name every required field as the listing names it: by its
+   name, or by its title, with its number when the title has one. Add what
+   it means if that helps, but never by a paraphrase alone: one that drops
+   a word of the name can name a different field, or none.
 
 **Fictional data or a preview, when asked for** (such as "show me what it
 produces"):
