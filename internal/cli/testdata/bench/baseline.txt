@@ -1,6 +1,6 @@
 # ADR-010 D15 item 1's benchmarks of ./internal/cli, in benchstat's input format.
 # sandbox figure, not a budget
-# host: linux-desktop-1, a contended Work Order sandbox
+# host: Ubuntu Linux on an x86-64 desktop CPU (linux/amd64), a contended Work Order sandbox
 # cpu: AMD Ryzen 5 3600 6-Core Processor
 # go version go1.26.9 linux/amd64
 # GOOS=linux GOARCH=amd64
