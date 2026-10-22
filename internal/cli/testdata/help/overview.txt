@@ -67,6 +67,8 @@ Global flags:
 
 Topics (metais help <topic>):
   inputs      Supplying a package's inputs, and which source wins.
+  templates   Writing templates: the environment, every filter, and escaping.
+  manifest    Every field of metais.yaml, inputs and outputs included.
   globs       The patterns that select a package's entries.
   json        The JSON document every command prints with --json.
   exit-codes  What each exit status means.

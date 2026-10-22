@@ -1698,6 +1698,69 @@ command's own help are unchanged.
    so no chapter changes with it. The package's README, the first thing
    of all that a reader sees, is ADR-001 A3's.
 
+### A6 — `metais help templates` and `metais help manifest`, examples first, each held to its source
+
+**Status:** Accepted on merge. It carries PLAN-2026-10-metais-ux Wave 2's
+item W2-3, from the baseline scorecard's candidate 8 and plan §1, under
+the plan's rulings that Ed Funnekotter ratified on 2026-10-21.
+**Amends:** D15 item 4 (the topics) and `help`'s own declaration (its
+operand and examples). D15 items 1 to 3, 5 and 6, A1, A3 and D16 are
+unchanged; `metais.help/1` gains no member, so its schema is unchanged.
+
+1. **`metais help templates`** is one page, examples first. It states
+   the inputs its examples read, opens with templates a reader can copy,
+   each beside what it renders — a loop over an input with `forloop`,
+   `assign` with a chain of filters and a test for nil, and a partial —
+   and then states:
+   - the template environment: `inputs.<name>` and the other globals,
+     loops and `forloop`, nil and what an undefined name does, `assign`
+     and `capture`, partials, and METAIS's `embed`, `asset` and
+     `provenance` tags;
+   - every filter of the dialect — the standard catalog chapter 7 adopts
+     and chapter 8's — each on one line with one example and what it
+     gives;
+   - escaping: an output's `escape`, which values are safe and `safe`'s
+     place as the last filter, `json_script` for data inside `<script>`,
+     and `url_encode` for a URL component, with examples of each in an
+     output whose `escape` is `html`.
+2. **`metais help manifest`** is examples first: a whole `metais.yaml`
+   comes before the fields. It then gives every field of the manifest by
+   its path (`inputs[].csv.delimiter`, `outputs[].container.entries[].first`),
+   each with what the specification says of it and an example. A
+   container's entries are listed by the fields they add to an output's;
+   the fields they share are stated once, under `outputs[]`.
+3. **Each topic is held to its source by a drift test** (D16 item 1):
+   - the `templates` topic's filter table is the dialect's catalog, the
+     filters `internal/template` registers. A filter added to the catalog
+     and not to the topic, or a row naming no filter, fails it. Every
+     example the topic gives, each filter's and the escaping examples
+     included, is rendered by the engine over the inputs the topic states,
+     and must give what the topic says it gives;
+   - the `manifest` topic's field table is the field paths of the
+     manifest schema (`spec/schemas/1.0/manifest.schema.json`, as the
+     binary embeds it). A field added to the schema and not to the topic,
+     or a row naming no field, fails it. The topic's whole example
+     manifest is a valid manifest.
+4. **Both topics are reachable where a session looks for them**: the
+   overview's topics and `help --json`'s `topics`, which list every
+   topic of the table; `help`'s operand, which names every topic; `help`'s
+   examples, which lead with `metais help`, `metais help templates` and
+   `metais help manifest`; and the skill's steps for writing a package and
+   its "When stuck" list.
+5. **The help is not a second specification.** Each topic states what
+   chapters 3, 5, 7, 8, 9 and 10 and the manifest schema state, in fewer
+   words, and points to the chapter for the rest; where the
+   specification is silent the topic says nothing. The specification
+   does not describe the help's topics, so no chapter changes with them.
+6. **Why.** A session authoring a package found the template language,
+   the manifest's fields and the escaping rules only in `spec/` and the
+   repository's example packages, which a session holding only the binary
+   cannot read (plan §1). One baseline run shipped an HTML output that
+   declares no `escape: html` and writes its data with `json`, not
+   `json_script`; another probed filters one by one in a scratch package
+   and tried to fetch the specification from the network (scorecard
+   2026-10-21, candidate 8).
+
 ### A7 — `metais schema --fields` lists the fields an agent reads whole, and `inspect` says the fields are there
 
 **Status:** Accepted on merge. It carries PLAN-2026-10-metais-ux Wave 2's
@@ -1858,69 +1921,6 @@ D10 and D14 are unchanged.
     the command line's output, so no chapter changes; the help, the CLI
     schema and the skill carry the listing. No conformance vector runs
     `schema`, so none changes.
-
-### A6 — `metais help templates` and `metais help manifest`, examples first, each held to its source
-
-**Status:** Accepted on merge. It carries PLAN-2026-10-metais-ux Wave 2's
-item W2-3, from the baseline scorecard's candidate 8 and plan §1, under
-the plan's rulings that Ed Funnekotter ratified on 2026-10-21.
-**Amends:** D15 item 4 (the topics) and `help`'s own declaration (its
-operand and examples). D15 items 1 to 3, 5 and 6, A1, A3 and D16 are
-unchanged; `metais.help/1` gains no member, so its schema is unchanged.
-
-1. **`metais help templates`** is one page, examples first. It states
-   the inputs its examples read, opens with templates a reader can copy,
-   each beside what it renders — a loop over an input with `forloop`,
-   `assign` with a chain of filters and a test for nil, and a partial —
-   and then states:
-   - the template environment: `inputs.<name>` and the other globals,
-     loops and `forloop`, nil and what an undefined name does, `assign`
-     and `capture`, partials, and METAIS's `embed`, `asset` and
-     `provenance` tags;
-   - every filter of the dialect — the standard catalog chapter 7 adopts
-     and chapter 8's — each on one line with one example and what it
-     gives;
-   - escaping: an output's `escape`, which values are safe and `safe`'s
-     place as the last filter, `json_script` for data inside `<script>`,
-     and `url_encode` for a URL component, with examples of each in an
-     output whose `escape` is `html`.
-2. **`metais help manifest`** is examples first: a whole `metais.yaml`
-   comes before the fields. It then gives every field of the manifest by
-   its path (`inputs[].csv.delimiter`, `outputs[].container.entries[].first`),
-   each with what the specification says of it and an example. A
-   container's entries are listed by the fields they add to an output's;
-   the fields they share are stated once, under `outputs[]`.
-3. **Each topic is held to its source by a drift test** (D16 item 1):
-   - the `templates` topic's filter table is the dialect's catalog, the
-     filters `internal/template` registers. A filter added to the catalog
-     and not to the topic, or a row naming no filter, fails it. Every
-     example the topic gives, each filter's and the escaping examples
-     included, is rendered by the engine over the inputs the topic states,
-     and must give what the topic says it gives;
-   - the `manifest` topic's field table is the field paths of the
-     manifest schema (`spec/schemas/1.0/manifest.schema.json`, as the
-     binary embeds it). A field added to the schema and not to the topic,
-     or a row naming no field, fails it. The topic's whole example
-     manifest is a valid manifest.
-4. **Both topics are reachable where a session looks for them**: the
-   overview's topics and `help --json`'s `topics`, which list every
-   topic of the table; `help`'s operand, which names every topic; `help`'s
-   examples, which lead with `metais help`, `metais help templates` and
-   `metais help manifest`; and the skill's steps for writing a package and
-   its "When stuck" list.
-5. **The help is not a second specification.** Each topic states what
-   chapters 3, 5, 7, 8, 9 and 10 and the manifest schema state, in fewer
-   words, and points to the chapter for the rest; where the
-   specification is silent the topic says nothing. The specification
-   does not describe the help's topics, so no chapter changes with them.
-6. **Why.** A session authoring a package found the template language,
-   the manifest's fields and the escaping rules only in `spec/` and the
-   repository's example packages, which a session holding only the binary
-   cannot read (plan §1). One baseline run shipped an HTML output that
-   declares no `escape: html` and writes its data with `json`, not
-   `json_script`; another probed filters one by one in a scratch package
-   and tried to fetch the specification from the network (scorecard
-   2026-10-21, candidate 8).
 
 ### A8 — A supplier who wants an example, a preview or data to start from is sent to `render --sample` and `sample`, and an example is said to be the author's
 
