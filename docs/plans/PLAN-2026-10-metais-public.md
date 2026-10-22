@@ -243,6 +243,14 @@ Made by the plan orchestrator in answer to the wave's breakdown
   changes it keeps `ci.yml` true and may remove the split. The reason it
   cannot wait: Wave 3's branch protection requires CI, so a job that
   cannot go green would block every pull request after the flip.
+- **R-W1-5, the sign-off identity.** Every commit this train makes signs
+  off as `Edward Funnekotter <3941907+efunneko@users.noreply.github.com>`,
+  set explicitly on the command line, never taken from the host's git
+  configuration: a dispatch host without `user.email` signs off with an
+  address built from its host name, which ADR-013 D4 item 3 keeps out of
+  new work. Commits already merged keep what they carry (D4 items 1 and
+  3). The DCO check requires a `Signed-off-by:` on every commit (D3 item
+  2), and is not made stricter than that.
 
 ## 6. Out-of-band acts
 
