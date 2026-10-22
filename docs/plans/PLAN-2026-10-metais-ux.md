@@ -129,7 +129,7 @@ Two rules this train adds:
 | 0 | This plan, merged to `main` | — | **authored** |
 | 1 | **The harness and the baseline**: `docs/dev/ux-testing.md`; the scenario set; the runner, with its isolation proof; the transcript scorer with its fixtures; a baseline scorecard on `main` | 0 | **complete** (see §5, Wave 1 verdict) |
 | 2 | **The fixes**: the `templates` and `manifest` help topics; examples first in every command's help; a compact field listing from `schema`; on-the-fly data on `inspect`'s next steps and in the supplier's help; a minimal `init`; the agent skill (`01a15ad7`); generated vectors (`01a15ad6`) | 1 | **complete** (see §7, Wave 2 verdict) |
-| 3 | **Measure, fix, and close**: the scorecard on post-Wave-2 `main`, with and without the skill installed; its comparison with the baseline; a fix item for each failing scenario, then a re-run until §4's thresholds hold; the SC1 and SC9 rounds | 2 | — |
+| 3 | **Measure, fix, and close**: the scorecard on post-Wave-2 `main`, with and without the skill installed; its comparison with the baseline; a fix item for each failing scenario, then a re-run until §4's thresholds hold; the SC1 and SC9 rounds | 2 | **complete** (see §8, Wave 3 verdict) |
 
 Wave 1 comes before the fixes so that the baseline measures today's binary.
 Wave 2's items all depend on Wave 1's merge, not on each other. Its two items
@@ -244,6 +244,8 @@ a number for today's binary.
   | A1 new-package | "make a .metais that renders an invoice as HTML from line items" | `check` and `pack` pass; `render --sample` renders |
   | A2 edit-package | "add a due date to this package's invoice" | the schema and template change together; `test` passes |
   | A3 data-to-js | "a package whose HTML page charts numbers it writes into a JS array" (the pr-report shape) | `escape: html` with `json_script` for strings; renders; the page's data parses |
+  | C6 render-acr-fictional | "render this file with new fictional data: accessibility-conformance-report.metais" (SC1's evidence, the §4.1 package) | valid data matching no shipped example, supplied to the package; rendered; the package untouched (R-UX-8). The evidence is judged by sc1.md's own bar |
+  | A4 spec-only-package | SC9's task: write a package of your own choosing from `spec/` and the binary alone, with the commit's `spec/` as the only fixture (SC9's evidence) | the last `check`, `test` and `pack`, after the last edit, each pass. The evidence is judged by sc9.md's own bar |
 
 - **The runner** lives outside the binary: never reachable from
   `cmd/metais`, held so by `internal/guarantees`, as ADR-009 A2 holds the
@@ -481,6 +483,81 @@ and Ed added that edge on 2026-10-22.
   - Ed keeps both of R-W3-3's judge calls: C0 passes a session that asks
     for the real facts and invents nothing, and C1 fails one that renders
     generated sample data, even data it labels as not real.
+
+### Wave 3 verdict
+
+**Complete, 2026-10-22.** Brief and closeout:
+[brief-plan-2026-10-metais-ux-wave3.md](../briefs/brief-plan-2026-10-metais-ux-wave3.md)
+(brief [#216](https://github.com/kottera/metais/pull/216), closeout
+[#233](https://github.com/kottera/metais/pull/233)). Wave orchestrator
+`01a16240-eae6-7e34-98e5-6d3084cba73d`.
+
+**What it did.** It measured, fixed and re-measured, in fourteen items:
+
+- **The measurements:**
+  - the after sets, without the skill (#220) and with it (#221);
+  - one judge, `claude-opus-5-5` with one published prompt, on every C0
+    and C1 run, the baseline's included (#223);
+  - two fix rounds, each followed by a re-run of every consuming scenario
+    in both modes (#229, #231).
+- **The fixes:**
+  - generated data only when a person asked for it (ADR-008 A10, #225);
+  - an example's data is never a real document's (ADR-008 A11, #230);
+  - the README says a package is read only with `metais` (ADR-001 A4,
+    #226);
+  - §B.6 agrees with MTS-AUT-003 (#227);
+  - the skill names each field as listed (#232).
+- **The scorer corrections:** eight, each red first (#219, #222, #228).
+
+No scenario's prompt was reworded.
+
+**R-UX-5 after the last re-run, under R-W3-5:**
+
+- consuming scenarios without the skill pass **18 of 18**;
+- authoring scenarios on Opus and Sonnet with the skill pass **6 of 6**;
+- **the thresholds hold.**
+
+Published beside the verdict, as Ed asked: authoring without the skill
+passes 4 of 6, because A1 and A3 on Sonnet never ran `metais`. That is
+carried to a later plan, as R-W3-5 says. The baseline, re-read with
+`main`'s scorer and judge, is 9 of 24. See
+[scorecard-2026-10-22-after.md](../ux/scorecard-2026-10-22-after.md).
+
+**The verification.** One round, `01a1632a-d8a5`.
+
+- The wave tier ran green on a fresh clone at `be1c74b`.
+- Every published set re-scored identically from its artifacts.
+- 41 mutations were made, and 23 of them went red:
+  - seven items were checked at depth `mutated`;
+  - the six measurement and document items were checked at depth
+    `inspected`, measured by re-scoring rather than by mutation.
+- The 18 green mutations are mostly unpinned scorer guards. The ones the
+  verifier raised are W3-NB1's.
+- **It blocked on one finding:** C4 on Haiku failed with the skill and
+  passed without it, which R-W3-1 makes a skill defect. W3-14 (#232) fixed
+  it, and its re-run passes 3 of 3. **That fix was not re-verified.**
+
+**Non-blocking findings, running beside the close:**
+
+- W3-NB1 (`01a16351-ed1b`): five scorer and runner pins;
+- W3-NB2 (`01a16352-2b89`): two `internal/cli` help sentences, under
+  ADR-008 A12 if one is needed.
+
+**The SC1 and SC9 evidence.** W3-5 (#218) added scenarios C6 and A4.
+Both runs were on Opus and Sonnet, on the post-Wave-2 binary before Wave
+3's fixes.
+
+- **SC9:** both pass `check`, `test` and `pack`. They ran against the old
+  §B.6.
+- **SC1:** both pass `validate` and `render`. Both read the package's raw
+  bytes once before `inspect`, so neither meets the bar's last item. C6's
+  prompt lacks the round's own "Start with `./metais inspect`", and W3-9's
+  README change came later and targets exactly that read. The rounds
+  (`01a15abf-4d58`, `01a15abf-6347`) are Ed's, and he decides them. This
+  train marks neither done.
+
+**R-UX-6.** Not run: the dispatch has no Codex or OpenCode and no
+credential for one.
 
 ## 9. What this plan does not cover
 
