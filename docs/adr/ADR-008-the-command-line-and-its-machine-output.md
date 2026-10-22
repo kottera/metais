@@ -1588,6 +1588,70 @@ mention it.
     writing under `.gemini/skills`, `.cursor/skills` or `.opencode/skills`,
     which each harness reads but none needs.
 
+### A3 — A command's help leads with its examples
+
+**Status:** Accepted on merge, as PLAN-2026-10-metais-ux W2-1 under the
+plan's Wave 2 brief, whose ruling "the help is examples first, and the
+normative text stays complete" it carries out. It needs no ratification.
+**Amends:** D15 item 3 (the order of a command's text help). D15 items 1,
+2, 4, 5 and 6, A1, and D16 are unchanged.
+
+1. **`metais <command> --help` and `metais help <command>` print the
+   command's examples straight after its usage lines**, and then its
+   detail, operands, flags, what it prints and its refusals, in that
+   order. A person reading the help, or a session reading its first
+   screen, meets the invocations it is likely to type before the
+   normative text that qualifies them. Nothing the help states is
+   dropped: the same sections hold the same text, in a new order.
+2. **A command's examples lead with the two or three invocations a person
+   actually types for it**, and then the variations. `render`'s lead with
+   a render from a data directory, a preview from sample data
+   (`render <package> --sample --out <dir>`), and one output written to a
+   file (`render <package> --data <dir> --out - --only <path> > <file>`).
+   An example may end in a shell redirection of standard output to a
+   file; everything before it is a metais command line that parses.
+3. **`metais help --json` is unchanged**: it carries every example of
+   every command in the declaration's order, which is the order text help
+   prints.
+4. **D16 item 1's tests assert the order**: for every command, by both
+   routes, the `Examples:` heading follows the usage lines and comes
+   before the detail and every other heading, and every declared example
+   is listed beneath it.
+
+### A4 — Every command that writes a directory names it with `--out`
+
+**Status:** Accepted on merge, as PLAN-2026-10-metais-ux W2-1 under the
+plan's Wave 2 brief, whose ruling lets flag names change before a
+release. It needs no ratification.
+**Amends:** D9 (`unpack`'s and `sample`'s synopses and items), the
+`extract` command's synopsis and items, D14 (the next steps that name
+those commands), and ADR-007's and ADR-011's text that names the flag.
+
+1. **`unpack`, `extract` and `sample` name the directory they write with
+   `--out <dir>`**, as `render` names its output directory and `pack` its
+   package file. `--to` is not a flag of any command. The baseline's
+   sessions guessed `--out` for every command that writes (scorecard
+   2026-10-21, candidate 2), and were refused with `usage.unknown_flag`;
+   one spelling across the five commands makes the guess right.
+2. **This is the fix, not a refusal hint.** A hint naming `--to` would
+   still cost each session a refused command and a second try; flags that
+   agree cost nothing, and nothing is released, so no caller depends on
+   `--to`.
+3. **`--out` is the golden path's only spelling.** There is no alias: a
+   second spelling would be one more thing the help, the skill and every
+   next step had to choose between.
+4. **Each command's meaning of the flag, and every refusal of it, is
+   unchanged; only its name is.** `unpack --out` and `extract --out` are
+   required; `sample` takes exactly one of `--out` and `--example`, and
+   `--overwrite` only with `--out`. Each refusal names `--out` where it
+   named `--to`, in its cause, its parameters and its next step.
+5. **The conformance vectors' setup member `to`** (spec §15) names an
+   operation's destination for every implementation, `pack`'s included; it
+   is not a flag spelling and does not change.
+6. **D16's tests prove it**: each of `render`, `pack`, `unpack`, `extract`
+   and `sample` declares `--out` and no `--to`, and a command line giving
+   it `--out` raises no usage refusal.
+
 ### A5 — What a session sees first sends a package to `inspect` and `read`, never to `unzip`; the consuming path offers on-the-fly data
 
 **Status:** Accepted on merge. It carries PLAN-2026-10-metais-ux Wave 2's
@@ -1632,6 +1696,7 @@ command's own help are unchanged.
    item 1 is text help's. The specification does not describe the help,
    so no chapter changes with it. The package's README, the first thing
    of all that a reader sees, is ADR-001 A3's.
+
 
 ## Implementation log
 

@@ -53,10 +53,10 @@ it, checks inputs against it and renders it.
    what it would write.
 
 **Fictional data, when asked for:**
-`metais sample report.metais --to <data dir>` writes valid generated data
+`metais sample report.metais --out <data dir>` writes valid generated data
 (`--seed <n>` varies it); then `validate` and `render` as above. Or start
 from an example's inputs:
-`metais extract report.metais 'examples/<name>/inputs/**' --to <dir>`, then
+`metais extract report.metais 'examples/<name>/inputs/**' --out <dir>`, then
 use `<dir>/examples/<name>/inputs` as the data directory. Say in your
 answer that the data is fictional.
 
@@ -71,7 +71,7 @@ answer that the data is fictional.
    `expected/` outputs; `metais test <dir> --update` records them.
 5. `metais pack <dir>` — check, test, and write `<name>-<version>.metais`.
 
-To change a packed package: `metais unpack report.metais --to <dir>`,
+To change a packed package: `metais unpack report.metais --out <dir>`,
 edit, then `check`, `test` and `pack`.
 
 ## Machine output
@@ -94,4 +94,4 @@ a `message` and a `hint`. `metais help json` lists every format.
 This skill was installed by `metais skill`. If `metais version` is newer
 than the version in the last line, `metais skill --dry-run` says whether to
 refresh it.
-<!-- metais skill: version 1.2.3, sha256 70e6233725e123d7660d27d669dbd75a839eb2d30e3f5195ae9925a4daf876ec -->
+<!-- metais skill: version 1.2.3, sha256 1c47a5e9b42c40a69080366fde56c78733788e5c93bcd87f5abd03a7e25e113f -->
