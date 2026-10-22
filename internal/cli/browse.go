@@ -76,7 +76,7 @@ func readingDeclarations() []*Command {
 				"A packed package's entries are the zip's, .compiled/ included and README.md, the " +
 				"specification's text, not; a source directory's are the " +
 				"files metais pack would write from it, without .compiled/. Paths use / on every platform and " +
-				"are matched byte for byte, case-sensitively; the root is . or omitted.",
+				"are matched byte for byte, case-sensitively; the root is . or omitted.\n\n" + examplesEntries,
 			Operands: []args.Operand{{Name: "<path>", Description: "An entry or a directory of the package, with or without a trailing /; the root when omitted."}},
 			Flags:    []args.Flag{{Name: "recursive", Short: 'r', Description: "List every file and directory beneath the path, not only its children."}},
 			Format:   "metais.ls/1",
@@ -98,7 +98,7 @@ func readingDeclarations() []*Command {
 				"each line with its number and a tab. Both read lines of text, and refuse a binary entry; " +
 				"a binary entry is not written to a terminal.\n\n" +
 				"With --json, a text entry is the string content, with the lines read and the entry's line " +
-				"count; a binary entry is content_base64.",
+				"count; a binary entry is content_base64.\n\n" + examplesEntries,
 			Operands: []args.Operand{{Name: "<path>", Required: true, Description: "The entry to read."}},
 			Flags: []args.Flag{
 				{Name: "lines", Value: "<range>", Description: "Print only the lines N, N-M or N- of a text entry."},
@@ -230,7 +230,8 @@ func readingDeclarations() []*Command {
 				"the new file onto its name. The files are prepared beneath a staging directory, " +
 				".metais-staging, inside <dir>, and moved into place; a failure before then leaves <dir> as " +
 				"it was, and one while moving them lists the files already moved.\n\n" +
-				"--dry-run lists the files extract would write, makes every check, and writes nothing.",
+				"--dry-run lists the files extract would write, makes every check, and writes nothing.\n\n" +
+				examplesEntries,
 			Operands: []args.Operand{{Name: "<glob>", Required: true, Repeatable: true, Description: "A glob selecting entries to write."}},
 			Flags: []args.Flag{
 				{Name: "out", Value: "<dir>", Description: "The directory to write into: a new one, or an existing one that is empty, or holds entries with --overwrite; required."},
@@ -243,7 +244,7 @@ func readingDeclarations() []*Command {
 				{"metais extract report-1.0.0.metais 'references/**' --out refs", "Writes the package's references into the new directory refs."},
 				{"metais extract report-1.0.0.metais references --out refs --dry-run", "Lists the references it would write."},
 				{"metais extract report-1.0.0.metais 'templates/**' --out . --overwrite", "Writes the templates into the current directory, replacing the files already there."},
-				{"metais extract report-1.0.0.metais 'examples/basic/**' --out basic", "Writes the example basic into the new directory basic."},
+				{"metais extract report-1.0.0.metais 'examples/basic/**' --out basic", "Writes the example basic into the new directory basic, to see how the package is tested; its inputs are never a real document's data."},
 			},
 			run: runExtract,
 		},

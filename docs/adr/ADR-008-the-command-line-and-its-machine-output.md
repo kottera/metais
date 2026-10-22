@@ -2099,6 +2099,77 @@ generator, `render --sample` and `sample` are unchanged.
    section's sentence; the help of `render` and `sample`; and the skill's
    fictional-data rule and section.
 
+### A11 — An example's inputs are never a real document's data, and the skill routes what a package needs and a script's test data
+
+**Status:** Accepted on merge. It carries PLAN-2026-10-metais-ux Wave 3's
+item W3-12, from W3-6's re-run of the 2026-10-22 after scorecard: C1
+render-real on Haiku without the skill, and C4 what-it-needs on Haiku and
+C5 script on Sonnet with it, under the plan's ruling R-UX-2 and the wave
+brief's ruling that a consuming scenario that passes without the skill and
+fails with it is a defect in the skill. It needs no ratification.
+**Amends:** D6 item 10 (`inspect`'s Examples section) and A8 item 3 (what
+the tool says where it shows an example), the help of `inspect`, `ls`,
+`read` and `extract`, A2's skill text as A10 item 3 leaves it, and the
+skill's account of `check` under MTS-AUT-003. `metais.inspect/1`, every
+command's behaviour and machine output, and `inspect`'s `Next:` block are
+unchanged.
+
+1. **An example's inputs are said never to be a real document's data.**
+   After A8 item 3's sentence, `inspect`'s Examples section prints a
+   second line: "An example's inputs are the author's illustration, never
+   a real document's data: render a real document only from the facts the
+   person supplies, and without them ask the person for them, never taking
+   them from an example." `inspect`'s help ends with the same sentence.
+   The help of `ls`, `read` and `extract`, the commands that reach an
+   example's entries, gains a paragraph: "The entries under examples/ are
+   the package's examples.", then A8 item 3's sentence and this one.
+   `extract`'s example that writes the example `basic` says it does so to
+   see how the package is tested, and that its inputs are never a real
+   document's data.
+2. **The skill has a route for what a package needs.** Its section "What a
+   package needs, when asked" is `metais inspect report.metais`, then
+   `metais schema report.metais --fields`, every input's fields, read
+   whole; the answer names each input and its fields, not from `inspect`
+   alone.
+3. **The skill lets a session test a script on generated data.** Its
+   fictional-data rule also allows fictional data "to test a script or
+   tool the person asked for", and its section "Testing a script or tool
+   the person asked for" runs `metais sample report.metais --out <data
+   dir>` with the data directory inside the session's working directory,
+   tests the script on it and says so. That render is a test, never the
+   person's document: a real document is rendered only from their facts,
+   and without them the session asks for them.
+4. **The skill's `check` step says what MTS-AUT-003 does**: every defect,
+   without data, or only the refusal of a package it cannot read, as
+   W3-11 made `metais help check` say.
+5. **Why.** In W3-6's re-run, C1 Haiku without the skill no longer
+   rendered generated data, which A10 closed, but extracted the `final`
+   example's inputs with `metais extract` and rendered them as the
+   document. Nothing it read said an example's inputs are never a real
+   document's data: A8 item 3's sentence says an example is "not your
+   data", which a session that has no data of its own read past. C4 Haiku
+   with the skill answered from `inspect` alone: the skill's one mention
+   of the fields was step 3 of filling a package in, which a session that
+   is only asked what a package needs does not take. C5 Sonnet with the
+   skill, refused `/tmp` by its sandbox, checked its script's syntax only
+   and said it "didn't use sample data to test it": the skill's
+   fictional-data rule made no room for testing a script the person asked
+   for, and named no place to write the data.
+6. **What this does not change.** R-UX-2, A8 and A10 hold: no route of
+   `inspect`, the help or the skill lists, reads or copies an example's
+   files as the person's data, or shows an example's expected outputs as
+   a preview; `inspect` offers `render --sample` and `sample` only to a
+   person who asked for an example, sample data or a preview; and
+   generated data never stands in for a real document's facts. A package's
+   examples stay listed and readable, and `extract` still writes them. The
+   specification describes neither the help nor `inspect`'s text output,
+   and §13.7's account of an example is unchanged, so no chapter,
+   published schema or vector changes.
+7. **D16's tests prove it**: the Examples section's second line, the help
+   of `inspect`, `ls`, `read` and `extract`, and `extract`'s example of an
+   example; the skill's route for what a package needs, its script-testing
+   rule and section, and its `check` step.
+
 ## Implementation log
 
 This log is this section together with the entry files in

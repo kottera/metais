@@ -20,7 +20,8 @@ it, checks inputs against it and renders it.
   person or from the sources they name. A value nobody supplied is asked
   for, not guessed, and not filled with a placeholder.
 - **Fictional data only when the person asks for it** ("example data",
-  "sample", "demo", "a preview", "show me what it produces"). Then run
+  "sample", "demo", "a preview", "show me what it produces"), or to test a
+  script or tool the person asked for. Then run
   `metais inspect <package>` first, and generate it with
   `metais render <package> --sample` or `metais sample`. Never copy a
   package's examples, never show an example's expected outputs as what
@@ -60,6 +61,16 @@ it, checks inputs against it and renders it.
    document. `--out` must be a new or empty directory; `--dry-run` lists
    what it would write.
 
+**What a package needs, when asked** (such as "what does it need from
+me"):
+
+1. `metais inspect report.metais` — its inputs, each with the file name it
+   takes, and its guide.
+2. `metais schema report.metais --fields` — every input's fields, one line
+   each, `required` or `optional`, with the conditions that make a field
+   required. Read it whole, and answer with each input and its fields, not
+   from `inspect` alone.
+
 **Fictional data or a preview, when asked for** (such as "show me what it
 produces"):
 
@@ -75,6 +86,13 @@ produces"):
 Say in your answer that the data is fictional. Never use generated data
 for a real document: without its facts, ask for them.
 
+**Testing a script or tool the person asked for**: run
+`metais sample report.metais --out <data dir>`, with the data directory
+inside your working directory, run the script on it, and say in your
+answer that it was tested on generated data. That render is a test, never
+the person's document: a real document is rendered only from their facts,
+and without them, ask for them.
+
 ## Writing a package
 
 1. `metais init <dir> --minimal` — a new source directory with one input
@@ -87,7 +105,8 @@ for a real document: without its facts, ask for them.
    example; `metais help templates` gives the template language, every
    filter, and escaping, a URL component's `url_encode` included. Preview
    with `metais render <dir> --sample --out <preview dir>`.
-3. `metais check <dir>` — every defect, without data.
+3. `metais check <dir>` — every defect, without data, or only the refusal
+   of a package it cannot read.
 4. `metais test <dir>` — renders each example and compares it with its
    `expected/` outputs; `metais test <dir> --update` records them.
 5. `metais pack <dir>` — check, test, and write `<name>-<version>.metais`.
