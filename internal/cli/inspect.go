@@ -17,6 +17,7 @@ import (
 	"metais.org/metais/internal/loader"
 	"metais.org/metais/internal/manifest"
 	"metais.org/metais/internal/render"
+	"metais.org/metais/internal/schema"
 	"metais.org/metais/internal/template"
 	"metais.org/metais/internal/version"
 )
@@ -103,8 +104,9 @@ func inspectDeclaration() *Command {
 		},
 		Format:       "metais.inspect/1",
 		NextToStdout: true,
-		Prints:       "The package's summary: its title, name and version, description, specification version, form and digest, then the sections Guide, Inputs, Outputs, References, Assets and Examples, then the Next: block; with --guide, the guide's Markdown alone.",
-		Refusals:     packageRefusals("inspect"),
+		Prints: "The package's summary: its title, name and version, description, specification version, form and digest, then the sections Guide, Inputs, Outputs, References, Assets and Examples, then the Next: block; with --guide, the guide's Markdown alone. " +
+			"An input whose schema has rules across its rows, uniqueKeys or coverage, says so on its line, naming metais schema <package> <input> --fields, which lists them.",
+		Refusals: packageRefusals("inspect"),
 		Examples: []Example{
 			{"metais inspect report-1.0.0.metais", "Prints the summary of a packed package."},
 			{"metais inspect .", "Prints the summary of the source directory in the working directory."},
@@ -199,6 +201,9 @@ type inspectInput struct {
 	Meaning     *string  `json:"meaning"`
 	SchemaEntry string   `json:"schema_entry"`
 	Examples    []string `json:"examples"`
+	// rules is whether the input's schema states a rule across the items
+	// of an array, which the human summary says (ADR-003 A2 item 10).
+	rules bool
 }
 
 type inspectOutput struct {
@@ -259,7 +264,7 @@ func runInspect(s *session, p args.Parsed) outcome {
 		return refused
 	}
 	defer pkg.Close()
-	return inspectOutcome(pkg, p.Has("guide"), s.table)
+	return inspectOutcome(pkg, p.Has("guide"), int(s.lim.Value(limits.ValueDepth)), s.table)
 }
 
 // open opens the package its first operand names (ADR-008 D2), within
@@ -323,8 +328,8 @@ func (s *session) limits(p args.Parsed) (limits.Set, []finding.Finding) {
 }
 
 // inspectOutcome is the summary of pkg (ADR-008 D6), its next steps the
-// commands of t.
-func inspectOutcome(pkg *loader.Package, guideOnly bool, t []*Command) outcome {
+// commands of t; each input's field listing is read to value-depth depth.
+func inspectOutcome(pkg *loader.Package, guideOnly bool, depth int, t []*Command) outcome {
 	m := pkg.Manifest
 	res := &inspectResult{
 		Package: inspectPackage{
@@ -341,7 +346,9 @@ func inspectOutcome(pkg *loader.Package, guideOnly bool, t []*Command) outcome {
 	examples := examplesOf(entries)
 	inputs := make([]inspectInput, 0, len(m.Inputs))
 	for _, in := range m.Inputs {
-		inputs = append(inputs, inputOf(in, examples))
+		e := inputOf(in, examples)
+		e.rules = hasRules(pkg, in, depth)
+		inputs = append(inputs, e)
 	}
 	outputs := outputsOf(m.Outputs, entries, render.ExplicitTemplates(m.Outputs))
 	refs := &inspectReferences{Entries: []inspectReference{}}
@@ -414,6 +421,22 @@ func inputOf(in manifest.Input, examples map[string]*inspectExample) inspectInpu
 		}
 	}
 	return out
+}
+
+// hasRules reports whether the field listing of in's schema holds a rule
+// across the items of an array, uniqueKeys or coverage (ADR-003 A2 item
+// 10): what metais schema <package> <input> --fields writes in words,
+// listed to value-depth depth.
+func hasRules(pkg *loader.Package, in manifest.Input, depth int) bool {
+	w, err := schema.NewWalker(schema.InputDocument(pkg.CombinedValue, in.Name), schema.CombinedURI)
+	if err != nil {
+		// The package compiled when it opened, and every schema the
+		// walker indexes is one the compiler accepted.
+		panic("cli: walking a compiled schema: " + err.Error())
+	}
+	return slices.ContainsFunc(w.Fields(in.Name, in.Required, depth), func(f schema.Field) bool {
+		return len(f.Rules) > 0
+	})
 }
 
 // filesOf is the names a data directory may hold the input under
@@ -680,7 +703,11 @@ func inspectHuman(res *inspectResult) []byte {
 		if in.Required {
 			req = "required"
 		}
-		b.WriteString("  " + in.Name + " — " + in.Title + " (" + req + "; " + strings.Join(in.Files, ", ") + ")\n")
+		line := "  " + in.Name + " — " + in.Title + " (" + req + "; " + strings.Join(in.Files, ", ") + ")"
+		if in.rules {
+			line += " — has rules across its rows, which metais schema <package> " + shellQuote(in.Name) + " --fields lists"
+		}
+		b.WriteString(line + "\n")
 		if in.Description != nil {
 			first, _, _ := strings.Cut(*in.Description, "\n")
 			b.WriteString("    " + first + "\n")

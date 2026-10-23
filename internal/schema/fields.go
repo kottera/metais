@@ -41,6 +41,71 @@ type Field struct {
 	// beneath this one that are not listed, because they lie deeper than
 	// value-depth beneath the input, where no input is accepted.
 	BeyondValueDepth bool
+	// Rules is each rule across the items of the field's array that the
+	// declaring schemas state, uniqueKeys and coverage (ADR-003 A2 item
+	// 10), in their order. A rule is never cut: the package's schema-size
+	// bounds it.
+	Rules []Rule
+}
+
+// Rule is one rule across the items of an array: a uniqueKeys, its key
+// pointers, or a coverage, its key and its values (ADR-003 A2 items 4
+// and 5).
+type Rule struct {
+	// Keyword is uniqueKeys or coverage.
+	Keyword string
+	// Pointers is uniqueKeys' key pointers, in order, or coverage's key.
+	Pointers []string
+	// Values is coverage's values, in order, each as its canonical JSON;
+	// nil for uniqueKeys.
+	Values []string
+}
+
+// Words is the rule as one sentence (ADR-003 A2 item 10): "no two rows
+// share `/criterion`", or "rows must include, at `/criterion`, each of:"
+// and every value, each as its canonical JSON, as a finding's missing
+// parameter writes it.
+func (r Rule) Words() string {
+	ps := make([]string, len(r.Pointers))
+	for i, p := range r.Pointers {
+		ps[i] = "`" + p + "`"
+	}
+	if r.Keyword == "uniqueKeys" {
+		return "no two rows share " + Conjoin(ps)
+	}
+	return "rows must include, at " + ps[0] + ", each of: " + strings.Join(r.Values, ", ")
+}
+
+// Conjoin joins words as a list in prose: "a", "a and b", "a, b and c".
+func Conjoin(words []string) string {
+	if len(words) < 2 {
+		return strings.Join(words, "")
+	}
+	return strings.Join(words[:len(words)-1], ", ") + " and " + words[len(words)-1]
+}
+
+// ruleOf is the rule the keyword kw of the rules vocabulary states with
+// value v, and false when v is not of the keyword's grammar, which the
+// package's open has refused already.
+func ruleOf(kw string, v value.Value) (Rule, bool) {
+	if !ruleKeywords[kw](v) {
+		return Rule{}, false
+	}
+	r := Rule{Keyword: kw}
+	if kw == "uniqueKeys" {
+		for _, p := range v.(value.Array).All() {
+			r.Pointers = append(r.Pointers, p.(value.String).Text())
+		}
+		return r, true
+	}
+	o := v.(value.Object)
+	key, _ := o.Get("key")
+	values, _ := o.Get("values")
+	r.Pointers = []string{key.(value.String).Text()}
+	for _, e := range values.(value.Array).All() {
+		r.Values = append(r.Values, string(jsonx.Canonical(e)))
+	}
+	return r, true
 }
 
 // The listing's cuts (ADR-008 A7 item 5, A16): a title, a condition and
@@ -96,6 +161,10 @@ type summary struct {
 	constraints []string
 	size        int
 	cut         bool
+	// rules is each rule the schema states, by the canonical JSON of its
+	// keyword and value, never cut.
+	rules     []Rule
+	ruleTexts []string
 	// beneath is true when the schema, or one it reaches without a
 	// condition, declares a field beneath its location or a conditional
 	// branch.
@@ -164,6 +233,11 @@ func (l *lister) summary(ptr string) *summary {
 			case unlisted[kw] || strings.HasPrefix(kw, "x-"):
 			default:
 				s.add(kw + "=" + l.shown(string(jsonx.Canonical(m))))
+				if _, ok := ruleKeywords[kw]; ok {
+					if r, ok := ruleOf(kw, m); ok {
+						s.rule(r, kw+"="+string(jsonx.Canonical(m)))
+					}
+				}
 			}
 		}
 		for _, kw := range []string{"$ref", "$dynamicRef"} {
@@ -225,6 +299,15 @@ func (s *summary) add(c string) {
 	s.size += len(c) + 1
 }
 
+// rule appends one rule, once, whose keyword and canonical value are text.
+func (s *summary) rule(r Rule, text string) {
+	if slices.Contains(s.ruleTexts, text) {
+		return
+	}
+	s.rules = append(s.rules, r)
+	s.ruleTexts = append(s.ruleTexts, text)
+}
+
 // merge adds what t declares to s: its type when s has none, and
 // otherwise a `type` of its own that differs as a constraint; its title
 // when s has none; and its constraints.
@@ -241,6 +324,9 @@ func (s *summary) merge(t *summary) {
 	}
 	for _, c := range t.constraints {
 		s.add(c)
+	}
+	for i, r := range t.rules {
+		s.rule(r, t.ruleTexts[i])
 	}
 	if t.cut {
 		s.cut = true
@@ -319,7 +405,7 @@ func (l *lister) field(ptr string, depth int, when []string, roots []string, req
 	for _, r := range roots {
 		s.merge(l.summary(r))
 	}
-	f := Field{Pointer: ptr, Type: s.types, Required: required, Title: s.title, When: when}
+	f := Field{Pointer: ptr, Type: s.types, Required: required, Title: s.title, When: when, Rules: s.rules}
 	f.Constraints = slices.Clone(s.constraints)
 	if s.cut {
 		f.Constraints = append(f.Constraints, constraintsMark(l.whole))
@@ -329,7 +415,7 @@ func (l *lister) field(ptr string, depth int, when []string, roots []string, req
 	same, beyond, kids, branches := l.gather(ptr, depth, roots)
 	g := &l.out[at]
 	g.SameAs, g.BeyondValueDepth = same, beyond
-	if !show && !s.typed && s.title == nil && len(g.Constraints) == 0 && !required && same == "" && !beyond {
+	if !show && !s.typed && s.title == nil && len(g.Constraints) == 0 && len(g.Rules) == 0 && !required && same == "" && !beyond {
 		l.out = l.out[:at]
 	}
 	l.emit(ptr, depth, when, kids, branches)

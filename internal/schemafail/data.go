@@ -23,8 +23,10 @@ package schemafail
 //	multipleOf              divisor, value
 //	uniqueItems             duplicates []int (two indexes, the earlier first)
 //	uniqueKeys              duplicates []int (the first item with the key, then the item repeating it);
-//	                        at []string (the tokens of the keyword's one pointer, absent when it has several)
-//	coverage                missing string (the RFC 8785 text of one member of values no item holds; one failure per member)
+//	                        at []string (the tokens of the keyword's one pointer, absent when it has several);
+//	                        keys []string (every key pointer, as the schema writes it)
+//	coverage                missing string (the RFC 8785 text of one member of values no item holds; one failure per member);
+//	                        keys []string (the key pointer, as the schema writes it)
 //	anyOf, oneOf            branch_count int; for a oneOf more than one branch of which matched,
 //	                        matched []int (two of them) and no children
 //	false                   prefix_count int, when the false schema is items' (one failure per item refused)
@@ -57,6 +59,7 @@ const (
 	dataDivisor     = "divisor"
 	dataDuplicates  = "duplicates"
 	dataAt          = "at"
+	dataKeys        = "keys"
 	dataBranchCount = "branch_count"
 	dataMatched     = "matched"
 	dataPrefixCount = "prefix_count"

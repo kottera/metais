@@ -589,6 +589,10 @@ const (
 	hintFormatPat    = "Write a value in the {format} format that matches the pattern {pattern}."
 	hintQuoteAs      = `Put the value in quotes, as "{written}": YAML reads an unquoted {written} as a {actual}.`
 	hintQuote        = "Put the value in quotes, so that YAML reads it as a string rather than as a {actual}."
+	// ADR-003 A2 item 10: a rule's hint names it in words, with the column
+	// its key pointers name, which no parameter of the code carries.
+	hintUniqueKeys = "No two items may share {key}, and item {index} repeats item {duplicate_of}'s: change item {index} there, or remove it if it repeats item {duplicate_of} whole."
+	hintCoverage   = "Add an item whose value at {key} is {missing}: the array must include, at {key}, each of coverage's values, and no item holds this one."
 )
 
 // The bounds on what a declared hint shows whole (ADR-006 Amendment A4):
@@ -606,6 +610,21 @@ const (
 // field's, and at the value's path.
 func (m *mapper) declaredHint(f finding.Finding, n *Failure, suffix string, fd finding.Field, writeOnly bool, at *finding.Path) finding.Finding {
 	switch suffix {
+	case "unique_keys", "coverage":
+		keys := m.strs(n, dataKeys)
+		if len(keys) == 0 {
+			m.fail(n, "%s names no key pointer", dataKeys)
+			return f
+		}
+		cols := make([]string, len(keys))
+		for i, k := range keys {
+			cols[i] = "`" + k + "`"
+		}
+		tmpl := hintUniqueKeys
+		if suffix == "coverage" {
+			tmpl = hintCoverage
+		}
+		return f.WithHintValues(tmpl, map[string]string{"key": conjoin(cols)})
 	case "enum":
 		if _, ok := f.Param("suggestion"); ok {
 			return f.WithHint(hintEnumNear)
@@ -644,6 +663,14 @@ func (m *mapper) declaredHint(f finding.Finding, n *Failure, suffix string, fd f
 		return f.WithHintValues(hintQuoteAs, map[string]string{"written": lit})
 	}
 	return f
+}
+
+// conjoin joins words as a list in prose: "a", "a and b", "a, b and c".
+func conjoin(words []string) string {
+	if len(words) < 2 {
+		return strings.Join(words, "")
+	}
+	return strings.Join(words[:len(words)-1], ", ") + " and " + words[len(words)-1]
 }
 
 // suppressed reports whether D7 item 4 suppresses a finding of n at inst:

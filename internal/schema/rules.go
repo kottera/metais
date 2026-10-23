@@ -56,12 +56,13 @@ func compileRules(_ *jsonschema.CompilerContext, obj map[string]any) (jsonschema
 		// The pre-check held it to its grammar: strings, each a pointer.
 		for _, p := range v.([]any) {
 			r.uniqueKeys = append(r.uniqueKeys, pointerTokens(p.(string)))
+			r.keyTexts = append(r.keyTexts, p.(string))
 		}
 	}
 	if v, ok := obj["coverage"]; ok {
 		// The pre-check held it to its grammar: a key pointer and values.
 		m := v.(map[string]any)
-		c := &coverage{key: pointerTokens(m["key"].(string)), values: m["values"].([]any)}
+		c := &coverage{key: pointerTokens(m["key"].(string)), keyText: m["key"].(string), values: m["values"].([]any)}
 		var b strings.Builder
 		for _, e := range c.values {
 			b.Reset()
@@ -136,12 +137,14 @@ func keyPointer(p string) bool {
 // rules is the rules vocabulary's keywords of one schema object, compiled.
 type rules struct {
 	uniqueKeys [][]string // each key pointer's tokens, in order
+	keyTexts   []string   // each key pointer as the schema writes it
 	coverage   *coverage
 }
 
 // coverage is coverage's value, compiled.
 type coverage struct {
 	key     []string // the key pointer's tokens
+	keyText string   // the key pointer as the schema writes it
 	values  []any    // values' members, as the library holds them
 	encoded []string // each member's encoding by encodeKey, in order
 }
@@ -180,7 +183,7 @@ func (c *coverage) cover(ctx *jsonschema.ValidatorContext, items []any) {
 	}
 	for i, k := range c.encoded {
 		if !held[k] {
-			ctx.AddError(&coverageKind{Missing: canonicalText(c.values[i])})
+			ctx.AddError(&coverageKind{Missing: canonicalText(c.values[i]), Key: c.keyText})
 		}
 	}
 }
@@ -203,7 +206,7 @@ func (r *rules) unique(ctx *jsonschema.ValidatorContext, items []any) {
 		}
 		k := b.String()
 		if j, ok := first[k]; ok {
-			ctx.AddError(&uniqueKeysKind{Duplicates: [2]int{j, i}, At: at})
+			ctx.AddError(&uniqueKeysKind{Duplicates: [2]int{j, i}, At: at, Keys: r.keyTexts})
 			continue
 		}
 		first[k] = i
@@ -317,24 +320,28 @@ func encodeKey(b *strings.Builder, v any) {
 // uniqueKeys repeats an earlier item's: Duplicates holds the earlier
 // item's index, then its own. At is the tokens of the keyword's one
 // pointer, where the finding is located beneath the item, and nil when the
-// keyword has several. It embeds *kind.Group only for the text method the
+// keyword has several; Keys is every pointer as the schema writes it, which
+// the hint names. It embeds *kind.Group only for the text method the
 // library's ErrorKind requires, which the adapter never calls (ADR-010 D5
 // item 5).
 type uniqueKeysKind struct {
 	*kind.Group
 	Duplicates [2]int
 	At         []string
+	Keys       []string
 }
 
 // KeywordPath is the keyword's path within its schema object.
 func (*uniqueKeysKind) KeywordPath() []string { return []string{"uniqueKeys"} }
 
 // coverageKind is the library's error kind for one member of coverage's
-// values that no item holds at the key: Missing is its RFC 8785 text. It
+// values that no item holds at the key: Missing is its RFC 8785 text, and
+// Key the key pointer as the schema writes it, which the hint names. It
 // embeds *kind.Group as uniqueKeysKind does, for the same reason.
 type coverageKind struct {
 	*kind.Group
 	Missing string
+	Key     string
 }
 
 // KeywordPath is the keyword's path within its schema object.
