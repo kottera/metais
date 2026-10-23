@@ -149,6 +149,31 @@ func TestFormulaRefusesSums(t *testing.T) {
 	}
 }
 
+// TestFormulaVersions holds brewVersion to what Homebrew 6.0's version
+// scanner read from each version's archive URL, by brew ruby's
+// Version.parse: the accepted versions came back as themselves, and each
+// refused one as another version (1.0.0-0, 1.0.0-x-y.0a, 1.0.0-dev and
+// 1.0.0-b.1 as 64, 1.0.0-preview.4 as 1.0.0-pre, 1.0.0-rc.1.2 as
+// 1.0.0-rc.1, 1.0.0-rc.x as 1.0.0-rc.).
+func TestFormulaVersions(t *testing.T) {
+	for _, v := range []string{"1.0.0", "2.10.3", "1.0.0-rc.1", "1.0.0-rc.12", "1.0.0-rc.0", "1.0.0-rc", "1.0.0-alpha", "1.0.0-alpha.1", "1.0.0-beta", "1.0.0-beta.2", "1.0.0-pre", "1.0.0-pre.3"} {
+		if !brewVersion(v) {
+			t.Errorf("brewVersion(%q) is false", v)
+		}
+	}
+	for _, v := range []string{"1.0.0-0", "1.0.0-x-y.0a", "1.0.0-dev", "1.0.0-b.1", "1.0.0-preview.4", "1.0.0-rc.1.2", "1.0.0-rc.x"} {
+		if !releaseVersion(v) {
+			t.Fatalf("%q is not a release version, so it proves nothing here", v)
+		}
+		if brewVersion(v) {
+			t.Errorf("brewVersion(%q) is true", v)
+		}
+		if _, err := formula(v, nil); !errors.Is(err, errBrewVersion) {
+			t.Errorf("formula(%q) returned %v, want %v", v, err, errBrewVersion)
+		}
+	}
+}
+
 func TestFormulaCLI(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	if code := cli([]string{"formula", "-version", goldenVersion, "-sums", goldenSums}, &stdout, &stderr, nil); code != 0 {

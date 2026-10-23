@@ -19,6 +19,10 @@ import (
 // exactly the one the builder writes for the version.
 var errSums = errors.New("SHA256SUMS is not the release's")
 
+// errBrewVersion refuses a version Homebrew would read otherwise from the
+// archive's URL.
+var errBrewVersion = errors.New("Homebrew does not read this version from an archive's URL; a formula's version is MAJOR.MINOR.PATCH, optionally with a prerelease suffix -alpha, -beta, -pre or -rc and an optional .<number>")
+
 // releaseURL is where the GitHub release of v<version> serves its assets
 // (ADR-013 D6 item 5, D7 item 3).
 const releaseURL = "https://github.com/kottera/metais/releases/download/v"
@@ -67,11 +71,15 @@ func formulaCLI(args []string, stdout, stderr io.Writer) int {
 // its SHA-256 is its line in sums, so neither can drift from what the
 // release published. sums must be exactly what the builder writes for
 // version: one "<sha256>  <archive>" line per shipped target, in byte
-// order of the name, and nothing else. The version is not stated: Homebrew
-// reads it from the archive's URL.
+// order of the name, and nothing else. The version is not stated, because
+// brew audit refuses a version Homebrew can read from the URL, so version
+// must be one it reads there exactly (brewVersion).
 func formula(version string, sums []byte) ([]byte, error) {
 	if !releaseVersion(version) {
 		return nil, fmt.Errorf("%w: %q", errVersion, version)
+	}
+	if !brewVersion(version) {
+		return nil, fmt.Errorf("%w: %q", errBrewVersion, version)
 	}
 	want := make([]string, len(buildline.Shipped))
 	targets := map[string]buildline.Target{}
@@ -144,4 +152,18 @@ class Metais < Formula
 end
 `)
 	return []byte(b.String()), nil
+}
+
+// brewVersion reports whether Homebrew reads the release version v, as
+// releaseVersion accepts it, back exactly from an archive's URL: a version
+// with no prerelease suffix, or with one of the words Homebrew's version
+// scanner knows, alone or followed by .<number> (1.0.0-rc.1, 1.0.0-beta).
+// It reads 1.0.0-0, 1.0.0-dev and 1.0.0-preview.4 as other versions.
+func brewVersion(v string) bool {
+	_, pre, ok := strings.Cut(v, "-")
+	if !ok {
+		return true
+	}
+	word, n, numbered := strings.Cut(pre, ".")
+	return slices.Contains([]string{"alpha", "beta", "pre", "rc"}, word) && (!numbered || numeral(n))
 }

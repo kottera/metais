@@ -15,7 +15,13 @@ and its `sha256` is its line in `SHA256SUMS`. The generator refuses a
 `SHA256SUMS` that is not exactly what the builder writes for the version:
 one line per shipped target, in byte order of the name, and nothing else.
 So neither the URLs nor the hashes can drift from the release. The formula
-states no `version`, because Homebrew reads it from the URL. Its `test`
+states no `version`, because Homebrew reads it from the URL and `brew
+audit` refuses one that repeats it. So the generator also refuses a
+version Homebrew 6.0 reads otherwise from the URL. It accepts a version
+with no prerelease suffix, or a suffix `alpha`, `beta`, `pre` or `rc` with
+an optional `.<number>`, the shapes Homebrew was seen to read back exactly
+(`TestFormulaVersions`). It refuses the other semantic versions, such as
+`1.0.0-0`, which Homebrew reads as `64`. Its `test`
 block runs the installed `metais version`. Its caveat suggests
 `metais skill`, as ADR-013 D6 item 9 asks.
 
