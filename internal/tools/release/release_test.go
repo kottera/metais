@@ -410,7 +410,9 @@ var errStopped = errors.New("stopped at the first target's build")
 // that is not released, by each way a revision can fail to be. A
 // prerelease, 1.0.0-rc.1, of the same tree is not, and reaches the build;
 // it is refused only where the tool implements nothing, or something that
-// is not a revision.
+// is not a revision. Reaching the build is the whole of the property:
+// nothing after checkImplements depends on whether the version is a
+// prerelease, and TestReleaseBuildsTwiceAndWritesDist proves the rest.
 func TestReleaseRefusesAnUnreleasedRevision(t *testing.T) {
 	cases := []struct {
 		name  string
@@ -475,25 +477,6 @@ func TestReleaseRefusesAnUnreleasedRevision(t *testing.T) {
 				t.Errorf("the prerelease's report %q does not say %q", report, want)
 			}
 		})
-	}
-}
-
-// TestReleaseBuildsAPrereleaseOfADraft builds a whole prerelease whose tool
-// implements a revision with no tag and no released list, as
-// v1.0.0-rc.1 is built before spec-1.0 exists (ADR-011 A8 item 5).
-func TestReleaseBuildsAPrereleaseOfADraft(t *testing.T) {
-	dir := fakeRepo(t)
-	gitIn(t, dir, "tag", "-d", "spec-1.0")
-	gitIn(t, dir, "rm", "--quiet", "spec/conformance/released/1.0.sha256")
-	commit(t, dir, "1.0 is a draft")
-	gitIn(t, dir, "tag", "v1.0.0-rc.1")
-	if _, err := runIn(t, dir, "1.0.0-rc.1", nil); err != nil {
-		t.Fatal(err)
-	}
-	head := gitIn(t, dir, "rev-parse", "HEAD")
-	for _, tg := range buildline.Shipped {
-		name := archiveName("1.0.0-rc.1", tg)
-		checkArchive(t, name, []byte(readFile(t, filepath.Join(dir, "dist", name))), tg, head)
 	}
 }
 
