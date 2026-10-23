@@ -84,7 +84,7 @@ func formula(version string, sums []byte) ([]byte, error) {
 	want := make([]string, len(buildline.Shipped))
 	targets := map[string]buildline.Target{}
 	for i, t := range buildline.Shipped {
-		want[i] = archiveName(version, t)
+		want[i] = buildline.ArchiveName(version, t)
 		targets[want[i]] = t
 	}
 	slices.Sort(want)
@@ -128,7 +128,7 @@ class Metais < Formula
 			b.WriteString("\n")
 		}
 		fmt.Fprintf(&b, "    %s do\n      url \"%s%s/%s\"\n      sha256 \"%s\"\n    end\n",
-			arch, releaseURL, version, archiveName(version, t), hashes[t])
+			arch, releaseURL, version, buildline.ArchiveName(version, t), hashes[t])
 		if i == len(buildline.Shipped)-1 || buildline.Shipped[i+1].OS != t.OS {
 			b.WriteString("  end\n")
 		}

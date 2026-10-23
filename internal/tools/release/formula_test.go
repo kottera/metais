@@ -75,7 +75,7 @@ func TestFormulaIsTheRelease(t *testing.T) {
 				t.Errorf("%s %s selects no shipped target", b[1], a[1])
 				continue
 			}
-			name := archiveName(goldenVersion, tg)
+			name := buildline.ArchiveName(goldenVersion, tg)
 			if want := "https://github.com/kottera/metais/releases/download/v" + goldenVersion + "/" + name; a[2] != want {
 				t.Errorf("%s's url is %q, want %q", tg, a[2], want)
 			}
