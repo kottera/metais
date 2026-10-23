@@ -1,0 +1,10 @@
+{
+  "number": "2026-0042",
+  "date": "2026-10-23",
+  "customer": "Northwind Traders",
+  "lines": [
+    {"description": "Consulting, October", "quantity": 12, "unit_price": 15000},
+    {"description": "Printed manuals", "quantity": 3, "unit_price": 1999},
+    {"description": "Shipping", "quantity": 1, "unit_price": 805}
+  ]
+}
