@@ -154,8 +154,9 @@ configuration, so:
   changes. It rewrites every committed generated file from its sources:
   - `spec/findings/registry.json`, the specdata copies,
     `spec/statements.json` and the code catalog, by `go generate`;
-  - the help, scaffold, tar, YAML-writer and vector-package goldens, and
-    the packages pack's vectors expect, by their tests' `-update`;
+  - the help, scaffold, tar, YAML-writer, formula and vector-package
+    goldens, and the packages pack's vectors expect, by their tests'
+    `-update`;
   - every number a vectorgen package's bytes fix in its vector: a
     finding's offset, size or length, and a limit lowered to the
     package's own size. `internal/vectorgen`'s `TestValues` derives each

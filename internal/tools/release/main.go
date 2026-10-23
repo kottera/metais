@@ -15,6 +15,13 @@
 // 6), unless the version has a prerelease suffix (ADR-011 A8 item 5). It then writes dist/ at the work tree's root: one
 // metais_<version>_<os>_<arch>.tar.gz per shipped target and SHA256SUMS.
 //
+// Its formula subcommand writes the Homebrew formula of a release from the
+// SHA256SUMS the builder wrote (ADR-010 A8 item 3, ADR-013 D7 item 5):
+//
+//	go run ./internal/tools/release formula -version <semver> -sums dist/SHA256SUMS > metais.rb
+//
+// It reads that one file and writes the formula to standard output.
+//
 // The builder is a developer's tool, never linked into metais, and is the
 // one package ADR-009 Amendment A2 lets run commands, read the environment
 // and write files outside internal/hostfs.
@@ -32,9 +39,13 @@ func main() {
 }
 
 // cli parses args and runs the builder from the working directory, writing
-// its report to stdout and a refusal to stderr. It returns the exit status:
-// 0 when dist/ is written, 1 on a refusal, 2 on a usage error.
+// its report to stdout and a refusal to stderr, or runs formulaCLI when the
+// first argument is formula. It returns the exit status: 0 when dist/ is
+// written, 1 on a refusal, 2 on a usage error.
 func cli(args []string, stdout, stderr io.Writer, environ []string) int {
+	if len(args) > 0 && args[0] == "formula" {
+		return formulaCLI(args[1:], stdout, stderr)
+	}
 	fs := flag.NewFlagSet("release", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	version := fs.String("version", "", "the release's semantic version, without a leading v; HEAD must be the tag v<version>")
