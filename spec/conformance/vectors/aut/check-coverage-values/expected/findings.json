@@ -1,0 +1,38 @@
+[
+  {
+    "code": "schema.unsatisfiable",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/either/coverage/values/2"
+    }
+  },
+  {
+    "code": "schema.unsatisfiable",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/nested/coverage/values/1"
+    }
+  },
+  {
+    "code": "schema.unsatisfiable",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/wcag/coverage/values/1"
+    }
+  }
+]

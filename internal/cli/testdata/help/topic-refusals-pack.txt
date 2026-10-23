@@ -280,6 +280,7 @@ Next: metais check <dir>
   schema.invalid
   schema.invalid_default
   schema.invalid_example
+  schema.key_not_declared
   schema.keyword_unknown
   schema.pattern_unsupported
   schema.ref_by_path

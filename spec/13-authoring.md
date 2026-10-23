@@ -157,6 +157,22 @@ file of it holds — the input's, or a collection's item schema — as
 set holds `object`, `text` needs `string` and `markdown` needs `object`.
 Both are errors.
 
+<a id="mts-aut-081"></a>**MTS-AUT-081** A check MUST report each member of a
+`coverage`'s `values` that the schema reached from the array's item schema by
+`key`, token by token as [MTS-AUT-013](#mts-aut-013) resolves a property
+segment, refuses, as `schema.unsatisfiable`, an error located at the member:
+no table can hold a row with that value.
+
+<a id="mts-aut-082"></a>**MTS-AUT-082** A check MUST report a `coverage`
+whose `values` hold more members than the `maxItems` of the schema object
+holding it as `schema.unsatisfiable`, an error located at `values`.
+
+<a id="mts-aut-083"></a>**MTS-AUT-083** A check MUST report each key pointer
+of a `uniqueKeys` or a `coverage` with a token that no alternative of the
+array's item schema declares, resolved as [MTS-AUT-013](#mts-aut-013)
+resolves a property segment, as `schema.key_not_declared`, a warning located
+at the pointer: a key no row can hold is a rule that never applies.
+
 ### Step 6: the templates
 
 <a id="mts-aut-010"></a>**MTS-AUT-010** A check MUST report every file

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-key-not-declared",
+  "title": "A key pointer of uniqueKeys or coverage with a token no alternative of the item schema declares is a warning at the pointer; a key one alternative declares is not reported",
+  "statements": [
+    "MTS-AUT-083"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": true,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

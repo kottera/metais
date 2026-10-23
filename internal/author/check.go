@@ -43,6 +43,7 @@ const (
 	CodeUnsatisfiable                finding.Code = "schema.unsatisfiable"         // step 5
 	CodeUnusableEnumMember           finding.Code = "schema.unusable_enum_member"  // step 5, a warning
 	CodeRequiredNotDeclared          finding.Code = "schema.required_not_declared" // step 5, a warning
+	CodeKeyNotDeclared               finding.Code = "schema.key_not_declared"      // step 5, a warning
 	CodeTemplateCRLF                 finding.Code = "template.crlf"                // step 6, a warning
 	CodeExampleLayout                finding.Code = "example.layout"               // step 9, D5 item 1
 	codeTemplateNotUTF8                           = loader.CodeTemplateNotUTF8     // step 6
@@ -61,7 +62,7 @@ const (
 // package for any other purpose reports none of them.
 func CheckCodes() []finding.Code {
 	out := []finding.Code{CodeStepSkipped, CodeOSLitter, CodeNotPacked, CodeGuideLinkMissing, CodeInvalidDefault,
-		CodeInvalidExample, CodeUnsatisfiable, CodeUnusableEnumMember, CodeRequiredNotDeclared, CodeTemplateCRLF,
+		CodeInvalidExample, CodeUnsatisfiable, CodeUnusableEnumMember, CodeRequiredNotDeclared, CodeKeyNotDeclared, CodeTemplateCRLF,
 		CodeExampleLayout, CodeFormShape, CodeCollectionShape, CodeValidateKind, codeTemplateNotUTF8, ooxml.CodeSplitConstruct, ooxml.CodeSplitDelimiter}
 	return append(out, xref.Codes()...)
 }
@@ -731,8 +732,9 @@ var kindTable = []struct {
 // object of every schema file: each default and each examples entry
 // validates against the object holding it; a const that fails the rest of
 // its object is unsatisfiable, and an enum member that does is unusable;
-// and a name in required that the object does not declare (D3 item 4) is
-// almost always a typo.
+// a name in required that the object does not declare (D3 item 4) is
+// almost always a typo; and a rule across the items of an array that no
+// table can satisfy, or whose key no item can hold (ADR-003 A2 item 15).
 func (k *checker) schemaStatics() []finding.Finding {
 	s := &statics{c: k.c.Schemas, lim: k.lim, patterns: map[string]*regexprofile.Regexp{}}
 	for _, n := range k.c.Tree.List() {
@@ -803,6 +805,7 @@ func (s *statics) walk(entry, ptr string, v value.Value) {
 			}
 		}
 	}
+	s.rules(entry, ptr, o)
 	for _, kw := range schemaKeywords {
 		if sub, ok := o.Get(kw); ok {
 			s.walk(entry, ptr+"/"+escapeToken(kw), sub)
@@ -832,9 +835,16 @@ func (s *statics) walk(entry, ptr string, v value.Value) {
 // value lying at at. A regular expression that reaches regex-work is a
 // limit the package breaches, reported at at.
 func (s *statics) fails(entry, ptr, at string, v value.Value) bool {
-	sub, err := s.c.Subschema(entry, ptr)
+	return s.refuses(snode{entry, ptr}, entry, at, v)
+}
+
+// refuses reports whether v fails the schema at n, the value lying at at
+// in entry. A regular expression that reaches regex-work is a limit the
+// package breaches, reported at at.
+func (s *statics) refuses(n snode, entry, at string, v value.Value) bool {
+	sub, err := s.c.Subschema(n.entry, n.ptr)
 	if err != nil {
-		panic(fmt.Sprintf("author: compiling %s#%s, which compiled whole: %v", entry, ptr, err))
+		panic(fmt.Sprintf("author: compiling %s#%s, which compiled whole: %v", n.entry, n.ptr, err))
 	}
 	failures, err := sub.Validate(v)
 	if err != nil {
@@ -854,72 +864,57 @@ func (s *statics) add(code finding.Code, entry, ptr string, p finding.Params) {
 	s.out = append(s.out, finding.New(code, pkgSubject, &l, p))
 }
 
+// snode is a schema node: the place of a schema in a schema file.
+type snode struct{ entry, ptr string }
+
 // declared reports whether the schema object at ptr in entry declares the
-// property name by ADR-007 D3 item 4: some node of its applicable set is
-// open, or has name in properties, a pattern of patternProperties that
-// matches it, or an additionalProperties other than false — or, with no
-// additionalProperties, an unevaluatedProperties other than false.
+// property name by ADR-007 D3 item 4.
 func (s *statics) declared(entry, ptr, name string) bool {
-	type node struct{ entry, ptr string }
-	seen := map[node]bool{}
-	var visit func(n node) bool
-	visit = func(n node) bool {
-		if seen[n] {
-			return false
+	_, declared := s.property(snode{entry, ptr}, name)
+	return declared
+}
+
+// applicable returns the applicable set of the node n (ADR-007 D3 item
+// 4.1): n, and every node $ref, $dynamicRef, allOf, anyOf, oneOf, if,
+// then, else and dependentSchemas reach from it. It reports whether the
+// set is open (item 4.2): some node of it is open, or names nothing the
+// package holds.
+func (s *statics) applicable(n snode) ([]snode, bool) {
+	seen := map[snode]bool{}
+	var set []snode
+	open := false
+	var visit func(n snode)
+	visit = func(n snode) {
+		if seen[n] || open {
+			return
 		}
 		seen[n] = true
 		v, ok := s.c.Lookup(n.entry, n.ptr)
-		if !ok {
-			return true
+		if !ok || isOpen(v) {
+			open = true
+			return
 		}
-		if isOpen(v) {
-			return true
-		}
+		set = append(set, n)
 		o, ok := v.(value.Object)
 		if !ok {
-			return false
+			return
 		}
-		if p, ok := o.Get("properties"); ok {
-			if po, ok := p.(value.Object); ok {
-				if _, ok := po.Get(name); ok {
-					return true
-				}
-			}
+		if e, p, ok := s.c.Ref(n.entry, n.ptr); ok {
+			visit(snode{e, p})
 		}
-		if pp, ok := o.Get("patternProperties"); ok {
-			if po, ok := pp.(value.Object); ok {
-				for pat := range po.All() {
-					if s.matches(pat, name) {
-						return true
-					}
-				}
-			}
-		}
-		if ap, ok := o.Get("additionalProperties"); ok {
-			if ap != value.Bool(false) {
-				return true
-			}
-		} else if up, ok := o.Get("unevaluatedProperties"); ok && up != value.Bool(false) {
-			return true
-		}
-		if e, p, ok := s.c.Ref(n.entry, n.ptr); ok && visit(node{e, p}) {
-			return true
-		}
-		if e, p, ok := s.c.DynamicRef(n.entry, n.ptr); ok && visit(node{e, p}) {
-			return true
+		if e, p, ok := s.c.DynamicRef(n.entry, n.ptr); ok {
+			visit(snode{e, p})
 		}
 		for _, kw := range []string{"if", "then", "else"} {
-			if _, ok := o.Get(kw); ok && visit(node{n.entry, n.ptr + "/" + kw}) {
-				return true
+			if _, ok := o.Get(kw); ok {
+				visit(snode{n.entry, n.ptr + "/" + kw})
 			}
 		}
 		for _, kw := range []string{"allOf", "anyOf", "oneOf"} {
 			if a, ok := o.Get(kw); ok {
 				if aa, ok := a.(value.Array); ok {
 					for i := range aa.Len() {
-						if visit(node{n.entry, n.ptr + "/" + kw + "/" + strconv.Itoa(i)}) {
-							return true
-						}
+						visit(snode{n.entry, n.ptr + "/" + kw + "/" + strconv.Itoa(i)})
 					}
 				}
 			}
@@ -927,15 +922,193 @@ func (s *statics) declared(entry, ptr, name string) bool {
 		if d, ok := o.Get("dependentSchemas"); ok {
 			if do, ok := d.(value.Object); ok {
 				for dn := range do.All() {
-					if visit(node{n.entry, n.ptr + "/dependentSchemas/" + escapeToken(dn)}) {
-						return true
+					visit(snode{n.entry, n.ptr + "/dependentSchemas/" + escapeToken(dn)})
+				}
+			}
+		}
+	}
+	visit(n)
+	return set, open
+}
+
+// property resolves the property segment name on the node n as
+// MTS-AUT-013 does, and reports whether it is declared: the applicable set
+// of n is open, or some node of it has name in properties, a pattern of
+// patternProperties that matches it, or an additionalProperties other
+// than false — or, with no additionalProperties, an
+// unevaluatedProperties other than false. It returns the subschemas the
+// segment reaches, none when the set is open.
+func (s *statics) property(n snode, name string) ([]snode, bool) {
+	set, open := s.applicable(n)
+	if open {
+		return nil, true
+	}
+	var out []snode
+	for _, m := range set {
+		v, _ := s.c.Lookup(m.entry, m.ptr)
+		o, ok := v.(value.Object)
+		if !ok {
+			continue
+		}
+		matched := false
+		if p, ok := o.Get("properties"); ok {
+			if po, ok := p.(value.Object); ok {
+				if _, ok := po.Get(name); ok {
+					out = append(out, snode{m.entry, m.ptr + "/properties/" + escapeToken(name)})
+					matched = true
+				}
+			}
+		}
+		if pp, ok := o.Get("patternProperties"); ok {
+			if po, ok := pp.(value.Object); ok {
+				for pat := range po.All() {
+					if s.matches(pat, name) {
+						out = append(out, snode{m.entry, m.ptr + "/patternProperties/" + escapeToken(pat)})
+						matched = true
 					}
 				}
 			}
 		}
-		return false
+		if matched {
+			continue
+		}
+		for _, kw := range []string{"additionalProperties", "unevaluatedProperties"} {
+			if ap, ok := o.Get(kw); ok {
+				if ap != value.Bool(false) {
+					out = append(out, snode{m.entry, m.ptr + "/" + kw})
+				}
+				break
+			}
+		}
 	}
-	return visit(node{entry, ptr})
+	return out, len(out) > 0
+}
+
+// rules is MTS-AUT-081 to MTS-AUT-083 over the rules vocabulary's
+// keywords of the schema object o at ptr in entry: each key pointer of
+// uniqueKeys and coverage is resolved against the array's item schema,
+// token by token as MTS-AUT-013 resolves a property segment, and one with
+// a token no alternative declares is reported; each member of coverage's
+// values that the schema the key reaches refuses is unsatisfiable; and so
+// is a coverage with more values than the object's maxItems.
+func (s *statics) rules(entry, ptr string, o value.Object) {
+	uk, hasUnique := o.Get("uniqueKeys")
+	cv, hasCoverage := o.Get("coverage")
+	if !hasUnique && !hasCoverage {
+		return
+	}
+	items, open := s.itemSchemas(snode{entry, ptr})
+	if hasUnique && !open {
+		if a, ok := uk.(value.Array); ok {
+			for i, e := range a.All() {
+				if p, ok := e.(value.String); ok {
+					if _, declared := s.key(items, p.Text()); !declared {
+						s.add(CodeKeyNotDeclared, entry, ptr+"/uniqueKeys/"+strconv.Itoa(i), nil)
+					}
+				}
+			}
+		}
+	}
+	co, ok := cv.(value.Object)
+	if !ok {
+		return
+	}
+	vs, _ := co.Get("values")
+	values, ok := vs.(value.Array)
+	if !ok {
+		return
+	}
+	if mx, ok := o.Get("maxItems"); ok {
+		if n, ok := mx.(value.Number); ok {
+			if max, ok := n.SafeInt(); ok && int64(values.Len()) > max {
+				s.add(CodeUnsatisfiable, entry, ptr+"/coverage/values", nil)
+			}
+		}
+	}
+	key, ok := co.Get("key")
+	p, isString := key.(value.String)
+	if !ok || !isString || open {
+		return
+	}
+	reached, declared := s.key(items, p.Text())
+	if !declared {
+		s.add(CodeKeyNotDeclared, entry, ptr+"/coverage/key", nil)
+		return
+	}
+	if len(reached) == 0 {
+		return // an open schema refuses no value
+	}
+	for i, v := range values.All() {
+		at := ptr + "/coverage/values/" + strconv.Itoa(i)
+		if !slices.ContainsFunc(reached, func(n snode) bool { return !s.refuses(n, entry, at, v) }) {
+			s.add(CodeUnsatisfiable, entry, at, nil)
+		}
+	}
+}
+
+// itemSchemas returns the item schemas of the array whose schema is the
+// node n: the items and each prefixItems member of every node of its
+// applicable set. It reports whether an item may be any value, the set
+// being open or naming no item schema.
+func (s *statics) itemSchemas(n snode) ([]snode, bool) {
+	set, open := s.applicable(n)
+	if open {
+		return nil, true
+	}
+	var out []snode
+	for _, m := range set {
+		v, _ := s.c.Lookup(m.entry, m.ptr)
+		o, ok := v.(value.Object)
+		if !ok {
+			continue
+		}
+		if pi, ok := o.Get("prefixItems"); ok {
+			if a, ok := pi.(value.Array); ok {
+				for i := range a.Len() {
+					out = append(out, snode{m.entry, m.ptr + "/prefixItems/" + strconv.Itoa(i)})
+				}
+			}
+		}
+		if _, ok := o.Get("items"); ok {
+			out = append(out, snode{m.entry, m.ptr + "/items"})
+		}
+	}
+	return out, len(out) == 0
+}
+
+// key resolves the key pointer p against the item schemas items, each
+// token as a property segment, and returns the schemas it reaches, none
+// when one of them is open. It reports whether every token is declared by
+// some schema the tokens before it reach.
+func (s *statics) key(items []snode, p string) ([]snode, bool) {
+	path, ok := finding.ParsePath(p)
+	if !ok {
+		return nil, true // the pre-check refused it, as schema.invalid
+	}
+	cur := items
+	for _, tok := range path.Tokens() {
+		var next []snode
+		declared := false
+		for _, n := range cur {
+			r, d := s.property(n, tok)
+			if d && len(r) == 0 {
+				return nil, true
+			}
+			if d {
+				declared = true
+				for _, m := range r {
+					if !slices.Contains(next, m) {
+						next = append(next, m)
+					}
+				}
+			}
+		}
+		if !declared {
+			return nil, false
+		}
+		cur = next
+	}
+	return cur, true
 }
 
 // matches reports whether the patternProperties pattern pat matches name,

@@ -309,6 +309,79 @@ func TestSchemaStatics(t *testing.T) {
 	}
 }
 
+// TestSchemaStaticsRules is step 5 over the rules across an array's items
+// (MTS-AUT-081 to MTS-AUT-083): a coverage value the key's schema
+// refuses, and coverage values beyond maxItems, are unsatisfiable, and a
+// key pointer with a token no alternative of the item schema declares is
+// a warning at the pointer. A value one alternative accepts, values
+// exactly at maxItems, a key one alternative declares, a key reached
+// through $ref and additionalProperties, and an array with no item schema
+// are not reported.
+func TestSchemaStaticsRules(t *testing.T) {
+	files := checkFiles()
+	files["inputs/report.schema.json"] = `{
+	  "type": "object",
+	  "properties": {
+	    "title": {"type": "string"},
+	    "wcag": {
+	      "type": "array", "maxItems": 2,
+	      "uniqueKeys": ["/criterion"],
+	      "coverage": {"key": "/criterion", "values": ["1.1.1", "9.9.9", "1.2.1"]},
+	      "items": {"type": "object", "properties": {"criterion": {"enum": ["1.1.1", "1.2.1"]}}}
+	    },
+	    "exact": {
+	      "type": "array", "maxItems": 2,
+	      "coverage": {"key": "/criterion", "values": ["1.1.1", "1.2.1"]},
+	      "items": {"type": "object", "properties": {"criterion": {"enum": ["1.1.1", "1.2.1"]}}}
+	    },
+	    "clauses": {
+	      "type": "array",
+	      "uniqueKeys": ["/standard", "/clasue"],
+	      "coverage": {"key": "/levl", "values": ["A"]},
+	      "items": {"type": "object", "properties": {"standard": {}, "clause": {}, "level": {}}}
+	    },
+	    "either": {
+	      "type": "array",
+	      "uniqueKeys": ["/a", "/b"],
+	      "coverage": {"key": "/a", "values": [1, 2, 3]},
+	      "items": {"anyOf": [
+	        {"properties": {"a": {"enum": [1]}}},
+	        {"oneOf": [{"properties": {"a": {"enum": [2]}, "b": {}}}]}
+	      ]}
+	    },
+	    "nested": {
+	      "type": "array",
+	      "uniqueKeys": ["/id/code", "/id/nope", "/extra/x"],
+	      "coverage": {"key": "/extra/x", "values": [1, "one"]},
+	      "items": {"$ref": "#/$defs/row"}
+	    },
+	    "loose": {"type": "array", "uniqueKeys": ["/anything"], "coverage": {"key": "/x", "values": [1]}}
+	  },
+	  "$defs": {
+	    "row": {
+	      "type": "object",
+	      "properties": {"id": {"type": "object", "properties": {"code": {"type": "string"}}}},
+	      "additionalProperties": {"type": "object", "additionalProperties": {"type": "integer"}}
+	    }
+	  }
+	}`
+	got := lines(t, runCheck(t, files))
+	want := []string{
+		"schema.unsatisfiable inputs/report.schema.json#/properties/wcag/coverage/values",
+		"schema.unsatisfiable inputs/report.schema.json#/properties/wcag/coverage/values/1",
+		"schema.key_not_declared inputs/report.schema.json#/properties/clauses/uniqueKeys/1",
+		"schema.key_not_declared inputs/report.schema.json#/properties/clauses/coverage/key",
+		"schema.unsatisfiable inputs/report.schema.json#/properties/either/coverage/values/2",
+		"schema.key_not_declared inputs/report.schema.json#/properties/nested/uniqueKeys/1",
+		"schema.unsatisfiable inputs/report.schema.json#/properties/nested/coverage/values/1",
+	}
+	slices.Sort(got)
+	slices.Sort(want)
+	if !slices.Equal(got, want) {
+		t.Errorf("findings\n\t%s\nwant\n\t%s", strings.Join(got, "\n\t"), strings.Join(want, "\n\t"))
+	}
+}
+
 // TestSchemaStaticsBeneathArrayApplicators is step 5 beneath each keyword
 // whose value is an array of schemas: a default that fails the object
 // holding it is found beneath allOf, anyOf, oneOf and prefixItems.

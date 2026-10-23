@@ -1,0 +1,14 @@
+[
+  {
+    "code": "schema.unsatisfiable",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/over/coverage/values"
+    }
+  }
+]

@@ -274,6 +274,7 @@ it, and the statements it reports.
 | `schema.invalid` | error | content | package | `keyword` | 1.0 | [MTS-DAT-003](05-data-specification.md#mts-dat-003), [MTS-DAT-015](05-data-specification.md#mts-dat-015), [MTS-DAT-016](05-data-specification.md#mts-dat-016) |
 | `schema.invalid_default` | error | content | package | — | 1.0 | [MTS-AUT-007](13-authoring.md#mts-aut-007) |
 | `schema.invalid_example` | error | content | package | — | 1.0 | [MTS-AUT-007](13-authoring.md#mts-aut-007) |
+| `schema.key_not_declared` | warning | content | package | — | 1.0 | [MTS-AUT-083](13-authoring.md#mts-aut-083) |
 | `schema.keyword_unknown` | error | content | package | `keyword` | 1.0 | [MTS-DAT-004](05-data-specification.md#mts-dat-004) |
 | `schema.pattern_unsupported` | error | content | package | `construct` | 1.0 | [MTS-DAT-006](05-data-specification.md#mts-dat-006), [MTS-SEC-041](14-security.md#mts-sec-041) |
 | `schema.ref_by_path` | error | content | package | `reference`, `id` | 1.0 | [MTS-DAT-008](05-data-specification.md#mts-dat-008) |
@@ -283,7 +284,7 @@ it, and the statements it reports.
 | `schema.sample_invalid` | error | content | input | `code` | 1.0 | [MTS-SMP-002](13-authoring.md#mts-smp-002), [MTS-SMP-009](13-authoring.md#mts-smp-009) |
 | `schema.sample_unsatisfiable` | error | content | input | `instance`, `reason` | 1.0 | [MTS-SMP-004](13-authoring.md#mts-smp-004), [MTS-SMP-009](13-authoring.md#mts-smp-009) |
 | `schema.syntax` | error | content | package | `form`, `rule` | 1.0 | [MTS-DAT-002](05-data-specification.md#mts-dat-002) |
-| `schema.unsatisfiable` | error | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
+| `schema.unsatisfiable` | error | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008), [MTS-AUT-081](13-authoring.md#mts-aut-081), [MTS-AUT-082](13-authoring.md#mts-aut-082) |
 | `schema.unusable_enum_member` | warning | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
 | `template.amount_currency` | error | content | template | `reason`, `column`; optional: `output_path` | 1.0 | [MTS-FLT-020](08-filters-and-tags.md#mts-flt-020), [MTS-MAN-018](03-manifest.md#mts-man-018) |
 | `template.asset_ambiguous` | error | content | template | `asset`, `column`, `output_path` | 1.0 | [MTS-TAG-015](08-filters-and-tags.md#mts-tag-015) |
