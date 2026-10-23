@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-coverage-values",
+  "title": "A coverage value the schema at its key refuses is unsatisfiable, at the member; a value one alternative of the item schema accepts is not reported",
+  "statements": [
+    "MTS-AUT-081"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

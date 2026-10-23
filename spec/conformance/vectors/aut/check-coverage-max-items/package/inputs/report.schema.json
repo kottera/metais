@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "over": {
+      "type": "array",
+      "maxItems": 2,
+      "coverage": {
+        "key": "/criterion",
+        "values": [
+          "1.1.1",
+          "1.2.1",
+          "1.2.2"
+        ]
+      },
+      "items": {
+        "type": "object",
+        "properties": {
+          "criterion": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "exact": {
+      "type": "array",
+      "maxItems": 3,
+      "coverage": {
+        "key": "/criterion",
+        "values": [
+          "1.1.1",
+          "1.2.1",
+          "1.2.2"
+        ]
+      },
+      "items": {
+        "type": "object",
+        "properties": {
+          "criterion": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

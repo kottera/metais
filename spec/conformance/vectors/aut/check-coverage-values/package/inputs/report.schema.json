@@ -1,0 +1,94 @@
+{
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "wcag": {
+      "type": "array",
+      "coverage": {
+        "key": "/criterion",
+        "values": [
+          "1.1.1",
+          "9.9.9",
+          "1.2.1"
+        ]
+      },
+      "items": {
+        "type": "object",
+        "properties": {
+          "criterion": {
+            "type": "string",
+            "enum": [
+              "1.1.1",
+              "1.2.1",
+              "1.2.2"
+            ]
+          }
+        }
+      }
+    },
+    "either": {
+      "type": "array",
+      "coverage": {
+        "key": "/level",
+        "values": [
+          "A",
+          "AA",
+          3
+        ]
+      },
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "level": {
+                "const": "A"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "properties": {
+              "level": {
+                "enum": [
+                  "AA"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "nested": {
+      "type": "array",
+      "coverage": {
+        "key": "/id/code",
+        "values": [
+          "x1",
+          "y1"
+        ]
+      },
+      "items": {
+        "$ref": "#/$defs/row"
+      }
+    }
+  },
+  "$defs": {
+    "row": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "pattern": "^x"
+            }
+          }
+        }
+      }
+    }
+  }
+}

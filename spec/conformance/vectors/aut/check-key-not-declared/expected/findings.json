@@ -1,0 +1,38 @@
+[
+  {
+    "code": "schema.key_not_declared",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/clauses/coverage/key"
+    }
+  },
+  {
+    "code": "schema.key_not_declared",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/clauses/uniqueKeys/1"
+    }
+  },
+  {
+    "code": "schema.key_not_declared",
+    "severity": "warning",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/report.schema.json",
+      "pointer": "/properties/deep/uniqueKeys/1"
+    }
+  }
+]

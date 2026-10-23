@@ -1,0 +1,30 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "aut/check-coverage-max-items",
+  "title": "A coverage with more values than the maxItems beside it is unsatisfiable, at values; values exactly at maxItems are not reported",
+  "statements": [
+    "MTS-AUT-082"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "check",
+      "steps": [
+        {
+          "op": "check",
+          "args": {
+            "source": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}
