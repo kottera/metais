@@ -589,10 +589,11 @@ func TestHelpExamplesFirst(t *testing.T) {
 	}
 }
 
-// TestAuthoringTopicsReachable is ADR-008 A6 item 4: the templates and
-// manifest topics are where a session looks for them — the overview's
-// topics, help --json, help's own operand text and examples, and the
-// skill wherever it concerns an author.
+// TestAuthoringTopicsReachable is ADR-008 A6 item 4, and ADR-003 A2
+// item 10 for schemas: the templates, manifest and schemas topics are
+// where a session looks for them — the overview's topics, help --json,
+// help's own operand text and examples, and the skill wherever it
+// concerns an author.
 func TestAuthoringTopicsReachable(t *testing.T) {
 	overview := runTool(t, "help").stdout
 	var res helpResult
@@ -601,7 +602,7 @@ func TestAuthoringTopicsReachable(t *testing.T) {
 	}
 	own := runTool(t, "help", "help").stdout
 	operand := lookup(table, "help").Operands[0].Description
-	for _, name := range []string{"templates", "manifest"} {
+	for _, name := range []string{"templates", "manifest", "schemas"} {
 		if _, ok := lookupTopic(name); !ok {
 			t.Errorf("there is no topic %s", name)
 			continue

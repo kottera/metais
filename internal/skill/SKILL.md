@@ -109,8 +109,13 @@ and without them, ask for them.
 2. Edit `metais.yaml`, `inputs/`, `templates/` and `examples/`.
    `metais help manifest` gives every field of `metais.yaml` with an
    example; `metais help templates` gives the template language, every
-   filter, and escaping, a URL component's `url_encode` included. Preview
-   with `metais render <dir> --sample --out <preview dir>`.
+   filter, and escaping, a URL component's `url_encode` included;
+   `metais help schemas` gives the keywords and formats a schema under
+   `inputs/` may use. For a table, an array of rows, state the rules
+   across its rows in the array's schema: `uniqueKeys` names the columns
+   no two rows may share, and `coverage` the values a column must hold,
+   each in some row. Preview with
+   `metais render <dir> --sample --out <preview dir>`.
 3. `metais check <dir>` — every defect, without data, or only the refusal
    of a package it cannot read.
 4. `metais test <dir>` — renders each example and compares it with its
@@ -133,8 +138,9 @@ a `message` and a `hint`. `metais help json` lists every format.
 - `metais help <command>` — a command's operands, flags, refusals and
   examples.
 - `metais help inputs` — supplying inputs, and which source wins.
-- `metais help templates` and `metais help manifest` — writing templates
-  and `metais.yaml`.
+- `metais help templates`, `metais help manifest` and
+  `metais help schemas` — writing templates, `metais.yaml` and the
+  schemas, `uniqueKeys` and `coverage` among them.
 - `metais help refusals <command>` — every code a command can report, with
   the next step.
 - A finding's `hint` says what to do; its code is stable.

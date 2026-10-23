@@ -54,6 +54,10 @@ constraints together stop at 4096 bytes, ending […; metais schema <package>
 <package>. A rule's line is never cut: it lists every value. The schema itself
 has every value whole, with each field's description.
 
+metais help schemas teaches the dialect a schema is written in: the asserted
+keywords and formats, x- annotations, and uniqueKeys and coverage with an
+example.
+
 Operands:
   <package>
       A packed package file, or a source directory; - is refused, since a
