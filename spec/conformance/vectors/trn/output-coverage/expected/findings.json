@@ -1,0 +1,71 @@
+[
+  {
+    "code": "output.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "data"
+    },
+    "location": {
+      "origin": "output",
+      "file": "data.json",
+      "line": 2,
+      "column": 11,
+      "pointer": "/rows"
+    },
+    "schema": {
+      "entry": "references/v.schema.json",
+      "pointer": "/properties/rows/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "\"green\""
+    }
+  },
+  {
+    "code": "output.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "data"
+    },
+    "location": {
+      "origin": "output",
+      "file": "data.json",
+      "line": 6,
+      "column": 12,
+      "pointer": "/pairs"
+    },
+    "schema": {
+      "entry": "references/v.schema.json",
+      "pointer": "/properties/pairs/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "3"
+    }
+  },
+  {
+    "code": "output.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "data"
+    },
+    "location": {
+      "origin": "output",
+      "file": "data.json",
+      "line": 6,
+      "column": 12,
+      "pointer": "/pairs"
+    },
+    "schema": {
+      "entry": "references/v.schema.json",
+      "pointer": "/properties/pairs/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "\"2\""
+    }
+  }
+]

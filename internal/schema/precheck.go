@@ -54,7 +54,7 @@ var keywords = map[string]shape{
 	"maxProperties": shapeValue, "minProperties": shapeValue,
 	"required": shapeValue, "dependentRequired": shapeValue,
 	// Rules across the items of an array (ADR-003 Amendment A2).
-	"uniqueKeys": shapeValue,
+	"uniqueKeys": shapeValue, "coverage": shapeValue,
 	// Format, under ADR-003 D4.
 	"format": shapeValue,
 	// Content, annotations only.

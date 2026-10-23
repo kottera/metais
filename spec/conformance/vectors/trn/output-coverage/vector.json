@@ -1,0 +1,34 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/output-coverage",
+  "title": "An output's value that misses a value its validate schema's coverage requires is reported by output.coverage, once per value, at the array",
+  "statements": [
+    "MTS-TRN-015",
+    "MTS-DAT-019",
+    "MTS-FND-004"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "rows covers red from its input and blue literally but not green; pairs has 2.0, which covers 2, and misses 3 and \"2\". Each gap is one output.coverage at its array.",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

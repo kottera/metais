@@ -292,6 +292,9 @@ func (m *mapper) node(path []*Failure, n *Failure, via []finding.Via) []emitted 
 		return []emitted{m.uniqueItems(path, n, via)}
 	case "uniqueKeys":
 		return []emitted{m.uniqueKeys(path, n, via)}
+	case "coverage":
+		// MTS-DAT-019: at the array, naming the member no item holds.
+		return one("coverage", finding.Params{"missing": finding.String(m.str(n, dataMissing))})
 	}
 	if suffix, ok := boundKeywords[n.Keyword]; ok {
 		return one(suffix, finding.Params{"limit": m.num(n, dataLimit), "count": m.num(n, dataCount)})

@@ -1,0 +1,54 @@
+[
+  {
+    "code": "input.validation.partial",
+    "severity": "info",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.csv",
+      "pointer": ""
+    },
+    "params": {
+      "unparsed": 2,
+      "suppressed": 2
+    }
+  },
+  {
+    "code": "csv.bare_quote",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.csv",
+      "line": 3,
+      "column": 10,
+      "pointer": "/1/conformance"
+    },
+    "params": {}
+  },
+  {
+    "code": "csv.after_quote",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.csv",
+      "line": 5,
+      "column": 12,
+      "pointer": "/3/conformance"
+    },
+    "params": {}
+  }
+]

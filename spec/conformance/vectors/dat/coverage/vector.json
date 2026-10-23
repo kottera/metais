@@ -1,0 +1,50 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "dat/coverage",
+  "title": "coverage reports each value no item holds at its key, once, at the array, wherever its schema object applies to an array",
+  "statements": [
+    "MTS-DAT-004",
+    "MTS-DAT-017",
+    "MTS-DAT-019",
+    "MTS-FND-004",
+    "MTS-DAT-010"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "example is chapter 5 §5.4's example schema: a row with a criterion coverage does not list covers nothing it lists and is allowed, so 1.1.1 and 1.3.1 are each reported. gaps lists its values out of order, and the three missing are reported in the order of their parameters' canonical form, not of values; rows with no criterion, a null criterion, and an item that is not an object cover nothing. numbers has 1.0 and 25e-1, which cover 1 and 2.5, and the number 3, which does not cover the string \"3\". nested holds the keyword on an array beneath properties, located at that array. rows is a CSV input, its finding located at the file. referenced reaches the keyword through $ref, conditional under then; scalar holds the keyword on schema objects that apply to an object and a number, which it never judges. The valid case covers every value, some more than once and beside values not listed.",
+  "cases": [
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/valid"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/invalid"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/invalid.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -288,7 +288,7 @@ Refusals:
 
   collection.* (5)      An input is refused. Next: metais inspect <package>
   csv.* (7)             An input is refused. Next: metais inspect <package>
-  input.* (53)          An input is refused. Next: metais inspect <package>
+  input.* (54)          An input is refused. Next: metais inspect <package>
   json.* (5)            An input is refused. Next: metais inspect <package>
   limit.exceeded (1)    An input is refused (exceeded).
                         Next: metais inspect <package>
@@ -296,7 +296,7 @@ Refusals:
   manifest.* (44)       The manifest breaks one of its rules.
                         Next: metais inspect <package>
   markdown.* (3)        An input is refused. Next: metais inspect <package>
-  output.* (35)         An output fails its validation.
+  output.* (36)         An output fails its validation.
                         Next: metais inspect <package>
   output.* (14)         An output is refused. Next: metais inspect <package>
   package.* (47)        The package is refused. Next: metais inspect <package>

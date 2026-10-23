@@ -1,0 +1,44 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "dat/coverage-grammar",
+  "title": "A coverage that is not an object of exactly key, a key pointer, and values, one or more distinct values, is refused at open with schema.invalid naming the keyword",
+  "statements": [
+    "MTS-DAT-016"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "Each schema of package breaks the grammar in one way: an array in place of the object, no values, a third member, a key that is not a string, the empty pointer, a pointer with no leading slash, no value, and two values equal as MTS-DAT-013 compares them, 1 and 1.0. Each is one schema.invalid at the keyword's value, naming coverage. valid holds the edge the grammar allows: values of every type, null, false, 0 and \"0\" among them, and two arrays of the same items in another order, which are distinct, at a pointer with an escape and an index.",
+  "cases": [
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "valid"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    }
+  ]
+}

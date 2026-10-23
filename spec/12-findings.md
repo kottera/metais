@@ -46,6 +46,7 @@ it, and the statements it reports.
 | `input.constraints_failed` | error | content | invocation | `keyword` | 1.0 | [MTS-DAT-012](05-data-specification.md#mts-dat-012) |
 | `input.constraints_not_evaluated` | info | content | invocation | — | 1.0 | [MTS-SUP-029](06-supplying-inputs.md#mts-sup-029) |
 | `input.contains` | error | content | input | — | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.coverage` | error | content | input | `missing` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-DAT-017](05-data-specification.md#mts-dat-017), [MTS-DAT-019](05-data-specification.md#mts-dat-019), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.dependent_required` | error | content | input | `property`, `because` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.encoding_invalid` | error | content | input | `reason`, `offset` | 1.0 | [MTS-SUP-001](06-supplying-inputs.md#mts-sup-001) |
 | `input.enum` | error | content | input | `allowed`, `allowed_count`; optional: `suggestion` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
@@ -164,6 +165,7 @@ it, and the statements it reports.
 | `output.container.space` | warning | content | output | `profile`, `path` | 1.0 | [MTS-TRN-011](10-transforms.md#mts-trn-011), [MTS-AUT-031](13-authoring.md#mts-aut-031) |
 | `output.container.too_many_entries` | error | content | output | `count` | 1.0 | [MTS-TRN-007](10-transforms.md#mts-trn-007) |
 | `output.contains` | error | content | output | — | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.coverage` | error | content | output | `missing` | 1.0 | [MTS-DAT-019](05-data-specification.md#mts-dat-019), [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `output.declaration.empty_mirror` | warning | content | output | `directory` | 1.0 | [MTS-OUT-019](09-outputs.md#mts-out-019) |
 | `output.declaration.empty_name` | error | content | output | `template` | 1.0 | [MTS-OUT-018](09-outputs.md#mts-out-018) |
 | `output.declaration.validate_kind` | error | content | output | `kind` | 1.0 | [MTS-AUT-023](13-authoring.md#mts-aut-023) |
@@ -269,7 +271,7 @@ it, and the statements it reports.
 | `schema.dialect` | error | content | package | `reason` | 1.0 | [MTS-DAT-003](05-data-specification.md#mts-dat-003) |
 | `schema.format_unsupported` | error | content | package | `format` | 1.0 | [MTS-DAT-005](05-data-specification.md#mts-dat-005) |
 | `schema.id_duplicate` | error | content | package | `id`; optional: `other` | 1.0 | [MTS-DAT-008](05-data-specification.md#mts-dat-008) |
-| `schema.invalid` | error | content | package | `keyword` | 1.0 | [MTS-DAT-003](05-data-specification.md#mts-dat-003), [MTS-DAT-015](05-data-specification.md#mts-dat-015) |
+| `schema.invalid` | error | content | package | `keyword` | 1.0 | [MTS-DAT-003](05-data-specification.md#mts-dat-003), [MTS-DAT-015](05-data-specification.md#mts-dat-015), [MTS-DAT-016](05-data-specification.md#mts-dat-016) |
 | `schema.invalid_default` | error | content | package | — | 1.0 | [MTS-AUT-007](13-authoring.md#mts-aut-007) |
 | `schema.invalid_example` | error | content | package | — | 1.0 | [MTS-AUT-007](13-authoring.md#mts-aut-007) |
 | `schema.keyword_unknown` | error | content | package | `keyword` | 1.0 | [MTS-DAT-004](05-data-specification.md#mts-dat-004) |
@@ -466,6 +468,7 @@ family:
 | `maxItems`, `minItems` | `input.max_items`, `input.min_items` |
 | `uniqueItems` | `input.unique_items` |
 | `uniqueKeys` | `input.unique_keys` |
+| `coverage` | `input.coverage` |
 | `contains`, `minContains`, `maxContains` | `input.contains`, `input.min_contains`, `input.max_contains` |
 | `maxProperties`, `minProperties` | `input.max_properties`, `input.min_properties` |
 | `required` | `input.required` |

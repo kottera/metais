@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "table": {
+      "type": "array",
+      "coverage": { "key": "/id", "values": ["a", "b"] }
+    }
+  }
+}

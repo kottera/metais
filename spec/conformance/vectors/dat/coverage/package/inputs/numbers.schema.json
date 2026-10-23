@@ -1,0 +1,4 @@
+{
+  "type": "array",
+  "coverage": { "key": "/n", "values": [1, 2.5, "3"] }
+}

@@ -156,7 +156,7 @@ Refusals:
   example.* (9)             An example fails. Next: metais test <dir>
   example.layout (1)        An example's layout (layout), an error.
                             Next: metais check <dir>
-  input.* (53)              An example's inputs are refused.
+  input.* (54)              An example's inputs are refused.
                             Next: metais test <dir>
   json.* (5)                An example's inputs are refused.
                             Next: metais test <dir>
@@ -172,7 +172,7 @@ Refusals:
   manifest.input.* (2)      The manifest, an error. Next: metais check <dir>
   markdown.* (3)            An example's inputs are refused.
                             Next: metais test <dir>
-  output.* (36)             An example's output fails its validation.
+  output.* (37)             An example's output fails its validation.
                             Next: metais test <dir>
   output.container.* (3)    A container's profile, an error.
                             Next: metais check <dir>

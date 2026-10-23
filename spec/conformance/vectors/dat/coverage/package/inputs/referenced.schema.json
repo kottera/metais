@@ -1,0 +1,9 @@
+{
+  "$ref": "#/$defs/table",
+  "$defs": {
+    "table": {
+      "type": "array",
+      "coverage": { "key": "/id", "values": [1, 2] }
+    }
+  }
+}

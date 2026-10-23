@@ -718,6 +718,30 @@
       ]
     },
     {
+      "code": "input.coverage",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "missing",
+          "type": "string",
+          "meaning": "The member of coverage's values that no item holds at the key, as its canonical JSON text.",
+          "always": true
+        }
+      ],
+      "message": "{field} has no item whose value at coverage's key is {missing}, a value the array must cover.",
+      "hint": "Add an item whose value at coverage's key is {missing}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-DAT-017",
+        "MTS-DAT-019",
+        "MTS-FND-004"
+      ]
+    },
+    {
       "code": "input.dependent_required",
       "severity": "error",
       "class": "content",
@@ -3434,6 +3458,29 @@
       ]
     },
     {
+      "code": "output.coverage",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "missing",
+          "type": "string",
+          "meaning": "The member of coverage's values that no item holds at the key, as its canonical JSON text.",
+          "always": true
+        }
+      ],
+      "message": "{field} has no item whose value at coverage's key is {missing}, a value the array must cover.",
+      "hint": "Add an item whose value at coverage's key is {missing}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-DAT-019",
+        "MTS-FND-004",
+        "MTS-TRN-015"
+      ]
+    },
+    {
       "code": "output.declaration.empty_mirror",
       "severity": "warning",
       "class": "content",
@@ -6046,7 +6093,7 @@
         {
           "name": "keyword",
           "type": "string",
-          "meaning": "The keyword of the draft 2020-12 meta-schema the value fails, or the keyword of this dialect's own (uniqueKeys) whose grammar the value breaks.",
+          "meaning": "The keyword of the draft 2020-12 meta-schema the value fails, or the keyword of this dialect's own (uniqueKeys or coverage) whose grammar the value breaks.",
           "always": true
         }
       ],
@@ -6056,7 +6103,8 @@
       "since": "1.0",
       "statements": [
         "MTS-DAT-003",
-        "MTS-DAT-015"
+        "MTS-DAT-015",
+        "MTS-DAT-016"
       ]
     },
     {

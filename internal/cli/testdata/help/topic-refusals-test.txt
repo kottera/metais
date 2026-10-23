@@ -31,6 +31,7 @@ Next: metais test <package>
   input.constraints_failed
   input.constraints_not_evaluated
   input.contains
+  input.coverage
   input.dependent_required
   input.encoding_invalid
   input.enum
@@ -142,6 +143,7 @@ Next: metais test <package>
   output.container.space
   output.container.too_many_entries
   output.contains
+  output.coverage
   output.declaration.empty_mirror
   output.declaration.empty_name
   output.declaration.validate_kind

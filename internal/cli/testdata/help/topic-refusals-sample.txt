@@ -23,6 +23,7 @@ Next: metais inspect <package>
   input.constraints_failed
   input.constraints_not_evaluated
   input.contains
+  input.coverage
   input.dependent_required
   input.encoding_invalid
   input.enum

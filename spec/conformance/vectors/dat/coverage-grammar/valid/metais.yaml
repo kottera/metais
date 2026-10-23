@@ -1,0 +1,13 @@
+metais: "1.0"
+name: org.example.wellformed
+version: 1.0.0
+title: Well formed
+description: A package whose schema holds coverage at its grammar's edge.
+guide: Supply the table.
+inputs:
+  - name: table
+    title: Table
+    schema: inputs/table.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid

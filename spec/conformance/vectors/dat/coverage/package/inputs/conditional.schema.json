@@ -1,0 +1,5 @@
+{
+  "type": "array",
+  "if": { "minItems": 1 },
+  "then": { "coverage": { "key": "/id", "values": [1, 2] } }
+}
