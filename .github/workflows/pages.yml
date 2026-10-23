@@ -1,21 +1,41 @@
 # Copyright 2026 Kottera
 # SPDX-License-Identifier: Apache-2.0
 #
-# Publishes metais.org with GitHub Pages from a pushed release tag: the pages
-# of site/public/, and every schema of spec/schemas/ and docs/cli/schemas/ at
-# the path its $id names, built by site/build.sh from the tagged commit.
+# Publishes metais.org with GitHub Pages from a published release's tag
+# (ADR-013 D7 item 3.4): the pages of site/package and site/public, and
+# every schema of spec/schemas/ and docs/cli/schemas/ at the path its $id
+# names, built by site/build.sh --release from the tagged commit with the
+# release's version and SHA256SUMS.
 #
-# Inert while the repository is private. GitHub's free plan publishes Pages
-# only from a public repository, so every job is gated on the repository
-# being public: on a private repository each job is skipped, nothing runs
-# and nothing fails. The gate also requires a v* tag, so a manual run from a
-# branch deploys nothing. docs/dev/release.md has the go-live steps.
+# release.yml calls it as its last job, once the release is published. A
+# release published with that workflow's own token starts no workflow, so
+# this workflow has no release trigger. Dispatched by hand, with a
+# published release's tag, it rebuilds and redeploys that release's site,
+# as an erratum does (ADR-011 Amendment A8 item 1). Either way the build
+# job refuses a tag that is not v<version> or whose release is not
+# published, so the site never describes a release that is not out, and it
+# never builds from a branch.
+#
+# Inert while the repository is private. GitHub's free plan publishes
+# Pages only from a public repository, so every job is gated on the
+# repository being public: on a private repository each job is skipped,
+# nothing runs and nothing fails. docs/dev/release.md has the go-live
+# steps.
 name: pages
 
 on:
-  push:
-    tags: ['v*']
+  workflow_call:
+    inputs:
+      tag:
+        description: The published release whose site to build, by its tag, v<version>
+        required: true
+        type: string
   workflow_dispatch:
+    inputs:
+      tag:
+        description: The published release whose site to build, by its tag, v<version>
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -26,18 +46,43 @@ concurrency:
 
 jobs:
   build:
-    if: ${{ !github.event.repository.private && startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ inputs.tag }}
     steps:
+      - name: the tag's release is published
+        run: |
+          case $TAG in
+          v[0-9]*) ;;
+          *) echo "pages: $TAG is not a release's tag, v<version>" >&2; exit 1 ;;
+          esac
+          draft=$(gh api "repos/$GH_REPO/releases/tags/$TAG" --jq .draft) || {
+            echo "pages: there is no published release $TAG" >&2
+            exit 1
+          }
+          if [ "$draft" != false ]; then
+            echo "pages: the release $TAG is not published" >&2
+            exit 1
+          fi
       - uses: actions/checkout@v5
-      - run: site/build.sh _site
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: gh release download "$TAG" --pattern SHA256SUMS --dir "$RUNNER_TEMP/release"
+      - run: site/build.sh --release "${TAG#v}" "$RUNNER_TEMP/release/SHA256SUMS" _site
       - uses: actions/upload-pages-artifact@v4
         with:
           path: _site
 
   deploy:
     needs: build
-    if: ${{ !github.event.repository.private && startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     permissions:
       pages: write
