@@ -40,3 +40,7 @@ outputs:
     template: form-fraction.txt.liquid
   - id: form_digits
     template: form-digits.txt.liquid
+  - id: form_week_time
+    template: form-week-time.txt.liquid
+  - id: form_week_day
+    template: form-week-day.txt.liquid
