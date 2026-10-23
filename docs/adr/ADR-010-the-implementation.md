@@ -2,18 +2,20 @@
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 [Amendment A1](#amendments) (`golang.org/x/sys` and `golang.org/x/term` on
-unix only) is proposed by PLAN-2026-10-metais-v1 Wave 1 and awaits Ed
-Funnekotter's ratification; the passages it changes are marked *(A1,
-proposed)*. [Amendment A2](#amendments) (the `MapOrder` fault is named by
+unix only), proposed by PLAN-2026-10-metais-v1 Wave 1, is accepted by Ed
+Funnekotter on 2026-10-22, at the train's ratification; the passages it
+changes are marked *(A1)*. [Amendment A2](#amendments) (the `MapOrder` fault is named by
 `internal/template` and carried into the engine by a plain option) is
 accepted by Ed Funnekotter; the passages it changes are marked *(A2)*.
 [Amendment A3](#amendments) (the Markdown outline is METAIS's own CommonMark
-reading, and goldmark leaves the module) is proposed by PLAN-2026-10-metais-v1
-Wave 2 and awaits Ed Funnekotter's ratification; the passages it changes are
-marked *(A3, proposed)*. [Amendment A4](#amendments) (`Core()`'s filter list
-names `escape`'s alias `h`) is proposed by PLAN-2026-10-metais-v1 Wave 3 and
-awaits Ed Funnekotter's ratification; the passage it changes is marked
-*(A4, proposed)*.
+reading, and goldmark leaves the module), ruled by the plan orchestrator in
+PLAN-2026-10-metais-v1 Wave 2, is accepted by Ed Funnekotter on 2026-10-22;
+the passages it changes are marked *(A3)*. [Amendment A4](#amendments)
+(`Core()`'s filter list names `escape`'s alias `h`, and `date` is registered
+outside `Core()`), proposed by PLAN-2026-10-metais-v1 Wave 3, is accepted by
+Ed Funnekotter on 2026-10-22; the passage it changes is marked *(A4)*.
+[Amendment A5](#amendments) (the gate's two tiers) records Ed Funnekotter's
+ruling of 2026-10-19 and is accepted on merge.
 [Amendment A6](#amendments) (the render's one goroutine, the detectors' probes, and race detection) is proposed by
 [ADR-012](ADR-012-test-economy.md) and accepted by Ed Funnekotter on 2026-10-21;
 it takes effect as PLAN-2026-10-metais-test-economy's items land.
@@ -25,6 +27,10 @@ passages it changes are marked *(A7)*.
 is ADR-013's, and CI is a third gate tier) is accepted by Ed Funnekotter on 2026-10-22, proposed by
 [ADR-013](ADR-013-the-public-project-and-its-distribution.md); it takes
 effect as PLAN-2026-10-metais-public's items land.
+[Amendment A9](#amendments) (every fault in D13's table, the archive writer
+`internal/tarw`, and a gate resumed after its host starved) is accepted by
+Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's ratification; the
+passages it changes are marked *(A9)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R18 item 1 (one static binary, the supported targets,
@@ -400,7 +406,7 @@ spec/                         the specification                                 
      `internal/hostfs` imports `golang.org/x/sys`. Each does so only in
      files built for darwin and linux: on windows the binary links neither
      module, and both packages use the standard library's `syscall` there
-     (D3 item 3). *(A1, proposed)*
+     (D3 item 3). *(A1)*
    - `internal/render` reaches `internal/hostfs` only through `CheckPaths`,
      so only `internal/render/sink` writes; and `internal/render` and its
      subpackages hold exactly one `go` statement, A6 item 1's. *(A7)*
@@ -450,7 +456,7 @@ the specification defines.**
 
    **No module parses Markdown.** The heading outline is METAIS's own
    reading of CommonMark (D9), and the table has no row for it and no
-   fallback. *(A3, proposed)*
+   fallback. *(A3)*
 
    **`golang.org/x/sys` and `golang.org/x/term` are linked on unix targets
    only.** `golang.org/x/sys/windows` imports `net`, which D11 item 10 and
@@ -458,7 +464,7 @@ the specification defines.**
    `golang.org/x/term` imports `golang.org/x/sys/windows` on windows. On
    windows `internal/hostenv` asks `syscall.GetConsoleMode` whether a stream
    is a terminal (D11 item 8), and `internal/hostfs` takes the no-replace
-   rename from `syscall.MoveFile` (D11 item 3). *(A1, proposed)*
+   rename from `syscall.MoveFile` (D11 item 3). *(A1)*
 4. **Rejected and not in `go.mod`**: `osteele/liquid`, `Notifuse/liquidgo`
    (D4); `kaptinlin/jsonschema` (Alternatives); `goccy/go-yaml`;
    `dlclark/regexp2`; `spf13/pflag`; `encoding/csv` for reading (D8);
@@ -529,8 +535,11 @@ engine of the dialect ADR-004 pins.**
      strip_html strip_newlines sum times truncate truncatewords uniq upcase
      url_decode url_encode where` — with ADR-004's semantics where it pins
      one (stable sorting, the `date` filter's format directives over a value
-     with an explicit offset, number rendering). No other filter exists in
-     `Core()`. *(A4, proposed)* METAIS's own filters and tags are registered by
+     with an explicit offset, number rendering). `Core()` holds every one
+     of them, with `escape`'s alias `h`, except `date`, which lives in
+     `internal/dates` and which `internal/template` registers through
+     `Extend` with these semantics. No other filter exists in
+     `Core()`. *(A4)* METAIS's own filters and tags are registered by
      `internal/template` through the engine's extension API, which is
      internal Go code, never a package's.
    - **Value model** (`internal/liquid/value`): nil, boolean, integer (int64;
@@ -747,7 +756,7 @@ not used to read inputs.**
    the `csv` filter writes, reading it back yields the same fields and
    quotedness.
 
-### D9 — Markdown: the outline and the frontmatter split are METAIS's own *(A3, proposed)*
+### D9 — Markdown: the outline and the frontmatter split are METAIS's own *(A3)*
 
 1. **`markdown.SplitFrontmatter(src) (front []byte, frontLine int, body
    []byte, finding)`** implements ADR-003 D13 item 2 in METAIS code: the first
@@ -764,7 +773,7 @@ not used to read inputs.**
    alone. Both are linear in the input, cmark's pathological cases included
    (ADR-009 D10 item 4). The frontmatter is split off first and line numbers
    are offset by its length, so a heading's line is its line in the file.
-   *(A3, proposed)*
+   *(A3)*
 3. **No Markdown is rendered.** The tool converts no Markdown to HTML; R4
    item 3's `body` is a string (ADR-003 D13 item 3).
 4. **Tests**: every example of CommonMark 0.31.2's specification, vendored
@@ -772,7 +781,7 @@ not used to read inputs.**
    of its expected HTML, and each single-paragraph example held, made a
    setext heading, to the paragraph's plain text, with each exclusion named;
    cmark's pathological cases under a CPU-time bound; and fuzz targets over
-   `Outline` and `SplitFrontmatter`. *(A3, proposed)*
+   `Outline` and `SplitFrontmatter`. *(A3)*
 
 ### D10 — Regular expressions and the argument parser
 
@@ -832,8 +841,8 @@ not used to read inputs.**
    `MoveFileW` on windows, from the standard library's `syscall.MoveFile` —
    each in a build-tagged file. `MoveFileW` takes no flags and fails on any
    existing target, file or directory, which is the refusal ADR-005 D14
-   asks of `MoveFileExW` without `MOVEFILE_REPLACE_EXISTING`. *(A1,
-   proposed)* It names staging directories and temporary files as
+   asks of `MoveFileExW` without `MOVEFILE_REPLACE_EXISTING`. *(A1)*
+   It names staging directories and temporary files as
    ADR-005 D14 fixes them, from a SHA-256 of a name, never from a random
    source or the process. **No code outside `internal/hostfs` opens,
    creates, renames or removes a file**, and `hostfs` removes only entries
@@ -841,8 +850,8 @@ not used to read inputs.**
    expected files `test --update` replaces (ADR-007 D5 item 5); a tripwire
    checks both.
 4. **`GODEBUG` cannot change behaviour**: with `archive/zip` reading gone,
-   the remaining archive code is `archive/tar` writing (no insecure-path check
-   applies to writing) and `zipfmt` writing. A host-variation run (D13) sets
+   the remaining archive code is `internal/tarw`'s writing and `zipfmt`
+   writing, and no insecure-path check applies to writing *(A9)*. A host-variation run (D13) sets
    `GODEBUG=zipinsecurepath=0,tarinsecurepath=0`, ADR-011 D12's environment
    A sets the opposite, and both expect identical results (ADR-009 D14
    item 2).
@@ -869,8 +878,7 @@ not used to read inputs.**
    `time.Local` to UTC (ADR-009 D14 item 1); `cmd/metais` calls it before
    anything else. `internal/hostenv` is also the only caller of
    `term.IsTerminal` on darwin and linux and of `syscall.GetConsoleMode` on
-   windows, which is the call `golang.org/x/term` makes there. *(A1,
-   proposed)*
+   windows, which is the call `golang.org/x/term` makes there. *(A1)*
 9. **Forbidden in non-test code**: ADR-009 D16 item 3's tripwire,
    `TestNoHostFacts` in `internal/guarantees/`, over the `go/ast` of every
    non-test file, with ADR-009 D12's symbol lists plus these: `os.Getwd`,
@@ -887,14 +895,14 @@ not used to read inputs.**
 10. **Forbidden in the binary's dependency closure**, checked by the same
     tripwire over `go list -deps ./cmd/metais`: `net` (the socket package;
     `net/url` and `net/netip` are pure parsers and allowed — the JSON Schema
-    library imports them *(A3, proposed)*), `net/http` and below, `net/rpc`,
+    library imports them *(A3)*), `net/http` and below, `net/rpc`,
     `net/smtp`, `crypto/tls`, `os/exec`, `os/signal`, `plugin`, `os/user`,
     `log/syslog`, `runtime/cgo`, `syscall/js`. The probe found none of them
     in the closure of a program importing every admitted module at the
     versions of D3's table, built for darwin and linux. Built for windows,
     that closure holds `net`, through `golang.org/x/sys/windows`, which is
     why D3 item 3 links neither `golang.org/x/sys` nor `golang.org/x/term`
-    there. *(A1, proposed)*
+    there. *(A1)*
 
 ### D12 — Build, release and the tool's version *(A8)*
 
@@ -933,7 +941,7 @@ not used to read inputs.**
    -version <semver>` into `dist/`:
    - `metais_<version>_<os>_<arch>.tar.gz` per shipped target, holding
      `metais`, `LICENSE`, `NOTICE` and `THIRD-PARTY-NOTICES.txt`, written
-     deterministically by `archive/tar` and `compress/gzip` (entries sorted,
+     deterministically by `internal/tarw` *(A9)* and `compress/gzip` (entries sorted,
      mode 0755 for the binary and 0644 otherwise, uid and gid 0, empty owner
      names, ADR-001's fixed instant, gzip header with no name and zero
      mtime);
@@ -979,6 +987,12 @@ the detector must fail on, and both run in every `go test`.**
    | read in place (R2 item 1) | `UnpackToTemp`: browse extracts the entry to a temporary file and reads it back | `internal/browse` |
    | determinism (R10 items 2–3) | `MapOrder`: object iteration follows a Go map | `internal/template`, which sets the engine's `Env.UnorderedObjects` *(A2)* |
    | every finding at once (R6 item 1, SC8) | `FirstFinding`: the report keeps only the first error | `internal/finding` |
+   | an existing destination's contents are never read (ADR-009 D8 item 4) | `ReadExisting`: a write into an existing directory reads every file it replaces | `internal/hostfs` *(A9)* |
+   | a write removes only what it created (ADR-005 D15 item 7, A1 item 6) | `RemoveForeign`: a write into an existing directory removes the unplanned files beside the ones it commits | `internal/hostfs` *(A9)* |
+   | standard output holds only the bytes (ADR-008 D16 item 5) | `StdoutNotice`: a render to standard output writes a notice line there first | `internal/cli` *(A9)* |
+   | `test --update` stays in `expected/` (ADR-007 D5 item 5, R1-006) | `UpdateBeyondExpected`: `--update` reckons its removals over the whole example | `internal/cli` *(A9)* |
+   | pack's byte identity (ADR-007 D7 item 4) | `PackMapOrder`: the digest file's entries follow a Go map | `internal/author` *(A9)* |
+   | machine output is the same at a terminal (ADR-008 D16 item 6) | `ColourJSON`: a JSON document written to a terminal is coloured | `internal/cli` *(A9)* |
 
 3. **The harness runs the tool in-process.** `internal/cli.Run(ctx,
    cli.Invocation{Args, Stdin, Stdout, Stderr, Options})` is what `Main`
@@ -1046,8 +1060,9 @@ the detector must fail on, and both run in every `go test`.**
      the work item lands (MIT), with its exclusion list (D5 item 7).
    Updating either is a deliberate change that re-reads the exclusions.
 5. **Golden files**: the zip canary (D1 item 3), the tar layout (ADR-005 D17:
-   the exact bytes `archive/tar` writes for a ustar-fitting name and for a
-   pax-requiring one), and the RFC 8785 examples.
+   the exact bytes `internal/tarw` writes for a ustar-fitting name and for a
+   pax-requiring one, which are the bytes `archive/tar` writes *(A9)*), and
+   the RFC 8785 examples.
 6. **Fuzz targets** (Go native fuzzing; their seed corpora under
    `testdata/fuzz/` run in every `go test`): `FuzzZipRead`, `FuzzYAMLProfile`,
    `FuzzJSONParse`, `FuzzCSVRead`, `FuzzFrontmatter`, `FuzzOutline`,
@@ -1154,8 +1169,9 @@ names and no-replace rename, D17's tar profile, D19's proofs. Promised:
 `liquid.ParseValue`, `liquid.ParseCondition`, `liquid.Eval` and
 `liquid.EvalCondition` (D4 item 3); `golang.org/x/sys/unix` for
 `renameat2` and `renamex_np`, and the standard library's `syscall.MoveFile`
-(`MoveFileW`) on windows, inside `internal/hostfs` *(A1, proposed)*; the
-tar golden test proving D17's claim about `archive/tar`; D19's
+(`MoveFileW`) on windows, inside `internal/hostfs` *(A1)*; the
+tar golden test and `TestMatchesArchiveTar` proving D17's claim that
+`internal/tarw` writes what `archive/tar` would *(A9)*; D19's
 host-variation and repetition runs as D13's determinism detector; Go 1.26, which has
 everything ADR-005 needs (`os.Root` with `Rename` and `MkdirAll`, Unicode
 15.0.0 tables).
@@ -1181,7 +1197,7 @@ only), the parser behaviour of D3 (long flags, the closed short-alias list,
 no grouping, no abbreviation). Promised: `internal/cli/args` (D10 item 3),
 `internal/hostenv` as the single reader of `NO_COLOR` and of the terminal
 state, METAIS's own CommonMark 0.31.2 reading for `outline` and the
-references index *(A3, proposed)*, Go `regexp` for `grep`, `encoding/json` with HTML escaping off and
+references index *(A3)*, Go `regexp` for `grep`, `encoding/json` with HTML escaping off and
 declared member order, the version string of D12 item 3.
 
 **ADR-009 — the security model.** Relied on: every limit with its default,
@@ -1389,7 +1405,7 @@ into, and an environment switch contradicts R14 item 4's spirit.
 8. **goldmark v2 (v2.1.6) for the outline; own frontmatter split** (D9).
    Lean: v2. Why: start positions on every node, the maintained line.
    Alternative: goldmark v1.8.6, more mature, positions from segments.
-   The library choice is superseded by Amendment A3. *(A3, proposed)*
+   The library choice is superseded by Amendment A3. *(A3)*
 9. **RE2 is the only regex engine, behind a profile walk** (D10). Lean: yes.
    Alternative: `regexp2` in ECMAScript mode with a timeout.
 10. **Own argument parser** (D10 item 3). Lean: yes. Alternative: `pflag`
@@ -1469,8 +1485,9 @@ into, and an environment switch contradicts R14 item 4's spirit.
 
 ### A1 — `golang.org/x/sys` and `golang.org/x/term` are linked on unix targets only
 
-**Status:** Proposed 2026-10-18 by PLAN-2026-10-metais-v1 Wave 1 (W1-F2,
-from W1-4's finding); awaiting ratification by Ed Funnekotter.
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4); proposed 2026-10-18 by the plan's Wave 1
+(W1-F2, from W1-4's finding).
 **Amends:** D2 item 2 (the layering bullet), D3 item 3 (the
 `golang.org/x/sys` and `golang.org/x/term` rows and the paragraph after the
 table), D11 item 3 (the windows no-replace rename), D11 item 8 (the caller
@@ -1563,10 +1580,10 @@ outside the standard library.
 
 ### A3 — The Markdown outline is METAIS's own CommonMark reading; goldmark leaves the module
 
-**Status:** Proposed 2026-10-19 by PLAN-2026-10-metais-v1 Wave 2 (W2-9's
-finding, ruled by Ed Funnekotter in plan §8's "Rulings made during the
-wave"); awaiting ratification by Ed Funnekotter at the train's close, with
-A1.
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4). It was ruled 2026-10-19 by the plan
+orchestrator under plan §4, as Wave 2's ruling R3 on W2-9's finding (plan
+§8's "Rulings made during the wave", [#35](https://github.com/kottera/metais/pull/35)).
 **Amends:** D3 item 3 (the `github.com/yuin/goldmark/v2` row and its
 fallback), D9 (its title, item 2 and item 4), D11 item 10 (which admitted
 module imports `net/url`), proposed ruling 8, and the promise to ADR-008
@@ -1632,11 +1649,13 @@ R2-156 (RULINGS-v1); R2-156's own frontmatter split stands.
    `TestNoHostFacts`' dependency scan flagged, leaves with it, and no
    allow-list entry is added.
 
-### A4 — `Core()`'s filter list names `escape`'s alias `h`
+### A4 — `Core()`'s filter list names `escape`'s alias `h`, and `date` is registered outside `Core()`
 
-**Status:** Proposed 2026-10-19 by PLAN-2026-10-metais-v1 Wave 3 (W3-NB1,
-from Wave 3's verification of W3-4); awaiting ratification by Ed Funnekotter
-at the train's close, with A1 and A3.
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4); proposed 2026-10-19 by the plan's Wave 3
+(W3-NB1, from Wave 3's verification of W3-4). Item 2 writes in the placement
+of `date` the plan settled before Wave 2 was filed (plan §8, "Decisions
+settled before filing"), ratified in the same act.
 **Amends:** D4 item 2 (the filter list and its "No other filter exists in
 `Core()`").
 
@@ -1646,8 +1665,19 @@ at the train's close, with A1 and A3.
    2's rule puts it in `Core()`. The list D4 item 2 spells out leaves it
    out, which made "No other filter exists in `Core()`" false of a
    `Core()` that follows the rule. With `h` named, that sentence holds:
-   `Core()`'s filters are the list with `h`, without `date` (plan §8).
-2. **Nothing else changes.** `h` is `escape` under a second name, with
+   `Core()`'s filters are the list with `h`, without `date` (item 2).
+2. **`date` is implemented in `internal/dates` and registered by
+   `internal/template` through `Extend`; `Core()` holds the rest.** The
+   `date` filter needs `time.Parse` and `time.Unix`, which ADR-009 D16
+   item 3 allows only in `internal/dates`, and `internal/liquid` imports no
+   internal package (D2 item 2). So `internal/template` builds its
+   environment as `liquid.Core().Extend(...)`, adding `date`
+   (`internal/dates`' `Filter`, listed by `internal/template/filters`)
+   beside METAIS's own filters. `date` keeps the semantics
+   D4 item 2 and ADR-004 pin for it; only its home moves. The list D4 item
+   2 spells out stays `standardfilters.rb`'s, `date` included, because it
+   is the list ADR-004's catalog is compared with.
+3. **Nothing else changes.** `h` is `escape` under a second name, with
    `escape`'s semantics and charges. `TestCoreIsADR004Catalog` reads the
    list from D4 item 2 and this item's addition from item 1, and holds
    their union to ADR-004's.
@@ -2185,6 +2215,45 @@ that carries it lands.
    `pull_request_target` trigger, and every workflow declares its
    `permissions`. A tripwire in `internal/guarantees` reads
    `.github/workflows/` and fails on any of the three.
+
+### A9 — Every fault is in D13's table, the archive writer is `internal/tarw`, and a gate resumed after its host starved is the same gate
+
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4). It writes into the decision text what the
+train decided under plan §4 and its logs record; item 3 is his ruling on
+the Wave 7 orchestrator's "On gate re-runs".
+**Amends:** D11 item 4, D12 item 5, D13 item 2 (the table), D14 item 5,
+and the promise to ADR-005 under *Interfaces with sibling ADRs*, whose
+passages are marked *(A9)* in place; item 3 adds a rule beside A5 item 9.
+
+1. **D13 item 2's table lists every fault `internal/fault` defines**, each
+   with the guarantee its detector proves and its seam, so each
+   detector's control can be read from this ADR. The train added
+   `ReadExisting` and `RemoveForeign` (bits 5 and 6, Wave 5's existing
+   destinations), `StdoutNotice` (bit 7), `UpdateBeyondExpected` (bit 8,
+   W5-11), `PackMapOrder` (bit 9) and `ColourJSON` (bit 10, both Wave 6).
+   Their detectors are `TestExistingDestinationDetector`,
+   `TestStdoutPurity`, `TestUpdateConfinement`,
+   `TestPackDeterminism` and `TestPresentationUnderTerminal`, which runs
+   on a pseudo-terminal from `internal/hostfs`'s tests, the one package
+   that may import `golang.org/x/sys` (D11 item 3 with A1). A fault added
+   later gets its row in the change that adds it.
+2. **The tar writer is `internal/tarw`.** `archive/tar` imports `os/user`,
+   which D11 item 10 keeps out of the binary, so `internal/tarw` encodes
+   the ustar header, the pax `path` record and its `PaxHeaders.0` header
+   itself (W5-9), for `render --out -` and for the release archives (W7-R).
+   `archive/tar` stays a test dependency: `TestMatchesArchiveTar` holds
+   the encoder to what `archive/tar` writes under the pinned toolchain for
+   every path shape a render plans, and the golden files of D14 item 5
+   pass byte for byte. ADR-005 D17 item 5's claim is a proved equivalence,
+   and ADR-005's A3 says so there.
+3. **A gate resumed after its host starved is a re-run of the same gate.**
+   When a gate run was cut off, or its steps timed out because the shared
+   host gave it less than its share, `gate.sh --resume` once the host
+   gives it its share runs the steps and packages A5 item 9 has not
+   verified, and its verdict is that gate's. The pull request names the
+   runs and their CPU. This covers resuming only: a lone re-run of a red
+   test still closes nothing, because the red has a mechanism to find.
 
 ## Implementation log
 

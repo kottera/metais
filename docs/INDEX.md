@@ -10,7 +10,7 @@
 
 | Plan | Feature | Status |
 |---|---|---|
-| [PLAN-2026-10-metais-v1](plans/PLAN-2026-10-metais-v1.md) | `metais-v1` | Ratified; §3 gives each wave's status |
+| [PLAN-2026-10-metais-v1](plans/PLAN-2026-10-metais-v1.md) | `metais-v1` | Done 2026-10-22; outcome ratified, §15 records it and names the §6 acts still open |
 | [PLAN-2026-10-metais-test-economy](plans/PLAN-2026-10-metais-test-economy.md) | `metais-test-economy` | Accepted |
 | [PLAN-2026-10-metais-ux](plans/PLAN-2026-10-metais-ux.md) | `metais-ux` | Complete 2026-10-22; §10 is the train closeout |
 | [PLAN-2026-10-metais-render-seams](plans/PLAN-2026-10-metais-render-seams.md) | `metais-render-seams` | Accepted; §3 gives each wave's status |

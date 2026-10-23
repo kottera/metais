@@ -8,6 +8,9 @@ it takes effect as PLAN-2026-10-metais-test-economy's items land.
 phases behind the tool's extension points (forms, producers, stages and
 sinks). It changes nothing this ADR decides; it makes D13 item 4's output
 bounds hold after D10's conversion too, which the tool did not do.
+[Amendment A3](#amendments) (the archive is written by `internal/tarw`) is
+accepted by Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's
+ratification; the passages it changes are marked *(A3)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R8 (items 1–5), R9 (items 1–5), R10 (items 1–4), R12 (items 1–5); the output-count and output-size parts of R14 item 2
@@ -652,8 +655,8 @@ guarantee depends on whether the output directory exists.
       that refuses an existing target: `renameat2(RENAME_NOREPLACE)` on
       Linux, `renamex_np(RENAME_EXCL)` on macOS, `MoveFileExW` without
       `MOVEFILE_REPLACE_EXISTING` on Windows (under ADR-010 Amendment A1,
-      proposed, the Windows call is `MoveFileW`, which refuses an existing
-      target the same way). Where the filesystem does not
+      the Windows call is `MoveFileW`, which refuses an existing target the
+      same way). Where the filesystem does not
       support the flag (`EINVAL`, `ENOTSUP`), check the target with `Lstat`
       and rename, accepting the race window between the two.
    5. If the target appeared meanwhile, or anything before the rename
@@ -798,9 +801,10 @@ guarantee depends on whether the output directory exists.
 5. **Conformance compares the archive by entries**: order, path, typeflag,
    mode, uid, gid, uname, gname, mtime, size and content. The tool's own
    archive is byte-identical across platforms and runs, as its containers
-   are. Go's `archive/tar`, given these headers with no format forced,
-   writes exactly this (ustar where it fits, a pax `path` record where it
-   does not); ADR-010 proves it.
+   are. The tool writes it with its own encoder, `internal/tarw`: ustar
+   where every field fits, a pax `path` record where it does not, exactly
+   the bytes Go's `archive/tar` writes given these headers with no format
+   forced. ADR-010 proves the equivalence (its A9). *(A3)*
 6. **The archive is built from the plan**, never from files on disk, so no
    host state (umask, ownership, filesystem case behaviour) reaches it.
 
@@ -963,7 +967,8 @@ guarantee depends on whether the output directory exists.
 - *Needs*: Go 1.26 (ADR-010 D1): `os.Root` with `Rename` and `MkdirAll`
   (since 1.25); `unicode` at 15.0.0; `golang.org/x/text/unicode/norm` and
   `golang.org/x/text/cases` (`Fold`) on the 15.0.0 tables the toolchain
-  selects; `archive/zip` with `CreateRaw`; `archive/tar`;
+  selects; `archive/zip` with `CreateRaw`; `internal/tarw`, held to
+  `archive/tar`'s bytes *(A3)*;
   `golang.org/x/sys/unix` for `renameat2` and `renamex_np`, used only in
   `internal/hostfs`; METAIS's own engine for D3 (ADR-010 D4).
 
@@ -1386,6 +1391,24 @@ PLAN-2026-10-metais-test-economy W3-1 lands.
    process, under a umask of `077`, renders the probe and every vector whose
    expected trees mark a file executable, since the execute bit is the only
    observed byte a umask reaches.
+
+### A3 — The standard-output archive is written by `internal/tarw`
+
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4). It records the stricter rule W5-9 applied
+under plan §4.
+**Amends:** D17 item 5 (what writes the archive) and the needs from
+ADR-010 under *Interfaces with sibling ADRs*, marked *(A3)* in place.
+
+1. **The archive D17 specifies is written by `internal/tarw`**, METAIS's
+   own encoder of the ustar header, the pax `path` record and its
+   `PaxHeaders.0` header. Go's `archive/tar` imports `os/user`, which
+   ADR-010 D11 item 10 keeps out of the binary, and that rule is the
+   stricter one.
+2. **Nothing in the archive changes.** D17's profile is unchanged, and
+   `internal/tarw` writes exactly what `archive/tar` writes given D17's
+   headers: ADR-010's `TestMatchesArchiveTar` and its tar golden files
+   prove it (ADR-010 A9 item 2).
 
 ## Implementation log
 

@@ -5,6 +5,9 @@
 metais.org's reference pages) is accepted by Ed Funnekotter on 2026-10-22, proposed by
 [ADR-013](ADR-013-the-public-project-and-its-distribution.md); it takes
 effect as PLAN-2026-10-metais-public's items land.
+[Amendment A15](#amendments) (the envelope carries `summary`) is accepted by
+Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's ratification; the
+passage it changes is marked *(A15)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R2 (items 1–4) and R17 (items 1–3); the command-line
@@ -671,10 +674,10 @@ everything they write.**
 **With `--json`, a run prints exactly one JSON document, of one envelope
 shape, named and versioned per command.**
 
-1. **The envelope**, members always present and in this order:
+1. **The envelope**, members always present and in this order *(A15)*:
 
    ```json
-   {"format":"metais.validate/1","ok":false,"findings":[…],"result":{…},"next":[{"run":"…","why":"…"}]}
+   {"format":"metais.validate/1","ok":false,"findings":[…],"summary":{…},"result":{…},"next":[{"run":"…","why":"…"}]}
    ```
 
    - `format` — `metais.<command>/<major>`; `metais.help/1` and
@@ -684,6 +687,8 @@ shape, named and versioned per command.**
      severity.
    - `findings` — ADR-006 finding objects in ADR-006's order; `[]` when none.
      Usage errors are findings too.
+   - `summary` — ADR-006 D10 item 3's exact totals of the findings, present
+     when there are none, so a capped list stays honest.
    - `result` — the command's result object (the shapes in D5–D9), or `null`
      when the command was refused before producing one.
    - `next` — D14's list; `[]` when there is nothing to suggest.
@@ -1025,8 +1030,8 @@ references from a JSON parser alone.**
   single-valued flag, and per-command declarations the help printer reads;
   terminal detection (`golang.org/x/term.IsTerminal` on darwin and linux,
   `syscall.GetConsoleMode` on windows, in `internal/hostenv` only; ADR-010
-  Amendment A1, proposed); goldmark v2 as the CommonMark 0.31.2 parser for
-  `outline` and D17; Go `regexp` for `grep`; a JSON encoder with HTML escaping off and
+  Amendment A1); METAIS's own reading of CommonMark 0.31.2 for `outline`
+  and D17 (ADR-010 Amendment A3); Go `regexp` for `grep`; a JSON encoder with HTML escaping off and
   declared member order. The tool's version string is ADR-010's.
 - **ADR-011** — I rely on: nothing in the format specification binding a
   command line (see Proposed rulings). The conformance runner's `cli`
@@ -2274,6 +2279,24 @@ its resolution, `metais.version/1` and every other command are unchanged.
    output and the skill to this, and `metais version`'s output to naming
    its maker on its last line only; `TestVersion` pins the line and the
    document's bytes.
+
+### A15 — The envelope carries `summary`, after `findings`
+
+**Status:** Accepted 2026-10-22 by Ed Funnekotter, at the ratification of
+PLAN-2026-10-metais-v1 (T-A4). It records the plan orchestrator's Wave 2
+ruling, logged by W2-1.
+**Amends:** D10 item 1 (the envelope's members), marked *(A15)* in place.
+
+1. **The envelope's members are `format`, `ok`, `findings`, `summary`,
+   `result` and `next`, in that order, each always present.** ADR-006 D10
+   item 4 requires `findings` and `summary` in every envelope, and owns
+   both members' content; D10 item 1 lists `summary` with them.
+   `docs/cli/schemas/metais.envelope.1.json` requires all six, and
+   `TestEnvelopeMemberOrder` holds the type that writes the envelope and
+   the schema to this order.
+2. **Why it stays.** `summary` carries the exact totals by severity and by
+   code after de-duplication, so a report capped by `findings` still says
+   how many findings there were.
 
 ## Implementation log
 
