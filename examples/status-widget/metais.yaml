@@ -15,8 +15,8 @@ guide: |-
   status from wherever it is kept, writes it as status.json in a data
   directory, and runs two commands:
 
-      metais validate status-widget --data data
-      metais render status-widget --data data --out widget
+      metais validate <package> --data data
+      metais render <package> --data data --out widget
 
   validate reports every value that does not fit the
   [status schema](inputs/status.schema.json), and render writes
