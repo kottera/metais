@@ -157,6 +157,63 @@ file of it holds — the input's, or a collection's item schema — as
 set holds `object`, `text` needs `string` and `markdown` needs `object`.
 Both are errors.
 
+#### Rules across the rows of a table
+
+A table is an array of objects, one per row, and JSON Schema judges each row
+alone. When each row stands for one thing — a criterion, a clause, a
+requirement — two rules usually hold across the rows, and a schema that
+leaves them out accepts a table that contradicts itself or leaves out what
+its reader needs. State them with the two keywords of
+[chapter 5](05-data-specification.md) §5.4, in the schema of the array:
+
+- **`uniqueKeys`** names the columns that identify a row, as key pointers,
+  and refuses a second row with the same values in all of them: a table that
+  answers one criterion twice, once `Supports` and once `Does Not Support`,
+  is refused, at the second row. Several pointers make one key together:
+  `["/standard", "/clause"]` allows the same clause in two standards.
+- **`coverage`** names one column and the values that column has to hold,
+  and reports each value no row has. List what is required, not everything
+  that may appear: a WCAG table must answer every Level A and AA criterion,
+  and may answer a Level AAA one, so its `values` are the A and AA criteria
+  and the AAA ones stay out.
+
+```json
+{
+  "type": "array",
+  "uniqueKeys": ["/criterion"],
+  "coverage": {
+    "key": "/criterion",
+    "values": ["1.1.1", "1.2.1", "1.2.2", "1.2.3", "1.2.4", "1.2.5"]
+  },
+  "items": {
+    "type": "object",
+    "required": ["criterion", "conformance"],
+    "properties": {
+      "criterion": { "type": "string", "enum": ["1.1.1", "1.2.1", "1.2.2", "1.2.3", "1.2.4", "1.2.5", "1.2.6"] },
+      "conformance": { "enum": ["Supports", "Partially Supports", "Does Not Support", "Not Applicable", "Not Evaluated"] }
+    }
+  }
+}
+```
+
+A row with no value in a key column takes no part in either rule, so make
+the column `required` when every row needs one. A rule between the fields of
+one row needs neither keyword: `if` and `then` in the item schema say it, as
+in "a Level A or AA criterion is never `Not Evaluated`", and a rule between
+inputs belongs in the input constraints ([chapter 5](05-data-specification.md) §5.3). Say each rule in the input's
+meaning document too, in words, so that a supplier gathers complete data
+before validating it rather than after.
+
+The keywords are this specification's, so a JSON Schema tool that knows
+only 2020-12 ignores them. A supplier who reads the schema reads them as the
+author wrote them, and an authoring tool shows them plainly beside the
+fields they constrain.
+
+> **Note.** `metais`, the reference tool, writes each rule as a sentence in
+> `metais schema <package> <input> --fields`, on the line of the array it
+> constrains, and in the hint of each finding it reports; `metais help
+> schemas` teaches both keywords with this example.
+
 <a id="mts-aut-081"></a>**MTS-AUT-081** A check MUST report each member of a
 `coverage`'s `values` that the schema reached from the array's item schema by
 `key`, token by token as [MTS-AUT-013](#mts-aut-013) resolves a property

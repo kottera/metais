@@ -5,6 +5,7 @@ package schema
 
 import (
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -302,4 +303,15 @@ func climbs(base, ref string) bool {
 		}
 	}
 	return false
+}
+
+// Keywords returns every keyword a schema may use but one beginning "x-",
+// sorted (ADR-003 D3 items 3 to 5, Amendment A2).
+func Keywords() []string {
+	names := make([]string, 0, len(keywords))
+	for n := range keywords {
+		names = append(names, n)
+	}
+	slices.Sort(names)
+	return names
 }

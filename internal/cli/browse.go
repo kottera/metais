@@ -207,7 +207,9 @@ func readingDeclarations() []*Command {
 				"together stop at 4096 bytes, ending […; metais schema <package> <input> prints every " +
 				"constraint]. Without an input the marks name metais schema <package>. A rule's line is " +
 				"never cut: it lists every value. The schema itself has every value whole, with each " +
-				"field's description.",
+				"field's description.\n\n" +
+				"metais help schemas teaches the dialect a schema is written in: the asserted keywords " +
+				"and formats, x- annotations, and uniqueKeys and coverage with an example.",
 			Operands: []args.Operand{{Name: "<input>", Description: "An input's name; the combined schema, or every input's fields, when omitted."}},
 			Flags:    []args.Flag{{Name: "fields", Description: "List the fields, one line each, in place of the schema."}},
 			Format:   "metais.schema/1",

@@ -333,6 +333,7 @@ func declarations() []*Command {
 				{"metais help", "Prints the overview."},
 				{"metais help templates", "Prints the template language, every filter with an example, and escaping."},
 				{"metais help manifest", "Prints every field of metais.yaml with an example."},
+				{"metais help schemas", "Prints the schema dialect, its formats, and uniqueKeys and coverage with an example."},
 				{"metais help refusals render", "Lists every code metais render may refuse with, by its next step."},
 				{"metais help --json", "Prints every command's declaration and every topic as one document."},
 			},
