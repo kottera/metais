@@ -1,0 +1,40 @@
+[
+  {
+    "code": "schema.sample_unsatisfiable",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "criteria"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/criteria.schema.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {
+      "instance": "",
+      "reason": "coverage"
+    }
+  },
+  {
+    "code": "schema.sample_unsatisfiable",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "flags"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/flags.schema.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "params": {
+      "instance": "",
+      "reason": "unique_keys"
+    }
+  }
+]

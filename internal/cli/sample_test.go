@@ -129,6 +129,45 @@ func TestSampleTo(t *testing.T) {
 	}
 }
 
+// TestRenderSampleRules is W2-4.5: render --sample renders a package
+// whose table holds both uniqueKeys and coverage on one column. The
+// covered criteria come first in coverage's order, no criterion repeats,
+// and --items above the five criteria the column allows gives the five;
+// the data sample writes for the same options validates.
+func TestRenderSampleRules(t *testing.T) {
+	root := testenv.Dir(t)
+	pkg := filepath.Join(root, "pkg")
+	if err := os.CopyFS(pkg, os.DirFS(filepath.Join(vectorsDir, "smp", "sample-coverage-unique-keys", "package"))); err != nil {
+		t.Fatal(err)
+	}
+	out := filepath.Join(root, "out")
+	r := runTool(t, "render", pkg, "--sample", "--items", "9", "--out", out, "--json")
+	if r.status != 0 {
+		t.Fatalf("render --sample: status %d, %s%s", r.status, r.stdout, r.stderr)
+	}
+	b, err := os.ReadFile(filepath.Join(out, "report.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var criteria []string
+	for _, line := range strings.Split(string(b), "\n") {
+		if c, ok := strings.CutPrefix(line, "- "); ok {
+			criteria = append(criteria, strings.SplitN(c, ":", 2)[0])
+		}
+	}
+	rest := slices.Sorted(slices.Values(criteria[min(2, len(criteria)):]))
+	if len(criteria) != 5 || criteria[0] != "1.2.1" || criteria[1] != "1.1.1" || !slices.Equal(rest, []string{"1.3.1", "1.4.1", "2.1.1"}) {
+		t.Errorf("render --sample --items 9 renders the criteria %v, want 1.2.1, 1.1.1 and then 1.3.1, 1.4.1 and 2.1.1 once each:\n%s", criteria, b)
+	}
+	data := filepath.Join(root, "data")
+	if r := runTool(t, "sample", pkg, "--items", "9", "--out", data); r.status != 0 {
+		t.Fatalf("sample: status %d, %s%s", r.status, r.stdout, r.stderr)
+	}
+	if r := runTool(t, "validate", pkg, "--data", data, "--json"); r.status != 0 || len(r.doc.Findings) != 0 {
+		t.Errorf("the data does not validate: %s", r.stdout)
+	}
+}
+
 // TestSampleOptions is ADR-008 D9 sample item 4 and D8 item 8: the
 // options change the data, the same options give the same bytes on every
 // run, and the result and render's sample name them.

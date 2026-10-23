@@ -237,6 +237,10 @@ type place struct {
 	// earlier are the items before this one, when the enclosing array is
 	// uniqueItems.
 	earlier []value.Value
+	// avoid are values that a value below this place must not equal,
+	// each at its path from here: the keys earlier items of an enclosing
+	// array hold under a uniqueKeys of one pointer.
+	avoid []avoided
 	// refs counts each $ref target entered on the path from the root,
 	// this place's own included (item 20).
 	refs map[node]int
@@ -247,6 +251,10 @@ type place struct {
 	// purpose is the purpose of the place's value stream: value, or an
 	// attempt's.
 	purpose string
+	// attempt is the attempt the enclosing item is regenerated under,
+	// when a uniqueKeys key repeated: every place below it inherits it
+	// as its value stream's purpose, so the key's own value changes.
+	attempt string
 	// fixed is the value supplied for this place, nil when none was.
 	fixed value.Value
 	// prose is whether a string here is prose, and of which kind.
@@ -350,7 +358,8 @@ func (s *Generator) valid(starts []node, v value.Value) bool {
 	return true
 }
 
-// The reasons of schema.sample_unsatisfiable (ADR-007 D9 item 23).
+// The reasons of schema.sample_unsatisfiable (ADR-007 D9 item 23, and the
+// two ADR-003 Amendment A2 item 17 adds: unique_keys and coverage).
 const (
 	ReasonType               = "type"
 	ReasonRange              = "range"
@@ -362,6 +371,8 @@ const (
 	ReasonPatternUnmet       = "pattern_unmet"
 	ReasonFormat             = "format"
 	ReasonUniqueItems        = "unique_items"
+	ReasonUniqueKeys         = "unique_keys"
+	ReasonCoverage           = "coverage"
 	ReasonNot                = "not"
 	ReasonConditionals       = "conditionals"
 	ReasonRecursion          = "recursion"
@@ -395,15 +406,41 @@ func itoa(i int) string { return strconv.Itoa(i) }
 // child is the place of the member or element token below loc, on the
 // path loc's targets were entered on.
 func (loc *place) child(token string) *place {
-	return &place{ptr: loc.ptr + finding.Pointer(token), k: loc.k, refs: loc.refs, stop: loc.stop, noCR: loc.noCR}
+	child := &place{ptr: loc.ptr + finding.Pointer(token), k: loc.k, refs: loc.refs, stop: loc.stop, noCR: loc.noCR, attempt: loc.attempt}
+	for _, a := range loc.avoid {
+		if len(a.path) > 0 && a.path[0] == token {
+			child.avoid = append(child.avoid, avoided{a.path[1:], a.held})
+		}
+	}
+	return child
+}
+
+// avoided is the values that the value at path below a place must not
+// equal, each by its digest.
+type avoided struct {
+	path []string
+	held map[string]bool
+}
+
+// avoids reports whether loc's own value must not be v.
+func (loc *place) avoids(v value.Value) bool {
+	for _, a := range loc.avoid {
+		if len(a.path) == 0 && a.held[digest(v)] {
+			return true
+		}
+	}
+	return false
 }
 
 // valuePurpose is the purpose of loc's value stream.
 func (loc *place) valuePurpose() string {
-	if loc.purpose == "" {
-		return purposeValue
+	switch {
+	case loc.purpose != "":
+		return loc.purpose
+	case loc.attempt != "":
+		return loc.attempt
 	}
-	return loc.purpose
+	return purposeValue
 }
 
 // errorf is a defect in the generator, never in its input.

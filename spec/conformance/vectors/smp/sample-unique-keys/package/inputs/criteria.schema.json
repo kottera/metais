@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "uniqueKeys": [
+    "/edition",
+    "/criterion"
+  ],
+  "items": {
+    "type": "object",
+    "required": [
+      "edition",
+      "criterion",
+      "level"
+    ],
+    "additionalProperties": false,
+    "properties": {
+      "edition": {
+        "enum": [
+          "wcag",
+          "en"
+        ]
+      },
+      "criterion": {
+        "enum": [
+          "1.1.1",
+          "1.2.1",
+          "1.3.1"
+        ]
+      },
+      "level": {
+        "enum": [
+          "Supports",
+          "Partially Supports",
+          "Does Not Support"
+        ]
+      }
+    }
+  }
+}

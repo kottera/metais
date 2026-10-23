@@ -388,6 +388,16 @@ operation can generate no value its schema allows MUST be reported as
 parameter is the field's place in the input's value. Every such field MUST
 be reported in one run, and nothing written.
 
+<a id="mts-smp-010"></a>**MTS-SMP-010** For an array whose schema holds
+`coverage`, the sample operation MUST generate, whatever `items` asks for, an
+item whose value at `key` is each member of `values`, and MUST report an
+array for which it cannot as `schema.sample_unsatisfiable`.
+
+<a id="mts-smp-011"></a>**MTS-SMP-011** For an array whose schema holds
+`uniqueKeys`, the sample operation MUST generate no two items whose keys are
+equal, and MUST report an array for which it cannot as
+`schema.sample_unsatisfiable`.
+
 <a id="mts-smp-005"></a>**MTS-SMP-005** When `to` names a directory that
 does not exist, the sample operation MUST create it, with its missing
 parent directories, holding the data directory; when `to` names an

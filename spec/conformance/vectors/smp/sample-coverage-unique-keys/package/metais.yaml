@@ -1,0 +1,18 @@
+metais: "1.0"
+name: "sample-rules-vector"
+version: "1.0.0"
+title: "Sample rules vector"
+description: "A package whose table holds each criterion once and must cover two."
+guide: |-
+  This package produces report.md from its tables.
+  Read [the tables](inputs/tables.md) before you supply them.
+inputs:
+  - name: criteria
+    title: "Criteria"
+    schema: inputs/criteria.schema.json
+    meaning: inputs/tables.md
+    forms:
+      - csv
+outputs:
+  - id: report
+    template: report.md.liquid
