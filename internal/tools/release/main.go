@@ -12,7 +12,7 @@
 // unless the two binaries are equal byte for byte and go version -m shows
 // go.mod's toolchain and the release's build settings. It refuses a tool whose
 // implements names an unreleased specification revision (ADR-011 D5 item
-// 6). It then writes dist/ at the work tree's root: one
+// 6), unless the version has a prerelease suffix (ADR-011 A8 item 5). It then writes dist/ at the work tree's root: one
 // metais_<version>_<os>_<arch>.tar.gz per shipped target and SHA256SUMS.
 //
 // The builder is a developer's tool, never linked into metais, and is the
