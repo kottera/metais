@@ -187,10 +187,10 @@ references.
 
 ## Evidence on the post-Wave-2 binary (PLAN-2026-10-metais-ux W3-5)
 
-This is the harness's evidence for the round, recorded for whoever takes it
+This is the harness's evidence for the round, recorded for whoever took it
 (PLAN-2026-10-metais-ux §8). It is not the round. The round is Work Order
-`01a15abf-4d58` of PLAN-2026-10-metais-v1, and it is not done until Ed
-confirms it.
+`01a15abf-4d58` of PLAN-2026-10-metais-v1, and its result is recorded below, in
+"The round on 339864912a01 (PLAN-2026-10-metais-v1 W7-A2)".
 
 **What ran.** Scenario C6 of the UX set (`docs/dev/ux-testing.md`): a
 C2-shaped run, the prompt "render this file with new fictional data:
