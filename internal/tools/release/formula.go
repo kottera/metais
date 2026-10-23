@@ -65,22 +65,11 @@ func formulaCLI(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
-// formula is the Homebrew formula metais of the tap kottera/tap (ADR-013
-// D1 item 3, D7 item 5) for the release version, whose SHA256SUMS is
-// sums. Each shipped target's archive is fetched from the release, and
-// its SHA-256 is its line in sums, so neither can drift from what the
-// release published. sums must be exactly what the builder writes for
-// version: one "<sha256>  <archive>" line per shipped target, in byte
-// order of the name, and nothing else. The version is not stated, because
-// brew audit refuses a version Homebrew can read from the URL, so version
-// must be one it reads there exactly (brewVersion).
-func formula(version string, sums []byte) ([]byte, error) {
-	if !releaseVersion(version) {
-		return nil, fmt.Errorf("%w: %q", errVersion, version)
-	}
-	if !brewVersion(version) {
-		return nil, fmt.Errorf("%w: %q", errBrewVersion, version)
-	}
+// parseSums is the SHA-256 of each shipped target's archive that sums,
+// the SHA256SUMS of the release version, lists. sums must be exactly what
+// the builder writes for version: one "<sha256>  <archive>" line per
+// shipped target, in byte order of the name, and nothing else.
+func parseSums(version string, sums []byte) (map[buildline.Target]string, error) {
 	want := make([]string, len(buildline.Shipped))
 	targets := map[string]buildline.Target{}
 	for i, t := range buildline.Shipped {
@@ -106,6 +95,28 @@ func formula(version string, sums []byte) ([]byte, error) {
 			return nil, fmt.Errorf("%w: line %d names %q, and a release of %s has %q there", errSums, i+1, name, version, want[i])
 		}
 		hashes[targets[name]] = sum
+	}
+	return hashes, nil
+}
+
+// formula is the Homebrew formula metais of the tap kottera/tap (ADR-013
+// D1 item 3, D7 item 5) for the release version, whose SHA256SUMS is
+// sums. Each shipped target's archive is fetched from the release, and
+// its SHA-256 is its line in sums, so neither can drift from what the
+// release published. sums must be exactly what the builder writes for
+// version (parseSums). The version is not stated, because
+// brew audit refuses a version Homebrew can read from the URL, so version
+// must be one it reads there exactly (brewVersion).
+func formula(version string, sums []byte) ([]byte, error) {
+	if !releaseVersion(version) {
+		return nil, fmt.Errorf("%w: %q", errVersion, version)
+	}
+	if !brewVersion(version) {
+		return nil, fmt.Errorf("%w: %q", errBrewVersion, version)
+	}
+	hashes, err := parseSums(version, sums)
+	if err != nil {
+		return nil, err
 	}
 
 	var b strings.Builder
