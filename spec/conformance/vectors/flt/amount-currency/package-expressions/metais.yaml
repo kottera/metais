@@ -1,0 +1,17 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: malformed
+    template: page.txt.liquid
+    path: "{{ 1 | amount: 'eur' }}.txt"
+  - id: gold
+    template: page.txt.liquid
+    path: "{{ 1 | amount: 'XAU' }}.txt"
+  - id: given
+    template: page.txt.liquid
+    path: "{{ 1 | amount: 'XAU', decimals: 0 }}.txt"

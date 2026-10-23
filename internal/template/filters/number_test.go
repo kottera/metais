@@ -320,3 +320,26 @@ func TestNumberCharges(t *testing.T) {
 		}
 	}
 }
+
+// TestAmountCurrencyHoldsNoCode is MTS-FLT-020's last clause: the error
+// of a refused code holds neither the code nor any part of it, in its
+// arguments or its detail, at parse and at render.
+func TestAmountCurrencyHoldsNoCode(t *testing.T) {
+	testenv.Home(t)
+	for _, code := range []string{"qwz", "QWZK", "QWZ", "XPT"} {
+		for _, src := range []string{`{{ 1 | amount: "` + code + `" }}`, `{{ 1 | amount: c }}`} {
+			_, err, _ := render(t, src, `{"c": "`+code+`"}`)
+			if err == nil || err.Code != liquid.CodeAmountCurrency {
+				t.Fatalf("%s with %s: %v, want %s", src, code, err, liquid.CodeAmountCurrency)
+			}
+			for k, v := range err.Args {
+				if strings.Contains(strings.ToUpper(v), strings.ToUpper(code[:3])) {
+					t.Errorf("%s with %s: Args[%q] = %q holds the code", src, code, k, v)
+				}
+			}
+			if strings.Contains(strings.ToUpper(err.Detail), strings.ToUpper(code[:3])) {
+				t.Errorf("%s with %s: the detail %q holds the code", src, code, err.Detail)
+			}
+		}
+	}
+}

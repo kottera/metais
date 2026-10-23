@@ -1,0 +1,22 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: lower
+    template: lower.txt.liquid
+  - id: four
+    template: four.txt.liquid
+  - id: digit_with_decimals
+    template: digit-with-decimals.txt.liquid
+  - id: empty
+    template: empty.txt.liquid
+  - id: unlisted
+    template: unlisted.txt.liquid
+  - id: gold
+    template: gold.txt.liquid
+  - id: variable_decimals
+    template: variable-decimals.txt.liquid

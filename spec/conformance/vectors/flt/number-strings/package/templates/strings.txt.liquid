@@ -1,0 +1,11 @@
+{{ inputs.r.long | number: decimals: 2, group: "," }}
+{{ inputs.r.neg | number }}
+{{ inputs.r.huge | number: group: " " }}
+{{ inputs.r.half | number: decimals: 0 }}
+{{ inputs.r.nhalf | number: decimals: 2 }}
+{{ inputs.r.below | number: decimals: 2 }}
+{{ inputs.r.carry | number: decimals: 1, group: "," }}
+{{ inputs.r.nz | number: decimals: 2 }}
+{{ inputs.r.zero | number }}
+{{ inputs.r.pad | number: decimals: 4 }}
+{{ "-0" | number }}

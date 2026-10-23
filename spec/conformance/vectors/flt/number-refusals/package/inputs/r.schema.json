@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "b": {},
+    "a": {},
+    "o": {},
+    "s_space": {},
+    "s_plus": {},
+    "s_zero": {},
+    "s_exp": {},
+    "s_sep": {},
+    "s_point": {},
+    "s_empty": {},
+    "s_decimals": {},
+    "s_comma": {}
+  }
+}

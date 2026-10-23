@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "properties": {
+    "long": {
+      "type": "string"
+    },
+    "neg": {
+      "type": "string"
+    },
+    "huge": {
+      "type": "string"
+    },
+    "half": {
+      "type": "string"
+    },
+    "nhalf": {
+      "type": "string"
+    },
+    "below": {
+      "type": "string"
+    },
+    "carry": {
+      "type": "string"
+    },
+    "nz": {
+      "type": "string"
+    },
+    "zero": {
+      "type": "string"
+    },
+    "pad": {
+      "type": "string"
+    }
+  }
+}

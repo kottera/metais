@@ -1,0 +1,46 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: decimals_21
+    template: decimals-21.txt.liquid
+  - id: decimals_negative
+    template: decimals-negative.txt.liquid
+  - id: decimals_float
+    template: decimals-float.txt.liquid
+  - id: decimals_string
+    template: decimals-string.txt.liquid
+  - id: point_two
+    template: point-two.txt.liquid
+  - id: point_empty
+    template: point-empty.txt.liquid
+  - id: point_digit
+    template: point-digit.txt.liquid
+  - id: point_minus
+    template: point-minus.txt.liquid
+  - id: group_minus
+    template: group-minus.txt.liquid
+  - id: group_digit
+    template: group-digit.txt.liquid
+  - id: group_default_point
+    template: group-default-point.txt.liquid
+  - id: group_point
+    template: group-point.txt.liquid
+  - id: number_positional
+    template: number-positional.txt.liquid
+  - id: number_code
+    template: number-code.txt.liquid
+  - id: keyword_twice
+    template: keyword-twice.txt.liquid
+  - id: amount_no_code
+    template: amount-no-code.txt.liquid
+  - id: amount_two_codes
+    template: amount-two-codes.txt.liquid
+  - id: amount_code_number
+    template: amount-code-number.txt.liquid
+  - id: amount_code_place
+    template: amount-code-place.txt.liquid

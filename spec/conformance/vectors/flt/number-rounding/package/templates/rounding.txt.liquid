@@ -1,0 +1,11 @@
+2.675 at 2: {{ inputs.r.a | number: decimals: 2 }}
+1.005 at 2: {{ inputs.r.b | number: decimals: 2 }}
+0.125 at 2: {{ inputs.r.c | number: decimals: 2 }}
+-2.5 at 0: {{ inputs.r.d | number: decimals: 0 }}
+-0.004 at 2: {{ inputs.r.e | number: decimals: 2 }}
+-0.004: {{ inputs.r.e | number }}
+1e21: {{ inputs.r.f | number }}
+1e21 at 2: {{ inputs.r.f | number: decimals: 2, group: "," }}
+2.675 round: {{ inputs.r.a | round: 2 }}
+9.995 at 2: {{ inputs.r.g | number: decimals: 2 }}
+-0: {{ inputs.r.h | number: decimals: 1 }}

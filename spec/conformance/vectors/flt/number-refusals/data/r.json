@@ -1,0 +1,18 @@
+{
+  "b": true,
+  "a": [
+    1
+  ],
+  "o": {
+    "x": 1
+  },
+  "s_space": " 1",
+  "s_plus": "+1",
+  "s_zero": "01",
+  "s_exp": "1e3",
+  "s_sep": "1,000",
+  "s_point": "1.",
+  "s_empty": "",
+  "s_decimals": "2",
+  "s_comma": ","
+}

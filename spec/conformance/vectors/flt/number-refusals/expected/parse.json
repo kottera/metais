@@ -1,0 +1,363 @@
+[
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/amount-code-number.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/amount-code-number.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "amount",
+      "argument": "1",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/amount-code-place.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/amount-code-place.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "amount",
+      "argument": "code",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/amount-no-code.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/amount-no-code.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "amount",
+      "argument": "1",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/amount-two-codes.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/amount-two-codes.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "amount",
+      "argument": "2",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/decimals-21.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/decimals-21.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "decimals",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/decimals-float.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/decimals-float.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "decimals",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/decimals-negative.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/decimals-negative.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "decimals",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/decimals-string.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/decimals-string.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "amount",
+      "argument": "decimals",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/group-default-point.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/group-default-point.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "group",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/group-digit.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/group-digit.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "group",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/group-minus.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/group-minus.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "group",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/group-point.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/group-point.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "amount",
+      "argument": "group",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/keyword-twice.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/keyword-twice.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "decimals",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/number-code.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/number-code.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "code",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/number-positional.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/number-positional.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "1",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/point-digit.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/point-digit.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "point",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/point-empty.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/point-empty.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "point",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/point-minus.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/point-minus.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "point",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/point-two.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/point-two.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "point",
+      "column": 1
+    }
+  }
+]

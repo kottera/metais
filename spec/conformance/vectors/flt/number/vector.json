@@ -1,0 +1,41 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "flt/number",
+  "title": "number writes a number with the decimals, the point and the group separator its keywords give, a point . and no group separator when none is given, and nil as nil",
+  "statements": [
+    "MTS-FLT-015",
+    "MTS-FLT-016",
+    "MTS-FLT-017",
+    "MTS-FLT-018"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "determinism"
+  ],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/out"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

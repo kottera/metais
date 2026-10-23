@@ -1,0 +1,64 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "flt/amount-currency",
+  "title": "amount refuses a code that is not three ASCII capital letters, reason malformed, and, without decimals:, one Appendix C does not list or lists with no minor units, reason no_minor_unit, a literal code when the template or the manifest expression is parsed, and the finding never holds the code",
+  "statements": [
+    "MTS-FLT-020",
+    "MTS-MAN-018"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "literal",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/literal.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "data",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package-data",
+            "out": "out",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/data.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "open",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package-expressions"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/expressions.json"
+          }
+        }
+      ]
+    }
+  ]
+}
