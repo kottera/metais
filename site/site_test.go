@@ -256,7 +256,13 @@ func builtSite(t *testing.T) string {
 // sharedDir holds the shared build, made and removed by TestMain.
 var sharedDir string
 
+// TestMain runs the test binary as sha256sum when it is invoked by that
+// name (install_test.go), and otherwise runs the tests around the shared
+// build's directory.
 func TestMain(m *testing.M) {
+	if filepath.Base(os.Args[0]) == "sha256sum" {
+		os.Exit(sha256sum(os.Args[1:]))
+	}
 	dir, err := os.MkdirTemp("", "metais-site-test-")
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

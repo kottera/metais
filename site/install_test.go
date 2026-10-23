@@ -37,14 +37,6 @@ const installScript = "public/install.sh"
 // perl being able to run; the install jobs of ci.yml run the script with each
 // host's own curl and hash tool.
 
-// TestMain runs the test binary as sha256sum when it is run by that name.
-func TestMain(m *testing.M) {
-	if filepath.Base(os.Args[0]) == "sha256sum" {
-		os.Exit(sha256sum(os.Args[1:]))
-	}
-	os.Exit(m.Run())
-}
-
 // sha256sum prints each file's SHA-256 as sha256sum does.
 func sha256sum(files []string) int {
 	for _, f := range files {
@@ -387,7 +379,7 @@ func TestInstallServed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := os.ReadFile(filepath.Join(build(t), "install.sh"))
+	got, err := os.ReadFile(filepath.Join(builtSite(t), "install.sh"))
 	if err != nil {
 		t.Fatal(err)
 	}
