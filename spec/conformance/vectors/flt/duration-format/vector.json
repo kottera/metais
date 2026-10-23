@@ -34,7 +34,7 @@
         {
           "op": "render",
           "args": {
-            "package": "render",
+            "package": "package-render",
             "out": "out",
             "data": "data"
           },
@@ -51,7 +51,7 @@
         {
           "op": "open",
           "args": {
-            "package": "manifest"
+            "package": "package-manifest"
           },
           "expect": {
             "ok": false,

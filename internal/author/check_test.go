@@ -380,7 +380,7 @@ func TestParseHintCauses(t *testing.T) {
 // METAIS's filters and date (W5-1), and with METAIS's embed, asset and
 // provenance tags known by name, which no expression may hold (ADR-004 D16 item 5).
 func TestCheckOneParse(t *testing.T) {
-	want := append(liquid.Core().FilterNames(), "csv", "date", "json", "json_script", "markdown_table", "safe", "slug", "yaml")
+	want := append(liquid.Core().FilterNames(), "csv", "date", "duration", "json", "json_script", "markdown_table", "safe", "slug", "yaml")
 	slices.Sort(want)
 	if got := loader.Dialect().FilterNames(); !slices.Equal(got, want) {
 		t.Errorf("the dialect's filters are %q, want %q", got, want)

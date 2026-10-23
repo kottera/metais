@@ -164,6 +164,7 @@ var filterGroups = []filterGroup{
 		{"safe", "Marks a value safe from escaping; only as the last filter of {{ }} or echo.", `{{ "<b>" | safe }}`, "<b>"},
 		{"slug", "Lower-case ASCII letters and digits joined by -; accents are dropped, and a string with no slug is an error.", `{{ "Hello, World!" | slug }}`, "hello-world"},
 		{"date", "Formats an RFC 3339 date or date-time, or Unix seconds, in its own offset, with a strftime format; spec chapter 8 lists the directives.", `{{ "2026-10-18T09:30:00+02:00" | date: "%Y-%m-%d %H:%M %z" }}`, "2026-10-18 09:30 +0200"},
+		{"duration", "Writes seconds, an ISO 8601 duration, or fields: \"d:h:m\" and the like, with %d %H %M %S, as date's directives are written.", `{{ "00:07:25" | duration: "%-H h %M min", fields: "d:h:m" }}`, "7 h 25 min"},
 	}},
 }
 

@@ -62,7 +62,7 @@
         {
           "op": "render",
           "args": {
-            "package": "nil",
+            "package": "package-nil",
             "out": "out",
             "limits": {
               "render-work": 39
@@ -86,7 +86,7 @@
         {
           "op": "render",
           "args": {
-            "package": "nil",
+            "package": "package-nil",
             "out": "out",
             "limits": {
               "render-work": 38

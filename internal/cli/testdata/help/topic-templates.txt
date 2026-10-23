@@ -252,6 +252,10 @@ METAIS's own (spec chapter 8):
                   directives.
                   {{ "2026-10-18T09:30:00+02:00" | date: "%Y-%m-%d %H:%M %z" }}
                   gives 2026-10-18 09:30 +0200
+  duration        Writes seconds, an ISO 8601 duration, or fields: "d:h:m" and
+                  the like, with %d %H %M %S, as date's directives are written.
+                  {{ "00:07:25" | duration: "%-H h %M min", fields: "d:h:m" }}
+                  gives 7 h 25 min
 
 Escaping:
 An output's escape is none, the default, or html, set in metais.yaml beside its
