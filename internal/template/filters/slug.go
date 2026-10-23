@@ -41,8 +41,10 @@ var slugFilter = &filter{
 	},
 }
 
-// slugLetters is step 1 of ADR-004 D10 item 6: the Latin letters that
-// have no decomposition, each with its ASCII spelling.
+// slugLetters is step 3 of ADR-004 D10 item 6 (Amendment A1): the Latin
+// letters that have no decomposition, each with its ASCII spelling. It is
+// read after NFKD, so a letter that decomposes to one of them, as U+01FE
+// does to U+00D8 and a combining acute, is spelled as its base is.
 var slugLetters = map[rune]string{
 	'ß': "ss", 'ẞ': "ss",
 	'æ': "ae", 'Æ': "ae",
@@ -58,21 +60,19 @@ var slugLetters = map[rune]string{
 	'ĸ': "k",
 }
 
-// slug applies ADR-004 D10 item 6's steps to s and hands each byte of the
-// slug to emit, in order, building nothing itself: the table of letters,
-// NFKD, every Mn removed, ASCII A–Z lower-cased, each maximal run of
-// anything but a–z and 0–9 replaced by one "-", and a leading or trailing
-// "-" removed. It decomposes one code point at a time, so it holds no copy
-// of s however far NFKD expands it. That gives the slug of the whole
-// string's NFKD: normalizing a string decomposes each code point and then
-// reorders only runs of combining marks, which are never a–z or 0–9 and so
-// end as part of a run of "-" wherever they stand.
+// slug applies ADR-004 D10 item 6's steps (Amendment A1) to s and hands
+// each byte of the slug to emit, in order, building nothing itself: NFKD,
+// every Mn removed, the table of letters, ASCII A–Z lower-cased, each
+// maximal run of anything but a–z and 0–9 replaced by one "-", and a
+// leading or trailing "-" removed. It decomposes one code point at a time,
+// so it holds no copy of s however far NFKD expands it. That gives the
+// slug of the whole string's NFKD: normalizing a string decomposes each
+// code point and then reorders only runs of combining marks, which are
+// never a–z, 0–9 or a letter of the table and so end as part of a run of
+// "-" wherever they stand.
 func slug(s string, emit func(byte)) {
 	started, dash := false, false
 	put := func(r rune) {
-		if unicode.Is(unicode.Mn, r) {
-			return
-		}
 		if 'A' <= r && r <= 'Z' {
 			r += 'a' - 'A'
 		}
@@ -86,19 +86,25 @@ func slug(s string, emit func(byte)) {
 		}
 		dash = true
 	}
-	for _, r := range s {
-		if ascii, ok := slugLetters[r]; ok {
+	letter := func(d rune) {
+		if unicode.Is(unicode.Mn, d) {
+			return
+		}
+		if ascii, ok := slugLetters[d]; ok {
 			for _, a := range ascii {
 				put(a)
 			}
-			continue
+			return
 		}
+		put(d)
+	}
+	for _, r := range s {
 		if r < utf8.RuneSelf {
 			put(r)
 			continue
 		}
 		for _, d := range unitext.NFKD(string(r)) {
-			put(d)
+			letter(d)
 		}
 	}
 }

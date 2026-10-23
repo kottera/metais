@@ -156,6 +156,18 @@ func TestMarkdownTable(t *testing.T) {
 	})
 }
 
+// TestSlugLettersDoNotDecompose is ADR-004 Amendment A1's premise: no
+// letter of the table decomposes under NFKD, so reading the table after
+// NFKD gives each of them the spelling it had when the table was read
+// first.
+func TestSlugLettersDoNotDecompose(t *testing.T) {
+	for r := range slugLetters {
+		if d := unitext.NFKD(string(r)); d != string(r) {
+			t.Errorf("U+%04X decomposes to %+q", r, d)
+		}
+	}
+}
+
 // TestSlug is ADR-004 D10 item 6.
 func TestSlug(t *testing.T) {
 	testenv.Home(t)
@@ -163,6 +175,8 @@ func TestSlug(t *testing.T) {
 		{name: "the specification's example", src: `{{ "Café Déjà-vu" | slug }}`, want: "cafe-deja-vu"},
 		{name: "the letters with no decomposition", src: `{{ "Straße ẞ Æsir æ Œuvre œ Øre ø Đ đ Ð ð Þ þ Łódź ł ı Ħ ħ Ŧ ŧ Ŋ ŋ ĸ" | slug }}`,
 			want: "strasse-ss-aesir-ae-oeuvre-oe-ore-o-d-d-d-d-th-th-lodz-l-i-h-h-t-t-ng-ng-k"},
+		{name: "letters that reach the table through decomposition", src: `{{ "Ǿrsted ǿ Ǽsir ǽ Ǣ ǣ" | slug }}`,
+			want: "orsted-o-aesir-ae-ae-ae"},
 		{name: "compatibility forms", src: `{{ "ﬁle ① ½ Ｆｕｌｌ" | slug }}`, want: "file-1-1-2-full"},
 		{name: "runs and ends", src: `{{ "  --Hello__World!!2026--  " | slug }}`, want: "hello-world-2026"},
 		{name: "a letter with no ASCII form among others", src: `{{ "Ελλάδα 2026" | slug }}`, want: "2026"},
