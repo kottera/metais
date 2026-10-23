@@ -7,8 +7,11 @@ license: Apache-2.0
 homepage: https://metais.org/
 guide: |-
   This package renders the pages of metais.org. Nothing is written by hand
-  but the layout and the pages' own text: the reference comes from metais's
-  help and skill, and the specification from its Markdown.
+  but the layout and the pages' own text: the reference, under reference/,
+  comes from metais's help and skill, one page per command and per topic
+  and one for the skill, and the specification, under spec/, from its
+  Markdown: the draft at spec/draft/, each released revision at
+  spec/<M>.<m>/, and spec/ leading to the latest.
 
   site/build.sh is the one way to render it. It builds metais from the
   commit being built, exports every input below as one JSON file of a data
@@ -29,7 +32,7 @@ inputs:
     forms: [json]
   - name: spec
     title: The specification's text
-    description: The draft and every released revision of the specification, each Markdown file of spec/ as an HTML fragment.
+    description: The draft and every released revision of the specification, each Markdown file of spec/ as an HTML fragment, and every released revision's pages in one list.
     schema: inputs/spec.schema.json
     forms: [json]
   - name: release

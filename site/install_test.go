@@ -10,6 +10,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"html"
 	"maps"
 	"os"
 	"os/exec"
@@ -423,4 +424,34 @@ func tarGz(t *testing.T, files map[string]string) []byte {
 		t.Fatal(err)
 	}
 	return buf.Bytes()
+}
+
+// TestInstallPage holds the install page to ADR-013 D6: item 1's four
+// routes, each command as D6 writes it; item 6's install directory, its
+// variable and the PATH line it prints; item 7's METAIS_VERSION; item 9's
+// metais skill; item 10's xattr for a binary downloaded with a browser;
+// and a link to the script, which item 3 asks a reader to read.
+func TestInstallPage(t *testing.T) {
+	b, err := os.ReadFile(filepath.Join(builtSite(t), "install", "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	page := html.UnescapeString(string(b))
+	for _, want := range []string{
+		"<code>brew install kottera/tap/metais</code>",
+		"<code>curl -fsSL https://metais.org/install.sh | sh</code>",
+		"<code>go install metais.org/metais/cmd/metais@latest</code>",
+		"<code>SHA256SUMS</code>",
+		"<code>~/.local/bin</code>",
+		"<code>METAIS_INSTALL_DIR</code>",
+		"<code>PATH</code>",
+		"<code>curl -fsSL https://metais.org/install.sh | METAIS_VERSION=1.0.0 sh</code>",
+		"<code>metais skill</code>",
+		"<code>xattr -d com.apple.quarantine ~/.local/bin/metais</code>",
+		`<a href="/install.sh">`,
+	} {
+		if !strings.Contains(page, want) {
+			t.Errorf("the install page does not hold %s", want)
+		}
+	}
 }

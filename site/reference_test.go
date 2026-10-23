@@ -482,7 +482,9 @@ func TestSpecPages(t *testing.T) {
 		checkDraft(t, p, site[p])
 	}
 
-	tags, err := exec.Command("git", "-C", "..", "tag", "--list", "spec-*").Output()
+	git := exec.Command("git", "-C", "..", "tag", "--list", "spec-*")
+	git.Env = testenv.GitEnv(hostEnviron)
+	tags, err := git.Output()
 	if err != nil {
 		t.Fatal(err)
 	}
