@@ -15,9 +15,11 @@ evidence is in the row's remarks.
 - **Not Applicable**: the criterion does not concern this product, such as
   a captions criterion for a product with no video. The remarks say why.
 - **Not Evaluated**: the product was not evaluated against the criterion.
-  Use it for a Level AAA criterion the vendor chose not to evaluate, and
+  Use it for a Level AAA criterion the evaluation chose not to cover, and
   for nothing that a buyer's standard requires: a report that leaves a
-  required criterion unevaluated does not show conformance with it.
+  required criterion unevaluated does not show conformance with it. A
+  required criterion the evaluation's scope left out is still Not
+  Evaluated, and the remarks say why.
 
 When in doubt between two levels, choose the lower, and explain in the
 remarks. A buyer relies on a report as a statement of fact about the

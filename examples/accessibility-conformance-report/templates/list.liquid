@@ -1,0 +1,8 @@
+{%- comment -%}
+The entries of items as a phrase of prose: "A", "A and AA", or "A, AA and
+AAA".
+{%- endcomment -%}
+{%- for item in items -%}
+{%- if forloop.index > 1 -%}{%- if forloop.last %} and {% else %}, {% endif -%}{%- endif -%}
+{{ item }}
+{%- endfor -%}

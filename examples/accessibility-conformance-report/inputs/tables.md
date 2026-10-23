@@ -47,11 +47,13 @@ the order of its reference file. A complete report lists every criterion
 of the table, so that a reader can tell a criterion met from one left
 out: write Not Applicable for a criterion that does not concern the
 product, and Not Evaluated for one nobody evaluated. The rows appear in
-the report in the order the file gives them.
+the report in the order the file gives them, and its summary counts them
+by level.
 
 The **WCAG 2.2** table lists the success criteria at Levels A and AA, and
-those at Level AAA the vendor chose to evaluate. The report gives each
-criterion's level beside its name. It also answers the parts of the other
+those at Level AAA the evaluation chose to cover. The report gives each
+criterion's level beside its name, and names the levels the table lists
+among the standards it answers. It also answers the parts of the other
 two standards that apply WCAG to web pages, documents and software, so
 those standards' tables leave them out.
 

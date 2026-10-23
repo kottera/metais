@@ -62,7 +62,7 @@
     "table": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["standard", "criteria"],
+      "required": ["standard", "summary", "criteria"],
       "properties": {
         "standard": { "enum": ["wcag", "section508", "en301549"] },
         "source": {
@@ -75,6 +75,27 @@
             "url": { "const": "https://www.w3.org/TR/2024/REC-WCAG22-20241212/" },
             "status": { "const": "W3C Recommendation 12 December 2024" },
             "notice": { "const": "Copyright © 2020-2024 World Wide Web Consortium. W3C® liability, trademark and document use rules apply." }
+          }
+        },
+        "summary": {
+          "description": "How many criteria the table lists, and how many of them give each conformance level, counted from the table's rows.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["criteria", "conformance"],
+          "properties": {
+            "criteria": { "type": "integer", "minimum": 1 },
+            "conformance": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["Supports", "Partially Supports", "Does Not Support", "Not Applicable", "Not Evaluated"],
+              "properties": {
+                "Supports": { "type": "integer", "minimum": 0 },
+                "Partially Supports": { "type": "integer", "minimum": 0 },
+                "Does Not Support": { "type": "integer", "minimum": 0 },
+                "Not Applicable": { "type": "integer", "minimum": 0 },
+                "Not Evaluated": { "type": "integer", "minimum": 0 }
+              }
+            }
           }
         },
         "criteria": {

@@ -1,8 +1,10 @@
 {%- comment -%}
 One table of the JSON report: its standard; for WCAG 2.2, whose criterion
 names and levels are excerpts of W3C's document, the source W3C's terms
-require with them: its title, link, status and copyright notice; then a
-criterion object per entry of rows, in the order supplied.
+require with them: its title, link, status and copyright notice; then its
+summary, how many criteria rows lists and how many of them give each
+conformance level; then a criterion object per entry of rows, in the order
+supplied.
 {%- endcomment -%}
 {
       "standard": {{ standard | json }},
@@ -14,6 +16,16 @@ criterion object per entry of rows, in the order supplied.
         "notice": "Copyright © 2020-2024 World Wide Web Consortium. W3C® liability, trademark and document use rules apply."
       },
 {%- endif %}
+      "summary": {
+        "criteria": {{ rows.size }},
+        "conformance": {
+          "Supports": {{ rows | where: "conformance", "Supports" | size }},
+          "Partially Supports": {{ rows | where: "conformance", "Partially Supports" | size }},
+          "Does Not Support": {{ rows | where: "conformance", "Does Not Support" | size }},
+          "Not Applicable": {{ rows | where: "conformance", "Not Applicable" | size }},
+          "Not Evaluated": {{ rows | where: "conformance", "Not Evaluated" | size }}
+        }
+      },
       "criteria": [
 {%- for row in rows %}
         {

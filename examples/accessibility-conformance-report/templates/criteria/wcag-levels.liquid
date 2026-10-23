@@ -1,0 +1,21 @@
+{%- comment -%}
+The WCAG 2.2 conformance levels at which rows list success criteria, in
+the order A, AA, AAA, as a phrase: "Level AA", "Levels A and AA", or
+"Levels A, AA and AAA". A level no row lists is left out, so the report
+never claims a level its table does not hold.
+{%- endcomment -%}
+{%- assign a = false -%}
+{%- assign aa = false -%}
+{%- assign aaa = false -%}
+{%- for row in rows -%}
+{%- capture level %}{% render "criteria/wcag-level.liquid", id: row.criterion %}{% endcapture -%}
+{%- case level -%}
+{%- when "A" -%}{%- assign a = true -%}
+{%- when "AA" -%}{%- assign aa = true -%}
+{%- when "AAA" -%}{%- assign aaa = true -%}
+{%- endcase -%}
+{%- endfor -%}
+{%- capture levels %}{% if a %} A{% endif %}{% if aa %} AA{% endif %}{% if aaa %} AAA{% endif %}{% endcapture -%}
+{%- assign levels = levels | strip | split: " " -%}
+{%- if levels.size > 1 %}Levels {% else %}Level {% endif -%}
+{%- render "list.liquid", items: levels -%}
