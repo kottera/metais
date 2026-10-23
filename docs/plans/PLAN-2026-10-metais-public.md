@@ -372,6 +372,29 @@ with nothing published.
   become an off-tera act run by hand outside the dispatch sandbox, and the
   item says so.
 
+### Rulings made during Wave 2
+
+Made by the plan orchestrator in answer to the wave's breakdown
+(2026-10-23). They bind later items of their kind:
+
+- **R-W2-1, what starts the site's deploy.** ADR-013 D7 item 3.4 binds
+  what must be true. The site is built and deployed from the released
+  tag, and only once the release is published, so the site never
+  describes a release that is not out. A release published with the
+  workflow's own token starts no further workflow, so the trigger is the
+  item's design. Any of these will do:
+  - the `release: published` event, where it fires;
+  - `release.yml` calling `pages.yml` as its last step after publishing,
+    at the released tag;
+  - a token that starts workflows, held in the `release` environment.
+
+  None needs an ADR-013 amendment. The item states which it chose in its
+  log entry and in `docs/dev/release.md`. Whichever it chooses:
+  - `pages.yml` never deploys from a branch, from an unreleased tag, or
+    before publication;
+  - a manual run can redeploy a published tag, for an erratum;
+  - every workflow keeps minimal, declared `permissions`.
+
 ## 8. Wave 3 — rehearsal
 
 **Goal:** proof that every route works, on a release candidate, before
