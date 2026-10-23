@@ -20,8 +20,12 @@ evidence is in the row's remarks.
   required criterion unevaluated does not show conformance with it. A
   WCAG 2.2 criterion at Level A or AA is never Not Evaluated, and
   validation refuses it: evaluate each one before writing the report. Any
-  other required criterion the evaluation's scope left out is still Not
-  Evaluated, and the remarks say why.
+  other criterion the evaluation's scope left out, such as a Revised
+  Section 508 or EN 301 549 criterion about documentation or support
+  services an evaluator outside the vendor cannot see, is still Not
+  Evaluated, never Not Applicable when it concerns the product. Its
+  remarks say why it was not evaluated, and validation refuses a Not
+  Evaluated row without them.
 
 When in doubt between two levels, choose the lower, and explain in the
 remarks. A buyer relies on a report as a statement of fact about the

@@ -30,10 +30,12 @@ criterion,conformance,remarks
 - **remarks** says what the evaluation found. For Supports, say how the
   product meets the criterion; for Partially Supports and Does Not
   Support, say which functions fail and how; for Not Applicable, say why
-  the criterion does not concern the product. A field holding a comma, a
-  quote or a line break is written between double quotes, with each quote
-  inside it doubled (`""`); a line break starts a new paragraph of the
-  remarks. Leave the field empty only when there is nothing to say.
+  the criterion does not concern the product; for Not Evaluated, say why
+  the evaluation did not cover it. A Not Evaluated row without remarks is
+  refused. A field holding a comma, a quote or a line break is written
+  between double quotes, with each quote inside it doubled (`""`); a line
+  break starts a new paragraph of the remarks. Leave the field empty only
+  when there is nothing to say.
 
 A row speaks for the whole product. Where its parts meet a criterion
 differently, such as its web pages, its documents and its software, give
@@ -44,11 +46,11 @@ part fares.
 
 List each criterion of the table once, in the standard's order, which is
 the order of its reference file. A complete report lists every criterion
-of the table, so that a reader can tell a criterion met from one left
-out: write Not Applicable for a criterion that does not concern the
-product, and Not Evaluated for one nobody evaluated. The rows appear in
-the report in the order the file gives them, and its summary counts them
-by level.
+of the table, so that a reader can tell a criterion met from one left out:
+write Not Applicable for a criterion that does not concern the product,
+and Not Evaluated, with the reason in its remarks, for one nobody
+evaluated. The rows appear in the report in the order the file gives them,
+and its summary counts them by level.
 
 The **WCAG 2.2** table lists the success criteria at Levels A and AA, and
 those at Level AAA the evaluation chose to cover. A Level A or AA
