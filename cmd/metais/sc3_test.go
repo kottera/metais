@@ -41,7 +41,7 @@ const statusHTML = `<section class="status status-degraded" aria-label="Payments
     <li class="status-degraded">Card payments: Degraded</li>
     <li class="status-operational">Bank transfers: Operational</li>
   </ul>
-  <p class="status-updated">Updated <time datetime="2026-10-20T08:15:00Z">2026-10-20T08:15:00Z</time></p>
+  <p class="status-updated">Updated <time datetime="2026-10-20T08:15:00Z">20 October 2026, 08:15 UTC</time></p>
 </section>
 `
 

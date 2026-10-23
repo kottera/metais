@@ -549,7 +549,7 @@ func TestACRClaimsFromRows(t *testing.T) {
 					t.Errorf("acr.docx has no paragraph %q; it has:\n%s", want, strings.Join(paragraphs, "\n"))
 				}
 			}
-			date := slices.Index(paragraphs, "Report date: 2026-10-01")
+			date := slices.Index(paragraphs, "Report date: 1 October 2026")
 			product := slices.Index(paragraphs, "Product")
 			if date < 0 || product < 0 || date > product || date > 3 {
 				t.Errorf("acr.docx's report date is paragraph %d and its Product heading %d, want the date under the title, before the product", date, product)
