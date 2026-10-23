@@ -86,7 +86,13 @@ jobs:
         run: .github/scripts/conformance.sh run
 
   # The DCO check (ADR-013 D3 item 2): every commit of the change carries
-  # Signed-off-by:, with no exemption list.
+  # Signed-off-by:, with no exemption list. Beside it, the co-author check
+  # (AGENTS.md, Git and pull requests): no commit of the change, and not a
+  # pull request's title and body, the squash merge's message, carries a
+  # Co-authored-by line. The squash body typed at the merge is not seen
+  # here, which is why AGENTS.md has every merge pass it explicitly. The
+  # flip's pull_request trigger includes the edited type, so an edit to
+  # the body runs the check again.
   dco:
     if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'dco' }}
     runs-on: ubuntu-latest
@@ -100,6 +106,20 @@ jobs:
         env:
           BASE: ${{ github.event.pull_request.base.sha || inputs.base || github.event.before }}
         run: .github/scripts/dco.sh "$BASE" HEAD
+      - name: no Co-authored-by line
+        if: ${{ !cancelled() }}
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || inputs.base || github.event.before }}
+          PR: ${{ github.event.pull_request.number }}
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if [ -n "$PR" ]; then
+            printf '%s\n\n%s\n' "$TITLE" "$BODY" >"$RUNNER_TEMP/squash.txt"
+            .github/scripts/coauthor.sh "$BASE" HEAD "$RUNNER_TEMP/squash.txt"
+          else
+            .github/scripts/coauthor.sh "$BASE" HEAD
+          fi
 
   # shellcheck over the repository's shell scripts. Fixtures are data, not
   # scripts the repository runs: a conformance vector's or an example's

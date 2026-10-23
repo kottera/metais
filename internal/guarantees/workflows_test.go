@@ -33,6 +33,10 @@ const ciWorkflow = "../../.github/workflows/ci.yml"
 // dcoScript is CI's DCO check (ADR-013 D3 item 2).
 const dcoScript = "../../.github/scripts/dco.sh"
 
+// coAuthorScript is CI's check that no Co-authored-by line reaches main
+// (AGENTS.md, Git and pull requests).
+const coAuthorScript = "../../.github/scripts/coauthor.sh"
+
 // conformanceScript is how CI splits internal/conformance's tests (R-W1-4).
 const conformanceScript = "../../.github/scripts/conformance.sh"
 
@@ -260,7 +264,7 @@ func TestCIWorkflow(t *testing.T) {
 	}{
 		{"wave", "ubuntu-latest", []string{"skip=$(.github/scripts/conformance.sh skip)", `GOFLAGS="-skip=$skip" METAIS_GATE_P=$(nproc) .claude/skills/verification-gate/gate.sh wave`, ".github/scripts/conformance.sh run"}},
 		{"macos", "macos-latest", []string{"go build ./...", "CGO_ENABLED=0 go build -trimpath ./cmd/metais", "skip=$(.github/scripts/conformance.sh skip)", `go test -race -count=1 ./... -skip "$skip"`, ".github/scripts/conformance.sh run"}},
-		{"dco", "ubuntu-latest", []string{".github/scripts/dco.sh"}},
+		{"dco", "ubuntu-latest", []string{".github/scripts/dco.sh", `.github/scripts/coauthor.sh "$BASE" HEAD "$RUNNER_TEMP/squash.txt"`, `.github/scripts/coauthor.sh "$BASE" HEAD` + "\n"}},
 		{"shell", "ubuntu-latest", []string{"xargs -0 shellcheck"}},
 		{"site", "ubuntu-latest", []string{"site/build.sh", "go test -race -count=1 ./site/..."}},
 	}
@@ -397,6 +401,108 @@ func TestDCOCheck(t *testing.T) {
 		}
 		if code != c.code || !strings.Contains(string(out), c.says) {
 			t.Errorf("%s: dco.sh exited %d saying\n%s\nwant exit %d saying %q", c.name, code, out, c.code, c.says)
+		}
+	}
+}
+
+// TestCoAuthorCheck runs CI's co-author check over a repository of
+// commits with and without a Co-authored-by line, and over a pull
+// request's title and body, the squash merge's message (AGENTS.md, Git
+// and pull requests; the ruling at PLAN-2026-10-metais-v1's T-A4). A line
+// that opens with the key fails the change in any case and wherever it
+// sits in the message, since GitHub's squash merge carries a commit's
+// body into the squash message; the key named inside a line of prose does
+// not. The change is the DCO check's: every commit reachable from the
+// head and not from the base, a merge commit included, or the head alone
+// when it is on the base.
+func TestCoAuthorCheck(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the co-author check runs on CI's linux runner")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skipf("the co-author check reads git: %v", err)
+	}
+	script, err := filepath.Abs(coAuthorScript)
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := testenv.Dir(t)
+	env := append(testenv.GitEnv(os.Environ()),
+		"GIT_AUTHOR_NAME=A Contributor", "GIT_AUTHOR_EMAIL=a@example.invalid",
+		"GIT_COMMITTER_NAME=A Contributor", "GIT_COMMITTER_EMAIL=a@example.invalid")
+	git := func(args ...string) string {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = repo
+		cmd.Env = env
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %s: %v\n%s", strings.Join(args, " "), err, out)
+		}
+		return strings.TrimSpace(string(out))
+	}
+	commit := func(msg string) string {
+		t.Helper()
+		git("commit", "--quiet", "--allow-empty", "-m", msg)
+		return git("rev-parse", "HEAD")
+	}
+	const signed = "\n\nSigned-off-by: A Contributor <a@example.invalid>"
+	git("init", "--quiet", "--initial-branch=main", ".")
+	base := commit("base" + signed)
+	git("checkout", "--quiet", "-b", "clean")
+	commit("one" + signed)
+	cleanHead := commit("two\n\nThis names no Co-authored-by: line of its own." + signed)
+	git("checkout", "--quiet", "-b", "trailer")
+	trailerHead := commit("three\n\nSigned-off-by: A Contributor <a@example.invalid>\nCo-authored-by: B <b@example.invalid>")
+	git("checkout", "--quiet", "-b", "capitals", cleanHead)
+	capitalsHead := commit("four\n\nCo-Authored-By: B <b@example.invalid>" + signed)
+	git("checkout", "--quiet", "-b", "inbody", cleanHead)
+	inBodyHead := commit("five\n\nco-authored-by: B <b@example.invalid>\n\nis carried into a squash body." + signed)
+	git("checkout", "--quiet", "-b", "merge", cleanHead)
+	git("merge", "--quiet", "--no-ff", "--no-edit", "-m", "a clean merge"+signed, "trailer")
+	git("checkout", "--quiet", "main")
+	onMain := commit("on main\n\nCo-authored-by: B <b@example.invalid>" + signed)
+
+	dir := testenv.Dir(t)
+	message := func(name, data string) string {
+		p := filepath.Join(dir, name)
+		write(t, p, data)
+		return p
+	}
+	cleanPR := message("clean", "ci(x): do a thing (#1)\n\nA body that mentions Co-authored-by: in prose.\n\nSigned-off-by: A Contributor <a@example.invalid>\n")
+	trailerPR := message("trailer", "ci(x): do a thing (#1)\n\nA body.\n\nSigned-off-by: A Contributor <a@example.invalid>\r\nCo-authored-by: B <b@example.invalid>\r\n")
+
+	for _, c := range []struct {
+		name string
+		args []string
+		code int
+		says string
+	}{
+		{"no commit carries the line", []string{base, cleanHead}, 0, "no Co-authored-by line in 2 commit(s)"},
+		{"a trailer", []string{base, trailerHead}, 1, "three carries a Co-authored-by line"},
+		{"a trailer in capitals", []string{base, capitalsHead}, 1, "four carries a Co-authored-by line"},
+		{"a line in the body", []string{base, inBodyHead}, 1, "five carries a Co-authored-by line"},
+		{"a clean merge of a commit with a trailer", []string{base, "merge"}, 1, "three carries a Co-authored-by line"},
+		{"the head on the base", []string{"main", onMain}, 1, "on main carries a Co-authored-by line"},
+		{"a clean title and body", []string{base, cleanHead, cleanPR}, 0, "no Co-authored-by line in 2 commit(s) and the pull request's title and body"},
+		{"a trailer in the body", []string{base, cleanHead, trailerPR}, 1, "the pull request's title and body carry a Co-authored-by line"},
+		{"a body that cannot be read", []string{base, cleanHead, filepath.Join(dir, "nosuchfile")}, 2, "cannot read"},
+		{"a base that does not exist", []string{"nosuchref", cleanHead}, 2, "cannot list the commits"},
+		{"no head", []string{base}, 2, "usage"},
+	} {
+		cmd := exec.Command("sh", append([]string{script}, c.args...)...)
+		cmd.Dir = repo
+		cmd.Env = env
+		out, err := cmd.CombinedOutput()
+		code := 0
+		var exit *exec.ExitError
+		if errors.As(err, &exit) {
+			code = exit.ExitCode()
+		} else if err != nil {
+			t.Fatalf("%s: %v", c.name, err)
+		}
+		if code != c.code || !strings.Contains(string(out), c.says) {
+			t.Errorf("%s: coauthor.sh exited %d saying\n%s\nwant exit %d saying %q", c.name, code, out, c.code, c.says)
 		}
 	}
 }
