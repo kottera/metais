@@ -111,6 +111,7 @@ Next: metais unpack <package> --out <dir>
   schema.ref_escapes
   schema.ref_unresolved
   schema.syntax
+  template.amount_currency
   template.date_format
   template.division_by_zero
   template.duration_format

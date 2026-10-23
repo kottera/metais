@@ -252,6 +252,16 @@ METAIS's own (spec chapter 8):
                   directives.
                   {{ "2026-10-18T09:30:00+02:00" | date: "%Y-%m-%d %H:%M %z" }}
                   gives 2026-10-18 09:30 +0200
+  number          Writes a number or a decimal text for a reader, with
+                  decimals:, group: and point:; no group separator and a point .
+                  unless given.
+                  {{ 48920000 | number: decimals: 2, group: "," }}
+                  gives 48,920,000.00
+  amount          Writes an amount in the currency's major unit with its ISO
+                  4217 code, its decimals from spec Appendix C unless decimals:
+                  gives them.
+                  {{ 48920000 | amount: "EUR", group: "," }}
+                  gives EUR 48,920,000.00
   duration        Writes seconds, an ISO 8601 duration, or fields: "d:h:m" and
                   the like, with %d %H %M %S, as date's directives are written.
                   {{ "00:07:25" | duration: "%-H h %M min", fields: "d:h:m" }}

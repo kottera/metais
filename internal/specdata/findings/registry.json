@@ -6326,6 +6326,40 @@
       ]
     },
     {
+      "code": "template.amount_currency",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the code is refused: malformed (it is not three ASCII capital letters) or no_minor_unit (decimals: is not given, and Appendix C does not list the code or lists it with no minor units).",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The amount filter is given a currency code it refuses ({reason}).",
+      "hint": "Give an ISO 4217 code of three capital letters, such as EUR; for a code Appendix C does not list, give decimals: as well.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-FLT-020",
+        "MTS-MAN-018"
+      ]
+    },
+    {
       "code": "template.asset_ambiguous",
       "severity": "error",
       "class": "content",
@@ -6997,6 +7031,45 @@
       "statements": [
         "MTS-AUT-010",
         "MTS-TPL-006"
+      ]
+    },
+    {
+      "code": "template.number_input",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "filter",
+          "type": "string",
+          "meaning": "The filter's name: number or amount.",
+          "always": true
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "meaning": "The kind of value the filter was given: boolean, string, array or object.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The filter {filter} is given a {type} that is not a number or a decimal text.",
+      "hint": "Supply a number, or a string of digits with an optional - and an optional . and fraction, such as \"-1234.50\", with no space, separator or exponent.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-FLT-015"
       ]
     },
     {

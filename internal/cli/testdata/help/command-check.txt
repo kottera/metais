@@ -112,9 +112,9 @@ Refusals:
                             Next: metais check <package>
   schema.* (3)              A schema, an error. Next: metais check <package>
   schema.* (2)              A schema, a warning. Next: metais check <package>
-  template.* (6)            A template or a manifest expression, a warning.
+  template.* (11)           An output's path, when or for_each does not parse.
                             Next: metais check <package>
-  template.* (10)           An output's path, when or for_each does not parse.
+  template.* (6)            A template or a manifest expression, a warning.
                             Next: metais check <package>
   template.* (8)            A template does not parse, an error.
                             Next: metais check <package>

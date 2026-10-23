@@ -137,6 +137,7 @@ Next: metais test <dir>
   template.duration_input
   template.invalid_utf8
   template.nil_property
+  template.number_input
   template.object_output
   template.partial_not_found
   template.slug_empty
@@ -286,6 +287,7 @@ Next: metais check <dir>
   schema.syntax
   schema.unsatisfiable
   schema.unusable_enum_member
+  template.amount_currency
   template.crlf
   template.date_format
   template.division_by_zero
