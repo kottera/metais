@@ -67,6 +67,7 @@ Next: metais inspect <package>
   input.unevaluated_item
   input.unevaluated_property
   input.unique_items
+  input.unique_keys
   input.validation.partial
   json.duplicate_name
   json.lone_surrogate
@@ -146,6 +147,7 @@ Next: metais inspect <package>
   output.unevaluated_item
   output.unevaluated_property
   output.unique_items
+  output.unique_keys
   template.asset_ambiguous
   template.asset_not_found
   template.asset_not_text

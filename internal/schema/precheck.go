@@ -27,8 +27,9 @@ const (
 
 // keywords is every keyword of draft 2020-12's core, applicator,
 // unevaluated, validation, format-annotation, content and meta-data
-// vocabularies (ADR-003 D3 items 3 and 4). Any other keyword but one
-// beginning "x-" is refused (D3 item 5, RULINGS R1-002 and R1-016), and so
+// vocabularies (ADR-003 D3 items 3 and 4), and of the rules vocabulary
+// (Amendment A2, ruleKeywords). Any other keyword but one beginning "x-"
+// is refused (D3 item 5, RULINGS R1-002 and R1-016), and so
 // is $vocabulary (D3 item 2), which the walk reports as a dialect.
 var keywords = map[string]shape{
 	// Core.
@@ -52,6 +53,8 @@ var keywords = map[string]shape{
 	"maxContains": shapeValue, "minContains": shapeValue,
 	"maxProperties": shapeValue, "minProperties": shapeValue,
 	"required": shapeValue, "dependentRequired": shapeValue,
+	// Rules across the items of an array (ADR-003 Amendment A2).
+	"uniqueKeys": shapeValue,
 	// Format, under ADR-003 D4.
 	"format": shapeValue,
 	// Content, annotations only.
@@ -178,6 +181,11 @@ func (w *prechecker) walk(v value.Value, ptr string, base *url.URL, depth int) {
 				w.findings = append(w.findings, report(CodeKeywordUnknown, w.entry, at, finding.Params{"keyword": fstr(name)}))
 			}
 			continue
+		}
+		if valid, ok := ruleKeywords[name]; ok && !valid(member) {
+			// A2 item 14: a rule that breaks its grammar is refused at
+			// open, naming the keyword.
+			w.findings = append(w.findings, report(CodeInvalid, w.entry, at, finding.Params{"keyword": fstr(name)}))
 		}
 		s, isString := member.(value.String)
 		switch name {

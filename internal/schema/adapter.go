@@ -134,6 +134,13 @@ func (a adapter) convert(ve *jsonschema.ValidationError, kwLoc, parentURL string
 	case *kind.RefCycle:
 		keyword("$ref")
 		keepChildren = false
+	case *uniqueKeysKind:
+		keyword("uniqueKeys")
+		f.Data = schemafail.Data{"duplicates": []int{k.Duplicates[0], k.Duplicates[1]}}
+		if k.At != nil {
+			f.Data["at"] = slices.Clone(k.At)
+		}
+		keepChildren = false
 	default:
 		kw, data, err := leaf(ve.ErrorKind)
 		if err != nil {

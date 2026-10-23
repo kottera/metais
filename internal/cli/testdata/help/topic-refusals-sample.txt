@@ -67,6 +67,7 @@ Next: metais inspect <package>
   input.unevaluated_item
   input.unevaluated_property
   input.unique_items
+  input.unique_keys
   input.validation.partial
   json.duplicate_name
   json.lone_surrogate

@@ -87,6 +87,8 @@ type file struct {
 //     root declares $id, its canonical URI, and every embedded resource
 //     under its own;
 //   - formats are asserted, each of ADR-003 D4's with METAIS's validator;
+//   - the rules vocabulary is registered and asserted on every schema,
+//     none of which declares $vocabulary (ADR-003 Amendment A2 item 19);
 //   - patterns are compiled by the package regular-expression profile.
 //
 // Before the library sees a file, NewCompiler checks schema-size, then
@@ -134,6 +136,8 @@ func NewCompiler(tree pkgtree.Tree, lim limits.Set, decode Decode, output ...out
 	lib.DefaultDraft(jsonschema.Draft2020)
 	lib.UseLoader(refuseLoader{})
 	lib.AssertFormat()
+	lib.RegisterVocabulary(rulesVocabulary())
+	lib.AssertVocabs()
 	for _, name := range Formats() {
 		lib.RegisterFormat(&jsonschema.Format{Name: name, Validate: formatCheck(formats[name])})
 	}

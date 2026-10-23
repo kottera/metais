@@ -59,13 +59,13 @@ var schemaCodes = []Entry{
 		Class:    ClassContent,
 		Subject:  SubjectPackage,
 		Params: []ParamSpec{
-			{Name: "keyword", Type: TypeString, Meaning: "The keyword of the draft 2020-12 meta-schema the value fails.", Always: true},
+			{Name: "keyword", Type: TypeString, Meaning: "The keyword of the draft 2020-12 meta-schema the value fails, or the keyword of this dialect's own (uniqueKeys) whose grammar the value breaks.", Always: true},
 		},
 		Message:    "The schema is not a valid JSON Schema: a value fails the meta-schema's {keyword}.",
 		Hint:       "Correct the value at the location given so that it is what draft 2020-12 defines for the keyword that holds it.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-DAT-003"},
+		Statements: []string{"MTS-DAT-003", "MTS-DAT-015"},
 	},
 	{
 		Code:       "schema.invalid_default",

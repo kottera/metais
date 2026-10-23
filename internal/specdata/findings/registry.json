@@ -1769,6 +1769,36 @@
       ]
     },
     {
+      "code": "input.unique_keys",
+      "severity": "error",
+      "class": "content",
+      "subject": "input",
+      "params": [
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The 0-based index of the item whose key repeats.",
+          "always": true
+        },
+        {
+          "name": "duplicate_of",
+          "type": "number",
+          "meaning": "The 0-based index of the first item with that key.",
+          "always": true
+        }
+      ],
+      "message": "{field} repeats the key of item {duplicate_of} of the array, whose uniqueKeys requires each item's key to be unique.",
+      "hint": "Change the key of item {index}, or remove the item if it repeats item {duplicate_of}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-DAT-010",
+        "MTS-DAT-017",
+        "MTS-DAT-018",
+        "MTS-FND-004"
+      ]
+    },
+    {
       "code": "input.validation.partial",
       "severity": "info",
       "class": "content",
@@ -4745,6 +4775,35 @@
       ]
     },
     {
+      "code": "output.unique_keys",
+      "severity": "error",
+      "class": "content",
+      "subject": "output",
+      "params": [
+        {
+          "name": "index",
+          "type": "number",
+          "meaning": "The 0-based index of the item whose key repeats.",
+          "always": true
+        },
+        {
+          "name": "duplicate_of",
+          "type": "number",
+          "meaning": "The 0-based index of the first item with that key.",
+          "always": true
+        }
+      ],
+      "message": "{field} repeats the key of item {duplicate_of} of the array, whose uniqueKeys requires each item's key to be unique.",
+      "hint": "Change the key of item {index}, or remove the item if it repeats item {duplicate_of}.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-DAT-018",
+        "MTS-FND-004",
+        "MTS-TRN-015"
+      ]
+    },
+    {
       "code": "package.compiled.mismatch",
       "severity": "error",
       "class": "refused",
@@ -5987,7 +6046,7 @@
         {
           "name": "keyword",
           "type": "string",
-          "meaning": "The keyword of the draft 2020-12 meta-schema the value fails.",
+          "meaning": "The keyword of the draft 2020-12 meta-schema the value fails, or the keyword of this dialect's own (uniqueKeys) whose grammar the value breaks.",
           "always": true
         }
       ],
@@ -5996,7 +6055,8 @@
       "location": "value",
       "since": "1.0",
       "statements": [
-        "MTS-DAT-003"
+        "MTS-DAT-003",
+        "MTS-DAT-015"
       ]
     },
     {

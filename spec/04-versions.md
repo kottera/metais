@@ -68,9 +68,9 @@ membership without knowing which minors imply which.
 ### 4.1.2 What a minor promises
 
 A minor adds only constructs that every earlier minor of the same major
-refuses: a manifest member, an enumeration value, an input form, a filter, a
-tag, a variable member, a transform or one of its options, or a warning. A
-minor never changes what an accepted construct means, removes one, changes a
+refuses: a manifest member, an enumeration value, an input form, a JSON
+Schema keyword not beginning `x-`, a filter, a tag, a variable member, a
+transform or one of its options, or a warning. A minor never changes what an accepted construct means, removes one, changes a
 default, refuses or renders differently any package and input set an earlier
 minor of the same major accepts, gives meaning to a JSON Schema keyword
 beginning `x-`, or asserts a `format` an earlier minor accepted without
