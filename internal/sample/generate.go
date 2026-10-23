@@ -8,6 +8,7 @@ import (
 	"maps"
 	"math"
 	"slices"
+	"strconv"
 	"strings"
 
 	"metais.org/metais/internal/finding"
@@ -273,7 +274,7 @@ func (s *Generator) holder(c *conj, keyword string) node {
 // preference — const, an entry of examples, default, an enum member —
 // each kept only when it validates against C, can be written so that it
 // reads back (writable), and, in a uniqueItems array, equals no earlier
-// item. An object or array is taken whole from examples or default only
+// item, nor, at a uniqueKeys key of one pointer, an earlier item's key. An object or array is taken whole from examples or default only
 // when C declares no properties or items for it (item 13).
 func (s *Generator) candidate(loc *place, c *conj) (value.Value, bool) {
 	if loc.fixed != nil {
@@ -282,6 +283,7 @@ func (s *Generator) candidate(loc *place, c *conj) (value.Value, bool) {
 	keep := func(v value.Value) bool {
 		return s.writable(loc, v) &&
 			!slices.ContainsFunc(loc.earlier, func(e value.Value) bool { return value.Equal(e, v) }) &&
+			!loc.avoids(v) &&
 			s.valid(c.starts, v)
 	}
 	whole := func(v value.Value) bool {
@@ -859,11 +861,14 @@ func (s *Generator) itemStarts(c *conj, i int) []node {
 // array makes an array from C (item 16). Its length is --items, or the
 // prefixItems length when C has one, clamped to minItems and maxItems,
 // where maxItems is lowered to the prefixItems length when items is false;
-// past the recursion bound it is minItems. The first minContains items
-// are made from contains as well, and a later one that would push the
-// count past maxContains is made again. A duplicate in a uniqueItems
-// array is made again from attempt streams, and dropped when they are
-// spent, while the array stays at its minimum length.
+// past the recursion bound it is minItems. With coverage, the first items
+// each hold one member of values at the key, in values' order, and the
+// length is at least their count (ADR-003 Amendment A2 item 17). The
+// first minContains items are made from contains as well, and a later one
+// that would push the count past maxContains is made again. A duplicate in
+// a uniqueItems array, and an item whose key repeats under uniqueKeys, is
+// made again from attempt streams, and dropped when they are spent, while
+// the array stays at its minimum length.
 func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 	prefix, capItems := 0, int64(-1)
 	for _, o := range c.objs {
@@ -889,6 +894,11 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 		s.unsatisfiable(loc, s.holder(c, "minItems"), ReasonLength)
 		return nil, false
 	}
+	covered := c.covered()
+	if hasMax && int64(len(covered)) > maxI {
+		s.unsatisfiable(loc, s.holder(c, "coverage"), ReasonCoverage)
+		return nil, false
+	}
 	target := int64(s.opts.Items)
 	if prefix > 0 {
 		target = int64(prefix)
@@ -900,6 +910,7 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 	if hasMax {
 		n = min(n, maxI)
 	}
+	n = max(n, int64(len(covered)))
 	if !s.affords(loc, n) {
 		return nil, false
 	}
@@ -914,47 +925,84 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 	}
 	unique := false
 	c.each("uniqueItems", func(_ node, v value.Value) { unique = unique || v == value.Bool(true) })
+	keys := c.uniqueKeys()
 	var items []value.Value
 	ok := true
 	counted := int64(0)
+	dropped := ReasonUniqueItems
 	for i := int64(0); i < n; i++ {
 		starts := s.itemStarts(c, int(i))
 		if i < minC {
 			starts = append(starts, contains...)
 		}
-		child := s.itemPlace(loc, int(i))
-		if unique {
-			child.earlier = items
+		// place is the item's place, regenerated under attempt k when k
+		// is above 0: holding its coverage member, and steered off the
+		// values earlier items hold at a key of one pointer.
+		place := func(k int) *place {
+			p := s.itemPlace(loc, int(i))
+			if i < int64(len(covered)) {
+				p.fixed = covered[i].item()
+			}
+			if unique {
+				p.earlier = items
+			}
+			for _, key := range keys {
+				if len(key) == 1 {
+					p.avoid = append(p.avoid, avoided{key[0], keyValues(items, key[0])})
+				}
+			}
+			if k > 0 {
+				p.purpose = attempt(k)
+				if len(keys) > 0 {
+					p.attempt = p.purpose
+				}
+			}
+			return p
 		}
 		mark := len(s.findings)
-		v, good := s.value(child, starts)
-		if !good && unique && !s.stopped() {
-			// No value but one equal to an earlier item: the item is a
-			// duplicate, not unsatisfiable.
+		v, good := s.value(place(0), starts)
+		if !good && (unique || len(keys) > 0) && !s.stopped() {
+			// No value but one equal to an earlier item, or holding an
+			// earlier item's key: the item is a duplicate, not
+			// unsatisfiable.
 			s.findings = s.findings[:mark]
-			v, good = s.value(s.itemPlace(loc, int(i)), starts)
+			free := s.itemPlace(loc, int(i))
+			if i < int64(len(covered)) {
+				free.fixed = covered[i].item()
+			}
+			v, good = s.value(free, starts)
 		}
 		if !good {
 			ok = false
 			continue
 		}
+		repeats := func(v value.Value) bool { return slices.ContainsFunc(keys, func(key [][]string) bool { return keyRepeats(items, key, v) }) }
 		clash := func(v value.Value) bool {
 			if unique && slices.ContainsFunc(items, func(e value.Value) bool { return value.Equal(e, v) }) {
+				return true
+			}
+			if repeats(v) {
 				return true
 			}
 			return i >= minC && hasMaxC && counted >= maxC && s.matchesAny(contains, v)
 		}
 		for k := 1; clash(v) && k <= maxAttempts && !s.stopped(); k++ {
-			again := s.itemPlace(loc, int(i))
-			again.purpose, again.earlier = attempt(k), child.earlier
 			mark := len(s.findings)
-			if w, good := s.value(again, starts); good {
+			if w, good := s.value(place(k), starts); good {
 				v = w
 			} else {
 				s.findings = s.findings[:mark]
 			}
 		}
 		if clash(v) {
+			if repeats(v) {
+				dropped = ReasonUniqueKeys
+			}
+			if i < int64(len(covered)) {
+				// An item holding a coverage member is never dropped.
+				s.unsatisfiable(loc, s.holder(c, "uniqueKeys"), ReasonUniqueKeys)
+				ok = false
+			}
 			// Dropped: the array is shortened, and below minItems it is
 			// unsatisfiable.
 			continue
@@ -965,7 +1013,11 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 		items = append(items, v)
 	}
 	if ok && int64(len(items)) < minI {
-		s.unsatisfiable(loc, s.holder(c, "uniqueItems"), ReasonUniqueItems)
+		keyword := "uniqueItems"
+		if dropped == ReasonUniqueKeys {
+			keyword = "uniqueKeys"
+		}
+		s.unsatisfiable(loc, s.holder(c, keyword), dropped)
 		return nil, false
 	}
 	a, err := value.NewArray(items...)
@@ -973,6 +1025,142 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 		panic(err)
 	}
 	return a, ok
+}
+
+// cover is one member of a coverage's values, and the key it is held at.
+type cover struct {
+	key    []string
+	member value.Value
+}
+
+// item is the fixed point of the item that holds the member: an object
+// holding it at the key, which the item's other fields are generated
+// around (item 2).
+func (cv cover) item() value.Value {
+	v := cv.member
+	for i := len(cv.key) - 1; i >= 0; i-- {
+		o, err := value.NewObject(value.Member{Name: cv.key[i], Value: v})
+		if err != nil {
+			// A pointer's tokens are valid UTF-8, and one member is unique.
+			panic(err)
+		}
+		v = o
+	}
+	return v
+}
+
+// covered returns the members of every coverage of C, each with its key,
+// in walk order and each coverage's values in order, a member a coverage
+// before it already holds at the same key left out (ADR-003 Amendment A2
+// item 17).
+func (c *conj) covered() []cover {
+	var out []cover
+	c.each("coverage", func(_ node, v value.Value) {
+		o, ok := v.(value.Object)
+		if !ok {
+			return
+		}
+		kv, _ := o.Get("key")
+		ks, _ := kv.(value.String)
+		key := pointerTokens(ks.Text())
+		vs, _ := o.Get("values")
+		values, _ := vs.(value.Array)
+		for _, m := range values.All() {
+			if !slices.ContainsFunc(out, func(cv cover) bool { return slices.Equal(cv.key, key) && value.Equal(cv.member, m) }) {
+				out = append(out, cover{key, m})
+			}
+		}
+	})
+	return out
+}
+
+// uniqueKeys returns every uniqueKeys of C, each a list of key pointers'
+// tokens.
+func (c *conj) uniqueKeys() [][][]string {
+	var out [][][]string
+	c.each("uniqueKeys", func(_ node, v value.Value) {
+		a, ok := v.(value.Array)
+		if !ok {
+			return
+		}
+		var key [][]string
+		for _, p := range a.All() {
+			if ps, ok := p.(value.String); ok {
+				key = append(key, pointerTokens(ps.Text()))
+			}
+		}
+		out = append(out, key)
+	})
+	return out
+}
+
+// pointerTokens is a key pointer's tokens; the schema compiler has held
+// it to RFC 6901.
+func pointerTokens(p string) []string {
+	path, ok := finding.ParsePath(p)
+	if !ok {
+		return nil
+	}
+	return path.Tokens()
+}
+
+// at returns the value the tokens name within v, as RFC 6901 evaluates a
+// pointer, and false when they name nothing.
+func at(v value.Value, toks []string) (value.Value, bool) {
+	for _, t := range toks {
+		switch c := v.(type) {
+		case value.Object:
+			m, ok := c.Get(t)
+			if !ok {
+				return nil, false
+			}
+			v = m
+		case value.Array:
+			i, err := strconv.Atoi(t)
+			if err != nil || i < 0 || i >= c.Len() || itoa(i) != t {
+				return nil, false
+			}
+			v = c.At(i)
+		default:
+			return nil, false
+		}
+	}
+	return v, true
+}
+
+// keyValues returns the values items hold at toks.
+func keyValues(items []value.Value, toks []string) []value.Value {
+	var out []value.Value
+	for _, e := range items {
+		if v, ok := at(e, toks); ok {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
+// keyRepeats reports whether v's key under key, its pointers' tokens,
+// equals an earlier item's, as MTS-DAT-018 compares keys: pointer by
+// pointer, by the equality of MTS-DAT-013. An item where any pointer
+// resolves to nothing has no key, and repeats none.
+func keyRepeats(items []value.Value, key [][]string, v value.Value) bool {
+	mine := make([]value.Value, len(key))
+	for i, toks := range key {
+		x, ok := at(v, toks)
+		if !ok {
+			return false
+		}
+		mine[i] = x
+	}
+	return slices.ContainsFunc(items, func(e value.Value) bool {
+		for i, toks := range key {
+			x, ok := at(e, toks)
+			if !ok || !value.Equal(x, mine[i]) {
+				return false
+			}
+		}
+		return true
+	})
 }
 
 // itemPlace is the place of the element at i of the array at loc.
