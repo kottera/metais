@@ -1,0 +1,49 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "smp/sample-coverage-refused",
+  "title": "An array whose coverage holds a value the schema at its key refuses is schema.sample_unsatisfiable with reason coverage, located at the array, by sample and by a render with sample",
+  "statements": [
+    "MTS-SMP-010"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "sample",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          },
+          "repeatable": true
+        }
+      ]
+    },
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "sample": {}
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

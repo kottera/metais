@@ -170,6 +170,8 @@ type Generator struct {
 	over []finding.Finding
 	// patterns are the patterns compiled so far, by their text.
 	patterns map[string]*regexprofile.Regexp
+	// keys resolves a coverage's key against its array's item schemas.
+	keys *schema.KeyResolver
 }
 
 // New returns the generator over c, the package's compiled schemas, with
@@ -179,7 +181,7 @@ func New(c *schema.Compiler, pos Positions, lim limits.Set, opts Options) *Gener
 	if opts.Items < 0 {
 		panic("sample: a negative item count")
 	}
-	return &Generator{c: c, pos: pos, lim: lim, opts: opts}
+	return &Generator{c: c, pos: pos, lim: lim, opts: opts, keys: schema.NewKeyResolver(c, lim)}
 }
 
 // Generate returns the value the generator makes for in, and whether the

@@ -736,7 +736,7 @@ var kindTable = []struct {
 // almost always a typo; and a rule across the items of an array that no
 // table can satisfy, or whose key no item can hold (ADR-003 A2 item 15).
 func (k *checker) schemaStatics() []finding.Finding {
-	s := &statics{c: k.c.Schemas, lim: k.lim, patterns: map[string]*regexprofile.Regexp{}}
+	s := &statics{c: k.c.Schemas, lim: k.lim, keys: schema.NewKeyResolver(k.c.Schemas, k.lim)}
 	for _, n := range k.c.Tree.List() {
 		if !schema.IsSchemaFile(n) {
 			continue
@@ -750,10 +750,10 @@ func (k *checker) schemaStatics() []finding.Finding {
 
 // statics is one run of the schema statics.
 type statics struct {
-	c        *schema.Compiler
-	lim      limits.Set
-	patterns map[string]*regexprofile.Regexp
-	out      []finding.Finding
+	c    *schema.Compiler
+	lim  limits.Set
+	keys *schema.KeyResolver
+	out  []finding.Finding
 }
 
 // The keywords whose value is a schema, an object of schemas, or an array
@@ -835,16 +835,16 @@ func (s *statics) walk(entry, ptr string, v value.Value) {
 // value lying at at. A regular expression that reaches regex-work is a
 // limit the package breaches, reported at at.
 func (s *statics) fails(entry, ptr, at string, v value.Value) bool {
-	return s.refuses(snode{entry, ptr}, entry, at, v)
+	return s.refuses(schema.Node{Entry: entry, Ptr: ptr}, entry, at, v)
 }
 
 // refuses reports whether v fails the schema at n, the value lying at at
 // in entry. A regular expression that reaches regex-work is a limit the
 // package breaches, reported at at.
-func (s *statics) refuses(n snode, entry, at string, v value.Value) bool {
-	sub, err := s.c.Subschema(n.entry, n.ptr)
+func (s *statics) refuses(n schema.Node, entry, at string, v value.Value) bool {
+	sub, err := s.c.Subschema(n.Entry, n.Ptr)
 	if err != nil {
-		panic(fmt.Sprintf("author: compiling %s#%s, which compiled whole: %v", n.entry, n.ptr, err))
+		panic(fmt.Sprintf("author: compiling %s#%s, which compiled whole: %v", n.Entry, n.Ptr, err))
 	}
 	failures, err := sub.Validate(v)
 	if err != nil {
@@ -864,124 +864,11 @@ func (s *statics) add(code finding.Code, entry, ptr string, p finding.Params) {
 	s.out = append(s.out, finding.New(code, pkgSubject, &l, p))
 }
 
-// snode is a schema node: the place of a schema in a schema file.
-type snode struct{ entry, ptr string }
-
 // declared reports whether the schema object at ptr in entry declares the
 // property name by ADR-007 D3 item 4.
 func (s *statics) declared(entry, ptr, name string) bool {
-	_, declared := s.property(snode{entry, ptr}, name)
+	_, declared := s.keys.Property(schema.Node{Entry: entry, Ptr: ptr}, name)
 	return declared
-}
-
-// applicable returns the applicable set of the node n (ADR-007 D3 item
-// 4.1): n, and every node $ref, $dynamicRef, allOf, anyOf, oneOf, if,
-// then, else and dependentSchemas reach from it. It reports whether the
-// set is open (item 4.2): some node of it is open, or names nothing the
-// package holds.
-func (s *statics) applicable(n snode) ([]snode, bool) {
-	seen := map[snode]bool{}
-	var set []snode
-	open := false
-	var visit func(n snode)
-	visit = func(n snode) {
-		if seen[n] || open {
-			return
-		}
-		seen[n] = true
-		v, ok := s.c.Lookup(n.entry, n.ptr)
-		if !ok || isOpen(v) {
-			open = true
-			return
-		}
-		set = append(set, n)
-		o, ok := v.(value.Object)
-		if !ok {
-			return
-		}
-		if e, p, ok := s.c.Ref(n.entry, n.ptr); ok {
-			visit(snode{e, p})
-		}
-		if e, p, ok := s.c.DynamicRef(n.entry, n.ptr); ok {
-			visit(snode{e, p})
-		}
-		for _, kw := range []string{"if", "then", "else"} {
-			if _, ok := o.Get(kw); ok {
-				visit(snode{n.entry, n.ptr + "/" + kw})
-			}
-		}
-		for _, kw := range []string{"allOf", "anyOf", "oneOf"} {
-			if a, ok := o.Get(kw); ok {
-				if aa, ok := a.(value.Array); ok {
-					for i := range aa.Len() {
-						visit(snode{n.entry, n.ptr + "/" + kw + "/" + strconv.Itoa(i)})
-					}
-				}
-			}
-		}
-		if d, ok := o.Get("dependentSchemas"); ok {
-			if do, ok := d.(value.Object); ok {
-				for dn := range do.All() {
-					visit(snode{n.entry, n.ptr + "/dependentSchemas/" + escapeToken(dn)})
-				}
-			}
-		}
-	}
-	visit(n)
-	return set, open
-}
-
-// property resolves the property segment name on the node n as
-// MTS-AUT-013 does, and reports whether it is declared: the applicable set
-// of n is open, or some node of it has name in properties, a pattern of
-// patternProperties that matches it, or an additionalProperties other
-// than false — or, with no additionalProperties, an
-// unevaluatedProperties other than false. It returns the subschemas the
-// segment reaches, none when the set is open.
-func (s *statics) property(n snode, name string) ([]snode, bool) {
-	set, open := s.applicable(n)
-	if open {
-		return nil, true
-	}
-	var out []snode
-	for _, m := range set {
-		v, _ := s.c.Lookup(m.entry, m.ptr)
-		o, ok := v.(value.Object)
-		if !ok {
-			continue
-		}
-		matched := false
-		if p, ok := o.Get("properties"); ok {
-			if po, ok := p.(value.Object); ok {
-				if _, ok := po.Get(name); ok {
-					out = append(out, snode{m.entry, m.ptr + "/properties/" + escapeToken(name)})
-					matched = true
-				}
-			}
-		}
-		if pp, ok := o.Get("patternProperties"); ok {
-			if po, ok := pp.(value.Object); ok {
-				for pat := range po.All() {
-					if s.matches(pat, name) {
-						out = append(out, snode{m.entry, m.ptr + "/patternProperties/" + escapeToken(pat)})
-						matched = true
-					}
-				}
-			}
-		}
-		if matched {
-			continue
-		}
-		for _, kw := range []string{"additionalProperties", "unevaluatedProperties"} {
-			if ap, ok := o.Get(kw); ok {
-				if ap != value.Bool(false) {
-					out = append(out, snode{m.entry, m.ptr + "/" + kw})
-				}
-				break
-			}
-		}
-	}
-	return out, len(out) > 0
 }
 
 // rules is MTS-AUT-081 to MTS-AUT-083 over the rules vocabulary's
@@ -997,12 +884,12 @@ func (s *statics) rules(entry, ptr string, o value.Object) {
 	if !hasUnique && !hasCoverage {
 		return
 	}
-	items, open := s.itemSchemas(snode{entry, ptr})
+	items, open := s.keys.ItemSchemas(schema.Node{Entry: entry, Ptr: ptr})
 	if hasUnique && !open {
 		if a, ok := uk.(value.Array); ok {
 			for i, e := range a.All() {
 				if p, ok := e.(value.String); ok {
-					if _, declared := s.key(items, p.Text()); !declared {
+					if _, declared := s.keys.Key(items, p.Text()); !declared {
 						s.add(CodeKeyNotDeclared, entry, ptr+"/uniqueKeys/"+strconv.Itoa(i), nil)
 					}
 				}
@@ -1030,7 +917,7 @@ func (s *statics) rules(entry, ptr string, o value.Object) {
 	if !ok || !isString || open {
 		return
 	}
-	reached, declared := s.key(items, p.Text())
+	reached, declared := s.keys.Key(items, p.Text())
 	if !declared {
 		s.add(CodeKeyNotDeclared, entry, ptr+"/coverage/key", nil)
 		return
@@ -1040,114 +927,10 @@ func (s *statics) rules(entry, ptr string, o value.Object) {
 	}
 	for i, v := range values.All() {
 		at := ptr + "/coverage/values/" + strconv.Itoa(i)
-		if !slices.ContainsFunc(reached, func(n snode) bool { return !s.refuses(n, entry, at, v) }) {
+		if !slices.ContainsFunc(reached, func(n schema.Node) bool { return !s.refuses(n, entry, at, v) }) {
 			s.add(CodeUnsatisfiable, entry, at, nil)
 		}
 	}
-}
-
-// itemSchemas returns the item schemas of the array whose schema is the
-// node n: the items and each prefixItems member of every node of its
-// applicable set. It reports whether an item may be any value, the set
-// being open or naming no item schema.
-func (s *statics) itemSchemas(n snode) ([]snode, bool) {
-	set, open := s.applicable(n)
-	if open {
-		return nil, true
-	}
-	var out []snode
-	for _, m := range set {
-		v, _ := s.c.Lookup(m.entry, m.ptr)
-		o, ok := v.(value.Object)
-		if !ok {
-			continue
-		}
-		if pi, ok := o.Get("prefixItems"); ok {
-			if a, ok := pi.(value.Array); ok {
-				for i := range a.Len() {
-					out = append(out, snode{m.entry, m.ptr + "/prefixItems/" + strconv.Itoa(i)})
-				}
-			}
-		}
-		if _, ok := o.Get("items"); ok {
-			out = append(out, snode{m.entry, m.ptr + "/items"})
-		}
-	}
-	return out, len(out) == 0
-}
-
-// key resolves the key pointer p against the item schemas items, each
-// token as a property segment, and returns the schemas it reaches, none
-// when one of them is open. It reports whether every token is declared by
-// some schema the tokens before it reach.
-func (s *statics) key(items []snode, p string) ([]snode, bool) {
-	path, ok := finding.ParsePath(p)
-	if !ok {
-		return nil, true // the pre-check refused it, as schema.invalid
-	}
-	cur := items
-	for _, tok := range path.Tokens() {
-		var next []snode
-		declared := false
-		for _, n := range cur {
-			r, d := s.property(n, tok)
-			if d && len(r) == 0 {
-				return nil, true
-			}
-			if d {
-				declared = true
-				for _, m := range r {
-					if !slices.Contains(next, m) {
-						next = append(next, m)
-					}
-				}
-			}
-		}
-		if !declared {
-			return nil, false
-		}
-		cur = next
-	}
-	return cur, true
-}
-
-// matches reports whether the patternProperties pattern pat matches name,
-// by the package regular-expression profile the compiler compiled it with.
-func (s *statics) matches(pat, name string) bool {
-	re, ok := s.patterns[pat]
-	if !ok {
-		var err error
-		re, err = regexprofile.Compile(pat, s.lim, nil)
-		if err != nil {
-			// The compiler compiled the pattern under the same limits.
-			panic(fmt.Sprintf("author: compiling the pattern %q, which compiled: %v", pat, err))
-		}
-		s.patterns[pat] = re
-	}
-	return re.MatchString(name)
-}
-
-// annotations are the keywords an open schema holds (ADR-007 D3 item 4.2).
-var annotations = map[string]bool{
-	"title": true, "description": true, "$comment": true, "examples": true, "default": true, "deprecated": true,
-	"readOnly": true, "writeOnly": true, "$id": true, "$anchor": true, "$schema": true, "$defs": true,
-}
-
-// isOpen reports whether a schema is open: the boolean schema true, or an
-// object schema holding annotations only (ADR-007 D3 item 4.2).
-func isOpen(v value.Value) bool {
-	switch s := v.(type) {
-	case value.Bool:
-		return bool(s)
-	case value.Object:
-		for name := range s.All() {
-			if !annotations[name] {
-				return false
-			}
-		}
-		return true
-	}
-	return false
 }
 
 // escapeToken escapes a JSON Pointer reference token (RFC 6901 §3).
