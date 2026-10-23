@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -615,4 +616,67 @@ func acrParagraphs(t *testing.T, path string) []string {
 		}
 	}
 	return paragraphs
+}
+
+// TestACRRequiredLevelsEvaluated holds the §4.1 example to ADR-003 A2
+// item 8's per-row rule: a WCAG 2.2 criterion at Level A or AA is never
+// Not Evaluated. One table answers every criterion the level partial
+// names Not Evaluated, and validation refuses each Level A and AA row and
+// no Level AAA one, at the row's conformance cell, each failure naming
+// the condition that selected it, all in one report.
+func TestACRRequiredLevelsEvaluated(t *testing.T) {
+	testenv.Home(t)
+	b, err := os.ReadFile(filepath.Join(acrPackage, "templates/criteria/wcag-level.liquid"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	whens := regexp.MustCompile(`\{%- when ((?:"[^"]+"(?:, )?)+) -%\}([^\n]*)`)
+	quoted := regexp.MustCompile(`"([^"]+)"`)
+	csv := "criterion,conformance,remarks\n"
+	var want []string
+	row := 0
+	for _, m := range whens.FindAllStringSubmatch(string(b), -1) {
+		for _, q := range quoted.FindAllStringSubmatch(m[1], -1) {
+			csv += q[1] + ",Not Evaluated,\n"
+			if m[2] == "A" || m[2] == "AA" {
+				want = append(want, "input.not /"+strconv.Itoa(row)+"/conformance")
+			}
+			row++
+		}
+	}
+	src := filepath.Join(acrPackage, "examples/wcag_only/inputs")
+	data := testenv.Dir(t)
+	report, err := os.ReadFile(filepath.Join(src, "report.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, b := range map[string][]byte{"report.json": report, "wcag.csv": []byte(csv)} {
+		if err := os.WriteFile(filepath.Join(data, name), b, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r := runTool(t, "validate", acrPackage, "--data", data, "--json")
+	var doc struct {
+		Findings []struct {
+			Code     string
+			Location struct{ Pointer string }
+			Via      []struct {
+				Keyword   string
+				Condition struct{ Title string }
+			}
+		}
+	}
+	if err := json.Unmarshal([]byte(r.stdout), &doc); err != nil {
+		t.Fatalf("validate's document: %v\n%s", err, r.stdout)
+	}
+	var got []string
+	for _, f := range doc.Findings {
+		got = append(got, f.Code+" "+f.Location.Pointer)
+		if len(f.Via) != 1 || f.Via[0].Keyword != "then" || f.Via[0].Condition.Title != "A Level A or AA criterion" {
+			t.Errorf("the finding at %s is reached by %+v, want a then whose if is titled %q", f.Location.Pointer, f.Via, "A Level A or AA criterion")
+		}
+	}
+	if !slices.Equal(got, want) || r.status == 0 {
+		t.Errorf("validate exits %d and reports %q,\nwant %q", r.status, got, want)
+	}
 }

@@ -45,7 +45,9 @@ guide: |-
 
   Base every level and remark on an evaluation of the real product, and
   say how it was evaluated in the report's methods. A criterion you did
-  not evaluate is Not Evaluated, never Supports.
+  not evaluate is Not Evaluated, never Supports, and validation refuses
+  Not Evaluated for a WCAG 2.2 criterion at Level A or AA: evaluate every
+  one of them.
 
   Then run `metais validate <package> --data <dir>`, which reports every
   problem at once: a value that does not fit, a criterion number that does

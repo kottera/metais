@@ -51,11 +51,12 @@ the report in the order the file gives them, and its summary counts them
 by level.
 
 The **WCAG 2.2** table lists the success criteria at Levels A and AA, and
-those at Level AAA the evaluation chose to cover. The report gives each
-criterion's level beside its name, and names the levels the table lists
-among the standards it answers. It also answers the parts of the other
-two standards that apply WCAG to web pages, documents and software, so
-those standards' tables leave them out.
+those at Level AAA the evaluation chose to cover. A Level A or AA
+criterion is never Not Evaluated: validation refuses it. The report gives
+each criterion's level beside its name, and names the levels the table
+lists among the standards it answers. It also answers the parts of the
+other two standards that apply WCAG to web pages, documents and software,
+so those standards' tables leave them out.
 
 The **Revised Section 508** table lists the criteria of chapters 3 to 6:
 the functional performance criteria (302), hardware (402 to 415), software

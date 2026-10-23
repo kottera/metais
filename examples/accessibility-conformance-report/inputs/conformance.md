@@ -18,7 +18,9 @@ evidence is in the row's remarks.
   Use it for a Level AAA criterion the evaluation chose not to cover, and
   for nothing that a buyer's standard requires: a report that leaves a
   required criterion unevaluated does not show conformance with it. A
-  required criterion the evaluation's scope left out is still Not
+  WCAG 2.2 criterion at Level A or AA is never Not Evaluated, and
+  validation refuses it: evaluate each one before writing the report. Any
+  other required criterion the evaluation's scope left out is still Not
   Evaluated, and the remarks say why.
 
 When in doubt between two levels, choose the lower, and explain in the
