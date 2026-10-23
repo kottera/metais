@@ -15,6 +15,7 @@ import (
 	"metais.org/metais/internal/jsonx"
 	"metais.org/metais/internal/liquid/value"
 	"metais.org/metais/internal/regexprofile"
+	"metais.org/metais/internal/schema"
 )
 
 // The generator's fixed bounds (ADR-007 D9 items 9, 10 and 16): passes
@@ -870,7 +871,9 @@ func (s *Generator) itemStarts(c *conj, i int) []node {
 // where maxItems is lowered to the prefixItems length when items is false;
 // past the recursion bound it is minItems. With coverage, the first items
 // each hold one member of values at the key, in values' order, and the
-// length is at least their count (ADR-003 Amendment A2 item 17). The
+// length is at least their count (ADR-003 Amendment A2 item 17); a
+// coverage with more members than maxItems, or with a member no item can
+// hold, is unsatisfiable (MTS-SMP-010). The
 // first minContains items are made from contains as well, and a later one
 // that would push the count past maxContains is made again. A duplicate in
 // a uniqueItems array, and an item whose key repeats under uniqueKeys, is
@@ -904,6 +907,14 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 	covered := c.covered()
 	if hasMax && int64(len(covered)) > maxI {
 		s.unsatisfiable(loc, s.holder(c, "coverage"), ReasonCoverage)
+		return nil, false
+	}
+	if n, ok := s.refused(c); ok || s.stopped() {
+		if ok {
+			s.unsatisfiable(loc, n, ReasonCoverage)
+			last := len(s.findings) - 1
+			s.findings[last] = s.findings[last].WithHint(hintCoverageRefused)
+		}
 		return nil, false
 	}
 	target := int64(s.opts.Items)
@@ -1059,6 +1070,43 @@ func (cv cover) item() value.Value {
 		v = o
 	}
 	return v
+}
+
+// hintCoverageRefused is the hint of a coverage member no item can hold,
+// which no examples value can change.
+const hintCoverageRefused = "A value coverage requires is one the schema at its key refuses, so no row can hold it: correct the value, or let the schema at coverage's key accept it, as its enum or pattern. metais check reports it as schema.unsatisfiable."
+
+// refused returns the first schema of C whose coverage holds a member
+// that every schema its key reaches from the array's item schemas
+// refuses, which no item can hold (MTS-SMP-010): the members check
+// reports as schema.unsatisfiable (MTS-AUT-081), by the same resolution.
+func (s *Generator) refused(c *conj) (node, bool) {
+	var at node
+	found := false
+	c.each("coverage", func(n node, v value.Value) {
+		o, ok := v.(value.Object)
+		if found || !ok || s.stopped() {
+			return
+		}
+		kv, _ := o.Get("key")
+		ks, _ := kv.(value.String)
+		reached := s.keys.CoverageKey(schema.Node{Entry: n.entry, Ptr: n.ptr}, ks.Text())
+		if len(reached) == 0 {
+			return // an open schema refuses no value
+		}
+		vs, _ := o.Get("values")
+		values, _ := vs.(value.Array)
+		for _, m := range values.All() {
+			holds := slices.ContainsFunc(reached, func(r schema.Node) bool {
+				return s.valid([]node{{r.Entry, r.Ptr}}, m)
+			})
+			if !holds && !s.stopped() {
+				at, found = n, true
+				return
+			}
+		}
+	})
+	return at, found
 }
 
 // covered returns the members of every coverage of C, each with its key,

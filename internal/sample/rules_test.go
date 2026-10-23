@@ -73,6 +73,43 @@ func TestCoverageNested(t *testing.T) {
 	}
 }
 
+// TestCoverageRefused is MTS-SMP-010's "cannot" (ruling R-W2-b): a
+// coverage member every schema its key reaches refuses is one no item can
+// hold, reported once as schema.sample_unsatisfiable with reason coverage,
+// located at the schema holding the coverage and at the array's place,
+// with a hint that names no examples value, which could not help. At the
+// key's top level, below it, and in a conjunct of allOf; a member one
+// alternative of the key's schema accepts is generated.
+func TestCoverageRefused(t *testing.T) {
+	for _, tc := range []struct {
+		schema, pointer string
+	}{
+		{rows(`"coverage":{"key":"/criterion","values":["1.3.1","9.9.9"]},`), ""},
+		{`{"type":"array","coverage":{"key":"/ref/id","values":[7,"x"]},
+			"items":{"type":"object","properties":{"ref":{"type":"object","properties":{"id":{"type":"integer"}}}}}}`, ""},
+		{`{"type":"object","required":["list"],"properties":{"list":{"allOf":[{"type":"array"},
+			{"coverage":{"key":"/id","values":[1,-1]},"items":{"type":"object","properties":{"id":{"minimum":0}}}}]}}}`, "/properties/list/allOf/1"},
+	} {
+		_, fs := one(t, tc.schema, Options{Items: 2})
+		if got := reasons(t, fs); !slices.Equal(got, []string{ReasonCoverage}) {
+			t.Errorf("%s: reasons %v, want coverage%s", tc.schema, got, describe(fs))
+			continue
+		}
+		loc, _ := fs[0].Location()
+		if loc.Pointer != tc.pointer {
+			t.Errorf("%s: located at %q, want %q", tc.schema, loc.Pointer, tc.pointer)
+		}
+		if strings.Contains(fs[0].Hint(), "examples") {
+			t.Errorf("%s: hint %q names an examples value", tc.schema, fs[0].Hint())
+		}
+	}
+	v := mustOne(t, `{"type":"array","coverage":{"key":"/id","values":[1,"a"]},
+		"items":{"type":"object","properties":{"id":{"anyOf":[{"type":"integer"},{"type":"string"}]}}}}`, Options{Items: 2})
+	if a := v.(value.Array); a.Len() != 2 {
+		t.Errorf("%s, want both members held", text(v))
+	}
+}
+
 // TestUniqueKeysItems is MTS-SMP-011: no two items have equal keys, for a
 // key of one pointer whose values the generator draws, or takes from an
 // enum, and for a composite key, compared pointer by pointer.
