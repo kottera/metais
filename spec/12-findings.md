@@ -282,7 +282,7 @@ it, and the statements it reports.
 | `schema.ref_unresolved` | error | content | package | `reference` | 1.0 | [MTS-DAT-007](05-data-specification.md#mts-dat-007) |
 | `schema.required_not_declared` | warning | content | package | `name` | 1.0 | [MTS-AUT-009](13-authoring.md#mts-aut-009) |
 | `schema.sample_invalid` | error | content | input | `code` | 1.0 | [MTS-SMP-002](13-authoring.md#mts-smp-002), [MTS-SMP-009](13-authoring.md#mts-smp-009) |
-| `schema.sample_unsatisfiable` | error | content | input | `instance`, `reason` | 1.0 | [MTS-SMP-004](13-authoring.md#mts-smp-004), [MTS-SMP-009](13-authoring.md#mts-smp-009) |
+| `schema.sample_unsatisfiable` | error | content | input | `instance`, `reason` | 1.0 | [MTS-SMP-004](13-authoring.md#mts-smp-004), [MTS-SMP-009](13-authoring.md#mts-smp-009), [MTS-SMP-010](13-authoring.md#mts-smp-010), [MTS-SMP-011](13-authoring.md#mts-smp-011) |
 | `schema.syntax` | error | content | package | `form`, `rule` | 1.0 | [MTS-DAT-002](05-data-specification.md#mts-dat-002) |
 | `schema.unsatisfiable` | error | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008), [MTS-AUT-081](13-authoring.md#mts-aut-081), [MTS-AUT-082](13-authoring.md#mts-aut-082) |
 | `schema.unusable_enum_member` | warning | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |

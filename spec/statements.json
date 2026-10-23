@@ -288,6 +288,8 @@
     {"id": "MTS-SMP-007", "chapter": "13-authoring.md", "section": "13.6", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-SMP-008", "chapter": "13-authoring.md", "section": "13.6", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-SMP-009", "chapter": "13-authoring.md", "section": "13.6", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-SMP-010", "chapter": "13-authoring.md", "section": "13.6", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-SMP-011", "chapter": "13-authoring.md", "section": "13.6", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-SUP-001", "chapter": "06-supplying-inputs.md", "section": "6.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-SUP-002", "chapter": "06-supplying-inputs.md", "section": "6.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-SUP-003", "chapter": "06-supplying-inputs.md", "section": "6.2", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
