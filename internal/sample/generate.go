@@ -976,7 +976,9 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 			ok = false
 			continue
 		}
-		repeats := func(v value.Value) bool { return slices.ContainsFunc(keys, func(key [][]string) bool { return keyRepeats(items, key, v) }) }
+		repeats := func(v value.Value) bool {
+			return slices.ContainsFunc(keys, func(key [][]string) bool { return keyRepeats(items, key, v) })
+		}
 		clash := func(v value.Value) bool {
 			if unique && slices.ContainsFunc(items, func(e value.Value) bool { return value.Equal(e, v) }) {
 				return true
