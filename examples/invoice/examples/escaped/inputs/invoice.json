@@ -1,0 +1,8 @@
+{
+  "number": "2026-0043",
+  "date": "2026-10-24",
+  "customer": "<script>alert(\"hi\")</script> & Sons",
+  "lines": [
+    {"description": "Widgets <b>bold</b>", "quantity": 2, "unit_price": 50}
+  ]
+}

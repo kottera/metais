@@ -1,0 +1,27 @@
+metais: "1.0"
+name: "invoice"
+version: "0.1.0"
+title: "Invoice"
+description: "Renders an invoice as an HTML page, from its number, date, customer and line items."
+license: "Apache-2.0"
+guide: |-
+  This package renders invoice.html, an HTML page that lists one invoice's
+  line items, each with its amount in US dollars. It is the package the
+  guide "Writing a package" on metais.org writes, step by step.
+
+  Supply one input, invoice: the invoice's number, its date, the customer
+  it is made out to, and its line items. Give each line's unit price in
+  cents, as a whole number, so no price is rounded before it is printed.
+  Read [what the invoice means](inputs/invoice.md) before you supply it.
+inputs:
+  - name: invoice
+    title: "Invoice"
+    schema: inputs/invoice.schema.json
+    meaning: inputs/invoice.md
+    forms:
+      - json
+      - yaml
+outputs:
+  - id: page
+    template: invoice.html.liquid
+    escape: html

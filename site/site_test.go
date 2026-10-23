@@ -57,7 +57,7 @@ var sources = []schemaSource{
 const helpGolden = "../internal/cli/testdata/help/help.json"
 
 // pages are the site's pages, by their paths in the published tree.
-var pages = []string{"index.html", "install/index.html", "getting-started/index.html", "metais/index.html", "metais/cmd/metais/index.html"}
+var pages = []string{"index.html", "install/index.html", "guide/using-a-package/index.html", "guide/writing-a-package/index.html", "getting-started/index.html", "metais/index.html", "metais/cmd/metais/index.html"}
 
 // schema is one published schema: its path in the repository, its path below
 // its source's directory, slash separated, its $id, and its bytes.
@@ -456,8 +456,9 @@ func TestBuildUsage(t *testing.T) {
 var commandLine = regexp.MustCompile(`^metais(\s.*)?$`)
 
 // TestPageCommands requires every metais command line in a page's code
-// blocks to name a command metais has, with flags that command takes, so the
-// pages cannot drift from metais help.
+// blocks to name a command metais has, with flags that command takes, or to
+// be one global flag alone, such as metais --version, so the pages cannot
+// drift from metais help.
 func TestPageCommands(t *testing.T) {
 	b, err := os.ReadFile(helpGolden)
 	if err != nil {
@@ -480,6 +481,10 @@ func TestPageCommands(t *testing.T) {
 		t.Fatal(err)
 	}
 	flags := map[string][]string{}
+	var global []string
+	for _, f := range help.Result.GlobalFlags {
+		global = append(global, f.Name)
+	}
 	for _, c := range help.Result.Commands {
 		known := []string{}
 		for _, f := range c.Flags {
@@ -517,6 +522,13 @@ func TestPageCommands(t *testing.T) {
 					continue
 				}
 				name := fields[1]
+				if strings.HasPrefix(name, "--") {
+					// metais --version: a global flag alone, with no command.
+					if f, _, _ := strings.Cut(name, "="); !slices.Contains(global, f) || len(fields) > 2 {
+						t.Errorf("%s: %q: metais takes no global flag %s alone", p, line, name)
+					}
+					continue
+				}
 				known, ok := flags[name]
 				if !ok {
 					t.Errorf("%s: %q: metais has no command %s", p, line, name)

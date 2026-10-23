@@ -1,0 +1,177 @@
+{%- comment -%}
+  The guide "Writing a package" (ADR-013 D1 item 5, R17 item 2), in the
+  words Ed approved in W2-OOB5. Its invoice is examples/invoice, which
+  TestWritingGuideInvoice holds identical to the files the guide shows.
+  The guide holds Liquid, so its text is a raw block.
+{%- endcomment -%}
+{%- capture body -%}
+{% raw %}<h1 id="writing-a-package">Writing a package</h1>
+<p>A package is a template that tells whoever fills it in exactly what to
+supply, and refuses what does not fit before any document is made. This
+guide writes one: <a href="https://github.com/kottera/metais/tree/main/examples/invoice">an invoice, rendered as an HTML page from its line
+items</a>. Then it changes a package that is already packed, and writes data
+into a page's script safely.</p>
+<p>It assumes <code>metais</code> is <a href="/install/">installed</a>.</p>
+<h2 id="the-route">The route</h2>
+<ol>
+<li>Start from a scaffold: <a href="/reference/commands/init/"><code>metais init</code></a>.</li>
+<li>Edit the manifest, the inputs and the templates, and preview them with
+<code>metais render --sample</code>.</li>
+<li>Check the package: <a href="/reference/commands/check/"><code>metais check</code></a>.</li>
+<li>Test its examples: <a href="/reference/commands/test/"><code>metais test</code></a>.</li>
+<li>Pack it into one file: <a href="/reference/commands/pack/"><code>metais pack</code></a>.</li>
+</ol>
+<p>Every command ends with a <code>Next:</code> list of the commands to run after it.
+<a href="/reference/"><code>metais help &lt;command&gt;</code></a> explains any command in full, and two topics
+cover what you write: <a href="/reference/topics/manifest/"><code>metais help manifest</code></a> gives every field of
+<code>metais.yaml</code> with an example, and <a href="/reference/topics/templates/"><code>metais help templates</code></a> gives the
+template language, every filter, and how escaping works.</p>
+<h2 id="1-start-from-a-scaffold">1. Start from a scaffold</h2>
+<pre><code>metais init invoice --minimal --html</code></pre>
+<p>This writes a package's source directory, <code>invoice</code>, that already checks,
+tests and packs:</p>
+<ul>
+<li><code>metais.yaml</code>, the manifest: the package's name, version, title,
+description and guide, its inputs and its outputs;</li>
+<li><code>inputs/data.schema.json</code>, one input's JSON Schema, and
+<code>inputs/data.md</code>, the document that says what the input means;</li>
+<li><code>templates/page.html.liquid</code>, one template.</li>
+</ul>
+<p><code>--minimal</code> gives you one input and one template to replace. Without it,
+<code>init</code> writes a complete small package, a greeting with an example, to
+learn from. <code>--html</code> declares the output as HTML, so that every value the
+template writes is escaped for HTML.</p>
+<h2 id="2-edit-it">2. Edit it</h2>
+<p><strong>The manifest.</strong> Give the package a description and a guide. The guide is
+what a supplier reads first, in <a href="/reference/commands/inspect/"><code>metais inspect</code></a>: say what the package
+produces and what to supply. Name the input for what it holds:</p>
+<pre><code>inputs:
+  - name: invoice
+    title: &quot;Invoice&quot;
+    schema: inputs/invoice.schema.json
+    meaning: inputs/invoice.md
+    forms:
+      - json
+      - yaml
+outputs:
+  - id: page
+    template: invoice.html.liquid
+    escape: html</code></pre>
+<p>Rename the scaffold's files to match: <code>inputs/invoice.schema.json</code>,
+<code>inputs/invoice.md</code> and <code>templates/invoice.html.liquid</code>.</p>
+<p><strong>The schema</strong> is the contract. Every value a supplier gives is checked
+against it, so make it as strict as the document needs: which fields are
+required, their types, their formats and their limits.</p>
+<pre><code>{
+  &quot;$schema&quot;: &quot;https://json-schema.org/draft/2020-12/schema&quot;,
+  &quot;title&quot;: &quot;Invoice&quot;,
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;additionalProperties&quot;: false,
+  &quot;required&quot;: [&quot;number&quot;, &quot;date&quot;, &quot;customer&quot;, &quot;lines&quot;],
+  &quot;properties&quot;: {
+    &quot;number&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;minLength&quot;: 1, &quot;maxLength&quot;: 40, &quot;title&quot;: &quot;Invoice number&quot;},
+    &quot;date&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;format&quot;: &quot;date&quot;, &quot;title&quot;: &quot;Invoice date&quot;},
+    &quot;customer&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;minLength&quot;: 1, &quot;maxLength&quot;: 200, &quot;title&quot;: &quot;Customer&quot;},
+    &quot;lines&quot;: {
+      &quot;type&quot;: &quot;array&quot;, &quot;minItems&quot;: 1, &quot;maxItems&quot;: 100, &quot;title&quot;: &quot;Line items&quot;,
+      &quot;items&quot;: {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;additionalProperties&quot;: false,
+        &quot;required&quot;: [&quot;description&quot;, &quot;quantity&quot;, &quot;unit_price&quot;],
+        &quot;properties&quot;: {
+          &quot;description&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;minLength&quot;: 1, &quot;maxLength&quot;: 200, &quot;title&quot;: &quot;Description&quot;},
+          &quot;quantity&quot;: {&quot;type&quot;: &quot;integer&quot;, &quot;minimum&quot;: 1, &quot;maximum&quot;: 10000, &quot;title&quot;: &quot;Quantity&quot;},
+          &quot;unit_price&quot;: {&quot;type&quot;: &quot;integer&quot;, &quot;minimum&quot;: 0, &quot;maximum&quot;: 100000000, &quot;title&quot;: &quot;Unit price in cents&quot;}
+        }
+      }
+    }
+  }
+}</code></pre>
+<p>Give every field a <code>title</code>: it is how the field is named in every finding
+a supplier sees.</p>
+<p><strong>The meaning document</strong> says, in prose, what the schema cannot: what each
+field holds and where a supplier finds it.</p>
+<p><strong>The template</strong> is Liquid, in the dialect the specification pins. Each
+input is <code>inputs.&lt;name&gt;</code>:</p>
+<pre><code>&lt;h1&gt;Invoice {{ inputs.invoice.number }}&lt;/h1&gt;
+&lt;p&gt;{{ inputs.invoice.customer }}, {{ inputs.invoice.date }}&lt;/p&gt;
+&lt;table&gt;
+{%- for line in inputs.invoice.lines %}
+{%- assign cents = line.quantity | times: line.unit_price %}
+&lt;tr&gt;&lt;td&gt;{{ line.description }}&lt;/td&gt;&lt;td&gt;{{ line.quantity }}&lt;/td&gt;&lt;td&gt;{{ cents | divided_by: 100.0 | amount: &quot;USD&quot;, group: &quot;,&quot; }}&lt;/td&gt;&lt;/tr&gt;
+{%- endfor %}
+&lt;/table&gt;</code></pre>
+<p>Because the output declares <code>escape: html</code>, a customer named
+<code>&lt;script&gt;</code> is printed as text, never as markup.</p>
+<p><strong>Preview it</strong> from data generated from your schema, as often as you like:</p>
+<pre><code>metais render invoice --sample --out preview</code></pre>
+<h2 id="3-check-it">3. Check it</h2>
+<pre><code>metais check invoice</code></pre>
+<p><code>check</code> needs no data. It checks the manifest, every schema, every
+template, and the references between them, such as a template that uses a
+field the schema does not declare. It reports every finding of every step
+at once.</p>
+<h2 id="4-test-it">4. Test it</h2>
+<p>An example is a set of inputs and the outputs a render of them must
+produce, byte for byte. It is how you know the package still renders what
+you meant after you change it. Generate an example's inputs from your
+schemas, edit them into a realistic invoice, then record its outputs:</p>
+<pre><code>metais sample invoice --example basic
+metais test invoice --update</code></pre>
+<p>Read <code>invoice/examples/basic/expected/invoice.html</code> before you keep it:
+<code>--update</code> records whatever the render wrote. From then on, test the
+package after every change:</p>
+<pre><code>metais test invoice</code></pre>
+<p>A render that differs from an example's expected output fails, and the
+test shows the difference.</p>
+<h2 id="5-pack-it">5. Pack it</h2>
+<pre><code>metais pack invoice</code></pre>
+<p><code>pack</code> runs <code>check</code> and <code>test</code> again, and refuses to write a package whose
+checks or examples fail. Otherwise it writes <code>invoice-0.1.0.metais</code>: the
+same bytes from the same sources, every time. That file is what you give
+to the people who supply the data, and
+<a href="/guide/using-a-package/">Using a package</a> is what they do with it.</p>
+<h2 id="change-a-package-that-is-already-packed">Change a package that is already packed</h2>
+<p>To add a due date to the invoice, unpack the package into a source
+directory, edit it, and pack it again:</p>
+<pre><code>metais unpack invoice-0.1.0.metais --out invoice-src</code></pre>
+<ol>
+<li>In <code>inputs/invoice.schema.json</code>, add <code>&quot;due&quot;</code> to <code>required</code>, and the
+field: <code>&quot;due&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;format&quot;: &quot;date&quot;, &quot;title&quot;: &quot;Due date&quot;}</code>.</li>
+<li>In <code>templates/invoice.html.liquid</code>, print it:
+<code>&lt;p&gt;Due {{ inputs.invoice.due }}&lt;/p&gt;</code>.</li>
+<li>Raise <code>version</code> in <code>metais.yaml</code>, here to <code>0.2.0</code>.</li>
+</ol>
+<p>Then test it:</p>
+<pre><code>metais test invoice-src</code></pre>
+<p>The test fails, and says why: the example has no due date, which the
+schema now requires. Add one to <code>examples/basic/inputs/invoice.json</code>, run
+the test again to see the difference in the rendered page, record it, and
+pack:</p>
+<pre><code>metais test invoice-src --update
+metais pack invoice-src</code></pre>
+<p><code>pack</code> writes <code>invoice-0.2.0.metais</code>.</p>
+<h2 id="write-data-into-a-pages-script">Write data into a page's script</h2>
+<p>A page that charts its data needs that data in JavaScript. Never write it
+into a script with <code>json</code>: a value holding <code>&lt;/script&gt;</code> would end the
+script early. Write it into a JSON script element with <code>json_script</code>,
+which no value can break out of, and read it from there:</p>
+<pre><code>&lt;script type=&quot;application/json&quot; id=&quot;numbers&quot;&gt;{{ inputs.data.numbers | json_script }}&lt;/script&gt;
+&lt;script&gt;
+const numbers = JSON.parse(document.getElementById(&quot;numbers&quot;).textContent);
+&lt;/script&gt;</code></pre>
+<p><code>metais init &lt;dir&gt; --minimal --html</code> writes its template this way, and
+<a href="/reference/topics/templates/"><code>metais help templates</code></a> explains each filter's escaping.</p>
+<h2 id="escape-hatches">Escape hatches</h2>
+<ul>
+<li><strong>A source directory as it is.</strong> Every command that reads a package
+also reads its source directory, so <code>metais inspect invoice</code> shows you
+the package as a supplier will see it, before you pack it.</li>
+<li><strong>Test one example</strong>: <code>metais test invoice --example basic</code>.</li>
+<li><strong>Pack somewhere else</strong>: <code>metais pack invoice --out dist</code>, into an
+existing directory.</li>
+<li><strong>An agent doing this for you.</strong> <a href="/reference/commands/skill/"><code>metais skill</code></a> installs a skill that
+teaches a coding agent this route.</li>
+</ul>{% endraw %}
+{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "Writing a package — METAIS", description: "Write a package, an invoice rendered as an HTML page, from init to pack, then change it and write data into a page's script.", head: nil, body: body -%}

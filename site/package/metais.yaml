@@ -54,6 +54,14 @@ outputs:
     template: install/index.html.liquid
     path: install/index.html
     escape: html
+  - id: guide_using
+    template: guide/using-a-package/index.html.liquid
+    path: guide/using-a-package/index.html
+    escape: html
+  - id: guide_writing
+    template: guide/writing-a-package/index.html.liquid
+    path: guide/writing-a-package/index.html
+    escape: html
   - id: getting_started
     template: getting-started/index.html.liquid
     path: getting-started/index.html

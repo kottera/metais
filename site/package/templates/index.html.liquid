@@ -1,32 +1,55 @@
+{%- comment -%}
+  The landing page (ADR-013 D8 item 3): what METAIS is, who it is for,
+  the install command, and "Who makes METAIS" (D2 item 1), in the words
+  Ed approved in W2-OOB5.
+{%- endcomment -%}
 {%- capture body -%}
-<h1>METAIS</h1>
-<p><strong>Multi-file Extensible Templating And Instantiation Specification.</strong></p>
-
-<p>A METAIS package is a document template in one file, usually named
-<code>&lt;name&gt;-&lt;version&gt;.metais</code>. It says which inputs a
-document needs, with a JSON Schema and a prose explanation for each one, and
-it carries the Liquid templates that render the document from them. One
-package can produce anything from a Markdown report to a set of files for a
-static site.</p>
-
-<p><code>metais</code> is the reference tool. It reads a package in place,
-without unpacking it, checks the data you supply against the package's
-schemas and reports every problem at once, and renders the outputs. It never
-runs code from a package and never touches the network, and the same package
-and data give the same bytes on every platform. It also helps authors write,
-check, test and pack their own packages.</p>
-
-<h2>Where to go next</h2>
+<h1 id="metais">METAIS</h1>
+<p><strong>Document templates that check your data before they fill it in.</strong></p>
+<p>A METAIS package is a document template in one file. It says which data
+the document needs, with a JSON Schema and a plain explanation for each
+input, and it carries the Liquid templates that turn that data into the
+finished document: a Markdown report, an HTML page, a Word document, or a
+whole directory of files.</p>
+<p><code>metais</code> is the tool that reads a package, checks your data against it and
+renders the document. It reads the package in place, without unpacking it.
+It reports every problem with your data at once, each with where it is and
+how to fix it. It never runs code from a package and never touches the
+network, and the same package and data give the same bytes on every
+platform.</p>
+<h2 id="who-it-is-for">Who it is for</h2>
 <ul>
-<li><strong>Someone gave you a <code>.metais</code> file:</strong>
-<a href="/install/">install metais</a>, then follow
-<a href="/getting-started/#use-a-package">Use a package</a>.</li>
-<li><strong>You want to write a package:</strong>
-<a href="/install/">install metais</a>, then follow
-<a href="/getting-started/#write-a-package">Write a package</a>.</li>
-<li><strong>You are building another implementation:</strong> the
-specification's JSON Schemas are published at their <code>$id</code>s under
-<a href="/schemas/1.0/manifest.schema.json"><code>https://metais.org/schemas/</code></a>.</li>
+<li><strong>You were given a <code>.metais</code> file</strong> and need the document it makes.
+<a href="/reference/commands/inspect/"><code>metais inspect</code></a> tells you what the package needs, and <a href="/reference/commands/render/"><code>metais render</code></a>
+makes the document once your data is valid.
+→ <a href="/guide/using-a-package/">Using a package</a></li>
+<li><strong>You want to hand someone a template</strong> that tells them exactly what to
+supply, and refuses what does not fit, before any document is made.
+→ <a href="/guide/writing-a-package/">Writing a package</a></li>
+<li><strong>You work with a coding agent.</strong> The packages and the tool are built to
+be read by agents as well as people: every command ends with the
+commands to run next, every refusal names the fix, and <code>--json</code> gives
+any result as one document. <a href="/reference/commands/skill/"><code>metais skill</code></a> installs a skill that
+teaches your agent the same routes these guides describe.</li>
+<li><strong>You are writing another implementation.</strong> The specification is
+normative, its JSON Schemas are published at their <code>$id</code>s under
+<a href="/schemas/1.0/manifest.schema.json"><code>https://metais.org/schemas/</code></a>, and its conformance suite proves a
+processor or an authoring tool against it.
+→ <a href="/spec/draft/">The specification</a></li>
 </ul>
+<h2 id="install">Install</h2>
+<p>On macOS:</p>
+<pre><code>brew install kottera/tap/metais</code></pre>
+<p>On Linux, or a Mac without Homebrew:</p>
+<pre><code>curl -fsSL https://metais.org/install.sh | sh</code></pre>
+<p>Then check it works:</p>
+<pre><code>metais --version</code></pre>
+<p>Go users, and anyone who wants the release archives themselves, will find
+those routes on the <a href="/install/">install page</a>.</p>
+<h2 id="who-makes-metais">Who makes METAIS</h2>
+<p>METAIS is made by <a href="https://kottera.com/">Kottera</a>. Kottera builds tera, a
+work engine for AI agents.</p>
+<p>METAIS is its own project, under the Apache License 2.0, and does not need
+tera.</p>
 {%- endcapture -%}
-{%- render "_layout.html.liquid", title: "METAIS — document templates you can check", description: "METAIS is a package format for document templates, and metais is the tool that reads, validates and renders them.", head: nil, body: body -%}
+{%- render "_layout.html.liquid", title: "METAIS — document templates that check your data before they fill it in", description: "METAIS is a package format for document templates, and metais is the tool that reads, validates and renders them.", head: nil, body: body -%}

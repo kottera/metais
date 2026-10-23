@@ -1,0 +1,169 @@
+{%- comment -%}
+  The guide "Using a package" (ADR-013 D1 item 5, R17 item 1), in the
+  words Ed approved in W2-OOB5: inspect, schema, a data directory,
+  validate and render, with the escape hatches last.
+{%- endcomment -%}
+{%- capture body -%}
+<h1 id="using-a-package">Using a package</h1>
+<p>Someone gave you a <code>.metais</code> file. This guide takes you from that file to
+the document it makes, and on to rendering it from a program.</p>
+<p>It assumes <code>metais</code> is <a href="/install/">installed</a>. Its example is a small
+package, <code>status-widget-1.0.0.metais</code>, which renders an HTML fragment
+showing a service's status. Every command works the same way on any
+package: put your own file's name where this guide has
+<code>status-widget-1.0.0.metais</code>.</p>
+<p><strong>Do not unzip the package.</strong> A <code>.metais</code> file is a zip archive, but
+<code>metais</code> reads it in place and verifies every entry as it reads it. Every
+command below takes the file exactly as you received it.</p>
+<h2 id="the-route">The route</h2>
+<ol>
+<li>Find out what the package needs: <a href="/reference/commands/inspect/"><code>metais inspect</code></a>.</li>
+<li>Read what each input means, and list its fields: <a href="/reference/commands/schema/"><code>metais schema</code></a>.</li>
+<li>Put your data in a data directory, one file per input.</li>
+<li>Check it: <a href="/reference/commands/validate/"><code>metais validate</code></a>.</li>
+<li>Make the document: <a href="/reference/commands/render/"><code>metais render</code></a>.</li>
+</ol>
+<p>Every command ends with a <code>Next:</code> list of the commands to run after it, so
+you can follow the route from the tool itself.
+<a href="/reference/"><code>metais help &lt;command&gt;</code></a> explains any command in full.</p>
+<h2 id="1-find-out-what-the-package-needs">1. Find out what the package needs</h2>
+<pre><code>metais inspect status-widget-1.0.0.metais</code></pre>
+<p><code>inspect</code> verifies the whole package, then prints what it is: its title
+and description, the author's guide, each input with the file names it is
+read from, the outputs it renders, its references and examples, and the
+commands to run next.</p>
+<p>Read the guide. It is the author's own instructions for supplying the
+data, and it often says where the data comes from. For this package, the
+one input is <code>status</code>, read from <code>status.json</code>, and the one output is
+<code>status.html</code>.</p>
+<h2 id="2-read-what-each-input-means">2. Read what each input means</h2>
+<pre><code>metais schema status-widget-1.0.0.metais --fields</code></pre>
+<p><code>schema --fields</code> lists every field of every input, one line each: where
+the field is, its type, whether it is required, its constraints, and its
+title. For this package:</p>
+<pre><code>/status                     object  required  additionalProperties=false                              Service status
+/status/components          array   optional  maxItems=20 minItems=1                                  Components
+/status/components/*        object  optional  additionalProperties=false                              -
+/status/components/*/name   string  required  maxLength=80 minLength=1                                Component name
+/status/components/*/state  any     required  enum=[&quot;operational&quot;,&quot;degraded&quot;,&quot;outage&quot;,&quot;maintenance&quot;]  Component state
+/status/message             string  optional  maxLength=280 minLength=1                               Message
+/status/service             string  required  maxLength=80 minLength=1                                Service
+/status/state               any     required  enum=[&quot;operational&quot;,&quot;degraded&quot;,&quot;outage&quot;,&quot;maintenance&quot;]  State
+/status/updated             string  required  format=&quot;date-time&quot;                                      Updated</code></pre>
+<p>A field such as a component's <code>name</code> is required only when its parent,
+here a component, is given.</p>
+<p>Give it an input's name, <code>metais schema status-widget-1.0.0.metais status --fields</code>, to list one input. Leave out <code>--fields</code> to print the whole JSON
+Schema, with each field's description.</p>
+<p>If someone asks you what the package needs from them, this listing is the
+answer: every input, and every required field of each.</p>
+<p>Many packages also give an input a meaning document, which explains what
+the data is and what good data looks like. When a package has one,
+<code>inspect</code> lists it in its <code>Next:</code> lines as a <a href="/reference/commands/read/"><code>metais read</code></a> of the
+package's <code>inputs/</code> entry: run it, and read the whole document before you
+gather the data. This package's single input needs none.</p>
+<h2 id="3-put-your-data-in-a-data-directory">3. Put your data in a data directory</h2>
+<p>Make a directory, here <code>data</code>, and put one file in it for each input,
+named as <code>inspect</code> listed it: <code>data/status.json</code>.</p>
+<pre><code>{
+  &quot;service&quot;: &quot;Payments API&quot;,
+  &quot;state&quot;: &quot;degraded&quot;,
+  &quot;updated&quot;: &quot;2026-10-23T09:30:00Z&quot;,
+  &quot;message&quot;: &quot;Card payments are slower than usual.&quot;
+}</code></pre>
+<p><strong>The data is yours to supply.</strong> A real document is made only from real
+facts. If you do not have a value the package requires, find it or ask
+for it. Do not guess it, and do not copy it from the package's examples:
+an example is the author's illustration, kept to test the package, and
+none of its values are yours.</p>
+<h2 id="4-check-your-data">4. Check your data</h2>
+<pre><code>metais validate status-widget-1.0.0.metais --data data</code></pre>
+<p><code>validate</code> reports every problem in one run, each with the file, line and
+column it is at, the field it concerns, the rule it breaks and how to fix
+it:</p>
+<pre><code>status.json:4:14: error: Updated is not in the date-time format. [input.format]
+  at /status/updated (input status: Service status)
+  …
+  hint: Write a value in the date-time format that fits the field's description: …
+1 error, 0 warnings, 0 info</code></pre>
+<p>Fix what it reports and run it again, until it reports <code>0 errors</code>.</p>
+<h2 id="5-make-the-document">5. Make the document</h2>
+<pre><code>metais render status-widget-1.0.0.metais --data data --out widget</code></pre>
+<p><code>render</code> checks the data again, renders every output in memory, and
+writes them into the new directory <code>widget</code> only when all of them
+succeed. It lists each file it wrote, with its size and digest.</p>
+<ul>
+<li><code>--dry-run</code> lists what it would write, and writes nothing.</li>
+<li><code>--out</code> must name a new or empty directory. To render again into the
+same one, add <code>--overwrite</code>: it replaces the files the render writes,
+and leaves every other file there alone.</li>
+</ul>
+<p>Rendering is pure. Nothing from the package runs, nothing is fetched from
+the network, and the same package and data give the same bytes on every
+platform.</p>
+<h2 id="see-what-a-package-produces-before-you-have-the-data">See what a package produces, before you have the data</h2>
+<p>To preview a package, render it from data that <code>metais</code> generates from
+the package's schemas:</p>
+<pre><code>metais render status-widget-1.0.0.metais --sample --out preview</code></pre>
+<p>The values are fictional, so the preview shows the document's shape, not
+your document. Show it as a preview, and never as a real document.</p>
+<p>The package's examples are not a preview: they are the author's tests.</p>
+<h2 id="start-from-generated-data">Start from generated data</h2>
+<p>To start your data from a file of the right shape, generate one and
+replace every value with your own:</p>
+<pre><code>metais sample status-widget-1.0.0.metais --out data</code></pre>
+<p><code>--seed &lt;n&gt;</code> generates different values, for when you want fictional data
+of your own rather than the default set:</p>
+<pre><code>metais sample status-widget-1.0.0.metais --seed 7 --out data7</code></pre>
+<h2 id="render-from-a-program">Render from a program</h2>
+<p>A package is often filled in by a program: a nightly job that fetches the
+status and renders the widget. The job writes its data where the package
+expects it, and runs <code>render</code>. Here is the job as <code>render-status.sh</code>:</p>
+<pre><code>#!/bin/sh
+# Renders the status widget from data/status.json into widget/.
+set -eu
+metais render status-widget-1.0.0.metais --data data --out widget --overwrite</code></pre>
+<p><code>render</code> validates the data first, and writes nothing when any of it is
+in error, so the job never publishes a broken document. Its exit status
+says what happened: <code>0</code> when the document was written, <code>1</code> when the data
+is invalid, and <code>4</code> or <code>5</code> when the package or the destination was
+refused. <a href="/reference/topics/exit-codes/"><code>metais help exit-codes</code></a> lists every one.</p>
+<p>To test the job before it has real data, give it generated data:</p>
+<pre><code>metais sample status-widget-1.0.0.metais --out data
+./render-status.sh</code></pre>
+<p>A program that wants to read the result can add <code>--json</code> to any command,
+which prints one JSON document: whether it succeeded, every finding with
+its stable code, and what was written. <a href="/reference/topics/json/"><code>metais help json</code></a> describes every
+document.</p>
+<h2 id="escape-hatches">Escape hatches</h2>
+<p>The route above is the one to follow. When it does not fit, these are
+there:</p>
+<ul>
+<li>
+<p><strong>Values on the command line.</strong> <code>--set /status/state=outage</code> sets one
+value over the data directory's; <code>--set-json</code> sets a JSON value, and
+<code>--inputs-json</code> supplies whole inputs. <a href="/reference/topics/inputs/"><code>metais help inputs</code></a> says which
+source wins.</p>
+</li>
+<li>
+<p><strong>One file to standard output.</strong>
+<code>metais render status-widget-1.0.0.metais --data data --out - --only status.html</code>
+writes that file's bytes alone.</p>
+</li>
+<li>
+<p><strong>Reading the package.</strong> <a href="/reference/commands/ls/"><code>metais ls</code></a>, <a href="/reference/commands/read/"><code>metais read</code></a>, <a href="/reference/commands/outline/"><code>metais outline</code></a>
+and <a href="/reference/commands/grep/"><code>metais grep</code></a> list, print, outline and search its entries, in place:</p>
+<pre><code>metais ls status-widget-1.0.0.metais -r
+metais grep status-widget-1.0.0.metais degraded references/</code></pre>
+</li>
+<li>
+<p><strong>Changing the package itself.</strong> That is writing a package, not using
+one: <a href="/reference/commands/unpack/"><code>metais unpack</code></a> turns it back into a source directory.
+<a href="/guide/writing-a-package/">Writing a package</a> explains the rest.</p>
+</li>
+<li>
+<p><strong>An agent doing this for you.</strong> <a href="/reference/commands/skill/"><code>metais skill</code></a> installs a skill that
+teaches a coding agent this route.</p>
+</li>
+</ul>
+{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "Using a package — METAIS", description: "From a .metais file someone gave you to the document it makes, and on to rendering it from a program.", head: nil, body: body -%}
