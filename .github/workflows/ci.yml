@@ -8,9 +8,9 @@
 #
 # While the repository is private it runs only when dispatched by hand
 # (ADR-013 D5 item 5), so private minutes are spent only on proving runs.
-# The jobs input runs one job, so a red is proved fixed without paying for
-# the others: debug a red that is not platform-specific on Linux, and prove
-# the macOS job once. From the flip it runs on every pull request and every
+# The jobs input runs one job, or install's two, so a red is proved fixed
+# without paying for the others: debug a red that is not platform-specific
+# on Linux, and prove the macOS jobs once. From the flip it runs on every pull request and every
 # push to main.
 name: ci
 
@@ -20,7 +20,7 @@ on:
       jobs:
         description: The job to run, or all of them
         type: choice
-        options: [all, wave, macos, dco, shell, site]
+        options: [all, wave, macos, dco, shell, site, install, install-linux, install-macos]
         default: all
       base:
         description: The DCO check's base; it checks the commits not on it, or the dispatched commit alone when that is on it
@@ -121,10 +121,11 @@ jobs:
             .github/scripts/coauthor.sh "$BASE" HEAD
           fi
 
-  # shellcheck over the repository's shell scripts. Fixtures are data, not
-  # scripts the repository runs: a conformance vector's or an example's
-  # expected output, and testdata. The install script's tests (ADR-013 D6
-  # item 8) are a step of this job.
+  # shellcheck over the repository's shell scripts, site/public/install.sh
+  # among them (ADR-013 D6 item 8). Fixtures are data, not scripts the
+  # repository runs: a conformance vector's or an example's expected output,
+  # and testdata. The install script's refusals are tested by the site's
+  # tests, and its real installs by the install jobs.
   shell:
     if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'shell' }}
     runs-on: ubuntu-latest
@@ -149,3 +150,37 @@ jobs:
           go-version-file: go.mod
       - run: site/build.sh "$RUNNER_TEMP/site"
       - run: go test -race -count=1 ./site/...
+
+  # A real install with site/public/install.sh on each platform it serves
+  # (ADR-013 D6 item 8): install-test.sh builds a prerelease of the
+  # dispatched commit with internal/tools/release, serves its archives and
+  # SHA256SUMS on 127.0.0.1 at the paths github.com serves them from, and
+  # installs it with the script as published, pinned both ways and into the
+  # default directory, and requires the refusal of a repository with no
+  # stable release. The builder clones this clone, so it is a whole one
+  # rather than a shallow one.
+  install-linux:
+    if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'install' || inputs.jobs == 'install-linux' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: .github/scripts/install-test.sh "$RUNNER_TEMP/install"
+
+  install-macos:
+    if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'install' || inputs.jobs == 'install-macos' }}
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - run: .github/scripts/install-test.sh "$RUNNER_TEMP/install"
