@@ -71,8 +71,15 @@ func (c *config) scoreSet(set []*scenario.Scenario) ([]scored, error) {
 // authoring results are recorded, not gated.
 var gatedAuthoring = []string{"opus", "sonnet"}
 
-// gated reports whether R-UX-5's thresholds count a run.
+// gated reports whether a run gates: R-UX-5's thresholds count it, or,
+// for an install scenario, ADR-013 D9's gate does. D9 gates I1, the
+// consuming install scenario, on every model, and I2, the authoring one,
+// on none: it is evidence of what a model and a search engine know on
+// the day.
 func gated(s *scenario.Scenario, model string) bool {
+	if s.Install {
+		return s.Kind == scenario.Consuming
+	}
 	return s.Kind == scenario.Consuming || slices.Contains(gatedAuthoring, model)
 }
 
@@ -112,18 +119,25 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 	p("| Set started | %s |\n", st.Started)
 	p("| Scorer | %s |\n\n", score.Format)
 
-	for _, kind := range []scenario.Kind{scenario.Consuming, scenario.Authoring} {
-		if !slices.ContainsFunc(set, func(s *scenario.Scenario) bool { return s.Kind == kind }) {
+	sections := []struct {
+		heading string
+		in      func(s *scenario.Scenario) bool
+	}{
+		{"## Consuming scenarios\n\nGated on every model (R-UX-5).\n\n",
+			func(s *scenario.Scenario) bool { return !s.Install && s.Kind == scenario.Consuming }},
+		{fmt.Sprintf("## Authoring scenarios\n\nGated on %s; Haiku's results are recorded, not gated (R-UX-5).\n\n", strings.Join(gatedAuthoring, " and ")),
+			func(s *scenario.Scenario) bool { return !s.Install && s.Kind == scenario.Authoring }},
+		{"## Install scenarios\n\nEach session starts with no metais on PATH (ADR-013 D9). I1 gates on every model. I2 is evidence, not a gate: it records whether a session finds METAIS and installs it, and its results are recorded.\n\n",
+			func(s *scenario.Scenario) bool { return s.Install }},
+	}
+	for _, sec := range sections {
+		if !slices.ContainsFunc(set, sec.in) {
 			continue
 		}
-		if kind == scenario.Consuming {
-			p("## Consuming scenarios\n\nGated on every model (R-UX-5).\n\n")
-		} else {
-			p("## Authoring scenarios\n\nGated on %s; Haiku's results are recorded, not gated (R-UX-5).\n\n", strings.Join(gatedAuthoring, " and "))
-		}
+		p("%s", sec.heading)
 		p("| Scenario | %s |\n|---|%s\n", strings.Join(c.models, " | "), strings.Repeat("---|", len(c.models)))
 		for _, s := range set {
-			if s.Kind != kind {
+			if !sec.in(s) {
 				continue
 			}
 			p("| %s |", s.Name())
@@ -137,26 +151,39 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 		p("\n")
 	}
 
-	var pass, total, invalid, pending int
+	// R-UX-5's thresholds count the runs of every scenario but the install
+	// scenarios, and D9's gate the runs of the install scenario it gates.
+	type tally struct{ pass, total, invalid, pending int }
+	var ux, d9 tally
 	for _, r := range runs {
+		t := &ux
+		if r.scenario.Install {
+			if !gated(r.scenario, r.model) {
+				continue
+			}
+			t = &d9
+		}
 		switch {
 		case r.outcome == nil:
-			pending++
+			t.pending++
 		case !r.outcome.Scored:
-			invalid++
+			t.invalid++
 		case gated(r.scenario, r.model):
-			total++
+			t.total++
 			if r.outcome.Pass {
-				pass++
+				t.pass++
 			}
 		}
 	}
+	holds := func(t tally) bool { return t.pass == t.total && t.invalid == 0 && t.pending == 0 }
 	p("## Thresholds\n\n")
-	p("%d of %d gated runs pass. %d runs are invalid and not scored; %d are not yet run. ", pass, total, invalid, pending)
-	if pass == total && invalid == 0 && pending == 0 {
-		p("R-UX-5's thresholds hold.\n\n")
-	} else {
-		p("R-UX-5's thresholds do not hold.\n\n")
+	if slices.ContainsFunc(set, func(s *scenario.Scenario) bool { return !s.Install }) {
+		p("%d of %d gated runs pass. %d runs are invalid and not scored; %d are not yet run. ", ux.pass, ux.total, ux.invalid, ux.pending)
+		p("R-UX-5's thresholds %s.\n\n", map[bool]string{true: "hold", false: "do not hold"}[holds(ux)])
+	}
+	if slices.ContainsFunc(set, func(s *scenario.Scenario) bool { return s.Install }) {
+		p("Install scenarios: %d of %d gated runs pass. %d runs are invalid and not scored; %d are not yet run. ", d9.pass, d9.total, d9.invalid, d9.pending)
+		p("ADR-013 D9's gate %s. I2's runs are recorded, not gated.\n\n", map[bool]string{true: "holds", false: "does not hold"}[holds(d9) && d9.total > 0])
 	}
 
 	p("## Why each run failed\n\n")
@@ -215,7 +242,7 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 	p("\n")
 
 	p("## Recorded verdicts\n\n")
-	p("C0's and C1's checks read the session's words by phrase. A run may carry a verdict, from a judge model or a person, which then decides the check. Before a scorecard counts towards R-UX-5's thresholds, every C0 and C1 run carries one.\n\n")
+	p("C0's, C1's and I1's checks read the session's words by phrase. A run may carry a verdict, from a judge model or a person, which then decides the check. Before a scorecard counts towards R-UX-5's thresholds or ADR-013 D9's gate, every C0, C1 and I1 run carries one.\n\n")
 	var judged, verdicts int
 	var needs, disagree []string
 	for _, r := range runs {

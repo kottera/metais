@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/tools/ux/scenario"
 	"metais.org/metais/internal/tools/ux/score"
 	"metais.org/metais/internal/tools/ux/scrub"
 )
@@ -705,5 +706,101 @@ func TestHarnessByName(t *testing.T) {
 	}
 	if _, err := h.version(); err == nil || !strings.Contains(err.Error(), "ANTHROPIC_BASE_URL") {
 		t.Errorf("no proxy: version = %v", err)
+	}
+}
+
+// TestRunSetInstallScenarios: an install scenario's session starts with
+// no metais on PATH, the runner's PATH alone, and is checked for that
+// instead of for the metais under test; its scorecard shows it apart,
+// with I1 gated and I2 recorded (ADR-013 D9).
+func TestRunSetInstallScenarios(t *testing.T) {
+	f := newFakeSet(t, "I1", "I2", "C4")
+	f.c.models = []string{"haiku"}
+	if err := f.c.run(); err != nil {
+		t.Fatalf("run: %v\n%s", err, f.out)
+	}
+	installChecks := slices.Clone(allChecks)
+	installChecks[slices.Index(installChecks, checkMetaisOnPath)] = checkNoMetais
+	for _, name := range []string{"I1-install-and-render", "I2-discover"} {
+		r := f.record(t, name, "haiku")
+		if !r.Valid || r.Status != statusComplete {
+			t.Errorf("%s: status %s, valid %v: %+v", name, r.Status, r.Valid, r.Checks)
+		}
+		if got := names(r.Checks); !slices.Equal(got, installChecks) {
+			t.Errorf("%s: checks %q, want %q", name, got, installChecks)
+		}
+		if path, _ := lookup(r.Invocation.Env, "PATH"); path != "/usr/bin:/bin" {
+			t.Errorf("%s: PATH %q, want the runner's alone", name, path)
+		}
+		if v, _ := lookup(r.Invocation.Env, "GOFLAGS"); v != "-modcacherw" {
+			t.Errorf("%s: GOFLAGS %q", name, v)
+		}
+	}
+	// Every other scenario keeps the metais under test first on PATH.
+	r := f.record(t, "C4-what-it-needs", "haiku")
+	if path, _ := lookup(r.Invocation.Env, "PATH"); path != filepath.Join(f.c.out, "bin")+string(filepath.ListSeparator)+"/usr/bin:/bin" || !slices.Equal(names(r.Checks), allChecks) {
+		t.Errorf("C4: PATH %q, checks %q", path, names(r.Checks))
+	}
+	if _, ok := lookup(r.Invocation.Env, "GOFLAGS"); ok {
+		t.Error("C4's session has GOFLAGS")
+	}
+	for _, want := range []string{
+		"## Install scenarios\n\nEach session starts with no metais on PATH (ADR-013 D9). I1 gates on every model. I2 is evidence, not a gate",
+		"| I1-install-and-render | fail: golden-install, inspect-first, outcome (asks-not-invents) |",
+		"| I2-discover | fail: outcome (finds-and-installs) (recorded) |",
+		"0 of 1 gated runs pass. 0 runs are invalid and not scored; 0 are not yet run. R-UX-5's thresholds do not hold.",
+		"Install scenarios: 0 of 1 gated runs pass. 0 runs are invalid and not scored; 0 are not yet run. ADR-013 D9's gate does not hold.",
+		"0 of 1 judged runs carry a verdict. Without one: I1-install-and-render haiku.",
+	} {
+		if !strings.Contains(f.out.String(), want) {
+			t.Errorf("the scorecard lacks %q:\n%s", want, f.out)
+		}
+	}
+	out := f.out.String()
+	if c4, install, i1 := strings.Index(out, "| C4-what-it-needs |"), strings.Index(out, "## Install scenarios"), strings.Index(out, "| I1-install-and-render |"); c4 > install || i1 < install {
+		t.Errorf("I1 is not listed apart from the consuming scenarios:\n%s", out)
+	}
+}
+
+// TestRunSetInstallScenarioRefusesAHostMetais: a metais on the runner's
+// own PATH would be found by an install scenario's session, so the run is
+// recorded not-run and no session starts.
+func TestRunSetInstallScenarioRefusesAHostMetais(t *testing.T) {
+	f := newFakeSet(t, "I2")
+	f.c.models = []string{"haiku"}
+	host := testenv.Dir(t)
+	if err := os.WriteFile(filepath.Join(host, "metais"), []byte("the host's metais"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	f.c.harness.(fakeClaude).hostPath = host + string(filepath.ListSeparator) + "/usr/bin:/bin"
+	if err := f.c.run(); err != nil {
+		t.Fatal(err)
+	}
+	r := f.record(t, "I2-discover", "haiku")
+	i := slices.IndexFunc(r.Checks, func(c check) bool { return c.Name == checkNoMetais })
+	if r.Status != statusNotRun || r.Valid || len(f.sessions) != 0 || i < 0 || r.Checks[i].Pass {
+		t.Errorf("status %s, valid %v, %d sessions, checks %+v", r.Status, r.Valid, len(f.sessions), r.Checks)
+	}
+}
+
+// TestInstallScenariosRunOnlyWhenNamed: the whole set, which -scenarios
+// selects when it is empty, holds no install scenario; and an install
+// scenario is refused with -with-skill, as it starts with no skill.
+func TestInstallScenariosRunOnlyWhenNamed(t *testing.T) {
+	f := newFakeSet(t)
+	set, err := f.c.loadSet()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(set) == 0 || slices.ContainsFunc(set, func(s *scenario.Scenario) bool { return s.Install }) {
+		t.Errorf("the whole set: %d scenarios, an install scenario among them", len(set))
+	}
+	f.c.scenarios = []string{"I1"}
+	if set, err := f.c.loadSet(); err != nil || len(set) != 1 || !set[0].Install {
+		t.Errorf("I1 named: %v", err)
+	}
+	f.c.withSkill = true
+	if _, err := f.c.loadSet(); err == nil || !strings.Contains(err.Error(), "no metais and no skill") {
+		t.Errorf("I1 with -with-skill: %v", err)
 	}
 }

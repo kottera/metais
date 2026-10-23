@@ -452,3 +452,29 @@ func TestChanges(t *testing.T) {
 		t.Errorf("a changed fixture is %s", got[0].Change)
 	}
 }
+
+func TestCheckMetaisNotOnPath(t *testing.T) {
+	dir := testenv.Dir(t)
+	clean, other := filepath.Join(dir, "clean"), filepath.Join(dir, "other")
+	for _, d := range []string{clean, other} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	path := func(dirs ...string) invocation {
+		return invocation{env: []string{"PATH=" + strings.Join(dirs, string(filepath.ListSeparator))}}
+	}
+	if c := checkMetaisNotOnPath(path(clean, filepath.Join(dir, "none"))); !c.Pass {
+		t.Fatalf("no metais: %s", c.Detail)
+	}
+	if c := checkMetaisNotOnPath(path(clean, ".")); c.Pass {
+		t.Error("a relative directory passed")
+	}
+	// Found anywhere on PATH, executable or not, a metais fails.
+	if err := os.WriteFile(filepath.Join(other, "metais"), []byte("a metais"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if c := checkMetaisNotOnPath(path(clean, other)); c.Pass || !strings.Contains(c.Detail, filepath.Join(other, "metais")) {
+		t.Errorf("a metais last on PATH: %+v", c)
+	}
+}

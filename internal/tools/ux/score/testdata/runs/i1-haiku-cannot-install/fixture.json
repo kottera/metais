@@ -1,0 +1,22 @@
+{
+  "shows": "started with no metais on PATH and no site at metais.org, the session cannot install metais: metais.org does not resolve, brew fails in the dispatch's sandbox, and a GitHub search finds nothing official; it renders nothing and runs no metais",
+  "recorded": {
+    "set": "Work Order 01a16916's set ux-install (W2-10), run in a tera dispatch on darwin/arm64 before metais.org had an address",
+    "run": "I1-install-and-render/haiku",
+    "date": "2026-10-23",
+    "commit": "c7975d50d9d219bde97c1f9a4c5d65cd8c92aaa7",
+    "model": "claude-haiku-5-5"
+  },
+  "expect": {
+    "golden-install": "fail",
+    "inspect-first": "fail",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "pass",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "golden-install": "never runs a metais it installed",
+    "inspect-first": "never runs metais inspect"
+  }
+}

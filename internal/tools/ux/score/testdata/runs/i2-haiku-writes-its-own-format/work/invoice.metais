@@ -1,0 +1,98 @@
+// Renders an invoice as an HTML string from a list of line items.
+//
+// renderInvoice({
+//   number: 'INV-1001',
+//   date: '2026-10-23',
+//   seller: { name: 'Acme Ltd', address: '1 Main St' },
+//   buyer: { name: 'Globex', address: '2 High St' },
+//   currency: 'USD',
+//   taxRate: 0.2,                  // optional, fraction
+//   lineItems: [
+//     { description: 'Widget', quantity: 2, unitPrice: 9.5 },
+//   ],
+// })
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatMoney(amount, currency) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
+}
+
+function renderInvoice(invoice) {
+  const currency = invoice.currency || 'USD';
+  const taxRate = invoice.taxRate || 0;
+
+  const rows = invoice.lineItems.map((item) => {
+    const lineTotal = item.quantity * item.unitPrice;
+    return `
+        <tr>
+          <td>${escapeHtml(item.description)}</td>
+          <td class="num">${escapeHtml(item.quantity)}</td>
+          <td class="num">${formatMoney(item.unitPrice, currency)}</td>
+          <td class="num">${formatMoney(lineTotal, currency)}</td>
+        </tr>`;
+  }).join('');
+
+  const subtotal = invoice.lineItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const tax = subtotal * taxRate;
+  const total = subtotal + tax;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Invoice ${escapeHtml(invoice.number)}</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #222; margin: 40px; }
+    h1 { margin: 0 0 8px; }
+    .parties { display: flex; justify-content: space-between; margin: 24px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px; border-bottom: 1px solid #ddd; text-align: left; }
+    th { background: #f5f5f5; }
+    .num { text-align: right; }
+    .totals { margin-top: 16px; width: 300px; margin-left: auto; }
+    .totals div { display: flex; justify-content: space-between; padding: 4px 0; }
+    .totals .grand { font-weight: bold; border-top: 2px solid #222; }
+  </style>
+</head>
+<body>
+  <h1>Invoice ${escapeHtml(invoice.number)}</h1>
+  <div>Date: ${escapeHtml(invoice.date)}</div>
+
+  <div class="parties">
+    <div><strong>From</strong><br>${escapeHtml(invoice.seller.name)}<br>${escapeHtml(invoice.seller.address)}</div>
+    <div><strong>To</strong><br>${escapeHtml(invoice.buyer.name)}<br>${escapeHtml(invoice.buyer.address)}</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th class="num">Qty</th>
+        <th class="num">Unit price</th>
+        <th class="num">Amount</th>
+      </tr>
+    </thead>
+    <tbody>${rows}
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div><span>Subtotal</span><span>${formatMoney(subtotal, currency)}</span></div>
+    <div><span>Tax (${(taxRate * 100).toFixed(2)}%)</span><span>${formatMoney(tax, currency)}</span></div>
+    <div class="grand"><span>Total</span><span>${formatMoney(total, currency)}</span></div>
+  </div>
+</body>
+</html>`;
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = { renderInvoice };
+}

@@ -1,0 +1,21 @@
+{
+  "shows": "given A1's task with no metais on PATH and no skill, and no site at metais.org, the session never finds METAIS: it writes a JavaScript renderer and names it invoice.metais",
+  "recorded": {
+    "set": "Work Order 01a16916's set ux-install (W2-10), run in a tera dispatch on darwin/arm64 before metais.org had an address",
+    "run": "I2-discover/haiku",
+    "date": "2026-10-23",
+    "commit": "c7975d50d9d219bde97c1f9a4c5d65cd8c92aaa7",
+    "model": "claude-haiku-5-5"
+  },
+  "expect": {
+    "golden-install": "n/a",
+    "inspect-first": "n/a",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "fail"
+  },
+  "reasons": {
+    "outcome": "never runs metais"
+  }
+}

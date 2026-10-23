@@ -104,18 +104,46 @@ func (r *run) installs() []install {
 func isInstallScript(w string) bool { return strings.Contains(w, "metais.org/install.sh") }
 
 // savedAs is the name of the file curl or wget saved what it fetched as:
-// curl's -o or --output, or its -O, which keeps the URL's name, wget's
-// -O, or a redirection of its output; "" when it wrote to standard output.
+// curl's -o or --output, its -O or --remote-name, which keep the URL's
+// name, wget's -O or --output-document, a short flag of either among
+// others (-fsSLo, -qO), or a redirection of its output; wget saves under
+// the URL's name by default. It is "" for standard output.
 func savedAs(c *cmd) string {
-	for _, f := range []string{"-o", "--output", "-O", "--output-document"} {
-		if v := flagValues(c.rest, f); len(v) > 0 && !(c.name == "curl" && f == "-O") {
-			return path.Base(v[len(v)-1])
+	name := func(v string) string {
+		if v == "-" || v == "" {
+			return ""
+		}
+		return path.Base(v)
+	}
+	for i, w := range c.rest {
+		next := ""
+		if i+1 < len(c.rest) {
+			next = c.rest[i+1]
+		}
+		short := strings.HasPrefix(w, "-") && !strings.HasPrefix(w, "--")
+		switch {
+		case w == "--output" || w == "--output-document":
+			return name(next)
+		case strings.HasPrefix(w, "--output=") || strings.HasPrefix(w, "--output-document="):
+			_, v, _ := strings.Cut(w, "=")
+			return name(v)
+		case w == "--remote-name":
+			return "install.sh"
+		case short && c.name == "curl" && strings.HasSuffix(w, "o"):
+			return name(next)
+		case short && c.name == "curl" && strings.Contains(w, "O"):
+			return "install.sh"
+		case short && c.name == "wget" && strings.Contains(w, "O"):
+			if _, v, _ := strings.Cut(w, "O"); v != "" {
+				return name(v)
+			}
+			return name(next)
 		}
 	}
 	if len(c.s.outs) > 0 {
-		return path.Base(c.s.outs[len(c.s.outs)-1])
+		return name(c.s.outs[len(c.s.outs)-1])
 	}
-	if c.name == "wget" || slices.Contains(c.rest, "-O") || slices.Contains(c.rest, "--remote-name") {
+	if c.name == "wget" {
 		return "install.sh"
 	}
 	return ""
