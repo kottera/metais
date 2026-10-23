@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The specification's text",
+  "description": "The draft and every released revision of the specification, each Markdown file of spec/ as an HTML fragment, as the build step exports them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["draft", "releases"],
+  "properties": {
+    "draft": {
+      "$ref": "#/$defs/revision",
+      "description": "The checkout's own spec/, served at /spec/draft/.",
+      "properties": {
+        "revision": { "const": "draft" },
+        "ref": { "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "releases": {
+      "type": "array",
+      "description": "Each released revision, from its spec-<M>.<m> tag, oldest first.",
+      "items": {
+        "$ref": "#/$defs/revision",
+        "properties": {
+          "revision": { "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" },
+          "ref": { "pattern": "^spec-(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision", "ref", "path", "files"],
+      "properties": {
+        "revision": {
+          "type": "string",
+          "description": "draft, or the release's <M>.<m>."
+        },
+        "ref": {
+          "type": "string",
+          "description": "The git ref the files were read at: the commit for the draft, the tag for a release."
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^/spec/[^/]+/$",
+          "description": "The site's path of the revision, /spec/<revision>/."
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "description": "The revision's Markdown files, spec/*.md, in byte order of the name.",
+          "items": { "$ref": "#/$defs/file" }
+        }
+      }
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "path", "title", "html", "headings"],
+      "properties": {
+        "file": {
+          "type": "string",
+          "pattern": "^[^/]+\\.md$",
+          "description": "The file's name in spec/."
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^/spec/[^/]+/([^/]+/)?$",
+          "description": "The site's path of the file's page: the revision's path for README.md, and the revision's path, the name without .md and a slash for every other file."
+        },
+        "title": {
+          "type": "string",
+          "description": "The plain text of the file's first level-1 heading, or empty when it has none."
+        },
+        "html": {
+          "type": "string",
+          "description": "The file as an HTML fragment. A link to another file of the revision is a link to its page; any other relative link is a link to the file in the repository at ref."
+        },
+        "headings": {
+          "type": "array",
+          "description": "Every heading, in document order.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["level", "id", "text"],
+            "properties": {
+              "level": { "type": "integer", "minimum": 1, "maximum": 6 },
+              "id": { "type": "string", "minLength": 1, "description": "The id the heading's element carries." },
+              "text": { "type": "string", "description": "The heading's plain text." }
+            }
+          }
+        }
+      }
+    }
+  }
+}

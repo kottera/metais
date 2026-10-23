@@ -303,6 +303,75 @@ func f() { user.Current() }`, []string{"imports os/user"}},
 		{"the UX runner imports a random source", "internal/tools/ux", "", `package main
 import "math/rand/v2"
 func f() int { return rand.Int() }`, []string{"imports math/rand/v2"}},
+		{"the site's build step runs, reads the environment and writes", "internal/tools/site", "", `package main
+import ("os"; "os/exec"; "path/filepath")
+func main() { _ = exec.Command("go"); _ = os.Environ(); _, _ = os.Lstat("x"); _ = os.Mkdir("x", 0o755); _ = os.MkdirAll("x", 0o755); _, _ = os.ReadDir("x"); _, _ = os.ReadFile("x"); _ = os.RemoveAll("x"); _ = os.Rename("x", "y"); _ = os.WriteFile("x", nil, 0o644); _ = filepath.WalkDir("x", nil); _, _ = os.MkdirTemp("x", "y"); os.Stdout.Write(nil); os.Stderr.Write(nil); os.Exit(len(os.Args)) }`, nil},
+		{"the Markdown converter beneath the site's build step", "internal/tools/site/mdhtml", "", `package mdhtml
+import "os"
+func f() ([]byte, error) { return os.ReadFile("x") }`, []string{"os.ReadFile"}},
+		{"a sibling named like the site's build step", "internal/tools/sitex", "", `package main
+import "os"
+func f() []string { return os.Environ() }`, []string{"os.Environ"}},
+		{"the site's build step's walk outside it", "internal/render", "", `package render
+import "path/filepath"
+func f() { filepath.WalkDir(".", nil) }`, []string{"path/filepath.WalkDir"}},
+		{"the site's build step reads one variable", "internal/tools/site", "", `package main
+import "os"
+func f() string { return os.Getenv("HOME") }`, []string{"os.Getenv"}},
+		{"the site's build step looks a variable up", "internal/tools/site", "", `package main
+import "os"
+func f() bool { _, ok := os.LookupEnv("HOME"); return ok }`, []string{"os.LookupEnv"}},
+		{"the site's build step sets the environment", "internal/tools/site", "", `package main
+import "os"
+func f() { os.Setenv("X", "y") }`, []string{"os.Setenv"}},
+		{"the site's build step reads the clock", "internal/tools/site", "", `package main
+import "time"
+func f() time.Time { return time.Now() }`, []string{"time.Now"}},
+		{"the site's build step uses the local zone", "internal/tools/site", "", `package main
+import "time"
+func f(t time.Time) time.Time { return t.In(time.Local) }`, []string{"time.Local"}},
+		{"the site's build step reads the working directory", "internal/tools/site", "", `package main
+import "os"
+func f() (string, error) { return os.Getwd() }`, []string{"os.Getwd"}},
+		{"the site's build step makes a path absolute", "internal/tools/site", "", `package main
+import "path/filepath"
+func f() (string, error) { return filepath.Abs("x") }`, []string{"path/filepath.Abs"}},
+		{"the site's build step opens a file", "internal/tools/site", "", `package main
+import "os"
+func f() { os.Open("x") }`, []string{"os.Open"}},
+		{"the site's build step creates a file", "internal/tools/site", "", `package main
+import "os"
+func f() { os.Create("x") }`, []string{"os.Create"}},
+		{"the site's build step follows a link with os.Stat", "internal/tools/site", "", `package main
+import "os"
+func f() { os.Stat("x") }`, []string{"os.Stat"}},
+		{"the site's build step names the temporary directory", "internal/tools/site", "", `package main
+import "os"
+func f() string { return os.TempDir() }`, []string{"os.TempDir"}},
+		{"the site's build step reads its standard input", "internal/tools/site", "", `package main
+import "os"
+var in = os.Stdin`, []string{"os.Stdin"}},
+		{"the site's build step reads the host name", "internal/tools/site", "", `package main
+import "os"
+func f() (string, error) { return os.Hostname() }`, []string{"os.Hostname"}},
+		{"the site's build step reads the process", "internal/tools/site", "", `package main
+import "os"
+func f() (string, error) { _ = os.Getpid(); return os.Executable() }`, []string{"os.Getpid"}},
+		{"the site's build step reads the home directory", "internal/tools/site", "", `package main
+import "os"
+func f() (string, error) { return os.UserHomeDir() }`, []string{"os.UserHomeDir"}},
+		{"the site's build step starts a process without os/exec", "internal/tools/site", "", `package main
+import "os"
+func f() { os.StartProcess("x", nil, nil) }`, []string{"os.StartProcess"}},
+		{"the site's build step reads the platform", "internal/tools/site", "", `package main
+import "runtime"
+var w = runtime.GOOS == "windows"`, []string{"runtime.GOOS"}},
+		{"the site's build step imports os/user", "internal/tools/site", "", `package main
+import "os/user"
+func f() { user.Current() }`, []string{"imports os/user"}},
+		{"the site's build step imports a random source", "internal/tools/site", "", `package main
+import "crypto/rand"
+func f() { rand.Text() }`, []string{"imports crypto/rand"}},
 		{"strings.Index is no host fact", "internal/cli", "", `package cli
 import ("os"; "strings")
 var _ = strings.Index("", ""); var _ os.FileMode`, nil},
@@ -443,7 +512,9 @@ func TestModuleAllowListIsR2143(t *testing.T) {
 	// RULINGS-v1 R2-143 and ADR-009 D16 item 3: these four, each with its
 	// reason; ADR-009 Amendment A2 item 6: and the release builder's one
 	// entry; Amendment A8 item 5: and the UX runner's one entry, for its
-	// own package and none beneath it; and no other.
+	// own package and none beneath it; Amendment A11 item 6: and the site's
+	// build step's one entry, for its own package and none beneath it; and
+	// no other.
 	var got []string
 	for _, a := range moduleAllowList {
 		got = append(got, a.pkg+"."+a.fn)
@@ -454,9 +525,9 @@ func TestModuleAllowListIsR2143(t *testing.T) {
 			t.Errorf("allow-list entry %s: beneath is %v; only A2's entry covers the packages beneath it", a.pkg, a.beneath)
 		}
 	}
-	want := []string{"internal/hostenv.Isolate", "internal/hostfs.", "cmd/metais.", "internal/dates.", "internal/tools/release.", "internal/tools/ux."}
+	want := []string{"internal/hostenv.Isolate", "internal/hostfs.", "cmd/metais.", "internal/dates.", "internal/tools/release.", "internal/tools/ux.", "internal/tools/site."}
 	if !slices.Equal(got, want) {
-		t.Errorf("the module allow-list is %q, want R2-143's, A2's and A8's %q", got, want)
+		t.Errorf("the module allow-list is %q, want R2-143's, A2's, A8's and A11's %q", got, want)
 	}
 
 	// A2 item 1's symbols, spelled out, so the entry cannot grow with
@@ -506,5 +577,31 @@ func TestModuleAllowListIsR2143(t *testing.T) {
 	}
 	if !found {
 		t.Error("the module allow-list has no entry for A8's UX runner")
+	}
+
+	// A11 item 1's symbols, spelled out: the symbols the site's build step
+	// uses, and no other. os/exec, the item's first entry, is no symbol of
+	// hostSymbols.
+	site := []string{
+		"os.Environ",
+		"os.Lstat", "os.Mkdir", "os.MkdirAll", "os.ReadDir", "os.ReadFile",
+		"os.RemoveAll", "os.Rename", "os.WriteFile", "path/filepath.WalkDir",
+		"os.MkdirTemp",
+		"os.Args", "os.Stdout", "os.Stderr", "os.Exit",
+	}
+	slices.Sort(site)
+	found = false
+	for _, a := range moduleAllowList {
+		if a.pkg != "internal/tools/site" {
+			continue
+		}
+		found = true
+		syms := slices.Sorted(slices.Values(a.symbols))
+		if !slices.Equal(syms, site) || a.fn != "" || a.onlyArg != nil || a.beneath {
+			t.Errorf("A11's entry allows %q (function %q, arguments %v, beneath %v), want exactly %q for its own package", syms, a.fn, a.onlyArg, a.beneath, site)
+		}
+	}
+	if !found {
+		t.Error("the module allow-list has no entry for A11's site build step")
 	}
 }

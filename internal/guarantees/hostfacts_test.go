@@ -259,8 +259,9 @@ type moduleAllowance struct {
 
 // moduleAllowList is RULINGS-v1 R2-143's allow-list, exactly: ADR-009 D16
 // item 3's four entries, each with its reason, ADR-009 Amendment A2's one
-// entry for the release builder, and Amendment A8's one entry for the UX
-// runner. No entry is added to make the
+// entry for the release builder, Amendment A8's one entry for the UX
+// runner, and Amendment A11's one entry for the site's build step. No
+// entry is added to make the
 // tripwire pass; a package that cannot pass without one is a finding.
 // internal/hostfs and internal/dates are named before they exist, so the
 // seams they fill are fixed before their code lands.
@@ -309,6 +310,30 @@ var moduleAllowList = []moduleAllowance{
 			"reaches a template, an output or a finding, because it never runs inside metais, and the " +
 			"packages beneath it, the scorer's among them, get none of this (ADR-009 A8 items 1 to 4)",
 	},
+	{
+		pkg:     "internal/tools/site",
+		symbols: siteBuilderSymbols,
+		reason: "the site's build step, a developer's tool run with go run by site/build.sh and never linked into " +
+			"metais, builds metais from the checkout, runs it to export the site package's inputs, reads the " +
+			"specification and the release's SHA256SUMS, and writes the site in a fresh directory; nothing it " +
+			"reads reaches a template, an output or a finding of metais except as the inputs it exports, which " +
+			"the package's schemas validate, and the packages beneath it, the Markdown converter's among them, " +
+			"get none of this (ADR-009 A11 items 1 to 4)",
+	},
+}
+
+// siteBuilderSymbols are exactly ADR-009 Amendment A11 item 1's symbols,
+// the ones the site's build step uses: the environment, read whole; the
+// file functions it calls, with path/filepath.WalkDir to copy a tree and
+// os.MkdirTemp for its work directory beside the site; and a main
+// package's arguments, standard output and error, and exit. os/exec, the
+// item's first entry, is no symbol of hostSymbols.
+var siteBuilderSymbols = []string{
+	"os.Environ",
+	"os.Lstat", "os.Mkdir", "os.MkdirAll", "os.ReadDir", "os.ReadFile",
+	"os.RemoveAll", "os.Rename", "os.WriteFile", "path/filepath.WalkDir",
+	"os.MkdirTemp",
+	"os.Args", "os.Stdout", "os.Stderr", "os.Exit",
 }
 
 // uxRunnerSymbols are exactly ADR-009 Amendment A8 item 1's symbols, the

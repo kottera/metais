@@ -50,3 +50,10 @@ func Args(version, out string) []string {
 func LDFlags(version string) string {
 	return "-s -w -X " + versionVar + "=" + version
 }
+
+// ArchiveName is the name of the release archive of version for t,
+// metais_<version>_<os>_<arch>.tar.gz (ADR-010 D12 item 6), which the
+// release builder writes into dist/ and SHA256SUMS lists.
+func ArchiveName(version string, t Target) string {
+	return "metais_" + version + "_" + t.OS + "_" + t.Arch + ".tar.gz"
+}

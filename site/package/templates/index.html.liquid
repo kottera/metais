@@ -1,16 +1,4 @@
-<!DOCTYPE html>
-<!-- Copyright 2026 Kottera. SPDX-License-Identifier: Apache-2.0 -->
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>METAIS — document templates you can check</title>
-<meta name="description" content="METAIS is a package format for document templates, and metais is the tool that reads, validates and renders them.">
-<link rel="stylesheet" href="/style.css">
-</head>
-<body>
-<nav><a href="/">METAIS</a><a href="/install/">Install</a><a href="/getting-started/">Getting started</a></nav>
-<main>
+{%- capture body -%}
 <h1>METAIS</h1>
 <p><strong>Multi-file Extensible Templating And Instantiation Specification.</strong></p>
 
@@ -40,8 +28,5 @@ check, test and pack their own packages.</p>
 specification's JSON Schemas are published at their <code>$id</code>s under
 <a href="/schemas/1.0/manifest.schema.json"><code>https://metais.org/schemas/</code></a>.</li>
 </ul>
-</main>
-<footer>METAIS is created by <a href="https://github.com/kottera">Kottera</a>,
-under the Apache License 2.0. Source: <a href="https://github.com/kottera/metais">github.com/kottera/metais</a>.</footer>
-</body>
-</html>
+{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "METAIS — document templates you can check", description: "METAIS is a package format for document templates, and metais is the tool that reads, validates and renders them.", head: nil, body: body -%}

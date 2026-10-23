@@ -162,7 +162,9 @@ configuration, so:
     package's own size. `internal/vectorgen`'s `TestValues` derives each
     from where vectorgen placed the records, and fails on one it does not
     write, so no vector hard-codes an offset;
-  - `THIRD-PARTY-NOTICES.txt`.
+  - `THIRD-PARTY-NOTICES.txt`;
+  - the site package's input schemas of a command's result, from
+    `docs/cli/schemas/`, by `site`'s `TestCLIResultSchemas -update`.
 
   Each file's drift test fails until it has run.
 

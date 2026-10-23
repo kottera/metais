@@ -31,6 +31,10 @@ effect as PLAN-2026-10-metais-public's items land.
 `internal/tarw`, and a gate resumed after its host starved) is accepted by
 Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's ratification; the
 passages it changes are marked *(A9)*.
+[Amendment A10](#amendments) (the site's build step converts Markdown with
+goldmark, a module of `go.mod` that never enters the binary's closure) is
+proposed on 2026-10-23 by PLAN-2026-10-metais-public W2-1, under ADR-013 D8
+item 1; the passages it changes are marked *(A10)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R18 item 1 (one static binary, the supported targets,
@@ -454,9 +458,18 @@ the specification defines.**
    Every licence here is compatible with Apache-2.0 distribution of a binary,
    given the notices of D12 item 6.
 
-   **No module parses Markdown.** The heading outline is METAIS's own
-   reading of CommonMark (D9), and the table has no row for it and no
-   fallback. *(A3)*
+   **No module the binary links parses Markdown.** The heading outline is
+   METAIS's own reading of CommonMark (D9), and the table has no row for it
+   and no fallback. *(A3)*
+
+   **One module of `go.mod` is never linked into `metais`**, and so is not
+   in the table: the site's build step's Markdown library (A10).
+
+   | Module | Version | Licence | Used for | Fallback when it fails |
+   |---|---|---|---|---|
+   | `github.com/yuin/goldmark` | v1.8.6 | MIT | the specification's chapters and the skill as HTML fragments for metais.org (ADR-013 D8 item 1), in `internal/tools/site/mdhtml` alone | any CommonMark converter with tables behind `mdhtml.Convert` |
+
+   *(A10)*
 
    **`golang.org/x/sys` and `golang.org/x/term` are linked on unix targets
    only.** `golang.org/x/sys/windows` imports `net`, which D11 item 10 and
@@ -1643,11 +1656,13 @@ R2-156 (RULINGS-v1); R2-156's own frontmatter split stands.
    a setext heading, and the heading's text must be the paragraph's plain
    text. An excluded example is listed with its reason, and an exclusion
    that passes fails the test.
-5. **No module replaces goldmark.** D3's table has no Markdown row, so no
-   fallback either, and goldmark is not in `go.mod`, `go.sum` or
-   `THIRD-PARTY-NOTICES.txt`. Its `os.Stdout` reference, which
-   `TestNoHostFacts`' dependency scan flagged, leaves with it, and no
-   allow-list entry is added.
+5. **No module replaces goldmark in the binary.** D3's table has no
+   Markdown row, so no fallback either, and no Markdown module is in
+   `cmd/metais`'s closure or `THIRD-PARTY-NOTICES.txt`. goldmark v1 is in
+   `go.mod` and `go.sum` as the site's build step's library alone, outside
+   that closure (A10). The `os.Stdout` reference of goldmark v2, which
+   `TestNoHostFacts`' dependency scan flagged, left with it; v1.8.6 refers
+   to no host symbol, and no allow-list entry is added. *(A10)*
 
 ### A4 — `Core()`'s filter list names `escape`'s alias `h`, and `date` is registered outside `Core()`
 
@@ -2254,6 +2269,61 @@ passages are marked *(A9)* in place; item 3 adds a rule beside A5 item 9.
    verified, and its verdict is that gate's. The pull request names the
    runs and their CPU. This covers resuming only: a lone re-run of a red
    test still closes nothing, because the red has a mechanism to find.
+
+### A10 — The site's build step converts Markdown with goldmark, a module of `go.mod` that never enters the binary's closure
+
+**Status:** Proposed 2026-10-23 by PLAN-2026-10-metais-public W2-1, whose
+number the [Wave 2 brief](../briefs/brief-plan-2026-10-metais-public-wave2.md)'s
+breakdown allotted. It is the D3 note
+[ADR-013](ADR-013-the-public-project-and-its-distribution.md) D8 item 1,
+accepted with that plan, asks for, under the brief's ruling "The site's
+Markdown library and ADR-010 A3".
+**Amends:** D3 item 3 (a second table, for a module the binary never
+links) and A3 item 5 (what is in `go.mod`), marked *(A10)* in place. D9,
+A3 items 1 to 4 and every rule of the binary's closure are unchanged.
+
+1. **The library.** The site's build step, `internal/tools/site` (ADR-009
+   A11), converts the specification's chapters and the agent skill from
+   Markdown to HTML fragments, which it exports as the site package's
+   inputs. METAIS gains no Markdown filter: the conversion is input
+   preparation, outside the package and outside the binary. The converter
+   is `internal/tools/site/mdhtml`, over `github.com/yuin/goldmark` v1.8.6
+   (MIT) with its table extension. Raw HTML passes through, as the
+   specification's statement anchors need, and each heading's id is made
+   from its plain text as GitHub makes an anchor, which is what the
+   chapters' links between one another name.
+2. **It sits in the main module.** A second module beside the tool was
+   rejected for the reasons ADR-009 A2 item 7 rejected one for the release
+   builder, and one more: `TestNoHostFacts`' symbol rule and the layering
+   tests walk the main module only. In a module of its own, the converter
+   and its library would be outside every tripwire that holds the binary
+   free of them, and the build step would need a second `go.mod` and a
+   second gate.
+3. **What holds the binary free of it.**
+   - `layers.json` lets only `internal/tools/site/mdhtml` import
+     `github.com/yuin/goldmark/...` (`only-importers`). A2 item 4's
+     `never-depends` rule keeps everything under `internal/tools/` out of
+     `cmd/metais`'s closure, so the library cannot enter it.
+     `TestLayersControl`'s fixture imports the library outside the
+     converter, and the converter into its binary, and both are refused.
+   - The library is not in `cmd/metais`'s closure, so
+     `THIRD-PARTY-NOTICES.txt`, which `TestThirdPartyNotices` holds to that
+     closure (D12 item 6), stays true of what ships without it.
+   - `TestNoHostFacts`' dependency scan reads the closure of every package
+     of the module, the converter's included, so the library's files are
+     scanned. At v1.8.6 they refer to no host symbol.
+   - `outline` stays METAIS's own reading (A3 item 3). `internal/markdown`
+     cannot import the library, because the `only-importers` rule
+     refuses any importer but the converter.
+4. **ADR-009 D10 item 4 does not bind it.** That item's linearity is a
+   property of the parser that reads a package, which is hostile input.
+   The converter reads this repository's own `spec/` and the skill's text,
+   never a package, and only when the site is built.
+5. **A3 item 5's sentence now reads:** no module replaces goldmark in the
+   binary, D3's table has no Markdown row and no fallback, and no Markdown
+   module is in `cmd/metais`'s closure or `THIRD-PARTY-NOTICES.txt`;
+   goldmark v1 is in `go.mod` and `go.sum` as the site's build step's
+   library alone.
 
 ## Implementation log
 

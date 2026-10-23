@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The release",
+  "description": "The release of metais the site is built for, as the build step exports it from the release's version and its SHA256SUMS, or published false for a build with no release.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["published"],
+      "properties": {
+        "published": { "const": false }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["published", "version", "tag", "sums_url", "archives"],
+      "properties": {
+        "published": { "const": true },
+        "version": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$",
+          "description": "The release's semantic version, without a leading v."
+        },
+        "tag": {
+          "type": "string",
+          "pattern": "^v",
+          "description": "The release's tag, v<version>."
+        },
+        "prerelease": {
+          "const": true,
+          "description": "Present, and true, when the version has a prerelease suffix."
+        },
+        "sums_url": {
+          "type": "string",
+          "pattern": "^https://github\\.com/kottera/metais/releases/download/",
+          "description": "Where the release publishes SHA256SUMS."
+        },
+        "archives": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Each archive SHA256SUMS lists, in its order.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "os", "arch", "sha256", "url"],
+            "properties": {
+              "name": { "type": "string", "pattern": "^metais_[^/]+\\.tar\\.gz$" },
+              "os": { "type": "string", "minLength": 1 },
+              "arch": { "type": "string", "minLength": 1 },
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "url": { "type": "string", "pattern": "^https://github\\.com/kottera/metais/releases/download/" }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

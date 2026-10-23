@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Generated from docs/cli/schemas by site/inputs_test.go's TestCLIResultSchemas; do not edit.",
+  "properties": {
+    "specification": {
+      "additionalProperties": false,
+      "properties": {
+        "implements": {
+          "description": "Every specification version the tool implements, ascending by major then minor, each listed explicitly.",
+          "items": {
+            "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "implements"
+      ],
+      "type": "object"
+    },
+    "tool": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "const": "metais"
+        },
+        "version": {
+          "description": "The tool's version, a semantic version without a leading v.",
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "tool",
+    "specification"
+  ],
+  "title": "The result of a metais.version/1 document",
+  "type": "object"
+}
