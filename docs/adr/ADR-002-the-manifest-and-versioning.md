@@ -1,6 +1,9 @@
 # ADR-002: The manifest and versioning — one closed manifest in a strict YAML or JSON profile, canonicalized by RFC 8785, naming a `major.minor` specification version that only grows into what earlier minors refuse
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
+[ADR-003 Amendment A2](ADR-003-the-data-specification.md#amendments)
+(rules across the items of an array: `uniqueKeys` and `coverage`) is
+proposed on 2026-10-23 and amends D7 item 4: a minor may add a JSON Schema keyword not beginning `x-`.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R1 item 4 (the canonical manifest), R3 item 3 (the
