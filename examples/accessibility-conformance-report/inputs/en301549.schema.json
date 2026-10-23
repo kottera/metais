@@ -191,6 +191,32 @@
           "Every function can be operated from a keyboard, without simultaneous actions."
         ]
       }
+    },
+    "if": {
+      "title": "Answered Not Evaluated",
+      "description": "A row whose conformance level is Not Evaluated.",
+      "required": [
+        "conformance"
+      ],
+      "properties": {
+        "conformance": {
+          "const": "Not Evaluated"
+        }
+      }
+    },
+    "then": {
+      "title": "Says why it was not evaluated",
+      "description": "A row answered Not Evaluated gives, in its remarks, why the evaluation did not cover the criterion.",
+      "required": [
+        "remarks"
+      ],
+      "properties": {
+        "remarks": {
+          "title": "Remarks",
+          "description": "Why the criterion was not evaluated, such as the evaluation's scope leaving it out. A row answered Not Evaluated needs them. inputs/conformance.md says what to write.",
+          "pattern": "[^ \\t\\n]"
+        }
+      }
     }
   }
 }

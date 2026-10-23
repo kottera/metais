@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -492,7 +493,7 @@ func TestACRClaimsFromRows(t *testing.T) {
 		},
 		{
 			name:       "level AAA alone, chapter 6 alone",
-			wcag:       "2.4.13,Not Evaluated,\n",
+			wcag:       "2.4.13,Not Evaluated,Out of the evaluation's scope.\n",
 			section508: "602.3,Not Applicable,\n",
 			standards: []string{
 				"Web Content Accessibility Guidelines (WCAG) 2.2, W3C Recommendation: its table lists success criteria at Level AAA.",
@@ -615,4 +616,125 @@ func acrParagraphs(t *testing.T, path string) []string {
 		}
 	}
 	return paragraphs
+}
+
+// TestACRRequiredLevelsEvaluated holds the §4.1 example to ADR-003 A2
+// item 8's per-row rule: a WCAG 2.2 criterion at Level A or AA is never
+// Not Evaluated. One table answers every criterion the level partial
+// names Not Evaluated, each saying why, and validation refuses each Level A
+// and AA row and no Level AAA one, at the row's conformance cell, each failure naming
+// the condition that selected it, all in one report.
+func TestACRRequiredLevelsEvaluated(t *testing.T) {
+	testenv.Home(t)
+	b, err := os.ReadFile(filepath.Join(acrPackage, "templates/criteria/wcag-level.liquid"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	whens := regexp.MustCompile(`\{%- when ((?:"[^"]+"(?:, )?)+) -%\}([^\n]*)`)
+	quoted := regexp.MustCompile(`"([^"]+)"`)
+	csv := "criterion,conformance,remarks\n"
+	var want []string
+	row := 0
+	for _, m := range whens.FindAllStringSubmatch(string(b), -1) {
+		for _, q := range quoted.FindAllStringSubmatch(m[1], -1) {
+			csv += q[1] + ",Not Evaluated,Out of the evaluation's scope.\n"
+			if m[2] == "A" || m[2] == "AA" {
+				want = append(want, "input.not /"+strconv.Itoa(row)+"/conformance")
+			}
+			row++
+		}
+	}
+	src := filepath.Join(acrPackage, "examples/wcag_only/inputs")
+	data := testenv.Dir(t)
+	report, err := os.ReadFile(filepath.Join(src, "report.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, b := range map[string][]byte{"report.json": report, "wcag.csv": []byte(csv)} {
+		if err := os.WriteFile(filepath.Join(data, name), b, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r := runTool(t, "validate", acrPackage, "--data", data, "--json")
+	var doc struct {
+		Findings []struct {
+			Code     string
+			Location struct{ Pointer string }
+			Via      []struct {
+				Keyword   string
+				Condition struct{ Title string }
+			}
+		}
+	}
+	if err := json.Unmarshal([]byte(r.stdout), &doc); err != nil {
+		t.Fatalf("validate's document: %v\n%s", err, r.stdout)
+	}
+	var got []string
+	for _, f := range doc.Findings {
+		got = append(got, f.Code+" "+f.Location.Pointer)
+		if len(f.Via) != 1 || f.Via[0].Keyword != "then" || f.Via[0].Condition.Title != "A Level A or AA criterion" {
+			t.Errorf("the finding at %s is reached by %+v, want a then whose if is titled %q", f.Location.Pointer, f.Via, "A Level A or AA criterion")
+		}
+	}
+	if !slices.Equal(got, want) || r.status == 0 {
+		t.Errorf("validate exits %d and reports %q,\nwant %q", r.status, got, want)
+	}
+}
+
+// TestACRNotEvaluatedSaysWhy holds the §4.1 example to Ed Funnekotter's
+// ruling of 2026-10-23 on W1-3: in every table a row answered Not
+// Evaluated says why in its remarks, so a Revised Section 508 or EN 301
+// 549 criterion an evaluator cannot assess stays honestly Not Evaluated
+// and a bare one is refused. In each table a Not Evaluated row with no
+// remarks, and one whose remarks are only spaces, are refused at the
+// row's remarks, each failure naming the condition that selected it;
+// one that says why, and a row of another level with no remarks, are
+// accepted, all in one report.
+func TestACRNotEvaluatedSaysWhy(t *testing.T) {
+	testenv.Home(t)
+	src := filepath.Join(acrPackage, "examples/international/inputs")
+	data := testenv.Dir(t)
+	header := "criterion,conformance,remarks\n"
+	files := map[string][]byte{
+		"report.yaml": acrReport(t, src, "international"),
+		// Level AAA criteria: a Level A or AA one is never Not Evaluated.
+		"wcag.csv":       []byte(header + "1.2.6,Not Evaluated,\n1.2.7,Not Evaluated,\"   \"\n1.2.8,Not Evaluated,Out of the evaluation's scope.\n1.2.9,Supports,\n"),
+		"section508.csv": []byte(header + "602.2,Not Evaluated,\n602.3,Not Evaluated,\"   \"\n602.4,Not Evaluated,The evaluator had no access to the vendor's documentation.\n603.2,Supports,\n"),
+		"en301549.csv":   []byte(header + "12.1,Not Evaluated,\n12.2,Not Evaluated,\"   \"\n12.3,Not Evaluated,The evaluator had no access to the vendor's support services.\n12.4,Supports,\n"),
+	}
+	for name, b := range files {
+		if err := os.WriteFile(filepath.Join(data, name), b, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r := runTool(t, "validate", acrPackage, "--data", data, "--json")
+	var doc struct {
+		Findings []struct {
+			Code     string
+			Subject  struct{ Name string }
+			Location struct{ Pointer string }
+			Via      []struct {
+				Keyword   string
+				Condition struct{ Title string }
+			}
+		}
+	}
+	if err := json.Unmarshal([]byte(r.stdout), &doc); err != nil {
+		t.Fatalf("validate's document: %v\n%s", err, r.stdout)
+	}
+	var got []string
+	for _, f := range doc.Findings {
+		got = append(got, f.Subject.Name+" "+f.Code+" "+f.Location.Pointer)
+		if len(f.Via) != 1 || f.Via[0].Keyword != "then" || f.Via[0].Condition.Title != "Answered Not Evaluated" {
+			t.Errorf("the %s finding at %s is reached by %+v, want a then whose if is titled %q", f.Subject.Name, f.Location.Pointer, f.Via, "Answered Not Evaluated")
+		}
+	}
+	slices.Sort(got)
+	var want []string
+	for _, table := range []string{"en301549", "section508", "wcag"} {
+		want = append(want, table+" input.pattern /1/remarks", table+" input.required /0/remarks")
+	}
+	if !slices.Equal(got, want) || r.status == 0 {
+		t.Errorf("validate exits %d and reports %q,\nwant %q", r.status, got, want)
+	}
 }
