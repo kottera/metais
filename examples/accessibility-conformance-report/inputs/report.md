@@ -40,13 +40,16 @@ the version must be text.
 
 ## vendor
 
-- **name** is the company or organization that makes the product.
+- **name** is the company or organization that makes the product. Ask
+  for it if you were not given it; if you cannot ask, write `Not stated`
+  and say so in the notes.
 - **contact**, **email** and **website**, each optional, say whom a reader
   asks about the report. The website begins `https://` or `http://`.
 
 ## date
 
-The date the report was completed, written `YYYY-MM-DD`.
+The date the report was completed, by the evaluator's local calendar,
+written `YYYY-MM-DD`. The report gives it under its title.
 
 ## edition
 
@@ -73,7 +76,8 @@ a report never carries a table its title does not promise.
 
 How the product was evaluated, in prose: who tested, when, with which
 assistive technologies, browsers and platforms and their versions, which
-automated tools, and what was in and out of scope. A reader judges every
+automated tools, and what was in and out of scope. If no assistive
+technology was used, say so plainly. A reader judges every
 row of the tables by this text, so be specific. A line break starts a new
 paragraph.
 

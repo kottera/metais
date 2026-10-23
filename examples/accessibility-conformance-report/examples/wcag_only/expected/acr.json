@@ -24,6 +24,16 @@
         "status": "W3C Recommendation 12 December 2024",
         "notice": "Copyright © 2020-2024 World Wide Web Consortium. W3C® liability, trademark and document use rules apply."
       },
+      "summary": {
+        "criteria": 7,
+        "conformance": {
+          "Supports": 4,
+          "Partially Supports": 1,
+          "Does Not Support": 1,
+          "Not Applicable": 0,
+          "Not Evaluated": 1
+        }
+      },
       "criteria": [
         {
           "criterion": "1.1.1",

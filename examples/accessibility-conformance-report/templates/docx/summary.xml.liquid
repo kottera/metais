@@ -1,0 +1,19 @@
+{%- comment -%}
+One paragraph of the report's summary for one standard's table: its name,
+then how many of rows give each conformance level, in the levels' order,
+leaving out a level no row gives, and how many criteria the table lists.
+{%- endcomment -%}
+{%- assign supports = rows | where: "conformance", "Supports" | size -%}
+{%- assign partially = rows | where: "conformance", "Partially Supports" | size -%}
+{%- assign does_not = rows | where: "conformance", "Does Not Support" | size -%}
+{%- assign not_applicable = rows | where: "conformance", "Not Applicable" | size -%}
+{%- assign not_evaluated = rows | where: "conformance", "Not Evaluated" | size -%}
+{%- capture counts -%}
+{%- if supports > 0 %}, {{ supports }} Supports{% endif -%}
+{%- if partially > 0 %}, {{ partially }} Partially Supports{% endif -%}
+{%- if does_not > 0 %}, {{ does_not }} Does Not Support{% endif -%}
+{%- if not_applicable > 0 %}, {{ not_applicable }} Not Applicable{% endif -%}
+{%- if not_evaluated > 0 %}, {{ not_evaluated }} Not Evaluated{% endif -%}
+{%- endcapture -%}
+{%- if rows.size == 1 %}{% assign criteria = "criterion" %}{% else %}{% assign criteria = "criteria" %}{% endif -%}
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">{{ name }}: </w:t></w:r><w:r><w:t xml:space="preserve">{{ counts | remove_first: ", " }} ({{ rows.size }} {{ criteria }})</w:t></w:r></w:p>

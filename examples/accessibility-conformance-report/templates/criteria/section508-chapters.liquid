@@ -1,0 +1,16 @@
+{%- comment -%}
+The chapters of the Revised Section 508 Standards whose criteria rows
+list, as a phrase: "chapter 5", "chapters 3, 5 and 6", or, when rows list
+criteria of every one of chapters 3 to 6, "chapters 3 to 6". A chapter no
+row lists is left out, so the report never claims a chapter its table
+does not hold.
+{%- endcomment -%}
+{%- capture chapters -%}
+{%- for row in rows %} {{ row.criterion | slice: 0 }}{% endfor -%}
+{%- endcapture -%}
+{%- assign chapters = chapters | strip | split: " " | uniq | sort -%}
+{%- if chapters.size == 4 -%}chapters 3 to 6
+{%- else -%}
+{%- if chapters.size > 1 %}chapters {% else %}chapter {% endif -%}
+{%- render "list.liquid", items: chapters -%}
+{%- endif -%}

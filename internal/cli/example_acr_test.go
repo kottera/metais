@@ -6,6 +6,7 @@ package cli
 import (
 	"bytes"
 	"encoding/json"
+	"html"
 	"io"
 	"maps"
 	"os"
@@ -449,4 +450,169 @@ func TestACRJSONValidated(t *testing.T) {
 	if ents, err := os.ReadDir(out); err == nil && len(ents) > 0 {
 		t.Errorf("render of an acr.json the schema refuses wrote %d entries into the output directory", len(ents))
 	}
+}
+
+// TestACRClaimsFromRows holds the §4.1 example's report to the rows it
+// was given: the WCAG levels and the Revised Section 508 chapters its
+// Standards section names are the ones its tables list, and no other; its
+// summary counts each table's rows by conformance level, in acr.json as in
+// acr.docx; and its date stands under its title, before the product. Each
+// case varies one table's rows just past where a fixed claim shows: a
+// level or a chapter left out, one alone, all of them, and counts of zero.
+func TestACRClaimsFromRows(t *testing.T) {
+	testenv.Home(t)
+	src := filepath.Join(acrPackage, "examples/international/inputs")
+	en301549, err := os.ReadFile(filepath.Join(src, "en301549.csv"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	header := "criterion,conformance,remarks\n"
+	for _, c := range []struct {
+		name, wcag, section508 string
+		standards              []string
+		summary                []string
+		counts                 map[string]map[string]int
+	}{
+		{
+			name:       "levels A and AA, chapters 3 and 5",
+			wcag:       "1.1.1,Supports,\n1.4.3,Partially Supports,\n2.1.1,Supports,\n",
+			section508: "302.1,Supports,\n502.3.1,Does Not Support,\n",
+			standards: []string{
+				"Web Content Accessibility Guidelines (WCAG) 2.2, W3C Recommendation: its table lists success criteria at Levels A and AA.",
+				"Revised Section 508 Standards, 36 CFR part 1194: its table lists criteria of chapters 3 and 5.",
+			},
+			summary: []string{
+				"WCAG 2.2: 2 Supports, 1 Partially Supports (3 criteria)",
+				"Revised Section 508: 1 Supports, 1 Does Not Support (2 criteria)",
+			},
+			counts: map[string]map[string]int{
+				"wcag":       {"Supports": 2, "Partially Supports": 1},
+				"section508": {"Supports": 1, "Does Not Support": 1},
+			},
+		},
+		{
+			name:       "level AAA alone, chapter 6 alone",
+			wcag:       "2.4.13,Not Evaluated,\n",
+			section508: "602.3,Not Applicable,\n",
+			standards: []string{
+				"Web Content Accessibility Guidelines (WCAG) 2.2, W3C Recommendation: its table lists success criteria at Level AAA.",
+				"Revised Section 508 Standards, 36 CFR part 1194: its table lists criteria of chapter 6.",
+			},
+			summary: []string{
+				"WCAG 2.2: 1 Not Evaluated (1 criterion)",
+				"Revised Section 508: 1 Not Applicable (1 criterion)",
+			},
+			counts: map[string]map[string]int{
+				"wcag":       {"Not Evaluated": 1},
+				"section508": {"Not Applicable": 1},
+			},
+		},
+		{
+			name:       "every level, every chapter",
+			wcag:       "1.1.1,Supports,\n1.4.3,Supports,\n2.4.13,Supports,\n",
+			section508: "302.1,Supports,\n402.1,Supports,\n502.3.1,Supports,\n602.3,Supports,\n",
+			standards: []string{
+				"Web Content Accessibility Guidelines (WCAG) 2.2, W3C Recommendation: its table lists success criteria at Levels A, AA and AAA.",
+				"Revised Section 508 Standards, 36 CFR part 1194: its table lists criteria of chapters 3 to 6.",
+			},
+			summary: []string{
+				"WCAG 2.2: 3 Supports (3 criteria)",
+				"Revised Section 508: 4 Supports (4 criteria)",
+			},
+			counts: map[string]map[string]int{
+				"wcag":       {"Supports": 3},
+				"section508": {"Supports": 4},
+			},
+		},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			data := testenv.Dir(t)
+			files := map[string][]byte{
+				"report.yaml":    acrReport(t, src, "international"),
+				"wcag.csv":       []byte(header + c.wcag),
+				"section508.csv": []byte(header + c.section508),
+				"en301549.csv":   en301549,
+			}
+			for name, b := range files {
+				if err := os.WriteFile(filepath.Join(data, name), b, 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			out := filepath.Join(testenv.Dir(t), "out")
+			if r := runTool(t, "render", acrPackage, "--data", data, "--out", out); r.status != 0 {
+				t.Fatalf("render exits %d: %s", r.status, r.stderr)
+			}
+			paragraphs := acrParagraphs(t, filepath.Join(out, "acr.docx"))
+			for _, want := range append(slices.Clone(c.standards), c.summary...) {
+				if !slices.Contains(paragraphs, want) {
+					t.Errorf("acr.docx has no paragraph %q; it has:\n%s", want, strings.Join(paragraphs, "\n"))
+				}
+			}
+			date := slices.Index(paragraphs, "Report date: 2026-10-01")
+			product := slices.Index(paragraphs, "Product")
+			if date < 0 || product < 0 || date > product || date > 3 {
+				t.Errorf("acr.docx's report date is paragraph %d and its Product heading %d, want the date under the title, before the product", date, product)
+			}
+			b, err := os.ReadFile(filepath.Join(out, "acr.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var doc struct {
+				Tables []struct {
+					Standard string
+					Summary  struct {
+						Criteria    int
+						Conformance map[string]int
+					}
+					Criteria []json.RawMessage
+				}
+			}
+			if err := json.Unmarshal(b, &doc); err != nil {
+				t.Fatal(err)
+			}
+			for _, table := range doc.Tables {
+				want, ok := c.counts[table.Standard]
+				if !ok {
+					continue
+				}
+				if table.Summary.Criteria != len(table.Criteria) {
+					t.Errorf("acr.json's %s summary counts %d criteria, and the table lists %d", table.Standard, table.Summary.Criteria, len(table.Criteria))
+				}
+				for _, level := range acrLevels {
+					if got := table.Summary.Conformance[level]; got != want[level] {
+						t.Errorf("acr.json's %s summary counts %d %s, want %d", table.Standard, got, level, want[level])
+					}
+				}
+			}
+		})
+	}
+}
+
+// acrParagraphs is the text of each paragraph of the acr.docx at path's
+// word/document.xml, in order, with its XML character references
+// resolved.
+func acrParagraphs(t *testing.T, path string) []string {
+	t.Helper()
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var document bytes.Buffer
+	sink := func(name string) io.Writer {
+		if name == "word/document.xml" {
+			return &document
+		}
+		return nil
+	}
+	if _, fs, err := zipfmt.OpenContainer(bytes.NewReader(b), int64(len(b)), limits.Defaults(), sink); err != nil || len(fs) > 0 {
+		t.Fatalf("%s: %v %v", path, err, fs)
+	}
+	tag := regexp.MustCompile(`<[^>]*>`)
+	var paragraphs []string
+	for _, p := range strings.Split(document.String(), "</w:p>") {
+		if s := html.UnescapeString(tag.ReplaceAllString(p, "")); strings.TrimSpace(s) != "" {
+			paragraphs = append(paragraphs, strings.TrimSpace(s))
+		}
+	}
+	return paragraphs
 }
