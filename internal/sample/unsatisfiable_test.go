@@ -44,6 +44,14 @@ func TestUnsatisfiable(t *testing.T) {
 		{ReasonFormat, `{"type":"string","format":"date","maxLength":5}`, ""},
 		{ReasonFormat, `{"type":"string","format":"email","pattern":"^[0-9]+$"}`, ""},
 		{ReasonUniqueItems, `{"type":"array","uniqueItems":true,"minItems":3,"items":{"enum":["a","b"]}}`, ""},
+		// Too few distinct keys for minItems (ADR-003 Amendment A2 item 17).
+		{ReasonUniqueKeys, `{"type":"array","uniqueKeys":["/on"],"minItems":3,"items":{"type":"object","required":["on"],"properties":{"on":{"type":"boolean"}}}}`, ""},
+		// An item holding a coverage member is never dropped, so a key
+		// it cannot hold apart from an earlier item's is unsatisfiable.
+		{ReasonUniqueKeys, `{"type":"array","uniqueKeys":["/on"],"coverage":{"key":"/c","values":["x","y","z"]},
+			"items":{"type":"object","required":["on","c"],"properties":{"on":{"type":"boolean"},"c":{"type":"string"}}}}`, ""},
+		{ReasonCoverage, `{"type":"array","maxItems":2,"coverage":{"key":"/c","values":["x","y","z"]},"items":{"type":"object"}}`, ""},
+		{ReasonCoverage, `{"type":"array","allOf":[{"maxItems":1}],"coverage":{"key":"/c","values":["x","y"]}}`, ""},
 		{ReasonNot, `{"type":"integer","not":{}}`, ""},
 		{ReasonNot, `{"type":"integer","minimum":1,"maximum":1,"not":{"const":1}}`, ""},
 		{ReasonConditionals, `{"type":"object","required":["a"],"properties":{"a":{"type":"integer"}},

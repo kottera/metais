@@ -295,13 +295,18 @@ func (s *Generator) candidate(loc *place, c *conj) (value.Value, bool) {
 		}
 		return true
 	}
-	// cycle tries the members of list from (seed + k) mod count on.
+	// cycle tries the members of list from (seed + k) mod count on, moved
+	// on by a draw of the attempt's stream when a uniqueKeys key repeated,
+	// so that each column of a composite key moves apart from the others.
 	cycle := func(list []value.Value, filter func(value.Value) bool) (value.Value, bool) {
 		n := uint64(len(list))
 		if n == 0 {
 			return nil, false
 		}
 		start := (s.opts.Seed%n + uint64(loc.k)%n) % n
+		if loc.attempt != "" {
+			start = (start + s.stream(loc.ptr, loc.attempt).Below(n)) % n
+		}
 		for i := range n {
 			v := list[(start+i)%n]
 			if filter(v) && keep(v) {
