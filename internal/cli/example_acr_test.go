@@ -738,3 +738,98 @@ func TestACRNotEvaluatedSaysWhy(t *testing.T) {
 		t.Errorf("validate exits %d and reports %q,\nwant %q", r.status, got, want)
 	}
 }
+
+// acrWCAGRequired is every WCAG 2.2 criterion that
+// templates/criteria/wcag-level.liquid names Level A or AA, in the
+// partial's order.
+func acrWCAGRequired(t *testing.T) []string {
+	t.Helper()
+	b, err := os.ReadFile(filepath.Join(acrPackage, "templates/criteria/wcag-level.liquid"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	whens := regexp.MustCompile(`\{%- when ((?:"[^"]+"(?:, )?)+) -%\}([^\n]*)`)
+	quoted := regexp.MustCompile(`"([^"]+)"`)
+	var required []string
+	for _, m := range whens.FindAllStringSubmatch(string(b), -1) {
+		if m[2] != "A" && m[2] != "AA" {
+			continue
+		}
+		for _, q := range quoted.FindAllStringSubmatch(m[1], -1) {
+			required = append(required, q[1])
+		}
+	}
+	return required
+}
+
+// TestACRTesterTableRefused holds the §4.1 example to the table the
+// external tester's run validated on 2026-10-23 (plan §1): a WCAG 2.2
+// table that answers 1.1.1 once Supports and once Does Not Support, and
+// no other criterion. Validation refuses it, all in one report: one
+// input.unique_keys at the second row's criterion, and one input.coverage
+// at the table for each other Level A and AA criterion the level partial
+// names, its missing parameter that criterion.
+func TestACRTesterTableRefused(t *testing.T) {
+	testenv.Home(t)
+	src := filepath.Join(acrPackage, "examples/wcag_only/inputs")
+	data := testenv.Dir(t)
+	report, err := os.ReadFile(filepath.Join(src, "report.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	csv := "criterion,conformance,remarks\n" +
+		"1.1.1,Supports,Every image has a text alternative.\n" +
+		"1.1.1,Does Not Support,The dashboard's chart has no text alternative.\n"
+	for name, b := range map[string][]byte{"report.json": report, "wcag.csv": []byte(csv)} {
+		if err := os.WriteFile(filepath.Join(data, name), b, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r := runTool(t, "validate", acrPackage, "--data", data, "--json")
+	var doc struct {
+		Findings []struct {
+			Code     string
+			Subject  struct{ Name string }
+			Location struct{ Pointer string }
+			Params   map[string]any
+		}
+	}
+	if err := json.Unmarshal([]byte(r.stdout), &doc); err != nil {
+		t.Fatalf("validate's document: %v\n%s", err, r.stdout)
+	}
+	var got, missing []string
+	for _, f := range doc.Findings {
+		got = append(got, f.Subject.Name+" "+f.Code+" "+f.Location.Pointer)
+		if f.Code == "input.coverage" {
+			// missing is the value as canonical JSON text.
+			var m string
+			text, _ := f.Params["missing"].(string)
+			if err := json.Unmarshal([]byte(text), &m); err != nil {
+				t.Errorf("an input.coverage finding's missing is %q, not a JSON string", text)
+			}
+			missing = append(missing, m)
+		}
+	}
+	required := acrWCAGRequired(t)
+	want := []string{"wcag input.unique_keys /1/criterion"}
+	var wantMissing []string
+	for _, c := range required {
+		if c != "1.1.1" {
+			want = append(want, "wcag input.coverage ")
+			wantMissing = append(wantMissing, c)
+		}
+	}
+	slices.Sort(got)
+	slices.Sort(want)
+	slices.Sort(missing)
+	slices.Sort(wantMissing)
+	if len(required) != 55 || len(wantMissing) != 54 {
+		t.Errorf("the level partial names %d Level A and AA criteria, want 55", len(required))
+	}
+	if !slices.Equal(got, want) || r.status == 0 {
+		t.Errorf("validate exits %d and reports %q,\nwant %q", r.status, got, want)
+	}
+	if !slices.Equal(missing, wantMissing) {
+		t.Errorf("validate's input.coverage findings miss %q,\nwant %q", missing, wantMissing)
+	}
+}

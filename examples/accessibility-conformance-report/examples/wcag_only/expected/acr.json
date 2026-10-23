@@ -25,12 +25,12 @@
         "notice": "Copyright © 2020-2024 World Wide Web Consortium. W3C® liability, trademark and document use rules apply."
       },
       "summary": {
-        "criteria": 7,
+        "criteria": 56,
         "conformance": {
-          "Supports": 4,
+          "Supports": 41,
           "Partially Supports": 1,
           "Does Not Support": 1,
-          "Not Applicable": 0,
+          "Not Applicable": 12,
           "Not Evaluated": 1
         }
       },
@@ -43,11 +43,137 @@
           "remarks": "Every image has a text alternative, and decorative images are hidden from screen readers."
         },
         {
+          "criterion": "1.2.1",
+          "label": "Audio-only and Video-only (Prerecorded)",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no audio-only or video-only content."
+        },
+        {
+          "criterion": "1.2.2",
+          "label": "Captions (Prerecorded)",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no prerecorded video."
+        },
+        {
+          "criterion": "1.2.3",
+          "label": "Audio Description or Media Alternative (Prerecorded)",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no prerecorded video."
+        },
+        {
+          "criterion": "1.2.4",
+          "label": "Captions (Live)",
+          "wcag_level": "AA",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no live video."
+        },
+        {
+          "criterion": "1.2.5",
+          "label": "Audio Description (Prerecorded)",
+          "wcag_level": "AA",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no prerecorded video."
+        },
+        {
+          "criterion": "1.3.1",
+          "label": "Info and Relationships",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Headings, lists, tables and form fields are marked up as such."
+        },
+        {
+          "criterion": "1.3.2",
+          "label": "Meaningful Sequence",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "The reading order of every page follows its visual order."
+        },
+        {
+          "criterion": "1.3.3",
+          "label": "Sensory Characteristics",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "No instruction relies on shape or position alone."
+        },
+        {
+          "criterion": "1.3.4",
+          "label": "Orientation",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Every page works in portrait and landscape."
+        },
+        {
+          "criterion": "1.3.5",
+          "label": "Identify Input Purpose",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Fields for the user's name, email and address name their purpose."
+        },
+        {
+          "criterion": "1.4.1",
+          "label": "Use of Color",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Overdue invoices are marked by a word as well as a colour."
+        },
+        {
+          "criterion": "1.4.2",
+          "label": "Audio Control",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "The product plays no audio."
+        },
+        {
           "criterion": "1.4.3",
           "label": "Contrast (Minimum)",
           "wcag_level": "AA",
           "conformance": "Partially Supports",
           "remarks": "Body text meets the ratio. The \"Draft\" badge on unsent invoices measures 3.1 to 1."
+        },
+        {
+          "criterion": "1.4.4",
+          "label": "Resize Text",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Text can be enlarged to 200 percent with browser zoom without loss of content."
+        },
+        {
+          "criterion": "1.4.5",
+          "label": "Images of Text",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "The product shows no images of text."
+        },
+        {
+          "criterion": "1.4.10",
+          "label": "Reflow",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Every page reflows to a width of 320 CSS pixels."
+        },
+        {
+          "criterion": "1.4.11",
+          "label": "Non-text Contrast",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Controls and focus indicators meet the 3 to 1 ratio."
+        },
+        {
+          "criterion": "1.4.12",
+          "label": "Text Spacing",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "1.4.13",
+          "label": "Content on Hover or Focus",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Tooltips stay while hovered, and Escape dismisses them."
         },
         {
           "criterion": "2.1.1",
@@ -57,11 +183,144 @@
           "remarks": "Every function can be operated from a keyboard."
         },
         {
+          "criterion": "2.1.2",
+          "label": "No Keyboard Trap",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Focus never becomes trapped, in dialogs included."
+        },
+        {
+          "criterion": "2.1.4",
+          "label": "Character Key Shortcuts",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "The product has no single-character keyboard shortcuts."
+        },
+        {
+          "criterion": "2.2.1",
+          "label": "Timing Adjustable",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "The session warns before it times out and can be extended."
+        },
+        {
+          "criterion": "2.2.2",
+          "label": "Pause, Stop, Hide",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "Nothing on the product's pages moves or updates on its own."
+        },
+        {
+          "criterion": "2.3.1",
+          "label": "Three Flashes or Below Threshold",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Nothing on the product's pages flashes."
+        },
+        {
+          "criterion": "2.4.1",
+          "label": "Bypass Blocks",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "A \"Skip to content\" link starts every page."
+        },
+        {
+          "criterion": "2.4.2",
+          "label": "Page Titled",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Every page has a title naming the page and the product."
+        },
+        {
+          "criterion": "2.4.3",
+          "label": "Focus Order",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.4.4",
+          "label": "Link Purpose (In Context)",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.4.5",
+          "label": "Multiple Ways",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Every page can be reached from the menu, and from search."
+        },
+        {
+          "criterion": "2.4.6",
+          "label": "Headings and Labels",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
           "criterion": "2.4.7",
           "label": "Focus Visible",
           "wcag_level": "AA",
           "conformance": "Does Not Support",
           "remarks": "The product's style sheet removes the browser's focus outline, and nothing replaces it."
+        },
+        {
+          "criterion": "2.4.11",
+          "label": "Focus Not Obscured (Minimum)",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "The page's header never covers the focused control."
+        },
+        {
+          "criterion": "2.4.13",
+          "label": "Focus Appearance",
+          "wcag_level": "AAA",
+          "conformance": "Not Evaluated",
+          "remarks": "Level AAA; not evaluated."
+        },
+        {
+          "criterion": "2.5.1",
+          "label": "Pointer Gestures",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "No function uses a path-based or multipoint gesture."
+        },
+        {
+          "criterion": "2.5.2",
+          "label": "Pointer Cancellation",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "Controls act when the pointer is released."
+        },
+        {
+          "criterion": "2.5.3",
+          "label": "Label in Name",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "2.5.4",
+          "label": "Motion Actuation",
+          "wcag_level": "A",
+          "conformance": "Not Applicable",
+          "remarks": "No function is operated by moving the device."
+        },
+        {
+          "criterion": "2.5.7",
+          "label": "Dragging Movements",
+          "wcag_level": "AA",
+          "conformance": "Not Applicable",
+          "remarks": "No function needs dragging."
+        },
+        {
+          "criterion": "2.5.8",
+          "label": "Target Size (Minimum)",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Every target is at least 24 by 24 CSS pixels."
         },
         {
           "criterion": "3.1.1",
@@ -71,6 +330,90 @@
           "remarks": null
         },
         {
+          "criterion": "3.1.2",
+          "label": "Language of Parts",
+          "wcag_level": "AA",
+          "conformance": "Not Applicable",
+          "remarks": "The product's text is all in one language."
+        },
+        {
+          "criterion": "3.2.1",
+          "label": "On Focus",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.2.2",
+          "label": "On Input",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.2.3",
+          "label": "Consistent Navigation",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "The menu is in the same place and order on every page."
+        },
+        {
+          "criterion": "3.2.4",
+          "label": "Consistent Identification",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.2.6",
+          "label": "Consistent Help",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "The help link is in the same place on every page."
+        },
+        {
+          "criterion": "3.3.1",
+          "label": "Error Identification",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "A field in error is named, and the error is described in text."
+        },
+        {
+          "criterion": "3.3.2",
+          "label": "Labels or Instructions",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": null
+        },
+        {
+          "criterion": "3.3.3",
+          "label": "Error Suggestion",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Errors say what was expected, such as a date's format."
+        },
+        {
+          "criterion": "3.3.4",
+          "label": "Error Prevention (Legal, Financial, Data)",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "An invoice can be reviewed before it is sent and recalled for ten minutes after."
+        },
+        {
+          "criterion": "3.3.7",
+          "label": "Redundant Entry",
+          "wcag_level": "A",
+          "conformance": "Supports",
+          "remarks": "The product never asks for the same information twice in one process."
+        },
+        {
+          "criterion": "3.3.8",
+          "label": "Accessible Authentication (Minimum)",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Signing in allows a password manager and pasting, and asks no cognitive test."
+        },
+        {
           "criterion": "4.1.2",
           "label": "Name, Role, Value",
           "wcag_level": "A",
@@ -78,11 +421,11 @@
           "remarks": "Every control is a native one, or exposes its name, role and state."
         },
         {
-          "criterion": "2.4.13",
-          "label": "Focus Appearance",
-          "wcag_level": "AAA",
-          "conformance": "Not Evaluated",
-          "remarks": "Level AAA; not evaluated."
+          "criterion": "4.1.3",
+          "label": "Status Messages",
+          "wcag_level": "AA",
+          "conformance": "Supports",
+          "remarks": "Saved and sent messages are announced as status messages."
         }
       ]
     }
