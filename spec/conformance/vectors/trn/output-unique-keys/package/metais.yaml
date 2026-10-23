@@ -1,0 +1,14 @@
+metais: "1.0"
+name: org.example.validated
+version: 1.0.0
+title: Validated
+description: A package whose output's rows carry uniqueKeys.
+guide: Supply a label.
+inputs:
+  - name: label
+    title: Label
+    schema: inputs/label.schema.json
+outputs:
+  - id: data
+    template: data.json.liquid
+    validate: references/v.schema.json

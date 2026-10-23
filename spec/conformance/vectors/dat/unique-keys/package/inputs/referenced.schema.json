@@ -1,0 +1,9 @@
+{
+  "$ref": "#/$defs/table",
+  "$defs": {
+    "table": {
+      "type": "array",
+      "uniqueKeys": ["/id"]
+    }
+  }
+}

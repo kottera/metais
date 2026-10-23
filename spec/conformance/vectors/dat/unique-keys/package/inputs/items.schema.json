@@ -1,0 +1,5 @@
+{
+  "type": "array",
+  "uniqueKeys": ["/id"],
+  "items": { "type": "object", "properties": { "id": { "type": "string" } } }
+}

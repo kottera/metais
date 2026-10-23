@@ -1,0 +1,12 @@
+{
+  "type": "array",
+  "uniqueKeys": ["/criterion"],
+  "items": {
+    "type": "object",
+    "required": ["criterion", "conformance"],
+    "properties": {
+      "criterion": { "type": "string" },
+      "conformance": { "type": "string" }
+    }
+  }
+}

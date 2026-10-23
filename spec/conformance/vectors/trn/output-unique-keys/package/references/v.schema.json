@@ -1,0 +1,7 @@
+{
+  "type": "object",
+  "properties": {
+    "rows": { "type": "array", "uniqueKeys": ["/id"] },
+    "pairs": { "type": "array", "uniqueKeys": ["/a", "/b"] }
+  }
+}

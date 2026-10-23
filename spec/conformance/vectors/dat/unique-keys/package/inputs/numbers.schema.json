@@ -1,0 +1,5 @@
+{
+  "type": "array",
+  "uniqueKeys": ["/n"],
+  "items": { "type": "object" }
+}

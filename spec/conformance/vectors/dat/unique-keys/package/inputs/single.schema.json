@@ -1,0 +1,11 @@
+{
+  "type": "array",
+  "uniqueKeys": ["/criterion"],
+  "items": {
+    "type": "object",
+    "properties": {
+      "criterion": { "type": ["string", "null"] },
+      "conformance": { "type": "string" }
+    }
+  }
+}

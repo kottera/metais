@@ -1,0 +1,34 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "trn/output-unique-keys",
+  "title": "An output's value that repeats a key its validate schema's uniqueKeys forbids is reported by output.unique_keys, at the key's value or at the item, with the first in related",
+  "statements": [
+    "MTS-TRN-015",
+    "MTS-DAT-018",
+    "MTS-FND-004"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "rows has a key of one pointer, its repeat located at the value of id; pairs a key of two, 2 and 2.0 one value, its repeat located at the item.",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "data": "data",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

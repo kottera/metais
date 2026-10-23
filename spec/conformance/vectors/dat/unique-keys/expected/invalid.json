@@ -1,0 +1,396 @@
+[
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "composite",
+      "title": "Composite"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "composite.json",
+      "line": 5,
+      "column": 3,
+      "pointer": "/3"
+    },
+    "schema": {
+      "entry": "inputs/composite.schema.json",
+      "pointer": "/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 3,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "composite.json",
+        "line": 2,
+        "column": 3,
+        "pointer": "/0",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "conditional",
+      "title": "Conditional"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "conditional.json",
+      "line": 1,
+      "column": 23,
+      "pointer": "/1/id"
+    },
+    "schema": {
+      "entry": "inputs/conditional.schema.json",
+      "pointer": "/then/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 1,
+      "duplicate_of": 0
+    },
+    "via": [
+      {
+        "keyword": "then",
+        "schema_pointer": "/then",
+        "condition": {
+          "schema_pointer": "/if"
+        }
+      }
+    ],
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "conditional.json",
+        "line": 1,
+        "column": 10,
+        "pointer": "/0/id",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "items",
+      "title": "Items"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "items/c.json",
+      "line": 1,
+      "column": 9,
+      "pointer": "/2/id"
+    },
+    "schema": {
+      "entry": "inputs/items.schema.json",
+      "pointer": "/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 2,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "items/a.json",
+        "line": 1,
+        "column": 9,
+        "pointer": "/0/id",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "numbers",
+      "title": "Numbers"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "numbers.json",
+      "line": 3,
+      "column": 10,
+      "pointer": "/1/n"
+    },
+    "schema": {
+      "entry": "inputs/numbers.schema.json",
+      "pointer": "/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 1,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "numbers.json",
+        "line": 2,
+        "column": 10,
+        "pointer": "/0/n",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "numbers",
+      "title": "Numbers"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "numbers.json",
+      "line": 5,
+      "column": 10,
+      "pointer": "/3/n"
+    },
+    "schema": {
+      "entry": "inputs/numbers.schema.json",
+      "pointer": "/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 3,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "numbers.json",
+        "line": 2,
+        "column": 10,
+        "pointer": "/0/n",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "referenced",
+      "title": "Referenced"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "referenced.json",
+      "line": 1,
+      "column": 23,
+      "pointer": "/1/id"
+    },
+    "schema": {
+      "entry": "inputs/referenced.schema.json",
+      "pointer": "/$defs/table/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 1,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "referenced.json",
+        "line": 1,
+        "column": 10,
+        "pointer": "/0/id",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.csv",
+      "line": 4,
+      "column": 1,
+      "pointer": "/2/criterion"
+    },
+    "schema": {
+      "entry": "inputs/rows.schema.json",
+      "pointer": "/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 2,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "rows.csv",
+        "line": 2,
+        "column": 1,
+        "pointer": "/0/criterion",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "single",
+      "title": "Single"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "single.json",
+      "line": 4,
+      "column": 18,
+      "pointer": "/2/criterion"
+    },
+    "schema": {
+      "entry": "inputs/single.schema.json",
+      "pointer": "/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 2,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "single.json",
+        "line": 2,
+        "column": 18,
+        "pointer": "/0/criterion",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "single",
+      "title": "Single"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "single.json",
+      "line": 7,
+      "column": 18,
+      "pointer": "/5/criterion"
+    },
+    "schema": {
+      "entry": "inputs/single.schema.json",
+      "pointer": "/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 5,
+      "duplicate_of": 1
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "single.json",
+        "line": 3,
+        "column": 18,
+        "pointer": "/1/criterion",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "single",
+      "title": "Single"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "single.json",
+      "line": 8,
+      "column": 18,
+      "pointer": "/6/criterion"
+    },
+    "schema": {
+      "entry": "inputs/single.schema.json",
+      "pointer": "/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 6,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "single.json",
+        "line": 2,
+        "column": 18,
+        "pointer": "/0/criterion",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "single",
+      "title": "Single"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "single.json",
+      "line": 10,
+      "column": 18,
+      "pointer": "/8/criterion"
+    },
+    "schema": {
+      "entry": "inputs/single.schema.json",
+      "pointer": "/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 8,
+      "duplicate_of": 7
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "single.json",
+        "line": 9,
+        "column": 18,
+        "pointer": "/7/criterion",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]

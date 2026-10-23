@@ -1,0 +1,32 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "sup/unique-keys-partial",
+  "title": "A CSV input validated without its refused records reports each repeated key between two records it validated at their original indexes",
+  "statements": [
+    "MTS-SUP-029",
+    "MTS-DAT-018"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "Records 1 and 4 are refused alone, for a bare quote and text after a closing quote, and the other four are validated as an array of four. Record 2 repeats record 0's criterion and record 5 repeats record 3's: each input.unique_keys names the records by their indexes in the file, and is located at the records' own lines. uniqueKeys judges pairs of items, so neither finding is about the array as a whole, and none is suppressed.",
+  "cases": [
+    {
+      "name": "partial",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

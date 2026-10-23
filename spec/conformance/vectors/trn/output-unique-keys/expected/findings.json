@@ -1,0 +1,70 @@
+[
+  {
+    "code": "output.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "data"
+    },
+    "location": {
+      "origin": "output",
+      "file": "data.json",
+      "line": 5,
+      "column": 13,
+      "pointer": "/rows/2/id"
+    },
+    "schema": {
+      "entry": "references/v.schema.json",
+      "pointer": "/properties/rows/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 2,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "output",
+        "file": "data.json",
+        "line": 3,
+        "column": 13,
+        "pointer": "/rows/0/id",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "output.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "output",
+      "name": "data"
+    },
+    "location": {
+      "origin": "output",
+      "file": "data.json",
+      "line": 9,
+      "column": 5,
+      "pointer": "/pairs/1"
+    },
+    "schema": {
+      "entry": "references/v.schema.json",
+      "pointer": "/properties/pairs/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 1,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "output",
+        "file": "data.json",
+        "line": 8,
+        "column": 5,
+        "pointer": "/pairs/0",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]
