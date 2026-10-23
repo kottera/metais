@@ -305,7 +305,7 @@ Refusals:
   schema.* (2)          With --sample, the generated data cannot be made or does
                         not validate.
                         Next: metais schema <package> <name> --fields
-  template.* (23)       A template is refused. Next: metais inspect <package>
-  template.* (9)        An output's path, when or for_each does not parse.
+  template.* (24)       A template is refused. Next: metais inspect <package>
+  template.* (10)       An output's path, when or for_each does not parse.
                         Next: metais inspect <package>
   yaml.* (13)           An input is refused. Next: metais inspect <package>

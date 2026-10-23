@@ -155,6 +155,7 @@ Next: metais inspect <package>
   template.asset_tree
   template.comparison
   template.date_input
+  template.duration_input
   template.embed_index
   template.embed_unknown_input
   template.filter_input
@@ -284,6 +285,7 @@ Next: metais inspect <package>
   schema.syntax
   template.date_format
   template.division_by_zero
+  template.duration_format
   template.filter_argument
   template.include
   template.number_range

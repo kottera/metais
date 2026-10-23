@@ -1,0 +1,7 @@
+{{ inputs.d.dora | duration: "%d d %-H h %-M min", fields: "d:h:m" }}
+{{ inputs.d.dora | duration: "%-H h %M min", fields: "d:h:m" }}
+{{ "1:23:59:59" | duration: "%d d %H:%M:%S", fields: "d:h:m:s" }}
+{{ "100:00:01" | duration: "%d d %H h %S s", fields: "h:m:s" }}
+{{ "7:25" | duration: "%-M min", fields: "h:m" }}
+{{ "90:30" | duration: "%H:%M:%S", fields: "m:s" }}
+{{ "000:00" | duration: "%M", fields: "m:s" }}

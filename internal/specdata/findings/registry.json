@@ -6651,6 +6651,79 @@
       ]
     },
     {
+      "code": "template.duration_format",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "directive",
+          "type": "string",
+          "meaning": "The first directive of the format outside the closed set, or named a second time, from its % to the character that put it outside the set; absent for an empty format.",
+          "always": false
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The duration filter is given a format outside the set it formats.",
+      "hint": "Use %d, %H, %M and %S, as date's directives are written, each once, with the flags -, _ and 0; a literal % is written %%.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-FLT-022",
+        "MTS-MAN-018"
+      ]
+    },
+    {
+      "code": "template.duration_input",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "type",
+          "type": "string",
+          "meaning": "The kind of value the filter was given: nil, boolean, integer, float, string, array or object.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the input is refused: kind (a kind the filter does not read, or an integer given with fields:), calendar (an ISO 8601 duration with a year or a month, whose length depends on the calendar), range (below zero, above 2^53-1 seconds, or a field beyond its range) or form (any other string).",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The duration filter is given a {type} it does not read as a duration ({reason}).",
+      "hint": "Supply whole seconds, an ISO 8601 duration such as PT7H25M, or fields separated by : with fields: naming them, such as fields: \"d:h:m\".",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-FLT-021"
+      ]
+    },
+    {
       "code": "template.embed_index",
       "severity": "error",
       "class": "content",

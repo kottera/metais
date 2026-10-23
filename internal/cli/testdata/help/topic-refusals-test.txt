@@ -249,6 +249,8 @@ Next: metais test <package>
   template.date_format
   template.date_input
   template.division_by_zero
+  template.duration_format
+  template.duration_input
   template.embed_index
   template.embed_unknown_input
   template.filter_argument

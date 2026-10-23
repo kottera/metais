@@ -15,17 +15,18 @@ import (
 // (ADR-004 D16 items 1 and 5). Each is class content, about the template,
 // which for a manifest expression is metais.yaml.
 const (
-	CodeTemplateSyntax        finding.Code = "template.syntax"
-	CodeTemplateNotUTF8       finding.Code = "template.not_utf8"
-	CodeTemplateInclude       finding.Code = "template.include"
-	CodeTemplateUnknownFilter finding.Code = "template.unknown_filter"
-	CodeTemplateNumberRange   finding.Code = "template.number_range"
-	CodeTemplateTagContext    finding.Code = "template.tag_context"
-	CodeTemplateFilterArg     finding.Code = "template.filter_argument"
-	CodeTemplateFilterInput   finding.Code = "template.filter_input"
-	CodeTemplateDivision      finding.Code = "template.division_by_zero"
-	CodeTemplateSafePosition  finding.Code = "template.safe_position"
-	CodeTemplateDateFormat    finding.Code = "template.date_format"
+	CodeTemplateSyntax         finding.Code = "template.syntax"
+	CodeTemplateNotUTF8        finding.Code = "template.not_utf8"
+	CodeTemplateInclude        finding.Code = "template.include"
+	CodeTemplateUnknownFilter  finding.Code = "template.unknown_filter"
+	CodeTemplateNumberRange    finding.Code = "template.number_range"
+	CodeTemplateTagContext     finding.Code = "template.tag_context"
+	CodeTemplateFilterArg      finding.Code = "template.filter_argument"
+	CodeTemplateFilterInput    finding.Code = "template.filter_input"
+	CodeTemplateDivision       finding.Code = "template.division_by_zero"
+	CodeTemplateSafePosition   finding.Code = "template.safe_position"
+	CodeTemplateDateFormat     finding.Code = "template.date_format"
+	CodeTemplateDurationFormat finding.Code = "template.duration_format"
 )
 
 // The top-level directories a manifest path is resolved in.
@@ -232,6 +233,12 @@ func TemplateFinding(e *liquid.Error, subj finding.Subject, at finding.Location,
 			p["directive"] = finding.String(d)
 		}
 		return finding.New(CodeTemplateDateFormat, subj, &at, p)
+	case liquid.CodeDurationFormat:
+		p := finding.Params{"column": column}
+		if d, ok := e.Args["directive"]; ok {
+			p["directive"] = finding.String(d)
+		}
+		return finding.New(CodeTemplateDurationFormat, subj, &at, p)
 	case liquid.CodePartialName:
 		return finding.New(CodeTemplateTagContext, subj, &at, finding.Params{"tag": finding.String("render"), "column": column})
 	case liquid.CodeNotUTF8:

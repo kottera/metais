@@ -100,6 +100,14 @@ const (
 	CodeDateFormat Code = "date_format"
 	// CodeSlugEmpty is a slug whose result is empty (ADR-004 D10 item 6).
 	CodeSlugEmpty Code = "slug_empty"
+	// CodeDurationInput is a duration input MTS-FLT-021 does not read
+	// (ADR-004 Amendment A2 decision item 4). Args "type" names the kind
+	// found and "reason" why it is refused: kind, calendar, range or form.
+	CodeDurationInput Code = "duration_input"
+	// CodeDurationFormat is a duration format outside MTS-FLT-022's set,
+	// or an empty one. Args "directive" is the first directive outside
+	// the set, as the format writes it, and absent for an empty format.
+	CodeDurationFormat Code = "duration_format"
 )
 
 // The render error codes (ADR-004 D4 to D6, D16 item 1). A render stops at

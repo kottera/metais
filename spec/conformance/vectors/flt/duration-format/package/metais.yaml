@@ -1,0 +1,20 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs: []
+outputs:
+  - id: unknown
+    template: unknown.txt.liquid
+  - id: twice
+    template: twice.txt.liquid
+  - id: lone_percent
+    template: lone-percent.txt.liquid
+  - id: two_flags
+    template: two-flags.txt.liquid
+  - id: flag_on_percent
+    template: flag-on-percent.txt.liquid
+  - id: empty
+    template: empty.txt.liquid

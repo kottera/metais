@@ -162,5 +162,5 @@ Refusals:
                    Next: metais inspect <package>
   package.* (47)   The package is refused. Next: metais inspect <package>
   schema.* (10)    An input schema is refused. Next: metais inspect <package>
-  template.* (9)   An output's path, when or for_each does not parse.
+  template.* (10)  An output's path, when or for_each does not parse.
                    Next: metais inspect <package>

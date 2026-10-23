@@ -1,0 +1,302 @@
+[
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/calendar-month.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/calendar-month.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "reason": "calendar",
+      "column": 1,
+      "output_path": "calendar-month.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/calendar-year.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/calendar-year.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "reason": "calendar",
+      "column": 1,
+      "output_path": "calendar-year.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/form-digits.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/form-digits.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "reason": "form",
+      "column": 1,
+      "output_path": "form-digits.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/form-fields-without-fields.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/form-fields-without-fields.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "reason": "form",
+      "column": 1,
+      "output_path": "form-fields-without-fields.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/form-fraction.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/form-fraction.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "reason": "form",
+      "column": 1,
+      "output_path": "form-fraction.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/form-too-few-fields.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/form-too-few-fields.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "reason": "form",
+      "column": 1,
+      "output_path": "form-too-few-fields.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/kind-array.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/kind-array.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "array",
+      "reason": "kind",
+      "column": 1,
+      "output_path": "kind-array.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/kind-boolean.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/kind-boolean.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "boolean",
+      "reason": "kind",
+      "column": 1,
+      "output_path": "kind-boolean.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/kind-float.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/kind-float.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "float",
+      "reason": "kind",
+      "column": 1,
+      "output_path": "kind-float.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/kind-integer-with-fields.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/kind-integer-with-fields.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "integer",
+      "reason": "kind",
+      "column": 1,
+      "output_path": "kind-integer-with-fields.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/kind-object.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/kind-object.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "object",
+      "reason": "kind",
+      "column": 1,
+      "output_path": "kind-object.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/range-hour-field.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/range-hour-field.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "reason": "range",
+      "column": 1,
+      "output_path": "range-hour-field.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/range-iso.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/range-iso.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "reason": "range",
+      "column": 1,
+      "output_path": "range-iso.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/range-negative.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/range-negative.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "integer",
+      "reason": "range",
+      "column": 1,
+      "output_path": "range-negative.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/range-second-field.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/range-second-field.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "reason": "range",
+      "column": 1,
+      "output_path": "range-second-field.txt"
+    }
+  }
+]

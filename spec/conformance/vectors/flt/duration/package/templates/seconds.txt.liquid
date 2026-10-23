@@ -1,0 +1,6 @@
+{{ inputs.d.secs | duration: "%d d %-H h %-M min" }}
+{{ inputs.d.secs | duration: "%H:%M" }}
+{{ inputs.d.secs | duration: "%-M min" }}
+{{ 26700 | duration: "%S s" }}
+{{ inputs.d.max | duration: "%d %H %M %S" }}
+{{ 0 | duration: "%d:%H:%M:%S" }}

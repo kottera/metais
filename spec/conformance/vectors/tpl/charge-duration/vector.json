@@ -1,0 +1,103 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/charge-duration",
+  "title": "duration is charged its input's and its format's shallow sizes and its result's length, or nil's shallow size",
+  "statements": [
+    "MTS-TPL-063"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "16 for the output, 16 for the filter, 1 for the input, 5 for the format's bytes, and 5 for the result's; for nil, which is the result, its shallow size, 1, in place of the result's length.",
+  "cases": [
+    {
+      "name": "at-the-bound",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "render-work": 43
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/at-the-bound-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "one-below",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "render-work": 42
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/one-below.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "nil-at-the-bound",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package-nil",
+            "out": "out",
+            "limits": {
+              "render-work": 39
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/nil-at-the-bound-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "nil-one-below",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package-nil",
+            "out": "out",
+            "limits": {
+              "render-work": 38
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/nil-one-below.json"
+          }
+        }
+      ]
+    }
+  ]
+}
