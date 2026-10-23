@@ -157,6 +157,30 @@
     "severity": "error",
     "subject": {
       "kind": "input",
+      "name": "keyless",
+      "title": "Keyless"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "keyless.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/keyless.schema.json",
+      "pointer": "/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "null"
+    }
+  },
+  {
+    "code": "input.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
       "name": "nested",
       "title": "Nested"
     },

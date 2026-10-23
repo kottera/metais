@@ -30,6 +30,9 @@ inputs:
   - name: scalar
     title: Scalar
     schema: inputs/scalar.schema.json
+  - name: keyless
+    title: Keyless
+    schema: inputs/keyless.schema.json
 outputs:
   - id: report
     template: report.md.liquid

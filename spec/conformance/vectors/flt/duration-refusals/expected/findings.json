@@ -124,6 +124,46 @@
     "severity": "error",
     "subject": {
       "kind": "template",
+      "name": "templates/form-week-day.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/form-week-day.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "reason": "form",
+      "column": 1,
+      "output_path": "form-week-day.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/form-week-time.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/form-week-time.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "type": "string",
+      "reason": "form",
+      "column": 1,
+      "output_path": "form-week-time.txt"
+    }
+  },
+  {
+    "code": "template.duration_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
       "name": "templates/kind-array.txt.liquid"
     },
     "location": {
