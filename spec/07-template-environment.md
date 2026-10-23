@@ -531,11 +531,12 @@ and *beyond the shallow size* is a value's deep size less its shallow size.
 | Filter | Units before the work | Result |
 |---|---|---|
 | `abs`, `ceil`, `floor`, `round`, `plus`, `minus`, `times`, `divided_by`, `modulo`, `at_least`, `at_most`, `size`, `first`, `last`, `default`, `slice` | — | shallow size |
-| `sum`, `reverse`, `map`, `compact`, `concat` | flattening the input | shallow size |
+| `sum` | flattening the input, and the byte length of each term that is a string: each element or, with a property, its value of it, up to the first element the property refuses | shallow size |
+| `reverse`, `map`, `compact`, `concat` | flattening the input | shallow size |
 | `uniq` | flattening the input, and the deep size of each key: each element or, with a property, its value of it | shallow size |
 | `sort` | flattening the input, and sorting its keys: the elements or, with a property, their values of it | shallow size |
 | `sort_natural` | flattening the input, the text work of each key that is not nil, and sorting the keys, a key's bytes being those of its text | shallow size |
-| `where`, `reject`, `has`, `find`, `find_index` | flattening the input, and, when it has elements and the value sought is an array or an object, that value's deep size once for each element | shallow size |
+| `where`, `reject`, `has`, `find`, `find_index` | flattening the input, and, when it has elements and the value sought is a string, an array or an object, that value's deep size once for each element | shallow size |
 | `join` | flattening the input, and the glue's text work | built |
 | `append`, `prepend`, `upcase`, `downcase`, `capitalize`, `strip_newlines`, `newline_to_br`, `strip_html`, `base64_encode`, `base64_url_safe_encode`, `base64_decode`, `base64_url_safe_decode` | the text work of the input and of each argument | built |
 | `escape`, `h`, `escape_once`, `squish`, `url_encode`, `url_decode` | the input's text work; nothing for nil, which is the result | built; for nil, shallow size |
@@ -554,3 +555,10 @@ and *beyond the shallow size* is a value's deep size less its shallow size.
 > their input's size, so each counts its result's length before it writes a
 > byte, and a render whose work would exceed `render-work` is refused before
 > the text is built.
+
+<a id="mts-tpl-064"></a>**MTS-TPL-064** A processor MUST charge a `contains`
+whose left operand is an array and whose right operand is a string, beside
+the operator's 16 units and the sizes of its operands and its result, the
+string's byte length once for each element of the array, before it compares
+the string with any element. A charge that would take the render beyond
+`render-work` refuses the render at the condition's token.

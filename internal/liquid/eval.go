@@ -5,6 +5,7 @@ package liquid
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"unicode/utf8"
 
@@ -465,13 +466,20 @@ func (r *renderer) cond(c *ast.Cond) (bool, *Error) {
 // compare applies a comparison operator (ADR-004 D4 item 6). It costs
 // operatorCost units and the shallow size of each operand, or, for an
 // equality or contains between two arrays or objects, their deep sizes
-// (ADR-009 D11 item 2), charged before the comparison is made.
+// (ADR-009 D11 item 2); and an array's contains of a string compares the
+// string with each element, so it costs the string's bytes once for each
+// element too. All of it is charged before the comparison is made.
 func (r *renderer) compare(op ast.CompareOp, l, rt operand, at ast.Node) (bool, *Error) {
 	var cost int64
 	if (op != ast.OpLt && op != ast.OpGt && op != ast.OpLe && op != ast.OpGe) && composite(l.v) && composite(rt.v) {
 		cost = saturatingAdd(deepSize(l.v), deepSize(rt.v))
 	} else {
 		cost = saturatingAdd(shallow(l.v), shallow(rt.v))
+	}
+	if a, ok := l.v.(value.Array); ok && op == ast.OpContains && l.special == 0 {
+		if s, ok := rt.v.(value.String); ok && a.Len() > 0 {
+			cost = saturatingAdd(cost, min(int64(len(s.Text())), math.MaxInt64/int64(a.Len()))*int64(a.Len()))
+		}
 	}
 	if err := r.charge(WorkUnits, saturatingAdd(operatorCost, cost), at); err != nil {
 		return false, err

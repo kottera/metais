@@ -1,7 +1,7 @@
 {
   "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
   "id": "sec/render-work",
-  "title": "render-work bounds a render's template work, which renders within the default",
+  "title": "render-work bounds a render's template work at 2²⁸ units by default, and a lowered limit below it",
   "statements": [
     "MTS-SEC-008"
   ],
@@ -11,7 +11,7 @@
     "limits"
   ],
   "requires": [],
-  "notes": "",
+  "notes": "within-default and past-default render at the default. Each assigns a 1 MiB string by doubling, 5,243,580 units with the output, then strips it in a loop, 2²¹ + 32 units an iteration: 120 iterations need 256,905,660 units and render, 131 need 279,974,684 and are refused. Neither count is near the bound, so a charge elsewhere that moves by a few units leaves both cases standing, and both together hold the default above 2²⁷ and below 2²⁹.",
   "cases": [
     {
       "name": "default",
@@ -49,6 +49,43 @@
           "expect": {
             "ok": false,
             "findings": "expected/lowered.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "within-default",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "within-default",
+            "out": "out"
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/within-default-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "past-default",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "past-default",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/past-default.json"
           }
         }
       ]

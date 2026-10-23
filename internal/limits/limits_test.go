@@ -49,7 +49,7 @@ var adr009 = []struct{ name, def, class string }{
 	{"collection-items", "100,000", "data"},
 	{"frontmatter-size", "1 MiB", "data"},
 
-	{"render-work", "2^32 units", "work"},
+	{"render-work", "2^28 units", "work"},
 	{"loop-iterations", "10,000,000", "work"},
 	{"value-size", "64 MiB", "work"},
 	{"array-size", "1,000,000 elements", "work"},

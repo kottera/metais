@@ -174,7 +174,7 @@ var table = [count]Limit{
 	{CollectionItems, "collection-items", 100_000, Count, ClassData},
 	{FrontmatterSize, "frontmatter-size", 1 * mib, Bytes, ClassData},
 
-	{RenderWork, "render-work", 1 << 32, Count, ClassWork},
+	{RenderWork, "render-work", 1 << 28, Count, ClassWork},
 	{LoopIterations, "loop-iterations", 10_000_000, Count, ClassWork},
 	{ValueSize, "value-size", 64 * mib, Bytes, ClassWork},
 	{ArraySize, "array-size", 1_000_000, Count, ClassWork},

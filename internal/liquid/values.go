@@ -54,11 +54,7 @@ func Data(v value.Value) value.Value {
 
 // intValue returns the template integer i.
 func intValue(i int64) value.Number {
-	n, err := value.ParseNumber(strconv.FormatInt(i, 10))
-	if err != nil {
-		panic(err) // FormatInt writes RFC 8259 integers
-	}
-	return n
+	return value.NumberFromInt(i)
 }
 
 // newObject returns the object of members, which are values of the data

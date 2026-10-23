@@ -77,10 +77,18 @@ also proves that one less refuses it.
 | Case | Command | The worst case | Reaches its limit by |
 |---|---|---|---|
 | `render-work` | `render` | 32 empty `if` tags in nested loops: the cheapest node, as often as the units allow | refusal |
+| `render-work-range` | `render` | a range of `array-size` elements assigned in a loop: a number made and boxed for each unit (ADR-009 A13's costliest units, this and the rows below) | refusal |
+| `render-work-write` | `render` | an array of empty strings written whole in a loop: an element visited for each unit, no byte written | refusal |
+| `render-work-size` | `render` | `size` of a string of two-byte characters in a loop: a byte counted for each unit | refusal |
+| `render-work-split` | `render` | `split` of a text of commas into empty strings in a loop | refusal |
+| `render-work-sum` | `render` | `sum` of `array-size` integers in a loop | refusal |
+| `render-work-uniq` | `render` | `uniq` of `array-size` distinct integers in a loop: a new key for each element | refusal |
+| `render-work-slug` | `render` | `slug` in a loop of the code points of nine blocks that nearly all have a decomposition, each decomposed on every call | refusal |
+| `render-work-strip-html` | `render` | `strip_html` of empty tags, `<a>` after `<a>`, in a loop | refusal |
 | `loop-iterations` | `render` | nested empty loops, one range of 1,000 past the limit | refusal |
-| `value-size` | `render` | a string doubled by `append` | refusal |
+| `value-size` | `render` | a string doubled by `capture` | refusal |
 | `array-size` | `render` | `split` of a doubled string of `x,` | refusal |
-| `assign-bytes` | `render` | a string of `value-size` bytes, copied by `assign` | refusal |
+| `assign-bytes` | `render` | a string of `value-size` bytes, copied by `capture` | refusal |
 | `assign-bytes-capture` | `render` | captures nested one in another, each writing a string of `value-size` bytes before the next opens, so every buffer is filling at once | refusal |
 | `schema-work` | `validate` | an array input, each item evaluating `items` and an `allOf` of nine, exactly the limit's units | accepted at the limit |
 | `schema-work-anyof` | `validate` | two-branch `anyOf`s nested by `$ref` over a type every level fails, exactly the limit's units, every one failing, the choices' alternatives nesting to the `findings` limit | accepted at the limit, with its findings |
@@ -106,6 +114,14 @@ also proves that one less refuses it.
 | `example-json` | `test` | `example.yaml` in its JSON form, exactly `manifest-size` bytes of zeros (A6 item 2) | parsed whole at the limit, and refused before it is read past it |
 | `reference-title` | `inspect` | a reference of exactly `entry-size` bytes, a title and then empty headings, a heading every three bytes (A6 item 2) | accepted at the limit |
 | `manifest-schema-work` | `inspect` | a manifest of exactly `manifest-size` bytes whose unknown member is an array of zeros, whose validation passes `schema-work` (A6 item 2) | refused naming `schema-work` |
+
+`render-work`'s units are defined, not measured (ADR-009 D11 item 2), so
+one unit costs more CPU time than another. The `render-work` case runs the
+cheapest; the `render-work-` cases each run one of the costliest, and the
+default holds only if every one of them stays within the CPU ceiling. A
+unit that costs more than the costliest case's, by a filter's
+implementation or by work its charge does not count, is a defect in the
+tool or in the charge, and gains a case here when it is fixed.
 
 `schema-work` is counted before a validation evaluates anything
 (MTS-SEC-046), so a validation one unit past the limit is refused at the
@@ -144,7 +160,7 @@ Each run writes one JSON document, `metais.calibration/1`:
     {
       "case": "render-work",
       "limit": "render-work",
-      "bound": 4294967296,
+      "bound": 268435456,
       "metadata": false,
       "reached": true,
       "exit": 4,

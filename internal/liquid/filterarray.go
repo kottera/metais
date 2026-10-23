@@ -258,52 +258,110 @@ func uniq(c *call, in value.Value) (value.Value, *Error) {
 	if err := c.units(work); err != nil {
 		return nil, err
 	}
-	seen := map[string]bool{}
+	var seen uniqSet
 	var out []value.Value
 	for i, it := range items {
-		var b strings.Builder
-		identity(&b, keys[i])
-		if k := b.String(); !seen[k] {
-			seen[k] = true
+		if seen.add(keyOf(keys[i]), len(items)-i) {
 			out = append(out, it)
 		}
 	}
 	return c.array(out)
 }
 
-// identity writes a text that two values share exactly when they are
-// equal and of the same kinds throughout.
-func identity(b *strings.Builder, v value.Value) {
+// uniqKey is a value as uniq tells values apart: equal exactly when the
+// values are equal and of the same kinds throughout, as their identities
+// are. A string is keyed by its own text and a number by its kind and
+// value, so neither is copied; an array or an object by its identity.
+type uniqKey struct {
+	kind byte
+	n    tnum
+	text string
+}
+
+// uniqSet is the keys uniq has seen, a set for each kind, so an integer
+// or a string is hashed as the one value it is.
+type uniqSet struct {
+	ints    map[int64]struct{}
+	strings map[string]struct{}
+	others  map[uniqKey]struct{}
+}
+
+// add adds k, and reports whether it was not there; room is how many keys
+// are still to come, a set's size when it is first made.
+func (u *uniqSet) add(k uniqKey, room int) bool {
+	switch {
+	case k.kind == 'n' && k.n.isInt:
+		return addKey(&u.ints, k.n.i, room)
+	case k.kind == 's':
+		return addKey(&u.strings, k.text, room)
+	}
+	return addKey(&u.others, k, room)
+}
+
+func addKey[K comparable](m *map[K]struct{}, k K, room int) bool {
+	if *m == nil {
+		*m = make(map[K]struct{}, room)
+	}
+	if _, ok := (*m)[k]; ok {
+		return false
+	}
+	(*m)[k] = struct{}{}
+	return true
+}
+
+func keyOf(v value.Value) uniqKey {
 	switch v := v.(type) {
 	case value.Null:
-		b.WriteByte('z')
+		return uniqKey{kind: 'z'}
 	case value.Bool:
 		if v {
-			b.WriteByte('t')
+			return uniqKey{kind: 't'}
+		}
+		return uniqKey{kind: 'f'}
+	case value.Number:
+		n := numberKind(v)
+		n.f += 0 // -0 is 0, as the identity writes it
+		return uniqKey{kind: 'n', n: n}
+	case value.String:
+		return uniqKey{kind: 's', text: v.Text()}
+	}
+	return uniqKey{kind: 'c', text: string(appendIdentity(nil, v))}
+}
+
+// appendIdentity appends to b a text that two values share exactly when
+// they are equal and of the same kinds throughout.
+func appendIdentity(b []byte, v value.Value) []byte {
+	switch v := v.(type) {
+	case value.Null:
+		b = append(b, 'z')
+	case value.Bool:
+		if v {
+			b = append(b, 't')
 		} else {
-			b.WriteByte('f')
+			b = append(b, 'f')
 		}
 	case value.Number:
 		n := numberKind(v)
 		if n.isInt {
-			b.WriteString("i" + strconv.FormatInt(n.i, 10) + ";")
+			b = append(strconv.AppendInt(append(b, 'i'), n.i, 10), ';')
 		} else {
-			b.WriteString("d" + strconv.FormatFloat(n.f+0, 'g', -1, 64) + ";")
+			b = append(strconv.AppendFloat(append(b, 'd'), n.f+0, 'g', -1, 64), ';')
 		}
 	case value.String:
-		b.WriteString("s" + strconv.Itoa(len(v.Text())) + ":" + v.Text())
+		b = append(append(strconv.AppendInt(append(b, 's'), int64(len(v.Text())), 10), ':'), v.Text()...)
 	case value.Array:
-		b.WriteString("a" + strconv.Itoa(v.Len()) + ":")
+		b = append(strconv.AppendInt(append(b, 'a'), int64(v.Len()), 10), ':')
 		for _, e := range v.All() {
-			identity(b, e)
+			b = appendIdentity(b, e)
 		}
 	case value.Object:
-		b.WriteString("o" + strconv.Itoa(v.Len()) + ":")
+		b = append(strconv.AppendInt(append(b, 'o'), int64(v.Len()), 10), ':')
 		for name, e := range v.All() {
-			identity(b, newString(name))
-			identity(b, e)
+			b = appendIdentity(b, newString(name))
+			b = appendIdentity(b, e)
 		}
 	}
+	return b
 }
 
 // mapFilter is each element's property: nil for an element that cannot
@@ -583,9 +641,9 @@ func selectFilter(mode int) func(*call, value.Value) (value.Value, *Error) {
 		if _, isNull := target.(value.Null); isNull {
 			equality = false
 		}
-		if k := target; equality && (k.Kind() == value.KindArray || k.Kind() == value.KindObject) {
-			// Comparing an element with an array or object costs at most
-			// the target's deep size.
+		if equality && (target.Kind() == value.KindString || target.Kind() == value.KindArray || target.Kind() == value.KindObject) {
+			// Comparing an element with a string, an array or an object
+			// costs at most the target's deep size: a string's bytes.
 			work := min(deepSize(target), math.MaxInt64/int64(len(items)))
 			if err := c.units(work * int64(len(items))); err != nil {
 				return nil, err
