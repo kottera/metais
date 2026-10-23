@@ -254,6 +254,9 @@ const (
 type sink struct {
 	w   io.Writer
 	buf []byte
+	// held is set on a capture's buffer, whose bytes are charged to
+	// assign-bytes as they are written.
+	held bool
 }
 
 // at makes n the statement errors are located at.
@@ -315,7 +318,9 @@ func (r *renderer) checkArray(n int64, at ast.Node) *Error {
 }
 
 // write writes b to the current sink: to the output, charged as output
-// bytes, or to a buffer, held to value-size.
+// bytes, or to a buffer, held to value-size. A capture's buffer is
+// charged as held bytes as it fills, so the bytes of captures not yet
+// ended are counted too (ADR-009 D2 item 2).
 func (r *renderer) write(b []byte, at ast.Node) *Error {
 	if len(b) == 0 {
 		return nil
@@ -324,6 +329,11 @@ func (r *renderer) write(b []byte, at ast.Node) *Error {
 	if s.w == nil {
 		if e := r.checkString(len(s.buf)+len(b), at); e != nil {
 			return e
+		}
+		if s.held {
+			if e := r.charge(WorkHeldBytes, int64(len(b)), at); e != nil {
+				return e
+			}
 		}
 		s.buf = append(s.buf, b...)
 		return nil
@@ -388,8 +398,9 @@ func scalarText(v value.Value) string {
 	panic(fmt.Sprintf("scalarText of %T", v))
 }
 
-// pushBuffer starts capturing writes; popBuffer ends it and returns them.
-func (r *renderer) pushBuffer() { r.sinks = append(r.sinks, &sink{}) }
+// pushBuffer starts capturing writes, charged as held bytes when held is
+// set; popBuffer ends it and returns them.
+func (r *renderer) pushBuffer(held bool) { r.sinks = append(r.sinks, &sink{held: held}) }
 
 func (r *renderer) popBuffer() []byte {
 	s := r.sinks[len(r.sinks)-1]
@@ -946,18 +957,16 @@ func (r *renderer) assign(n *ast.Assign) *Error {
 
 // capture binds a template-scoped name to what its body writes. In a
 // render that escapes, the captured text is already escaped, and is safe
-// (ADR-004 D9 item 2).
+// (ADR-004 D9 item 2). Its bytes are charged as held bytes as its body
+// writes them.
 func (r *renderer) capture(n *ast.Capture) (ctl, *Error) {
-	r.pushBuffer()
+	r.pushBuffer(true)
 	c, err := r.block(n.Body, false)
 	b := r.popBuffer()
 	if err != nil {
 		return ctlNone, err
 	}
 	r.at(n)
-	if err := r.charge(WorkHeldBytes, int64(len(b)), n); err != nil {
-		return ctlNone, err
-	}
 	s, verr := value.NewString(string(b))
 	if verr != nil {
 		return ctlNone, r.fail(n, CodeInternal, nil, "a capture is not Unicode text")
@@ -1045,7 +1054,7 @@ func (r *renderer) literalKey(n *ast.Cycle) (string, bool) {
 // ifchanged of this template wrote. The body is held while it is
 // compared, and charged as held bytes.
 func (r *renderer) ifchanged(n *ast.Ifchanged) (ctl, *Error) {
-	r.pushBuffer()
+	r.pushBuffer(false)
 	c, err := r.block(n.Body, false)
 	b := r.popBuffer()
 	if err != nil {

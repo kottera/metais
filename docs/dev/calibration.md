@@ -81,6 +81,7 @@ also proves that one less refuses it.
 | `value-size` | `render` | a string doubled by `append` | refusal |
 | `array-size` | `render` | `split` of a doubled string of `x,` | refusal |
 | `assign-bytes` | `render` | a string of `value-size` bytes, copied by `assign` | refusal |
+| `assign-bytes-capture` | `render` | captures nested one in another, each writing a string of `value-size` bytes before the next opens, so every buffer is filling at once | refusal |
 | `schema-work` | `validate` | an array input, each item evaluating `items` and an `allOf` of nine, exactly the limit's units | accepted at the limit |
 | `schema-work-anyof` | `validate` | two-branch `anyOf`s nested by `$ref` over a type every level fails, exactly the limit's units, every one failing, the choices' alternatives nesting to the `findings` limit | accepted at the limit, with its findings |
 | `yaml-size` | `validate` | one YAML document of exactly `yaml-size` bytes, a flow sequence of zeros, as many as `input-values` allows | accepted at the limit |

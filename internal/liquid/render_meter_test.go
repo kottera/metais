@@ -245,3 +245,42 @@ func TestRenderPanicRecovered(t *testing.T) {
 		t.Errorf("Render(nil) = %v, want CodeInternal", err)
 	}
 }
+
+// TestCaptureChargedAsWritten: a capture's bytes are charged to
+// assign-bytes as they are written into its buffer, not when it ends, so
+// captures still filling never hold more than the bound (ADR-009 D2 item
+// 2). Charged at the end, nested captures each under value-size held
+// every buffer at once, uncounted, until the outermost ended.
+func TestCaptureChargedAsWritten(t *testing.T) {
+	testenv.Home(t)
+	// Twelve bytes in flight across three nested captures, against a
+	// bound of 8: the innermost capture's write is refused, before any
+	// capture has ended.
+	e := renderRefused(t, `{% capture a %}xxxx{% capture b %}xxxx{% capture c %}xxxx{% endcapture %}{% endcapture %}{% endcapture %}`,
+		CodeLimit, meter(NewMeter(MeterLimits{AssignBytes: 8})))
+	if e.Args["limit"] != "assign-bytes" || e.Col != 39 {
+		t.Errorf("nested captures: %v; want assign-bytes at column 39, the innermost capture", e)
+	}
+	// One capture filled a byte at a time stops at the write that passes
+	// the bound, not after its loop has run: the capture, the for and
+	// nine outputs are evaluated, 16 units each, and no more.
+	m := NewMeter(MeterLimits{AssignBytes: 8})
+	e = renderRefused(t, `{% capture a %}{% for i in (1..1000) %}{{ "x" }}{% endfor %}{% endcapture %}`, CodeLimit, meter(m))
+	if e.Args["limit"] != "assign-bytes" || e.Col != 40 || m.Used(WorkUnits) != 11*16 || m.Used(WorkHeldBytes) != 8 {
+		t.Errorf("a capture filled in a loop: %v after %d units and %d bytes held; want assign-bytes at column 40 after %d units, 8 held",
+			e, m.Used(WorkUnits), m.Used(WorkHeldBytes), 11*16)
+	}
+	// A partial's writes into its caller's capture are charged too, and
+	// located in the partial.
+	e = renderRefused(t, `{% capture a %}{% render "p" %}{% endcapture %}`, CodeLimit,
+		meter(NewMeter(MeterLimits{AssignBytes: 3})), partials(map[string]string{"p": `{{ "abcd" }}`}))
+	if e.Args["limit"] != "assign-bytes" || e.Source != "p" || len(e.Chain) != 1 {
+		t.Errorf("a partial writing into a capture: %v; want assign-bytes in p, rendered from the template", e)
+	}
+	// Bytes a capture writes into the output, and an outer capture's
+	// writes of an inner capture's value, are each charged once.
+	m = renderCounted(t, `{% capture a %}xy{% capture b %}z{% endcapture %}{{ b }}{% endcapture %}{{ a }}`)
+	if held, out := m.Used(WorkHeldBytes), m.Used(WorkOutputBytes); held != 4 || out != 3 {
+		t.Errorf("nested captures written out: %d held and %d output bytes, want 4 and 3", held, out)
+	}
+}
