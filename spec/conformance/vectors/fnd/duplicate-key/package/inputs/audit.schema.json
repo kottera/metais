@@ -1,0 +1,39 @@
+{
+  "$defs": {
+    "row": {
+      "required": [
+        "level"
+      ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "criteria": {
+      "type": "array",
+      "allOf": [
+        {
+          "contains": {
+            "const": "1.1.1"
+          },
+          "minContains": 1
+        },
+        {
+          "contains": {
+            "const": "1.2.1"
+          },
+          "minContains": 1
+        }
+      ]
+    },
+    "row": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/row"
+        },
+        {
+          "$ref": "#/$defs/row"
+        }
+      ]
+    }
+  }
+}

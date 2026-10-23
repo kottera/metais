@@ -1,0 +1,52 @@
+[
+  {
+    "code": "input.min_contains",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "audit",
+      "title": "Audit"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "audit.json",
+      "line": 2,
+      "column": 15,
+      "pointer": "/criteria"
+    },
+    "schema": {
+      "entry": "inputs/audit.schema.json",
+      "pointer": "/properties/criteria/allOf/0/minContains",
+      "keyword": "minContains"
+    },
+    "params": {
+      "limit": 1,
+      "count": 0
+    }
+  },
+  {
+    "code": "input.min_contains",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "audit",
+      "title": "Audit"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "audit.json",
+      "line": 2,
+      "column": 15,
+      "pointer": "/criteria"
+    },
+    "schema": {
+      "entry": "inputs/audit.schema.json",
+      "pointer": "/properties/criteria/allOf/1/minContains",
+      "keyword": "minContains"
+    },
+    "params": {
+      "limit": 1,
+      "count": 0
+    }
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "code": "input.required",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "audit",
+      "title": "Audit"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "audit.json",
+      "line": 2,
+      "column": 10,
+      "pointer": "/row/level"
+    },
+    "schema": {
+      "entry": "inputs/audit.schema.json",
+      "pointer": "/$defs/row/required",
+      "keyword": "required"
+    },
+    "params": {
+      "property": "level"
+    }
+  }
+]
