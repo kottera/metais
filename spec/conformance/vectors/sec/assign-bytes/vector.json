@@ -1,7 +1,7 @@
 {
   "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
   "id": "sec/assign-bytes",
-  "title": "assign-bytes bounds the bytes assign and capture store in one render, summed",
+  "title": "assign-bytes bounds the bytes assign and capture store in one render, summed, a capture's as its body writes them",
   "statements": [
     "MTS-SEC-009"
   ],
@@ -52,6 +52,25 @@
           "expect": {
             "ok": false,
             "findings": "expected/beyond-the-limit.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "nested-captures",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "nested-captures",
+            "out": "out",
+            "limits": {
+              "assign-bytes": 8
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/nested-captures.json"
           }
         }
       ]

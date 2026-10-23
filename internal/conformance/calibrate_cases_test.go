@@ -75,6 +75,21 @@ var calCases = append([]calCase{
 		reached: refusedBy("assign-bytes"),
 	},
 	{
+		// Captures nested one in another, each writing a string at
+		// value-size before opening the next, so their buffers fill at
+		// once until the bytes held pass the limit. A capture's bytes are
+		// charged as they are written, so this is refused before the
+		// buffers pass assign-bytes, not when the outermost ends.
+		name: "assign-bytes-capture", limit: "assign-bytes",
+		lowered: calLimits{"assign-bytes": 512 << 10, "value-size": 64 << 10},
+		build: func(dir string, lim calLimits) ([]string, error) {
+			n := int(lim["assign-bytes"]/lim["value-size"] + 1)
+			return renderTemplate(dir, doubled("s", "x", lim["value-size"])+
+				strings.Repeat("{% capture c %}{{ s }}", n)+strings.Repeat("{% endcapture %}", n)+"{{ c.size }}")
+		},
+		reached: refusedBy("assign-bytes"),
+	},
+	{
 		// Exactly the units the limit allows (MTS-SEC-046). The combined
 		// schema's root costs 2; its properties/report and the file's root
 		// each apply to the array, 1 and 1 for each of its n items; the
