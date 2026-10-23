@@ -350,7 +350,7 @@ func TestRunRefuses(t *testing.T) {
 	}{
 		"an existing out":                 {builder{root: repo, out: exists}, errExists},
 		"a static cli/":                   {builder{root: withPublic, out: newOut()}, errPublic},
-		"a shallow clone":                 {builder{root: shallow, out: newOut()}, errShallow},
+		"a release from a shallow clone":  {builder{root: shallow, out: newOut(), version: "1.0.0", sums: sums1}, errShallow},
 		"another release's sums":          {builder{root: repo, out: newOut(), version: "1.0.1", sums: sums1}, errSums},
 		"a release with no tag":           {builder{root: repo, out: newOut(), version: "2.0.0", sums: sums2}, errNotTag},
 		"a release whose tag is not HEAD": {builder{root: repo, out: newOut(), version: "1.0.0", sums: sums1}, errNotTag},

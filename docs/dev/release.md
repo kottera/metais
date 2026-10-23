@@ -78,18 +78,25 @@ installing the tool and getting started, and the host of the
 specification's JSON Schemas and the command line's output schemas at
 their `$id`s. Its source is `site/`:
 
-- `site/public/` holds the pages (home, `install/` and
-  `getting-started/`), their stylesheet and `CNAME`, which holds
-  `metais.org`;
-- `site/build.sh <out>` writes the published tree into a new directory:
-  `site/public/`, every file of `spec/schemas/` under `schemas/`, and
-  every file of `docs/cli/schemas/` under `cli/schemas/`. So
-  `https://metais.org/schemas/<path>` serves `spec/schemas/<path>`, and
-  `https://metais.org/cli/schemas/<path>` serves
+- `site/package/` is the site as a METAIS package: its pages' templates,
+  around one layout whose footer names METAIS's maker, and the schemas
+  of the inputs it renders from (ADR-013 D8);
+- `site/public/` holds the static files, the stylesheet and `CNAME`,
+  which holds `metais.org`, each served at its own path byte for byte;
+- `site/build.sh <out>` writes the published tree into a new directory.
+  It runs `internal/tools/site`, which builds `metais` from the commit,
+  exports the package's inputs from it (its help, its skill, the
+  specification's text and the release), renders the package with it,
+  and adds `site/public/`, every file of `spec/schemas/` under
+  `schemas/`, and every file of `docs/cli/schemas/` under `cli/schemas/`.
+  So `https://metais.org/schemas/<path>` serves `spec/schemas/<path>`,
+  and `https://metais.org/cli/schemas/<path>` serves
   `docs/cli/schemas/<path>`, each the file whose `$id` it is. The schemas
-  are copied from the commit being built, never committed twice.
-  `site/site_test.go` holds the `$id`-to-path mapping, runs the build and
-  requires each schema byte-identical at its `$id`'s path.
+  are copied from the commit being built, never committed twice. The
+  script's header says how a release's version and `SHA256SUMS` reach
+  it. `site/site_test.go` holds the `$id`-to-path mapping, runs the build
+  twice to hold it byte-identical, and requires each schema
+  byte-identical at its `$id`'s path.
 
 To see the site locally:
 

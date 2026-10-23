@@ -28,6 +28,8 @@ spec/conformance/vectors/aut/test-containers/package/examples/** merge=metais-ge
 spec/conformance/vectors/aut/test-containers-packed/packed.metais merge=metais-generated
 spec/conformance/vectors/aut/pack-containers/*/examples/** merge=metais-generated
 THIRD-PARTY-NOTICES.txt merge=metais-generated
+site/package/inputs/help.schema.json merge=metais-generated
+site/package/inputs/tool.schema.json merge=metais-generated
 
 # The packages pack's vectors expect it to write, which vectorgen builds
 # from each vector's source directory (TestPackOutputs).

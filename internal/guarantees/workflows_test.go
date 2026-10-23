@@ -267,7 +267,7 @@ func TestCIWorkflow(t *testing.T) {
 		{"macos", "macos-latest", []string{"go build ./...", "CGO_ENABLED=0 go build -trimpath ./cmd/metais", "skip=$(.github/scripts/conformance.sh skip)", `go test -race -count=1 ./... -skip "$skip"`, ".github/scripts/conformance.sh run"}},
 		{"dco", "ubuntu-latest", []string{".github/scripts/dco.sh", `.github/scripts/coauthor.sh "$BASE" HEAD "$RUNNER_TEMP/squash.txt"`, `.github/scripts/coauthor.sh "$BASE" HEAD` + "\n"}},
 		{"shell", "ubuntu-latest", []string{"xargs -0 shellcheck"}},
-		{"site", "ubuntu-latest", []string{"site/build.sh", "go test -race -count=1 ./site/..."}},
+		{"site", "ubuntu-latest", []string{"site/build.sh", "go test -race -count=1 ./site/... ./internal/tools/site/..."}},
 		{"install-linux", "ubuntu-latest", []string{`.github/scripts/install-test.sh "$RUNNER_TEMP/install"`}},
 		{"install-macos", "macos-latest", []string{`.github/scripts/install-test.sh "$RUNNER_TEMP/install"`}},
 	}

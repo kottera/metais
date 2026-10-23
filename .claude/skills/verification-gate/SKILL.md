@@ -107,7 +107,8 @@ A committed generated file is never merged by hand (ADR-011 A5).
   copy and reports a clean merge. These are `spec/statements.json`,
   `spec/findings/registry.json`, the specdata copies, the help, scaffold,
   tar, YAML-writer, formula and vector-package goldens, the packages
-  pack's vectors expect, and `THIRD-PARTY-NOTICES.txt`.
+  pack's vectors expect, `THIRD-PARTY-NOTICES.txt`, and the site
+  package's input schemas generated from `docs/cli/schemas/`.
 - **`metais-generated-region`, for `spec/12-findings.md`**, gives the
   chapter's prose git's own three-way merge, conflicts included, and keeps
   one side only between the code catalog's markers. When the markers are

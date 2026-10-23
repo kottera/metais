@@ -12,6 +12,9 @@ passages it changes are marked *(A9)*.
 array written and a string's `size` shorthand; `assign-bytes` counts only
 what `assign` and `capture` store) is proposed on 2026-10-23 under Ed
 Funnekotter's ruling at T-A4; the passages it changes are marked *(A10)*.
+[Amendment A11](#amendments) (the site's build step is allowed host access
+in its own package, and the binary can never reach it) is proposed on
+2026-10-23 by PLAN-2026-10-metais-public W2-1, under ADR-013 D8 item 1.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R14 (items 1 to 4); the security halves of R10 item 1, R11
@@ -2040,6 +2043,86 @@ and `tpl/charge-size-shorthand`. The engine already made those charges;
 item 4 changes the engine, and item 5 its comments. The calibration of
 `render-work` by its costliest unit, and the memory `capture` holds as its
 body writes, are their own work, and this amendment decides neither.
+
+### A11 — The site's build step is allowed host access in its own package, and the binary can never reach it
+
+**Status:** Proposed 2026-10-23 by PLAN-2026-10-metais-public W2-1, whose
+number the [Wave 2 brief](../briefs/brief-plan-2026-10-metais-public-wave2.md)'s
+breakdown allotted. It writes down what
+[ADR-013](ADR-013-the-public-project-and-its-distribution.md) D8 item 1,
+accepted with that plan, requires: a build step held away from
+`cmd/metais` as the release builder is.
+**Amends:** D16 item 3's symbol rule (one allow-list entry), and the
+`only-referrers` rule of `internal/guarantees/layers.json` (one package
+added). A2's `never-depends` rule already covers the build step, and its
+reason now names this amendment too.
+
+1. **The allowance.** The symbol rule's allow-list gains
+   `internal/tools/site`, the site's build step that `site/build.sh` runs,
+   for exactly the symbols it uses, and for its own package only:
+   - `os/exec`, to build `metais` from the checkout; to run that `metais`
+     for `help --json`, `skill --print`, `version --json` and the render
+     of `site/package`; and to ask `git` for the commit, the
+     `spec-<M>.<m>` tags and their files, and whether the clone is
+     shallow;
+   - `os.Environ`, the environment read whole. The build step hands it to
+     `go` and `git`, with every `GIT_*` variable, `GOOS` and `GOARCH`
+     dropped and the release build's settings added. It runs `metais`
+     with an empty environment;
+   - the file functions `os.Lstat`, `os.Mkdir`, `os.MkdirAll`,
+     `os.ReadDir`, `os.ReadFile`, `os.RemoveAll`, `os.Rename`,
+     `os.WriteFile` and `path/filepath.WalkDir`, and `os.MkdirTemp`. With
+     them it reads `spec/`, `site/public/`, the schemas and the release's
+     `SHA256SUMS`, makes its work directory beside the site's, writes the
+     inputs and the site there, and moves the site into place in one
+     rename;
+   - `os.Args`, `os.Stdout`, `os.Stderr` and `os.Exit`, because the build
+     step is a `main` package run with `go run`.
+2. **What it does not allow.** Everything else stays refused in the build
+   step as it is everywhere else:
+   - the clock, every one of its symbols, and the time zone: the same
+     commit builds the same site byte for byte, and no page holds the
+     time it was built;
+   - the environment's other readers and every setter;
+   - every other file function, and `os.TempDir` and `os.CreateTemp`.
+     The work directory is beside the site's, so the last rename never
+     crosses a file system;
+   - the working-directory symbols, so every path is absolute and
+     `site/build.sh` makes them so;
+   - standard input, the host name, the user, the process identity, the
+     home directory, the platform, `os.StartProcess`, and every random
+     source, which D12 refuses with no exception. `metais` is built for
+     the host by leaving `GOOS` and `GOARCH` unset, never by reading the
+     platform.
+3. **Why the build step may have it, and why the binary can never reach
+   it.** The build step is a developer's tool, run with `go run` from a
+   checkout, and is never linked into `metais`. It lives under
+   `internal/tools/`, so A2 item 4's `never-depends` rule holds it away
+   from `cmd/metais`. `TestLayersControl` proves the rule sees it: its
+   fixture module's binary imports the package beneath the build step,
+   and the rule refuses it. What the build step reads reaches the site
+   only as the package inputs it exports. `metais render` validates them
+   against the package's schemas and renders them as any package's
+   inputs, with no hook, script or network. None of it reaches an output
+   or a finding of `metais` except as that data.
+4. **The packages beneath it get none of it.** The entry covers
+   `internal/tools/site` itself. The Markdown converter beneath it,
+   `internal/tools/site/mdhtml`, is handed bytes and returns HTML, and
+   runs in the gate with no host symbol. It alone imports the site's
+   Markdown library (ADR-010 A10). If it ever needs a host symbol, that is
+   a further amendment, not a widening of this entry.
+5. **The `only-referrers` rule** for `os.Args`, `os.Stdin`, `os.Stdout`,
+   `os.Stderr` and `os.Exit` names `internal/tools/site` beside
+   `cmd/metais`, `internal/tools/release` and `internal/tools/ux`, for the
+   same reason as item 1's last entry.
+6. **The allow-list stays exact.** `TestModuleAllowListIsR2143` pins the
+   module allow-list to R2-143, A2's entry, A8's entry and this
+   amendment's entry. It spells out item 1's symbols, so the entry cannot
+   grow without the test changing. `TestSymbolRule` holds the boundary
+   from both sides:
+   - the build step's symbols are refused in the converter beneath it, in
+     a sibling named like it, and elsewhere in the module;
+   - inside it, the symbols item 2 keeps refused are refused.
 
 ## Implementation log
 

@@ -50,9 +50,10 @@ run go test -count=1 -run '^TestContainerVectors$' ./internal/vectorgen -args -u
 run go test -count=1 -run '^TestPackOutputs$' ./internal/vectorgen -args -update
 run go test -count=1 -run '^TestValues$' ./internal/vectorgen -args -update
 run go test -count=1 -run '^TestThirdPartyNotices$' ./internal/guarantees -args -notices.update
+run go test -count=1 -run '^TestCLIResultSchemas$' ./site -args -update
 
 echo "--- generated files that differ from HEAD"
-git status --short -- spec internal THIRD-PARTY-NOTICES.txt | grep -v '^??' || echo "(none)"
+git status --short -- spec internal site THIRD-PARTY-NOTICES.txt | grep -v '^??' || echo "(none)"
 if [ -n "$failed" ]; then
 	echo "regenerate: FAILED:$failed"
 	exit 1

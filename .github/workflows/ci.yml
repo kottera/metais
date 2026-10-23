@@ -149,7 +149,7 @@ jobs:
         with:
           go-version-file: go.mod
       - run: site/build.sh "$RUNNER_TEMP/site"
-      - run: go test -race -count=1 ./site/...
+      - run: go test -race -count=1 ./site/... ./internal/tools/site/...
 
   # A real install with site/public/install.sh on each platform it serves
   # (ADR-013 D6 item 8): install-test.sh builds a prerelease of the

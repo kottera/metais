@@ -37,7 +37,7 @@ var schemaDirs = []struct{ src, at string }{
 
 var (
 	errExists    = errors.New("the site is built into a new directory, and it exists")
-	errShallow   = errors.New("the checkout is a shallow clone, which may lack the spec-<M>.<m> tags the site serves; fetch its whole history (actions/checkout's fetch-depth: 0)")
+	errShallow   = errors.New("the site of a release is built from a whole clone, and the checkout is a shallow one, which may lack the spec-<M>.<m> tags the site serves; fetch its whole history (actions/checkout's fetch-depth: 0)")
 	errCollision = errors.New("a static file has the path of a page the package renders")
 	errPublic    = errors.New("site/public holds a path the site serves from elsewhere")
 	errVersion   = errors.New("the built metais does not report the release's version")
@@ -70,15 +70,8 @@ func (b *builder) run() error {
 	if err != nil {
 		return err
 	}
-	shallow, err := b.git("rev-parse", "--is-shallow-repository")
-	if err != nil {
-		return err
-	}
-	if string(shallow) != "false\n" {
-		return errShallow
-	}
 	if rel.Published {
-		if err := b.atTag(rel.Tag); err != nil {
+		if err := b.releasable(rel.Tag); err != nil {
 			return err
 		}
 	}
@@ -145,8 +138,17 @@ func (b *builder) run() error {
 	return nil
 }
 
-// atTag refuses unless the checkout's HEAD is the commit tag names.
-func (b *builder) atTag(tag string) error {
+// releasable refuses a checkout the site of the release tagged tag cannot
+// be built from: a shallow clone, which may lack the spec-<M>.<m> tags the
+// site serves, and one whose HEAD is not the commit tag names.
+func (b *builder) releasable(tag string) error {
+	shallow, err := b.git("rev-parse", "--is-shallow-repository")
+	if err != nil {
+		return err
+	}
+	if string(shallow) != "false\n" {
+		return errShallow
+	}
 	head, err := b.git("rev-parse", "--verify", "HEAD^{commit}")
 	if err != nil {
 		return err
