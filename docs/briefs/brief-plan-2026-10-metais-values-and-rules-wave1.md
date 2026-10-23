@@ -214,5 +214,177 @@ this train is PLAN-2026-10-metais-public's.
 
 ## Closeout
 
-*Not yet written. The wave orchestrator replaces this line with the
-wave's closeout.*
+Written 2026-10-23 by the wave orchestrator
+(`01a16964-1c6e-7e86-80f4-b45bbc82b4fc`) after the wave drained. This is a
+record of what landed and where every finding went. It is **not a
+correctness verdict**. I read the merge commits, the children's reports and
+the verifier's report, and spot-read the code where an ask named a mechanism.
+I did not mutate or test anything myself. The testing described below is the
+verifier's, attributed to it.
+
+### 1. What landed, against what the brief asked
+
+Seven items, all complete, all merged to `main`. They are listed in merge
+order below `e5a18988`. Commits of other trains are interleaved: #278,
+#266, #273, #274 and #285.
+
+| Item | Work Order | PR | Merge | Landed |
+|---|---|---|---|---|
+| W1-1, the amendments | `01a16968-c0e7-70fa-951b-a0bf7d2a2eab` | #279 | `f50ab6cb` | ADR-003 A2 and ADR-004 A2, the (A2) passages and the status-line pointers of ADR-002, 006, 007 and 008, with plan §4's acceptance lines. Docs only. |
+| W1-3, the ACR's per-row rule (R2) | `01a1696b-3ad9-74f5-a214-22c095128b7a` | #281 | `9c0ebe5d` | The WCAG table refuses `Not Evaluated` for its 55 Level A and AA criteria. Under Ed's ruling (c), a `Not Evaluated` row in every table (WCAG, Section 508 and EN 301 549) must also carry remarks. |
+| W1-6, `uniqueKeys` (R3) | `01a16969-48d1-774f-a083-5323bae02f3d` | #282 | `ed7e46d9` | The spike succeeded: `RegisterVocabulary` with `AssertVocabs` changed no 1.0 vector, so A2 item 19's fallback was not built and no module was added. Grammar, evaluation through every applicator, linear keyed evaluation, `input.`/`output.unique_keys`, and partial validation, with its slice. |
+| W1-5, `duration` (V2) | `01a1696a-91ce-7e0d-beff-06b51681e6db` | #280 | `0edb86fb` | §8.1.13, both codes, and parse-time judging. It merged first, so it carried the shared sentences: MTS-MAN-018, the MTS-TPL-063 row and the 8.1.14 heading. |
+| W1-2, MTS-FND-003's key (R1) | `01a1696a-ee29-7cb9-8f04-7a1fdcb605bc` | #284 | `dac9aa3e` | The duplicate key compares `schema.entry` and `schema.pointer`. Red first on the collapsed `min_contains` findings, with `fnd/duplicate-key`. |
+| W1-4, `number` and `amount` (V1) | `01a1696a-2126-79db-a346-93dda2753719` | #283 | `5549ee65` | §8.1.10 to §8.1.12, Appendix C as a Go table held by `TestCurrencyTable`, both codes, and the charge vector. It closed W1-5's shared sentences. |
+| W1-7, `coverage` (R4) | `01a16969-ad78-7514-a9de-0f1365a1b354` | #286 | `b18ab317` | Grammar, one finding per missing value at the array, and suppression and counting in partial validation. It closed every sentence W1-6 opened. |
+
+What I read in the merged code: `internal/schema/compiler.go` registers
+the rules vocabulary and calls `AssertVocabs`. `internal/template/filters/number.go`
+rounds on `big.Rat` from `FormatFloat(x, 'g', -1, 64)`. `TestCurrencyTable`
+exists. The log files exist under ADR-002, 003, 004, 006, 009 and 010.
+Those names follow the plan-prefix rule wherever a `W1-*` name was taken.
+
+**Divergences from the ask:**
+
+- **W1-3's scope grew under Ed's ruling (c).** It added a second rule: a
+  `Not Evaluated` row needs remarks in every table, WCAG AAA included. So
+  W1-3.2's "a Level AAA row answered `Not Evaluated` is still accepted"
+  holds only when that row carries remarks. The ruling, not the item, made
+  that choice. It is recorded in #281 and `docs/adr/logs/ADR-003/W1-3.md`.
+- **`main` did not stay green after every merge.** See §4: `gofmt` was red
+  from `5549ee65` until `9f83587c`.
+- **The scoped gate was not the pre-merge check for four items.** W1-2,
+  W1-4, W1-5 and W1-7 merged on directed tests under the operator's
+  guidance (below). W1-1, W1-3 and W1-6 report a green scoped gate.
+
+**Rulings and instructions made during this wave:**
+
+- **Ed's ruling (c), 2026-10-23, to W1-3**: the Section 508 and EN 301 549
+  question reached him through the tree, and he answered it.
+- **R-W1-a (wave orchestrator, to W1-4 and then W1-2):** do not merge over a
+  scoped gate starved on a shared host. Wait for the load to fall below
+  the cores, `gate.sh --resume`, and merge at full share. It followed from
+  the `verification-gate` skill's ladder step 1 and R-VR-3. It was
+  **superseded** the same day.
+- **Operator guidance message 1 (Ed's standing instruction, 2026-10-23),
+  adopted:** metais work items do not run `gate.sh` or the wave tier. Each
+  runs directed tests and merges, and the full gate runs once, on the
+  merged tree, when all the work is complete.
+
+### 2. What children flagged, declined or discovered
+
+- **Host saturation.** Four Wave 1 gates on one host starved each other at
+  0.4 to 0.6 of their share. `internal/conformance`, `internal/guarantees`
+  and `internal/cli` hit `go test`'s ten-minute bound in every run. That is
+  what led to the operator's instruction.
+- **A lead, unsettled:** W1-2 saw race-enabled `internal/conformance` time
+  out on `main` `a9d58851` as well. That was measured only while starved,
+  never at full share. W1-2 recorded it as a suspected observation on the
+  package. The verifier's run of the same package took 470 s.
+- **Help rows.** W1-4 and W1-5 each added a `metais help templates` row for
+  their filters, because `TestTemplatesTopicFilters` demands one per dialect
+  filter. That contradicts the brief's line "This wave's items write no help
+  topic", but leaving the rows out would have turned `main` red.
+- **Readings the producers took:**
+  - W1-5: an integer beyond 2⁵³ − 1 is a float to the template, so it is
+    refused with reason `kind`, not `range`.
+  - W1-6: `schema.invalid`'s `keyword` parameter now also covers this
+    dialect's own keywords, and its registry entry cites MTS-DAT-015 (and,
+    after W1-7, MTS-DAT-016), consistent with A2 item 14.
+  - W1-7: `missing` holds the value's canonical JSON text as a string, as
+    `const`'s `expected` does.
+  - W1-7: the hint names only the missing value; the rule in words is R7's.
+
+### 3. What carries to the next wave
+
+- **Wave 2's V3 owns the help rows for `number`, `amount` and `duration`.**
+  They are there now, written minimally. V3 rewrites them as teaching.
+  Wave 2's brief should state that the rows exist, and why, so V3 does not
+  treat them as someone else's work.
+- **R7 owns the findings' hints in words.** `input.coverage`'s hint names
+  only the missing value today.
+- **The full gate has not run on this wave's merged tree.** Under the
+  operator's instruction it runs once, when all the work is complete. The
+  verifier's directed run was green but for the `gofmt` red, which has since
+  been fixed on `main` (§4).
+- **What I would do differently.** Seven gates on one shared host at once
+  produced the starvation. A wave this wide needs its pre-merge checks
+  staggered, or kept to directed tests from the start, as the operator
+  then ruled. Wave 2's briefs and items should carry the directed-tests
+  rule from the outset.
+
+### 4. What the verification found, and where every finding went
+
+One `wave-verification`, `01a16a25-ad4e-730d-823e-468a05a081fa`. It
+returned all seven ids I sent: W1-1 `inspected`, and W1-2 to W1-7
+`mutated`.
+
+- **What it did:**
+  - ran 39 mutations across W1-2 to W1-7, all of which went red;
+  - spot-checked the producers' claimed-red rows (W1-6's quadratic, W1-4's
+    `FormatFloat`, W1-2's pointer), which went red as claimed;
+  - checked line by line that every line the wave added under `spec/*.md`,
+    generated catalog rows aside, is a line of `b80ed115` or `b0cbb230`;
+  - confirmed every shared sentence closed, each with a vector citing it;
+  - ran `TestCoverage` and `TestFindingCodesCovered` at each of the seven
+    merge commits, all green.
+- **How it ran its tests:** by the operator's instruction it did **not**
+  run `gate.sh` or the wave tier. It ran build, vet, `gofmt`, tidy, the
+  static and six-target builds and the specdata drift, plus `go test -race`
+  over `internal/schema`, `schemafail`, `finding`, `specdata`, `template`,
+  `loader`, `conformance`, `guarantees` and `cli` on `b18ab317`.
+- **Where it found nothing:** W1-1. The verifier read it rather than
+  mutating it.
+
+**Blocking: one finding, no fix child.**
+
+- **W1-4 left `internal/cli/inspect.go` failing `gofmt`.** Its PR added
+  `loader.CodeTemplateAmountCode: true,` without realigning the map. So
+  `main` failed the scoped tier's `gofmt` step from `5549ee65`, through
+  W1-7's `b18ab317`, which merged over it. The verifier quoted the brief's
+  "**`main` never goes red** (R-VR-3)".
+- **No fix child was filed** because the defect is already repaired.
+  `9f83587c` (#275, outside this wave) realigned the line, and `gofmt -l .`
+  over `main` at `0dac5ac8` prints nothing. I checked that myself. The
+  breach of "`main` was green after every merge" happened and is recorded
+  here. It cannot be undone.
+
+**Non-blocking findings.** Three are combined in one child, and
+`01a16a38-9c5f-76d9-aa17-2506bc5e4bdc` (W1-NB1) carries each with the
+verifier's evidence verbatim. They share it because each is a small vector
+addition that the conformance suite verifies at one cost, and they are
+severable. **The wave completed without waiting for this child, by design.**
+
+| Finding | From | Where it went |
+|---|---|---|
+| No vector pins `schema.entry`'s part of MTS-FND-003's key (dropping it reddens only `TestReportDuplicates`) | W1-2 | W1-NB1 `01a16a38-9c5f-76d9-aa17-2506bc5e4bdc` |
+| No test refuses `P1WT1H` (a week with a time part is accepted under mutation) | W1-5 | W1-NB1 `01a16a38-9c5f-76d9-aa17-2506bc5e4bdc` |
+| No test tells a keyless item from `null` under `coverage` | W1-7 | W1-NB1 `01a16a38-9c5f-76d9-aa17-2506bc5e4bdc` |
+| W1-3.2's AAA row accepted only with remarks | W1-3 | **Not filed.** It is Ed's ruling (c) applied as he gave it, not a defect, and is recorded in §1. |
+| `schema.invalid` cites MTS-DAT-015 and covers this dialect's own keyword | W1-6 | **Not filed.** It is consistent with ADR-003 A2 item 14 (a malformed keyword is `schema.invalid`, naming it), and the citation is the statement that requires the code. Recorded in §2. |
+| Help rows added despite the brief's "no help topic" line | W1-4, W1-5 | **Not filed.** The two brief lines conflict, and a test forces the rows. Wave 2's V3 owns them (§3). |
+
+The verifier also recorded two **cross-item** checks. Neither is a defect,
+so neither is filed:
+
+- W1-6's claim that `internal/schema/compiler.go` is the one call site of
+  `jsonschema.NewCompiler` still holds on the merged tree, and the manifest
+  schema's compile gets the vocabulary too.
+- MTS-FND-003's new key composes with the `uniqueKeys`, `coverage` and ACR
+  findings, and the edits W1-4 and W1-5 share, and W1-6 and W1-7 share,
+  show no drift.
+
+No janitorial issue was filed: no finding was prose-only.
+
+### 5. Out-of-band acts
+
+None was filed, and none was needed. The brief's two conditional acts did
+not arise as filed acts:
+
+- **The vocabulary-spike ruling:** the spike succeeded.
+- **A wording change to approved text:** no item parked for one. Every
+  slice landed verbatim, as the verifier checked line by line.
+
+The one decision that went to Ed was a judgement on the ACR's tables, not
+an out-of-band act. It reached him as W1-3's park and returned as ruling
+(c).
