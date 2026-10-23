@@ -72,7 +72,10 @@ Prints:
   The package's summary: its title, name and version, description, specification
   version, form and digest, then the sections Guide, Inputs, Outputs,
   References, Assets and Examples, then the Next: block; with --guide, the
-  guide's Markdown alone. With --json, one metais.inspect/1 document.
+  guide's Markdown alone. An input whose schema has rules across its rows,
+  uniqueKeys or coverage, says so on its line, naming metais schema <package>
+  <input> --fields, which lists them. With --json, one metais.inspect/1
+  document.
 
 Refusals:
   limit.invalid
