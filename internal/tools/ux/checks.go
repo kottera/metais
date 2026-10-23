@@ -35,6 +35,7 @@ const (
 	checkFresh           = "fresh-directory"
 	checkOutsideRepo     = "outside-repository"
 	checkMetaisOnPath    = "metais-first-on-path"
+	checkNoMetais        = "metais-not-on-path"
 	checkCredentialName  = "placeholder-credential"
 	checkAutoMemory      = "auto-memory-off"
 	checkProjectSettings = "project-settings-only"
@@ -151,6 +152,23 @@ func checkMetaisFirstOnPath(inv invocation, bin, sha string) check {
 		return pass(checkMetaisOnPath)
 	}
 	return fail(checkMetaisOnPath, "no metais on PATH")
+}
+
+// checkMetaisNotOnPath: an install scenario's session finds no metais on
+// its PATH, so a metais it runs is one it installed (ADR-013 D9). PATH
+// holds no relative directory, which would find a metais the session
+// writes into its own directory.
+func checkMetaisNotOnPath(inv invocation) check {
+	path, _ := lookup(inv.env, "PATH")
+	for _, dir := range filepath.SplitList(path) {
+		if !filepath.IsAbs(dir) {
+			return fail(checkNoMetais, "PATH holds the relative directory %q", dir)
+		}
+		if st, err := os.Stat(filepath.Join(dir, "metais")); err == nil && !st.IsDir() {
+			return fail(checkNoMetais, "PATH finds %s: an install scenario starts with no metais on PATH", filepath.Join(dir, "metais"))
+		}
+	}
+	return pass(checkNoMetais)
 }
 
 // checkCredential: the session's only credential is R-UX-7's placeholder,

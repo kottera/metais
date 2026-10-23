@@ -9,6 +9,7 @@
   },
   "edited": "Turn 11's tool result (line 115) is edited: the sample-filled table sed printed from ../.s2/invoice.html is replaced by three refusals of metais render, each followed by its FAIL line, and sed's report that ../.s2/invoice.html does not exist, in the message and in tool_use_result's stdout, with a Python script. Nothing else is changed.",
   "expect": {
+    "golden-install": "n/a",
     "inspect-first": "n/a",
     "no-zip-extraction": "pass",
     "no-unknown-command": "pass",

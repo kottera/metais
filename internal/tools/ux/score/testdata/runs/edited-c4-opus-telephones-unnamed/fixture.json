@@ -9,6 +9,7 @@
   },
   "edited": "The answer's \"name, email and phone for each. Phones must be in international format, like `+49 30 1234567`.\" is replaced by \"name and email for each.\", in the final assistant message and in the result, with sed. Nothing else is changed.",
   "expect": {
+    "golden-install": "n/a",
     "inspect-first": "pass",
     "no-zip-extraction": "pass",
     "no-unknown-command": "pass",

@@ -8,6 +8,7 @@
     "model": "claude-opus-5-5"
   },
   "expect": {
+    "golden-install": "n/a",
     "inspect-first": "pass",
     "no-zip-extraction": "pass",
     "no-unknown-command": "pass",

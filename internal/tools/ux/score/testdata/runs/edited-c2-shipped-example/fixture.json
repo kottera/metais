@@ -9,6 +9,7 @@
   },
   "edited": "Turns after the session read the shipped final example's inputs are replaced by copying them out with metais read and rendering them. Each command's output is the real output of running it, with the set's own metais, on a copy of the session's starting directory; record.json's files are listed from the directory those commands left. The real C1 run c1-sonnet-shipped-example shows the same copy under C1's prompt.",
   "expect": {
+    "golden-install": "n/a",
     "inspect-first": "pass",
     "no-zip-extraction": "pass",
     "no-unknown-command": "pass",

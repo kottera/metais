@@ -12,34 +12,39 @@ import (
 	"testing/fstest"
 )
 
-// TestTheSet holds the committed set to plan §5's amended table, and the
+// TestTheSet holds the committed set to plan §5's amended table, the
 // two evidence scenarios of SC1's and SC9's rounds (C6 and A4,
-// PLAN-2026-10-metais-ux W3-5): each prompt's declaration under the Wave
-// 1 brief's ruling on R-UX-8, and the fixtures each starts from.
+// PLAN-2026-10-metais-ux W3-5), and ADR-013 D9's two install scenarios
+// (I1 and I2): each prompt's declaration under the Wave 1 brief's ruling
+// on R-UX-8, the fixtures each starts from, and whether it starts with no
+// metais on PATH.
 func TestTheSet(t *testing.T) {
 	set, err := Load(os.DirFS(filepath.Join("..", "scenarios")))
 	if err != nil {
 		t.Fatal(err)
 	}
 	type row struct {
-		name   string
-		kind   Kind
-		output bool
-		as     []string
+		name    string
+		kind    Kind
+		output  bool
+		install bool
+		as      []string
 	}
 	report := []string{"report.metais"}
 	want := []row{
-		{"A1-new-package", Authoring, false, nil},
-		{"A2-edit-package", Authoring, false, []string{"invoice.metais"}},
-		{"A3-data-to-js", Authoring, false, nil},
-		{"A4-spec-only-package", Authoring, false, []string{"spec"}},
-		{"C0-fill-ambiguous", Consuming, false, report},
-		{"C1-render-real", Consuming, true, report},
-		{"C2-render-new-fictional", Consuming, true, report},
-		{"C3-preview", Consuming, true, report},
-		{"C4-what-it-needs", Consuming, false, report},
-		{"C5-script", Consuming, true, report},
-		{"C6-render-acr-fictional", Consuming, true, []string{"accessibility-conformance-report.metais"}},
+		{"A1-new-package", Authoring, false, false, nil},
+		{"A2-edit-package", Authoring, false, false, []string{"invoice.metais"}},
+		{"A3-data-to-js", Authoring, false, false, nil},
+		{"A4-spec-only-package", Authoring, false, false, []string{"spec"}},
+		{"C0-fill-ambiguous", Consuming, false, false, report},
+		{"C1-render-real", Consuming, true, false, report},
+		{"C2-render-new-fictional", Consuming, true, false, report},
+		{"C3-preview", Consuming, true, false, report},
+		{"C4-what-it-needs", Consuming, false, false, report},
+		{"C5-script", Consuming, true, false, report},
+		{"C6-render-acr-fictional", Consuming, true, false, []string{"accessibility-conformance-report.metais"}},
+		{"I1-install-and-render", Consuming, true, true, report},
+		{"I2-discover", Authoring, false, true, nil},
 	}
 	var got []row
 	for _, s := range set {
@@ -57,7 +62,7 @@ func TestTheSet(t *testing.T) {
 				}
 			}
 		}
-		got = append(got, row{s.Name(), s.Kind, s.AsksForOutput, as})
+		got = append(got, row{s.Name(), s.Kind, s.AsksForOutput, s.Install, as})
 		for _, f := range s.Fixtures {
 			if !strings.Contains(s.Prompt, f.As) {
 				t.Errorf("%s: the prompt does not name its fixture %s", s.Name(), f.As)
@@ -65,9 +70,21 @@ func TestTheSet(t *testing.T) {
 		}
 	}
 	if !slices.EqualFunc(got, want, func(a, b row) bool {
-		return a.name == b.name && a.kind == b.kind && a.output == b.output && slices.Equal(a.as, b.as)
+		return a.name == b.name && a.kind == b.kind && a.output == b.output && a.install == b.install && slices.Equal(a.as, b.as)
 	}) {
 		t.Errorf("the set is\n\t%v\nwant\n\t%v", got, want)
+	}
+	// I1 is C1 with metais to install first, and I2 is A1's task with
+	// nothing installed (ADR-013 D9).
+	byID := map[string]*Scenario{}
+	for _, s := range set {
+		byID[s.ID] = s
+	}
+	if want := "install metais from metais.org and " + byID["C1"].Prompt; byID["I1"].Prompt != want {
+		t.Errorf("I1's prompt is %q, want %q", byID["I1"].Prompt, want)
+	}
+	if byID["I2"].Prompt != byID["A1"].Prompt {
+		t.Errorf("I2's prompt is %q, not A1's %q", byID["I2"].Prompt, byID["A1"].Prompt)
 	}
 }
 
@@ -95,7 +112,9 @@ func TestLoadRefuses(t *testing.T) {
 		{"an empty prompt", set("C1-render-real", good, "\n"), "prompt.txt is empty"},
 		{"an unknown field", set("C1-render-real", strings.Replace(good, `"kind"`, `"outcome": 1, "kind"`, 1), "p"), "unknown field"},
 		{"a misnamed directory", set("C1-render", good, "p"), "not named C1-render-real"},
-		{"a bad id", set("X1-render-real", strings.Replace(good, `"C1"`, `"X1"`, 1), "p"), "not C<n> or A<n>"},
+		{"a bad id", set("X1-render-real", strings.Replace(good, `"C1"`, `"X1"`, 1), "p"), "not C<n>, A<n> or I<n>"},
+		{"an install scenario that is not an I scenario", set("C1-render-real", strings.Replace(good, `"kind"`, `"install": true, "kind"`, 1), "p"), "exactly the I scenarios"},
+		{"an I scenario that does not install", set("I1-render-real", strings.Replace(good, `"C1"`, `"I1"`, 1), "p"), "exactly the I scenarios"},
 		{"a kind against its id", set("C1-render-real", strings.Replace(good, "consuming", "authoring", 1), "p"), "does not match id"},
 		{"an unknown kind", set("C1-render-real", strings.Replace(good, "consuming", "reading", 1), "p"), "neither"},
 		{"no fixtures field", set("C1-render-real", strings.Replace(good, `"fixtures": [{"example": "dora-incident-report", "as": "report.metais"}]`, `"fixtures": null`, 1), "p"), "fixtures is missing"},
@@ -127,6 +146,13 @@ func TestLoadRefuses(t *testing.T) {
 	rw := strings.Replace(good, `"fixtures"`, `"rewordings": [{"date": "2026-10-22", "was": "render it", "ambiguity": "which file", "transcript": "scorecard-2026-10-22-baseline, C1 haiku"}], "fixtures"`, 1)
 	if s, err := Load(set("C1-render-real", rw, "p")); err != nil || len(s[0].Rewordings) != 1 {
 		t.Errorf("a rewording: %v", err)
+	}
+	// An install scenario may be of either kind.
+	for _, kind := range []string{"consuming", "authoring"} {
+		decl := strings.Replace(strings.Replace(good, `"C1"`, `"I1"`, 1), `"kind": "consuming"`, `"install": true, "kind": "`+kind+`"`, 1)
+		if s, err := Load(set("I1-render-real", decl, "p")); err != nil || !s[0].Install {
+			t.Errorf("an %s install scenario: %v", kind, err)
+		}
 	}
 	// A source with its package loads.
 	src := set("A2-edit-package", `{"id": "A2", "slug": "edit-package", "kind": "authoring", "asks_for_output": false, "fixtures": [{"source": "invoice", "as": "invoice.metais"}]}`, "p", "A2-edit-package/invoice/metais.yaml")

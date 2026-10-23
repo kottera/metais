@@ -9,6 +9,7 @@
   },
   "edited": "The digest turn 12's render lists for index.html (line 39, in the message and in tool_use_result's stdout) has its last hex digit changed from c to d, with sed, so it is no longer the digest of examples/basic/expected/index.html. Nothing else is changed.",
   "expect": {
+    "golden-install": "n/a",
     "inspect-first": "n/a",
     "no-zip-extraction": "pass",
     "no-unknown-command": "pass",

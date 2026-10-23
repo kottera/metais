@@ -58,7 +58,8 @@ func (f Fixture) Package() bool { return f.Tree == "" }
 
 // Scenario is one scenario's declaration and prompt.
 type Scenario struct {
-	// ID is the table's name for it: C0 to C5, A1 to A3.
+	// ID is the table's name for it: C<n> for a consuming scenario, A<n>
+	// for an authoring one, I<n> for an install scenario of either kind.
 	ID string `json:"id"`
 	// Slug is the table's short name; the directory is ID-Slug.
 	Slug string `json:"slug"`
@@ -71,6 +72,11 @@ type Scenario struct {
 	// Fixtures are the packages the session's directory starts with, in
 	// order; none for a scenario that starts from an empty directory.
 	Fixtures []Fixture `json:"fixtures"`
+	// Install marks a scenario of ADR-013 D9, an I scenario: the session
+	// starts with no metais on PATH and no skill, and installing metais is
+	// part of what it is asked to do. Exactly the I scenarios set it, so
+	// the runner leaves metais off PATH for them and for no other.
+	Install bool `json:"install,omitempty"`
 	// Check is the place reserved for the scenario's outcome check, which
 	// the scorer defines (PLAN-2026-10-metais-ux W1-2). This package keeps
 	// it as written and does not interpret it.
@@ -104,7 +110,7 @@ type Rewording struct {
 func (s *Scenario) Name() string { return s.ID + "-" + s.Slug }
 
 var (
-	idPattern   = regexp.MustCompile(`^[CA][0-9]+$`)
+	idPattern   = regexp.MustCompile(`^[CAI][0-9]+$`)
 	slugPattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 	filePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*\.metais$`)
 	datePattern = regexp.MustCompile(`^[0-9]{4}-[0-9]{2}-[0-9]{2}$`)
@@ -188,7 +194,7 @@ func read(fsys fs.FS, dir string) (*Scenario, error) {
 		errs = append(errs, fmt.Errorf("%s: "+format, append([]any{dir}, args...)...))
 	}
 	if !idPattern.MatchString(s.ID) {
-		bad("id %q is not C<n> or A<n>", s.ID)
+		bad("id %q is not C<n>, A<n> or I<n>", s.ID)
 	}
 	if !slugPattern.MatchString(s.Slug) {
 		bad("slug %q is not lower-case words joined by hyphens", s.Slug)
@@ -196,11 +202,16 @@ func read(fsys fs.FS, dir string) (*Scenario, error) {
 	if dir != s.Name() {
 		bad("the directory is not named %s, its id and slug", s.Name())
 	}
+	install := strings.HasPrefix(s.ID, "I")
 	switch {
-	case s.Kind == Consuming && !strings.HasPrefix(s.ID, "C"), s.Kind == Authoring && !strings.HasPrefix(s.ID, "A"):
-		bad("kind %s does not match id %s: consuming scenarios are C<n>, authoring A<n>", s.Kind, s.ID)
 	case s.Kind != Consuming && s.Kind != Authoring:
 		bad("kind %q is neither %s nor %s", s.Kind, Consuming, Authoring)
+	case install:
+	case s.Kind == Consuming && !strings.HasPrefix(s.ID, "C"), s.Kind == Authoring && !strings.HasPrefix(s.ID, "A"):
+		bad("kind %s does not match id %s: consuming scenarios are C<n>, authoring A<n>", s.Kind, s.ID)
+	}
+	if s.Install != install {
+		bad("install is %v for id %s: exactly the I scenarios start with no metais on PATH (ADR-013 D9)", s.Install, s.ID)
 	}
 	if strings.TrimSpace(s.Prompt) == "" {
 		bad("prompt.txt is empty")

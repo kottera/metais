@@ -9,6 +9,7 @@
   },
   "edited": "The session's second command, which metais && metais inspect report.metais, is replaced by which metais, and its output by the first two lines of the recorded output, which are which's. The rest of the run is as recorded, so the final answer still names what the package needs. No recorded consuming session left metais inspect out without also extracting the package.",
   "expect": {
+    "golden-install": "n/a",
     "inspect-first": "fail",
     "no-zip-extraction": "pass",
     "no-unknown-command": "pass",

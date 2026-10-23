@@ -9,6 +9,7 @@
   },
   "edited": "Turns after the session's metais inspect are replaced by the probe's C0-style reading of Work Order 01a15b3b (metais unpack, a rewritten example entity, metais test --update, metais pack and a move over report.metais). Each command's output is the real output of running it, with the set's own metais, on a copy of the session's starting directory; record.json's files are listed from the directory those commands left. The final answer is written to report what it did without saying which reading it took.",
   "expect": {
+    "golden-install": "n/a",
     "inspect-first": "pass",
     "no-zip-extraction": "pass",
     "no-unknown-command": "pass",
