@@ -9235,6 +9235,14 @@
             }
           },
           {
+            "code": "input.coverage",
+            "cause": "An input is refused (coverage).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Lists the inputs the package takes, the files each is read from, and what each means."
+            }
+          },
+          {
             "code": "input.dependent_required",
             "cause": "An input is refused (dependent required).",
             "next": {
@@ -10133,6 +10141,14 @@
           {
             "code": "output.contains",
             "cause": "An output fails its validation (contains).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Shows the package's outputs; a template's defect is the package's, for its author to fix."
+            }
+          },
+          {
+            "code": "output.coverage",
+            "cause": "An output fails its validation (coverage).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Shows the package's outputs; a template's defect is the package's, for its author to fix."
@@ -13543,6 +13559,14 @@
             }
           },
           {
+            "code": "input.coverage",
+            "cause": "A value given with --set, --set-json or --inputs-json is refused (coverage).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Lists the inputs the package takes; a value given with --set, --set-json or --inputs-json is kept as given and must be one the schema allows."
+            }
+          },
+          {
             "code": "input.dependent_required",
             "cause": "A value given with --set, --set-json or --inputs-json is refused (dependent required).",
             "next": {
@@ -15515,6 +15539,14 @@
             }
           },
           {
+            "code": "input.coverage",
+            "cause": "An example's inputs are refused (coverage).",
+            "next": {
+              "run": "metais test <package>",
+              "why": "Tests every example again once the package or its examples are fixed."
+            }
+          },
+          {
             "code": "input.dependent_required",
             "cause": "An example's inputs are refused (dependent required).",
             "next": {
@@ -16413,6 +16445,14 @@
           {
             "code": "output.contains",
             "cause": "An example's output fails its validation (contains).",
+            "next": {
+              "run": "metais test <package>",
+              "why": "Tests every example again once the package or its examples are fixed."
+            }
+          },
+          {
+            "code": "output.coverage",
+            "cause": "An example's output fails its validation (coverage).",
             "next": {
               "run": "metais test <package>",
               "why": "Tests every example again once the package or its examples are fixed."
@@ -18041,6 +18081,14 @@
             }
           },
           {
+            "code": "input.coverage",
+            "cause": "An example's inputs are refused (coverage).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
             "code": "input.dependent_required",
             "cause": "An example's inputs are refused (dependent required).",
             "next": {
@@ -18963,6 +19011,14 @@
           {
             "code": "output.contains",
             "cause": "An example's output fails its validation (contains).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.coverage",
+            "cause": "An example's output fails its validation (coverage).",
             "next": {
               "run": "metais test <dir>",
               "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
