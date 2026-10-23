@@ -9,7 +9,7 @@
       "origin": "package"
     },
     "params": {
-      "offset": 3516,
+      "offset": 3651,
       "record": "end of central directory record",
       "header_field": "total number of entries in the central directory on this disk",
       "value": 7,

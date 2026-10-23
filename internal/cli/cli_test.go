@@ -574,7 +574,8 @@ func TestMemoryStop(t *testing.T) {
 // metais --help and metais help each say, before the usage line, that a
 // package's contents are read in place with metais, inspect first, then
 // read, ls and grep, and not by unzipping it or with another zip tool or
-// library (in the README's words of ADR-001 A4). metais alone says it on
+// library, because metais checks the package's digests and security limits
+// (in the README's words of ADR-001 A4 and A5). metais alone says it on
 // the line under its refusal too, the second line a session reads.
 func TestFirstSightReadsInPlace(t *testing.T) {
 	for _, c := range []struct {
@@ -593,7 +594,7 @@ func TestFirstSightReadsInPlace(t *testing.T) {
 		}
 		// The overview is wrapped, so a command may break across lines.
 		flat := strings.ReplaceAll(head, "\n", " ")
-		for _, want := range []string{"metais inspect <package>", "metais read ", "metais ls ", "metais grep ", "unzip", "zip tool or library"} {
+		for _, want := range []string{"metais inspect <package>", "metais read ", "metais ls ", "metais grep ", "unzip", "zip tool or library", "digests and its security limits"} {
 			if !strings.Contains(flat, want) {
 				t.Errorf("metais %q does not say %q before its usage line:\n%s", c.args, want, head)
 			}

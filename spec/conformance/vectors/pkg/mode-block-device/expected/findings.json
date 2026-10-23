@@ -10,7 +10,7 @@
       "file": "assets/disk"
     },
     "params": {
-      "offset": 3468,
+      "offset": 3603,
       "record": "central directory header",
       "header_field": "external file attributes",
       "value": 1638137856,

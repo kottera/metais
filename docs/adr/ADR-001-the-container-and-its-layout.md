@@ -1114,6 +1114,45 @@ README text of specification 1.0.
    and the skill's rule, which quote the README's wording about unzipping,
    say the same.
 
+### A5 — The README says why the package is read only with `metais`
+
+**Status:** Proposed. Ed Funnekotter ruled on 2026-10-23 that it lands
+before v1.0, because the README text freezes with the specification.
+**Amends:** A4 item 1 (what the text says), and the README text of
+specification 1.0.
+
+1. **The text gives the rule its reason.** The sentence telling a reader
+   not to unzip the package, nor to open it with any other zip tool or
+   library, goes on: "because metais checks the package against its
+   digests and its security limits before it reads any file in it, and a
+   zip tool does not". The rule's meaning and strength are A4's.
+2. **The reason is what the tool does.** At open, before it reads or
+   prints any of a package's content, the tool bounds the file by
+   ADR-009's limits (D3, D8 steps 1 to 3) and verifies every entry's
+   SHA-256 against `.compiled/digests.json` and the package digest (D8
+   steps 5 and 6), and refuses the package on any mismatch (D8 item 2).
+   A general-purpose zip reader does neither, so an entry it returns is
+   one nothing has checked.
+3. **Why.** In an external test, a Claude session given only the binary
+   and a packed package said that text inside a file telling an AI what
+   to do is the pattern agents are trained to distrust, since it looks
+   like prompt injection, and that a one-line reason would make the rule
+   read as a technical constraint rather than a command. A rule with its
+   reason is one a reader can check against what the tool does.
+4. **What stays.** The text still names `metais inspect` first and
+   `metais read` second, and no other command and no flag (A3 item 3). It
+   names no zip tool, library or vendor, and gives no command that could
+   go stale (A4 item 2).
+5. **What else changes.** Specification §2.4.1's block and its prose
+   carry the new bytes, which grow from 762 to 897. `internal/specdata`'s
+   copy and every packed package in the conformance vectors are
+   regenerated, and every finding offset or size past the README, and
+   every limit lowered to a package's own size, moves by the same 135
+   bytes. The first line, with A1 item 8's detection key at offset 39, and
+   the last line are unchanged. The help overview, the hint of
+   `usage.missing_command` and the skill's first rule, which carry the
+   README's rule, give the same reason.
+
 ## Implementation log
 
 This log is this section together with the entry files in
