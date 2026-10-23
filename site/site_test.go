@@ -2,14 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package site holds the tests of the metais.org site, whose source is this
-// directory: the pages under public/, and build.sh, which writes the
-// published tree with every specification schema and every CLI output
-// schema at the path its $id names.
+// directory: the METAIS package under package/, which renders its pages;
+// the static files under public/; and build.sh, which builds metais from
+// the commit, renders the package with it from the inputs
+// internal/tools/site exports, and writes the published tree with the
+// static files and every specification schema and every CLI output schema
+// at the path its $id names (ADR-013 D8).
 package site
 
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"html"
 	"io/fs"
 	"maps"
@@ -20,6 +25,7 @@ import (
 	"runtime"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 
 	"metais.org/metais/internal/testenv"
@@ -51,7 +57,7 @@ var sources = []schemaSource{
 const helpGolden = "../internal/cli/testdata/help/help.json"
 
 // pages are the site's pages, by their paths in the published tree.
-var pages = []string{"index.html", "install/index.html", "getting-started/index.html"}
+var pages = []string{"index.html", "install/index.html", "getting-started/index.html", "metais/index.html", "metais/cmd/metais/index.html"}
 
 // schema is one published schema: its path in the repository, its path below
 // its source's directory, slash separated, its $id, and its bytes.
@@ -166,19 +172,129 @@ func TestSitePath(t *testing.T) {
 	}
 }
 
-// build runs build.sh into a new directory and returns it.
-func build(t *testing.T) string {
+// hostEnviron is the environment this test binary started with, taken
+// before any test points HOME at a temporary directory: go env reads the
+// host's caches from it.
+var hostEnviron = os.Environ()
+
+// goHost is the host's toolchain and its caches (testenv.GoHost), read once
+// by the go command of the toolchain running this test.
+var goHost = sync.OnceValues(func() (testenv.GoHost, error) {
+	exe := "go"
+	if root := runtime.GOROOT(); root != "" {
+		exe = filepath.Join(root, "bin", "go")
+	}
+	cmd := exec.Command(exe, testenv.GoHostQuery...)
+	cmd.Env = append(slices.Clone(hostEnviron), "GOTOOLCHAIN=local")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	out, err := cmd.Output()
+	if err != nil {
+		return testenv.GoHost{}, fmt.Errorf("go %s: %v\n%s", strings.Join(testenv.GoHostQuery, " "), err, stderr.Bytes())
+	}
+	return testenv.ParseGoHost(hostEnviron, out)
+})
+
+// buildCmd is sh build.sh with args, in the whole environment testenv.GoEnv
+// gives over home: it takes nothing from the host but its toolchain, its
+// caches and PATH, and never reaches the network.
+func buildCmd(t testing.TB, home string, args ...string) *exec.Cmd {
 	t.Helper()
 	if runtime.GOOS == "windows" {
 		t.Skip("build.sh is a POSIX shell script; the site is built on Linux")
 	}
+	h, err := goHost()
+	if err != nil {
+		t.Fatalf("locating the host's toolchain: %v", err)
+	}
+	cmd := exec.Command("sh", append([]string{"build.sh"}, args...)...)
+	cmd.Env = append(testenv.GoEnv(h, home), "LC_ALL=C")
+	return cmd
+}
+
+// build runs build.sh into a new directory and returns it.
+func build(t testing.TB) string {
+	t.Helper()
 	out := filepath.Join(testenv.Dir(t), "site")
-	cmd := exec.Command("sh", "build.sh", out)
-	cmd.Env = []string{"PATH=" + os.Getenv("PATH"), "HOME=" + testenv.Home(t), "LC_ALL=C"}
-	if b, err := cmd.CombinedOutput(); err != nil {
+	if b, err := buildCmd(t, testenv.Dir(t), out).CombinedOutput(); err != nil {
 		t.Fatalf("sh build.sh: %v\n%s", err, b)
 	}
 	return out
+}
+
+// built is one build of the site, shared by the tests that read it.
+var built struct {
+	once sync.Once
+	dir  string
+	err  string
+}
+
+// builtSite returns the shared build, building it on first use beneath a
+// directory TestMain removes.
+func builtSite(t *testing.T) string {
+	t.Helper()
+	built.once.Do(func() {
+		var out bytes.Buffer
+		cmd := buildCmd(t, filepath.Join(sharedDir, "home"), filepath.Join(sharedDir, "site"))
+		cmd.Stdout, cmd.Stderr = &out, &out
+		if err := os.Mkdir(filepath.Join(sharedDir, "home"), 0o755); err != nil {
+			built.err = err.Error()
+			return
+		}
+		if err := cmd.Run(); err != nil {
+			built.err = fmt.Sprintf("sh build.sh: %v\n%s", err, out.Bytes())
+			return
+		}
+		built.dir = filepath.Join(sharedDir, "site")
+	})
+	if built.err != "" {
+		t.Fatal(built.err)
+	}
+	return built.dir
+}
+
+// sharedDir holds the shared build, made and removed by TestMain.
+var sharedDir string
+
+func TestMain(m *testing.M) {
+	dir, err := os.MkdirTemp("", "metais-site-test-")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	sharedDir = dir
+	code := m.Run()
+	if err := os.RemoveAll(dir); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		code = 1
+	}
+	os.Exit(code)
+}
+
+// tree reads every file below root, by its slash-separated path.
+func tree(t *testing.T, root string) map[string][]byte {
+	t.Helper()
+	files := map[string][]byte{}
+	err := filepath.WalkDir(root, func(p string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		if !d.Type().IsRegular() {
+			t.Errorf("%s is not a regular file", p)
+			return nil
+		}
+		rel, err := filepath.Rel(root, p)
+		if err != nil {
+			return err
+		}
+		b, err := os.ReadFile(p)
+		files[filepath.ToSlash(rel)] = b
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return files
 }
 
 // TestBuild builds the site and requires the published tree to hold the
@@ -186,7 +302,7 @@ func build(t *testing.T) string {
 // schema byte for byte at the path its $id names, and nothing else under
 // schemas/ or cli/.
 func TestBuild(t *testing.T) {
-	out := build(t)
+	out := builtSite(t)
 
 	for _, p := range pages {
 		if _, err := os.Stat(filepath.Join(out, filepath.FromSlash(p))); err != nil {
@@ -236,20 +352,97 @@ func TestBuild(t *testing.T) {
 	}
 }
 
+// TestStaticFiles requires the built site to serve every file of public/
+// at its own path, byte for byte (ADR-013 D1 item 5): install.sh among
+// them, once it is there.
+func TestStaticFiles(t *testing.T) {
+	site := tree(t, builtSite(t))
+	static := tree(t, "public")
+	if len(static) == 0 {
+		t.Fatal("public/ holds no file; the check is blind")
+	}
+	for p, want := range static {
+		if got, ok := site[p]; !ok {
+			t.Errorf("the site does not serve public/%s at /%s", p, p)
+		} else if !bytes.Equal(got, want) {
+			t.Errorf("the site's /%s differs from public/%s", p, p)
+		}
+	}
+}
+
+// TestBuildReproducible builds the site a second time and requires the
+// same tree, byte for byte, as the shared build of the same commit.
+func TestBuildReproducible(t *testing.T) {
+	a := tree(t, builtSite(t))
+	b := tree(t, build(t))
+	for _, p := range slices.Sorted(maps.Keys(a)) {
+		if got, ok := b[p]; !ok {
+			t.Errorf("the second build has no %s", p)
+		} else if !bytes.Equal(got, a[p]) {
+			t.Errorf("the two builds' %s differ", p)
+		}
+	}
+	for p := range b {
+		if _, ok := a[p]; !ok {
+			t.Errorf("only the second build has %s", p)
+		}
+	}
+}
+
+// footer is ADR-013 D2 item 1's footer: METAIS is made by Kottera, with a
+// link to kottera.com.
+const footer = `METAIS is made by <a href="https://kottera.com/">Kottera</a>`
+
+// TestFooter requires every page of the built site to end with the footer,
+// once.
+func TestFooter(t *testing.T) {
+	foot := regexp.MustCompile(`(?s)<footer>(.*?)</footer>\s*</body>\s*</html>\s*$`)
+	n := 0
+	for p, b := range tree(t, builtSite(t)) {
+		if !strings.HasSuffix(p, ".html") {
+			continue
+		}
+		n++
+		m := foot.FindSubmatch(b)
+		if m == nil || !strings.Contains(string(m[1]), footer) || bytes.Count(b, []byte("<footer>")) != 1 {
+			t.Errorf("the page %s does not end with one footer saying %s", p, footer)
+		}
+	}
+	if n < len(pages) {
+		t.Errorf("the site holds %d pages, fewer than the %d it must; the check is blind", n, len(pages))
+	}
+}
+
 // TestBuildRefusesExisting requires build.sh to refuse a directory that
 // exists, so a build never mixes with what an earlier one left.
 func TestBuildRefusesExisting(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("build.sh is a POSIX shell script; the site is built on Linux")
-	}
 	out := testenv.Dir(t)
-	cmd := exec.Command("sh", "build.sh", out)
-	cmd.Env = []string{"PATH=" + os.Getenv("PATH"), "HOME=" + testenv.Home(t), "LC_ALL=C"}
-	if b, err := cmd.CombinedOutput(); err == nil {
+	if b, err := buildCmd(t, testenv.Dir(t), out).CombinedOutput(); err == nil {
 		t.Fatalf("sh build.sh %s succeeded over an existing directory:\n%s", out, b)
 	}
 	if entries, err := os.ReadDir(out); err != nil || len(entries) != 0 {
 		t.Fatalf("the refused build wrote into %s: %v, %v", out, entries, err)
+	}
+}
+
+// TestBuildUsage requires build.sh to refuse a command line it does not
+// take, with its usage and status 2, before it builds anything.
+func TestBuildUsage(t *testing.T) {
+	dir := testenv.Dir(t)
+	for _, args := range [][]string{
+		nil,
+		{"a", "b"},
+		{"--release", "1.0.0", filepath.Join(dir, "site")},
+		{"--release", "1.0.0", "SHA256SUMS", filepath.Join(dir, "site"), "extra"},
+	} {
+		b, err := buildCmd(t, testenv.Dir(t), args...).CombinedOutput()
+		var exit *exec.ExitError
+		if !errors.As(err, &exit) || exit.ExitCode() != 2 || !strings.Contains(string(b), "usage: site/build.sh") {
+			t.Errorf("sh build.sh %q: %v\n%s\nwant its usage and status 2", args, err, b)
+		}
+	}
+	if entries, err := os.ReadDir(dir); err != nil || len(entries) != 0 {
+		t.Errorf("a refused command line wrote %v, %v", entries, err)
 	}
 }
 
@@ -298,8 +491,9 @@ func TestPageCommands(t *testing.T) {
 	code := regexp.MustCompile(`(?s)<pre><code>(.*?)</code></pre>`)
 	tag := regexp.MustCompile(`<[^>]*>`)
 	seen := 0
+	site := builtSite(t)
 	for _, p := range pages {
-		b, err := os.ReadFile(filepath.Join("public", filepath.FromSlash(p)))
+		b, err := os.ReadFile(filepath.Join(site, filepath.FromSlash(p)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -379,7 +573,7 @@ const goSource = "metais.org/metais https://github.com/kottera/metais" +
 	" https://github.com/kottera/metais/tree/main{/dir}" +
 	" https://github.com/kottera/metais/blob/main{/dir}/{file}#L{line}"
 
-// goImportDir is the directory, in the published tree as under public/, of
+// goImportDir is the directory, in the published tree, of
 // the module's go-import pages (ADR-013 D1 item 5): the page for the package
 // path metais.org/<p> is <p>/index.html, served at /<p>/.
 const goImportDir = "metais"
@@ -449,11 +643,10 @@ func checkGoImportPages(t *testing.T, where string, got map[string][]byte) {
 }
 
 // TestGoImportPages holds the module's go-import pages to ADR-013 D1 item 2,
-// in public/ and in the tree build.sh publishes: one page for each package
+// in the tree build.sh publishes: one page for each package
 // path a user can name and no other, each with the go-import content that
 // resolves metais.org/metais to its repository, and the go-source content
 // that links each directory and file to its source.
 func TestGoImportPages(t *testing.T) {
-	checkGoImportPages(t, "public", goImportPages(t, "public"))
-	checkGoImportPages(t, "the built site", goImportPages(t, build(t)))
+	checkGoImportPages(t, "the built site", goImportPages(t, builtSite(t)))
 }

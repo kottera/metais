@@ -15,7 +15,7 @@
       "rule": "never-depends",
       "package": "metais.org/metais/cmd/metais",
       "imports": "metais.org/metais/internal/tools/...",
-      "reason": "ADR-009 A2 item 4: the binary never reaches the release builder, which is why the builder may run commands, read the environment and write files; ADR-009 A8 item 3: nor the UX runner, which is why the runner may start sessions, read the environment, write files and read the clock"
+      "reason": "ADR-009 A2 item 4: the binary never reaches the release builder, which is why the builder may run commands, read the environment and write files; ADR-009 A8 item 3: nor the UX runner, which is why the runner may start sessions, read the environment, write files and read the clock; ADR-009 A11 item 3: nor the site's build step, which is why it may run commands, read the environment and write files, and the Markdown converter beneath it"
     },
     {
       "rule": "single-entry-point",
@@ -128,6 +128,12 @@
     },
     {
       "rule": "only-importers",
+      "imports": "github.com/yuin/goldmark/...",
+      "importers": ["metais.org/metais/internal/tools/site/mdhtml"],
+      "reason": "ADR-010 A10 item 2, ADR-009 A11 item 3: the site's Markdown library is the site's build step's alone, imported by its converter beneath internal/tools/, which the binary never depends on, so the library never enters cmd/metais's closure and the outline stays METAIS's own reading"
+    },
+    {
+      "rule": "only-importers",
       "imports": "metais.org/metais/internal/xref",
       "importers": ["metais.org/metais/internal/author"],
       "reason": "ADR-010 D2, ADR-007 D2 and D3: the cross-reference is check's, which internal/author holds, so no other command or layer reports template.xref.* findings around it"
@@ -172,8 +178,8 @@
     {
       "rule": "only-referrers",
       "symbols": ["os.Args", "os.Stdin", "os.Stdout", "os.Stderr", "os.Exit"],
-      "packages": ["metais.org/metais/cmd/metais", "metais.org/metais/internal/tools/release", "metais.org/metais/internal/tools/ux"],
-      "reason": "ADR-010 D2 item 2, ADR-009 D14 item 4: everything else receives the arguments and streams, so the whole tool runs in-process under test; ADR-009 A2 item 5: the release builder is a main package run with go run; ADR-009 A8 item 1: so is the UX runner"
+      "packages": ["metais.org/metais/cmd/metais", "metais.org/metais/internal/tools/release", "metais.org/metais/internal/tools/ux", "metais.org/metais/internal/tools/site"],
+      "reason": "ADR-010 D2 item 2, ADR-009 D14 item 4: everything else receives the arguments and streams, so the whole tool runs in-process under test; ADR-009 A2 item 5: the release builder is a main package run with go run; ADR-009 A8 item 1: so is the UX runner; ADR-009 A11 item 5: and so is the site's build step"
     }
   ]
 }

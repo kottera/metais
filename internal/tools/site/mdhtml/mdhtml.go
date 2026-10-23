@@ -12,7 +12,8 @@
 // one module ADR-010 Amendment A10 admits for it. The text converted is
 // this repository's, never a package's, so raw HTML passes through, as the
 // specification's statement anchors need. Every heading gets an id, made
-// the way GitHub makes the anchors the specification's links name.
+// from its plain text the way GitHub makes the anchors the specification's
+// links name.
 package mdhtml
 
 import (
@@ -25,7 +26,6 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/text"
 )
@@ -56,11 +56,10 @@ type Doc struct {
 func Convert(src []byte, link func(dest string) string) (Doc, error) {
 	md := goldmark.New(
 		goldmark.WithExtensions(extension.Table),
-		goldmark.WithParserOptions(parser.WithAutoHeadingID()),
 		goldmark.WithRendererOptions(html.WithUnsafe()),
 	)
-	ctx := parser.NewContext(parser.WithIDs(&githubIDs{seen: map[string]int{}}))
-	root := md.Parser().Parse(text.NewReader(src), parser.WithContext(ctx))
+	root := md.Parser().Parse(text.NewReader(src))
+	ids := githubIDs{seen: map[string]int{}}
 	var doc Doc
 	err := ast.Walk(root, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		if !entering {
@@ -72,9 +71,9 @@ func Convert(src []byte, link func(dest string) string) (Doc, error) {
 				n.Destination = []byte(link(string(n.Destination)))
 			}
 		case *ast.Heading:
-			id, _ := n.AttributeString("id")
-			idText, _ := id.([]byte)
-			h := Heading{Level: n.Level, ID: string(idText), Text: plainText(n, src)}
+			h := Heading{Level: n.Level, Text: plainText(n, src)}
+			h.ID = ids.id(h.Text)
+			n.SetAttributeString("id", []byte(h.ID))
 			if h.Level == 1 && doc.Title == "" {
 				doc.Title = h.Text
 			}
@@ -122,16 +121,17 @@ func plainText(n ast.Node, src []byte) string {
 
 // githubIDs makes heading ids the way GitHub makes a Markdown heading's
 // anchor, which the specification's links between chapters name: the
-// heading's text lower-cased, each letter, digit, mark, hyphen and
+// heading's plain text lower-cased, each letter, digit, mark, hyphen and
 // underscore kept, each space made a hyphen, and every other character
 // dropped; a repeated id gets -1, -2 and so on.
 type githubIDs struct {
 	seen map[string]int
 }
 
-func (g *githubIDs) Generate(value []byte, kind ast.NodeKind) []byte {
+// id is the id of the next heading, whose plain text is text.
+func (g *githubIDs) id(text string) string {
 	var b strings.Builder
-	for _, r := range strings.ToLower(string(value)) {
+	for _, r := range strings.ToLower(text) {
 		switch {
 		case r == ' ':
 			b.WriteByte('-')
@@ -149,9 +149,5 @@ func (g *githubIDs) Generate(value []byte, kind ast.NodeKind) []byte {
 		id += "-" + strconv.Itoa(n)
 		g.seen[id]++
 	}
-	return []byte(id)
-}
-
-func (g *githubIDs) Put(value []byte) {
-	g.seen[string(value)]++
+	return id
 }
