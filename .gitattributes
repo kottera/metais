@@ -22,6 +22,7 @@ internal/cli/testdata/help/** merge=metais-generated
 internal/author/testdata/scaffold/** merge=metais-generated
 internal/tarw/testdata/*.tar merge=metais-generated
 internal/yamlx/testdata/write/document.yaml merge=metais-generated
+internal/tools/release/testdata/formula/metais.rb merge=metais-generated
 spec/conformance/vectors/**/package.metais merge=metais-generated
 spec/conformance/vectors/aut/test-containers/package/examples/** merge=metais-generated
 spec/conformance/vectors/aut/test-containers-packed/packed.metais merge=metais-generated

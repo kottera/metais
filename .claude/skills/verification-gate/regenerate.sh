@@ -44,6 +44,7 @@ run go test -count=1 -run '^TestHelpGolden$' ./internal/cli -args -update
 run go test -count=1 -run '^TestScaffoldGolden$' ./internal/author -args -update
 run go test -count=1 -run '^TestGolden$' ./internal/tarw -args -update
 run go test -count=1 -run '^TestWriteGolden$' ./internal/yamlx -args -update
+run go test -count=1 -run '^TestFormulaGolden$' ./internal/tools/release -args -update
 run go test -count=1 -run '^TestPackages$' ./internal/vectorgen -args -update
 run go test -count=1 -run '^TestContainerVectors$' ./internal/vectorgen -args -update
 run go test -count=1 -run '^TestPackOutputs$' ./internal/vectorgen -args -update

@@ -28,10 +28,16 @@ It refuses, and writes nothing, when:
 - `HEAD` is not the commit the tag `v<version>` names;
 - `go.mod` has no single `toolchain` line naming a go release;
 - the tool built from `HEAD` does not report `<version>`, or its
-  `implements` names a specification revision that is not released. A
-  revision `M.m` is released when the annotated tag `spec-M.m` is on
-  `HEAD`'s history and `HEAD` holds `spec/conformance/released/M.m.sha256`
-  (ADR-011 D5 items 2 and 6). Release the specification first;
+  `implements` is empty or names something that is not a revision `M.m`;
+- `<version>` has no prerelease suffix and the tool's `implements` names
+  a specification revision that is not released. A revision `M.m` is
+  released when the annotated tag `spec-M.m` is on `HEAD`'s history and
+  `HEAD` holds `spec/conformance/released/M.m.sha256` (ADR-011 D5 items 2
+  and 6). Release the specification first. A prerelease such as
+  `1.0.0-rc.1` may implement a revision that is not yet released, so a
+  release candidate can be rehearsed before the specification's release
+  commit (ADR-011 A8 item 5); the builder names each such revision in its
+  report;
 - a binary's `go version -m` does not show exactly go.mod's toolchain and
   the release's settings: `-trimpath=true`, `CGO_ENABLED=0`, the target's `GOOS` and `GOARCH`,
   `GOAMD64=v1` or `GOARM64=v8.0`, and a clean `git` stamp of `HEAD`, with

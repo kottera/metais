@@ -400,20 +400,34 @@ func TestReleaseRefusesAnExistingDist(t *testing.T) {
 	}
 }
 
+// errStopped is what the prerelease side's tamper returns at the first
+// target's build, which the builder reaches only once checkImplements has
+// passed, so each case costs one host build and not a release's.
+var errStopped = errors.New("stopped at the first target's build")
+
+// TestReleaseRefusesAnUnreleasedRevision pins both sides of ADR-011 A8
+// item 5. A release, 1.0.0, is refused whose tool implements a revision
+// that is not released, by each way a revision can fail to be. A
+// prerelease, 1.0.0-rc.1, of the same tree is not, and reaches the build;
+// it is refused only where the tool implements nothing, or something that
+// is not a revision. Reaching the build is the whole of the property:
+// nothing after checkImplements depends on whether the version is a
+// prerelease, and TestReleaseBuildsTwiceAndWritesDist proves the rest.
 func TestReleaseRefusesAnUnreleasedRevision(t *testing.T) {
 	cases := []struct {
 		name  string
 		setup func(t *testing.T, dir string)
 		want  string
+		pre   bool // a prerelease is refused too
 	}{
 		{"a revision with no tag", func(t *testing.T, dir string) {
 			write(t, dir, "cmd/metais/implements.go", implementsGo([]string{"1.0", "1.1"}, "v"))
 			commit(t, dir, "implements 1.1")
-		}, "1.1: there is no annotated tag spec-1.1"},
+		}, "1.1: there is no annotated tag spec-1.1", false},
 		{"a lightweight tag", func(t *testing.T, dir string) {
 			gitIn(t, dir, "tag", "-d", "spec-1.0")
 			gitIn(t, dir, "tag", "spec-1.0", "HEAD")
-		}, "1.0: there is no annotated tag spec-1.0"},
+		}, "1.0: there is no annotated tag spec-1.0", false},
 		{"a tag off HEAD's history", func(t *testing.T, dir string) {
 			gitIn(t, dir, "checkout", "--quiet", "-b", "side")
 			write(t, dir, "NOTICE", "side\n")
@@ -421,20 +435,21 @@ func TestReleaseRefusesAnUnreleasedRevision(t *testing.T) {
 			gitIn(t, dir, "tag", "-d", "spec-1.0")
 			gitIn(t, dir, "tag", "-a", "-m", "spec 1.0", "spec-1.0")
 			gitIn(t, dir, "checkout", "--quiet", "main")
-		}, "1.0: spec-1.0 is not an ancestor of HEAD"},
+		}, "1.0: spec-1.0 is not an ancestor of HEAD", false},
 		{"no released list", func(t *testing.T, dir string) {
 			gitIn(t, dir, "rm", "--quiet", "spec/conformance/released/1.0.sha256")
 			commit(t, dir, "no released list")
-		}, "1.0: HEAD has no spec/conformance/released/1.0.sha256"},
+		}, "1.0: HEAD has no spec/conformance/released/1.0.sha256", false},
 		{"implements nothing", func(t *testing.T, dir string) {
 			write(t, dir, "cmd/metais/implements.go", implementsGo(nil, "v"))
 			commit(t, dir, "implements nothing")
-		}, "it implements nothing"},
+		}, "it implements nothing", true},
 		{"not a revision", func(t *testing.T, dir string) {
 			write(t, dir, "cmd/metais/implements.go", implementsGo([]string{"1.0", "1.x"}, "v"))
 			commit(t, dir, "implements 1.x")
-		}, "1.x: not a revision"},
+		}, "1.x: not a revision", true},
 	}
+	stop := func(buildline.Target, int, string) error { return errStopped }
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			dir := fakeRepo(t)
@@ -443,6 +458,23 @@ func TestReleaseRefusesAnUnreleasedRevision(t *testing.T) {
 			err := refused(t, dir, "1.0.0", errUnreleased, nil)
 			if !strings.Contains(err.Error(), c.want) {
 				t.Errorf("the refusal %q does not say %q", err, c.want)
+			}
+
+			gitIn(t, dir, "tag", "v1.0.0-rc.1")
+			if c.pre {
+				err := refused(t, dir, "1.0.0-rc.1", errUnreleased, nil)
+				if !strings.Contains(err.Error(), c.want) {
+					t.Errorf("the prerelease's refusal %q does not say %q", err, c.want)
+				}
+				return
+			}
+			report, err := runIn(t, dir, "1.0.0-rc.1", stop)
+			if !errors.Is(err, errStopped) {
+				t.Fatalf("the prerelease returned %v, want it to reach the build", err)
+			}
+			rev, _, _ := strings.Cut(c.want, ":")
+			if want := "the prerelease 1.0.0-rc.1 implements " + rev + ", which is not released"; !strings.Contains(report, want) {
+				t.Errorf("the prerelease's report %q does not say %q", report, want)
 			}
 		})
 	}

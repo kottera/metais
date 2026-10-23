@@ -196,9 +196,11 @@ func (c *config) build(src string, t buildline.Target, bin string) error {
 }
 
 // checkImplements builds the tool for the host from src, asks it what it
-// is, and refuses a tool that does not report the release's version or
-// whose implements names a specification revision root's history has not
-// released (ADR-011 D5 items 2 and 6).
+// is, and refuses a tool that does not report the release's version, that
+// implements nothing or something that is not a revision, or, unless the
+// version is a prerelease, whose implements names a specification revision
+// root's history has not released (ADR-011 D5 items 2 and 6, A8 item 5). A
+// prerelease's unreleased revisions are reported on stdout.
 func (c *config) checkImplements(root, src string) error {
 	host, err := c.goCmd(src, nil, "env", "GOHOSTOS", "GOHOSTARCH")
 	if err != nil {
@@ -235,23 +237,41 @@ func (c *config) checkImplements(root, src string) error {
 	if len(v.Result.Specification.Implements) == 0 {
 		return fmt.Errorf("%w: it implements nothing", errUnreleased)
 	}
+	pre := prerelease(c.version)
 	for _, rev := range v.Result.Specification.Implements {
-		if err := c.released(root, rev); err != nil {
+		if !revision(rev) {
+			return fmt.Errorf("%w: %s: not a revision <major>.<minor>", errUnreleased, rev)
+		}
+		err := c.released(root, rev)
+		switch {
+		case err != nil && pre:
+			fmt.Fprintf(c.stdout, "the prerelease %s implements %s, which is not released: %v\n", c.version, rev, err)
+		case err != nil:
 			return fmt.Errorf("%w: %s: %v", errUnreleased, rev, err)
 		}
 	}
 	return nil
 }
 
-// released reports why rev is not a released revision of the
-// specification in root's history at HEAD, or nil when it is: an annotated
+// prerelease reports whether the release version v has a prerelease
+// suffix, as 1.0.0-rc.1 has. A prerelease may implement a revision that is
+// not yet released, so a release candidate can be rehearsed end to end
+// before the specification's release commit (ADR-011 A8 item 5).
+func prerelease(v string) bool {
+	return strings.Contains(v, "-")
+}
+
+// revision reports whether rev is a revision <major>.<minor>.
+func revision(rev string) bool {
+	major, minor, ok := strings.Cut(rev, ".")
+	return ok && numeral(major) && numeral(minor)
+}
+
+// released reports why rev, a revision <major>.<minor>, is not a released
+// revision of the specification in root's history at HEAD, or nil when it is: an annotated
 // tag spec-<rev> on an ancestor of HEAD, and the released list
 // spec/conformance/released/<rev>.sha256 in HEAD's tree (ADR-011 D5 item 2).
 func (c *config) released(root, rev string) error {
-	major, minor, ok := strings.Cut(rev, ".")
-	if !ok || !numeral(major) || !numeral(minor) {
-		return errors.New("not a revision <major>.<minor>")
-	}
 	tag := "refs/tags/spec-" + rev
 	if kind, err := c.git(root, "cat-file", "-t", tag); err != nil || kind != "tag" {
 		return fmt.Errorf("there is no annotated tag spec-%s", rev)
