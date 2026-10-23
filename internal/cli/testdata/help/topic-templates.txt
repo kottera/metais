@@ -247,25 +247,36 @@ METAIS's own (spec chapter 8):
   slug            Lower-case ASCII letters and digits joined by -; accents are
                   dropped, and a string with no slug is an error.
                   {{ "Hello, World!" | slug }} gives hello-world
-  date            Formats an RFC 3339 date or date-time, or Unix seconds, in its
+
+Values for readers (spec chapter 8); none reads a locale:
+  date            {{ "2026-10-18T09:30:00+02:00" | date: "%Y-%m-%d %H:%M %z" }}
+                  gives 2026-10-18 09:30 +0200
+                  Formats an RFC 3339 date or date-time, or Unix seconds, in its
                   own offset, with a strftime format; spec chapter 8 lists the
                   directives.
-                  {{ "2026-10-18T09:30:00+02:00" | date: "%Y-%m-%d %H:%M %z" }}
-                  gives 2026-10-18 09:30 +0200
-  number          Writes a number or a decimal text for a reader, with
-                  decimals:, group: and point:; no group separator and a point .
-                  unless given.
-                  {{ 48920000 | number: decimals: 2, group: "," }}
+  number          {{ 48920000 | number: decimals: 2, group: "," }}
                   gives 48,920,000.00
-  amount          Writes an amount in the currency's major unit with its ISO
-                  4217 code, its decimals from spec Appendix C unless decimals:
-                  gives them.
-                  {{ 48920000 | amount: "EUR", group: "," }}
+                  Writes a number, or a decimal text such as "-1234.50" at any
+                  length, for a reader. decimals: (0 to 20) rounds half away
+                  from zero; group: and point: name the separators, and with
+                  none named it groups nothing and writes . as the point.
+  amount          {{ 48920000 | amount: "EUR", group: "," }}
                   gives EUR 48,920,000.00
-  duration        Writes seconds, an ISO 8601 duration, or fields: "d:h:m" and
-                  the like, with %d %H %M %S, as date's directives are written.
-                  {{ "00:07:25" | duration: "%-H h %M min", fields: "d:h:m" }}
+                  Writes an amount with its ISO 4217 code, usually an input, so
+                  one template writes any currency: its decimals follow the code
+                  by spec Appendix C unless decimals: gives them, it takes
+                  number's group: and point:, and code: "after" writes the code
+                  last. It writes no symbol.
+                  There is no money filter: amount takes the amount in the
+                  currency's major unit, euros and not cents, so an amount in
+                  cents is divided by 100 first.
+  duration        {{ "00:07:25" | duration: "%-H h %M min", fields: "d:h:m" }}
                   gives 7 h 25 min
+                  Writes a length of time: whole seconds, an ISO 8601 duration
+                  such as PT7H25M, or fields separated by : that fields: names
+                  ("d:h:m", "h:m:s" and the like). Its directives mirror date's:
+                  %d, %H, %M and %S are days, hours, minutes and seconds, with
+                  date's flags -, _ and 0, and the largest named takes the rest.
 
 Escaping:
 An output's escape is none, the default, or html, set in metais.yaml beside its

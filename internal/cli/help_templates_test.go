@@ -86,6 +86,56 @@ func TestTemplatesTopicFilters(t *testing.T) {
 	}
 }
 
+// TestTemplatesTopicValues is ADR-004 A2 decision item 6: the topic shows
+// number, amount and duration example first, in date's group, each with
+// chapter 8's example; amount's entry has a line of its own saying there
+// is no money filter and that amount takes major units, not cents; and
+// duration's says its directives mirror date's.
+func TestTemplatesTopicValues(t *testing.T) {
+	examples := map[string]string{
+		"number":   `{{ 48920000 | number: decimals: 2, group: "," }}`,
+		"amount":   `{{ 48920000 | amount: "EUR", group: "," }}`,
+		"duration": `{{ "00:07:25" | duration: "%-H h %M min", fields: "d:h:m" }}`,
+	}
+	var group *filterGroup
+	for i, g := range filterGroups {
+		if slices.ContainsFunc(g.docs, func(d filterDoc) bool { return d.Name == "date" }) {
+			group = &filterGroups[i]
+		}
+	}
+	if group == nil || !group.exampleFirst {
+		t.Fatal("date's group does not show its filters example first")
+	}
+	for name, ex := range examples {
+		i := slices.IndexFunc(group.docs, func(d filterDoc) bool { return d.Name == name })
+		if i < 0 {
+			t.Errorf("%s is not beside date", name)
+		} else if group.docs[i].Example != ex {
+			t.Errorf("%s's example is %s, not chapter 8's %s", name, group.docs[i].Example, ex)
+		}
+	}
+
+	out := runTool(t, "help", "templates").stdout
+	for name, ex := range examples {
+		if !strings.Contains(out, "\n  "+name+strings.Repeat(" ", filterWidth-2-len(name))+ex+"\n") {
+			t.Errorf("metais help templates does not lead %s's entry with its example", name)
+		}
+	}
+	// The note begins a line of its own, after what amount does.
+	note := filterNotes["amount"]
+	if !strings.HasPrefix(note, "There is no money filter: amount takes the amount in the currency's major unit") ||
+		!strings.Contains(note, "not cents") {
+		t.Errorf("amount's note does not say there is no money filter and that it takes major units: %q", note)
+	}
+	if !strings.Contains(out, "\n"+strings.Repeat(" ", filterWidth)+"There is no money filter:") {
+		t.Error("amount's note is not on a line of its own")
+	}
+	if i := slices.IndexFunc(group.docs, func(d filterDoc) bool { return d.Name == "duration" }); i < 0 ||
+		!strings.Contains(group.docs[i].Line, "directives mirror date's") {
+		t.Error("duration's entry does not say its directives mirror date's")
+	}
+}
+
 // examplePartials is the one partial the worked examples render.
 type examplePartials map[string]*liquid.Template
 
