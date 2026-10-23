@@ -229,5 +229,186 @@ train's to file.
 
 ## Closeout
 
-*Not yet written. The wave orchestrator replaces this line with the
-wave's closeout.*
+Written 2026-10-23 by the wave orchestrator
+(`01a16a3c-f273-7cc5-a975-223b0ba3901d`) after the wave drained. This is a
+record of what landed and where every finding went. It is **not a
+correctness verdict**. I read the children's reports, the merge commits and
+the verifier's report. I spot-read the merged tree where an ask named a
+mechanism. I did not mutate or test anything myself. The testing described
+below is the verifier's, attributed to it.
+
+### 1. What landed, against what the brief asked
+
+The wave had six items and one correction. All are complete and merged to
+`main`, below `962e155e` (the wave's base), in merge order. Commits of
+other work are interleaved: #290 (W1-NB1), #291 (R-W2-a in the plan), and
+PLAN-2026-10-metais-public's #271, #292, #298 and #299.
+
+| Item | Candidate | Work Order | PR | Merge | Landed |
+|---|---|---|---|---|---|
+| W2-2 | V4 | `01a16a42-6b57-7be2-b248-bf310eadc15d` | #293 | `6cbb16f0` | DORA writes its date-times through `date`, counts and percentages through `number`, amounts through `amount` with the code from `reporting_currency`, and 3.15 and 3.16 through `duration` with `fields: "d:h:m"`. The status widget's visible `<time>` text goes through `date`, and its `datetime` attribute stays RFC 3339. In the ACR only the Word body's report date changed; `acr.json` and `core.xml` keep their machine form, and no ACR rule changed. The PR shows `48920000` → `EUR 48,920,000.00` and `00:07:25` → `0 d 7 h 25 min`. |
+| W2-1 | V3 | `01a16a41-d690-78d1-a58e-25c9ff5ee725` | #294 | `bd2ad7ef` | `template.unknown_filter`'s `alternative`, from an explicit three-name table in `internal/template/filters`, used by template parse and manifest expressions alike. `help templates` has a group of its own for `date`, `number`, `amount` and `duration`, example first. MTS-FLT-014's wording, MTS-FLT-023 and its Note, chapter 13's opening and §13.9. `TestWritingValuesForReaders` renders §13.9 from the spec text. |
+| W2-3 | R5 | `01a16a42-df3b-7461-9e79-d1866fca0110` | #295 | `53e4949f` | MTS-AUT-081 to 083 in `check`; `schema.key_not_declared` registered; `schema.unsatisfiable`'s message and hint name each of its three causes; `aut/check-*` vectors. |
+| W2-4 | R6 | `01a16a43-4c98-7641-b5eb-451d911b31cc` | #296 | `68a86735` | Covered items first, then fill; repeated keys regenerated; reasons `unique_keys` and `coverage`; MTS-SMP-010 and 011; `smp/` vectors; `render --sample` over both keywords. |
+| W2-5 | R7, first half | `01a16a43-b465-7d90-b998-9bcb87166df0` | #297 | `85a8e622` | `schema --fields` rule lines directly after the array's line (R-W2-a), every value listed; `metais.schema/1` `rules`; `inspect`'s line; the four rule findings' hints name the column. |
+| W2-6 | R7, second half | `01a16a44-2441-7e8a-92f3-9af9706fa296` | #300 | `72c33df9` | `metais help schemas`, with keyword lists checked against a new `schema.Keywords()`; the pointer from `help schema`; the skill names both keywords; chapter 13's "Rules across the rows of a table" with its Note, verbatim. |
+| W2-7 | correction of W2-1 | `01a16a9e-6cd7-73c8-9a5d-e707e719e413` | #301 | `ab7fd2c4` | `internal/template`'s `TestUnknownFilterAlternative` guards the template path: near-names carry no `alternative`. Shown red under both of the verifier's mutations. |
+
+**What I checked in the merged tree.**
+
+- Chapter 13 holds "Rules across the rows of a table" at line 160, then
+  MTS-AUT-081 at line 217, then `### Step 6` at line 233. So W2-3's and
+  W2-6's shared hunk sits in `b80ed115`'s order.
+- `internal/template/filters/filters.go` holds the three-name table.
+- `internal/cli/inspect.go` writes "has rules across its rows, which metais
+  schema <package> <input> --fields lists".
+- Every log file the items name exists. The plan-prefixed names are used
+  where a `W2-*` name was taken in ADR-007 or ADR-008.
+- `gofmt -l .` on `ab7fd2c4` prints nothing.
+
+**Divergences from the ask:**
+
+- **W2-1.2 asked for a proof "by a vector" that a vector cannot give.** The
+  conformance harness compares an expected finding's parameters as a
+  subset (ADR-011 D10 item 2), so no vector can show a parameter is
+  absent. W2-7 met the criterion with the vector and a unit test together,
+  and left the harness alone. This was my criterion's wording, not the
+  item's fault.
+- **The values in W2-5's rule sentences are canonical JSON** (`"1.1.1"`,
+  `1`), not the bare text of A2 item 10's illustration. That keeps `1` and
+  `"1"` apart, and matches `missing` and the hint. The producer stated
+  this reading in #297.
+- **W2-6's squash commit carries a malformed sign-off** (§4).
+
+**Rulings made during this wave:**
+
+- **R-W2-a (plan orchestrator, 2026-10-23).** It was given in answer to the
+  breakdown's park, and recorded in the plan by #291. In `schema --fields`
+  the tool writes one line per rule, after the line of the array that
+  carries the keyword, as A2 item 10 says. Chapter 13's Note, "on the line
+  of the array it constrains", is read as agreeing: the rule is written
+  with, and directly under, that array's line. No wording change was made.
+  It governed W2-5 and W2-6. The verifier mutated the order, and its test
+  went red.
+- **R-W2-b (wave orchestrator, 2026-10-23), given to W2-NB1.** A `coverage`
+  member that the key's schema refuses is a case where the generator
+  "cannot" (MTS-SMP-010). So it is `schema.sample_unsatisfiable` with
+  reason `coverage`, not a `schema.sample_invalid` read back. It follows
+  from MTS-SMP-010 with MTS-SMP-004: the sample operation generates values
+  the schema allows. If W2-NB1 finds approved text against it, the item
+  parks.
+
+Nobody asked for a wording change to approved text, and no item parked.
+
+### 2. What children flagged, declined or discovered
+
+- **W2-2:** English separators (`group: ","`), because the report's labels
+  are Annex II's English, as in §13.9. Percentages are written with one
+  decimal. The recorded UX-run fixtures under
+  `internal/tools/ux/score/testdata/runs/`, which hold old DORA renders,
+  were left as past runs.
+- **W2-3:** two readings of "the array's item schema".
+  - It is the `items` and `prefixItems` of every node in the applicable
+    set. If an open set is reached, every token counts as declared.
+  - A `coverage` value is reported only when every reached alternative
+    refuses it.
+
+  No parameter was added to either finding.
+- **W2-4:** a choice and a gap.
+  - When `--items` asks for more items than there are distinct keys, the
+    array is shortened to the keys there are, as D9 item 16 shortens a
+    `uniqueItems` array. Below `minItems` that is `unique_keys`, and
+    covered items are never dropped.
+  - A refused `coverage` member was not special-cased (§4, W2-NB1).
+- **W2-5:**
+  - `inspect`'s flag is text only, because A2 states no JSON member for it.
+  - The hints name the column through `WithHintValues` from failure data,
+    with no new parameter.
+  - No vector records a hint, so no expectation changed.
+- **W2-1:** suggested that the skill gain a line saying that amounts go
+  through `amount` and there is no `money` filter. W2-6 named both rule
+  keywords and the `help schemas` topic in the skill. I did not check
+  whether it took the amount line.
+- **Tooling:**
+  - Several clones needed `git config core.precomposeunicode false`,
+    because the sandbox's iconv lacks UTF-8-MAC.
+  - Some clones had no git identity set.
+
+### 3. What carries to the next wave
+
+- **Wave 3's full gate will hit the host starvation the verifier measured**
+  (§4, finding not filed). The whole-package `-race` runs of
+  `internal/guarantees` and `internal/conformance` took the full 600 s,
+  getting about half the CPU they were allowed. Run the full gate when the
+  host is otherwise idle, or split those two packages by `-run` as R-W6-3
+  splits the reach.
+- **Give every item's squash a real identity.** From W2-7 on, tasks said so
+  explicitly, after W2-6's empty trailer. Wave 3's brief should say it from
+  the start.
+- **R8 starts from what this wave built.** The ACR is the first package to
+  adopt both keywords. `check` (W2-3), the generator (W2-4) and the listing
+  (W2-5) all meet it, so R8's `render --sample` criterion is the first real
+  exercise of W2-4 on 55 covered criteria with `--items` below them.
+- **Two follow-ups run beside Wave 3**, unwaited: W2-NB1 and W2-NB2 (§4).
+  W2-NB1 touches `internal/sample` and the registry, as R8 may.
+- **What I would do differently:** write each criterion in a form the
+  repository's proof mechanism can express. W2-1.2's "proved by a vector"
+  could not be met, and it cost a correction round.
+
+### 4. What the verification found, and where every finding went
+
+One `wave-verification`, `01a16a7f-1338-718e-9bcb-4400634e8697`. It returned
+all six item ids I sent, each `mutated`.
+
+- **What it did:**
+  - ran 31 mutations across the six items, by my count of its report's
+    rows. Every one went red except:
+    - four stayed green, and those became the findings below: two on
+      W2-1, one on W2-2 and one on W2-3;
+    - one compile error (FALSE_RED), which it re-ran.
+  - spot-checked claimed reds: §13.9's `(4.2 %)` and the help rows;
+  - checked that every line the wave added under `spec/`, other than the
+    generated catalog, is a line of `b80ed115` or `b0cbb230`. It also
+    checked that chapters 8 and 13 equal the approved text exactly, and
+    that no shared sentence was left open.
+  - ran `TestCoverage`, `TestFindingCodesCovered` and `gofmt -l` on a
+    worktree of each of the 12 commits in `962e155e..72c33df9`, all green;
+  - ran `regenerate.sh` on the merged tree, which changed nothing.
+- **How it ran its tests:** directed runs (R-VR-7). Build, vet, `gofmt`,
+  the specdata drift, and `go test -race` over cli, template, loader,
+  finding, specdata, author, sample, schema, schemafail, skill,
+  `cmd/metais`, site and vectorgen. Its gate result is **RED** only
+  because the whole-package runs of `internal/guarantees` and
+  `internal/conformance` timed out; scoped re-runs of what those two
+  packages hold for this wave were green.
+- **Where it found nothing:** W2-4 (5 mutations) and W2-5 (6 mutations).
+
+**Blocking: one finding, one fix child.**
+
+| Finding | Criterion quoted | Fix |
+|---|---|---|
+| `flt/money-near-names` cannot prove a near-name gets no `alternative`, and no test guarded the template path. Making every template `unknown_filter` carry `alternative: amount` left every vector and test green. | W2-1.2 (item) | W2-7 `01a16a9e-6cd7-73c8-9a5d-e707e719e413`, #301, merged. Not re-verified in this wave, by design; its PR shows its test red under both mutations. |
+
+**Non-blocking findings.** Two are combined in one child because each is a
+thin test addition, and the task says the two are severable. **The wave
+completed without waiting for W2-NB1 and W2-NB2, by design.** They were
+filed just before this closeout, after the wave had drained and once no wait
+of mine remained, so they hold nothing up.
+
+| Finding | From | Where it went |
+|---|---|---|
+| `sample` writes a `coverage` member the key's schema refuses, then reports `schema.sample_invalid` with a hint to add an `examples` value, which cannot help | W2-3/W2-4 seam (cross-item) | W2-NB1 `01a16aa6-6764-702a-b809-d8df0783afd3`, under ruling R-W2-b |
+| No example pins that DORA's amount code comes from the input: every example is EUR, and hard-coding `"EUR"` stays green | W2-2 | W2-NB2 `01a16aa6-ba87-7094-883a-7a5160cb7686` |
+| `check`'s `prefixItems` branch of the item schema is untested: ignoring it stays green | W2-3 | W2-NB2 `01a16aa6-ba87-7094-883a-7a5160cb7686` |
+| Squash commit `72c33df9` ends `Signed-off-by:  <>`, though its branch commit `7ecc736f` is signed | W2-6 | Issue #302, a decision for Ed. Repairing it means rewriting `main`'s history, which no work item may do. |
+| Whole-package `-race` runs of `internal/guarantees` and `internal/conformance` exceed `go test`'s 10-minute bound on the shared host | cross-item | **Not filed.** It is host starvation, not a defect of this wave: about 0.5 of the allowed share, and 591 s already on pre-wave `c831e966`. Earlier observations record it, and code cannot fix it. It is carried to Wave 3's full gate (§3). |
+
+No janitorial issue was filed: no finding was prose-only.
+
+### 5. Out-of-band acts
+
+None was filed, and none was needed. Plan §6 gives this wave no act. The
+conditional act "rule on a wording change to approved text" did not arise:
+no item parked. The question of where a rule line sits went to the plan
+orchestrator in the breakdown's review, and came back as R-W2-a. The final
+UX check follows Wave 3's verification.
