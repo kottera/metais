@@ -731,7 +731,7 @@
         }
       ],
       "message": "{field} has no item whose value at coverage's key is {missing}, a value the array must cover.",
-      "hint": "Add an item whose value at coverage's key is {missing}.",
+      "hint": "Add an item whose value at coverage's key is {missing}: the array must include, at the key, each of coverage's values, and no item holds this one.",
       "location": "value",
       "since": "1.0",
       "statements": [
@@ -1812,7 +1812,7 @@
         }
       ],
       "message": "{field} repeats the key of item {duplicate_of} of the array, whose uniqueKeys requires each item's key to be unique.",
-      "hint": "Change the key of item {index}, or remove the item if it repeats item {duplicate_of}.",
+      "hint": "No two items may share the key uniqueKeys names, and item {index} repeats item {duplicate_of}'s: change item {index} there, or remove it if it repeats item {duplicate_of} whole.",
       "location": "value",
       "since": "1.0",
       "statements": [
@@ -3471,7 +3471,7 @@
         }
       ],
       "message": "{field} has no item whose value at coverage's key is {missing}, a value the array must cover.",
-      "hint": "Add an item whose value at coverage's key is {missing}.",
+      "hint": "Add an item whose value at coverage's key is {missing}: the array must include, at the key, each of coverage's values, and no item holds this one.",
       "location": "value",
       "since": "1.0",
       "statements": [
@@ -4841,7 +4841,7 @@
         }
       ],
       "message": "{field} repeats the key of item {duplicate_of} of the array, whose uniqueKeys requires each item's key to be unique.",
-      "hint": "Change the key of item {index}, or remove the item if it repeats item {duplicate_of}.",
+      "hint": "No two items may share the key uniqueKeys names, and item {index} repeats item {duplicate_of}'s: change item {index} there, or remove it if it repeats item {duplicate_of} whole.",
       "location": "value",
       "since": "1.0",
       "statements": [
