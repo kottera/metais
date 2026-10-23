@@ -73,9 +73,11 @@ plan §6's act reports back.
 are run and compared with their committed baselines, and which benchmark
 measures which budget.
 
-[dev/release.md](dev/release.md) is how a release's archives are built
-with the release builder of ADR-010 D12, and what it refuses, and how
-the metais.org site, built from `site/`, goes live at the release.
+[dev/release.md](dev/release.md) is how a release is cut and published
+(ADR-013 D7): the procedure that tags, builds and drafts it and pushes
+nothing, the release act in which `release.yml` pushes the tags,
+publishes it, updates the tap and deploys the site, the release builder
+of ADR-010 D12 and what it refuses, and how metais.org goes live.
 
 [dev/ux-testing.md](dev/ux-testing.md) is how fresh agent sessions are run
 over the UX scenario set of PLAN-2026-10-metais-ux: the scenarios, the
