@@ -250,6 +250,104 @@ spaces or zeros instead.
 > `%Z` departs from it: Ruby writes a zone's name, which a value that carries
 > only an offset does not have.
 
+### 8.1.10 Numbers for readers
+
+`number` and `amount` write a number as a reader reads it: with a chosen
+count of decimals, a decimal point, and a separator between groups of
+digits. Neither reads a locale. Every separator is an argument, and what an
+argument left out means is the same in every package: a point `.`, no group
+separator, and the value's own decimals.
+
+<a id="mts-flt-015"></a>**MTS-FLT-015** `number` and `amount` MUST accept
+as their input a number; a string that is a *decimal text*, an optional
+`-`, then `0` or an ASCII digit `1` to `9` followed by any ASCII digits,
+then optionally `.` and one or more ASCII digits, and nothing else; and nil,
+which gives nil. A processor MUST refuse every other input with
+`template.number_input`, naming the filter and the kind found: a boolean,
+an array, an object, and any other string, among them one with a space, a
+`+`, a leading zero, an exponent or a separator.
+
+<a id="mts-flt-016"></a>**MTS-FLT-016** The value of a number MUST be the
+shortest decimal that reads back as its binary64 value, the decimal
+[MTS-TPL-018](07-template-environment.md#mts-tpl-018)'s arithmetic computes
+on, and the value of a decimal text MUST be the decimal it spells, exactly,
+whatever its count of digits. With `decimals:` n, a processor MUST round
+the value to n digits after the point, a value exactly halfway between the
+two nearest being rounded away from zero, and MUST write n digits after the
+point;
+without `decimals:`, it MUST write the value's digits after the point with
+trailing zeros removed. It MUST write the integer part's digits with no
+leading zero but a lone `0`, no point when no digit follows it, `-` before
+the first digit when the value written is below zero, and never an
+exponent: `-0.004` with `decimals: 2` is `0.00`, and `1e21` is written with
+its 22 digits.
+
+<a id="mts-flt-017"></a>**MTS-FLT-017** `decimals:` MUST be an integer from
+0 to 20; `point:` MUST be a string of one code point other than an ASCII
+digit and `-`, and is `.` when not given; and `group:` MUST be the empty
+string, which it is when not given, or a string of one code point other than
+an ASCII digit, `-` and the point. A processor MUST refuse any other with
+`template.filter_argument`, MUST write the point as `point:` gives it, and,
+when `group:` is not empty, MUST write it between two digits of the integer
+part wherever the digits to its right in the integer part number a multiple
+of three, and nowhere in the fraction.
+
+> **Note.** The value of the number 2.675 is the decimal 2.675, so
+> `{{ 2.675 | number: decimals: 2 }}` writes `2.68`, as
+> `{{ 2.675 | round: 2 }}` gives 2.68. A formatter that rounds a binary64's
+> exact binary value — C's `printf`, Go's `strconv.FormatFloat`,
+> ECMAScript's `toFixed` — writes `2.67`, because the binary64 nearest 2.675
+> lies just below it; `1.005` and `0.125` part the same way. A number keeps
+> about fifteen significant digits exactly. A supplier who needs more gives
+> the value as a decimal text, which the input's schema declares as a
+> string.
+
+### 8.1.11 `number`
+
+<a id="mts-flt-018"></a>**MTS-FLT-018** `number` MUST take no positional
+argument and the keywords `decimals:`, `group:` and `point:`, each
+optional, and MUST write its value as
+[MTS-FLT-016](#mts-flt-016) and [MTS-FLT-017](#mts-flt-017) state.
+
+So `{{ 48920000 | number: decimals: 2, group: "," }}` writes
+`48,920,000.00`, `{{ 1234.5 | number: group: " ", point: "," }}` writes
+`1 234,5`, `{{ "12345678901234567.891" | number: decimals: 2, group: "," }}`
+writes `12,345,678,901,234,567.89`, and `{{ -2.5 | number: decimals: 0 }}`
+writes `-3`.
+
+### 8.1.12 `amount`
+
+`amount` writes an amount of money with its
+[ISO 4217](A-references.md#iso4217) code. It takes the amount in the
+currency's major unit — euros, not cents — and the code as its argument,
+usually an input the supplier gives, so one template writes a report in any
+currency. The count of decimals comes from the code, by
+[Appendix C](C-currency-minor-units.md), unless `decimals:` gives it. It
+writes no currency symbol: `$` names more than one currency.
+
+<a id="mts-flt-019"></a>**MTS-FLT-019** `amount` MUST take one positional
+argument, the code, a string, and the keywords `decimals:`, `group:`,
+`point:` and `code:`, each optional; `code:` MUST be `"before"`, which it is
+when not given, or `"after"`. A processor MUST write the code, one U+0020
+and the number when `code:` is `"before"`, and the number, one U+0020 and
+the code when it is `"after"`, the number being the value as
+[MTS-FLT-016](#mts-flt-016) and [MTS-FLT-017](#mts-flt-017) write it, with
+`decimals:` when it is given and otherwise with the code's minor units in
+Appendix C.
+
+So `{{ 48920000 | amount: "EUR", group: "," }}` writes
+`EUR 48,920,000.00`, `{{ 5000 | amount: "JPY" }}` writes `JPY 5000`,
+`{{ 1.5 | amount: "BHD" }}` writes `BHD 1.500`, and
+`{{ -5 | amount: "EUR", code: "after" }}` writes `-5.00 EUR`.
+
+<a id="mts-flt-020"></a>**MTS-FLT-020** A processor MUST refuse with
+`template.amount_currency` a code that is not three ASCII capital letters,
+its `reason` `malformed`; and, when `decimals:` is not given, a code
+Appendix C does not list or lists with no minor units, its `reason`
+`no_minor_unit`. With `decimals:`, any three ASCII capital letters are a
+code. A code written as a literal MUST be judged when the template is
+parsed, and the finding MUST NOT hold the code.
+
 ### 8.1.13 `duration`
 
 `duration` writes a length of time, by a format whose directives mirror

@@ -33,6 +33,7 @@ program's conformance.
 
 - [Appendix A. References](A-references.md)
 - [Appendix B. A worked package](B-worked-package.md)
+- [Appendix C. Currency minor units](C-currency-minor-units.md)
 - [Changelog](CHANGELOG.md)
 - [Errata](ERRATA.md)
 - [The conformance suite](conformance/README.md)

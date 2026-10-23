@@ -1,0 +1,12 @@
+{{ 48920000 | amount: "EUR", group: "," }}
+{{ 5000 | amount: "JPY" }}
+{{ 1.5 | amount: "BHD" }}
+{{ -5 | amount: "EUR", code: "after" }}
+{{ 1.23456 | amount: "CLF" }}
+{{ 2.5 | amount: "XAU", decimals: 3 }}
+{{ 2 | amount: "ZZZ", decimals: 1 }}
+{{ 2.675 | amount: "JPY", decimals: 2 }}
+{{ -5 | amount: "EUR", code: "before" }}
+{{ inputs.r.value | amount: inputs.r.currency, group: ".", point: "," }}
+{{ inputs.r.text | amount: inputs.r.currency, group: "," }}
+[{{ nil | amount: "EUR" }}]

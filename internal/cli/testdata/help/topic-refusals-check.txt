@@ -131,6 +131,7 @@ Next: metais check <package>
   schema.syntax
   schema.unsatisfiable
   schema.unusable_enum_member
+  template.amount_currency
   template.crlf
   template.date_format
   template.division_by_zero

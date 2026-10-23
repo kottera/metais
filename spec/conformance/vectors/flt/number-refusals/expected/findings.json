@@ -1,0 +1,262 @@
+[
+  {
+    "code": "template.number_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/amount-string.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/amount-string.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "amount",
+      "type": "string",
+      "column": 1,
+      "output_path": "amount-string.txt"
+    }
+  },
+  {
+    "code": "template.number_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/array.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/array.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "type": "array",
+      "column": 1,
+      "output_path": "array.txt"
+    }
+  },
+  {
+    "code": "template.number_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/bare-point.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/bare-point.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "type": "string",
+      "column": 1,
+      "output_path": "bare-point.txt"
+    }
+  },
+  {
+    "code": "template.number_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/boolean.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/boolean.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "type": "boolean",
+      "column": 1,
+      "output_path": "boolean.txt"
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/decimals-text.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/decimals-text.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "decimals",
+      "column": 1,
+      "output_path": "decimals-text.txt"
+    }
+  },
+  {
+    "code": "template.number_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/empty.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/empty.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "type": "string",
+      "column": 1,
+      "output_path": "empty.txt"
+    }
+  },
+  {
+    "code": "template.number_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/exponent.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/exponent.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "type": "string",
+      "column": 1,
+      "output_path": "exponent.txt"
+    }
+  },
+  {
+    "code": "template.filter_argument",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/group-point.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/group-point.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "argument": "group",
+      "column": 1,
+      "output_path": "group-point.txt"
+    }
+  },
+  {
+    "code": "template.number_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/leading-zero.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/leading-zero.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "type": "string",
+      "column": 1,
+      "output_path": "leading-zero.txt"
+    }
+  },
+  {
+    "code": "template.number_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/object.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/object.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "type": "object",
+      "column": 1,
+      "output_path": "object.txt"
+    }
+  },
+  {
+    "code": "template.number_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/plus.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/plus.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "type": "string",
+      "column": 1,
+      "output_path": "plus.txt"
+    }
+  },
+  {
+    "code": "template.number_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/separator.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/separator.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "type": "string",
+      "column": 1,
+      "output_path": "separator.txt"
+    }
+  },
+  {
+    "code": "template.number_input",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/space.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/space.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "filter": "number",
+      "type": "string",
+      "column": 1,
+      "output_path": "space.txt"
+    }
+  }
+]

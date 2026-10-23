@@ -1,0 +1,110 @@
+[
+  {
+    "code": "template.amount_currency",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/digit-with-decimals.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/digit-with-decimals.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "malformed",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.amount_currency",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/empty.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/empty.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "malformed",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.amount_currency",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/four.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/four.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "malformed",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.amount_currency",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/gold.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/gold.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "no_minor_unit",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.amount_currency",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/lower.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/lower.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "malformed",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.amount_currency",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/unlisted.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/unlisted.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "reason": "no_minor_unit",
+      "column": 1
+    }
+  }
+]

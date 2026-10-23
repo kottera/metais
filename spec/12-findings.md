@@ -283,6 +283,7 @@ it, and the statements it reports.
 | `schema.syntax` | error | content | package | `form`, `rule` | 1.0 | [MTS-DAT-002](05-data-specification.md#mts-dat-002) |
 | `schema.unsatisfiable` | error | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
 | `schema.unusable_enum_member` | warning | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
+| `template.amount_currency` | error | content | template | `reason`, `column`; optional: `output_path` | 1.0 | [MTS-FLT-020](08-filters-and-tags.md#mts-flt-020), [MTS-MAN-018](03-manifest.md#mts-man-018) |
 | `template.asset_ambiguous` | error | content | template | `asset`, `column`, `output_path` | 1.0 | [MTS-TAG-015](08-filters-and-tags.md#mts-tag-015) |
 | `template.asset_not_found` | error | content | template | `asset`, `column` | 1.0 | [MTS-TAG-013](08-filters-and-tags.md#mts-tag-013) |
 | `template.asset_not_text` | error | content | template | `asset`, `column`, `output_path` | 1.0 | [MTS-TAG-016](08-filters-and-tags.md#mts-tag-016) |
@@ -303,6 +304,7 @@ it, and the statements it reports.
 | `template.invalid_utf8` | error | content | template | `column`; optional: `filter`, `tag`, `output_path` | 1.0 | [MTS-TAG-003](08-filters-and-tags.md#mts-tag-003), [MTS-TPL-052](07-template-environment.md#mts-tpl-052) |
 | `template.nil_property` | error | content | template | `path`, `column`; optional: `output_path` | 1.0 | [MTS-TPL-030](07-template-environment.md#mts-tpl-030) |
 | `template.not_utf8` | error | content | template | — | 1.0 | [MTS-AUT-010](13-authoring.md#mts-aut-010), [MTS-TPL-006](07-template-environment.md#mts-tpl-006) |
+| `template.number_input` | error | content | template | `filter`, `type`, `column`; optional: `output_path` | 1.0 | [MTS-FLT-015](08-filters-and-tags.md#mts-flt-015) |
 | `template.number_range` | error | content | template | `column`; optional: `filter`, `output_path` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-019](07-template-environment.md#mts-tpl-019) |
 | `template.object_output` | error | content | template | `column`; optional: `output_path` | 1.0 | [MTS-TPL-021](07-template-environment.md#mts-tpl-021) |
 | `template.ooxml.split_construct` | error | content | template | `cause`, `text`, `text_elements` | 1.0 | [MTS-AUT-019](13-authoring.md#mts-aut-019) |

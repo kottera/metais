@@ -27,6 +27,7 @@ const (
 	CodeTemplateSafePosition   finding.Code = "template.safe_position"
 	CodeTemplateDateFormat     finding.Code = "template.date_format"
 	CodeTemplateDurationFormat finding.Code = "template.duration_format"
+	CodeTemplateAmountCode     finding.Code = "template.amount_currency"
 )
 
 // The top-level directories a manifest path is resolved in.
@@ -239,6 +240,8 @@ func TemplateFinding(e *liquid.Error, subj finding.Subject, at finding.Location,
 			p["directive"] = finding.String(d)
 		}
 		return finding.New(CodeTemplateDurationFormat, subj, &at, p)
+	case liquid.CodeAmountCurrency:
+		return finding.New(CodeTemplateAmountCode, subj, &at, finding.Params{"reason": finding.String(e.Args["reason"]), "column": column})
 	case liquid.CodePartialName:
 		return finding.New(CodeTemplateTagContext, subj, &at, finding.Params{"tag": finding.String("render"), "column": column})
 	case liquid.CodeNotUTF8:

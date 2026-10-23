@@ -1,0 +1,52 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "flt/number-refusals",
+  "title": "number and amount refuse an input that is neither a number, a decimal text nor nil with template.number_input, naming the filter and the kind; and an argument they never take with template.filter_argument, a literal one when the template is parsed",
+  "statements": [
+    "MTS-FLT-004",
+    "MTS-FLT-015",
+    "MTS-FLT-017",
+    "MTS-FLT-018",
+    "MTS-FLT-019"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package-parse",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/parse.json"
+          }
+        }
+      ]
+    }
+  ]
+}

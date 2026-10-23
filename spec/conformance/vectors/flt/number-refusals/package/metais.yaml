@@ -1,0 +1,37 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: r
+    title: R
+    schema: inputs/r.schema.json
+outputs:
+  - id: boolean
+    template: boolean.txt.liquid
+  - id: array
+    template: array.txt.liquid
+  - id: object
+    template: object.txt.liquid
+  - id: space
+    template: space.txt.liquid
+  - id: plus
+    template: plus.txt.liquid
+  - id: leading_zero
+    template: leading-zero.txt.liquid
+  - id: exponent
+    template: exponent.txt.liquid
+  - id: separator
+    template: separator.txt.liquid
+  - id: bare_point
+    template: bare-point.txt.liquid
+  - id: empty
+    template: empty.txt.liquid
+  - id: amount_string
+    template: amount-string.txt.liquid
+  - id: decimals_text
+    template: decimals-text.txt.liquid
+  - id: group_point
+    template: group-point.txt.liquid
