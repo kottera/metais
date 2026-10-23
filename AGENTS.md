@@ -291,8 +291,17 @@ there as its own work.
   licence. A squash merge keeps the trailer in its commit's body. CI's DCO
   check fails a pull request with any commit that lacks one, and there is
   no exemption.
-- Never include `Co-Authored-By` lines in commit messages or pull request
-  descriptions.
+- Never include `Co-Authored-By` lines in commit messages, pull request
+  titles and descriptions, or squash messages. CI's co-author check fails
+  a pull request whose commits, or whose title and body, carry one.
+- **Pass every squash merge's body explicitly.** GitHub's default squash
+  body adds a `Co-authored-by` line for every commit author other than the
+  merging account's own identity, so a merge without one adds the line
+  even to clean commits, and CI cannot see a body typed at the merge.
+  Write the pull request's description to a file whose only trailer is
+  the `Signed-off-by:` line, then run `gh pr merge <n> --squash --subject
+  '<title> (#<n>)' --body-file <file>`. Then check the merged commit's
+  message.
 - Pass a multi-paragraph commit or pull request message by file
   (`git commit -F`, `gh pr create --body-file`), written under
   `${TMPDIR:-/tmp}` with a unique name, never through a heredoc. Leave the
