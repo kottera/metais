@@ -204,5 +204,115 @@ one is declared when you file.
 
 ## Closeout
 
-*Not yet written. The wave orchestrator replaces this line with the
-wave's closeout.*
+Written by the wave orchestrator (Work Order 01a16404-76cf-7831-bcf6-278f81c14f88)
+on 2026-10-23, against `main` at 424b523d. Base ref: bb173ea8. This section
+says what landed and where every finding went. It is not a correctness
+verdict: the verification round's findings below are W1-V's, with its
+method named. Where this section says "reports", the claim is the child's.
+Where it says "I read", I read the merged code. I mutated nothing.
+
+### 1. What landed, and whether it matches the ask
+
+| Item | Work Order | Pull request, merge | What landed |
+|---|---|---|---|
+| W1-1 | 01a16407-717a | #243, 045981b2 | The module is `metais.org/metais` in `go.mod`, every import, `testdata/` modules, `layers.json`, the baselines, the gate's scripts, the `-X` flag in `docs/dev/release.md`, and the rules in force of ADR-009 A2 and A8 and ADR-010 D1 and D12. Records keep the old path. `site/public/metais/` and `site/public/metais/cmd/metais/` carry `go-import` (`metais.org/metais git https://github.com/kottera/metais`) and `go-source`, held by `TestGoImportPages`. The wave tier was green before merge. |
+| W1-2 | 01a16407-cf5e | #247, bcc44a3d | gitleaks 8.30.1 and trufflehog 3.99.3 scanned 1013 commits over every remote ref and found nothing, so nothing was rotated. The report is the Work Order's artifact `art_4ggwebkg2wmwb5f2lnoftlsaei7o2hsl3644rvq5mc2idtyo64ja`, not committed. Host labels in the baselines and host tables became platform descriptions. Notes about a person's machine became the procedure. AGENTS.md states its naming rules itself. |
+| W1-3 | 01a16408-2a43 | #244, 33986491 | `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1, contact `conduct@kottera.com`), `SECURITY.md` (GitHub private vulnerability reporting, no email), three issue templates and the pull request template. |
+| W1-4 | 01a16408-863e | #246, 1d2a8f3a | `.github/workflows/ci.yml`, dispatch-only, read-only token, jobs wave, macos, dco, shell and site. `.github/scripts/dco.sh`. `TestWorkflows` in `internal/guarantees`, seen red first three ways. AGENTS.md's three tiers and the sign-off rule. Its proving runs were declared a gap and owned by W1-4b. |
+| W1-4b | 01a1644c-4203 | #249, 3d13240c; #252, 44ece575 | #249 cleared every shellcheck finding in the gate's scripts. #252 is R-W1-4's split: `.github/scripts/conformance.sh` runs `internal/conformance` by `-run`, each top-level test alone and `TestConformance` once per area, the areas read at run time. `gate.sh`, its tiers and every timeout are unchanged. Every job has a green dispatched run, linked on #246. |
+| W1-5 | 01a16408-c151 | #245, 9075f604 | ADR-008 A14. `metais version` and `metais --version` end with "METAIS is made by Kottera."; every `--json` spelling is byte-identical. `TestVendorNeutral` holds help, topics and the skill free of Kottera and tera. |
+
+I read the merged code for the asks that named a mechanism, and found what the items report:
+- both `go-import` pages carry the exact content;
+- `go.mod` begins `module metais.org/metais`;
+- `makerLine` is in `internal/cli/commands.go`, and its output test pins it;
+- `ci.yml`'s only trigger is `workflow_dispatch`;
+- `TestWorkflows` has cases for `self-hosted`, `pull_request_target` and a missing `permissions`;
+- AGENTS.md states three tiers and the sign-off;
+- `CODE_OF_CONDUCT.md` names `conduct@kottera.com`;
+- `SECURITY.md` names no address.
+
+Where an item diverged from its first ask:
+- **W1-4 could not prove its jobs.** The pipeline's credential cannot dispatch a workflow, and GitHub refused a dispatch from the branch before merge. The proving went to W1-4b and to Ed's dispatches (R-W1-2).
+- **The wave job did not fit a 2-core hosted runner.** `internal/conformance` needs about 1,490 CPU-s under `-race`, against the 1,200 one binary gets in ten minutes. R-W1-4 split it in `ci.yml` alone rather than changing the gate.
+
+The proving runs, each dispatched by Ed from `main`:
+
+| Job | Run | Commit |
+|---|---|---|
+| dco | 39843868770 | 33986491 |
+| site | 39843878792 | 33986491 |
+| shell | 39885050381 | 454f0618 |
+| wave | 39885052223 | 454f0618 |
+| macos | 39952978385 | bd68635e |
+
+### 2. What children flagged, declined or discovered
+
+- **Sign-off identity.** Dispatch hosts have no `user.email`, so `git commit -s` signed off with a host-derived address. W1-5's merge 9075f604 carries one, and it also carries a `Co-Authored-By` trailer. R-W1-5 fixed the identity for new commits. Merged commits stay as they are (ADR-013 D4 items 1 and 3).
+- **Commit metadata.** W1-2 reports that older commits' metadata carries host-derived author emails from before an email was configured. They are left as history. Its own first pushes had one too. It force-pushed them away before opening its PR, but GitHub may serve those unreachable commits by SHA until it collects them.
+- **The DCO check is presence-only.** W1-4b reports that `dco.sh` already accepts a sign-off whose address differs from the author's, because ADR-013 D3 item 2 asks only that a `Signed-off-by:` be present. `TestDCOCheck` gained that case, and the check was not made stricter.
+- **The Code of Conduct address.** W1-3 parked for the address and was resumed with `conduct@kottera.com` by a route other than this orchestrator. Ed's report in W1-OOB1 names the same address, an existing Google Workspace alias he confirmed. No test mail was sent.
+- **The pipeline cannot dispatch workflows.** Ed chose in W1-OOB2 to dispatch proving runs himself, with no Actions grant to the pipeline. Every later workflow item needs an act for each proving run.
+- **Shellcheck.** W1-4's sandbox could not download shellcheck, so the first shell run was red on scripts that predate CI (SC2148, SC2181). #249 fixed them.
+
+### 3. What carries to the next wave
+
+- **The pipeline has no Actions grant.** Every workflow Wave 2 adds (`release.yml`'s dry run, the install tests, `pages.yml`'s new event) is proved by Ed's dispatch, filed as an act. A brief should plan for that round trip rather than discover it.
+- **Commits outside items reach CI too.** #254 (bd68635e, the co-author check) is a `metais-public` commit outside any item. It changed the dco job after it was proved. A change to `ci.yml` outside an item still needs its jobs proved, and W1-OOB5 carries that here.
+- **Rescan before the flip.** W1-2's scan covers history to 045981b2. W1-NB1 rescans to the present. A rescan just before the flip, in Wave 3, is still the one the flip should rest on.
+- **Test-economy and `ci.yml`.** When PLAN-2026-10-metais-test-economy's Wave 2 changes the conformance runner, its item keeps `ci.yml`'s split true (R-W1-4).
+- **What I would do differently:**
+  - Find out at breakdown whether the pipeline can dispatch a workflow. Here it cost two acts and a follow-on.
+  - Hand the sign-off identity to every item from the start.
+
+### 4. What the verification round found, and where each finding went
+
+**Who verified, and how.** W1-V (01a168f1-1d01, `wave-verification`), on `main` at 424b523d:
+- **Gate:** `gate.sh wave` on a fresh clone was green across 54 packages, including every SC7 reach group.
+- **Mutation:** 22 mutations across W1-1, W1-4, W1-4b and W1-5. 21 went red on an assertion. One went green and was filed (below). One false red from a syntax-breaking edit was re-run properly and went red.
+- **Runs:** the five proving runs were checked through the GitHub API.
+- **Scan report:** W1-2's scan report was fetched and matched its criterion.
+- **Tree:** no internal host name, tailnet URL or personal path was found in the current tree.
+- **Audit:** the item list against `git log bb173ea8..main` was verified for accuracy. Completeness was trusted.
+
+Depth per item:
+- **Mutated:** W1-1, W1-4, W1-4b and W1-5.
+- **Inspected only:** W1-2 and W1-3, whose guards were read, not broken; and the acts W1-OOB1 to W1-OOB4. The runs of W1-OOB2 to W1-OOB4 were confirmed by API. W1-OOB1 rests on Ed's attestation.
+
+Verdict: pass, with no blocking finding, so there is no fix child and no second round. Where each non-blocking finding went:
+
+| Finding | Where it went |
+|---|---|
+| Cross-item: #254 changed the dco job and added `coauthor.sh` after the dco and shell jobs were proved. Neither has run since. | W1-OOB5, 01a16905-12da-7bb0-b25d-e8e70e4b4823: Ed dispatches dco and shell. |
+| Cross-item: CONTRIBUTING.md does not state the Co-authored-by check CI now enforces. | W1-NB1, 01a16904-f5e9-7ac5-962e-2780314e66dc, finding A |
+| W1-1: `TestGoImportPages` does not pin `go-source`'s templates (`tree/main` to `tree/master` stayed green). | W1-NB1, 01a16904-f5e9-7ac5-962e-2780314e66dc, finding B |
+| W1-2: commits merged after the scan were not scanned, and the verifier could not run a scanner. | W1-NB1, 01a16904-f5e9-7ac5-962e-2780314e66dc, finding C |
+| W1-5: merge 9075f604 carries a `Co-Authored-By` trailer and a host-derived sign-off. | **Not filed.** The repair would rewrite history, which R-PUB-7 and R-W1-5 rule out. Rotation is not relevant, since it holds no secret. |
+
+W1-NB1 holds three findings, grouped because each is thin, none decides another, and one dispatch serves all three. Each keeps its own heading and evidence, and they are severable.
+
+**Wave 1 completed without waiting for W1-NB1 or W1-OOB5, and that is the intent.** They run beside Wave 2 and are not re-verified.
+
+### 5. Out-of-band acts
+
+| Act | Type | Work Order | Placement | Outcome |
+|---|---|---|---|---|
+| Create `kottera/homebrew-tap` and `kottera/kottera.com`, grant push, name the Code of Conduct address | design-session | W1-OOB1, 01a16406-f2e8 | waited on | Ended by Ed. Both repositories are public, each with one empty root commit. The pipeline's credential pushed and deleted a probe branch on each, with no grant changed. The address is `conduct@kottera.com`. |
+| Grant the pipeline Actions write, or dispatch the proving runs | design-session | W1-OOB2, 01a1644c-1031 | waited on, filed for W1-4 (Step 4) | Ended by Ed, choosing to dispatch himself. dco and site were green; shell and wave were red. |
+| Dispatch shell again | design-session | W1-OOB3, 01a16575-1416 | waited on, for W1-4b | Ended by Ed. Green, run 39885050381. |
+| Dispatch wave, then macos | design-session | W1-OOB4, 01a165bf-e76b | waited on, for W1-4b | Ended by Ed. Wave green 39885052223, then macos green 39952978385. |
+| Dispatch dco and shell after #254 | design-session | W1-OOB5, 01a16905-12da | carried | Open. |
+| USPTO and EUIPO knockout search | — | 01a16409-e851 | filed by the plan orchestrator | Carried by it to Wave 3's flip (R-W1-3). |
+| Confirm T-A3 was recalled, edited and released | — | 01a16409-f3eb | filed by the plan orchestrator | Complete. T-A3 carries plan §6's edits with all seven of its edges kept. Wave 3 adds its verification edge. |
+| Rotate a live secret | — | none | — | Not needed: the scan found no secret. |
+
+### Rulings made during this wave
+
+All five are the plan orchestrator's, recorded in plan §5, "Rulings made during Wave 1" (#242, #250, #251):
+- **R-W1-1:** contact addresses.
+- **R-W1-2:** proving a workflow while private.
+- **R-W1-3:** the acts the plan orchestrator filed itself.
+- **R-W1-4:** CI's tests split by `-run` on a 2-core runner, in `ci.yml` only.
+- **R-W1-5:** the sign-off identity.
+
+I escalated once, for R-W1-4. Every other question was answered from the brief or from these rulings.
