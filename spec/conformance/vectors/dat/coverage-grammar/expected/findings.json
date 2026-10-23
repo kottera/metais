@@ -1,0 +1,122 @@
+[
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/array.schema.json",
+      "pointer": "/coverage"
+    },
+    "params": {
+      "keyword": "coverage"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/equal.schema.json",
+      "pointer": "/coverage"
+    },
+    "params": {
+      "keyword": "coverage"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/keytype.schema.json",
+      "pointer": "/coverage"
+    },
+    "params": {
+      "keyword": "coverage"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/none.schema.json",
+      "pointer": "/coverage"
+    },
+    "params": {
+      "keyword": "coverage"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/novalues.schema.json",
+      "pointer": "/coverage"
+    },
+    "params": {
+      "keyword": "coverage"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/pointer.schema.json",
+      "pointer": "/coverage"
+    },
+    "params": {
+      "keyword": "coverage"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/relative.schema.json",
+      "pointer": "/coverage"
+    },
+    "params": {
+      "keyword": "coverage"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/third.schema.json",
+      "pointer": "/coverage"
+    },
+    "params": {
+      "keyword": "coverage"
+    }
+  }
+]

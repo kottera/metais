@@ -1,0 +1,249 @@
+[
+  {
+    "code": "input.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "conditional",
+      "title": "Conditional"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "conditional.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/conditional.schema.json",
+      "pointer": "/then/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "2"
+    },
+    "via": [
+      {
+        "keyword": "then",
+        "schema_pointer": "/then",
+        "condition": {
+          "schema_pointer": "/if"
+        }
+      }
+    ]
+  },
+  {
+    "code": "input.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "example",
+      "title": "Example"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "example.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/example.schema.json",
+      "pointer": "/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "\"1.1.1\""
+    }
+  },
+  {
+    "code": "input.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "example",
+      "title": "Example"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "example.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/example.schema.json",
+      "pointer": "/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "\"1.3.1\""
+    }
+  },
+  {
+    "code": "input.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "gaps",
+      "title": "Gaps"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "gaps.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/gaps.schema.json",
+      "pointer": "/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "\"1.1.1\""
+    }
+  },
+  {
+    "code": "input.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "gaps",
+      "title": "Gaps"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "gaps.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/gaps.schema.json",
+      "pointer": "/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "\"1.3.1\""
+    }
+  },
+  {
+    "code": "input.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "gaps",
+      "title": "Gaps"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "gaps.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/gaps.schema.json",
+      "pointer": "/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "\"2.4.1\""
+    }
+  },
+  {
+    "code": "input.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "nested",
+      "title": "Nested"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "nested.json",
+      "line": 1,
+      "column": 12,
+      "pointer": "/table"
+    },
+    "schema": {
+      "entry": "inputs/nested.schema.json",
+      "pointer": "/properties/table/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "\"a\""
+    }
+  },
+  {
+    "code": "input.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "numbers",
+      "title": "Numbers"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "numbers.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/numbers.schema.json",
+      "pointer": "/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "\"3\""
+    }
+  },
+  {
+    "code": "input.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "referenced",
+      "title": "Referenced"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "referenced.json",
+      "line": 1,
+      "column": 1,
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/referenced.schema.json",
+      "pointer": "/$defs/table/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "1"
+    }
+  },
+  {
+    "code": "input.coverage",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.csv",
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/rows.schema.json",
+      "pointer": "/coverage",
+      "keyword": "coverage"
+    },
+    "params": {
+      "missing": "\"1.1.1\""
+    }
+  }
+]

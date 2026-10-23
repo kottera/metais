@@ -1,0 +1,35 @@
+metais: "1.0"
+name: org.example.covered
+version: 1.0.0
+title: Covered
+description: A package whose tables carry coverage.
+guide: Supply the tables.
+inputs:
+  - name: example
+    title: Example
+    schema: inputs/example.schema.json
+  - name: gaps
+    title: Gaps
+    schema: inputs/gaps.schema.json
+  - name: numbers
+    title: Numbers
+    schema: inputs/numbers.schema.json
+  - name: nested
+    title: Nested
+    schema: inputs/nested.schema.json
+  - name: rows
+    title: Rows
+    schema: inputs/rows.schema.json
+    forms: [csv]
+  - name: referenced
+    title: Referenced
+    schema: inputs/referenced.schema.json
+  - name: conditional
+    title: Conditional
+    schema: inputs/conditional.schema.json
+  - name: scalar
+    title: Scalar
+    schema: inputs/scalar.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid

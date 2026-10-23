@@ -1,0 +1,11 @@
+{
+  "type": "array",
+  "coverage": { "key": "/criterion", "values": ["1.1.1", "1.2.1"] },
+  "items": {
+    "type": "object",
+    "properties": {
+      "criterion": { "type": "string" },
+      "conformance": { "type": "string" }
+    }
+  }
+}

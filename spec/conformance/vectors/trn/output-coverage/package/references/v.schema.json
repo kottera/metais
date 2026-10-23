@@ -1,0 +1,7 @@
+{
+  "type": "object",
+  "properties": {
+    "rows": { "type": "array", "coverage": { "key": "/id", "values": ["red", "green", "blue"] } },
+    "pairs": { "type": "array", "coverage": { "key": "/a", "values": [2, 3, "2"] } }
+  }
+}
