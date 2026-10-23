@@ -12809,6 +12809,14 @@
             }
           },
           {
+            "code": "schema.key_not_declared",
+            "cause": "A schema (key not declared), a warning.",
+            "next": {
+              "run": "metais check <package>",
+              "why": "Checks the package again once the errors are fixed; every step runs again and may report more."
+            }
+          },
+          {
             "code": "schema.keyword_unknown",
             "cause": "An input schema is refused (keyword unknown).",
             "next": {
@@ -19827,6 +19835,14 @@
           {
             "code": "schema.invalid_example",
             "cause": "A schema (invalid example), an error.",
+            "next": {
+              "run": "metais check <dir>",
+              "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "schema.key_not_declared",
+            "cause": "A schema (key not declared), a warning.",
             "next": {
               "run": "metais check <dir>",
               "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
