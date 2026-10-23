@@ -45,31 +45,38 @@ part fares.
 ## Which criteria to list
 
 List each criterion of the table once, in the standard's order, which is
-the order of its reference file. A complete report lists every criterion
-of the table, so that a reader can tell a criterion met from one left out:
-write Not Applicable for a criterion that does not concern the product,
-and Not Evaluated, with the reason in its remarks, for one nobody
-evaluated. The rows appear in the report in the order the file gives them,
-and its summary counts them by level.
+the order of its reference file. A report lists every criterion of the
+table it must answer, so that a reader can tell a criterion met from one
+left out: write Not Applicable for a criterion that does not concern the
+product, and Not Evaluated, with the reason in its remarks, for one nobody
+evaluated. Validation refuses a criterion answered twice, at each row
+after the first, and refuses a table that leaves out a criterion it must
+answer, once for each criterion missing. The rows appear in the report in
+the order the file gives them, and its summary counts them by level.
 
-The **WCAG 2.2** table lists the success criteria at Levels A and AA, and
-those at Level AAA the evaluation chose to cover. A Level A or AA
-criterion is never Not Evaluated: validation refuses it. The report gives
-each criterion's level beside its name, and names the levels the table
-lists among the standards it answers. It also answers the parts of the
-other two standards that apply WCAG to web pages, documents and software,
-so those standards' tables leave them out.
+The **WCAG 2.2** table lists every success criterion at Levels A and AA,
+and those at Level AAA the evaluation chose to cover. Validation refuses
+a table without one of the Level A or AA criteria, and a Level A or AA
+criterion is never Not Evaluated: validation refuses that too. The
+report gives each criterion's level beside its name, and names the levels
+the table lists among the standards it answers. It also answers the parts
+of the other two standards that apply WCAG to web pages, documents and
+software, so those standards' tables leave them out.
 
-The **Revised Section 508** table lists the criteria of chapters 3 to 6:
-the functional performance criteria (302), hardware (402 to 415), software
-(502 to 504) and support documentation and services (602 and 603). For
-software, chapter 4's hardware criteria are Not Applicable.
+The **Revised Section 508** table lists every criterion of chapters 3 to 6,
+and validation refuses a table without one: the functional performance
+criteria (302), hardware (402 to 415), software (502 to 504) and support
+documentation and services (602 and 603). For
+software, chapter 4's hardware criteria are Not Applicable: a chapter the
+product has no part in is still listed, row by row.
 
-The **EN 301 549** table, for EN 301 549 V4.1.1 (2026-09), lists the
-clauses outside clauses 9, 10 and 11.1 to 11.4, which the WCAG table
-answers: the functional performance statements (4.2), the generic
-requirements, authoring tools among them (5), real-time voice, text and
-video communication (6), video playback (7), hardware (8), software's
-interoperability with assistive technology and its accessibility
-settings (11.5 to 11.7), information and documentation about the product
-and its services (12), and relay services (13).
+The **EN 301 549** table, for EN 301 549 V4.1.1 (2026-09), lists every
+clause outside clauses 9, 10 and 11.1 to 11.4, which the WCAG table
+answers, and validation refuses a table without one: the functional
+performance statements (4.2), the generic requirements, authoring tools
+among them (5), real-time voice, text and video communication (6), video
+playback (7), hardware (8), software's interoperability with assistive
+technology and its accessibility settings (11.5 to 11.7), information and
+documentation about the product and its services (12), and relay
+services (13). A clause that does not concern the product, such as relay
+services for most software, is Not Applicable.

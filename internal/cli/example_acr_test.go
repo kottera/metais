@@ -5,7 +5,9 @@ package cli
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"html"
 	"io"
 	"maps"
@@ -127,14 +129,17 @@ func TestACRRowsRefused(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(data, "report.json"), b, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	csv := "criterion,conformance,remarks\n" +
-		"1.1.1,Supports,\n" + // a valid row
-		"302.1,Supports,\n" + // a Section 508 number in the WCAG table
-		"1.4.3,Mostly,\n" + // a level outside the five
-		",Supports,\n" + // no criterion
-		"2.1.1,,\n" + // no level
-		"4.1.2,Supports,\"bell \a\"\n" // a control character
-	if err := os.WriteFile(filepath.Join(data, "wcag.csv"), []byte(csv), 0o644); err != nil {
+	// The rows are put into the example's own table, which answers every
+	// criterion the table covers, so the findings are the rows' alone.
+	table, at := acrTable(t, filepath.Join(src, "wcag.csv"),
+		"1.1.1,Supports,",            // a valid row
+		"302.1,Supports,",            // a Section 508 number in the WCAG table
+		"1.4.3,Mostly,",              // a level outside the five
+		",Supports,",                 // no criterion
+		"2.1.1,,",                    // no level
+		"4.1.2,Supports,\"bell \a\"", // a control character
+	)
+	if err := os.WriteFile(filepath.Join(data, "wcag.csv"), table, 0o644); err != nil {
 		t.Fatal(err)
 	}
 	r := runTool(t, "validate", acrPackage, "--data", data, "--json")
@@ -153,12 +158,13 @@ func TestACRRowsRefused(t *testing.T) {
 	}
 	slices.Sort(got)
 	want := []string{
-		"input.enum /1/criterion",
-		"input.enum /2/conformance",
-		"input.pattern /5/remarks",
-		"input.required /3/criterion",
-		"input.required /4/conformance",
+		"input.enum /" + strconv.Itoa(at[1]) + "/criterion",
+		"input.enum /" + strconv.Itoa(at[2]) + "/conformance",
+		"input.pattern /" + strconv.Itoa(at[5]) + "/remarks",
+		"input.required /" + strconv.Itoa(at[3]) + "/criterion",
+		"input.required /" + strconv.Itoa(at[4]) + "/conformance",
 	}
+	slices.Sort(want)
 	if !slices.Equal(got, want) || r.status == 0 {
 		t.Errorf("validate exits %d and reports %q, want %q", r.status, got, want)
 	}
@@ -460,8 +466,14 @@ func TestACRJSONValidated(t *testing.T) {
 // acr.docx; and its date stands under its title, before the product. Each
 // case varies one table's rows just past where a fixed claim shows: a
 // level or a chapter left out, one alone, all of them, and counts of zero.
+//
+// A table that leaves a level or a chapter out is one coverage refuses,
+// so the cases render a copy of the package whose tables carry no
+// coverage: the claims are the templates' work, and coverage only decides
+// which tables reach them.
 func TestACRClaimsFromRows(t *testing.T) {
 	testenv.Home(t)
+	pkg := acrUncovered(t)
 	src := filepath.Join(acrPackage, "examples/international/inputs")
 	en301549, err := os.ReadFile(filepath.Join(src, "en301549.csv"))
 	if err != nil {
@@ -540,7 +552,7 @@ func TestACRClaimsFromRows(t *testing.T) {
 				}
 			}
 			out := filepath.Join(testenv.Dir(t), "out")
-			if r := runTool(t, "render", acrPackage, "--data", data, "--out", out); r.status != 0 {
+			if r := runTool(t, "render", pkg, "--data", data, "--out", out); r.status != 0 {
 				t.Fatalf("render exits %d: %s", r.status, r.stderr)
 			}
 			paragraphs := acrParagraphs(t, filepath.Join(out, "acr.docx"))
@@ -694,19 +706,27 @@ func TestACRNotEvaluatedSaysWhy(t *testing.T) {
 	testenv.Home(t)
 	src := filepath.Join(acrPackage, "examples/international/inputs")
 	data := testenv.Dir(t)
-	header := "criterion,conformance,remarks\n"
-	files := map[string][]byte{
-		"report.yaml": acrReport(t, src, "international"),
+	// Each table's rows are put into the example's own table, which
+	// answers every criterion the table covers, so the findings are the
+	// rows' alone.
+	rows := map[string][]string{
 		// Level AAA criteria: a Level A or AA one is never Not Evaluated.
-		"wcag.csv":       []byte(header + "1.2.6,Not Evaluated,\n1.2.7,Not Evaluated,\"   \"\n1.2.8,Not Evaluated,Out of the evaluation's scope.\n1.2.9,Supports,\n"),
-		"section508.csv": []byte(header + "602.2,Not Evaluated,\n602.3,Not Evaluated,\"   \"\n602.4,Not Evaluated,The evaluator had no access to the vendor's documentation.\n603.2,Supports,\n"),
-		"en301549.csv":   []byte(header + "12.1,Not Evaluated,\n12.2,Not Evaluated,\"   \"\n12.3,Not Evaluated,The evaluator had no access to the vendor's support services.\n12.4,Supports,\n"),
+		"wcag":       {"1.2.6,Not Evaluated,", "1.2.7,Not Evaluated,\"   \"", "1.2.8,Not Evaluated,Out of the evaluation's scope.", "1.2.9,Supports,"},
+		"section508": {"602.2,Not Evaluated,", "602.3,Not Evaluated,\"   \"", "602.4,Not Evaluated,The evaluator had no access to the vendor's documentation.", "603.2,Supports,"},
+		"en301549":   {"12.1,Not Evaluated,", "12.2,Not Evaluated,\"   \"", "12.3,Not Evaluated,The evaluator had no access to the vendor's support services.", "12.4,Supports,"},
 	}
-	for name, b := range files {
-		if err := os.WriteFile(filepath.Join(data, name), b, 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(data, "report.yaml"), acrReport(t, src, "international"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var want []string
+	for table, rows := range rows {
+		b, at := acrTable(t, filepath.Join(src, table+".csv"), rows...)
+		if err := os.WriteFile(filepath.Join(data, table+".csv"), b, 0o644); err != nil {
 			t.Fatal(err)
 		}
+		want = append(want, table+" input.required /"+strconv.Itoa(at[0])+"/remarks", table+" input.pattern /"+strconv.Itoa(at[1])+"/remarks")
 	}
+	slices.Sort(want)
 	r := runTool(t, "validate", acrPackage, "--data", data, "--json")
 	var doc struct {
 		Findings []struct {
@@ -730,10 +750,6 @@ func TestACRNotEvaluatedSaysWhy(t *testing.T) {
 		}
 	}
 	slices.Sort(got)
-	var want []string
-	for _, table := range []string{"en301549", "section508", "wcag"} {
-		want = append(want, table+" input.pattern /1/remarks", table+" input.required /0/remarks")
-	}
 	if !slices.Equal(got, want) || r.status == 0 {
 		t.Errorf("validate exits %d and reports %q,\nwant %q", r.status, got, want)
 	}
@@ -831,5 +847,241 @@ func TestACRTesterTableRefused(t *testing.T) {
 	}
 	if !slices.Equal(missing, wantMissing) {
 		t.Errorf("validate's input.coverage findings miss %q,\nwant %q", missing, wantMissing)
+	}
+}
+
+// acrTable is the table in the CSV file at path, every criterion of its
+// table answered, with rows put in: each row, a CSV record, replaces the
+// file's row for its criterion, or follows the file's rows when the file
+// has none. It returns the table and each row's index in it, in rows'
+// order, so that a test of one rule sees no input.coverage finding.
+func acrTable(t *testing.T, path string, rows ...string) ([]byte, []int) {
+	t.Helper()
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	records, err := csv.NewReader(bytes.NewReader(b)).ReadAll()
+	if err != nil {
+		t.Fatalf("%s: %v", path, err)
+	}
+	var at []int
+	for _, row := range rows {
+		r := csv.NewReader(strings.NewReader(row))
+		r.FieldsPerRecord = 3
+		record, err := r.Read()
+		if err != nil {
+			t.Fatalf("the row %q: %v", row, err)
+		}
+		i := slices.IndexFunc(records[1:], func(rec []string) bool { return record[0] != "" && rec[0] == record[0] })
+		if i < 0 {
+			records = append(records, record)
+			i = len(records) - 2
+		} else {
+			records[i+1] = record
+		}
+		at = append(at, i)
+	}
+	var out bytes.Buffer
+	w := csv.NewWriter(&out)
+	if err := w.WriteAll(records); err != nil {
+		t.Fatal(err)
+	}
+	return out.Bytes(), at
+}
+
+// acrUncovered is a copy of the §4.1 example whose criteria tables carry
+// no coverage, so that a table may leave criteria out.
+func acrUncovered(t *testing.T) string {
+	t.Helper()
+	pkg := copyTree(t, acrPackage)
+	for _, table := range []string{"wcag", "section508", "en301549"} {
+		p := filepath.Join(pkg, "inputs", table+".schema.json")
+		b, err := os.ReadFile(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var schema map[string]any
+		if err := json.Unmarshal(b, &schema); err != nil {
+			t.Fatal(err)
+		}
+		if _, ok := schema["coverage"]; !ok {
+			t.Fatalf("inputs/%s.schema.json carries no coverage to take out", table)
+		}
+		delete(schema, "coverage")
+		if b, err = json.Marshal(schema); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, b, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return pkg
+}
+
+// TestACRTablesCovered holds each criteria table of the §4.1 example to
+// the rows it must hold: its array is unique on its criterion, and covers
+// the criteria the report answers in full. For WCAG 2.2 that is every
+// criterion the level partial names Level A or AA, and none at Level AAA,
+// so a Level A or AA criterion added to or dropped from the one list
+// without the other fails here. For the Revised Section 508 and EN 301
+// 549 tables it is every criterion the table takes, as inputs/tables.md
+// asks.
+func TestACRTablesCovered(t *testing.T) {
+	required := acrWCAGRequired(t)
+	for _, input := range []string{"wcag", "section508", "en301549"} {
+		b, err := os.ReadFile(filepath.Join(acrPackage, "inputs", input+".schema.json"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var schema struct {
+			UniqueKeys []string
+			Coverage   struct {
+				Key    string
+				Values []string
+			}
+			Items struct {
+				Properties struct {
+					Criterion struct{ Enum []string }
+				}
+			}
+		}
+		if err := json.Unmarshal(b, &schema); err != nil {
+			t.Fatal(err)
+		}
+		if !slices.Equal(schema.UniqueKeys, []string{"/criterion"}) {
+			t.Errorf("inputs/%s.schema.json's uniqueKeys is %q, want [\"/criterion\"]", input, schema.UniqueKeys)
+		}
+		if schema.Coverage.Key != "/criterion" {
+			t.Errorf("inputs/%s.schema.json's coverage key is %q, want /criterion", input, schema.Coverage.Key)
+		}
+		want := schema.Items.Properties.Criterion.Enum
+		if input == "wcag" {
+			want = slices.Clone(required)
+			slices.SortFunc(want, func(a, b string) int {
+				return slices.Index(schema.Items.Properties.Criterion.Enum, a) - slices.Index(schema.Items.Properties.Criterion.Enum, b)
+			})
+		}
+		if !slices.Equal(schema.Coverage.Values, want) {
+			t.Errorf("inputs/%s.schema.json covers %q,\nwant %q", input, schema.Coverage.Values, want)
+		}
+	}
+	if len(required) != 55 {
+		t.Errorf("the level partial names %d Level A and AA criteria, and WCAG 2.2 has 55", len(required))
+	}
+}
+
+// TestACRCriterionAnsweredOnce holds each criteria table of the §4.1
+// example to answering a criterion once: a complete table that answers
+// one criterion again twice more, at its end, is refused with one
+// input.unique_keys for each repeat, at the repeat's criterion, naming
+// the first row as the one it repeats, all in one report. Its only other
+// finding is the input.max_items of a table whose rows already number its
+// criteria.
+func TestACRCriterionAnsweredOnce(t *testing.T) {
+	testenv.Home(t)
+	src := filepath.Join(acrPackage, "examples/international/inputs")
+	data := testenv.Dir(t)
+	if err := os.WriteFile(filepath.Join(data, "report.yaml"), acrReport(t, src, "international"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var want []string
+	for table, criterion := range map[string]string{"wcag": "1.1.1", "section508": "302.1", "en301549": "4.2.1"} {
+		b, at := acrTable(t, filepath.Join(src, table+".csv"), criterion+",Supports,")
+		rows := strings.Count(string(b), "\n") - 1
+		b = append(b, criterion+",Does Not Support,\n"+criterion+",Partially Supports,\n"...)
+		if err := os.WriteFile(filepath.Join(data, table+".csv"), b, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		for _, i := range []int{rows, rows + 1} {
+			want = append(want, table+" input.unique_keys /"+strconv.Itoa(i)+"/criterion of "+strconv.Itoa(at[0]))
+		}
+		// The Revised Section 508 and EN 301 549 tables hold as many rows
+		// as they have criteria, so the repeats also make one too long.
+		if table != "wcag" {
+			want = append(want, table+" input.max_items  of <nil>")
+		}
+	}
+	r := runTool(t, "validate", acrPackage, "--data", data, "--json")
+	var doc struct {
+		Findings []struct {
+			Code     string
+			Subject  struct{ Name string }
+			Location struct{ Pointer string }
+			Params   map[string]any
+		}
+	}
+	if err := json.Unmarshal([]byte(r.stdout), &doc); err != nil {
+		t.Fatalf("validate's document: %v\n%s", err, r.stdout)
+	}
+	var got []string
+	for _, f := range doc.Findings {
+		got = append(got, f.Subject.Name+" "+f.Code+" "+f.Location.Pointer+" of "+fmt.Sprint(f.Params["duplicate_of"]))
+	}
+	slices.Sort(got)
+	slices.Sort(want)
+	if !slices.Equal(got, want) || r.status == 0 {
+		t.Errorf("validate exits %d and reports %q,\nwant %q", r.status, got, want)
+	}
+}
+
+// TestACRSampleRendered holds the §4.1 example's preview to its tables'
+// coverage: render --sample, with --items below the 55 criteria WCAG 2.2's
+// table covers, renders with no finding, every covered criterion
+// answered once in each table of acr.json, and two runs with one seed
+// write the same bytes. TestExamplePackages previews at the default count
+// and compares a preview with a render of kept sample data; this holds the
+// seed's determinism and the counts below and just under the coverage.
+func TestACRSampleRendered(t *testing.T) {
+	testenv.Home(t)
+	required := acrWCAGRequired(t)
+	for _, items := range []string{"1", "3", "54"} {
+		t.Run("items "+items, func(t *testing.T) {
+			var outs [2]string
+			for i := range outs {
+				outs[i] = filepath.Join(testenv.Dir(t), "out")
+				r := runTool(t, "render", acrPackage, "--sample", "--seed", "7", "--items", items, "--out", outs[i], "--json")
+				if r.status != 0 || len(r.codes()) > 0 {
+					t.Fatalf("render --sample --items %s exits %d and reports %q", items, r.status, r.codes())
+				}
+			}
+			for _, name := range []string{"acr.docx", "acr.json"} {
+				a, errA := os.ReadFile(filepath.Join(outs[0], name))
+				b, errB := os.ReadFile(filepath.Join(outs[1], name))
+				if errA != nil || errB != nil || !bytes.Equal(a, b) {
+					t.Errorf("two renders with seed 7 write %s differently (%v, %v)", name, errA, errB)
+				}
+			}
+			b, err := os.ReadFile(filepath.Join(outs[0], "acr.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var doc struct {
+				Tables []struct {
+					Standard string
+					Criteria []struct{ Criterion string }
+				}
+			}
+			if err := json.Unmarshal(b, &doc); err != nil {
+				t.Fatal(err)
+			}
+			for _, table := range doc.Tables {
+				var listed []string
+				for _, c := range table.Criteria {
+					if slices.Contains(listed, c.Criterion) {
+						t.Errorf("the preview's %s table answers %s twice", table.Standard, c.Criterion)
+					}
+					listed = append(listed, c.Criterion)
+				}
+				if table.Standard != "wcag" {
+					continue
+				}
+				for _, c := range required {
+					if !slices.Contains(listed, c) {
+						t.Errorf("the preview's wcag table leaves out %s", c)
+					}
+				}
+			}
+		})
 	}
 }
