@@ -8,8 +8,8 @@ and `<type>(metais-v1): [W2-C3] <change>` for a pull request and its squash
 subject, by `kottera/kottera`'s `docs/dev/work-order-and-pr-naming.md`, which
 AGENTS.md adopts.
 **Status:** Done 2026-10-22: Ed Funnekotter ratified the train's outcome
-([§15](#15-ratification-of-the-outcome)). Still open from §6: the SC1
-round, `govulncheck`, and the v1.0 release, which waits on
+([§15](#15-ratification-of-the-outcome)). Still open from §6:
+`govulncheck` and the v1.0 release, which waits on
 [PLAN-2026-10-metais-public](PLAN-2026-10-metais-public.md)'s Wave 3.
 Ratified 2026-10-18 under Ed Funnekotter's direction to merge this plan and
 start its train.
@@ -148,7 +148,7 @@ another harness's type to get past a capacity wait.** Park on
 | 5b | **The gate's cost and merge friction** (inserted by Ed, 2026-10-19): the two-tier gate and its scripts; the shared-host cap; the skills; the `hostfs` limit tests; self-merging generated files; per-item ADR logs; one edit per finding code; help refusals by family; `render.go` split by phase | 5 | **complete** — [verdict](#11b-wave-5b--the-gates-cost-and-merge-friction-inserted-by-ed-2026-10-19) |
 | 6 | **Pack, and hardening**: `pack` with the example-package harness; `test`'s container comparison; the hostile corpus in full; the SC7 harness's full reach; limit calibration; benchmark budgets; the release builder | 5b | **complete**, release builder carried to Wave 7 — [verdict](#12-wave-6--pack-and-hardening) |
 | 7 | **The example packages and the close-out**: the packages of PRD §4.1 to §4.5; the worked package of `B-worked-package.md`; the specification's 1.0 text complete; the README, documentation and ADR implementation logs | 6 | **complete** — [verdict](#13-wave-7--the-example-packages-and-the-close-out) |
-| — | **The out-of-band acts**: §6 | — | the outcome is ratified ([§15](#15-ratification-of-the-outcome)); the SC9 round passed; the SC1 round, `govulncheck` and the v1.0 release are open |
+| — | **The out-of-band acts**: §6 | — | the outcome is ratified ([§15](#15-ratification-of-the-outcome)); the SC1 and SC9 rounds passed; `govulncheck` and the v1.0 release are open |
 
 Two chains set the wave count:
 
@@ -271,7 +271,7 @@ need it a `depends_on` edge to it.
 | Run the four-target matrix: the suite with `-conformance.record` on darwin/arm64, darwin/amd64 under Rosetta 2, linux/arm64 and linux/amd64, then `-conformance.compare` | Wave 6, as a rehearsal of the procedure; again at release | Ed | the v1.0 release | ADR-011 D15 and SC5. darwin/arm64 against linux/amd64 is the minimum pair. The rehearsal also runs the OS branches and the pseudo-terminal proof of §5. |
 | Run the limit-calibration suite and the benchmarks on each supported target | Wave 6, after both items merge | Ed | the v1.0 release | ADR-009 D3 item 3 and D18 item 4, and ADR-010 D15 item 2. A default whose worst case breaks a ceiling is lowered only by an ADR-009 amendment Ed ratifies (R1-015). Budgets go in ADR-010's implementation log. |
 | Check each example package's source material against its publisher's reuse terms | Wave 7 | Ed | that example's merge | PRD §25. ITI's VPAT is ITI's, so §4.1 is written from W3C's criterion text and GSA's OpenACR catalogue and schema, or in this project's own words. §4.2 uses the EU's DORA texts, Implementing Regulation (EU) 2025/302 Annex II, under the EU's reuse policy. Record each source and its terms in the package's `references/`. |
-| SC1 round: an AI harness given only the binary and the §4.1 package produces a valid ACR for a real product | Wave 7, after the §4.1 package merges | Ed | the v1.0 release | Record what the harness read, which must be nothing beyond what `inspect` and the commands it points to show. A finding comes back as a fix item. |
+| SC1 round: an AI harness given only the binary and the §4.1 package produces a valid ACR for a real product | Wave 7, after the §4.1 package merges | Ed | the v1.0 release | Record what the harness read, which must be nothing beyond what `inspect` and the commands it points to show. A finding comes back as a fix item. Done: passed on 2026-10-22 on `339864912a01`, `main` by Ed's ruling, for tera's web user interface in the international edition, with no finding from `validate` or `render`; the `.docx` opened without repair in Pages, Word being unavailable. The evidence and the findings for fix items are [sc1.md](../dev/rounds/sc1.md#the-round-on-339864912a01-plan-2026-10-metais-v1-w7-a2) (W7-A2). |
 | SC9 round: an author working only from `spec/`, with no access to the tool's source, writes a package that `check`, `test` and `pack` accept cleanly | Wave 7, after the worked package merges | Ed | the v1.0 release | `B-worked-package.md` is where the author starts (ADR-011 D4 item 4). Done: passed on 2026-10-22 on `339864912a01`, `main` by Ed's ruling, with no finding from `check`, `test` or `pack`; the evidence and the findings for fix items are [sc9.md](../dev/rounds/sc9.md#the-round-on-339864912a01-plan-2026-10-metais-v1-w7-a3) (W7-A3). |
 | `govulncheck ./...` | before the release | Ed | the v1.0 release | ADR-010 D3 item 5. |
 | The v1.0 release: the specification first, then the tool | after the train | Ed | — | Specification: one commit that dates the `1.0` changelog section, sets the front page to `Released`, writes `spec/conformance/released/1.0.sha256` and records the matrix's pass, tagged `spec-1.0` (ADR-011 D5 item 2). Tool: `go run ./internal/tools/release -version 1.0.0` on the tag, built twice and compared (ADR-010 D12). The specification is released no later than the tool that implements it (ADR-011 D5 item 6). Publishing is [PLAN-2026-10-metais-public](PLAN-2026-10-metais-public.md)'s (ADR-013 D7): this act tags `v1.0.0` and `spec-1.0` in its own clone only, attaches `dist/` to a draft release, and pushes nothing. `release.yml` pushes both tags after Ed approves (R-PUB-14). This act waits for that plan's Wave 3 (R-PUB-12). |
@@ -1859,7 +1859,6 @@ changed one:
 
 **Still open from §6:**
 
-- the SC1 round, W7-A2 (`01a15abf-4d58-7c58-94ca-f4833e218555`);
 - `govulncheck ./...`;
 - the v1.0 release, T-A3, which waits on PLAN-2026-10-metais-public's
   Wave 3 (R-PUB-12, R-PUB-14). That plan's close marks §6's release row
@@ -1873,9 +1872,11 @@ half); the calibration re-run at ADR-009 A3, A4 and A6's defaults (T-A2,
 [#187](https://github.com/kottera/metais/pull/187) and
 [#190](https://github.com/kottera/metais/pull/190); the liquid-spec runs
 W4-A1R and W5-A1; `metais.org` (R-PUB-5); the terms checks W7-A1 and
-W7-A1b; and the SC9 round W7-A3
+W7-A1b; the SC9 round W7-A3
 (`01a15abf-6347-7520-8a58-1b9ab5f65180`, passed 2026-10-22 on
-`339864912a01`, [sc9.md](../dev/rounds/sc9.md#the-round-on-339864912a01-plan-2026-10-metais-v1-w7-a3)).
+`339864912a01`, [sc9.md](../dev/rounds/sc9.md#the-round-on-339864912a01-plan-2026-10-metais-v1-w7-a3));
+and the SC1 round W7-A2 (`01a15abf-4d58-7c58-94ca-f4833e218555`, passed
+2026-10-22 on `339864912a01`, [sc1.md](../dev/rounds/sc1.md#the-round-on-339864912a01-plan-2026-10-metais-v1-w7-a2)).
 
 **Where earlier sections no longer describe the tree:**
 
@@ -1916,7 +1917,7 @@ specification defect, not a ruling, and needs its own Work Order before
 | R16 specification | every wave, completed in 7 |
 | R17 golden paths | 2 (help), 3 (`inspect`'s next), 7 (README) |
 | R18 portable | 1 (the gate's targets), 6 (the release builder), §6 (the matrix) |
-| SC1 | §6 |
+| SC1 | §6 (the round: passed on `339864912a01`, [sc1.md](../dev/rounds/sc1.md#the-round-on-339864912a01-plan-2026-10-metais-v1-w7-a2)) |
 | SC2, SC3, SC4 | 7 |
 | SC5 | 2 (the record), §6 (the matrix) |
 | SC6 | 3 onward, in full in 6 |
