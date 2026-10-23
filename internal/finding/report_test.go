@@ -50,8 +50,8 @@ func reference(fs []Finding, max int) (listed []Finding, total int) {
 }
 
 // randomFindings draws n findings from a small space, so duplicates are
-// common, and duplicates differ in schema pointer and keyword location,
-// which is what moves a kept finding within the order.
+// common, findings differ in schema pointer, and duplicates in keyword
+// location, which is what moves a kept finding within the order.
 func randomFindings(rng *rand.Rand, n int) []Finding {
 	out := make([]Finding, n)
 	for i := range out {
