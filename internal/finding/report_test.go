@@ -50,8 +50,8 @@ func reference(fs []Finding, max int) (listed []Finding, total int) {
 }
 
 // randomFindings draws n findings from a small space, so duplicates are
-// common, and duplicates differ in schema pointer and keyword location,
-// which is what moves a kept finding within the order.
+// common, findings differ in schema pointer, and duplicates in keyword
+// location, which is what moves a kept finding within the order.
 func randomFindings(rng *rand.Rand, n int) []Finding {
 	out := make([]Finding, n)
 	for i := range out {
@@ -191,8 +191,8 @@ func TestReportDuplicates(t *testing.T) {
 		t.Errorf("errors = %d, want 1", s.Errors)
 	}
 
-	// Not duplicates: another origin, file, argument, pointer, subject or
-	// param.
+	// Not duplicates: another origin, file, argument, pointer, subject,
+	// param, schema entry or schema pointer, or no schema (MTS-FND-003).
 	base := Location{Origin: OriginDataDir, File: "v.yaml"}.WithPointer("/a")
 	variants := []Location{base}
 	l := base
@@ -215,7 +215,14 @@ func TestReportDuplicates(t *testing.T) {
 	r.Add(New(codeInputRequired, input("w"), &base, Params{"property": String("a")}))
 	r.Add(New(codeInputRequired, Subject{Kind: SubjectInput, Name: "v", Title: "other"}, &base, Params{"property": String("a")}))
 	r.Add(New(codeInputRequired, input("v"), &base, Params{"property": String("b")}))
-	if got, want := len(r.Findings()), len(variants)+3; got != want {
+	for _, sch := range []Schema{
+		{Entry: "inputs/v.schema.json", Pointer: "/allOf/0/required", Keyword: "required", KeywordLocation: "/allOf/0/required"},
+		{Entry: "inputs/v.schema.json", Pointer: "/allOf/1/required", Keyword: "required", KeywordLocation: "/allOf/1/required"},
+		{Entry: "inputs/w.schema.json", Pointer: "/allOf/0/required", Keyword: "required", KeywordLocation: "/allOf/0/required"},
+	} {
+		r.Add(New(codeInputRequired, input("v"), &base, Params{"property": String("a")}, WithSchema(sch)))
+	}
+	if got, want := len(r.Findings()), len(variants)+6; got != want {
 		t.Errorf("got %d findings, want %d distinct ones", got, want)
 	}
 }

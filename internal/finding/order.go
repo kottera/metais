@@ -175,7 +175,8 @@ func appendCanonicalString(b []byte, s string) []byte {
 
 // duplicateKey is the SHA-256 digest of the members that make two
 // findings duplicates (D8 item 3): code, subject, location's origin, file,
-// argument and pointer, and params. Each member is written with its
+// argument and pointer, schema's entry and pointer, and params
+// (MTS-FND-003). Each member is written with its
 // length, so no two keys share an encoding; the pointer is written as its
 // path's digest, which is as unique as its tokens and costs nothing to
 // write however long the pointer is.
@@ -207,6 +208,13 @@ func (f Finding) duplicateKey() [sha256.Size]byte {
 		} else {
 			num(0)
 		}
+	} else {
+		num(0)
+	}
+	if sc := f.schema; sc != nil {
+		num(1)
+		str(sc.Entry)
+		str(sc.Pointer)
 	} else {
 		num(0)
 	}

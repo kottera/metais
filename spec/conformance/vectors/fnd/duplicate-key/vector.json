@@ -1,0 +1,48 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "fnd/duplicate-key",
+  "title": "Two keywords that fail alike at one pointer are two findings; one keyword reached twice through a shared $ref is one",
+  "statements": [
+    "MTS-FND-003",
+    "MTS-FND-005"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "alike",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/alike"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/alike.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "shared-ref",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/shared-ref"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/shared-ref.json"
+          }
+        }
+      ]
+    }
+  ]
+}
