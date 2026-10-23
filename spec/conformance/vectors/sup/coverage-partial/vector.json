@@ -10,7 +10,7 @@
   "class": "processor",
   "tags": [],
   "requires": [],
-  "notes": "Records 1 and 3 are refused alone, for a bare quote and text after a closing quote, and the other three are validated as an array of three. The validated records hold 1.1.1 and 1.3.1, so coverage misses 1.2.1 and 2.1.1; only a refused record holds 1.2.1. Both gaps are findings about the array as a whole, so neither is reported, and input.validation.partial counts them in suppressed.",
+  "notes": "Records 1 and 3 are refused alone, for a bare quote and text after a closing quote, and the other three are validated as an array of three. The validated records hold 1.1.1 and 1.3.1, so coverage misses 1.2.1 and 2.1.1, each held only by a refused record. Both gaps are findings about the array as a whole, so neither is reported, and input.validation.partial counts them in suppressed.",
   "cases": [
     {
       "name": "partial",
