@@ -414,3 +414,32 @@ func TestInspectSectionsAsPrinted(t *testing.T) {
 		}
 	}
 }
+
+// TestInspectRules is ADR-003 A2 item 10's inspect: the line of an input
+// whose schema carries uniqueKeys or coverage, at its root or on an array
+// nested in an item, says it has rules across its rows and names the
+// command that lists them; an input with neither says nothing of rules,
+// and neither does a package with no rule at all.
+func TestInspectRules(t *testing.T) {
+	testenv.Home(t)
+	dir, _ := rulesPackage(t)
+	r := runTool(t, "inspect", dir)
+	if r.status != 0 {
+		t.Fatalf("status %d: %s", r.status, r.stderr)
+	}
+	for _, want := range []string{
+		"  sections — Sections (required; sections.json, sections.yaml, sections.yml) — has rules across its rows, which metais schema <package> sections --fields lists\n",
+		"  criteria — Criteria (required; criteria.json, criteria.yaml, criteria.yml) — has rules across its rows, which metais schema <package> criteria --fields lists\n",
+		"  plain — Plain (required; plain.json, plain.yaml, plain.yml)\n",
+	} {
+		if !strings.Contains(r.stdout, want) {
+			t.Errorf("the summary lacks %q:\n%s", want, r.stdout)
+		}
+	}
+	if n := strings.Count(r.stdout, "rules across its rows"); n != 2 {
+		t.Errorf("%d inputs said to have rules, want 2:\n%s", n, r.stdout)
+	}
+	if none := runTool(t, "inspect", filepath.Join(vectorsDir, "pkg/opens-source/package")); strings.Contains(none.stdout, "rules across") {
+		t.Errorf("a package with no rule says it has some:\n%s", none.stdout)
+	}
+}

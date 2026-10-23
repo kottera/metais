@@ -108,3 +108,40 @@ func TestDeclaredHints(t *testing.T) {
 		t.Errorf("an output's many values: %q, want %q", fs[0].Hint(), want)
 	}
 }
+
+// TestRuleHints is ADR-003 A2 item 10's last bullet: the hint of a rule's
+// finding names the rule in words, with the column its key pointers name,
+// which no parameter of the code carries: the item a key repeats and the
+// columns of the key, a composite key's together; or the value no item
+// holds and the key's column. An output's findings say the same.
+func TestRuleHints(t *testing.T) {
+	d := newDocs(t, map[string]string{"vendor.schema.json": `{"type": "array"}`})
+	cases := []struct {
+		name string
+		f    Failure
+		want string
+	}{
+		{"a key of one pointer", at("uniqueKeys", "/uniqueKeys", nil, Data{"duplicates": []int{0, 2}, "at": []string{"criterion"}, "keys": []string{"/criterion"}}),
+			"No two items may share `/criterion`, and item 2 repeats item 0's: change item 2 there, or remove it if it repeats item 0 whole."},
+		{"a composite key", at("uniqueKeys", "/uniqueKeys", nil, Data{"duplicates": []int{1, 3}, "keys": []string{"/standard", "/clause", "/edition"}}),
+			"No two items may share `/standard`, `/clause` and `/edition`, and item 3 repeats item 1's: change item 3 there, or remove it if it repeats item 1 whole."},
+		{"a value no item holds", at("coverage", "/coverage", nil, Data{"missing": `"1.2.1"`, "keys": []string{"/criterion"}}),
+			"Add an item whose value at `/criterion` is \"1.2.1\": the array must include, at `/criterion`, each of coverage's values, and no item holds this one."},
+	}
+	out := target(d)
+	out.Family, out.Subject = FamilyOutput, finding.Subject{Kind: finding.SubjectOutput, Name: "report"}
+	for _, tg := range []Target{target(d), out} {
+		for _, c := range cases {
+			fs := mapAll(t, tg, c.f)
+			if len(fs) != 1 {
+				t.Fatalf("%s: %d findings: %v", c.name, len(fs), briefs(fs))
+			}
+			if got := fs[0].Hint(); got != c.want {
+				t.Errorf("%s, %s: hint\n  %q\nwant\n  %q", fs[0].Code(), c.name, got, c.want)
+			}
+			if n := utf8.RuneCountInString(fs[0].Hint()); n > 240 {
+				t.Errorf("a hint of %d code points", n)
+			}
+		}
+	}
+}

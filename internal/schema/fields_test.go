@@ -217,3 +217,104 @@ func TestFieldsCuts(t *testing.T) {
 		t.Errorf("the condition is not cut: %d bytes, ending %q", len(w), w[len(w)-60:])
 	}
 }
+
+// ruleLines is each field of fs that states a rule, its pointer then its
+// rules in words, one line each.
+func ruleLines(fs []Field) []string {
+	var out []string
+	for _, f := range fs {
+		for _, r := range f.Rules {
+			out = append(out, f.Pointer+" "+r.Words())
+		}
+	}
+	return out
+}
+
+// TestFieldsRules is ADR-003 A2 item 10's listing: each uniqueKeys and
+// coverage is a rule of the line of the array whose schema carries it,
+// stated in words, a composite key's pointers together; it is reached
+// through $ref and allOf as a constraint is, on an array nested in an
+// item, and under a condition; a rule a field reaches along two paths is
+// stated once; and the keyword stays among the line's constraints. A
+// schema with neither keyword states no rule.
+func TestFieldsRules(t *testing.T) {
+	w := walker(t, `{
+		"type": "object",
+		"properties": {
+			"criteria": {"$ref": "#/$defs/table"},
+			"clauses": {"type": "array", "uniqueKeys": ["/standard", "/clause", "/edition"]},
+			"sections": {"type": "array", "items": {"properties": {
+				"rows": {"allOf": [{"$ref": "#/$defs/keyed"}, {"$ref": "#/$defs/keyed"}]}
+			}}},
+			"stages": {"if": {"minItems": 2}, "then": {"coverage": {"key": "/n", "values": [1, 2.5, "3", null]}}},
+			"plain": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
+		},
+		"$defs": {
+			"table": {
+				"type": "array",
+				"uniqueKeys": ["/criterion"],
+				"coverage": {"key": "/criterion", "values": ["1.1.1", "1.2.1"]}
+			},
+			"keyed": {"uniqueKeys": ["/id"]}
+		}
+	}`)
+	fs := w.Fields("in", true, 64)
+	got, want := ruleLines(fs), []string{
+		"/in/clauses no two rows share `/standard`, `/clause` and `/edition`",
+		"/in/criteria rows must include, at `/criterion`, each of: \"1.1.1\", \"1.2.1\"",
+		"/in/criteria no two rows share `/criterion`",
+		"/in/sections/*/rows no two rows share `/id`",
+		"/in/stages rows must include, at `/n`, each of: 1, 2.5, \"3\", null",
+	}
+	if strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Errorf("rules:\n%s\nwant:\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+	for _, f := range fs {
+		switch f.Pointer {
+		case "/in/criteria":
+			if strings.Join(f.Constraints, " ") != `coverage={"key":"/criterion","values":["1.1.1","1.2.1"]} uniqueKeys=["/criterion"]` {
+				t.Errorf("the keywords are not among %s's constraints: %v", f.Pointer, f.Constraints)
+			}
+			if r := f.Rules[0]; r.Keyword != "coverage" || strings.Join(r.Pointers, " ") != "/criterion" || strings.Join(r.Values, " ") != `"1.1.1" "1.2.1"` {
+				t.Errorf("the coverage rule is %+v", r)
+			}
+			if r := f.Rules[1]; r.Keyword != "uniqueKeys" || strings.Join(r.Pointers, " ") != "/criterion" || r.Values != nil {
+				t.Errorf("the uniqueKeys rule is %+v", r)
+			}
+		case "/in/stages":
+			if len(f.Rules) > 0 && len(f.When) == 0 {
+				t.Errorf("the conditional rule is on a line with no condition")
+			}
+		case "/in/plain", "/in/plain/*", "/in":
+			if len(f.Rules) != 0 {
+				t.Errorf("%s states rules it has not: %v", f.Pointer, f.Rules)
+			}
+		}
+	}
+	if fs := walker(t, `{"type": "array", "uniqueItems": true, "items": {"type": "object"}}`).Fields("in", true, 64); len(ruleLines(fs)) != 0 {
+		t.Errorf("a schema with neither keyword states rules: %v", ruleLines(fs))
+	}
+}
+
+// TestFieldsRulesWhole is ADR-003 A2 item 10's bound: a rule's values are
+// never cut, where the same coverage as a constraint is. The list is the
+// smallest past both of the listing's cuts: longer than one constraint's
+// MaxShown bytes, and than a line's MaxConstraints.
+func TestFieldsRulesWhole(t *testing.T) {
+	var values []string
+	for i := 0; len(strings.Join(values, ", ")) <= MaxConstraints; i++ {
+		values = append(values, strconv.Quote(fmt.Sprintf("criterion %d.%d.%d", i/100+1, i/10%10+1, i%10+1)))
+	}
+	w := walker(t, `{"type": "array", "coverage": {"key": "/criterion", "values": [`+strings.Join(values, ",")+`]}}`)
+	fs := w.Fields("in", true, 64)
+	if len(fs) != 1 || len(fs[0].Rules) != 1 {
+		t.Fatalf("Fields: %v", fieldLines(fs))
+	}
+	if c := fs[0].Constraints[0]; !strings.HasSuffix(c, "prints it whole]") {
+		t.Errorf("the constraint is not cut at %d bytes: %d bytes", MaxShown, len(c))
+	}
+	want := "rows must include, at `/criterion`, each of: " + strings.Join(values, ", ")
+	if got := fs[0].Rules[0].Words(); got != want {
+		t.Errorf("the rule is cut: %d bytes, want %d, ending %q", len(got), len(want), got[max(0, len(got)-60):])
+	}
+}
