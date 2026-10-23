@@ -548,6 +548,7 @@ and *beyond the shallow size* is a value's deep size less its shallow size.
 | `safe` | — | shallow size |
 | `json_script` | the input's deep size beyond its shallow size | built |
 | `slug`, `date` | — | built |
+| `number`, `amount`, `duration` | — | built; for nil, which is the result, shallow size |
 
 > **Note.** `json`, `yaml`, `csv` and `markdown_table` can write many times
 > their input's size, so each counts its result's length before it writes a

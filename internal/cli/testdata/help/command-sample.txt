@@ -220,7 +220,7 @@ Refusals:
   schema.* (10)       An input schema is refused. Next: metais inspect <package>
   schema.* (2)        The generated data cannot be made or does not validate.
                       Next: metais schema <package> <name> --fields
-  template.* (9)      An output's path, when or for_each does not parse.
+  template.* (10)     An output's path, when or for_each does not parse.
                       Next: metais inspect <package>
   yaml.* (13)         A value given with --set, --set-json or --inputs-json is
                       refused. Next: metais inspect <package>

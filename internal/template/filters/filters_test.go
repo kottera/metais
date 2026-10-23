@@ -257,6 +257,90 @@ func TestDate(t *testing.T) {
 	})
 }
 
+// TestDuration is ADR-004 Amendment A2 decision item 4 (MTS-FLT-021,
+// MTS-FLT-022): what duration reads, how its format writes it, and each
+// refusal with its reason or directive.
+func TestDuration(t *testing.T) {
+	testenv.Home(t)
+	refused := func(kind, reason string) map[string]string {
+		return map[string]string{"type": kind, "reason": reason}
+	}
+	runCases(t, []filterCase{
+		{name: "seconds", src: `{{ 26700 | duration: "%d d %-H h %-M min" }}`, want: "0 d 7 h 25 min"},
+		{name: "the largest unit takes the whole count", src: `{{ 26700 | duration: "%-M min" }}`, want: "445 min"},
+		{name: "two digits", src: `{{ 26700 | duration: "%H:%M" }}`, want: "07:25"},
+		{name: "below the smallest unit is dropped", src: `{{ 59 | duration: "%M" }}|{{ 3599 | duration: "%-H" }}|{{ 86399 | duration: "%d" }}`, want: "00|0|0"},
+		{name: "the units in any order", src: `{{ 90061 | duration: "%S %M %H %d" }}`, want: "01 01 01 1"},
+		{name: "flags", src: `{{ 3661 | duration: "%-H|%_M|%0S|%_d" }}|{{ 0 | duration: "%0d" }}|{{ 0 | duration: "%-d" }}`, want: "1| 1|01| 0|00|0"},
+		{name: "wider than two digits", src: `{{ 360000 | duration: "%H" }}`, want: "100"},
+		{name: "a literal percent", src: `{{ 60 | duration: "%-M%% done" }}`, want: "1% done"},
+		{name: "no unit named", src: `{{ 60 | duration: "time" }}`, want: "time"},
+		{name: "the largest", src: `{{ 9007199254740991 | duration: "%d %H %M %S" }}`, want: "104249991374 07 36 31"},
+		{name: "ISO weeks", src: `{{ "P2W" | duration: "%d" }}`, want: "14"},
+		{name: "ISO days and time", src: `{{ "P1DT2H3M4S" | duration: "%d %H %M %S" }}`, want: "1 02 03 04"},
+		{name: "ISO time alone", src: `{{ "PT7H25M" | duration: "%-H h %M min" }}`, want: "7 h 25 min"},
+		{name: "ISO minutes", src: `{{ "PT90M" | duration: "%H:%M" }}`, want: "01:30"},
+		{name: "ISO hours beyond a day", src: `{{ "PT36H" | duration: "%d %H" }}`, want: "1 12"},
+		{name: "ISO leading zeros", src: `{{ "PT007S" | duration: "%S" }}`, want: "07"},
+		{name: "fields d:h:m", src: `{{ "00:07:25" | duration: "%d d %-H h %-M min", fields: "d:h:m" }}`, want: "0 d 7 h 25 min"},
+		{name: "fields d:h:m:s", src: `{{ "1:23:59:59" | duration: "%d %H %M %S", fields: "d:h:m:s" }}`, want: "1 23 59 59"},
+		{name: "fields h:m:s", src: `{{ "100:00:01" | duration: "%d %H %S", fields: "h:m:s" }}`, want: "4 04 01"},
+		{name: "fields h:m", src: `{{ "7:25" | duration: "%-M", fields: "h:m" }}`, want: "445"},
+		{name: "fields m:s", src: `{{ "90:30" | duration: "%H:%M:%S", fields: "m:s" }}`, want: "01:30:30"},
+		{name: "nil", src: `{{ nil | duration: "%d" | json }}`, want: "null"},
+		{name: "nil with fields", src: `{{ nil | duration: "%d", fields: "h:m" | json }}`, want: "null"},
+
+		{name: "a float", src: `{{ 1.5 | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("float", "kind")},
+		{name: "a float written whole", src: `{{ 60.0 | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("float", "kind")},
+		{name: "a boolean", src: `{{ true | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("boolean", "kind")},
+		{name: "an array", src: `{{ a | duration: "%S" }}`, data: `{"a": []}`, code: liquid.CodeDurationInput, args: refused("array", "kind")},
+		{name: "an object", src: `{{ a | duration: "%S" }}`, data: `{"a": {}}`, code: liquid.CodeDurationInput, args: refused("object", "kind")},
+		{name: "an integer with fields", src: `{{ 60 | duration: "%S", fields: "m:s" }}`, code: liquid.CodeDurationInput, args: refused("integer", "kind")},
+		{name: "a year", src: `{{ "P1Y" | duration: "%d" }}`, code: liquid.CodeDurationInput, args: refused("string", "calendar")},
+		{name: "a month", src: `{{ "P1M" | duration: "%d" }}`, code: liquid.CodeDurationInput, args: refused("string", "calendar")},
+		{name: "a month and a time", src: `{{ "P1MT1M" | duration: "%d" }}`, code: liquid.CodeDurationInput, args: refused("string", "calendar")},
+		{name: "a year with fields", src: `{{ "P1Y" | duration: "%d", fields: "h:m" }}`, code: liquid.CodeDurationInput, args: refused("string", "calendar")},
+		{name: "below zero", src: `{{ -1 | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("integer", "range")},
+		{name: "ISO beyond 2^53-1 seconds", src: `{{ "PT9007199254740992S" | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("string", "range")},
+		{name: "ISO parts beyond together", src: `{{ "P104249991374DT7H36M32S" | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("string", "range")},
+		{name: "ISO digits beyond any integer", src: `{{ "P99999999999999999999999W" | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("string", "range")},
+		{name: "an hour field of 24", src: `{{ "0:24:00" | duration: "%S", fields: "d:h:m" }}`, code: liquid.CodeDurationInput, args: refused("string", "range")},
+		{name: "a minute field of 60", src: `{{ "1:60" | duration: "%S", fields: "h:m" }}`, code: liquid.CodeDurationInput, args: refused("string", "range")},
+		{name: "a second field of 60", src: `{{ "1:60" | duration: "%S", fields: "m:s" }}`, code: liquid.CodeDurationInput, args: refused("string", "range")},
+		{name: "a first field beyond", src: `{{ "104249991375:00:00" | duration: "%S", fields: "d:h:m" }}`, code: liquid.CodeDurationInput, args: refused("string", "range")},
+		{name: "colon fields without fields", src: `{{ "00:07:25" | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+		{name: "too few fields", src: `{{ "07:25" | duration: "%S", fields: "d:h:m" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+		{name: "an empty field", src: `{{ "1::2" | duration: "%S", fields: "d:h:m" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+		{name: "a signed field", src: `{{ "-1:00" | duration: "%S", fields: "h:m" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+		{name: "ISO with fields", src: `{{ "PT1H" | duration: "%S", fields: "h:m" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+		{name: "digits", src: `{{ "60" | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+		{name: "P alone", src: `{{ "P" | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+		{name: "an empty time", src: `{{ "P1DT" | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+		{name: "weeks and days", src: `{{ "P1W1D" | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+		{name: "time out of order", src: `{{ "PT1S1M" | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+		{name: "a fraction", src: `{{ "PT0.5S" | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+		{name: "a negative duration", src: `{{ "-PT1S" | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+		{name: "lower case", src: `{{ "pt1s" | duration: "%S" }}`, code: liquid.CodeDurationInput, args: refused("string", "form")},
+
+		{name: "an unknown directive", src: `{{ 0 | duration: "%H %Y" }}`, code: liquid.CodeDurationFormat, args: map[string]string{"directive": "%Y"}, atParse: true},
+		{name: "a directive twice", src: `{{ 0 | duration: "%H %-H" }}`, code: liquid.CodeDurationFormat, args: map[string]string{"directive": "%-H"}, atParse: true},
+		{name: "a lone percent", src: `{{ 0 | duration: "%H%" }}`, code: liquid.CodeDurationFormat, args: map[string]string{"directive": "%"}, atParse: true},
+		{name: "a flag at the end", src: `{{ 0 | duration: "%H %-" }}`, code: liquid.CodeDurationFormat, args: map[string]string{"directive": "%-"}, atParse: true},
+		{name: "two flags", src: `{{ 0 | duration: "%--H" }}`, code: liquid.CodeDurationFormat, args: map[string]string{"directive": "%--"}, atParse: true},
+		{name: "date's upper-case flag", src: `{{ 0 | duration: "%^H" }}`, code: liquid.CodeDurationFormat, args: map[string]string{"directive": "%^"}, atParse: true},
+		{name: "a flag on percent", src: `{{ 0 | duration: "%-%" }}`, code: liquid.CodeDurationFormat, args: map[string]string{"directive": "%-%"}, atParse: true},
+		{name: "a multi-byte character", src: `{{ 0 | duration: "%é" }}`, code: liquid.CodeDurationFormat, args: map[string]string{"directive": "%é"}, atParse: true},
+		{name: "an empty format", src: `{{ 0 | duration: "" }}`, code: liquid.CodeDurationFormat, args: map[string]string{"directive": ""}, atParse: true},
+		{name: "a directive at render", src: `{{ 0 | duration: f }}`, data: `{"f": "%m"}`, code: liquid.CodeDurationFormat, args: map[string]string{"directive": "%m"}},
+		{name: "a format not a string", src: `{{ 0 | duration: 5 }}`, code: liquid.CodeFilterArgument, args: map[string]string{"argument": "1"}, atParse: true},
+		{name: "no format", src: `{{ 0 | duration }}`, code: liquid.CodeFilterArgument, args: map[string]string{"argument": "1"}, atParse: true},
+		{name: "two formats", src: `{{ 0 | duration: "%H", "%M" }}`, code: liquid.CodeFilterArgument, args: map[string]string{"argument": "2"}, atParse: true},
+		{name: "fields outside the five", src: `{{ "1:2" | duration: "%H", fields: "d:h" }}`, code: liquid.CodeFilterArgument, args: map[string]string{"argument": "fields"}, atParse: true},
+		{name: "fields at render", src: `{{ "1:2" | duration: "%H", fields: f }}`, data: `{"f": "s:m"}`, code: liquid.CodeFilterArgument, args: map[string]string{"argument": "fields"}},
+		{name: "an unknown keyword", src: `{{ 0 | duration: "%H", unit: "s" }}`, code: liquid.CodeFilterArgument, args: map[string]string{"argument": "unit"}, atParse: true},
+	})
+}
+
 // meter is a FilterContext over a fresh meter with limits l.
 type meter struct{ m liquid.Meter }
 
@@ -294,6 +378,10 @@ func TestCharges(t *testing.T) {
 		{"slug", get("s"), nil, 4 + 4, 0},
 		// 1 + 2 + 5 for "00:00"
 		{"date", get("n"), []liquid.Arg{{Value: str("%H:%M")}}, 1 + 5 + 5, 0},
+		// 1 + 5 + 5 for "00:00"
+		{"duration", get("n"), []liquid.Arg{{Value: str("%H:%M")}}, 1 + 5 + 5, 0},
+		// 1 + 5 + 1 for nil, which is the result
+		{"duration", value.Null{}, []liquid.Arg{{Value: str("%H:%M")}}, 1 + 5 + 1, 0},
 	}
 	for i, c := range cases {
 		if c.filter == "json" && c.args != nil {

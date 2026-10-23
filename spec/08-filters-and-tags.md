@@ -250,7 +250,61 @@ spaces or zeros instead.
 > `%Z` departs from it: Ruby writes a zone's name, which a value that carries
 > only an offset does not have.
 
-### 8.1.10 What 1.0 does not have
+### 8.1.13 `duration`
+
+`duration` writes a length of time, by a format whose directives mirror
+`date`'s: `%d`, `%H`, `%M` and `%S` are its days, hours, minutes and
+seconds. It reads a count of seconds, an
+[ISO 8601](A-references.md#iso8601) duration, or a string of fields
+separated by `:` whose meaning the template names with `fields:`, so
+`00:07:25` read with `fields: "d:h:m"` is seven hours and twenty-five
+minutes, never seven minutes and twenty-five seconds.
+
+<a id="mts-flt-021"></a>**MTS-FLT-021** Without `fields:`, `duration` MUST
+accept as its input an integer from 0 to 2⁵³ − 1, as seconds; a string that
+is an ISO 8601 duration matching `duration` in the grammar below, a week
+being 604 800 seconds, a day 86 400, an hour 3 600 and a minute 60; and nil,
+which gives nil. With `fields:`, it MUST accept a string of as many runs of
+one or more ASCII digits as `fields:` names, separated by `:`, each after
+the first at most 23 for `h` and 59 for `m` and `s`, and nil. A processor
+MUST refuse every other input with `template.duration_input`, naming the
+kind found and a `reason`: `kind` for a float, a boolean, an array and an
+object, and for an integer given with `fields:`; `calendar` for a string
+beginning `P` that holds `Y`, or `M` before any `T`, whose length depends on
+the calendar; `range` for a value below zero or above 2⁵³ − 1 seconds, and
+for a field beyond its range; and `form` for any other string.
+
+```abnf
+duration = %s"P" ( 1*DIGIT %s"W" / 1*DIGIT %s"D" [ %s"T" time ] / %s"T" time )
+time     = 1*DIGIT %s"H" [ 1*DIGIT %s"M" ] [ 1*DIGIT %s"S" ]
+         / 1*DIGIT %s"M" [ 1*DIGIT %s"S" ]
+         / 1*DIGIT %s"S"
+```
+
+<a id="mts-flt-022"></a>**MTS-FLT-022** `duration` MUST take one positional
+argument, its format, a string, and the one keyword `fields:`, which MUST
+be one of `"d:h:m:s"`, `"d:h:m"`, `"h:m:s"`, `"h:m"` and `"m:s"`. It MUST
+write the format's text as it is, but for each directive: `%d`, `%H`, `%M`
+and `%S`, each at most once and optionally preceded by one of the flags
+`-`, `_` and `0`, and `%%`, which writes `%`. The largest unit the format
+names MUST be written as the whole count of that unit in the duration,
+rounded down, and each smaller unit it names as the whole count of that
+unit in what the larger units named leave, rounded down, so what lies below
+the smallest unit named is dropped and nothing is rounded up. `%d` MUST be
+written with no padding and `%H`, `%M` and `%S` with zeros to two digits;
+`-` writes no padding, and `_` and `0` pad to two digits with spaces or
+zeros. Any other directive — `%` followed by anything else, a directive
+named twice, a lone `%` at the end included — and an empty format MUST be
+refused with `template.duration_format`, its `directive` the directive from
+its `%` to the character that put it outside the set, and absent for an
+empty format; a format written as a literal, when the template is parsed.
+
+So a duration of 26 700 seconds is `0 d 7 h 25 min` by the format
+`"%d d %-H h %-M min"`, `07:25` by `"%H:%M"` and `445 min` by
+`"%-M min"`; and `{{ "00:07:25" | duration: "%-H h %M min", fields: "d:h:m" }}`
+writes `7 h 25 min`.
+
+### 8.1.14 What 1.0 does not have
 
 <a id="mts-flt-014"></a>**MTS-FLT-014** The filters of version 1.0 are the
 standard filters [chapter 7](07-template-environment.md) adopts and those of

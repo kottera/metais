@@ -64,7 +64,7 @@ background only.
   https://doi.org/10.1109/IEEESTD.2019.8766229
 - <a id="iso8601"></a>**[ISO 8601]** ISO, *Date and time — Representations
   for information interchange — Part 1: Basic rules*, ISO 8601-1:2019, its
-  week dates — https://www.iso.org/standard/70907.html
+  week dates and its durations — https://www.iso.org/standard/70907.html
 - <a id="posix"></a>**[POSIX]** IEEE and The Open Group, *The Open Group Base
   Specifications Issue 7*, IEEE Std 1003.1-2017, 2018 edition, the `pax`
   utility's pax interchange format and its ustar format —

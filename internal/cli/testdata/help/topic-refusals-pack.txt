@@ -132,6 +132,7 @@ Next: metais test <dir>
   template.asset_tree
   template.comparison
   template.date_input
+  template.duration_input
   template.invalid_utf8
   template.nil_property
   template.object_output
@@ -286,6 +287,7 @@ Next: metais check <dir>
   template.crlf
   template.date_format
   template.division_by_zero
+  template.duration_format
   template.embed_index
   template.embed_unknown_input
   template.filter_argument

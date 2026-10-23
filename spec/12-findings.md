@@ -291,6 +291,8 @@ it, and the statements it reports.
 | `template.date_format` | error | content | template | `column`; optional: `directive`, `output_path` | 1.0 | [MTS-FLT-013](08-filters-and-tags.md#mts-flt-013), [MTS-MAN-018](03-manifest.md#mts-man-018) |
 | `template.date_input` | error | content | template | `type`, `column`; optional: `global`, `output_path` | 1.0 | [MTS-FLT-011](08-filters-and-tags.md#mts-flt-011) |
 | `template.division_by_zero` | error | content | template | `filter`, `column`; optional: `output_path` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-019](07-template-environment.md#mts-tpl-019) |
+| `template.duration_format` | error | content | template | `column`; optional: `directive`, `output_path` | 1.0 | [MTS-FLT-022](08-filters-and-tags.md#mts-flt-022), [MTS-MAN-018](03-manifest.md#mts-man-018) |
+| `template.duration_input` | error | content | template | `type`, `reason`, `column`; optional: `output_path` | 1.0 | [MTS-FLT-021](08-filters-and-tags.md#mts-flt-021) |
 | `template.embed_index` | error | content | template | `input`, `reason`, `column`; optional: `index`, `items`, `type`, `output_path` | 1.0 | [MTS-TAG-002](08-filters-and-tags.md#mts-tag-002) |
 | `template.embed_unknown_input` | error | content | template | `column`; optional: `name` | 1.0 | [MTS-TAG-001](08-filters-and-tags.md#mts-tag-001) |
 | `template.filter_argument` | error | content | template | `filter`, `argument`, `column`; optional: `output_path` | 1.0 | [MTS-FLT-004](08-filters-and-tags.md#mts-flt-004), [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-052](07-template-environment.md#mts-tpl-052) |

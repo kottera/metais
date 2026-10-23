@@ -134,6 +134,7 @@ Next: metais check <package>
   template.crlf
   template.date_format
   template.division_by_zero
+  template.duration_format
   template.embed_index
   template.embed_unknown_input
   template.filter_argument

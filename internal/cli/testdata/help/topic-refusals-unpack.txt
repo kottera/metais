@@ -113,6 +113,7 @@ Next: metais unpack <package> --out <dir>
   schema.syntax
   template.date_format
   template.division_by_zero
+  template.duration_format
   template.filter_argument
   template.include
   template.number_range

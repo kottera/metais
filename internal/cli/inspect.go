@@ -154,6 +154,7 @@ var openTemplateCodes = map[finding.Code]bool{
 	loader.CodeTemplateSyntax: true, loader.CodeTemplateInclude: true, loader.CodeTemplateUnknownFilter: true,
 	loader.CodeTemplateNumberRange: true, loader.CodeTemplateTagContext: true, loader.CodeTemplateFilterArg: true,
 	loader.CodeTemplateDivision: true, loader.CodeTemplateSafePosition: true, loader.CodeTemplateDateFormat: true,
+	loader.CodeTemplateDurationFmt: true,
 }
 
 // inspectResult is metais.inspect/1's result (ADR-008 D6). Under --guide,

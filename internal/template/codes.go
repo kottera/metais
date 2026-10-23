@@ -47,6 +47,9 @@ const (
 	CodeDateInput       finding.Code = "template.date_input"
 	CodeDateFormat      finding.Code = "template.date_format"
 	CodeSlugEmpty       finding.Code = "template.slug_empty"
+
+	CodeDurationInput  finding.Code = "template.duration_input"
+	CodeDurationFormat finding.Code = "template.duration_format"
 )
 
 // CodeRawUnavailable is ADR-003's finding for an embed of a raw form that
@@ -60,7 +63,8 @@ const CodeRawUnavailable finding.Code = "input.raw_unavailable"
 func ParseCodes() []finding.Code {
 	return []finding.Code{CodeSyntax, CodeNotUTF8, CodeInclude, CodeUnknownFilter, CodeReservedName, CodePartialName,
 		CodeSafePosition, CodeNumberRange, CodeFilterArgument, CodeFilterInput, CodeDivisionByZero,
-		CodeEmbedUnknownInput, CodeEmbedIndex, CodeProvenanceArgument, CodeProvenanceStyle, CodeDateFormat}
+		CodeEmbedUnknownInput, CodeEmbedIndex, CodeProvenanceArgument, CodeProvenanceStyle, CodeDateFormat,
+		CodeDurationFormat}
 }
 
 // subject is the template whose entry is entry.
@@ -120,6 +124,9 @@ func parseFinding(e *liquid.Error, lim limits.Set, cause string) finding.Finding
 		copyArgs(p, e, "reason", "style", "type")
 	case liquid.CodeDateFormat:
 		code = CodeDateFormat
+		copyArgs(p, e, "directive")
+	case liquid.CodeDurationFormat:
+		code = CodeDurationFormat
 		copyArgs(p, e, "directive")
 	case liquid.CodeLimit:
 		id := limits.TemplateNesting
@@ -213,6 +220,12 @@ func evalFinding(e *liquid.Error, subj finding.Subject, loc finding.Location, ou
 		copyArgs(p, e, "directive")
 	case liquid.CodeSlugEmpty:
 		code = CodeSlugEmpty
+	case liquid.CodeDurationInput:
+		code = CodeDurationInput
+		copyArgs(p, e, "type", "reason")
+	case liquid.CodeDurationFormat:
+		code = CodeDurationFormat
+		copyArgs(p, e, "directive")
 	default:
 		panic("template: the Liquid renderer met a defect: " + e.Error())
 	}
