@@ -215,6 +215,8 @@ func TestMapRefusals(t *testing.T) {
 			at("type", "/anyOf/1/type", nil, Data{"want": []string{"string"}, "got": "null"})), "in no branch of 1"},
 		{"an enum's got that is not a string", nil, at("enum", "/enum", nil, Data{"allowed": []string{"1"}, "got": 1}), "got is a int"},
 		{"duplicates that are not two", nil, at("uniqueItems", "/uniqueItems", nil, Data{"duplicates": []int{1}}), "not two indexes"},
+		{"a uniqueKeys with no keys", nil, at("uniqueKeys", "/uniqueKeys", nil, Data{"duplicates": []int{0, 1}}), "keys is not a list of strings"},
+		{"a coverage with no key", nil, at("coverage", "/coverage", nil, Data{"missing": "1", "keys": []string{}}), "names no key pointer"},
 		{"a refused item with no index", nil, at(KeywordFalse, "/items", path("x"), Data{"prefix_count": 0}), "no index"},
 		{"a tree Check refuses", nil, Failure{Keyword: ""}, "no keyword"},
 		{"no Locate", func(tg Target) Target { tg.Locate = nil; return tg }, at("not", "/not", nil, nil), "incomplete target"},

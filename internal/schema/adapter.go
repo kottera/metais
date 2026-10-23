@@ -136,14 +136,14 @@ func (a adapter) convert(ve *jsonschema.ValidationError, kwLoc, parentURL string
 		keepChildren = false
 	case *uniqueKeysKind:
 		keyword("uniqueKeys")
-		f.Data = schemafail.Data{"duplicates": []int{k.Duplicates[0], k.Duplicates[1]}}
+		f.Data = schemafail.Data{"duplicates": []int{k.Duplicates[0], k.Duplicates[1]}, "keys": slices.Clone(k.Keys)}
 		if k.At != nil {
 			f.Data["at"] = slices.Clone(k.At)
 		}
 		keepChildren = false
 	case *coverageKind:
 		keyword("coverage")
-		f.Data = schemafail.Data{"missing": k.Missing}
+		f.Data = schemafail.Data{"missing": k.Missing, "keys": []string{k.Key}}
 		keepChildren = false
 	default:
 		kw, data, err := leaf(ve.ErrorKind)

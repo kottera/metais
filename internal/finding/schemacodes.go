@@ -129,10 +129,10 @@ var schemaKeywords = []schemaKeyword{
 	{"unique_keys", []ParamSpec{
 		always("index", TypeNumber, "The 0-based index of the item whose key repeats."),
 		always("duplicate_of", TypeNumber, "The 0-based index of the first item with that key."),
-	}, "{field} repeats the key of item {duplicate_of} of the array, whose uniqueKeys requires each item's key to be unique.", "Change the key of item {index}, or remove the item if it repeats item {duplicate_of}.", SpanValue},
+	}, "{field} repeats the key of item {duplicate_of} of the array, whose uniqueKeys requires each item's key to be unique.", "No two items may share the key uniqueKeys names, and item {index} repeats item {duplicate_of}'s: change item {index} there, or remove it if it repeats item {duplicate_of} whole.", SpanValue},
 	{"coverage", []ParamSpec{
 		always("missing", TypeString, "The member of coverage's values that no item holds at the key, as its canonical JSON text."),
-	}, "{field} has no item whose value at coverage's key is {missing}, a value the array must cover.", "Add an item whose value at coverage's key is {missing}.", SpanValue},
+	}, "{field} has no item whose value at coverage's key is {missing}, a value the array must cover.", "Add an item whose value at coverage's key is {missing}: the array must include, at the key, each of coverage's values, and no item holds this one.", SpanValue},
 	{"contains", nil, "{field} has no item the schema's contains accepts.", "Add an item that the contains subschema accepts.", SpanValue},
 	{"min_contains", []ParamSpec{
 		always("limit", TypeNumber, meaningLimit), always("count", TypeNumber, "How many items the contains subschema accepts."),

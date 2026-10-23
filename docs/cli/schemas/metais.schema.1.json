@@ -79,7 +79,8 @@
         "title",
         "when",
         "same_as",
-        "beyond_value_depth"
+        "beyond_value_depth",
+        "rules"
       ],
       "additionalProperties": false,
       "properties": {
@@ -137,6 +138,68 @@
         "beyond_value_depth": {
           "description": "True when fields beneath this one are declared and not listed, since they lie deeper than value-depth beneath the input.",
           "type": "boolean"
+        },
+        "rules": {
+          "description": "Each rule across the items of the field's array that the declaring schemas state, uniqueKeys and coverage, in their order; empty for none (ADR-003 A2 item 10). The text listing writes each in words on a line of its own, directly beneath the field's: no two rows share <pointers>, or rows must include, at <key>, each of: <values>. A rule's values are never cut.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule"
+          }
+        }
+      }
+    },
+    "rule": {
+      "description": "One rule across the items of an array: a uniqueKeys, or a coverage.",
+      "type": "object",
+      "required": [
+        "keyword",
+        "pointers"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "keyword": {
+          "description": "The keyword that states the rule.",
+          "enum": [
+            "uniqueKeys",
+            "coverage"
+          ]
+        },
+        "pointers": {
+          "description": "uniqueKeys' key pointers, in order, which together make one key; or coverage's key, alone.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "values": {
+          "description": "coverage's values, in order, every one: the values some item must hold at the key. Absent for uniqueKeys.",
+          "type": "array",
+          "minItems": 1
+        }
+      },
+      "if": {
+        "properties": {
+          "keyword": {
+            "const": "coverage"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "values"
+        ],
+        "properties": {
+          "pointers": {
+            "maxItems": 1
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "values"
+          ]
         }
       }
     }

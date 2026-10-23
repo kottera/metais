@@ -196,19 +196,25 @@ func readingDeclarations() []*Command {
 				"again with a last column, when, naming the condition. A schema's fields are listed once, " +
 				"where it is first met; another field it declares says (fields as at <pointer>). No field " +
 				"deeper beneath its input than value-depth is listed.\n\n" +
+				"Directly beneath the line of an array whose schema has uniqueKeys or coverage, one line per " +
+				"rule says it in words: the array's pointer, then rule, then no two rows share `/criterion`, " +
+				"or rows must include, at `/criterion`, each of: and every value as JSON. The keyword also " +
+				"stays among the array's constraints, as keyword=JSON.\n\n" +
 				"The listing is cut by bytes, never by a count of values. A title, a condition or one " +
 				"constraint longer than 1024 bytes is cut on a character boundary, so an enum is cut where " +
 				"its JSON passes 1024 bytes, however many values it has; the cut ends " +
 				"[…+N bytes; metais schema <package> <input> prints it whole]. A line's constraints " +
 				"together stop at 4096 bytes, ending […; metais schema <package> <input> prints every " +
-				"constraint]. Without an input the marks name metais schema <package>. The schema itself " +
-				"has every value whole, with each field's description.",
+				"constraint]. Without an input the marks name metais schema <package>. A rule's line is " +
+				"never cut: it lists every value. The schema itself has every value whole, with each " +
+				"field's description.",
 			Operands: []args.Operand{{Name: "<input>", Description: "An input's name; the combined schema, or every input's fields, when omitted."}},
 			Flags:    []args.Flag{{Name: "fields", Description: "List the fields, one line each, in place of the schema."}},
 			Format:   "metais.schema/1",
 			Prints: "The schema alone, indented by two spaces; with --fields, one line per field: its pointer, type, " +
 				"required or optional, constraints and title, and the condition of one declared under a " +
-				"condition, separated by tabs. Never coloured.",
+				"condition, separated by tabs, and beneath an array's line one line per rule across its rows, " +
+				"in words. Never coloured.",
 			Examples: []Example{
 				{"metais schema report-1.0.0.metais product --fields", "Lists the fields of the input product, one line each."},
 				{"metais schema report-1.0.0.metais product > product.json", "Writes the schema of the input product to a file."},
@@ -724,14 +730,23 @@ type schemaResult struct {
 
 // schemaField is one line of the field listing (ADR-008 A7 item 6).
 type schemaField struct {
-	Pointer          string   `json:"pointer"`
-	Type             []string `json:"type"`
-	Required         bool     `json:"required"`
-	Constraints      []string `json:"constraints"`
-	Title            *string  `json:"title"`
-	When             []string `json:"when"`
-	SameAs           *string  `json:"same_as"`
-	BeyondValueDepth bool     `json:"beyond_value_depth"`
+	Pointer          string       `json:"pointer"`
+	Type             []string     `json:"type"`
+	Required         bool         `json:"required"`
+	Constraints      []string     `json:"constraints"`
+	Title            *string      `json:"title"`
+	When             []string     `json:"when"`
+	SameAs           *string      `json:"same_as"`
+	BeyondValueDepth bool         `json:"beyond_value_depth"`
+	Rules            []schemaRule `json:"rules"`
+}
+
+// schemaRule is one rule across the items of a field's array (ADR-003 A2
+// item 10): its keyword, its key pointers and, for coverage, its values.
+type schemaRule struct {
+	Keyword  string            `json:"keyword"`
+	Pointers []string          `json:"pointers"`
+	Values   []json.RawMessage `json:"values,omitempty"`
 }
 
 // runSchema is metais schema.
@@ -808,6 +823,13 @@ func (s *session) schemaFields(res *schemaResult, doc value.Object, in *manifest
 			same := f.SameAs
 			row.SameAs = &same
 		}
+		row.Rules = make([]schemaRule, len(f.Rules))
+		for j, r := range f.Rules {
+			row.Rules[j] = schemaRule{Keyword: r.Keyword, Pointers: r.Pointers}
+			for _, v := range r.Values {
+				row.Rules[j].Values = append(row.Rules[j].Values, json.RawMessage(v))
+			}
+		}
 		rows[i] = row
 		b.WriteString(fieldLine(row))
 	}
@@ -818,7 +840,11 @@ func (s *session) schemaFields(res *schemaResult, doc value.Object, in *manifest
 }
 
 // fieldLine is one field as text (ADR-008 A7 item 3): its columns
-// separated by tabs, each neutralised and with no tab of its own.
+// separated by tabs, each neutralised and with no tab of its own, then
+// directly beneath it one line per rule across its array's items, in
+// words (ADR-003 A2 item 10, R-W2-a): the pointer, rule, the sentence,
+// and the field's conditions when it has any. A rule's values are never
+// cut.
 func fieldLine(f schemaField) string {
 	typ := "any"
 	if len(f.Type) > 0 {
@@ -843,10 +869,24 @@ func fieldLine(f schemaField) string {
 	if f.Title != nil {
 		title = *f.Title
 	}
-	cols := []string{f.Pointer, typ, req, cons, title}
+	var when []string
 	if len(f.When) > 0 {
-		cols = append(cols, "when "+strings.Join(f.When, " and "))
+		when = []string{"when " + strings.Join(f.When, " and ")}
 	}
+	line := listingLine(append([]string{f.Pointer, typ, req, cons, title}, when...))
+	for _, r := range f.Rules {
+		rule := schema.Rule{Keyword: r.Keyword, Pointers: r.Pointers}
+		for _, v := range r.Values {
+			rule.Values = append(rule.Values, string(v))
+		}
+		line += listingLine(append([]string{f.Pointer, "rule", rule.Words()}, when...))
+	}
+	return line
+}
+
+// listingLine is one line of the listing: cols separated by tabs, each
+// neutralised and with no tab of its own.
+func listingLine(cols []string) string {
 	for i, c := range cols {
 		cols[i] = strings.ReplaceAll(browse.Neutralise(c), "\t", `\u0009`)
 	}

@@ -39,14 +39,20 @@ condition. A schema's fields are listed once, where it is first met; another
 field it declares says (fields as at <pointer>). No field deeper beneath its
 input than value-depth is listed.
 
+Directly beneath the line of an array whose schema has uniqueKeys or coverage,
+one line per rule says it in words: the array's pointer, then rule, then no two
+rows share `/criterion`, or rows must include, at `/criterion`, each of: and
+every value as JSON. The keyword also stays among the array's constraints, as
+keyword=JSON.
+
 The listing is cut by bytes, never by a count of values. A title, a condition or
 one constraint longer than 1024 bytes is cut on a character boundary, so an enum
 is cut where its JSON passes 1024 bytes, however many values it has; the cut
 ends […+N bytes; metais schema <package> <input> prints it whole]. A line's
 constraints together stop at 4096 bytes, ending […; metais schema <package>
 <input> prints every constraint]. Without an input the marks name metais schema
-<package>. The schema itself has every value whole, with each field's
-description.
+<package>. A rule's line is never cut: it lists every value. The schema itself
+has every value whole, with each field's description.
 
 Operands:
   <package>
@@ -79,8 +85,9 @@ Flags:
 Prints:
   The schema alone, indented by two spaces; with --fields, one line per field:
   its pointer, type, required or optional, constraints and title, and the
-  condition of one declared under a condition, separated by tabs. Never
-  coloured. With --json, one metais.schema/1 document.
+  condition of one declared under a condition, separated by tabs, and beneath an
+  array's line one line per rule across its rows, in words. Never coloured. With
+  --json, one metais.schema/1 document.
 
 Refusals:
   limit.invalid

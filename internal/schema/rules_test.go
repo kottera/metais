@@ -393,3 +393,38 @@ func TestUniqueKeysLinear(t *testing.T) {
 		t.Fatalf("got %+v, want one failure naming items 0 and %d", fails, n-1)
 	}
 }
+
+// TestRuleFailuresNameTheirKeys is the adapter's half of ADR-003 A2 item
+// 10's hints: each uniqueKeys and coverage failure carries the keyword's
+// key pointers as the schema writes them, escapes and all, for the hint
+// to name the column; a composite key's in order.
+func TestRuleFailuresNameTheirKeys(t *testing.T) {
+	testenv.Home(t)
+	for _, c := range []struct {
+		name, schema, v string
+		want            []string
+	}{
+		{"one pointer", `{"uniqueKeys": ["/a~1b"]}`, `[{"a/b": 1}, {"a/b": 1}]`, []string{"/a~1b"}},
+		{"a composite key", `{"uniqueKeys": ["/t", "/c"]}`, `[{"t": 1, "c": 2}, {"t": 1, "c": 2}]`, []string{"/t", "/c"}},
+		{"coverage's key", `{"coverage": {"key": "/k/0", "values": [1]}}`, `[]`, []string{"/k/0"}},
+	} {
+		s := mustCompile(t, map[string]string{"inputs/s.json": c.schema}, "inputs/s.json")
+		fails, err := s.Validate(mustValue(t, c.v))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var got [][]string
+		for i := range fails {
+			fails[i].Walk(func(_ []*schemafail.Failure, f *schemafail.Failure) bool {
+				if len(f.Children) == 0 {
+					keys, _ := f.Data["keys"].([]string)
+					got = append(got, keys)
+				}
+				return true
+			})
+		}
+		if len(got) != 1 || !slices.Equal(got[0], c.want) {
+			t.Errorf("%s: keys %v, want one failure naming %v", c.name, got, c.want)
+		}
+	}
+}
