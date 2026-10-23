@@ -22,3 +22,4 @@ the tool is wrong. CONTRIBUTING.md, "Changing the format", has the order.
 ## Sign-off
 
 - [ ] Every commit carries `Signed-off-by:`, made with `git commit -s`, certifying the [Developer Certificate of Origin](https://developercertificate.org/). CI checks every commit.
+- [ ] No commit message, and not this pull request's title or description, carries a `Co-authored-by:` line. CI checks them all.
