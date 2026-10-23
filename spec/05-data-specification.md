@@ -6,8 +6,9 @@ The data specification says which data a package needs and what that data
 means. This chapter specifies the `inputs` section of the manifest, the JSON
 Schema dialect an input's schema is written in and the keywords and formats
 it asserts, how a schema's references stay inside the package, the meaning
-documents that explain an input in prose, and the combined schema a packed
-package carries for all of its inputs.
+documents that explain an input in prose, the combined schema a packed
+package carries for all of its inputs, and the two keywords that state rules
+across the items of an array.
 
 ## 5.1 The inputs section
 
@@ -71,7 +72,8 @@ root or an embedded resource has it, MUST be
 
 <a id="mts-dat-004"></a>**MTS-DAT-004** A schema MUST use no keyword the
 2020-12 core, applicator, unevaluated, validation, meta-data, content and
-format vocabularies do not define, but one beginning `x-`, which is the
+format vocabularies do not define, but `uniqueKeys` and `coverage`, which
+this specification defines (§5.4), and one beginning `x-`, which is the
 author's own annotation, and a processor MUST refuse every other with
 `schema.keyword_unknown`: a misspelt `requried` is a rule the author believes
 is enforced and is not.
@@ -163,3 +165,82 @@ input's value about that input, with the conditional that selected it, a
 required input the constraints require with `input.missing`, and a failure of a
 rule over the inputs object as a whole, which names no one input, with
 `input.constraints_failed` about the invocation, naming the keyword.
+
+## 5.4 Rules across the items of an array
+
+JSON Schema judges each item of an array alone, and `uniqueItems` compares
+whole items. A table whose rows each describe one thing needs two rules more:
+that no two rows describe the same thing, and that every thing the package
+requires has a row. `uniqueKeys` and `coverage` state them. Each is an
+assertion keyword of this dialect, written in a schema object beside
+`uniqueItems`, and each judges an array.
+
+A *key pointer* is a JSON Pointer ([RFC 6901](A-references.md#rfc6901)) other
+than the empty one, evaluated against one item of an array. An item's value
+at a key pointer is the value the pointer resolves to within the item, and
+an item where it resolves to nothing has no value there. Values are compared
+as [MTS-DAT-013](#mts-dat-013) compares them, so `1.0` equals `1`, and `null`
+is a value, equal to `null`.
+
+```json
+{
+  "type": "array",
+  "uniqueKeys": ["/criterion"],
+  "coverage": { "key": "/criterion", "values": ["1.1.1", "1.2.1", "1.3.1"] },
+  "items": {
+    "type": "object",
+    "required": ["criterion", "conformance"],
+    "properties": {
+      "criterion": { "type": "string" },
+      "conformance": { "type": "string" }
+    }
+  }
+}
+```
+
+This array refuses a second row whose `criterion` is `1.1.1`, and reports
+each of `1.1.1`, `1.2.1` and `1.3.1` that no row has. Its rows may hold other
+criteria too: `coverage` names what must be there, not all that may be.
+
+<a id="mts-dat-015"></a>**MTS-DAT-015** `uniqueKeys` MUST be an array of 1 to
+8 key pointers, no two of them equal, and a processor MUST refuse one that is
+not with `schema.invalid`, naming the keyword.
+
+<a id="mts-dat-016"></a>**MTS-DAT-016** `coverage` MUST be an object with
+exactly two members, `key`, a key pointer, and `values`, an array of one or
+more values no two of which are equal, and a processor MUST refuse one that
+is not with `schema.invalid`, naming the keyword.
+
+<a id="mts-dat-017"></a>**MTS-DAT-017** A processor MUST evaluate
+`uniqueKeys` and `coverage` wherever the schema object holding them applies
+to an array, through `$ref`, `allOf`, a conditional and every other
+applicator, as it evaluates `uniqueItems` there, and MUST NOT evaluate either
+against an instance that is not an array.
+
+<a id="mts-dat-018"></a>**MTS-DAT-018** An item's key under `uniqueKeys` is
+the list of its values at the keyword's pointers, in their order, and an item
+with no value at any one of them has no key. A processor MUST report each
+item whose key equals an earlier item's key, pointer by pointer, with one
+`input.unique_keys` naming its index and, as `duplicate_of`, the index of the
+first item with that key, located at its value at the pointer when the
+keyword has one pointer and at the item when it has several, with the first
+item's same place in `related`; an item with no key is never reported.
+
+<a id="mts-dat-019"></a>**MTS-DAT-019** A processor MUST report each member of
+`coverage`'s `values` that no item's value at `key` equals with one
+`input.coverage` located at the array, whose `missing` parameter is that
+member; an item with no value at `key` covers nothing.
+
+A failure of either keyword in an output's value is reported by the `output.`
+family, as every keyword's is ([chapter 12](12-findings.md) §12.3). A
+duplicate key names two indexes and no value, so a finding never repeats what
+a supplier wrote ([MTS-FND-011](12-findings.md#mts-fnd-011)); the value
+`input.coverage` names is the package's own, written in its schema.
+
+> **Note.** A validator that implements JSON Schema 2020-12 and not this
+> specification treats `uniqueKeys` and `coverage` as unknown keywords, which
+> 2020-12 lets it collect as annotations, and so accepts a table this
+> specification refuses. The keywords have plain names because no minor of
+> this specification ever gives meaning to a keyword beginning `x-`
+> ([chapter 4](04-versions.md) §4.1.2). The combined schema carries them as
+> the author wrote them, so a supplier that reads it reads the rules.

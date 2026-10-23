@@ -8,6 +8,9 @@ effect as PLAN-2026-10-metais-public's items land.
 [Amendment A15](#amendments) (the envelope carries `summary`) is accepted by
 Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's ratification; the
 passage it changes is marked *(A15)*.
+[ADR-003 Amendment A2](ADR-003-the-data-specification.md#amendments)
+(rules across the items of an array: `uniqueKeys` and `coverage`) is
+proposed on 2026-10-23 and amends D5 as A7 amends it, D6 and D15 item 4 (`schema --fields` and `inspect` show each rule, and a `schemas` help topic teaches both keywords).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R2 (items 1–4) and R17 (items 1–3); the command-line

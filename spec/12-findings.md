@@ -426,7 +426,8 @@ line, then its column, a finding with no line first; its pointer, token by
 token, an array index comparing as a number and a prefix before its
 extensions; the code; the schema's entry, then its pointer; and the canonical
 JSON of the parameters. Of two findings equal in code, subject, origin, file,
-argument, pointer and parameters, it MUST report one.
+argument, pointer, schema entry, schema pointer and parameters, it MUST report
+one.
 
 ## 12.3 A schema failure
 
@@ -458,6 +459,8 @@ family:
 | `format` | `input.format` |
 | `maxItems`, `minItems` | `input.max_items`, `input.min_items` |
 | `uniqueItems` | `input.unique_items` |
+| `uniqueKeys` | `input.unique_keys` |
+| `coverage` | `input.coverage` |
 | `contains`, `minContains`, `maxContains` | `input.contains`, `input.min_contains`, `input.max_contains` |
 | `maxProperties`, `minProperties` | `input.max_properties`, `input.min_properties` |
 | `required` | `input.required` |
@@ -475,10 +478,12 @@ family:
 
 <a id="mts-fnd-004"></a>**MTS-FND-004** A processor MUST report each failing
 keyword by its code in the table above: `required`, `dependentRequired` and
-`additionalProperties` once per member they concern, a missing member at the
-pointer of the absent member with the line and column of its parent, an extra
-or misnamed member at its name, an item at its index, and each other keyword
-at the value it fails.
+`additionalProperties` once per member they concern, `uniqueKeys` once per
+item whose key repeats and `coverage` once per value it misses, a missing
+member at the pointer of the absent member with the line and column of its
+parent, an extra or misnamed member at its name, an item at its index, a
+repeated key where [MTS-DAT-018](05-data-specification.md#mts-dat-018)
+places it, and each other keyword at the value it fails.
 
 <a id="mts-fnd-005"></a>**MTS-FND-005** A processor MUST report a schema
 failure with its `schema` member: the package entry of the schema file the
