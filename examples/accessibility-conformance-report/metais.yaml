@@ -35,7 +35,9 @@ guide: |-
      and international editions only.
 
   Each table is a CSV file with the header `criterion,conformance,remarks`
-  and a row per criterion. [How to fill in a table](inputs/tables.md) says
+  and a row per criterion: every Level A and AA criterion of WCAG 2.2, and
+  every criterion of the Revised Section 508 and EN 301 549 tables, each
+  answered once. [How to fill in a table](inputs/tables.md) says
   what each column holds, which criteria to list and how to write the
   remarks, and [what the conformance levels mean](inputs/conformance.md)
   says which level to choose. What each criterion asks is in the
@@ -52,8 +54,9 @@ guide: |-
 
   Then run `metais validate <package> --data <dir>`, which reports every
   problem at once: a value that does not fit, a criterion number that does
-  not exist, or a table the edition needs and you left out, or one it
-  does not hold and you supplied. Fix them all, and run
+  not exist, a criterion answered twice, a criterion a table must answer
+  and you left out, or a table the edition needs and you left out, or one
+  it does not hold and you supplied. Fix them all, and run
   `metais render <package> --data <dir> --out <dir>` to write the report.
 inputs:
   - name: report
