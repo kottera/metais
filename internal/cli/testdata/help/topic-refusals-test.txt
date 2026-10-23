@@ -75,6 +75,7 @@ Next: metais test <package>
   input.unevaluated_item
   input.unevaluated_property
   input.unique_items
+  input.unique_keys
   input.validation.partial
   json.duplicate_name
   json.lone_surrogate
@@ -181,6 +182,7 @@ Next: metais test <package>
   output.unevaluated_item
   output.unevaluated_property
   output.unique_items
+  output.unique_keys
   package.compiled.mismatch
   package.compiled.missing
   package.compiled.unknown_file

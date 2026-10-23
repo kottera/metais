@@ -1,0 +1,7 @@
+{
+  "type": "object",
+  "properties": {
+    "table": { "uniqueKeys": ["/id"] },
+    "id": { "uniqueKeys": ["/id"] }
+  }
+}

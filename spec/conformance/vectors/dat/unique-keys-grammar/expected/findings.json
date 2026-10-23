@@ -1,0 +1,122 @@
+[
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/escape.schema.json",
+      "pointer": "/uniqueKeys"
+    },
+    "params": {
+      "keyword": "uniqueKeys"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/member.schema.json",
+      "pointer": "/uniqueKeys"
+    },
+    "params": {
+      "keyword": "uniqueKeys"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/nested.schema.json",
+      "pointer": "/properties/rows/uniqueKeys"
+    },
+    "params": {
+      "keyword": "uniqueKeys"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/nine.schema.json",
+      "pointer": "/uniqueKeys"
+    },
+    "params": {
+      "keyword": "uniqueKeys"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/relative.schema.json",
+      "pointer": "/uniqueKeys"
+    },
+    "params": {
+      "keyword": "uniqueKeys"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/repeated.schema.json",
+      "pointer": "/uniqueKeys"
+    },
+    "params": {
+      "keyword": "uniqueKeys"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/root.schema.json",
+      "pointer": "/uniqueKeys"
+    },
+    "params": {
+      "keyword": "uniqueKeys"
+    }
+  },
+  {
+    "code": "schema.invalid",
+    "severity": "error",
+    "subject": {
+      "kind": "package"
+    },
+    "location": {
+      "origin": "package",
+      "file": "inputs/zero.schema.json",
+      "pointer": "/uniqueKeys"
+    },
+    "params": {
+      "keyword": "uniqueKeys"
+    }
+  }
+]

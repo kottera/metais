@@ -295,7 +295,9 @@ the supply, its assembly and its validation together, in one report.
 some of whose items did not parse, and a CSV input some of whose records were
 refused alone for their field count or a quote, without those items, reporting
 `input.validation.partial` with how many were left out and how many findings
-about the array as a whole were therefore not reported; and when any input did
+about the array as a whole were therefore not reported, `input.coverage`
+among them; MUST report each `input.unique_keys` between two of the items it
+validated, at their original indexes; and when any input did
 not parse, was validated in part, or an `--inputs-json` argument did not
 parse, it MUST NOT evaluate the input constraints, and MUST report
 `input.constraints_not_evaluated`.

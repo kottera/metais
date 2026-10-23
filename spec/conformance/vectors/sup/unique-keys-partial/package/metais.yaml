@@ -1,0 +1,14 @@
+metais: "1.0"
+name: org.example.rows
+version: 1.0.0
+title: Rows
+description: A package whose table carries uniqueKeys.
+guide: Supply the table.
+inputs:
+  - name: rows
+    title: Rows
+    schema: inputs/rows.schema.json
+    forms: [csv]
+outputs:
+  - id: report
+    template: report.md.liquid

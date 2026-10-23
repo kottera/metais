@@ -90,6 +90,7 @@ it, and the statements it reports.
 | `input.unevaluated_item` | error | content | input | `index` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.unevaluated_property` | error | content | input | `property`; optional: `suggestion` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.unique_items` | error | content | input | `index`, `duplicate_of` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-DAT-013](05-data-specification.md#mts-dat-013), [MTS-FND-004](12-findings.md#mts-fnd-004) |
+| `input.unique_keys` | error | content | input | `index`, `duplicate_of` | 1.0 | [MTS-DAT-010](05-data-specification.md#mts-dat-010), [MTS-DAT-017](05-data-specification.md#mts-dat-017), [MTS-DAT-018](05-data-specification.md#mts-dat-018), [MTS-FND-004](12-findings.md#mts-fnd-004) |
 | `input.validation.partial` | info | content | input | `unparsed`, `suppressed` | 1.0 | [MTS-SUP-029](06-supplying-inputs.md#mts-sup-029) |
 | `internal.error` | error | internal | invocation | `tool_version`, `phase` | 1.0 | — |
 | `internal.memory` | error | internal | invocation | `tool_version` | 1.0 | — |
@@ -213,6 +214,7 @@ it, and the statements it reports.
 | `output.unevaluated_item` | error | content | output | `index` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `output.unevaluated_property` | error | content | output | `property`; optional: `suggestion` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `output.unique_items` | error | content | output | `index`, `duplicate_of` | 1.0 | [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
+| `output.unique_keys` | error | content | output | `index`, `duplicate_of` | 1.0 | [MTS-DAT-018](05-data-specification.md#mts-dat-018), [MTS-FND-004](12-findings.md#mts-fnd-004), [MTS-TRN-015](10-transforms.md#mts-trn-015) |
 | `package.compiled.mismatch` | error | refused | package | — | 1.0 | [MTS-MAN-022](03-manifest.md#mts-man-022), [MTS-PKG-025](02-container.md#mts-pkg-025) |
 | `package.compiled.missing` | error | refused | package | — | 1.0 | [MTS-PKG-024](02-container.md#mts-pkg-024) |
 | `package.compiled.unknown_file` | error | refused | package | — | 1.0 | [MTS-PKG-024](02-container.md#mts-pkg-024) |
@@ -267,7 +269,7 @@ it, and the statements it reports.
 | `schema.dialect` | error | content | package | `reason` | 1.0 | [MTS-DAT-003](05-data-specification.md#mts-dat-003) |
 | `schema.format_unsupported` | error | content | package | `format` | 1.0 | [MTS-DAT-005](05-data-specification.md#mts-dat-005) |
 | `schema.id_duplicate` | error | content | package | `id`; optional: `other` | 1.0 | [MTS-DAT-008](05-data-specification.md#mts-dat-008) |
-| `schema.invalid` | error | content | package | `keyword` | 1.0 | [MTS-DAT-003](05-data-specification.md#mts-dat-003) |
+| `schema.invalid` | error | content | package | `keyword` | 1.0 | [MTS-DAT-003](05-data-specification.md#mts-dat-003), [MTS-DAT-015](05-data-specification.md#mts-dat-015) |
 | `schema.invalid_default` | error | content | package | — | 1.0 | [MTS-AUT-007](13-authoring.md#mts-aut-007) |
 | `schema.invalid_example` | error | content | package | — | 1.0 | [MTS-AUT-007](13-authoring.md#mts-aut-007) |
 | `schema.keyword_unknown` | error | content | package | `keyword` | 1.0 | [MTS-DAT-004](05-data-specification.md#mts-dat-004) |
@@ -458,6 +460,7 @@ family:
 | `format` | `input.format` |
 | `maxItems`, `minItems` | `input.max_items`, `input.min_items` |
 | `uniqueItems` | `input.unique_items` |
+| `uniqueKeys` | `input.unique_keys` |
 | `contains`, `minContains`, `maxContains` | `input.contains`, `input.min_contains`, `input.max_contains` |
 | `maxProperties`, `minProperties` | `input.max_properties`, `input.min_properties` |
 | `required` | `input.required` |
@@ -475,10 +478,12 @@ family:
 
 <a id="mts-fnd-004"></a>**MTS-FND-004** A processor MUST report each failing
 keyword by its code in the table above: `required`, `dependentRequired` and
-`additionalProperties` once per member they concern, a missing member at the
-pointer of the absent member with the line and column of its parent, an extra
-or misnamed member at its name, an item at its index, and each other keyword
-at the value it fails.
+`additionalProperties` once per member they concern, `uniqueKeys` once per
+item whose key repeats and `coverage` once per value it misses, a missing
+member at the pointer of the absent member with the line and column of its
+parent, an extra or misnamed member at its name, an item at its index, a
+repeated key where [MTS-DAT-018](05-data-specification.md#mts-dat-018)
+places it, and each other keyword at the value it fails.
 
 <a id="mts-fnd-005"></a>**MTS-FND-005** A processor MUST report a schema
 failure with its `schema` member: the package entry of the schema file the

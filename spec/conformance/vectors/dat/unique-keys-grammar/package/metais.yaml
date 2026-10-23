@@ -1,0 +1,34 @@
+metais: "1.0"
+name: org.example.rows
+version: 1.0.0
+title: Rows
+description: A package whose uniqueKeys break their grammar.
+guide: Supply the tables.
+inputs:
+  - name: zero
+    title: zero
+    schema: inputs/zero.schema.json
+  - name: nine
+    title: nine
+    schema: inputs/nine.schema.json
+  - name: member
+    title: member
+    schema: inputs/member.schema.json
+  - name: root
+    title: root
+    schema: inputs/root.schema.json
+  - name: relative
+    title: relative
+    schema: inputs/relative.schema.json
+  - name: escape
+    title: escape
+    schema: inputs/escape.schema.json
+  - name: repeated
+    title: repeated
+    schema: inputs/repeated.schema.json
+  - name: nested
+    title: nested
+    schema: inputs/nested.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid

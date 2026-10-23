@@ -290,6 +290,8 @@ func (m *mapper) node(path []*Failure, n *Failure, via []finding.Via) []emitted 
 		return one("multiple_of", finding.Params{"divisor": m.num(n, dataDivisor), "value": m.num(n, dataValue)})
 	case "uniqueItems":
 		return []emitted{m.uniqueItems(path, n, via)}
+	case "uniqueKeys":
+		return []emitted{m.uniqueKeys(path, n, via)}
 	}
 	if suffix, ok := boundKeywords[n.Keyword]; ok {
 		return one(suffix, finding.Params{"limit": m.num(n, dataLimit), "count": m.num(n, dataCount)})
@@ -482,6 +484,35 @@ func (m *mapper) uniqueItems(path []*Failure, n *Failure, via []finding.Via) emi
 	firstPath := m.paths.Path(nil, m.remap(n, at))
 	rel := finding.Related{Location: m.t.Locate(firstPath, false).WithPath(firstPath), Note: noteFirst}
 	return m.emit(path, n, append(slices.Clip(inst), strconv.Itoa(max(d[0], d[1]))), "unique_items", n.Keyword,
+		finding.Params{"index": finding.Int(int64(later)), "duplicate_of": finding.Int(int64(first))}, via, finding.WithRelated(rel))
+}
+
+// uniqueKeys maps one uniqueKeys failure, an item whose key repeats an
+// earlier item's, to a finding at the item's value at the keyword's one
+// pointer, or at the item when it has several, related to the first item's
+// same place (MTS-DAT-018).
+func (m *mapper) uniqueKeys(path []*Failure, n *Failure, via []finding.Via) emitted {
+	d := m.ints(n, dataDuplicates)
+	if len(d) != 2 || d[0] < 0 || d[0] >= d[1] {
+		m.fail(n, "duplicates is not two indexes, the earlier first")
+		return emitted{}
+	}
+	var under []string
+	if _, ok := n.Data[dataAt]; ok {
+		under = m.strs(n, dataAt)
+	}
+	inst := n.InstancePointer
+	place := func(i int) []string {
+		return append(append(slices.Clip(inst), strconv.Itoa(i)), under...)
+	}
+	first, later := d[0], d[1]
+	firstPath := m.paths.Path(nil, m.remap(n, place(first)))
+	rel := finding.Related{Location: m.t.Locate(firstPath, false).WithPath(firstPath), Note: noteFirst}
+	at := place(later)
+	if len(inst) == 0 {
+		first, later = m.original(n, first), m.original(n, later)
+	}
+	return m.emit(path, n, at, "unique_keys", n.Keyword,
 		finding.Params{"index": finding.Int(int64(later)), "duplicate_of": finding.Int(int64(first))}, via, finding.WithRelated(rel))
 }
 

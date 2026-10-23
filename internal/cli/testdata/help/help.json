@@ -9459,6 +9459,14 @@
             }
           },
           {
+            "code": "input.unique_keys",
+            "cause": "An input is refused (unique keys).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Lists the inputs the package takes, the files each is read from, and what each means."
+            }
+          },
+          {
             "code": "input.validation.partial",
             "cause": "An input is refused (validation: partial).",
             "next": {
@@ -10381,6 +10389,14 @@
           {
             "code": "output.unique_items",
             "cause": "An output fails its validation (unique items).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Shows the package's outputs; a template's defect is the package's, for its author to fix."
+            }
+          },
+          {
+            "code": "output.unique_keys",
+            "cause": "An output fails its validation (unique keys).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Shows the package's outputs; a template's defect is the package's, for its author to fix."
@@ -13703,6 +13719,14 @@
             }
           },
           {
+            "code": "input.unique_keys",
+            "cause": "A value given with --set, --set-json or --inputs-json is refused (unique keys).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Lists the inputs the package takes; a value given with --set, --set-json or --inputs-json is kept as given and must be one the schema allows."
+            }
+          },
+          {
             "code": "input.validation.partial",
             "cause": "A value given with --set, --set-json or --inputs-json is refused (validation: partial).",
             "next": {
@@ -15651,6 +15675,14 @@
             }
           },
           {
+            "code": "input.unique_keys",
+            "cause": "An example's inputs are refused (unique keys).",
+            "next": {
+              "run": "metais test <package>",
+              "why": "Tests every example again once the package or its examples are fixed."
+            }
+          },
+          {
             "code": "input.validation.partial",
             "cause": "An example's inputs are refused (validation: partial).",
             "next": {
@@ -16541,6 +16573,14 @@
           {
             "code": "output.unique_items",
             "cause": "An example's output fails its validation (unique items).",
+            "next": {
+              "run": "metais test <package>",
+              "why": "Tests every example again once the package or its examples are fixed."
+            }
+          },
+          {
+            "code": "output.unique_keys",
+            "cause": "An example's output fails its validation (unique keys).",
             "next": {
               "run": "metais test <package>",
               "why": "Tests every example again once the package or its examples are fixed."
@@ -18129,6 +18169,14 @@
             }
           },
           {
+            "code": "input.unique_keys",
+            "cause": "An example's inputs are refused (unique keys).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
             "code": "input.validation.partial",
             "cause": "An example's inputs are refused (validation: partial).",
             "next": {
@@ -19035,6 +19083,14 @@
           {
             "code": "output.unique_items",
             "cause": "An example's output fails its validation (unique items).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "output.unique_keys",
+            "cause": "An example's output fails its validation (unique keys).",
             "next": {
               "run": "metais test <dir>",
               "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."

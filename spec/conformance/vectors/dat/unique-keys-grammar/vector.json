@@ -1,0 +1,44 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "dat/unique-keys-grammar",
+  "title": "A uniqueKeys that is not an array of 1 to 8 key pointers, no two equal, is refused at open with schema.invalid naming the keyword",
+  "statements": [
+    "MTS-DAT-015"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "Each schema of package breaks the grammar one way: no pointer, nine, a member that is not a string, the empty pointer, a pointer with no leading slash, an escape RFC 6901 does not define, two equal pointers, and a string in place of the array, in a subschema. valid holds eight pointers, escaped ones and the pointer to the empty member name among them.",
+  "cases": [
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "package"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "valid"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    }
+  ]
+}

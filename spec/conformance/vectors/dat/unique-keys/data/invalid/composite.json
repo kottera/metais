@@ -1,0 +1,8 @@
+[
+  { "table": "A", "criterion": "1.1.1" },
+  { "table": "AA", "criterion": "1.1.1" },
+  { "table": "A", "criterion": "1.2.1" },
+  { "table": "A", "criterion": "1.1.1" },
+  { "table": "A" },
+  { "table": "A" }
+]

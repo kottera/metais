@@ -206,7 +206,7 @@ Refusals:
                       refused. Next: metais inspect <package>
   csv.* (7)           A value given with --set, --set-json or --inputs-json is
                       refused. Next: metais inspect <package>
-  input.* (52)        A value given with --set, --set-json or --inputs-json is
+  input.* (53)        A value given with --set, --set-json or --inputs-json is
                       refused. Next: metais inspect <package>
   json.* (5)          A value given with --set, --set-json or --inputs-json is
                       refused. Next: metais inspect <package>

@@ -22,6 +22,8 @@ package schemafail
 //	minimum ...             limit, value (also maximum, exclusiveMinimum, exclusiveMaximum)
 //	multipleOf              divisor, value
 //	uniqueItems             duplicates []int (two indexes, the earlier first)
+//	uniqueKeys              duplicates []int (the first item with the key, then the item repeating it);
+//	                        at []string (the tokens of the keyword's one pointer, absent when it has several)
 //	anyOf, oneOf            branch_count int; for a oneOf more than one branch of which matched,
 //	                        matched []int (two of them) and no children
 //	false                   prefix_count int, when the false schema is items' (one failure per item refused)
@@ -53,6 +55,7 @@ const (
 	dataValue       = "value"
 	dataDivisor     = "divisor"
 	dataDuplicates  = "duplicates"
+	dataAt          = "at"
 	dataBranchCount = "branch_count"
 	dataMatched     = "matched"
 	dataPrefixCount = "prefix_count"

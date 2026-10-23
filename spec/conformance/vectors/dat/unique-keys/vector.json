@@ -1,0 +1,49 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "dat/unique-keys",
+  "title": "uniqueKeys reports each item whose key repeats an earlier one's, once, naming the first, at the key's cell or at the item, wherever its schema object applies to an array",
+  "statements": [
+    "MTS-DAT-017",
+    "MTS-DAT-018",
+    "MTS-FND-004",
+    "MTS-DAT-010"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "single holds a key repeated twice and one repeated once, every repeat reported naming the first item with its key; rows with no criterion, which take no part; and null repeated, a value equal to null. composite has a key of two pointers, located at the item, and items keyless for a missing part. numbers has 1.0, 1 and 10e-1, one value, and the string \"1\", another. rows is a CSV input, each finding at its cell's line and column with the first row's cell in related. items is a collection, each finding in its item's file. referenced reaches the keyword through $ref, conditional under then; scalar holds the keyword on schema objects that apply to an object and a number, which it never judges. The valid case holds distinct keys and keyless rows.",
+  "cases": [
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/valid"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/invalid"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/invalid.json"
+          }
+        }
+      ]
+    }
+  ]
+}

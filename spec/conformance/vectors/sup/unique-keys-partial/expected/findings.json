@@ -1,0 +1,124 @@
+[
+  {
+    "code": "input.validation.partial",
+    "severity": "info",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.csv",
+      "pointer": ""
+    },
+    "params": {
+      "unparsed": 2,
+      "suppressed": 0
+    }
+  },
+  {
+    "code": "csv.bare_quote",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.csv",
+      "line": 3,
+      "column": 10,
+      "pointer": "/1/conformance"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.csv",
+      "line": 4,
+      "column": 1,
+      "pointer": "/2/criterion"
+    },
+    "schema": {
+      "entry": "inputs/rows.schema.json",
+      "pointer": "/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 2,
+      "duplicate_of": 0
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "rows.csv",
+        "line": 2,
+        "column": 1,
+        "pointer": "/0/criterion",
+        "note": "first occurrence"
+      }
+    ]
+  },
+  {
+    "code": "csv.after_quote",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.csv",
+      "line": 6,
+      "column": 12,
+      "pointer": "/4/conformance"
+    },
+    "params": {}
+  },
+  {
+    "code": "input.unique_keys",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "rows",
+      "title": "Rows"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "rows.csv",
+      "line": 7,
+      "column": 1,
+      "pointer": "/5/criterion"
+    },
+    "schema": {
+      "entry": "inputs/rows.schema.json",
+      "pointer": "/uniqueKeys",
+      "keyword": "uniqueKeys"
+    },
+    "params": {
+      "index": 5,
+      "duplicate_of": 3
+    },
+    "related": [
+      {
+        "origin": "data_dir",
+        "file": "rows.csv",
+        "line": 5,
+        "column": 1,
+        "pointer": "/3/criterion",
+        "note": "first occurrence"
+      }
+    ]
+  }
+]

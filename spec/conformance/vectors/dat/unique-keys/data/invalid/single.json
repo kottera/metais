@@ -1,0 +1,11 @@
+[
+  { "criterion": "1.1.1", "conformance": "Supports" },
+  { "criterion": "1.2.1", "conformance": "Supports" },
+  { "criterion": "1.1.1", "conformance": "Does Not Support" },
+  { "conformance": "Supports" },
+  { "conformance": "Supports" },
+  { "criterion": "1.2.1", "conformance": "Partially Supports" },
+  { "criterion": "1.1.1", "conformance": "Supports" },
+  { "criterion": null, "conformance": "Supports" },
+  { "criterion": null, "conformance": "Supports" }
+]
