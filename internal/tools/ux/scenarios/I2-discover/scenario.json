@@ -1,0 +1,9 @@
+{
+  "id": "I2",
+  "slug": "discover",
+  "kind": "authoring",
+  "asks_for_output": false,
+  "install": true,
+  "fixtures": [],
+  "check": "finds-and-installs"
+}

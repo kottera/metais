@@ -44,6 +44,9 @@ type session struct {
 	model  string // the model, as the harness names it
 	prompt string
 	skill  bool // metais skill was installed for it
+	// install marks a session of an install scenario (ADR-013 D9): bin is
+	// left off its PATH, so it starts with no metais.
+	install bool
 }
 
 // invocation is one command, exactly as the runner starts it.
@@ -143,9 +146,16 @@ const sessionSettings = `{"autoMemoryEnabled":false}`
 // session saved, no MCP server but --mcp-config's (none), project settings
 // only, auto-memory off, and permissions bypassed, as nobody is there to
 // answer them. Its environment holds nothing of the host's but PATH and
-// the proxy's address.
+// the proxy's address. An install scenario's session gets the runner's
+// PATH alone, with no metais under test before it, and GOFLAGS
+// -modcacherw, so a module cache go install makes in its HOME is one the
+// runner can remove when it runs the run again.
 func (c *claudeCode) invocation(s session) invocation {
-	return invocation{
+	path := s.bin + string(filepath.ListSeparator) + c.hostPath
+	if s.install {
+		path = c.hostPath
+	}
+	inv := invocation{
 		path: c.binary,
 		args: []string{
 			"-p", s.prompt,
@@ -158,7 +168,7 @@ func (c *claudeCode) invocation(s session) invocation {
 			"--permission-mode", "bypassPermissions",
 		},
 		env: []string{
-			"PATH=" + s.bin + string(filepath.ListSeparator) + c.hostPath,
+			"PATH=" + path,
 			"HOME=" + s.home,
 			"TMPDIR=" + s.tmp,
 			"CLAUDE_CODE_TMPDIR=" + s.tmp,
@@ -170,6 +180,10 @@ func (c *claudeCode) invocation(s session) invocation {
 		},
 		dir: s.work,
 	}
+	if s.install {
+		inv.env = append(inv.env, "GOFLAGS=-modcacherw")
+	}
+	return inv
 }
 
 func (c *claudeCode) checks(inv invocation) []check {

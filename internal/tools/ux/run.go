@@ -136,7 +136,18 @@ func (c *config) loadSet() ([]*scenario.Scenario, error) {
 	if err != nil {
 		return nil, err
 	}
-	return selectScenarios(set, c.scenarios)
+	set, err = selectScenarios(set, c.scenarios)
+	if err != nil {
+		return nil, err
+	}
+	if c.withSkill {
+		for _, s := range set {
+			if s.Install {
+				return nil, fmt.Errorf("%s starts with no metais and no skill (ADR-013 D9): run it without -with-skill", s.Name())
+			}
+		}
+	}
+	return set, nil
 }
 
 // printScorecard scores the runs already recorded and prints the
@@ -178,11 +189,13 @@ func (c *config) refuse() error {
 	return nil
 }
 
-// selectScenarios is the scenarios ids names, in the set's order, or the
-// whole set when ids is empty.
+// selectScenarios is the scenarios ids names, in the set's order, or,
+// when ids is empty, every scenario but the install scenarios. An install
+// scenario runs only when named: it needs the live site and a host whose
+// sessions can install metais (ADR-013 D9).
 func selectScenarios(set []*scenario.Scenario, ids []string) ([]*scenario.Scenario, error) {
 	if len(ids) == 0 {
-		return set, nil
+		return slices.DeleteFunc(slices.Clone(set), func(s *scenario.Scenario) bool { return s.Install }), nil
 	}
 	var out []*scenario.Scenario
 	for _, s := range set {
@@ -382,13 +395,14 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 		return nil, err
 	}
 	ses := session{
-		work:   filepath.Join(dir, workDir),
-		home:   filepath.Join(dir, "home"),
-		tmp:    filepath.Join(dir, "tmp"),
-		bin:    st.bin,
-		model:  m,
-		prompt: s.Prompt,
-		skill:  c.withSkill,
+		work:    filepath.Join(dir, workDir),
+		home:    filepath.Join(dir, "home"),
+		tmp:     filepath.Join(dir, "tmp"),
+		bin:     st.bin,
+		model:   m,
+		prompt:  s.Prompt,
+		skill:   c.withSkill,
+		install: s.Install,
 	}
 	for _, d := range []string{ses.work, ses.home, ses.tmp} {
 		if err := os.MkdirAll(d, 0o755); err != nil {
@@ -433,10 +447,14 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 
 	inv := c.harness.invocation(ses)
 	r.Invocation.Path, r.Invocation.Args, r.Invocation.Env, r.Invocation.Dir = inv.path, inv.args, inv.env, inv.dir
+	onPath := checkMetaisFirstOnPath(inv, st.bin, st.rec.Metais.SHA256)
+	if s.Install {
+		onPath = checkMetaisNotOnPath(inv)
+	}
 	r.Checks = slices.Concat([]check{
 		checkOutsideRepository(ses.work),
 		checkFreshDirectory(ses.work, r.Fixtures),
-		checkMetaisFirstOnPath(inv, st.bin, st.rec.Metais.SHA256),
+		onPath,
 	}, c.harness.checks(inv))
 	if !valid(r.Checks) {
 		r.Status = statusNotRun

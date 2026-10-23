@@ -9,6 +9,7 @@
   },
   "edited": "Turns after the session's metais inspect are replaced by the probe's unpack, rewrite, test --update and repack, then a metais render of the rewritten example's data. Each command's output is the real output of running it, with the set's own metais, on a copy of the session's starting directory; record.json's files are listed from the directory those commands left. No model unpacked the package under an output-asking prompt in the recorded runs.",
   "expect": {
+    "golden-install": "n/a",
     "inspect-first": "pass",
     "no-zip-extraction": "fail",
     "no-unknown-command": "pass",

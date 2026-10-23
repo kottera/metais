@@ -9,6 +9,7 @@
   },
   "edited": "turn 9's unzip -p out/acr.docx, of the session's own render, is changed to unzip -p accessibility-conformance-report.metais, the package",
   "expect": {
+    "golden-install": "n/a",
     "inspect-first": "pass",
     "no-zip-extraction": "fail",
     "no-unknown-command": "pass",

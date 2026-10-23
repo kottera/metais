@@ -1,0 +1,22 @@
+{
+  "shows": "the session installs metais with go install, an escape hatch of ADR-013 D6 rather than a golden path, then inspects the package, renders nothing and asks for the incident's facts",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "C1-render-real/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "expect": {
+    "golden-install": "fail",
+    "inspect-first": "pass",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "pass",
+    "outcome": "pass"
+  },
+  "reasons": {
+    "golden-install": "not by a golden path"
+  },
+  "edited": "Recorded as C1 with the metais under test on PATH; no I1 run can install before metais.org is live. The record is made I1's: its scenario, prompt and PATH (the metais under test taken off it, GOFLAGS added, as the runner gives an install scenario's session) and its metais-first-on-path check renamed metais-not-on-path. A Bash call of go install metais.org/metais/cmd/metais@latest, with no output, as go install prints none, is added before the session's inspect; the session's text before it says it installs metais; and its which metais && metais inspect becomes ~/go/bin/metais inspect, its output without which's line."
+}

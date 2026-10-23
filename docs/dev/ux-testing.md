@@ -5,7 +5,8 @@ watching fresh agent sessions use the binary
 ([PLAN-2026-10-metais-ux](../plans/PLAN-2026-10-metais-ux.md) §5). Each
 session starts in an empty directory with a packed package, the `metais`
 under test on `PATH`, and nothing else: no memory, no user settings, no MCP
-server. The runner, `internal/tools/ux`, starts the sessions, isolates
+server. The install scenarios are the one exception: their sessions start
+with no `metais` at all ([The install scenarios](#the-install-scenarios)). The runner, `internal/tools/ux`, starts the sessions, isolates
 them, and records each run. The scorer, `internal/tools/ux/score`,
 judges each run from its record, its transcript and the directory the
 session left, and the runner prints the scorecard.
@@ -17,9 +18,9 @@ faked, and the scorer's tests over committed transcripts.
 
 ## The scenarios
 
-The set is plan §5's table and the two rounds' evidence scenarios, one
-directory per scenario under `internal/tools/ux/scenarios/`, named
-`<id>-<slug>`:
+The set is plan §5's table, the two rounds' evidence scenarios and
+ADR-013 D9's two install scenarios, one directory per scenario under
+`internal/tools/ux/scenarios/`, named `<id>-<slug>`:
 
 | Scenario | Prompt | Asks for output | Fixtures |
 |---|---|---|---|
@@ -34,12 +35,20 @@ directory per scenario under `internal/tools/ux/scenarios/`, named
 | A3 data-to-js | make a .metais package whose HTML page charts a list of numbers it is given, writing them into a JavaScript array in the page | no | none |
 | C6 render-acr-fictional | render this file with new fictional data: accessibility-conformance-report.metais | yes | `accessibility-conformance-report.metais` |
 | A4 spec-only-package | Write a METAIS package of your own choosing, on a subject that is not the release notes of spec/B-worked-package.md, starting at spec/B-worked-package.md. […] When metais check, metais test and metais pack all accept the package, stop. […] | no | `spec/` |
+| I1 install-and-render | install metais from metais.org and render this file: report.metais | yes | `report.metais` |
+| I2 discover | make a .metais that renders an invoice as HTML from line items | no | none |
 
 C scenarios consume a package someone else wrote. A scenarios author or
 edit one. `report.metais` is `examples/dora-incident-report`.
 `invoice.metais` is the invoice package whose source is
 `A2-edit-package/invoice/`: no example package holds an invoice, so A2's
 source lives with its scenario.
+
+I1 and I2 are ADR-013 D9's, and their sessions start with no `metais` on
+`PATH` and no skill. I1 is C1 with metais to install first: the same
+package, and C1's prompt after "install metais from metais.org and". I2 is
+A1's prompt as it stands. [The install scenarios](#the-install-scenarios)
+says how they are run and scored.
 
 C6 and A4 are the evidence scenarios of the SC1 and SC9 rounds
 ([sc1.md](rounds/sc1.md), [sc9.md](rounds/sc9.md)), not plan §5's: C6
@@ -68,7 +77,8 @@ Each scenario's directory holds:
 
   - `kind` is `consuming` for a C scenario and `authoring` for an A
     scenario. It says which half of R-UX-5's thresholds the scenario
-    counts towards.
+    counts towards, and which pass rules hold it. An I scenario is of
+    either kind: I1 is consuming and I2 authoring.
   - `asks_for_output` says whether the prompt asks for output, such as
     "render…" or "produce the report from…". R-UX-8 applies to exactly
     the scenarios that do: in them, extracting, changing or repacking the
@@ -86,6 +96,8 @@ Each scenario's directory holds:
     starts from an empty directory.
   - `check` names the scenario's outcome check, one of the scorer's
     ([Scoring](#scoring-a-run)).
+  - `install` is `true` for an I scenario and absent for every other.
+    The runner starts its session with no `metais` on `PATH`.
   - `rewordings` records each change of the prompt under R-UX-9
     ([Rewording a prompt](#rewording-a-prompt)). It is absent until the
     prompt first changes.
@@ -93,13 +105,15 @@ Each scenario's directory holds:
 
 `internal/tools/ux/scenario` reads the set. It refuses a declaration with
 an unknown field, a directory not named `<id>-<slug>`, a kind that does not
-match its id, an empty prompt, and a fixture that is not exactly one of
-`example`, `source` and `tree`. Its test holds the set to the table above.
+match its id, an `install` other than exactly the I scenarios', an empty
+prompt, and a fixture that is not exactly one of `example`, `source` and
+`tree`. Its test holds the set to the table above.
 
 ### Adding a scenario
 
 1. Make `internal/tools/ux/scenarios/<id>-<slug>/`, with `prompt.txt` and
-   `scenario.json`. The id is the next free `C<n>` or `A<n>`. The prompt
+   `scenario.json`. The id is the next free `C<n>` or `A<n>`, or `I<n>`
+   for a scenario whose session installs metais itself. The prompt
    names each fixture file it starts with.
 2. Declare `asks_for_output` from the prompt's own words.
 3. Put a `source` fixture's package beside `scenario.json`. It must pass
@@ -147,7 +161,8 @@ of them is recorded `not-run`, and its session never starts:
 |---|---|
 | `outside-repository` | The session's directory is an absolute path, and neither it nor any directory above it holds `.git`, `.hg`, `.jj` or `.svn`. |
 | `fresh-directory` | The session's directory holds exactly the scenario's fixtures, byte for byte, and nothing else. With `-with-skill`, it also holds the skill `metais skill` wrote. |
-| `metais-first-on-path` | The first `metais` on the session's `PATH` is the binary built from the commit under test, by its SHA-256, and no relative directory comes before it. |
+| `metais-first-on-path` | The first `metais` on the session's `PATH` is the binary built from the commit under test, by its SHA-256, and no relative directory comes before it. Every scenario but the I scenarios makes it. |
+| `metais-not-on-path` | An I scenario's in place of the previous check: no directory of the session's `PATH` holds a `metais`, and `PATH` holds no relative directory, so a `metais` the session runs is one it installed. |
 | `placeholder-credential` | `ANTHROPIC_AUTH_TOKEN` is R-UX-7's placeholder, and no other credential variable is set. |
 | `auto-memory-off` | Auto-memory is off both ways: `CLAUDE_CODE_DISABLE_AUTO_MEMORY=1` in the environment, and `--settings` setting `autoMemoryEnabled` to `false`. |
 | `project-settings-only` | `--setting-sources project`, and the session's own `HOME` starts empty, so it holds no user settings. |
@@ -183,13 +198,14 @@ of the host's:
 
 | Variable | Value |
 |---|---|
-| `PATH` | the directory of the `metais` under test, then the runner's own `PATH` |
+| `PATH` | the directory of the `metais` under test, then the runner's own `PATH`; for an I scenario, the runner's own `PATH` alone |
 | `HOME` | the run's own `home/`, empty when the session starts |
 | `TMPDIR`, `CLAUDE_CODE_TMPDIR` | the run's own `tmp/`. The sandbox refuses `/tmp`, and Claude Code puts its own temporary files under `CLAUDE_CODE_TMPDIR`. |
 | `ANTHROPIC_BASE_URL` | the runner's own: the dispatch's loopback proxy, which authenticates upstream |
 | `ANTHROPIC_AUTH_TOKEN` | `metais-ux-placeholder`. This is not a secret. A nested `claude` refuses on the client side unless some credential variable is set (R-UX-7). |
 | `CLAUDE_CODE_DISABLE_AUTO_MEMORY` | `1` |
 | `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`, `DISABLE_AUTOUPDATER` | `1` |
+| `GOFLAGS` | an I scenario's only: `-modcacherw`, so the module cache a `go install` makes in the session's `HOME` is one the runner can remove when it runs the run again |
 
 The runner refuses to start without `ANTHROPIC_BASE_URL`. A host with no
 loopback proxy needs a credential route of its own, which this runner does
@@ -211,8 +227,9 @@ harness supplies:
 - its reading of a transcript;
 - its checks of the finished session.
 
-The `outside-repository`, `fresh-directory` and `metais-first-on-path`
-checks are the runner's own, so every harness makes them.
+The `outside-repository`, `fresh-directory`, `metais-first-on-path` and
+`metais-not-on-path` checks are the runner's own, so every harness makes
+them.
 
 **The models** are R-UX-5's three: `opus`, `sonnet` and `haiku`, given to
 `--model` as Claude Code's aliases. Each record also holds the model ID
@@ -250,10 +267,10 @@ scratch volume is one. The runner then:
 | Flag | Default | What it does |
 |---|---|---|
 | `-out` | (required) | the set's directory |
-| `-scenarios` | every scenario | the scenarios to run, by id, comma-separated |
+| `-scenarios` | every scenario but the I scenarios | the scenarios to run, by id, comma-separated. An I scenario runs only when named. |
 | `-models` | `opus,sonnet,haiku` | the models, comma-separated |
 | `-harness` | `claude-code` | the harness |
-| `-with-skill` | off | install `metais skill` for each session before it starts |
+| `-with-skill` | off | install `metais skill` for each session before it starts. The runner refuses it with an I scenario, which starts with no skill. |
 | `-pace` | `30s` | the wait between two runs |
 | `-quota-wait` | `0` | on a quota pause, how long to wait before running the run again; `0` stops the set |
 | `-timeout` | `30m` | how long one session may run before it is stopped |
@@ -303,6 +320,133 @@ starts. The skill is then one of the session's fixtures, and
 `skill-as-declared` requires the session to report it loaded. Wave 3 runs
 each consuming scenario both with and without it. The baseline runs
 without it.
+
+## The install scenarios
+
+I1 and I2 measure the step every other scenario skips: getting `metais`
+(ADR-013 D9). Each session starts as the others do, but with no `metais`
+on `PATH` and no skill:
+
+- **The session's `PATH` is the runner's own.** No directory of the
+  `metais` under test comes before it, and the runner refuses to start a
+  session whose `PATH` finds any `metais` (`metais-not-on-path`). A
+  `metais` left on the host by an earlier run, such as one `brew` put in
+  its prefix, makes the next run `not-run` rather than letting it pass
+  without installing anything.
+- **`~/.local/bin`, where `install.sh` installs, is the run's own `HOME`,**
+  and it is not on `PATH`, as it is not on a fresh Mac. The script says so
+  and prints the line to add (ADR-013 D6 item 6). A session then runs the
+  binary by its path, which the scorer reads as `metais` like any other.
+- **Neither runs unless named.** `-scenarios` without them runs every other
+  scenario, so a baseline never starts a session that needs the live site.
+  `-with-skill` refuses them.
+
+I1 gates on Opus, Sonnet and Haiku, against the live site, in Wave 3 of
+PLAN-2026-10-metais-public. It passes when `golden-install` holds and then
+R-UX-5's consuming rules and C1's check hold: told to render a real
+document with no facts, the right session still asks for them, and its
+`metais inspect` is the first proof that the binary it installed runs. I2
+is recorded: whether a session given A1's task with nothing installed
+finds METAIS and installs it depends on what a model and a search engine
+know on the day.
+
+### Reading an install
+
+The scorer reads an install from the session's commands, in a Bash call
+the harness reports no error for, by these routes of ADR-013 D6:
+
+| Route | Seen as | D6 |
+|---|---|---|
+| `brew install kottera/tap/metais` | `brew install` or `reinstall` of `kottera/tap/metais`, or of `metais` after `brew tap kottera/tap` | golden path |
+| the install script | `curl` or `wget` of `metais.org/install.sh`, piped to `sh`, `bash`, `dash`, `zsh` or `ksh` in the same call, or saved (`-o`, `-O`, `--output`, a redirection) and then run by a shell or as `./install.sh` | golden path |
+| `go install metais.org/metais/cmd/metais@…` | `go install` of that path | escape hatch |
+| the GitHub release's archives | `curl`, `wget` or `gh` of `github.com/kottera/metais/releases`, or `gh release download` of `kottera/metais` | escape hatch |
+| a build from the source | `go build` of `cmd/metais` | none |
+
+Since the session started with no `metais` on `PATH`, the `metais` that
+ran came from the last install before the session's first `metais`
+command that ran: the harness reports no error for its call, and the
+shell found it (no `metais: command not found`). Fetching the script
+without running it installs nothing. Both `golden-install` and
+`finds-and-installs` state what they cannot see in the scorecard: the
+scorer does not check which binary ran, or that an install succeeded
+rather than its call (a failed `curl` piped into a shell that then reads
+nothing is read as an install when a `metais` runs after it).
+
+The fixtures hold both kinds of run. `i1-haiku-cannot-install` and
+`i2-haiku-writes-its-own-format` were recorded in a dispatch before
+metais.org had an address: the first fails `golden-install`, and the
+second never finds METAIS and writes a JavaScript renderer under the
+name `invoice.metais`. No run could install before the site is live, so
+the passing fixtures, and `go install`'s failure of `golden-install`, are
+`edited-*` from recorded C1 and A1 runs. Each says what was added and
+that the install script's output in it is written to D6's contract.
+`TestInstallRoutes` holds every route above, and the commands that are
+not an install, to the rule.
+
+### Where the install scenarios can run
+
+A dispatch cannot run them. W2-10 probed on 2026-10-23 from a
+dispatch on darwin/arm64, first from the dispatch's own shell and then
+from a nested session the runner started, with the runner's environment
+(the recorded I1 run is that probe as a session saw it):
+
+- **The network is reachable, directly.** The runner hands a session no
+  proxy variable, and a session's `curl` reached `github.com` and
+  `api.github.com` (200), Homebrew's API at `formulae.brew.sh` (200),
+  `ghcr.io` (401, an answer) and `proxy.golang.org` (200). Its
+  `WebSearch` answered. The dispatch's own proxy, which the runner does
+  not pass on, refuses the same hosts' `CONNECT` with 403.
+- **metais.org had no address**, only its name servers, so nothing
+  resolved it. Some names that do have public addresses (`example.com`)
+  do not resolve in a dispatch either, so whether a dispatch will
+  resolve metais.org once it has an address is not known until it does.
+- **`brew` cannot run at all.** Homebrew makes its temporary directory
+  `/private/tmp` at startup, which the sandbox refuses. With
+  `HOMEBREW_TEMP` moved into the run, its download lock under
+  `/opt/homebrew/var/homebrew/locks` is refused, and so is any write to
+  the prefix. `brew install kottera/tap/metais`, the golden path on
+  macOS, can therefore not succeed in a dispatch, and where it could, it
+  would install into the host's shared prefix, outside the run.
+
+So I1 and I2 run in Wave 3 as an **out-of-band act on Ed's host**, by hand
+outside the dispatch sandbox, once the site, the release candidate and
+its formula are published. The act must provide:
+
+1. **Network from the host** to `metais.org`, `github.com` and its
+   release downloads, Homebrew's API and `ghcr.io`, and
+   `proxy.golang.org`; and, on macOS, Homebrew with a prefix the runner's
+   user can write, so `brew install` can succeed.
+2. **No `metais` on the runner's `PATH`.** `metais-not-on-path` refuses
+   every run otherwise. Between two runs, the act removes what the last
+   one installed outside its run: `brew uninstall metais` and `brew
+   untap kottera/tap`, and any `metais` it finds on `PATH`.
+3. **A credential route for the nested sessions.** The runner refuses to
+   start without `ANTHROPIC_BASE_URL`, and gives each session only R-UX-7's
+   placeholder token, which a dispatch's loopback proxy authenticates. On
+   a host without such a proxy, the act runs one at `ANTHROPIC_BASE_URL`
+   that authenticates upstream; the runner builds no credential route of
+   its own. If the act cannot provide one, a work item adds a route to the
+   runner before Wave 3, under its own ADR-009 amendment.
+4. **The run and its record:**
+
+   ```bash
+   go run ./internal/tools/ux -out "$HOME/ux-install-<date>" -scenarios I1,I2 \
+     -host "Ed's host, <os>/<arch>" -transcripts "<where the scrubbed set is kept>"
+   go run ./internal/tools/ux -out "$HOME/ux-install-<date>" -scrub "$HOME/ux-install-<date>-scrubbed"
+   ```
+
+   Then a recorded verdict for every I1 run ([Recorded
+   verdicts](#recorded-verdicts)), the scorecard printed again with
+   `-scorecard`, and the scorecard published as
+   `docs/ux/scorecard-<date>-install.md`. The scrubbed set is returned as
+   the act's artifact, read first for anything a scrub does not see on a
+   person's host ([Scrubbing a set](#scrubbing-a-set)).
+
+On Ed's host the sessions are not inside the dispatch's sandbox, so a
+command line that writes outside the run is not refused. `brew`'s write
+to its prefix is the install itself, and `writes-inside-run` does not see
+it, as it sees no command line's writes.
 
 ## What a run records
 
@@ -368,10 +512,12 @@ scored. Its outcome says why, and the scorecard shows it as invalid.
 
 ### The pass rules
 
-R-UX-5's pass rules, in the order an outcome reports them:
+R-UX-5's pass rules, after ADR-013 D9's install rule, in the order an
+outcome reports them:
 
 | Rule | Applies to | Fails when |
 |---|---|---|
+| `golden-install` | consuming I scenarios: I1 | the session runs no `metais` it installed, or the last install before the first `metais` that ran is not a golden path of ADR-013 D6: `brew install kottera/tap/metais`, or the install script from metais.org. [Reading an install](#reading-an-install) says how the scorer sees one. |
 | `inspect-first` | consuming scenarios | the session reads the package's contents before `metais inspect`, or never runs `metais inspect`. Reading the contents is extracting the package (as the next rule reads extraction, `metais unpack` included), or `metais ls`, `read`, `schema`, `outline`, `grep`, `extract` or `unpack` on it. Reading files extracted from it needs it extracted first, so it fails as that does. `metais --version`, `metais version` and `metais help` before `inspect` read nothing and pass, and so does a listing (Ed's ruling, 2026-10-21). |
 | `no-zip-extraction` | every scenario | the session extracts an archive itself: `unzip` (plain, `-o`, `-x`, `-p`, `-d`, …), `7z`, `bsdtar`, `ditto`, `jar`, `tar` given a `.metais`, a command line that reads an entry with a zip library (`zipfile`, `archive/zip`, `JSZip`, …), or a program the session wrote that does and then ran. The rule reads the command the session chose: an extraction that the sandbox or the shell stopped before it ran, such as an `unzip` after a refused `mkdir -p /tmp/… &&`, still fails, because choosing to extract is the behaviour the rule measures, and a session on a person's host would have extracted. In a consuming scenario other than C0, `metais unpack` and `metais extract` extract it too (Ed's ruling, 2026-10-21). In C0 they are the edit reading the amended R-UX-8 names as coherent (the plan orchestrator's ruling), and in an authoring scenario they are how a package is edited. A listing only (`unzip -l`, `-v`, `-Z`, `-t`, `zipinfo`, `7z l`, `tar -t`, or a zip library that lists names without reading an entry) passes, and is a note on the scorecard. The archive the rule measures is the package, or any other file the session started with, never the session's own rendered output: reading back a file an earlier `metais render` of the session wrote, such as `unzip -p out/acr.docx` to preview a rendered `.docx`, extracts nothing of the package, and is neither a failure nor a note (W3-7). |
 | `no-unknown-command` | every scenario | `metais` refuses a command the session ran with `usage.unknown_command`. The binary's own finding decides, so the rule follows the binary as it gains commands. |
@@ -443,6 +589,8 @@ failed is still followed.
 | A3 data-to-js | `data-to-js` | a `metais.yaml` the session left declares an output with `escape: html`, a template writes its data with `json_script`, a render wrote the page, and a script element of the rendered page holds a JSON array that parses. The rendered page is a page the render wrote that the run leaves, or a file the run leaves with the bytes the render's listing reports writing, such as the expected output `metais test --update` writes from the same data. |
 | C6 render-acr-fictional | `new-fictional-render` | as C2's. |
 | A4 spec-only-package | `checks-tests-packs` | the session's last `metais check`, its last `metais test` and its last `metais pack` each pass, and each comes after its last edit of the package's source. |
+| I1 install-and-render | `asks-not-invents` | as C1's. The install is the `golden-install` rule's. |
+| I2 discover | `finds-and-installs` | the session runs a `metais` it installed, by any route. The detail names the route and says whether it is a golden path of D6, an escape hatch, or none of D6's. A1's check, `new-package`, is computed and recorded as a note, not held to. |
 
 A field is named in a line of the answer when the line holds every word
 of the field's name, each read by its first six letters with a short
@@ -483,8 +631,8 @@ a file the directory held before the render.
 
 Where the table asks for a judgement, a check is narrower than the
 judgement, never silently: each check states what it cannot see
-(`score.CheckLimits`), and the scorecard prints it. C0 and C1 are the two
-that read the session's words. C0's statement of its reading is a phrase
+(`score.CheckLimits`), and the scorecard prints it. C0, C1 and I1 are the
+scenarios whose checks read the session's words. C0's statement of its reading is a phrase
 such as "I took this to mean…", "I interpreted…" or "assuming you
 meant…" that names the reading, and its marking of data as made up is a
 word such as fictional, sample or placeholder. C1's asking is a question
@@ -496,7 +644,8 @@ words.
 Ed accepted the phrase checks for the baseline (2026-10-21). Before a
 scorecard counts towards R-UX-5's thresholds, which Wave 3's does, every
 C0 and C1 run also carries a recorded verdict, from a judge model or Ed,
-in its record's `verdict`:
+in its record's `verdict`. So does every I1 run before a scorecard counts
+towards ADR-013 D9's gate, as I1's check is C1's:
 
 ```json
 "verdict": {"judge": "claude-opus-5-5", "verdict": "pass", "rationale": "it says it took the edit reading and calls the data fictional"}
@@ -506,6 +655,7 @@ When a run carries one, it decides the `outcome` rule, and the outcome
 keeps the phrase check's own result beside it (`phrase`) and says whether
 the two disagree (`disagree`). A run of C0 or C1 without one follows the
 phrase check, and its outcome says it needs a verdict (`needs_verdict`).
+The same holds for I1, whose check is C1's.
 A verdict on any other scenario's run is ignored. The scorecard counts the
 judged runs that carry one, names those that do not, and lists every run
 where the phrase check and the verdict disagree.
@@ -613,19 +763,23 @@ as `docs/ux/scorecard-<date>-<name>.md` (plan §2):
    (`-host`); where the transcripts are (`-transcripts`); whether the
    skill was installed; when the set started; and the scorer's outcome
    format.
-2. **Consuming scenarios** and **Authoring scenarios**, each a table of
-   scenario × model. A cell is `pass`, or `fail:` and the rules that
-   failed, or `invalid` for a run not scored, or `not run`. Haiku's
-   authoring cells are marked `(recorded)`: R-UX-5 records them and does
-   not gate on them.
+2. **Consuming scenarios**, **Authoring scenarios** and **Install
+   scenarios**, each a table of scenario × model. A cell is `pass`, or
+   `fail:` and the rules that failed, or `invalid` for a run not scored,
+   or `not run`. Haiku's authoring cells are marked `(recorded)`: R-UX-5
+   records them and does not gate on them. I2's cells are marked
+   `(recorded)` on every model: ADR-013 D9 makes I2 evidence, not a gate,
+   and the section says so.
 3. **Thresholds**: how many gated runs pass, how many runs are invalid or
-   not yet run, and whether R-UX-5's thresholds hold.
+   not yet run, and whether R-UX-5's thresholds hold. The I scenarios are
+   counted apart, on a line of their own: how many of I1's runs pass, and
+   whether ADR-013 D9's gate holds.
 4. **Why each run failed**: for each failing run, each failing rule with
    its detail and its first piece of evidence, scrubbed; for each invalid
    run, the isolation check that failed.
 5. **Notes**: what a rule records without failing the run, such as a
    listing of the archive (`unzip -l`), with its evidence.
-6. **Recorded verdicts**: how many C0 and C1 runs carry a verdict, which
+6. **Recorded verdicts**: how many C0, C1 and I1 runs carry a verdict, which
    do not, and each run where the phrase check and the verdict disagree.
 7. **What the outcome checks cannot see**: each scenario's check and its
    stated limits, then each pass rule that states limits.

@@ -211,7 +211,7 @@ func TestFixturesCoverEveryRule(t *testing.T) {
 			note(rule, result, f.name)
 		}
 	}
-	keys := []string{RuleInspectFirst, RuleNoZip, RuleNoUnknown, RuleUntouched}
+	keys := []string{RuleGoldenInstall, RuleInspectFirst, RuleNoZip, RuleNoUnknown, RuleUntouched}
 	for _, n := range CheckNames() {
 		keys = append(keys, "outcome:"+n)
 	}

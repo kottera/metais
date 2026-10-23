@@ -1,0 +1,9 @@
+{
+  "id": "I1",
+  "slug": "install-and-render",
+  "kind": "consuming",
+  "asks_for_output": true,
+  "install": true,
+  "fixtures": [{"example": "dora-incident-report", "as": "report.metais"}],
+  "check": "asks-not-invents"
+}

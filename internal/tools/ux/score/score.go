@@ -32,8 +32,12 @@ import (
 // changes it.
 const Format = "metais-ux-outcome/1"
 
-// The pass rules of R-UX-5, by the names an outcome reports them under.
+// The pass rules of R-UX-5, and the install rule of ADR-013 D9, by the
+// names an outcome reports them under.
 const (
+	// RuleGoldenInstall: an install scenario that gates (I1) installs
+	// metais by a golden path of ADR-013 D6 before it runs it.
+	RuleGoldenInstall = "golden-install"
 	// RuleInspectFirst: a consuming session reads nothing of the package's
 	// contents before metais inspect.
 	RuleInspectFirst = "inspect-first"
@@ -191,9 +195,10 @@ type rule struct {
 // see of an archive the session rendered (W3-7).
 const ownRenderLimits = "The archive the rule measures is the package, or any other file the session started with, never the session's own rendered output: a zip tool or zip library that reads a file a metais render of the session wrote before it, such as unzip -p out/report.docx, extracts nothing of the package and is not counted. A file is one a render wrote when it lies in the render's output directory, or is the file its output was redirected to, and the run's directory holds it at the end as added, with bytes that are no fixture's. A command that also names a .metais file or a file the session started with is counted. A rendered file the session deleted before the run ended is not seen as rendered, so reading it is counted; one it overwrote by other means with bytes no fixture has is still read as rendered."
 
-// rules are R-UX-5's, in the order an outcome reports them. The outcome
-// check is last.
+// rules are R-UX-5's, after D9's install rule, in the order an outcome
+// reports them. The outcome check is last.
 var rules = []rule{
+	{RuleGoldenInstall, func(r *run) bool { return r.scenario.Install && r.scenario.Kind == scenario.Consuming }, goldenInstall, installLimits},
 	{RuleInspectFirst, func(r *run) bool { return r.scenario.Kind == scenario.Consuming }, inspectFirst, ""},
 	{RuleNoZip, always, noZip, ownRenderLimits},
 	{RuleNoUnknown, always, noUnknown, ""},
