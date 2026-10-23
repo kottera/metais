@@ -1,0 +1,53 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "dat/input-constraints-refused",
+  "title": "An input the input constraints refuse as a whole is reported not allowed, and nothing of its value is validated",
+  "statements": [
+    "MTS-DAT-012"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "The table breaks its own schema's minItems and enum and the constraints' maxItems. The short edition refuses it with one input.forbidden and reports none of those; the long edition allows it, and all three are reported.",
+  "cases": [
+    {
+      "name": "refused",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/table",
+            "set": [
+              "/edition=short"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/refused.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "allowed",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/table",
+            "set": [
+              "/edition=long"
+            ]
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/allowed.json"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "edition": {
+            "const": "short"
+          }
+        },
+        "required": [
+          "edition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "table": false
+        }
+      }
+    },
+    {
+      "properties": {
+        "table": {
+          "maxItems": 1
+        }
+      }
+    }
+  ]
+}

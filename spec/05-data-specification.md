@@ -132,7 +132,8 @@ reported by the finding [chapter 12](12-findings.md) maps its keyword to.
 object against the combined schema, reporting a required input that nothing
 supplied with `input.missing` and every failure of an input's value against
 its schema by its keyword's finding, and MUST report every failure the
-validation meets, not only the first.
+validation meets, not only the first, but of an input the input constraints
+refuse whole, which [MTS-DAT-012](#mts-dat-012) reports alone.
 
 <a id="mts-dat-011"></a>**MTS-DAT-011** A processor MUST assert each `format`
 of §5.2 on the strings of the inputs, by the definition JSON Schema's
@@ -164,7 +165,12 @@ constraints over the whole inputs object, reporting a failure inside one
 input's value about that input, with the conditional that selected it, a
 required input the constraints require with `input.missing`, and a failure of a
 rule over the inputs object as a whole, which names no one input, with
-`input.constraints_failed` about the invocation, naming the keyword.
+`input.constraints_failed` about the invocation, naming the keyword. An input
+whose member the constraints answer with a `false` schema is refused whole: a
+processor MUST report it with `input.forbidden` at the input's root, and MUST
+NOT report any other failure of that input's value, against its own schema or
+the constraints, since the supplier is to remove the input rather than correct
+it.
 
 ## 5.4 Rules across the items of an array
 

@@ -1,0 +1,80 @@
+[
+  {
+    "code": "input.max_items",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "table",
+      "title": "Table"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "table.csv",
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/constraints.schema.json",
+      "pointer": "/allOf/1/properties/table/maxItems",
+      "keyword": "maxItems"
+    },
+    "params": {
+      "limit": 1,
+      "count": 2
+    }
+  },
+  {
+    "code": "input.min_items",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "table",
+      "title": "Table"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "table.csv",
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/table.schema.json",
+      "pointer": "/minItems",
+      "keyword": "minItems"
+    },
+    "field": {
+      "title": "Table"
+    },
+    "params": {
+      "limit": 3,
+      "count": 2
+    }
+  },
+  {
+    "code": "input.enum",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "table",
+      "title": "Table"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "table.csv",
+      "line": 2,
+      "column": 7,
+      "pointer": "/0/level"
+    },
+    "schema": {
+      "entry": "inputs/table.schema.json",
+      "pointer": "/items/properties/level/enum",
+      "keyword": "enum"
+    },
+    "params": {
+      "allowed": [
+        "\"Supports\"",
+        "\"Does Not Support\""
+      ],
+      "allowed_count": 2,
+      "suggestion": "Supports"
+    }
+  }
+]

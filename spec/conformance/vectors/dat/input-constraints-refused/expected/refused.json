@@ -1,0 +1,33 @@
+[
+  {
+    "code": "input.forbidden",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "table",
+      "title": "Table"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "table.csv",
+      "pointer": ""
+    },
+    "schema": {
+      "entry": "inputs/constraints.schema.json",
+      "pointer": "/allOf/0/then/properties/table",
+      "keyword": "properties"
+    },
+    "params": {
+      "property": "table"
+    },
+    "via": [
+      {
+        "keyword": "then",
+        "schema_pointer": "/allOf/0/then",
+        "condition": {
+          "schema_pointer": "/allOf/0/if"
+        }
+      }
+    ]
+  }
+]

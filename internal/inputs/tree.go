@@ -121,7 +121,57 @@ func (n *node) element(i int) (*node, bool) {
 // above it. It reads a path a token at a time from its parent's, so the
 // paths under one long member name cost each its depth.
 func (n *node) locator() func(p *finding.Path, key bool) finding.Location {
-	r := finding.NewResolver(reached{node: n, at: n.at}, func(r reached, tok string) (reached, bool) {
+	r := n.resolver()
+	return func(p *finding.Path, key bool) finding.Location {
+		at, _ := r.Resolve(p)
+		if at.at == nil {
+			panic("inputs: a value with no source")
+		}
+		return at.at.locate(p.Below(at.atDepth), key)
+	}
+}
+
+// written returns a Target's Written for the values below n: the text the
+// value at a path was written as, when it is a number or a boolean that
+// an unquoted scalar of a YAML document gave (ADR-006 Amendment A4 item
+// 4). A number keeps its literal, so 3.10 is 3.10 and not 3.1; a value a
+// path set, a default or a JSON document gave has no such text.
+func (n *node) written() func(p *finding.Path) (string, bool) {
+	r := n.resolver()
+	return func(p *finding.Path) (string, bool) {
+		at, depth := r.Resolve(p)
+		if depth != p.Depth() || !fromYAML(at.at) {
+			return "", false
+		}
+		switch v := at.node.scalar.(type) {
+		case value.Number:
+			return v.Literal(), true
+		case value.Bool:
+			if v {
+				return "true", true
+			}
+			return "false", true
+		}
+		return "", false
+	}
+}
+
+// fromYAML reports whether the values a locator locates were read from a
+// YAML document: a YAML file's, or a Markdown file's frontmatter.
+func fromYAML(l locator) bool {
+	switch l := l.(type) {
+	case docLocator:
+		return l.yaml
+	case markdownLocator:
+		return l.front != nil
+	}
+	return false
+}
+
+// resolver walks the values below n to the one a path names, keeping the
+// deepest node on the way that records a source.
+func (n *node) resolver() *finding.Resolver[reached] {
+	return finding.NewResolver(reached{node: n, at: n.at}, func(r reached, tok string) (reached, bool) {
 		var next *node
 		ok := false
 		switch {
@@ -141,13 +191,6 @@ func (n *node) locator() func(p *finding.Path, key bool) finding.Location {
 		}
 		return r, true
 	})
-	return func(p *finding.Path, key bool) finding.Location {
-		at, _ := r.Resolve(p)
-		if at.at == nil {
-			panic("inputs: a value with no source")
-		}
-		return at.at.locate(p.Below(at.atDepth), key)
-	}
 }
 
 // reached is a node a path below another reaches, how many tokens below
@@ -216,6 +259,7 @@ type docLocator struct {
 	at     finding.Location
 	pos    finding.Positions
 	prefix *finding.Path
+	yaml   bool // the document is YAML, not JSON
 }
 
 func (d docLocator) locate(rel *finding.Path, key bool) finding.Location {

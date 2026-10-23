@@ -110,6 +110,49 @@ func TestConstraintsOverTheWhole(t *testing.T) {
 	}
 }
 
+// TestForbiddenInputNotValidated is MTS-DAT-012 as ADR-003 Amendment A3
+// gives it: an input the input constraints refuse as a whole, by a false
+// schema at its member, is reported not allowed and nothing else, neither
+// by its own schema nor by the constraints inside it, since the supplier
+// is to remove it rather than fix it. An input the constraints allow is
+// still validated whole, and a false schema below an input's root refuses
+// only that member.
+func TestForbiddenInputNotValidated(t *testing.T) {
+	testenv.Home(t)
+	l := layer(t, pkg{
+		inputs: []map[string]any{
+			slot("edition", "inputs/edition.json"),
+			slot("table", "inputs/table.json", "required", false),
+		},
+		constraints: "inputs/c.json",
+		schemas: map[string]string{
+			"inputs/edition.json": `{"enum": ["short", "long", "strict"]}`,
+			"inputs/table.json":   `{"type": "array", "items": {"type": "object", "properties": {"level": {"enum": ["Supports", "Does Not Support"]}, "note": {"type": "string"}}}}`,
+			"inputs/c.json": `{"allOf": [
+				{"if": {"properties": {"edition": {"const": "short"}}}, "then": {"properties": {"table": false}}},
+				{"properties": {"table": {"minItems": 2}}},
+				{"if": {"properties": {"edition": {"const": "strict"}}}, "then": {"properties": {"table": {"items": {"properties": {"note": false}}}}}}
+			]}`,
+		},
+	})
+	bad := dataDir(t, map[string]string{"table.json": `[{"level": "Supported", "note": "n"}]`})
+	res := run(t, l, limits.Defaults(), args{data: bad, flags: []string{"--set=/edition=short"}})
+	wantFindings(t, res.Findings, `input.forbidden table data_dir:table.json:1:1 # {"property":"table"} via:then`)
+
+	res = run(t, l, limits.Defaults(), args{data: bad, flags: []string{"--set=/edition=long"}})
+	wantFindings(t, res.Findings,
+		`input.enum table data_dir:table.json:1:12 #/0/level {"allowed":["\"Supports\"","\"Does Not Support\""],"allowed_count":2,"suggestion":"Supports"}`,
+		`input.min_items table data_dir:table.json:1:1 # {"limit":2,"count":1}`,
+	)
+
+	res = run(t, l, limits.Defaults(), args{data: bad, flags: []string{"--set=/edition=strict"}})
+	wantFindings(t, res.Findings,
+		`input.enum table data_dir:table.json:1:12 #/0/level {"allowed":["\"Supports\"","\"Does Not Support\""],"allowed_count":2,"suggestion":"Supports"}`,
+		`input.forbidden table data_dir:table.json:1:33 #/0/note {"property":"note"} via:then`,
+		`input.min_items table data_dir:table.json:1:1 # {"limit":2,"count":1}`,
+	)
+}
+
 // TestMissingInputs: "an absent required input is a finding at the input's
 // root" (ADR-003 D6 item 1); "A command with no supply flag validates
 // nothing supplied: every required input is reported missing, in one

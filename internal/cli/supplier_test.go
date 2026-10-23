@@ -349,3 +349,29 @@ func TestSkillNamesEachFieldAsListed(t *testing.T) {
 		}
 	}
 }
+
+// TestInspectNextReadsEachMeaningOnce is ADR-008 Amendment A17 item 1:
+// inputs that share a meaning document are sent to read it once, at the
+// first of them, by a step that names every input it explains, and no
+// Next: block names one command line twice (item 2). The accessibility
+// conformance report's three tables share inputs/tables.md.
+func TestInspectNextReadsEachMeaningOnce(t *testing.T) {
+	testenv.Home(t)
+	r := runTool(t, "inspect", "--json", filepath.Join(examplePackagesDir, "accessibility-conformance-report"))
+	var reads []Next
+	for _, n := range r.doc.Next {
+		if strings.HasPrefix(n.Run, "metais read ") {
+			reads = append(reads, n)
+		}
+	}
+	want := []Next{
+		{"metais read <package> inputs/report.md", "Reads what the input report means and what good data for it looks like."},
+		{"metais read <package> inputs/tables.md", "Reads what the inputs wcag, section508 and en301549 mean and what good data for them looks like."},
+	}
+	if !slices.Equal(reads, want) {
+		t.Errorf("inspect's read steps:\n%v\nwant\n%v", reads, want)
+	}
+	if got := uniqueSteps([]Next{{"a", "1"}, {"b", "2"}, {"a", "3"}}); !slices.Equal(got, []Next{{"a", "1"}, {"b", "2"}}) {
+		t.Errorf("uniqueSteps kept %v", got)
+	}
+}
