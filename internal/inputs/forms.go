@@ -132,7 +132,7 @@ func (r *reader) read(src []byte, raw string, form manifest.Form, loc finding.Lo
 		if len(fs) > 0 {
 			return parsed{findings: r.place(fs, prefix)}
 		}
-		return parsed{value: fromValue(doc.Value, docLocator{at: loc, pos: doc.Positions()})}
+		return parsed{value: fromValue(doc.Value, docLocator{at: loc, pos: doc.Positions(), yaml: true})}
 	case manifest.FormCSV:
 		return r.csv(normalize(text), loc, prefix, at)
 	case manifest.FormText:

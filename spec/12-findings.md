@@ -488,7 +488,9 @@ item whose key repeats and `coverage` once per value it misses, a missing
 member at the pointer of the absent member with the line and column of its
 parent, an extra or misnamed member at its name, an item at its index, a
 repeated key where [MTS-DAT-018](05-data-specification.md#mts-dat-018)
-places it, and each other keyword at the value it fails.
+places it, and each other keyword at the value it fails; of an input the input
+constraints refuse whole, it reports only the refusal
+([MTS-DAT-012](05-data-specification.md#mts-dat-012)).
 
 <a id="mts-fnd-005"></a>**MTS-FND-005** A processor MUST report a schema
 failure with its `schema` member: the package entry of the schema file the

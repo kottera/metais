@@ -14,6 +14,9 @@ proposed on 2026-10-23 and amends D5 as A7 amends it, D6 and D15 item 4 (`schema
 [Amendment A16](#amendments) (a cut in the field listing names the command
 that prints the value whole) is ruled by Ed Funnekotter on 2026-10-23 to
 land before v1.0; the passage it changes is marked *(A16)*.
+[Amendment A17](#amendments) (a `Next:` block names each command line
+once) is proposed on 2026-10-23, under Ed Funnekotter's ruling of that day that the external UX test's findings land before v1.0; the passages it changes are marked
+*(A17)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R2 (items 1–4) and R17 (items 1–3); the command-line
@@ -465,8 +468,9 @@ references, the examples, and an ordered list of commands to run next.**
    1), in this order, each a full command line with the package operand
    written as the placeholder `<package>` (D14 item 2):
    1. `metais inspect <package> --guide`, if the guide was cut;
-   2. `metais read <package> <meaning entry>` for each input that has a
-      meaning document, in input order;
+   2. `metais read <package> <meaning entry>` for each meaning document
+      an input has, once, in the order of the first input that has it
+      *(A17)*;
    3. `metais schema <package> <input>` for each input;
    4. `metais ls <package> examples/<first example>/ -r`, if there is an
       example (examples in name order);
@@ -836,7 +840,8 @@ authoring commands; `version`, `help` and `limits` open no package.
 line and the reason; every refusal has at least one.**
 
 1. Each item is `{"run": "<command line>", "why": "<one sentence>"}`. Human
-   output prints them under `Next:` as `  <run>  — <why>`.
+   output prints them under `Next:` as `  <run>  — <why>`. No two items
+   have one `run` *(A17)*.
 2. `run` is a complete `metais` command line. **No path the caller gave is
    echoed** (D11 item 5): the package operand is the placeholder
    `<package>`, a data directory `<data dir>`, an output or destination
@@ -1955,8 +1960,9 @@ example is.
 1. **`inspect`'s `Next:` block offers the generator before any shipped
    example.** D6 item 8's list is, in this order:
    1. `metais inspect <package> --guide`, if the guide was cut;
-   2. `metais read <package> <meaning entry>` for each input that has a
-      meaning document, in input order;
+   2. `metais read <package> <meaning entry>` for each meaning document
+      an input has, once, in the order of the first input that has it
+      *(A17)*;
    3. `metais schema <package> <input>` for each input;
    4. `metais grep <package> <pattern> references/`, if there are
       references;
@@ -2335,6 +2341,28 @@ unchanged.
    subschemas. The 1024- and 4096-byte bounds keep each line, and so the
    listing, within A7 item 5's bound, and the mark costs one command to
    reach what the cut leaves out.
+
+### A17 — A `Next:` block names each command line once
+
+**Status:** Proposed 2026-10-23, under Ed Funnekotter's ruling of 2026-10-23 that the findings of the external UX test of `accessibility-conformance-report-1.0.0.metais` land before v1.0, which they block (T-A3, the release).
+**Amends:** D6 item 8 step 2, as A8 item 1 restates it, and D14 item 1,
+marked *(A17)* in place.
+
+1. **Inputs that share a meaning document are sent to read it once.**
+   `inspect`'s step is `metais read <package> <meaning entry>` for each
+   distinct meaning document, in the order of the first input that names
+   it, and its reason names every input it explains: `Reads what the
+   inputs wcag, section508 and en301549 mean and what good data for them
+   looks like.` The accessibility conformance report's three tables share
+   `inputs/tables.md`, and its `Next:` block named the same command line
+   three times.
+2. **No `Next:` block names one command line twice.** Every envelope's
+   `next`, and so every human `Next:` block, keeps the first step of each
+   `run` and drops a later one, so a step two causes declare alike is
+   offered once whichever command builds the list.
+3. **How it is proved.** `internal/cli`'s
+   `TestInspectNextReadsEachMeaningOnce` holds `inspect`'s read steps over
+   the accessibility conformance report, and the list's de-duplication.
 
 ## Implementation log
 

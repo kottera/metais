@@ -89,10 +89,7 @@ func (s *session) emit(o outcome) int {
 	}
 	status := r.Exit(role, s.failOn())
 	fs, sum := r.Findings(), r.Summary()
-	next := o.next
-	if next == nil {
-		next = []Next{}
-	}
+	next := uniqueSteps(o.next)
 	// Standard output carries the bytes and nothing else when the command
 	// writes bytes there, a refusal's included, so that a refused render's
 	// standard output is empty (ADR-008 D11 items 2 and 4).
@@ -361,6 +358,19 @@ func write(w io.Writer, b []byte) {
 	if len(b) > 0 {
 		_, _ = w.Write(b)
 	}
+}
+
+// uniqueSteps is next with each command line once, at its first step
+// (ADR-008 Amendment A17 item 2), and never nil, since the envelope always
+// carries next.
+func uniqueSteps(next []Next) []Next {
+	out := []Next{}
+	for _, n := range next {
+		if !slices.ContainsFunc(out, func(m Next) bool { return m.Run == n.Run }) {
+			out = append(out, n)
+		}
+	}
+	return out
 }
 
 // appendNext appends the human Next: block (ADR-008 D14 item 1).

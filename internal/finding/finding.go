@@ -14,6 +14,7 @@ package finding
 
 import (
 	"fmt"
+	"maps"
 	"math"
 	"slices"
 	"strings"
@@ -294,7 +295,8 @@ type Finding struct {
 	via          []Via
 	alternatives []Alternative
 	related      []Related
-	hint         string // a declared hint template in place of the code's; see WithHint
+	hint         string            // a declared hint template in place of the code's; see WithHint
+	hintValues   map[string]string // the declared hint's own placeholders; see WithHintValues
 	// listed is how many findings the finding lists: itself and every
 	// finding within its alternatives, at any depth (MTS-FND-020).
 	listed int
@@ -317,7 +319,7 @@ func (f Finding) Message() string { return f.mustRender(f.entry.Message) }
 // from the template WithHint gave it.
 func (f Finding) Hint() string {
 	if f.hint != "" {
-		return f.mustRender(f.hint)
+		return f.mustRenderWith(f.hint, f.hintValues)
 	}
 	return f.mustRender(f.entry.Hint)
 }
@@ -333,7 +335,33 @@ func (f Finding) WithHint(tmpl string) Finding {
 	if _, err := f.render(tmpl, false); err != nil {
 		panic(fmt.Sprintf("finding: %s declared hint: %v", f.entry.Code, err))
 	}
-	f.hint = tmpl
+	f.hint, f.hintValues = tmpl, nil
+	return f
+}
+
+// WithHintValues returns f with its hint rendered from tmpl, as WithHint
+// does, where tmpl may also name the placeholders vals declares: text of
+// the package that no parameter of the code carries, such as the field's
+// description or the pattern beside a failed format (ADR-006 D9 item 6),
+// or a number as the input wrote it (D9 item 5). A value is shortened as
+// a parameter's is, so the hint stays within 240 code points. No value is
+// ever a string from the inputs. WithHintValues panics when tmpl names a
+// placeholder neither f nor vals fills, or when vals names one f already
+// has.
+func (f Finding) WithHintValues(tmpl string, vals map[string]string) Finding {
+	for name := range vals {
+		if _, err := f.placeholder(name, false); err == nil {
+			panic(fmt.Sprintf("finding: %s declared hint: {%s} is already a placeholder", f.entry.Code, name))
+		}
+	}
+	vals = maps.Clone(vals)
+	for name, v := range vals {
+		vals[name] = validUTF8(v)
+	}
+	if _, err := f.renderWith(tmpl, false, vals); err != nil {
+		panic(fmt.Sprintf("finding: %s declared hint: %v", f.entry.Code, err))
+	}
+	f.hint, f.hintValues = tmpl, vals
 	return f
 }
 
@@ -567,8 +595,12 @@ func validPointer(p string) bool {
 }
 
 // mustRender expands tmpl, which New has checked.
-func (f Finding) mustRender(tmpl string) string {
-	s, err := f.render(tmpl, true)
+func (f Finding) mustRender(tmpl string) string { return f.mustRenderWith(tmpl, nil) }
+
+// mustRenderWith expands tmpl, which New or WithHintValues has checked,
+// with vals' placeholders beside f's own.
+func (f Finding) mustRenderWith(tmpl string, vals map[string]string) string {
+	s, err := f.renderWith(tmpl, true, vals)
 	if err != nil {
 		panic(fmt.Sprintf("finding: %s: %v", f.entry.Code, err))
 	}
@@ -594,6 +626,11 @@ type segment struct {
 // points: a value that would carry it past them is shortened, and the
 // finding's members keep the whole of it.
 func (f Finding) render(tmpl string, write bool) (string, error) {
+	return f.renderWith(tmpl, write, nil)
+}
+
+// renderWith is render, a placeholder vals names being filled from it.
+func (f Finding) renderWith(tmpl string, write bool, vals map[string]string) (string, error) {
 	var segs []segment
 	var lit strings.Builder
 	flush := func() {
@@ -617,9 +654,12 @@ func (f Finding) render(tmpl string, write bool) (string, error) {
 				return "", fmt.Errorf("unclosed placeholder at byte %d", i)
 			}
 			name := tmpl[i+1 : i+end]
-			s, err := f.placeholder(name, write)
-			if err != nil {
-				return "", err
+			s, ok := vals[name]
+			if !ok {
+				var err error
+				if s, err = f.placeholder(name, write); err != nil {
+					return "", err
+				}
 			}
 			flush()
 			segs = append(segs, segment{text: s, value: true, tail: name == "field" && f.fieldIsPointer()})

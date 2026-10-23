@@ -155,7 +155,7 @@ var openTemplateCodes = map[finding.Code]bool{
 	loader.CodeTemplateNumberRange: true, loader.CodeTemplateTagContext: true, loader.CodeTemplateFilterArg: true,
 	loader.CodeTemplateDivision: true, loader.CodeTemplateSafePosition: true, loader.CodeTemplateDateFormat: true,
 	loader.CodeTemplateDurationFormat: true,
-	loader.CodeTemplateAmountCode: true,
+	loader.CodeTemplateAmountCode:     true,
 }
 
 // inspectResult is metais.inspect/1's result (ADR-008 D6). Under --guide,
@@ -582,10 +582,24 @@ func inspectNext(res *inspectResult, t []*Command) []Next {
 	if res.Guide.Truncated {
 		out = append(out, Next{"metais inspect <package> --guide", "Prints the whole guide; this summary shows its start."})
 	}
+	// A meaning document several inputs share is read once, at the first
+	// of them (ADR-008 Amendment A17 item 1).
+	var meanings []string
+	explains := map[string][]string{}
 	for _, in := range *res.Inputs {
 		if in.Meaning != nil {
-			out = append(out, Next{"metais read <package> " + shellQuote(*in.Meaning), "Reads what the input " + in.Name + " means and what good data for it looks like."})
+			if explains[*in.Meaning] == nil {
+				meanings = append(meanings, *in.Meaning)
+			}
+			explains[*in.Meaning] = append(explains[*in.Meaning], in.Name)
 		}
+	}
+	for _, m := range meanings {
+		why := "Reads what the input " + explains[m][0] + " means and what good data for it looks like."
+		if names := explains[m]; len(names) > 1 {
+			why = "Reads what the inputs " + strings.Join(names[:len(names)-1], ", ") + " and " + names[len(names)-1] + " mean and what good data for them looks like."
+		}
+		out = append(out, Next{"metais read <package> " + shellQuote(m), why})
 	}
 	for _, in := range *res.Inputs {
 		out = append(out, Next{"metais schema <package> " + shellQuote(in.Name) + " --fields", "Lists the fields of the input " + in.Name + ", one line each with its type, whether it is required, its constraints and title; without --fields, metais schema prints the whole schema it is validated against."})

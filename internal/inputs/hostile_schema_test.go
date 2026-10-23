@@ -114,6 +114,9 @@ func encodeReport(r *finding.Report) []byte {
 // taken from that code's encodeReport output, with its messages bounded
 // to 240 code points as W4-1 bounds them (ADR-006 D9 item 1): the bound
 // changed the text of the messages that named the long pointer, and
+// nothing else. The first supply's default-limits digest was taken again
+// when ADR-006 Amendment A4 item 4 gave a YAML item's numbers, where a
+// string is wanted, the hint to quote them: that changed those hints, and
 // nothing else.
 func TestHostileFailuresReportUnchanged(t *testing.T) {
 	testenv.Home(t)
@@ -123,7 +126,7 @@ func TestHostileFailuresReportUnchanged(t *testing.T) {
 		digests []string
 	}{
 		{"default limits", limits.Defaults(), []string{
-			"913560b488dab63d853f73c692a6bcf0a21d1a757f9fdfec313dfc0d9f62bc09",
+			"84c06f5d086cd55dbef6b3658b523f78ccf6375adb05aa92578eb256f0c1606a",
 			"9cf6f7c27b72c5fc0dac946279f6e1bb401ca2890d254c84cfcb4354ba06fb83",
 		}},
 		{"findings=7", lowered(t, "findings=7"), []string{

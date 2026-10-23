@@ -7,6 +7,9 @@ ratification; the passage it changes is marked *(A1)*.
 [Amendment A2](#amendments) (rules across the items of an array:
 `uniqueKeys` and `coverage`) is proposed on 2026-10-23, recording Ed
 Funnekotter's rulings of that day; it blocks the v1.0 release.
+[Amendment A3](#amendments) (an input the input constraints refuse whole
+is reported alone) is proposed on 2026-10-23, under Ed Funnekotter's ruling of that day that the external UX test's findings land before v1.0; the passages it changes
+are marked *(A3)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R3 (items 1 to 5), R4 (items 1 to 4), R5 (items 1 to 4), and
@@ -293,6 +296,8 @@ listed under References:
    Its instance locations are inputs-object pointers, so a finding at
    `/incident/root_cause` is reported against input `incident` at
    `/root_cause`.
+   A `false` schema at an input's member refuses the input whole, and the
+   refusal is its one finding *(A3)*.
 3. **A constraint that depends on a single input belongs in that input's own
    schema**; `check` warns when an `input_constraints` subschema reads one
    input only (ADR-007).
@@ -715,7 +720,8 @@ template reaches it.
 4. **Validation**: the instance is evaluated against the combined schema.
    When any input is unparsed, the `input_constraints` subschema is not
    evaluated, and an `info` finding says so: cross-input rules over an
-   incomplete instance would report errors that are not there.
+   incomplete instance would report errors that are not there. An input the
+   constraints refuse whole is reported by that refusal alone *(A3)*.
 5. **Every finding from steps 2 to 4 is reported together** (R6 item 1);
    ADR-006 orders and de-duplicates them. Render proceeds only when none is
    an error (R6 item 4).
@@ -1361,6 +1367,32 @@ partial table; `fnd/` for two keywords that fail alike at one pointer,
 reported twice, and one keyword reached by two paths, reported once;
 `trn/` for an output's value; `aut/` for the three check findings; and
 `smp/` for both generator statements.
+
+### A3 — An input the input constraints refuse whole is reported alone
+
+**Status:** Proposed 2026-10-23, under Ed Funnekotter's ruling of 2026-10-23 that the findings of the external UX test of `accessibility-conformance-report-1.0.0.metais` land before v1.0, which they block (T-A3, the release).
+**Amends:** D6 item 2 and D22 item 4, marked *(A3)* in place;
+chapter 5's MTS-DAT-010 and MTS-DAT-012, and chapter 12's MTS-FND-004.
+
+1. **The refusal is the one finding.** When the input constraints answer
+   an input's member with a `false` schema, the input is refused whole:
+   it is reported with one `input.forbidden` at the input's root, about
+   the input, with the conditional that selected the refusal, and no
+   other failure of the input's value is reported, neither by its own
+   schema nor by the constraints inside it. The supplier is to remove
+   the input, and a report of its rows would ask them to correct a file
+   they are about to delete. In the test, a `section508.csv` supplied for
+   the `wcag` edition gave the refusal and then six findings about its
+   rows.
+2. **Every other failure is still reported.** An input the constraints
+   allow is validated whole, and a `false` schema below an input's root
+   refuses only that member, as ADR-006 D6 maps it. The refusal is
+   decided over the constraints' own failures, so it needs nothing the
+   validation does not already give.
+3. **The vector.** `dat/input-constraints-refused` supplies a table that
+   breaks its own schema's `minItems` and `enum` and the constraints'
+   `maxItems`. The edition that refuses it reports one `input.forbidden`;
+   the edition that allows it reports all three.
 
 ## Implementation log
 

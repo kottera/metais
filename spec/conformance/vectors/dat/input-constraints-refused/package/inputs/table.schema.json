@@ -1,0 +1,15 @@
+{
+  "type": "array",
+  "minItems": 3,
+  "items": {
+    "type": "object",
+    "properties": {
+      "level": {
+        "enum": [
+          "Supports",
+          "Does Not Support"
+        ]
+      }
+    }
+  }
+}

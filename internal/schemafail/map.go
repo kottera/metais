@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"metais.org/metais/internal/finding"
 )
@@ -34,12 +35,14 @@ func (f Family) String() string {
 }
 
 // Annotations are what a schema object says about the value it describes
-// that the mapping reports: its title and description (ADR-006 D6 item 9)
-// and whether it is writeOnly (D9 item 5).
+// that the mapping reports: its title and description (ADR-006 D6 item 9),
+// whether it is writeOnly (D9 item 5), and its pattern, which a format's
+// hint names when no description says what the field holds (A4 item 3).
 type Annotations struct {
 	Title       string
 	Description string
 	WriteOnly   bool
+	Pattern     string
 }
 
 // Schemas reads the schema entries a failure tree's pointers name, as they
@@ -76,6 +79,11 @@ type Target struct {
 	// within its alternatives together (MTS-FND-020), since a report lists
 	// no more than that in all. Map builds no more of a finding than that.
 	Listed int
+	// Written, when set, returns the text the value at the instance
+	// pointer p was written as, when it is a number or a boolean an
+	// unquoted YAML scalar gave, so that a type's hint can say to quote it
+	// (ADR-006 Amendment A4 item 4).
+	Written func(p *finding.Path) (string, bool)
 }
 
 // Partial describes an array validated in part: Kept[i] is the original
@@ -563,7 +571,76 @@ func (m *mapper) emit(path []*Failure, n *Failure, inst []string, suffix, kw str
 	if m.err != nil {
 		return emitted{}
 	}
-	return emitted{finding.New(code, m.t.Subject, &loc, p, opts...), suppressed, true}
+	f := finding.New(code, m.t.Subject, &loc, p, opts...)
+	return emitted{m.declaredHint(f, n, suffix, fd, writeOnly, at), suppressed, true}
+}
+
+// The declared hints of ADR-006 Amendment A4: each names the step its own
+// failure needs where the code's hint, written for every failure of its
+// keyword, would name a less useful one.
+const (
+	hintEnumNear     = `Write "{suggestion}", the allowed value nearest to the one written.`
+	hintEnumMany     = "Write one of the {allowed_count} values the schema allows; `metais schema {package} {input} --fields` lists them all."
+	hintEnumManyElse = "Write one of the {allowed_count} values the schema's enum lists."
+	hintFormatDesc   = "Write a value in the {format} format that fits the field's description: {description}"
+	hintFormatPat    = "Write a value in the {format} format that matches the pattern {pattern}."
+	hintQuoteAs      = `Put the value in quotes, as "{written}": YAML reads an unquoted {written} as a {actual}.`
+	hintQuote        = "Put the value in quotes, so that YAML reads it as a string rather than as a {actual}."
+)
+
+// The bounds on what a declared hint shows whole (ADR-006 Amendment A4):
+// an enum's values are listed when they are at most maxAllowed and their
+// texts at most maxListedRunes code points together, and a number is
+// quoted as written when it is at most maxWrittenRunes.
+const (
+	maxListedRunes  = 160
+	maxWrittenRunes = 40
+)
+
+// declaredHint returns f, the finding of n's keyword code suffix, with
+// the hint its own failure needs (ADR-006 Amendment A4 items 2 to 4), or
+// as it is when the code's hint is that one. fd and writeOnly are the
+// field's, and at the value's path.
+func (m *mapper) declaredHint(f finding.Finding, n *Failure, suffix string, fd finding.Field, writeOnly bool, at *finding.Path) finding.Finding {
+	switch suffix {
+	case "enum":
+		if _, ok := f.Param("suggestion"); ok {
+			return f.WithHint(hintEnumNear)
+		}
+		allowed := m.strs(n, dataAllowed)
+		runes := 0
+		for _, a := range allowed {
+			runes += utf8.RuneCountInString(a) + 2
+		}
+		if len(allowed) <= maxAllowed && runes <= maxListedRunes {
+			return f
+		}
+		if m.t.Family == FamilyInput && m.t.Subject.Kind == finding.SubjectInput && m.t.Subject.Name != "" {
+			return f.WithHint(hintEnumMany)
+		}
+		return f.WithHint(hintEnumManyElse)
+	case "format":
+		if d, _, _ := strings.Cut(fd.Description, "\n"); d != "" {
+			return f.WithHintValues(hintFormatDesc, map[string]string{"description": d})
+		}
+		toks := tokens(n.SchemaPointer)
+		if pat := m.t.Schemas.Annotations(n.Entry, pointer(toks[:max(len(toks)-1, 0)])).Pattern; pat != "" {
+			return f.WithHintValues(hintFormatPat, map[string]string{"pattern": pat})
+		}
+	case "type":
+		if m.t.Written == nil || !slices.Contains(m.strs(n, dataWant), "string") {
+			return f
+		}
+		lit, ok := m.t.Written(at)
+		if !ok {
+			return f
+		}
+		if writeOnly || utf8.RuneCountInString(lit) > maxWrittenRunes {
+			return f.WithHint(hintQuote)
+		}
+		return f.WithHintValues(hintQuoteAs, map[string]string{"written": lit})
+	}
+	return f
 }
 
 // suppressed reports whether D7 item 4 suppresses a finding of n at inst:

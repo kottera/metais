@@ -12,6 +12,9 @@ the passages it changes are marked *(A3)*.
 [ADR-003 Amendment A2](ADR-003-the-data-specification.md#amendments)
 (rules across the items of an array: `uniqueKeys` and `coverage`) is
 proposed on 2026-10-23 and amends D6 (two keyword codes in each of the `input.` and `output.` families), D7 item 4 and D8 item 3 (the duplicate key compares the schema location).
+[Amendment A4](#amendments) (a refused input stops its own validation, and
+a hint names the step its own failure needs) is proposed on 2026-10-23,
+under Ed Funnekotter's ruling of that day that the external UX test's findings land before v1.0; the passages it changes are marked *(A4)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R6 (items 1 to 4); the finding half of R14 item 3 (a
@@ -522,6 +525,7 @@ it is still checked and reported.**
    | Opening the package (container, entries, digests, specification version, package limits) | every later phase | every refusal detectable in one scan of the central directory and the digest file (ADR-001): every unsafe entry name, every mismatched digest |
    | The manifest (consumer commands) | every later phase | every manifest finding, in ADR-002's gated steps |
    | Parsing one input | that input's schema validation, except D7 item 4 | every other input, parsed and validated |
+   | The input constraints refusing an input whole *(A4)* | that input's validation | the refusal, and every other input, validated |
    | Validating inputs | rendering | every finding of every input |
    | Rendering one output | that output | every other output, rendered to staging, and its output schema validation |
    | Output schema validation | writing | every finding of every output |
@@ -618,7 +622,8 @@ next, and neither ever repeats a string value from the inputs.**
    imperative, naming the next step concretely: a value range ("Write between
    10 and 2000 characters."), the edit ("Add `name` to the vendor object."),
    or the command that shows more (``Run `metais schema <package> vendor` to
-   see every field.``). The package is always written `<package>` in a hint,
+   see every field.``). Where one cause of a code has a more useful step
+   than the code's hint, the tool declares that cause's hint *(A4)*. The package is always written `<package>` in a hint,
    never the path the caller gave, so a hint is the same on every machine.
    Every code has a hint, so every refusal names the next step (R17 item 3).
 3. **`{field}`** in a template is the field's title when D6 item 9 finds one,
@@ -634,7 +639,8 @@ next, and neither ever repeats a string value from the inputs.**
    in data it holds. A library's message text is never used, because the
    library echoes values.
 5. **Numbers, booleans and `null` may be echoed** (`params.value` for the
-   numeric keywords), **except** where the schema at the instance location
+   numeric keywords, and a number as YAML read it in a hint *(A4)*),
+   **except** where the schema at the instance location
    carries `writeOnly: true`, the 2020-12 annotation whose own example is a
    password field: then no value, no length and no suggestion appears.
 6. **Package content may be echoed**: allowed values, limits, patterns,
@@ -1363,6 +1369,59 @@ exit codes, marked *(A3)* in place.
    adapter fails a step that exits 2 or 3, and the command line has no
    chapter, so ADR-008 D16 item 2's test for each refusal code proves
    them (ADR-011 A9 item 4).
+
+### A4 — A refused input stops its own validation, and a hint names the step its own failure needs
+
+**Status:** Proposed 2026-10-23, under Ed Funnekotter's ruling of 2026-10-23 that the findings of the external UX test of `accessibility-conformance-report-1.0.0.metais` land before v1.0, which they block (T-A3, the release). In that test an agent given
+only the binary and the package judged `validate`'s findings excellent
+but for the four this amendment answers.
+**Amends:** D7 item 1 (a row), D9 items 2 and 5, marked *(A4)* in place.
+D6's codes and `params`, D9 item 7's suggestion rule and every member
+conformance compares are unchanged, except the findings ADR-003 A3 no
+longer reports.
+
+1. **An input the input constraints refuse whole is not validated
+   further** (ADR-003 A3). Its `input.forbidden` stops the input's
+   own validation, as a parse failure stops a file's (D7 item 1's table
+   gains the row), so none of its value's failures is reported.
+2. **An enum's hint is the near value, every value, or how to list
+   them.** When `params.suggestion` is present, by D9 item 7's rule,
+   which A3 item 3 keeps for every suggestion but `check`'s
+   cross-reference, the hint names it: `Write "Supports", the allowed
+   value nearest to the one written.` Otherwise, when the allowed values
+   are at most 20 and their texts at most 160 code points together, the
+   hint lists them all, as before. Otherwise it states how many there
+   are and the command that lists them, `metais schema <package> <input>
+   --fields`, for an input; an output's or the manifest's says how many
+   the schema's enum lists. `params.allowed` keeps its first 20 values
+   for a machine: what the hint never does is print an arbitrary first
+   20 of 86 to a person.
+3. **A format's hint says what the field asks.** When the field has a
+   description (D6 item 9), the hint is `Write a value in the <format>
+   format that fits the field's description:` and the description's
+   first line. When it has none, and the schema object holding the
+   `format` has a `pattern`, the hint names the pattern. The validator
+   ADR-010 chose stops evaluating a schema object at its failed
+   `format`, before its `pattern`, so without this the stricter rule is
+   not heard at all. Both are package content (D9 item 6).
+4. **A number or boolean YAML read from an unquoted scalar, where a
+   string is wanted, is told to be quoted.** An `input.type` whose
+   `expected` includes `string`, at a value an unquoted YAML scalar gave
+   as a number or a boolean, has the hint `Put the value in quotes, as
+   "3.10": YAML reads an unquoted 3.10 as a number.` The number is
+   echoed as written, since its canonical form, 3.1, is not what the
+   supplier meant: D9 item 5 allows a number, and this is that number's
+   text, bounded to 40 code points. Under `writeOnly`, or beyond the
+   bound, the hint says to quote it without echoing it. A value from
+   JSON, a path set or a default gets the code's hint, `Write a value of
+   type string.`
+5. **How it is proved.** `internal/schemafail`'s `TestDeclaredHints`
+   holds each hint to its cause, its control and its bound, and
+   `internal/finding`'s `TestWithHintValues` holds a hint's package text
+   to D9 item 2's 240 code points. `internal/inputs`'
+   `TestForbiddenInputNotValidated` and the vector
+   `dat/input-constraints-refused` prove item 1. Hints are not compared
+   by conformance (D10 item 5), so items 2 to 4 change no vector.
 
 ## Implementation log
 

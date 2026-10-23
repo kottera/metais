@@ -217,28 +217,54 @@ func (s *Supply) mapFailures(failures []schemafail.Failure, root *node, states m
 			Subject: s.l.subject(in.Name),
 			Schemas: s.l.pkg.Compiler,
 			Locate:  n.locator(),
+			Written: n.written(),
 			Listed:  int(min(s.lim.Value(limits.Findings), int64(^uint(0)>>1))),
 		}
 		if st.partial != nil {
 			t.Partial = &schemafail.Partial{Kept: st.partial.kept, Unparsed: st.partial.unparsed}
+		}
+		// The constraints are mapped first: an input they refuse as a whole
+		// is reported so, and nothing of its value is (MTS-DAT-012).
+		var consFs []finding.Finding
+		whole := t
+		whole.Partial = nil
+		for _, u := range cons {
+			fs, err := schemafail.Map(whole, u.tree)
+			if err != nil {
+				return nil, err
+			}
+			for _, f := range fs {
+				consFs = append(consFs, rebuild(f, f.Subject(), keep, u.via...))
+			}
+		}
+		if refused := slices.DeleteFunc(slices.Clone(consFs), func(f finding.Finding) bool { return !refusedWhole(f) }); len(refused) > 0 {
+			out = append(out, refused...)
+			continue
 		}
 		fs, err := schemafail.Map(t, trees...)
 		if err != nil {
 			return nil, err
 		}
 		out = append(out, fs...)
-		t.Partial = nil
-		for _, u := range cons {
-			fs, err := schemafail.Map(t, u.tree)
-			if err != nil {
-				return nil, err
-			}
-			for _, f := range fs {
-				out = append(out, rebuild(f, f.Subject(), keep, u.via...))
-			}
-		}
+		out = append(out, consFs...)
 	}
 	return out, nil
+}
+
+// codeForbidden is the keyword code of a false schema reached outside the
+// applicators that name it otherwise (ADR-006 D6 item 4).
+const codeForbidden finding.Code = "input.forbidden"
+
+// refusedWhole reports whether f refuses its input as a whole: an
+// input.forbidden at the input's root, which only the input constraints
+// can give, since an input's own schema at its root is the value's
+// (ADR-003 Amendment A3).
+func refusedWhole(f finding.Finding) bool {
+	if f.Code() != codeForbidden {
+		return false
+	}
+	l, ok := f.At()
+	return ok && l.HasPointer && l.Path().Depth() == 0
 }
 
 // condition is the via entry of a then or else at the inputs object's

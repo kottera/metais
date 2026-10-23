@@ -44,8 +44,8 @@ func (c *Compiler) object(entry, ptr string) (value.Object, bool) {
 	return o, ok
 }
 
-// Annotations returns the title, description and writeOnly of the schema
-// object at pointer in entry.
+// Annotations returns the title, description, writeOnly and pattern of
+// the schema object at pointer in entry.
 func (c *Compiler) Annotations(entry, pointer string) schemafail.Annotations {
 	o, ok := c.object(entry, pointer)
 	if !ok {
@@ -64,6 +64,11 @@ func (c *Compiler) Annotations(entry, pointer string) schemafail.Annotations {
 	}
 	if b, ok := o.Get("writeOnly"); ok {
 		a.WriteOnly = b == value.Bool(true)
+	}
+	if s, ok := o.Get("pattern"); ok {
+		if s, ok := s.(value.String); ok {
+			a.Pattern = s.Text()
+		}
 	}
 	return a
 }

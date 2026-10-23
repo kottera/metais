@@ -1,0 +1,19 @@
+metais: "1.0"
+name: org.example.inputs
+version: 1.0.0
+title: Inputs
+description: A package whose input constraints refuse an input as a whole for one edition.
+guide: Supply the inputs.
+inputs:
+  - name: edition
+    title: Edition
+    schema: inputs/edition.schema.json
+  - name: table
+    title: Table
+    schema: inputs/table.schema.json
+    forms: [csv]
+    required: false
+input_constraints: inputs/constraints.schema.json
+outputs:
+  - id: report
+    template: report.md.liquid

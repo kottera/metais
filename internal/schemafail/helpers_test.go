@@ -56,7 +56,8 @@ func (d docs) Annotations(entry, ptr string) Annotations {
 	title, _ := o["title"].(string)
 	desc, _ := o["description"].(string)
 	wo, _ := o["writeOnly"].(bool)
-	return Annotations{Title: title, Description: desc, WriteOnly: wo}
+	pat, _ := o["pattern"].(string)
+	return Annotations{Title: title, Description: desc, WriteOnly: wo, Pattern: pat}
 }
 
 // Ref resolves a $ref of the form "<entry>#<pointer>", the entry empty

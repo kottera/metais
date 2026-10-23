@@ -6,6 +6,7 @@ package finding
 import (
 	"strings"
 	"testing"
+	"unicode/utf8"
 )
 
 func mustPanic(t *testing.T, name string, want string, f func()) {
@@ -175,4 +176,27 @@ func TestWithHint(t *testing.T) {
 		t.Errorf("WithHint changed more than the hint: %q, %q", g.Message(), g.Hint())
 	}
 	mustPanic(t, "an unknown placeholder", "declared hint", func() { f.WithHint("Use {nothing}.") })
+}
+
+// TestWithHintValues is a declared hint with values of its own: text the
+// package declares, such as a field's description, that no parameter
+// carries. Each fills its placeholder in the hint and nowhere else, is
+// shortened as a parameter's value is so that the hint stays within 240
+// code points, and leaves every other member as it was.
+func TestWithHintValues(t *testing.T) {
+	withTestCodes(t)
+	f := minLength("name", "inputs/a.json", 2, "/name", 3)
+	g := f.WithHintValues("Write at least {limit} characters: {description}", map[string]string{"description": "The name, as it is signed."})
+	if want := "Write at least 10 characters: The name, as it is signed."; g.Hint() != want {
+		t.Errorf("hint %q, want %q", g.Hint(), want)
+	}
+	if g.Message() != f.Message() || Compare(f, g) != 0 {
+		t.Errorf("WithHintValues changed more than the hint: %q", g.Message())
+	}
+	long := g.WithHintValues("Write it as {description} says.", map[string]string{"description": strings.Repeat("d", 400)})
+	if n := utf8.RuneCountInString(long.Hint()); n != 240 || !strings.HasSuffix(long.Hint(), "… says.") {
+		t.Errorf("a long value gives a hint of %d code points: %q", n, long.Hint())
+	}
+	mustPanic(t, "a value no placeholder names", "declared hint", func() { f.WithHintValues("Use {limit}.", map[string]string{"limit": "x"}) })
+	mustPanic(t, "an unknown placeholder", "declared hint", func() { f.WithHintValues("Use {nothing}.", map[string]string{"other": "x"}) })
 }
