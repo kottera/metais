@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"metais.org/metais/internal/finding"
+	"metais.org/metais/internal/jsonx"
 	"metais.org/metais/internal/liquid/value"
 	"metais.org/metais/internal/regexprofile"
 )
@@ -274,8 +275,9 @@ func (s *Generator) holder(c *conj, keyword string) node {
 // preference — const, an entry of examples, default, an enum member —
 // each kept only when it validates against C, can be written so that it
 // reads back (writable), and, in a uniqueItems array, equals no earlier
-// item, nor, at a uniqueKeys key of one pointer, an earlier item's key. An object or array is taken whole from examples or default only
-// when C declares no properties or items for it (item 13).
+// item, nor, at a uniqueKeys key of one pointer, an earlier item's key.
+// An object or array is taken whole from examples or default only when C
+// declares no properties or items for it (item 13).
 func (s *Generator) candidate(loc *place, c *conj) (value.Value, bool) {
 	if loc.fixed != nil {
 		return nil, false
@@ -931,6 +933,9 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 	unique := false
 	c.each("uniqueItems", func(_ node, v value.Value) { unique = unique || v == value.Bool(true) })
 	keys := c.uniqueKeys()
+	repeats := func(v value.Value) bool {
+		return slices.ContainsFunc(keys, func(k *keyed) bool { return k.holds(v) })
+	}
 	var items []value.Value
 	ok := true
 	counted := int64(0)
@@ -951,9 +956,9 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 			if unique {
 				p.earlier = items
 			}
-			for _, key := range keys {
-				if len(key) == 1 {
-					p.avoid = append(p.avoid, avoided{key[0], keyValues(items, key[0])})
+			for _, k := range keys {
+				if len(k.key) == 1 {
+					p.avoid = append(p.avoid, avoided{k.key[0], k.held})
 				}
 			}
 			if k > 0 {
@@ -980,9 +985,6 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 		if !good {
 			ok = false
 			continue
-		}
-		repeats := func(v value.Value) bool {
-			return slices.ContainsFunc(keys, func(key [][]string) bool { return keyRepeats(items, key, v) })
 		}
 		clash := func(v value.Value) bool {
 			if unique && slices.ContainsFunc(items, func(e value.Value) bool { return value.Equal(e, v) }) {
@@ -1018,6 +1020,9 @@ func (s *Generator) array(loc *place, c *conj) (value.Value, bool) {
 			counted++
 		}
 		items = append(items, v)
+		for _, k := range keys {
+			k.add(v)
+		}
 	}
 	if ok && int64(len(items)) < minI {
 		keyword := "uniqueItems"
@@ -1062,6 +1067,7 @@ func (cv cover) item() value.Value {
 // item 17).
 func (c *conj) covered() []cover {
 	var out []cover
+	seen := map[string]bool{}
 	c.each("coverage", func(_ node, v value.Value) {
 		o, ok := v.(value.Object)
 		if !ok {
@@ -1073,7 +1079,10 @@ func (c *conj) covered() []cover {
 		vs, _ := o.Get("values")
 		values, _ := vs.(value.Array)
 		for _, m := range values.All() {
-			if !slices.ContainsFunc(out, func(cv cover) bool { return slices.Equal(cv.key, key) && value.Equal(cv.member, m) }) {
+			// A key pointer's text ends where the member's digest, of a
+			// fixed length, begins.
+			if d := digest(m); !seen[ks.Text()+d] {
+				seen[ks.Text()+d] = true
 				out = append(out, cover{key, m})
 			}
 		}
@@ -1081,24 +1090,68 @@ func (c *conj) covered() []cover {
 	return out
 }
 
-// uniqueKeys returns every uniqueKeys of C, each a list of key pointers'
-// tokens.
-func (c *conj) uniqueKeys() [][][]string {
-	var out [][][]string
+// keyed is one uniqueKeys of C: its key pointers' tokens, and the keys
+// the items made so far hold under it, each by its encoding.
+type keyed struct {
+	key  [][]string
+	held map[string]bool
+}
+
+// uniqueKeys returns every uniqueKeys of C, in walk order, none of whose
+// keys is yet held.
+func (c *conj) uniqueKeys() []*keyed {
+	var out []*keyed
 	c.each("uniqueKeys", func(_ node, v value.Value) {
 		a, ok := v.(value.Array)
 		if !ok {
 			return
 		}
-		var key [][]string
+		k := &keyed{held: map[string]bool{}}
 		for _, p := range a.All() {
 			if ps, ok := p.(value.String); ok {
-				key = append(key, pointerTokens(ps.Text()))
+				k.key = append(k.key, pointerTokens(ps.Text()))
 			}
 		}
-		out = append(out, key)
+		out = append(out, k)
 	})
 	return out
+}
+
+// of returns v's key under k, encoded so that two keys are encoded alike
+// exactly when MTS-DAT-018 has them equal: pointer by pointer, by the
+// equality of MTS-DAT-013. ok is false when a pointer resolves to nothing
+// within v, which then has no key.
+func (k *keyed) of(v value.Value) (string, bool) {
+	var b strings.Builder
+	for _, toks := range k.key {
+		x, ok := at(v, toks)
+		if !ok {
+			return "", false
+		}
+		b.WriteString(digest(x))
+	}
+	return b.String(), true
+}
+
+// holds reports whether v's key under k is one an earlier item holds.
+func (k *keyed) holds(v value.Value) bool {
+	e, ok := k.of(v)
+	return ok && k.held[e]
+}
+
+// add records v's key under k as held, when v has one.
+func (k *keyed) add(v value.Value) {
+	if e, ok := k.of(v); ok {
+		k.held[e] = true
+	}
+}
+
+// digest is the SHA-256 of v's canonical JSON, as text: two values have
+// the same digest exactly when they are equal, a number by its value and
+// an object whatever its members' order.
+func digest(v value.Value) string {
+	d := jsonx.CanonicalDigest(v)
+	return string(d[:])
 }
 
 // pointerTokens is a key pointer's tokens; the schema compiler has held
@@ -1133,41 +1186,6 @@ func at(v value.Value, toks []string) (value.Value, bool) {
 		}
 	}
 	return v, true
-}
-
-// keyValues returns the values items hold at toks.
-func keyValues(items []value.Value, toks []string) []value.Value {
-	var out []value.Value
-	for _, e := range items {
-		if v, ok := at(e, toks); ok {
-			out = append(out, v)
-		}
-	}
-	return out
-}
-
-// keyRepeats reports whether v's key under key, its pointers' tokens,
-// equals an earlier item's, as MTS-DAT-018 compares keys: pointer by
-// pointer, by the equality of MTS-DAT-013. An item where any pointer
-// resolves to nothing has no key, and repeats none.
-func keyRepeats(items []value.Value, key [][]string, v value.Value) bool {
-	mine := make([]value.Value, len(key))
-	for i, toks := range key {
-		x, ok := at(v, toks)
-		if !ok {
-			return false
-		}
-		mine[i] = x
-	}
-	return slices.ContainsFunc(items, func(e value.Value) bool {
-		for i, toks := range key {
-			x, ok := at(e, toks)
-			if !ok || !value.Equal(x, mine[i]) {
-				return false
-			}
-		}
-		return true
-	})
 }
 
 // itemPlace is the place of the element at i of the array at loc.

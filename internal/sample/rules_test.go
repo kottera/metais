@@ -5,9 +5,12 @@ package sample
 
 import (
 	"slices"
+	"strings"
 	"testing"
+	"time"
 
 	"metais.org/metais/internal/liquid/value"
+	"metais.org/metais/internal/testenv"
 )
 
 // rows is the schema of an array of rows whose criterion column is an
@@ -93,21 +96,22 @@ func TestUniqueKeysItems(t *testing.T) {
 		if a.Len() != tc.items {
 			t.Errorf("%s: %d items, want %d: %s", tc.schema, a.Len(), tc.items, text(v))
 		}
-		var earlier []value.Value
+		k := &keyed{key: tc.key, held: map[string]bool{}}
 		for _, e := range a.All() {
-			if keyRepeats(earlier, tc.key, e) {
+			if k.holds(e) {
 				t.Errorf("%s: the key of %s repeats: %s", tc.schema, text(e), text(v))
 			}
-			earlier = append(earlier, e)
+			k.add(e)
 		}
 	}
 }
 
-// TestKeyRepeats is MTS-DAT-018's comparison, as the generator applies
-// it: 1.0 equals 1, null equals null, a composite key repeats only when
-// every pointer's value does, and an item without the key repeats none.
-func TestKeyRepeats(t *testing.T) {
-	items := []value.Value{parse(t, `{"a":1,"b":null}`), parse(t, `{"a":2}`)}
+// TestKeyHeld is MTS-DAT-018's comparison, as the generator applies it:
+// 1.0 equals 1, null equals null, an object whatever its members' order,
+// a composite key repeats only when every pointer's value does, and an
+// item without the key repeats none.
+func TestKeyHeld(t *testing.T) {
+	items := []value.Value{parse(t, `{"a":1,"b":null,"o":{"x":1,"y":2}}`), parse(t, `{"a":2}`)}
 	for _, tc := range []struct {
 		key  [][]string
 		item string
@@ -120,8 +124,14 @@ func TestKeyRepeats(t *testing.T) {
 		{[][]string{{"a"}, {"b"}}, `{"a":2,"b":null}`, false},
 		{[][]string{{"a"}, {"b"}}, `{"a":2}`, false},
 		{[][]string{{"c"}}, `{"c":1}`, false},
+		{[][]string{{"o"}}, `{"o":{"y":2,"x":1.0}}`, true},
+		{[][]string{{"o"}}, `{"o":{"x":1}}`, false},
 	} {
-		if got := keyRepeats(items, tc.key, parse(t, tc.item)); got != tc.want {
+		k := &keyed{key: tc.key, held: map[string]bool{}}
+		for _, e := range items {
+			k.add(e)
+		}
+		if got := k.holds(parse(t, tc.item)); got != tc.want {
 			t.Errorf("%v %s: %v, want %v", tc.key, tc.item, got, tc.want)
 		}
 	}
@@ -175,5 +185,40 @@ func TestRulesDeterministic(t *testing.T) {
 				t.Errorf("seed %d: %s, want %s", tc.seed, got, tc.want)
 			}
 		}
+	}
+}
+
+// TestRulesLinear is A2 item 18 for the generator: honouring coverage and
+// uniqueKeys is linear in the items, each key encoded once and looked up
+// once, so 20,000 covered values, each a key no earlier item holds, are
+// made in bounded CPU time. A scan of the earlier items per item, put in
+// place of the sets, makes this 2·10^8 key comparisons.
+func TestRulesLinear(t *testing.T) {
+	testenv.Home(t)
+	const n = 20000
+	const cpuBound = 3 * time.Second
+	var b strings.Builder
+	for i := range n {
+		if i > 0 {
+			b.WriteByte(',')
+		}
+		b.WriteString(itoa(i))
+	}
+	sch := `{"type":"array","uniqueKeys":["/id"],"coverage":{"key":"/id","values":[` + b.String() + `]},
+		"items":{"type":"object","required":["id"],"properties":{"id":{"type":"integer"}}}}`
+	p := compile(t, map[string]string{entry: sch})
+	before, measured := selfCPU()
+	v, _, fs, err := p.gen(Options{Items: 3}).Generate(Input{Name: "data", Schema: entry, Forms: []Form{FormJSON}, Required: true})
+	if after, _ := selfCPU(); measured {
+		t.Logf("%d covered keys took %v of CPU", n, after-before)
+		if after-before > cpuBound {
+			t.Errorf("%d covered keys took %v of CPU, more than %v", n, after-before, cpuBound)
+		}
+	}
+	if err != nil || len(fs) > 0 {
+		t.Fatalf("%v%s", err, describe(fs))
+	}
+	if a := v.(value.Array); a.Len() != n {
+		t.Fatalf("%d items, want %d", a.Len(), n)
 	}
 }

@@ -26,7 +26,6 @@ package sample
 
 import (
 	"fmt"
-	"slices"
 	"strconv"
 
 	"metais.org/metais/internal/finding"
@@ -239,8 +238,8 @@ type place struct {
 	// uniqueItems.
 	earlier []value.Value
 	// avoid are values that a value below this place must not equal,
-	// each at its path from here: the values earlier items of an
-	// enclosing array hold at a uniqueKeys key of one pointer.
+	// each at its path from here: the keys earlier items of an enclosing
+	// array hold under a uniqueKeys of one pointer.
 	avoid []avoided
 	// refs counts each $ref target entered on the path from the root,
 	// this place's own included (item 20).
@@ -410,22 +409,23 @@ func (loc *place) child(token string) *place {
 	child := &place{ptr: loc.ptr + finding.Pointer(token), k: loc.k, refs: loc.refs, stop: loc.stop, noCR: loc.noCR, attempt: loc.attempt}
 	for _, a := range loc.avoid {
 		if len(a.path) > 0 && a.path[0] == token {
-			child.avoid = append(child.avoid, avoided{a.path[1:], a.values})
+			child.avoid = append(child.avoid, avoided{a.path[1:], a.held})
 		}
 	}
 	return child
 }
 
-// avoided is values that the value at path below a place must not equal.
+// avoided is the values that the value at path below a place must not
+// equal, each by its digest.
 type avoided struct {
-	path   []string
-	values []value.Value
+	path []string
+	held map[string]bool
 }
 
 // avoids reports whether loc's own value must not be v.
 func (loc *place) avoids(v value.Value) bool {
 	for _, a := range loc.avoid {
-		if len(a.path) == 0 && slices.ContainsFunc(a.values, func(e value.Value) bool { return value.Equal(e, v) }) {
+		if len(a.path) == 0 && a.held[digest(v)] {
 			return true
 		}
 	}
