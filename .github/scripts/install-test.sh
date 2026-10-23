@@ -38,11 +38,7 @@ web=$work/web
 rel=$web/github.com/kottera/metais/releases/download/v$version
 server=
 
-cleanup() {
-	[ -z "$server" ] || kill "$server" 2>/dev/null || true
-	git tag -d "v$version" >/dev/null 2>&1 || true
-}
-trap cleanup EXIT
+trap '[ -z "$server" ] || kill "$server" 2>/dev/null; git tag -d "v$version" >/dev/null 2>&1' EXIT
 
 fail() {
 	echo "install-test.sh: $*" >&2

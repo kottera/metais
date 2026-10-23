@@ -235,7 +235,8 @@ func quote(s string) string { return `"` + s + `"` }
 // jobs are item 2's, each on the platform it names, running what it names,
 // with internal/conformance's tests split out of the run of the others and
 // run on their own, as R-W1-4 splits them: a job that skipped them and did
-// not run them would run them nowhere.
+// not run them would run them nowhere. The install jobs are D6 item 8's
+// real installs, one on each platform install.sh serves.
 // The flip adds pull_request and push to main, and changes this test.
 func TestCIWorkflow(t *testing.T) {
 	src, err := os.ReadFile(ciWorkflow)
@@ -267,6 +268,8 @@ func TestCIWorkflow(t *testing.T) {
 		{"dco", "ubuntu-latest", []string{".github/scripts/dco.sh", `.github/scripts/coauthor.sh "$BASE" HEAD "$RUNNER_TEMP/squash.txt"`, `.github/scripts/coauthor.sh "$BASE" HEAD` + "\n"}},
 		{"shell", "ubuntu-latest", []string{"xargs -0 shellcheck"}},
 		{"site", "ubuntu-latest", []string{"site/build.sh", "go test -race -count=1 ./site/..."}},
+		{"install-linux", "ubuntu-latest", []string{`.github/scripts/install-test.sh "$RUNNER_TEMP/install"`}},
+		{"install-macos", "macos-latest", []string{`.github/scripts/install-test.sh "$RUNNER_TEMP/install"`}},
 	}
 	var names []string
 	for _, j := range want {
