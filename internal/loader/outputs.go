@@ -9,6 +9,7 @@ import (
 	"metais.org/metais/internal/liquid"
 	"metais.org/metais/internal/liquid/ast"
 	"metais.org/metais/internal/manifest"
+	"metais.org/metais/internal/template/filters"
 )
 
 // The template family's codes the parse of a manifest expression reports
@@ -217,7 +218,11 @@ func TemplateFinding(e *liquid.Error, subj finding.Subject, at finding.Location,
 	case liquid.CodeInclude:
 		return finding.New(CodeTemplateInclude, subj, &at, finding.Params{"column": column})
 	case liquid.CodeUnknownFilter:
-		return finding.New(CodeTemplateUnknownFilter, subj, &at, finding.Params{"filter": finding.String(e.Args["filter"]), "column": column})
+		p := finding.Params{"filter": finding.String(e.Args["filter"]), "column": column}
+		if a, ok := filters.Alternative(e.Args["filter"]); ok {
+			p["alternative"] = finding.String(a)
+		}
+		return finding.New(CodeTemplateUnknownFilter, subj, &at, p)
 	case liquid.CodeFilterArgument:
 		return finding.New(CodeTemplateFilterArg, subj, &at, finding.Params{"filter": finding.String(e.Args["filter"]), "argument": finding.String(e.Args["argument"]), "column": column})
 	case liquid.CodeFilterInput:

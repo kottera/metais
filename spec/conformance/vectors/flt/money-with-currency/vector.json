@@ -1,0 +1,31 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "flt/money-with-currency",
+  "title": "money_with_currency is refused with amount named as its alternative",
+  "statements": [
+    "MTS-FLT-023"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/findings.json"
+          }
+        }
+      ]
+    }
+  ]
+}

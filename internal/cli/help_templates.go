@@ -79,9 +79,12 @@ type filterDoc struct {
 }
 
 // filterGroup is a heading of the topic's filter list and its filters.
+// exampleFirst writes each filter's example and what it gives before
+// what it does.
 type filterGroup struct {
-	title string
-	docs  []filterDoc
+	title        string
+	docs         []filterDoc
+	exampleFirst bool
 }
 
 // filterGroups is every filter of template.Dialect(), each exactly once
@@ -109,7 +112,7 @@ var filterGroups = []filterGroup{
 		{"split", "Splits a string into an array at each separator.", `{{ "a,b,c" | split: "," | join: " " }}`, "a b c"},
 		{"truncate", "Cuts a string to a number of characters, the ellipsis (... unless given) included.", `{{ "abcdefgh" | truncate: 6 }}`, "abc..."},
 		{"truncatewords", "Keeps a number of words, then the ellipsis (... unless given).", `{{ "one two three" | truncatewords: 2 }}`, "one two..."},
-	}},
+	}, false},
 	{"Numbers (integers give an integer):", []filterDoc{
 		{"abs", "The absolute value.", `{{ -3 | abs }}`, "3"},
 		{"ceil", "Rounds up to an integer.", `{{ 1.2 | ceil }}`, "2"},
@@ -122,7 +125,7 @@ var filterGroups = []filterGroup{
 		{"modulo", "The remainder of the division rounded down.", `{{ -7 | modulo: 2 }}`, "1"},
 		{"at_least", "The larger of the value and the argument.", `{{ 3 | at_least: 5 }}`, "5"},
 		{"at_most", "The smaller of the value and the argument.", `{{ 3 | at_most: 2 }}`, "2"},
-	}},
+	}, false},
 	{"Arrays:", []filterDoc{
 		{"size", "The length of a string, array or object; 0 for a number, a boolean and nil.", `{{ "abc" | size }}`, "3"},
 		{"first", "The first element.", `{{ "a,b,c" | split: "," | first }}`, "a"},
@@ -143,7 +146,7 @@ var filterGroups = []filterGroup{
 		{"find", "The first element whose property is truthy, or equals a value.", `{{ inputs.rows | find: "n", 1 | json }}`, `{"n":1,"name":"a","tag":null}`},
 		{"find_index", "The position of that element, from 0.", `{{ inputs.rows | find_index: "name", "a" }}`, "1"},
 		{"default", "The value, or its argument when the value is nil, false, or an empty string, array or object; allow_false: true keeps false.", `{{ inputs.title | default: "Untitled" }}`, "Untitled"},
-	}},
+	}, false},
 	{"Encoding (escape, h and escape_once give a safe value):", []filterDoc{
 		{"escape", "Writes & < > \" and ' as HTML character references.", `{{ "a < b" | escape }}`, "a &lt; b"},
 		{"h", "escape, by another name.", `{{ "a & b" | h }}`, "a &amp; b"},
@@ -154,7 +157,7 @@ var filterGroups = []filterGroup{
 		{"base64_decode", "Decodes base64.", `{{ "aGk/" | base64_decode }}`, "hi?"},
 		{"base64_url_safe_encode", "Base64 with - and _ for + and /.", `{{ "hi?" | base64_url_safe_encode }}`, "aGk_"},
 		{"base64_url_safe_decode", "Decodes URL-safe base64.", `{{ "aGk_" | base64_url_safe_decode }}`, "hi?"},
-	}},
+	}, false},
 	{"METAIS's own (spec chapter 8):", []filterDoc{
 		{"json", "RFC 8785 JSON: members in name order, no whitespace; indent: n (1 to 8) pretty-prints.", `{{ inputs.rows | last | json }}`, `{"n":1,"name":"a","tag":null}`},
 		{"yaml", "A YAML block document, members in name order, with no final line feed; a string YAML could read otherwise, such as n, is quoted.", `{{ inputs.rows | first | yaml }}`, "\"n\": 2\nname: b\ntag: new"},
@@ -163,11 +166,31 @@ var filterGroups = []filterGroup{
 		{"json_script", "json for a <script> element: < > & U+2028 and U+2029 written as \\u escapes; safe.", `{{ "a&b" | json_script }}`, `"a\u0026b"`},
 		{"safe", "Marks a value safe from escaping; only as the last filter of {{ }} or echo.", `{{ "<b>" | safe }}`, "<b>"},
 		{"slug", "Lower-case ASCII letters and digits joined by -; accents are dropped, and a string with no slug is an error.", `{{ "Hello, World!" | slug }}`, "hello-world"},
+	}, false},
+	// ADR-004 A2 decision item 6: the filters that write a value for a
+	// reader, each example first, with chapter 8's example.
+	{"Values for readers (spec chapter 8); none reads a locale:", []filterDoc{
 		{"date", "Formats an RFC 3339 date or date-time, or Unix seconds, in its own offset, with a strftime format; spec chapter 8 lists the directives.", `{{ "2026-10-18T09:30:00+02:00" | date: "%Y-%m-%d %H:%M %z" }}`, "2026-10-18 09:30 +0200"},
-		{"number", "Writes a number or a decimal text for a reader, with decimals:, group: and point:; no group separator and a point . unless given.", `{{ 48920000 | number: decimals: 2, group: "," }}`, "48,920,000.00"},
-		{"amount", "Writes an amount in the currency's major unit with its ISO 4217 code, its decimals from spec Appendix C unless decimals: gives them.", `{{ 48920000 | amount: "EUR", group: "," }}`, "EUR 48,920,000.00"},
-		{"duration", "Writes seconds, an ISO 8601 duration, or fields: \"d:h:m\" and the like, with %d %H %M %S, as date's directives are written.", `{{ "00:07:25" | duration: "%-H h %M min", fields: "d:h:m" }}`, "7 h 25 min"},
-	}},
+		{
+			"number", "Writes a number, or a decimal text such as \"-1234.50\" at any length, for a reader. decimals: (0 to 20) rounds half away from zero; group: and point: name the separators, and with none named it groups nothing and writes . as the point.",
+			`{{ 48920000 | number: decimals: 2, group: "," }}`, "48,920,000.00",
+		},
+		{
+			"amount", "Writes an amount with its ISO 4217 code, usually an input, so one template writes any currency: its decimals follow the code by spec Appendix C unless decimals: gives them, it takes number's group: and point:, and code: \"after\" writes the code last. It writes no symbol.",
+			`{{ 48920000 | amount: "EUR", group: "," }}`, "EUR 48,920,000.00",
+		},
+		{
+			"duration", "Writes a length of time: whole seconds, an ISO 8601 duration such as PT7H25M, or fields separated by : that fields: names (\"d:h:m\", \"h:m:s\" and the like). Its directives mirror date's: %d, %H, %M and %S are days, hours, minutes and seconds, with date's flags -, _ and 0, and the largest named takes the rest.",
+			`{{ "00:07:25" | duration: "%-H h %M min", fields: "d:h:m" }}`, "7 h 25 min",
+		},
+	}, true},
+}
+
+// filterNotes are lines the topic writes, each on a line of its own,
+// after what a filter of an exampleFirst group does: amount's says there
+// is no money filter (ADR-004 A2 decision item 6, MTS-FLT-023).
+var filterNotes = map[string]string{
+	"amount": "There is no money filter: amount takes the amount in the currency's major unit, euros and not cents, so an amount in cents is divided by 100 first.",
 }
 
 // filterDocs is every row of filterGroups, in order.
@@ -253,6 +276,10 @@ func templatesTopic(h *helpText, _ []*Command) {
 		h.blank()
 		h.line(g.title)
 		for _, d := range g.docs {
+			if g.exampleFirst {
+				h.exampleFirst(d)
+				continue
+			}
 			h.item("  "+d.Name, filterWidth, d.Line)
 			h.example(d.Example, d.Gives, filterWidth)
 		}
@@ -318,4 +345,26 @@ func (h *helpText) example(ex, gives string, width int) {
 	indent := strings.Repeat(" ", width)
 	h.line(indent + ex)
 	h.line(indent + "gives " + strings.ReplaceAll(gives, "\n", `\n`))
+}
+
+// exampleFirst writes a filter's name and its example, then what the
+// example gives, what the filter does, and its note in filterNotes on a
+// line of its own.
+// The example is beside the name when it fits there, and otherwise on the
+// next line indented by filterWidth.
+func (h *helpText) exampleFirst(d filterDoc) {
+	indent := strings.Repeat(" ", filterWidth)
+	name := "  " + d.Name
+	lead := name + strings.Repeat(" ", max(filterWidth-utf8.RuneCountInString(name), 1))
+	if utf8.RuneCountInString(lead+d.Example) <= helpWidth {
+		h.line(lead + d.Example)
+	} else {
+		h.line(name)
+		h.line(indent + d.Example)
+	}
+	h.line(indent + "gives " + strings.ReplaceAll(d.Gives, "\n", `\n`))
+	h.b = wrap(h.b, d.Line, indent, indent)
+	if n := filterNotes[d.Name]; n != "" {
+		h.b = wrap(h.b, n, indent, indent)
+	}
 }

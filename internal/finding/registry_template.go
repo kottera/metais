@@ -615,12 +615,13 @@ var templateCodes = []Entry{
 		Params: []ParamSpec{
 			{Name: "filter", Type: TypeString, Meaning: "The filter's name.", Always: true},
 			{Name: "column", Type: TypeNumber, Meaning: "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.", Always: true},
+			{Name: "alternative", Type: TypeString, Meaning: "The filter of the dialect that does what the name does in another Liquid dialect: amount, for money, money_with_currency and money_without_currency, which take cents where amount takes the currency's major unit; present for those names."},
 		},
 		Message:    "The filter {filter} is not one the dialect defines.",
-		Hint:       "Use a filter the specification defines; a misspelt filter is refused, never ignored.",
+		Hint:       "Use a filter the specification defines; a misspelt filter is refused, never ignored. Where alternative is given, it names the dialect's filter for what this name does elsewhere.",
 		Span:       SpanValue,
 		Since:      "1.0",
-		Statements: []string{"MTS-MAN-018", "MTS-TPL-004"},
+		Statements: []string{"MTS-FLT-023", "MTS-MAN-018", "MTS-TPL-004"},
 	},
 	{
 		Code:     "template.xref.budget_exhausted",

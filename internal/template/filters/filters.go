@@ -50,6 +50,24 @@ func All() []liquid.FilterDef {
 	}
 }
 
+// alternatives maps a filter another Liquid dialect defines to the filter
+// of this one that does what it does (ADR-004 A2 decision item 5,
+// MTS-FLT-023): Shopify's storefront money filters, which take cents and
+// read the shop's settings, to amount. The table is explicit and closed:
+// no name gets an alternative by its spelling's nearness to one.
+var alternatives = map[string]string{
+	"money":                  "amount",
+	"money_with_currency":    "amount",
+	"money_without_currency": "amount",
+}
+
+// Alternative returns the filter that a template.unknown_filter finding of
+// the filter name gives as its alternative, and whether there is one.
+func Alternative(name string) (string, bool) {
+	a, ok := alternatives[name]
+	return a, ok
+}
+
 // filter is one of METAIS's filters. Its applications take from min to
 // max positional arguments (max -1 for any number), each checked by
 // positional when it is a literal, and the keywords it knows, each at

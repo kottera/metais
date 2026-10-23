@@ -107,6 +107,7 @@
     {"id": "MTS-FLT-020", "chapter": "08-filters-and-tags.md", "section": "8.1.12", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-FLT-021", "chapter": "08-filters-and-tags.md", "section": "8.1.13", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-FLT-022", "chapter": "08-filters-and-tags.md", "section": "8.1.13", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-FLT-023", "chapter": "08-filters-and-tags.md", "section": "8.1.14", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-FND-001", "chapter": "12-findings.md", "section": "12.2", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-FND-002", "chapter": "12-findings.md", "section": "12.2", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-FND-003", "chapter": "12-findings.md", "section": "12.2", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
