@@ -195,9 +195,14 @@ func readingDeclarations() []*Command {
 				"A field that anyOf, oneOf, if with then or else, or dependentSchemas declares is listed " +
 				"again with a last column, when, naming the condition. A schema's fields are listed once, " +
 				"where it is first met; another field it declares says (fields as at <pointer>). No field " +
-				"deeper beneath its input than value-depth is listed. A title, a condition or a constraint " +
-				"longer than 1024 bytes is cut, and a line's constraints at 4096 bytes; the schema itself " +
-				"has them whole, with each field's description.",
+				"deeper beneath its input than value-depth is listed.\n\n" +
+				"The listing is cut by bytes, never by a count of values. A title, a condition or one " +
+				"constraint longer than 1024 bytes is cut on a character boundary, so an enum is cut where " +
+				"its JSON passes 1024 bytes, however many values it has; the cut ends " +
+				"[…+N bytes; metais schema <package> <input> prints it whole]. A line's constraints " +
+				"together stop at 4096 bytes, ending […; metais schema <package> <input> prints every " +
+				"constraint]. Without an input the marks name metais schema <package>. The schema itself " +
+				"has every value whole, with each field's description.",
 			Operands: []args.Operand{{Name: "<input>", Description: "An input's name; the combined schema, or every input's fields, when omitted."}},
 			Flags:    []args.Flag{{Name: "fields", Description: "List the fields, one line each, in place of the schema."}},
 			Format:   "metais.schema/1",

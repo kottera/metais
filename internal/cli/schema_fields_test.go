@@ -4,8 +4,10 @@
 package cli
 
 import (
+	"encoding/json"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -75,6 +77,73 @@ func TestSchemaFields(t *testing.T) {
 				t.Errorf("JSON field %d is %q, the text line %q", i, got, lines[i])
 			}
 		}
+	}
+}
+
+// TestSchemaFieldsLongEnum is ADR-008 A16: a field whose enum is longer
+// than the listing prints either lists every value or names the command
+// that does. The DORA report's root causes are a long enum, longer than a
+// constraint's 1024 bytes; its line ends with the mark naming the input's
+// whole schema, and that command prints every value.
+func TestSchemaFieldsLongEnum(t *testing.T) {
+	testenv.Home(t)
+	dora := filepath.Join(examplePackagesDir, "dora-incident-report")
+	r := runTool(t, "schema", dora, "incident", "--fields")
+	var line string
+	for l := range strings.SplitSeq(r.stdout, "\n") {
+		if strings.HasPrefix(l, "/incident/root_cause_details/*\t") {
+			line = l
+		}
+	}
+	whole := runTool(t, "schema", "--json", dora, "incident")
+	var res struct {
+		Schema struct {
+			Defs map[string]struct {
+				Properties map[string]struct {
+					Items struct {
+						Enum []string `json:"enum"`
+					} `json:"items"`
+				} `json:"properties"`
+			} `json:"$defs"`
+		} `json:"schema"`
+	}
+	result(t, whole, &res)
+	values := res.Schema.Defs["inputs/incident.schema.json"].Properties["root_cause_details"].Items.Enum
+	if len(values) < 2 || len(line) == 0 {
+		t.Fatalf("no root causes: the listing's line %q, the schema's values %v", line, values)
+	}
+	var cut string
+	for _, v := range values {
+		if !strings.Contains(line, strconv.Quote(v)) {
+			cut = v
+		}
+	}
+	if cut == "" {
+		return
+	}
+	const mark = " bytes; metais schema <package> incident prints it whole]"
+	if !strings.Contains(line, mark+"\t") {
+		t.Fatalf("the listing does not show %q, and names no command that does: %q", cut, line[max(0, len(line)-120):])
+	}
+	text := runTool(t, "schema", dora, "incident").stdout
+	for _, v := range values {
+		if !strings.Contains(text, strconv.Quote(v)) {
+			t.Errorf("metais schema <package> incident does not print %q", v)
+		}
+	}
+	var listed schemaResult
+	result(t, runTool(t, "--json", "schema", dora, "incident", "--fields"), &listed)
+	for _, f := range *listed.Fields {
+		if f.Pointer == "/incident/root_cause_details/*" {
+			if c := f.Constraints[0]; !strings.HasSuffix(c, mark) {
+				t.Errorf("the JSON constraint names no command: %q", c[max(0, len(c)-120):])
+			}
+		}
+	}
+	var combined json.RawMessage
+	result(t, runTool(t, "--json", "schema", dora, "--fields"), &combined)
+	if !strings.Contains(string(combined), " bytes; metais schema <package> prints it whole]") {
+		t.Errorf("the combined listing's mark does not name the combined schema")
 	}
 }
 

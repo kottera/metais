@@ -107,7 +107,7 @@
           "type": "boolean"
         },
         "constraints": {
-          "description": "Each assertion and default the declaring schemas make, as keyword=<canonical JSON>, in their order; name-matches=<JSON string> for a member patternProperties selects; false for a false schema; a value longer than 1024 bytes is cut and ends […+N bytes], and a last entry […] says the line's constraints were cut at 4096 bytes.",
+          "description": "Each assertion and default the declaring schemas make, as keyword=<canonical JSON>, in their order; name-matches=<JSON string> for a member patternProperties selects; false for a false schema; a value longer than 1024 bytes is cut on a character boundary and ends […+N bytes; <command> prints it whole], and a last entry […; <command> prints every constraint] says the line's constraints were cut at 4096 bytes; <command> is metais schema <package> <input>, or metais schema <package> for the combined listing, which prints the schema whole.",
           "type": "array",
           "items": {
             "type": "string"
