@@ -55,31 +55,22 @@ type Report struct {
 type group struct {
 	keywordLocation string // the kept finding's, which sorts first
 	line, column    int    // the kept finding's
-	hasSchema       bool   // the kept finding's
-	entry, pointer  string // the kept finding's schema.entry and schema.pointer
 	it              *item  // the kept finding while it is held; nil once it cannot be listed
 }
 
 // keep records f as the group's kept finding.
 func (g *group) keep(f Finding) {
-	l, s := f.locationOrZero(), f.schemaOrZero()
+	l := f.locationOrZero()
 	g.keywordLocation, g.line, g.column = f.keywordLocation(), l.Line, l.Column
-	g.hasSchema, g.entry, g.pointer = f.schema != nil, s.Entry, s.Pointer
 }
 
 // order compares f, a duplicate of the group's kept finding, with it by
 // D8 item 1's key. The members a duplicate shares with it compare equal,
-// so only these can decide: line and column, then schema.entry and
-// schema.pointer.
+// schema.entry and schema.pointer among them (MTS-FND-003), so only its
+// line and column can decide.
 func (g *group) order(f Finding) int {
-	l, s := f.locationOrZero(), f.schemaOrZero()
-	return cmp.Or(
-		cmp.Compare(l.Line, g.line),
-		cmp.Compare(l.Column, g.column),
-		cmpBool(f.schema != nil, g.hasSchema),
-		strings.Compare(s.Entry, g.entry),
-		strings.Compare(s.Pointer, g.pointer),
-	)
+	l := f.locationOrZero()
+	return cmp.Or(cmp.Compare(l.Line, g.line), cmp.Compare(l.Column, g.column))
 }
 
 type item struct {

@@ -430,7 +430,8 @@ line, then its column, a finding with no line first; its pointer, token by
 token, an array index comparing as a number and a prefix before its
 extensions; the code; the schema's entry, then its pointer; and the canonical
 JSON of the parameters. Of two findings equal in code, subject, origin, file,
-argument, pointer and parameters, it MUST report one.
+argument, pointer, schema entry, schema pointer and parameters, it MUST report
+one.
 
 ## 12.3 A schema failure
 
