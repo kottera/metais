@@ -147,7 +147,7 @@ Three rules this train adds:
 |---|---|---|---|
 | 0 | This plan, merged to `main` | — | **complete** on merge |
 | 1 | **The amendments, then the cores**: ADR-003 A2 and ADR-004 A2 on `main`; the deduplication fix; the ACR's per-row rule; `number` and `amount`; `duration`; `uniqueKeys`, then `coverage` | 0 | **complete** (see §5, Wave 1 verdict) |
-| 2 | **Teaching and adoption**: the `money` alternative and `help templates`; the examples write their values through the filters; `check`'s three findings; the sample generator; `schema --fields`, `inspect`, `help schemas` and the skill | 1 | — |
+| 2 | **Teaching and adoption**: the `money` alternative and `help templates`; the examples write their values through the filters; `check`'s three findings; the sample generator; `schema --fields`, `inspect`, `help schemas` and the skill | 1 | **complete** (see §7, Wave 2 verdict) |
 | 3 | **The ACR adopts both keywords**, then the close | 2 | — |
 
 Inside Wave 1, the amendments item merges first, and every other Wave 1
@@ -458,6 +458,55 @@ examples' trees (V4 now, R8 in Wave 3); `internal/finding`'s registry
   verbatim and no wording change is needed. Only a tool that put a rule
   anywhere other than directly after its array's line would bring the
   Note to Ed.
+
+- **R-W2-b, a `coverage` member the key's schema refuses** (wave
+  orchestrator, 2026-10-23, given to W2-NB1). The sample generator cannot
+  produce such an item (MTS-SMP-010), so it reports
+  `schema.sample_unsatisfiable` with reason `coverage`. It does not write
+  the item and then report `schema.sample_invalid`.
+
+### Wave 2 verdict
+
+**Complete**, 2026-10-23. Brief and closeout:
+[brief-plan-2026-10-metais-values-and-rules-wave2.md](../briefs/brief-plan-2026-10-metais-values-and-rules-wave2.md)
+(brief #289, closeout #303). All six items merged, with one correction:
+
+- W2-1, V3: #294.
+- W2-2, V4: #293.
+- W2-3, R5: #295.
+- W2-4, R6: #296.
+- W2-5, R7's listing half: #297.
+- W2-6, R7's teaching half: #300.
+- W2-7, a correction of W2-1: #301.
+
+The tester's misread values now read correctly: DORA writes
+`EUR 48,920,000.00` and `0 d 7 h 25 min`.
+
+The verifier, `01a16a7f-1338-718e-9bcb-4400634e8697`, ran 31 mutations
+across the six items. Four stayed green, and each became a finding: one
+blocking, fixed by W2-7, and the others non-blocking. It checked that
+chapters 8 and 13 equal the approved text, and that no shared sentence
+was left open. `TestCoverage`, `TestFindingCodesCovered` and `gofmt` were
+green at every one of the wave's 12 commits.
+
+What the plan should know:
+
+- **The whole-package race runs of `internal/guarantees` and
+  `internal/conformance` time out on the shared host.** They took 600 s
+  at about half their CPU share, and the same happens at `c831e966`,
+  before this train. The verifier's scoped re-runs of this wave's parts of
+  them were green. This bears on the one full gate that R-VR-7 places
+  before the close (§8).
+- **Squash commit `72c33df9` (#300) ends `Signed-off-by:  <>`**, though its
+  branch commit carries a proper sign-off. Repairing it would rewrite
+  `main`'s history, which no work item may do. Issue #302 asks Ed to
+  decide.
+- **W2-5 writes a rule's values as canonical JSON** (`"1.1.1"`), not the
+  bare text of A2 item 10's illustration. That keeps `1` and `"1"` apart.
+- **Still running, not waited on:**
+  - W2-NB1 (`01a16aa6-6764-702a-b809-d8df0783afd3`), R-W2-b;
+  - W2-NB2 (`01a16aa6-ba87-7094-883a-7a5160cb7686`), DORA's currency pin
+    and `check`'s `prefixItems` branch.
 
 ## 8. Wave 3 — the ACR adopts both keywords, then the close
 
