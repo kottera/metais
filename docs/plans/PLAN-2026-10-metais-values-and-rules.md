@@ -146,7 +146,7 @@ Three rules this train adds:
 | Wave | Objective | Depends on | Status |
 |---|---|---|---|
 | 0 | This plan, merged to `main` | — | **complete** on merge |
-| 1 | **The amendments, then the cores**: ADR-003 A2 and ADR-004 A2 on `main`; the deduplication fix; the ACR's per-row rule; `number` and `amount`; `duration`; `uniqueKeys`, then `coverage` | 0 | — |
+| 1 | **The amendments, then the cores**: ADR-003 A2 and ADR-004 A2 on `main`; the deduplication fix; the ACR's per-row rule; `number` and `amount`; `duration`; `uniqueKeys`, then `coverage` | 0 | **complete** (see §5, Wave 1 verdict) |
 | 2 | **Teaching and adoption**: the `money` alternative and `help templates`; the examples write their values through the filters; `check`'s three findings; the sample generator; `schema --fields`, `inspect`, `help schemas` and the skill | 1 | — |
 | 3 | **The ACR adopts both keywords**, then the close | 2 | — |
 
@@ -328,6 +328,68 @@ the items from them.
   (MTS-DAT-019); suppressed, and counted, in partial validation. Vectors
   under `dat/`, `sup/` and `trn/` as A2's "Conformance" lists them for
   `coverage`, several gaps in one run among them.
+
+### Rulings made during Wave 1
+
+- **R-W1-c, the ACR's Section 508 and EN 301 549 tables** (Ed, 2026-10-23,
+  his option (c), reached through W1-3's park). A row in any of the ACR's
+  tables may be `Not Evaluated` only with remarks saying why. In the WCAG
+  table this sits beside the Level A and AA rule, so only a Level AAA row
+  can be `Not Evaluated` there, and it must give its reason too. The
+  reasoning is in #281 and `docs/adr/logs/ADR-003/W1-3.md`. Wave 3's R8
+  builds on it.
+- **R-VR-7, items run directed tests only** (Ed's standing instruction,
+  2026-10-23, given to the train as operator guidance). No metais work
+  item runs `gate.sh`'s scoped tier or the wave tier. Each item runs
+  `go test` on the packages it changed, plus the tests its task names,
+  passes them, and merges. A wave verification checks with directed runs
+  too. The full gate runs **once**, on a fresh clone of the merged tree,
+  after Wave 3's last merge and before the close. Where §2, §5 or §9 say
+  "its scoped gate" or "runs the wave tier once", this ruling replaces
+  them.
+
+### Wave 1 verdict
+
+**Complete**, 2026-10-23. Brief and closeout:
+[brief-plan-2026-10-metais-values-and-rules-wave1.md](../briefs/brief-plan-2026-10-metais-values-and-rules-wave1.md)
+(brief #277, closeout #287). All seven items merged:
+
+- W1-1, the amendments: #279.
+- W1-2, R1: #284.
+- W1-3, R2: #281.
+- W1-4, V1: #283.
+- W1-5, V2: #280.
+- W1-6, R3: #282.
+- W1-7, R4: #286.
+
+R-VR-6's spike succeeded, so `uniqueKeys` and `coverage` are a registered
+vocabulary under `AssertVocabs`, A2 item 19's fallback was not built, and
+no module was added. Nobody asked for a wording change, and the verifier
+checked line by line that every slice landed verbatim. Every shared
+sentence opened in the wave also closed inside it.
+
+The verifier, `01a16a25-ad4e-730d-823e-468a05a081fa`, ran 39 mutations
+across W1-2 to W1-7 and every one went red. It read W1-1 without mutating
+it. Under R-VR-7 it ran directed tests, not the wave tier.
+
+What the plan should know:
+
+- **`main` did not stay green after every merge.** `gofmt` failed on
+  `internal/cli/inspect.go` from #283 (`5549ee65`) until #275
+  (`9f83587c`), another train's fix, realigned it. `TestCoverage` and
+  `TestFindingCodesCovered` were green at every merge.
+- **W1-3 grew under R-W1-c.** It holds every table to the remarks rule,
+  not only WCAG to the Level A and AA rule.
+- **V1 and V2 already wrote minimal `metais help templates` rows**, because
+  `TestTemplatesTopicFilters` demands a row for each filter. V3 in Wave 2
+  rewrites them as teaching.
+- **Carried to Wave 2:**
+  - V3 owns the help rows;
+  - R7 owns the findings' hints in words;
+  - W1-NB1 (`01a16a38-9c5f-76d9-aa17-2506bc5e4bdc`) adds three small
+    vectors and runs beside Wave 2 without being waited on.
+- **The full gate has not run on the merged tree.** Under R-VR-7 it runs
+  once, before the close.
 
 ## 6. Out-of-band acts
 
