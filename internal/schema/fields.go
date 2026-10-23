@@ -71,13 +71,13 @@ func (r Rule) Words() string {
 		ps[i] = "`" + p + "`"
 	}
 	if r.Keyword == "uniqueKeys" {
-		return "no two rows share " + Conjoin(ps)
+		return "no two rows share " + conjoin(ps)
 	}
 	return "rows must include, at " + ps[0] + ", each of: " + strings.Join(r.Values, ", ")
 }
 
-// Conjoin joins words as a list in prose: "a", "a and b", "a, b and c".
-func Conjoin(words []string) string {
+// conjoin joins words as a list in prose: "a", "a and b", "a, b and c".
+func conjoin(words []string) string {
 	if len(words) < 2 {
 		return strings.Join(words, "")
 	}
@@ -161,8 +161,9 @@ type summary struct {
 	constraints []string
 	size        int
 	cut         bool
-	// rules is each rule the schema states, by the canonical JSON of its
-	// keyword and value, never cut.
+	// rules is each rule the schema states, never cut, and ruleTexts
+	// each one's keyword=<canonical JSON>, by which a rule reached twice
+	// is stated once.
 	rules     []Rule
 	ruleTexts []string
 	// beneath is true when the schema, or one it reaches without a
