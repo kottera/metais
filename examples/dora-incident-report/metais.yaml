@@ -32,13 +32,13 @@ guide: |-
   incident, and for each new report change stage, add the fields the stage
   adds and correct what has changed:
 
-      metais validate dora-incident-report --data incident
-      metais render dora-incident-report --data incident --out report
+      metais validate <package> --data incident
+      metais render <package> --data incident --out report
 
   validate reports every mandatory field the stage still lacks, and every
   value that does not fit its field's type, all at once. Each schema's
   properties carry the glossary's field number as x-field and its type as
-  x-field-type; metais schema dora-incident-report incident shows them.
+  x-field-type; `metais schema <package> incident` shows them.
 
   The package renders the content of a report. It does not file it: send
   it to your competent authority in the form and through the channel that

@@ -27,7 +27,7 @@ guide: |-
   The repository is rendered into a new directory, which then becomes the
   repository:
 
-      metais render repo-scaffold --data data --out weather
+      metais render <package> --data data --out weather
       cd weather && git init && ./scripts/check.sh
 
   Every Go file begins with a copyright line, from the owner and the year,

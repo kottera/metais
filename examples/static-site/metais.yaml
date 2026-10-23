@@ -27,9 +27,10 @@ guide: |-
   frontmatter says `draft: true` gets no page, and is left out of the index
   and the feed.
 
-  `metais validate` checks the data, and `metais render --data <dir> --out
-  <dir>` writes the site. Nothing is fetched: every page links only to
-  files the same render writes, and to the site's own address.
+  `metais validate <package> --data <dir>` checks the data, and
+  `metais render <package> --data <dir> --out <dir>` writes the site.
+  Nothing is fetched: every page links only to files the same render
+  writes, and to the site's own address.
 inputs:
   - name: site
     title: "Site configuration"
