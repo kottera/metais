@@ -1,7 +1,7 @@
 {
   "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
   "id": "fnd/duplicate-key",
-  "title": "Two keywords that fail alike at one pointer are two findings; one keyword reached twice through a shared $ref is one",
+  "title": "Two keywords that fail alike at one pointer are two findings, from two schema files as from two schema pointers; one keyword reached twice through a shared $ref is one",
   "statements": [
     "MTS-FND-003",
     "MTS-FND-005"
@@ -10,7 +10,7 @@
   "class": "processor",
   "tags": [],
   "requires": [],
-  "notes": "",
+  "notes": "two-entries reaches inputs/left.schema.json and inputs/right.schema.json from one property: their findings are equal in everything but schema.entry, so both are reported.",
   "cases": [
     {
       "name": "alike",
@@ -40,6 +40,22 @@
           "expect": {
             "ok": false,
             "findings": "expected/shared-ref.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "two-entries",
+      "steps": [
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "data/two-entries"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/two-entries.json"
           }
         }
       ]

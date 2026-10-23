@@ -1,0 +1,50 @@
+[
+  {
+    "code": "input.required",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "audit",
+      "title": "Audit"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "audit.json",
+      "line": 2,
+      "column": 11,
+      "pointer": "/pair/level"
+    },
+    "schema": {
+      "entry": "inputs/left.schema.json",
+      "pointer": "/required",
+      "keyword": "required"
+    },
+    "params": {
+      "property": "level"
+    }
+  },
+  {
+    "code": "input.required",
+    "severity": "error",
+    "subject": {
+      "kind": "input",
+      "name": "audit",
+      "title": "Audit"
+    },
+    "location": {
+      "origin": "data_dir",
+      "file": "audit.json",
+      "line": 2,
+      "column": 11,
+      "pointer": "/pair/level"
+    },
+    "schema": {
+      "entry": "inputs/right.schema.json",
+      "pointer": "/required",
+      "keyword": "required"
+    },
+    "params": {
+      "property": "level"
+    }
+  }
+]

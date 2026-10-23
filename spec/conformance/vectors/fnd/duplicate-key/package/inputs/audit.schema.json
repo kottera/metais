@@ -34,6 +34,16 @@
           "$ref": "#/$defs/row"
         }
       ]
+    },
+    "pair": {
+      "allOf": [
+        {
+          "$ref": "left.schema.json"
+        },
+        {
+          "$ref": "right.schema.json"
+        }
+      ]
     }
   }
 }
