@@ -65,6 +65,12 @@ background only.
 - <a id="iso8601"></a>**[ISO 8601]** ISO, *Date and time — Representations
   for information interchange — Part 1: Basic rules*, ISO 8601-1:2019, its
   week dates and its durations — https://www.iso.org/standard/70907.html
+- <a id="iso4217"></a>**[ISO 4217]** ISO, *Codes for the representation of
+  currencies*, ISO 4217:2015, its list one, the current currency and funds
+  code list, as its maintenance agency, SIX Financial Information AG,
+  published it on 2026-09-17, which [Appendix C](C-currency-minor-units.md)
+  holds —
+  https://www.six-group.com/en/products-services/financial-information/market-reference-data/data-standards.html
 - <a id="posix"></a>**[POSIX]** IEEE and The Open Group, *The Open Group Base
   Specifications Issue 7*, IEEE Std 1003.1-2017, 2018 edition, the `pax`
   utility's pax interchange format and its ustar format —

@@ -85,7 +85,7 @@ const (
 )
 
 // The codes of the filters a dialect adds to Core(): METAIS's own and
-// date (ADR-004 D10, D11), which internal/template and internal/dates
+// date (ADR-004 D10, D11, A2), which internal/template and internal/dates
 // define. The engine never reports them itself; each carries Args
 // "filter" like the codes above.
 const (
@@ -108,6 +108,14 @@ const (
 	// or an empty one. Args "directive" is the first directive outside
 	// the set, as the format writes it, and absent for an empty format.
 	CodeDurationFormat Code = "duration_format"
+	// CodeNumberInput is an input number or amount does not read as a
+	// number (ADR-004 A2 decision item 1): neither a number, a decimal
+	// text nor nil. Args "type" names the kind found.
+	CodeNumberInput Code = "number_input"
+	// CodeAmountCurrency is a currency code amount refuses (ADR-004 A2
+	// decision item 3). Args "reason" is "malformed" or "no_minor_unit";
+	// the code itself is never carried.
+	CodeAmountCurrency Code = "amount_currency"
 )
 
 // The render error codes (ADR-004 D4 to D6, D16 item 1). A render stops at

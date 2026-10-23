@@ -6,6 +6,22 @@ package finding
 // templateCodes are the template family's registry entries, in code order.
 var templateCodes = []Entry{
 	{
+		Code:     "template.amount_currency",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectTemplate,
+		Params: []ParamSpec{
+			{Name: "reason", Type: TypeString, Meaning: "Why the code is refused: malformed (it is not three ASCII capital letters) or no_minor_unit (decimals: is not given, and Appendix C does not list the code or lists it with no minor units).", Always: true},
+			{Name: "column", Type: TypeNumber, Meaning: "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.", Always: true},
+			{Name: "output_path", Type: TypeString, Meaning: "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output."},
+		},
+		Message:    "The amount filter is given a currency code it refuses ({reason}).",
+		Hint:       "Give an ISO 4217 code of three capital letters, such as EUR; for a code Appendix C does not list, give decimals: as well.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-FLT-020", "MTS-MAN-018"},
+	},
+	{
 		Code:     "template.asset_ambiguous",
 		Severity: SeverityError,
 		Class:    ClassContent,
@@ -321,6 +337,23 @@ var templateCodes = []Entry{
 		Span:       SpanValue,
 		Since:      "1.0",
 		Statements: []string{"MTS-AUT-010", "MTS-TPL-006"},
+	},
+	{
+		Code:     "template.number_input",
+		Severity: SeverityError,
+		Class:    ClassContent,
+		Subject:  SubjectTemplate,
+		Params: []ParamSpec{
+			{Name: "filter", Type: TypeString, Meaning: "The filter's name: number or amount.", Always: true},
+			{Name: "type", Type: TypeString, Meaning: "The kind of value the filter was given: boolean, string, array or object.", Always: true},
+			{Name: "column", Type: TypeNumber, Meaning: "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.", Always: true},
+			{Name: "output_path", Type: TypeString, Meaning: "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output."},
+		},
+		Message:    "The filter {filter} is given a {type} that is not a number or a decimal text.",
+		Hint:       "Supply a number, or a string of digits with an optional - and an optional . and fraction, such as \"-1234.50\", with no space, separator or exponent.",
+		Span:       SpanValue,
+		Since:      "1.0",
+		Statements: []string{"MTS-FLT-015"},
 	},
 	{
 		Code:     "template.number_range",

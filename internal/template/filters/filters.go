@@ -3,8 +3,9 @@
 
 // Package filters holds METAIS's own filters, json, yaml, csv,
 // markdown_table and slug (ADR-004 D10), safe and json_script (D9, D10
-// item 5) and duration (Amendment A2 decision item 4), and registers date
-// with them, which internal/dates defines (ADR-004 D11). They are what a package's
+// item 5), duration (Amendment A2 decision item 4), and number and
+// amount (Amendment A2 decision items 1 to 3), and registers date with
+// them, which internal/dates defines (ADR-004 D11). They are what a package's
 // templates and manifest expressions are parsed and rendered with beyond
 // internal/liquid's standard catalog: internal/loader adds them to Core()
 // through Extend, so one dialect parses a template and a path template
@@ -44,6 +45,7 @@ func All() []liquid.FilterDef {
 	return []liquid.FilterDef{
 		jsonFilter, yamlFilter, csvFilter, markdownTableFilter, slugFilter,
 		safeFilter{}, jsonScriptFilter{}, durationFilter,
+		numberFilterDef, amountFilterDef,
 		dates.Filter(),
 	}
 }
