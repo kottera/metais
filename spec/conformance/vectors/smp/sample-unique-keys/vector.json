@@ -1,0 +1,82 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "smp/sample-unique-keys",
+  "title": "Sample generates no two items whose composite uniqueKeys key is equal, pointer by pointer, and shortens the array to the keys there are",
+  "statements": [
+    "MTS-SMP-011"
+  ],
+  "since": "1.0",
+  "class": "authoring",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "distinct",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out",
+            "items": 4
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/distinct"
+              }
+            ]
+          },
+          "repeatable": true
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "out"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "exhausted",
+      "steps": [
+        {
+          "op": "sample",
+          "args": {
+            "source": "package",
+            "to": "out",
+            "items": 9,
+            "seed": 3
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/exhausted"
+              }
+            ]
+          },
+          "repeatable": true
+        },
+        {
+          "op": "validate",
+          "args": {
+            "package": "package",
+            "data": "out"
+          },
+          "expect": {
+            "ok": true
+          }
+        }
+      ]
+    }
+  ]
+}
