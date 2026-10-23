@@ -63,3 +63,35 @@ outputs:
     template: metais/cmd/metais/index.html.liquid
     path: metais/cmd/metais/index.html
     escape: html
+  - id: reference
+    template: reference/index.html.liquid
+    path: reference/index.html
+    escape: html
+  - id: reference_commands
+    template: reference/command.html.liquid
+    for_each: inputs.help.commands
+    path: "reference/commands/{{ item.name }}/index.html"
+    escape: html
+  - id: reference_topics
+    template: reference/topic.html.liquid
+    for_each: inputs.help.topics
+    path: "reference/topics/{{ item.name }}/index.html"
+    escape: html
+  - id: reference_skill
+    template: reference/skill.html.liquid
+    path: reference/skill/index.html
+    escape: html
+  - id: spec
+    template: spec/index.html.liquid
+    path: spec/index.html
+    escape: html
+  - id: spec_draft
+    template: spec/draft.html.liquid
+    for_each: inputs.spec.draft.files
+    path: "{{ item.path | remove_first: '/' }}index.html"
+    escape: html
+  - id: spec_releases
+    template: spec/release.html.liquid
+    for_each: inputs.spec.release_pages
+    path: "{{ item.path | remove_first: '/' }}index.html"
+    escape: html

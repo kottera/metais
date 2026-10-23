@@ -1,0 +1,12 @@
+{%- comment -%}
+  The agent skill's page, from metais skill --print (ADR-008 A13 item 1):
+  the skill's body, the text after its frontmatter, as the build step
+  converted it.
+{%- endcomment -%}
+{%- capture body -%}
+<p><code>metais skill --print</code></p>
+<article class="skill">
+{{ inputs.skill.html | safe }}
+</article>
+{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "metais skill --print — METAIS", description: nil, head: nil, body: body -%}

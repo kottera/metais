@@ -142,6 +142,22 @@ func TestSpecInput(t *testing.T) {
 			}
 		}
 	}
+
+	// The release pages are every released revision's files, in the order
+	// of the releases and of their files, so one for_each renders them all.
+	var pages []string
+	for _, p := range got.ReleasePages {
+		pages = append(pages, p.Revision+" "+p.File+" "+p.Path)
+	}
+	var wantPages []string
+	for _, r := range got.Releases {
+		for _, f := range r.Files {
+			wantPages = append(wantPages, r.Revision+" "+f.File+" "+f.Path)
+		}
+	}
+	if len(wantPages) != 6 || !slices.Equal(pages, wantPages) {
+		t.Errorf("the release pages are %q, want %q, the releases' six files", pages, wantPages)
+	}
 }
 
 func TestSpecInputNoRelease(t *testing.T) {
@@ -154,9 +170,11 @@ func TestSpecInputNoRelease(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := json.Marshal(got.Releases)
-	if err != nil || string(b) != "[]" {
-		t.Errorf("with no spec tag the releases are %s, %v; want []", b, err)
+	for name, v := range map[string]any{"releases": got.Releases, "release_pages": got.ReleasePages} {
+		b, err := json.Marshal(v)
+		if err != nil || string(b) != "[]" {
+			t.Errorf("with no spec tag the %s are %s, %v; want []", name, b, err)
+		}
 	}
 }
 

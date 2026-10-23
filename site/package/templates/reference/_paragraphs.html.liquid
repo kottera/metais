@@ -1,0 +1,11 @@
+{%- comment -%}
+  text, a help text whose paragraphs are separated by a blank line, as one
+  p element per paragraph.
+{%- endcomment -%}
+{%- capture gap %}
+
+{% endcapture -%}
+{%- assign paragraphs = text | split: gap -%}
+{%- for p in paragraphs %}
+<p>{{ p }}</p>
+{%- endfor -%}

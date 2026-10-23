@@ -1,0 +1,8 @@
+{%- comment -%}
+  One page of a released revision, item, an element of release_pages: the
+  file of the tag spec-<M>.<m>, served at /spec/<M>.<m>/ (ADR-011 A8 item
+  1).
+{%- endcomment -%}
+{%- assign revision = inputs.spec.releases | find: "revision", item.revision -%}
+{%- assign file = revision.files | find: "file", item.file -%}
+{%- render "spec/_chapter.html.liquid", revision: revision, file: file -%}

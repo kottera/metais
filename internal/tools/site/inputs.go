@@ -55,11 +55,23 @@ func skillInput(text []byte) (skill, error) {
 	return skill{Text: string(text), HTML: doc.HTML}, nil
 }
 
-// spec is spec.json: the draft, from the checkout's own spec/, and each
-// released revision, from its spec-<M>.<m> tag, oldest first.
+// spec is spec.json: the draft, from the checkout's own spec/, each
+// released revision, from its spec-<M>.<m> tag, oldest first, and every
+// page of those releases in one list. An output's for_each iterates one
+// array, so the package renders a page per chapter of every release from
+// ReleasePages, and reads each page's text from its revision.
 type spec struct {
-	Draft    revision   `json:"draft"`
-	Releases []revision `json:"releases"`
+	Draft        revision   `json:"draft"`
+	Releases     []revision `json:"releases"`
+	ReleasePages []page     `json:"release_pages"`
+}
+
+// page is one page of a released revision: the revision, the file, and the
+// site's path of its page.
+type page struct {
+	Revision string `json:"revision"`
+	File     string `json:"file"`
+	Path     string `json:"path"`
 }
 
 // revision is one revision of the specification as the site serves it.
@@ -155,6 +167,12 @@ func (b *builder) specInput() (spec, error) {
 	}
 	if out.Releases == nil {
 		out.Releases = []revision{}
+	}
+	out.ReleasePages = []page{}
+	for _, r := range out.Releases {
+		for _, f := range r.Files {
+			out.ReleasePages = append(out.ReleasePages, page{Revision: r.Revision, File: f.File, Path: f.Path})
+		}
 	}
 	return out, nil
 }

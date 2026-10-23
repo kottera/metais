@@ -1,88 +1,111 @@
+{%- comment -%}
+  The install page: ADR-013 D6's four routes, the install script's
+  directory and version pin, the agent skill, and the quarantine attribute
+  of a binary downloaded with a browser. Its commands are D6's; for a site
+  built for a release, the release's archives come from its SHA256SUMS.
+{%- endcomment -%}
+{%- assign release = inputs.release -%}
 {%- capture body -%}
 <h1>Install metais</h1>
 
-<p><code>metais</code> is one static binary with no dependencies. Each
-release publishes an archive for each of these platforms, and a
-<code>SHA256SUMS</code> file that lists the checksum of every archive:</p>
+<p><code>metais</code> is one static binary with no dependencies.</p>
 
-<ul>
-<li>macOS on Apple silicon: <code>darwin_arm64</code></li>
-<li>macOS on Intel: <code>darwin_amd64</code></li>
-<li>Linux on x86-64: <code>linux_amd64</code></li>
-<li>Linux on ARM64: <code>linux_arm64</code></li>
-</ul>
+<table>
+<thead><tr><th>Who</th><th>Route</th></tr></thead>
+<tbody>
+<tr><td>macOS</td><td><a href="#homebrew">Homebrew</a>: <code>brew install kottera/tap/metais</code></td></tr>
+<tr><td>Linux, or a Mac without Homebrew</td><td><a href="#script">The install script</a>: <code>curl -fsSL https://metais.org/install.sh | sh</code></td></tr>
+<tr><td>Go users</td><td><a href="#go">Go</a>: <code>go install metais.org/metais/cmd/metais@latest</code></td></tr>
+<tr><td>Anyone</td><td><a href="#release">The release's archives</a> and <code>SHA256SUMS</code></td></tr>
+</tbody>
+</table>
 
-<p>On Windows, <a href="#from-source">build it from source</a>.</p>
+<p>Every route but <code>go install</code> installs the same bytes: the
+archives of the release on GitHub. <code>go install</code> builds the same
+version from the module.</p>
 
-<h2 id="download">1. Download the latest release</h2>
+<h2 id="homebrew">Homebrew</h2>
 
-<p>Open the latest release:
-<a href="https://github.com/kottera/metais/releases/latest">github.com/kottera/metais/releases/latest</a>.
-Its title is its version. Download two files from it: the archive for your
-platform, <code>metais_&lt;version&gt;_&lt;os&gt;_&lt;arch&gt;.tar.gz</code>,
-and <code>SHA256SUMS</code>.</p>
+<pre><code>brew install kottera/tap/metais</code></pre>
 
-<p>With the <a href="https://cli.github.com/">GitHub CLI</a>, this downloads
-both for Linux on x86-64; change the pattern for another platform:</p>
+<h2 id="script">The install script</h2>
 
-<pre><code>gh release download --repo kottera/metais --pattern 'metais_*_linux_amd64.tar.gz' --pattern SHA256SUMS</code></pre>
+<pre><code>curl -fsSL https://metais.org/install.sh | sh</code></pre>
 
-<h2 id="verify">2. Verify the archive</h2>
+<p><a href="/install.sh">install.sh</a> is a short POSIX shell script; read
+it before you run it. It runs on macOS and Linux, on amd64 and arm64. It
+downloads this machine's archive and <code>SHA256SUMS</code> from the GitHub
+release, and refuses to install unless the archive's SHA-256 is the one
+<code>SHA256SUMS</code> lists for it.</p>
 
-<p>Check the archive against <code>SHA256SUMS</code> before you unpack it.
-Run this in the directory that holds both files.</p>
+<p>It installs <code>metais</code> into <code>~/.local/bin</code>, or into
+the directory <code>METAIS_INSTALL_DIR</code> names, with no
+<code>sudo</code>. It never edits your shell's startup files: when the
+directory is not on your <code>PATH</code>, it says so and prints the line
+to add to one.</p>
 
-<p>On Linux:</p>
-<pre><code>sha256sum --check --ignore-missing SHA256SUMS</code></pre>
+<pre><code>curl -fsSL https://metais.org/install.sh | METAIS_INSTALL_DIR=/opt/metais/bin sh</code></pre>
 
-<p>On macOS:</p>
-<pre><code>shasum -a 256 --check --ignore-missing SHA256SUMS</code></pre>
+<p>Without <code>METAIS_VERSION</code>, it installs the latest release that
+is not a prerelease. <code>METAIS_VERSION</code> pins a version, with or
+without its leading <code>v</code>:</p>
 
-<p>Each command prints the archive's name followed by <code>OK</code>. Any
-other answer means the download is damaged or is not the release's: delete
-it and do not use it.</p>
+<pre><code>curl -fsSL https://metais.org/install.sh | METAIS_VERSION=1.0.0 sh</code></pre>
 
-<p>The release's binaries are reproducible: building the release's tag with
-the release builder in the repository gives the same bytes, so the
-checksums can be checked independently of the download.</p>
+<h2 id="go">Go</h2>
 
-<h2 id="unpack">3. Unpack it and put metais on your PATH</h2>
+<pre><code>go install metais.org/metais/cmd/metais@latest</code></pre>
 
-<p>The archive holds <code>metais</code> and its <code>LICENSE</code>,
-<code>NOTICE</code> and <code>THIRD-PARTY-NOTICES.txt</code>.</p>
+<h2 id="release">The release's archives</h2>
+{%- if release.published %}
+
+<p>metais {{ release.version }}, from the release
+<a href="https://github.com/kottera/metais/releases/tag/{{ release.tag }}">{{ release.tag }}</a>,
+and its <a href="{{ release.sums_url }}"><code>SHA256SUMS</code></a>:</p>
+
+<table>
+<thead><tr><th>Archive</th><th>SHA-256</th></tr></thead>
+<tbody>
+{%- for a in release.archives %}
+<tr><td><a href="{{ a.url }}"><code>{{ a.name }}</code></a></td><td><code>{{ a.sha256 }}</code></td></tr>
+{%- endfor %}
+</tbody>
+</table>
+{%- else %}
+
+<p>Download the archive for your platform,
+<code>metais_&lt;version&gt;_&lt;os&gt;_&lt;arch&gt;.tar.gz</code>, and
+<code>SHA256SUMS</code> from
+<a href="https://github.com/kottera/metais/releases/latest">the latest release</a>.</p>
+{%- endif %}
+
+<p>Verify the archive against <code>SHA256SUMS</code> in the directory that
+holds both, on Linux and on macOS:</p>
+
+<pre><code>sha256sum --check --ignore-missing SHA256SUMS
+shasum -a 256 --check --ignore-missing SHA256SUMS</code></pre>
+
+<p>Each prints the archive's name and <code>OK</code>. Then unpack
+<code>metais</code> into a directory on your <code>PATH</code>:</p>
 
 <pre><code>tar -xzf metais_*_linux_amd64.tar.gz metais
-sudo install metais /usr/local/bin/</code></pre>
+mkdir -p ~/.local/bin
+mv metais ~/.local/bin/</code></pre>
 
-<p>Any directory on your <code>PATH</code> will do, such as
-<code>~/.local/bin</code> without <code>sudo</code>. On macOS, if Gatekeeper
-refuses a binary downloaded with a browser, remove its quarantine attribute
-after verifying it: <code>xattr -d com.apple.quarantine metais</code>.</p>
+<p>On macOS, a binary downloaded with a browser carries the quarantine
+attribute, and Gatekeeper refuses to run it. Remove it after you have
+verified the archive:</p>
 
-<h2 id="check">4. Check it runs</h2>
+<pre><code>xattr -d com.apple.quarantine ~/.local/bin/metais</code></pre>
+
+<h2 id="next">Next</h2>
 
 <pre><code>metais version
-metais help</code></pre>
+metais skill</code></pre>
 
-<p><code>metais version</code> prints the tool's version and the
-specification versions it implements. <code>metais help</code> is the
-tool's own reference: every command, flag and refusal is in it, and
-<code>metais help &lt;command&gt;</code> prints one command's.</p>
-
-<p>Next: <a href="/getting-started/">getting started</a>.</p>
-
-<h2 id="from-source">Building from source</h2>
-
-<p>With Go installed, clone the repository at the release's tag and build
-it. Its <code>go.mod</code> names the exact Go toolchain, which Go fetches
-by itself.</p>
-
-<pre><code>git clone https://github.com/kottera/metais.git
-cd metais
-git checkout "$(git describe --tags --abbrev=0 --match 'v*')"
-CGO_ENABLED=0 go build -trimpath ./cmd/metais</code></pre>
-
-<p>A binary built this way is not the release's: <code>metais version</code>
-reports <code>0.0.0-devel</code>.</p>
+<p><code>metais version</code> prints the version you installed.
+<a href="/reference/commands/skill/"><code>metais skill</code></a>, run at
+the top of a project, gives the project's coding agent the skill that
+teaches it metais.</p>
 {%- endcapture -%}
-{%- render "_layout.html.liquid", title: "Install metais — METAIS", description: "How to download metais from its latest release, verify it against SHA256SUMS, and put it on your PATH.", head: nil, body: body -%}
+{%- render "_layout.html.liquid", title: "Install metais — METAIS", description: "How to install metais with Homebrew, the install script, go install, or the release's archives.", head: nil, body: body -%}
