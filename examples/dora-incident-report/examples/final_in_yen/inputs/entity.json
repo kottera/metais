@@ -1,0 +1,16 @@
+{
+  "submitting_entity_name": "Nordwind Bank AG",
+  "submitting_entity_code": "529900NORDWIND000017",
+  "affected_entity_types": [
+    "credit institution"
+  ],
+  "primary_contact_name": "Lena Hartmann",
+  "primary_contact_email": "lena.hartmann@nordwind-bank.example",
+  "primary_contact_telephone": "+49 69 5550 1201",
+  "second_contact_name": "Tomás Ferreira",
+  "second_contact_email": "tomas.ferreira@nordwind-bank.example",
+  "second_contact_telephone": "+49 69 5550 1202",
+  "parent_undertaking_name": "Nordwind Holding SE",
+  "parent_undertaking_lei": "529900NORDWINDHLD045",
+  "reporting_currency": "JPY"
+}

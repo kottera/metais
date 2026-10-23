@@ -313,7 +313,8 @@ func TestSchemaStatics(t *testing.T) {
 // (MTS-AUT-081 to MTS-AUT-083): a coverage value the key's schema
 // refuses, and coverage values beyond maxItems, are unsatisfiable, and a
 // key pointer with a token no alternative of the item schema declares is
-// a warning at the pointer. A value one alternative accepts, values
+// a warning at the pointer, whether the item schema is the array's items
+// or only its prefixItems. A value one alternative accepts, values
 // exactly at maxItems, a key one alternative declares, a key reached
 // through $ref and additionalProperties, and an array with no item schema
 // are not reported.
@@ -355,6 +356,15 @@ func TestSchemaStaticsRules(t *testing.T) {
 	      "coverage": {"key": "/extra/x", "values": [1, "one"]},
 	      "items": {"$ref": "#/$defs/row"}
 	    },
+	    "pairs": {
+	      "type": "array",
+	      "uniqueKeys": ["/criterion", "/critrion"],
+	      "coverage": {"key": "/criterion", "values": ["1.2.1", "3.3.3"]},
+	      "prefixItems": [
+	        {"type": "object", "properties": {"criterion": {"enum": ["1.1.1"]}}},
+	        {"type": "object", "properties": {"criterion": {"enum": ["1.2.1"]}}}
+	      ]
+	    },
 	    "loose": {"type": "array", "uniqueKeys": ["/anything"], "coverage": {"key": "/x", "values": [1]}}
 	  },
 	  "$defs": {
@@ -374,6 +384,8 @@ func TestSchemaStaticsRules(t *testing.T) {
 		"schema.unsatisfiable inputs/report.schema.json#/properties/either/coverage/values/2",
 		"schema.key_not_declared inputs/report.schema.json#/properties/nested/uniqueKeys/1",
 		"schema.unsatisfiable inputs/report.schema.json#/properties/nested/coverage/values/1",
+		"schema.key_not_declared inputs/report.schema.json#/properties/pairs/uniqueKeys/1",
+		"schema.unsatisfiable inputs/report.schema.json#/properties/pairs/coverage/values/1",
 	}
 	slices.Sort(got)
 	slices.Sort(want)
