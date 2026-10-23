@@ -408,9 +408,22 @@ writes `7 h 25 min`.
 standard filters [chapter 7](07-template-environment.md) adopts and those of
 this chapter. A processor MUST refuse any other filter with
 `template.unknown_filter` ([chapter 7](07-template-environment.md#mts-tpl-004)):
-among them `sha256`, an indentation filter such as `indent`, and any filter
-that would read something other than its input and its arguments. A later
-minor version may add one.
+among them `sha256`, an indentation filter such as `indent`, a filter that
+reads a locale or a shop's settings such as `money`, and any filter that
+would read something other than its input and its arguments. A later minor
+version may add one.
+
+<a id="mts-flt-023"></a>**MTS-FLT-023** A processor MUST give the
+`template.unknown_filter` finding of a filter named `money`,
+`money_with_currency` or `money_without_currency` the `alternative`
+`amount`.
+
+> **Note.** Those three are filters of Shopify's storefront, not of the
+> `liquid` gem: they take an amount in cents and read the shop's currency
+> settings. METAIS has no `money` filter. `amount` takes the amount in the
+> currency's major unit, and its code as an argument, so a value in cents is
+> divided by 100 first, or by the power of ten its currency's minor units
+> name.
 
 ## 8.2 `embed`
 

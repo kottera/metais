@@ -7656,13 +7656,20 @@
           "type": "number",
           "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
           "always": true
+        },
+        {
+          "name": "alternative",
+          "type": "string",
+          "meaning": "The filter of the dialect that does what the name does in another Liquid dialect: amount, for money, money_with_currency and money_without_currency, which take cents where amount takes the currency's major unit; present for those names.",
+          "always": false
         }
       ],
       "message": "The filter {filter} is not one the dialect defines.",
-      "hint": "Use a filter the specification defines; a misspelt filter is refused, never ignored.",
+      "hint": "Use a filter the specification defines; a misspelt filter is refused, never ignored. Where alternative is given, it names the dialect's filter for what this name does elsewhere.",
       "location": "value",
       "since": "1.0",
       "statements": [
+        "MTS-FLT-023",
         "MTS-MAN-018",
         "MTS-TPL-004"
       ]

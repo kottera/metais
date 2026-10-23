@@ -7,8 +7,9 @@ publish. This chapter specifies checking a package without data, with its
 cross-reference of templates against schemas and its finding for a Liquid
 construct split across Office Open XML text runs; examples, and testing a
 package against them; packing a source directory into a package and
-unpacking one back; and the sample data an authoring tool generates from a
-package's schemas.
+unpacking one back; the sample data an authoring tool generates from a
+package's schemas; and how a template writes numbers, amounts, durations
+and dates for a reader.
 
 ## 13.1 Checking a package
 
@@ -650,3 +651,73 @@ packed package ([MTS-PKG-032](02-container.md#mts-pkg-032)'s steps 1 to
 refuse with that verification's findings, writing nothing: a limit only
 the packed bytes show, such as `entry-ratio` and `package-size`, which
 the check cannot judge without the encoder, is pack's to hold.
+
+## 13.9 Writing values for readers
+
+A template that writes a value as the data holds it writes it for a
+program: `48920000`, `2026-03-02T06:40:00Z`, `00:07:25`. A reader takes the
+first for a figure to count the digits of, the second for a code, and the
+third for hours, minutes and seconds. The filters of
+[chapter 8](08-filters-and-tags.md) write each for a reader, and none of
+them reads a locale: what the output shows is what the template says, in
+every conforming implementation.
+
+Given this input, `report`:
+
+```json
+{
+  "reporting_currency": "EUR",
+  "gross_costs_and_losses": 48920000,
+  "clients_affected": 18500,
+  "clients_affected_percentage": 4.24,
+  "detected_at": "2026-03-02T06:40:00Z",
+  "duration": "00:07:25"
+}
+```
+
+this template:
+
+```liquid
+{%- assign r = inputs.report -%}
+- Gross costs and losses: {{ r.gross_costs_and_losses | amount: r.reporting_currency, group: "," }}
+- Clients affected: {{ r.clients_affected | number: group: "," }} ({{ r.clients_affected_percentage | number: decimals: 1 }} %)
+- Detected: {{ r.detected_at | date: "%Y-%m-%d %H:%M %Z" }}
+- Duration: {{ r.duration | duration: "%d d %-H h %-M min", fields: "d:h:m" }}
+```
+
+writes:
+
+```text
+- Gross costs and losses: EUR 48,920,000.00
+- Clients affected: 18,500 (4.2 %)
+- Detected: 2026-03-02 06:40 UTC
+- Duration: 0 d 7 h 25 min
+```
+
+- **`amount` takes the amount in the currency's major unit**, euros and not
+  cents, and the ISO 4217 code as its argument. There is no `money` filter:
+  Shopify's storefront `money`, `money_with_currency` and
+  `money_without_currency` take cents and read the shop's settings, and a
+  template that uses one is refused with `amount` named as the
+  alternative. An amount the data holds in cents is divided first:
+  `{{ r.total_cents | divided_by: 100.0 | amount: "EUR" }}`.
+- **Take the code from the data** when an input names the currency, as
+  above: the count of decimals then follows the currency, `JPY 5000` and
+  `BHD 1.500` as well as `EUR 12.50`, by
+  [Appendix C](C-currency-minor-units.md). Give `decimals:` for a code it
+  does not list.
+- **Name the separators for the output's readers.** With none named,
+  `number` and `amount` group nothing and write `.` as the point. A report
+  for readers of English names `group: ","`; one for readers of German
+  names `group: "."` and `point: ","`; `group: " "` reads in either.
+- **A value with more than about fifteen significant digits** loses its
+  last digits as a number. Declare it as a string holding a decimal text,
+  such as `"12345678901234567.89"`, and `number` and `amount` write every
+  digit of it.
+- **A duration held as fields separated by `:` is ambiguous** until the
+  template names them: `fields: "d:h:m"` reads `00:07:25` as seven hours
+  and twenty-five minutes. `duration`'s directives are `date`'s `%H`, `%M`
+  and `%S` with `%d` for days, and the largest one a format names takes
+  the rest: `"%-H h"` writes `26 h` for a day and two hours.
+- **`date` writes an instant in the offset it carries**, so a value in UTC
+  stays in UTC; `%Z` says so to the reader.

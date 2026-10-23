@@ -9,6 +9,7 @@ import (
 	"metais.org/metais/internal/finding"
 	"metais.org/metais/internal/limits"
 	"metais.org/metais/internal/liquid"
+	"metais.org/metais/internal/template/filters"
 )
 
 // The template family's codes this package reports (ADR-004 D16 item 1).
@@ -98,6 +99,9 @@ func parseFinding(e *liquid.Error, lim limits.Set, cause string) finding.Finding
 		code = CodeInclude
 	case liquid.CodeUnknownFilter:
 		code, p["filter"] = CodeUnknownFilter, finding.String(e.Args["filter"])
+		if a, ok := filters.Alternative(e.Args["filter"]); ok {
+			p["alternative"] = finding.String(a)
+		}
 	case liquid.CodeReservedName:
 		code, p["name"] = CodeReservedName, finding.String(e.Args["name"])
 	case liquid.CodePartialName:
