@@ -43,9 +43,11 @@ type Field struct {
 	BeyondValueDepth bool
 }
 
-// The listing's cuts (ADR-008 A7 item 5): a title, a condition and one
-// constraint are each cut at MaxShown bytes, as grep cuts a line, and a
-// line's constraints together at MaxConstraints.
+// The listing's cuts (ADR-008 A7 item 5, A16): a title, a condition and
+// one constraint are each cut at MaxShown bytes, as grep cuts a line, and
+// a line's constraints together at MaxConstraints. The bound is in bytes,
+// not in values: an enum is cut where its canonical JSON passes MaxShown.
+// Each mark names the command that prints the value whole.
 const (
 	MaxShown       = 1024
 	MaxConstraints = 4096
@@ -65,7 +67,7 @@ const (
 // along many paths is listed once; the listing has at most one line per
 // subschema of the document and per name a `required` lists.
 func (w *Walker) Fields(input string, required bool, depth int) []Field {
-	l := &lister{w: w, depth: depth, sums: map[string]*summary{}, expanded: map[string]string{}}
+	l := &lister{w: w, depth: depth, sums: map[string]*summary{}, expanded: map[string]string{}, whole: WholeCommand(input)}
 	if input == "" {
 		_, _, kids, branches := l.gather("", -1, []string{""})
 		l.emit("", -1, nil, kids, branches)
@@ -80,6 +82,7 @@ type lister struct {
 	depth    int
 	sums     map[string]*summary // a schema's pointer → what it declares at its own location
 	expanded map[string]string   // a schema's pointer → the instance pointer its fields are listed beneath
+	whole    string              // the command that prints the listed schema whole, named by each cut's mark
 	out      []Field
 }
 
@@ -140,7 +143,7 @@ func (l *lister) summary(ptr string) *summary {
 				s.types, s.typed = declaredNames(m), true
 			case kw == "title":
 				if t, ok := m.(value.String); ok {
-					title := shown(t.Text())
+					title := l.shown(t.Text())
 					s.title = &title
 				}
 			case walkedSchemas[kw]:
@@ -160,14 +163,14 @@ func (l *lister) summary(ptr string) *summary {
 				}
 			case unlisted[kw] || strings.HasPrefix(kw, "x-"):
 			default:
-				s.add(kw + "=" + shown(string(jsonx.Canonical(m))))
+				s.add(kw + "=" + l.shown(string(jsonx.Canonical(m))))
 			}
 		}
 		for _, kw := range []string{"$ref", "$dynamicRef"} {
 			if t, ok := l.target(v, ptr, kw); ok {
 				s.merge(l.summary(t))
 			} else if r, has := v.Get(kw); has {
-				s.add(kw + "=" + shown(string(jsonx.Canonical(r))))
+				s.add(kw + "=" + l.shown(string(jsonx.Canonical(r))))
 			}
 		}
 		if all, ok := v.Get("allOf"); ok {
@@ -256,11 +259,29 @@ func typeJSON(types []string) string {
 	return "[" + strings.Join(q, ",") + "]"
 }
 
-// cutMark marks a cut: omitted bytes follow what is shown.
-func cutMark(omitted int) string { return "[…+" + strconv.Itoa(omitted) + " bytes]" }
+// WholeCommand is the command that prints whole the schema whose fields
+// Fields lists for input: the input's schema, or with "" the combined
+// schema.
+func WholeCommand(input string) string {
+	if input == "" {
+		return "metais schema <package>"
+	}
+	return "metais schema <package> " + input
+}
+
+// cutMark marks a value's cut: omitted bytes follow what is shown, and
+// whole prints them.
+func cutMark(omitted int, whole string) string {
+	return "[…+" + strconv.Itoa(omitted) + " bytes; " + whole + " prints it whole]"
+}
+
+// constraintsMark ends a line's constraints cut at MaxConstraints.
+func constraintsMark(whole string) string {
+	return "[…; " + whole + " prints every constraint]"
+}
 
 // shown is s cut at MaxShown bytes, on a character boundary, and marked.
-func shown(s string) string {
+func (l *lister) shown(s string) string {
 	if len(s) <= MaxShown {
 		return s
 	}
@@ -268,7 +289,7 @@ func shown(s string) string {
 	for n > 0 && !utf8.RuneStart(s[n]) {
 		n--
 	}
-	return s[:n] + cutMark(len(s)-n)
+	return s[:n] + cutMark(len(s)-n, l.whole)
 }
 
 // child is a field beneath the one being expanded, gathered from every
@@ -301,7 +322,7 @@ func (l *lister) field(ptr string, depth int, when []string, roots []string, req
 	f := Field{Pointer: ptr, Type: s.types, Required: required, Title: s.title, When: when}
 	f.Constraints = slices.Clone(s.constraints)
 	if s.cut {
-		f.Constraints = append(f.Constraints, "[…]")
+		f.Constraints = append(f.Constraints, constraintsMark(l.whole))
 	}
 	at := len(l.out)
 	l.out = append(l.out, f)
@@ -386,7 +407,7 @@ func (l *lister) gather(ptr string, depth int, roots []string) (same string, bey
 				for re := range pats.All() {
 					c := kid("r:"+re, "*")
 					c.roots = append(c.roots, sp+"/patternProperties/"+escapeToken(re))
-					c.constraint = "name-matches=" + shown(strconv.Quote(re))
+					c.constraint = "name-matches=" + l.shown(strconv.Quote(re))
 				}
 			}
 		}
@@ -432,7 +453,7 @@ func (l *lister) gather(ptr string, depth int, roots []string) (same string, bey
 			}
 		}
 		if cond, ok := o.Get("if"); ok {
-			c := shown(string(jsonx.Canonical(cond)))
+			c := l.shown(string(jsonx.Canonical(cond)))
 			if _, ok := o.Get("then"); ok {
 				branches = append(branches, branch{at + " matches " + c, sp + "/then"})
 			}

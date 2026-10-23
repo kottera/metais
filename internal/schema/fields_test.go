@@ -5,6 +5,7 @@ package schema
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -177,10 +178,10 @@ func TestFieldsValueDepth(t *testing.T) {
 	})
 }
 
-// TestFieldsCuts is ADR-008 A7 item 5 for a line's width: a constraint,
-// a title and a condition longer than MaxShown bytes are cut and marked
-// with what was cut, and a line's constraints at MaxConstraints, marked
-// […].
+// TestFieldsCuts is ADR-008 A7 item 5 and A16 for a line's width: a
+// constraint, a title and a condition longer than MaxShown bytes are cut,
+// and a line's constraints at MaxConstraints, and each mark names the
+// command that prints the value whole.
 func TestFieldsCuts(t *testing.T) {
 	long := strings.Repeat("é", MaxShown) // 2 bytes each
 	w := walker(t, `{
@@ -198,18 +199,21 @@ func TestFieldsCuts(t *testing.T) {
 		t.Fatalf("Fields: %v", fieldLines(fs))
 	}
 	root, cond := fs[0], fs[1]
+	mark := func(n int) string {
+		return "[…+" + strconv.Itoa(n) + " bytes; metais schema <package> in prints it whole]"
+	}
 	// The quote before the é's puts the cut inside a character, so it
 	// falls a byte earlier, before it.
-	if c, want := root.Constraints[0], `const="`+strings.Repeat("é", 511)+"[…+1027 bytes]"; c != want {
-		t.Errorf("the const constraint is not cut at %d bytes: %d bytes, ending %q", MaxShown, len(c), c[len(c)-20:])
+	if c, want := root.Constraints[0], `const="`+strings.Repeat("é", 511)+mark(1027); c != want {
+		t.Errorf("the const constraint is not cut at %d bytes: %d bytes, ending %q", MaxShown, len(c), c[len(c)-60:])
 	}
-	if got := root.Constraints[len(root.Constraints)-1]; got != "[…]" || len(root.Constraints) != 5 {
+	if got, want := root.Constraints[len(root.Constraints)-1], "[…; metais schema <package> in prints every constraint]"; got != want || len(root.Constraints) != 5 {
 		t.Errorf("the constraints are not cut at %d bytes: %d of them, the last %q", MaxConstraints, len(root.Constraints), got)
 	}
-	if want := shown(long); *root.Title != want || len(want) > MaxShown+len("[…+9999 bytes]") {
+	if want := strings.Repeat("é", 512) + mark(1024); *root.Title != want {
 		t.Errorf("the title is not cut at %d bytes: %d bytes", MaxShown, len(*root.Title))
 	}
-	if w := cond.When[0]; !strings.HasSuffix(w, "bytes]") || len(w) > len(`/in matches `)+MaxShown+len("[…+9999 bytes]") {
-		t.Errorf("the condition is not cut: %d bytes", len(w))
+	if w := cond.When[0]; !strings.HasSuffix(w, " bytes; metais schema <package> in prints it whole]") || len(w) > len(`/in matches `)+MaxShown+len(mark(9999)) {
+		t.Errorf("the condition is not cut: %d bytes, ending %q", len(w), w[len(w)-60:])
 	}
 }

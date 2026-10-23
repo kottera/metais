@@ -11,6 +11,9 @@ passage it changes is marked *(A15)*.
 [ADR-003 Amendment A2](ADR-003-the-data-specification.md#amendments)
 (rules across the items of an array: `uniqueKeys` and `coverage`) is
 proposed on 2026-10-23 and amends D5 as A7 amends it, D6 and D15 item 4 (`schema --fields` and `inspect` show each rule, and a `schemas` help topic teaches both keywords).
+[Amendment A16](#amendments) (a cut in the field listing names the command
+that prints the value whole) is ruled by Ed Funnekotter on 2026-10-23 to
+land before v1.0; the passage it changes is marked *(A16)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R2 (items 1–4) and R17 (items 1–3); the command-line
@@ -1872,11 +1875,13 @@ D10 and D14 are unchanged.
      that depth whose schemas declare fields beneath it says
      `(fields beneath deeper than value-depth)`. `--limit value-depth=<n>`
      lowers it, as for every command;
-   - **a line's width is bounded.** A title, a condition and one
+   - **a line's width is bounded** *(A16)*. A title, a condition and one
      constraint longer than 1024 bytes are each cut, on a character
-     boundary, and end `[…+N bytes]`, as `grep` cuts a line. A line's
+     boundary, and end `[…+N bytes; <command> prints it whole]`. A line's
      constraints together stop at 4096 bytes, and the column then ends
-     `[…]`. The whole schema has every value whole.
+     `[…; <command> prints every constraint]`. `<command>` is
+     `metais schema <package> <input>`, or `metais schema <package>` for
+     the combined listing: the whole schema has every value whole.
 6. **With `--json`,** the result of `metais.schema/1` is `input` and
    `fields`, and has no `schema` member: a consumer that asked for the
    listing reads `fields`, and no document of an invocation that existed
@@ -2300,6 +2305,36 @@ ruling, logged by W2-1.
 2. **Why it stays.** `summary` carries the exact totals by severity and by
    code after de-duplication, so a report capped by `findings` still says
    how many findings there were.
+
+### A16 — A cut in the field listing says it is by bytes and names the command that prints the value whole
+
+**Status:** Accepted on merge. Ed Funnekotter ruled on 2026-10-23 that it
+lands before v1.0, from the external UX tests of the field listing.
+**Amends:** A7 item 5 (a line's width), marked *(A16)* in place, and
+`metais schema`'s help. A7's other items, and the listing's bounds, are
+unchanged.
+
+1. **The rule is one rule, by bytes.** A title, a condition and one
+   constraint are each cut at 1024 bytes, and a line's constraints
+   together at 4096; an enum is one constraint, so it is cut where its
+   canonical JSON passes 1024 bytes, however many values it has. No count
+   of values enters the rule. `metais schema -h` states it.
+2. **Every cut names where the rest is.** A cut value ends
+   `[…+N bytes; <command> prints it whole]`, and cut constraints end
+   `[…; <command> prints every constraint]`, where `<command>` is
+   `metais schema <package> <input>` for an input's listing and
+   `metais schema <package>` for the combined one, the command whose
+   schema has every value whole. The marks are part of the strings, so the
+   JSON entries still give their text lines exactly (A7 item 6), and a
+   reader of either form who meets a cut is told what to run.
+3. **Why the cut stays.** Printing every value whole would leave the
+   listing unbounded in a way the schema is not: a constraint is merged
+   into the line of every field whose schema reaches it through `$ref` or
+   `allOf`, so one long enum shared by many fields would be printed once
+   per field, and the listing would grow as the schema's size times its
+   subschemas. The 1024- and 4096-byte bounds keep each line, and so the
+   listing, within A7 item 5's bound, and the mark costs one command to
+   reach what the cut leaves out.
 
 ## Implementation log
 
