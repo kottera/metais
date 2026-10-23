@@ -446,6 +446,19 @@ authoring tools, and used by the examples.
 examples' trees (V4 now, R8 in Wave 3); `internal/finding`'s registry
 (every item that registers a code).
 
+### Rulings made during Wave 2
+
+- **R-W2-a, where `schema --fields` writes a rule** (plan orchestrator,
+  2026-10-23). The tool builds ADR-003 A2 item 10 exactly: one line per
+  rule, after the line of the array that carries the keyword. Chapter 13's
+  Note says the tool writes each rule "on the line of the array it
+  constrains". That Note is informative, and Ed accepted it in the same
+  design as item 10, so it is read as agreeing with item 10: the rule is
+  written with that array's line, directly under it. The Note lands
+  verbatim and no wording change is needed. Only a tool that put a rule
+  anywhere other than directly after its array's line would bring the
+  Note to Ed.
+
 ## 8. Wave 3 — the ACR adopts both keywords, then the close
 
 **Goal:** the example SC1 rests on refuses a contradictory or incomplete
