@@ -150,17 +150,21 @@ a string whose slug is empty with `template.slug_empty`, and MUST otherwise
 make the string a slug matching `[a-z0-9]+(-[a-z0-9]+)*`, by these steps in
 order:
 
-1. replace each of these Latin letters, which have no decomposition: `ß` and
+1. normalize to Normalization Form KD ([Unicode 15.0.0](A-references.md#unicode));
+2. remove every code point of general category Mn;
+3. replace each of these Latin letters, which have no decomposition: `ß` and
    `ẞ` with `ss`; `æ` and `Æ` with `ae`; `œ` and `Œ` with `oe`; `ø` and `Ø`
    with `o`; `đ`, `Đ`, `ð` and `Ð` with `d`; `þ` and `Þ` with `th`; `ł` and
    `Ł` with `l`; `ı` with `i`; `ħ` and `Ħ` with `h`; `ŧ` and `Ŧ` with `t`; `ŋ`
    and `Ŋ` with `ng`; and `ĸ` with `k`;
-2. normalize to Normalization Form KD ([Unicode 15.0.0](A-references.md#unicode));
-3. remove every code point of general category Mn;
 4. lower-case ASCII `A` to `Z`;
 5. replace each maximal run of code points other than `a` to `z` and `0` to
    `9` with one `-`;
 6. remove a `-` at the start or the end.
+
+The letters are replaced after normalization, so a letter that decomposes
+to one of them is spelled as that letter is: `Ǿ` decomposes to `Ø` and a
+combining acute, and `"Ǿrsted" | slug` is `orsted`.
 
 So `"Café Déjà-vu" | slug` is `cafe-deja-vu`, and `"日本語"` has no slug: the
 author supplies one as data.

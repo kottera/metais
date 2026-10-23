@@ -1,6 +1,8 @@
 # ADR-004: The template environment — Shopify Liquid 5.14.0 parsed strictly, a closed set of bindings, strict on every name, and a METAIS filter and tag catalog defined to the byte
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
+[Amendment A1](#amendments) (`slug` reads its letter table after NFKD) is
+Proposed; the passage it changes is marked *(A1)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R7 (items 1 to 6) and R11 (items 1 and 2); the
@@ -531,13 +533,13 @@ Liquid's `name: value` form.
    result cannot close a `<script>` element or open an HTML comment, and is
    safe (D9). It writes the JSON only; the author writes the element
    (`<script type="application/json" id="d">{{ x | json_script }}</script>`).
-6. **`slug`** — a URL-safe slug in `[a-z0-9]+(-[a-z0-9]+)*`:
-   1. replace `ß`, `ẞ` → `ss`; `æ`, `Æ` → `ae`; `œ`, `Œ` → `oe`; `ø`, `Ø`
+6. **`slug`** — a URL-safe slug in `[a-z0-9]+(-[a-z0-9]+)*` *(A1)*:
+   1. normalize to NFKD (Unicode 15.0.0);
+   2. remove every code point of general category Mn;
+   3. replace `ß`, `ẞ` → `ss`; `æ`, `Æ` → `ae`; `œ`, `Œ` → `oe`; `ø`, `Ø`
       → `o`; `đ`, `Đ`, `ð`, `Ð` → `d`; `þ`, `Þ` → `th`; `ł`, `Ł` → `l`;
       `ı` → `i`; `ħ`, `Ħ` → `h`; `ŧ`, `Ŧ` → `t`; `ŋ`, `Ŋ` → `ng`;
       `ĸ` → `k` (Latin letters with no decomposition);
-   2. normalize to NFKD (Unicode 15.0.0);
-   3. remove every code point of general category Mn;
    4. lower-case ASCII `A`–`Z`;
    5. replace each maximal run of code points other than `a`–`z` and `0`–`9`
       with one `-`;
@@ -1090,6 +1092,33 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
 - XML 1.0, comments (no `--`): https://www.w3.org/TR/xml/#sec-comments
 - UAX #15, normalization forms: https://www.unicode.org/reports/tr15/
 - Go `unicode.Version` (15.0.0): https://pkg.go.dev/unicode#pkg-constants
+
+## Amendments
+
+### A1 — `slug` reads its letter table after NFKD
+
+**Status:** Proposed 2026-10-23. Ed Funnekotter ruled on 2026-10-22, at the
+ratification of PLAN-2026-10-metais-v1 (T-A4), that the defect W5-1
+observed gets its own fix before `spec-1.0` freezes the vectors (R2-170).
+**Amends:** D10 item 6 (the order of its steps), marked *(A1)* in place.
+
+1. **The table is read after decomposition.** The steps are NFKD, then
+   every Mn removed, then the letter table, then the ASCII steps as
+   before. Read first, the table never sees a letter that reaches one of
+   its entries only through decomposition, and the letter was dropped:
+   U+01FE `Ǿ` is `Ø` and a combining acute under NFKD, so `"Ǿrsted"` gave
+   `rsted`. It now gives `orsted`, as do `ǿ`, `Ǽ`, `ǽ`, `Ǣ` and `ǣ` the
+   `o` and `ae` of their bases.
+2. **No entry of the table changes meaning.** Every entry has no
+   decomposition, canonical or compatibility, in Unicode 15.0.0, so NFKD
+   leaves it as it was and the table spells it as before. A table letter
+   is a starter, and the marks that follow one are removed in either
+   order. The only slugs that change are those of text holding a letter
+   that decomposes to a table letter, which was dropped and is now
+   spelled.
+3. **Proof.** The vector `flt/slug-decomposed-letters` fails on the
+   order D10 gave and passes on this one; a unit test of
+   `internal/template/filters` holds that no table letter decomposes.
 
 ## Implementation log
 
