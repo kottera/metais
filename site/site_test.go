@@ -372,6 +372,13 @@ func TestWorkflow(t *testing.T) {
 // holds it.
 const goImport = "metais.org/metais git https://github.com/kottera/metais"
 
+// goSource is the content of every go-import page's go-source meta tag: the
+// module's path, the repository's home, and the templates pkg.go.dev fills
+// in to link a directory and a line of a file to their source on main.
+const goSource = "metais.org/metais https://github.com/kottera/metais" +
+	" https://github.com/kottera/metais/tree/main{/dir}" +
+	" https://github.com/kottera/metais/blob/main{/dir}/{file}#L{line}"
+
 // goImportDir is the directory, in the published tree as under public/, of
 // the module's go-import pages (ADR-013 D1 item 5): the page for the package
 // path metais.org/<p> is <p>/index.html, served at /<p>/.
@@ -419,8 +426,8 @@ func goImportPages(t *testing.T, root string) map[string][]byte {
 }
 
 // checkGoImportPages requires the pages to serve exactly goPackages, each
-// with one go-import tag whose content is goImport and one go-source tag for
-// the same module and repository.
+// with one go-import tag whose content is goImport and one go-source tag
+// whose content is goSource.
 func checkGoImportPages(t *testing.T, where string, got map[string][]byte) {
 	t.Helper()
 	paths := slices.Sorted(maps.Keys(got))
@@ -435,13 +442,8 @@ func checkGoImportPages(t *testing.T, where string, got map[string][]byte) {
 		if imp := tags["go-import"]; len(imp) != 1 || imp[0] != goImport {
 			t.Errorf("%s: the page for %s has go-import %q, want exactly one, %q", where, pkg, imp, goImport)
 		}
-		src := tags["go-source"]
-		if len(src) != 1 {
-			t.Errorf("%s: the page for %s has %d go-source tags, want one", where, pkg, len(src))
-			continue
-		}
-		if f := strings.Fields(src[0]); len(f) != 4 || f[0] != "metais.org/metais" || f[1] != "https://github.com/kottera/metais" {
-			t.Errorf("%s: the page for %s has go-source %q, want the module, its repository, and its directory and file templates", where, pkg, src[0])
+		if src := tags["go-source"]; len(src) != 1 || src[0] != goSource {
+			t.Errorf("%s: the page for %s has go-source %q, want exactly one, %q", where, pkg, src, goSource)
 		}
 	}
 }
@@ -449,7 +451,8 @@ func checkGoImportPages(t *testing.T, where string, got map[string][]byte) {
 // TestGoImportPages holds the module's go-import pages to ADR-013 D1 item 2,
 // in public/ and in the tree build.sh publishes: one page for each package
 // path a user can name and no other, each with the go-import content that
-// resolves metais.org/metais to its repository, and a go-source tag.
+// resolves metais.org/metais to its repository, and the go-source content
+// that links each directory and file to its source.
 func TestGoImportPages(t *testing.T) {
 	checkGoImportPages(t, "public", goImportPages(t, "public"))
 	checkGoImportPages(t, "the built site", goImportPages(t, build(t)))

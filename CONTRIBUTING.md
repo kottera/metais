@@ -71,7 +71,9 @@ runners only. On a pull request and on a push to `main` it runs:
   host-isolation reach over every vector;
 - build, vet, the static build and `go test -race -count=1 ./...` on
   `macos-latest` (darwin/arm64);
-- the DCO check of every commit in the pull request (below);
+- the DCO check of every commit in the pull request (below), and beside
+  it the co-author check: no commit of the pull request, and not its
+  title or description, carries a `Co-authored-by:` line;
 - `shellcheck` over the repository's shell scripts;
 - the site's build and its tests.
 
@@ -170,6 +172,13 @@ A few rules hold for every change, and a review checks them:
   `revert`.
 - Fill in the pull request template: what changed, why, how you tested
   it, and the specification and vectors it changes.
+- **No commit message, and not the pull request's title or description,
+  carries a `Co-authored-by:` line.** CI fails the pull request on a line
+  that opens with it, in any case and wherever it sits in the message,
+  because a squash merge carries every commit's message into the one that
+  lands on `main`. Mentioning the words inside a sentence is fine. Remove
+  such a line with `git commit --amend` or `git rebase -i origin/main` and
+  push with `--force-with-lease`, or edit the pull request's description.
 - Pass a multi-paragraph commit message by file (`git commit -s -F <file>`)
   rather than through the shell.
 
