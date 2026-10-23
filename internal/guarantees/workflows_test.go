@@ -37,6 +37,9 @@ const dcoScript = "../../.github/scripts/dco.sh"
 // (AGENTS.md, Git and pull requests).
 const coAuthorScript = "../../.github/scripts/coauthor.sh"
 
+// releaseWorkflow publishes a draft release (ADR-013 D7 item 3).
+const releaseWorkflow = "../../.github/workflows/release.yml"
+
 // conformanceScript is how CI splits internal/conformance's tests (R-W1-4).
 const conformanceScript = "../../.github/scripts/conformance.sh"
 
@@ -298,6 +301,122 @@ func TestCIWorkflow(t *testing.T) {
 				t.Errorf("ci.yml's job %s does not run %q", j.job, r)
 			}
 		}
+	}
+}
+
+// TestReleaseWorkflow holds release.yml to ADR-013 D7 item 3. Ed
+// dispatches it, naming the draft, and its release job runs in the release
+// environment, whose approval is his release act. Its dry_run input turns
+// off every step that pushes or publishes, and the pages job, and nothing
+// else: prepare, which checks everything and pushes nothing, runs either
+// way. Only the job that pushes may write the repository's contents, and
+// only the step that pushes to the tap is given TAP_TOKEN. It builds no
+// release and attests nothing (ADR-013 D7 items 2 and 4), and once the
+// release is published it calls pages.yml with the released tag (ruling
+// R-W2-1). release.sh's own test, internal/tools/release's
+// TestReleaseScript, proves what each step does.
+func TestReleaseWorkflow(t *testing.T) {
+	src, err := os.ReadFile(releaseWorkflow)
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc, fds := yamlx.Parse(src, yamlx.Source{Subject: finding.Subject{Kind: finding.SubjectInput, Name: "release"}}, limits.Defaults())
+	if len(fds) > 0 {
+		t.Fatal(fds[0].Message())
+	}
+	w := doc.Value.(value.Object)
+	on, _ := w.Get("on")
+	if got := triggers(on); !slices.Equal(got, []string{"workflow_dispatch"}) {
+		t.Errorf("release.yml is triggered by %q, not by workflow_dispatch alone", got)
+	}
+	dispatch, _ := on.(value.Object).Get("workflow_dispatch")
+	inputs, _ := must(dispatch.(value.Object).Get("inputs")).(value.Object)
+	if got := inputs.Names(); !slices.Equal(got, []string{"dry_run", "tag"}) {
+		t.Errorf("release.yml's inputs are %q, want dry_run and tag", got)
+	}
+	dry, _ := must(inputs.Get("dry_run")).(value.Object)
+	if typ, _ := dry.Get("type"); text(typ) != "boolean" {
+		t.Errorf("release.yml's dry_run is not a boolean")
+	}
+	if def, _ := dry.Get("default"); def != value.Bool(false) {
+		t.Errorf("release.yml's dry_run does not default to false")
+	}
+	if perms, _ := w.Get("permissions"); !value.Equal(perms, value.Object{}) {
+		t.Errorf("release.yml's top-level permissions are not empty")
+	}
+
+	jobsObj, _ := must(w.Get("jobs")).(value.Object)
+	if got := jobsObj.Names(); !slices.Equal(got, []string{"pages", "release"}) {
+		t.Fatalf("release.yml's jobs are %q, want pages and release", got)
+	}
+	job, _ := must(jobsObj.Get("release")).(value.Object)
+	if env, _ := job.Get("environment"); text(env) != "release" {
+		t.Errorf("release.yml's release job does not run in the release environment")
+	}
+	if _, ok := job.Get("if"); ok {
+		t.Errorf("release.yml's release job is conditional")
+	}
+	write, _ := value.NewObject(value.Member{Name: "actions", Value: mustString("read")}, value.Member{Name: "contents", Value: mustString("write")})
+	if perms, _ := job.Get("permissions"); !value.Equal(perms, write) {
+		t.Errorf("release.yml's release job's permissions are not contents: write and actions: read alone")
+	}
+	const dryOff = "${{ !inputs.dry_run"
+	pushSteps := map[string]bool{"push-tags": false, "publish": false, "push-tap": false}
+	prepared := false
+	for _, s := range must(job.Get("steps")).(value.Array).All() {
+		so, _ := s.(value.Object)
+		run := text(must(so.Get("run")))
+		cond, hasIf := so.Get("if")
+		// The release job runs only the actions that check the
+		// repository out and set up go: no builder, and no attestation.
+		if uses, ok := so.Get("uses"); ok && !slices.Contains([]string{"actions/checkout@v5", "actions/setup-go@v6"}, text(uses)) {
+			t.Errorf("release.yml's release job uses %s", text(uses))
+		}
+		if env, ok := so.Get("env"); ok {
+			if tok, ok := env.(value.Object).Get("TAP_TOKEN"); ok && !strings.Contains(run, "push-tap") {
+				t.Errorf("release.yml's step %q is given TAP_TOKEN: %s", run, text(tok))
+			}
+		}
+		if strings.Contains(run, ".github/scripts/release.sh prepare ") {
+			prepared = true
+			if hasIf {
+				t.Errorf("release.yml's prepare is conditional: %s", text(cond))
+			}
+			continue
+		}
+		pushes := strings.Contains(run, "git push") || strings.Contains(run, "gh release")
+		for step := range pushSteps {
+			if strings.Contains(run, ".github/scripts/release.sh "+step+" ") {
+				pushSteps[step] = true
+				pushes = true
+			}
+		}
+		if pushes && (!hasIf || !strings.HasPrefix(text(cond), dryOff)) {
+			t.Errorf("release.yml's step %q pushes or publishes in a dry run", run)
+		}
+	}
+	if !prepared {
+		t.Errorf("release.yml's release job does not run release.sh prepare")
+	}
+	for step, seen := range pushSteps {
+		if !seen {
+			t.Errorf("release.yml's release job does not run release.sh %s", step)
+		}
+	}
+
+	pages, _ := must(jobsObj.Get("pages")).(value.Object)
+	if uses, _ := pages.Get("uses"); text(uses) != "./.github/workflows/pages.yml" {
+		t.Errorf("release.yml's pages job does not call pages.yml")
+	}
+	if needs, _ := pages.Get("needs"); text(needs) != "release" {
+		t.Errorf("release.yml's pages job does not wait for the release job")
+	}
+	if cond, _ := pages.Get("if"); !strings.HasPrefix(text(cond), dryOff) {
+		t.Errorf("release.yml's pages job runs in a dry run")
+	}
+	with, _ := must(pages.Get("with")).(value.Object)
+	if tag, _ := with.Get("tag"); text(tag) != "${{ inputs.tag }}" {
+		t.Errorf("release.yml's pages job is not given the released tag")
 	}
 }
 

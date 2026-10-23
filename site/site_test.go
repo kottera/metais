@@ -551,9 +551,15 @@ func TestPageCommands(t *testing.T) {
 	}
 }
 
-// TestWorkflow requires the Pages workflow to build the site with build.sh,
-// from a release tag alone, and to run nothing while the repository is
-// private: GitHub's free plan publishes Pages only from a public repository.
+// TestWorkflow requires the Pages workflow to build the site with
+// build.sh from a published release's tag, with the release's version and
+// SHA256SUMS, and to run nothing while the repository is private: GitHub's
+// free plan publishes Pages only from a public repository. Its triggers
+// are release.yml's call, once the release is published, and a dispatch,
+// for an erratum; it has no push or release trigger, which would build
+// from a branch or before publication, and its build checks that the
+// tag's release is published before it checks the tag out (ADR-013 D7
+// item 3.4, ruling R-W2-1).
 func TestWorkflow(t *testing.T) {
 	b, err := os.ReadFile("../.github/workflows/pages.yml")
 	if err != nil {
@@ -561,9 +567,12 @@ func TestWorkflow(t *testing.T) {
 	}
 	w := string(b)
 	for _, want := range []string{
-		"site/build.sh _site",
-		"tags: ['v*']",
-		"if: ${{ !github.event.repository.private && startsWith(github.ref, 'refs/tags/v') }}",
+		"\non:\n  workflow_call:\n",
+		"\n  workflow_dispatch:\n",
+		`gh api "repos/$GH_REPO/releases/tags/$TAG" --jq .draft`,
+		"ref: refs/tags/${{ inputs.tag }}",
+		"fetch-depth: 0",
+		`site/build.sh --release "${TAG#v}" "$RUNNER_TEMP/release/SHA256SUMS" _site`,
 		"actions/upload-pages-artifact@",
 		"actions/deploy-pages@",
 	} {
@@ -571,11 +580,19 @@ func TestWorkflow(t *testing.T) {
 			t.Errorf(".github/workflows/pages.yml does not contain %q", want)
 		}
 	}
+	for _, refused := range []string{"\n  push:", "\n  release:", "\n  pull_request:", "\n  schedule:"} {
+		if strings.Contains(w, refused) {
+			t.Errorf(".github/workflows/pages.yml has the trigger %q", strings.TrimSpace(refused))
+		}
+	}
+	if strings.Index(w, "/releases/tags/") > strings.Index(w, "actions/checkout@") {
+		t.Errorf(".github/workflows/pages.yml checks the tag out before it checks that its release is published")
+	}
 	// Every job is gated, so a job added without the gate fails here.
 	jobs := strings.Count(w, "\n    runs-on:")
-	gates := strings.Count(w, "\n    if: ${{ !github.event.repository.private && startsWith(github.ref, 'refs/tags/v') }}")
+	gates := strings.Count(w, "\n    if: ${{ !github.event.repository.private }}")
 	if jobs == 0 || jobs != gates {
-		t.Errorf(".github/workflows/pages.yml has %d jobs and %d of them gated on a public repository and a v tag", jobs, gates)
+		t.Errorf(".github/workflows/pages.yml has %d jobs and %d of them gated on a public repository", jobs, gates)
 	}
 }
 

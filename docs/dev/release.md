@@ -1,16 +1,223 @@
-# Building a release
+# Releasing metais
+
+A release of `metais` is published in two halves (ADR-013 D7 item 3):
+
+- **The release procedure** builds it and pushes nothing. It tags the
+  release in its own clone, builds it twice and compares, and creates a
+  **draft** GitHub release with the archives and `SHA256SUMS`. T-A3
+  follows it for `v1.0.0`, and Wave 3's item for `v1.0.0-rc.1`.
+- **The release act** is Ed's. He dispatches `release.yml`, naming the
+  draft, and approves its `release` environment. Only then is anything
+  pushed: the tags, the published release, the tap's formula and the
+  site.
+
+Nothing is public before Ed approves (R-PUB-14). Once the repository is
+public, a pushed `v*` tag is installable through the Go proxy at once, and
+the proxy keeps it for good. So the procedure never pushes a tag, and a
+step that would is a step to stop at.
+
+## The release procedure
+
+Work in a fresh clone of `kottera/metais`, at the commit to release. That
+commit is on `main` and pushed: the draft names it, and `release.yml`
+checks it out from GitHub. `<version>` is the release's semantic version
+without its `v`, such as `1.0.0-rc.1` or `1.0.0`.
+
+1. **Tag in the clone only.** If this release also releases the
+   specification, its release commit (ADR-011 D5 item 2) is already on
+   `main`. Tag it first, because the builder refuses a release whose tool
+   implements a revision with no `spec-<M>.<m>` tag on its history. A
+   prerelease never releases the specification, and needs no such tag
+   (ADR-011 A8 item 5).
+
+   ```bash
+   git tag -a -m "METAIS specification <M>.<m>" spec-<M>.<m> <the specification's release commit>   # a release that releases it only
+   git tag -a -m "metais <version>" v<version>
+   git checkout v<version>
+   ```
+
+   Push neither tag. `release.yml` makes its own annotated tags at the
+   same commits after Ed's approval, so these exist for the builder alone.
+2. **Build twice and compare.** Each run builds every target twice and
+   refuses unless the two builds match (below). The second run proves the
+   whole of `dist/` reproducible from the tag:
+
+   ```bash
+   go run ./internal/tools/release -version <version>
+   mv dist "$TMPDIR/dist.1"
+   go run ./internal/tools/release -version <version>
+   diff -r "$TMPDIR/dist.1" dist && echo "the two runs are byte-identical"
+   ```
+
+   Stop on any difference. `dist/` now holds the four archives and
+   `SHA256SUMS`.
+3. **Create the draft release** with the archives and `SHA256SUMS`,
+   targeting the tagged commit by its full SHA:
+
+   ```bash
+   gh release create v<version> --draft \
+     --target "$(git rev-parse 'v<version>^{commit}')" \
+     --title "metais <version>" --notes-file "$TMPDIR/notes.md" \
+     dist/*
+   ```
+
+   A draft stores its tag's name without creating the tag. The notes are
+   the release's text. When the release also releases the specification,
+   they end with one line that names its release commit, which is how
+   `release.yml` knows to push `spec-<M>.<m>`:
+
+   ```text
+   Specification release: spec-<M>.<m> <the commit's full SHA>
+   ```
+
+4. **Check that nothing was pushed.** Neither tag is on GitHub:
+
+   ```bash
+   git ls-remote --tags origin 'v<version>' 'spec-*'   # lists no v<version>, and no new spec tag
+   ```
+
+5. **Record `SHA256SUMS`** in the Work Order's result, verbatim, with the
+   draft's URL. That copy is half of what the archives' authenticity rests
+   on (ADR-013 D7 item 4).
+6. **Hand over.** The procedure ends here, with nothing pushed. It asks Ed
+   to dispatch `release.yml` for the draft, naming its tag.
+
+## The release act
+
+Ed dispatches `release.yml` from `main`, with the draft's tag and
+`dry_run` off:
+
+```bash
+gh workflow run release.yml --ref main -f tag=v<version> -f dry_run=false
+```
+
+Then, on the run's page, he reviews the deployment to `release` and
+approves it. Until he does, the job waits and nothing runs. After approval
+the `release` job runs `.github/scripts/release.sh`, one step at a time:
+
+1. **prepare** checks everything and pushes nothing:
+   - the release is a draft, and its target is a commit's full SHA that
+     the repository holds;
+   - the draft's assets are exactly `SHA256SUMS` and one archive per
+     shipped target (`buildline.Shipped`). `SHA256SUMS` is exactly what
+     the builder writes, and each archive's SHA-256 is its line's. The
+     `metais` of the linux/amd64 archive reports `<version>`. This is
+     `go run ./internal/tools/release verify`;
+   - a specification release the draft names is a commit on the target's
+     history that holds `spec/conformance/released/<M>.<m>.sha256`, and
+     the tool implements it. A prerelease names none;
+   - a release that is not a prerelease implements only released
+     revisions: each has a `spec-<M>.<m>` tag on GitHub or is the one the
+     draft names;
+   - no tag it would push is on GitHub at another commit. A tag already
+     there at the right commit is not pushed again, so a run that stopped
+     part way can be dispatched again;
+   - the repository is public, the `release` environment requires a
+     reviewer, and it holds `TAP_TOKEN` when the tap is to be updated.
+
+   It then makes the annotated tags in the job's clone, tagged by the
+   dispatching account, generates the formula from `SHA256SUMS` (`go run
+   ./internal/tools/release formula`), and commits it to a clone of the
+   tap.
+2. **push-tags** pushes `v<version>` at the draft's target, and
+   `spec-<M>.<m>` at the commit the draft names, in one atomic push.
+3. **publish** publishes the draft, marked a prerelease when `<version>`
+   has a prerelease suffix.
+4. **push-tap** pushes `Formula/metais.rb` to `kottera/homebrew-tap`'s
+   `main` with `TAP_TOKEN` (ADR-013 D7 item 5). The commit follows the
+   tap's README: it is signed off by the dispatching account and carries
+   no `Co-authored-by` line. A prerelease updates the tap only while no
+   release without a prerelease suffix exists, that is, before `v1.0.0`.
+   The push starts the tap's CI, which runs `brew audit` and `brew test`.
+5. **pages**, the workflow's last job, calls `pages.yml` with the released
+   tag, once the release is published. It builds the site from that tag
+   with `site/build.sh --release <version> <SHA256SUMS>`, with the
+   `SHA256SUMS` the published release serves, and deploys it with GitHub
+   Pages.
+
+`release.yml` runs no second build and makes no attestation: the
+archives are the procedure's, as built (ADR-013 D7 items 2 and 4).
+
+**Why `release.yml` calls `pages.yml`.** A release published with a
+workflow's own `GITHUB_TOKEN` starts no new workflow run, so a
+`release: published` trigger would never fire. A token that does start
+workflows would be a second credential, wider than this needs. So the
+site is deployed by `release.yml`'s own last job, which runs only after
+the publish step succeeded (ruling R-W2-1). `pages.yml` has no push or
+release trigger. Its build refuses a tag whose release is not published,
+and checks the tag out, never a branch.
+
+### When a step fails
+
+Read the failed step's log. Nothing after it ran.
+
+- **prepare refused.** Nothing was pushed. Fix what it names, in the draft
+  or on `main`, and dispatch again.
+- **push-tags or publish failed.** Dispatch again. prepare accepts a tag
+  already pushed at the right commit, and pushes only what is missing.
+- **push-tap failed.** The release is published, so a new dispatch
+  refuses it. Push the formula by hand, following the tap's README:
+  generate it with `go run ./internal/tools/release formula -version
+  <version> -sums SHA256SUMS`, commit it as `Formula/metais.rb` with
+  `git commit -s`, and push it to the tap's `main`. Then dispatch
+  `pages.yml` as below.
+- **pages failed.** Dispatch `pages.yml` as below.
+
+### Redeploying the site
+
+To rebuild and redeploy the site of a published release, as an erratum
+does (ADR-011 A8 item 1), dispatch `pages.yml` from `main` with the
+release's tag:
+
+```bash
+gh workflow run pages.yml --ref main -f tag=v<version>
+```
+
+It refuses a tag whose release is not published.
+
+### The dry run
+
+`release.yml`'s `dry_run` input exists to prove the workflow alone. Under
+it, prepare runs whole, against a real draft. The push steps, the publish
+and the pages job are skipped, and `release.sh` refuses each push step on
+its own as well. So a dry run pushes no tag, publishes nothing and leaves
+the tap alone. It still checks the draft's assets, makes the tags in the
+job's clone, and commits the formula to its clone of the tap, and its log
+shows that commit. It also reports, without refusing, what a real run
+would refuse: a private repository, a `release` environment without a
+reviewer, and a missing `TAP_TOKEN`.
+
+To run one, create a draft by the procedure above with a prerelease
+version that no release will use, such as `0.0.0-alpha.1`, and dispatch:
+
+```bash
+gh workflow run release.yml --ref main -f tag=v0.0.0-alpha.1 -f dry_run=true
+```
+
+Delete the draft afterwards (`gh release delete v0.0.0-alpha.1`), which
+deletes no tag, because none exists.
+
+### What cannot run while the repository is private
+
+On GitHub's free plan, a private repository has no environment protection
+rules and no environment secrets. So the `release` environment's required
+reviewer, and `TAP_TOKEN`, are first exercised at `v1.0.0-rc.1`, after
+the repository is public. prepare refuses any run but a dry run while the
+repository is private, because nothing would have required Ed's approval.
+Pages is the same: `pages.yml`'s jobs are skipped on a private
+repository, and its deploy first runs at `v1.0.0-rc.1`.
+
+## The release builder
 
 The release builder is `internal/tools/release` (ADR-010 D12). It builds
 the shipped binaries from a tagged commit, proves each one reproducible,
 and writes the archives a release publishes. It publishes nothing itself.
 
 ```bash
-git checkout v<version>          # a clean checkout whose HEAD is the tag
-go run ./internal/tools/release -version <version>
+go run ./internal/tools/release -version <version>   # in a clean checkout whose HEAD is the tag v<version>
 ```
 
-`<version>` is the tag without its leading `v`, a semantic version without
-build metadata. The builder writes `dist/` at the work tree's root:
+It writes `dist/` at the work tree's root:
 
 - `metais_<version>_<os>_<arch>.tar.gz` for darwin/amd64, darwin/arm64,
   linux/amd64 and linux/arm64, each holding `metais`, `LICENSE`, `NOTICE`
@@ -20,7 +227,7 @@ build metadata. The builder writes `dist/` at the work tree's root:
 Two runs over the same tag give the same `SHA256SUMS`. Move `dist/` away
 before running again: the builder never writes into an existing one.
 
-## What it checks
+### What the builder checks
 
 It refuses, and writes nothing, when:
 
@@ -44,7 +251,7 @@ It refuses, and writes nothing, when:
   no other setting such as build tags or the race detector;
 - the two builds of a target differ.
 
-## How it builds
+### How the builder builds
 
 It clones `HEAD` twice into fresh temporary directories, and builds every
 target in each clone with that clone's own `GOCACHE`, by the build line of
@@ -71,7 +278,7 @@ same line, so the binary it clears is the one a release ships. The
 archives are written by `internal/tarw`, whose bytes are those
 `archive/tar` writes for the same headers, without linking `os/user`.
 
-## Publishing metais.org
+## metais.org
 
 `metais.org` is the site every package's `README.md` points to for
 installing the tool and getting started, and the host of the
@@ -105,26 +312,31 @@ site/build.sh _site
 python3 -m http.server --directory _site 8000   # or any static file server
 ```
 
-`.github/workflows/pages.yml` builds the site with `site/build.sh` from
-a pushed `v*` tag and deploys it with GitHub Pages. GitHub's free plan
-publishes Pages only from a public repository, so every job of the
-workflow is gated on `!github.event.repository.private`: while the
-repository is private, a tag push skips both jobs, and nothing runs or
-fails. The gate also requires the ref to be a `v*` tag, so a manual run
-from a branch deploys nothing.
+`release.yml`'s last job calls `.github/workflows/pages.yml` with the
+released tag, and it can be dispatched with a published release's tag
+(above). It checks that the tag's release is published, checks the tag
+out with its whole history, downloads the release's `SHA256SUMS`, builds
+the site with `site/build.sh --release`, and deploys it with GitHub Pages.
+GitHub's free plan publishes Pages only from a public repository, so every
+job of the workflow is gated on `!github.event.repository.private`: while
+the repository is private, both jobs are skipped, and nothing runs or
+fails.
 
 The organization's domain verification for `metais.org` (the
 `_github-pages-challenge-kottera.metais.org` TXT record) was done by Ed
 on 2026-10-20, before release.
 
-### Going live
+## Going live
 
-At the release, in this order:
+These are Wave 3's, before `v1.0.0-rc.1`, in this order:
 
 1. **Make the repository public** (Settings → General → Danger Zone).
 2. **Turn on Pages:** in Settings → Pages, set the source to **GitHub
    Actions**, and the custom domain to `metais.org`. Once GitHub has
-   issued the certificate, tick **Enforce HTTPS**.
+   issued the certificate, tick **Enforce HTTPS**. Pages deploys from
+   runs on `main`, which is where `release.yml` and a dispatched
+   `pages.yml` run, so the `github-pages` environment's default rule,
+   which allows `main`, stays as it is.
 3. **Point the domain at Pages** (Ed's step, in Route 53), in the
    `metais.org` hosted zone:
    - apex `A` records to `185.199.108.153`, `185.199.109.153`,
@@ -132,17 +344,20 @@ At the release, in this order:
    - apex `AAAA` records to `2606:50c0:8000::153`, `2606:50c0:8001::153`,
      `2606:50c0:8002::153` and `2606:50c0:8003::153`;
    - `www` as a `CNAME` to `kottera.github.io`.
-4. **Publish the release and deploy the site:** push the release tag
-   `v<version>`, which runs the workflow, and attach the builder's
-   `dist/` archives and `SHA256SUMS` to the tag's GitHub release, which
-   the install page sends readers to as the latest release. Then check
-   that the home page and one schema `$id` resolve, the schema as JSON:
+4. **Create the `release` environment** (Settings → Environments → New
+   environment, named `release`):
+   - **Required reviewers:** Ed. Leave **Prevent self-review** off, since
+     Ed both dispatches the release and approves it.
+   - **Deployment branches and tags:** selected branches, `main` alone,
+     since `release.yml` runs from `main`.
+   - **Environment secret `TAP_TOKEN`:** a fine-grained personal access
+     token with **Contents: Read and write** on `kottera/homebrew-tap`
+     alone, and no other repository or permission.
+5. **Cut the release** by the procedure and the release act above. Once
+   the `pages` job is green, check that the home page and one schema `$id`
+   resolve, the schema as JSON:
 
    ```bash
    curl -sSI https://metais.org/ | head -n 1
    curl -sSI https://metais.org/schemas/1.0/manifest.schema.json | grep -i '^content-type: application/json'
    ```
-
-   A tag pushed before the repository was public deployed nothing; run
-   the workflow on the tag from the Actions tab (Run workflow, with the
-   tag selected) once steps 1 and 2 are done.

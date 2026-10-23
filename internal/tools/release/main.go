@@ -22,6 +22,18 @@
 //
 // It reads that one file and writes the formula to standard output.
 //
+// Its verify subcommand checks a release's assets, downloaded from its
+// draft, before release.yml publishes anything (ADR-013 D7 item 3):
+//
+//	go run ./internal/tools/release verify -version <semver> -dir <assets> -run <os>/<arch>
+//
+// The directory must hold exactly SHA256SUMS, as the builder writes it,
+// and each shipped target's archive with its line's SHA-256, and the
+// archive of -run, the target of the host it runs on, must hold a metais
+// that reports <semver>.
+// It writes the specification revisions that metais implements to
+// standard output, one per line.
+//
 // The builder is a developer's tool, never linked into metais, and is the
 // one package ADR-009 Amendment A2 lets run commands, read the environment
 // and write files outside internal/hostfs.
@@ -39,12 +51,15 @@ func main() {
 }
 
 // cli parses args and runs the builder from the working directory, writing
-// its report to stdout and a refusal to stderr, or runs formulaCLI when the
-// first argument is formula. It returns the exit status: 0 when dist/ is
+// its report to stdout and a refusal to stderr, or runs formulaCLI or
+// verifyCLI when the first argument is formula or verify. It returns the exit status: 0 when dist/ is
 // written, 1 on a refusal, 2 on a usage error.
 func cli(args []string, stdout, stderr io.Writer, environ []string) int {
 	if len(args) > 0 && args[0] == "formula" {
 		return formulaCLI(args[1:], stdout, stderr)
+	}
+	if len(args) > 0 && args[0] == "verify" {
+		return verifyCLI(args[1:], stdout, stderr)
 	}
 	fs := flag.NewFlagSet("release", flag.ContinueOnError)
 	fs.SetOutput(stderr)

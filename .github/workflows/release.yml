@@ -1,0 +1,105 @@
+# Copyright 2026 Kottera
+# SPDX-License-Identifier: Apache-2.0
+#
+# Publishes a release from the draft GitHub release the release procedure
+# created (docs/dev/release.md, ADR-013 D7 item 3). Ed dispatches it, naming
+# the draft by its tag, and its release job runs in the release
+# environment, which requires his approval: approving it is his release
+# act. After approval, .github/scripts/release.sh checks the draft and
+# then pushes:
+#
+#   1. prepare checks every asset's SHA-256 against its line in the
+#      draft's SHA256SUMS and the archives against the shipped targets,
+#      the specification release the draft names, and the tags; it makes
+#      the annotated tags and the tap's commit in the job's own clones;
+#   2. push-tags pushes v<version> at the draft's target, and spec-<M>.<m>
+#      when the draft names the specification's release commit;
+#   3. publish publishes the draft, a prerelease when the version has a
+#      prerelease suffix;
+#   4. push-tap pushes the formula generated from SHA256SUMS to the tap,
+#      with TAP_TOKEN (ADR-013 D7 item 5);
+#   5. the pages job then builds and deploys metais.org from the released
+#      tag, by calling pages.yml. A release published with this workflow's
+#      own token starts no workflow, so no release event would.
+#
+# It builds no release and attests nothing: the archives are the release
+# procedure's, as built (ADR-013 D7 items 2 and 4).
+#
+# dry_run exists to prove this workflow alone, on a draft in the private
+# repository: prepare runs whole, and every push step, the publish and the
+# pages job are skipped, so nothing is pushed or published.
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The draft release to publish, by its tag, v<version>
+        required: true
+        type: string
+      dry_run:
+        description: Dry run, to prove this workflow; check everything, push and publish nothing
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: release
+    permissions:
+      # push the tags and publish the draft, which only a token that can
+      # write the repository's contents sees
+      contents: write
+      # read the release environment's protection rules
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag }}
+      DRY_RUN: ${{ inputs.dry_run }}
+      WORK: ${{ runner.temp }}/release
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: build the release tool, which verifies the assets and writes the formula
+        run: go build -o "$RUNNER_TEMP/release-tool" ./internal/tools/release
+      - name: prepare, which pushes nothing
+        id: prepare
+        env:
+          RELEASE_TOOL: ${{ runner.temp }}/release-tool
+          ACTOR: ${{ github.actor }}
+          ACTOR_ID: ${{ github.actor_id }}
+          TAP_TOKEN_SET: ${{ secrets.TAP_TOKEN != '' }}
+        run: .github/scripts/release.sh prepare "$WORK"
+      - name: push the tags
+        if: ${{ !inputs.dry_run }}
+        run: .github/scripts/release.sh push-tags "$WORK"
+      - name: publish the release
+        if: ${{ !inputs.dry_run }}
+        run: .github/scripts/release.sh publish "$WORK"
+      - name: push the formula to the tap
+        if: ${{ !inputs.dry_run && steps.prepare.outputs.tap == 'true' }}
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: .github/scripts/release.sh push-tap "$WORK"
+
+  pages:
+    needs: release
+    if: ${{ !inputs.dry_run }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
+    with:
+      tag: ${{ inputs.tag }}
