@@ -10,7 +10,7 @@
 {%- endcase %}
 <w:p><w:pPr><w:pStyle w:val="Title"/></w:pPr><w:r><w:t xml:space="preserve">{{ report.product.name }} Accessibility Conformance Report</w:t></w:r></w:p>
 <w:p><w:pPr><w:pStyle w:val="Subtitle"/></w:pPr><w:r><w:t xml:space="preserve">{{ edition }} edition</w:t></w:r></w:p>
-<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Report date: </w:t></w:r><w:r><w:t xml:space="preserve">{{ report.date }}</w:t></w:r></w:p>
+<w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Report date: </w:t></w:r><w:r><w:t xml:space="preserve">{{ report.date | date: "%-d %B %Y" }}</w:t></w:r></w:p>
 <w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Summary</w:t></w:r></w:p>
 <w:p><w:r><w:t xml:space="preserve">How many criteria of each table the product gives each conformance level:</w:t></w:r></w:p>
 {% render "docx/summary.xml.liquid", rows: inputs.wcag, name: "WCAG 2.2" -%}

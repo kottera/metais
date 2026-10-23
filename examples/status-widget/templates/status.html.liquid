@@ -12,5 +12,5 @@
 {%- endfor %}
   </ul>
 {%- endif %}
-  <p class="status-updated">Updated <time datetime="{{ s.updated }}">{{ s.updated }}</time></p>
+  <p class="status-updated">Updated <time datetime="{{ s.updated }}">{{ s.updated | date: "%-d %B %Y, %H:%M %Z" }}</time></p>
 </section>

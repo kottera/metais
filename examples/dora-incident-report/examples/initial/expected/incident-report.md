@@ -20,8 +20,8 @@
 ## 2. Initial notification
 
 - **2.1 Incident reference code assigned by the financial entity:** NWB-INC-2026-0042
-- **2.2 Date and time of detection of the ICT-related incident:** 2026-03-02T06:40:00Z
-- **2.3 Date and time of classification of the incident as major:** 2026-03-02T08:10:00Z
+- **2.2 Date and time of detection of the ICT-related incident:** 2 March 2026, 06:40:00 UTC
+- **2.3 Date and time of classification of the incident as major:** 2 March 2026, 08:10:00 UTC
 - **2.4 Description of the ICT-related incident:** From 06:15 UTC, card payments by retail clients in Germany and Austria were declined after a scheduled configuration change to the card payment gateway. The change has been rolled back and payments are recovering.
 - **2.5 Classification criteria that triggered the incident report:** clients, financial counterparts and transactions affected; duration and service downtime; geographical spread; critical services affected
 - **2.6 Materiality thresholds for the classification criterion ‘Geographical spread’:** AT; DE

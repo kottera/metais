@@ -1,7 +1,11 @@
 {%- comment -%}
 One report on a major ICT-related incident: field 1.1, then each section
 of the template that holds a value, every field under its number in
-Annex II to Implementing Regulation (EU) 2025/302.
+Annex II to Implementing Regulation (EU) 2025/302. Each value is written
+for a reader of the report's English: a date and time with its month named
+and its offset, a count grouped by commas, a percentage to the one decimal
+the glossary allows, an amount with the code 1.15 names, and a duration,
+which the data holds as DD:HH:MM, in days, hours and minutes.
 {%- endcomment -%}
 # Major ICT-related incident report {{ inputs.incident.reference_code }}
 
@@ -61,10 +65,10 @@ Annex II to Implementing Regulation (EU) 2025/302.
 - **2.1 Incident reference code assigned by the financial entity:** {{ inputs.incident.reference_code }}
 {%- endif %}
 {%- if inputs.incident.detected_at != nil %}
-- **2.2 Date and time of detection of the ICT-related incident:** {{ inputs.incident.detected_at }}
+- **2.2 Date and time of detection of the ICT-related incident:** {{ inputs.incident.detected_at | date: "%-d %B %Y, %H:%M:%S %Z" }}
 {%- endif %}
 {%- if inputs.incident.classified_at != nil %}
-- **2.3 Date and time of classification of the incident as major:** {{ inputs.incident.classified_at }}
+- **2.3 Date and time of classification of the incident as major:** {{ inputs.incident.classified_at | date: "%-d %B %Y, %H:%M:%S %Z" }}
 {%- endif %}
 {%- if inputs.incident.description != nil %}
 - **2.4 Description of the ICT-related incident:** {{ inputs.incident.description }}
@@ -98,34 +102,34 @@ Annex II to Implementing Regulation (EU) 2025/302.
 - **3.1 Incident reference code provided by the competent authority:** {{ inputs.incident.authority_reference_code }}
 {%- endif %}
 {%- if inputs.incident.occurred_at != nil %}
-- **3.2 Date and time of occurrence of the incident:** {{ inputs.incident.occurred_at }}
+- **3.2 Date and time of occurrence of the incident:** {{ inputs.incident.occurred_at | date: "%-d %B %Y, %H:%M:%S %Z" }}
 {%- endif %}
 {%- if inputs.incident.restored_at != nil %}
-- **3.3 Date and time when services, activities or operations have been recovered:** {{ inputs.incident.restored_at }}
+- **3.3 Date and time when services, activities or operations have been recovered:** {{ inputs.incident.restored_at | date: "%-d %B %Y, %H:%M:%S %Z" }}
 {%- endif %}
 {%- if inputs.incident.clients_affected != nil %}
-- **3.4 Number of clients affected:** {{ inputs.incident.clients_affected }}
+- **3.4 Number of clients affected:** {{ inputs.incident.clients_affected | number: group: "," }}
 {%- endif %}
 {%- if inputs.incident.clients_affected_percentage != nil %}
-- **3.5 Percentage of clients affected:** {{ inputs.incident.clients_affected_percentage }}
+- **3.5 Percentage of clients affected:** {{ inputs.incident.clients_affected_percentage | number: decimals: 1 }} %
 {%- endif %}
 {%- if inputs.incident.financial_counterparts_affected != nil %}
-- **3.6 Number of financial counterparts affected:** {{ inputs.incident.financial_counterparts_affected }}
+- **3.6 Number of financial counterparts affected:** {{ inputs.incident.financial_counterparts_affected | number: group: "," }}
 {%- endif %}
 {%- if inputs.incident.financial_counterparts_affected_percentage != nil %}
-- **3.7 Percentage of financial counterparts affected:** {{ inputs.incident.financial_counterparts_affected_percentage }}
+- **3.7 Percentage of financial counterparts affected:** {{ inputs.incident.financial_counterparts_affected_percentage | number: decimals: 1 }} %
 {%- endif %}
 {%- if inputs.incident.relevant_clients_or_counterparts_impacted != nil %}
 - **3.8 Impact on relevant clients or financial counterparts:** {% if inputs.incident.relevant_clients_or_counterparts_impacted %}Yes{% else %}No{% endif %}
 {%- endif %}
 {%- if inputs.incident.transactions_affected != nil %}
-- **3.9 Number of affected transactions:** {{ inputs.incident.transactions_affected }}
+- **3.9 Number of affected transactions:** {{ inputs.incident.transactions_affected | number: group: "," }}
 {%- endif %}
 {%- if inputs.incident.transactions_affected_percentage != nil %}
-- **3.10 Percentage of affected transactions:** {{ inputs.incident.transactions_affected_percentage }}
+- **3.10 Percentage of affected transactions:** {{ inputs.incident.transactions_affected_percentage | number: decimals: 1 }} %
 {%- endif %}
 {%- if inputs.incident.transactions_affected_value != nil %}
-- **3.11 Value of affected transactions:** {{ inputs.incident.transactions_affected_value }}
+- **3.11 Value of affected transactions:** {{ inputs.incident.transactions_affected_value | amount: inputs.entity.reporting_currency, group: "," }}
 {%- endif %}
 {%- if inputs.incident.impact_figures_basis != nil %}
 - **3.12 Information on whether the numbers are actual or estimates, or whether there has not been any impact:** {{ inputs.incident.impact_figures_basis | join: "; " }}
@@ -137,10 +141,10 @@ Annex II to Implementing Regulation (EU) 2025/302.
 - **3.14 Contextual information about the reputational impact:** {{ inputs.incident.reputational_impact_context }}
 {%- endif %}
 {%- if inputs.incident.duration != nil %}
-- **3.15 Duration of the incident:** {{ inputs.incident.duration }}
+- **3.15 Duration of the incident:** {{ inputs.incident.duration | duration: "%d d %-H h %-M min", fields: "d:h:m" }}
 {%- endif %}
 {%- if inputs.incident.service_downtime != nil %}
-- **3.16 Service downtime:** {{ inputs.incident.service_downtime }}
+- **3.16 Service downtime:** {{ inputs.incident.service_downtime | duration: "%d d %-H h %-M min", fields: "d:h:m" }}
 {%- endif %}
 {%- if inputs.incident.duration_figures_basis != nil %}
 - **3.17 Information on whether the numbers for duration and service downtime are actual or estimates:** {{ inputs.incident.duration_figures_basis }}
@@ -225,10 +229,10 @@ Annex II to Implementing Regulation (EU) 2025/302.
 - **4.6 Incident resolution:** {{ inputs.incident.resolution_summary }}
 {%- endif %}
 {%- if inputs.incident.root_cause_addressed_at != nil %}
-- **4.7 Date and time when the incident root cause was addressed:** {{ inputs.incident.root_cause_addressed_at }}
+- **4.7 Date and time when the incident root cause was addressed:** {{ inputs.incident.root_cause_addressed_at | date: "%-d %B %Y, %H:%M:%S %Z" }}
 {%- endif %}
 {%- if inputs.incident.resolved_at != nil %}
-- **4.8 Date and time when the incident was resolved:** {{ inputs.incident.resolved_at }}
+- **4.8 Date and time when the incident was resolved:** {{ inputs.incident.resolved_at | date: "%-d %B %Y, %H:%M:%S %Z" }}
 {%- endif %}
 {%- if inputs.incident.resolution_date_difference != nil %}
 - **4.9 Information if the permanent resolution date of the incidents differs from the initially planned implementation date:** {{ inputs.incident.resolution_date_difference }}
@@ -243,16 +247,16 @@ Annex II to Implementing Regulation (EU) 2025/302.
 - **4.12 Materiality threshold for the classification criterion ‘Economic impact’:** {{ inputs.incident.economic_impact_threshold }}
 {%- endif %}
 {%- if inputs.incident.gross_costs_and_losses != nil %}
-- **4.13 Amount of gross direct and indirect costs and losses:** {{ inputs.incident.gross_costs_and_losses }}
+- **4.13 Amount of gross direct and indirect costs and losses:** {{ inputs.incident.gross_costs_and_losses | amount: inputs.entity.reporting_currency, group: "," }}
 {%- endif %}
 {%- if inputs.incident.financial_recoveries != nil %}
-- **4.14 Amount of financial recoveries:** {{ inputs.incident.financial_recoveries }}
+- **4.14 Amount of financial recoveries:** {{ inputs.incident.financial_recoveries | amount: inputs.entity.reporting_currency, group: "," }}
 {%- endif %}
 {%- if inputs.incident.recurring_incidents != nil %}
 - **4.15 Information on whether the non-major incidents have been recurring:** {{ inputs.incident.recurring_incidents }}
 {%- endif %}
 {%- if inputs.incident.recurring_incidents_occurred_at != nil %}
-- **4.16 Date and time of occurrence of recurring incidents:** {{ inputs.incident.recurring_incidents_occurred_at }}
+- **4.16 Date and time of occurrence of recurring incidents:** {{ inputs.incident.recurring_incidents_occurred_at | date: "%-d %B %Y, %H:%M:%S %Z" }}
 {%- endif %}
 {%- endcapture %}
 {%- if section != "" %}

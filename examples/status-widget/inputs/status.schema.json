@@ -23,7 +23,7 @@
       "type": "string",
       "format": "date-time",
       "title": "Updated",
-      "description": "When the status was last updated, as an RFC 3339 date-time. The widget prints it as given.",
+      "description": "When the status was last updated, as an RFC 3339 date-time. The widget writes it for a reader in the offset it carries, as 20 October 2026, 08:15 UTC, and keeps it as given in the time element's datetime attribute.",
       "examples": ["2026-10-20T08:15:00Z"]
     },
     "message": {
