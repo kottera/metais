@@ -377,10 +377,10 @@ func TestParseHintCauses(t *testing.T) {
 // TestCheckOneParse is W4-4.7: check parses a template with the parse the
 // manifest's expressions use, Dialect() under ParseLimits(), and reports
 // exactly the errors that parse gives. Dialect() is liquid.Core() with
-// METAIS's filters and date (W5-1), and with METAIS's embed, asset and
+// METAIS's filters and date (W5-1), number and amount (ADR-004 A2), and with METAIS's embed, asset and
 // provenance tags known by name, which no expression may hold (ADR-004 D16 item 5).
 func TestCheckOneParse(t *testing.T) {
-	want := append(liquid.Core().FilterNames(), "csv", "date", "duration", "json", "json_script", "markdown_table", "safe", "slug", "yaml")
+	want := append(liquid.Core().FilterNames(), "amount", "csv", "date", "duration", "json", "json_script", "markdown_table", "number", "safe", "slug", "yaml")
 	slices.Sort(want)
 	if got := loader.Dialect().FilterNames(); !slices.Equal(got, want) {
 		t.Errorf("the dialect's filters are %q, want %q", got, want)
