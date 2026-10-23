@@ -206,6 +206,11 @@ criteria too: `coverage` names what must be there, not all that may be.
 8 key pointers, no two of them equal, and a processor MUST refuse one that is
 not with `schema.invalid`, naming the keyword.
 
+<a id="mts-dat-016"></a>**MTS-DAT-016** `coverage` MUST be an object with
+exactly two members, `key`, a key pointer, and `values`, an array of one or
+more values no two of which are equal, and a processor MUST refuse one that
+is not with `schema.invalid`, naming the keyword.
+
 <a id="mts-dat-017"></a>**MTS-DAT-017** A processor MUST evaluate
 `uniqueKeys` and `coverage` wherever the schema object holding them applies
 to an array, through `$ref`, `allOf`, a conditional and every other
@@ -220,6 +225,11 @@ item whose key equals an earlier item's key, pointer by pointer, with one
 first item with that key, located at its value at the pointer when the
 keyword has one pointer and at the item when it has several, with the first
 item's same place in `related`; an item with no key is never reported.
+
+<a id="mts-dat-019"></a>**MTS-DAT-019** A processor MUST report each member of
+`coverage`'s `values` that no item's value at `key` equals with one
+`input.coverage` located at the array, whose `missing` parameter is that
+member; an item with no value at `key` covers nothing.
 
 A failure of either keyword in an output's value is reported by the `output.`
 family, as every keyword's is ([chapter 12](12-findings.md) §12.3). A

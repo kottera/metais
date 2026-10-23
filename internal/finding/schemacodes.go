@@ -130,6 +130,9 @@ var schemaKeywords = []schemaKeyword{
 		always("index", TypeNumber, "The 0-based index of the item whose key repeats."),
 		always("duplicate_of", TypeNumber, "The 0-based index of the first item with that key."),
 	}, "{field} repeats the key of item {duplicate_of} of the array, whose uniqueKeys requires each item's key to be unique.", "Change the key of item {index}, or remove the item if it repeats item {duplicate_of}.", SpanValue},
+	{"coverage", []ParamSpec{
+		always("missing", TypeString, "The member of coverage's values that no item holds at the key, as its canonical JSON text."),
+	}, "{field} has no item whose value at coverage's key is {missing}, a value the array must cover.", "Add an item whose value at coverage's key is {missing}.", SpanValue},
 	{"contains", nil, "{field} has no item the schema's contains accepts.", "Add an item that the contains subschema accepts.", SpanValue},
 	{"min_contains", []ParamSpec{
 		always("limit", TypeNumber, meaningLimit), always("count", TypeNumber, "How many items the contains subschema accepts."),
@@ -161,9 +164,9 @@ var schemaKeywords = []schemaKeyword{
 
 // manifestUnproducible are the keyword codes the manifest family does not
 // register, because no manifest can fail the 1.0 manifest schema in a way
-// that D6's mapping names by them (ADR-006 A1). Fifteen are keywords the
-// schema never uses (A1 item 1), unique_keys among them (ADR-003
-// Amendment A2 ruling 7). The other two are failures the schema's
+// that D6's mapping names by them (ADR-006 A1). Sixteen are keywords the
+// schema never uses (A1 item 1), unique_keys and coverage among them
+// (ADR-003 Amendment A2 ruling 7). The other two are failures the schema's
 // use of a keyword cannot give: its one anyOf is beneath a not, whose
 // subschema reports nothing from inside it (D6 item 10), and its oneOfs
 // choose between closed branches that each require a member no other
@@ -187,6 +190,7 @@ var manifestUnproducible = map[string]bool{
 	"unevaluated_item":     true,
 	"unevaluated_property": true,
 	"unique_keys":          true,
+	"coverage":             true,
 }
 
 // schemaEntries are the registry entries of ADR-006 D6 item 4's keyword
@@ -227,6 +231,7 @@ var schemaStatements = map[Code][]string{
 	"input.unevaluated_property":   {"MTS-DAT-010", "MTS-FND-004"},
 	"input.unique_items":           {"MTS-DAT-010", "MTS-DAT-013", "MTS-FND-004"},
 	"input.unique_keys":            {"MTS-DAT-010", "MTS-DAT-017", "MTS-DAT-018", "MTS-FND-004"},
+	"input.coverage":               {"MTS-DAT-010", "MTS-DAT-017", "MTS-DAT-019", "MTS-FND-004"},
 	"manifest.additional_property": {"MTS-MAN-011", "MTS-MAN-019"},
 	"manifest.const":               {"MTS-MAN-019"},
 	"manifest.contains":            {"MTS-MAN-019"},
@@ -276,6 +281,7 @@ var schemaStatements = map[Code][]string{
 	"output.unevaluated_property":  {"MTS-FND-004", "MTS-TRN-015"},
 	"output.unique_items":          {"MTS-FND-004", "MTS-TRN-015"},
 	"output.unique_keys":           {"MTS-DAT-018", "MTS-FND-004", "MTS-TRN-015"},
+	"output.coverage":              {"MTS-DAT-019", "MTS-FND-004", "MTS-TRN-015"},
 }
 
 func schemaEntries() []Entry {

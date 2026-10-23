@@ -466,6 +466,7 @@ family:
 | `maxItems`, `minItems` | `input.max_items`, `input.min_items` |
 | `uniqueItems` | `input.unique_items` |
 | `uniqueKeys` | `input.unique_keys` |
+| `coverage` | `input.coverage` |
 | `contains`, `minContains`, `maxContains` | `input.contains`, `input.min_contains`, `input.max_contains` |
 | `maxProperties`, `minProperties` | `input.max_properties`, `input.min_properties` |
 | `required` | `input.required` |

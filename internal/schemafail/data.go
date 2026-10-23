@@ -24,6 +24,7 @@ package schemafail
 //	uniqueItems             duplicates []int (two indexes, the earlier first)
 //	uniqueKeys              duplicates []int (the first item with the key, then the item repeating it);
 //	                        at []string (the tokens of the keyword's one pointer, absent when it has several)
+//	coverage                missing string (the RFC 8785 text of one member of values no item holds; one failure per member)
 //	anyOf, oneOf            branch_count int; for a oneOf more than one branch of which matched,
 //	                        matched []int (two of them) and no children
 //	false                   prefix_count int, when the false schema is items' (one failure per item refused)
