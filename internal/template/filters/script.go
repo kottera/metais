@@ -73,8 +73,8 @@ func (jsonScriptFilter) Check(f *ast.Filter) *liquid.Error { return checkNoArgs(
 func (jsonScriptFilter) MarksSafe() bool                   { return true }
 
 // Apply charges the deep size of the input, which encoding visits whole,
-// before encoding it, then the result's bytes as a string it builds:
-// work units and held bytes (ADR-009 D11 item 2).
+// before encoding it, then the result's bytes as a string it builds, as
+// work units (ADR-009 D11 item 2).
 func (jsonScriptFilter) Apply(c liquid.FilterContext, in value.Value, args []liquid.Arg) (value.Value, *liquid.Error) {
 	if err := applyNoArgs("json_script", args); err != nil {
 		return nil, err
@@ -90,9 +90,6 @@ func (jsonScriptFilter) Apply(c liquid.FilterContext, in value.Value, args []liq
 	s := scriptSafe.Replace(string(b))
 	n := int64(len(s))
 	if err := m.Charge(liquid.WorkUnits, n); err != nil {
-		return nil, err
-	}
-	if err := m.Charge(liquid.WorkHeldBytes, n); err != nil {
 		return nil, err
 	}
 	v, verr := value.NewString(s)

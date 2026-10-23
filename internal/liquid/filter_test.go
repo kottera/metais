@@ -540,10 +540,11 @@ func TestFilterCharges(t *testing.T) {
 		filter, in, args string
 		units, held      int64
 	}{
-		// 2 + 3 for input and argument; the built "abcde": 5 units, 5 bytes.
-		{"append", `"ab"`, `["cde"]`, 10, 5},
+		// 2 + 3 for input and argument; the built "abcde": 5 units, and no
+		// held bytes, which only assign and capture charge.
+		{"append", `"ab"`, `["cde"]`, 10, 0},
 		// 2 for the input, 2 for the built result.
-		{"upcase", `"ab"`, ``, 4, 2},
+		{"upcase", `"ab"`, ``, 4, 0},
 		// 3 for the input, 1 for the integer result.
 		{"size", `[1, 2, 3]`, ``, 4, 0},
 		// 3 for the input; 3 comparisons ⌈log2 3⌉ = 2 deep, so 6; 3 for the result.
@@ -551,8 +552,8 @@ func TestFilterCharges(t *testing.T) {
 		// 3 for the input; 3 comparisons 2 deep, and the keys' 3 bytes 2
 		// deep, so 12; 3 for the result.
 		{"sort", `["c", "a", "b"]`, ``, 18, 0},
-		// 2 + 1; 2 flattened from the nested array; the built "1,2,3": 5 units, 5 bytes.
-		{"join", `[[1, 2], 3]`, `[","]`, 10, 5},
+		// 2 + 1; 2 flattened from the nested array; the built "1,2,3": 5 units.
+		{"join", `[[1, 2], 3]`, `[","]`, 10, 0},
 		// 1 + 1 for the operands, 1 for the result.
 		{"plus", `1`, `[2]`, 3, 0},
 		// 3 for the input; the substring result: 1.
@@ -622,10 +623,13 @@ func TestFilterChargesOperandsFirst(t *testing.T) {
 
 // TestGrowthRefusedBeforeWork pins the charge-first property where it
 // matters: a filter whose result would be far larger than its operands
-// charges the result's size, and is refused, before it builds it. Each
-// application here would build at least four times what the meter holds,
-// and the replace with an empty pattern gibibytes; each is refused having
-// allocated next to nothing.
+// charges the result's size, and is refused, before it builds it. The
+// meter holds the operands' charges and 16 KiB of units more; each
+// application here would build at least four times that, and the replace
+// with an empty pattern gibibytes. Each is refused by render-work, the
+// operands charged, having allocated next to nothing: a built string
+// charges no held bytes (ADR-009 Amendment A10 item 4), so its units are
+// what refuse it.
 func TestGrowthRefusedBeforeWork(t *testing.T) {
 	testenv.Home(t)
 	big := strings.Repeat("x", 1<<16)
@@ -647,7 +651,11 @@ func TestGrowthRefusedBeforeWork(t *testing.T) {
 		}()), []Arg{{Value: newString(big)}}},
 	} {
 		def, _ := Core().Filter(c.filter)
-		m := newTestMeter(map[Work]int64{WorkHeldBytes: 1 << 16})
+		operands := shallow(c.in)
+		for _, a := range c.args {
+			operands += shallow(a.Value)
+		}
+		m := newTestMeter(map[Work]int64{WorkUnits: operands + 1<<14})
 		var before, after runtime.MemStats
 		runtime.GC()
 		runtime.ReadMemStats(&before)
@@ -655,6 +663,9 @@ func TestGrowthRefusedBeforeWork(t *testing.T) {
 		runtime.ReadMemStats(&after)
 		if err == nil || err.Code != CodeLimit || got != nil {
 			t.Errorf("%s: %v; want refused by the meter", c.filter, err)
+		}
+		if used := m.Used(WorkUnits); used < operands {
+			t.Errorf("%s: refused having charged %d units, before its operands' %d", c.filter, used, operands)
 		}
 		if grew := after.TotalAlloc - before.TotalAlloc; grew > 4<<20 {
 			t.Errorf("%s allocated %d bytes before it was refused", c.filter, grew)

@@ -31,8 +31,7 @@ const FilterName = "date"
 //
 // Its work is charged as ADR-009 D11 item 2's table says: the shallow
 // sizes of the input and of the format before anything else, then the
-// result's byte length, as work units and held bytes, once the result is
-// made. Formatting is linear in the format's length, which the first
+// result's byte length, as work units, once the result is made. Formatting is linear in the format's length, which the first
 // charge has already counted, so no work goes uncharged.
 func Filter() liquid.FilterDef { return dateFilter{} }
 
@@ -101,9 +100,6 @@ func (dateFilter) Apply(c liquid.FilterContext, in value.Value, args []liquid.Ar
 	s := f.Apply(t)
 	n := int64(len(s))
 	if err := m.Charge(liquid.WorkUnits, n); err != nil {
-		return nil, err
-	}
-	if err := m.Charge(liquid.WorkHeldBytes, n); err != nil {
 		return nil, err
 	}
 	out, verr := value.NewString(s)

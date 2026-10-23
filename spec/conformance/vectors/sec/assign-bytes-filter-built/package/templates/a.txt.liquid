@@ -1,0 +1,1 @@
+{% assign s = "abc" | append: "d" %}{{ s }}{{ s | append: "e" }}{% ifchanged %}{{ s }}{% endifchanged %}

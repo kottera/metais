@@ -294,11 +294,14 @@ limit is.
 
 <a id="mts-sec-008"></a>**MTS-SEC-008** A processor MUST bound a render's
 template work by `render-work`, counted in units — 16 for every node it
-evaluates (an output, a tag, a filter application, an operator), and, for
-every filter application and operator, units for the size of its input, its
-arguments and its result — and MUST refuse a render whose units exceed the
-limit with `limit.exceeded.template`, naming the limit, at the token whose
-evaluation exceeded it.
+evaluates (an output, a tag, a filter application, an operator, a range made
+a value being an operator), and, for every filter application and operator,
+units for the size of its input, its arguments and its result; 1 for each
+element of an array written, and of every array nested in it; and 1 for each
+byte of a string whose `size` shorthand is read
+([§7.11](07-template-environment.md#mts-tpl-063)) — and MUST refuse a
+render whose units exceed the limit with `limit.exceeded.template`, naming
+the limit, at the token whose evaluation exceeded it.
 
 <a id="mts-sec-009"></a>**MTS-SEC-009** A processor MUST refuse a render whose
 loop iterations, summed over the render, exceed `loop-iterations`, a range
