@@ -182,7 +182,7 @@ func (c *config) run() error {
 		if err != nil {
 			return err
 		}
-		archives[archiveName(c.version, t)] = b
+		archives[buildline.ArchiveName(c.version, t)] = b
 	}
 	return writeDist(dist, archives, c.stdout)
 }
@@ -385,11 +385,6 @@ func archive(binary []byte, notices map[string][]byte) ([]byte, error) {
 		return nil, err
 	}
 	return buf.Bytes(), nil
-}
-
-// archiveName is metais_<version>_<os>_<arch>.tar.gz.
-func archiveName(version string, t buildline.Target) string {
-	return binaryName + "_" + version + "_" + t.OS + "_" + t.Arch + ".tar.gz"
 }
 
 // writeDist creates dist, which must not exist, and writes each archive

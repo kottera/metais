@@ -1,0 +1,65 @@
+metais: "1.0"
+name: org.metais.site
+version: "1.0.0"
+title: The metais.org site
+description: The metais.org site's pages, rendered from metais's own help and skill, the specification's text and the release the site is built for.
+license: Apache-2.0
+homepage: https://metais.org/
+guide: |-
+  This package renders the pages of metais.org. Nothing is written by hand
+  but the layout and the pages' own text: the reference comes from metais's
+  help and skill, and the specification from its Markdown.
+
+  site/build.sh is the one way to render it. It builds metais from the
+  commit being built, exports every input below as one JSON file of a data
+  directory, renders this package with that metais, and adds the static
+  files of site/public and the schemas at their $ids. Each input says
+  where it comes from in its description, and its schema is what the build
+  step must export.
+inputs:
+  - name: help
+    title: metais's help
+    description: The result of metais help --json, the metais.help/1 document of every command and every topic.
+    schema: inputs/help.schema.json
+    forms: [json]
+  - name: skill
+    title: metais's agent skill
+    description: The skill metais skill --print prints, as its text and as an HTML fragment of its body.
+    schema: inputs/skill.schema.json
+    forms: [json]
+  - name: spec
+    title: The specification's text
+    description: The draft and every released revision of the specification, each Markdown file of spec/ as an HTML fragment.
+    schema: inputs/spec.schema.json
+    forms: [json]
+  - name: release
+    title: The release
+    description: The release of metais the site is built for, its version and archives, or published false for a build with no release.
+    schema: inputs/release.schema.json
+    forms: [json]
+  - name: tool
+    title: The metais that renders the site
+    description: The result of metais version --json, from the metais built from the commit being built.
+    schema: inputs/tool.schema.json
+    forms: [json]
+outputs:
+  - id: home
+    template: index.html.liquid
+    path: index.html
+    escape: html
+  - id: install
+    template: install/index.html.liquid
+    path: install/index.html
+    escape: html
+  - id: getting_started
+    template: getting-started/index.html.liquid
+    path: getting-started/index.html
+    escape: html
+  - id: go_import_module
+    template: metais/index.html.liquid
+    path: metais/index.html
+    escape: html
+  - id: go_import_command
+    template: metais/cmd/metais/index.html.liquid
+    path: metais/cmd/metais/index.html
+    escape: html

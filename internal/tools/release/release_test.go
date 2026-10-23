@@ -642,7 +642,7 @@ func TestReleaseTakesNoHostGoConfiguration(t *testing.T) {
 	}
 	head := gitIn(t, dir, "rev-parse", "HEAD")
 	for _, tg := range buildline.Shipped {
-		name := archiveName("1.0.0", tg)
+		name := buildline.ArchiveName("1.0.0", tg)
 		checkArchive(t, name, []byte(readFile(t, filepath.Join(dir, "dist", name))), tg, head)
 	}
 }

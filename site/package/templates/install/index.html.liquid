@@ -1,16 +1,4 @@
-<!DOCTYPE html>
-<!-- Copyright 2026 Kottera. SPDX-License-Identifier: Apache-2.0 -->
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Install metais — METAIS</title>
-<meta name="description" content="How to download metais from its latest release, verify it against SHA256SUMS, and put it on your PATH.">
-<link rel="stylesheet" href="/style.css">
-</head>
-<body>
-<nav><a href="/">METAIS</a><a href="/install/">Install</a><a href="/getting-started/">Getting started</a></nav>
-<main>
+{%- capture body -%}
 <h1>Install metais</h1>
 
 <p><code>metais</code> is one static binary with no dependencies. Each
@@ -96,8 +84,5 @@ CGO_ENABLED=0 go build -trimpath ./cmd/metais</code></pre>
 
 <p>A binary built this way is not the release's: <code>metais version</code>
 reports <code>0.0.0-devel</code>.</p>
-</main>
-<footer>METAIS is created by <a href="https://github.com/kottera">Kottera</a>,
-under the Apache License 2.0. Source: <a href="https://github.com/kottera/metais">github.com/kottera/metais</a>.</footer>
-</body>
-</html>
+{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "Install metais — METAIS", description: "How to download metais from its latest release, verify it against SHA256SUMS, and put it on your PATH.", head: nil, body: body -%}

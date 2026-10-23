@@ -1,16 +1,4 @@
-<!DOCTYPE html>
-<!-- Copyright 2026 Kottera. SPDX-License-Identifier: Apache-2.0 -->
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Getting started — METAIS</title>
-<meta name="description" content="What to do with a .metais package someone gave you, and how to write one of your own.">
-<link rel="stylesheet" href="/style.css">
-</head>
-<body>
-<nav><a href="/">METAIS</a><a href="/install/">Install</a><a href="/getting-started/">Getting started</a></nav>
-<main>
+{%- capture body -%}
 <h1>Getting started</h1>
 
 <p>This page assumes <code>metais</code> is <a href="/install/">installed</a>.
@@ -161,8 +149,5 @@ under <code>spec/</code>.</li>
 <code>$id</code>s: <a href="/schemas/1.0/manifest.schema.json"><code>https://metais.org/schemas/1.0/manifest.schema.json</code></a>
 and its neighbours.</li>
 </ul>
-</main>
-<footer>METAIS is created by <a href="https://github.com/kottera">Kottera</a>,
-under the Apache License 2.0. Source: <a href="https://github.com/kottera/metais">github.com/kottera/metais</a>.</footer>
-</body>
-</html>
+{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "Getting started — METAIS", description: "What to do with a .metais package someone gave you, and how to write one of your own.", head: nil, body: body -%}

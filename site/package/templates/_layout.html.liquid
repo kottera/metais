@@ -1,0 +1,30 @@
+{%- comment -%}
+  Every page of the site: the head, with the page's title, its
+  description and any other element it gives as head, the navigation, the
+  page's body as main, and the footer ADR-013 D2 item 1 fixes, which says
+  METAIS is made by Kottera, with a link to kottera.com.
+{%- endcomment -%}
+<!DOCTYPE html>
+<!-- Copyright 2026 Kottera. SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ title }}</title>
+{%- if description %}
+<meta name="description" content="{{ description }}">
+{%- endif %}
+{%- if head %}
+{{ head }}
+{%- endif %}
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<nav><a href="/">METAIS</a><a href="/install/">Install</a><a href="/getting-started/">Getting started</a></nav>
+<main>
+{{ body }}
+</main>
+<footer>METAIS is made by <a href="https://kottera.com/">Kottera</a>,
+under the Apache License 2.0. Source: <a href="https://github.com/kottera/metais">github.com/kottera/metais</a>.</footer>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The agent skill",
+  "description": "The skill metais skill --print prints, as the build step exports it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["text", "html"],
+  "properties": {
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The skill exactly as metais skill --print prints it, its frontmatter included."
+    },
+    "html": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The skill's body, the text after its frontmatter, as an HTML fragment."
+    }
+  }
+}
