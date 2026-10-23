@@ -10859,6 +10859,14 @@
             }
           },
           {
+            "code": "template.amount_currency",
+            "cause": "A template is refused (amount currency).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Shows the package's outputs; a template's defect is the package's, for its author to fix."
+            }
+          },
+          {
             "code": "template.asset_ambiguous",
             "cause": "A template is refused (asset ambiguous).",
             "next": {
@@ -10931,6 +10939,22 @@
             }
           },
           {
+            "code": "template.duration_format",
+            "cause": "A template is refused (duration format).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Shows the package's outputs; a template's defect is the package's, for its author to fix."
+            }
+          },
+          {
+            "code": "template.duration_input",
+            "cause": "A template is refused (duration input).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Shows the package's outputs; a template's defect is the package's, for its author to fix."
+            }
+          },
+          {
             "code": "template.embed_index",
             "cause": "A template is refused (embed index).",
             "next": {
@@ -10989,6 +11013,14 @@
           {
             "code": "template.not_utf8",
             "cause": "A template is refused (not utf8).",
+            "next": {
+              "run": "metais inspect <package>",
+              "why": "Shows the package's outputs; a template's defect is the package's, for its author to fix."
+            }
+          },
+          {
+            "code": "template.number_input",
+            "cause": "A template is refused (number input).",
             "next": {
               "run": "metais inspect <package>",
               "why": "Shows the package's outputs; a template's defect is the package's, for its author to fix."
@@ -17003,6 +17035,14 @@
             }
           },
           {
+            "code": "template.amount_currency",
+            "cause": "A template is refused (amount currency).",
+            "next": {
+              "run": "metais test <package>",
+              "why": "Tests every example again once the package or its examples are fixed."
+            }
+          },
+          {
             "code": "template.asset_ambiguous",
             "cause": "A template is refused (asset ambiguous).",
             "next": {
@@ -17075,6 +17115,22 @@
             }
           },
           {
+            "code": "template.duration_format",
+            "cause": "A template is refused (duration format).",
+            "next": {
+              "run": "metais test <package>",
+              "why": "Tests every example again once the package or its examples are fixed."
+            }
+          },
+          {
+            "code": "template.duration_input",
+            "cause": "A template is refused (duration input).",
+            "next": {
+              "run": "metais test <package>",
+              "why": "Tests every example again once the package or its examples are fixed."
+            }
+          },
+          {
             "code": "template.embed_index",
             "cause": "A template is refused (embed index).",
             "next": {
@@ -17133,6 +17189,14 @@
           {
             "code": "template.not_utf8",
             "cause": "A template is refused (not utf8).",
+            "next": {
+              "run": "metais test <package>",
+              "why": "Tests every example again once the package or its examples are fixed."
+            }
+          },
+          {
+            "code": "template.number_input",
+            "cause": "A template is refused (number input).",
             "next": {
               "run": "metais test <package>",
               "why": "Tests every example again once the package or its examples are fixed."
@@ -19569,6 +19633,14 @@
             }
           },
           {
+            "code": "template.amount_currency",
+            "cause": "A template is refused (amount currency).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
             "code": "template.asset_ambiguous",
             "cause": "A template is refused (asset ambiguous).",
             "next": {
@@ -19649,6 +19721,22 @@
             }
           },
           {
+            "code": "template.duration_format",
+            "cause": "A template is refused (duration format).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
+            "code": "template.duration_input",
+            "cause": "A template is refused (duration input).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
+            }
+          },
+          {
             "code": "template.embed_index",
             "cause": "A template does not parse (embed index), an error.",
             "next": {
@@ -19710,6 +19798,14 @@
             "next": {
               "run": "metais check <dir>",
               "why": "Lists the errors that stop pack; fix them, then pack again, which checks and tests the package first."
+            }
+          },
+          {
+            "code": "template.number_input",
+            "cause": "A template is refused (number input).",
+            "next": {
+              "run": "metais test <dir>",
+              "why": "Renders every example and compares it; fix the package or the examples that fail, then pack again."
             }
           },
           {

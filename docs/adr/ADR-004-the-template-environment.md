@@ -1,8 +1,9 @@
 # ADR-004: The template environment — Shopify Liquid 5.14.0 parsed strictly, a closed set of bindings, strict on every name, and a METAIS filter and tag catalog defined to the byte
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
-[Amendment A1](#amendments) (`slug` reads its letter table after NFKD) is
-Proposed; the passage it changes is marked *(A1)*.
+[Amendment A1](#amendments) (`slug` reads its letter table after NFKD) and
+Amendment A2 (value-formatting filters: `number`, `amount` and `duration`)
+are Proposed; the passages they change are marked *(A1)* and *(A2)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R7 (items 1 to 6) and R11 (items 1 and 2); the
@@ -548,8 +549,17 @@ Liquid's `name: value` form.
    (`"日本語"`) is `template.slug_empty`, saying to supply the slug as data.
 7. **`safe`** — D9 item 3.
 8. **`escape`** and **`escape_once`** are Shopify's, with D9's mapping.
-9. **Not in `1.0`**: a `sha256` filter, an indentation filter, and any
-   filter reading something other than its arguments.
+9. **Not in `1.0`**: a `sha256` filter, an indentation filter, a filter
+   reading a locale or a shop's settings, such as Shopify's `money`, and
+   any filter reading something other than its arguments. *(A2)*
+10. **`number`** — a number or a decimal text, rounded to `decimals:`
+    half away from zero, with the point and group separators its keywords
+    name. *(A2)*
+11. **`amount`** — `number` with an ISO 4217 code before or after it, its
+    decimals from the code by Appendix C unless `decimals:` gives them.
+    *(A2)*
+12. **`duration`** — seconds, an ISO 8601 duration, or fields named by
+    `fields:`, written by `%d`, `%H`, `%M` and `%S`. *(A2)*
 
 ### D11 — `date` takes RFC 3339 text or Unix seconds and formats in the value's own offset
 
@@ -703,8 +713,9 @@ Liquid's `name: value` form.
    `filter_input`, `filter_argument`, `number_range`, `division_by_zero`,
    `invalid_utf8`, `date_input`, `date_format`, `slug_empty`,
    `asset_not_written`, `asset_ambiguous`, `asset_tree`, `asset_not_text`,
-   `provenance_style` (found at render, or at parse when the arguments are
-   literals). A limit ADR-009 defines (`partial-depth`, `template-nesting`,
+   `provenance_style`, `number_input`, `amount_currency`, `duration_input`,
+   `duration_format` *(A2)* (found at render, or at parse when the
+   arguments are literals). A limit ADR-009 defines (`partial-depth`, `template-nesting`,
    `template-size`, `render-work` and the rest) is ADR-009 D19's
    `limit.package` when the package's own content breaches it and
    `limit.exceeded` when a render's data or work does, naming the limit.
@@ -973,6 +984,9 @@ tables most implementations do not carry; `inspect`'s format changed in Ruby
 - Identity of a collection item through a filtered or reordered
   `for_each`, a `sha256` filter, an indentation filter, alignment in `markdown_table`, and a locale for `date` names: a
   later minor may add any of them.
+- A locale, a preset, a rounding mode, a currency symbol or a minus sign
+  for `number` and `amount`; a negative or fractional duration; and an
+  offset for `date` *(A2)*: a later minor may add each as a keyword.
 
 ## Proposed rulings
 
@@ -1119,6 +1133,168 @@ observed gets its own fix before `spec-1.0` freezes the vectors (R2-170).
 3. **Proof.** The vector `flt/slug-decomposed-letters` fails on the
    order D10 gave and passes on this one; a unit test of
    `internal/template/filters` holds that no table letter decomposes.
+
+### A2 — Value-formatting filters: `number`, `amount` and `duration`
+
+**Status:** Proposed 2026-10-23. Ed Funnekotter ruled on 2026-10-23 that
+value-formatting filters ship in `1.0`, locale-free and with explicit
+arguments, and accepted rulings 1 to 12 below as proposed, freezing ruling
+5's table at the current edition of the official list.
+**Amends:** D10 (item 9 widened; items 10 to 12 added), D16's codes, and
+"What this does not decide", each marked *(A2)* in place. Chapter 8
+§8.1.10 to §8.1.14 state it as MTS-FLT-015 to MTS-FLT-023, Appendix C
+holds the currency table, chapter 3's MTS-MAN-018 names the two literal
+refusals in a manifest expression, chapter 7's MTS-TPL-063 charges the
+filters, and chapter 13 §13.9 shows them in use.
+
+**Context.** An external test of `examples/dora-incident-report` found
+three values a reader misreads, each written as the data holds it: an
+amount, `48920000`, with no currency, though an input names it; a
+timestamp left as raw RFC 3339 text; and a duration, `00:07:25`, which
+readers took as hours, minutes and seconds where the field means days,
+hours and minutes. `date` already writes the second for a reader; nothing
+wrote the first or the third. An agent-written invoice package in the UX
+runner's records (`internal/tools/ux`) wrote `{{ amount }} {{ currency }}`
+and printed `12.5 EUR`. No Liquid dialect has these filters, and the ones
+agents know best for money, Shopify storefront's `money`,
+`money_with_currency` and `money_without_currency`, take cents and read the
+shop's settings.
+
+**Rulings of 2026-10-23,** numbered as ruled:
+
+1. **Three filters, `number`, `amount` and `duration`,** not one filter
+   with modes: an author looks for an amount or a duration by that name,
+   and each filter's refusals stay its own, as `date`'s are.
+2. **`decimals:` is a keyword** of `number` and `amount` alike, since
+   `amount`'s one positional argument is the code. Every argument a later
+   minor adds is a keyword, which `1.0` refuses (MTS-FLT-004), so the
+   addition is a construct an earlier minor refuses (chapter 4 §4.1.2).
+3. **No group separator by default,** and `.` as the point: grouping is
+   always written in the template, and the point is the data's own
+   spelling. U+202F, the ISO 80000 thin space, was the alternative; it is
+   not chosen, for the fonts and CSV readers that do not take it.
+4. **No presets in `1.0`.** A preset is a locale by another name; a later
+   `locale:` or `preset:` keyword is additive, and an explicit
+   `group:` or `point:` will win over it.
+5. **A frozen ISO 4217 table, with `decimals:` overriding it.** DORA's
+   reporting currency is an input, so the author cannot know at authoring
+   time whether it is `JPY` (0), `EUR` (2) or `BHD` (3). The table is ISO
+   4217's list one as SIX Financial Information AG published it on
+   2026-09-17 (Appendix C, 178 codes). No version of the major changes an
+   entry's minor units; a later minor may add a code, which `1.0` refuses
+   without `decimals:`, and `decimals:` is the escape for a code the table
+   lacks.
+6. **The code before the number, separated by one U+0020** (`EUR 48,920,000.00`),
+   the order of the EU's Interinstitutional Style Guide, with
+   `code: "after"` for `48,920,000.00 EUR`; `-` belongs to the number
+   (`EUR -5.00`). No symbol, ever: `$` names more than one currency.
+7. **Half away from zero,** so `x | round: 2` (MTS-TPL-018) and
+   `x | number: decimals: 2` never disagree; DORA's own glossary rounds
+   percentages half up, which is the same for the values it rounds. A
+   later minor may add a `rounding:` keyword.
+8. **Strings are read only as a strict decimal text,**
+   `-?(0|[1-9][0-9]*)(\.[0-9]+)?`, exactly and at any length: ADR-003 D8
+   item 5 tells a supplier to give a number beyond binary64 as a string,
+   and this is where that string is formatted. Ruby's `to_i` coercion,
+   which the arithmetic filters keep (D4 item 3), is never applied: a
+   loose reading could not be withdrawn later, a strict one can widen.
+9. **`duration` reads a string of fields separated by `:` only when
+   `fields:` names them** (`"d:h:m:s"`, `"d:h:m"`, `"h:m:s"`, `"h:m"`,
+   `"m:s"`), beside whole seconds and the ISO 8601 durations of `W`, `D`,
+   `H`, `M` and `S`. DORA's `DD:HH:MM` is the regulator's own field type,
+   and naming the fields makes the misreading that started this amendment
+   impossible to write.
+10. **A directive format,** `%d`, `%H`, `%M` and `%S` with `date`'s flags
+    `-`, `_` and `0`, rather than named styles, which would need English
+    unit names. The largest unit named takes the whole count, each smaller
+    one what is left, and what lies below the smallest is dropped, never
+    rounded up, as a clock does.
+11. **No offset for `date` in `1.0`.** A fixed offset is wrong for half of
+    every year in a zone with daylight saving time, and a zone name needs
+    the time zone database D11 item 2 forbids. A later minor may add a
+    keyword.
+12. **Four new codes,** `template.number_input`, `template.amount_currency`,
+    `template.duration_input` and `template.duration_format`, as `date` has
+    `template.date_input` and `template.date_format`: `template.filter_input`
+    naming the kind `string` would mislead where strings are read.
+
+**Decision.**
+
+1. **One reading of a number** (MTS-FLT-015 to MTS-FLT-017), shared by
+   `number` and `amount`. A number's value is the shortest decimal that
+   reads back as its binary64, the decimal D4 item 3's arithmetic computes
+   on, never the binary value's exact expansion and never the literal the
+   supplier wrote (JSON, YAML and CSV supply one value, ADR-003 D8 item
+   5). A decimal text's value is the decimal it spells. The value is
+   rounded to `decimals:` (0 to 20) half away from zero, or written with
+   its own digits when `decimals:` is absent; it is written positionally,
+   never with an exponent; `-` only when the value written is below zero,
+   so `-0.004` at two decimals is `0.00`. Nil gives nil.
+2. **`number`** (MTS-FLT-018) takes no positional argument and the keywords
+   `decimals:`, `group:` and `point:`.
+3. **`amount`** (MTS-FLT-019, MTS-FLT-020) takes the code and the keywords
+   `decimals:`, `group:`, `point:` and `code:`. A code that is not three
+   ASCII capital letters is `template.amount_currency`, reason
+   `malformed`; one Appendix C lacks or gives no minor unit, when
+   `decimals:` is absent, reason `no_minor_unit`. A literal code is judged
+   at parse, in a template and in a manifest expression (MTS-MAN-018).
+   The finding never holds the code (D16 item 3).
+4. **`duration`** (MTS-FLT-021, MTS-FLT-022) takes its format and the
+   keyword `fields:`; its input refusals are `template.duration_input`
+   with a `reason` (`kind`, `calendar`, `range`, `form`), and its format's
+   `template.duration_format` with the `directive`, a literal format at
+   parse, as `date`'s is.
+5. **The `money` names** (MTS-FLT-023). `template.unknown_filter` gains an
+   optional parameter, `alternative`, which a processor gives as `amount`
+   for `money`, `money_with_currency` and `money_without_currency`. It is
+   not `suggestion`: chapter 12's MTS-FND-011 confines a `suggestion` to a
+   name the package declares, and a near-match by spelling would never
+   reach `amount` from `money` in any case. It names a filter of the
+   dialect and holds nothing of the inputs.
+6. **Help.** `metais help templates` (ADR-008 A6) shows `number`, `amount`
+   and `duration` example first, beside `date`, each with the example
+   chapter 8 gives. Its entry for `amount` says, in a line of its own,
+   that there is no `money` filter and that `amount` takes the amount in
+   the currency's major unit, not in cents. Its entry for `duration` says
+   that the directives mirror `date`'s. The help is held to its source by
+   its golden, as A6 holds it.
+7. **Charges** (MTS-TPL-063). Each of the three charges 16 units, the
+   shallow sizes of its input and arguments, and then the length of the
+   string it builds, or the shallow size of nil; the work is linear in a
+   length already charged, as `date`'s is.
+8. **Authoring** (chapter 13 §13.9) shows the four filters on one report's
+   values and says what an author does: take the code from the data, name
+   the separators, give long values as decimal text, name a duration's
+   fields.
+
+**What a later minor can add.** A keyword on any of the three (`locale:`,
+`preset:`, `rounding:`, `minus:`, a grouping other than threes, `symbol:`),
+a code in Appendix C, an `offset:` for `date`, and negative or fractional
+durations: each is a construct `1.0` refuses. What no minor of this major
+changes: a default, a table entry's minor units, and the reading of a
+string.
+
+**Implementation.** The filters live in `internal/template/filters`
+beside `slug`, registered by `All()`, so the loader's dialect knows them
+and a manifest expression applies them (D16 item 5). The currency table is
+a Go table held equal to Appendix C by a test that reads the appendix;
+it is never generated at build time. The rounding is computed on
+`math/big` from `strconv.FormatFloat(f, 'g', -1, 64)`, as `round` computes
+it, and never with `FormatFloat(f, 'f', n, 64)`, which rounds the binary
+value and writes `2.67` for 2.675. `internal/template/codes.go` maps the
+engine's codes to the four; `internal/cli`'s declaration of the codes a
+manifest expression can produce gains `template.amount_currency` and
+`template.duration_format`.
+
+**Proof.** Vectors under `flt/`: the number reading and its rounding
+(2.675, 1.005, 0.125, −2.5, −0.004, 1e21), decimal texts, separators and
+their refusals; `amount` across `EUR`, `JPY`, `BHD`, `CLF` and `XAU`, with
+`decimals:` and `code:`, and its refusals; `duration` over seconds, ISO
+8601 durations and each `fields:` form, its format and its refusals; the
+`money` alternative; and `tpl/charge-number` at its bound. The examples
+`dora-incident-report`, `status-widget` and
+`accessibility-conformance-report` write their amounts, counts, dates and
+durations through the filters.
 
 ## Implementation log
 

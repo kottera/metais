@@ -146,6 +146,7 @@ Next: metais inspect <package>
   output.unevaluated_item
   output.unevaluated_property
   output.unique_items
+  template.amount_currency
   template.asset_ambiguous
   template.asset_not_found
   template.asset_not_text
@@ -153,12 +154,15 @@ Next: metais inspect <package>
   template.asset_tree
   template.comparison
   template.date_input
+  template.duration_format
+  template.duration_input
   template.embed_index
   template.embed_unknown_input
   template.filter_input
   template.invalid_utf8
   template.nil_property
   template.not_utf8
+  template.number_input
   template.object_output
   template.partial_name
   template.partial_not_found

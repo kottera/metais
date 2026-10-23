@@ -238,6 +238,7 @@ Next: metais test <package>
   schema.ref_escapes
   schema.ref_unresolved
   schema.syntax
+  template.amount_currency
   template.asset_ambiguous
   template.asset_not_found
   template.asset_not_text
@@ -247,6 +248,8 @@ Next: metais test <package>
   template.date_format
   template.date_input
   template.division_by_zero
+  template.duration_format
+  template.duration_input
   template.embed_index
   template.embed_unknown_input
   template.filter_argument
@@ -255,6 +258,7 @@ Next: metais test <package>
   template.invalid_utf8
   template.nil_property
   template.not_utf8
+  template.number_input
   template.number_range
   template.object_output
   template.partial_name

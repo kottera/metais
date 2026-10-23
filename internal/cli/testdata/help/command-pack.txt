@@ -194,7 +194,7 @@ Refusals:
   schema.* (10)             An input schema is refused. Next: metais check <dir>
   schema.* (3)              A schema, an error. Next: metais check <dir>
   schema.* (2)              A schema, a warning. Next: metais check <dir>
-  template.* (15)           A template is refused. Next: metais test <dir>
+  template.* (19)           A template is refused. Next: metais test <dir>
   template.* (6)            A template or a manifest expression, a warning.
                             Next: metais check <dir>
   template.* (9)            An output's path, when or for_each does not parse.

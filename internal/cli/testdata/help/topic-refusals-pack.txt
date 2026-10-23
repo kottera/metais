@@ -125,6 +125,7 @@ Next: metais test <dir>
   output.unevaluated_item
   output.unevaluated_property
   output.unique_items
+  template.amount_currency
   template.asset_ambiguous
   template.asset_not_found
   template.asset_not_text
@@ -132,8 +133,11 @@ Next: metais test <dir>
   template.asset_tree
   template.comparison
   template.date_input
+  template.duration_format
+  template.duration_input
   template.invalid_utf8
   template.nil_property
+  template.number_input
   template.object_output
   template.partial_not_found
   template.slug_empty

@@ -250,15 +250,180 @@ spaces or zeros instead.
 > `%Z` departs from it: Ruby writes a zone's name, which a value that carries
 > only an offset does not have.
 
-### 8.1.10 What 1.0 does not have
+### 8.1.10 Numbers for readers
+
+`number` and `amount` write a number as a reader reads it: with a chosen
+count of decimals, a decimal point, and a separator between groups of
+digits. Neither reads a locale. Every separator is an argument, and what an
+argument left out means is the same in every package: a point `.`, no group
+separator, and the value's own decimals.
+
+<a id="mts-flt-015"></a>**MTS-FLT-015** `number` and `amount` MUST accept
+as their input a number; a string that is a *decimal text*, an optional
+`-`, then `0` or an ASCII digit `1` to `9` followed by any ASCII digits,
+then optionally `.` and one or more ASCII digits, and nothing else; and nil,
+which gives nil. A processor MUST refuse every other input with
+`template.number_input`, naming the filter and the kind found: a boolean,
+an array, an object, and any other string, among them one with a space, a
+`+`, a leading zero, an exponent or a separator.
+
+<a id="mts-flt-016"></a>**MTS-FLT-016** The value of a number MUST be the
+shortest decimal that reads back as its binary64 value, the decimal
+[MTS-TPL-018](07-template-environment.md#mts-tpl-018)'s arithmetic computes
+on, and the value of a decimal text MUST be the decimal it spells, exactly,
+whatever its count of digits. With `decimals:` n, a processor MUST round
+the value to n digits after the point, a value exactly halfway between the
+two nearest being rounded away from zero, and MUST write n digits after the
+point;
+without `decimals:`, it MUST write the value's digits after the point with
+trailing zeros removed. It MUST write the integer part's digits with no
+leading zero but a lone `0`, no point when no digit follows it, `-` before
+the first digit when the value written is below zero, and never an
+exponent: `-0.004` with `decimals: 2` is `0.00`, and `1e21` is written with
+its 22 digits.
+
+<a id="mts-flt-017"></a>**MTS-FLT-017** `decimals:` MUST be an integer from
+0 to 20; `point:` MUST be a string of one code point other than an ASCII
+digit and `-`, and is `.` when not given; and `group:` MUST be the empty
+string, which it is when not given, or a string of one code point other than
+an ASCII digit, `-` and the point. A processor MUST refuse any other with
+`template.filter_argument`, MUST write the point as `point:` gives it, and,
+when `group:` is not empty, MUST write it between two digits of the integer
+part wherever the digits to its right in the integer part number a multiple
+of three, and nowhere in the fraction.
+
+> **Note.** The value of the number 2.675 is the decimal 2.675, so
+> `{{ 2.675 | number: decimals: 2 }}` writes `2.68`, as
+> `{{ 2.675 | round: 2 }}` gives 2.68. A formatter that rounds a binary64's
+> exact binary value — C's `printf`, Go's `strconv.FormatFloat`,
+> ECMAScript's `toFixed` — writes `2.67`, because the binary64 nearest 2.675
+> lies just below it; `1.005` and `0.125` part the same way. A number keeps
+> about fifteen significant digits exactly. A supplier who needs more gives
+> the value as a decimal text, which the input's schema declares as a
+> string.
+
+### 8.1.11 `number`
+
+<a id="mts-flt-018"></a>**MTS-FLT-018** `number` MUST take no positional
+argument and the keywords `decimals:`, `group:` and `point:`, each
+optional, and MUST write its value as
+[MTS-FLT-016](#mts-flt-016) and [MTS-FLT-017](#mts-flt-017) state.
+
+So `{{ 48920000 | number: decimals: 2, group: "," }}` writes
+`48,920,000.00`, `{{ 1234.5 | number: group: " ", point: "," }}` writes
+`1 234,5`, `{{ "12345678901234567.891" | number: decimals: 2, group: "," }}`
+writes `12,345,678,901,234,567.89`, and `{{ -2.5 | number: decimals: 0 }}`
+writes `-3`.
+
+### 8.1.12 `amount`
+
+`amount` writes an amount of money with its
+[ISO 4217](A-references.md#iso4217) code. It takes the amount in the
+currency's major unit — euros, not cents — and the code as its argument,
+usually an input the supplier gives, so one template writes a report in any
+currency. The count of decimals comes from the code, by
+[Appendix C](C-currency-minor-units.md), unless `decimals:` gives it. It
+writes no currency symbol: `$` names more than one currency.
+
+<a id="mts-flt-019"></a>**MTS-FLT-019** `amount` MUST take one positional
+argument, the code, a string, and the keywords `decimals:`, `group:`,
+`point:` and `code:`, each optional; `code:` MUST be `"before"`, which it is
+when not given, or `"after"`. A processor MUST write the code, one U+0020
+and the number when `code:` is `"before"`, and the number, one U+0020 and
+the code when it is `"after"`, the number being the value as
+[MTS-FLT-016](#mts-flt-016) and [MTS-FLT-017](#mts-flt-017) write it, with
+`decimals:` when it is given and otherwise with the code's minor units in
+Appendix C.
+
+So `{{ 48920000 | amount: "EUR", group: "," }}` writes
+`EUR 48,920,000.00`, `{{ 5000 | amount: "JPY" }}` writes `JPY 5000`,
+`{{ 1.5 | amount: "BHD" }}` writes `BHD 1.500`, and
+`{{ -5 | amount: "EUR", code: "after" }}` writes `-5.00 EUR`.
+
+<a id="mts-flt-020"></a>**MTS-FLT-020** A processor MUST refuse with
+`template.amount_currency` a code that is not three ASCII capital letters,
+its `reason` `malformed`; and, when `decimals:` is not given, a code
+Appendix C does not list or lists with no minor units, its `reason`
+`no_minor_unit`. With `decimals:`, any three ASCII capital letters are a
+code. A code written as a literal MUST be judged when the template is
+parsed, and the finding MUST NOT hold the code.
+
+### 8.1.13 `duration`
+
+`duration` writes a length of time, by a format whose directives mirror
+`date`'s: `%d`, `%H`, `%M` and `%S` are its days, hours, minutes and
+seconds. It reads a count of seconds, an
+[ISO 8601](A-references.md#iso8601) duration, or a string of fields
+separated by `:` whose meaning the template names with `fields:`, so
+`00:07:25` read with `fields: "d:h:m"` is seven hours and twenty-five
+minutes, never seven minutes and twenty-five seconds.
+
+<a id="mts-flt-021"></a>**MTS-FLT-021** Without `fields:`, `duration` MUST
+accept as its input an integer from 0 to 2⁵³ − 1, as seconds; a string that
+is an ISO 8601 duration matching `duration` in the grammar below, a week
+being 604 800 seconds, a day 86 400, an hour 3 600 and a minute 60; and nil,
+which gives nil. With `fields:`, it MUST accept a string of as many runs of
+one or more ASCII digits as `fields:` names, separated by `:`, each after
+the first at most 23 for `h` and 59 for `m` and `s`, and nil. A processor
+MUST refuse every other input with `template.duration_input`, naming the
+kind found and a `reason`: `kind` for a float, a boolean, an array and an
+object, and for an integer given with `fields:`; `calendar` for a string
+beginning `P` that holds `Y`, or `M` before any `T`, whose length depends on
+the calendar; `range` for a value below zero or above 2⁵³ − 1 seconds, and
+for a field beyond its range; and `form` for any other string.
+
+```abnf
+duration = %s"P" ( 1*DIGIT %s"W" / 1*DIGIT %s"D" [ %s"T" time ] / %s"T" time )
+time     = 1*DIGIT %s"H" [ 1*DIGIT %s"M" ] [ 1*DIGIT %s"S" ]
+         / 1*DIGIT %s"M" [ 1*DIGIT %s"S" ]
+         / 1*DIGIT %s"S"
+```
+
+<a id="mts-flt-022"></a>**MTS-FLT-022** `duration` MUST take one positional
+argument, its format, a string, and the one keyword `fields:`, which MUST
+be one of `"d:h:m:s"`, `"d:h:m"`, `"h:m:s"`, `"h:m"` and `"m:s"`. It MUST
+write the format's text as it is, but for each directive: `%d`, `%H`, `%M`
+and `%S`, each at most once and optionally preceded by one of the flags
+`-`, `_` and `0`, and `%%`, which writes `%`. The largest unit the format
+names MUST be written as the whole count of that unit in the duration,
+rounded down, and each smaller unit it names as the whole count of that
+unit in what the larger units named leave, rounded down, so what lies below
+the smallest unit named is dropped and nothing is rounded up. `%d` MUST be
+written with no padding and `%H`, `%M` and `%S` with zeros to two digits;
+`-` writes no padding, and `_` and `0` pad to two digits with spaces or
+zeros. Any other directive — `%` followed by anything else, a directive
+named twice, a lone `%` at the end included — and an empty format MUST be
+refused with `template.duration_format`, its `directive` the directive from
+its `%` to the character that put it outside the set, and absent for an
+empty format; a format written as a literal, when the template is parsed.
+
+So a duration of 26 700 seconds is `0 d 7 h 25 min` by the format
+`"%d d %-H h %-M min"`, `07:25` by `"%H:%M"` and `445 min` by
+`"%-M min"`; and `{{ "00:07:25" | duration: "%-H h %M min", fields: "d:h:m" }}`
+writes `7 h 25 min`.
+
+### 8.1.14 What 1.0 does not have
 
 <a id="mts-flt-014"></a>**MTS-FLT-014** The filters of version 1.0 are the
 standard filters [chapter 7](07-template-environment.md) adopts and those of
 this chapter. A processor MUST refuse any other filter with
 `template.unknown_filter` ([chapter 7](07-template-environment.md#mts-tpl-004)):
-among them `sha256`, an indentation filter such as `indent`, and any filter
-that would read something other than its input and its arguments. A later
-minor version may add one.
+among them `sha256`, an indentation filter such as `indent`, a filter that
+reads a locale or a shop's settings such as `money`, and any filter that
+would read something other than its input and its arguments. A later minor
+version may add one.
+
+<a id="mts-flt-023"></a>**MTS-FLT-023** A processor MUST give the
+`template.unknown_filter` finding of a filter named `money`,
+`money_with_currency` or `money_without_currency` the `alternative`
+`amount`.
+
+> **Note.** Those three are filters of Shopify's storefront, not of the
+> `liquid` gem: they take an amount in cents and read the shop's currency
+> settings. METAIS has no `money` filter. `amount` takes the amount in the
+> currency's major unit, and its code as an argument, so a value in cents is
+> divided by 100 first, or by the power of ten its currency's minor units
+> name.
 
 ## 8.2 `embed`
 

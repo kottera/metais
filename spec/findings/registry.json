@@ -6266,6 +6266,40 @@
       ]
     },
     {
+      "code": "template.amount_currency",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the code is refused: malformed (it is not three ASCII capital letters) or no_minor_unit (decimals: is not given, and Appendix C does not list the code or lists it with no minor units).",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The amount filter is given a currency code it refuses ({reason}).",
+      "hint": "Give an ISO 4217 code of three capital letters, such as EUR; for a code Appendix C does not list, give decimals: as well.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-FLT-020",
+        "MTS-MAN-018"
+      ]
+    },
+    {
       "code": "template.asset_ambiguous",
       "severity": "error",
       "class": "content",
@@ -6591,6 +6625,79 @@
       ]
     },
     {
+      "code": "template.duration_format",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "directive",
+          "type": "string",
+          "meaning": "The first directive of the format outside the closed set, or named a second time, from its % to the character that put it outside the set; absent for an empty format.",
+          "always": false
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The duration filter is given a format outside the set it formats.",
+      "hint": "Use %d, %H, %M and %S, as date's directives are written, each once, with the flags -, _ and 0; a literal % is written %%.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-FLT-022",
+        "MTS-MAN-018"
+      ]
+    },
+    {
+      "code": "template.duration_input",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "type",
+          "type": "string",
+          "meaning": "The kind of value the filter was given: nil, boolean, integer, float, string, array or object.",
+          "always": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "meaning": "Why the input is refused: kind (a kind the filter does not read, or an integer given with fields:), calendar (an ISO 8601 duration with a year or a month, whose length depends on the calendar), range (below zero, above 2^53-1 seconds, or a field beyond its range) or form (any other string).",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The duration filter is given a {type} it does not read as a duration ({reason}).",
+      "hint": "Supply whole seconds, an ISO 8601 duration such as PT7H25M, or fields separated by : with fields: naming them, such as fields: \"d:h:m\".",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-FLT-021"
+      ]
+    },
+    {
       "code": "template.embed_index",
       "severity": "error",
       "class": "content",
@@ -6864,6 +6971,45 @@
       "statements": [
         "MTS-AUT-010",
         "MTS-TPL-006"
+      ]
+    },
+    {
+      "code": "template.number_input",
+      "severity": "error",
+      "class": "content",
+      "subject": "template",
+      "params": [
+        {
+          "name": "filter",
+          "type": "string",
+          "meaning": "The filter's name: number or amount.",
+          "always": true
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "meaning": "The kind of value the filter was given: boolean, string, array or object.",
+          "always": true
+        },
+        {
+          "name": "column",
+          "type": "number",
+          "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
+          "always": true
+        },
+        {
+          "name": "output_path",
+          "type": "string",
+          "meaning": "The path of the output being rendered, relative to the root of its tree; present when the error was met rendering an output.",
+          "always": false
+        }
+      ],
+      "message": "The filter {filter} is given a {type} that is not a number or a decimal text.",
+      "hint": "Supply a number, or a string of digits with an optional - and an optional . and fraction, such as \"-1234.50\", with no space, separator or exponent.",
+      "location": "value",
+      "since": "1.0",
+      "statements": [
+        "MTS-FLT-015"
       ]
     },
     {
@@ -7402,13 +7548,20 @@
           "type": "number",
           "meaning": "The 1-based column, in code points, of the token where the error is: within its line of the template, or, for a manifest expression, within the expression or path template, the finding being located at the field that holds it.",
           "always": true
+        },
+        {
+          "name": "alternative",
+          "type": "string",
+          "meaning": "The filter of the dialect that does what the name does in another Liquid dialect: amount, for money, money_with_currency and money_without_currency, which take cents where amount takes the currency's major unit; present for those names.",
+          "always": false
         }
       ],
       "message": "The filter {filter} is not one the dialect defines.",
-      "hint": "Use a filter the specification defines; a misspelt filter is refused, never ignored.",
+      "hint": "Use a filter the specification defines; a misspelt filter is refused, never ignored. Where alternative is given, it names the dialect's filter for what this name does elsewhere.",
       "location": "value",
       "since": "1.0",
       "statements": [
+        "MTS-FLT-023",
         "MTS-MAN-018",
         "MTS-TPL-004"
       ]

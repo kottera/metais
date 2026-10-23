@@ -206,7 +206,9 @@ with `template.unknown_filter`, a filter given literal arguments it never
 takes with `template.filter_argument`, a division by a literal zero with
 `template.division_by_zero`, a number literal beyond what a template number
 holds with `template.number_range`, a literal `date` format outside its set
-with `template.date_format`, `safe` other than as the last filter of
+with `template.date_format`, a literal `duration` format outside its set
+with `template.duration_format`, a literal `amount` code it refuses with
+`template.amount_currency`, `safe` other than as the last filter of
 a `path`'s output expression with `template.safe_position`, and a `render`
 in a `path` with `template.tag_context`, each located at the field's manifest
 pointer and giving the column within the expression; and it MUST know every

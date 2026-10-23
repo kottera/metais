@@ -281,6 +281,7 @@ it, and the statements it reports.
 | `schema.syntax` | error | content | package | `form`, `rule` | 1.0 | [MTS-DAT-002](05-data-specification.md#mts-dat-002) |
 | `schema.unsatisfiable` | error | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
 | `schema.unusable_enum_member` | warning | content | package | — | 1.0 | [MTS-AUT-008](13-authoring.md#mts-aut-008) |
+| `template.amount_currency` | error | content | template | `reason`, `column`; optional: `output_path` | 1.0 | [MTS-FLT-020](08-filters-and-tags.md#mts-flt-020), [MTS-MAN-018](03-manifest.md#mts-man-018) |
 | `template.asset_ambiguous` | error | content | template | `asset`, `column`, `output_path` | 1.0 | [MTS-TAG-015](08-filters-and-tags.md#mts-tag-015) |
 | `template.asset_not_found` | error | content | template | `asset`, `column` | 1.0 | [MTS-TAG-013](08-filters-and-tags.md#mts-tag-013) |
 | `template.asset_not_text` | error | content | template | `asset`, `column`, `output_path` | 1.0 | [MTS-TAG-016](08-filters-and-tags.md#mts-tag-016) |
@@ -291,6 +292,8 @@ it, and the statements it reports.
 | `template.date_format` | error | content | template | `column`; optional: `directive`, `output_path` | 1.0 | [MTS-FLT-013](08-filters-and-tags.md#mts-flt-013), [MTS-MAN-018](03-manifest.md#mts-man-018) |
 | `template.date_input` | error | content | template | `type`, `column`; optional: `global`, `output_path` | 1.0 | [MTS-FLT-011](08-filters-and-tags.md#mts-flt-011) |
 | `template.division_by_zero` | error | content | template | `filter`, `column`; optional: `output_path` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-019](07-template-environment.md#mts-tpl-019) |
+| `template.duration_format` | error | content | template | `column`; optional: `directive`, `output_path` | 1.0 | [MTS-FLT-022](08-filters-and-tags.md#mts-flt-022), [MTS-MAN-018](03-manifest.md#mts-man-018) |
+| `template.duration_input` | error | content | template | `type`, `reason`, `column`; optional: `output_path` | 1.0 | [MTS-FLT-021](08-filters-and-tags.md#mts-flt-021) |
 | `template.embed_index` | error | content | template | `input`, `reason`, `column`; optional: `index`, `items`, `type`, `output_path` | 1.0 | [MTS-TAG-002](08-filters-and-tags.md#mts-tag-002) |
 | `template.embed_unknown_input` | error | content | template | `column`; optional: `name` | 1.0 | [MTS-TAG-001](08-filters-and-tags.md#mts-tag-001) |
 | `template.filter_argument` | error | content | template | `filter`, `argument`, `column`; optional: `output_path` | 1.0 | [MTS-FLT-004](08-filters-and-tags.md#mts-flt-004), [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-052](07-template-environment.md#mts-tpl-052) |
@@ -299,6 +302,7 @@ it, and the statements it reports.
 | `template.invalid_utf8` | error | content | template | `column`; optional: `filter`, `tag`, `output_path` | 1.0 | [MTS-TAG-003](08-filters-and-tags.md#mts-tag-003), [MTS-TPL-052](07-template-environment.md#mts-tpl-052) |
 | `template.nil_property` | error | content | template | `path`, `column`; optional: `output_path` | 1.0 | [MTS-TPL-030](07-template-environment.md#mts-tpl-030) |
 | `template.not_utf8` | error | content | template | — | 1.0 | [MTS-AUT-010](13-authoring.md#mts-aut-010), [MTS-TPL-006](07-template-environment.md#mts-tpl-006) |
+| `template.number_input` | error | content | template | `filter`, `type`, `column`; optional: `output_path` | 1.0 | [MTS-FLT-015](08-filters-and-tags.md#mts-flt-015) |
 | `template.number_range` | error | content | template | `column`; optional: `filter`, `output_path` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-019](07-template-environment.md#mts-tpl-019) |
 | `template.object_output` | error | content | template | `column`; optional: `output_path` | 1.0 | [MTS-TPL-021](07-template-environment.md#mts-tpl-021) |
 | `template.ooxml.split_construct` | error | content | template | `cause`, `text`, `text_elements` | 1.0 | [MTS-AUT-019](13-authoring.md#mts-aut-019) |
@@ -315,7 +319,7 @@ it, and the statements it reports.
 | `template.tag_context` | error | content | template | `tag`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TAG-011](08-filters-and-tags.md#mts-tag-011) |
 | `template.undefined_property` | error | content | template | `path`, `column`; optional: `output_path` | 1.0 | [MTS-FLT-009](08-filters-and-tags.md#mts-flt-009), [MTS-TPL-029](07-template-environment.md#mts-tpl-029), [MTS-TPL-031](07-template-environment.md#mts-tpl-031), [MTS-TPL-032](07-template-environment.md#mts-tpl-032) |
 | `template.undefined_variable` | error | content | template | `name`, `column`; optional: `output_path` | 1.0 | [MTS-OUT-004](09-outputs.md#mts-out-004), [MTS-TPL-003](07-template-environment.md#mts-tpl-003), [MTS-TPL-027](07-template-environment.md#mts-tpl-027), [MTS-TPL-033](07-template-environment.md#mts-tpl-033), [MTS-TPL-034](07-template-environment.md#mts-tpl-034), [MTS-TPL-058](07-template-environment.md#mts-tpl-058) |
-| `template.unknown_filter` | error | content | template | `filter`, `column` | 1.0 | [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-004](07-template-environment.md#mts-tpl-004) |
+| `template.unknown_filter` | error | content | template | `filter`, `column`; optional: `alternative` | 1.0 | [MTS-FLT-023](08-filters-and-tags.md#mts-flt-023), [MTS-MAN-018](03-manifest.md#mts-man-018), [MTS-TPL-004](07-template-environment.md#mts-tpl-004) |
 | `template.xref.budget_exhausted` | warning | content | package | `bound`, `limit` | 1.0 | [MTS-AUT-018](13-authoring.md#mts-aut-018) |
 | `template.xref.dynamic_reference` | warning | content | template | optional: `output` | 1.0 | [MTS-AUT-014](13-authoring.md#mts-aut-014) |
 | `template.xref.for_each_not_array` | error | content | output | `types` | 1.0 | [MTS-AUT-016](13-authoring.md#mts-aut-016) |
