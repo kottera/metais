@@ -10,7 +10,7 @@
       "file": "assets/dir/"
     },
     "params": {
-      "offset": 3472,
+      "offset": 3607,
       "record": "central directory header",
       "header_field": "external file attributes",
       "value": 1106051088,
@@ -28,7 +28,7 @@
       "file": "assets/dir/"
     },
     "params": {
-      "offset": 3434
+      "offset": 3569
     }
   }
 ]

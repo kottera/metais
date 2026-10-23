@@ -26,10 +26,11 @@ const description = "metais reads, validates and renders METAIS packages, and he
 
 // readInPlace follows the description: a package's contents are read in
 // place with metais, inspect first, and never by unzipping it or with
-// another zip tool or library (ADR-008 A5 item 1, in the README's words
-// of ADR-001 A4).
+// another zip tool or library, and says why (ADR-008 A5 item 1, in the
+// README's words of ADR-001 A4 and A5).
 const readInPlace = "A package (a .metais file) is a zip archive that is read only with metais, in place: " +
-	"do not unzip it, and do not open it with any other zip tool or library, not even to read one file in memory. " +
+	"do not unzip it, and do not open it with any other zip tool or library, not even to read one file in memory, " +
+	"because metais checks the package against its digests and its security limits before it reads any file in it, and a zip tool does not. " +
 	"Start with 'metais inspect <package>', which shows what the package needs and the commands to run next. " +
 	"Then 'metais read <package> <entry>' prints one of its entries, 'metais ls <package>' lists them and " +
 	"'metais grep <package> <pattern>' searches them."

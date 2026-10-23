@@ -10,9 +10,9 @@
     },
     "params": {
       "limit": "package-uncompressed",
-      "bound": 6753,
+      "bound": 6888,
       "lowered": true,
-      "observed": 6754
+      "observed": 6889
     }
   }
 ]

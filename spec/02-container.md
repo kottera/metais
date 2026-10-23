@@ -311,8 +311,11 @@ any zip lister. So every packed package begins with `README.md`, stored,
 holding a text the specification fixes and no author writes. The text says
 what a METAIS package is, that the file is a zip archive which is read
 only with the tool, in place, and never with a zip tool or library,
-whether by extracting it or by reading a file inside it in memory, where
-inside it the package describes itself, where to find the tool, the
+whether by extracting it or by reading a file inside it in memory. It
+says why: the tool verifies the package against its digests (§2.6) and
+the package limits of [chapter 14](14-security.md) before it reads any
+file in it ([MTS-PKG-032](#mts-pkg-032)), and a zip tool does neither. It says where inside it the package describes itself,
+where to find the tool, the
 command to start with, `metais inspect`, and the command that reads a
 file inside it, `metais read`. The reference tool keeps both commands for
 every package of this version. It gives no install command and quotes
@@ -334,9 +337,10 @@ document needs, checks them, and renders the document from them.
 
 This file is a zip archive, but it is read only with the metais tool,
 which reads it in place. Do not unzip it, and do not open it with any
-other zip tool or library, not even to read one file in memory.
-Inside it, metais.yaml holds this package's own title, description
-and guide.
+other zip tool or library, not even to read one file in memory,
+because metais checks the package against its digests and its security
+limits before it reads any file in it, and a zip tool does not. Inside
+it, metais.yaml holds this package's own title, description and guide.
 
 To use it, you need the metais tool. With it installed, start by
 running `metais inspect` on this file: it shows what the package

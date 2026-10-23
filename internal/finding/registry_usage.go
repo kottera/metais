@@ -248,7 +248,7 @@ var usageCodes = []Entry{
 		Class:      ClassUsage,
 		Subject:    SubjectInvocation,
 		Message:    "No command was given; metais runs one command, named after any global flags.",
-		Hint:       "To read a package, run `metais inspect <package>`: a package is read only with metais, in place, so do not unzip it or open it with any other zip tool or library. `metais help` lists every command.",
+		Hint:       "To read a package, run `metais inspect <package>`: a package is read only with metais, in place, so do not unzip it or open it with any other zip tool or library, which does not check it against its digests and security limits. `metais help` lists every command.",
 		Span:       SpanNone,
 		Since:      "1.0",
 		Statements: []string{},

@@ -10,8 +10,8 @@
       "file": "inputs/report.schema.json"
     },
     "params": {
-      "offset": 2448,
-      "declared": 2752
+      "offset": 2583,
+      "declared": 2887
     }
   },
   {
@@ -25,8 +25,8 @@
       "file": "metais.yaml"
     },
     "params": {
-      "offset": 2894,
-      "declared": 2448
+      "offset": 3029,
+      "declared": 2583
     }
   },
   {
@@ -40,8 +40,8 @@
       "file": "templates/report.md.liquid"
     },
     "params": {
-      "offset": 2752,
-      "declared": 2894
+      "offset": 2887,
+      "declared": 3029
     }
   }
 ]

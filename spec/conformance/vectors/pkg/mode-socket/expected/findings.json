@@ -10,7 +10,7 @@
       "file": "assets/socket"
     },
     "params": {
-      "offset": 3472,
+      "offset": 3607,
       "record": "central directory header",
       "header_field": "external file attributes",
       "value": 3248750592,

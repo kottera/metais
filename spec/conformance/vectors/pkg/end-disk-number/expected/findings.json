@@ -9,7 +9,7 @@
       "origin": "package"
     },
     "params": {
-      "offset": 3514,
+      "offset": 3649,
       "record": "end of central directory record",
       "header_field": "number of the disk with the start of the central directory",
       "value": 1,
@@ -26,7 +26,7 @@
       "origin": "package"
     },
     "params": {
-      "offset": 3512,
+      "offset": 3647,
       "record": "end of central directory record",
       "header_field": "number of this disk",
       "value": 1,

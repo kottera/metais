@@ -26,7 +26,7 @@
               "/report/title=Hostile"
             ],
             "limits": {
-              "package-uncompressed": 6754
+              "package-uncompressed": 6889
             }
           },
           "expect": {
@@ -47,7 +47,7 @@
           "args": {
             "package": "package.metais",
             "limits": {
-              "package-uncompressed": 6753
+              "package-uncompressed": 6888
             }
           },
           "expect": {
