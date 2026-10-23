@@ -1,0 +1,11 @@
+{%- comment -%}
+  One help topic's page, item, from metais help --json: its title, and its
+  text exactly as metais help <topic> prints it (ADR-008 A13).
+{%- endcomment -%}
+{%- capture body -%}
+<h1><code>metais help {{ item.name }}</code></h1>
+<p>{{ item.title }}</p>
+<pre class="topic">{{ item.text }}</pre>
+{%- endcapture -%}
+{%- assign title = "metais help " | append: item.name | append: " — METAIS" -%}
+{%- render "_layout.html.liquid", title: title, description: item.title, head: nil, body: body -%}

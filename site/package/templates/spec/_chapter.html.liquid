@@ -1,0 +1,39 @@
+{%- comment -%}
+  One page of the specification: file, a Markdown file of revision as the
+  build step converted it, with revision's chapters listed beside it, and
+  what revision it is. A draft's page says it is a draft and asks search
+  engines not to index it (ADR-011 A8 item 2).
+{%- endcomment -%}
+{%- assign draft = false -%}
+{%- if revision.revision == "draft" -%}{%- assign draft = true -%}{%- endif -%}
+{%- capture body -%}
+{%- if draft %}
+<p class="draft"><strong>Draft.</strong> This is the draft of the METAIS specification at commit <code>{{ revision.ref }}</code>, not a released revision. It may change before it is released.</p>
+{%- else %}
+<p class="revision">The METAIS specification, revision {{ revision.revision }}, released at the tag <code>{{ revision.ref }}</code>.</p>
+{%- endif %}
+<nav class="chapters"><ul>
+{%- for f in revision.files %}
+<li><a href="{{ f.path }}">{% if f.title != "" %}{{ f.title }}{% else %}{{ f.file }}{% endif %}</a></li>
+{%- endfor %}
+</ul></nav>
+<article class="spec">
+{{ file.html | safe }}
+</article>
+{%- endcapture -%}
+{%- capture head -%}
+{%- if draft -%}
+<meta name="robots" content="noindex">
+{%- endif -%}
+{%- endcapture -%}
+{%- if file.title != "" -%}
+{%- assign name = file.title -%}
+{%- else -%}
+{%- assign name = file.file -%}
+{%- endif -%}
+{%- if draft -%}
+{%- assign title = name | append: " — METAIS specification, draft" -%}
+{%- else -%}
+{%- assign title = name | append: " — METAIS specification " | append: revision.revision -%}
+{%- endif -%}
+{%- render "_layout.html.liquid", title: title, description: nil, head: head, body: body -%}

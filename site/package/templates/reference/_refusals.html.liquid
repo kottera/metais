@@ -1,0 +1,10 @@
+{%- comment -%}
+  refusals, a list of metais.help/1 refusals, as a definition list: each
+  code, its cause, and the next step it names.
+{%- endcomment -%}
+<dl class="refusals">
+{%- for r in refusals %}
+<dt id="{{ r.code }}"><code>{{ r.code }}</code></dt>
+<dd>{{ r.cause }}{% if r.next %} Next: <code>{{ r.next.run }}</code>: {{ r.next.why }}{% endif %}</dd>
+{%- endfor %}
+</dl>

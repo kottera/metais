@@ -1,0 +1,59 @@
+{%- comment -%}
+  The reference's overview, from metais help --json as metais help prints
+  it (ADR-008 D15 item 2, A13): every command by group, the golden paths,
+  the global flags, the topics, the exit codes, and the refusals of a line
+  that names no command. The version line is metais version --json's. Nothing but the layout is
+  written here.
+{%- endcomment -%}
+{%- assign help = inputs.help -%}
+{%- capture body -%}
+<h1>metais</h1>
+<p>{{ help.description }}</p>
+<p><code>metais version</code>: {{ inputs.tool.tool.version }}. Specification: {{ inputs.tool.specification.implements | join: ", " }}.</p>
+<pre><code>{{ help.usage }}</code></pre>
+
+<h2 id="paths">Golden paths</h2>
+<dl>
+{%- for p in help.paths %}
+<dt>{{ p.title }}</dt>
+<dd>{{ p.steps }}</dd>
+{%- endfor %}
+</dl>
+
+<h2 id="commands">Commands</h2>
+{%- assign groups = help.commands | map: "group" | uniq -%}
+{%- for g in groups %}
+<h3>{{ g }}</h3>
+<dl>
+{%- assign commands = help.commands | where: "group", g -%}
+{%- for c in commands %}
+<dt><a href="/reference/commands/{{ c.name }}/"><code>metais {{ c.name }}</code></a></dt>
+<dd>{{ c.description }}</dd>
+{%- endfor %}
+</dl>
+{%- endfor %}
+
+<h2 id="global-flags">Global flags</h2>
+{% render "reference/_flags.html.liquid", flags: help.global_flags %}
+
+<h2 id="topics">Topics</h2>
+<dl>
+{%- for t in help.topics %}
+<dt><a href="/reference/topics/{{ t.name }}/"><code>metais help {{ t.name }}</code></a></dt>
+<dd>{{ t.title }}</dd>
+{%- endfor %}
+<dt><a href="/reference/skill/"><code>metais skill --print</code></a></dt>
+</dl>
+
+<h2 id="exit-codes">Exit codes</h2>
+<dl>
+{%- for e in help.exit_codes %}
+<dt><code>{{ e.code }}</code></dt>
+<dd>{{ e.meaning }}</dd>
+{%- endfor %}
+</dl>
+
+<h2 id="refusals">Refusals</h2>
+{% render "reference/_refusals.html.liquid", refusals: help.refusals %}
+{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "metais help — METAIS", description: help.description, head: nil, body: body -%}

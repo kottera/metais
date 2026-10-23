@@ -4,7 +4,7 @@
   "description": "The draft and every released revision of the specification, each Markdown file of spec/ as an HTML fragment, as the build step exports them.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["draft", "releases"],
+  "required": ["draft", "releases", "release_pages"],
   "properties": {
     "draft": {
       "$ref": "#/$defs/revision",
@@ -22,6 +22,20 @@
         "properties": {
           "revision": { "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" },
           "ref": { "pattern": "^spec-(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$" }
+        }
+      }
+    },
+    "release_pages": {
+      "type": "array",
+      "description": "Every page of the released revisions, in the order of releases and of each one's files, so one output's for_each renders a page per chapter of every release; each page's text is its file's in its revision.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["revision", "file", "path"],
+        "properties": {
+          "revision": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$", "description": "The release's <M>.<m>." },
+          "file": { "type": "string", "pattern": "^[^/]+\\.md$", "description": "The file's name in spec/." },
+          "path": { "type": "string", "pattern": "^/spec/[^/]+/([^/]+/)?$", "description": "The site's path of the file's page." }
         }
       }
     }

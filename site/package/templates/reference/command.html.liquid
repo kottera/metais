@@ -1,0 +1,52 @@
+{%- comment -%}
+  One command's page, item, from its declaration as metais help --json
+  gives it (ADR-008 D15 items 1 and 3, A13): what metais help <command>
+  prints, in the same order. Nothing but the layout is written here.
+{%- endcomment -%}
+{%- capture body -%}
+<h1><code>metais {{ item.name }}</code></h1>
+<p>{{ item.description }}</p>
+<p>{{ item.group }}</p>
+
+<h2 id="usage">Usage</h2>
+<pre><code>{{ item.synopsis }}</code></pre>
+{%- if item.examples.size > 0 %}
+
+<h2 id="examples">Examples</h2>
+<dl>
+{%- for e in item.examples %}
+<dt><pre><code>{{ e.run }}</code></pre></dt>
+<dd>{{ e.why }}</dd>
+{%- endfor %}
+</dl>
+{%- endif %}
+{%- if item.detail != "" %}
+
+<h2 id="detail">Detail</h2>
+{%- render "reference/_paragraphs.html.liquid", text: item.detail -%}
+{%- endif %}
+{%- if item.operands.size > 0 %}
+
+<h2 id="operands">Operands</h2>
+<dl class="operands">
+{%- for o in item.operands %}
+<dt><code>{{ o.name }}</code></dt>
+<dd>{{ o.description }}{% if o.required %} Required.{% endif %}{% if o.repeatable %} May be given more than once.{% endif %}</dd>
+{%- endfor %}
+</dl>
+{%- endif %}
+
+<h2 id="flags">Flags</h2>
+{% render "reference/_flags.html.liquid", flags: item.flags %}
+
+<h2 id="prints">Prints</h2>
+<p>{{ item.prints }}</p>
+{%- if item.format %}
+<p>--json: <code>{{ item.format }}</code></p>
+{%- endif %}
+
+<h2 id="refusals">Refusals</h2>
+{% render "reference/_refusals.html.liquid", refusals: item.refusals %}
+{%- endcapture -%}
+{%- assign title = "metais " | append: item.name | append: " — METAIS" -%}
+{%- render "_layout.html.liquid", title: title, description: item.description, head: nil, body: body -%}
