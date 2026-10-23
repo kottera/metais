@@ -940,7 +940,8 @@ func floorDiv(a, b int64) int64 {
 func floorMod(a, b int64) int64 { return a - floorDiv(a, b)*b }
 
 // assign binds a template-scoped name (ADR-004 D7 item 8). A string it
-// binds is charged as held bytes (assign-bytes).
+// binds is charged as held bytes (assign-bytes), once: a filter that
+// built it charged none.
 func (r *renderer) assign(n *ast.Assign) *Error {
 	v, safe, err := r.expr(n.Value)
 	if err != nil {
@@ -1052,7 +1053,8 @@ func (r *renderer) literalKey(n *ast.Cycle) (string, bool) {
 
 // ifchanged writes its body when it differs from the last body an
 // ifchanged of this template wrote. The body is held while it is
-// compared, and charged as held bytes.
+// compared, to value-size as every buffer is; it is not stored by assign
+// or capture, so it charges no held bytes (ADR-009 Amendment A10 item 4).
 func (r *renderer) ifchanged(n *ast.Ifchanged) (ctl, *Error) {
 	r.pushBuffer(false)
 	c, err := r.block(n.Body, false)
@@ -1061,9 +1063,6 @@ func (r *renderer) ifchanged(n *ast.Ifchanged) (ctl, *Error) {
 		return ctlNone, err
 	}
 	r.at(n)
-	if err := r.charge(WorkHeldBytes, int64(len(b)), n); err != nil {
-		return ctlNone, err
-	}
 	if s := string(b); !r.fr.hasChanged || s != r.fr.changed {
 		r.fr.changed, r.fr.hasChanged = s, true
 		if err := r.write(b, n); err != nil {

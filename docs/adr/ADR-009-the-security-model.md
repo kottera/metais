@@ -8,6 +8,10 @@ it takes effect as PLAN-2026-10-metais-test-economy's items land.
 and A2's "`os` file function" is a function of package `os`) is accepted by
 Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's ratification; the
 passages it changes are marked *(A9)*.
+[Amendment A10](#amendments) (D11's charges for a range made a value, an
+array written and a string's `size` shorthand; `assign-bytes` counts only
+what `assign` and `capture` store) is proposed on 2026-10-23 under Ed
+Funnekotter's ruling at T-A4; the passages it changes are marked *(A10)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R14 (items 1 to 4); the security halves of R10 item 1, R11
@@ -633,10 +637,22 @@ a write is confined, for `render`, `unpack`, `extract` and `init` alike.
 2. **`render-work` units are defined, not measured**, so the bound is identical
    in every implementation:
    - each node evaluated (an output tag, a tag, a filter application, an
-     operator) costs 16 units;
+     operator) costs 16 units. An *operator* is a comparison, an `and`, an
+     `or`, and a range made a value: a range written anywhere but as the
+     collection a `for`, a `tablerow` or a `render … for` iterates, which
+     visits its integers without making them an array *(A10)*;
    - each filter application and operator additionally costs the *shallow size*
      of its input, of its arguments and of its result — a string's byte length,
-     an array's element count, an object's key count, 1 for anything else;
+     an array's element count, an object's key count, 1 for anything else. A
+     range made a value has its two bounds for arguments and the array of its
+     integers for result, so it costs 16 + 2 + n for n integers, charged
+     before the array is made *(A10)*;
+   - writing an array, by an output tag, an `echo` or a `cycle`, costs 1 unit
+     for each element of the array and of every array nested in it, beside
+     the 16 of the node that writes it *(A10)*;
+   - reading a string's `size` shorthand with a `.size` step costs 1 unit for
+     each byte of the string; every other step of a path costs nothing
+     *(A10)*;
    - comparing two arrays or objects for equality costs their deep size.
 
    The specification carries the charge of every filter in ADR-004's catalog;
@@ -1955,6 +1971,75 @@ functions it allows), marked *(A9)* in place.
    which D16 item 3's symbol rule also counts as file access, are not
    among them, so the release builder stays refused them (W7-R). It is
    the narrower reading of the allowance.
+
+### A10 — D11's charges name a range made a value, an array written and a string's `size` shorthand, and `assign-bytes` counts only what `assign` and `capture` store
+
+**Status:** Proposed 2026-10-23, under Ed Funnekotter's ruling of
+2026-10-23 at PLAN-2026-10-metais-v1's T-A4, on its item M-6.
+**Amends:** D11 item 2 (*operator* defined, and three charges added),
+marked *(A10)* in place. It supersedes T-A4's ratification of W3-3's and
+W5-1's charge readings (logs/ADR-009/T-A4.md) where it differs: the unit
+charges are written here, and the other two readings are not adopted.
+D3's `assign-bytes` row is unchanged, and item 4 holds the engine to it.
+
+A limit's bound is exact: chapter 14's MTS-SEC-058 has a processor accept
+a value equal to the bound, and D3 item 2 makes the defaults exact. So a
+charge the engine makes that D11 does not state refuses a conforming
+package at its bound, and a charge D11 needs that the specification does
+not state lets another conforming tool burn the CPU the limit exists to
+bound. M-6 compared the engine's charges with D11 item 2, chapter 7's §7.11
+(MTS-TPL-063) and chapter 14's MTS-SEC-008 and MTS-SEC-009, at origin/main
+454f0618, and found five places they part:
+
+| Work | The engine | D11 and the specification |
+|---|---|---|
+| A range made a value, `{% assign r = (1..n) %}` | 16 + 2 + n | sizes only for "filter application and operator", and *operator* undefined |
+| An array written to an output | a unit per element, beside the output's 16 | the output's 16 |
+| A string's `.size` shorthand | its byte length | a path, which costs nothing |
+| Entering a partial | counted as `WorkPartials`, and bounded by nothing | nothing |
+| A string a filter builds, an assigned filter result again at the `assign`, an `ifchanged` body | `assign-bytes` | `assign-bytes` bounds only the bytes `assign` and `capture` store |
+
+`{% assign s = "abc" | append: "d" %}` stores 4 bytes, and the engine
+refused it at `--limit assign-bytes=4`, passing it at 8.
+
+1. **A range made a value is an operator.** It costs 16 units, 1 for each
+   bound and 1 for each of the n integers it makes, 16 + 2 + n, before
+   the array is made. A range a `for`, a `tablerow` or a `render … for`
+   iterates is never made an array, is charged nothing as a value, and is
+   bounded by `loop-iterations` (D11 item 1). Without the charge, an
+   `assign` of a million-integer range costs 16 units and a million
+   allocations, and a loop of such assigns runs for hours of CPU within
+   `render-work`'s default.
+2. **Writing an array costs a unit for each element**, the elements of
+   every array nested in it included, beside the 16 of the node that
+   writes it: each element is visited and its text written. Without it, an
+   output of an `array-size` array costs 16 units, and the same loop runs
+   as long.
+3. **A string's `size` shorthand costs a unit for each byte of the
+   string**, as the `size` filter's charge of its input already does: a
+   character count reads every byte. Every other step of a path costs
+   nothing. Without it, `s.size` of a `value-size` string in a loop runs
+   for the same hours.
+4. **`assign-bytes` counts exactly the bytes `assign` and `capture`
+   store** (D3, chapter 14's MTS-SEC-009). A string a filter builds is
+   charged as work units, and held to `value-size`, but stores nothing:
+   it charges no held bytes until an `assign` binds it, when it is charged
+   once. An `ifchanged` body is held while it is compared, to
+   `value-size`, and is not stored by either tag. The vector
+   `sec/assign-bytes-filter-built` renders a filter-built assign of 4
+   bytes at `assign-bytes=4`, and refuses it at 3.
+5. **Partials entered are not a D11 charge.** The engine's count of them,
+   `WorkPartials`, is its own bookkeeping, which no limit bounds and which
+   never refuses. Partials are bounded by `partial-depth` and by the
+   `render-work` every `render` tag is charged.
+
+The specification states items 1 to 3 in §7.11's definition of an
+operator, in MTS-TPL-063 and in MTS-SEC-008, proved at the exact bound and
+one unit below it by `tpl/charge-range-value`, `tpl/charge-array-write`
+and `tpl/charge-size-shorthand`. The engine already made those charges;
+item 4 changes the engine, and item 5 its comments. The calibration of
+`render-work` by its costliest unit, and the memory `capture` holds as its
+body writes, are their own work, and this amendment decides neither.
 
 ## Implementation log
 

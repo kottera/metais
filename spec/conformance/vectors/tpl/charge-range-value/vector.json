@@ -1,0 +1,61 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/charge-range-value",
+  "title": "A range made a value is an operator, charged 16, a unit for each bound and one for each integer; a range a for iterates is not",
+  "statements": [
+    "MTS-TPL-063",
+    "MTS-SEC-008"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "The for tag 16 and its five outputs 16 each, 96, its range nothing; the assign 16; the range (1..5) it binds 16, 2 for its bounds and 5 for its integers, 23: 135 in all.",
+  "cases": [
+    {
+      "name": "at-the-bound",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "render-work": 135
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/at-the-bound-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "one-below",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "limits": {
+              "render-work": 134
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/one-below.json"
+          }
+        }
+      ]
+    }
+  ]
+}

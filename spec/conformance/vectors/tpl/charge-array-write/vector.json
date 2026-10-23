@@ -1,0 +1,67 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "tpl/charge-array-write",
+  "title": "Writing an array is charged a unit for each element it writes, the elements of a nested array included",
+  "statements": [
+    "MTS-TPL-063",
+    "MTS-SEC-008"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [
+    "limits"
+  ],
+  "requires": [],
+  "notes": "16 for the output, and [[1, 2], 3] 2 for its elements and 2 for those of the array nested in it: 20. Reading inputs.a is a path, which is free.",
+  "cases": [
+    {
+      "name": "at-the-bound",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "set_json": [
+              "/a=[[1, 2], 3]"
+            ],
+            "limits": {
+              "render-work": 20
+            }
+          },
+          "expect": {
+            "ok": true,
+            "trees": [
+              {
+                "path": "out",
+                "equals": "expected/at-the-bound-out"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "one-below",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out",
+            "set_json": [
+              "/a=[[1, 2], 3]"
+            ],
+            "limits": {
+              "render-work": 19
+            }
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/one-below.json"
+          }
+        }
+      ]
+    }
+  ]
+}

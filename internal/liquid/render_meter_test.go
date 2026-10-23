@@ -118,6 +118,14 @@ func TestRenderCharges(t *testing.T) {
 	if out, held := m.Used(WorkOutputBytes), m.Used(WorkHeldBytes); out != 5 || held != 5 {
 		t.Errorf("%d output bytes and %d held, want 5 and 5", out, held)
 	}
+	// Held bytes are what assign and capture store, and nothing else: an
+	// assigned filter result is charged once, at the assign, and a string
+	// a filter builds unassigned, or an ifchanged body, charges none
+	// (ADR-009 Amendment A10 item 4).
+	m = renderCounted(t, `{% assign s = "abc" | append: "d" %}{{ s | append: "e" }}{% ifchanged %}{{ s }}{% endifchanged %}`, withDialect(Core()))
+	if held := m.Used(WorkHeldBytes); held != 4 {
+		t.Errorf("%d held bytes, want 4", held)
+	}
 	for src, want := range map[string]int64{
 		`{% for i in (1..10) limit: 3 %}{% endfor %}`:                10,
 		`{% for x in xs limit: 2 %}{% endfor %}`:                     2,

@@ -9,9 +9,11 @@ import "fmt"
 // kind of work. The values are the caller's — internal/template passes
 // ADR-009's — and this package knows no other. Zero means no bound.
 //
-// WorkPartials has no limit of its own: ADR-009 bounds partials by
-// partial-depth, which the renderer holds, and by render-work, which
-// every render tag is charged. The meter counts them all the same.
+// WorkPartials has no limit of its own and never refuses: it is internal
+// bookkeeping, not a charge of ADR-009 D11 (Amendment A10 item 5).
+// ADR-009 bounds partials by partial-depth, which the renderer holds, and
+// by render-work, which every render tag is charged. The meter counts
+// them all the same, so a test can read how many were entered.
 type MeterLimits struct {
 	// RenderWork bounds WorkUnits (ADR-009 render-work).
 	RenderWork int64

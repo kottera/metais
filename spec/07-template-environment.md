@@ -490,10 +490,19 @@ A render's template work is counted in units and bounded by the
 `render-work` limit ([chapter 14](14-security.md#mts-sec-008)): 16 units for
 each node evaluated — an output, a tag, a filter application, an operator —
 and, for each filter application and operator, units for the sizes of its
-input, its arguments and its result. A value's *shallow size* is a string's
-byte length, an array's element count, an object's member count, and 1 for
-anything else; its *deep size* is its shallow size and the deep sizes of
+input, its arguments and its result. Writing an array and reading a string's
+`size` shorthand are charged units too. A value's *shallow size* is a
+string's byte length, an array's element count, an object's member count, and
+1 for anything else; its *deep size* is its shallow size and the deep sizes of
 every element and member value beneath it.
+
+An *operator* is a comparison (`==`, `!=`, `<>`, `<`, `>`, `<=`, `>=`,
+`contains`), an `and`, an `or`, and a range made a value. A range is made a
+value wherever it is written but as the collection a `for`, a `tablerow` or a
+`render … for` iterates, which visits the range's integers without making
+them an array: as in an `assign`, an output, a filter's input or argument,
+or a condition. A range's operands are its two bounds, and its result is the
+array of its integers.
 
 <a id="mts-tpl-063"></a>**MTS-TPL-063** A processor MUST charge each filter
 application 16 units and then, once its argument count and keywords are ones
@@ -502,7 +511,17 @@ arguments; then the units the table below adds, before the work they count;
 and then its result: the shallow size of the result, or, where the table
 says *built*, the byte length of the string it builds. A charge that would
 take the render beyond `render-work` refuses the render at the filter's
-token, and nothing of the work it counts is done. In the table, *text work*
+token, and nothing of the work it counts is done. Beyond its filters, a
+processor MUST charge a range made a value 16 units, 1 for each of its two
+bounds and 1 for each integer it makes, 18 + n units for n integers, before
+it makes the array; a range a `for`, a `tablerow` or a `render … for`
+iterates is charged nothing as a value. It MUST charge an output, an `echo`
+or a `cycle` that writes an array, beyond the node's 16 units, 1 unit for
+each element of the array and for each element of every array nested in it,
+at every depth, each array's before its elements are written. It MUST charge
+a `.size` step that reads a string's `size` shorthand
+([MTS-TPL-024](#mts-tpl-024)) 1 unit for each byte of the string; every other
+step of a path is charged nothing. In the table, *text work*
 is the deep size of an array whose text the filter takes, and nothing for
 any other value; *flattening* is, for an array, the element count of every
 array nested in it, at every depth; *sorting n keys* is n·⌈log₂ n⌉ units and

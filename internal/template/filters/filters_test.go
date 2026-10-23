@@ -266,7 +266,8 @@ func (c meter) Meter() liquid.Meter { return c.m }
 // counted on the meter: the shallow sizes of the input and the arguments,
 // the deep size beyond the input's shallow size for a filter that writes
 // a value's text, the comparisons of sorting a table's names, and the
-// result's length as work units and held bytes.
+// result's length as work units. No filter charges held bytes, which
+// count only what assign and capture store (ADR-009 Amendment A10 item 4).
 func TestCharges(t *testing.T) {
 	testenv.Home(t)
 	d := dialect
@@ -280,26 +281,26 @@ func TestCharges(t *testing.T) {
 		units, held int64
 	}{
 		// 1 + 4 beyond + 11 for {"a":[1,2]}
-		{"json", get("o"), nil, 1 + 4 + 11, 11},
+		{"json", get("o"), nil, 1 + 4 + 11, 0},
 		// 1 + 1 for indent + 4 beyond + 21 for "{\n \"a\": [\n  1,\n  2\n ]\n}"
 		{"json", get("o"), []liquid.Arg{{Name: "indent", Value: value.Number{}}}, 0, 0},
 		// 1 + 4 beyond + 14 for "a:\n  - 1\n  - 2"
-		{"yaml", get("o"), nil, 1 + 4 + 14, 14},
+		{"yaml", get("o"), nil, 1 + 4 + 14, 0},
 		// 2 + 6 beyond (the rows, 2 and 1, and their values, 2 and 1) +
 		// sorting 3 names of 3 bytes, 3·2 + 3·2, + 12 for
 		// "a,b\n1,x\n22,\n"
-		{"csv", get("rows"), nil, 2 + 6 + 12 + 12, 12},
+		{"csv", get("rows"), nil, 2 + 6 + 12 + 12, 0},
 		// 4 + 10 for "ab-c": the result is no longer than the input
-		{"slug", get("s"), nil, 4 + 4, 4},
+		{"slug", get("s"), nil, 4 + 4, 0},
 		// 1 + 2 + 5 for "00:00"
-		{"date", get("n"), []liquid.Arg{{Value: str("%H:%M")}}, 1 + 5 + 5, 5},
+		{"date", get("n"), []liquid.Arg{{Value: str("%H:%M")}}, 1 + 5 + 5, 0},
 	}
 	for i, c := range cases {
 		if c.filter == "json" && c.args != nil {
 			// indent 1, a number whose shallow size is 1
 			n, _ := value.ParseNumber("1")
 			c.args[0].Value = n
-			c.units, c.held = 1+1+4+23, 23
+			c.units = 1 + 1 + 4 + 23
 		}
 		f, _ := d.Filter(c.filter)
 		m := liquid.NewMeter(liquid.MeterLimits{})

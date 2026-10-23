@@ -219,14 +219,20 @@ const (
 	WorkUnits Work = iota + 1
 	// WorkOutputBytes is bytes written to the output (output-size).
 	WorkOutputBytes
-	// WorkHeldBytes is bytes held by strings built by assign, capture and
-	// filters (assign-bytes, value-size).
+	// WorkHeldBytes is bytes stored by assign and capture (assign-bytes),
+	// and nothing else: a string a filter builds or an ifchanged body is
+	// held to value-size by the renderer, and charges none (ADR-009
+	// Amendment A10 item 4).
 	WorkHeldBytes
 	// WorkIterations is loop iterations, charged for a range before it is
 	// materialized (loop-iterations).
 	WorkIterations
-	// WorkPartials is partials rendered (partial-depth is the renderer's
-	// own stack, not a count).
+	// WorkPartials is partials rendered. It is the meter's own
+	// bookkeeping, which a test reads through Used, and never refuses: no
+	// limit bounds it, and it is no charge of ADR-009 D11. Partials are
+	// bounded by partial-depth, the renderer's own stack, and by the
+	// render-work every render tag is charged (ADR-009 Amendment A10
+	// item 5).
 	WorkPartials
 )
 

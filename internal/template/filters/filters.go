@@ -16,8 +16,10 @@
 // the meter (ADR-004 D7 item 1). Each charges ADR-009 D11 item 2's table
 // to the meter before the work it charges for: the shallow sizes of its
 // input and arguments first; then, for a filter that writes a value's
-// text, the input's deep size; and the result's byte length, as work units
-// and held bytes, before the result is returned. json, yaml, csv and
+// text, the input's deep size; and the result's byte length, as work
+// units, before the result is returned. A built string charges no held
+// bytes: assign-bytes counts only what assign and capture store (ADR-009
+// Amendment A10 item 4). json, yaml, csv and
 // markdown_table count that length before they write a byte of it, since
 // their text can be many times their input's size; slug's is no larger
 // than a few bytes for each of its input's.
@@ -193,16 +195,11 @@ func (c *call) units(n int64) *liquid.Error {
 	return c.m.Charge(liquid.WorkUnits, n)
 }
 
-// text charges a string result of n bytes before it is built — n work
-// units and n held bytes — then builds it with build and returns it.
+// text charges a string result of n bytes before it is built, as n work
+// units, then builds it with build and returns it.
 func (c *call) text(n int64, build func() string) (value.Value, *liquid.Error) {
 	if err := c.units(n); err != nil {
 		return nil, err
-	}
-	if n > 0 {
-		if err := c.m.Charge(liquid.WorkHeldBytes, n); err != nil {
-			return nil, err
-		}
 	}
 	s := build()
 	if int64(len(s)) != n {

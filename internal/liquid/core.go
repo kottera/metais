@@ -49,10 +49,11 @@ func (d *Dialect) TagNames() []string { return slices.Sorted(maps.Keys(d.tags)) 
 //   - the shallow size of the input and of each argument, before anything
 //     else is done;
 //   - the shallow size of the result. A filter that builds a string
-//     charges its byte length before building it, and charges it again as
-//     held bytes (WorkHeldBytes, which value-size and assign-bytes bound);
-//     one whose result is no larger than what it was charged for already
-//     charges the result when it is made;
+//     charges its byte length before building it; one whose result is no
+//     larger than what it was charged for already charges the result when
+//     it is made. A built string is held to value-size by the renderer and
+//     is no held bytes: assign-bytes counts only what assign and capture
+//     store (ADR-009 Amendment A10 item 4);
 //   - where a filter's true cost exceeds those shallow charges, the excess,
 //     before the work: the elements of every nested array it flattens; the
 //     deep size of an array whose text it takes; the deep size of values it
@@ -231,16 +232,10 @@ func (c *call) units(n int64) *Error {
 }
 
 // build charges a string of n bytes the filter is about to build, as its
-// result: n work units and n held bytes.
+// result: n work units.
 func (c *call) build(n int64) *Error {
 	c.charged = true
-	if err := c.units(n); err != nil {
-		return err
-	}
-	if n <= 0 {
-		return nil
-	}
-	return c.m.Charge(WorkHeldBytes, n)
+	return c.units(n)
 }
 
 // result charges a result of shallow size n the filter is about to make.
