@@ -4,6 +4,9 @@
 [Amendment A1](#amendments) (a duplicated member name is one finding) is
 accepted by Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's
 ratification; the passage it changes is marked *(A1)*.
+[Amendment A2](#amendments) (rules across the items of an array:
+`uniqueKeys` and `coverage`) is proposed on 2026-10-23, recording Ed
+Funnekotter's rulings of that day; it blocks the v1.0 release.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R3 (items 1 to 5), R4 (items 1 to 4), R5 (items 1 to 4), and
@@ -1133,6 +1136,231 @@ in place.
    parameter: a member name is not a value under ADR-006 D9 item 4.
 2. **What is accepted does not change.** A file with a duplicate name gives
    a finding as before; only the count of findings follows ADR-006.
+
+### A2 — Rules across the items of an array: `uniqueKeys` and `coverage`
+
+**Status:** Proposed 2026-10-23. Ed Funnekotter accepted the design as
+written on 2026-10-23, and it becomes Accepted at the close of
+[PLAN-2026-10-metais-values-and-rules](../plans/PLAN-2026-10-metais-values-and-rules.md).
+It records Ed Funnekotter's rulings of
+2026-10-23 on the cross-record design brief, every lean of which he
+accepted (items 1 to 9 below), and his note on teaching the keywords
+(item 10). It lands before the v1.0 release and blocks it.
+**Amends:** D3 items 2, 3 and 5 (two keywords this dialect defines), D7
+item 1 (nothing: the combined schema carries the keywords unchanged), and,
+in the ADRs that own them, ADR-002 D7 item 4 (what a minor may add),
+ADR-006 D6 (two keyword codes in each of the `input.` and `output.`
+families), D7 item 4 (partial validation) and D8 item 3 (the duplicate
+key), ADR-007 D2 (three check findings) and D9 items 16 and 23 (the
+generator), and ADR-008 D5 as A7 amends it, D6 and D15 item 4 (how the
+tool shows and teaches the rules). Each of those ADRs' status lines points
+here.
+
+**Context.** An external test of the accessibility conformance report
+example gave it a WCAG table that answered criterion 1.1.1 twice, once
+`Supports` and once `Does Not Support`, and left out the other Level A and
+AA criteria. It validated with no finding and rendered a report that looked
+complete. The tester: rules across records, uniqueness and coverage, would
+make "0 errors" mean the report is sound and not only well formed. JSON
+Schema 2020-12 judges each item of an array alone. `uniqueItems` compares
+whole items, so two rows that differ only in their conformance level pass
+it. The brief measured what 2020-12 already reaches:
+
+- **A rule between the fields of one row** is an `if` and `then` in the
+  item schema. "A Level A or AA criterion is never `Not Evaluated`" fails
+  today at the row's cell, with the condition named in `via`. Nothing new
+  is needed.
+- **Uniqueness over a closed set of keys** can be spelled as one `allOf`
+  branch per key value, each a `contains` with `maxContains: 1`: 86
+  branches for WCAG, the schema eight times its size, and the finding
+  located at the table, not at the row. A key with no closed set (an
+  identifier the supplier makes up) cannot be spelled at all.
+- **Coverage** spelled with `minContains: 1` per required value fails
+  twice. The generator conjoins every `contains` at the array's first
+  position and refuses the field as unsatisfiable, so `render --sample`
+  breaks. And of 54 missing criteria one finding was reported: ADR-006 D8
+  item 3's duplicate key holds no schema location, so 54 `min_contains`
+  findings at one pointer with equal parameters were one.
+
+Only the relation between two rows whose values are not fixed in advance,
+and the presence of a required set, are beyond the dialect. Those two are
+what this amendment adds.
+
+**Rulings of 2026-10-23.**
+
+1. **Scope: both keywords in 1.0.** `uniqueKeys` and `coverage` are
+   specified, implemented, proved by vectors and adopted by the
+   accessibility conformance report example before v1.0 is released. A
+   minor could have added them, because 1.0 refuses every keyword it does
+   not define (D3 item 5) and ADR-002 D7 item 5 lets a minor add one; 1.0
+   carries them because the first minor would otherwise be the first to
+   build the table of constructs each minor added, and because the example
+   PRD-001 SC1 rests on should not accept a contradictory report.
+2. **Shape: two schema keywords**, written in the schema object of the
+   array they judge, beside `uniqueItems`. A rule sits where a JSON Schema
+   author looks for it, `metais schema` shows it to a supplier before data
+   is gathered, a failure carries ADR-006 D5's schema location for free,
+   and the keywords reach an array at any depth and under `$ref`, where a
+   manifest member would reach only an input's top-level array and need a
+   path language for any other. A manifest member and a rules file are
+   rejected below.
+3. **Names: `uniqueKeys` and `coverage`, never a name beginning `x-`.**
+   ADR-002 D7 item 5 forbids any minor to give an `x-` keyword meaning, and
+   D3 item 5 promises an author that `x-` is never interpreted. The plain
+   names cannot collide with a later JSON Schema draft, because this
+   dialect is pinned to 2020-12 (D3 item 1). `uniqueKeys` is also the name
+   the validator's own vocabulary example gives this rule (item 19).
+4. **Keys.** `uniqueKeys` is an array of 1 to 8 JSON Pointers, each
+   evaluated against one item; several make one composite key, compared
+   pointer by pointer. An item where any pointer resolves to nothing has no
+   key and takes no part: whether every row must have the column is
+   `required`'s to say. Values are equal as MTS-DAT-013 compares them (`1.0`
+   equals `1`), and `null` is a value, equal to `null`.
+5. **Coverage values are a literal list only.** `coverage` is an object of
+   exactly `key`, one pointer, and `values`, one or more distinct values.
+   No shorthand for "every member of the key's `enum`", and no list read
+   from a reference file through a filter: a filter is a query language, the
+   scope creep PRD-001's non-goals guard against, and the example's WCAG
+   levels live in a template, not in data. An author who wants every member
+   of an enumeration writes them out.
+6. **Both findings are errors.** A value an author wants to allow but not
+   require stays out of `values`; a warning variant would make "0 errors"
+   mean less than the tester asked.
+7. **The keywords also apply to output schemas.** An output's `validate`
+   schema uses this dialect (ADR-005, chapter 10 §10.4), so the `output.`
+   family carries `output.unique_keys` and `output.coverage` beside the
+   `input.` codes. The `manifest.` family registers neither, by ADR-006 A1:
+   the manifest schema uses neither keyword.
+8. **Three 1.0 changes independent of the keywords.**
+   - **ADR-006 D8 item 3's duplicate key also compares `schema.entry` and
+     `schema.pointer`** (MTS-FND-003). A keyword reached twice through a
+     shared `$ref` is still one finding, because both paths end at one
+     authored location (MTS-FND-005); two keywords at two locations that
+     fail alike are two. So a member that two `required` keywords both
+     require is reported once for each: each is a rule the author wrote.
+   - **ADR-002 D7 item 4 and §4.1.2 name "a JSON Schema keyword not
+     beginning `x-`"** among what a minor may add, which D7 item 5 already
+     implies.
+   - **The accessibility conformance report adopts the per-row rule** —
+     a Level A or AA criterion is never `Not Evaluated` — as an `if` and
+     `then` in each table's item schema. It needs no new keyword and lands
+     on its own.
+9. **Deferral is moot.** The brief's ninth question said what 1.0 would
+   state if the keywords waited for 1.1; ruling 1 makes it moot.
+10. **Every agent meets these keywords here first**, since no JSON Schema
+    draft defines them, so the tool shows each rule plainly before it can
+    fail, and teaches both:
+    - **`metais schema <package> <input> --fields`** writes, after the
+      line of an array that carries either keyword, one line per rule in
+      words: "no two rows share `/criterion`", or "rows must include, at
+      `/criterion`, each of: 1.1.1, 1.2.1, …", every value listed. The
+      length bound ADR-008 A7 puts on a constraint does not cut a rule's
+      values; the package's schema-size bounds them. The JSON listing
+      (`metais.schema/1`) gives each field a `rules` member: one object per
+      rule with its keyword, its pointers and, for `coverage`, its values.
+      The keyword also stays in the line's constraints column as
+      `keyword=<canonical JSON>`, as every assertion does.
+    - **`metais inspect`** says, on the line of an input whose schema
+      carries either keyword, that the input has rules across its rows and
+      names the `schema --fields` command that lists them.
+    - **A new help topic, `metais help schemas`**, teaches the dialect an
+      author writes — the asserted keywords and formats, `x-` annotations,
+      and `uniqueKeys` and `coverage` with chapter 13's example — and
+      `metais help schema` points to it.
+    - **Chapter 13's guidance** (§13.1, step 5) teaches both keywords with
+      an example, says what each is for and what each is not, and the skill
+      `metais skill` writes names them in its authoring path.
+    - **Each finding's hint names the rule in words**: the row it repeats
+      and the column, or the value no row holds and the column.
+
+**Drafting decisions** this amendment takes where the rulings are silent,
+which Ed Funnekotter accepted as written on 2026-10-23:
+
+11. **Every repeated key is reported**, once per later item, each naming the
+    first item with that key as `duplicate_of`, where MTS-DAT-013 reports
+    one `input.unique_items`. A table with three duplicated rows needs three
+    fixes, and SC8 asks for every error in one run.
+12. **Where a duplicate is located.** At the item's value at the pointer
+    when the key has one pointer, so a CSV row's finding carries the line
+    and column of the cell; at the item when it has several. `related`
+    gives the first item's same place, noted "first occurrence".
+13. **A coverage gap is located at the array**, one finding per missing
+    value, its `missing` parameter the value. That value is the package's,
+    written in its schema, so MTS-FND-011 allows it; the finding repeats no
+    value a supplier wrote. ADR-006 D8 orders the findings by their
+    parameters' canonical form, not by `values`' order.
+14. **A malformed keyword is `schema.invalid`**, naming it, at open, as
+    every other keyword that breaks its grammar is (MTS-DAT-003).
+15. **Check reports three things** (ADR-007 D2, step 5): a `values` member
+    the key's schema refuses, and a `coverage` with more values than the
+    array's `maxItems`, are `schema.unsatisfiable`, errors, since no table
+    can satisfy them; a key pointer with a token the item schema does not
+    declare, by ADR-007 D3's definition, is `schema.key_not_declared`, a
+    warning, because a misspelt key makes every row keyless and the rule
+    silently never applies. The warning matches `schema.required_not_declared`
+    for a name `required` lists.
+16. **Partial validation** (ADR-006 D7 item 4, MTS-SUP-029): `input.coverage`
+    is a finding about the array as a whole, so it is suppressed and
+    counted in `suppressed`; `input.unique_keys` between two items that
+    were validated is reported at their original indexes.
+17. **The generator** (ADR-007 D9 item 16): for `coverage`, it generates
+    one item per member of `values`, in order, the key's value set to the
+    member and the item's other fields generated as usual, and then fills
+    up to `--items`; the array's length is at least the number of values,
+    whatever `--items` asks. For `uniqueKeys`, an item whose key repeats is
+    regenerated from `attempt:<k>` streams as a `uniqueItems` duplicate is.
+    Item 23's reasons gain `uniqueKeys` exhausted and `coverage` beyond
+    `maxItems`.
+18. **No resource limit changes.** MTS-SEC-046 already counts one unit per
+    item at the array's place; evaluating either keyword hashes each item's
+    key once, linear in the items counted and in the package's own values.
+19. **The implementation** registers both keywords as one vocabulary with
+    `santhosh-tekuri/jsonschema/v6`'s `Compiler.RegisterVocabulary`,
+    which ADR-010 D3 already depends on, and switches on
+    `Compiler.AssertVocabs` so a registered vocabulary applies to a schema
+    that declares no `$vocabulary`, which MTS-DAT-003 forbids it to. The
+    library ships an example of this very keyword. No module dependency is
+    added. If the switch changes how any 1.0 vector validates, the
+    fallback is the evaluator's annotation output read by a post-pass; the
+    first implementation item proves which.
+
+**Rejected.**
+
+- **A manifest member** (`inputs[].rows: {unique, cover}`): additive in a
+  minor, since every manifest object is closed (MTS-MAN-011), and it keeps
+  schemas pure 2020-12, but it reaches only an input's top-level array,
+  puts a 55-value list in the manifest the supplier reads first, and needs a
+  location of its own for a failure. A schema exported to another validator
+  loses the rule either way.
+- **A rules file in the package**: a new kind of file with its own reading
+  rules and findings, for what two keywords say.
+- **`x-unique-by` and `x-covers`**: legal in 1.0, but they break D3 item 5's
+  promise that `x-` is never interpreted, and could never be added by a
+  minor.
+- **Spelling the rules with `allOf`, `contains` and `maxContains`**: see
+  the context. It works for uniqueness over a closed set only, locates at
+  the table, and multiplies the schema; for coverage it breaks the
+  generator.
+
+**What it changes in the specification.** Chapter 5 §5.4 and MTS-DAT-004,
+MTS-DAT-015 to MTS-DAT-019; chapter 6 MTS-SUP-029; chapter 12 §12.3's
+table, MTS-FND-003 and MTS-FND-004; chapter 13 step 5's guidance,
+MTS-AUT-081 to MTS-AUT-083, MTS-SMP-010 and MTS-SMP-011; chapter 4 §4.1.2.
+The code catalog in chapter 12 and `spec/findings/registry.json` gain
+`input.unique_keys`, `input.coverage`, `output.unique_keys`,
+`output.coverage` and `schema.key_not_declared` when the implementation
+registers them in `internal/finding`, from which both are generated
+(ADR-006 A2).
+
+**Conformance.** Vectors under `dat/` for each of MTS-DAT-015 to
+MTS-DAT-019 (a single and a composite key, a keyless row, `1.0` against
+`1`, `null` against `null`, a CSV row located at its cell with `related`,
+a collection, the keywords reached through `$ref` and under a conditional,
+a non-array instance ignored, several gaps in one run); `sup/` for the
+partial table; `fnd/` for two keywords that fail alike at one pointer,
+reported twice, and one keyword reached by two paths, reported once;
+`trn/` for an output's value; `aut/` for the three check findings; and
+`smp/` for both generator statements.
 
 ## Implementation log
 

@@ -9,6 +9,9 @@ accepted on merge. [Amendment A3](#amendments) (A1's tripwire reads each
 keyword where it stands, and the train's reporting readings) is accepted
 by Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's ratification;
 the passages it changes are marked *(A3)*.
+[ADR-003 Amendment A2](ADR-003-the-data-specification.md#amendments)
+(rules across the items of an array: `uniqueKeys` and `coverage`) is
+proposed on 2026-10-23 and amends D6 (two keyword codes in each of the `input.` and `output.` families), D7 item 4 and D8 item 3 (the duplicate key compares the schema location).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R6 (items 1 to 4); the finding half of R14 item 3 (a
