@@ -719,8 +719,8 @@ func TestACRNotEvaluatedSaysWhy(t *testing.T) {
 		t.Fatal(err)
 	}
 	var want []string
-	for table, rows := range rows {
-		b, at := acrTable(t, filepath.Join(src, table+".csv"), rows...)
+	for table, put := range rows {
+		b, at := acrTable(t, filepath.Join(src, table+".csv"), put...)
 		if err := os.WriteFile(filepath.Join(data, table+".csv"), b, 0o644); err != nil {
 			t.Fatal(err)
 		}
