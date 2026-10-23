@@ -1,0 +1,109 @@
+[
+  {
+    "code": "template.duration_format",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/empty.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/empty.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "column": 1
+    }
+  },
+  {
+    "code": "template.duration_format",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/flag-on-percent.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/flag-on-percent.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "directive": "%-%",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.duration_format",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/lone-percent.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/lone-percent.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "directive": "%",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.duration_format",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/twice.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/twice.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "directive": "%-H",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.duration_format",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/two-flags.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/two-flags.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "directive": "%--",
+      "column": 1
+    }
+  },
+  {
+    "code": "template.duration_format",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/unknown.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/unknown.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "directive": "%Y",
+      "column": 1
+    }
+  }
+]

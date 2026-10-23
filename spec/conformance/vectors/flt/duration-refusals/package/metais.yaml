@@ -1,0 +1,42 @@
+metais: "1.0"
+name: example
+version: 1.0.0
+title: Example
+description: An example package.
+guide: Supply the inputs and render.
+inputs:
+  - name: r
+    title: R
+    schema: inputs/r.schema.json
+    required: false
+outputs:
+  - id: kind_float
+    template: kind-float.txt.liquid
+  - id: kind_boolean
+    template: kind-boolean.txt.liquid
+  - id: kind_array
+    template: kind-array.txt.liquid
+  - id: kind_object
+    template: kind-object.txt.liquid
+  - id: kind_integer_with_fields
+    template: kind-integer-with-fields.txt.liquid
+  - id: calendar_year
+    template: calendar-year.txt.liquid
+  - id: calendar_month
+    template: calendar-month.txt.liquid
+  - id: range_negative
+    template: range-negative.txt.liquid
+  - id: range_iso
+    template: range-iso.txt.liquid
+  - id: range_hour_field
+    template: range-hour-field.txt.liquid
+  - id: range_second_field
+    template: range-second-field.txt.liquid
+  - id: form_fields_without_fields
+    template: form-fields-without-fields.txt.liquid
+  - id: form_too_few_fields
+    template: form-too-few-fields.txt.liquid
+  - id: form_fraction
+    template: form-fraction.txt.liquid
+  - id: form_digits
+    template: form-digits.txt.liquid

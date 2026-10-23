@@ -1,0 +1,64 @@
+{
+  "$schema": "https://metais.org/schemas/conformance/1/vector.schema.json",
+  "id": "flt/duration-format",
+  "title": "duration refuses a format outside its set with the directive, a literal one when the template or the manifest is parsed",
+  "statements": [
+    "MTS-FLT-022",
+    "MTS-MAN-018"
+  ],
+  "since": "1.0",
+  "class": "processor",
+  "tags": [],
+  "requires": [],
+  "notes": "",
+  "cases": [
+    {
+      "name": "parse",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "package",
+            "out": "out"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/parse.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "render",
+      "steps": [
+        {
+          "op": "render",
+          "args": {
+            "package": "render",
+            "out": "out",
+            "data": "data"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/render.json"
+          }
+        }
+      ]
+    },
+    {
+      "name": "manifest",
+      "steps": [
+        {
+          "op": "open",
+          "args": {
+            "package": "manifest"
+          },
+          "expect": {
+            "ok": false,
+            "findings": "expected/manifest.json"
+          }
+        }
+      ]
+    }
+  ]
+}

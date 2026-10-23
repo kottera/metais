@@ -1,0 +1,21 @@
+[
+  {
+    "code": "template.duration_format",
+    "severity": "error",
+    "subject": {
+      "kind": "template",
+      "name": "templates/data-format.txt.liquid"
+    },
+    "location": {
+      "origin": "package",
+      "file": "templates/data-format.txt.liquid",
+      "line": 1,
+      "column": 1
+    },
+    "params": {
+      "directive": "%m",
+      "column": 1,
+      "output_path": "data-format.txt"
+    }
+  }
+]

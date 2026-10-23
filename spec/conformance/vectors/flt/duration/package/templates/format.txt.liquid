@@ -1,0 +1,10 @@
+{{ 3661 | duration: "[%-H] [%_M] [%0S]" }}
+{{ 3661 | duration: "[%H] [%M] [%S]" }}
+[{{ 86400 | duration: "%d" }}] [{{ 86400 | duration: "%_d" }}] [{{ 86400 | duration: "%0d" }}] [{{ 86400 | duration: "%-d" }}]
+{{ 360000 | duration: "%H h" }}
+{{ 59 | duration: "%M min" }}
+{{ 3599 | duration: "%-H h" }}
+{{ 86399 | duration: "%d d" }}
+{{ 90061 | duration: "%S s %M min %H h %d d" }}
+{{ 60 | duration: "100%% of %-M min" }}
+{{ 60 | duration: "no unit" }}
