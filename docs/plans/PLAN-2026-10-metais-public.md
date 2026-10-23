@@ -97,7 +97,7 @@ Rules this train adds:
 | Wave | Objective | Depends on | Status |
 |---|---|---|---|
 | 0 | ADR-013, its amendments and this plan, merged to `main` | — | **complete** (#240) |
-| 1 | **Foundations**: the module path; the history scan and the tree's internal details; the community files and contributor guide; CI on GitHub-hosted runners; `--version`'s maker line | 0 | — |
+| 1 | **Foundations**: the module path; the history scan and the tree's internal details; the community files and contributor guide; CI on GitHub-hosted runners; `--version`'s maker line | 0 | **complete** (see §5, Wave 1 verdict) |
 | 2 | **The site and distribution**: the site as a METAIS package with generated reference pages, the guides and the specification; `install.sh` and its tests; `release.yml`, the tap formula and the tap's CI; the builder's prerelease rule; the kottera.com page; UX scenarios I1 and I2 | 1 | — |
 | 3 | **Rehearsal**: the name search, Ed's settings and DNS, the flip; `v1.0.0-rc.1` end to end; I1 against the live site; a fix item for each defect, and a new candidate until it is clean | 2 | — |
 | 4 | **Launch**: T-A3 cuts `v1.0.0`, Ed approves it, and every route is checked live; the train's close | 3, and T-A3's own dependencies | — |
@@ -251,6 +251,53 @@ Made by the plan orchestrator in answer to the wave's breakdown
   new work. Commits already merged keep what they carry (D4 items 1 and
   3). The DCO check requires a `Signed-off-by:` on every commit (D3 item
   2), and is not made stricter than that.
+
+### Wave 1 verdict
+
+**Complete, 2026-10-23.** Brief and closeout:
+[brief-plan-2026-10-metais-public-wave1.md](../briefs/brief-plan-2026-10-metais-public-wave1.md)
+(brief #241, closeout #260). Wave orchestrator `01a16404-76cf`.
+
+Landed:
+- **The module is `metais.org/metais`** (W1-1, #243). The site carries
+  its two `go-import` pages, held by `TestGoImportPages`.
+- **The history is clean** (W1-2, #247). gitleaks and trufflehog scanned
+  1013 commits and found no secret, so nothing was rotated. The current
+  tree is cleared of internal details, and AGENTS.md stands on its own.
+- **The community files exist** (W1-3, #244). The Code of Conduct's
+  contact is `conduct@kottera.com`, which Ed confirmed.
+- **CI exists, dispatch-only** (W1-4, #246; W1-4b, #249 and #252): the
+  wave, macos, dco, shell and site jobs, the workflows tripwire, and
+  AGENTS.md's three tiers. `internal/conformance` is split by area in
+  `ci.yml` (R-W1-4).
+- **`--version` ends with "METAIS is made by Kottera."** (W1-5, #245,
+  ADR-008 A14).
+
+Every job has a green run, each dispatched by Ed.
+
+The verification round passed with no blocking finding. Its evidence:
+- the wave tier on a fresh clone;
+- 22 mutations over W1-1, W1-4, W1-4b and W1-5, each red but one, which
+  is now a finding;
+- the scan report and the tree, inspected.
+
+W1-2 and W1-3 were inspected, not mutated.
+
+What a later wave must know:
+- **The pipeline cannot dispatch a workflow.** Ed ruled in W1-OOB2 that
+  he dispatches proving runs himself. So every workflow a later wave adds
+  or changes is proved by an act for Ed.
+- **CI fails a pull request that carries a `Co-authored-by` line**
+  (#254, outside any item), and every commit signs off as R-W1-5 says.
+- **Two things still run beside Wave 2:**
+  - W1-NB1 (`01a16904-f5e9`): CONTRIBUTING.md's co-author rule, pinning
+    `go-source`, and a rescan to the present;
+  - W1-OOB5 (`01a16905-12da`): Ed re-dispatches dco and shell after #254.
+- **The rescan the flip rests on is Wave 3's**, just before the flip.
+- **The name search is done** (`01a16409-e851`). Ed found no live
+  conflict in classes 9 or 42 and ruled to proceed, so it does not stop
+  the flip.
+- **T-A3 carries §6's edits**, confirmed by `01a16409-f3eb`.
 
 ## 6. Out-of-band acts
 
