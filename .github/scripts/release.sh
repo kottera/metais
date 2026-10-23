@@ -11,8 +11,8 @@
 #   prepare    checks everything and pushes nothing. The draft is a draft,
 #              its target is a commit's full SHA, its assets are exactly
 #              SHA256SUMS and the shipped targets' archives, each with its
-#              line's SHA-256, and their tool reports the version
-#              (release verify). The specification release the draft
+#              line's SHA-256, and the tool of this host's target reports
+#              the version (release verify). The specification release the draft
 #              names, if any, is a released commit that is an ancestor of
 #              the target, and a prerelease names none. A release that is
 #              not a prerelease implements only released revisions. No tag
@@ -116,7 +116,17 @@ prepare() {
 	git cat-file -e "$target^{commit}" 2>/dev/null || die "this repository holds no commit $target, the draft's target"
 
 	gh release download "$TAG" --dir "$work/assets"
-	implements=$("$RELEASE_TOOL" verify -version "$version" -dir "$work/assets") ||
+	case $(uname -s) in
+	Linux) os=linux ;;
+	Darwin) os=darwin ;;
+	*) die "$(uname -s) runs no shipped target's metais" ;;
+	esac
+	case $(uname -m) in
+	x86_64 | amd64) arch=amd64 ;;
+	aarch64 | arm64) arch=arm64 ;;
+	*) die "$(uname -m) runs no shipped target's metais" ;;
+	esac
+	implements=$("$RELEASE_TOOL" verify -version "$version" -dir "$work/assets" -run "$os/$arch") ||
 		die "the draft's assets are refused"
 	case $version in
 	*-*) prerelease=true ;;
@@ -152,6 +162,7 @@ prepare() {
 		printf '%s\n' "$implements" | grep -Fqx "$spec_rev" ||
 			die "the draft names $spec_tag, and the release's tool implements only $(echo "$implements" | tr '\n' ' ')"
 	fi
+	# shellcheck disable=SC2086 # one revision M.m per line
 	for rev in $implements; do
 		[ "$rev" != "$spec_rev" ] || continue
 		c=$(remote_commit "spec-$rev")
@@ -258,6 +269,7 @@ EOF
 # load reads prepare's state, and refuses a dry run.
 load() {
 	[ -f "$work/state" ] || die "$work holds no state; prepare runs first"
+	dry_run=true
 	# shellcheck source=/dev/null
 	. "$work/state"
 	if [ "$DRY_RUN" != false ] || [ "$dry_run" != false ]; then

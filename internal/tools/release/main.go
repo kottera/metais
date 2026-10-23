@@ -25,11 +25,12 @@
 // Its verify subcommand checks a release's assets, downloaded from its
 // draft, before release.yml publishes anything (ADR-013 D7 item 3):
 //
-//	go run ./internal/tools/release verify -version <semver> -dir <assets>
+//	go run ./internal/tools/release verify -version <semver> -dir <assets> -run <os>/<arch>
 //
 // The directory must hold exactly SHA256SUMS, as the builder writes it,
 // and each shipped target's archive with its line's SHA-256, and the
-// archive built for this host must hold a metais that reports <semver>.
+// archive of -run, the target of the host it runs on, must hold a metais
+// that reports <semver>.
 // It writes the specification revisions that metais implements to
 // standard output, one per line.
 //

@@ -79,7 +79,8 @@ func TestVerify(t *testing.T) {
 		t.Skip("the fake release's tool is a shell script")
 	}
 	const v = "1.0.0-rc.1"
-	host := buildline.ArchiveName(v, buildline.Target{OS: runtime.GOOS, Arch: runtime.GOARCH})
+	here := buildline.Target{OS: runtime.GOOS, Arch: runtime.GOARCH}
+	host := buildline.ArchiveName(v, here)
 	other := buildline.ArchiveName(v, buildline.Shipped[0])
 	if other == host {
 		other = buildline.ArchiveName(v, buildline.Shipped[1])
@@ -89,7 +90,7 @@ func TestVerify(t *testing.T) {
 		writeAssets(t, dir, v, v, `"1.0"`)
 		return dir
 	}
-	got, err := verify(v, good(t))
+	got, err := verify(v, good(t), here)
 	if err != nil || !slices.Equal(got, []string{"1.0"}) {
 		t.Fatalf("verify of a release's assets returned %q, %v", got, err)
 	}
@@ -126,7 +127,7 @@ func TestVerify(t *testing.T) {
 	} {
 		dir := good(t)
 		c.change(t, dir)
-		got, err := verify(c.version, dir)
+		got, err := verify(c.version, dir, here)
 		if err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%s: verify returned %q, %v; want a refusal saying %q", c.name, got, err, c.want)
 		}
@@ -139,8 +140,9 @@ func TestVerifyCLI(t *testing.T) {
 	}
 	dir := testenv.Dir(t)
 	writeAssets(t, dir, "1.0.0", "1.0.0", `"1.0","1.1"`)
+	here := runtime.GOOS + "/" + runtime.GOARCH
 	var stdout, stderr bytes.Buffer
-	if code := cli([]string{"verify", "-version", "1.0.0", "-dir", dir}, &stdout, &stderr, nil); code != 0 {
+	if code := cli([]string{"verify", "-version", "1.0.0", "-dir", dir, "-run", here}, &stdout, &stderr, nil); code != 0 {
 		t.Fatalf("verify exited %d: %s", code, stderr.String())
 	}
 	if stdout.String() != "1.0\n1.1\n" {
@@ -153,9 +155,12 @@ func TestVerifyCLI(t *testing.T) {
 		{[]string{"verify"}, 2},
 		{[]string{"verify", "-version", "1.0.0"}, 2},
 		{[]string{"verify", "-dir", dir}, 2},
-		{[]string{"verify", "-version", "1.0.0", "-dir", dir, "extra"}, 2},
-		{[]string{"verify", "-version", "1.0.1", "-dir", dir}, 1},
-		{[]string{"verify", "-version", "1.0.0", "-dir", filepath.Join(dir, "absent")}, 1},
+		{[]string{"verify", "-version", "1.0.0", "-dir", dir}, 2},
+		{[]string{"verify", "-version", "1.0.0", "-dir", dir, "-run", "linux"}, 2},
+		{[]string{"verify", "-version", "1.0.0", "-dir", dir, "-run", here, "extra"}, 2},
+		{[]string{"verify", "-version", "1.0.1", "-dir", dir, "-run", here}, 1},
+		{[]string{"verify", "-version", "1.0.0", "-dir", dir, "-run", "windows/amd64"}, 1},
+		{[]string{"verify", "-version", "1.0.0", "-dir", filepath.Join(testenv.Dir(t), "absent"), "-run", here}, 1},
 	} {
 		var stdout, stderr bytes.Buffer
 		if code := cli(c.args, &stdout, &stderr, nil); code != c.code {

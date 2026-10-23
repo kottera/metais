@@ -18,7 +18,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -40,19 +39,21 @@ const sumsName = "SHA256SUMS"
 // status: 0 when the assets are the release's, 1 on a refusal, 2 on a
 // usage error.
 func verifyCLI(args []string, stdout, stderr io.Writer) int {
-	const usage = "usage: go run ./internal/tools/release verify -version <semver> -dir <assets>"
+	const usage = "usage: go run ./internal/tools/release verify -version <semver> -dir <assets> -run <os>/<arch>"
 	fs := flag.NewFlagSet("release verify", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	version := fs.String("version", "", "the release's semantic version, without a leading v")
 	dir := fs.String("dir", "", "a directory holding the release's assets and nothing else")
+	run := fs.String("run", "", "the shipped target, <os>/<arch>, whose metais this host runs")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
-	if fs.NArg() > 0 || *version == "" || *dir == "" {
+	host, hostOK := parseTarget(*run)
+	if fs.NArg() > 0 || *version == "" || *dir == "" || !hostOK {
 		fmt.Fprintln(stderr, usage)
 		return 2
 	}
-	implements, err := verify(*version, *dir)
+	implements, err := verify(*version, *dir, host)
 	if err != nil {
 		fmt.Fprintln(stderr, "release verify:", err)
 		return 1
@@ -70,12 +71,13 @@ func verifyCLI(args []string, stdout, stderr io.Writer) int {
 // anything: SHA256SUMS and one archive per shipped target (ADR-010 D12
 // item 2), and nothing else; SHA256SUMS exactly what the builder writes
 // for version (parseSums); and each archive's SHA-256 its line's. It then
-// runs the metais of the archive built for this host, which must report
+// runs the metais of host's archive, built for the host verify runs on,
+// which must report
 // version, and returns the specification revisions it implements, so the
 // caller can hold a release to ADR-011 D5 item 6. Running the shipped
 // binary builds nothing: the bytes are the release procedure's (ADR-013
 // D7 item 2).
-func verify(version, dir string) ([]string, error) {
+func verify(version, dir string, host buildline.Target) ([]string, error) {
 	if !releaseVersion(version) {
 		return nil, fmt.Errorf("%w: %q", errVersion, version)
 	}
@@ -117,11 +119,16 @@ func verify(version, dir string) ([]string, error) {
 			return nil, fmt.Errorf("%w: %s's SHA-256 is %s, and its line in %s says %s", errAssets, name, got, sumsName, hashes[t])
 		}
 	}
-	host := buildline.Target{OS: runtime.GOOS, Arch: runtime.GOARCH}
 	if !slices.Contains(buildline.Shipped, host) {
-		return nil, fmt.Errorf("this host, %s, is no shipped target, so it cannot run the release's tool", host)
+		return nil, fmt.Errorf("%s is no shipped target, so no archive holds a tool for it to run", host)
 	}
 	return reportedVersion(filepath.Join(dir, buildline.ArchiveName(version, host)), version)
+}
+
+// parseTarget reads <os>/<arch>.
+func parseTarget(s string) (buildline.Target, bool) {
+	os, arch, ok := strings.Cut(s, "/")
+	return buildline.Target{OS: os, Arch: arch}, ok && os != "" && arch != ""
 }
 
 // reportedVersion runs metais version --json with the metais of archive,
