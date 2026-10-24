@@ -118,6 +118,7 @@ fingerprint() {
 # $code and $type. A failure to connect leaves code 000, and curl's own
 # message above the line.
 get() {
+	: >"$2"
 	got=$(curl -sSL -o "$2" -w '%{http_code} %{content_type}' "$1") || true
 	code=${got%% *}
 	type=${got#* }
