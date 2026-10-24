@@ -23,6 +23,16 @@ commit is on `main` and pushed: the draft names it, and `release.yml`
 checks it out from GitHub. `<version>` is the release's semantic version
 without its `v`, such as `1.0.0-rc.1` or `1.0.0`.
 
+**Its `.github/workflows` must be `main`'s when Ed releases it.**
+`release.yml` pushes the tag with the workflow's own token, and GitHub
+refuses such a token a tag at a commit whose workflows differ from the
+default branch's: it counts that as a change to the workflows, which no
+workflow's token may make. So cut the release at `main`'s tip, and land
+no change to `.github/workflows` between the draft and the release act.
+That includes a Dependabot update of an action's pin. `prepare` refuses
+a draft whose target's workflows are not `main`'s, before anything is
+pushed. The fix is a new candidate, cut at `main`'s tip.
+
 1. **Tag in the clone only.** If this release also releases the
    specification, its release commit (ADR-011 D5 item 2) is already on
    `main`. Tag it first, because the builder refuses a release whose tool
@@ -97,7 +107,8 @@ the `release` job runs `.github/scripts/release.sh`, one step at a time:
 
 1. **prepare** checks everything and pushes nothing:
    - the release is a draft, and its target is a commit's full SHA that
-     the repository holds;
+     the repository holds, whose `.github/workflows` is `main`'s (see
+     the procedure above);
    - the draft's assets are exactly `SHA256SUMS` and one archive per
      shipped target (`buildline.Shipped`). `SHA256SUMS` is exactly what
      the builder writes, and each archive's SHA-256 is its line's. The
