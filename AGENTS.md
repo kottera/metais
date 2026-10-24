@@ -90,15 +90,14 @@ CI:
   darwin/arm64, the DCO check, `shellcheck` over the repository's shell
   scripts, and the site's build and tests. Its linux job runs `gate.sh
   wave` with `METAIS_GATE_P` at the runner's cores, since a hosted runner
-  runs nothing else. While the repository is
-  private it runs only when dispatched by hand, and a dispatch is spent
-  only on proving a workflow. CI does not replace the other two: a train
-  item still runs the scoped tier before it merges, and a wave still runs
-  the wave tier at its verification, because they select what a change
-  reaches. No workflow runs on a self-hosted runner or on the
-  `pull_request_target` trigger, and every workflow declares a top-level
-  `permissions` block; `internal/guarantees`' `TestWorkflows` holds each
-  one to that.
+  runs nothing else. It runs on every pull request and every push to
+  `main`, and a dispatch with its `jobs` input re-runs one job alone. CI
+  does not replace the other two: a train item still runs the scoped tier
+  before it merges, and a wave still runs the wave tier at its
+  verification, because they select what a change reaches. No workflow
+  runs on a self-hosted runner or on the `pull_request_target` trigger,
+  and every workflow declares a top-level `permissions` block;
+  `internal/guarantees`' `TestWorkflows` holds each one to that.
 
 ```bash
 go build ./...
@@ -273,7 +272,20 @@ Agents that do not load skills read them as plain files:
 - **Never copy code** from another template engine, scaffolding tool or
   schema validator. Depend on a library through its module, or write the
   code here.
-- The repository is private for now. Do not publish its contents outside it.
+- **The repository is public, so everything committed is published**:
+  every pushed commit on every branch, its message, and every pull
+  request's title, body and comments. Git keeps a commit's contents in the
+  history after a later commit removes them, so treat a push as permanent.
+  Nothing internal enters it (ADR-013 D4 item 3): no host name, no private
+  network's name or URL, and no note that describes a person's machine
+  rather than a procedure. Describe a procedure, and say what a host must
+  provide rather than which host provides it. Work Order IDs stay: they
+  are opaque, and they tie each change to its decision.
+- **No secret enters the tree**, not a token, a key or a password, not even
+  one that is expired or meant only for a test. A test makes the
+  credential it needs. A secret that reaches a pushed commit is rotated at
+  once (ADR-013 D4 item 2): removing it from the tree does not take it out
+  of the history, and only rotation makes it harmless.
 
 ## Other repositories
 

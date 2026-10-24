@@ -553,8 +553,8 @@ func TestPageCommands(t *testing.T) {
 
 // TestWorkflow requires the Pages workflow to build the site with
 // build.sh from a published release's tag, with the release's version and
-// SHA256SUMS, and to run nothing while the repository is private: GitHub's
-// free plan publishes Pages only from a public repository. Its triggers
+// SHA256SUMS, and to run nothing on a private repository: GitHub's free
+// plan publishes Pages only from a public repository. Its triggers
 // are release.yml's call, once the release is published, and a dispatch,
 // for an erratum; it has no push or release trigger, which would build
 // from a branch or before publication, and its build checks that the

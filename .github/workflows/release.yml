@@ -25,9 +25,9 @@
 # It builds no release and attests nothing: the archives are the release
 # procedure's, as built (ADR-013 D7 items 2 and 4).
 #
-# dry_run exists to prove this workflow alone, on a draft in the private
-# repository: prepare runs whole, and every push step, the publish and the
-# pages job are skipped, so nothing is pushed or published.
+# dry_run exists to prove this workflow alone, on a draft: prepare runs
+# whole, and every push step, the publish and the pages job are skipped,
+# so nothing is pushed or published.
 name: release
 
 on:
