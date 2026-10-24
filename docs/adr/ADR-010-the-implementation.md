@@ -35,6 +35,10 @@ passages it changes are marked *(A9)*.
 goldmark, a module of `go.mod` that never enters the binary's closure) is
 proposed on 2026-10-23 by PLAN-2026-10-metais-public W2-1, under ADR-013 D8
 item 1; the passages it changes are marked *(A10)*.
+[Amendment A11](#amendments) (the conformance vectors are a module of their
+own, outside metais.org/metais's module zip, and every path in that zip
+is one Go's module zip admits) is accepted by Ed Funnekotter on
+2026-10-24, in PLAN-2026-10-metais-public's Wave 3 release act (W3-OOB4).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R18 item 1 (one static binary, the supported targets,
@@ -2324,6 +2328,46 @@ A3 items 1 to 4 and every rule of the binary's closure are unchanged.
    module is in `cmd/metais`'s closure or `THIRD-PARTY-NOTICES.txt`;
    goldmark v1 is in `go.mod` and `go.sum` as the site's build step's
    library alone.
+
+### A11 — The conformance vectors are a module of their own, and every path in metais.org/metais's module zip is one Go admits
+
+**Status:** Accepted by Ed Funnekotter on 2026-10-24, in Wave 3's release
+act (W3-OOB4, `01a16bc5-fcc5`) of PLAN-2026-10-metais-public, after the
+rehearsal of `v1.0.0-rc.2` found its `go install` route refused.
+**Amends:** A8 (the module is `metais.org/metais`): what is in its module
+zip. Nothing in the binary, its closure or its build changes.
+
+1. **What failed.** `go install metais.org/metais/cmd/metais@v1.0.0-rc.2`
+   failed through the Go proxy and direct alike. The go command refuses to
+   make the zip of a module holding one path that Go's module zip refuses
+   (`golang.org/x/mod`'s `module.CheckFilePath` and `zip.CheckDir`).
+   Two of the module's files held one: the fuzz input
+   `internal/markdown/testdata/fuzz/FuzzOutline/nul`, a name Windows
+   reserves, and the expected output `Tom & Jerry's.txt` of the vector
+   `out/path-templates`, whose apostrophe a module zip refuses. A
+   `testdata` directory is in a module zip like any other.
+2. **The vectors leave the module.** `spec/conformance/vectors/` holds a
+   `go.mod` of its own, `metais.org/metais/spec/conformance/vectors`, with
+   no Go code. The go command leaves a directory holding another module
+   out of a module's zip, so the vectors are not in `metais.org/metais`'s
+   zip. A vector's expected tree may hold any path a package can render
+   (MTS-OUT-003 proves a path unescaped, the apostrophe included), and the
+   specification, not Go's zip, decides which. Nothing imports the vectors
+   module. The conformance tests, `vectorgen` and the site's build read
+   the vectors from the repository's tree, as before. `go install` no
+   longer downloads them.
+3. **The fuzz input is renamed** `nul-byte`. A fuzz corpus file's name is
+   free.
+4. **What holds it.** `internal/guarantees`' `TestModuleZipPaths` holds
+   every file of the module, outside any directory holding another module,
+   to the module zip's file-path rules: the characters it admits, no
+   element ending in a dot, no element Windows reserves, and no two paths
+   equal but for case. `TestModuleZipPathsControl` refuses rc.2's two
+   paths and one of each other rule, admits paths the zip admits, and
+   skips another module's directory. The rules are applied here, not by
+   importing `golang.org/x/mod`, which would be a module of `go.mod` for a
+   test alone. Their parity with `x/mod` v0.42.0 was checked when they
+   were written, on every control path.
 
 ## Implementation log
 
