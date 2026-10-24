@@ -520,6 +520,26 @@ Made by the plan orchestrator in answer to the wave's breakdown
   requests are included. Until he rules, nothing bypasses protection on
   its own: an item parks. A wait for CI that his ruling leaves in place
   is accepted.
+- **Ed's rulings in the settings act before the flip, 2026-10-24**
+  (W3-OOB1, `01a16bc4-06a8`):
+  - **What is set while private.** The default token is read-only and
+    cannot create or approve pull requests. Fork pull requests run no
+    workflow at all. GitHub refuses the rest of §6's list on a private
+    free-plan repository: approval for first-time contributors'
+    workflows, private vulnerability reporting, branch protection, and
+    the `release` environment's required reviewer. All of it is set in
+    the settings act after the flip (W3-OOB3).
+  - **The moment of the flip.** Approval for first-time contributors'
+    workflows is set on the repository, not the organization. It is the
+    first step after the flip, before Pages and everything else
+    (`docs/dev/release.md`, "Going live", step 2).
+  - **The credential route for I1 and I2 (Q1).** Ed's host does not
+    provide an endpoint at `ANTHROPIC_BASE_URL`. Item W3-4 adds a
+    credential route to the UX runner, under an ADR-009 amendment Ed
+    approves, and lands before I1 runs.
+  - **kottera.com's Pages (Q2).** It serves from a branch, `main` and
+    `/docs`, as W2-12 built it. No deploy workflow is needed, so there
+    is no W3-5. Ed sets the source in W3-OOB3.
 
 ## 9. Wave 4 — launch
 
