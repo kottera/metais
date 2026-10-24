@@ -2,6 +2,8 @@
 
 **Multi-file Extensible Templating And Instantiation Specification**
 
+Pronounced *meh-TAY* (/mɛˈteɪ/). The final *s* is silent, as in *Beaujolais*.
+
 A METAIS package is a single zip that turns input data into finished files.
 It carries Liquid templates, a data specification (JSON Schemas for every
 input, with prose saying what each input means), and optional reference
