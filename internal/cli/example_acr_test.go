@@ -1119,3 +1119,64 @@ func TestACRSampleRendered(t *testing.T) {
 		})
 	}
 }
+
+// TestACRSampleEditionTables holds the §4.1 example's preview to its input
+// constraints in every optional mode: render --sample renders with no
+// finding at several seeds, under all, none and mixed, and with each
+// edition supplied by --set, and its acr.json holds exactly the tables the
+// edition does. The generator decides an optional input after the
+// constraints' conditionals, so a mixed run's edition decides its tables
+// rather than each table's include stream alone (W3-NB1).
+func TestACRSampleEditionTables(t *testing.T) {
+	testenv.Home(t)
+	tables := map[string][]string{
+		"wcag":          {"wcag"},
+		"section508":    {"wcag", "section508"},
+		"en301549":      {"wcag", "en301549"},
+		"international": {"wcag", "section508", "en301549"},
+	}
+	type run struct{ mode, seed, edition string }
+	var runs []run
+	for _, mode := range []string{"all", "none", "mixed"} {
+		for _, seed := range []string{"1", "7", "42"} {
+			runs = append(runs, run{mode, seed, ""})
+		}
+	}
+	for _, edition := range slices.Sorted(maps.Keys(tables)) {
+		runs = append(runs, run{"mixed", "7", edition}, run{"all", "7", edition}, run{"none", "7", edition})
+	}
+	for _, rn := range runs {
+		t.Run(fmt.Sprintf("%s seed %s edition %q", rn.mode, rn.seed, rn.edition), func(t *testing.T) {
+			out := filepath.Join(testenv.Dir(t), "out")
+			args := []string{"render", acrPackage, "--sample", "--optional", rn.mode, "--seed", rn.seed, "--items", "1", "--out", out, "--json"}
+			if rn.edition != "" {
+				args = append(args, "--set", "/report/edition="+rn.edition)
+			}
+			r := runTool(t, args...)
+			if r.status != 0 || len(r.codes()) > 0 {
+				t.Fatalf("render --sample --optional %s --seed %s exits %d and reports %q", rn.mode, rn.seed, r.status, r.codes())
+			}
+			b, err := os.ReadFile(filepath.Join(out, "acr.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var doc struct {
+				Edition string
+				Tables  []struct{ Standard string }
+			}
+			if err := json.Unmarshal(b, &doc); err != nil {
+				t.Fatal(err)
+			}
+			if rn.edition != "" && doc.Edition != rn.edition {
+				t.Errorf("the preview's edition is %q, want the one set, %q", doc.Edition, rn.edition)
+			}
+			var got []string
+			for _, table := range doc.Tables {
+				got = append(got, table.Standard)
+			}
+			if want, ok := tables[doc.Edition]; !ok || !slices.Equal(got, want) {
+				t.Errorf("the preview's %q edition holds the tables %q, want %q", doc.Edition, got, want)
+			}
+		})
+	}
+}
