@@ -275,7 +275,7 @@ scratch volume is one. The runner then:
 | `-quota-wait` | `0` | on a quota pause, how long to wait before running the run again; `0` stops the set |
 | `-timeout` | `30m` | how long one session may run before it is stopped |
 | `-allow-dirty` | off | run from a checkout with uncommitted changes |
-| `-host` | (none) | the host, as the scorecard publishes it, such as `tera dispatch, linux/amd64` |
+| `-host` | (none) | the host, as the scorecard publishes it, such as `a dispatch host, linux/amd64` |
 | `-transcripts` | the set's `runs/` | where the transcripts are kept, as the scorecard publishes it, such as a Work Order's artifact handle |
 | `-scorecard` | off | run nothing: score the runs `-out` holds and print the scorecard |
 | `-scrub` | (none) | run nothing: write a scrubbed copy of `-out`'s set to this new directory ([Scrubbing](#scrubbing-a-set)) |
@@ -289,7 +289,7 @@ change, without running anything:
 
 ```bash
 go run ./internal/tools/ux -out "$SCRATCH/ux-baseline" -scorecard \
-  -host "tera dispatch, linux/amd64" -transcripts "Work Order <id>'s artifacts"
+  -host "a dispatch host, linux/amd64" -transcripts "Work Order <id>'s artifacts"
 ```
 
 ### Pacing and resuming

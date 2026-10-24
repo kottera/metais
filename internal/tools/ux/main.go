@@ -55,7 +55,7 @@ func cli(args []string, stdout, stderr io.Writer, environ []string) int {
 	timeout := fs.Duration("timeout", 30*time.Minute, "how long one session may run before it is stopped and recorded as timed out")
 	allowDirty := fs.Bool("allow-dirty", false, "run from a checkout with uncommitted changes, recording the commit as dirty")
 	scorecardOnly := fs.Bool("scorecard", false, "run nothing: score the runs already recorded in -out and print the scorecard")
-	host := fs.String("host", "", "the host the set ran on, as the scorecard publishes it, such as \"tera dispatch, linux/amd64\"")
+	host := fs.String("host", "", "the host the set ran on, as the scorecard publishes it, such as \"a dispatch host, linux/amd64\"")
 	transcripts := fs.String("transcripts", "", "where the set's transcripts are kept, as the scorecard publishes it (default the set's runs/ directory)")
 	scrubTo := fs.String("scrub", "", "run nothing: write a scrubbed copy of the set in -out to this new directory, fit to publish")
 	if err := fs.Parse(args); err != nil {

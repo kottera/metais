@@ -337,6 +337,7 @@ step() {
 	fi
 }
 
+# shellcheck disable=SC2329 # step calls gofmt_clean by name, through "$@", which shellcheck cannot follow
 gofmt_clean() {
 	local out
 	out=$(gofmt -l .)
@@ -346,10 +347,12 @@ gofmt_clean() {
 	}
 }
 
+# shellcheck disable=SC2329 # step calls static_build by name, through "$@", which shellcheck cannot follow
 static_build() {
 	CGO_ENABLED=0 go build -trimpath -o "$state/metais-static" ./cmd/metais
 }
 
+# shellcheck disable=SC2329 # step calls cross by name, through "$@", which shellcheck cannot follow
 cross() {
 	local rc=0 t
 	for t in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64 windows/arm64; do
@@ -364,6 +367,7 @@ cross() {
 	return "$rc"
 }
 
+# shellcheck disable=SC2329 # step calls specdata_fresh by name, through "$@", which shellcheck cannot follow
 specdata_fresh() {
 	go generate ./internal/specdata && git diff --exit-code --stat internal/specdata
 }
@@ -373,6 +377,7 @@ specdata_fresh() {
 # that matches fewer tests than the list names fails, so a renamed test
 # cannot drop out of the tier unnoticed. internal/finding and
 # internal/specdata are tripwires whole, and are tested as packages.
+# shellcheck disable=SC2329 # called only from tripwire, which step calls by name, through "$@", which shellcheck cannot follow
 tripwire_names() {
 	case "$1" in
 	tripwire-conformance) echo 'TestVectorsWellFormed TestVectorsWellFormedControl TestNoSentinelInSuite TestNoSentinelInSuiteControl' ;;
@@ -389,6 +394,7 @@ tripwire_pkg() {
 	esac
 }
 
+# shellcheck disable=SC2329 # step calls tripwire by name, through "$@", which shellcheck cannot follow
 tripwire() {
 	local names pkg pat n out missing="" rc
 	names=$(tripwire_names "$1")
@@ -484,6 +490,7 @@ reach_groups() {
 # -conformance.reach, selecting the area and the group's vectors. A run that
 # ran fewer vectors than the group names fails, so a selection that matches
 # nothing cannot pass.
+# shellcheck disable=SC2329 # step calls reach by name, through "$@", which shellcheck cannot follow
 reach() {
 	local area=$1 out rc n
 	shift

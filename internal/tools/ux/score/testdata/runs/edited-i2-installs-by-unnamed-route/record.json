@@ -1,0 +1,127 @@
+{
+  "format": "metais-ux-run/1",
+  "scenario": {
+    "id": "I2",
+    "name": "I2-discover",
+    "kind": "authoring",
+    "asks_for_output": false,
+    "prompt": "make a .metais that renders an invoice as HTML from line items"
+  },
+  "model_requested": "sonnet",
+  "model_reported": "claude-sonnet-5-5",
+  "models_used": [
+    "claude-sonnet-5-5"
+  ],
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.299 (Claude Code)"
+  },
+  "with_skill": false,
+  "commit": "c268fb92621a70bcf583263b995462400984a56d",
+  "metais_sha256": "7303b0de8fe9b20b8e4ddca16da9a99d5540de24b6b113762f326c73e2e29a77",
+  "status": "complete",
+  "valid": true,
+  "checks": [
+    {
+      "name": "outside-repository",
+      "pass": true
+    },
+    {
+      "name": "fresh-directory",
+      "pass": true
+    },
+    {
+      "name": "metais-not-on-path",
+      "pass": true
+    },
+    {
+      "name": "placeholder-credential",
+      "pass": true
+    },
+    {
+      "name": "auto-memory-off",
+      "pass": true
+    },
+    {
+      "name": "project-settings-only",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "session-as-started",
+      "pass": true
+    },
+    {
+      "name": "strict-mcp-config",
+      "pass": true
+    },
+    {
+      "name": "skill-as-declared",
+      "pass": true
+    },
+    {
+      "name": "no-session-persistence",
+      "pass": true
+    },
+    {
+      "name": "no-memory-read",
+      "pass": true
+    }
+  ],
+  "started": "2026-10-21T14:04:31.318639723Z",
+  "ended": "2026-10-21T14:04:38.083839634Z",
+  "wall_ms": 6765,
+  "turns": 2,
+  "cost_usd": 0.0628547,
+  "duration_ms": 6347,
+  "is_error": false,
+  "subtype": "success",
+  "exit_code": 0,
+  "tool_uses": 3,
+  "invocation": {
+    "path": "/ux/host",
+    "args": [
+      "-p",
+      "make a .metais that renders an invoice as HTML from line items",
+      "--model",
+      "sonnet",
+      "--output-format",
+      "stream-json",
+      "--verbose",
+      "--no-session-persistence",
+      "--strict-mcp-config",
+      "--setting-sources",
+      "project",
+      "--settings",
+      "{\"autoMemoryEnabled\":false}",
+      "--permission-mode",
+      "bypassPermissions"
+    ],
+    "env": [
+      "PATH=/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "HOME=/ux/run/home",
+      "TMPDIR=/ux/run/tmp",
+      "CLAUDE_CODE_TMPDIR=/ux/run/tmp",
+      "ANTHROPIC_BASE_URL=http://127.0.0.1:46565",
+      "ANTHROPIC_AUTH_TOKEN=[scrubbed]",
+      "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
+      "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
+      "DISABLE_AUTOUPDATER=1",
+      "GOFLAGS=-modcacherw"
+    ],
+    "dir": "/ux/run/work"
+  },
+  "fixtures": null,
+  "files": null,
+  "transcript": "transcript.jsonl",
+  "stderr": "stderr.txt",
+  "work": "work",
+  "outcome": null
+}
