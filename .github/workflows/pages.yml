@@ -16,11 +16,10 @@
 # published, so the site never describes a release that is not out, and it
 # never builds from a branch.
 #
-# Inert while the repository is private. GitHub's free plan publishes
-# Pages only from a public repository, so every job is gated on the
-# repository being public: on a private repository each job is skipped,
-# nothing runs and nothing fails. docs/dev/release.md has the go-live
-# steps.
+# GitHub's free plan publishes Pages only from a public repository, so
+# every job is gated on the repository being public: on a private
+# repository each job is skipped, nothing runs and nothing fails.
+# docs/dev/release.md has the go-live steps.
 name: pages
 
 on:

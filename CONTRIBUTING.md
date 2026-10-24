@@ -77,10 +77,9 @@ runners only. On a pull request and on a push to `main` it runs:
 - `shellcheck` over the repository's shell scripts;
 - the site's build and its tests.
 
-**While the repository is private, CI runs only when it is dispatched by
-hand**, so no job runs on its own for a pull request yet. From the day the
-repository is public, CI runs on every pull request, and a first-time
-contributor's run waits for a maintainer to approve it. Either way, run the
+CI runs on every pull request, again whenever its commits, title or
+description change, and on every push to `main`. A first-time
+contributor's run waits for a maintainer to approve it, so run the
 commands above yourself before you open one.
 
 ## Signing off your commits

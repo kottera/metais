@@ -11,9 +11,9 @@ A release of `metais` is published in two halves (ADR-013 D7 item 3):
   pushed: the tags, the published release, the tap's formula and the
   site.
 
-Nothing is public before Ed approves (R-PUB-14). Once the repository is
-public, a pushed `v*` tag is installable through the Go proxy at once, and
-the proxy keeps it for good. So the procedure never pushes a tag, and a
+Nothing is published before Ed approves (R-PUB-14). The repository is
+public, so a pushed `v*` tag is installable through the Go proxy at once,
+and the proxy keeps it for good. So the procedure never pushes a tag, and a
 step that would is a step to stop at.
 
 ## The release procedure
@@ -215,31 +215,27 @@ gh workflow run release.yml --ref main -f tag=v0.0.0-alpha.1 -f dry_run=true
 Delete the draft afterwards (`gh release delete v0.0.0-alpha.1`), which
 deletes no tag, because none exists.
 
-### What cannot run while the repository is private
+### What only a hosted run proves
 
-On GitHub's free plan, a private repository has no environment protection
-rules and no environment secrets. So the `release` environment's required
-reviewer, and `TAP_TOKEN`, are first exercised at `v1.0.0-rc.1`, after
-the repository is public. prepare refuses any run but a dry run while the
-repository is private, because nothing would have required Ed's approval.
-Pages is the same: `pages.yml`'s jobs are skipped on a private
-repository, and its deploy first runs at `v1.0.0-rc.1`.
+On GitHub's free plan, an environment's protection rules and secrets
+exist only on a public repository. So prepare refuses any run but a dry
+run on a private repository, or when the `release` environment requires
+no reviewer, because nothing would then have required Ed's approval. The
+`release` environment's required reviewer, and `TAP_TOKEN`, are first
+exercised at `v1.0.0-rc.1`, and so is `pages.yml`'s deploy.
 
-Until the public flip, proofs of these workflows are made by hand, by
-Ed's ruling of 2026-10-23, and their hosted runs wait for the flip. So
 `release.yml`'s dry run was proved by running `release.sh prepare` by
-hand, as its step runs it, against a draft. `ci.yml`'s `shell` job was
-proved by running its `shellcheck` command by hand. What only a hosted
-run shows is first seen after the flip:
+hand, as its step runs it, against a draft, by Ed's ruling of
+2026-10-23. What only a hosted run shows is:
 
 - whether a job that names `environment: release` waits for approval,
   runs straight through, or fails;
-- the workflow's `dry_run` skips, and the skipped pages job;
-- the `shell` job itself, on `ubuntu-latest`.
+- the workflow's `dry_run` skips, and the skipped pages job.
 
-Dispatch `release.yml`'s dry run against a draft once the repository is
-public and the `release` environment exists, before `v1.0.0-rc.1`'s
-release act. Its `release` job then waits for Ed's approval.
+Dispatch `release.yml`'s dry run against a draft once the `release`
+environment exists, before `v1.0.0-rc.1`'s release act. Its `release` job
+then waits for Ed's approval. `ci.yml` needs no such run: every pull
+request runs its jobs on GitHub's runners.
 
 ## The rehearsal's checks
 
@@ -400,9 +396,8 @@ released tag, and it can be dispatched with a published release's tag
 out with its whole history, downloads the release's `SHA256SUMS`, builds
 the site with `site/build.sh --release`, and deploys it with GitHub Pages.
 GitHub's free plan publishes Pages only from a public repository, so every
-job of the workflow is gated on `!github.event.repository.private`: while
-the repository is private, both jobs are skipped, and nothing runs or
-fails.
+job of the workflow is gated on `!github.event.repository.private`: on a
+private repository, both jobs are skipped, and nothing runs or fails.
 
 The organization's domain verification for `metais.org` (the
 `_github-pages-challenge-kottera.metais.org` TXT record) was done by Ed
