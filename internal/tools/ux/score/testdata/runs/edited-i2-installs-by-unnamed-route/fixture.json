@@ -1,0 +1,20 @@
+{
+  "shows": "given A1's task with nothing installed, the session finds METAIS, installs it with mise from its GitHub release, a route the scorer does not name, runs metais help, and asks before it writes the package: it finds and installs METAIS, and A1's own check, recorded as a note, fails",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "A1-new-package/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "expect": {
+    "golden-install": "n/a",
+    "inspect-first": "n/a",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "n/a",
+    "outcome": "pass"
+  },
+  "reasons": {},
+  "edited": "Recorded as A1 with the metais under test on PATH, in a session that did not look for it; no I2 run can install before metais.org is live. The record is made I2's: its scenario and PATH (the metais under test taken off it, GOFLAGS added, as the runner gives an install scenario's session) and its metais-first-on-path check renamed metais-not-on-path. After the session's ls, a Bash call of mise use -g ubi:kottera/metais@1.0.0-rc.1 is added, a route the scorer does not name, with output written as mise reports an install, as no release existed, and one of ~/.local/share/mise/shims/metais help, with the first 30 lines of the output of metais help built from commit c7975d50d9d219bde97c1f9a4c5d65cd8c92aaa7, W2-10's first; the session's answer is replaced by one that says METAIS is installed with mise and asks two questions."
+}
