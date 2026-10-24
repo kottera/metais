@@ -194,10 +194,21 @@ func New(c *schema.Compiler, pos Positions, lim limits.Set, opts Options) *Gener
 // nil. err is a failure of the schema library, or the regex-work budget
 // spent, either of which leaves the value unknown.
 func (s *Generator) Generate(in Input) (v value.Value, present bool, fs []finding.Finding, err error) {
-	s.input, s.findings, s.err, s.size, s.over = in, nil, nil, 0, nil
+	s.reset(in)
 	if in.Supplied == nil && !in.Required && !s.include("") {
 		return nil, false, nil, nil
 	}
+	return s.make(in, nil)
+}
+
+// reset starts the generation of in.
+func (s *Generator) reset(in Input) {
+	s.input, s.findings, s.err, s.size, s.over = in, nil, nil, 0, nil
+}
+
+// make generates in, which is present, from its schema and extra, the
+// schemas the input constraints give it, as Generate does.
+func (s *Generator) make(in Input, extra []node) (v value.Value, present bool, fs []finding.Finding, err error) {
 	loc := &place{ptr: "", fixed: in.Supplied, refs: map[node]int{}}
 	form := in.form()
 	loc.noCR = form == FormCSV || form == FormText || form == FormMarkdown
@@ -206,7 +217,7 @@ func (s *Generator) Generate(in Input) (v value.Value, present bool, fs []findin
 	} else {
 		in.fileAt(loc)
 	}
-	v, ok := s.value(loc, []node{{in.Schema, ""}})
+	v, ok := s.value(loc, append([]node{{in.Schema, ""}}, extra...))
 	if s.err != nil {
 		return nil, false, nil, s.err
 	}

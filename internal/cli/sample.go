@@ -243,9 +243,13 @@ func (s *session) generate(p args.Parsed, pkg *loader.Package, lim limits.Set, o
 	}
 	g := sample.New(pkg.Schemas, pkg.SchemaPositions(lim), lim, opts)
 	var files []inputs.File
-	for _, in := range pkg.Manifest.Inputs {
-		si := sampleInput(in, fixed[in.Name])
-		v, present, gfs, err := g.Generate(si)
+	sis := make([]sample.Input, len(pkg.Manifest.Inputs))
+	for i, in := range pkg.Manifest.Inputs {
+		sis[i] = sampleInput(in, fixed[in.Name])
+	}
+	for i, gen := range g.Inputs(sis, pkg.Manifest.InputConstraints) {
+		in, si := pkg.Manifest.Inputs[i], sis[i]
+		v, present, gfs, err := gen.Value, gen.Present, gen.Findings, gen.Err
 		var le *regexprofile.LimitError
 		switch {
 		case errors.As(err, &le):
