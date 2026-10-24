@@ -98,7 +98,7 @@ Rules this train adds:
 |---|---|---|---|
 | 0 | ADR-013, its amendments and this plan, merged to `main` | — | **complete** (#240) |
 | 1 | **Foundations**: the module path; the history scan and the tree's internal details; the community files and contributor guide; CI on GitHub-hosted runners; `--version`'s maker line | 0 | **complete** (see §5, Wave 1 verdict) |
-| 2 | **The site and distribution**: the site as a METAIS package with generated reference pages, the guides and the specification; `install.sh` and its tests; `release.yml`, the tap formula and the tap's CI; the builder's prerelease rule; the kottera.com page; UX scenarios I1 and I2 | 1 | — |
+| 2 | **The site and distribution**: the site as a METAIS package with generated reference pages, the guides and the specification; `install.sh` and its tests; `release.yml`, the tap formula and the tap's CI; the builder's prerelease rule; the kottera.com page; UX scenarios I1 and I2 | 1 | **complete** (see §7, Wave 2 verdict) |
 | 3 | **Rehearsal**: the name search, Ed's settings and DNS, the flip; `v1.0.0-rc.1` end to end; I1 against the live site; a fix item for each defect, and a new candidate until it is clean | 2 | — |
 | 4 | **Launch**: T-A3 cuts `v1.0.0`, Ed approves it, and every route is checked live; the train's close | 3, and T-A3's own dependencies | — |
 
@@ -394,6 +394,80 @@ Made by the plan orchestrator in answer to the wave's breakdown
     before publication;
   - a manual run can redeploy a published tag, for an erratum;
   - every workflow keeps minimal, declared `permissions`.
+- **Ed's rulings during the wave, 2026-10-23.** They reached the wave's
+  items through the operator, and are recorded here as the wave's
+  closeout reports them:
+  - **Proving while private.** While the repository is private, a
+    workflow is proved by hand, by running its steps. GitHub-hosted runs
+    are deferred to the flip. This replaces R-W1-2's "a linked run before
+    the wave closes" for Wave 2's workflows. The deferred runs are the act
+    W2-OOB6 (`01a16bb8-56c8`), before `v1.0.0-rc.1`.
+  - **The gate.** Items run directed tests and merge, and the full gate
+    (the wave tier) runs once, at the wave's verification. It is a
+    standing instruction from Ed and departs from AGENTS.md's scoped tier
+    before every merge. It holds until he withdraws it.
+
+### Wave 2 verdict
+
+**Complete, 2026-10-24.** Brief and closeout:
+[brief-plan-2026-10-metais-public-wave2.md](../briefs/brief-plan-2026-10-metais-public-wave2.md)
+(brief #262, closeout #315). Wave orchestrator `01a1690c-a75a`.
+
+Landed, with nothing published:
+- **The site is a METAIS package** (W2-1, #269). `internal/tools/site`
+  exports its inputs, under ADR-009 A11. goldmark is in `go.mod` under
+  ADR-010 A10, outside the binary's closure. Two builds are
+  byte-identical.
+- **The site's pages and tests** (W2-2, #292): the reference pages from
+  `help --json` and `skill --print`, `/spec/draft/`, the tag rule on a
+  fixture, the install page, and the link test.
+- **The builder's prerelease rule and the formula generator** (W2-3,
+  #266).
+- **Publishing:** `release.yml`, `release.sh` and the procedure in
+  `docs/dev/release.md` (W2-4, #299 and #312). `pages.yml` is called
+  from `release.yml` after publishing (R-W2-1).
+- **`install.sh`**, with its four refusals tested and CI's install jobs
+  (W2-5, #285).
+- **UX scenarios I1 and I2** and their checks (W2-10, #271).
+- **The approved copy:** the landing page and both guides (W2-11, #298),
+  and the kottera.com page (W2-12, kottera/kottera.com#1). Ed approved
+  all of it in W2-OOB5.
+- **The tap's README, licence and CI** (W2-13, kottera/homebrew-tap#1),
+  proved by a test pull request closed unmerged. No formula is on its
+  `main`.
+
+The verification round passed with no blocking finding:
+- the wave tier on a fresh clone, after one resume for a starved
+  package;
+- about 110 mutations, every expected-red row red except the findings
+  it filed;
+- a check that nothing is published.
+
+What this result is not:
+- **No workflow this wave added has run on GitHub-hosted runners.** Ed
+  deferred those runs to the flip.
+- **No item before the verification ran the gate**, by his standing
+  instruction.
+- **The kottera.com and tap work was inspected only**, not mutated.
+
+What a later wave must know:
+- **I1 and I2 cannot run in a dispatch.** `brew` cannot run in the
+  sandbox, and metais.org has no address yet. They are an act on Ed's
+  host in Wave 3. `docs/dev/ux-testing.md`, "Where the install scenarios
+  can run", lists what the act must provide, including a credential
+  route for the nested sessions. If the host cannot provide one, a work
+  item adds it to the runner first.
+- **Still open beside Wave 3:**
+  - W2-NB1 to W2-NB4 (`01a16bb7-639b`, `01a16bb7-bb85`, `01a16bb8-05e1`,
+    `01a16bb8-26eb`);
+  - W2-OOB6, the deferred hosted runs.
+- **The vendor-neutrality line is about code** (ADR-013 D2 item 3).
+  Records keep naming tera.
+- **Two settings decisions belong to Ed:** whether kottera.com's Pages
+  serves from a branch (as built) or from Actions, and what
+  `environment: release` does on the private repository.
+- **W2-6 ended `failed` with its work done.** Its type requires a
+  merged pull request, so a draft-only item cannot be filed under it.
 
 ## 8. Wave 3 — rehearsal
 
