@@ -209,7 +209,9 @@ func TestUsingGuideCommands(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if out, err := exec.Command(metais, "pack", src, "--out", dir).CombinedOutput(); err != nil {
+		pack := exec.Command(metais, "pack", src, "--out", dir)
+		pack.Env = []string{"HOME=" + testenv.Dir(t), "LC_ALL=C"}
+		if out, err := pack.CombinedOutput(); err != nil {
 			t.Fatalf("metais pack examples/status-widget: %v\n%s", err, out)
 		}
 		if _, err := os.Stat(filepath.Join(dir, "status-widget-1.0.0.metais")); err != nil {
