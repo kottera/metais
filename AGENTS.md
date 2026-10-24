@@ -91,14 +91,13 @@ CI:
   scripts, and the site's build and tests. Its linux job runs `gate.sh
   wave` with `METAIS_GATE_P` at the runner's cores, since a hosted runner
   runs nothing else. It runs on every pull request and every push to
-  `main`, and a dispatch with its `jobs` input re-runs one job alone.
-  CI does not replace the other two: a train
-  item still runs the scoped tier before it merges, and a wave still runs
-  the wave tier at its verification, because they select what a change
-  reaches. No workflow runs on a self-hosted runner or on the
-  `pull_request_target` trigger, and every workflow declares a top-level
-  `permissions` block; `internal/guarantees`' `TestWorkflows` holds each
-  one to that.
+  `main`, and a dispatch with its `jobs` input re-runs one job alone. CI
+  does not replace the other two: a train item still runs the scoped tier
+  before it merges, and a wave still runs the wave tier at its
+  verification, because they select what a change reaches. No workflow
+  runs on a self-hosted runner or on the `pull_request_target` trigger,
+  and every workflow declares a top-level `permissions` block;
+  `internal/guarantees`' `TestWorkflows` holds each one to that.
 
 ```bash
 go build ./...
