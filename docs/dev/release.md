@@ -241,6 +241,54 @@ Dispatch `release.yml`'s dry run against a draft once the repository is
 public and the `release` environment exists, before `v1.0.0-rc.1`'s
 release act. Its `release` job then waits for Ed's approval.
 
+## The rehearsal's checks
+
+Before `v1.0.0`, each release candidate is installed by every route on
+clean machines, and the site and kottera.com are checked live (ADR-013 D7
+item 8). `.github/workflows/rehearse.yml` runs those checks. It runs only
+when dispatched, so dispatch it once the candidate's `release.yml` run is
+green, which is after its prerelease is published, the tap updated and the
+site deployed. Name the version without its `v`:
+
+```bash
+gh workflow run rehearse.yml --ref main -f version=<version>   # such as 1.0.0-rc.1
+```
+
+Dispatch it again for every later candidate. Its run is the evidence the
+rehearsal's record cites, so record the run's URL there. The candidate
+passes when every job is green. Each job runs whether or not another
+fails, and so does each check of the site job, so a red run lists every
+check that refused. Each check is one step running
+`.github/scripts/rehearse.sh` or the route's own command, and its log
+shows:
+
+- the command;
+- what it printed;
+- the version `metais --version` reported, or the URL and the HTTP answer;
+- a last line beginning `ok`, or a line beginning `FAIL` saying what it
+  found.
+
+| Job | Runner | What it checks |
+|---|---|---|
+| `brew-macos` | `macos-latest` | `brew install kottera/tap/metais`, then `brew info`, then `metais --version` reports `<version>`, and `metais skill` writes the skill of `<version>` into a new project |
+| `install-ubuntu`, `install-macos` | `ubuntu-latest`, `macos-latest` | `curl -fsSL https://metais.org/install.sh \| sh` with no `METAIS_VERSION`: for a prerelease, the refusal that names `METAIS_VERSION`, since no stable release exists, with nothing installed. Then the same with `METAIS_VERSION=<version>`: an install into `~/.local/bin` that reports `<version>`. Then `metais skill` |
+| `install-container` | an `ubuntu:24.04` container | the same, in an image given only `curl` and its CA certificates, which the one-line command needs |
+| `go-install` | `ubuntu-latest` | `go install metais.org/metais/cmd/metais@v<version>` through the Go proxy, then `metais --version` and `metais skill`. Then the same with `GOPROXY=direct` and a module cache of its own, so the go command reads metais.org's go-import page and clones the repository it names |
+| `manual-ubuntu`, `manual-macos` | `ubuntu-latest`, `macos-latest` | the manual route: this machine's archive and `SHA256SUMS` downloaded from the release, checked with the install page's command (`sha256sum --check --ignore-missing`, or `shasum -a 256` on macOS), `metais` unpacked and run, reporting `<version>`. Then `metais skill` |
+| `site` | `ubuntu-latest` | against a checkout of the tag `v<version>`: every schema's `$id` under `spec/schemas/` and `docs/cli/schemas/` answers `200 application/json` with JSON holding that `$id`; both go-import pages; a reference page for every command and topic that the release's `metais help --json` lists; a `/spec/draft/` page per chapter of `spec/`, each unindexed; the landing page and the install page; `/install.sh` byte for byte the tag's `site/public/install.sh`; and kottera.com |
+
+The site's checks read the schemas, chapters and `install.sh` from the
+candidate's tag, so a schema added since is never skipped. The scripts are
+the dispatched ref's, `main`'s.
+
+A red check is first read for its mechanism. One the candidate caused
+becomes a fix item and a new candidate (`rc.N+1`), never a re-cut of this
+one. One that is the workflow's own becomes a fix item to the workflow.
+`internal/guarantees`' `TestRehearseWorkflow` holds the workflow to these
+checks, and `TestRehearseScript` runs each check of `rehearse.sh` against
+a release and site served locally, as published and with each defect it
+is there to find.
+
 ## The release builder
 
 The release builder is `internal/tools/release` (ADR-010 D12). It builds
