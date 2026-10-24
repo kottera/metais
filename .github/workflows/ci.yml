@@ -140,6 +140,12 @@ jobs:
   # repository runs: a conformance vector's or an example's expected output,
   # and testdata. The install script's refusals are tested by the site's
   # tests, and its real installs by the install jobs.
+  # actionlint holds every workflow to what GitHub parses, its contexts
+  # included, so a workflow that is never run on a pull request, as
+  # release.yml is not, cannot first be parsed at its dispatch. It is a
+  # pinned release's binary, verified by its checksum, since the actions
+  # allowlist admits GitHub's own actions alone; it runs shellcheck over
+  # every run: script too.
   shell:
     if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'shell' }}
     runs-on: ubuntu-latest
@@ -151,6 +157,17 @@ jobs:
           shellcheck --version
           git ls-files -z -- '*.sh' ':(exclude,glob)**/testdata/**' ':(exclude)spec/conformance/vectors' ':(exclude,glob)examples/**/expected/**' |
             xargs -0 shellcheck
+      - name: actionlint
+        env:
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$archive" "https://github.com/rhysd/actionlint/releases/download/v$ACTIONLINT_VERSION/$archive"
+          echo "$ACTIONLINT_SHA256  $RUNNER_TEMP/$archive" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -version
+          "$RUNNER_TEMP/actionlint" -color
 
   # The site's build and its tests (ADR-013 D8).
   site:

@@ -256,7 +256,10 @@ func quote(s string) string { return `"` + s + `"` }
 // with internal/conformance's tests split out of the run of the others and
 // run on their own, as R-W1-4 splits them: a job that skipped them and did
 // not run them would run them nowhere. The install jobs are D6 item 8's
-// real installs, one on each platform install.sh serves.
+// real installs, one on each platform install.sh serves. The shell job
+// runs actionlint, verified by its checksum, over every workflow, with no
+// path that would narrow it, so what GitHub refuses to parse is red on a
+// pull request rather than at a dispatch.
 func TestCIWorkflow(t *testing.T) {
 	src, err := os.ReadFile(ciWorkflow)
 	if err != nil {
@@ -300,7 +303,7 @@ func TestCIWorkflow(t *testing.T) {
 		{"wave", "ubuntu-latest", []string{"skip=$(.github/scripts/conformance.sh skip)", `GOFLAGS="-skip=$skip" METAIS_GATE_P=$(nproc) .claude/skills/verification-gate/gate.sh wave`, ".github/scripts/conformance.sh run"}},
 		{"macos", "macos-latest", []string{"go build ./...", "CGO_ENABLED=0 go build -trimpath ./cmd/metais", "skip=$(.github/scripts/conformance.sh skip)", `go test -race -count=1 ./... -skip "$skip"`, ".github/scripts/conformance.sh run"}},
 		{"dco", "ubuntu-latest", []string{".github/scripts/dco.sh", `.github/scripts/coauthor.sh "$BASE" HEAD "$RUNNER_TEMP/squash.txt"`, `.github/scripts/coauthor.sh "$BASE" HEAD` + "\n"}},
-		{"shell", "ubuntu-latest", []string{"xargs -0 shellcheck"}},
+		{"shell", "ubuntu-latest", []string{"xargs -0 shellcheck", `| sha256sum -c -`, `"$RUNNER_TEMP/actionlint" -color` + "\n"}},
 		{"site", "ubuntu-latest", []string{"site/build.sh", "go test -race -count=1 ./site/... ./internal/tools/site/..."}},
 		{"install-linux", "ubuntu-latest", []string{`.github/scripts/install-test.sh "$RUNNER_TEMP/install"`}},
 		{"install-macos", "macos-latest", []string{`.github/scripts/install-test.sh "$RUNNER_TEMP/install"`}},
