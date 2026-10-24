@@ -11,6 +11,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"html"
+	"io"
 	"maps"
 	"os"
 	"os/exec"
@@ -22,6 +23,7 @@ import (
 	"testing"
 
 	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/tools/release/buildline"
 )
 
 // installScript is the install script (ADR-013 D6), from this directory, as
@@ -614,4 +616,133 @@ func TestInstallPage(t *testing.T) {
 			t.Errorf("the install page does not hold %s", want)
 		}
 	}
+}
+
+// TestInstallPageRelease builds the site as pages.yml builds it for a
+// release, with build.sh --release and the release's SHA256SUMS, from a
+// whole clone whose HEAD is the release's tag, and requires the install
+// page to list each archive of SHA256SUMS, in its order, linked to its
+// download on the release, with its SHA-256, beside the release's tag and
+// its SHA256SUMS. The clone is a repository made of this checkout's
+// files, committed and tagged, since the checkout itself may be shallow
+// and is not at a release's tag.
+func TestInstallPageRelease(t *testing.T) {
+	const version = "1.2.3"
+	repo := releaseRepo(t, "v"+version)
+
+	var names []string
+	for _, tg := range buildline.Shipped {
+		names = append(names, buildline.ArchiveName(version, tg))
+	}
+	slices.Sort(names)
+	var sums strings.Builder
+	digests := map[string]string{}
+	for i, n := range names {
+		digests[n] = strings.Repeat(string("0123456789abcdef"[i]), 64)
+		sums.WriteString(digests[n] + "  " + n + "\n")
+	}
+	sumsFile := filepath.Join(testenv.Dir(t), "SHA256SUMS")
+	writeFile(t, sumsFile, sums.String(), 0o644)
+
+	out := filepath.Join(testenv.Dir(t), "site")
+	cmd := buildCmd(t, testenv.Dir(t), "--release", version, sumsFile, out)
+	cmd.Args[1] = filepath.Join(repo, "site", "build.sh")
+	if b, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("sh build.sh --release %s: %v\n%s", version, err, b)
+	}
+	b, err := os.ReadFile(filepath.Join(out, "install", "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	page := string(b)
+
+	const releases = "https://github.com/kottera/metais/releases/"
+	for _, want := range []string{
+		"<p>metais " + version + ", from the release",
+		`<a href="` + releases + `tag/v` + version + `">v` + version + `</a>`,
+		`<a href="` + releases + `download/v` + version + `/SHA256SUMS"><code>SHA256SUMS</code></a>`,
+	} {
+		if !strings.Contains(page, want) {
+			t.Errorf("the release's install page does not hold %s", want)
+		}
+	}
+	row := regexp.MustCompile(`<tr><td><a href="([^"]*)"><code>([^<]*)</code></a></td><td><code>([^<]*)</code></td></tr>`)
+	var got []string
+	for _, m := range row.FindAllStringSubmatch(page, -1) {
+		got = append(got, m[1]+" "+m[2]+" "+m[3])
+	}
+	var want []string
+	for _, n := range names {
+		want = append(want, releases+"download/v"+version+"/"+n+" "+n+" "+digests[n])
+	}
+	if !slices.Equal(got, want) {
+		t.Errorf("the release's install page lists the archives\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+	if strings.Contains(page, "/releases/latest") {
+		t.Errorf("the release's install page sends the reader to the latest release, as a build with no release does")
+	}
+}
+
+// releaseRepo is a whole repository holding every file of this checkout
+// that git does not ignore, as it is in the working tree, in one commit
+// tagged tag, and checked out. The commit is written by git fast-import,
+// as one pack: git add would write each of the checkout's thousands of
+// files as an object of its own.
+func releaseRepo(t *testing.T, tag string) string {
+	t.Helper()
+	root, err := filepath.Abs("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	home := testenv.Dir(t)
+	git := func(dir string, stdin io.Reader, args ...string) []byte {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = dir
+		cmd.Env = testenv.GitEnv(append(slices.Clone(hostEnviron), "HOME="+home))
+		cmd.Stdin = stdin
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		out, err := cmd.Output()
+		if err != nil {
+			t.Fatalf("git %s: %v\n%s", strings.Join(args, " "), err, stderr.Bytes())
+		}
+		return out
+	}
+	repo := testenv.Dir(t)
+	var stream bytes.Buffer
+	stream.WriteString("commit refs/heads/main\ncommitter Site Test <site@example.org> 0 +0000\ndata 7\nrelease\n")
+	for _, name := range strings.Split(strings.TrimSuffix(string(git(root, nil, "ls-files", "-z", "--cached", "--others", "--exclude-standard")), "\x00"), "\x00") {
+		src := filepath.Join(root, filepath.FromSlash(name))
+		fi, err := os.Lstat(src)
+		if os.IsNotExist(err) {
+			continue // deleted in the working tree
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !fi.Mode().IsRegular() {
+			t.Fatalf("%s is not a regular file", name)
+		}
+		data, err := os.ReadFile(src)
+		if err != nil {
+			t.Fatal(err)
+		}
+		writeFile(t, filepath.Join(repo, filepath.FromSlash(name)), string(data), fi.Mode().Perm())
+		mode := "100644"
+		if fi.Mode().Perm()&0o111 != 0 {
+			mode = "100755"
+		}
+		fmt.Fprintf(&stream, "M %s inline %s\ndata %d\n", mode, name, len(data))
+		stream.Write(data)
+		stream.WriteString("\n")
+	}
+	fmt.Fprintf(&stream, "reset refs/tags/%s\nfrom refs/heads/main\n", tag)
+	git(repo, nil, "init", "-q", "-b", "main")
+	git(repo, &stream, "fast-import", "--quiet")
+	git(repo, nil, "reset", "-q")
+	if st := git(repo, nil, "status", "--porcelain"); len(st) != 0 {
+		t.Fatalf("the release's clone differs from its commit:\n%s", st)
+	}
+	return repo
 }
