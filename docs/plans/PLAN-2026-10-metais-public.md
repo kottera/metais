@@ -504,6 +504,23 @@ anything permanent carries the name `v1.0.0`.
 - **A fix item for each defect**, and a new candidate (`rc.2`, …) through
   the same steps, until a candidate passes every check.
 
+### Rulings made during Wave 3
+
+Made by the plan orchestrator in answer to the wave's breakdown
+(2026-10-24):
+
+- **R-W3-1, I1 across candidates.** I1 runs on the first published
+  candidate. It runs again only if a later candidate's fixes change an
+  install route, the site, the skill, or what I1's render step exercises
+  in the binary. Otherwise the earlier result carries forward, and the
+  rehearsal record says so.
+- **R-W3-2, branch protection and the train's merges.** How the train's
+  own pull requests pass a required review is Ed's to rule, in the
+  settings act after the flip. The plan orchestrator's docs pull
+  requests are included. Until he rules, nothing bypasses protection on
+  its own: an item parks. A wait for CI that his ruling leaves in place
+  is accepted.
+
 ## 9. Wave 4 — launch
 
 **Goal:** `v1.0.0`, published by Ed's one approval.
