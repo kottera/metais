@@ -128,7 +128,7 @@ func TestRehearseWorkflow(t *testing.T) {
 		checks := 0
 		for _, s := range must(jo.Get("steps")).(value.Array).All() {
 			so, _ := s.(value.Object)
-			if uses, ok := so.Get("uses"); ok && !slices.Contains([]string{"actions/checkout@v5", "actions/setup-go@v6"}, text(uses)) {
+			if uses, ok := so.Get("uses"); ok && !slices.Contains([]string{"actions/checkout", "actions/setup-go"}, actionName(text(uses))) {
 				t.Errorf("rehearse.yml's job %s uses %s", j.job, text(uses))
 			}
 			r, ok := so.Get("run")

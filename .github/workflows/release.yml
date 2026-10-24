@@ -65,10 +65,10 @@ jobs:
       DRY_RUN: ${{ inputs.dry_run }}
       WORK: ${{ runner.temp }}/release
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: go.mod
       - name: build the release tool, which verifies the assets and writes the formula

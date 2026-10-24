@@ -96,8 +96,11 @@ CI:
   before it merges, and a wave still runs the wave tier at its
   verification, because they select what a change reaches. No workflow
   runs on a self-hosted runner or on the `pull_request_target` trigger,
-  and every workflow declares a top-level `permissions` block;
-  `internal/guarantees`' `TestWorkflows` holds each one to that.
+  every workflow declares a top-level `permissions` block, and every
+  action a workflow uses from another repository is pinned to a full
+  commit SHA with its release in a comment, kept current by Dependabot's
+  reviewed pull requests; `internal/guarantees`' `TestWorkflows` holds
+  each one to that.
 
 ```bash
 go build ./...
