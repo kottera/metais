@@ -304,6 +304,89 @@ func TestCIWorkflow(t *testing.T) {
 	}
 }
 
+// jobsCondition matches a job's if: that the jobs input selects it by:
+// one or more comparisons of inputs.jobs with a value, joined by ||.
+var jobsCondition = regexp.MustCompile(`^\$\{\{ inputs\.jobs == '[^']*'( \|\| inputs\.jobs == '[^']*')* \}\}$`)
+
+// jobsValue matches one comparison of jobsCondition, and its value.
+var jobsValue = regexp.MustCompile(`inputs\.jobs == '([^']*)'`)
+
+// TestCIJobsInput holds the selection ci.yml's jobs input makes: a run
+// with no input, as a pull request's will be from the flip, and a run of
+// all run every job, and any other option runs the job of its own name
+// and the jobs whose names begin with it and a hyphen, so install runs
+// install-linux and install-macos, and nothing else. Every option is a
+// job's name or a group of them, and every job can be run alone.
+// TestCIWorkflow holds what each job runs.
+func TestCIJobsInput(t *testing.T) {
+	src, err := os.ReadFile(ciWorkflow)
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc, fds := yamlx.Parse(src, yamlx.Source{Subject: finding.Subject{Kind: finding.SubjectInput, Name: "ci"}}, limits.Defaults())
+	if len(fds) > 0 {
+		t.Fatal(fds[0].Message())
+	}
+	w := doc.Value.(value.Object)
+	on, _ := must(w.Get("on")).(value.Object)
+	dispatch, _ := must(on.Get("workflow_dispatch")).(value.Object)
+	inputs, _ := must(dispatch.Get("inputs")).(value.Object)
+	input, _ := must(inputs.Get("jobs")).(value.Object)
+	optionsArr, _ := must(input.Get("options")).(value.Array)
+	var options []string
+	for _, o := range optionsArr.All() {
+		options = append(options, text(o))
+	}
+	if def, _ := input.Get("default"); text(def) != "all" {
+		t.Errorf("ci.yml's jobs input does not default to all")
+	}
+
+	jobs, _ := must(w.Get("jobs")).(value.Object)
+	selects := map[string][]string{}
+	for _, name := range jobs.Names() {
+		job, _ := must(jobs.Get(name)).(value.Object)
+		cond := text(must(job.Get("if")))
+		if !jobsCondition.MatchString(cond) {
+			t.Errorf("ci.yml's job %s runs if %q, which is not a selection by the jobs input", name, cond)
+			continue
+		}
+		for _, m := range jobsValue.FindAllStringSubmatch(cond, -1) {
+			selects[name] = append(selects[name], m[1])
+		}
+	}
+	if len(selects) < 2 {
+		t.Fatalf("ci.yml has %d jobs selected by the jobs input; the check is blind", len(selects))
+	}
+
+	for _, o := range append([]string{""}, options...) {
+		var got, want []string
+		for _, name := range jobs.Names() {
+			if slices.Contains(selects[name], o) {
+				got = append(got, name)
+			}
+			if o == "" || o == "all" || o == name || strings.HasPrefix(name, o+"-") {
+				want = append(want, name)
+			}
+		}
+		if len(want) == 0 {
+			t.Errorf("ci.yml's jobs input has the option %q, which names no job", o)
+		}
+		if !slices.Equal(got, want) {
+			t.Errorf("ci.yml's jobs input %q runs %q, want %q", o, got, want)
+		}
+	}
+	for _, name := range jobs.Names() {
+		if !slices.Contains(options, name) {
+			t.Errorf("ci.yml's jobs input has no option that runs the job %s alone", name)
+		}
+		for _, v := range selects[name] {
+			if v != "" && !slices.Contains(options, v) {
+				t.Errorf("ci.yml's job %s runs for the jobs input %q, which is not one of its options", name, v)
+			}
+		}
+	}
+}
+
 // TestReleaseWorkflow holds release.yml to ADR-013 D7 item 3. Ed
 // dispatches it, naming the draft, and its release job runs in the release
 // environment, whose approval is his release act. Its dry_run input turns

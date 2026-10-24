@@ -11,16 +11,19 @@ import (
 	"encoding/hex"
 	"fmt"
 	"html"
+	"io"
 	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"slices"
 	"strings"
 	"testing"
 
 	"metais.org/metais/internal/testenv"
+	"metais.org/metais/internal/tools/release/buildline"
 )
 
 // installScript is the install script (ADR-013 D6), from this directory, as
@@ -341,6 +344,37 @@ func TestInstallRefuses(t *testing.T) {
 			want: []string{"SHA256SUMS has no line for " + archive, "Nothing was installed"},
 		},
 		{
+			name: "a repeated line",
+			sums: func(s string) string {
+				for l := range strings.SplitSeq(s, "\n") {
+					if strings.HasSuffix(l, "  "+archive) {
+						return s + l + "\n"
+					}
+				}
+				return s
+			},
+			sysname: "Linux", machine: "x86_64",
+			want: []string{"SHA256SUMS has no line for " + archive, "Nothing was installed"},
+		},
+		{
+			name:    "a look-alike name in a directory",
+			sums:    rename(archive, "dist/"+archive),
+			sysname: "Linux", machine: "x86_64",
+			want: []string{"SHA256SUMS has no line for " + archive, "Nothing was installed"},
+		},
+		{
+			name:    "a look-alike name with a prefix",
+			sums:    rename(archive, "x"+archive),
+			sysname: "Linux", machine: "x86_64",
+			want: []string{"SHA256SUMS has no line for " + archive, "Nothing was installed"},
+		},
+		{
+			name:    "a look-alike name with a suffix",
+			sums:    rename(archive, archive+".sig"),
+			sysname: "Linux", machine: "x86_64",
+			want: []string{"SHA256SUMS has no line for " + archive, "Nothing was installed"},
+		},
+		{
 			name:    "an unknown system",
 			sysname: "FreeBSD", machine: "amd64",
 			want: []string{"this is FreeBSD", "go install metais.org/metais/cmd/metais@latest", "https://github.com/kottera/metais/releases"},
@@ -349,6 +383,16 @@ func TestInstallRefuses(t *testing.T) {
 			name:    "an unknown machine",
 			sysname: "Linux", machine: "riscv64",
 			want: []string{"this is riscv64", "go install metais.org/metais/cmd/metais@latest", "https://github.com/kottera/metais/releases"},
+		},
+		{
+			name:    "a 32-bit ARM machine",
+			sysname: "Linux", machine: "armv7l",
+			want: []string{"this is armv7l", "go install metais.org/metais/cmd/metais@latest"},
+		},
+		{
+			name:    "a 32-bit x86 machine",
+			sysname: "Linux", machine: "i686",
+			want: []string{"this is i686", "go install metais.org/metais/cmd/metais@latest"},
 		},
 		{
 			name:    "no stable release",
@@ -370,6 +414,124 @@ func TestInstallRefuses(t *testing.T) {
 			requireContains(t, out, c.want...)
 			requireNothingInstalled(t, h.dir)
 		})
+	}
+}
+
+// rename is a rewrite of SHA256SUMS that gives the line of archive, with
+// its own SHA-256, the name to instead: a file whose name holds the
+// archive's, which install.sh must not take for the archive.
+func rename(archive, to string) func(string) string {
+	return func(s string) string {
+		return strings.Replace(s, "  "+archive+"\n", "  "+to+"\n", 1)
+	}
+}
+
+// TestInstallNoHashTool runs install.sh on a host with neither sha256sum
+// nor shasum, and requires it to refuse, since it cannot verify the
+// archive, and to install nothing. The control is the same host with
+// sha256sum, where it installs: what the host lacks is the hash tool
+// alone.
+func TestInstallNoHashTool(t *testing.T) {
+	h := newInstallHost(t, nil)
+	tools := testenv.Dir(t)
+	for _, name := range []string{"awk", "cat", "chmod", "cp", "gzip", "head", "mkdir", "mktemp", "mv", "rm", "sed", "tar"} {
+		p, err := exec.LookPath(name)
+		if err != nil {
+			t.Skipf("the host has no %s: %v", name, err)
+		}
+		if err := os.Symlink(p, filepath.Join(tools, name)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// h.bin holds curl and uname, and the test binary as sha256sum.
+	bare := testenv.Dir(t)
+	for _, name := range []string{"curl", "uname"} {
+		if err := os.Symlink(filepath.Join(h.bin, name), filepath.Join(bare, name)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	path := func(dirs ...string) string { return "PATH=" + strings.Join(dirs, string(os.PathListSeparator)) }
+	env := []string{"METAIS_VERSION=" + releaseVersion, "METAIS_INSTALL_DIR=" + h.dir}
+
+	out, ok := h.run(t, "Linux", "x86_64", append(env, path(bare, tools))...)
+	if ok {
+		t.Fatalf("install.sh succeeded with no hash tool:\n%s", out)
+	}
+	requireContains(t, out, "neither is on PATH")
+	requireNothingInstalled(t, h.dir)
+
+	out, ok = h.run(t, "Linux", "x86_64", append(env, path(h.bin, tools))...)
+	if !ok {
+		t.Fatalf("install.sh failed with sha256sum on PATH, so the host lacks more than a hash tool:\n%s", out)
+	}
+	requireInstalled(t, h.dir)
+}
+
+// shellRef matches a reference to a shell variable, $name or ${name...},
+// and shellAssign the assignment of one, at the start of a line or of a
+// case's branch, up to the end of the line or the branch.
+var (
+	shellRef    = regexp.MustCompile(`\$\{?([A-Za-z_][A-Za-z0-9_]*)`)
+	shellAssign = regexp.MustCompile(`(?m)(?:^\s*|\)\s+)([A-Za-z_][A-Za-z0-9_]*)=([^;\n]*)`)
+)
+
+// scriptEnv are the variables install.sh may read from its environment:
+// its two settings, and the HOME and PATH of the user running it.
+var scriptEnv = []string{"HOME", "METAIS_INSTALL_DIR", "METAIS_VERSION", "PATH"}
+
+// TestInstallURLsConstant requires the addresses install.sh downloads
+// from to be constants that no environment variable overrides (ADR-013
+// D6): repo, download and latest are each assigned once, to the address
+// written here, and every variable the script reads that it does not
+// assign is one of scriptEnv. A run with those three names and look-alike
+// settings in its environment, each pointing elsewhere, fetches from
+// github.com alone.
+func TestInstallURLsConstant(t *testing.T) {
+	b, err := os.ReadFile(installScript)
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := string(b)
+	assigned := map[string][]string{}
+	for _, m := range shellAssign.FindAllStringSubmatch(script, -1) {
+		assigned[m[1]] = append(assigned[m[1]], strings.TrimSpace(m[2]))
+	}
+	for name, want := range map[string]string{
+		"repo":     "kottera/metais",
+		"download": "https://github.com/$repo/releases/download",
+		"latest":   "https://api.github.com/repos/$repo/releases/latest",
+	} {
+		if got := assigned[name]; !slices.Equal(got, []string{want}) {
+			t.Errorf("install.sh assigns %s %q, want once, %q", name, got, want)
+		}
+	}
+	read := map[string]bool{}
+	for _, m := range shellRef.FindAllStringSubmatch(script, -1) {
+		read[m[1]] = true
+	}
+	if len(read) < len(scriptEnv) {
+		t.Fatalf("install.sh reads %d variables; the check is blind", len(read))
+	}
+	for _, name := range slices.Sorted(maps.Keys(read)) {
+		if _, ok := assigned[name]; !ok && !slices.Contains(scriptEnv, name) {
+			t.Errorf("install.sh reads $%s, which it does not assign: a variable of its environment it does not document", name)
+		}
+	}
+
+	h := newInstallHost(t, nil)
+	elsewhere := "https://example.org/kottera/metais"
+	env := []string{"METAIS_VERSION=" + releaseVersion, "METAIS_INSTALL_DIR=" + h.dir}
+	for _, name := range []string{"repo", "download", "latest", "METAIS_REPO", "METAIS_DOWNLOAD", "METAIS_DOWNLOAD_URL", "METAIS_BASE_URL", "METAIS_RELEASES_URL", "GITHUB_SERVER_URL", "GITHUB_API_URL"} {
+		env = append(env, name+"="+elsewhere)
+	}
+	out, ok := h.run(t, "Linux", "x86_64", env...)
+	if !ok {
+		t.Fatalf("install.sh failed:\n%s", out)
+	}
+	requireInstalled(t, h.dir)
+	base := "https://" + downloadPrefix + releaseTag + "/"
+	if got, want := h.requested(t), []string{base + "metais_" + releaseVersion + "_linux_amd64.tar.gz", base + "SHA256SUMS"}; !slices.Equal(got, want) {
+		t.Errorf("install.sh fetched %q, want %q", got, want)
 	}
 }
 
@@ -454,4 +616,133 @@ func TestInstallPage(t *testing.T) {
 			t.Errorf("the install page does not hold %s", want)
 		}
 	}
+}
+
+// TestInstallPageRelease builds the site as pages.yml builds it for a
+// release, with build.sh --release and the release's SHA256SUMS, from a
+// whole clone whose HEAD is the release's tag, and requires the install
+// page to list each archive of SHA256SUMS, in its order, linked to its
+// download on the release, with its SHA-256, beside the release's tag and
+// its SHA256SUMS. The clone is a repository made of this checkout's
+// files, committed and tagged, since the checkout itself may be shallow
+// and is not at a release's tag.
+func TestInstallPageRelease(t *testing.T) {
+	const version = "1.2.3"
+	repo := releaseRepo(t, "v"+version)
+
+	var names []string
+	for _, tg := range buildline.Shipped {
+		names = append(names, buildline.ArchiveName(version, tg))
+	}
+	slices.Sort(names)
+	var sums strings.Builder
+	digests := map[string]string{}
+	for i, n := range names {
+		digests[n] = strings.Repeat(string("0123456789abcdef"[i]), 64)
+		sums.WriteString(digests[n] + "  " + n + "\n")
+	}
+	sumsFile := filepath.Join(testenv.Dir(t), "SHA256SUMS")
+	writeFile(t, sumsFile, sums.String(), 0o644)
+
+	out := filepath.Join(testenv.Dir(t), "site")
+	cmd := buildCmd(t, testenv.Dir(t), "--release", version, sumsFile, out)
+	cmd.Args[1] = filepath.Join(repo, "site", "build.sh")
+	if b, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("sh build.sh --release %s: %v\n%s", version, err, b)
+	}
+	b, err := os.ReadFile(filepath.Join(out, "install", "index.html"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	page := string(b)
+
+	const releases = "https://github.com/kottera/metais/releases/"
+	for _, want := range []string{
+		"<p>metais " + version + ", from the release",
+		`<a href="` + releases + `tag/v` + version + `">v` + version + `</a>`,
+		`<a href="` + releases + `download/v` + version + `/SHA256SUMS"><code>SHA256SUMS</code></a>`,
+	} {
+		if !strings.Contains(page, want) {
+			t.Errorf("the release's install page does not hold %s", want)
+		}
+	}
+	row := regexp.MustCompile(`<tr><td><a href="([^"]*)"><code>([^<]*)</code></a></td><td><code>([^<]*)</code></td></tr>`)
+	var got []string
+	for _, m := range row.FindAllStringSubmatch(page, -1) {
+		got = append(got, m[1]+" "+m[2]+" "+m[3])
+	}
+	var want []string
+	for _, n := range names {
+		want = append(want, releases+"download/v"+version+"/"+n+" "+n+" "+digests[n])
+	}
+	if !slices.Equal(got, want) {
+		t.Errorf("the release's install page lists the archives\n%s\nwant\n%s", strings.Join(got, "\n"), strings.Join(want, "\n"))
+	}
+	if strings.Contains(page, "/releases/latest") {
+		t.Errorf("the release's install page sends the reader to the latest release, as a build with no release does")
+	}
+}
+
+// releaseRepo is a whole repository holding every file of this checkout
+// that git does not ignore, as it is in the working tree, in one commit
+// tagged tag, and checked out. The commit is written by git fast-import,
+// as one pack: git add would write each of the checkout's thousands of
+// files as an object of its own.
+func releaseRepo(t *testing.T, tag string) string {
+	t.Helper()
+	root, err := filepath.Abs("..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	home := testenv.Dir(t)
+	git := func(dir string, stdin io.Reader, args ...string) []byte {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = dir
+		cmd.Env = testenv.GitEnv(append(slices.Clone(hostEnviron), "HOME="+home))
+		cmd.Stdin = stdin
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		out, err := cmd.Output()
+		if err != nil {
+			t.Fatalf("git %s: %v\n%s", strings.Join(args, " "), err, stderr.Bytes())
+		}
+		return out
+	}
+	repo := testenv.Dir(t)
+	var stream bytes.Buffer
+	stream.WriteString("commit refs/heads/main\ncommitter Site Test <site@example.org> 0 +0000\ndata 7\nrelease\n")
+	for _, name := range strings.Split(strings.TrimSuffix(string(git(root, nil, "ls-files", "-z", "--cached", "--others", "--exclude-standard")), "\x00"), "\x00") {
+		src := filepath.Join(root, filepath.FromSlash(name))
+		fi, err := os.Lstat(src)
+		if os.IsNotExist(err) {
+			continue // deleted in the working tree
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !fi.Mode().IsRegular() {
+			t.Fatalf("%s is not a regular file", name)
+		}
+		data, err := os.ReadFile(src)
+		if err != nil {
+			t.Fatal(err)
+		}
+		writeFile(t, filepath.Join(repo, filepath.FromSlash(name)), string(data), fi.Mode().Perm())
+		mode := "100644"
+		if fi.Mode().Perm()&0o111 != 0 {
+			mode = "100755"
+		}
+		fmt.Fprintf(&stream, "M %s inline %s\ndata %d\n", mode, name, len(data))
+		stream.Write(data)
+		stream.WriteString("\n")
+	}
+	fmt.Fprintf(&stream, "reset refs/tags/%s\nfrom refs/heads/main\n", tag)
+	git(repo, nil, "init", "-q", "-b", "main")
+	git(repo, &stream, "fast-import", "--quiet")
+	git(repo, nil, "reset", "-q")
+	if st := git(repo, nil, "status", "--porcelain"); len(st) != 0 {
+		t.Fatalf("the release's clone differs from its commit:\n%s", st)
+	}
+	return repo
 }
