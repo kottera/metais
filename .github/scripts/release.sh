@@ -22,11 +22,14 @@
 #   push-tags  pushes the annotated v<version> tag, and spec-<M>.<m> when
 #              the draft names it, to origin, in one atomic push.
 #   publish    publishes the draft, marked a prerelease when the version
-#              has a prerelease suffix.
+#              has a prerelease suffix. A release that is not one is
+#              marked GitHub's latest release unless it is older than
+#              the newest such release whose tag origin has.
 #   push-tap   pushes the tap's commit to its main branch, with TAP_TOKEN,
 #              unless the release does not update the tap: a prerelease
 #              updates it only before a release that is not a prerelease
-#              exists (ADR-013 D7 item 5).
+#              exists (ADR-013 D7 item 5), and a release older than the
+#              newest one never moves the tap back (D6 item 1).
 #
 # A dry run (DRY_RUN=true) runs prepare whole, and every other step
 # refuses: it is how the workflow is proved on a draft without publishing
@@ -193,10 +196,29 @@ prepare() {
 		fi
 	fi
 
+	# The tap, and GitHub's latest release, which install.sh installs,
+	# follow the newest release that is not a prerelease (ADR-013 D6 item 1,
+	# D7 item 5). A prerelease updates the tap only while origin has no
+	# such release's tag, and a release older than the newest one already
+	# tagged updates neither.
+	newest=$(grep -E '[[:space:]]refs/tags/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' "$work/remote-tags" |
+		sed 's,.*refs/tags/v,,' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n 1)
 	tap=true
-	if [ "$prerelease" = true ] &&
-		grep -Eq '[[:space:]]refs/tags/v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' "$work/remote-tags"; then
-		tap=false
+	latest=
+	tap_why=
+	if [ "$prerelease" = true ]; then
+		if [ -n "$newest" ]; then
+			tap=false
+			tap_why="$TAG is a prerelease, and the release v$newest is not one"
+		fi
+	else
+		latest=true
+		if [ -n "$newest" ] &&
+			[ "$(printf '%s\n%s\n' "$newest" "$version" | sort -t. -k1,1n -k2,2n -k3,3n | tail -n 1)" != "$version" ]; then
+			tap=false
+			latest=false
+			tap_why="$TAG is older than v$newest, the newest release that is not a prerelease"
+		fi
 	fi
 
 	private=$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)
@@ -247,6 +269,7 @@ spec_tag=$spec_tag
 spec_commit=$spec_commit
 push_spec=$push_spec
 tap=$tap
+latest=$latest
 EOF
 	if [ -n "${GITHUB_OUTPUT:-}" ]; then
 		echo "tap=$tap" >>"$GITHUB_OUTPUT"
@@ -258,10 +281,11 @@ EOF
 	[ "$push_v" = false ] || note "push-tags pushes the annotated tag $TAG at $target"
 	[ "$push_spec" = false ] || note "push-tags pushes the annotated tag $spec_tag at $spec_commit"
 	note "publish publishes the draft $TAG as a $kind"
+	[ "$latest" != false ] || note "publish does not mark $TAG GitHub's latest release, which v$newest is"
 	if [ "$tap" = true ]; then
 		note "push-tap pushes Formula/metais.rb of $version to $TAP_REPO's main"
 	else
-		note "the tap is not updated: $TAG is a prerelease, and a release that is not one exists"
+		note "the tap is not updated: $tap_why"
 	fi
 	[ "$DRY_RUN" = false ] || note "dry run: nothing is pushed or published"
 }
@@ -292,7 +316,9 @@ push_tags() {
 
 publish() {
 	load
-	gh release edit "$TAG" --draft=false --prerelease="$prerelease" --verify-tag >/dev/null
+	set -- --draft=false --prerelease="$prerelease"
+	[ -z "$latest" ] || set -- "$@" --latest="$latest"
+	gh release edit "$TAG" "$@" --verify-tag >/dev/null
 	draft=$(gh release view "$TAG" --json isDraft --jq .isDraft)
 	[ "$draft" = false ] || die "the release $TAG is still a draft"
 	note "published $TAG"

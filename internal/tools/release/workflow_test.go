@@ -297,7 +297,7 @@ func TestReleaseScript(t *testing.T) {
 		if got := gitIn(t, r.origin, "cat-file", "-p", "spec-1.0"); !strings.HasSuffix(got, "\n\nMETAIS specification 1.0") {
 			t.Errorf("spec-1.0 is\n%s", got)
 		}
-		if calls := readFile(t, filepath.Join(r.fake, "calls")); !strings.Contains(calls, "release edit v1.0.0 --draft=false --prerelease=false --verify-tag\n") {
+		if calls := readFile(t, filepath.Join(r.fake, "calls")); !strings.Contains(calls, "release edit v1.0.0 --draft=false --prerelease=false --latest=true --verify-tag\n") {
 			t.Errorf("the draft was not published as a release:\n%s", calls)
 		}
 		if got := gitIn(t, r.tap, "show", "main:Formula/metais.rb"); !strings.Contains(got, "/v1.0.0/metais_1.0.0_darwin_arm64.tar.gz") {
@@ -305,20 +305,55 @@ func TestReleaseScript(t *testing.T) {
 		}
 	})
 
-	t.Run("a prerelease after a release leaves the tap", func(t *testing.T) {
-		r := newReleaseRepos(t, "v1.1.0-rc.1", "")
-		gitIn(t, r.clone, "tag", "-a", "-m", "spec", "spec-1.0", r.specCommit)
-		gitIn(t, r.clone, "tag", "v1.0.0", r.specCommit)
-		gitIn(t, r.clone, "push", "--quiet", "origin", "spec-1.0", "v1.0.0")
-		tapMain := gitIn(t, r.tap, "rev-parse", "main")
-		r.release(t)
-		if !strings.Contains(remoteTags(t, r.origin), r.target+"\trefs/tags/v1.1.0-rc.1^{}") {
-			t.Errorf("v1.1.0-rc.1 was not pushed")
-		}
-		if got := gitIn(t, r.tap, "rev-parse", "main"); got != tapMain {
-			t.Errorf("a prerelease after v1.0.0 updated the tap")
-		}
-	})
+	// The tap, and GitHub's latest release, follow the newest release that
+	// is not a prerelease (ADR-013 D6 item 1, D7 item 5). A prerelease
+	// updates the tap only while origin has no such release's tag, so
+	// earlier candidates do not stop one, and whatever its suffix it is
+	// a prerelease. A release updates the tap after an earlier release,
+	// but one older than the newest, compared as numbers, moves neither
+	// the tap nor GitHub's latest back.
+	for _, c := range []struct {
+		name, tag string
+		earlier   []string
+		tap       bool
+		edit      string
+	}{
+		{"a candidate after a candidate updates the tap", "v1.0.0-rc.2", []string{"v1.0.0-rc.1"}, true, "--prerelease=true --verify-tag"},
+		{"a prerelease after a release leaves the tap", "v1.1.0-rc.1", []string{"v1.0.0"}, false, "--prerelease=true --verify-tag"},
+		{"an alpha after a release is a prerelease", "v1.1.0-alpha.1", []string{"v1.0.0"}, false, "--prerelease=true --verify-tag"},
+		{"a release after a release updates the tap", "v1.0.1", []string{"v1.0.0-rc.1", "v1.0.0"}, true, "--prerelease=false --latest=true --verify-tag"},
+		{"a release after a candidate of the next updates the tap", "v1.0.1", []string{"v1.0.0", "v1.1.0-rc.1"}, true, "--prerelease=false --latest=true --verify-tag"},
+		{"a release is compared as numbers", "v1.10.0", []string{"v1.9.0"}, true, "--prerelease=false --latest=true --verify-tag"},
+		{"an older line leaves the tap and the latest", "v1.0.2", []string{"v1.0.0", "v1.1.0", "v1.0.1"}, false, "--prerelease=false --latest=false --verify-tag"},
+		{"an older line is compared as numbers", "v1.9.1", []string{"v1.10.0"}, false, "--prerelease=false --latest=false --verify-tag"},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			r := newReleaseRepos(t, c.tag, "")
+			gitIn(t, r.clone, "tag", "-a", "-m", "spec", "spec-1.0", r.specCommit)
+			push := []string{"push", "--quiet", "origin", "spec-1.0"}
+			for _, tag := range c.earlier {
+				gitIn(t, r.clone, "tag", tag, r.specCommit)
+				push = append(push, tag)
+			}
+			gitIn(t, r.clone, push...)
+			tapMain := gitIn(t, r.tap, "rev-parse", "main")
+			r.release(t)
+			if !strings.Contains(remoteTags(t, r.origin), r.target+"\trefs/tags/"+c.tag+"^{}") {
+				t.Errorf("%s was not pushed", c.tag)
+			}
+			if calls := readFile(t, filepath.Join(r.fake, "calls")); !strings.Contains(calls, "release edit "+c.tag+" --draft=false "+c.edit+"\n") {
+				t.Errorf("the draft was not published with %s:\n%s", c.edit, calls)
+			}
+			version := strings.TrimPrefix(c.tag, "v")
+			if c.tap {
+				if got := gitIn(t, r.tap, "show", "main:Formula/metais.rb"); !strings.Contains(got, "/"+c.tag+"/metais_"+version+"_darwin_arm64.tar.gz") {
+					t.Errorf("after %q, %s did not update the tap, whose main holds\n%s", c.earlier, c.tag, got)
+				}
+			} else if got := gitIn(t, r.tap, "rev-parse", "main"); got != tapMain {
+				t.Errorf("after %q, %s updated the tap", c.earlier, c.tag)
+			}
+		})
+	}
 
 	t.Run("a tag pushed before is not pushed again", func(t *testing.T) {
 		r := newReleaseRepos(t, "v1.0.0-rc.1", "")

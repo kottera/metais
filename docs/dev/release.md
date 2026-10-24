@@ -122,13 +122,31 @@ the `release` job runs `.github/scripts/release.sh`, one step at a time:
 2. **push-tags** pushes `v<version>` at the draft's target, and
    `spec-<M>.<m>` at the commit the draft names, in one atomic push.
 3. **publish** publishes the draft, marked a prerelease when `<version>`
-   has a prerelease suffix.
+   has a prerelease suffix (any suffix: `-rc.1`, `-alpha.1`). A release
+   that is not a prerelease is marked GitHub's latest release, unless it
+   is older than the newest one, as below.
 4. **push-tap** pushes `Formula/metais.rb` to `kottera/homebrew-tap`'s
    `main` with `TAP_TOKEN` (ADR-013 D7 item 5). The commit follows the
    tap's README: it is signed off by the dispatching account and carries
-   no `Co-authored-by` line. A prerelease updates the tap only while no
-   release without a prerelease suffix exists, that is, before `v1.0.0`.
-   The push starts the tap's CI, which runs `brew audit` and `brew test`.
+   no `Co-authored-by` line. The push starts the tap's CI, which runs
+   `brew audit` and `brew test`.
+
+**Which release the tap holds.** The tap holds the newest release that
+is not a prerelease, the same one GitHub marks latest and `install.sh`
+installs, so `brew install` installs the same bytes as the other golden
+routes (ADR-013 D6 item 1). "Newest" compares `<major>.<minor>.<patch>`
+as numbers, over the `v<version>` tags on GitHub without a prerelease
+suffix. So:
+
+- a prerelease updates the tap only while GitHub has no such tag, that
+  is, before `v1.0.0` (D7 item 5). A candidate after an earlier candidate
+  updates it;
+- a release updates the tap when it is the newest, after any earlier
+  release;
+- a release older than the newest, such as `v1.0.2` after `v1.1.0`,
+  updates neither the tap nor GitHub's latest release, so neither route
+  moves back to an older line. Its archives are still published on its
+  release page.
 5. **pages**, the workflow's last job, calls `pages.yml` with the released
    tag, once the release is published. It builds the site from that tag
    with `site/build.sh --release <version> <SHA256SUMS>`, with the
