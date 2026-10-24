@@ -50,7 +50,11 @@ const conformanceScript = "../../.github/scripts/conformance.sh"
 // and declares a top-level permissions block. A self-hosted runner is
 // shared with other work and holds credentials, so no stranger's pull
 // request may run on one; pull_request_target runs a pull request's
-// workflow with the base repository's token and secrets.
+// workflow with the base repository's token and secrets. Each workflow
+// also names, in its env and each job's env and if, only the contexts
+// GitHub admits there: GitHub refuses to parse one that names another,
+// so it fails at its first dispatch, and a release workflow is dispatched
+// first at a release.
 func TestWorkflows(t *testing.T) {
 	n := 0
 	err := filepath.WalkDir(workflowsDir, func(p string, d fs.DirEntry, err error) error {
@@ -79,7 +83,7 @@ func TestWorkflows(t *testing.T) {
 // TestWorkflowsControl feeds workflowProblems a workflow breaking each
 // rule, and one breaking none.
 func TestWorkflowsControl(t *testing.T) {
-	const ok = "name: x\non: [workflow_dispatch]\npermissions:\n  contents: read\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0\n      - uses: github/codeql-action/init@0123456789abcdef0123456789abcdef01234567\n      - uses: ./.github/actions/x\n      - uses: docker://alpine@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\n"
+	const ok = "name: x\non: [workflow_dispatch]\npermissions:\n  contents: read\nenv:\n  G: ${{ github.sha }}-${{ vars.V }}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    if: ${{ inputs.go && needs.b.result == 'runner.temp' }}\n    env:\n      A: ${{ inputs.x }}-${{ secrets.Y }}-${{ matrix.os }}-${{ github.event.inputs.z }}\n    steps:\n      - run: 'true'\n        env:\n          W: ${{ runner.temp }}/w\n      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0\n      - uses: github/codeql-action/init@0123456789abcdef0123456789abcdef01234567\n      - uses: ./.github/actions/x\n      - uses: docker://alpine@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\n"
 	if got := workflowProblems([]byte(ok)); len(got) != 0 {
 		t.Errorf("a workflow breaking no rule has problems: %q", got)
 	}
@@ -118,6 +122,20 @@ func TestWorkflowsControl(t *testing.T) {
 			`job a step 2 uses "github/codeql-action/init@v3", which no full commit SHA or digest pins`},
 		{"a remote workflow at a tag", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    uses: other/repo/.github/workflows/x.yml@v1\n",
 			`job a uses "other/repo/.github/workflows/x.yml@v1", which no full commit SHA or digest pins`},
+		{"runner in a job's env", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    env:\n      WORK: ${{ runner.temp }}/release\n",
+			"job a env WORK names the runner context, which GitHub does not allow in a job's env"},
+		{"steps in a job's env", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    env:\n      X: ${{ github.sha }}-${{ steps.s.outputs.o }}\n",
+			"job a env X names the steps context"},
+		{"runner in an index", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    env:\n      X: ${{ matrix[runner.os] }}\n",
+			"job a env X names the runner context"},
+		{"runner in the workflow's env", "on: workflow_dispatch\npermissions: {}\nenv:\n  OS: ${{ runner.os }}\njobs: {}\n",
+			"env OS names the runner context, which GitHub does not allow in a workflow's env"},
+		{"matrix in the workflow's env", "on: workflow_dispatch\npermissions: {}\nenv:\n  OS: ${{ matrix.os }}\njobs: {}\n",
+			"env OS names the matrix context"},
+		{"steps in a job's if", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    if: steps.s.outputs.o == 'x'\n",
+			"job a if names the steps context, which GitHub does not allow in a job's if"},
+		{"env in a job's if", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    if: ${{ !inputs.dry_run && env.X == 'y' }}\n",
+			"job a if names the env context"},
 		{"pull_request_target", "on: pull_request_target\npermissions: {}\njobs: {}\n",
 			"is triggered by pull_request_target"},
 		{"pull_request_target in a list", "on: [push, pull_request_target]\npermissions: {}\njobs: {}\n",
@@ -152,6 +170,58 @@ var localWorkflow = regexp.MustCompile(`^\./\.github/workflows/[^/]+\.ya?ml$`)
 // digest.
 var pinnedAction = regexp.MustCompile(`^([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(/[^@\s]+)?@[0-9a-f]{40}|docker://[^@\s]+@sha256:[0-9a-f]{64})$`)
 
+// The contexts GitHub admits in a workflow's env, a job's env and a job's
+// if (docs.github.com, "Contexts", "Context availability"). It refuses
+// to parse a workflow that names any other there, so a dispatch of it is
+// refused before a run exists. runner, env, steps and job are a step's
+// alone.
+var (
+	workflowEnvContexts = []string{"github", "inputs", "secrets", "vars"}
+	jobEnvContexts      = []string{"github", "inputs", "matrix", "needs", "secrets", "strategy", "vars"}
+	jobIfContexts       = []string{"github", "inputs", "needs", "vars"}
+)
+
+// expression is a ${{ }} in a workflow's value.
+var expression = regexp.MustCompile(`\$\{\{(.*?)\}\}`)
+
+// quotedLiteral is a string in an expression, whose text names no context.
+var quotedLiteral = regexp.MustCompile(`'(?:[^']|'')*'`)
+
+// identifier is a name in an expression. It reads a context when it is
+// not itself a property (no . before it) and a property or an index
+// follows it.
+var identifier = regexp.MustCompile(`[A-Za-z_][A-Za-z0-9_-]*`)
+
+// unavailable is each context src's expressions read that allowed does
+// not hold. whole says src is an expression even without ${{ }}, as a
+// job's if is.
+func unavailable(src string, whole bool, allowed []string) []string {
+	var exprs []string
+	for _, m := range expression.FindAllStringSubmatch(src, -1) {
+		exprs = append(exprs, m[1])
+	}
+	if exprs == nil && whole {
+		exprs = []string{src}
+	}
+	var out []string
+	for _, e := range exprs {
+		e = quotedLiteral.ReplaceAllString(e, "''")
+		for _, loc := range identifier.FindAllStringIndex(e, -1) {
+			if loc[0] > 0 && e[loc[0]-1] == '.' {
+				continue
+			}
+			rest := strings.TrimLeft(e[loc[1]:], " \t")
+			if rest == "" || (rest[0] != '.' && rest[0] != '[') {
+				continue
+			}
+			if c := e[loc[0]:loc[1]]; !slices.Contains(allowed, c) && !slices.Contains(out, c) {
+				out = append(out, c)
+			}
+		}
+	}
+	return out
+}
+
 // pinned is whether a uses: names exactly what runs: a path in this
 // repository, reviewed with it, or a pinnedAction.
 func pinned(uses string) bool {
@@ -176,10 +246,30 @@ func workflowProblems(src []byte) []string {
 	if on, ok := w.Get("on"); ok && slices.Contains(triggers(on), "pull_request_target") {
 		out = append(out, "is triggered by pull_request_target")
 	}
+	env, _ := w.Get("env")
+	envObj, _ := env.(value.Object)
+	for key, v := range envObj.All() {
+		for _, c := range unavailable(text(v), false, workflowEnvContexts) {
+			out = append(out, "env "+key+" names the "+c+" context, which GitHub does not allow in a workflow's env")
+		}
+	}
 	jobs, _ := w.Get("jobs")
 	jobsObj, _ := jobs.(value.Object)
 	for name, job := range jobsObj.All() {
 		j, _ := job.(value.Object)
+		if env, ok := j.Get("env"); ok {
+			envObj, _ := env.(value.Object)
+			for key, v := range envObj.All() {
+				for _, c := range unavailable(text(v), false, jobEnvContexts) {
+					out = append(out, "job "+name+" env "+key+" names the "+c+" context, which GitHub does not allow in a job's env")
+				}
+			}
+		}
+		if cond, ok := j.Get("if"); ok {
+			for _, c := range unavailable(text(cond), true, jobIfContexts) {
+				out = append(out, "job "+name+" if names the "+c+" context, which GitHub does not allow in a job's if")
+			}
+		}
 		runsOn, hasRunner := j.Get("runs-on")
 		if uses, ok := j.Get("uses"); ok {
 			if s := text(uses); !pinned(s) {

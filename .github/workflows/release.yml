@@ -63,7 +63,6 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       TAG: ${{ inputs.tag }}
       DRY_RUN: ${{ inputs.dry_run }}
-      WORK: ${{ runner.temp }}/release
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
@@ -80,18 +79,18 @@ jobs:
           ACTOR: ${{ github.actor }}
           ACTOR_ID: ${{ github.actor_id }}
           TAP_TOKEN_SET: ${{ secrets.TAP_TOKEN != '' }}
-        run: .github/scripts/release.sh prepare "$WORK"
+        run: .github/scripts/release.sh prepare "$RUNNER_TEMP/release"
       - name: push the tags
         if: ${{ !inputs.dry_run }}
-        run: .github/scripts/release.sh push-tags "$WORK"
+        run: .github/scripts/release.sh push-tags "$RUNNER_TEMP/release"
       - name: publish the release
         if: ${{ !inputs.dry_run }}
-        run: .github/scripts/release.sh publish "$WORK"
+        run: .github/scripts/release.sh publish "$RUNNER_TEMP/release"
       - name: push the formula to the tap
         if: ${{ !inputs.dry_run && steps.prepare.outputs.tap == 'true' }}
         env:
           TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
-        run: .github/scripts/release.sh push-tap "$WORK"
+        run: .github/scripts/release.sh push-tap "$RUNNER_TEMP/release"
 
   pages:
     needs: release
