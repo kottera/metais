@@ -1,0 +1,12 @@
+# Copyright 2026 Kottera
+# SPDX-License-Identifier: Apache-2.0
+
+# Every action a workflow uses is pinned to a full commit SHA
+# (internal/guarantees' TestWorkflows), so a new release reaches the
+# workflows only through a pull request a person reviews.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

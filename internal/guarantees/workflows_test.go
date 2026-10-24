@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"runtime"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -78,7 +79,7 @@ func TestWorkflows(t *testing.T) {
 // TestWorkflowsControl feeds workflowProblems a workflow breaking each
 // rule, and one breaking none.
 func TestWorkflowsControl(t *testing.T) {
-	const ok = "name: x\non: [workflow_dispatch]\npermissions:\n  contents: read\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n"
+	const ok = "name: x\non: [workflow_dispatch]\npermissions:\n  contents: read\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0\n      - uses: github/codeql-action/init@0123456789abcdef0123456789abcdef01234567\n      - uses: ./.github/actions/x\n      - uses: docker://alpine@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\n"
 	if got := workflowProblems([]byte(ok)); len(got) != 0 {
 		t.Errorf("a workflow breaking no rule has problems: %q", got)
 	}
@@ -101,6 +102,22 @@ func TestWorkflowsControl(t *testing.T) {
 			"job a names no runs-on and no workflow of this repository to call"},
 		{"a remote workflow", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    uses: other/repo/.github/workflows/x.yml@main\n",
 			`job a calls workflow "other/repo/.github/workflows/x.yml@main", which is not one of this repository's`},
+		{"an action at a tag", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n      - uses: actions/checkout@v5\n",
+			`job a step 2 uses "actions/checkout@v5", which no full commit SHA or digest pins`},
+		{"an action at a branch", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n      - uses: actions/checkout@main\n",
+			`job a step 2 uses "actions/checkout@main", which no full commit SHA or digest pins`},
+		{"an action at a short SHA", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n      - uses: actions/checkout@fbc6f39\n",
+			`job a step 2 uses "actions/checkout@fbc6f39", which no full commit SHA or digest pins`},
+		{"an action with no @", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n      - uses: actions/checkout\n",
+			`job a step 2 uses "actions/checkout", which no full commit SHA or digest pins`},
+		{"a SHA with no @", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n      - uses: fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09\n",
+			`job a step 2 uses "fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09", which no full commit SHA or digest pins`},
+		{"a docker image with no digest", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n      - uses: docker://alpine:3.20\n",
+			`job a step 2 uses "docker://alpine:3.20", which no full commit SHA or digest pins`},
+		{"an action in a path at a tag", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    runs-on: ubuntu-latest\n    steps:\n      - run: 'true'\n      - uses: github/codeql-action/init@v3\n",
+			`job a step 2 uses "github/codeql-action/init@v3", which no full commit SHA or digest pins`},
+		{"a remote workflow at a tag", "on: workflow_dispatch\npermissions: {}\njobs:\n  a:\n    uses: other/repo/.github/workflows/x.yml@v1\n",
+			`job a uses "other/repo/.github/workflows/x.yml@v1", which no full commit SHA or digest pins`},
 		{"pull_request_target", "on: pull_request_target\npermissions: {}\njobs: {}\n",
 			"is triggered by pull_request_target"},
 		{"pull_request_target in a list", "on: [push, pull_request_target]\npermissions: {}\njobs: {}\n",
@@ -129,6 +146,18 @@ var hostedLabel = regexp.MustCompile(`^(ubuntu|macos|windows)-[0-9a-z.-]+$`)
 // tripwire reads too.
 var localWorkflow = regexp.MustCompile(`^\./\.github/workflows/[^/]+\.ya?ml$`)
 
+// pinnedAction is a uses: that names exactly what runs: an action or
+// workflow of another repository at a full commit SHA, which its owner
+// cannot move as they can a tag or a branch, or a container image at its
+// digest.
+var pinnedAction = regexp.MustCompile(`^([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(/[^@\s]+)?@[0-9a-f]{40}|docker://[^@\s]+@sha256:[0-9a-f]{64})$`)
+
+// pinned is whether a uses: names exactly what runs: a path in this
+// repository, reviewed with it, or a pinnedAction.
+func pinned(uses string) bool {
+	return strings.HasPrefix(uses, "./") || pinnedAction.MatchString(uses)
+}
+
 // workflowProblems is what makes src a workflow TestWorkflows refuses,
 // one sentence about the workflow for each problem.
 func workflowProblems(src []byte) []string {
@@ -153,10 +182,21 @@ func workflowProblems(src []byte) []string {
 		j, _ := job.(value.Object)
 		runsOn, hasRunner := j.Get("runs-on")
 		if uses, ok := j.Get("uses"); ok {
+			if s := text(uses); !pinned(s) {
+				out = append(out, "job "+name+" uses "+quote(s)+", which no full commit SHA or digest pins")
+			}
 			if s := text(uses); !localWorkflow.MatchString(s) {
 				out = append(out, "job "+name+" calls workflow "+quote(s)+", which is not one of this repository's")
 			}
 			continue
+		}
+		steps, _ := j.Get("steps")
+		stepsArr, _ := steps.(value.Array)
+		for i, step := range stepsArr.All() {
+			so, _ := step.(value.Object)
+			if uses, ok := so.Get("uses"); ok && !pinned(text(uses)) {
+				out = append(out, "job "+name+" step "+strconv.Itoa(i+1)+" uses "+quote(text(uses))+", which no full commit SHA or digest pins")
+			}
 		}
 		if !hasRunner {
 			out = append(out, "job "+name+" names no runs-on and no workflow of this repository to call")
@@ -242,6 +282,13 @@ func texts(v value.Value) []string {
 		out = append(out, text(e))
 	}
 	return out
+}
+
+// actionName is a uses: without the ref after its @, which
+// workflowProblems holds to a full commit SHA.
+func actionName(uses string) string {
+	name, _, _ := strings.Cut(uses, "@")
+	return name
 }
 
 func quote(s string) string { return `"` + s + `"` }
@@ -483,7 +530,7 @@ func TestReleaseWorkflow(t *testing.T) {
 		cond, hasIf := so.Get("if")
 		// The release job runs only the actions that check the
 		// repository out and set up go: no builder, and no attestation.
-		if uses, ok := so.Get("uses"); ok && !slices.Contains([]string{"actions/checkout@v5", "actions/setup-go@v6"}, text(uses)) {
+		if uses, ok := so.Get("uses"); ok && !slices.Contains([]string{"actions/checkout", "actions/setup-go"}, actionName(text(uses))) {
 			t.Errorf("release.yml's release job uses %s", text(uses))
 		}
 		if env, ok := so.Get("env"); ok {

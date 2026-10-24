@@ -40,7 +40,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: brew install kottera/tap/metais
         run: brew install kottera/tap/metais
       - name: brew info kottera/tap/metais
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: install.sh with no METAIS_VERSION, refused while no stable release exists
         run: .github/scripts/rehearse.sh latest "$VERSION"
       - name: install.sh with METAIS_VERSION, reporting the version
@@ -71,7 +71,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: install.sh with no METAIS_VERSION, refused while no stable release exists
         run: .github/scripts/rehearse.sh latest "$VERSION"
       - name: install.sh with METAIS_VERSION, reporting the version
@@ -90,7 +90,7 @@ jobs:
     steps:
       - name: install curl, install.sh's one prerequisite, and nothing else
         run: apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: install.sh with no METAIS_VERSION, refused while no stable release exists
         run: .github/scripts/rehearse.sh latest "$VERSION"
       - name: install.sh with METAIS_VERSION, reporting the version
@@ -107,8 +107,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version: stable
           cache: false
@@ -143,7 +143,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: download, sha256sum --check, unpack, and run metais --version
         run: .github/scripts/rehearse.sh manual "$VERSION" "$RUNNER_TEMP/manual"
       - name: metais skill
@@ -153,7 +153,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: download, shasum -a 256 --check, unpack, and run metais --version
         run: .github/scripts/rehearse.sh manual "$VERSION" "$RUNNER_TEMP/manual"
       - name: metais skill
@@ -168,12 +168,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
       - name: the release's tag
         id: tag
         run: echo "tag=v${VERSION#v}" >>"$GITHUB_OUTPUT"
       - name: check out the release's tag
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
           ref: ${{ steps.tag.outputs.tag }}
           path: release
