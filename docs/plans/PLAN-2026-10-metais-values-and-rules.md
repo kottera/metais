@@ -148,7 +148,7 @@ Three rules this train adds:
 | 0 | This plan, merged to `main` | — | **complete** on merge |
 | 1 | **The amendments, then the cores**: ADR-003 A2 and ADR-004 A2 on `main`; the deduplication fix; the ACR's per-row rule; `number` and `amount`; `duration`; `uniqueKeys`, then `coverage` | 0 | **complete** (see §5, Wave 1 verdict) |
 | 2 | **Teaching and adoption**: the `money` alternative and `help templates`; the examples write their values through the filters; `check`'s three findings; the sample generator; `schema --fields`, `inspect`, `help schemas` and the skill | 1 | **complete** (see §7, Wave 2 verdict) |
-| 3 | **The ACR adopts both keywords**, then the close | 2 | — |
+| 3 | **The ACR adopts both keywords**, then the close | 2 | **complete** (see §8, Wave 3 verdict) |
 
 Inside Wave 1, the amendments item merges first, and every other Wave 1
 item depends on it: each cites the amendment and logs against it. R4
@@ -551,6 +551,48 @@ report, and the train closes.
   an input-contract one. A template that collapses a chapter of identical
   `Not Applicable` rows into one line is outside this train, and is not
   filed.
+
+### Wave 3 verdict
+
+**Complete**, 2026-10-24. Brief and closeout:
+[brief-plan-2026-10-metais-values-and-rules-wave3.md](../briefs/brief-plan-2026-10-metais-values-and-rules-wave3.md)
+(brief #305, closeout #310).
+
+R8 landed as one item, W3-1 (#308, `149923f7`). Each of the ACR's three
+criteria tables now carries `uniqueKeys` on `/criterion`, and `coverage`
+of 55 WCAG Level A and AA criteria, 104 Section 508 criteria and 148 EN
+301 549 criteria, under R-W3-a. `wcag_only` was expanded to answer every
+Level A and AA criterion. The tester's table is refused by
+`TestACRTesterTableRefused` with one `input.unique_keys` and 54
+`input.coverage` findings in one run. It validated on `main` before the
+change.
+
+The verifier, `01a16abd-eab7-7be2-8067-521e7233f26d`, ran 11 mutations
+and ten went red. It ran R-VR-7's one full gate, `gate.sh wave` on a
+fresh clone of `149923f7`, and it was green:
+
+- all 56 packages under `-race`;
+- `internal/conformance` in 454 s and `internal/guarantees` in 366 s, so
+  no `-run` groups were needed;
+- every SC7 reach group, unsplit.
+
+That tree holds every implementation item of the train except the two
+non-blocking ones below, W2-NB1 and W2-NB2 included.
+
+What the plan should know:
+
+- **W3-1 decided the Section 508 and EN 301 549 coverage without
+  parking**, though the brief reserved that question for Ed. The verifier
+  blocked on it, and Ed's R-W3-a kept what had merged.
+- **After the gate:** commits after `149923f7` were not under the full
+  gate:
+  - the plan and closeout records, #309 and #310;
+  - W3-NB2 (`01a16b86-4805-7061-966c-3e5123fad650`, #311), a test that
+    makes the ACR's sample render catch a missing `uniqueKeys`;
+  - W3-NB1 (`01a16b85-e756-7061-8dca-32b43ff48f6e`), still running.
+    It covers `render --sample --optional mixed --seed 7` failing
+    `schema.sample_invalid` on the ACR's Section 508 table, which
+    predates this train's Wave 3.
 
 ## 9. Verification
 
