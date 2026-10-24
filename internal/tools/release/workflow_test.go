@@ -355,6 +355,21 @@ func TestReleaseScript(t *testing.T) {
 		})
 	}
 
+	// GitHub refuses the workflow's token a tag where .github/workflows is
+	// not main's, so prepare refuses that target; a target behind main
+	// whose workflows are main's is released.
+	t.Run("a target behind main with main's workflows", func(t *testing.T) {
+		r := newReleaseRepos(t, "v1.0.0-rc.1", "")
+		r.commit(t, ".github/workflows/ci.yml", "name: ci\n")
+		write(t, r.clone, "README.md", "metais, after the draft\n")
+		gitIn(t, r.clone, "commit", "--quiet", "-am", "a change after the draft")
+		target := strings.TrimSpace(readFile(t, filepath.Join(r.fake, "release", "v1.0.0-rc.1", "targetCommitish")))
+		r.release(t)
+		if !strings.Contains(remoteTags(t, r.origin), target+"\trefs/tags/v1.0.0-rc.1^{}") {
+			t.Errorf("v1.0.0-rc.1 was not pushed at the draft's target %s", target)
+		}
+	})
+
 	t.Run("a tag pushed before is not pushed again", func(t *testing.T) {
 		r := newReleaseRepos(t, "v1.0.0-rc.1", "")
 		gitIn(t, r.clone, "tag", "-a", "-m", "earlier", "v1.0.0-rc.1", r.target)
@@ -412,6 +427,11 @@ func TestReleaseScript(t *testing.T) {
 			gitIn(t, r.clone, "push", "--quiet", "origin", "v1.0.0-rc.1")
 			gitIn(t, r.clone, "tag", "-d", "v1.0.0-rc.1")
 		}, "a tag never moves"},
+		{"a target whose workflows are not main's", "v1.0.0-rc.1", true, func(t *testing.T, r *releaseRepos) {
+			r.commit(t, ".github/workflows/ci.yml", "name: ci\n")
+			write(t, r.clone, ".github/workflows/ci.yml", "name: ci, pinned\n")
+			gitIn(t, r.clone, "commit", "--quiet", "-am", "change ci.yml after the draft")
+		}, "holds workflows other than main's"},
 		{"a private repository", "v1.0.0-rc.1", false, func(t *testing.T, r *releaseRepos) {
 			write(t, r.fake, "private", "true\n")
 		}, "is private"},

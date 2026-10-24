@@ -117,6 +117,14 @@ prepare() {
 	commit_sha "$target" ||
 		die "the draft's target, $target, is not a commit's full SHA; the release procedure creates the draft with --target <the tagged commit's SHA>"
 	git cat-file -e "$target^{commit}" 2>/dev/null || die "this repository holds no commit $target, the draft's target"
+	# GitHub refuses a workflow's token any ref at a commit whose workflows
+	# are not the default branch's, as a change to those workflows, and no
+	# workflow's token may change them. This run is main, so the tag can be
+	# pushed only where .github/workflows is main's.
+	here=$(git rev-parse -q --verify 'HEAD:.github/workflows' 2>/dev/null) || here=none
+	there=$(git rev-parse -q --verify "$target:.github/workflows" 2>/dev/null) || there=none
+	[ "$here" = "$there" ] ||
+		die "the draft's target $target holds workflows other than main's, and GitHub refuses this workflow's token a tag there; cut the candidate again at main's tip, and land no change to .github/workflows between the draft and the release act (docs/dev/release.md)"
 
 	gh release download "$TAG" --dir "$work/assets"
 	case $(uname -s) in
