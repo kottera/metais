@@ -286,5 +286,134 @@ approval) and Wave 4 are not this wave's. Neither is the T-A3 edge.
 
 ## Closeout
 
-*Not yet written. The wave orchestrator replaces this line with the
-wave's closeout.*
+Written by the wave orchestrator (Work Order 01a1690c-a75a-7e30-907f-2e8ff42a2039)
+on 2026-10-24, against `main` at c460af70. Base ref: 5e670f8b. This section
+says what landed and where every finding went. It is not a correctness
+verdict.
+- **The verification round's findings** below are W2-V's, with its method
+  named.
+- **Where this section says "reports",** the claim is the child's.
+- **Where it says "I read",** I read the merged code. I mutated nothing.
+
+### 1. What landed, and whether it matches the ask
+
+| Item | Work Order | Pull request, merge | What landed |
+|---|---|---|---|
+| W2-1 | 01a16914-cf93 | #269, 0dac5ac8 | The site is the METAIS package `site/package`. `site/build.sh` runs `internal/tools/site`, which builds `metais` from the commit, exports the help, the skill, the chapters as HTML fragments and the release (`--release`), renders the package, and adds `site/public` and the schemas at their `$id`s. ADR-009 A11 gives the build step its host access. ADR-010 A10 is the D3 note for goldmark, which sits in the root `go.mod` and outside `cmd/metais`'s closure. Every page carries D2 item 1's footer, and two builds are byte-identical (`TestBuildReproducible`). |
+| W2-2 | 01a16916-7994 | #292, ff0a8c98 | The reference pages are generated per command, per topic and for the skill from `help --json` and `skill --print`, and held by `TestReferencePages`. Also: `/spec/draft/` (noindex), `/spec/<M>.<m>/` from its tag (`TestSpecReleases`, on a fixture), the install page to D6, and `TestInternalLinks`. No ADR-008 amendment was needed. |
+| W2-3 | 01a16915-6718 | #266, 1550d99c | The builder's prerelease rule (ADR-011 A8 item 5), with both sides pinned in `TestReleaseRefusesAnUnreleasedRevision`. Also the formula generator, `go run ./internal/tools/release formula -version <v> -sums <SHA256SUMS>`, with its golden, which `regenerate.sh` rewrites. |
+| W2-4 | 01a16916-f20f | #299, 11ea8f6b; #312, 96e44725 | `release.yml`, run by dispatch in the `release` environment, with `dry_run`. `.github/scripts/release.sh` verifies, tags, publishes and pushes the tap. `pages.yml` is called by `release.yml` through `workflow_call` after publishing (R-W2-1), and keeps a `workflow_dispatch` for an erratum. `docs/dev/release.md` is rewritten as the procedure. #312 records the hand-made proofs and what waits for the flip. |
+| W2-5 | 01a16917-541a | #285, 5e72fd9c | `site/public/install.sh` to D6, with gate tests of its four refusals, no stable release included. `ci.yml`'s dispatch-only `install-linux` and `install-macos` jobs run `.github/scripts/install-test.sh` against a release built in the job. `TestInstallServed` holds `/install.sh`. |
+| W2-10 | 01a16916-18ab | #271, f6f0bd99 | UX scenarios I1 and I2, the runner's no-`metais`-on-`PATH` setup for them alone, and their scorer checks with fixtures seen red. `docs/dev/ux-testing.md` documents them and what the network probe found. |
+| W2-11 | 01a16923-9716 | #298, c938f2ff | The approved landing page with "Who makes METAIS", and "Using a package" and "Writing a package" under `/guide/`, with Ed's edits. Also `/getting-started/` redirects, and `TestTeraOnlyWhoMakes`. It replaced W2-7. |
+| W2-12 | 01a16923-dd3d | kottera/kottera.com#1, 3f52d7cb | The approved page, Version A with Ed's K edits, at `docs/index.html` with `docs/CNAME`, plus the README, the licence and CI. Pages is off. Its CI runs: 40010236810 on the pull request and 40010363486 on `main`, both green. It replaced W2-8. |
+| W2-13 | 01a16924-2655 | kottera/homebrew-tap#1, 3f164193 | The README, the licence, and CI running `brew audit --strict`, install and test on ubuntu and macos. It was proved by test pull request #2, closed unmerged, whose formula is byte-identical to the generator's output for the same `SHA256SUMS`. No formula is on `main`. It replaced W2-9. |
+
+I read these mechanisms in the merged tree, and found what the items report:
+- `release.yml`'s pages job is `uses: ./.github/workflows/pages.yml`, under `if: !inputs.dry_run`;
+- `pages.yml` has `workflow_call` and `workflow_dispatch`;
+- `release.sh` refuses a real run on a private repository or with no required reviewer;
+- goldmark is in `go.mod`.
+
+Where an item diverged from its first ask:
+- **W2-6 (01a16915-c35f) ended failed, with its work done.** I filed it as `code-implementation-direct`, whose postcondition is a merged pull request, and its task forbade the merge. Its drafts, draft PR #265 and an artifact, were delivered. Because the failure left W2-OOB1 unreleasable, I cancelled the four items that had not started:
+  - W2-OOB1, re-filed as W2-OOB5;
+  - W2-7, re-filed as W2-11;
+  - W2-8, re-filed as W2-12, with the repository it writes as its `repo`;
+  - W2-9, re-filed as W2-13, with the repository it writes as its `repo`.
+
+  I could not recall them. The new ones got new addresses.
+- **No GitHub-hosted proving run exists** for the jobs this wave added or changed. Ed ruled that the proofs are made by hand while the repository is private (rulings below). So the brief's "every workflow job added or changed has a green, linked run" is deferred to the flip and carried by W2-OOB6.
+- **Items ran directed tests, not the gate,** from Ed's standing instruction onward. W2-3 and W2-5 passed the scoped tier before it. The wave tier ran once, at W2-V.
+
+### 2. What children flagged, declined or discovered
+
+- **W2-1's first dispatch was killed at the 3h limit** before it opened its pull request. A retry resumed from its pushed branch.
+- **W2-10's scoped gate was starved repeatedly** on the shared host, with `internal/conformance` at 0.35 to 0.45 of 4 cores. It went green once, on cf0248a1, and Ed's CI wave run 39990375739 passed. It merged on directed tests under Ed's instruction.
+- **ADR-008 A16 was taken** by another train before W2-2 could use it. W2-2 needed no amendment, so nothing was renumbered. Allotted and unused: ADR-009 A12 (W2-3) and A13 (W2-10), and ADR-008 A16. ADR-013 A1 stayed unallotted under R-W2-1.
+- **The release environment is unsettled.** Whether a job naming `environment: release` runs on the private free-plan repository could not be settled by hand. `release.sh` refuses a real release there regardless.
+- **kottera.com's Pages is set up to serve from a branch** (`main`, `/docs`). Plan §6 says "likewise" to metais.org, which serves from Actions. If Ed chooses Actions, a deploy workflow is needed (W2-12).
+- **kottera.com's METAIS paragraph keeps the landing page's old tagline,** because Ed approved K5 as drafted. Ed may want the two to match (W2-12).
+- **brew audit runs without `--online`** in the tap's CI, because the release URLs do not exist yet (W2-13).
+- **Copy decisions:** W2-11 chose USD for M6, and renamed the template variable `amount` to `cents`.
+
+### 3. What carries to the next wave
+
+- **The hosted runs Ed deferred,** before `v1.0.0-rc.1`: the site job (and its linux/amd64, never covered by hand), install, shell, and `release.yml`'s dry run, with what the `release` environment does. W2-OOB6 carries them.
+- **The vendor-neutrality line, read through ADR-013 D2 item 3.** The brief's "No other file in `kottera/metais` names tera" is false of the tree, but only through records and files that predate this wave: ADRs, plans, briefs, logs, scorecards, AGENTS.md's own rule, and tests that forbid the word. The one code hit is W2-NB3's. Wave 3's scan before the flip should read the rule as about the code, and a brief should say so.
+- **kottera.com's Pages route,** branch or Actions, is Ed's Wave 3 setting.
+- **The wave tier's margin** on the shared host is thin (below), and is PLAN-2026-10-metais-test-economy's to own.
+- **What I would do differently:**
+  - Never file an item whose output is unmerged under `code-implementation-direct`.
+  - Read every operator ruling's text before relaying it. I learned of Ed's proving deferral from a child's report, and the plan does not record it.
+  - Check at breakdown whether a later standing instruction can change the gate. Both of Ed's instructions arrived mid-wave.
+
+### 4. What the verification round found, and where each finding went
+
+**Who verified, and how.** W2-V (01a16b8d-2472, `wave-verification`), on `main` at 96e44725:
+- **Gate:** `gate.sh wave` on a fresh clone. The first run passed every step and all 62 reach groups, except `internal/conformance` and `internal/guarantees`, which were starved at 0.57 of 5 cores. `gate.sh wave --resume` passed both: `GATE DONE: PASS (wave)`. This was the wave's first full gate.
+- **Mutation:** about 110 mutation rows across W2-1, W2-2, W2-3, W2-4, W2-5, W2-10 and W2-11. Every expected-red row went red, except the rows named in the findings below and three it explained as equivalent or refused independently.
+- **Inspected, not mutated:** W2-12, W2-13, W2-OOB5 and W2-OOB3. Their repositories and records were read, and their runs checked through the API.
+- **Replay:** every "Using a package" command, against `metais` built from `main`.
+- **Audit:** the item list against `git log 5e670f8b..main` was verified for accuracy, and its completeness trusted. Every merge is an ancestor of `main`. The only `metais-public` commit that is not an item is #264, R-W2-1's ruling.
+- **Publication check:** no tag and no release exist, the dry-run draft is deleted, the tap holds no formula, and kottera.com's Pages is off.
+
+Its 11 item entries match the 11 I sent.
+
+**Verdict:** pass, with no blocking finding. So there is no fix child and no second round. W2-11's criteria are "partial" only through the vendor-neutrality residue below.
+
+**Where each non-blocking finding went:**
+
+| Finding | Where it went |
+|---|---|
+| W2-4: `pages.yml`'s published-release guard is untested logic (three mutations green) | W2-NB1, 01a16bb7-639b |
+| W2-4: two sides of the tap rule are unpinned (rc after rc, full after full, a non-`-rc` prerelease) | W2-NB1, 01a16bb7-639b |
+| W2-4: the tap can be moved back to an older line | W2-NB1, 01a16bb7-639b |
+| W2-1: the install page as built with `--release` is never rendered by a test | W2-NB2, 01a16bb7-bb85 |
+| W2-5: `install.sh`'s guards beyond the four refusals are untested (no hash tool, duplicate line, substring match, armv7l and i686, URL override) | W2-NB2, 01a16bb7-bb85 |
+| W2-5: `ci.yml`'s selection of the install jobs is not held by a test | W2-NB2, 01a16bb7-bb85 |
+| W2-11: no test runs the guides' command lines | W2-NB2, 01a16bb7-bb85 |
+| W2-10: I2's finds-and-installs pass on an unnamed route has no fixture | W2-NB3, 01a16bb8-05e1 |
+| W2-OOB3: shellcheck 0.11 raises SC2329 on seven of `gate.sh`'s functions, which are called by name | W2-NB3, 01a16bb8-05e1 |
+| W2-11: "no file names tera" is false of the tree; the code residue is `internal/tools/ux/main.go:58` | W2-NB3, 01a16bb8-05e1, for code and live documents. Records stay, as section 3 says. |
+| W2-13: `setup-homebrew@main` is unpinned | W2-NB4, 01a16bb8-26eb |
+| Cross-item: no hosted run exists for the jobs this wave added or changed | W2-OOB6, 01a16bb8-56c8 |
+| W2-4: what `environment: release` does on the private repository is unsettled | W2-OOB6, 01a16bb8-56c8 |
+| W2-OOB3: the dry run's hosted-only skips were not exercised | W2-OOB6, 01a16bb8-56c8 |
+| W2-13: the merge subject 3f164193 lacks " (#1)" | **Not filed.** AGENTS.md never renames a commit already in history. |
+| W2-12: kottera.com#1 does not link its green CI run | **Not filed.** The runs, 40010236810 and 40010363486, are named in section 1, which is the record. |
+| Cross-item: the wave tier fits the ten-minute bound on the shared host only with a resume (`internal/conformance` at 568 s) | **Not filed as a child.** The cause is the shared host, and the remedy is PLAN-2026-10-metais-test-economy's scope. It is recorded as observation 01a16bb8-8625. |
+
+**Why the findings were grouped:**
+- **W2-NB1:** three findings in `release.sh` and `pages.yml` and their tests.
+- **W2-NB2:** four test gaps in `site/` and `install.sh`.
+- **W2-NB3:** three small changes to the developer tooling.
+
+Each child is told its members are severable.
+
+**Wave 2 completed without waiting for W2-NB1, W2-NB2, W2-NB3, W2-NB4 and W2-OOB6, and that is the intent.** They run beside Wave 3 and are not re-verified.
+
+### 5. Out-of-band acts
+
+| Act | Type | Work Order | Placement | Outcome |
+|---|---|---|---|---|
+| Approve the landing page's, the guides' and the kottera.com page's copy | design-session | W2-OOB5, 01a16923-4dd8 | waited on by W2-11 and W2-12 | Ended by Ed. Approved all four: the landing page and the Writing guide with edits, the Using guide as written, and kottera.com's Version A with edits. He answered M1 to M7 and K1 to K6, recorded on #265 (comment 6372789288). It replaced W2-OOB1. |
+| Dispatch the site job for W2-1 | design-session | W2-OOB2, 01a16918-7aea | held, then released | Cancelled outside this run under Ed's proving ruling. Ed's manual runs of the job's steps stand in (#269). |
+| Dispatch `release.yml`'s dry run for W2-4 | design-session | W2-OOB3, 01a16918-8f78 | held, then released | Ended by Ed, by hand. `release.sh prepare` ran as a dry run against draft v0.0.0-alpha.1 at 11ea8f6b, and pushed and published nothing. shellcheck 0.9.0 was clean. The environment question is deferred. |
+| Dispatch the install and shell jobs for W2-5 | design-session | W2-OOB4, 01a16918-9ebf | held, then released | Cancelled outside this run under Ed's proving ruling. Ed's manual runs of `install-test.sh` stand in (#285). |
+| Dispatch the deferred hosted runs after the flip | design-session | W2-OOB6, 01a16bb8-56c8 | carried | Open. The plan orchestrator carries it to Wave 3. |
+| Approve the copy (first filing) | design-session | W2-OOB1, 01a16917-c9bc | — | Cancelled before it ran. Its dependency W2-6 had failed, and W2-OOB5 replaced it. |
+
+### Rulings made during this wave
+
+- **R-W2-1** (plan orchestrator, plan §7, #264): ADR-013 D7 item 3.4's conditions bind, and the trigger is the item's. W2-4 chose `workflow_call` from `release.yml`.
+- **Ed's standing instruction, 2026-10-23,** relayed by the operator: items run directed tests only and merge, and the full gate runs once at verification.
+- **Ed's ruling, 2026-10-23:** while the repository is private, workflow proofs are made by hand, and GitHub-hosted runs are deferred to the public flip. It reached the children directly, and the plan does not record it. The plan orchestrator should.
+- **Mine, for W2-10, before Ed's instruction:**
+  - a starved gate red is not merged over;
+  - a CI run does not replace the scoped tier;
+  - a green scoped run before a rebase does not stand in for the `--resume` after it.
+
+  Each follows from AGENTS.md and the verification-gate skill. Ed's instruction superseded them for W2-10's merge.
+
+I escalated nothing. Every question was answered from the brief, the ADRs, AGENTS.md, or the operator's instructions.
