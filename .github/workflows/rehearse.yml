@@ -1,0 +1,199 @@
+# Copyright 2026 Kottera
+# SPDX-License-Identifier: Apache-2.0
+#
+# The rehearsal's checks against a published release candidate (ADR-013
+# D7 item 8, docs/dev/release.md "The rehearsal's checks"): every install
+# route of ADR-013 D6 on a clean machine, metais --version and metais skill
+# after each, and the live site and kottera.com. The clean machines are
+# GitHub-hosted runners, and an ubuntu container that is given install.sh's
+# one prerequisite, curl, and nothing else.
+#
+# It is dispatched by hand with the candidate's version, once the release
+# is published and its site deployed, and only then: it has no push or
+# pull request trigger, since there is nothing to check before a candidate
+# exists. Each check is one step running .github/scripts/rehearse.sh, or
+# the route's own command, and its log shows the command, what it printed
+# and the version it reported. Every job runs whether or not another
+# fails, and a failed step fails the run, so the run's page lists every
+# check that refused. The scripts are the dispatched ref's; what the
+# release holds, its schemas, chapters and install.sh, is read from a
+# checkout of its tag.
+name: rehearse
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: The published release to check, by its version without the v, such as 1.0.0-rc.1
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  VERSION: ${{ inputs.version }}
+
+jobs:
+  # brew install kottera/tap/metais on a clean macOS (ADR-013 D6 item 1).
+  brew-macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: brew install kottera/tap/metais
+        run: brew install kottera/tap/metais
+      - name: brew info kottera/tap/metais
+        run: brew info kottera/tap/metais
+      - name: metais --version reports the version
+        run: .github/scripts/rehearse.sh version "$(brew --prefix)/bin/metais" "$VERSION"
+      - name: metais skill
+        run: .github/scripts/rehearse.sh skill "$(brew --prefix)/bin/metais" "$VERSION" "$RUNNER_TEMP/project"
+
+  # curl -fsSL https://metais.org/install.sh | sh on each platform it
+  # serves (ADR-013 D6 items 1 and 7): with no METAIS_VERSION, the refusal
+  # while the version is a prerelease, since no stable release exists; with
+  # it, an install into ~/.local/bin, reporting the version.
+  install-ubuntu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: install.sh with no METAIS_VERSION, refused while no stable release exists
+        run: .github/scripts/rehearse.sh latest "$VERSION"
+      - name: install.sh with METAIS_VERSION, reporting the version
+        if: ${{ !cancelled() }}
+        run: .github/scripts/rehearse.sh install "$VERSION"
+      - name: metais skill
+        run: .github/scripts/rehearse.sh skill "$HOME/.local/bin/metais" "$VERSION" "$RUNNER_TEMP/project"
+
+  install-macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: install.sh with no METAIS_VERSION, refused while no stable release exists
+        run: .github/scripts/rehearse.sh latest "$VERSION"
+      - name: install.sh with METAIS_VERSION, reporting the version
+        if: ${{ !cancelled() }}
+        run: .github/scripts/rehearse.sh install "$VERSION"
+      - name: metais skill
+        run: .github/scripts/rehearse.sh skill "$HOME/.local/bin/metais" "$VERSION" "$RUNNER_TEMP/project"
+
+  # The same in a container with nothing installed: an ubuntu image, given
+  # curl and the certificates it checks github.com's with, which install.sh
+  # and its one-line command need, and nothing else.
+  install-container:
+    runs-on: ubuntu-latest
+    container: ubuntu:24.04
+    timeout-minutes: 30
+    steps:
+      - name: install curl, install.sh's one prerequisite, and nothing else
+        run: apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
+      - uses: actions/checkout@v5
+      - name: install.sh with no METAIS_VERSION, refused while no stable release exists
+        run: .github/scripts/rehearse.sh latest "$VERSION"
+      - name: install.sh with METAIS_VERSION, reporting the version
+        if: ${{ !cancelled() }}
+        run: .github/scripts/rehearse.sh install "$VERSION"
+      - name: metais skill
+        run: .github/scripts/rehearse.sh skill "$HOME/.local/bin/metais" "$VERSION" "$RUNNER_TEMP/project"
+
+  # go install metais.org/metais/cmd/metais@v<version> (ADR-013 D6 item 1),
+  # through the Go proxy as a user's go command does, and again with
+  # GOPROXY=direct and a module cache of its own, so the go command reads
+  # metais.org's go-import page and clones the repository it names.
+  go-install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+          cache: false
+      - name: go install through the Go proxy
+        working-directory: ${{ runner.temp }}
+        env:
+          GOBIN: ${{ runner.temp }}/proxy
+        run: |
+          go install "metais.org/metais/cmd/metais@v$VERSION"
+          go version -m "$GOBIN/metais"
+      - name: metais --version reports the version
+        run: .github/scripts/rehearse.sh version "$RUNNER_TEMP/proxy/metais" "$VERSION"
+      - name: metais skill
+        run: .github/scripts/rehearse.sh skill "$RUNNER_TEMP/proxy/metais" "$VERSION" "$RUNNER_TEMP/project"
+      - name: go install direct, through metais.org's go-import page
+        if: ${{ !cancelled() }}
+        working-directory: ${{ runner.temp }}
+        env:
+          GOBIN: ${{ runner.temp }}/direct
+          GOPROXY: direct
+          GOMODCACHE: ${{ runner.temp }}/direct-modcache
+        run: |
+          go install "metais.org/metais/cmd/metais@v$VERSION"
+          go version -m "$GOBIN/metais"
+      - name: metais --version reports the version, built direct
+        run: .github/scripts/rehearse.sh version "$RUNNER_TEMP/direct/metais" "$VERSION"
+
+  # The manual route (ADR-013 D6 item 1): this machine's archive and
+  # SHA256SUMS from the release, checked with the install page's command,
+  # and metais run from the unpacked archive.
+  manual-ubuntu:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: download, sha256sum --check, unpack, and run metais --version
+        run: .github/scripts/rehearse.sh manual "$VERSION" "$RUNNER_TEMP/manual"
+      - name: metais skill
+        run: .github/scripts/rehearse.sh skill "$RUNNER_TEMP/manual/metais" "$VERSION" "$RUNNER_TEMP/project"
+
+  manual-macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: download, shasum -a 256 --check, unpack, and run metais --version
+        run: .github/scripts/rehearse.sh manual "$VERSION" "$RUNNER_TEMP/manual"
+      - name: metais skill
+        run: .github/scripts/rehearse.sh skill "$RUNNER_TEMP/manual/metais" "$VERSION" "$RUNNER_TEMP/project"
+
+  # The live site against the release's tag (ADR-013 D1 and D8): every
+  # schema's $id, the go-import pages, a reference page for every command
+  # and topic the release's metais lists, the draft specification, the
+  # landing and install pages and install.sh, and kottera.com. Each check
+  # runs whether or not the one before it refused.
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: the release's tag
+        id: tag
+        run: echo "tag=v${VERSION#v}" >>"$GITHUB_OUTPUT"
+      - name: check out the release's tag
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.tag.outputs.tag }}
+          path: release
+      - name: the release's metais, whose help lists the reference pages
+        run: .github/scripts/rehearse.sh manual "$VERSION" "$RUNNER_TEMP/metais"
+      - name: every schema's $id resolves as JSON
+        if: ${{ !cancelled() }}
+        run: .github/scripts/rehearse.sh ids release
+      - name: the go-import pages
+        if: ${{ !cancelled() }}
+        run: .github/scripts/rehearse.sh go-import
+      - name: the reference pages
+        if: ${{ !cancelled() }}
+        run: .github/scripts/rehearse.sh reference "$RUNNER_TEMP/metais/metais"
+      - name: the specification at /spec/draft/
+        if: ${{ !cancelled() }}
+        run: .github/scripts/rehearse.sh spec release
+      - name: the landing page, the install page and install.sh
+        if: ${{ !cancelled() }}
+        run: .github/scripts/rehearse.sh pages release
+      - name: kottera.com
+        if: ${{ !cancelled() }}
+        run: .github/scripts/rehearse.sh kottera
