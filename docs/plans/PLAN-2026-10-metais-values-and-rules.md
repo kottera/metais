@@ -528,6 +528,30 @@ report, and the train closes.
   - this plan's status, its train closeout, and its row in
     `docs/INDEX.md`.
 
+### Rulings made during Wave 3
+
+- **R-W3-a, the ACR's Section 508 and EN 301 549 tables cover every
+  criterion** (Ed, 2026-10-24, his option A, reached through Wave 3's
+  verification). Each table's `coverage` holds every criterion its table
+  allows: Section 508 chapters 3 to 6, and every EN 301 549 criterion
+  outside clauses 9, 10 and 11.1 to 11.4, as #308 merged it. A chapter or
+  clause the product has no part in is listed and answered `Not
+  Applicable` row by row; a report may not leave it out. Ed's reasons:
+  - It is the only option that can change after 1.0 without breaking
+    anyone. Loosening it later, for instance to all or nothing per
+    chapter, only admits more reports. Tightening a looser rule later
+    would refuse reports that passed before. 1.0 must stand for a long
+    time, so the strict form is locked in.
+  - It is what the package already told authors. The international
+    example's `section508.csv` already answers chapter 4 row by row ("The
+    product is software and has no hardware"). Nothing is left out without
+    saying so, which SC1 rests on.
+
+  How long a software product's report is, is a rendering question, not
+  an input-contract one. A template that collapses a chapter of identical
+  `Not Applicable` rows into one line is outside this train, and is not
+  filed.
+
 ## 9. Verification
 
 Each wave is verified by a `wave-verification` Work Order, which audits
