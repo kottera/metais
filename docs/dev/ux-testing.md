@@ -409,7 +409,7 @@ from a nested session the runner started, with the runner's environment
   macOS, can therefore not succeed in a dispatch, and where it could, it
   would install into the host's shared prefix, outside the run.
 
-So I1 and I2 run in Wave 3 as an **out-of-band act on Ed's host**, by hand
+So I1 and I2 run in Wave 3 as an **out-of-band act**, by hand on a host
 outside the dispatch sandbox, once the site, the release candidate and
 its formula are published. The act must provide:
 
@@ -432,7 +432,7 @@ its formula are published. The act must provide:
 
    ```bash
    go run ./internal/tools/ux -out "$HOME/ux-install-<date>" -scenarios I1,I2 \
-     -host "Ed's host, <os>/<arch>" -transcripts "<where the scrubbed set is kept>"
+     -host "a host outside the dispatch sandbox, <os>/<arch>" -transcripts "<where the scrubbed set is kept>"
    go run ./internal/tools/ux -out "$HOME/ux-install-<date>" -scrub "$HOME/ux-install-<date>-scrubbed"
    ```
 
@@ -443,7 +443,7 @@ its formula are published. The act must provide:
    the act's artifact, read first for anything a scrub does not see on a
    person's host ([Scrubbing a set](#scrubbing-a-set)).
 
-On Ed's host the sessions are not inside the dispatch's sandbox, so a
+On such a host the sessions are not inside the dispatch's sandbox, so a
 command line that writes outside the run is not refused. `brew`'s write
 to its prefix is the install itself, and `writes-inside-run` does not see
 it, as it sees no command line's writes.
