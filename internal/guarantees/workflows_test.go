@@ -230,17 +230,33 @@ func text(v value.Value) string {
 	return "(not a string)"
 }
 
+// texts is the text of each element of an array, or nil for any other
+// value.
+func texts(v value.Value) []string {
+	a, ok := v.(value.Array)
+	if !ok {
+		return nil
+	}
+	var out []string
+	for _, e := range a.All() {
+		out = append(out, text(e))
+	}
+	return out
+}
+
 func quote(s string) string { return `"` + s + `"` }
 
-// TestCIWorkflow holds ci.yml to ADR-013 D5: while the repository is
-// private it runs only when dispatched (item 5), its token is read-only
+// TestCIWorkflow holds ci.yml to ADR-013 D5: it runs on every pull
+// request and on every push to main (items 2 and 5), and on dispatch. Its
+// pull_request trigger names no branch, so a pull request into any branch
+// runs it, and includes the edited type, so an edit to a pull request's
+// title or body runs the co-author check again. Its token is read-only
 // (ADR-013 D5 item 4's default, declared in the workflow itself), and its
 // jobs are item 2's, each on the platform it names, running what it names,
 // with internal/conformance's tests split out of the run of the others and
 // run on their own, as R-W1-4 splits them: a job that skipped them and did
 // not run them would run them nowhere. The install jobs are D6 item 8's
 // real installs, one on each platform install.sh serves.
-// The flip adds pull_request and push to main, and changes this test.
 func TestCIWorkflow(t *testing.T) {
 	src, err := os.ReadFile(ciWorkflow)
 	if err != nil {
@@ -252,8 +268,23 @@ func TestCIWorkflow(t *testing.T) {
 	}
 	w := doc.Value.(value.Object)
 	on, _ := w.Get("on")
-	if got := triggers(on); !slices.Equal(got, []string{"workflow_dispatch"}) {
-		t.Errorf("ci.yml is triggered by %q; while the repository is private, only by workflow_dispatch", got)
+	if got := slices.Sorted(slices.Values(triggers(on))); !slices.Equal(got, []string{"pull_request", "push", "workflow_dispatch"}) {
+		t.Errorf("ci.yml is triggered by %q, want pull_request, push and workflow_dispatch", got)
+	}
+	onObj, _ := on.(value.Object)
+	pr, _ := must(onObj.Get("pull_request")).(value.Object)
+	if got := pr.Names(); !slices.Equal(got, []string{"types"}) {
+		t.Errorf("ci.yml's pull_request trigger has %q; want types alone, so every pull request runs it", got)
+	}
+	if got := strings.Join(texts(must(pr.Get("types"))), " "); got != "opened synchronize reopened edited" {
+		t.Errorf("ci.yml's pull_request trigger has the types %q, want opened, synchronize, reopened and edited", got)
+	}
+	push, _ := must(onObj.Get("push")).(value.Object)
+	if got := push.Names(); !slices.Equal(got, []string{"branches"}) {
+		t.Errorf("ci.yml's push trigger has %q; want branches alone", got)
+	}
+	if got := texts(must(push.Get("branches"))); !slices.Equal(got, []string{"main"}) {
+		t.Errorf("ci.yml's push trigger runs on the branches %q, want main alone", got)
 	}
 	perms, _ := w.Get("permissions")
 	readOnly, _ := value.NewObject(value.Member{Name: "contents", Value: mustString("read")})
@@ -312,7 +343,7 @@ var jobsCondition = regexp.MustCompile(`^\$\{\{ inputs\.jobs == '[^']*'( \|\| in
 var jobsValue = regexp.MustCompile(`inputs\.jobs == '([^']*)'`)
 
 // TestCIJobsInput holds the selection ci.yml's jobs input makes: a run
-// with no input, as a pull request's will be from the flip, and a run of
+// with no input, as a pull request's or a push's is, and a run of
 // all run every job, and any other option runs the job of its own name
 // and the jobs whose names begin with it and a hyphen, so install runs
 // install-linux and install-macos, and nothing else. Every option is a

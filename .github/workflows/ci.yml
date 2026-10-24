@@ -6,15 +6,25 @@
 # (AGENTS.md, Development). It runs on GitHub-hosted runners only, and
 # internal/guarantees' TestWorkflows holds every workflow to that.
 #
-# While the repository is private it runs only when dispatched by hand
-# (ADR-013 D5 item 5), so private minutes are spent only on proving runs.
-# The jobs input runs one job, or install's two, so a red is proved fixed
-# without paying for the others: debug a red that is not platform-specific
-# on Linux, and prove the macOS jobs once. From the flip it runs on every pull request and every
-# push to main.
+# It runs on every pull request and on every push to main (ADR-013 D5
+# items 2 and 5), and when dispatched by hand. A first-time contributor's
+# pull request waits for a maintainer to approve its run. The pull_request
+# trigger includes the edited type, so an edit to a pull request's title or
+# body runs the dco job's co-author check again; every job runs again with
+# it, so no job's check on the head commit is replaced by a skipped one. A
+# newer run of the same pull request cancels the one in progress.
+#
+# A dispatch's jobs input runs one job, or install's two, so a red is
+# proved fixed without paying for the others: debug a red that is not
+# platform-specific on Linux, and prove the macOS jobs once. A run that is
+# not dispatched has no input, and runs every job.
 name: ci
 
 on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       jobs:
@@ -29,6 +39,10 @@ on:
 
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # The wave tier's list (ADR-010 Amendment A5) on linux/amd64: gate.sh
@@ -91,8 +105,8 @@ jobs:
   # pull request's title and body, the squash merge's message, carries a
   # Co-authored-by line. The squash body typed at the merge is not seen
   # here, which is why AGENTS.md has every merge pass it explicitly. The
-  # flip's pull_request trigger includes the edited type, so an edit to
-  # the body runs the check again.
+  # pull_request trigger includes the edited type, so an edit to the title
+  # or body runs the check again.
   dco:
     if: ${{ inputs.jobs == '' || inputs.jobs == 'all' || inputs.jobs == 'dco' }}
     runs-on: ubuntu-latest
