@@ -1026,16 +1026,40 @@ func TestACRCriterionAnsweredOnce(t *testing.T) {
 }
 
 // TestACRSampleRendered holds the §4.1 example's preview to its tables'
-// coverage: render --sample, with --items below the 55 criteria WCAG 2.2's
-// table covers, renders with no finding, every covered criterion
-// answered once in each table of acr.json, and two runs with one seed
-// write the same bytes. TestExamplePackages previews at the default count
-// and compares a preview with a render of kept sample data; this holds the
-// seed's determinism and the counts below and just under the coverage.
+// coverage and uniqueness: render --sample renders with no finding, every
+// covered criterion listed, no criterion answered twice in any table of
+// acr.json, and two runs with one seed write the same bytes.
+// TestExamplePackages previews at the default count and compares a preview
+// with a render of kept sample data; this holds the seed's determinism and
+// --items on both sides of the 55 criteria WCAG 2.2's table covers. At or
+// below them the generator emits exactly the coverage values. Past them it
+// fills each further row with a criterion the enum's cycle draws, which
+// runs back into the covered ones, so only uniqueKeys (MTS-SMP-011) keeps
+// a repeat out at 60; at 86, the table's maxItems and the enum's length,
+// the table answers every criterion the enum allows exactly once.
 func TestACRSampleRendered(t *testing.T) {
 	testenv.Home(t)
 	required := acrWCAGRequired(t)
-	for _, items := range []string{"1", "3", "54"} {
+	b, err := os.ReadFile(filepath.Join(acrPackage, "inputs/wcag.schema.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var schema struct {
+		Items struct {
+			Properties struct {
+				Criterion struct{ Enum []string }
+			}
+		}
+		MaxItems int
+	}
+	if err := json.Unmarshal(b, &schema); err != nil {
+		t.Fatal(err)
+	}
+	enum := schema.Items.Properties.Criterion.Enum
+	if len(enum) != 86 || schema.MaxItems != len(enum) {
+		t.Fatalf("inputs/wcag.schema.json allows %d criteria and %d rows, and the cases below are 86", len(enum), schema.MaxItems)
+	}
+	for _, items := range []string{"1", "3", "54", "60", "86"} {
 		t.Run("items "+items, func(t *testing.T) {
 			var outs [2]string
 			for i := range outs {
@@ -1079,6 +1103,16 @@ func TestACRSampleRendered(t *testing.T) {
 				for _, c := range required {
 					if !slices.Contains(listed, c) {
 						t.Errorf("the preview's wcag table leaves out %s", c)
+					}
+				}
+				if items == "86" {
+					for _, c := range enum {
+						if !slices.Contains(listed, c) {
+							t.Errorf("the preview's wcag table at --items 86 leaves out %s", c)
+						}
+					}
+					if len(listed) != len(enum) {
+						t.Errorf("the preview's wcag table at --items 86 has %d rows, want %d", len(listed), len(enum))
 					}
 				}
 			}
