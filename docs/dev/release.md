@@ -365,21 +365,38 @@ on 2026-10-20, before release.
 These are Wave 3's, before `v1.0.0-rc.1`, in this order:
 
 1. **Make the repository public** (Settings → General → Danger Zone).
-2. **Turn on Pages:** in Settings → Pages, set the source to **GitHub
+2. **Require approval for outside contributors' workflows**, at once,
+   before anything else on this list: in Settings → Actions → General,
+   under approval for fork pull request workflows, choose
+   **Require approval for first-time contributors**, or stricter. GitHub
+   refuses this setting while the repository is private, and until it is
+   set a public repository runs on GitHub's default. While private, fork
+   pull requests run no workflow at all. The default token is already
+   read-only and cannot create or approve pull requests: check that it
+   still is, and that it has stayed that way through the flip.
+
+   ```bash
+   gh api -X PUT repos/kottera/metais/actions/permissions/fork-pr-contributor-approval \
+     -f approval_policy=first_time_contributors
+   gh api repos/kottera/metais/actions/permissions/workflow
+   ```
+3. **Turn on Pages:** in Settings → Pages, set the source to **GitHub
    Actions**, and the custom domain to `metais.org`. Once GitHub has
    issued the certificate, tick **Enforce HTTPS**. Pages deploys from
    runs on `main`, which is where `release.yml` and a dispatched
    `pages.yml` run, so the `github-pages` environment's default rule,
    which allows `main`, stays as it is.
-3. **Point the domain at Pages** (Ed's step, in Route 53), in the
+4. **Point the domain at Pages** (Ed's step, in Route 53), in the
    `metais.org` hosted zone:
    - apex `A` records to `185.199.108.153`, `185.199.109.153`,
      `185.199.110.153` and `185.199.111.153`;
    - apex `AAAA` records to `2606:50c0:8000::153`, `2606:50c0:8001::153`,
      `2606:50c0:8002::153` and `2606:50c0:8003::153`;
    - `www` as a `CNAME` to `kottera.github.io`.
-4. **Create the `release` environment** (Settings → Environments → New
-   environment, named `release`):
+5. **Create the `release` environment** (Settings → Environments → New
+   environment, named `release`), only once the repository is public. On
+   a private free-plan repository GitHub refuses the required reviewer
+   and creates the environment anyway, with no protection:
    - **Required reviewers:** Ed. Leave **Prevent self-review** off, since
      Ed both dispatches the release and approves it.
    - **Deployment branches and tags:** selected branches, `main` alone,
@@ -387,7 +404,7 @@ These are Wave 3's, before `v1.0.0-rc.1`, in this order:
    - **Environment secret `TAP_TOKEN`:** a fine-grained personal access
      token with **Contents: Read and write** on `kottera/homebrew-tap`
      alone, and no other repository or permission.
-5. **Cut the release** by the procedure and the release act above. Once
+6. **Cut the release** by the procedure and the release act above. Once
    the `pages` job is green, check that the home page and one schema `$id`
    resolve, the schema as JSON:
 
