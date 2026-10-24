@@ -540,6 +540,44 @@ Made by the plan orchestrator in answer to the wave's breakdown
   - **kottera.com's Pages (Q2).** It serves from a branch, `main` and
     `/docs`, as W2-12 built it. No deploy workflow is needed, so there
     is no W3-5. Ed sets the source in W3-OOB3.
+- **The flip** (W3-OOB2, `01a16bc4-5df9`): `kottera/metais` went public
+  at 2026-10-24T15:00:10Z, at `main`
+  `e27428838e0a5aa879143ce76f9eace834758ba1`. The commits since W3-1's
+  scan were scanned again with W3-1's own commands, and nothing was
+  found. Approval for first-time contributors' workflows was set one
+  second later.
+- **Ed's rulings in the settings act after the flip, 2026-10-24**
+  (W3-OOB3, `01a16bc4-980f`). They answer R-W3-2 and bind every later
+  item:
+  - **How the train's pull requests merge.** `main` is held by a
+    repository ruleset: changes only by pull request, one approving
+    review, squash merges only, linear history, no force-push or
+    deletion. Repository administrators bypass the review through a pull
+    request, never by a direct push. The train's own pull requests, the
+    plan orchestrator's docs pull requests included, merge with
+    `gh pr merge --squash --admin` once every check that ran on them is
+    green. Required status checks are switched on in W3-OOB4.
+  - **What a release relies on.** The `release` environment requires
+    Ed's review, admits deployments from `main` alone, and holds
+    `TAP_TOKEN`. Published releases are immutable. A `v*` or `spec-*`
+    tag cannot be moved or deleted. GitHub cannot limit who creates such
+    a tag: a repository ruleset refuses GitHub Actions as a bypass
+    actor. So "only `release.yml` pushes a tag" stays a rule items keep,
+    not one GitHub enforces.
+  - **What runs.** Only GitHub-owned actions are allowed, and every job
+    runs on a GitHub-hosted runner (`internal/guarantees/workflows_test.go`).
+    A pull request from anyone outside the organization runs no workflow
+    until Ed approves it. The default token is read-only. W3-8
+    (`01a16e73-aeb4`) pins every action to a commit SHA, and Ed then
+    requires the pin in the repository's settings.
+  - **What watches.** Private vulnerability reporting, the route
+    `SECURITY.md` names; secret scanning with push protection; Dependabot
+    alerts and security updates; and CodeQL for Go and Actions.
+  - **The sites.** metais.org is served by Pages from Actions, and
+    kottera.com from `main` `/docs`. Both domains are verified for the
+    `kottera` organization and enforce HTTPS. Their DNS, and the
+    no-mail records on metais.org, are recorded in `kottera/infra`,
+    `dns/README.md`.
 
 ## 9. Wave 4 — launch
 
