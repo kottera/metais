@@ -207,6 +207,22 @@ repository is private, because nothing would have required Ed's approval.
 Pages is the same: `pages.yml`'s jobs are skipped on a private
 repository, and its deploy first runs at `v1.0.0-rc.1`.
 
+Until the public flip, proofs of these workflows are made by hand, by
+Ed's ruling of 2026-10-23, and their hosted runs wait for the flip. So
+`release.yml`'s dry run was proved by running `release.sh prepare` by
+hand, as its step runs it, against a draft. `ci.yml`'s `shell` job was
+proved by running its `shellcheck` command by hand. What only a hosted
+run shows is first seen after the flip:
+
+- whether a job that names `environment: release` waits for approval,
+  runs straight through, or fails;
+- the workflow's `dry_run` skips, and the skipped pages job;
+- the `shell` job itself, on `ubuntu-latest`.
+
+Dispatch `release.yml`'s dry run against a draft once the repository is
+public and the `release` environment exists, before `v1.0.0-rc.1`'s
+release act. Its `release` job then waits for Ed's approval.
+
 ## The release builder
 
 The release builder is `internal/tools/release` (ADR-010 D12). It builds
