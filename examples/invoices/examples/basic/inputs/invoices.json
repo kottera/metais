@@ -1,0 +1,31 @@
+[
+  {
+    "number": "2026-0042",
+    "date": "2026-10-23",
+    "customer": "Northwind Traders",
+    "lines": [
+      {"description": "Consulting, October", "quantity": 12, "unit_price": 15000},
+      {"description": "Printed manuals", "quantity": 3, "unit_price": 1999},
+      {"description": "Shipping", "quantity": 1, "unit_price": 805}
+    ]
+  },
+  {
+    "number": "2026-0043",
+    "date": "2026-10-24",
+    "customer": "Contoso Ltd",
+    "lines": [
+      {"description": "Workshop, half day", "quantity": 1, "unit_price": 48000},
+      {"description": "Travel", "quantity": 1, "unit_price": 16000}
+    ]
+  },
+  {
+    "number": "2026-0044",
+    "date": "2026-10-27",
+    "customer": "Fabrikam Inc",
+    "lines": [
+      {"description": "Consulting, October", "quantity": 15, "unit_price": 15000},
+      {"description": "Printed manuals", "quantity": 5, "unit_price": 1999},
+      {"description": "Shipping", "quantity": 1, "unit_price": 6555}
+    ]
+  }
+]

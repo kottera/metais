@@ -1,0 +1,9 @@
+<h1>Invoice {{ item.number }}</h1>
+<p>{{ item.customer }}, {{ item.date }}</p>
+<table>
+{%- for line in item.lines %}
+{%- assign cents = line.quantity | times: line.unit_price %}
+<tr><td>{{ line.description }}</td><td>{{ line.quantity }}</td><td>{{ cents | divided_by: 100.0 | amount: "USD", group: "," }}</td></tr>
+{%- endfor %}
+</table>
+<p><a href="summary.html">Every invoice</a></p>

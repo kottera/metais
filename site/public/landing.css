@@ -41,7 +41,14 @@ h1 em::after{content:"";position:absolute;left:2%;right:0;bottom:.1em;height:.09
 .note-small{font-size:13px;color:var(--muted);margin:10px 2px 0}
 .note-small a{color:var(--ink)}
 
-/* ---------- the proof sheet ---------- */
+/* the flow: a package and your data go in, documents come out */
+.flow{margin:56px 0 0;padding-top:30px;border-top:2px solid var(--ink)}
+.flow-h{font:600 clamp(26px,2.5vw,32px)/1.15 var(--display);letter-spacing:-.015em;margin:0 0 34px}
+.flow svg{display:block;width:100%;height:auto;overflow:visible}
+.flow .flow-narrow{display:none;max-width:440px;margin:0 auto}
+.flow .fig{margin-top:26px}
+
+/* ---------- the proof sheet: step ii's marked-up data ---------- */
 .proof{margin:46px 0 0;position:relative;background:var(--sheet);border:1px solid var(--rule);border-radius:4px;
   box-shadow:0 1px 0 #fff inset,0 24px 50px -28px rgba(20,35,74,.45),0 2px 6px rgba(20,35,74,.08);padding:30px 36px 26px}
 /* crop marks */
@@ -55,8 +62,7 @@ h1 em::after{content:"";position:absolute;left:2%;right:0;bottom:.1em;height:.09
 .slug .bars{display:flex;margin-left:auto}
 .slug .bars i{width:16px;height:10px;display:block}
 .slug .sep{opacity:.5}
-.sheet-grid{display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,392px);gap:0;align-items:start}
-.hero-top>*,.sheet-grid>*,.step>*,.who>*,.fail-grid>*,.strip>*{min-width:0}
+.hero-top>*,.step>*,.who>*,.fail-grid>*,.strip>*{min-width:0}
 .col-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:0 0 12px}
 .col-h h2{font:600 22px/1.1 var(--display);margin:0;letter-spacing:-.01em}
 .col-h span{font:500 12.5px/1 var(--mono);color:var(--muted)}
@@ -86,44 +92,15 @@ h1 em::after{content:"";position:absolute;left:2%;right:0;bottom:.1em;height:.09
 .notes .msg code{font-size:12px;color:var(--red)}
 .notes .hint{display:block;font:italic 500 16px/1.3 var(--display);color:var(--red);margin-top:3px}
 
-/* gutter between */
-.gutter{display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:120px;color:var(--muted)}
-.gutter svg{width:44px;height:80px}
-.gutter span{font:600 10.5px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg)}
 
-/* the printed invoice */
-.invoice-wrap{position:relative}
-.invoice{position:relative;background:#fff;border:1px solid #e3dac4;border-radius:2px;padding:30px 30px 92px;box-shadow:0 18px 30px -22px rgba(20,35,74,.5),0 1px 2px rgba(0,0,0,.05);transform:rotate(.6deg);border-top:6px solid var(--ink)}
-.invoice::after{content:"";position:absolute;inset:auto 0 -7px 6px;height:7px;background:#f6f1e4;border:1px solid #e3dac4;border-top:0;z-index:-1;transform:rotate(-.8deg)}
-.invoice .from{display:flex;justify-content:space-between;font:600 10.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#8a8470;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:20px}
-.invoice h3{font:600 30px/1.05 var(--display);margin:0 0 8px;letter-spacing:-.01em}
-.invoice p{margin:0 0 20px;font-size:15px;color:#3a4566}
-.invoice table{width:100%;border-collapse:collapse;font-size:14.5px}
-.invoice td{padding:10px 0;border-bottom:1px solid #ebe4d3}
-.invoice td:nth-child(2){text-align:center;width:3em;color:#3a4566;font-variant-numeric:tabular-nums}
-.invoice td:last-child{text-align:right;font:500 13.5px var(--mono);white-space:nowrap}
-.vres{margin:20px 0 0;background:#eef4e8;border-left:4px solid var(--green);border-radius:0 8px 8px 0;padding:12px 16px 14px}
-.vres .vlbl{font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.vres pre{margin:0;font:500 12.3px/1.6 var(--mono);color:var(--ink);white-space:pre-wrap;word-break:break-word}
-.vres .ok{color:var(--green);font-weight:700}
-.vres .nx{font-weight:700}
-.vres .dim{color:var(--muted)}
-.data .tk{position:absolute;right:0;top:.55em;width:1.05em;height:.95em;color:var(--green)}
-.data .tk svg{width:100%;height:100%;display:block}
 .data .l{position:relative;padding-right:1.7em}
-.proof:not(.fail) .data{font-size:12px}
-.col-h .good{color:var(--green);font-weight:700}
 .sub2{font-size:16.5px;line-height:1.55;max-width:40em;margin:14px 0 0;color:var(--muted)}
 .sub2 strong{color:var(--ink)}
-.invoice .src{margin-top:22px;font:500 11.5px/1.4 var(--mono);color:#8a8470}
-.stamp{position:absolute;right:-30px;bottom:-82px;width:168px;height:168px;color:var(--red);transform:rotate(-14deg);mix-blend-mode:multiply;opacity:.92;pointer-events:none}
 .fig{display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between;margin-top:30px;padding-top:14px;border-top:1px dashed var(--rule);font:500 12.5px/1.45 var(--mono);color:var(--muted)}
 .fig b{color:var(--ink)}
 
-/* motion: the stamp lands, the marks are drawn */
-@keyframes thunk{0%{opacity:0;transform:rotate(-24deg) scale(1.7)}60%{opacity:.95;transform:rotate(-12deg) scale(.94)}100%{opacity:.92;transform:rotate(-14deg) scale(1)}}
+/* motion: the marks are drawn */
 @keyframes ring{from{opacity:0;clip-path:inset(0 100% 0 0)}to{opacity:1;clip-path:inset(0 0 0 0)}}
-.stamp{animation:thunk .55s cubic-bezier(.2,.9,.3,1.2) 1.5s both}
 .mk::before{animation:ring .45s ease-out both}
 .m1::before{animation-delay:.35s}.m2::before{animation-delay:.6s}.m3::before{animation-delay:.85s}.m4::before{animation-delay:1.1s}
 
@@ -137,6 +114,7 @@ h2.big{font:600 clamp(34px,4.2vw,56px)/1.03 var(--display);letter-spacing:-.02em
 .steps{display:grid;gap:26px}
 .step{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr);gap:44px;align-items:start;padding:34px 0;border-top:2px solid var(--ink)}
 .step.wide{grid-template-columns:1fr;gap:26px}
+.step.pkg-step>div:last-child{align-self:center}
 .step.wide .intro{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr);gap:44px;align-items:start}
 .step.wide .intro .cols{columns:2;column-gap:36px;padding-top:12px}
 .step.wide .intro .cols p{break-inside:avoid}
@@ -172,14 +150,14 @@ details.raw .term{margin-top:8px}
 
 /* the package as an object */
 .pkg{display:grid;grid-template-columns:200px minmax(0,1fr);gap:26px;align-items:start;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:24px}
-.parcel{position:relative;width:170px;margin:6px auto 0}
+.parcel{position:relative;width:184px;margin:6px auto 0}
 .parcel .box{position:relative;height:150px;background:var(--ink);border-radius:12px;overflow:hidden}
 .parcel .box::before{content:"";position:absolute;left:0;right:0;top:50%;height:16px;margin-top:-8px;background:var(--ink-3)}
 .parcel .box::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:16px;margin-left:-8px;background:var(--ink-3)}
 .parcel .wax{position:absolute;left:50%;top:75px;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:var(--red);color:var(--sheet);display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 0 0 4px rgba(191,47,28,.25)}
 .parcel .wax svg{width:26px;height:24px}
-.parcel .tag{margin-top:10px;background:var(--paper);border:1.5px solid var(--ink);border-radius:6px;padding:9px 10px;font:700 12px/1.25 var(--mono);color:var(--ink)}
-.parcel .tag small{display:block;font:500 10.5px/1.35 var(--mono);color:var(--muted);margin-top:4px}
+.parcel .tag{white-space:nowrap;margin-top:10px;background:var(--paper);border:1.5px solid var(--ink);border-radius:6px;padding:9px 10px;font:700 12px/1.25 var(--mono);color:var(--ink)}
+.parcel .tag small{display:block;white-space:normal;font:500 10.5px/1.35 var(--mono);color:var(--muted);margin-top:4px}
 .fan{margin-top:16px;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:18px 22px 20px}
 .fan-h{font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
 .fan-row{display:flex;align-items:center;gap:18px}
@@ -302,11 +280,6 @@ details.raw .term{margin-top:8px}
 /* ---------- responsive ---------- */
 @media (max-width:1100px){
   .hero-top{grid-template-columns:1fr;gap:30px}
-  .sheet-grid{grid-template-columns:1fr;gap:34px}
-  .gutter{flex-direction:row;padding:0;justify-content:center}
-  .gutter svg{transform:rotate(90deg);height:60px}
-  .gutter span{writing-mode:horizontal-tb;transform:none}
-  .invoice{max-width:560px;margin:0 auto}
   .step{grid-template-columns:1fr;gap:18px}
   .gallery{grid-template-columns:1fr 1fr}
   .strip{grid-template-columns:1fr;gap:20px}
@@ -315,6 +288,9 @@ details.raw .term{margin-top:8px}
   .seals{grid-template-columns:1fr 1fr}
 }
 @media (max-width:760px){
+  .flow{margin-top:40px}
+  .flow .flow-wide{display:none}
+  .flow .flow-narrow{display:block}
   .hero{padding-top:18px}
   .sub{font-size:17.5px}
   .proof{padding:20px 16px 18px;margin-top:34px}
@@ -323,23 +299,16 @@ details.raw .term{margin-top:8px}
   .data{font-size:11px;white-space:pre-wrap;word-break:break-word}
   .data .l{padding-left:2em;text-indent:-2em}
   .data .ln{width:1.4em;margin-right:.6em}
-  .gutter svg{transform:none;height:56px;width:34px}
   .fan-row{flex-direction:column;align-items:stretch}
   .fan-src{flex-direction:row;justify-content:center}
   .fan .arrow{transform:rotate(90deg);text-align:center}
-  .parcel{width:150px}
+  .parcel{width:184px}
   .parcel .box{height:120px}
   .parcel .wax{top:60px}
   .install .cmd{font-size:12.6px;gap:8px}
   .notes{grid-template-columns:1fr}
-  .stamp{width:118px;height:118px;right:-6px;bottom:-36px}
-  .validated{margin-top:44px}
-  .invoice{padding:22px 18px 80px;transform:none}
-  .invoice h3{font-size:25px}
-  .invoice td{font-size:13.5px}
   section.wrap{padding-top:80px}
   .who,.gallery,.seals{grid-template-columns:1fr}
-  .data .tk{right:-2px}
   .pkg{grid-template-columns:1fr}
   .tree li{grid-template-columns:1fr}
   .tree .what{text-align:left}
