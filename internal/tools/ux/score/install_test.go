@@ -77,3 +77,67 @@ func TestInstallNeedsARun(t *testing.T) {
 		t.Errorf("a metais the shell did not find: %+v", res)
 	}
 }
+
+// TestNotFound: notFound reads each shell's report that it found no
+// metais, and nothing a metais that ran printed.
+func TestNotFound(t *testing.T) {
+	for _, c := range []struct {
+		out   string
+		found bool
+	}{
+		{"bash: metais: command not found", false},
+		{"/bin/bash: line 1: metais: command not found", false},
+		{"bash: ./bin/metais: No such file or directory", false},
+		{"sh: 1: metais: not found", false},
+		{"/bin/sh: 1: metais: not found", false},
+		{"zsh: command not found: metais", false},
+		{"(eval):1: command not found: metais", false},
+		{"metais not found\n(eval):1: command not found: metais\nnext", false},
+		{"command not found: metais", false},
+		{"zsh: no such file or directory: /ux/run/home/.local/bin/metais", false},
+		{"fish: Unknown command: metais", false},
+		// What a metais printed.
+		{"metais 1.0.0-rc.6", true},
+		{"metais: open data/incident.yaml: no such file or directory", true},
+		{`metais: unknown command "renderr" for "metais"`, true},
+		{"zsh: command not found: metaiss", true},
+	} {
+		if got := !notFound.MatchString(c.out); got != c.found {
+			t.Errorf("%q: read as a metais that ran: %v, want %v", c.out, got, c.found)
+		}
+	}
+}
+
+// TestInstallAfterZshNotFound: edited-i1-zsh-not-found-then-brew's first
+// call is zsh's command not found, so its brew install is the route of the
+// metais that ran. The same call answered by a metais that did run is a
+// metais before any install, and fails golden-install.
+func TestInstallAfterZshNotFound(t *testing.T) {
+	f := fixtureNamed(t, "edited-i1-zsh-not-found-then-brew")
+	const probeLine = 3
+	for _, c := range []struct {
+		out    string
+		pass   bool
+		detail string
+	}{
+		{`metais not found\n(eval):1: command not found: metais`, true, "by brew install kottera/tap/metais"},
+		{`metais not found\nzsh: command not found: metais`, true, "by brew install kottera/tap/metais"},
+		{`/usr/local/bin/metais\nmetais 1.0.0-rc.5`, false, "by no route the scorer sees before it"},
+	} {
+		in := probe(t, f, func(lines []string) []string {
+			const zsh = `metais not found\n(eval):1: command not found: metais`
+			if strings.Count(lines[probeLine], zsh) != 2 {
+				t.Fatalf("line %d is not zsh's not found: %.200s", probeLine, lines[probeLine])
+			}
+			lines[probeLine] = strings.ReplaceAll(lines[probeLine], zsh, c.out)
+			return lines
+		})
+		o, err := Score(in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if res := ruleResult(t, o, RuleGoldenInstall); res.Pass != c.pass || !strings.Contains(res.Detail, c.detail) {
+			t.Errorf("%s: golden-install is %v, %q; want %v, %q", c.out, res.Pass, res.Detail, c.pass, c.detail)
+		}
+	}
+}

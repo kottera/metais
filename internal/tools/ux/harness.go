@@ -162,7 +162,8 @@ const sessionSettings = `{"autoMemoryEnabled":false}`
 // session saved, no MCP server but --mcp-config's (none), project settings
 // only, auto-memory off, and permissions bypassed, as nobody is there to
 // answer them. Its environment holds nothing of the host's but PATH and
-// the proxy's address. An install scenario's session gets the runner's
+// the proxy's address, and TZ is UTC, so a time a command prints, such
+// as ls -l's, names no zone of the host's. An install scenario's session gets the runner's
 // PATH alone, with no metais under test before it, and GOFLAGS
 // -modcacherw, so a module cache go install makes in its HOME is one the
 // runner can remove when it runs the run again.
@@ -193,6 +194,7 @@ func (c *claudeCode) invocation(s session) invocation {
 			"CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
 			"CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1",
 			"DISABLE_AUTOUPDATER=1",
+			"TZ=UTC",
 		},
 		dir: s.work,
 	}

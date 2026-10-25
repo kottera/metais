@@ -154,8 +154,19 @@ func operands(words []string) []string {
 	return slices.DeleteFunc(slices.Clone(words), func(w string) bool { return strings.HasPrefix(w, "-") })
 }
 
-// notFound is a shell's report that it found no metais to run.
-var notFound = regexp.MustCompile(`metais: (?:command )?not found|metais: No such file or directory`)
+// notFound is a shell's report that it found no metais to run, in the
+// wording of each shell a session's commands may run in, which is the
+// user's: on macOS, zsh.
+//   - bash: "bash: metais: command not found", "bash: line 1: metais:
+//     command not found", "bash: ./metais: No such file or directory";
+//   - sh, dash and ksh: "sh: 1: metais: not found";
+//   - zsh: "zsh: command not found: metais", "(eval):1: command not
+//     found: metais", "zsh: no such file or directory: ./metais";
+//   - fish: "fish: Unknown command: metais".
+//
+// Each names metais as the command, so an error metais printed itself,
+// which names it before its own message, is still a metais that ran.
+var notFound = regexp.MustCompile(`(?m)metais: (?:command )?not found|metais: No such file or directory|(?:command not found|no such file or directory|Unknown command): (?:\S*/)?metais(?:\s|$)`)
 
 // installed is the session's first metais command that ran, the harness
 // reporting no error for its call and the shell finding the command, and
