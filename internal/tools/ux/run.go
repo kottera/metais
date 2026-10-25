@@ -510,7 +510,7 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 		return nil, err
 	}
 	t := c.harness.read(b)
-	r.ModelReported, r.ModelsUsed = t.Init.Model, t.Result.Models
+	r.ModelReported, r.ModelsUsed, r.ContextWindows = t.Init.Model, t.Result.Models, t.Result.ContextWindows
 	r.Turns, r.CostUSD, r.DurationMS = t.Result.Turns, t.Result.CostUSD, t.Result.DurationMS
 	r.IsError, r.Subtype, r.ToolUses = t.Result.IsError, t.Result.Subtype, len(t.ToolUses)
 	r.Checks = append(r.Checks, c.harness.after(ses, st.rec.Harness.Version, t)...)

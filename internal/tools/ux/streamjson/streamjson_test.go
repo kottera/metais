@@ -4,6 +4,7 @@
 package streamjson
 
 import (
+	"maps"
 	"slices"
 	"strings"
 	"testing"
@@ -21,7 +22,7 @@ func TestRead(t *testing.T) {
 		`{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"t1","content":"Package dora"}]},"tool_use_result":{"stdout":"Package dora","returnCodeInterpretation":"No matches found"}}`,
 		`{"type":"assistant","message":{"id":"m2","content":[{"type":"tool_use","id":"t2","name":"Write","input":{"file_path":"/ux/run/work/a.json","content":"{}"}}]}}`,
 		`{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"t2","is_error":true,"content":[{"type":"text","text":"Exit code 3"},{"type":"text","text":"no"}]}]}}`,
-		`{"type":"result","subtype":"success","is_error":false,"num_turns":3,"total_cost_usd":0.01,"duration_ms":1200,"result":"Done?","modelUsage":{"claude-haiku-5-5":{}}}`,
+		`{"type":"result","subtype":"success","is_error":false,"num_turns":3,"total_cost_usd":0.01,"duration_ms":1200,"result":"Done?","modelUsage":{"claude-haiku-5-5":{"contextWindow":200000},"claude-opus-5-5":{}}}`,
 	}, "\n")))
 	if !tr.Init.Found || tr.Init.Line != 1 || tr.Init.Cwd != "/ux/run/work" || tr.Init.Version != "2.1.299" || tr.Init.MCPServers != 0 {
 		t.Errorf("init = %+v", tr.Init)
@@ -44,7 +45,8 @@ func TestRead(t *testing.T) {
 	if len(tr.Texts) != 1 || tr.Texts[0].Text != "I'll look." || tr.Texts[0].Turn != 1 {
 		t.Errorf("texts = %+v", tr.Texts)
 	}
-	if !tr.Result.Found || tr.Result.Line != 8 || tr.Result.Text != "Done?" || tr.Result.Turns != 3 || !slices.Equal(tr.Result.Models, []string{"claude-haiku-5-5"}) {
+	if !tr.Result.Found || tr.Result.Line != 8 || tr.Result.Text != "Done?" || tr.Result.Turns != 3 || !slices.Equal(tr.Result.Models, []string{"claude-haiku-5-5", "claude-opus-5-5"}) ||
+		!maps.Equal(tr.Result.ContextWindows, map[string]int{"claude-haiku-5-5": 200000}) {
 		t.Errorf("result = %+v", tr.Result)
 	}
 }

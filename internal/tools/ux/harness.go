@@ -81,8 +81,19 @@ const placeholderToken = scrub.PlaceholderToken
 // claudeCodeName is the Claude Code harness's name.
 const claudeCodeName = "claude-code"
 
-// defaultModels are R-UX-5's three, by Claude Code's aliases.
-var defaultModels = []string{"opus", "sonnet", "haiku"}
+// defaultModels are R-UX-5's three, by Claude Code's aliases. Opus's is
+// chosen for its window: behind a loopback ANTHROPIC_BASE_URL, which
+// every route of the runner's is, bare opus resolves to a 200k-token
+// window and opus[1m] to 1M, Opus's own (R-W3-3). Each record carries the
+// window the session reported.
+var defaultModels = []string{"opus[1m]", "sonnet", "haiku"}
+
+// modelFamily is a model string without its bracketed variant: opus for
+// opus[1m].
+func modelFamily(m string) string {
+	f, _, _ := strings.Cut(m, "[")
+	return f
+}
 
 // harnessByName is the harness -harness names, configured from environ.
 func harnessByName(name string, environ []string) (harness, error) {
