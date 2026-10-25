@@ -206,6 +206,7 @@ of the host's:
 | `ANTHROPIC_AUTH_TOKEN` | `metais-ux-placeholder`. This is not a secret. A nested `claude` refuses on the client side unless some credential variable is set (R-UX-7). |
 | `CLAUDE_CODE_DISABLE_AUTO_MEMORY` | `1` |
 | `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`, `DISABLE_AUTOUPDATER` | `1` |
+| `TZ` | `UTC`, so a time a command prints, such as `ls -l`'s, names no zone of the host's |
 | `GOFLAGS` | an I scenario's only: `-modcacherw`, so the module cache a `go install` makes in the session's `HOME` is one the runner can remove when it runs the run again |
 
 The runner refuses to start without `ANTHROPIC_BASE_URL`, unless
@@ -799,6 +800,22 @@ lists each file with its size and digest. Every file is put through
 - any other path beneath a directory of users, volumes or temporary files
   (`/var/lib`, `/home`, `/Users`, `/tmp`, `/private`, …) becomes
   `/ux/host`;
+- a `PATH`, wherever it is written (the record's environment, an
+  `echo $PATH`, an error that quotes it), keeps only the placeholders,
+  among them `/ux/set/bin`, the one directory the runner puts on it, and
+  the directories every host of a kind has: `/usr/local/bin`,
+  `/usr/local/sbin`, `/usr/bin`, `/bin`, `/usr/sbin` and `/sbin`. Every
+  other entry describes the host, what it has installed
+  (`/Applications/Wireshark.app/Contents/MacOS`, a toolchain's directory)
+  or its system's version (macOS's `com.apple.security.cryptexd` paths),
+  and becomes `/ux/host`, a run of them one `/ux/host`;
+- the time `ls -l` prints, in the host's zone, becomes `Jan  1 00:00`,
+  or `2000-01-01 00:00` for an ISO time, its seconds and zone with it, so
+  it cannot be read against the set's UTC times to tell the zone. An older
+  file's year names no time and is kept. The runner runs every session
+  with `TZ=UTC`, so a set it records holds no local time; this is for a
+  set recorded before it did. A local time a command other than `ls -l`
+  printed, such as `date`'s, is not seen;
 - every credential is replaced by `[scrubbed]`, the name of its variable
   kept: an `ANTHROPIC_AUTH_TOKEN` or API key, an `sk-ant-` key, a GitHub
   or AWS token, a bearer token, and the runner's placeholder token too, so
@@ -809,7 +826,20 @@ lists each file with its size and digest. Every file is put through
 and group of each `ls -l` line become `user` and `group` (Ed's ruling,
 2026-10-21), as transcripts are kept as artifacts. On a person's own host,
 read the scrubbed copy before publishing it: a user name written anywhere
-else is not seen.
+else, or a host's directory named outside a `PATH` and outside the
+directories above, is not seen.
+
+A set scrubbed by an earlier scrub is scrubbed again from the set itself,
+into a new directory, since `-scrub` refuses one that exists; after a
+scorer change the set is scored again with `-scorecard`
+([Running a set](#running-a-set)), naming its scenarios when they are the
+install scenarios:
+
+```bash
+go run ./internal/tools/ux -out "$SET" -scrub "$SET-scrubbed-again"
+go run ./internal/tools/ux -out "$SET" -scorecard \
+  -scenarios I1-install-and-render,I2-discover -host "<the host, as published>"
+```
 
 ## The scorecard
 

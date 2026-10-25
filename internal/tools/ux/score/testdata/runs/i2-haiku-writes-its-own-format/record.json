@@ -109,7 +109,7 @@
       "bypassPermissions"
     ],
     "env": [
-      "PATH=/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
+      "PATH=/ux/host:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin",
       "HOME=/ux/run/home",
       "TMPDIR=/ux/run/tmp",
       "CLAUDE_CODE_TMPDIR=/ux/run/tmp",

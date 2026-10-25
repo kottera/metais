@@ -735,6 +735,9 @@ func TestRunSetInstallScenarios(t *testing.T) {
 		if v, _ := lookup(r.Invocation.Env, "GOFLAGS"); v != "-modcacherw" {
 			t.Errorf("%s: GOFLAGS %q", name, v)
 		}
+		if v, _ := lookup(r.Invocation.Env, "TZ"); v != "UTC" {
+			t.Errorf("%s: TZ %q, want UTC, so no time it records names the host's zone", name, v)
+		}
 	}
 	// Every other scenario keeps the metais under test first on PATH.
 	r := f.record(t, "C4-what-it-needs", "haiku")
@@ -743,6 +746,9 @@ func TestRunSetInstallScenarios(t *testing.T) {
 	}
 	if _, ok := lookup(r.Invocation.Env, "GOFLAGS"); ok {
 		t.Error("C4's session has GOFLAGS")
+	}
+	if v, _ := lookup(r.Invocation.Env, "TZ"); v != "UTC" {
+		t.Errorf("C4: TZ %q, want UTC", v)
 	}
 	for _, want := range []string{
 		"## Install scenarios\n\nEach session starts with no metais on PATH (ADR-013 D9). I1 gates on every model. I2 is evidence, not a gate",

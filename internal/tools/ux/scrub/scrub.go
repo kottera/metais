@@ -5,10 +5,11 @@
 // ruling, PLAN-2026-10-metais-ux W1-2): it takes every credential out of
 // them, the runner's placeholder token included, every path of the host
 // outside the run's own directory, and the user and group names ls -l
-// prints (Ed's ruling, 2026-10-21). It is the step a scorer's
-// committed fixtures were made by, and the one a baseline's transcripts
-// are put through before they are kept: the runner's -scrub runs it over
-// a set.
+// prints (Ed's ruling, 2026-10-21), every entry of a PATH that describes
+// the host, and the time ls -l prints in the host's zone. It is the step
+// a scorer's committed fixtures were made by, and the one a baseline's
+// transcripts are put through before they are kept: the runner's -scrub
+// runs it over a set.
 //
 // The package works on bytes it is handed and refers to no host symbol
 // (ADR-009 Amendment A8 item 4).
@@ -81,6 +82,71 @@ const (
 	Group = "group"
 )
 
+// lsTime matches an ls -l line's time, after its owner, group and size:
+// the month, the day and the time of day ls prints for a file of the last
+// six months, or an ISO date and time (--time-style), its seconds and
+// zone optional. ls prints it in the host's zone, so read against the
+// set's UTC times it tells the zone: it becomes LsTime, or LsISOTime, the
+// day with it. The runner runs each session under TZ=UTC, which records
+// no local time; this is for a set recorded before it did. An older
+// file's year names no time, and is kept.
+var lsTime = regexp.MustCompile(`([-dlcbps][rwxsStT-]{9}[@.+]?[ \t]+[0-9]+[ \t]+[^ \t\\"]+[ \t]+[^ \t\\"]+[ \t]+[0-9]+[ \t]+)((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[ \t]+[0-9]{1,2}[ \t]+[0-9]{1,2}:[0-9]{2}|[0-9]{4}-[0-9]{2}-[0-9]{2}[ \t]+[0-9]{2}:[0-9]{2}(?::[0-9]{2}(?:\.[0-9]+)?)?(?:[ \t]+[+-][0-9]{4})?)`)
+
+// The placeholders of an ls -l line's time.
+const (
+	LsTime    = "Jan  1 00:00"
+	LsISOTime = "2000-01-01 00:00"
+)
+
+// systemDirs are the directories of a PATH that every host of a kind
+// has, so they describe no host: the system's own, and /usr/local's,
+// where an install puts a tool for every user. They are kept in a PATH,
+// as are the placeholders, among them the set's bin/, the one directory
+// the runner itself puts on a session's PATH. Every other entry is a
+// choice of the host's or of what it has installed
+// (/Applications/Wireshark.app/Contents/MacOS, a toolchain's directory),
+// or of its system's version (macOS's cryptexd paths), and becomes
+// HostPath, a run of them one HostPath.
+var systemDirs = []string{"/usr/local/bin", "/usr/local/sbin", "/usr/bin", "/bin", "/usr/sbin", "/sbin"}
+
+// pathEntry is a character of a PATH's entry: those a directory's name
+// is written in, so a sed address such as /^Strings:/ is no PATH.
+const pathEntry = `[A-Za-z0-9._@+~/-]`
+
+// pathList matches a list of two or more absolute paths, joined by colons
+// as a PATH is, wherever it is written: an assignment, an echo $PATH, an
+// error that quotes it. pathVar matches a PATH of one entry.
+var (
+	pathList = regexp.MustCompile(`(^|\\[nrt]|[^A-Za-z0-9._~/:-])(/` + pathEntry + `*(?::/` + pathEntry + `*)+)`)
+	pathVar  = regexp.MustCompile(`(\bPATH=["']?)(/` + pathEntry + `*)`)
+)
+
+// keptOnPath reports whether a PATH's entry is kept: a placeholder, or a
+// system directory.
+func keptOnPath(p string) bool {
+	return kept(p) || slices.Contains(systemDirs, strings.TrimRight(p, "/"))
+}
+
+// scrubPath is a PATH with each entry keptOnPath rejects replaced, and
+// what it replaced.
+func scrubPath(list string) (string, []string) {
+	var (
+		out   []string
+		found []string
+	)
+	for _, p := range strings.Split(list, ":") {
+		if !keptOnPath(p) {
+			found = append(found, "a host path on PATH: "+p)
+			p = HostPath
+		}
+		if p == HostPath && len(out) > 0 && out[len(out)-1] == HostPath {
+			continue
+		}
+		out = append(out, p)
+	}
+	return strings.Join(out, ":"), found
+}
+
 // Scrubber replaces the paths of one run and every credential.
 type Scrubber struct {
 	dirs []dir
@@ -142,6 +208,26 @@ func scrub(text string) (string, []string) {
 		found = append(found, "a user name: "+sub[2]+" "+sub[4])
 		return sub[1] + User + sub[3] + Group + sub[5]
 	})
+	text = lsTime.ReplaceAllStringFunc(text, func(m string) string {
+		sub := lsTime.FindStringSubmatch(m)
+		to := LsTime
+		if sub[2][0] >= '0' && sub[2][0] <= '9' {
+			to = LsISOTime
+		}
+		if sub[2] == to {
+			return m
+		}
+		found = append(found, "a time in the host's zone: "+sub[2])
+		return sub[1] + to
+	})
+	for _, re := range []*regexp.Regexp{pathList, pathVar} {
+		text = re.ReplaceAllStringFunc(text, func(m string) string {
+			sub := re.FindStringSubmatch(m)
+			list, f := scrubPath(sub[2])
+			found = append(found, f...)
+			return sub[1] + list
+		})
+	}
 	text = hostMangled.ReplaceAllStringFunc(text, func(m string) string {
 		sub := hostMangled.FindStringSubmatch(m)
 		found = append(found, "a host path: "+sub[2])
