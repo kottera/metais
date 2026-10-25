@@ -75,6 +75,13 @@ func scrubRun(dir, setDir, dest string) error {
 	if err := readJSON(filepath.Join(dir, recordFile), &rec); err != nil {
 		return err
 	}
+	// A run that held the credential route's token is never copied
+	// (ADR-009 A12): it is removed and run again first.
+	for _, ch := range rec.Checks {
+		if ch.Name == checkCredentialNotSeen && !ch.Pass {
+			return fmt.Errorf("%s failed %s (%s): remove the run's directory and run the set again before scrubbing it", dir, checkCredentialNotSeen, ch.Detail)
+		}
+	}
 	unchanged := map[string]bool{}
 	for _, f := range rec.Files {
 		if f.Change == "unchanged" {

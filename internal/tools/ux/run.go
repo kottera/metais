@@ -48,6 +48,11 @@ type config struct {
 	transcripts string
 	environ     []string
 	stdout      io.Writer
+	// credential is -credential-file's token, which turns on the runner's
+	// own credential route (ADR-009 A12), and upstream is where the route
+	// sends it; "" is upstreamURL.
+	credential string
+	upstream   string
 
 	now   func() time.Time
 	sleep func(time.Duration)
@@ -81,6 +86,18 @@ func (c *config) run() error {
 	}
 	if err := c.refuse(); err != nil {
 		return err
+	}
+	if c.credential != "" {
+		up := c.upstream
+		if up == "" {
+			up = upstreamURL
+		}
+		rt, err := startRoute(c.credential, up)
+		if err != nil {
+			return err
+		}
+		defer rt.close()
+		c.harness.route(rt.url())
 	}
 	set, err := c.loadSet()
 	if err != nil {
@@ -493,7 +510,7 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 		return nil, err
 	}
 	t := c.harness.read(b)
-	r.ModelReported, r.ModelsUsed = t.Init.Model, t.Result.Models
+	r.ModelReported, r.ModelsUsed, r.ContextWindows = t.Init.Model, t.Result.Models, t.Result.ContextWindows
 	r.Turns, r.CostUSD, r.DurationMS = t.Result.Turns, t.Result.CostUSD, t.Result.DurationMS
 	r.IsError, r.Subtype, r.ToolUses = t.Result.IsError, t.Result.Subtype, len(t.ToolUses)
 	r.Checks = append(r.Checks, c.harness.after(ses, st.rec.Harness.Version, t)...)
@@ -502,6 +519,9 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 		return nil, err
 	}
 	r.Checks = append(r.Checks, checkWritesInsideRun(dir, ses.work, before, afterSet, t))
+	if c.credential != "" {
+		r.Checks = append(r.Checks, credentialNotSeen(dir, c.credential))
+	}
 	r.Valid = valid(r.Checks)
 
 	switch {
@@ -524,7 +544,15 @@ func (c *config) runOne(st *setState, s *scenario.Scenario, m, dir string) (*run
 		return nil, err
 	}
 	r.Files = changes(r.Fixtures, after)
-	return r, writeJSON(filepath.Join(dir, recordFile), r)
+	if err := writeJSON(filepath.Join(dir, recordFile), r); err != nil {
+		return nil, err
+	}
+	// A run that holds the credential stops the set: the file it names is
+	// removed before anything is scrubbed or published.
+	if i := slices.IndexFunc(r.Checks, func(ch check) bool { return ch.Name == checkCredentialNotSeen }); i >= 0 && !r.Checks[i].Pass {
+		return nil, fmt.Errorf("%s %s: %s: %s, beneath %s; remove it before scrubbing or publishing the set", s.Name(), m, checkCredentialNotSeen, r.Checks[i].Detail, dir)
+	}
+	return r, nil
 }
 
 // copyTree copies every file of the directory src into dst, and lists

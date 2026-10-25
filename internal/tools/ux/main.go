@@ -4,7 +4,7 @@
 // Command ux runs the UX scenario set of PLAN-2026-10-metais-ux §5 in
 // nested, isolated agent sessions (docs/dev/ux-testing.md):
 //
-//	go run ./internal/tools/ux -out <dir> [-scenarios C0,C1] [-models opus,sonnet,haiku]
+//	go run ./internal/tools/ux -out <dir> [-scenarios C0,C1] [-models 'opus[1m],sonnet,haiku'] [-credential-file <pipe>]
 //
 // run from the top of a clean checkout. It builds metais from the checkout
 // with -buildvcs=false, packs each scenario's fixtures with it, and runs
@@ -21,7 +21,9 @@
 // The runner is a developer's tool, never linked into metais, and is the
 // one package ADR-009 Amendment A8 lets start a session, read the
 // environment, write files and read the clock outside the release
-// builder. No go test starts a session: a UX run is evidence, not a gate.
+// builder. On a host with no loopback proxy, -credential-file starts the
+// runner's own credential route (ADR-009 A12, route.go). No go test starts
+// a session: a UX run is evidence, not a gate.
 package main
 
 import (
@@ -58,14 +60,31 @@ func cli(args []string, stdout, stderr io.Writer, environ []string) int {
 	host := fs.String("host", "", "the host the set ran on, as the scorecard publishes it, such as \"a dispatch host, linux/amd64\"")
 	transcripts := fs.String("transcripts", "", "where the set's transcripts are kept, as the scorecard publishes it (default the set's runs/ directory)")
 	scrubTo := fs.String("scrub", "", "run nothing: write a scrubbed copy of the set in -out to this new directory, fit to publish")
+	credentialFile := fs.String("credential-file", "", "a pipe holding a claude setup-token token, such as <(security find-generic-password -s metais-ux -w): the runner serves the sessions its own loopback route, which authenticates with it (ADR-009 A12)")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
 	if fs.NArg() > 0 || *out == "" {
-		fmt.Fprintln(stderr, "usage: go run ./internal/tools/ux -out <dir> [-scenarios <ids>] [-models <models>] [-harness <name>] [-with-skill] [-pace <d>] [-quota-wait <d>] [-host <host>] [-transcripts <where>]")
+		fmt.Fprintln(stderr, "usage: go run ./internal/tools/ux -out <dir> [-scenarios <ids>] [-models <models>] [-harness <name>] [-with-skill] [-pace <d>] [-quota-wait <d>] [-host <host>] [-transcripts <where>] [-credential-file <pipe>]")
 		fmt.Fprintln(stderr, "       go run ./internal/tools/ux -out <dir> -scorecard [-scenarios <ids>] [-models <models>] [-host <host>] [-transcripts <where>]")
 		fmt.Fprintln(stderr, "       go run ./internal/tools/ux -out <dir> -scrub <new dir>")
 		return 2
+	}
+	var credential string
+	var err error
+	if *credentialFile != "" {
+		if *scrubTo != "" || *scorecardOnly {
+			fmt.Fprintln(stderr, "ux: -credential-file starts the sessions' credential route, and -scorecard and -scrub start no session")
+			return 2
+		}
+		if _, ok := lookup(environ, "ANTHROPIC_BASE_URL"); ok {
+			fmt.Fprintln(stderr, "ux: -credential-file starts the runner's own route, and ANTHROPIC_BASE_URL names another: give one, so the set says which it ran on")
+			return 2
+		}
+		if credential, err = readCredential(*credentialFile); err != nil {
+			fmt.Fprintln(stderr, "ux:", err)
+			return 1
+		}
 	}
 	h, err := harnessByName(*harnessName, environ)
 	if err != nil {
@@ -87,6 +106,7 @@ func cli(args []string, stdout, stderr io.Writer, environ []string) int {
 		transcripts: *transcripts,
 		environ:     environ,
 		stdout:      stdout,
+		credential:  credential,
 		now:         time.Now,
 		sleep:       time.Sleep,
 	}

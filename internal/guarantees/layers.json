@@ -98,6 +98,18 @@
     },
     {
       "rule": "only-importers",
+      "imports": "net",
+      "importers": ["metais.org/metais/internal/tools/ux", "metais.org/metais/internal/hostfs", "metais.org/metais/internal/guarantees"],
+      "reason": "ADR-009 A12 item 5: the UX runner's credential route is the module's one network use, and the packages beneath the runner import no network package; hostfs's tests make a Unix socket to prove it is refused as an input, and the guarantees' tests serve the rehearsal's pages on loopback"
+    },
+    {
+      "rule": "only-importers",
+      "imports": "net/http/...",
+      "importers": ["metais.org/metais/internal/tools/ux", "metais.org/metais/internal/guarantees"],
+      "reason": "ADR-009 A12 item 5: the UX runner's credential route is the module's one network use, and the packages beneath the runner import no network package; the guarantees' tests serve the rehearsal's pages on loopback"
+    },
+    {
+      "rule": "only-importers",
       "imports": "golang.org/x/term",
       "importers": ["metais.org/metais/internal/hostenv"],
       "reason": "ADR-010 D2 item 2, D11 item 8: hostenv is the one judge of whether a stream is a terminal"

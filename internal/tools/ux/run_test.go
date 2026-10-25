@@ -245,7 +245,7 @@ func TestRunSet(t *testing.T) {
 		"# METAIS UX scorecard",
 		"| Commit | `" + f.commit + "` |",
 		"| Harness | claude-code " + fakeVersion + " |",
-		"| Models | haiku: claude-haiku-5-5; sonnet: claude-haiku-5-5 |",
+		"| Models | `haiku`: claude-haiku-5-5 (context window not reported); `sonnet`: claude-haiku-5-5 (context window not reported) |",
 		"| Host | not stated (give -host) |",
 		"| Skill | not installed (-with-skill off) |",
 		"| C1-render-real | fail: inspect-first, outcome (asks-not-invents) |",
@@ -802,5 +802,52 @@ func TestInstallScenariosRunOnlyWhenNamed(t *testing.T) {
 	f.c.withSkill = true
 	if _, err := f.c.loadSet(); err == nil || !strings.Contains(err.Error(), "no metais and no skill") {
 		t.Errorf("I1 with -with-skill: %v", err)
+	}
+}
+
+// TestOpusModelString: the Opus sessions are given opus[1m] by default,
+// since behind a loopback ANTHROPIC_BASE_URL bare opus resolves to a 200k
+// window; Sonnet's and Haiku's strings are their aliases. Each record
+// carries the string a session was given beside the model ID and context
+// window it reported, and the scorecard's header shows all three
+// (R-W3-3).
+func TestOpusModelString(t *testing.T) {
+	if !slices.Equal(defaultModels, []string{"opus[1m]", "sonnet", "haiku"}) {
+		t.Fatalf("the default models are %q", defaultModels)
+	}
+	f := newFakeSet(t, "I1", "A1")
+	f.c.models = defaultModels
+	window := map[string]string{"opus[1m]": `"claude-opus-5-5":{"contextWindow":1000000}`, "sonnet": `"claude-sonnet-5-5":{"contextWindow":1000000}`, "haiku": `"claude-haiku-5-5":{}`}
+	f.session = func(inv invocation) string {
+		m, _ := flagValue(inv.args, "--model")
+		id := strings.Split(window[m], `"`)[1]
+		init := strings.Replace(initLine(session{work: inv.dir}, "2.1.299", "[]", `["debug"]`), "claude-haiku-5-5", id, 1)
+		return init + "\n" + strings.Replace(resultLine, `"claude-haiku-5-5":{}`, window[m], 1) + "\n"
+	}
+	if err := f.c.run(); err != nil {
+		t.Fatalf("run: %v\n%s", err, f.out)
+	}
+	var given []string
+	for _, inv := range f.sessions {
+		m, _ := flagValue(inv.args, "--model")
+		given = append(given, m)
+	}
+	if !slices.Equal(given, []string{"opus[1m]", "sonnet", "haiku", "opus[1m]", "sonnet", "haiku"}) {
+		t.Errorf("the sessions were given %q", given)
+	}
+	r := f.record(t, "I1-install-and-render", "opus[1m]")
+	if r.ModelRequested != "opus[1m]" || r.ModelReported != "claude-opus-5-5" || r.ContextWindows["claude-opus-5-5"] != 1000000 {
+		t.Errorf("record: given %q, reported %q, windows %v", r.ModelRequested, r.ModelReported, r.ContextWindows)
+	}
+	if r := f.record(t, "I1-install-and-render", "haiku"); r.ContextWindows != nil {
+		t.Errorf("haiku reported no window, recorded %v", r.ContextWindows)
+	}
+	want := "| Models | `opus[1m]`: claude-opus-5-5 (context window 1000000 tokens); `sonnet`: claude-sonnet-5-5 (context window 1000000 tokens); `haiku`: claude-haiku-5-5 (context window not reported) |"
+	if !strings.Contains(f.out.String(), want) {
+		t.Errorf("the scorecard's header lacks %q:\n%s", want, f.out)
+	}
+	// opus[1m] is Opus: the authoring scenarios gate on it as on opus.
+	if !strings.Contains(f.out.String(), "- **A1-new-package opus[1m]**\n") || !strings.Contains(f.out.String(), "- **A1-new-package haiku** (recorded, not gated)\n") {
+		t.Errorf("A1 on opus[1m] is not gated:\n%s", f.out)
 	}
 }

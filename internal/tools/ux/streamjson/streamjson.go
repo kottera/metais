@@ -43,6 +43,9 @@ type Transcript struct {
 		CostUSD    float64
 		DurationMS int64
 		Models     []string
+		// ContextWindows is the context window, in tokens, the session's
+		// usage reports for each model it names, where it reports one.
+		ContextWindows map[string]int
 	}
 	// ToolUses are the session's tool calls, in order.
 	ToolUses []ToolUse
@@ -195,6 +198,18 @@ func Read(b []byte) *Transcript {
 					}
 				}
 			})
+			r.ContextWindows = nil
+			for m, raw := range ev.ModelUsage {
+				var u struct {
+					ContextWindow int `json:"contextWindow"`
+				}
+				if json.Unmarshal(raw, &u) == nil && u.ContextWindow > 0 {
+					if r.ContextWindows == nil {
+						r.ContextWindows = map[string]int{}
+					}
+					r.ContextWindows[m] = u.ContextWindow
+				}
+			}
 		}
 	}
 	for i := range t.ToolUses {

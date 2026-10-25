@@ -84,16 +84,22 @@ type runRecord struct {
 		AsksForOutput bool   `json:"asks_for_output"`
 		Prompt        string `json:"prompt"`
 	} `json:"scenario"`
-	// ModelRequested is the model as the run asked for it; ModelReported
+	// ModelRequested is the model string the session was given, as the
+	// run asked for it; ModelReported
 	// is the model the session reports it ran on, and ModelsUsed every
 	// model its usage names.
-	ModelRequested string        `json:"model_requested"`
-	ModelReported  string        `json:"model_reported"`
-	ModelsUsed     []string      `json:"models_used"`
-	Harness        harnessRecord `json:"harness"`
-	WithSkill      bool          `json:"with_skill"`
-	Commit         string        `json:"commit"`
-	MetaisSHA256   string        `json:"metais_sha256"`
+	ModelRequested string   `json:"model_requested"`
+	ModelReported  string   `json:"model_reported"`
+	ModelsUsed     []string `json:"models_used"`
+	// ContextWindows is the context window, in tokens, the session's
+	// usage reports for each model of ModelsUsed that reports one. Which
+	// window a model alias gets depends on the route: behind a loopback
+	// ANTHROPIC_BASE_URL, opus is 200k tokens and opus[1m] 1M (R-W3-3).
+	ContextWindows map[string]int `json:"context_windows,omitempty"`
+	Harness        harnessRecord  `json:"harness"`
+	WithSkill      bool           `json:"with_skill"`
+	Commit         string         `json:"commit"`
+	MetaisSHA256   string         `json:"metais_sha256"`
 
 	Status string `json:"status"`
 	// Valid is true when every isolation check passed. An invalid run is

@@ -80,7 +80,7 @@ func gated(s *scenario.Scenario, model string) bool {
 	if s.Install {
 		return s.Kind == scenario.Consuming
 	}
-	return s.Kind == scenario.Consuming || slices.Contains(gatedAuthoring, model)
+	return s.Kind == scenario.Consuming || slices.Contains(gatedAuthoring, modelFamily(model))
 }
 
 // scorecard prints the scorecard of the set's runs, as markdown, the form
@@ -330,21 +330,29 @@ func cell(r scored) string {
 	return s
 }
 
-// modelIDs names each model as requested and the model IDs its sessions
-// reported.
+// modelIDs names each model string the sessions were given, and the
+// model IDs its sessions reported, each with the context window it
+// reported (R-W3-3).
 func modelIDs(models []string, runs []scored) string {
 	var parts []string
 	for _, m := range models {
 		var ids []string
 		for _, r := range runs {
-			if r.model == m && r.rec != nil && r.rec.ModelReported != "" && !slices.Contains(ids, r.rec.ModelReported) {
-				ids = append(ids, r.rec.ModelReported)
+			if r.model != m || r.rec == nil || r.rec.ModelReported == "" {
+				continue
+			}
+			id := r.rec.ModelReported + " (context window not reported)"
+			if w := r.rec.ContextWindows[r.rec.ModelReported]; w > 0 {
+				id = fmt.Sprintf("%s (context window %d tokens)", r.rec.ModelReported, w)
+			}
+			if !slices.Contains(ids, id) {
+				ids = append(ids, id)
 			}
 		}
 		if len(ids) == 0 {
 			ids = []string{"no session reported"}
 		}
-		parts = append(parts, fmt.Sprintf("%s: %s", m, strings.Join(ids, ", ")))
+		parts = append(parts, fmt.Sprintf("`%s`: %s", m, strings.Join(ids, ", ")))
 	}
 	return strings.Join(parts, "; ")
 }

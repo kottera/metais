@@ -45,6 +45,9 @@ const (
 	checkSkill           = "skill-as-declared"
 	checkNoMemory        = "no-memory-read"
 	checkInsideRun       = "writes-inside-run"
+	// checkCredentialNotSeen is ADR-009 A12's, made only with the
+	// credential route on.
+	checkCredentialNotSeen = "credential-not-seen"
 )
 
 // fileEntry is one regular file of a directory: its path, slash-separated

@@ -15,6 +15,11 @@ Funnekotter's ruling at T-A4; the passages it changes are marked *(A10)*.
 [Amendment A11](#amendments) (the site's build step is allowed host access
 in its own package, and the binary can never reach it) is proposed on
 2026-10-23 by PLAN-2026-10-metais-public W2-1, under ADR-013 D8 item 1.
+[Amendment A12](#amendments) (the UX runner may serve the nested sessions'
+credential route itself, and no session can reach the credential) is
+proposed on 2026-10-24 by PLAN-2026-10-metais-public W3-4 and accepted by
+Ed Funnekotter on 2026-10-25, with a subscription token as its credential
+(that plan's R-W3-3).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R14 (items 1 to 4); the security halves of R10 item 1, R11
@@ -2123,6 +2128,118 @@ reason now names this amendment too.
    - the build step's symbols are refused in the converter beneath it, in
      a sibling named like it, and elsewhere in the module;
    - inside it, the symbols item 2 keeps refused are refused.
+
+### A12 — The UX runner may serve the nested sessions' credential route itself, and no session can reach the credential
+
+**Status:** Accepted 2026-10-25 by Ed Funnekotter, as PLAN-2026-10-metais-public
+R-W3-3 records it. Proposed 2026-10-24 by that plan's W3-4, under his
+ruling in its §8 (Q1 of W3-OOB1): his host provides no endpoint at
+`ANTHROPIC_BASE_URL`, so the runner adds a route before I1 runs.
+**Amends:** A8 items 1 and 2 (what the runner reads, what it hands a
+session, and the network it may use); R-UX-7's route, which stays the
+default. `TestModuleAllowListIsR2143` is unchanged: no host symbol is added.
+
+1. **The route.** `-credential-file <path>` turns it on. Without the flag
+   the runner is exactly as A8 leaves it: it refuses to start without
+   `ANTHROPIC_BASE_URL`, and hands a session that address. With the flag,
+   before the first session, the runner:
+   - reads the credential from `<path>` once, and keeps it only in its own
+     memory;
+   - starts a reverse proxy listening on `127.0.0.1`, on a port the
+     operating system picks, which lives until the set ends;
+   - hands each session that proxy's address as `ANTHROPIC_BASE_URL`, and
+     R-UX-7's placeholder as `ANTHROPIC_AUTH_TOKEN`, as today.
+
+   The proxy forwards to one fixed upstream, `https://api.anthropic.com`,
+   which no flag or variable changes. On each forwarded request it removes
+   the `Authorization` and `x-api-key` headers the session sent, sets
+   `Authorization: Bearer <credential>`, and adds the OAuth beta value
+   `oauth-2025-04-20` to `anthropic-beta`, merged with the values the
+   session sent rather than replacing them. It sets no `x-api-key`. It
+   forwards the response, streamed, unchanged.
+2. **The credential and where it is read from.** The credential is a
+   subscription OAuth token, as `claude setup-token` prints it
+   (`sk-ant-oat01-…`), so the runs spend subscription quota rather than API
+   credit (R-W3-3). `<path>` must name a pipe, such as the one a shell's
+   process substitution makes, so the token passes from the person's own
+   store to the runner without being written to a file or set in an
+   environment:
+
+   ```bash
+   go run ./internal/tools/ux -credential-file <(security find-generic-password -s metais-ux -w) …
+   ```
+
+   The runner reads it with `os.Stat` and `os.DirFS`, both already A8's,
+   and reads at most 1 KiB and one byte more. It refuses, before any session starts and without printing what it
+   read:
+   - a `<path>` that is not a pipe: a regular file, a directory, a device,
+     or nothing;
+   - a credential that is empty, longer than 1 KiB, or anything but one
+     line of printable ASCII with no space;
+   - a credential that is not a subscription OAuth token, by its
+     `sk-ant-oat` prefix, so an API key given by mistake is refused here
+     rather than upstream;
+   - `-credential-file` beside an `ANTHROPIC_BASE_URL` in the runner's
+     environment, because two routes leave unsaid which one a set ran on;
+   - `-credential-file` with `-scorecard` or `-scrub`, which start no
+     session.
+
+   A set resumes with either route; neither is recorded in `set.json`,
+   because the route is not what the set measures.
+3. **What each nested session is handed.** What A8 and R-UX-7 hand it, and
+   nothing more: the placeholder token, and a loopback address. The
+   `placeholder-credential` check still makes every run `not-run` whose
+   environment holds any other credential variable. The token is in no
+   session's environment, arguments, standard input, `HOME`, run directory
+   or fixture, and in no record, transcript or scorecard the runner writes.
+4. **What can reach the credential, and what cannot.**
+   - **Can:** the runner's own process, and the requests the proxy
+     forwards to `api.anthropic.com`. A session, and any local process
+     that can reach `127.0.0.1`, can *use* the credential through the
+     proxy while the set runs, as a dispatch's session uses the
+     dispatch's proxy; that is what the route is for. It cannot read it.
+   - **The proxy refuses** (403, forwarding nothing): a request whose
+     `Authorization` is not the placeholder's bearer token; a `Host` that
+     is not the proxy's own loopback address, so a page in a browser that
+     rebinds a name to `127.0.0.1` gets nothing; a method other than `GET`
+     or `POST`; and a path outside `/v1/`. A browser's cross-origin
+     request with that header needs a preflight `OPTIONS`, which is
+     refused.
+   - **Cannot:** a session, by any of the paths the runner controls (item
+     3). The runner never prints, logs or records the credential; a
+     refusal names the cause, never the bytes. Between the runner and what
+     a session can do with the person's own rights on a host outside the
+     sandbox stands only the operating system's isolation of one process's
+     memory from another's. On macOS a process cannot read another's
+     memory without the debugging entitlement, and on Linux the default
+     Yama scope lets a process trace only its own descendants. A session
+     is a descendant of the runner, never its ancestor. The pipe is
+     drained before the first session starts, and holds nothing to read
+     after it.
+   - **A post-session check, `credential-not-seen`,** proves item 3 on
+     every run when the route is on. The run's transcript, its standard
+     error and every file under its run directory must not hold the
+     credential's bytes. A run that fails it is recorded `valid: false`,
+     and the runner stops the set, naming the file, so it is removed
+     before anything is scrubbed or published.
+5. **The network.** The runner, `internal/tools/ux` itself, imports `net`,
+   `net/http` and `net/http/httputil` for the proxy. D16 item 3's import
+   rule holds them out of the binary's closure, and A2 item 4's
+   `never-depends` rule holds the runner out of `cmd/metais`, so the
+   binary can never reach the proxy or the credential. That is A8 item
+   3's line, unchanged. The proxy is the runner's only network use, and
+   only with `-credential-file`. The packages beneath the runner, the
+   scorer, the scenario reader and the scrub, import no network package,
+   which a test in `internal/guarantees` pins.
+6. **Why the runner may serve it.** A route kept outside the runner is the
+   act's to build, by hand, on each host, with nothing in this repository
+   to prove what it hands a session. A route inside it is one piece of
+   code, whose property is tested before it exists: that a nested session
+   never sees the real credential. Every refusal of items 2 and 4 has a
+   negative test, and item 1's rewrite has tests both ways on the fake
+   upstream: the bearer token set, the beta value merged, and no
+   `x-api-key` and no placeholder forwarded. The tests use a fake upstream and a fake credential.
+   None starts a session or touches the network beyond `127.0.0.1`.
 
 ## Implementation log
 
