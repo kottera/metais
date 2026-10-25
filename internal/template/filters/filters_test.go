@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 	"unicode"
+	"unicode/utf8"
 
 	"metais.org/metais/internal/finding"
 	"metais.org/metais/internal/jsonx"
@@ -189,21 +190,25 @@ func TestSlug(t *testing.T) {
 }
 
 // TestSlugStepByStep holds slug, which decomposes one code point at a
-// time, to ADR-004 D10 item 6's steps over the whole string: the table,
-// then NFKD of the whole, whose canonical reordering moves combining
-// marks across code points.
+// time, to ADR-004 D10 item 6's steps (Amendment A1) over the whole
+// string: NFKD of the whole, whose canonical reordering moves combining
+// marks across code points, every Mn removed, then the table.
 func TestSlugStepByStep(t *testing.T) {
 	testenv.Home(t)
 	whole := func(s string) string {
+		var kept strings.Builder
+		for _, r := range unitext.NFKD(s) {
+			if !unicode.Is(unicode.Mn, r) {
+				kept.WriteRune(r)
+			}
+		}
+		s = kept.String()
 		for from, to := range slugLetters {
 			s = strings.ReplaceAll(s, string(from), to)
 		}
 		var b strings.Builder
 		dash := false
-		for _, r := range unitext.NFKD(s) {
-			if unicode.Is(unicode.Mn, r) {
-				continue
-			}
+		for _, r := range s {
 			if 'A' <= r && r <= 'Z' {
 				r += 'a' - 'A'
 			}
@@ -221,12 +226,28 @@ func TestSlugStepByStep(t *testing.T) {
 	}
 	for _, s := range []string{
 		"Café Déjà-vu", "q\u0307\u0323x", "a\u0328\u0301b", "Å\u0316\u0300z", "ǅemal ǈ", "한국어 abc", "ﷺ 1 ﷺ",
-		"x\u0903y", "ⅷ ¼ ㎒ ﬁ", "Straße Øre ı", "-", "", "\u0301\u0301a", "a\u20dd-\u20ddb", "Ｆｕｌｌ\u3000Width",
+		"x\u0903y", "ⅷ ¼ ㎒ ﬁ", "Straße Øre ı", "Ǿrsted", "-", "", "\u0301\u0301a", "a\u20dd-\u20ddb", "Ｆｕｌｌ\u3000Width",
 	} {
 		var b []byte
-		slug(s, func(c byte) { b = append(b, c) })
+		slug(s, &slugSpeller{}, func(c byte) { b = append(b, c) })
 		if got, want := string(b), whole(s); got != want {
 			t.Errorf("slug(%q) = %q, the steps over the whole string give %q", s, got, want)
+		}
+	}
+	// Every code point, twice between two letters: a slugSpeller spells
+	// one with no decomposition without NFKD, and one with a decomposition
+	// from what it remembers the second time, and any one could differ.
+	var sp slugSpeller
+	var b []byte
+	for r := rune(utf8.RuneSelf); r <= unicode.MaxRune; r++ {
+		if !utf8.ValidRune(r) {
+			continue
+		}
+		s := "a" + string(r) + string(r) + "b"
+		b = b[:0]
+		slug(s, &sp, func(c byte) { b = append(b, c) })
+		if got, want := string(b), whole(s); got != want {
+			t.Fatalf("slug(%q) = %q, the steps over the whole string give %q", s, got, want)
 		}
 	}
 }

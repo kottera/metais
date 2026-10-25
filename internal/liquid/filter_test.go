@@ -63,10 +63,7 @@ func spelled(x any) (value.Value, error) {
 // same reports whether a and b are the same value, kinds of number
 // included.
 func same(a, b value.Value) bool {
-	var x, y strings.Builder
-	identity(&x, a)
-	identity(&y, b)
-	return x.String() == y.String()
+	return string(appendIdentity(nil, a)) == string(appendIdentity(nil, b))
 }
 
 // show writes v as JSON for a failure message, a float with its point.

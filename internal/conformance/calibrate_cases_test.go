@@ -22,9 +22,10 @@ var calCases = append([]calCase{
 	{
 		// The cheapest node over and over, so the most nodes run: 32 empty
 		// if tags an iteration charge 512 units, so render-work runs out
-		// at about 0.84 of loop-iterations.
+		// at about 0.05 of loop-iterations. The costliest units are
+		// renderWorkUnitCases (calibrate_units_test.go).
 		name: "render-work", limit: "render-work",
-		lowered: calLimits{"render-work": 4_294_967, "loop-iterations": 10_000},
+		lowered: calLimits{"render-work": 268_435, "loop-iterations": 10_000},
 		build: func(dir string, lim calLimits) ([]string, error) {
 			body := strings.Repeat("{% if i %}{% endif %}", 32)
 			return renderTemplate(dir, fmt.Sprintf("{%% for i in (1..%d) %%}{%% for j in (1..1000) %%}%s{%% endfor %%}{%% endfor %%}",
@@ -44,7 +45,7 @@ var calCases = append([]calCase{
 		reached: refusedBy("loop-iterations"),
 	},
 	{
-		// A string doubled by append until it is refused.
+		// A string doubled until it is refused.
 		name: "value-size", limit: "value-size",
 		lowered: calLimits{"value-size": 64 << 10},
 		build: func(dir string, lim calLimits) ([]string, error) {
@@ -63,14 +64,14 @@ var calCases = append([]calCase{
 		reached: refusedBy("array-size"),
 	},
 	{
-		// A string at value-size, copied by assign until the bytes assigned
+		// A string at value-size, copied by capture until the bytes held
 		// pass the limit.
 		name: "assign-bytes", limit: "assign-bytes",
 		lowered: calLimits{"assign-bytes": 512 << 10, "value-size": 64 << 10},
 		build: func(dir string, lim calLimits) ([]string, error) {
 			n := lim["assign-bytes"]/lim["value-size"] + 1
 			return renderTemplate(dir, doubled("s", "x", lim["value-size"])+
-				fmt.Sprintf(`{%% for i in (1..%d) %%}{%% assign t = s | append: "" %%}{%% endfor %%}{{ t.size }}`, n))
+				fmt.Sprintf(`{%% for i in (1..%d) %%}{%% capture t %%}{{ s }}{%% endcapture %%}{%% endfor %%}{{ t.size }}`, n))
 		},
 		reached: refusedBy("assign-bytes"),
 	},
@@ -383,7 +384,7 @@ var calCases = append([]calCase{
 	jointCase("yaml"),
 	renderJointCase("json"),
 	renderJointCase("yaml"),
-}, a6Cases...)
+}, append(a6Cases, renderWorkUnitCases...)...)
 
 // schemaWorkAnyOf is an input schema whose validation of 5 costs exactly
 // units of schema-work, and fails at every unit: an allOf of $refs to
@@ -444,12 +445,15 @@ func refusedBy(limit string) func(*calResult, calLimits) error {
 func succeeded(r *calResult, _ calLimits) error { return r.succeeded() }
 
 // doubled is Liquid that assigns to name the string seed doubled until it
-// is at least n bytes long.
+// is at least n bytes long. It doubles by capture, whose output tags cost
+// render-work's units whatever their length, so a string of value-size
+// costs a few hundred units to build, and every case leaves render-work
+// to the unit it measures.
 func doubled(name, seed string, n int64) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "{%% assign %s = %q %%}", name, seed)
 	for size := int64(len(seed)); size < n; size *= 2 {
-		fmt.Fprintf(&b, "{%% assign %s = %s | append: %s %%}", name, name, name)
+		fmt.Fprintf(&b, "{%% capture %s %%}{{ %s }}{{ %s }}{%% endcapture %%}", name, name, name)
 	}
 	return b.String()
 }

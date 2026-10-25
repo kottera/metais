@@ -67,3 +67,24 @@ func NFC(s string) string { return norm.NFC.String(s) }
 // slug filter folds a string to ASCII through (ADR-004 D10 item 6). s must
 // be valid UTF-8.
 func NFKD(s string) string { return norm.NFKD.String(s) }
+
+// A Decomposer appends NFKD forms, as NFKD gives them, and allocates
+// nothing when the buffer it appends to has room: the slug filter
+// decomposes one code point at a time into one buffer. Its zero value is
+// ready; one Decomposer is not for concurrent use.
+type Decomposer struct{ it norm.Iter }
+
+// Decomposes reports whether the code point b encodes, valid UTF-8, has a
+// decomposition in NFKD's tables. A Hangul syllable, which NFKD
+// decomposes by rule rather than by table, has none; every other code
+// point with none is its own NFKD form.
+func Decomposes(b []byte) bool { return norm.NFKD.Properties(b).Decomposition() != nil }
+
+// AppendNFKD appends the NFKD form of src to dst. src must be valid UTF-8.
+func (d *Decomposer) AppendNFKD(dst, src []byte) []byte {
+	d.it.Init(norm.NFKD, src)
+	for !d.it.Done() {
+		dst = append(dst, d.it.Next()...)
+	}
+	return dst
+}

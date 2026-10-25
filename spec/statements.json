@@ -401,6 +401,7 @@
     {"id": "MTS-TPL-061", "chapter": "07-template-environment.md", "section": "7.10", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-TPL-062", "chapter": "07-template-environment.md", "section": "7.10", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-TPL-063", "chapter": "07-template-environment.md", "section": "7.11", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
+    {"id": "MTS-TPL-064", "chapter": "07-template-environment.md", "section": "7.11", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-TRN-001", "chapter": "10-transforms.md", "section": "10.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-TRN-002", "chapter": "10-transforms.md", "section": "10.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},
     {"id": "MTS-TRN-003", "chapter": "10-transforms.md", "section": "10.1", "kind": "requirement", "since": "1.0", "observable": true, "status": "active"},

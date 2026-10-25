@@ -26,14 +26,15 @@ var slugFilter = &filter{
 			}
 			return value.Null{}, nil
 		case value.String:
+			var sp slugSpeller
 			n := 0
-			slug(v.Text(), func(byte) { n++ })
+			slug(v.Text(), &sp, func(byte) { n++ })
 			if n == 0 {
 				return nil, liquid.FilterError(c.name, liquid.CodeSlugEmpty, nil, "no letter or digit of the text has an ASCII form")
 			}
 			return c.text(int64(n), func() string {
 				b := make([]byte, 0, n)
-				slug(v.Text(), func(c byte) { b = append(b, c) })
+				slug(v.Text(), &sp, func(c byte) { b = append(b, c) })
 				return string(b)
 			})
 		}
@@ -70,41 +71,98 @@ var slugLetters = map[rune]string{
 // code point and then reorders only runs of combining marks, which are
 // never a–z, 0–9 or a letter of the table and so end as part of a run of
 // "-" wherever they stand.
-func slug(s string, emit func(byte)) {
+func slug(s string, sp *slugSpeller, emit func(byte)) {
 	started, dash := false, false
-	put := func(r rune) {
-		if 'A' <= r && r <= 'Z' {
-			r += 'a' - 'A'
-		}
-		if ('a' <= r && r <= 'z') || ('0' <= r && r <= '9') {
+	put := func(b byte) {
+		if 'a' <= b && b <= 'z' || '0' <= b && b <= '9' {
 			if dash && started {
 				emit('-')
 			}
 			started, dash = true, false
-			emit(byte(r))
+			emit(b)
 			return
 		}
 		dash = true
 	}
-	letter := func(d rune) {
-		if unicode.Is(unicode.Mn, d) {
-			return
-		}
-		if ascii, ok := slugLetters[d]; ok {
-			for _, a := range ascii {
-				put(a)
-			}
-			return
-		}
-		put(d)
-	}
 	for _, r := range s {
 		if r < utf8.RuneSelf {
-			put(r)
+			put(asciiSpelling(byte(r)))
 			continue
 		}
-		for _, d := range unitext.NFKD(string(r)) {
-			letter(d)
+		for _, b := range []byte(sp.spelling(r)) {
+			put(b)
 		}
 	}
+}
+
+// A slugSpeller gives a code point's spelling: the a–z, 0–9 and "-" that
+// its NFKD, its Mn removed and the table of letters applied, puts in the
+// slug, a "-" standing for anything else. A code point with no
+// decomposition is spelled as itself, with no NFKD: a Hangul syllable,
+// which NFKD decomposes by rule, is "-" as its jamo are. One with a
+// decomposition is decomposed the first time it is met and remembered, so
+// NFKD's expansion, up to 18 code points from one, is paid once a call
+// for each code point, however often the text repeats it.
+type slugSpeller struct {
+	d     unitext.Decomposer
+	one   [utf8.UTFMax]byte
+	nfkd  []byte
+	known map[rune]string
+}
+
+func (sp *slugSpeller) spelling(r rune) string {
+	b := utf8.AppendRune(sp.one[:0], r)
+	if !unitext.Decomposes(b) {
+		return letterSpelling(r)
+	}
+	if s, ok := sp.known[r]; ok {
+		return s
+	}
+	sp.nfkd = sp.d.AppendNFKD(sp.nfkd[:0], b)
+	var out []byte
+	for _, d := range string(sp.nfkd) {
+		out = append(out, letterSpelling(d)...)
+	}
+	if sp.known == nil {
+		sp.known = map[rune]string{}
+	}
+	s := string(out)
+	sp.known[r] = s
+	return s
+}
+
+// letterSpelling is one code point of an NFKD form spelled: nothing for
+// an Mn, the table's spelling for a letter of it, an ASCII letter or digit
+// lower-cased, and "-" for anything else.
+func letterSpelling(d rune) string {
+	if d < utf8.RuneSelf {
+		return asciiSpellings[d]
+	}
+	if unicode.Is(unicode.Mn, d) {
+		return ""
+	}
+	if ascii, ok := slugLetters[d]; ok {
+		return ascii
+	}
+	return "-"
+}
+
+// asciiSpellings spells each ASCII byte as letterSpelling does.
+var asciiSpellings = func() (t [utf8.RuneSelf]string) {
+	for b := range t {
+		t[b] = string(asciiSpelling(byte(b)))
+	}
+	return t
+}()
+
+// asciiSpelling is an ASCII byte spelled: a–z and 0–9 as themselves, A–Z
+// lower-cased, and "-" for anything else.
+func asciiSpelling(b byte) byte {
+	switch {
+	case 'A' <= b && b <= 'Z':
+		return b + 'a' - 'A'
+	case 'a' <= b && b <= 'z', '0' <= b && b <= '9':
+		return b
+	}
+	return '-'
 }

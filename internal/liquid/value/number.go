@@ -75,6 +75,13 @@ func NumberFromFloat(f float64) (Number, error) {
 	return Number{lit: strconv.FormatFloat(f, 'g', -1, 64), f: f}, nil
 }
 
+// NumberFromInt returns the number whose literal is i in decimal, as
+// ParseNumber returns it for that text: Go's conversion of an integer to
+// binary64 rounds to the nearest, ties to even, as ParseFloat does.
+func NumberFromInt(i int64) Number {
+	return Number{lit: strconv.FormatInt(i, 10), f: float64(i)}
+}
+
 // Literal returns the number's text as it was written.
 func (n Number) Literal() string {
 	if n.lit == "" {

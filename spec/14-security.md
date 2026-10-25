@@ -280,7 +280,7 @@ limit is.
 | Limit | Default | Bounds |
 |---|---|---|
 | `partial-depth` | 32 | the `render` calls active at once |
-| `render-work` | 2³² units | the template evaluation of one render |
+| `render-work` | 2²⁸ units | the template evaluation of one render |
 | `loop-iterations` | 10,000,000 | the iterations of every `for`, `tablerow` and `render … for` of one render, summed |
 | `value-size` | 64 MiB | a string a template builds: a filter's result, a `capture` |
 | `array-size` | 1,000,000 elements | an array a filter or a range builds |

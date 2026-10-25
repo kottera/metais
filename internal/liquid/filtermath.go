@@ -6,6 +6,8 @@ package liquid
 import (
 	"math"
 	"math/big"
+	"math/bits"
+	"strconv"
 
 	"metais.org/metais/internal/liquid/value"
 )
@@ -279,32 +281,176 @@ func sumFilter(c *call, in value.Value) (value.Value, *Error) {
 			hasProp = false
 		}
 	}
-	total := new(big.Rat)
+	term := func(it value.Value) (value.Value, lookup) {
+		if !hasProp {
+			return it, found
+		}
+		return property(it, prop)
+	}
+	// Reading a string term as a number reads its every byte, so each
+	// string term costs its byte length, charged before any is read. The
+	// count stops where the terms do, at an element the property refuses.
+	var work int64
+	for _, it := range items {
+		v, how := term(it)
+		if how == badIndex {
+			break
+		}
+		if s, ok := v.(value.String); how == found && ok {
+			work = saturatingAdd(work, int64(len(s.Text())))
+		}
+	}
+	if err := c.units(work); err != nil {
+		return nil, err
+	}
+	var total decimalSum
 	allInts := true
 	for _, it := range items {
-		term := it
-		if hasProp {
-			v, how := property(it, prop)
-			switch how {
-			case noIndex:
-				continue
-			case badIndex:
-				return nil, inputErr(c.name, it, "an element cannot be indexed by the property")
-			}
-			term = v
+		t, how := term(it)
+		switch how {
+		case noIndex:
+			continue
+		case badIndex:
+			return nil, inputErr(c.name, it, "an element cannot be indexed by the property")
 		}
-		n, err := c.number(term)
+		n, err := c.number(t)
 		if err != nil {
 			return nil, err
 		}
 		allInts = allInts && n.isInt
-		total.Add(total, n.rat())
+		total.add(n)
 	}
+	sum := total.rat()
 	if allInts {
-		if !total.Num().IsInt64() || !safe(total.Num().Int64()) {
+		if !sum.Num().IsInt64() || !safe(sum.Num().Int64()) {
 			return nil, filterErr(c.name, CodeNumberRange, nil, "an integer result of magnitude above 2^53-1")
 		}
-		return tnum{isInt: true, i: total.Num().Int64()}.value(c.name)
+		return tnum{isInt: true, i: sum.Num().Int64()}.value(c.name)
 	}
-	return fromRat(total).value(c.name)
+	return fromRat(sum).value(c.name)
+}
+
+// decimalSum is the exact sum of template numbers, each read as tnum.rat
+// reads it: an integer as itself, a float as the shortest decimal that
+// round-trips it. A term is its digits, an integer below 10^17, times a
+// power of ten, so add puts the digits in the bucket of that exponent and
+// allocates nothing; rat joins the buckets once. A term costs what an
+// element of the filter's input is charged, not a rational's arithmetic,
+// whatever the terms' exponents (ADR-009 Amendment A13).
+type decimalSum struct {
+	// buckets[e-minExp] is the sum of the digits of the terms whose
+	// exponent is e, a two's-complement 128-bit integer. At most 10^17
+	// in magnitude a term, it cannot overflow before 10^21 terms.
+	buckets [maxExp - minExp + 1]struct{ hi, lo uint64 }
+	used    bool
+	lo, hi  int // the least and greatest bucket index added to
+}
+
+// A float's shortest decimal has at most 17 digits, d.ddd…e±XX with XX
+// from -324 to 308, so its digits' exponent is from -340 to 308.
+const (
+	minExp = -340
+	maxExp = 308
+)
+
+func (s *decimalSum) add(n tnum) {
+	digits, exp := n.i, 0
+	if !n.isInt {
+		digits, exp = shortestDecimal(n.f)
+	}
+	if digits == 0 {
+		return
+	}
+	i := exp - minExp
+	if !s.used {
+		s.used, s.lo, s.hi = true, i, i
+	}
+	s.lo, s.hi = min(s.lo, i), max(s.hi, i)
+	b := &s.buckets[i]
+	ext := uint64(0)
+	if digits < 0 {
+		ext = math.MaxUint64
+	}
+	var carry uint64
+	b.lo, carry = bits.Add64(b.lo, uint64(digits), 0)
+	b.hi, _ = bits.Add64(b.hi, ext, carry)
+}
+
+// rat is the sum: the buckets from the greatest exponent down, each step
+// multiplying by ten to the gap and adding the next, then scaled by ten to
+// the least exponent.
+func (s *decimalSum) rat() *big.Rat {
+	if !s.used {
+		return new(big.Rat)
+	}
+	acc, term, ten := new(big.Int), new(big.Int), big.NewInt(10)
+	last := s.hi
+	for i := s.hi; i >= s.lo; i-- {
+		b := s.buckets[i]
+		if b.hi == 0 && b.lo == 0 {
+			continue
+		}
+		if i != last {
+			acc.Mul(acc, new(big.Int).Exp(ten, big.NewInt(int64(last-i)), nil))
+		}
+		last = i
+		acc.Add(acc, int128(term, b.hi, b.lo))
+	}
+	exp := last + minExp
+	scale := new(big.Int).Exp(ten, big.NewInt(int64(max(exp, -exp))), nil)
+	if exp >= 0 {
+		return new(big.Rat).SetInt(acc.Mul(acc, scale))
+	}
+	return new(big.Rat).SetFrac(acc, scale)
+}
+
+// int128 sets z to the two's-complement 128-bit integer hi:lo.
+func int128(z *big.Int, hi, lo uint64) *big.Int {
+	neg := hi>>63 == 1
+	if neg {
+		var borrow uint64
+		lo, borrow = bits.Sub64(0, lo, 0)
+		hi, _ = bits.Sub64(0, hi, borrow)
+	}
+	z.SetUint64(hi)
+	z.Lsh(z, 64)
+	z.Or(z, new(big.Int).SetUint64(lo))
+	if neg {
+		z.Neg(z)
+	}
+	return z
+}
+
+// shortestDecimal is f, finite, as digits times ten to exp: the shortest
+// decimal that round-trips it, as strconv writes it.
+func shortestDecimal(f float64) (digits int64, exp int) {
+	var buf [32]byte
+	t := strconv.AppendFloat(buf[:0], f, 'e', -1, 64)
+	neg := t[0] == '-'
+	if neg {
+		t = t[1:]
+	}
+	k := 0
+	for ; t[k] != 'e'; k++ {
+		if t[k] != '.' {
+			digits = digits*10 + int64(t[k]-'0')
+			if k > 0 {
+				exp--
+			}
+		}
+	}
+	e, sign := 0, 1
+	for _, c := range t[k+1:] {
+		switch c {
+		case '-':
+			sign = -1
+		case '+':
+		default:
+			e = e*10 + int(c-'0')
+		}
+	}
+	if neg {
+		digits = -digits
+	}
+	return digits, exp + sign*e
 }

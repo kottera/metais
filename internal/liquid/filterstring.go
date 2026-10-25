@@ -5,7 +5,6 @@ package liquid
 
 import (
 	"encoding/base64"
-	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -306,23 +305,118 @@ func squish(c *call, in value.Value) (value.Value, *Error) {
 }
 
 // Shopify's strip_html removes script and style elements and comments,
-// each from its opening to the nearest close, and then every tag, from a
-// "<" to the nearest ">". RE2 matches each in time linear in the text.
-var (
-	htmlBlocks = regexp.MustCompile(`(?s)<script.*?</script>|<!--.*?-->|<style.*?</style>`)
-	htmlTags   = regexp.MustCompile(`(?s)<.*?>`)
-)
-
+// each from its opening to the nearest close after it, and then every
+// tag, from a "<" to the nearest ">" after it, in the text the first pass
+// leaves. Each pass removes the leftmost-first matches of its expression,
+// (?s)<script.*?</script>|<!--.*?-->|<style.*?</style> and then (?s)<.*?>,
+// in time linear in the text.
 func stripHTML(c *call, in value.Value) (value.Value, *Error) {
 	s, err := c.str(in)
 	if err != nil {
 		return nil, err
 	}
-	s = htmlTags.ReplaceAllLiteralString(htmlBlocks.ReplaceAllLiteralString(s, ""), "")
+	s = stripTags(stripBlocks(s))
 	if err := c.build(int64(len(s))); err != nil {
 		return nil, err
 	}
 	return newString(s), nil
+}
+
+// htmlBlocks are the blocks strip_html removes first, each an opening and
+// its close, in the order its expression tries them.
+var htmlBlocks = [...]struct{ open, close string }{
+	{"<script", "</script>"},
+	{"<!--", "-->"},
+	{"<style", "</style>"},
+}
+
+// stripBlocks removes, left to right, each block of htmlBlocks: at the
+// first "<" where one opens and its close follows, the first that does,
+// through the nearest close.
+func stripBlocks(s string) string {
+	var closes [len(htmlBlocks)]nearest
+	for i := range closes {
+		closes[i].text = htmlBlocks[i].close
+	}
+	var b strings.Builder
+	kept := 0
+	for at := 0; ; {
+		j := strings.IndexByte(s[at:], '<')
+		if j < 0 {
+			break
+		}
+		at += j
+		end := -1
+		for k, blk := range htmlBlocks {
+			if strings.HasPrefix(s[at:], blk.open) {
+				if c := closes[k].after(s, at+len(blk.open)); c >= 0 {
+					end = c + len(blk.close)
+					break
+				}
+			}
+		}
+		if end < 0 {
+			at++
+			continue
+		}
+		b.WriteString(s[kept:at])
+		kept, at = end, end
+	}
+	if kept == 0 {
+		return s
+	}
+	b.WriteString(s[kept:])
+	return b.String()
+}
+
+// stripTags removes, left to right, each tag: a "<" through the nearest
+// ">" after it.
+func stripTags(s string) string {
+	var b strings.Builder
+	kept := 0
+	for {
+		i := strings.IndexByte(s[kept:], '<')
+		if i < 0 {
+			break
+		}
+		j := strings.IndexByte(s[kept+i+1:], '>')
+		if j < 0 {
+			break
+		}
+		b.WriteString(s[kept : kept+i])
+		kept += i + 1 + j + 1
+	}
+	if kept == 0 {
+		return s
+	}
+	b.WriteString(s[kept:])
+	return b.String()
+}
+
+// nearest finds the nearest text at or after a position, remembering the
+// last it found, so a scan that asks from positions that only grow reads
+// the string once, and a text that is absent is looked for once.
+type nearest struct {
+	text   string
+	at     int
+	found  bool
+	absent bool
+}
+
+func (n *nearest) after(s string, from int) int {
+	switch {
+	case n.absent:
+		return -1
+	case n.found && n.at >= from:
+		return n.at
+	}
+	i := strings.Index(s[from:], n.text)
+	if i < 0 {
+		n.absent = true
+		return -1
+	}
+	n.at, n.found = from+i, true
+	return n.at
 }
 
 // newlines replaces each line feed, and the carriage return before one,

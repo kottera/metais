@@ -20,6 +20,10 @@ credential route itself, and no session can reach the credential) is
 proposed on 2026-10-24 by PLAN-2026-10-metais-public W3-4 and accepted by
 Ed Funnekotter on 2026-10-25, with a subscription token as its credential
 (that plan's R-W3-3).
+[Amendment A13](#amendments) (`render-work`'s default is 2²⁸, its costliest
+units are calibrated, and two reads it did not count are charged) is
+proposed on 2026-10-23 under Ed Funnekotter's ruling at T-A4, on its item
+M-6; the passages it changes are marked *(A13)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R14 (items 1 to 4); the security halves of R10 item 1, R11
@@ -328,7 +332,7 @@ it at its defaults.
 
 | Limit | Default | Bounds | Rationale |
 |---|---|---|---|
-| `render-work` | 2³² units | template evaluation in one command (D11) | the deterministic CPU bound for templates |
+| `render-work` | 2²⁸ units | template evaluation in one command (D11) | the deterministic CPU bound for templates; lowered sixteenfold *(A13)* so that the costliest unit, not the cheapest, stays within D18 item 2's ceiling, while 100,000 outputs of the site benchmark's pages still fit |
 | `loop-iterations` | 10,000,000 | iterations of every `for`, `tablerow`, `render … for` and `for_each`, summed over one command | a range literal `(1..1000000000)` costs nothing to write |
 | `value-size` | 64 MiB | any string a template produces: a filter result, a `capture`, a concatenation | string doubling by `append` reaches a gibibyte in thirty steps |
 | `array-size` | 1,000,000 elements | an array a filter or a range produces | `split` on a large string |
@@ -661,7 +665,11 @@ a write is confined, for `render`, `unpack`, `extract` and `init` alike.
    - reading a string's `size` shorthand with a `.size` step costs 1 unit for
      each byte of the string; every other step of a path costs nothing
      *(A10)*;
-   - comparing two arrays or objects for equality costs their deep size.
+   - comparing two arrays or objects for equality costs their deep size;
+   - *(A13)* comparing a string with each element of an array, by `contains`
+     or by `where`, `reject`, `has`, `find` or `find_index`, costs the
+     string's byte length once for each element, and `sum` costs the byte
+     length of each term that is a string, which it reads to make a number.
 
    The specification carries the charge of every filter in ADR-004's catalog;
    where a filter's true cost exceeds its shallow charge (sorting), the table
@@ -2240,6 +2248,145 @@ default. `TestModuleAllowListIsR2143` is unchanged: no host symbol is added.
    upstream: the bearer token set, the beta value merged, and no
    `x-api-key` and no placeholder forwarded. The tests use a fake upstream and a fake credential.
    None starts a session or touches the network beyond `127.0.0.1`.
+
+### A13 — `render-work`'s default is 2²⁸, its costliest units are calibrated, and two reads it did not count are charged
+
+**Status:** Proposed 2026-10-23, under Ed Funnekotter's ruling of
+2026-10-23 at PLAN-2026-10-metais-v1's T-A4, on its item M-6: that METAIS
+refusing a costly template only after minutes, past A3's ceiling, blocks
+v1.0. Like every change to a default a calibration finds, it is his to
+ratify (RULINGS R1-015).
+**Amends:** D3 (`render-work`'s default), D11 item 2 (two charges added),
+and the calibration suite's cases (D18 item 4), marked *(A13)* in place.
+D18 item 2's ceilings, as A3 sets them, are unchanged.
+
+T-A2 calibrated `render-work` by its cheapest unit, an empty `if` tag:
+18.8 s of CPU on darwin/arm64 and 60.4 s on linux/amd64 for 2³² units,
+about 4.4 and 14 ns a unit. Units are defined, not measured (D11 item 2),
+so what one costs depends on what it counts. M-6 measured, on the M2 Max,
+`{% for i in (1..5000) %}{% assign r = (1..1000000) %}{% endfor %}`
+refused by `render-work` after 305 s of wall time and 400 s of CPU: a range
+element is one unit and about 71 ns. At 2³² the cheapest unit alone took
+half the ceiling on linux/amd64, so any unit costing more than twice the
+cheapest broke it there.
+
+This amendment measured the units the catalog charges by the element or
+the byte, on darwin/arm64 (an Apple silicon Mac of 16 cores, macOS 26.6.1,
+shared with other work). Each figure is a unit's CPU time as a multiple of the cheapest
+unit's, measured back to back with the same binary, the one before this
+amendment and the one after it:
+
+| Unit | Before | After |
+|---|---|---|
+| an element of a range made by `assign` | 20× | 15× |
+| an element of an array written | 2.2× | 2.4× |
+| a byte of `split`'s input or an element of its result | 3.1× | 3.4× |
+| `sum`, an integer term | 70× | 4.5× |
+| `sum`, a short decimal string term | 136× | 3.5×, charged its bytes (item 3) |
+| `uniq`, a distinct integer key | 27× | 24× |
+| `slug`, a code point NFKD expands to 18 | 65× | 2.0× |
+| `slug`, every code point that has a decomposition | 95× | 11× |
+| `strip_html`, a byte of empty tags | 14× | 2.3× |
+| a byte of `.size` | under 1× | under 1× |
+
+At 2³², on the same host, the calibration suite's `render-work-range` case
+(item 4) took 438 s of CPU to be refused, and its `render-work-sum` case
+had not been refused when it was stopped after 21 minutes.
+
+Two reads were not counted at all:
+
+- `sum` reads each string term whole to make a number of it, and was
+  charged one unit for it. 200 `sum`s of a one-element array holding a
+  16 MiB decimal string took 12.3 s of CPU and the render was accepted;
+- `contains` of a string in an array, and `where`, `reject`, `has`, `find`
+  and `find_index` seeking a string, compare it with every element, and
+  were charged the element count. Ten `contains` of an 8 MiB string over
+  16,384 elements, all one other 8 MiB string differing in its last byte,
+  took 43 s of CPU and the render was accepted.
+
+No default of `render-work` bounds either: only `loop-iterations`,
+`array-size` and `value-size` do, at days of CPU.
+
+1. **`render-work`'s default is 2²⁸ units**, sixteen times less. M-6
+   offered two ways to hold the ceiling: a heavier charge for a range
+   element (16 units, the 71 to 4.4 ratio), or a lower default. The lower
+   default is chosen:
+   - a heavier range charge holds one unit. At 2³² every unit costing more
+     than twice the cheapest broke the ceiling on linux/amd64, and the table
+     above has seven. Holding them by charges is a charge for each, set
+     against one host's figure, and every unit not yet measured stays a
+     risk. A10 states these same units' charges, each proved at its exact
+     bound by a vector, and a re-pricing here would move them all;
+   - a lower default gives every unit, measured or not, sixteen times the
+     margin at once. Lowering a default before 1.0 is the compatible
+     direction (A6 item 4, A3 item 5): a later amendment may raise it,
+     citing a four-target run of every `render-work-` case within the
+     ceiling;
+   - 2²⁸ is the lowest power of two that keeps a large site. ADR-010 D15's
+     site benchmark spends 1,130,373 units on 501 renders, about 2,256 a
+     page, so `outputs`' 100,000 such pages need about 226 million units,
+     inside 2²⁸ (268,435,456) and not inside 2²⁷. Its table benchmark, a
+     10,000-row `markdown_table`, spends 805,829.
+2. **The costliest units cost about what they are charged**, by their
+   implementation alone. No result, finding or charge changes, and each is
+   held by a test to what it replaces:
+   - `sum` adds each term's digits, as an integer, to a bucket of its
+     decimal exponent, and joins the buckets once, where it made a rational
+     of every term;
+   - a range element's number is made from its integer, not parsed back
+     from the integer's text;
+   - `uniq` keys an integer or a string by itself, in a set for each kind,
+     where it built a text for every key;
+   - `slug` spells a code point with no decomposition without NFKD, and
+     remembers the spelling of one with a decomposition for the call;
+   - `strip_html` finds its two expressions' leftmost matches in one scan
+     of the text, not by regular expression.
+3. **The two reads are charged** (D11 item 2, as amended). `sum` is
+   charged the byte length of each term that is a string, before it reads
+   any (MTS-TPL-063's table). `where`, `reject`, `has`, `find` and
+   `find_index` are charged a sought string's bytes once for each element,
+   as they already were an array's or an object's deep size (the same
+   table). An array's `contains` of a string is charged the string's bytes
+   once for each element, before it compares any (MTS-TPL-064).
+4. **The calibration suite holds the costliest units.** It gains a
+   `render-work-` case for each row of the table, each refused by
+   `render-work` at the default after spending it on that unit: a range,
+   an array written, `.size`, `split`, `sum`, `uniq`, `slug` of the code
+   points of nine blocks that nearly all have a decomposition, and
+   `strip_html`. The `render-work` case
+   stays the cheapest unit. A unit found to cost more than these is a
+   defect of the tool or of its charge, fixed by the item that finds it,
+   which adds its case; it is not a reason to keep a default that only the
+   cheapest unit meets.
+5. **`value-size` and `assign-bytes` reach their limits by `capture`.**
+   Doubling a string to `value-size` by `append` costs about 2²⁸ units, so
+   at the new default `render-work` refused both cases first. A `capture`
+   of output tags costs units by the node, not the byte, so their cases
+   double and copy by `capture`. `assign-bytes`'s case then peaks at 411
+   to 592 MiB, a `capture` holding its buffer and its string at once,
+   where `append`'s copy peaked at 145 MiB.
+6. **Measured on darwin/arm64 only.** At the new default the suite passes
+   there: every case reaches its limit within both ceilings (record sha256
+   `76be0b2a…eacd3da5`, logs/ADR-009/2026-10-23-render-work-costliest-unit.md).
+   The costliest units take 15.0 s of CPU (`render-work-uniq`), 13.1 s
+   (`render-work-slug`) and 12.1 s (`render-work-range`), 14 to 21 times
+   the cheapest unit's 0.76 s across four runs; at 2³² the same range case
+   took 438 s. This host could not run the other three targets: it has no
+   Rosetta 2 for darwin/amd64, no podman machine for linux/arm64, and is
+   not linux/amd64. Scaled by T-A2's figure for the cheapest unit on each
+   target, the costliest case would take about 20 to 35 s on darwin/amd64,
+   15 to 25 s on linux/arm64 and 55 to 80 s on linux/amd64. That is an
+   estimate, not a calibration: a work item's sandbox gives numbers, not
+   evidence (plan §5). The four-target run before the release measures
+   them, and a case that breaks the ceiling there lowers `render-work`
+   again, by a further amendment (R1-015).
+7. **The specification and vectors follow.** Chapter 14's limit table
+   gives 2²⁸; MTS-TPL-063's table charges `sum`'s string terms and a
+   sought string; MTS-TPL-064 charges `contains`. `sec/render-work` gains
+   a render within the default and one past it, each well clear of the
+   bound, which together hold it above 2²⁷ and below 2²⁹; `tpl/charge-sum`,
+   `tpl/charge-where` and `tpl/charge-contains` hold the new charges, each
+   accepted at its exact bound and refused one unit below it.
 
 ## Implementation log
 

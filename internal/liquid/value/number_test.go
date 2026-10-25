@@ -6,6 +6,7 @@ package value
 import (
 	"errors"
 	"math"
+	"strconv"
 	"testing"
 )
 
@@ -160,6 +161,25 @@ func TestNumberFromFloat(t *testing.T) {
 		}
 		if back.Float64() != f || math.Signbit(back.Float64()) != math.Signbit(f) || n.Float64() != f {
 			t.Errorf("NumberFromFloat(%v) literal %q parses to %v", f, n.Literal(), back.Float64())
+		}
+	}
+}
+
+// TestNumberFromInt holds NumberFromInt to ParseNumber of the integer's
+// decimal text, at zero, both signs, 2^53 and its neighbours, where the
+// rounding to binary64 starts, and the ends of int64.
+func TestNumberFromInt(t *testing.T) {
+	for _, i := range []int64{
+		0, 1, -1, 42, MaxSafeInteger, -MaxSafeInteger, 1 << 53, 1<<53 + 1, 1<<53 + 3,
+		-(1<<53 + 1), 1<<62 + 513, math.MaxInt64, math.MinInt64,
+	} {
+		n := NumberFromInt(i)
+		want, err := ParseNumber(strconv.FormatInt(i, 10))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n != want {
+			t.Errorf("NumberFromInt(%d) is %q %v, not %q %v", i, n.Literal(), n.Float64(), want.Literal(), want.Float64())
 		}
 	}
 }

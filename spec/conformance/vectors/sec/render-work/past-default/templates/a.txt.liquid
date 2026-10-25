@@ -1,0 +1,1 @@
+{% assign s = "x" %}{% for i in (1..20) %}{% assign s = s | append: s %}{% endfor %}{% for i in (1..131) %}{% assign t = s | strip %}{% endfor %}{{ t.size }}

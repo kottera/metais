@@ -298,15 +298,15 @@ func adr009Table(t *testing.T) []limitRow {
 }
 
 // parseADRDefault reads a default as ADR-009 writes it: 256 MiB, 10,000,
-// 2³² units, 512 bytes, 1,000,000 elements. The unit it returns is bytes
+// 2²⁸ units, 512 bytes, 1,000,000 elements. The unit it returns is bytes
 // for a size and count otherwise.
 func parseADRDefault(t *testing.T, s string) (int64, string) {
 	t.Helper()
 	num, word, _ := strings.Cut(s, " ")
 	var n int64
 	switch num {
-	case "2³²":
-		n = 1 << 32
+	case "2²⁸":
+		n = 1 << 28
 	case "2³³":
 		n = 1 << 33
 	default:
