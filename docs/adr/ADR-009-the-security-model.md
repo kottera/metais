@@ -17,8 +17,9 @@ in its own package, and the binary can never reach it) is proposed on
 2026-10-23 by PLAN-2026-10-metais-public W2-1, under ADR-013 D8 item 1.
 [Amendment A12](#amendments) (the UX runner may serve the nested sessions'
 credential route itself, and no session can reach the credential) is
-proposed on 2026-10-24 by PLAN-2026-10-metais-public W3-4, awaiting Ed
-Funnekotter's approval.
+proposed on 2026-10-24 by PLAN-2026-10-metais-public W3-4 and accepted by
+Ed Funnekotter on 2026-10-25, with a subscription token as its credential
+(that plan's R-W3-3).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R14 (items 1 to 4); the security halves of R10 item 1, R11
@@ -2130,10 +2131,10 @@ reason now names this amendment too.
 
 ### A12 — The UX runner may serve the nested sessions' credential route itself, and no session can reach the credential
 
-**Status:** Proposed 2026-10-24 by PLAN-2026-10-metais-public W3-4, under
-Ed Funnekotter's ruling in that plan's §8 (Q1 of W3-OOB1): his host
-provides no endpoint at `ANTHROPIC_BASE_URL`, so the runner adds a route
-before I1 runs. Awaiting his approval; nothing is built before it.
+**Status:** Accepted 2026-10-25 by Ed Funnekotter, as PLAN-2026-10-metais-public
+R-W3-3 records it. Proposed 2026-10-24 by that plan's W3-4, under his
+ruling in its §8 (Q1 of W3-OOB1): his host provides no endpoint at
+`ANTHROPIC_BASE_URL`, so the runner adds a route before I1 runs.
 **Amends:** A8 items 1 and 2 (what the runner reads, what it hands a
 session, and the network it may use); R-UX-7's route, which stays the
 default. `TestModuleAllowListIsR2143` is unchanged: no host symbol is added.
@@ -2151,12 +2152,16 @@ default. `TestModuleAllowListIsR2143` is unchanged: no host symbol is added.
 
    The proxy forwards to one fixed upstream, `https://api.anthropic.com`,
    which no flag or variable changes. On each forwarded request it removes
-   the `Authorization` and `x-api-key` headers the session sent and sets
-   `x-api-key` to the credential. It forwards the response, streamed,
-   unchanged.
-2. **The credential and where it is read from.** The credential is an
-   Anthropic API key. `<path>` must name a pipe, such as the one a shell's
-   process substitution makes, so the key passes from the person's own
+   the `Authorization` and `x-api-key` headers the session sent, sets
+   `Authorization: Bearer <credential>`, and adds the OAuth beta value
+   `oauth-2025-04-20` to `anthropic-beta`, merged with the values the
+   session sent rather than replacing them. It sets no `x-api-key`. It
+   forwards the response, streamed, unchanged.
+2. **The credential and where it is read from.** The credential is a
+   subscription OAuth token, as `claude setup-token` prints it
+   (`sk-ant-oat01-…`), so the runs spend subscription quota rather than API
+   credit (R-W3-3). `<path>` must name a pipe, such as the one a shell's
+   process substitution makes, so the token passes from the person's own
    store to the runner without being written to a file or set in an
    environment:
 
@@ -2164,13 +2169,16 @@ default. `TestModuleAllowListIsR2143` is unchanged: no host symbol is added.
    go run ./internal/tools/ux -credential-file <(security find-generic-password -s metais-ux -w) …
    ```
 
-   The runner reads it with `os.Stat` and `os.ReadFile`, both already
-   A8's. It refuses, before any session starts and without printing what it
+   The runner reads it with `os.Stat` and `os.DirFS`, both already A8's,
+   and reads at most 1 KiB and one byte more. It refuses, before any session starts and without printing what it
    read:
    - a `<path>` that is not a pipe: a regular file, a directory, a device,
      or nothing;
    - a credential that is empty, longer than 1 KiB, or anything but one
      line of printable ASCII with no space;
+   - a credential that is not a subscription OAuth token, by its
+     `sk-ant-oat` prefix, so an API key given by mistake is refused here
+     rather than upstream;
    - `-credential-file` beside an `ANTHROPIC_BASE_URL` in the runner's
      environment, because two routes leave unsaid which one a set ran on;
    - `-credential-file` with `-scorecard` or `-scrub`, which start no
@@ -2181,7 +2189,7 @@ default. `TestModuleAllowListIsR2143` is unchanged: no host symbol is added.
 3. **What each nested session is handed.** What A8 and R-UX-7 hand it, and
    nothing more: the placeholder token, and a loopback address. The
    `placeholder-credential` check still makes every run `not-run` whose
-   environment holds any other credential variable. The key is in no
+   environment holds any other credential variable. The token is in no
    session's environment, arguments, standard input, `HOME`, run directory
    or fixture, and in no record, transcript or scorecard the runner writes.
 4. **What can reach the credential, and what cannot.**
@@ -2228,7 +2236,9 @@ default. `TestModuleAllowListIsR2143` is unchanged: no host symbol is added.
    to prove what it hands a session. A route inside it is one piece of
    code, whose property is tested before it exists: that a nested session
    never sees the real credential. Every refusal of items 2 and 4 has a
-   negative test. The tests use a fake upstream and a fake credential.
+   negative test, and item 1's rewrite has tests both ways on the fake
+   upstream: the bearer token set, the beta value merged, and no
+   `x-api-key` and no placeholder forwarded. The tests use a fake upstream and a fake credential.
    None starts a session or touches the network beyond `127.0.0.1`.
 
 ## Implementation log
