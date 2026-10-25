@@ -1,0 +1,36 @@
+metais: "1.0"
+name: "invoices"
+version: "0.1.0"
+title: "Invoices"
+description: "Renders a batch of invoices as HTML pages, one per invoice, and a summary of every invoice with its total."
+license: "Apache-2.0"
+guide: |-
+  This package renders a batch of invoices: summary.html, which lists
+  every invoice with its customer and its total and the total of them all,
+  and one page per invoice, named after its number, 2026-0042.html for the
+  invoice 2026-0042, that lists its line items, each with its amount in US
+  dollars. It is the package metais.org's landing page shows.
+
+  Supply one input, invoices: a list of invoices, each with its number, its
+  date, the customer it is made out to, and its line items. Give each
+  line's unit price in cents, as a whole number, so no price is rounded
+  before it is printed. Give every invoice a different number: the number
+  names its page. Read [what the invoices mean](inputs/invoices.md) before
+  you supply them.
+inputs:
+  - name: invoices
+    title: "Invoices"
+    schema: inputs/invoices.schema.json
+    meaning: inputs/invoices.md
+    forms:
+      - json
+      - yaml
+outputs:
+  - id: summary
+    template: summary.html.liquid
+    escape: html
+  - id: invoice
+    template: invoice.html.liquid
+    for_each: inputs.invoices
+    path: "{{ item.number }}.html"
+    escape: html

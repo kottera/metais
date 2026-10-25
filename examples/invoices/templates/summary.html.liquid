@@ -1,0 +1,15 @@
+<h1>Summary</h1>
+<table>
+<tr><th>Invoice</th><th>Customer</th><th>Total</th></tr>
+{%- assign all = 0 %}
+{%- for invoice in inputs.invoices %}
+{%- assign total = 0 %}
+{%- for line in invoice.lines %}
+{%- assign cents = line.quantity | times: line.unit_price %}
+{%- assign total = total | plus: cents %}
+{%- endfor %}
+{%- assign all = all | plus: total %}
+<tr><td><a href="{{ invoice.number }}.html">{{ invoice.number }}</a></td><td>{{ invoice.customer }}</td><td>{{ total | divided_by: 100.0 | amount: "USD", group: "," }}</td></tr>
+{%- endfor %}
+<tr><td>Total</td><td></td><td>{{ all | divided_by: 100.0 | amount: "USD", group: "," }}</td></tr>
+</table>
