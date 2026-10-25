@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<!-- Copyright 2026 Kottera -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!-- The site's icon: a proof mark, site.css's stamp red on its ink blue. -->
+<rect width="64" height="64" rx="10" fill="#14234a"/>
+<path d="M27 0h10v64H27zM0 27h64v10H0z" fill="#25386e"/>
+<circle cx="32" cy="32" r="13" fill="#bf2f1c"/>
+<path d="M26.5 32.5l4 4 7.5-8" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
