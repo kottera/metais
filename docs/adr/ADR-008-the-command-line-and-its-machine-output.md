@@ -10,7 +10,7 @@ Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's ratification; the
 passage it changes is marked *(A15)*.
 [ADR-003 Amendment A2](ADR-003-the-data-specification.md#amendments)
 (rules across the items of an array: `uniqueKeys` and `coverage`) is
-proposed on 2026-10-23 and amends D5 as A7 amends it, D6 and D15 item 4 (`schema --fields` and `inspect` show each rule, and a `schemas` help topic teaches both keywords).
+accepted on 2026-10-25, at the close of PLAN-2026-10-metais-values-and-rules, and amends D5 as A7 amends it, D6 and D15 item 4 (`schema --fields` and `inspect` show each rule, and a `schemas` help topic teaches both keywords).
 [Amendment A16](#amendments) (a cut in the field listing names the command
 that prints the value whole) is ruled by Ed Funnekotter on 2026-10-23 to
 land before v1.0; the passage it changes is marked *(A16)*.
