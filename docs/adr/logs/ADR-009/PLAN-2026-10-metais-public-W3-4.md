@@ -32,7 +32,7 @@ the plan's name because earlier trains' items hold the address `W3-4`.
   is otherwise unchanged, R-UX-7's placeholder included.
 - **`credential-not-seen`** is made after every session while the route
   is on. A run with the token in any file stops the set, naming the file
-  but not the token.
+  but not the token, and `-scrub` refuses a set holding such a run.
 - **`layers.json`** gains two `only-importers` rules for item 5. `net` and
   `net/http/...` are imported only by the runner, and by the tests of
   `internal/hostfs` and `internal/guarantees` that already used them.

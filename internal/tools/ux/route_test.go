@@ -401,6 +401,11 @@ func TestCredentialNotSeen(t *testing.T) {
 			if r.Valid || i < 0 || r.Checks[i].Pass || strings.Contains(r.Checks[i].Detail, fakeToken) {
 				t.Errorf("valid %v, checks %+v", r.Valid, r.Checks)
 			}
+			// Nor is the run scrubbed, so the set cannot be published.
+			dest := filepath.Join(testenv.Dir(t), "scrubbed")
+			if err := f.c.scrubSet(dest); err == nil || !strings.Contains(err.Error(), checkCredentialNotSeen) {
+				t.Errorf("scrub: %v", err)
+			}
 		})
 	}
 }
