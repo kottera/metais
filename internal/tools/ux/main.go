@@ -58,14 +58,31 @@ func cli(args []string, stdout, stderr io.Writer, environ []string) int {
 	host := fs.String("host", "", "the host the set ran on, as the scorecard publishes it, such as \"a dispatch host, linux/amd64\"")
 	transcripts := fs.String("transcripts", "", "where the set's transcripts are kept, as the scorecard publishes it (default the set's runs/ directory)")
 	scrubTo := fs.String("scrub", "", "run nothing: write a scrubbed copy of the set in -out to this new directory, fit to publish")
+	credentialFile := fs.String("credential-file", "", "a pipe holding a claude setup-token token, such as <(security find-generic-password -s metais-ux -w): the runner serves the sessions its own loopback route, which authenticates with it (ADR-009 A12)")
 	if err := fs.Parse(args); err != nil {
 		return 2
 	}
 	if fs.NArg() > 0 || *out == "" {
-		fmt.Fprintln(stderr, "usage: go run ./internal/tools/ux -out <dir> [-scenarios <ids>] [-models <models>] [-harness <name>] [-with-skill] [-pace <d>] [-quota-wait <d>] [-host <host>] [-transcripts <where>]")
+		fmt.Fprintln(stderr, "usage: go run ./internal/tools/ux -out <dir> [-scenarios <ids>] [-models <models>] [-harness <name>] [-with-skill] [-pace <d>] [-quota-wait <d>] [-host <host>] [-transcripts <where>] [-credential-file <pipe>]")
 		fmt.Fprintln(stderr, "       go run ./internal/tools/ux -out <dir> -scorecard [-scenarios <ids>] [-models <models>] [-host <host>] [-transcripts <where>]")
 		fmt.Fprintln(stderr, "       go run ./internal/tools/ux -out <dir> -scrub <new dir>")
 		return 2
+	}
+	var credential string
+	var err error
+	if *credentialFile != "" {
+		if *scrubTo != "" || *scorecardOnly {
+			fmt.Fprintln(stderr, "ux: -credential-file starts the sessions' credential route, and -scorecard and -scrub start no session")
+			return 2
+		}
+		if _, ok := lookup(environ, "ANTHROPIC_BASE_URL"); ok {
+			fmt.Fprintln(stderr, "ux: -credential-file starts the runner's own route, and ANTHROPIC_BASE_URL names another: give one, so the set says which it ran on")
+			return 2
+		}
+		if credential, err = readCredential(*credentialFile); err != nil {
+			fmt.Fprintln(stderr, "ux:", err)
+			return 1
+		}
 	}
 	h, err := harnessByName(*harnessName, environ)
 	if err != nil {
@@ -87,6 +104,7 @@ func cli(args []string, stdout, stderr io.Writer, environ []string) int {
 		transcripts: *transcripts,
 		environ:     environ,
 		stdout:      stdout,
+		credential:  credential,
 		now:         time.Now,
 		sleep:       time.Sleep,
 	}

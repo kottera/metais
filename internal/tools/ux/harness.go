@@ -33,6 +33,9 @@ type harness interface {
 	// after are the harness's isolation checks of a finished session: its
 	// transcript, and its HOME.
 	after(s session, version string, t transcript) []check
+	// route makes baseURL, the runner's own credential route (ADR-009
+	// A12), the address every session is handed.
+	route(baseURL string)
 }
 
 // session is what the runner prepared for one run.
@@ -98,11 +101,13 @@ func harnessByName(name string, environ []string) (harness, error) {
 // stream-json.
 type claudeCode struct {
 	hostPath string // the runner's PATH, after the metais under test
-	baseURL  string // the dispatch's loopback proxy
+	baseURL  string // the dispatch's loopback proxy, or the runner's own route
 	binary   string // claude's absolute path, found on hostPath
 }
 
 func (c *claudeCode) name() string { return claudeCodeName }
+
+func (c *claudeCode) route(baseURL string) { c.baseURL = baseURL }
 
 // find resolves claude on the runner's PATH once.
 func (c *claudeCode) find() (string, error) {
@@ -123,7 +128,7 @@ func (c *claudeCode) find() (string, error) {
 
 func (c *claudeCode) version() (string, error) {
 	if c.baseURL == "" {
-		return "", errors.New("ANTHROPIC_BASE_URL is not set: the runs need the dispatch's loopback proxy (R-UX-7)")
+		return "", errors.New("ANTHROPIC_BASE_URL is not set: the runs need the dispatch's loopback proxy (R-UX-7), or the runner's own route, which -credential-file starts (ADR-009 A12)")
 	}
 	p, err := c.find()
 	if err != nil {
