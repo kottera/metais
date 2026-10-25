@@ -259,6 +259,9 @@ func TestReadCredentialRefuses(t *testing.T) {
 // route of the environment's, and with -scorecard or -scrub, before
 // anything is read.
 func TestCLIRefusesCredentialRoute(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the cases name /dev/null, which Windows does not have")
+	}
 	out := filepath.Join(testenv.Dir(t), "set")
 	for _, c := range []struct {
 		name    string
