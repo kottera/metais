@@ -1,56 +1,539 @@
 {%- comment -%}
-  The landing page (ADR-013 D8 item 3): what METAIS is, who it is for,
-  the install command, and "Who makes METAIS" (D2 item 1), in the words
-  Ed approved in W2-OOB5.
+  The landing page (ADR-013 D8 item 3): what METAIS is, who it is for, the
+  install command, and "Who makes METAIS" (D2 item 1), in the words Ed
+  approved on 2026-10-24 (direction C, "Data in, documents out"). It is a
+  page of its own, not the shared layout: its stylesheet is /landing.css,
+  and it ends, like every page, with the footer saying METAIS is made by
+  Kottera. Its demos are the invoice example's real output; the site's tests
+  hold them to what metais prints.
 {%- endcomment -%}
-{%- capture body -%}
-<h1 id="metais">METAIS</h1>
-<p><strong>Document templates that check your data before they fill it in.</strong></p>
-<p>METAIS is pronounced <em>meh-TAY</em> (/mɛˈteɪ/). The final <em>s</em> is silent, as in <em>Beaujolais</em>.</p>
-<p>A METAIS package is a document template in one file. It says which data
-the document needs, with a JSON Schema and a plain explanation for each
-input, and it carries the Liquid templates that turn that data into the
-finished document: a Markdown report, an HTML page, a Word document, or a
-whole directory of files.</p>
-<p><code>metais</code> is the tool that reads a package, checks your data against it and
-renders the document. It reads the package in place, without unpacking it.
-It reports every problem with your data at once, each with where it is and
-how to fix it. It never runs code from a package and never touches the
-network, and the same package and data give the same bytes on every
-platform.</p>
-<h2 id="who-it-is-for">Who it is for</h2>
-<ul>
-<li><strong>You were given a <code>.metais</code> file</strong> and need the document it makes.
-<a href="/reference/commands/inspect/"><code>metais inspect</code></a> tells you what the package needs, and <a href="/reference/commands/render/"><code>metais render</code></a>
-makes the document once your data is valid.
-→ <a href="/guide/using-a-package/">Using a package</a></li>
-<li><strong>You want to hand someone a template</strong> that tells them exactly what to
-supply, and refuses what does not fit, before any document is made.
-→ <a href="/guide/writing-a-package/">Writing a package</a></li>
-<li><strong>You work with a coding agent.</strong> The packages and the tool are built to
-be read by agents as well as people: every command ends with the
-commands to run next, every refusal names the fix, and <code>--json</code> gives
-any result as one document. <a href="/reference/commands/skill/"><code>metais skill</code></a> installs a skill that
-teaches your agent the same routes these guides describe.</li>
-<li><strong>You are writing another implementation.</strong> The specification is
-normative, its JSON Schemas are published at their <code>$id</code>s under
-<a href="/schemas/1.0/manifest.schema.json"><code>https://metais.org/schemas/</code></a>, and its conformance suite proves a
-processor or an authoring tool against it.
-→ <a href="/spec/draft/">The specification</a></li>
-</ul>
-<h2 id="install">Install</h2>
-<p>On macOS:</p>
-<pre><code>brew install kottera/tap/metais</code></pre>
-<p>On Linux, or a Mac without Homebrew:</p>
-<pre><code>curl -fsSL https://metais.org/install.sh | sh</code></pre>
-<p>Then check it works:</p>
-<pre><code>metais --version</code></pre>
-<p>Go users, and anyone who wants the release archives themselves, will find
-those routes on the <a href="/install/">install page</a>.</p>
-<h2 id="who-makes-metais">Who makes METAIS</h2>
-<p>METAIS is made by <a href="https://kottera.com/">Kottera</a>. Kottera builds tera, a
-work engine for AI agents.</p>
-<p>METAIS is its own project, under the Apache License 2.0, and does not need
-tera.</p>
-{%- endcapture -%}
-{%- render "_layout.html.liquid", title: "METAIS — document templates that check your data before they fill it in", description: "METAIS is a package format for document templates, and metais is the tool that reads, validates and renders them.", head: nil, body: body -%}
+{%- assign release = inputs.release -%}
+<!DOCTYPE html>
+<!-- Copyright 2026 Kottera. SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>METAIS: your data, proofread before it's printed</title>
+<meta name="description" content="Document templates that check your data before they fill it in. One .metais file: templates, a JSON Schema for every input, and a guide. Built for consistent output in AI workflows.">
+<link rel="stylesheet" href="/landing.css">
+</head>
+<body>
+
+<!-- The mark: a sheet whose corner is folded down into an acute accent, the stressed syllable of meh-TAY and a proofreader's tick at once. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="mark" viewBox="0 0 40 40">
+      <rect x="1" y="1" width="38" height="38" rx="9" fill="#14234a"/>
+      <path d="M11 9.5h12.5l6 6V30.5a1 1 0 0 1-1 1H11a1 1 0 0 1-1-1v-20a1 1 0 0 1 1-1z" fill="#f4eddc"/>
+      <path d="M23.5 9.5v6h6" fill="none" stroke="#14234a" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M14 20.5h9M14 24.5h11.5M14 28h6" stroke="#14234a" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M26.2 3.6l5.4-2.2" stroke="#bf2f1c" stroke-width="3.6" stroke-linecap="round" transform="translate(0 2.2)"/>
+    </symbol>
+    <filter id="ink" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.3 1.45" result="speckle"/>
+      <feComposite in="SourceGraphic" in2="speckle" operator="in"/>
+    </filter>
+  </defs>
+</svg>
+
+<header class="wrap">
+  <nav class="nav" aria-label="Main">
+    <a class="brand" href="/" aria-label="METAIS home"><svg aria-hidden="true"><use href="#mark"/></svg>metais</a>
+    {%- if release.published %}
+    <a class="pill" href="https://github.com/kottera/metais/releases/tag/{{ release.tag }}">{%- if release.prerelease %}<b>RC</b> {% endif %}{{ release.tag }}</a>
+    {%- else %}
+    <a class="pill" href="https://github.com/kottera/metais/releases"><b>DEV</b> v{{ inputs.tool.tool.version }}</a>
+    {%- endif %}
+    <ul>
+      <li><a href="/install/">Install</a></li>
+      <li><a href="/guide/using-a-package/">Guide</a></li>
+      <li><a href="/reference/">Reference</a></li>
+      <li><a href="/spec/draft/">Spec</a></li>
+      <li><a href="https://github.com/kottera/metais">GitHub</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+<!-- ================= HERO ================= -->
+<div class="hero wrap">
+  <div class="hero-top">
+    <div>
+      <p class="kicker">Data in · documents out</p>
+      <h1>Your data, <em>proofread</em> before it's printed.</h1>
+      <p class="sub"><strong>Built for AI workflows.</strong> Your agent gathers the data; <code>metais</code> makes every document come out the same way, every time: checked against the package's schemas, filled into its templates, the same bytes on every platform.</p>
+      <p class="sub2">A METAIS package is one <strong>.metais</strong> file: templates, a JSON Schema for every input, and a guide to what each input means. <code>metais</code> reports <strong>every problem at once</strong>, with where it is and how to fix it, and only then fills in the documents.</p>
+    </div>
+    <div>
+      <div class="dict" lang="en">
+        <div class="hw">me·tais <span class="ipa">/mɛˈteɪ/</span> <i>n.</i></div>
+        <p><b>meh-TAY.</b> Like Beaujolais, not like metal: the s stays silent. Multi-file Extensible Templating And Instantiation Specification.</p>
+      </div>
+      <div class="ctas">
+        <a class="btn primary" href="/install/">Install metais</a>
+        <a class="btn ghost" href="#check"><svg class="caret" viewBox="0 0 20 18" width="18" height="16" aria-hidden="true"><path d="M2 16 L10 2 L18 16" fill="none" stroke="#bf2f1c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg> See it catch a mistake</a>
+      </div>
+      <div class="install" role="group" aria-label="Install command">
+        <input type="radio" name="h-os" id="h-brew" checked>
+        <input type="radio" name="h-os" id="h-curl">
+        <input type="radio" name="h-os" id="h-go">
+        <div class="tabs"><label for="h-brew">macOS · brew</label><label for="h-curl">Linux · curl</label><label for="h-go">Go</label></div>
+        <div class="cmd c-brew"><code>brew install kottera/tap/metais</code></div>
+        <div class="cmd c-curl"><code>curl -fsSL https://metais.org/install.sh | sh</code></div>
+        <div class="cmd c-go"><code>go install metais.org/metais/cmd/metais@latest</code></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- The proof sheet -->
+  <figure class="proof" id="proof" aria-labelledby="proof-cap">
+    <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+    <div class="slug" aria-hidden="true">
+      <svg class="reg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 0v16M0 8h16" stroke="currentColor" stroke-width="1"/></svg>
+      <span>Proof</span><span class="sep">/</span><span>invoice-0.1.0.metais</span><span class="sep hide-s">/</span><span class="hide-s">checked</span>
+      <span class="bars"><i style="background:#14234a"></i><i style="background:#bf2f1c"></i><i style="background:#f4eddc;outline:1px solid #cfc3a6"></i><i style="background:#9a9378"></i></span>
+    </div>
+
+    <div class="sheet-grid">
+      <!-- left: the data as supplied, checked -->
+      <div>
+        <div class="col-h"><h2>As supplied</h2><span>invoice.json · <span class="good">0 errors</span></span></div>
+<pre class="data" aria-label="invoice.json, the data as supplied; every value checked"><span class="l"><span class="ln">1</span>{</span><span class="l"><span class="ln">2</span>  "number": "2026-0042",<span class="tk"><svg viewBox="0 0 16 14" aria-hidden="true"><path d="M2 7.5 L6 11.5 L14 2.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><span class="l"><span class="ln">3</span>  "date": "2026-10-23",<span class="tk"><svg viewBox="0 0 16 14" aria-hidden="true"><path d="M2 7.5 L6 11.5 L14 2.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><span class="l"><span class="ln">4</span>  "customer": "Northwind Traders",<span class="tk"><svg viewBox="0 0 16 14" aria-hidden="true"><path d="M2 7.5 L6 11.5 L14 2.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><span class="l"><span class="ln">5</span>  "lines": [</span><span class="l"><span class="ln">6</span>    {"description": "Consulting, October", "quantity": 12, "unit_price": 15000},<span class="tk"><svg viewBox="0 0 16 14" aria-hidden="true"><path d="M2 7.5 L6 11.5 L14 2.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><span class="l"><span class="ln">7</span>    {"description": "Printed manuals", "quantity": 3, "unit_price": 1999},<span class="tk"><svg viewBox="0 0 16 14" aria-hidden="true"><path d="M2 7.5 L6 11.5 L14 2.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><span class="l"><span class="ln">8</span>    {"description": "Shipping", "quantity": 1, "unit_price": 805}<span class="tk"><svg viewBox="0 0 16 14" aria-hidden="true"><path d="M2 7.5 L6 11.5 L14 2.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><span class="l"><span class="ln">9</span>  ]</span><span class="l"><span class="ln">10</span>}</span></pre>
+        <div class="vres" role="figure" aria-label="What metais validate prints for this data">
+          <div class="vlbl">metais validate, for this data</div>
+<pre><span class="ok">0 errors</span>, 0 warnings, 0 info
+
+<span class="nx">Next:</span>
+  metais render &lt;package&gt; --data &lt;data dir&gt; &lt;your --set, --set-json and --inputs-json flags&gt; --out &lt;dir&gt;  <span class="dim">— Renders the outputs from the inputs just validated into a new directory.</span></pre>
+        </div>
+      </div>
+
+      <div class="gutter" aria-hidden="true">
+        <svg viewBox="0 0 44 80"><path d="M22 4 C 6 24, 38 40, 22 70" fill="none" stroke="#14234a" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="4 5"/><path d="M14 63 L22 74 L31 64" fill="none" stroke="#14234a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>checked · rendered</span>
+      </div>
+
+      <!-- right: the document as printed -->
+      <div>
+        <div class="col-h"><h2>As printed</h2><span>invoice.html</span></div>
+        <div class="invoice-wrap">
+          <article class="invoice" aria-label="The rendered invoice">
+            <h3>Invoice 2026-0042</h3>
+            <p>Northwind Traders, 2026-10-23</p>
+            <table>
+              <tr><td>Consulting, October</td><td>12</td><td>USD 1,800.00</td></tr>
+              <tr><td>Printed manuals</td><td>3</td><td>USD 59.97</td></tr>
+              <tr><td>Shipping</td><td>1</td><td>USD 8.05</td></tr>
+            </table>
+          </article>
+          <svg class="stamp" viewBox="0 0 160 160" role="img" aria-label="Stamp: checked by metais">
+            <defs><path id="arcTop" d="M 30 80 A 50 50 0 0 1 130 80"/><path id="arcBot" d="M 19 80 A 61 61 0 0 0 141 80"/></defs>
+            <g filter="url(#ink)" fill="none" stroke="currentColor">
+              <circle cx="80" cy="80" r="74" stroke-width="5"/>
+              <circle cx="80" cy="80" r="66" stroke-width="1.6"/>
+              <circle cx="80" cy="80" r="37" stroke-width="1.6"/>
+              <path d="M62 81 L75 94 L100 64" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+              <g fill="currentColor" stroke="none" font-family="Iowan Old Style, Charter, Georgia, serif" font-weight="700" letter-spacing="3">
+                <text font-size="15"><textPath href="#arcTop" startOffset="50%" text-anchor="middle">CHECKED BY</textPath></text>
+                <text font-size="15"><textPath href="#arcBot" startOffset="50%" text-anchor="middle">METAIS</textPath></text>
+              </g>
+              <g fill="currentColor" stroke="none"><circle cx="20" cy="80" r="2.6"/><circle cx="140" cy="80" r="2.6"/></g>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <figcaption class="fig" id="proof-cap">
+      <span><b>fig. 1</b> Left: the invoice package's data, and what <b>metais validate</b> prints for it, word for word. Right: what <b>metais render</b> makes of it. <a href="#check">Step ii</a> shows the same invoice with four mistakes in it.</span>
+    </figcaption>
+  </figure>
+</div>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section id="how" class="wrap" aria-labelledby="how-h">
+  <p class="eyebrow">How it works</p>
+  <h2 class="big" id="how-h">One file goes in. It checks. Documents come out.</h2>
+  <p class="lede">The package says what its documents need. <code>metais</code> holds your data to it. The golden path for using one: <strong>inspect → read → schema → validate → render</strong>.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div>
+        <div class="no">i.</div>
+        <h3>Package</h3>
+        <p>A package is one <code>.metais</code> file, packed and checked by the <code>metais</code> command line tool. <code>metais pack</code> writes it after checking and testing the package; <code>metais</code> reads it in place.</p>
+        <p>Inside: templates (Liquid, if you know it) that become the output files, a JSON Schema for every input, prose saying what each input means, and optionally references, assets and examples. Examples carry their expected outputs, so they double as the package's tests.</p>
+        <p><strong>One package, many files.</strong> A package can declare several outputs. <code>for_each</code> makes one output per item, such as one page per article in the static-site example. And the outputs can make up a whole directory: a static site, a git repository.</p>
+      </div>
+      <div>
+      <div class="pkg">
+        <div class="parcel" aria-hidden="true"><div class="box"><div class="wax"><svg viewBox="0 0 16 14" width="26" height="24" aria-hidden="true"><path d="M2 7.5 L6 11.5 L14 2.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div><div class="tag">invoice-0.1.0.metais<small>one file, packed and checked by metais</small></div></div>
+        <div>
+          <ul class="tree" aria-label="What the invoice package carries, from metais inspect">
+            <li><span><span class="k">template</span>invoice.html.liquid</span><span class="what">becomes invoice.html</span></li>
+            <li><span><span class="k">schema</span>inputs/invoice.schema.json</span><span class="what">what valid data is</span></li>
+            <li><span><span class="k">guide</span>inputs/invoice.md</span><span class="what">what the input means</span></li>
+            <li><span><span class="k">reference</span>references/sources.md</span><span class="what">Sources and their terms</span></li>
+            <li><span><span class="k">examples</span>basic, escaped</span><span class="what">with expected outputs</span></li>
+          </ul>
+          <p class="sha">METAIS 1.0, packed, sha256:af30477b6470efed759a616226659b320d16077a474f562436f3e838c53841bf</p>
+        </div>
+      </div>
+        <div class="fan" aria-label="One package, many files: the static-site example">
+          <div class="fan-h">static-site · one package, many files</div>
+          <div class="fan-row">
+            <div class="fan-src"><span class="mini-parcel" aria-hidden="true"></span>static-site<br>.metais</div>
+            <span class="arrow" aria-hidden="true">→</span>
+            <div class="fan-outs">
+              <div class="fo many-pages"><i></i><i></i><i></i><span>one HTML page per article</span><b>for_each</b></div>
+              <div class="fo"><i></i><span>an index</span></div>
+              <div class="fo"><i class="rss"></i><span>an Atom feed</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step wide" id="check">
+      <div class="intro">
+        <div>
+          <div class="no">ii.</div>
+          <h3>Check</h3>
+        </div>
+        <div class="cols">
+          <p>Hand it your data as files, inline JSON or <code>--set</code> flags. It reports <strong>every problem at once</strong>: the file, line and column, the JSON pointer, the field's title, the schema rule it broke, and a hint.</p>
+          <p>Each finding carries a stable code, such as <code>[input.required]</code>, and the report ends by saying what to run next. Here is the invoice from fig. 1, with four mistakes in it.</p>
+        </div>
+      </div>
+      <figure class="proof fail" aria-labelledby="fail-cap">
+        <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
+        <div class="slug" aria-hidden="true">
+          <svg class="reg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 0v16M0 8h16" stroke="currentColor" stroke-width="1"/></svg>
+          <span>Proof</span><span class="sep">/</span><span>invoice-0.1.0.metais</span><span class="sep hide-s">/</span><span class="hide-s" style="color:var(--red)">4 errors</span>
+          <span class="bars"><i style="background:#14234a"></i><i style="background:#bf2f1c"></i><i style="background:#f4eddc;outline:1px solid #cfc3a6"></i><i style="background:#9a9378"></i></span>
+        </div>
+        <div class="fail-grid">
+          <div>
+            <div class="col-h"><h2>As supplied</h2><span>invoice.json · <span class="bad">4 errors</span></span></div>
+<pre class="data" aria-label="invoice.json, the data as supplied, with four marked mistakes"><span class="l"><span class="ln">1</span>{<span class="ins m1" aria-label="mistake 1"><svg viewBox="0 0 20 18" aria-hidden="true"><path d="M2 16 L10 2 L18 16" fill="none" stroke="#bf2f1c" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="num">1</span></span></span><span class="l"><span class="ln">2</span>  "number": "2026-0042",</span><span class="l"><span class="ln">3</span>  "date": <span class="mk m2">"23/10/2026"<span class="num">2</span></span>,</span><span class="l"><span class="ln">4</span>  "lines": [</span><span class="l"><span class="ln">5</span>    {"description": "Consulting, October", "quantity": 12, "unit_price": <span class="mk alt m3">149.99<span class="num">3</span></span>},</span><span class="l"><span class="ln">6</span>    {"description": "Printed manuals", "quantity": <span class="mk m4">0<span class="num">4</span></span>, "unit_price": 1999}</span><span class="l"><span class="ln">7</span>  ]</span><span class="l"><span class="ln">8</span>}</span></pre>
+          </div>
+          <div>
+            <div class="col-h"><h2>Proofreader's notes</h2><span>metais validate</span></div>
+        <ol class="notes" aria-label="What metais validate reports">
+          <li><span class="n">1</span><span class="where">invoice.json:1:1 · at /invoice/customer</span><span class="msg">Customer is required. <code>[input.required]</code></span><span class="hint">hint: Add the member `customer`.</span></li>
+          <li><span class="n">2</span><span class="where">invoice.json:3:11 · at /invoice/date</span><span class="msg">Invoice date is not in the date format. <code>[input.format]</code></span><span class="hint">hint: Write a value in the date format.</span></li>
+          <li><span class="n">3</span><span class="where">invoice.json:5:74 · at /invoice/lines/0/unit_price</span><span class="msg">Unit price in cents must be of type integer; it is of type number. <code>[input.type]</code></span><span class="hint">hint: Write a value of type integer.</span></li>
+          <li><span class="n">4</span><span class="where">invoice.json:6:52 · at /invoice/lines/1/quantity</span><span class="msg">Quantity must be at least 1. <code>[input.minimum]</code></span><span class="hint">hint: Write a number of at least 1.</span></li>
+        </ol>
+          </div>
+        </div>
+        <figcaption class="fig" id="fail-cap"><span><b>fig. 2</b> The marks are where <b>metais validate</b> points; the notes are what it says, word for word.</span></figcaption>
+      </figure>
+      <details class="raw" open>
+        <summary>The same report, as the terminal prints it</summary>
+        <div class="term" role="figure" aria-label="Output of metais validate">
+          <div class="bar"><i></i><i></i><i></i><span>metais validate · the data from fig. 2</span></div>
+<pre><span class="p">$</span> metais validate invoice-0.1.0.metais --data bad
+<span class="loc">invoice.json:1:1:</span> <span class="err">error:</span> Customer is required. <span class="code">[input.required]</span>
+<span class="dim">  at /invoice/customer (input invoice: Invoice)
+  field: Customer
+  rule: required in inputs/invoice.schema.json</span>
+<span class="hint">  hint: Add the member `customer`.</span>
+<span class="loc">invoice.json:3:11:</span> <span class="err">error:</span> Invoice date is not in the date format. <span class="code">[input.format]</span>
+<span class="dim">  at /invoice/date (input invoice: Invoice)
+  field: Invoice date
+  rule: format at /properties/date in inputs/invoice.schema.json</span>
+<span class="hint">  hint: Write a value in the date format.</span>
+<span class="loc">invoice.json:5:74:</span> <span class="err">error:</span> Unit price in cents must be of type integer; it is of type number. <span class="code">[input.type]</span>
+<span class="dim">  at /invoice/lines/0/unit_price (input invoice: Invoice)
+  field: Unit price in cents
+  rule: type at /properties/lines/items/properties/unit_price in inputs/invoice.schema.json</span>
+<span class="hint">  hint: Write a value of type integer.</span>
+<span class="loc">invoice.json:6:52:</span> <span class="err">error:</span> Quantity must be at least 1. <span class="code">[input.minimum]</span>
+<span class="dim">  at /invoice/lines/1/quantity (input invoice: Invoice)
+  field: Quantity
+  rule: minimum at /properties/lines/items/properties/quantity in inputs/invoice.schema.json</span>
+<span class="hint">  hint: Write a number of at least 1.</span>
+<span class="err">4 errors</span>, 0 warnings, 0 info
+
+<span class="nx">Next:</span>
+  metais validate &lt;package&gt; --data &lt;data dir&gt; &lt;your --set, --set-json and --inputs-json flags&gt;  <span class="dim">— Validates the inputs again once the findings are corrected.</span>
+  metais help inputs  <span class="dim">— Explains how inputs are supplied: the data directory, --inputs-json, --set and --set-json.</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="step">
+      <div>
+        <div class="no">iii.</div>
+        <h3>Render</h3>
+        <p>Only checked data is filled in. Templates write any text format: for example Markdown, HTML, JSON, YAML, CSV, source code, config, Word documents, whole directories and repositories, and anything else text can be.</p>
+        <p>Packages also ship static files, copied byte for byte from the package's assets: images, fonts, CSS, any binary file.</p>
+        <p>Templates are side-effect free, so the same inputs always give the same bytes, on every platform.</p>
+      </div>
+      <div>
+        <div class="pair">
+          <div class="term" role="figure" aria-label="The template, invoice.html.liquid">
+            <div class="bar"><i></i><i></i><i></i><span>invoice.html.liquid</span></div>
+{% raw %}<pre style="font-size:12px">&lt;h1&gt;Invoice {{ inputs.invoice.number }}&lt;/h1&gt;
+&lt;p&gt;{{ inputs.invoice.customer }}, {{ inputs.invoice.date }}&lt;/p&gt;
+&lt;table&gt;
+{%- for line in inputs.invoice.lines %}
+{%- assign cents = line.quantity | times: line.unit_price %}
+&lt;tr&gt;&lt;td&gt;{{ line.description }}&lt;/td&gt;&lt;td&gt;{{ line.quantity }}&lt;/td&gt;&lt;td&gt;{{ cents | divided_by: 100.0 | amount: "USD", group: "," }}&lt;/td&gt;&lt;/tr&gt;
+{%- endfor %}
+&lt;/table&gt;</pre>{% endraw %}
+          </div>
+          <div class="mini-out" aria-label="The rendered invoice.html">
+            <div class="lbl">invoice.html, rendered</div>
+            <h4>Invoice 2026-0042</h4>
+            <p>Northwind Traders, 2026-10-23</p>
+            <table>
+              <tr><td>Consulting, October</td><td>12</td><td>USD 1,800.00</td></tr>
+              <tr><td>Printed manuals</td><td>3</td><td>USD 59.97</td></tr>
+              <tr><td>Shipping</td><td>1</td><td>USD 8.05</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WHO IT'S FOR ================= -->
+<section id="who" class="wrap" aria-labelledby="who-h">
+  <p class="eyebrow">Four roles, four first commands</p>
+  <h2 class="big" id="who-h">Who it's for</h2>
+  <p class="lede">Whichever you are, <code>metais</code> tells you what it needs, and what to run next.</p>
+
+  <div class="who">
+    <article class="card">
+      <p class="tagline">You've been handed a .metais file</p>
+      <h3 class="cmdh"><span class="d">$</span>metais inspect</h3>
+      <p>It tells you what the package makes, what it needs from you, and where to read up, straight from the file.</p>
+      <div class="term">
+        <div class="bar"><i></i><i></i><i></i><span>metais inspect · excerpt</span></div>
+<pre><span class="nx">Invoice — invoice 0.1.0</span>
+Renders an invoice as an HTML page, from its number, date, customer and line items.
+<span class="cut">…</span>
+<span class="nx">Inputs</span>
+  invoice — Invoice (required; invoice.json, invoice.yaml, invoice.yml)
+
+<span class="nx">Outputs</span>
+  invoice.html ← template invoice.html.liquid
+<span class="cut">…</span></pre>
+      </div>
+    </article>
+
+    <article class="card">
+      <p class="tagline">You want to hand someone a template</p>
+      <h3 class="cmdh"><span class="d">$</span>metais init</h3>
+      <p>Write the templates, a JSON Schema and some prose for each input, and examples that prove it works. One golden path ends in a single file you can send anyone, with the rules shipped inside it.</p>
+      <div class="chips" aria-label="The golden path for writing a package">
+        <span>init</span><i>→</i><span class="soft">edit · render --sample</span><i>→</i><span>check</span><i>→</i><span>test</span><i>→</i><span>pack</span>
+      </div>
+      <div class="term">
+        <div class="bar"><i></i><i></i><i></i><span>metais schema &lt;package&gt; invoice --fields · excerpt</span></div>
+<table class="fields"><tr><td>/invoice/customer</td><td>string</td><td>required</td><td>maxLength=200 minLength=1</td><td>Customer</td></tr><tr><td>/invoice/date</td><td>string</td><td>required</td><td>format="date"</td><td>Invoice date</td></tr><tr><td>/invoice/lines/*/quantity</td><td>integer</td><td>required</td><td>maximum=10000 minimum=1</td><td>Quantity</td></tr><tr><td>/invoice/lines/*/unit_price</td><td>integer</td><td>required</td><td>maximum=100000000 minimum=0</td><td>Unit price in cents</td></tr></table>
+      </div>
+    </article>
+
+    <article class="card">
+      <p class="tagline">You work with a coding agent</p>
+      <h3 class="cmdh"><span class="d">$</span>metais skill</h3>
+      <p>It writes a SKILL.md that teaches your agent the golden paths: to <code>.claude/skills/metais/</code> for Claude Code, and to <code>.agents/skills/metais/</code> for Codex, Gemini CLI, Cursor and OpenCode. Every refusal names its fix; <code>--json</code> gives any result as one versioned document.</p>
+      <div class="term">
+        <div class="bar"><i></i><i></i><i></i><span>metais skill --harness claude</span></div>
+<pre>The metais skill, from metais 1.0.0:
+  .claude/skills/metais/SKILL.md  <span class="ok">installed</span>  for claude, because --harness names it
+
+A harness loads the skill when its next session starts.
+
+<span class="nx">Next:</span>
+  metais help  <span class="dim">— Lists the commands the skill teaches; a harness loads the skill at its next session.</span>
+
+<span class="p">$</span> metais validate … --json   <span class="cut"># excerpt</span>
+{<span class="code">"format":"metais.validate/1"</span>,"ok":false,"findings":[{"code":"input.required", <span class="cut">…</span></pre>
+      </div>
+    </article>
+
+    <article class="card">
+      <p class="tagline">You're writing another implementation</p>
+      <h3 class="cmdh"><span class="d">§</span>the spec and its schemas</h3>
+      <p>METAIS is a format with a written spec, published JSON Schemas and a conformance suite. <code>metais</code> is the reference tool, not the only possible one.</p>
+      <ul class="links">
+        <li><a href="/spec/draft/"><span class="sec">§</span><span class="ttl">The specification, 1.0 draft</span><span class="path">/spec/draft/</span></a></li>
+        <li><a href="/schemas/1.0/manifest.schema.json"><span class="sec">{ }</span><span class="ttl">JSON Schemas, served at their $ids</span><span class="path">/schemas/1.0/…</span></a></li>
+        <li><a href="https://github.com/kottera/metais"><span class="sec">✓</span><span class="ttl">The conformance suite</span><span class="path">github.com/kottera/metais</span></a></li>
+        <li><a href="/reference/"><span class="sec">¶</span><span class="ttl">Every command, documented</span><span class="path">/reference/</span></a></li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<!-- ================= GALLERY ================= -->
+<section id="examples" class="wrap" aria-labelledby="ex-h">
+  <p class="eyebrow">One package, any document</p>
+  <h2 class="big" id="ex-h">From a one-line widget to a whole git repository.</h2>
+  <p class="lede">Six example packages ship in the repository. Each is one .metais file; look at what comes out.</p>
+
+  <div class="gallery">
+    <article class="ex">
+      <div class="art" aria-hidden="true">
+        <div class="pg" style="width:104px;height:132px;padding-top:12px;transform:rotate(-3deg)">
+          <div class="ln-s ink w60" style="height:8px"></div><div class="ln-s w40"></div><div class="ln-s" style="margin-top:14px"></div><div class="ln-s"></div><div class="ln-s"></div><div class="ln-s red w40" style="margin-left:auto;margin-right:10px"></div>
+        </div>
+        <span class="badge" style="right:22%;top:24px;background:var(--red)">.html</span>
+      </div>
+      <div class="body"><h3>invoice</h3><p>An invoice as an HTML page, from its number, date, customer and line items.</p><div class="outs"><span class="in">invoice.json</span><span>HTML</span></div></div>
+    </article>
+
+    <article class="ex">
+      <div class="art" aria-hidden="true">
+        <div class="pg stage" style="--r:-6deg"><b>1</b><div style="height:34px"></div><div class="ln-s"></div><div class="ln-s w60"></div></div>
+        <div class="pg stage" style="--r:0deg"><b>2</b><div style="height:34px"></div><div class="ln-s"></div><div class="ln-s w75"></div></div>
+        <div class="pg stage" style="--r:6deg"><b>3</b><div style="height:34px"></div><div class="ln-s"></div><div class="ln-s ink w40"></div></div>
+      </div>
+      <div class="body"><h3>dora-incident-report</h3><p>A financial entity's report on a major ICT-related incident under the EU's DORA regulation, at each of its three stages.</p><div class="outs"><span>three stages</span><span>DORA</span></div></div>
+    </article>
+
+    <article class="ex">
+      <div class="art" aria-hidden="true">
+        <div class="tree-art" style="padding:10px 12px">CSV tables<br>of criteria</div>
+        <span class="arrow">→</span>
+        <div style="display:grid;gap:8px">
+          <div class="pg" style="width:70px;height:46px;padding-top:6px"><div class="ln-s ink w60"></div><div class="ln-s"></div><span class="badge" style="right:-10px;bottom:-8px">.docx</span></div>
+          <div class="pg" style="width:70px;height:46px;padding-top:6px"><div class="ln-s w75"></div><div class="ln-s w40"></div><span class="badge" style="right:-10px;bottom:-8px;background:var(--red)">.json</span></div>
+        </div>
+      </div>
+      <div class="body"><h3>accessibility-conformance-report</h3><p>An ACR for one product, as a Word document and a JSON copy, from CSV tables of criteria.</p><div class="outs"><span class="in">CSV</span><span>Word</span><span>JSON</span></div></div>
+    </article>
+
+    <article class="ex">
+      <div class="art" aria-hidden="true">
+<div class="tree-art">repo/
+├─ sources
+├─ config
+├─ README
+├─ check script
+├─ CI          <span style="color:var(--red)">optional</span>
+└─ container   <span style="color:var(--red)">optional</span></div>
+      </div>
+      <div class="body"><h3>repo-scaffold</h3><p>A complete Go repository from a project description: sources, config, README, check script, and optionally CI and a container build.</p><div class="outs"><span class="in">description</span><span>a directory</span><span>Go</span></div></div>
+    </article>
+
+    <article class="ex">
+      <div class="art" aria-hidden="true">
+        <div style="position:relative;width:110px;height:120px">
+          <div class="pg" style="position:absolute;inset:0 26px 18px 0;transform:rotate(-6deg)"></div>
+          <div class="pg" style="position:absolute;inset:6px 13px 12px 13px;transform:rotate(-2deg)"></div>
+          <div class="pg" style="position:absolute;inset:12px 0 6px 26px;padding-top:10px"><div class="ln-s ink w60"></div><div class="ln-s"></div><div class="ln-s"></div><div class="ln-s w40"></div></div>
+        </div>
+        <div class="feed"></div>
+      </div>
+      <div class="body"><h3>static-site</h3><p>One HTML page per article, an index and an Atom feed, from a directory of Markdown files.</p><div class="outs"><span class="in">Markdown</span><span>HTML pages</span><span>index</span><span>Atom</span></div></div>
+    </article>
+
+    <article class="ex">
+      <div class="art" aria-hidden="true">
+        <div class="tree-art" style="padding:10px 12px;color:var(--muted)">{ … }</div>
+        <span class="arrow">→</span>
+        <div class="pg" style="width:120px;height:44px;display:flex;align-items:center;gap:10px;padding:0 14px;border-radius:22px"><span class="dot"></span><div style="flex:1"><div class="ln-s ink" style="margin:0 0 5px"></div><div class="ln-s w60" style="margin:0"></div></div></div>
+      </div>
+      <div class="body"><h3>status-widget</h3><p>One HTML fragment showing a service's status, from a JSON object a program supplies.</p><div class="outs"><span class="in">JSON</span><span>HTML fragment</span></div></div>
+    </article>
+  </div>
+</section>
+</main>
+
+<!-- ================= SAFETY ================= -->
+<section class="safe" id="safe" aria-labelledby="safe-h">
+  <div class="wrap">
+    <p class="eyebrow">Safe with packages from strangers</p>
+    <h2 class="big" id="safe-h">A package can fill in documents. Nothing else.</h2>
+    <p class="lede">Templates are side-effect free. Whatever is inside a package, it:</p>
+    <div class="seals">
+      <div class="seal">
+        <svg viewBox="0 0 86 86" aria-hidden="true"><circle cx="43" cy="43" r="40" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="43" cy="43" r="33" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 3"/><path d="M30 34 l-7 9 7 9M56 34 l7 9 -7 9" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 60 L58 26" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></svg>
+        <h3>Can't run code</h3>
+        <p>Nothing in a package is ever executed.</p>
+      </div>
+      <div class="seal">
+        <svg viewBox="0 0 86 86" aria-hidden="true"><circle cx="43" cy="43" r="40" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="43" cy="43" r="33" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 3"/><path d="M31 24h17l8 8v30H31z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M24 62 L62 24" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></svg>
+        <h3>Can't read other files</h3>
+        <p>Only the package itself and the inputs you give it.</p>
+      </div>
+      <div class="seal">
+        <svg viewBox="0 0 86 86" aria-hidden="true"><circle cx="43" cy="43" r="40" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="43" cy="43" r="33" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 3"/><circle cx="43" cy="43" r="16" fill="none" stroke="currentColor" stroke-width="3"/><path d="M27 43h32M43 27c-8 9-8 23 0 32M43 27c8 9 8 23 0 32" fill="none" stroke="currentColor" stroke-width="2"/><path d="M24 62 L62 24" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></svg>
+        <h3>Can't reach the network</h3>
+        <p>No fetches, no phoning home.</p>
+      </div>
+      <div class="seal">
+        <svg viewBox="0 0 86 86" aria-hidden="true"><circle cx="43" cy="43" r="40" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="43" cy="43" r="33" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 3"/><circle cx="43" cy="43" r="15" fill="none" stroke="currentColor" stroke-width="3"/><path d="M43 34v9l6 4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M24 62 L62 24" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></svg>
+        <h3>Can't see your machine</h3>
+        <p>No environment variables, host name, user or clock.</p>
+      </div>
+      <div class="seal wide">
+        <svg viewBox="0 0 86 86" aria-hidden="true"><circle cx="43" cy="43" r="40" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="43" cy="43" r="33" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 3"/><path d="M28 36h30M28 50h30" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/></svg>
+        <div><h3>So: same inputs, same bytes</h3><p>The same package and the same data give the same bytes on macOS and Linux, amd64 and arm64. Run it a thousand times in an agent loop and the document never drifts.</p></div>
+      </div>
+    </div>
+    <p class="after">And before it reads any file in a package, <code>metais</code> checks the package against its digests and its security limits, so decompression bombs and the like are refused at the door. The invoice package, as <code>metais inspect</code> identifies it:</p>
+    <p class="digest">METAIS 1.0, packed, sha256:af30477b6470efed759a616226659b320d16077a474f562436f3e838c53841bf</p>
+  </div>
+</section>
+
+<!-- ================= INSTALL STRIP ================= -->
+<section class="strip wrap" id="install" aria-labelledby="install-h">
+  <div>
+    <h2 id="install-h">Install metais</h2>
+    <p>Builds for macOS and Linux, amd64 and arm64; each archive is checked against SHA256SUMS. <a href="/install/">All install options</a></p>
+  </div>
+  <div class="lines">
+    <div class="line"><span class="os">macOS</span><code>brew install kottera/tap/metais</code></div>
+    <div class="line"><span class="os">Linux, or a Mac without Homebrew</span><code>curl -fsSL https://metais.org/install.sh | sh</code></div>
+    <div class="line"><span class="os">Go</span><code>go install metais.org/metais/cmd/metais@latest</code></div>
+  </div>
+</section>
+
+<!-- ================= WHO MAKES METAIS (ADR-013 D2 item 1) ================= -->
+<section class="strip wrap" id="who-makes" aria-labelledby="who-makes-metais">
+  <div>
+    <h2 id="who-makes-metais">Who makes METAIS</h2>
+  </div>
+  <div>
+    <p>METAIS is made by <a href="https://kottera.com/">Kottera</a>. Kottera builds tera, a work engine for AI agents. METAIS is its own project, under the Apache License 2.0, and does not need tera.</p>
+  </div>
+</section>
+
+<script>
+/* Optional: copy buttons. Without JS the commands stay selectable text. */
+(function(){
+  if(!navigator.clipboard) return;
+  document.querySelectorAll('.install .cmd, .line').forEach(function(row){
+    var code=row.querySelector('code'); if(!code) return;
+    var b=document.createElement('button'); b.className='copy'; b.type='button'; b.textContent='Copy';
+    b.setAttribute('aria-label','Copy: '+code.textContent);
+    b.addEventListener('click',function(){navigator.clipboard.writeText(code.textContent).then(function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy'},1400)})});
+    row.appendChild(b);
+  });
+})();
+</script>
+
+<footer>
+  <div class="wrap foot">
+    <div>
+      <a class="brand" href="/"><svg aria-hidden="true"><use href="#mark"/></svg>metais</a>
+      <p class="acro"><b>M</b>ulti-file <b>E</b>xtensible <b>T</b>emplating <b>A</b>nd <b>I</b>nstantiation <b>S</b>pecification</p>
+      <p style="margin:8px 0 0">METAIS is made by <a href="https://kottera.com/">Kottera</a> · Apache-2.0{%- if release.published %} · {{ release.tag }}{% if release.prerelease %}, a release candidate{% endif %}{% endif %} · This site is itself built by METAIS, from a METAIS package.</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="/install/">Install</a><a href="/guide/using-a-package/">Using a package</a><a href="/guide/writing-a-package/">Writing a package</a><a href="/reference/">Reference</a><a href="/spec/draft/">Specification</a><a href="/schemas/1.0/manifest.schema.json">Schemas</a><a href="https://github.com/kottera/metais">GitHub</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
