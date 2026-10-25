@@ -316,6 +316,8 @@ func TestLayersControl(t *testing.T) {
 		"metais.org/metais/internal/render/paths.go:27: refers to metais.org/metais/internal/hostfs.CheckPaths, not for a call of metais.org/metais/internal/hostfs.CheckPaths",
 		"metais.org/metais/internal/tools/release/archive/archive.go:13: refers to os.Stdout, which only metais.org/metais/cmd/metais, metais.org/metais/internal/tools/release, metais.org/metais/internal/tools/ux, metais.org/metais/internal/tools/site may",
 		"metais.org/metais/internal/tools/site/mdhtml/mdhtml.go:19: refers to os.Stdout, which only metais.org/metais/cmd/metais, metais.org/metais/internal/tools/release, metais.org/metais/internal/tools/ux, metais.org/metais/internal/tools/site may",
+		"metais.org/metais/internal/tools/ux/scenario imports net, which only metais.org/metais/internal/tools/ux, metais.org/metais/internal/hostfs, metais.org/metais/internal/guarantees may",
+		"metais.org/metais/internal/tools/ux/scenario imports net/http, which only metais.org/metais/internal/tools/ux, metais.org/metais/internal/guarantees may",
 	}
 	if !slices.Equal(got, want) {
 		t.Errorf("the layering rules over testdata/layers reported\n\t%s\nwant\n\t%s", strings.Join(got, "\n\t"), strings.Join(want, "\n\t"))
