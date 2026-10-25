@@ -3,7 +3,7 @@
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 [ADR-003 Amendment A2](ADR-003-the-data-specification.md#amendments)
 (rules across the items of an array: `uniqueKeys` and `coverage`) is
-proposed on 2026-10-23 and amends D2 (three check findings at step 5) and D9 items 16 and 23 (the generator honours both keywords).
+accepted on 2026-10-25, at the close of PLAN-2026-10-metais-values-and-rules, and amends D2 (three check findings at step 5) and D9 items 16 and 23 (the generator honours both keywords).
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R13 items 1 to 6; R3 item 5 (examples as part of the

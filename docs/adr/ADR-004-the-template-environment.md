@@ -1,9 +1,11 @@
 # ADR-004: The template environment — Shopify Liquid 5.14.0 parsed strictly, a closed set of bindings, strict on every name, and a METAIS filter and tag catalog defined to the byte
 
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
-[Amendment A1](#amendments) (`slug` reads its letter table after NFKD) and
-Amendment A2 (value-formatting filters: `number`, `amount` and `duration`)
-are Proposed; the passages they change are marked *(A1)* and *(A2)*.
+[Amendment A1](#amendments) (`slug` reads its letter table after NFKD) is
+Proposed. [Amendment A2](#amendments) (value-formatting filters: `number`,
+`amount` and `duration`) is accepted on 2026-10-25, at the close of
+PLAN-2026-10-metais-values-and-rules. The passages they change are marked
+*(A1)* and *(A2)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R7 (items 1 to 6) and R11 (items 1 and 2); the
@@ -1136,9 +1138,10 @@ observed gets its own fix before `spec-1.0` freezes the vectors (R2-170).
 
 ### A2 — Value-formatting filters: `number`, `amount` and `duration`
 
-**Status:** Proposed 2026-10-23. Ed Funnekotter accepted the design as
-written on 2026-10-23, and it becomes Accepted at the close of
-[PLAN-2026-10-metais-values-and-rules](../plans/PLAN-2026-10-metais-values-and-rules.md).
+**Status:** Accepted 2026-10-25, at the close of
+[PLAN-2026-10-metais-values-and-rules](../plans/PLAN-2026-10-metais-values-and-rules.md),
+which built and proved it. Ed Funnekotter accepted the design as written
+on 2026-10-23.
 Ed Funnekotter ruled on 2026-10-23 that
 value-formatting filters ship in `1.0`, locale-free and with explicit
 arguments, and accepted rulings 1 to 12 below as proposed, freezing ruling

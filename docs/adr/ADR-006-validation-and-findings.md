@@ -11,7 +11,7 @@ by Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's ratification;
 the passages it changes are marked *(A3)*.
 [ADR-003 Amendment A2](ADR-003-the-data-specification.md#amendments)
 (rules across the items of an array: `uniqueKeys` and `coverage`) is
-proposed on 2026-10-23 and amends D6 (two keyword codes in each of the `input.` and `output.` families), D7 item 4 and D8 item 3 (the duplicate key compares the schema location).
+accepted on 2026-10-25, at the close of PLAN-2026-10-metais-values-and-rules, and amends D6 (two keyword codes in each of the `input.` and `output.` families), D7 item 4 and D8 item 3 (the duplicate key compares the schema location).
 [Amendment A4](#amendments) (a refused input stops its own validation, and
 a hint names the step its own failure needs) is proposed on 2026-10-23,
 under Ed Funnekotter's ruling of that day that the external UX test's findings land before v1.0; the passages it changes are marked *(A4)*.

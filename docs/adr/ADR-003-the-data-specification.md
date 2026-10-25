@@ -5,8 +5,9 @@
 accepted by Ed Funnekotter on 2026-10-22, at PLAN-2026-10-metais-v1's
 ratification; the passage it changes is marked *(A1)*.
 [Amendment A2](#amendments) (rules across the items of an array:
-`uniqueKeys` and `coverage`) is proposed on 2026-10-23, recording Ed
-Funnekotter's rulings of that day; it blocks the v1.0 release.
+`uniqueKeys` and `coverage`) is accepted on 2026-10-25, at the close of
+PLAN-2026-10-metais-values-and-rules, recording Ed Funnekotter's rulings of
+2026-10-23.
 [Amendment A3](#amendments) (an input the input constraints refuse whole
 is reported alone) is proposed on 2026-10-23, under Ed Funnekotter's ruling of that day that the external UX test's findings land before v1.0; the passages it changes
 are marked *(A3)*.
@@ -1145,9 +1146,10 @@ in place.
 
 ### A2 — Rules across the items of an array: `uniqueKeys` and `coverage`
 
-**Status:** Proposed 2026-10-23. Ed Funnekotter accepted the design as
-written on 2026-10-23, and it becomes Accepted at the close of
-[PLAN-2026-10-metais-values-and-rules](../plans/PLAN-2026-10-metais-values-and-rules.md).
+**Status:** Accepted 2026-10-25, at the close of
+[PLAN-2026-10-metais-values-and-rules](../plans/PLAN-2026-10-metais-values-and-rules.md),
+which built and proved it. Ed Funnekotter accepted the design as written
+on 2026-10-23.
 It records Ed Funnekotter's rulings of
 2026-10-23 on the cross-record design brief, every lean of which he
 accepted (items 1 to 9 below), and his note on teaching the keywords

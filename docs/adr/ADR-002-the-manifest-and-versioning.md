@@ -3,7 +3,7 @@
 **Status:** Accepted 2026-10-18 by Ed Funnekotter; its proposed rulings are ratified in [RULINGS-v1](RULINGS-v1.md).
 [ADR-003 Amendment A2](ADR-003-the-data-specification.md#amendments)
 (rules across the items of an array: `uniqueKeys` and `coverage`) is
-proposed on 2026-10-23 and amends D7 item 4: a minor may add a JSON Schema keyword not beginning `x-`.
+accepted on 2026-10-25, at the close of PLAN-2026-10-metais-values-and-rules, and amends D7 item 4: a minor may add a JSON Schema keyword not beginning `x-`.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R1 item 4 (the canonical manifest), R3 item 3 (the
