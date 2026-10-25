@@ -226,27 +226,20 @@ gh workflow run release.yml --ref main -f tag=v0.0.0-alpha.1 -f dry_run=true
 Delete the draft afterwards (`gh release delete v0.0.0-alpha.1`), which
 deletes no tag, because none exists.
 
-### What only a hosted run proves
+### The release environment
+
+`release.yml`'s `release` job names `environment: release`, so every
+dispatch, a dry run included, waits on the run's page until Ed approves
+the deployment to `release`. Nothing in the job runs before then.
 
 On GitHub's free plan, an environment's protection rules and secrets
 exist only on a public repository. So prepare refuses any run but a dry
 run on a private repository, or when the `release` environment requires
-no reviewer, because nothing would then have required Ed's approval. The
-`release` environment's required reviewer, and `TAP_TOKEN`, are first
-exercised at `v1.0.0-rc.1`, and so is `pages.yml`'s deploy.
+no reviewer, because nothing would then have required Ed's approval.
 
-`release.yml`'s dry run was proved by running `release.sh prepare` by
-hand, as its step runs it, against a draft, by Ed's ruling of
-2026-10-23. What only a hosted run shows is:
-
-- whether a job that names `environment: release` waits for approval,
-  runs straight through, or fails;
-- the workflow's `dry_run` skips, and the skipped pages job.
-
-Dispatch `release.yml`'s dry run against a draft once the `release`
-environment exists, before `v1.0.0-rc.1`'s release act. Its `release` job
-then waits for Ed's approval. `ci.yml` needs no such run: every pull
-request runs its jobs on GitHub's runners.
+Approving a dry run commits to nothing: no tag reaches the repository
+and the release stays a draft. So a `pages.yml` dispatch for that tag is
+refused until a real run publishes it.
 
 ## The rehearsal's checks
 
