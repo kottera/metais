@@ -4,7 +4,7 @@
 // Command ux runs the UX scenario set of PLAN-2026-10-metais-ux §5 in
 // nested, isolated agent sessions (docs/dev/ux-testing.md):
 //
-//	go run ./internal/tools/ux -out <dir> [-scenarios C0,C1] [-models opus,sonnet,haiku]
+//	go run ./internal/tools/ux -out <dir> [-scenarios C0,C1] [-models 'opus[1m],sonnet,haiku'] [-credential-file <pipe>]
 //
 // run from the top of a clean checkout. It builds metais from the checkout
 // with -buildvcs=false, packs each scenario's fixtures with it, and runs
@@ -21,7 +21,9 @@
 // The runner is a developer's tool, never linked into metais, and is the
 // one package ADR-009 Amendment A8 lets start a session, read the
 // environment, write files and read the clock outside the release
-// builder. No go test starts a session: a UX run is evidence, not a gate.
+// builder. On a host with no loopback proxy, -credential-file starts the
+// runner's own credential route (ADR-009 A12, route.go). No go test starts
+// a session: a UX run is evidence, not a gate.
 package main
 
 import (

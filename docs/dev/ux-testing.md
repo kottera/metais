@@ -179,6 +179,7 @@ After the session, the runner reads the transcript and makes these checks:
 | `no-session-persistence` | The session's `HOME` holds no saved session (`.claude/projects/**/*.jsonl`). |
 | `no-memory-read` | No tool call names a memory file: `CLAUDE.md`, `CLAUDE.local.md`, `MEMORY.md`, `AGENTS.md`, a `.claude/projects` or `.claude/memory` path, or a `memory/` directory. A tool output Claude Code spilled to a file of the session's project in the session's own `HOME` (`.claude/projects/<project>/<session>/tool-results/`), or that directory, is not one: that `HOME` starts empty, so the file is the session's own. The project and the session may be named by a glob (`$HOME/.claude/projects/*/*/tool-results/`), and the file too; a glob of the session is of a session's id, so it never reaches the project's `memory/` directory, and a path that leaves `tool-results/`, or one beneath another `HOME`, is still memory. |
 | `writes-inside-run` | The session wrote nothing outside its own run directory: the set's directory outside the run's is the same after the session as before it, and no Write or Edit tool call names a file outside the run's directory. A command line writing outside the set's directory is not seen; the dispatch's sandbox refuses most such paths. |
+| `credential-not-seen` | Made only with the credential route on ([The credential route](#the-credential-route)): no file of the run, its transcript and its standard error among them, holds the route's token. A run that fails it stops the set, naming the file, so it is removed before anything is scrubbed or published. |
 
 Each check has a unit test in `internal/tools/ux` that fails without it.
 
@@ -201,17 +202,56 @@ of the host's:
 | `PATH` | the directory of the `metais` under test, then the runner's own `PATH`; for an I scenario, the runner's own `PATH` alone |
 | `HOME` | the run's own `home/`, empty when the session starts |
 | `TMPDIR`, `CLAUDE_CODE_TMPDIR` | the run's own `tmp/`. The sandbox refuses `/tmp`, and Claude Code puts its own temporary files under `CLAUDE_CODE_TMPDIR`. |
-| `ANTHROPIC_BASE_URL` | the runner's own: the dispatch's loopback proxy, which authenticates upstream |
+| `ANTHROPIC_BASE_URL` | the runner's own: the dispatch's loopback proxy, which authenticates upstream; or, with `-credential-file`, the address of the runner's own route |
 | `ANTHROPIC_AUTH_TOKEN` | `metais-ux-placeholder`. This is not a secret. A nested `claude` refuses on the client side unless some credential variable is set (R-UX-7). |
 | `CLAUDE_CODE_DISABLE_AUTO_MEMORY` | `1` |
 | `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC`, `DISABLE_AUTOUPDATER` | `1` |
 | `GOFLAGS` | an I scenario's only: `-modcacherw`, so the module cache a `go install` makes in the session's `HOME` is one the runner can remove when it runs the run again |
 
-The runner refuses to start without `ANTHROPIC_BASE_URL`. A host with no
-loopback proxy needs a credential route of its own, which this runner does
-not build. When dispatches lose the proxy, plan §6's act, a run by hand
-outside the dispatch sandbox, is the fallback, and that act has to provide
-the route.
+The runner refuses to start without `ANTHROPIC_BASE_URL`, unless
+`-credential-file` starts its own route.
+
+### The credential route
+
+A host with no loopback proxy, such as a person's own, gives the runner
+the credential instead, and the runner serves the sessions a proxy of its
+own (ADR-009 A12):
+
+```bash
+go run ./internal/tools/ux -out "$HOME/ux-<date>" \
+  -credential-file <(security find-generic-password -s metais-ux -w) …
+```
+
+- **The credential** is a subscription OAuth token, as `claude
+  setup-token` prints it (`sk-ant-oat01-…`), so the sessions spend the
+  subscription's quota rather than API credit. Keep it in the host's own
+  secret store: on macOS, `security add-generic-password -s metais-ux -a
+  "$USER" -w` asks for it once and keeps it in the login keychain.
+- **`-credential-file` must name a pipe,** such as the shell's process
+  substitution above makes, so the token is never written to a file or set
+  in an environment. The runner reads it once, before the first session,
+  and refuses a regular file, a directory or a device, a credential that
+  is empty, longer than 1 KiB, not one line of printable ASCII, or not
+  such a token (an API key is refused). It also refuses the flag beside an
+  `ANTHROPIC_BASE_URL` of its own environment, and with `-scorecard` or
+  `-scrub`. No refusal prints what it read.
+- **The route** listens on `127.0.0.1`, on a port the system picks, until
+  the set ends. Each session is handed its address as
+  `ANTHROPIC_BASE_URL`, and R-UX-7's placeholder, as in a dispatch. It
+  forwards a session's request to `https://api.anthropic.com` alone, with
+  `Authorization: Bearer <token>` in place of the placeholder, no
+  `x-api-key`, and the OAuth beta value `oauth-2025-04-20` added to the
+  session's `anthropic-beta`. It refuses, with 403, a request whose
+  credential is not the placeholder, whose `Host` is not its own address,
+  whose method is not `GET` or `POST`, or whose path is not under `/v1/`.
+- **No session can read the token.** It is in no session's environment,
+  arguments, `HOME` or run directory, and in no record, transcript or
+  scorecard; `credential-not-seen` checks every run for it. A session, and
+  any local process, can use the token through the route while the set
+  runs, as a dispatch's session uses the dispatch's proxy.
+
+`go test` proves the route with a fake token and a fake upstream on
+`127.0.0.1`, and never reaches `api.anthropic.com`.
 
 The flags and variables were confirmed against **Claude Code 2.1.299**,
 the `claude` of the deployment's toolchain, on 2026-10-21. Every run's
@@ -231,10 +271,16 @@ The `outside-repository`, `fresh-directory`, `metais-first-on-path` and
 `metais-not-on-path` checks are the runner's own, so every harness makes
 them.
 
-**The models** are R-UX-5's three: `opus`, `sonnet` and `haiku`, given to
-`--model` as Claude Code's aliases. Each record also holds the model ID
-the session reports, such as `claude-haiku-5-5`, which is the ID a
-scorecard publishes.
+**The models** are R-UX-5's three: `opus[1m]`, `sonnet` and `haiku`, given
+to `--model` as Claude Code's model strings. Opus's is chosen for its
+window: behind a loopback `ANTHROPIC_BASE_URL`, which a dispatch's proxy
+and the runner's own route both are, bare `opus` resolves to a 200k-token
+context window, and `opus[1m]` restores Opus's 1M (R-W3-3). Each record
+holds the string the session was given (`model_requested`), the model ID
+the session reports (`model_reported`, such as `claude-haiku-5-5`), and
+the context window its usage reports for each model (`context_windows`).
+The scorecard's header names all three for each model string, and the
+authoring scenarios gate on `opus[1m]` as on Opus.
 
 ## Running a set
 
@@ -268,7 +314,7 @@ scratch volume is one. The runner then:
 |---|---|---|
 | `-out` | (required) | the set's directory |
 | `-scenarios` | every scenario but the I scenarios | the scenarios to run, by id, comma-separated. An I scenario runs only when named. |
-| `-models` | `opus,sonnet,haiku` | the models, comma-separated |
+| `-models` | `opus[1m],sonnet,haiku` | the model strings, comma-separated |
 | `-harness` | `claude-code` | the harness |
 | `-with-skill` | off | install `metais skill` for each session before it starts. The runner refuses it with an I scenario, which starts with no skill. |
 | `-pace` | `30s` | the wait between two runs |
@@ -279,6 +325,7 @@ scratch volume is one. The runner then:
 | `-transcripts` | the set's `runs/` | where the transcripts are kept, as the scorecard publishes it, such as a Work Order's artifact handle |
 | `-scorecard` | off | run nothing: score the runs `-out` holds and print the scorecard |
 | `-scrub` | (none) | run nothing: write a scrubbed copy of `-out`'s set to this new directory ([Scrubbing](#scrubbing-a-set)) |
+| `-credential-file` | (none) | a pipe holding a subscription OAuth token: the runner serves the sessions its own route ([The credential route](#the-credential-route)) |
 
 The runner cannot read the host's name or platform (ADR-009 A8 item 2),
 so `-host` says it. A scorecard printed without it says the host is not
@@ -421,20 +468,27 @@ its formula are published. The act must provide:
    every run otherwise. Between two runs, the act removes what the last
    one installed outside its run: `brew uninstall metais` and `brew
    untap kottera/tap`, and any `metais` it finds on `PATH`.
-3. **A credential route for the nested sessions.** The runner refuses to
-   start without `ANTHROPIC_BASE_URL`, and gives each session only R-UX-7's
-   placeholder token, which a dispatch's loopback proxy authenticates. On
-   a host without such a proxy, the act runs one at `ANTHROPIC_BASE_URL`
-   that authenticates upstream; the runner builds no credential route of
-   its own. If the act cannot provide one, a work item adds a route to the
-   runner before Wave 3, under its own ADR-009 amendment.
+3. **A credential route for the nested sessions.** A host without a
+   loopback proxy at `ANTHROPIC_BASE_URL` uses the runner's own route
+   ([The credential route](#the-credential-route)): a subscription OAuth
+   token from `claude setup-token`, kept in the host's secret store and
+   given by a pipe with `-credential-file`. The act unsets
+   `ANTHROPIC_BASE_URL` in the shell it runs from, and each session is
+   handed only R-UX-7's placeholder and the route's address.
 4. **The run and its record:**
 
    ```bash
    go run ./internal/tools/ux -out "$HOME/ux-install-<date>" -scenarios I1,I2 \
+     -credential-file <(security find-generic-password -s metais-ux -w) \
      -host "a host outside the dispatch sandbox, <os>/<arch>" -transcripts "<where the scrubbed set is kept>"
    go run ./internal/tools/ux -out "$HOME/ux-install-<date>" -scrub "$HOME/ux-install-<date>-scrubbed"
    ```
+
+   The Opus sessions are given `opus[1m]`, the default (R-W3-3). Before
+   the scorecard is published, the act reads its header's Models row: each
+   model string, with the model ID and context window its sessions
+   reported. An Opus session that reports a 200k window, or none, ran
+   with less than Opus's own, and the act says so beside the scorecard.
 
    Then a recorded verdict for every I1 run ([Recorded
    verdicts](#recorded-verdicts)), the scorecard printed again with
