@@ -9,4 +9,5 @@
 {{ inputs.skill.html | safe }}
 </article>
 {%- endcapture -%}
-{%- render "_layout.html.liquid", title: "metais skill --print — METAIS", description: nil, head: nil, body: body -%}
+{%- capture side -%}{% render "reference/_side.html.liquid", here: "/reference/skill/", toc: nil %}{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "metais skill --print — METAIS", description: nil, head: nil, body: body, section: "reference", kicker: "Reference · agent skill", side: side -%}

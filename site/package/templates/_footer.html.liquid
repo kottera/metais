@@ -1,0 +1,18 @@
+{%- comment -%}
+  The footer of every page, which ADR-013 D2 item 1 fixes: it says METAIS is
+  made by Kottera, with a link to kottera.com. A page ends with it: nothing
+  but </body></html> may follow it.
+{%- endcomment -%}
+{%- assign release = inputs.release -%}
+<footer>
+  <div class="wrap foot">
+    <div>
+      <a class="brand" href="/"><svg aria-hidden="true"><use href="#mark"/></svg>metais</a>
+      <p class="acro"><b>M</b>ulti-file <b>E</b>xtensible <b>T</b>emplating <b>A</b>nd <b>I</b>nstantiation <b>S</b>pecification</p>
+      <p style="margin:8px 0 0">METAIS is made by <a href="https://kottera.com/">Kottera</a> · Apache-2.0{%- if release.published %} · {{ release.tag }}{% if release.prerelease %}, a release candidate{% endif %}{% endif %} · This site is itself built by METAIS, from a METAIS package.</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="/install/">Install</a><a href="/guide/using-a-package/">Using a package</a><a href="/guide/writing-a-package/">Writing a package</a><a href="/reference/">Reference</a><a href="/spec/draft/">Specification</a><a href="/schemas/1.0/manifest.schema.json">Schemas</a><a href="https://github.com/kottera/metais">GitHub</a>
+    </nav>
+  </div>
+</footer>

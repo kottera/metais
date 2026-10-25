@@ -1,8 +1,11 @@
 {%- comment -%}
-  Every page of the site: the head, with the page's title, its
-  description and any other element it gives as head, the navigation, the
-  page's body as main, and the footer ADR-013 D2 item 1 fixes, which says
-  METAIS is made by Kottera, with a link to kottera.com.
+  Every page of the site but the landing page: the head, with the page's
+  title, its description and any other element it gives as head; the header
+  the landing page shares, with section, the page's section, marked as the
+  current one; the kicker above the page; the page's body as main; side,
+  the section's pages and the headings of this one, beside it, or nil for a
+  page with none; and the footer ADR-013 D2 item 1 fixes, which says METAIS
+  is made by Kottera, with a link to kottera.com.
 {%- endcomment -%}
 <!DOCTYPE html>
 <!-- Copyright 2026 Kottera. SPDX-License-Identifier: Apache-2.0 -->
@@ -17,14 +20,41 @@
 {%- if head %}
 {{ head }}
 {%- endif %}
-<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/site.css">
 </head>
-<body>
-<nav><a href="/">METAIS</a><a href="/install/">Install</a><a href="/guide/using-a-package/">Using a package</a><a href="/guide/writing-a-package/">Writing a package</a><a href="/reference/">Reference</a><a href="/spec/">Specification</a></nav>
+<body class="reading">
+
+{% render "_header.html.liquid", section: section %}
+<div class="doc wrap{% unless side %} single{% endunless %}">
+<div class="page">
+<p class="kicker">{{ kicker }}</p>
 <main>
 {{ body }}
 </main>
-<footer>METAIS is made by <a href="https://kottera.com/">Kottera</a>,
-under the Apache License 2.0. Source: <a href="https://github.com/kottera/metais">github.com/kottera/metais</a>.</footer>
+</div>
+{%- if side %}
+<nav class="side" aria-label="{{ kicker }}">
+{{ side }}
+</nav>
+{%- endif %}
+</div>
+
+<script>
+/* Optional: a copy button on every code block. Without JS the code stays selectable text. */
+(function(){
+  if(!navigator.clipboard) return;
+  document.querySelectorAll('main pre').forEach(function(pre){
+    var code=pre.querySelector('code'); if(!code) return;
+    var box=document.createElement('div'); box.className='codeblock';
+    pre.parentNode.insertBefore(box,pre); box.appendChild(pre);
+    var b=document.createElement('button'); b.className='copy'; b.type='button'; b.textContent='Copy';
+    b.setAttribute('aria-label','Copy the code');
+    b.addEventListener('click',function(){navigator.clipboard.writeText(code.textContent).then(function(){b.textContent='Copied';setTimeout(function(){b.textContent='Copy'},1400)})});
+    box.appendChild(b);
+  });
+})();
+</script>
+
+{% render "_footer.html.liquid" %}
 </body>
 </html>
