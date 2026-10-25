@@ -31,8 +31,7 @@ import (
 const installScript = "public/install.sh"
 
 // The tests run the script as published, with no variable or flag of its own
-// pointing it elsewhere: the script names github.com and api.github.com and
-// nothing else, so no setting of a user's can change what it downloads or how
+// pointing it elsewhere: the script names github.com and nothing else, so no setting of a user's can change what it downloads or how
 // it verifies it. What the tests change is what PATH finds for curl and uname,
 // as fakeCurl and fakeUname, so the script reads a release laid out in a
 // temporary directory and sees the platform a test names, without the network.
@@ -56,8 +55,11 @@ func sha256sum(files []string) int {
 }
 
 // fakeCurl answers a URL https://<host>/<path> from the file $FAKE_WEB/<host>/<path>,
-// for the curl options install.sh passes: -o, -w '%{http_code}', and -f, under
-// which a missing file is curl's exit status 22 rather than a 404 body. It
+// for the curl options install.sh passes: -o, -w with %{http_code} and
+// %{redirect_url}, and -f, under which an answer of 400 or more is curl's
+// exit status 22 rather than a body. A file $FAKE_WEB/<host>/<path>.redirect
+// makes the answer a 302 to the URL it holds, and a file .status the status
+// it holds, with no body; with neither and no file, the answer is a 404. It
 // appends every URL it is asked for to $FAKE_WEB.log.
 const fakeCurl = `#!/bin/sh
 out= fmt= f= url=
@@ -72,15 +74,19 @@ while [ "$#" -gt 0 ]; do
 	shift
 done
 echo "$url" >>"$FAKE_WEB.log"
-file=$FAKE_WEB/${url#https://}
-if [ -f "$file" ]; then
+file=$FAKE_WEB/${url#https://} to=
+if [ -f "$file.redirect" ]; then
+	code=302 to=$(cat "$file.redirect") file=/dev/null
+elif [ -f "$file.status" ]; then
+	code=$(cat "$file.status") file=/dev/null
+elif [ -f "$file" ]; then
 	code=200
 else
-	[ -n "$f" ] && exit 22
 	code=404 file=/dev/null
 fi
+[ -n "$f" ] && [ "$code" -ge 400 ] && exit 22
 if [ -n "$out" ]; then cp "$file" "$out"; else cat "$file"; fi
-[ -n "$fmt" ] && printf '%s' "$code"
+[ -n "$fmt" ] && printf '%s' "$fmt" | sed "s|%{http_code}|$code|g; s|%{redirect_url}|$to|g"
 exit 0
 `
 
@@ -102,7 +108,8 @@ const (
 
 const (
 	downloadPrefix = "github.com/kottera/metais/releases/download/"
-	latestPath     = "api.github.com/repos/kottera/metais/releases/latest"
+	releasesURL    = "https://github.com/kottera/metais/releases"
+	latestPath     = "github.com/kottera/metais/releases/latest"
 )
 
 // installHost is one run's host: a fake web, a bin directory holding
@@ -155,11 +162,25 @@ func newInstallHost(t *testing.T, sums func(string) string) installHost {
 }
 
 // setLatest makes tag the latest release that is not a prerelease, as
-// GitHub's API answers it.
+// github.com answers it: a redirect from its latest release to the tag's
+// page.
 func (h installHost) setLatest(t *testing.T, tag string) {
 	t.Helper()
-	writeFile(t, filepath.Join(h.web, filepath.FromSlash(latestPath)),
-		"{\n  \"url\": \"https://api.github.com/repos/kottera/metais/releases/1\",\n  \"tag_name\": \""+tag+"\",\n  \"prerelease\": false\n}\n", 0o644)
+	h.redirectLatest(t, releasesURL+"/tag/"+tag)
+}
+
+// redirectLatest makes github.com answer its latest release with a
+// redirect to url.
+func (h installHost) redirectLatest(t *testing.T, url string) {
+	t.Helper()
+	writeFile(t, filepath.Join(h.web, filepath.FromSlash(latestPath+".redirect")), url+"\n", 0o644)
+}
+
+// answerLatest makes github.com answer its latest release with status
+// code and no body.
+func (h installHost) answerLatest(t *testing.T, code int) {
+	t.Helper()
+	writeFile(t, filepath.Join(h.web, filepath.FromSlash(latestPath+".status")), fmt.Sprintf("%d\n", code), 0o644)
 }
 
 // run runs install.sh as curl ... | sh runs it, on a host whose uname says
@@ -283,9 +304,10 @@ func TestInstall(t *testing.T) {
 }
 
 // TestInstallLatest installs with no METAIS_VERSION, and requires the latest
-// release that is not a prerelease, as GitHub's API names it, to be the one
-// installed, into ~/.local/bin by default, with no PATH advice when that
-// directory is on PATH already.
+// release that is not a prerelease, as github.com's redirect from its latest
+// release names it, to be the one installed, into ~/.local/bin by default,
+// with no PATH advice when that directory is on PATH already: once a stable
+// release such as v1.0.0 exists, the code that refuses before it finds it.
 func TestInstallLatest(t *testing.T) {
 	h := newInstallHost(t, nil)
 	h.setLatest(t, releaseTag)
@@ -295,8 +317,9 @@ func TestInstallLatest(t *testing.T) {
 		t.Fatalf("install.sh failed:\n%s", out)
 	}
 	requireInstalled(t, dir)
-	if got := h.requested(t); len(got) == 0 || got[0] != "https://"+latestPath {
-		t.Errorf("install.sh fetched %q, want https://%s first", got, latestPath)
+	base := "https://" + downloadPrefix + releaseTag + "/"
+	if got, want := h.requested(t), []string{"https://" + latestPath, base + "metais_" + releaseVersion + "_linux_amd64.tar.gz", base + "SHA256SUMS"}; !slices.Equal(got, want) {
+		t.Errorf("install.sh fetched %q, want %q", got, want)
 	}
 	if strings.Contains(out, "not on your PATH") {
 		t.Errorf("install.sh says a directory on PATH is not:\n%s", out)
@@ -313,7 +336,8 @@ func TestInstallRefuses(t *testing.T) {
 		sums             func(string) string
 		sysname, machine string
 		noVersion        bool
-		want             []string
+		latest           func(*testing.T, installHost)
+		want, never      []string
 	}{
 		{
 			name: "a hash mismatch",
@@ -398,11 +422,60 @@ func TestInstallRefuses(t *testing.T) {
 			name:    "no stable release",
 			sysname: "Linux", machine: "x86_64",
 			noVersion: true,
+			latest:    func(t *testing.T, h installHost) { h.redirectLatest(t, releasesURL) },
 			want:      []string{"no stable release", "METAIS_VERSION"},
+		},
+		{
+			name:    "no stable release, to the list with a slash",
+			sysname: "Linux", machine: "x86_64",
+			noVersion: true,
+			latest:    func(t *testing.T, h installHost) { h.redirectLatest(t, releasesURL+"/") },
+			want:      []string{"no stable release", "METAIS_VERSION"},
+		},
+		{
+			name:    "no release at all",
+			sysname: "Linux", machine: "x86_64",
+			noVersion: true,
+			want:      []string{"no stable release", "METAIS_VERSION"},
+		},
+		{
+			name:    "a rate limit",
+			sysname: "Linux", machine: "x86_64",
+			noVersion: true,
+			latest:    func(t *testing.T, h installHost) { h.answerLatest(t, 429) },
+			want:      []string{"HTTP 429", "asked it too often", "METAIS_VERSION"},
+			never:     []string{"no stable release"},
+		},
+		{
+			name:    "a refusal",
+			sysname: "Linux", machine: "x86_64",
+			noVersion: true,
+			latest:    func(t *testing.T, h installHost) { h.answerLatest(t, 403) },
+			want:      []string{"HTTP 403", "asked it too often", "METAIS_VERSION"},
+			never:     []string{"no stable release"},
+		},
+		{
+			name:    "a server error",
+			sysname: "Linux", machine: "x86_64",
+			noVersion: true,
+			latest:    func(t *testing.T, h installHost) { h.answerLatest(t, 503) },
+			want:      []string{"HTTP 503", "METAIS_VERSION"},
+			never:     []string{"no stable release"},
+		},
+		{
+			name:    "a redirect elsewhere",
+			sysname: "Linux", machine: "x86_64",
+			noVersion: true,
+			latest:    func(t *testing.T, h installHost) { h.redirectLatest(t, "https://github.com/login") },
+			want:      []string{"https://github.com/login, which is not a release", "METAIS_VERSION"},
+			never:     []string{"no stable release"},
 		},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			h := newInstallHost(t, c.sums)
+			if c.latest != nil {
+				c.latest(t, h)
+			}
 			env := []string{"METAIS_INSTALL_DIR=" + h.dir}
 			if !c.noVersion {
 				env = append(env, "METAIS_VERSION="+releaseVersion)
@@ -412,6 +485,11 @@ func TestInstallRefuses(t *testing.T) {
 				t.Fatalf("install.sh succeeded:\n%s", out)
 			}
 			requireContains(t, out, c.want...)
+			for _, n := range c.never {
+				if strings.Contains(out, n) {
+					t.Errorf("install.sh's output says %q:\n%s", n, out)
+				}
+			}
 			requireNothingInstalled(t, h.dir)
 		})
 	}
@@ -482,7 +560,8 @@ var scriptEnv = []string{"HOME", "METAIS_INSTALL_DIR", "METAIS_VERSION", "PATH"}
 // TestInstallURLsConstant requires the addresses install.sh downloads
 // from to be constants that no environment variable overrides (ADR-013
 // D6): repo, download and latest are each assigned once, to the address
-// written here, and every variable the script reads that it does not
+// written here, and none of them is GitHub's REST API, which limits an
+// anonymous caller per network (R-W3-4), and every variable the script reads that it does not
 // assign is one of scriptEnv. A run with those three names and look-alike
 // settings in its environment, each pointing elsewhere, fetches from
 // github.com alone.
@@ -492,6 +571,9 @@ func TestInstallURLsConstant(t *testing.T) {
 		t.Fatal(err)
 	}
 	script := string(b)
+	if strings.Contains(script, "api.github.com/") {
+		t.Errorf("install.sh asks api.github.com, whose anonymous rate limit a shared network spends")
+	}
 	assigned := map[string][]string{}
 	for _, m := range shellAssign.FindAllStringSubmatch(script, -1) {
 		assigned[m[1]] = append(assigned[m[1]], strings.TrimSpace(m[2]))
@@ -499,7 +581,7 @@ func TestInstallURLsConstant(t *testing.T) {
 	for name, want := range map[string]string{
 		"repo":     "kottera/metais",
 		"download": "https://github.com/$repo/releases/download",
-		"latest":   "https://api.github.com/repos/$repo/releases/latest",
+		"latest":   "https://github.com/$repo/releases/latest",
 	} {
 		if got := assigned[name]; !slices.Equal(got, []string{want}) {
 			t.Errorf("install.sh assigns %s %q, want once, %q", name, got, want)

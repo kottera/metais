@@ -19,7 +19,7 @@ set -eu
 
 repo=kottera/metais
 download=https://github.com/$repo/releases/download
-latest=https://api.github.com/repos/$repo/releases/latest
+latest=https://github.com/$repo/releases/latest
 routes="go install metais.org/metais/cmd/metais@latest, which builds it from source, or the archives at https://github.com/$repo/releases"
 
 fail() {
@@ -46,14 +46,23 @@ trap 'exit 1' HUP INT TERM
 
 version=${METAIS_VERSION:-}
 if [ -z "$version" ]; then
-	code=$(curl -sSL -o "$tmp/latest.json" -w '%{http_code}' "$latest") ||
+	# github.com answers its latest release, the newest that is not a
+	# prerelease, with a redirect to that release's tag, and sends a
+	# repository with only prereleases to its list of releases instead.
+	# The REST API at api.github.com would say the same, but limits an
+	# anonymous caller to a few requests an hour for its whole network.
+	answer=$(curl -sS -o /dev/null -w '%{http_code} %{redirect_url}' "$latest") ||
 		fail "could not ask GitHub for the latest release at $latest"
-	case $code in
-	200) ;;
-	404) fail "metais has no stable release yet, only prereleases. Pick a version from https://github.com/$repo/releases and set METAIS_VERSION to it: curl -fsSL https://metais.org/install.sh | METAIS_VERSION=<version> sh" ;;
+	code=${answer%% *}
+	to=${answer#* }
+	case $code:$to in
+	30[1278]:https://github.com/"$repo"/releases/tag/?*) version=${to##*/} ;;
+	30[1278]:https://github.com/"$repo"/releases | 30[1278]:https://github.com/"$repo"/releases/ | 404:*)
+		fail "metais has no stable release yet, only prereleases. Pick a version from https://github.com/$repo/releases and set METAIS_VERSION to it: curl -fsSL https://metais.org/install.sh | METAIS_VERSION=<version> sh" ;;
+	403:* | 429:*) fail "GitHub refused to name the latest release, HTTP $code from $latest, as it does when this network has asked it too often. Try again later, or set METAIS_VERSION to install a version by name" ;;
+	30[1278]:*) fail "GitHub sent $latest to $to, which is not a release. Set METAIS_VERSION to install a version by name" ;;
 	*) fail "GitHub answered HTTP $code for the latest release at $latest. Set METAIS_VERSION to install a version by name" ;;
 	esac
-	version=$(sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$tmp/latest.json" | head -n 1)
 fi
 version=${version#v}
 case $version in
