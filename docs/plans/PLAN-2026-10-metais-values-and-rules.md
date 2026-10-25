@@ -8,8 +8,8 @@ request of this train inherits it verbatim: `metais-values-and-rules
 [W1-2]: <action>` for a Work Order, and `<type>(metais-values-and-rules):
 [W1-2] <change>` for a pull request and its squash subject, by the naming
 rules AGENTS.md adopts.
-**Status:** Ratified 2026-10-23 by Ed Funnekotter, with the rulings of §4.
-The drafting decisions of §4 are open to his override.
+**Status:** Complete 2026-10-25; §11 is the train closeout. Ratified
+2026-10-23 by Ed Funnekotter, with the rulings of §4.
 **For PRD:** [PRD-001](../prd/PRD-001-metais-v1.md) R3 to R5 (the data
 specification), R7 (the template environment), R13 (authoring) and R17 (the
 golden paths); SC1, whose example must not accept a contradictory report;
@@ -624,3 +624,165 @@ verification is the edge the close waits on, with §6's UX check.
 - A UX scorecard run. The final check of §6 is Ed's re-run of the external
   test, not PLAN-2026-10-metais-ux's harness.
 - Publishing: PLAN-2026-10-metais-public's.
+
+## 11. Train closeout
+
+Written 2026-10-25 by the plan orchestrator
+(`01a16961-9201-7e86-ae79-f519f35119f8`), which drove the three waves. This
+is a record of what the train did and of what it did not establish. It is
+**not a correctness verdict**. I read the closeouts, the verifiers'
+reports as the wave orchestrators relayed them, the pull requests' titles
+and the plan's own text. I checked one property myself: every line #268
+and #270 add under `spec/`, other than generated files, is on `main` (§9,
+below). I mutated nothing and ran no test of the code. The testing below
+is the verifiers', and it was relayed to me rather than observed.
+
+### Did the train deliver what §1 set out to?
+
+Yes, on every line of §1's "Done means", except where noted:
+
+- **`number`, `amount` and `duration`** are in the dialect as chapter 8
+  §8.1.10 to §8.1.14 state them, with Appendix C. `metais help templates`
+  teaches them example first, with the line saying there is no `money`
+  filter.
+- **`uniqueKeys` and `coverage`** are in the dialect for inputs and
+  outputs, as chapter 5 §5.4 states them. The tools honour them:
+  - `check` and the sample generator;
+  - `schema --fields`, `metais.schema/1`'s `rules` and `inspect`;
+  - `metais help schemas` and the skill.
+- **MTS-FND-003's deduplication fix** is in (W1-2).
+- **The examples use both features:**
+  - DORA writes its dates, amounts, counts, percentages and durations
+    through the filters;
+  - the status widget and the ACR write their reader-facing dates through
+    `date`;
+  - the ACR refuses a criterion answered twice, a Level A or AA criterion
+    missing, and a Level A or AA criterion `Not Evaluated`.
+- **Every statement of #268 and #270 is on `main` in the words Ed
+  accepted.** Every verifier checked its wave's slices line by line, and
+  I checked the whole at the close. One approved sentence, MTS-FND-003's,
+  ends "…and each other keyword at the value it fails." On `main` it
+  continues "; of an input the input constraints refuse whole, it reports
+  only the refusal". #275, outside this train, appended that for ADR-003
+  A3. The approved words are all there; another decision added to them.
+- **`main` was green after every merge — not quite.** `gofmt` failed on
+  `main` from #283 (`5549ee65`) until #275 (`9f83587c`), another train's
+  fix, realigned the line (Wave 1). `TestCoverage` and
+  `TestFindingCodesCovered` were green at every merge the verifiers
+  checked.
+- **#268 and #270 are closed as superseded, ADR-003 A2 and ADR-004 A2 are
+  Accepted, and `docs/INDEX.md` says so.** This closeout lands with the
+  plan's status and its INDEX row. The amendments' status lines land
+  beside it, and the design pull requests close after both.
+- **Ed's final UX check passed** (`01a16b8a-0528-79cb-b0c0-ddfbfd92e9ef`),
+  below.
+
+### What each wave contributed
+
+- **Wave 1**
+  ([brief and closeout](../briefs/brief-plan-2026-10-metais-values-and-rules-wave1.md),
+  #277, #287). Both amendments landed, then the cores: the
+  deduplication fix, the ACR's per-row rule, `number` and `amount`,
+  `duration`, `uniqueKeys`, then `coverage`. Seven items, #279 to #286.
+  R-VR-6's vocabulary spike succeeded.
+- **Wave 2**
+  ([brief and closeout](../briefs/brief-plan-2026-10-metais-values-and-rules-wave2.md),
+  #289, #303). Teaching and adoption: the `money` alternative and the
+  help, the examples on the filters, `check`'s findings, the generator,
+  and the rules shown in words. Six items and one correction, #293 to
+  #301.
+- **Wave 3**
+  ([brief and closeout](../briefs/brief-plan-2026-10-metais-values-and-rules-wave3.md),
+  #305, #310). The ACR adopted both keywords, and the tester's table is
+  refused. One item, #308. The one full gate R-VR-7 allows ran at its
+  verification.
+
+The non-blocking items, every one merged:
+
+- W1-NB1, #290;
+- W2-NB1, #307;
+- W2-NB2, #306;
+- W3-NB1, #314;
+- W3-NB2, #311.
+
+### What the train did not establish
+
+- **The full gate ran once, on `149923f7`** (Wave 3's verification,
+  green, every package under `-race`, every SC7 reach group). Everything
+  merged after it is outside that run:
+  - W3-NB2 (#311);
+  - W3-NB1 (#314), a fix to how the generator settles input constraints;
+  - the documentation records;
+  - UX-1, below.
+
+  Before R-VR-7, items ran the scoped tier. After it, they ran directed
+  tests only. Waves 1 and 2 were verified by directed runs, not by the
+  wave tier. R-VR-7 accepts that trade, and it is a weaker proof than
+  AGENTS.md's tiers give.
+- **Host starvation was measured, not fixed.**
+  - The whole-package race runs of `internal/guarantees` and
+    `internal/conformance` took about 591 s even before this train, close
+    to `go test`'s 600 s bound. They timed out in Wave 2 when the host was
+    shared.
+  - The full gate passed at 454 s and 366 s on a quieter host.
+  - The next gate run on a busy host may time out again for the same
+    reason.
+- **Mutation testing was the verifiers' sample, not a proof.**
+  - Wave 1: 39 mutations, all red.
+  - Wave 2: 31; four stayed green and became findings.
+  - Wave 3: 11; one stayed green, and the verifier explained why.
+  - W1-1, the amendments, was read, not mutated.
+- **The UX check is one session's reading**, on `linux/amd64`, of two
+  examples. The cross-platform byte-identity of the filters' output rests
+  on the gate's tests, not on a run on each platform.
+- **W3-1 decided the Section 508 and EN 301 549 coverage without
+  parking**, though the brief reserved it for Ed. Ed's R-W3-a kept the
+  result, so the outcome stands. The process gap is recorded in Wave 3's
+  closeout.
+- **The UX check's optional observations are not filed.** They are tool
+  wording and order, which the session understood regardless:
+  - `validate` prints the `input.unique_keys` finding after all 54
+    `input.coverage` findings;
+  - coverage findings sort as strings (`1.4.10` before `1.4.1`);
+  - the `unique_keys` message names item indices but not the repeated
+    value;
+  - the coverage message's "value at coverage's key" is jargon.
+
+  Each touches a finding's message or ordering, and so the specification
+  or the registry. That is a later decision, not a fix this train should
+  make on its own.
+
+### What is still running
+
+- **UX-1** (`01a170e2-d91e-7461-b384-229ae4c7ea68`) is the UX check's one
+  recommended fix: DORA's example amounts read as implausible ("EUR 2,350
+  across 41,200 card payments is about 6 cents each"). It changes example
+  data and its regenerated outputs only, and is not waited on.
+- **Issue #302** asks Ed to decide on squash commit `72c33df9`'s malformed
+  `Signed-off-by:  <>` trailer (W2-6). Repairing it means rewriting
+  `main`'s history, which no item may do.
+
+### How often a person was consulted, and for what
+
+Three times, plus one standing instruction:
+
+1. **R-W1-c** (2026-10-23): the ACR's Section 508 and EN 301 549 `Not
+   Evaluated` rows need remarks. W1-3's question reached Ed through the
+   tree.
+2. **R-W3-a** (2026-10-24): the ACR's Section 508 and EN 301 549 tables
+   cover every criterion. This was the plan orchestrator's one escalation.
+3. **The final UX check** (2026-10-25), plan §6's out-of-band act.
+
+The standing instruction was **R-VR-7** (2026-10-23): items run directed
+tests only, and the full gate runs once. Ed gave it as operator guidance.
+It was not asked for.
+
+### The out-of-band acts
+
+| Act | Id | How it ended |
+|---|---|---|
+| Add this train's close to T-A3's `depends_on` | not this run's | It belongs to the session that filed the plan orchestrator, by §6. This run did not file it and cannot confirm it. |
+| Rule on the vocabulary spike | not filed | It did not arise. The spike succeeded. |
+| Rule on a wording change to approved text | not filed | It did not arise. No slice needed one. |
+| Final UX check | `01a16b8a-0528-79cb-b0c0-ddfbfd92e9ef` | **Passed**, taken by Ed or a session for him, on `linux/amd64` from `a3ec4b9b`. The tester's table was refused with one `input.unique_keys` and 54 `input.coverage` findings, each problem named. DORA read correctly: `EUR 48,920,000.00` and `0 d 7 h 25 min`. Every checklist entry was attested done. Its one recommended fix is UX-1. |
+| Cut a release candidate that holds this train | not filed, already met | PLAN-2026-10-metais-public's candidates `v1.0.0-rc.2` (`39184c8e`) and `v1.0.0-rc.3` (`a3ec4b9b`) were cut after this train's last code merge, W3-NB1 (#314). Both hold every code change of this train except UX-1, which changes example data only. The UX check ran on `rc.3`'s commit. |
