@@ -413,7 +413,12 @@ the harness reports no error for, by these routes of ADR-013 D6:
 Since the session started with no `metais` on `PATH`, the `metais` that
 ran came from the last install before the session's first `metais`
 command that ran: the harness reports no error for its call, and the
-shell found it (no `metais: command not found`). Fetching the script
+shell found it. A shell that found none says so in its own words, and
+each is read: bash's `metais: command not found`, sh's and dash's
+`metais: not found`, zsh's `command not found: metais` (with or without
+an `(eval):1:` before it, as a session's commands run in the user's
+shell, which on macOS is zsh), and fish's `Unknown command: metais`. An
+error `metais` printed itself is a `metais` that ran. Fetching the script
 without running it installs nothing. Both `golden-install` and
 `finds-and-installs` state what they cannot see in the scorecard: the
 scorer does not check which binary ran, or that an install succeeded

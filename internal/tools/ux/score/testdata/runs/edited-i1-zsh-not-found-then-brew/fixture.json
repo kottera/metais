@@ -1,0 +1,20 @@
+{
+  "shows": "under zsh, the session's first call asks for a metais that is not there yet, and zsh answers command not found in a call that ends with no error; the session then installs metais by brew install kottera/tap/metais, a golden path of ADR-013 D6, and runs metais inspect with the binary brew linked",
+  "recorded": {
+    "set": "Work Order 01a15e8f's recording set ux-sonnet",
+    "run": "C1-render-real/sonnet",
+    "date": "2026-10-21",
+    "commit": "c268fb92621a70bcf583263b995462400984a56d",
+    "model": "claude-sonnet-5-5"
+  },
+  "expect": {
+    "golden-install": "pass",
+    "inspect-first": "pass",
+    "no-zip-extraction": "pass",
+    "no-unknown-command": "pass",
+    "package-untouched": "pass",
+    "outcome": "pass"
+  },
+  "reasons": {},
+  "edited": "Made from edited-i1-install-script, with the shape W3-OOB5's I1 haiku run showed on a person's Mac, where a session's commands run in zsh. A Bash call of which metais; metais --version 2>&1 | head -1 is added first, its output zsh's (metais not found, then (eval):1: command not found: metais); its install call becomes brew install kottera/tap/metais, with brew's output; its ~/.local/bin/metais inspect becomes metais inspect, found where brew linked it; its text before the install says it installs with Homebrew; and bash's /etc/bash.bashrc line is taken out of every call's output, as zsh does not print it. The record is edited-i1-install-script's."
+}
