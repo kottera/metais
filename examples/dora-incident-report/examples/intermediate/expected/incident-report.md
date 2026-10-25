@@ -40,7 +40,7 @@
 - **3.8 Impact on relevant clients or financial counterparts:** No
 - **3.9 Number of affected transactions:** 41,200
 - **3.10 Percentage of affected transactions:** 12.5 %
-- **3.11 Value of affected transactions:** EUR 2,350.00
+- **3.11 Value of affected transactions:** EUR 2,018,800.00
 - **3.12 Information on whether the numbers are actual or estimates, or whether there has not been any impact:** actual figures for clients affected; estimates for transactions affected; no impact on financial counterparts
 - **3.13 Reputational impact:** the major ICT-related incident has been reflected in the media; the major ICT-related incident has resulted in repetitive complaints from different clients or financial counterparts on client-facing services or critical business relationships
 - **3.14 Contextual information about the reputational impact:** Two national newspapers reported the declined payments, and the client service desk received about 1,900 complaints.

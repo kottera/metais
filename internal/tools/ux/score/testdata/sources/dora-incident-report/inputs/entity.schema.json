@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The financial entity",
+  "description": "Section 1 of the template: the entity submitting the report, the financial entity affected, and whom to contact. Its mandatory fields are mandatory at every stage.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "submitting_entity_name",
+    "submitting_entity_code",
+    "affected_entity_types",
+    "primary_contact_name",
+    "primary_contact_email",
+    "primary_contact_telephone",
+    "second_contact_name",
+    "second_contact_email",
+    "second_contact_telephone",
+    "reporting_currency"
+  ],
+  "properties": {
+    "submitting_entity_name": {
+      "title": "1.2 Name of the entity submitting the report",
+      "description": "The full legal name of the entity that submits the report. Mandatory in the initial notification, the intermediate report and the final report.",
+      "x-field": "1.2",
+      "x-field-type": "Alphanumeric",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "Example Bank AG"
+      ]
+    },
+    "submitting_entity_code": {
+      "title": "1.3 Identification code of the entity submitting the report",
+      "description": "The identification code of the entity that submits the report: its LEI, for a financial entity. Mandatory in the initial notification, the intermediate report and the final report.",
+      "x-field": "1.3",
+      "x-field-type": "Alphanumeric",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "529900EXAMPLE0000012"
+      ]
+    },
+    "affected_entity_types": {
+      "title": "1.4 Type of the affected financial entity",
+      "description": "The kind of financial entity the report is for, as Article 2(1) of Regulation (EU) 2022/2554 names them; more than one for an aggregated report. Mandatory in the initial notification, the intermediate report and the final report.",
+      "x-field": "1.4",
+      "x-field-type": "Choice (multiselect)",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "credit institution",
+          "payment institution",
+          "exempted payment institution",
+          "account information service provider",
+          "electronic money institution",
+          "exempted electronic money institution",
+          "investment firm",
+          "crypto-asset service provider",
+          "issuer of asset-referenced tokens",
+          "central securities depository",
+          "central counterparty",
+          "trading venue",
+          "trade repository",
+          "manager of alternative investment fund",
+          "management company",
+          "data reporting service provider",
+          "insurance and reinsurance undertaking",
+          "insurance intermediary, reinsurance intermediary and ancillary insurance intermediary",
+          "institution for occupational retirement provision",
+          "credit rating agency",
+          "administrator of critical benchmarks",
+          "crowdfunding service provider",
+          "securitisation repository"
+        ]
+      }
+    },
+    "affected_entity_name": {
+      "title": "1.5 Name of the financial entity affected",
+      "description": "The full legal name of the affected financial entity, given when it is not the entity submitting the report, and for an aggregated report. Mandatory when its condition holds.",
+      "x-field": "1.5",
+      "x-field-type": "Alphanumeric",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "Example Payments GmbH"
+      ]
+    },
+    "affected_entity_lei": {
+      "title": "1.6 LEI code of the financial entity affected",
+      "description": "The legal entity identifier of the affected financial entity, given when 1.5 is. Mandatory when its condition holds.",
+      "x-field": "1.6",
+      "x-field-type": "Unique 20 alphanumeric character code, based on ISO 17442-1:2020",
+      "type": "string",
+      "pattern": "^[A-Z0-9]{18}[0-9]{2}$",
+      "examples": [
+        "529900EXAMPLE0000034"
+      ]
+    },
+    "primary_contact_name": {
+      "title": "1.7 Primary contact person name",
+      "description": "The person the competent authority contacts first about the incident. Mandatory in the initial notification, the intermediate report and the final report.",
+      "x-field": "1.7",
+      "x-field-type": "Alphanumeric",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "Alex Example"
+      ]
+    },
+    "primary_contact_email": {
+      "title": "1.8 Primary contact person email",
+      "description": "The primary contact's email address. Mandatory in the initial notification, the intermediate report and the final report.",
+      "x-field": "1.8",
+      "x-field-type": "Alphanumeric",
+      "type": "string",
+      "format": "email",
+      "examples": [
+        "alex.example@example.com"
+      ]
+    },
+    "primary_contact_telephone": {
+      "title": "1.9 Primary contact person telephone",
+      "description": "The primary contact's telephone number, in international form. Mandatory in the initial notification, the intermediate report and the final report.",
+      "x-field": "1.9",
+      "x-field-type": "Alphanumeric",
+      "type": "string",
+      "pattern": "^\\+[0-9][0-9 ]{5,19}$",
+      "examples": [
+        "+49 69 1234567"
+      ]
+    },
+    "second_contact_name": {
+      "title": "1.10 Second contact person name",
+      "description": "The person the competent authority contacts when the primary contact cannot be reached. Mandatory in the initial notification, the intermediate report and the final report.",
+      "x-field": "1.10",
+      "x-field-type": "Alphanumeric",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "Sam Example"
+      ]
+    },
+    "second_contact_email": {
+      "title": "1.11 Second contact person email",
+      "description": "The second contact's email address. Mandatory in the initial notification, the intermediate report and the final report.",
+      "x-field": "1.11",
+      "x-field-type": "Alphanumeric",
+      "type": "string",
+      "format": "email",
+      "examples": [
+        "sam.example@example.com"
+      ]
+    },
+    "second_contact_telephone": {
+      "title": "1.12 Second contact person telephone",
+      "description": "The second contact's telephone number, in international form. Mandatory in the initial notification, the intermediate report and the final report.",
+      "x-field": "1.12",
+      "x-field-type": "Alphanumeric",
+      "type": "string",
+      "pattern": "^\\+[0-9][0-9 ]{5,19}$",
+      "examples": [
+        "+49 69 7654321"
+      ]
+    },
+    "parent_undertaking_name": {
+      "title": "1.13 Name of the ultimate parent undertaking",
+      "description": "The full legal name of the group's ultimate parent undertaking, given when the entity belongs to a group. Mandatory when its condition holds.",
+      "x-field": "1.13",
+      "x-field-type": "Alphanumeric",
+      "type": "string",
+      "minLength": 1,
+      "examples": [
+        "Example Holding SE"
+      ]
+    },
+    "parent_undertaking_lei": {
+      "title": "1.14 LEI code of the ultimate parent undertaking",
+      "description": "The legal entity identifier of the ultimate parent undertaking, given when 1.13 is. Mandatory when its condition holds.",
+      "x-field": "1.14",
+      "x-field-type": "Unique 20 alphanumeric character code, based on ISO 17442-1:2020",
+      "type": "string",
+      "pattern": "^[A-Z0-9]{18}[0-9]{2}$",
+      "examples": [
+        "529900EXAMPLE0000056"
+      ]
+    },
+    "reporting_currency": {
+      "title": "1.15 Reporting currency",
+      "description": "The ISO 4217 code of the currency every monetary amount in the report is given in. Mandatory in the initial notification, the intermediate report and the final report.",
+      "x-field": "1.15",
+      "x-field-type": "Choice populated by using ISO 4217 currency codes",
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "examples": [
+        "EUR"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "affected_entity_name": true
+        },
+        "required": [
+          "affected_entity_name"
+        ]
+      },
+      "then": {
+        "properties": {
+          "affected_entity_lei": true
+        },
+        "required": [
+          "affected_entity_lei"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "parent_undertaking_name": true
+        },
+        "required": [
+          "parent_undertaking_name"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parent_undertaking_lei": true
+        },
+        "required": [
+          "parent_undertaking_lei"
+        ]
+      }
+    }
+  ]
+}

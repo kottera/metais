@@ -101,8 +101,14 @@ func loadFixtures(t *testing.T) []loaded {
 	return out
 }
 
+// recordedSources holds an example package as the recorded runs saw it,
+// when the shipped one has changed since. A run is scored against the
+// package it ran with: a session that copied a shipped example copied
+// that package's data, not what the example holds today.
+const recordedSources = "testdata/sources"
+
 // sources are a scenario's fixtures' source directories, as the runner
-// hands them to the scorer.
+// hands them to the scorer, each as the recorded runs saw it.
 func sources(s *scenario.Scenario) map[string]fs.FS {
 	m := map[string]fs.FS{}
 	for _, f := range s.Fixtures {
@@ -110,6 +116,10 @@ func sources(s *scenario.Scenario) map[string]fs.FS {
 			continue
 		}
 		dir := filepath.Join(repoRoot, "examples", f.Example)
+		rec := filepath.Join(recordedSources, f.Example)
+		if _, err := os.Stat(rec); err == nil {
+			dir = rec
+		}
 		if f.Source != "" {
 			dir = filepath.Join("..", "scenarios", s.Dir, f.Source)
 		}
