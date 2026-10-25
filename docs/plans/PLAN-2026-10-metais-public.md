@@ -593,6 +593,21 @@ Made by the plan orchestrator in answer to the wave's breakdown
   window, and `opus[1m]` restores 1M. So I1's Opus run picks its model
   string deliberately, and the scorecard records it and the window the
   sessions got.
+- **R-W3-4, install.sh's latest-release lookup (plan orchestrator,
+  2026-10-25).** rc.6's rehearsal failed `install.sh` with no
+  `METAIS_VERSION` on hosted macOS. The anonymous REST call for the
+  latest release got GitHub's rate-limit 403. That is a defect in a
+  golden path, so it is fixed in this wave and the next candidate is
+  rc.7, with I1 re-run under R-W3-1.
+  - Resolving the latest release that is not a prerelease does not
+    depend on GitHub's anonymous, rate-limited REST API on the default
+    path.
+  - A rate-limit answer is never read as "no stable release". That
+    refusal stays distinct, and is tested on both sides of `v1.0.0`.
+  - The rest of ADR-013 D6 is unchanged, and no rehearsal check is
+    loosened.
+
+  The rc.7 I1 act returns its scorecard and scrubbed set to the train.
 
 ## 9. Wave 4 — launch
 
