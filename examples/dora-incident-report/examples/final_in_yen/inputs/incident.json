@@ -26,7 +26,7 @@
   "relevant_clients_or_counterparts_impacted": false,
   "transactions_affected": 41200,
   "transactions_affected_percentage": 12.5,
-  "transactions_affected_value": 384500,
+  "transactions_affected_value": 330276000,
   "impact_figures_basis": [
     "actual figures for clients affected",
     "estimates for transactions affected",
@@ -71,7 +71,7 @@
   "resolution_summary": "The configuration was corrected, the review now compares every change with the running configuration, and changes to the gateway need two reviewers.",
   "root_cause_addressed_at": "2026-03-09T16:00:00Z",
   "resolved_at": "2026-03-10T09:00:00Z",
-  "gross_costs_and_losses": 29450,
+  "gross_costs_and_losses": 6953000,
   "financial_recoveries": 0,
   "additional_root_causes": [
     "change management"
