@@ -174,4 +174,16 @@ existing directory.</li>
 teaches a coding agent this route.</li>
 </ul>{% endraw %}
 {%- endcapture -%}
-{%- render "_layout.html.liquid", title: "Writing a package — METAIS", description: "Write a package, an invoice rendered as an HTML page, from init to pack, then change it and write data into a page's script.", head: nil, body: body -%}
+{%- capture toc -%}
+<li><a href="#the-route">The route</a></li>
+<li><a href="#1-start-from-a-scaffold">1. Start from a scaffold</a></li>
+<li><a href="#2-edit-it">2. Edit it</a></li>
+<li><a href="#3-check-it">3. Check it</a></li>
+<li><a href="#4-test-it">4. Test it</a></li>
+<li><a href="#5-pack-it">5. Pack it</a></li>
+<li><a href="#change-a-package-that-is-already-packed">Change a package that is already packed</a></li>
+<li><a href="#write-data-into-a-pages-script">Write data into a page's script</a></li>
+<li><a href="#escape-hatches">Escape hatches</a></li>
+{%- endcapture -%}
+{%- capture side -%}{% render "guide/_side.html.liquid", current: "writing", toc: toc %}{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "Writing a package — METAIS", description: "Write a package, an invoice rendered as an HTML page, from init to pack, then change it and write data into a page's script.", head: nil, body: body, section: "guide", kicker: "Guide", side: side -%}

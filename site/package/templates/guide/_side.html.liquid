@@ -1,0 +1,24 @@
+{%- comment -%}
+  The guides' side navigation: both guides, with toc, the headings of
+  current, the guide this page is (using or writing), beneath it.
+{%- endcomment -%}
+<p class="side-h">Guides</p>
+<ul>
+<li><a href="/guide/using-a-package/"{% if current == "using" %} aria-current="page"{% endif %}>Using a package</a>
+{%- if current == "using" %}
+<ul>
+{{ toc }}
+</ul>
+{%- endif %}</li>
+<li><a href="/guide/writing-a-package/"{% if current == "writing" %} aria-current="page"{% endif %}>Writing a package</a>
+{%- if current == "writing" %}
+<ul>
+{{ toc }}
+</ul>
+{%- endif %}</li>
+</ul>
+<p class="side-h">See also</p>
+<ul>
+<li><a href="/install/">Install</a></li>
+<li><a href="/reference/">Reference</a></li>
+</ul>

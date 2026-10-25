@@ -2,12 +2,10 @@
   The landing page (ADR-013 D8 item 3): what METAIS is, who it is for, the
   install command, and "Who makes METAIS" (D2 item 1), in the words Ed
   approved on 2026-10-24 (direction C, "Data in, documents out"). It is a
-  page of its own, not the shared layout: its stylesheet is /landing.css,
-  and it ends, like every page, with the footer saying METAIS is made by
-  Kottera. Its demos are the invoice example's real output; the site's tests
-  hold them to what metais prints.
+  page of its own, not the shared layout: it shares the layout's header,
+  footer and /site.css, and adds /landing.css. Its demos are the invoice
+  example's real output; the site's tests hold them to what metais prints.
 {%- endcomment -%}
-{%- assign release = inputs.release -%}
 <!DOCTYPE html>
 <!-- Copyright 2026 Kottera. SPDX-License-Identifier: Apache-2.0 -->
 <html lang="en">
@@ -16,20 +14,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>METAIS: your data, proofread before it's printed</title>
 <meta name="description" content="Document templates that check your data before they fill it in. One .metais file: templates, a JSON Schema for every input, and a guide. Built for consistent output in AI workflows.">
+<link rel="stylesheet" href="/site.css">
 <link rel="stylesheet" href="/landing.css">
 </head>
 <body>
 
-<!-- The mark: a sheet whose corner is folded down into an acute accent, the stressed syllable of meh-TAY and a proofreader's tick at once. -->
+{% render "_header.html.liquid", section: nil %}
+<!-- The stamp's ink: a speckle that wears the stamp's edges. -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
-    <symbol id="mark" viewBox="0 0 40 40">
-      <rect x="1" y="1" width="38" height="38" rx="9" fill="#14234a"/>
-      <path d="M11 9.5h12.5l6 6V30.5a1 1 0 0 1-1 1H11a1 1 0 0 1-1-1v-20a1 1 0 0 1 1-1z" fill="#f4eddc"/>
-      <path d="M23.5 9.5v6h6" fill="none" stroke="#14234a" stroke-width="1.6" stroke-linejoin="round"/>
-      <path d="M14 20.5h9M14 24.5h11.5M14 28h6" stroke="#14234a" stroke-width="1.8" stroke-linecap="round"/>
-      <path d="M26.2 3.6l5.4-2.2" stroke="#bf2f1c" stroke-width="3.6" stroke-linecap="round" transform="translate(0 2.2)"/>
-    </symbol>
     <filter id="ink" x="-10%" y="-10%" width="120%" height="120%">
       <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="7" result="n"/>
       <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.3 1.45" result="speckle"/>
@@ -37,24 +30,6 @@
     </filter>
   </defs>
 </svg>
-
-<header class="wrap">
-  <nav class="nav" aria-label="Main">
-    <a class="brand" href="/" aria-label="METAIS home"><svg aria-hidden="true"><use href="#mark"/></svg>metais</a>
-    {%- if release.published %}
-    <a class="pill" href="https://github.com/kottera/metais/releases/tag/{{ release.tag }}">{%- if release.prerelease %}<b>RC</b> {% endif %}{{ release.tag }}</a>
-    {%- else %}
-    <a class="pill" href="https://github.com/kottera/metais/releases"><b>DEV</b> v{{ inputs.tool.tool.version }}</a>
-    {%- endif %}
-    <ul>
-      <li><a href="/install/">Install</a></li>
-      <li><a href="/guide/using-a-package/">Guide</a></li>
-      <li><a href="/reference/">Reference</a></li>
-      <li><a href="/spec/draft/">Spec</a></li>
-      <li><a href="https://github.com/kottera/metais">GitHub</a></li>
-    </ul>
-  </nav>
-</header>
 
 <main>
 <!-- ================= HERO ================= -->
@@ -522,18 +497,7 @@ A harness loads the skill when its next session starts.
 })();
 </script>
 
-<footer>
-  <div class="wrap foot">
-    <div>
-      <a class="brand" href="/"><svg aria-hidden="true"><use href="#mark"/></svg>metais</a>
-      <p class="acro"><b>M</b>ulti-file <b>E</b>xtensible <b>T</b>emplating <b>A</b>nd <b>I</b>nstantiation <b>S</b>pecification</p>
-      <p style="margin:8px 0 0">METAIS is made by <a href="https://kottera.com/">Kottera</a> · Apache-2.0{%- if release.published %} · {{ release.tag }}{% if release.prerelease %}, a release candidate{% endif %}{% endif %} · This site is itself built by METAIS, from a METAIS package.</p>
-    </div>
-    <nav aria-label="Footer">
-      <a href="/install/">Install</a><a href="/guide/using-a-package/">Using a package</a><a href="/guide/writing-a-package/">Writing a package</a><a href="/reference/">Reference</a><a href="/spec/draft/">Specification</a><a href="/schemas/1.0/manifest.schema.json">Schemas</a><a href="https://github.com/kottera/metais">GitHub</a>
-    </nav>
-  </div>
-</footer>
+{% render "_footer.html.liquid" %}
 
 </body>
 </html>

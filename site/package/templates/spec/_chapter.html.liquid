@@ -1,7 +1,7 @@
 {%- comment -%}
   One page of the specification: file, a Markdown file of revision as the
-  build step converted it, with revision's chapters listed beside it, and
-  what revision it is. A draft's page says it is a draft and asks search
+  build step converted it, with revision's chapters listed beside it and
+  the sections of file beneath its own, and what revision it is. A draft's page says it is a draft and asks search
   engines not to index it (ADR-011 A8 item 2).
 {%- endcomment -%}
 {%- assign draft = false -%}
@@ -12,11 +12,6 @@
 {%- else %}
 <p class="revision">The METAIS specification, revision {{ revision.revision }}, released at the tag <code>{{ revision.ref }}</code>.</p>
 {%- endif %}
-<nav class="chapters"><ul>
-{%- for f in revision.files %}
-<li><a href="{{ f.path }}">{% if f.title != "" %}{{ f.title }}{% else %}{{ f.file }}{% endif %}</a></li>
-{%- endfor %}
-</ul></nav>
 <article class="spec">
 {{ file.html | safe }}
 </article>
@@ -36,4 +31,33 @@
 {%- else -%}
 {%- assign title = name | append: " — METAIS specification " | append: revision.revision -%}
 {%- endif -%}
-{%- render "_layout.html.liquid", title: title, description: nil, head: head, body: body -%}
+{%- capture side -%}
+<p class="side-h">{% if draft %}The draft{% else %}Revision {{ revision.revision }}{% endif %}</p>
+<ul class="chapters">
+{%- assign contents = revision.files | where: "file", "README.md" -%}
+{%- for f in contents %}
+<li><a href="{{ f.path }}"{% if f.path == file.path %} aria-current="page"{% endif %}>Contents</a></li>
+{%- endfor %}
+{%- for f in revision.files %}
+{%- unless f.file == "README.md" %}
+<li><a href="{{ f.path }}"{% if f.path == file.path %} aria-current="page"{% endif %}>{% if f.title != "" %}{{ f.title }}{% else %}{{ f.file }}{% endif %}</a>
+{%- if f.path == file.path %}
+{%- assign sections = f.headings | where: "level", 2 -%}
+{%- if sections.size > 0 %}
+<ul>
+{%- for h in sections %}
+<li><a href="#{{ h.id }}">{{ h.text }}</a></li>
+{%- endfor %}
+</ul>
+{%- endif %}
+{%- endif %}</li>
+{%- endunless %}
+{%- endfor %}
+</ul>
+{%- endcapture -%}
+{%- if draft -%}
+{%- assign kicker = "Specification · draft" -%}
+{%- else -%}
+{%- assign kicker = "Specification · revision " | append: revision.revision -%}
+{%- endif -%}
+{%- render "_layout.html.liquid", title: title, description: nil, head: head, body: body, section: "spec", kicker: kicker, side: side -%}

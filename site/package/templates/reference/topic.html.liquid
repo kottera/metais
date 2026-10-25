@@ -8,4 +8,6 @@
 <pre class="topic">{{ item.text }}</pre>
 {%- endcapture -%}
 {%- assign title = "metais help " | append: item.name | append: " — METAIS" -%}
-{%- render "_layout.html.liquid", title: title, description: item.title, head: nil, body: body -%}
+{%- assign here = "/reference/topics/" | append: item.name | append: "/" -%}
+{%- capture side -%}{% render "reference/_side.html.liquid", here: here, toc: nil %}{%- endcapture -%}
+{%- render "_layout.html.liquid", title: title, description: item.title, head: nil, body: body, section: "reference", kicker: "Reference · topic", side: side -%}

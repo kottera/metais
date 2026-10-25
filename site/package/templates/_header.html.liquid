@@ -1,0 +1,37 @@
+{%- comment -%}
+  The header of every page: the mark's symbol, the brand, the version pill
+  of the release the site is built for, and the main navigation, with
+  section, the page's section (install, guide, reference or spec, or nil),
+  marked as the current one.
+{%- endcomment -%}
+{%- assign release = inputs.release -%}
+<!-- The mark: a sheet whose corner is folded down into an acute accent, the stressed syllable of meh-TAY and a proofreader's tick at once. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="mark" viewBox="0 0 40 40">
+      <rect x="1" y="1" width="38" height="38" rx="9" fill="#14234a"/>
+      <path d="M11 9.5h12.5l6 6V30.5a1 1 0 0 1-1 1H11a1 1 0 0 1-1-1v-20a1 1 0 0 1 1-1z" fill="#f4eddc"/>
+      <path d="M23.5 9.5v6h6" fill="none" stroke="#14234a" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M14 20.5h9M14 24.5h11.5M14 28h6" stroke="#14234a" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M26.2 3.6l5.4-2.2" stroke="#bf2f1c" stroke-width="3.6" stroke-linecap="round" transform="translate(0 2.2)"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="wrap">
+  <nav class="nav" aria-label="Main">
+    <a class="brand" href="/" aria-label="METAIS home"><svg aria-hidden="true"><use href="#mark"/></svg>metais</a>
+    {%- if release.published %}
+    <a class="pill" href="https://github.com/kottera/metais/releases/tag/{{ release.tag }}">{%- if release.prerelease %}<b>RC</b> {% endif %}{{ release.tag }}</a>
+    {%- else %}
+    <a class="pill" href="https://github.com/kottera/metais/releases"><b>DEV</b> v{{ inputs.tool.tool.version }}</a>
+    {%- endif %}
+    <ul>
+      <li><a href="/install/"{% if section == "install" %} aria-current="page"{% endif %}>Install</a></li>
+      <li><a href="/guide/using-a-package/"{% if section == "guide" %} aria-current="page"{% endif %}>Guide</a></li>
+      <li><a href="/reference/"{% if section == "reference" %} aria-current="page"{% endif %}>Reference</a></li>
+      <li><a href="/spec/draft/"{% if section == "spec" %} aria-current="page"{% endif %}>Spec</a></li>
+      <li><a href="https://github.com/kottera/metais">GitHub</a></li>
+    </ul>
+  </nav>
+</header>

@@ -56,4 +56,13 @@
 <h2 id="refusals">Refusals</h2>
 {% render "reference/_refusals.html.liquid", refusals: help.refusals %}
 {%- endcapture -%}
-{%- render "_layout.html.liquid", title: "metais help — METAIS", description: help.description, head: nil, body: body -%}
+{%- capture toc -%}
+<li><a href="#paths">Golden paths</a></li>
+<li><a href="#commands">Commands</a></li>
+<li><a href="#global-flags">Global flags</a></li>
+<li><a href="#topics">Topics</a></li>
+<li><a href="#exit-codes">Exit codes</a></li>
+<li><a href="#refusals">Refusals</a></li>
+{%- endcapture -%}
+{%- capture side -%}{% render "reference/_side.html.liquid", here: "/reference/", toc: toc %}{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "metais help — METAIS", description: help.description, head: nil, body: body, section: "reference", kicker: "Reference", side: side -%}

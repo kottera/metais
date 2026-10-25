@@ -63,7 +63,7 @@ without its leading <code>v</code>:</p>
 <a href="https://github.com/kottera/metais/releases/tag/{{ release.tag }}">{{ release.tag }}</a>,
 and its <a href="{{ release.sums_url }}"><code>SHA256SUMS</code></a>:</p>
 
-<table>
+<table class="archives">
 <thead><tr><th>Archive</th><th>SHA-256</th></tr></thead>
 <tbody>
 {%- for a in release.archives %}
@@ -108,4 +108,19 @@ metais skill</code></pre>
 the top of a project, gives the project's coding agent the skill that
 teaches it metais.</p>
 {%- endcapture -%}
-{%- render "_layout.html.liquid", title: "Install metais — METAIS", description: "How to install metais with Homebrew, the install script, go install, or the release's archives.", head: nil, body: body -%}
+{%- capture side -%}
+<p class="side-h">On this page</p>
+<ul>
+<li><a href="#homebrew">Homebrew</a></li>
+<li><a href="#script">The install script</a></li>
+<li><a href="#go">Go</a></li>
+<li><a href="#release">The release's archives</a></li>
+<li><a href="#next">Next</a></li>
+</ul>
+<p class="side-h">Then</p>
+<ul>
+<li><a href="/guide/using-a-package/">Using a package</a></li>
+<li><a href="/guide/writing-a-package/">Writing a package</a></li>
+</ul>
+{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "Install metais — METAIS", description: "How to install metais with Homebrew, the install script, go install, or the release's archives.", head: nil, body: body, section: "install", kicker: "Install", side: side -%}

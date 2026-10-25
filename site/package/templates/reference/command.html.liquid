@@ -49,4 +49,21 @@
 {% render "reference/_refusals.html.liquid", refusals: item.refusals %}
 {%- endcapture -%}
 {%- assign title = "metais " | append: item.name | append: " — METAIS" -%}
-{%- render "_layout.html.liquid", title: title, description: item.description, head: nil, body: body -%}
+{%- capture toc -%}
+<li><a href="#usage">Usage</a></li>
+{%- if item.examples.size > 0 %}
+<li><a href="#examples">Examples</a></li>
+{%- endif %}
+{%- if item.detail != "" %}
+<li><a href="#detail">Detail</a></li>
+{%- endif %}
+{%- if item.operands.size > 0 %}
+<li><a href="#operands">Operands</a></li>
+{%- endif %}
+<li><a href="#flags">Flags</a></li>
+<li><a href="#prints">Prints</a></li>
+<li><a href="#refusals">Refusals</a></li>
+{%- endcapture -%}
+{%- assign here = "/reference/commands/" | append: item.name | append: "/" -%}
+{%- capture side -%}{% render "reference/_side.html.liquid", here: here, toc: toc %}{%- endcapture -%}
+{%- render "_layout.html.liquid", title: title, description: item.description, head: nil, body: body, section: "reference", kicker: "Reference · command", side: side -%}

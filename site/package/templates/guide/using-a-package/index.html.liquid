@@ -166,4 +166,17 @@ teaches a coding agent this route.</p>
 </li>
 </ul>
 {%- endcapture -%}
-{%- render "_layout.html.liquid", title: "Using a package — METAIS", description: "From a .metais file someone gave you to the document it makes, and on to rendering it from a program.", head: nil, body: body -%}
+{%- capture toc -%}
+<li><a href="#the-route">The route</a></li>
+<li><a href="#1-find-out-what-the-package-needs">1. Find out what the package needs</a></li>
+<li><a href="#2-read-what-each-input-means">2. Read what each input means</a></li>
+<li><a href="#3-put-your-data-in-a-data-directory">3. Put your data in a data directory</a></li>
+<li><a href="#4-check-your-data">4. Check your data</a></li>
+<li><a href="#5-make-the-document">5. Make the document</a></li>
+<li><a href="#see-what-a-package-produces-before-you-have-the-data">See what a package produces, before you have the data</a></li>
+<li><a href="#start-from-generated-data">Start from generated data</a></li>
+<li><a href="#render-from-a-program">Render from a program</a></li>
+<li><a href="#escape-hatches">Escape hatches</a></li>
+{%- endcapture -%}
+{%- capture side -%}{% render "guide/_side.html.liquid", current: "using", toc: toc %}{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "Using a package — METAIS", description: "From a .metais file someone gave you to the document it makes, and on to rendering it from a program.", head: nil, body: body, section: "guide", kicker: "Guide", side: side -%}

@@ -1,0 +1,40 @@
+{%- comment -%}
+  The reference's side navigation, from metais help --json: the overview,
+  every command by group, every topic and the skill, with here, this
+  page's path, marked as the current one, and toc, the headings of this
+  page, beneath it.
+{%- endcomment -%}
+{%- assign help = inputs.help -%}
+<p class="side-h">Reference</p>
+<ul>
+<li><a href="/reference/"{% if here == "/reference/" %} aria-current="page"{% endif %}>Overview</a>
+{%- if here == "/reference/" %}
+<ul>
+{{ toc }}
+</ul>
+{%- endif %}</li>
+</ul>
+{%- assign groups = help.commands | map: "group" | uniq -%}
+{%- for g in groups %}
+<p class="side-h">{{ g }}</p>
+<ul>
+{%- assign commands = help.commands | where: "group", g -%}
+{%- for c in commands %}
+{%- assign path = "/reference/commands/" | append: c.name | append: "/" %}
+<li><a href="{{ path }}"{% if here == path %} aria-current="page"{% endif %}><code>{{ c.name }}</code></a>
+{%- if here == path %}
+<ul>
+{{ toc }}
+</ul>
+{%- endif %}</li>
+{%- endfor %}
+</ul>
+{%- endfor %}
+<p class="side-h">Topics</p>
+<ul>
+{%- for t in help.topics %}
+{%- assign path = "/reference/topics/" | append: t.name | append: "/" %}
+<li><a href="{{ path }}"{% if here == path %} aria-current="page"{% endif %}><code>{{ t.name }}</code></a></li>
+{%- endfor %}
+<li><a href="/reference/skill/"{% if here == "/reference/skill/" %} aria-current="page"{% endif %}>The agent skill</a></li>
+</ul>
