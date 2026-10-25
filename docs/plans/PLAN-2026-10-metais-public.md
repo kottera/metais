@@ -578,6 +578,21 @@ Made by the plan orchestrator in answer to the wave's breakdown
     `kottera` organization and enforce HTTPS. Their DNS, and the
     no-mail records on metais.org, are recorded in `kottera/infra`,
     `dns/README.md`.
+- **R-W3-3, I1's credential route (Ed, 2026-10-25).** ADR-009 A12 is
+  approved with one change: the credential is a `claude setup-token`
+  subscription OAuth token, not an API key, read once from a pipe only.
+  - The proxy removes the session's `Authorization` and `x-api-key`. It
+    sets `Authorization: Bearer <token>` and merges the OAuth beta value
+    into `anthropic-beta`, keeping the values the session sent. It sets
+    no `x-api-key`.
+  - Tests on the fake upstream cover the rewrite both ways.
+    `credential-not-seen` checks the token's bytes.
+  - Reason: subscription quota rather than API credit.
+
+  Behind a loopback `ANTHROPIC_BASE_URL`, bare `opus` resolves to a 200k
+  window, and `opus[1m]` restores 1M. So I1's Opus run picks its model
+  string deliberately, and the scorecard records it and the window the
+  sessions got.
 
 ## 9. Wave 4 — launch
 
