@@ -1,7 +1,7 @@
 ```
 Version: 1.0
-Status: Draft
-Latest release: none
+Status: Released 2026-10-26, tag spec-1.0
+Latest release: 1.0, tag spec-1.0
 ```
 
 # The METAIS specification

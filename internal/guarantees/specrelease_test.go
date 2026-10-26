@@ -34,10 +34,14 @@ const releasedDir = "conformance/released"
 
 var (
 	releasedNameRe = regexp.MustCompile(`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.sha256$`)
-	sha256LineRe   = regexp.MustCompile(`^([0-9a-f]{64})  (\S+)$`)
+	// sha256LineRe is a line of sha256sum's format. The path is the rest of
+	// the line, spaces included: some vectors' files have spaces in their
+	// names (out/path-templates, sec/manifest-strings-literal).
+	sha256LineRe = regexp.MustCompile(`^([0-9a-f]{64})  (.+)$`)
 	// erratumFileRe is an erratum's line naming a released file and its new
-	// digest (ADR-011 D6 item 2), with the "- Files:" lead on the first.
-	erratumFileRe = regexp.MustCompile(`^(?:- Files:)? *(\S+) sha256:([0-9a-f]{64})$`)
+	// digest (ADR-011 D6 item 2), with the "- Files:" lead on the first. The
+	// path runs to the last " sha256:", so it may hold spaces too.
+	erratumFileRe = regexp.MustCompile(`^(?:- Files:)? *(\S.*) sha256:([0-9a-f]{64})$`)
 )
 
 func sha256Hex(b []byte) string {

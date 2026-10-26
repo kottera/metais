@@ -572,6 +572,21 @@ func TestExamplesMatchVectorsControl(t *testing.T) {
 	})
 }
 
+// spacedFile is a released vector file whose name holds spaces, as
+// out/path-templates' and sec/manifest-strings-literal's do.
+const spacedFile = vectorsDir + "/out/relative-path/expected/out/Tom & Jerry's ${HOME}.txt"
+
+// listSpaced writes spacedFile with body and adds it to the fixture's
+// released list, in sha256sum's order by path.
+func listSpaced(t *testing.T, f *specFixture, body string) {
+	t.Helper()
+	f.write(t, spacedFile, body)
+	lines := strings.Split(strings.TrimSuffix(f.read(t, releasedDir+"/1.0.sha256"), "\n"), "\n")
+	lines = append(lines, sha256Hex([]byte(body))+"  "+spacedFile)
+	slices.SortFunc(lines, func(a, b string) int { return strings.Compare(a[66:], b[66:]) })
+	f.write(t, releasedDir+"/1.0.sha256", strings.Join(lines, "\n")+"\n")
+}
+
 func TestReleasedFilesUnchangedControl(t *testing.T) {
 	schema := "schemas/1.0/x.schema.json"
 	changed := strings.Replace(fixtureFiles[schema], `"y"`, `"z"`, 1)
@@ -598,6 +613,16 @@ func TestReleasedFilesUnchangedControl(t *testing.T) {
 		{"a list line not in sha256sum's form", appendTo(releasedDir+"/1.0.sha256", "deadbeef schemas/1.0/x.schema.json\n"), []string{"1.0.sha256:3: not a line of sha256sum's format"}},
 		{"a list path out of spec/", appendTo(releasedDir+"/1.0.sha256", strings.Repeat("0", 64)+"  zz/../../x\n"), []string{"is not a path below spec/"}},
 		{"a file in released/ that is no list", func(t *testing.T, f *specFixture) { f.write(t, releasedDir+"/notes.txt", "x\n") }, []string{"notes.txt is not a released revision's digest list"}},
+		{"a released file named with spaces", func(t *testing.T, f *specFixture) { listSpaced(t, f, "A\n") }, nil},
+		{"a released file named with spaces changed", func(t *testing.T, f *specFixture) {
+			listSpaced(t, f, "A\n")
+			f.write(t, spacedFile, "B\n")
+		}, []string{"the released file " + spacedFile + " has changed, to sha256:" + sha256Hex([]byte("B\n")) + ", and no erratum names it"}},
+		{"a released file named with spaces changed with its erratum", func(t *testing.T, f *specFixture) {
+			listSpaced(t, f, "A\n")
+			f.write(t, spacedFile, "B\n")
+			f.edit(t, "ERRATA.md", "- Files: none\n", "- Files: "+spacedFile+" sha256:"+sha256Hex([]byte("B\n"))+"\n")
+		}, nil},
 		{"an unlisted file may change", edit("09-outputs.md", "A summary", "The summary"), nil},
 	})
 }
