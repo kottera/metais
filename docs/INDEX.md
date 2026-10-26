@@ -14,7 +14,7 @@
 | [PLAN-2026-10-metais-test-economy](plans/PLAN-2026-10-metais-test-economy.md) | `metais-test-economy` | Accepted |
 | [PLAN-2026-10-metais-ux](plans/PLAN-2026-10-metais-ux.md) | `metais-ux` | Complete 2026-10-22; §10 is the train closeout |
 | [PLAN-2026-10-metais-render-seams](plans/PLAN-2026-10-metais-render-seams.md) | `metais-render-seams` | Accepted; §3 gives each wave's status |
-| [PLAN-2026-10-metais-public](plans/PLAN-2026-10-metais-public.md) | `metais-public` | Ratified; §3 gives each wave's status |
+| [PLAN-2026-10-metais-public](plans/PLAN-2026-10-metais-public.md) | `metais-public` | Done 2026-10-26: `v1.0.0` released, and the launch checks passed; [launch record](dev/rehearsal/v1.0.0.md) |
 | [PLAN-2026-10-metais-values-and-rules](plans/PLAN-2026-10-metais-values-and-rules.md) | `metais-values-and-rules` | Complete 2026-10-25; §11 is the train closeout |
 
 Each wave's brief, ending in the closeout its wave orchestrator writes, is under [briefs/](briefs/), named
