@@ -102,6 +102,7 @@ func TestRehearseWorkflow(t *testing.T) {
 			".github/scripts/rehearse.sh go-import",
 			".github/scripts/rehearse.sh reference ",
 			".github/scripts/rehearse.sh spec release",
+			`.github/scripts/rehearse.sh released release "$RUNNER_TEMP/metais/metais"`,
 			".github/scripts/rehearse.sh pages release",
 			".github/scripts/rehearse.sh kottera",
 		}},
@@ -186,7 +187,9 @@ func TestRehearseWorkflow(t *testing.T) {
 	if !proxy || !direct {
 		t.Errorf("rehearse.yml's go-install runs go install through the proxy %t, and direct with its own module cache %t; want both", proxy, direct)
 	}
-	// The site's checks read what the release holds from its tag.
+	// The site's checks read what the release holds from its tag, checked
+	// out with the whole history, so the spec-<M>.<m> tags that say which
+	// revisions are released are there for rehearse.sh released to read.
 	site, _ := must(jobs.Get("site")).(value.Object)
 	tagged := false
 	for _, s := range must(site.Get("steps")).(value.Array).All() {
@@ -195,11 +198,12 @@ func TestRehearseWorkflow(t *testing.T) {
 			wo, _ := with.(value.Object)
 			ref, _ := wo.Get("ref")
 			path, _ := wo.Get("path")
-			tagged = tagged || (text(ref) == "${{ steps.tag.outputs.tag }}" && text(path) == "release")
+			depth, _ := wo.Get("fetch-depth")
+			tagged = tagged || (text(ref) == "${{ steps.tag.outputs.tag }}" && text(path) == "release" && value.Equal(depth, value.NumberFromInt(0)))
 		}
 	}
 	if !tagged {
-		t.Errorf("rehearse.yml's site job does not check the release's tag out into release")
+		t.Errorf("rehearse.yml's site job does not check the release's tag out into release with fetch-depth: 0")
 	}
 }
 
@@ -218,13 +222,15 @@ type rehearsal struct {
 const rehearsed = "1.0.0-rc.1"
 
 // fakeMetais is a metais that reports $FAKE_REPORTS, or $FAKE_BUILT, or the
-// version it was built with; lists one command and one topic; and writes a
-// skill stamped with its version, unless $FAKE_SKILL names another or is
-// none.
+// version it was built with, implementing the revisions $FAKE_IMPLEMENTS
+// lists as JSON strings, or 1.0; lists one command and one topic; and
+// writes a skill stamped with its version, unless $FAKE_SKILL names another
+// or is none.
 const fakeMetais = `#!/bin/sh
 v=${FAKE_REPORTS:-${FAKE_BUILT:-%s}}
 case $1 in
 --version) printf 'metais %%s\nspecification 1.0\nMETAIS is made by Kottera.\n' "$v" ;;
+version) printf '{"ok":true,"result":{"tool":{"name":"metais","version":"%%s"},"specification":{"implements":[%%s]}}}\n' "$v" "${FAKE_IMPLEMENTS:-"\"1.0\""}" ;;
 help) echo '{"ok":true,"result":{"commands":[{"name":"render"}],"topics":[{"name":"templates"}]}}' ;;
 skill)
 	[ "${FAKE_SKILL:-}" = none ] && exit 0
@@ -292,6 +298,9 @@ func newRehearsal(t *testing.T) *rehearsal {
 		"web/reference/topics/templates/index.html":  "<title>templates</title>",
 		"web/spec/draft/index.html":                  `<meta name="robots" content="noindex"><title>METAIS</title>`,
 		"web/spec/draft/01-packages/index.html":      `<meta name="robots" content="noindex"><title>Packages</title>`,
+		"web/spec/1.0/index.html":                    "<title>METAIS</title>",
+		"web/spec/1.0/01-packages/index.html":        "<title>Packages</title>",
+		"web/spec/index.html":                        `<meta http-equiv="refresh" content="0; url=/spec/1.0/"><title>The METAIS specification</title>`,
 		"web/metais/index.html":                      goImportPage,
 		"web/metais/cmd/metais/index.html":           goImportPage,
 		"kottera/index.html":                         "<title>Kottera</title>",
@@ -347,7 +356,7 @@ func newRehearsal(t *testing.T) *rehearsal {
 			r.env = append(r.env, kv)
 		}
 	}
-	r.env = append(r.env, "HOME="+r.home,
+	r.env = append(testenv.GitEnv(r.env), "HOME="+r.home,
 		"METAIS_REHEARSE_SITE="+serve(r.web),
 		"METAIS_REHEARSE_DOWNLOAD="+serve(r.dl),
 		"METAIS_REHEARSE_KOTTERA="+serve(r.kottera))
@@ -392,6 +401,42 @@ func TestRehearseScript(t *testing.T) {
 	}
 	web := func(r *rehearsal) string { return r.web }
 	tree := func(r *rehearsal) string { return r.tree }
+	// git runs git in the release's checkout.
+	git := func(r *rehearsal, args ...string) {
+		cmd := exec.Command("git", args...)
+		cmd.Dir = r.tree
+		cmd.Env = append(testenv.GitEnv(os.Environ()),
+			"GIT_AUTHOR_NAME=A Contributor", "GIT_AUTHOR_EMAIL=a@example.invalid",
+			"GIT_COMMITTER_NAME=A Contributor", "GIT_COMMITTER_EMAIL=a@example.invalid")
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %s: %v\n%s", strings.Join(args, " "), err, out)
+		}
+	}
+	// tags makes the release's checkout a repository whose commit is tagged
+	// each of tags, after each setup of before.
+	tags := func(tags []string, before ...func(*rehearsal)) func(*rehearsal) {
+		return func(r *rehearsal) {
+			for _, f := range before {
+				f(r)
+			}
+			git(r, "init", "--quiet", ".")
+			git(r, "add", ".")
+			git(r, "commit", "--quiet", "-m", "the release")
+			for _, tag := range tags {
+				git(r, "tag", tag)
+			}
+		}
+	}
+	// then runs each setup in turn.
+	then := func(fs ...func(*rehearsal)) func(*rehearsal) {
+		return func(r *rehearsal) {
+			for _, f := range fs {
+				f(r)
+			}
+		}
+	}
+	released := tags([]string{"spec-1.0"})
+	const stable = "FAKE_REPORTS=1.0.0"
 
 	for _, c := range []struct {
 		name string
@@ -517,6 +562,38 @@ func TestRehearseScript(t *testing.T) {
 			code: 1, says: "/spec/draft/02-schemas/ answered 404"},
 		{name: "spec, indexed", args: []string{"spec", "{tree}"}, setup: put(web, "spec/draft/01-packages/index.html", "<title>Packages</title>"),
 			code: 1, says: "/spec/draft/01-packages/ does not ask not to be indexed"},
+
+		{name: "released", args: []string{"released", "{tree}", "{metais}"}, setup: released, env: []string{stable},
+			says: "ok: 3 of 3 pages of the released specification, 1.0, serve HTML, indexed, and /spec/ leads to 1.0"},
+		{name: "released, a prerelease of a released revision", args: []string{"released", "{tree}", "{metais}"}, setup: released,
+			says: "ok: 3 of 3 pages of the released specification, 1.0"},
+		{name: "released, a prerelease of the draft", args: []string{"released", "{tree}", "{metais}"}, setup: tags(nil),
+			says: "ok: " + rehearsed + " is a prerelease, and no revision it implements is released, so the site serves the draft alone"},
+		{name: "released, a release of no released revision", args: []string{"released", "{tree}", "{metais}"}, setup: tags(nil), env: []string{stable},
+			code: 1, says: "FAIL: 1.0.0 is a release, and no revision it implements is released"},
+		{name: "released, a release of a revision not yet released", args: []string{"released", "{tree}", "{metais}"}, setup: released,
+			env: []string{stable, `FAKE_IMPLEMENTS="1.0","1.1"`}, says: "1.1 is not released: "},
+		{name: "released, a chapter missing", args: []string{"released", "{tree}", "{metais}"},
+			setup: tags([]string{"spec-1.0"}, put(tree, "spec/02-schemas.md", "# Schemas\n")), env: []string{stable},
+			code: 1, says: "/spec/1.0/02-schemas/ answered 404"},
+		{name: "released, its chapters read from its tag", args: []string{"released", "{tree}", "{metais}"},
+			setup: then(released, put(tree, "spec/02-schemas.md", "# Schemas\n")), env: []string{stable},
+			says: "ok: 3 of 3 pages of the released specification, 1.0"},
+		{name: "released, its contents missing", args: []string{"released", "{tree}", "{metais}"}, setup: then(released, rm("spec/1.0/index.html")),
+			env: []string{stable}, code: 1, says: "/spec/1.0/ answered 404"},
+		{name: "released, unindexed", args: []string{"released", "{tree}", "{metais}"},
+			setup: then(released, put(web, "spec/1.0/01-packages/index.html", `<meta name="robots" content="noindex"><title>Packages</title>`)),
+			env:   []string{stable}, code: 1, says: "/spec/1.0/01-packages/ asks not to be indexed"},
+		{name: "released, /spec/ leading to the draft", args: []string{"released", "{tree}", "{metais}"},
+			setup: then(released, put(web, "spec/index.html", `<meta http-equiv="refresh" content="0; url=/spec/draft/">`)),
+			env:   []string{stable}, code: 1, says: "/spec/ does not lead to /spec/1.0/"},
+		{name: "released, /spec/ missing", args: []string{"released", "{tree}", "{metais}"}, setup: then(released, rm("spec/index.html")),
+			env: []string{stable}, code: 1, says: "/spec/ answered 404"},
+		{name: "released, /spec/ leading to an earlier revision", args: []string{"released", "{tree}", "{metais}"},
+			setup: tags([]string{"spec-1.0", "spec-1.9", "spec-1.10"}), env: []string{stable},
+			code: 1, says: "/spec/ does not lead to /spec/1.10/"},
+		{name: "released, outside a repository", args: []string{"released", "{tree}", "{metais}"}, env: []string{stable},
+			code: 1, says: "FAIL: could not list {tree}'s tags"},
 
 		{name: "pages", args: []string{"pages", "{tree}"}, says: "ok: 3 of 3 pages serve, install.sh as the release holds it"},
 		{name: "pages, install.sh not the release's", args: []string{"pages", "{tree}"}, setup: put(web, "install.sh", "#!/bin/sh\n"),
