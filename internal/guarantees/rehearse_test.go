@@ -397,7 +397,11 @@ func TestRehearseScript(t *testing.T) {
 		name string
 		// args are rehearse.sh's, where {metais} names the case's metais
 		// and {dir} a directory that does not exist
-		args   []string
+		args []string
+		// first are the arguments of a check run before args, in the same
+		// HOME, that must pass: a step of the same job the workflow runs
+		// before this one
+		first  []string
 		setup  func(*rehearsal)
 		env    []string
 		code   int
@@ -417,6 +421,23 @@ func TestRehearseScript(t *testing.T) {
 		{name: "install, another version installed", args: []string{"install", rehearsed}, env: []string{"FAKE_REPORTS=0.9.0"},
 			code: 1, says: `FAIL: {installed} --version reports "metais 0.9.0"`},
 		{name: "install, install.sh missing", args: []string{"install", rehearsed}, setup: rm("install.sh"),
+			code: 1, says: "FAIL: install.sh did not install {installed}"},
+		// A stable release's job runs latest first, which installs the
+		// same version's own bytes, so a correct install changes nothing
+		// in the file it writes.
+		{name: "install, the same release installed by latest", first: []string{"latest", "1.0.0"}, args: []string{"install", "1.0.0"},
+			env: []string{"FAKE_LATEST=1.0.0"}, says: "ok: {installed} reports 1.0.0"},
+		{name: "install, install.sh writing nothing after latest", first: []string{"latest", "1.0.0"}, args: []string{"install", "1.0.0"},
+			env: []string{"FAKE_LATEST=1.0.0"}, setup: func(r *rehearsal) {
+				p := filepath.Join(r.web, "install.sh")
+				b, err := os.ReadFile(p)
+				if err != nil {
+					t.Fatal(err)
+				}
+				write(t, p, "if [ -n \"${METAIS_VERSION:-}\" ]; then echo \"installed metais $METAIS_VERSION\"; exit 0; fi\n"+string(b))
+			},
+			code: 1, says: "FAIL: install.sh did not install {installed}"},
+		{name: "install, install.sh writing nothing", args: []string{"install", rehearsed}, setup: put(web, "install.sh", "echo installed metais\n"),
 			code: 1, says: "FAIL: install.sh did not install {installed}"},
 		{name: "install, install.sh failing", args: []string{"install", rehearsed}, setup: put(web, "install.sh", "exit 3\n"),
 			code: 1, says: "FAIL: install.sh exited 3"},
@@ -523,14 +544,23 @@ func TestRehearseScript(t *testing.T) {
 			dir := filepath.Join(r.home, "new")
 			subst := strings.NewReplacer("{metais}", r.metais, "{dir}", dir, "{tree}", r.tree,
 				"{installed}", filepath.Join(r.home, ".local/bin/metais"), "{unpacked}", filepath.Join(dir, "metais"))
-			args := []string{script}
-			for _, a := range c.args {
-				args = append(args, subst.Replace(a))
+			run := func(argv []string) ([]string, []byte, error) {
+				args := []string{script}
+				for _, a := range argv {
+					args = append(args, subst.Replace(a))
+				}
+				cmd := exec.Command("sh", args...)
+				cmd.Dir = r.home
+				cmd.Env = append(slices.Clone(r.env), c.env...)
+				out, err := cmd.CombinedOutput()
+				return args, out, err
 			}
-			cmd := exec.Command("sh", args...)
-			cmd.Dir = r.home
-			cmd.Env = append(slices.Clone(r.env), c.env...)
-			out, err := cmd.CombinedOutput()
+			if c.first != nil {
+				if args, out, err := run(c.first); err != nil {
+					t.Fatalf("rehearse.sh %s, run first, failed: %v\n%s", strings.Join(args[1:], " "), err, out)
+				}
+			}
+			args, out, err := run(c.args)
 			code := 0
 			var exit *exec.ExitError
 			if errors.As(err, &exit) {

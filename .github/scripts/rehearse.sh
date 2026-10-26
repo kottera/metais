@@ -156,11 +156,15 @@ install)
 	[ "$#" -eq 1 ] || usage
 	version=$(release "$1")
 	bin=${HOME:?rehearse.sh: HOME is not set}/.local/bin/metais
-	before=$(fingerprint "$bin")
+	# For a stable release, latest has just installed this version's own
+	# bytes, so an install.sh that wrote nothing would leave the same file.
+	# Removing it first means only a write puts it back.
+	if [ -e "$bin" ] || [ -L "$bin" ]; then
+		show rm -f "$bin" || fail "could not remove $bin"
+	fi
 	echo "\$ curl -fsSL $site/install.sh | METAIS_VERSION=$version sh"
 	curl -fsSL "$site/install.sh" | METAIS_VERSION=$version sh || fail "install.sh exited $?"
 	[ -x "$bin" ] || fail "install.sh did not install $bin"
-	[ "$(fingerprint "$bin")" != "$before" ] || fail "install.sh left $bin as it was"
 	check_version "$bin" "$version"
 	;;
 
