@@ -393,7 +393,8 @@ func quote(s string) string { return `"` + s + `"` }
 // with internal/conformance's tests split out of the run of the others and
 // run on their own, as R-W1-4 splits them: a job that skipped them and did
 // not run them would run them nowhere. The install jobs are D6 item 8's
-// real installs, one on each platform install.sh serves.
+// real installs, one on each platform install.sh serves. Its concurrency
+// cancels a pull request's superseded run and never a push run on main.
 func TestCIWorkflow(t *testing.T) {
 	src, err := os.ReadFile(ciWorkflow)
 	if err != nil {
@@ -427,6 +428,23 @@ func TestCIWorkflow(t *testing.T) {
 	readOnly, _ := value.NewObject(value.Member{Name: "contents", Value: mustString("read")})
 	if !value.Equal(perms, readOnly) {
 		t.Errorf("ci.yml's top-level permissions are not contents: read alone")
+	}
+	// A push run on main is the record of what merged, so no newer run
+	// may cancel it, while a pull request's superseded run is waste. Both
+	// halves hold that: a pull request's runs share the group of its
+	// number, and every other run's group is its own run's id, since a
+	// newer run in a group replaces the one pending in it even when
+	// nothing in progress is cancelled; and only a pull request's run
+	// cancels the run in progress in its group.
+	conc, _ := must(w.Get("concurrency")).(value.Object)
+	if got := conc.Names(); !slices.Equal(got, []string{"cancel-in-progress", "group"}) {
+		t.Errorf("ci.yml's concurrency has %q, want group and cancel-in-progress alone", got)
+	}
+	if got := text(must(conc.Get("group"))); got != "ci-${{ github.event.pull_request.number || github.run_id }}" {
+		t.Errorf("ci.yml's concurrency group is %q, want a pull request's number, or the run's own id for a push or a dispatch", got)
+	}
+	if got := text(must(conc.Get("cancel-in-progress"))); got != "${{ github.event_name == 'pull_request' }}" {
+		t.Errorf("ci.yml's concurrency cancels in progress when %q, want only a pull request's run, so a push run on main is never cancelled", got)
 	}
 	jobs, _ := w.Get("jobs")
 	jobsObj, _ := jobs.(value.Object)
