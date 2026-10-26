@@ -1,12 +1,13 @@
 # Copyright 2026 Kottera
 # SPDX-License-Identifier: Apache-2.0
 #
-# The rehearsal's checks against a published release candidate (ADR-013
-# D7 item 8, docs/dev/release.md "The rehearsal's checks"): every install
-# route of ADR-013 D6 on a clean machine, metais --version and metais skill
-# after each, and the live site and kottera.com. The clean machines are
-# GitHub-hosted runners, and an ubuntu container that is given install.sh's
-# one prerequisite, curl, and nothing else.
+# The rehearsal's checks against a published release or release
+# candidate (ADR-013 D7 item 8, docs/dev/release.md "The rehearsal's
+# checks"): every install route of ADR-013 D6 on a clean machine, metais
+# --version and metais skill after each, and the live site and
+# kottera.com. The clean machines are GitHub-hosted runners, and an ubuntu
+# container that is given install.sh's one prerequisite, curl, and nothing
+# else.
 #
 # It is dispatched by hand with the candidate's version, once the release
 # is published and its site deployed, and only then: it has no push or
@@ -52,14 +53,17 @@ jobs:
 
   # curl -fsSL https://metais.org/install.sh | sh on each platform it
   # serves (ADR-013 D6 items 1 and 7): with no METAIS_VERSION, the refusal
-  # while the version is a prerelease, since no stable release exists; with
-  # it, an install into ~/.local/bin, reporting the version.
+  # while the version is a prerelease, since no stable release exists, and
+  # an install into ~/.local/bin reporting the version when it is a
+  # release; with it, an install into ~/.local/bin reporting the version.
+  # The second step removes any metais the first installed before it runs,
+  # so it proves its own install, not the first's.
   install-ubuntu:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: install.sh with no METAIS_VERSION, refused while no stable release exists
+      - name: install.sh with no METAIS_VERSION, refused while no stable release exists, installing a release
         run: .github/scripts/rehearse.sh latest "$VERSION"
       - name: install.sh with METAIS_VERSION, reporting the version
         if: ${{ !cancelled() }}
@@ -72,7 +76,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: install.sh with no METAIS_VERSION, refused while no stable release exists
+      - name: install.sh with no METAIS_VERSION, refused while no stable release exists, installing a release
         run: .github/scripts/rehearse.sh latest "$VERSION"
       - name: install.sh with METAIS_VERSION, reporting the version
         if: ${{ !cancelled() }}
@@ -91,7 +95,7 @@ jobs:
       - name: install curl, install.sh's one prerequisite, and nothing else
         run: apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: install.sh with no METAIS_VERSION, refused while no stable release exists
+      - name: install.sh with no METAIS_VERSION, refused while no stable release exists, installing a release
         run: .github/scripts/rehearse.sh latest "$VERSION"
       - name: install.sh with METAIS_VERSION, reporting the version
         if: ${{ !cancelled() }}
@@ -161,8 +165,12 @@ jobs:
 
   # The live site against the release's tag (ADR-013 D1 and D8): every
   # schema's $id, the go-import pages, a reference page for every command
-  # and topic the release's metais lists, the draft specification, the
-  # landing and install pages and install.sh, and kottera.com. Each check
+  # and topic the release's metais lists, the draft specification, each
+  # released revision the release implements and /spec/ leading to the
+  # latest (ADR-011 A8 items 1 and 2), the landing and install pages and
+  # install.sh, and kottera.com. The tag is checked out with the
+  # repository's whole history, so its spec-<M>.<m> tags say which
+  # revisions are released, as they do to the site's build. Each check
   # runs whether or not the one before it refused.
   site:
     runs-on: ubuntu-latest
@@ -177,6 +185,7 @@ jobs:
         with:
           ref: ${{ steps.tag.outputs.tag }}
           path: release
+          fetch-depth: 0
       - name: the release's metais, whose help lists the reference pages
         run: .github/scripts/rehearse.sh manual "$VERSION" "$RUNNER_TEMP/metais"
       - name: every schema's $id resolves as JSON
@@ -191,6 +200,9 @@ jobs:
       - name: the specification at /spec/draft/
         if: ${{ !cancelled() }}
         run: .github/scripts/rehearse.sh spec release
+      - name: the released specification at /spec/<M>.<m>/, and /spec/ leading to it
+        if: ${{ !cancelled() }}
+        run: .github/scripts/rehearse.sh released release "$RUNNER_TEMP/metais/metais"
       - name: the landing page, the install page and install.sh
         if: ${{ !cancelled() }}
         run: .github/scripts/rehearse.sh pages release

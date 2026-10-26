@@ -21,6 +21,9 @@
 #   rehearse.sh go-import                the module's go-import pages
 #   rehearse.sh reference <metais>       a reference page for every command and topic <metais> has
 #   rehearse.sh spec <tree>              the specification's draft, a page per chapter in <tree>
+#   rehearse.sh released <tree> <metais> each released revision <metais> implements, a page per
+#                                        chapter of its spec-<M>.<m> tag in <tree>, and /spec/
+#                                        leading to the latest
 #   rehearse.sh pages <tree>             the landing page, the install page, and install.sh as
 #                                        <tree> holds it
 #   rehearse.sh kottera                  kottera.com
@@ -28,8 +31,9 @@
 # <version> is the release's semantic version, with or without its v.
 # <tree> is a checkout of the release's tag, so a schema, a command or a
 # chapter added later is never skipped and one the release lacks is never
-# asked for. install and latest install into ~/.local/bin, the golden
-# path's directory.
+# asked for, and it holds the repository's tags, so released knows which
+# revisions are released. install and latest install into ~/.local/bin,
+# the golden path's directory.
 #
 # Every check prints each command it runs after "$ ", what it printed, and
 # the version it reported, so its log is its evidence. A check that refuses
@@ -324,6 +328,66 @@ spec)
 		fi
 	done
 	finish "chapters of the draft specification serve HTML, unindexed"
+	;;
+
+released)
+	[ "$#" -eq 2 ] || usage
+	[ -f "$1/spec/README.md" ] || fail "$1 holds no spec/README.md"
+	echo "\$ $2 version --json"
+	"$2" version --json >"$tmp/version.json" || fail "metais version --json exited $?"
+	version=$(jq -r '.result.tool.version // empty' "$tmp/version.json") || version=
+	implements=$(jq -r '.result.specification.implements[]?' "$tmp/version.json") || implements=
+	if [ -z "$version" ] || [ -z "$implements" ]; then
+		fail "metais version --json names no version or no revision it implements"
+	fi
+	echo "metais $version implements:"
+	printf '%s\n' "$implements"
+	# The released revisions are the spec-<M>.<m> tags, as the site's build
+	# reads them, latest last; /spec/ leads to the latest.
+	echo "\$ git -C $1 tag --list 'spec-*'"
+	git -C "$1" tag --list 'spec-*' >"$tmp/tags" || fail "could not list $1's tags"
+	cat "$tmp/tags"
+	grep -E '^spec-(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' "$tmp/tags" | sed 's/^spec-//' | LC_ALL=C sort -t . -k 1,1n -k 2,2n >"$tmp/released" || true
+	latest=$(tail -n 1 "$tmp/released")
+	checked=
+	for r in $implements; do
+		if ! grep -qxF "$r" "$tmp/released"; then
+			echo "$r is not released: $1 has no tag spec-$r"
+			continue
+		fi
+		checked="$checked $r"
+		git -C "$1" ls-tree --name-only "refs/tags/spec-$r^{commit}" -- spec/ >"$tmp/chapters" || fail "could not list spec/ at spec-$r"
+		while IFS= read -r f; do
+			case $f in
+			spec/README.md) p=spec/$r/ ;;
+			spec/*.md) p=spec/$r/$(basename "$f" .md)/ ;;
+			*) continue ;;
+			esac
+			n=$((n + 1))
+			page "$site/$p"
+			if [ "$code" = 200 ] && grep -qF '<meta name="robots" content="noindex">' "$tmp/page"; then
+				echo "FAIL: $site/$p asks not to be indexed, as only a draft does" >&2
+				bad=$((bad + 1))
+			fi
+		done <"$tmp/chapters"
+	done
+	if [ -z "$checked" ]; then
+		prerelease "$version" || fail "$version is a release, and no revision it implements is released at a spec-<M>.<m> tag"
+		[ "$n" -eq 0 ] || fail "$n chapters checked of no released revision"
+		echo "ok: $version is a prerelease, and no revision it implements is released, so the site serves the draft alone"
+		exit 0
+	fi
+	[ "$n" -gt 0 ] || fail "no released revision holds a chapter"
+	want="<meta http-equiv=\"refresh\" content=\"0; url=/spec/$latest/\">"
+	echo "/spec/ must lead to the latest released revision, $latest: $want"
+	n=$((n + 1))
+	page "$site/spec/"
+	if [ "$code" = 200 ] && ! grep -qF "$want" "$tmp/page"; then
+		grep -o '<meta http-equiv="refresh" content="[^"]*">' "$tmp/page" || true
+		echo "FAIL: $site/spec/ does not lead to /spec/$latest/" >&2
+		bad=$((bad + 1))
+	fi
+	finish "pages of the released specification,$checked, serve HTML, indexed, and /spec/ leads to $latest"
 	;;
 
 pages)

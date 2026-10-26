@@ -243,12 +243,12 @@ refused until a real run publishes it.
 
 ## The rehearsal's checks
 
-Before `v1.0.0`, each release candidate is installed by every route on
+Each release candidate, and each release, is installed by every route on
 clean machines, and the site and kottera.com are checked live (ADR-013 D7
 item 8). `.github/workflows/rehearse.yml` runs those checks. It runs only
-when dispatched, so dispatch it once the candidate's `release.yml` run is
-green, which is after its prerelease is published, the tap updated and the
-site deployed. Name the version without its `v`:
+when dispatched, so dispatch it once the version's `release.yml` run is
+green, which is after its release or prerelease is published, the tap
+updated and the site deployed. Name the version without its `v`:
 
 ```bash
 gh workflow run rehearse.yml --ref main -f version=<version>   # such as 1.0.0-rc.1
@@ -275,11 +275,15 @@ shows:
 | `install-container` | an `ubuntu:24.04` container | the same, in an image given only `curl` and its CA certificates, which the one-line command needs |
 | `go-install` | `ubuntu-latest` | `go install metais.org/metais/cmd/metais@v<version>` through the Go proxy, then `metais --version` and `metais skill`. Then the same with `GOPROXY=direct` and a module cache of its own, so the go command reads metais.org's go-import page and clones the repository it names |
 | `manual-ubuntu`, `manual-macos` | `ubuntu-latest`, `macos-latest` | the manual route: this machine's archive and `SHA256SUMS` downloaded from the release, checked with the install page's command (`sha256sum --check --ignore-missing`, or `shasum -a 256` on macOS), `metais` unpacked and run, reporting `<version>`. Then `metais skill` |
-| `site` | `ubuntu-latest` | against a checkout of the tag `v<version>`: every schema's `$id` under `spec/schemas/` and `docs/cli/schemas/` answers `200 application/json` with JSON holding that `$id`; both go-import pages; a reference page for every command and topic that the release's `metais help --json` lists; a `/spec/draft/` page per chapter of `spec/`, each unindexed; the landing page and the install page; `/install.sh` byte for byte the tag's `site/public/install.sh`; and kottera.com |
+| `site` | `ubuntu-latest` | against a checkout of the tag `v<version>`: every schema's `$id` under `spec/schemas/` and `docs/cli/schemas/` answers `200 application/json` with JSON holding that `$id`; both go-import pages; a reference page for every command and topic that the release's `metais help --json` lists; a `/spec/draft/` page per chapter of `spec/`, each unindexed; for each revision the release's `metais version --json` implements that a `spec-<M>.<m>` tag releases, a `/spec/<M>.<m>/` page per chapter of `spec/` at that tag, none of them unindexed, and `/spec/` leading to the latest released revision by its refresh to `/spec/<M>.<m>/`. A release that implements no released revision is refused, and a prerelease that implements none is checked at `/spec/draft/` alone. Then the landing page and the install page; `/install.sh` byte for byte the tag's `site/public/install.sh`; and kottera.com |
 
 The site's checks read the schemas, chapters and `install.sh` from the
-candidate's tag, so a schema added since is never skipped. The scripts are
-the dispatched ref's, `main`'s.
+candidate's tag, so a schema added since is never skipped. The tag is
+checked out with the repository's whole history, so its `spec-<M>.<m>`
+tags say which revisions are released, as they do to the site's build.
+The site builds `/spec/draft/` from the release's own `spec/` whether or
+not a revision is released, so its check is the same for a release and a
+candidate. The scripts are the dispatched ref's, `main`'s.
 
 A red check is first read for its mechanism. One the candidate caused
 becomes a fix item and a new candidate (`rc.N+1`), never a re-cut of this
