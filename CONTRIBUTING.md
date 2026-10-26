@@ -178,6 +178,12 @@ A few rules hold for every change, and a review checks them:
   lands on `main`. Mentioning the words inside a sentence is fine. Remove
   such a line with `git commit --amend` or `git rebase -i origin/main` and
   push with `--force-with-lease`, or edit the pull request's description.
+- A maintainer lands a pull request as one squash merge, whose message is
+  the pull request's title and description. The description's
+  `Signed-off-by:` line is its last line, with nothing after it, since git
+  reads a trailer only from a message's last paragraph; the maintainer
+  checks the body with `.github/scripts/squash-body.sh` before the merge,
+  and the merged commit with `.github/scripts/dco.sh` after it.
 - Pass a multi-paragraph commit message by file (`git commit -s -F <file>`)
   rather than through the shell.
 
