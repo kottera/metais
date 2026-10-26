@@ -1895,6 +1895,175 @@ before NFKD, so `slug` turns `"Ǿrsted"` into `"rsted"` (W5-1). That is a
 specification defect, not a ruling, and needs its own Work Order before
 `spec-1.0` freezes the vectors (R2-170).
 
+## 16. Train closeout
+
+Written by the plan orchestrator (Work Order
+`01a150fc-a9a6-71b1-b70e-67f18569b2b7`) on 2026-10-26, after every wave and
+every out-of-band act of the train had ended.
+
+**This is not a correctness verdict.** I read each wave's closeout, each act's
+report, and the merge history of `main`, and I recorded what they said. I ran
+no gate and mutated no code. Every claim below that something "passed" is the
+claim of the wave verifier or the act's taker who ran it, and it says so.
+
+### 1. Did the plan deliver what it set out to?
+
+Yes, against §1's measure of done, with one change of route. METAIS 1.0 is
+released: specification `spec-1.0` at `6289d1b5`
+([#355](https://github.com/kottera/metais/pull/355)), and `metais` `v1.0.0`
+at `f7f57020`, published on 2026-10-26 by T-A3. §1's list, item by item:
+
+- **The binary.** `metais` builds as one static binary for darwin and linux
+  on amd64 and arm64, and it compiles and vets for windows. The release
+  builder built it twice, byte-identical (T-A3). The gate is the two-tier
+  gate of ADR-010 A5, which Ed inserted mid-train (§11b). It is not the
+  single list §1 named.
+- **Every command of ADR-008 D1** works end to end on a packed package and
+  on a source directory (Waves 3 to 6). The golden paths are documented in
+  the README (Wave 7).
+- **`spec/`** holds every chapter of ADR-011 D1, with `statements.json` and
+  the finding catalog generated and current. `TestCoverage` is green.
+  `TestFindingCodesCovered` exempts nothing, and the unwired list is gone
+  (Wave 7, verified there).
+- **The hostile corpus** of ADR-009 D17 is refused in full through every
+  opening command (Wave 6, and Wave 7's verifier). Content-class cases are
+  proved through `validate` and `check` steps (R-W6-9b, ratified as ADR-011
+  A9).
+- **The SC7 harness** runs over every vector and every hostile case, with
+  every canary caught. Its every-command reach runs at the wave tier, not in
+  every `go test` (R-W6-3, ratified).
+- **Every headline guarantee of ADR-010 D13** has its detector and its fault
+  control in every `go test` (Waves 1 to 6). The fault bits run to 10.
+- **The five packages of PRD §4.1 to §4.5** are under `examples/`, and each
+  passes the example-package harness, by Wave 7's verifier. SC2's and SC3's
+  tests exist.
+- **The release builder** is ready and was used for the release (W7-R,
+  [#163](https://github.com/kottera/metais/pull/163), under ADR-009 A2). The
+  release itself, the four-target matrix and the live rounds ran as §6's
+  acts.
+
+**Where it went further than §1.** Some of §14's exclusions were overtaken
+by Ed's later decisions: publishing, CI, and a site at `metais.org` came in
+under ADR-013 and PLAN-2026-10-metais-public. That was not this train's
+work, and §15 records it.
+
+### 2. What each wave contributed
+
+| Wave | What it contributed |
+|---|---|
+| [1](../briefs/brief-plan-2026-10-metais-v1-wave1.md) | The module, the shell, the finding model and registry, the limits table, the tripwires, the data model, `pkgtree`, and the `spec/` skeleton: 7 items (#7 to #13) |
+| [2](../briefs/brief-plan-2026-10-metais-v1-wave2.md) | Every leaf library, the conformance runner and its self-proof, the document tripwires, and `version`, `limits` and `help`: 16 items and 2 fixes (#20 to #40) |
+| [3](../briefs/brief-plan-2026-10-metais-v1-wave3.md) | `inspect`, with chapters 2 to 4 and the first vectors; the inputs layer, renderer, filters, generator, cross-reference, scanner and `init` as libraries: 13 items (#46 to #59) |
+| [4](../briefs/brief-plan-2026-10-metais-v1-wave4.md) | `validate`, the reading commands, the first render, `check` and `unpack`; four detectors; the Liquid closure: 7 items and 1 fix (#67 to #77) |
+| [5](../briefs/brief-plan-2026-10-metais-v1-wave5.md) | Every render capability, existing destinations under ADR-005 A1, `sample`, `render --sample` and `test`: 13 items, an integration gate and 2 fixes (#86 to #102) |
+| [5b](../briefs/brief-plan-2026-10-metais-v1-wave5b.md) | Inserted by Ed: the two-tier gate, the skills, self-merging generated files, one edit per finding code, help by family, and `render.go` by phase: 7 items and 1 fix (#108 to #117) |
+| [6](../briefs/brief-plan-2026-10-metais-v1-wave6.md) | `pack`, `test`'s container comparison, the hostile corpus in full, the SC7 full reach, the schema compile bounds, calibration and benchmarks: 13 items and 1 fix (#128 to #141) |
+| [7](../briefs/brief-plan-2026-10-metais-v1-wave7.md) | The five example packages, the specification's 1.0 text complete, the worked package, the documentation close-out, the release builder, and ADR-009 A3, A4 and A6's limits: 18 PRs (#148 to #172), plus #187 and #190 |
+
+### 3. What the train did NOT establish
+
+This is the section a reader may not skip.
+
+- **Not every merged fix was re-verified.** Each wave's blocking findings
+  were fixed by children that no later round re-checked. Those children are
+  W2-2F, W2-5F, W3-1V, W4-V1, W5-V1, W5-V2, W5b-V1 and W6-V1. Later waves'
+  wave-tier gates ran over them, but nobody mutated them.
+- **Some items were inspected, never mutated:**
+  - W1-2;
+  - W5-10 and W5-I1;
+  - W5b-1, including the scoped tier's selector until Wave 6 mutated it;
+  - W5b-4 and W5b-6;
+  - W6-7, the benchmarks;
+  - two items of Wave 7.
+
+  Their guards are tested by their producers alone.
+- **Wave 1's credential act was ended with no probe run.** The evidence for
+  it came from the items afterwards. Early gates ran on go1.26.2 under
+  `GOTOOLCHAIN=local` until Wave 2's ruling pinned go1.26.9.
+- **Calibration is evidence on four hosts, not a proof.** T-A2 passed every
+  case within ADR-009 A3's ceilings (1 GiB, 120 s) on the four shipped
+  targets, at the release-candidate defaults. Two things lie outside it:
+  - **ADR-009 A6 item 7's gaps were declared out of scope** by Ed;
+  - **`schema-work` at 450,000 can refuse input within the 1.0 data
+    limits.** Ed accepted that for 1.0.
+- **Accepted for 1.0, by Ed:**
+  - **the Liquid departures:** 549 are listed and measured by the
+    liquid-spec runs (W4-A1R, W5-A1);
+  - **`govulncheck`:** it passed at `d7ed0f5`. One standard-library
+    advisory, GO-2026-6809 (`crypto/x509`, fixed in go1.26.10), is not
+    called. The release ships on go1.26.9.
+- **The release act reports a defect of its own.** Three `rehearse.yml`
+  install jobs failed, on a defect in `rehearse.sh`'s own check rather than
+  in the release. T-A3's report names it, and this train files no fix for
+  it.
+- **`main`'s history carries `Co-authored-by` trailers** on 36 or more
+  commits, against AGENTS.md. Every one of the plan orchestrator's merges
+  from #5 to #121 is among them. Ed ruled that the history is not rewritten
+  (§15, ADR-013 D4 item 1).
+- **The live rounds were run on `339864912`, not on the release commit:**
+  - SC1: an AI harness produced a valid ACR for tera's web UI;
+  - SC9: an author worked only from `spec/`.
+
+  Ed ruled that they run on current `main`.
+
+### 4. What is still running
+
+Nothing in this train. Every wave orchestrator, item, finding child and act
+it filed has ended. Work that Ed's sessions filed outside this train
+continues under its own plans: PLAN-2026-10-metais-render-seams
+(from the render-pipeline follow-up, ADR-010 A7), PLAN-2026-10-metais-public,
+and PLAN-2026-10-metais-test-economy.
+
+### 5. How many times a person was consulted, and what for
+
+The plan orchestrator never parked the train on a question to a person. Ed
+was consulted through **seven design sessions**:
+
+| Design session | Who filed it | What Ed ruled |
+|---|---|---|
+| W1-F3 | Wave 1 | The MapOrder seam (ADR-010 A2) |
+| W2-A1 | Wave 2 | `hostfs` ownership under existing destinations (ADR-005 A1) |
+| W3-A1 | Plan orchestrator | The codes no vector could produce (ADR-006 A1, ADR-011 A4) |
+| W3-A2 | Plan orchestrator | Schema compile bounds (ADR-009 A1) |
+| W6-A0 | Plan orchestrator | The release builder's host access (ADR-009 A2) |
+| W7-A2 | Plan orchestrator | Input loading's memory (ADR-009 A4) |
+| W7-D1 | Wave 7 | The remaining memory paths (ADR-009 A6) |
+
+**Ed also steered the train unasked, by guidance.** On 2026-10-19 he sent
+seven messages, which inserted Wave 5b, the per-item gate and two breakdown
+rules. On 2026-10-20 he sent two more, on ADR-009 A6's items. He ratified
+the outcome through T-A4 (§15). Every other question the waves raised was
+answered by a wave orchestrator or by the plan orchestrator, and each such
+ruling is recorded under its wave's section.
+
+### 6. The out-of-band acts
+
+Each was ended by Ed or by a session acting for him.
+
+| Act | Work Order | How it ended, and what it found |
+|---|---|---|
+| Credential and build probe | `01a15104-30cd-75c0-8b87-a70de3c65ea2` | Complete, with no probe run; the evidence came from the Wave 1 items |
+| Register `metais.org` | `01a1516d-d1ff-7124-a73a-1df0ca782993` | Pass: registered on 2026-10-20; the `$id`s stand |
+| liquid-spec run | `01a15414-bf58-7436-8dc0-e1df81410d34` | Fail: the adapter never loaded the gem; fixed by W4-A1F (#83) |
+| liquid-spec re-run | `01a15429-2531-762a-aebc-1507b28a76a0` | Pass, in both locales: "1801 pass, 490 departures fail as listed" |
+| liquid-spec after Wave 5 | `01a155c2-5c85-7762-a3d8-2541e178e29c` | Pass: "1845 pass, 549 departures fail as listed" |
+| Matrix rehearsal | `01a15822-b803-7c96-9673-42aaf46e69b5` | Pass. Its pty run found `inspect`'s map order, which W7-C3 fixed |
+| Calibration and benchmarks | `01a15822-7680-746c-b98e-dc38260f857a` | Fail at the old defaults on every target; Ed ruled ADR-009 A3 |
+| Terms check, §4.1 and §4.2 | `01a15831-d4bb-7dd3-bfc1-e6e117c6bf94` | Ended, with W7-A1b; the sources and terms are in each package's `references/` |
+| SC1 round | `01a15abf-4d58-7c58-94ca-f4833e218555` | Pass on `339864912` |
+| SC9 round | `01a15abf-6347-7520-8a58-1b9ab5f65180` | Pass on `339864912` |
+| `govulncheck` | `01a15ac3-fdff-758d-9ef1-f7e9ff37f6e4` | Pass; GO-2026-6809 is not called |
+| Calibration re-run | `01a15ac4-1017-7989-8e81-cd8c5ef6a2f9` | Pass on four targets at A3, A4 and A6's defaults (#193) |
+| v1.0 release | `01a15ac4-4d4e-775e-9989-615255b813b7` | Pass. Released 2026-10-26: `spec-1.0` at `6289d1b5`, `v1.0.0` at `f7f57020`. The matrix ran three times, each pass; the builds are byte-identical; the published `SHA256SUMS` match. It needed one test fix in #355, and three `rehearse.yml` jobs failed on `rehearse.sh`'s own check |
+| Ratify the outcome | `01a15ac4-7f0f-7ad1-8b4a-7c3f0ba24a60` | Ratified on 2026-10-22 and 2026-10-23 (#248, §15); the plan is `Done` |
+| Render-pipeline follow-up | `01a15ac4-2353-7576-a889-515c6ad35285` | Designed as ADR-010 A7, with its own plan (#195) |
+
+**Checklist entries attested not done:**
+
+- **The credential act:** no probe ran.
+- **The ADR-009 A3 and A4 design sessions:** "follow_on_filed: false",
+  because each folded into a plan bullet instead of a separate item.
+
 ## Appendix A — where each requirement and success criterion is proved
 
 | PRD | Waves |
