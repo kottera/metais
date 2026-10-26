@@ -106,7 +106,8 @@ jobs:
   # go install metais.org/metais/cmd/metais@v<version> (ADR-013 D6 item 1),
   # through the Go proxy as a user's go command does, and again with
   # GOPROXY=direct and a module cache of its own, so the go command reads
-  # metais.org's go-import page and clones the repository it names.
+  # metais.org's go-import page and clones the repository it names. For a
+  # release, then go install ...@latest through the proxy.
   go-install:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -139,6 +140,37 @@ jobs:
           go version -m "$GOBIN/metais"
       - name: metais --version reports the version, built direct
         run: .github/scripts/rehearse.sh version "$RUNNER_TEMP/direct/metais" "$VERSION"
+      # go install metais.org/metais/cmd/metais@latest, through the Go
+      # proxy into a GOBIN and a module cache of its own, as a user's go
+      # command does. @latest resolves to the latest release and never to a
+      # prerelease while a release exists, so it is checked for a release
+      # alone, and a prerelease's log says it was not.
+      - name: whether the version is a release, which @latest installs
+        id: kind
+        if: ${{ !cancelled() }}
+        run: |
+          case ${VERSION%%+*} in
+          *-*)
+            echo "$VERSION is a prerelease, so go install ...@latest does not install it and is not checked"
+            echo "release=false" >>"$GITHUB_OUTPUT"
+            ;;
+          *)
+            echo "$VERSION is a release, so go install ...@latest must install it"
+            echo "release=true" >>"$GITHUB_OUTPUT"
+            ;;
+          esac
+      - name: go install @latest through the Go proxy, for a release
+        if: ${{ !cancelled() && steps.kind.outputs.release == 'true' }}
+        working-directory: ${{ runner.temp }}
+        env:
+          GOBIN: ${{ runner.temp }}/latest
+          GOMODCACHE: ${{ runner.temp }}/latest-modcache
+        run: |
+          go install metais.org/metais/cmd/metais@latest
+          go version -m "$GOBIN/metais"
+      - name: metais --version reports the version, installed @latest
+        if: ${{ !cancelled() && steps.kind.outputs.release == 'true' }}
+        run: .github/scripts/rehearse.sh version "$RUNNER_TEMP/latest/metais" "$VERSION"
 
   # The manual route (ADR-013 D6 item 1): this machine's archive and
   # SHA256SUMS from the release, checked with the install page's command,
