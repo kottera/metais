@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -946,5 +947,51 @@ func TestOpusModelString(t *testing.T) {
 	// opus[1m] is Opus: the authoring scenarios gate on it as on opus.
 	if !strings.Contains(f.out.String(), "- **A1-new-package opus[1m]**\n") || !strings.Contains(f.out.String(), "- **A1-new-package haiku** (recorded, not gated)\n") {
 		t.Errorf("A1 on opus[1m] is not gated:\n%s", f.out)
+	}
+}
+
+// TestDocumentedCommands: every runner command ux-testing.md gives names
+// only flags the runner defines, and a -scenarios value whose every id is
+// a scenario the runner knows. The re-score example once passed the
+// scenarios' names, which the runner refuses ("no scenario
+// I1-install-and-render").
+func TestDocumentedCommands(t *testing.T) {
+	b, err := os.ReadFile("../../../docs/dev/ux-testing.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	set, err := scenario.Load(os.DirFS("./scenarios"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var usage bytes.Buffer
+	cli([]string{"-h"}, io.Discard, &usage, nil)
+	// A quoted value and a process substitution are one argument each,
+	// whatever they hold.
+	quoted := regexp.MustCompile(`"[^"]*"|<\([^)]*\)`)
+	commands := 0
+	for cmd := range strings.SplitSeq(strings.ReplaceAll(string(b), "\\\n", " "), "\n") {
+		cmd = strings.TrimSpace(cmd)
+		if !strings.HasPrefix(cmd, "go run ./internal/tools/ux ") {
+			continue
+		}
+		commands++
+		args := strings.Fields(quoted.ReplaceAllString(strings.TrimPrefix(cmd, "go run ./internal/tools/ux "), "ARG"))
+		for i, a := range args {
+			if !strings.HasPrefix(a, "-") {
+				continue
+			}
+			if !strings.Contains(usage.String(), "\n  "+a+" ") && !strings.Contains(usage.String(), "\n  "+a+"\n") {
+				t.Errorf("%s: the runner defines no flag %s", cmd, a)
+			}
+			if a == "-scenarios" && i+1 < len(args) {
+				if _, err := selectScenarios(set, splitList(args[i+1])); err != nil {
+					t.Errorf("%s: %v", cmd, err)
+				}
+			}
+		}
+	}
+	if commands == 0 {
+		t.Error("ux-testing.md gives no runner command")
 	}
 }

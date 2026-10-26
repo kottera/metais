@@ -838,7 +838,7 @@ install scenarios:
 ```bash
 go run ./internal/tools/ux -out "$SET" -scrub "$SET-scrubbed-again"
 go run ./internal/tools/ux -out "$SET" -scorecard \
-  -scenarios I1-install-and-render,I2-discover -host "<the host, as published>"
+  -scenarios I1,I2 -host "<the host, as published>"
 ```
 
 ## The scorecard
