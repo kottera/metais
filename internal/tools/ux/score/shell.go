@@ -327,3 +327,23 @@ func isDigits(s string) bool {
 	}
 	return true
 }
+
+// Command is one simple command of a shell command line as the scorer
+// reads it: its words, with quotes removed, and the files it redirects to
+// and from.
+type Command struct{ Words, Outs, Ins []string }
+
+// Name is the command's name, past any variable assignments and
+// wrappers, and the words after it.
+func (c Command) Name() (string, []string) { return simple{words: c.Words}.name() }
+
+// Commands splits a Bash tool call's command line into its simple
+// commands, in order, as the scorer reads them, so a check outside the
+// scorer reads a session's commands the same way.
+func Commands(src string) []Command {
+	var out []Command
+	for _, s := range parseShell(src) {
+		out = append(out, Command{Words: s.words, Outs: s.outs, Ins: s.ins})
+	}
+	return out
+}

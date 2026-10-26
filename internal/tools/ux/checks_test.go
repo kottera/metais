@@ -399,6 +399,65 @@ func TestSpilledToolOutputGlob(t *testing.T) {
 	}
 }
 
+// TestOwnRepositoryIsNoMemory: a session that clones a repository, or
+// makes one, and reads its CLAUDE.md or AGENTS.md reads that
+// repository's file, not a harness's memory. The shape is I2-discover
+// opus[1m] of scorecard-2026-10-25-install, which the check recorded
+// invalid for cat CLAUDE.md in its own clone of kottera/metais under
+// /tmp; the calls are built by hand. A memory file anywhere else, a
+// clone the harness reports an error for, a read before the clone, a
+// shell the harness put back, and a directory the harness reads memory
+// from, are still memory.
+func TestOwnRepositoryIsNoMemory(t *testing.T) {
+	h, s := testSession(t)
+	const repo = "/tmp/metais-ref"
+	clone := bashCall(t, "c", "git clone --depth 1 https://github.com/kottera/metais.git "+repo, "Cloning into '"+repo+"'...", false)
+	for _, c := range []struct {
+		name  string
+		calls []string
+		pass  bool
+	}{
+		{"cd and cat in one call", []string{clone, bashCall(t, "r", "cd "+repo+" && cat CLAUDE.md", "# AGENTS.md", false)}, true},
+		{"cd, then cat in the next call", []string{clone,
+			bashCall(t, "d", "cd "+repo, "", false),
+			bashCall(t, "r", "cat CLAUDE.md AGENTS.md | head -50", "# AGENTS.md", false)}, true},
+		{"clone and cat in one call", []string{bashCall(t, "r", "git clone https://github.com/kottera/metais "+repo+" && cat "+repo+"/CLAUDE.md", "", false)}, true},
+		{"a clone into the session's directory, read", []string{
+			bashCall(t, "c", "git clone https://github.com/kottera/metais.git", "", false),
+			toolLine("Read", `{"file_path":"`+s.work+`/metais/CLAUDE.md"}`)}, true},
+		{"gh repo clone, then grep", []string{
+			bashCall(t, "c", "gh repo clone kottera/metais /tmp/m -- --depth 1", "", false),
+			toolLine("Grep", `{"pattern":"golden path","path":"/tmp/m/AGENTS.md"}`)}, true},
+		{"git init, then a Glob", []string{
+			bashCall(t, "c", "mkdir -p /tmp/pkg && git -C /tmp/pkg init", "", false),
+			toolLine("Glob", `{"pattern":"**/CLAUDE.md","path":"/tmp/pkg"}`)}, true},
+
+		{"cat CLAUDE.md with no clone", []string{bashCall(t, "r", "cat CLAUDE.md", "", false)}, false},
+		{"a read before the clone", []string{bashCall(t, "r", "cat "+repo+"/CLAUDE.md", "", false), clone}, false},
+		{"a clone that failed", []string{
+			bashCall(t, "c", "git clone https://github.com/kottera/metais.git "+repo, "fatal: destination path exists", true),
+			bashCall(t, "r", "cat "+repo+"/CLAUDE.md", "", false)}, false},
+		{"the shell put back", []string{clone,
+			bashCall(t, "d", "cd "+repo, "Shell cwd was reset to "+s.work, false),
+			bashCall(t, "r", "cat CLAUDE.md", "", false)}, false},
+		{"out of the clone", []string{clone, bashCall(t, "r", "cat "+repo+"/../CLAUDE.md", "", false)}, false},
+		{"the clone's and the harness's", []string{clone, bashCall(t, "r", "cat "+repo+"/CLAUDE.md ~/.claude/CLAUDE.md", "", false)}, false},
+		{"through a variable", []string{clone, bashCall(t, "r", "cd $R && cat CLAUDE.md", "", false)}, false},
+		{"a clone into HOME's .claude", []string{
+			bashCall(t, "c", "git clone https://github.com/kottera/metais.git ~/.claude/memory", "", false),
+			bashCall(t, "r", "cat ~/.claude/memory/MEMORY.md", "", false)}, false},
+		{"a clone above the session's directory", []string{
+			bashCall(t, "c", "git init ..", "", false),
+			bashCall(t, "r", "cat ../AGENTS.md", "", false)}, false},
+		{"a Read outside the clone", []string{clone, toolLine("Read", `{"file_path":"`+s.home+`/.claude/CLAUDE.md"}`)}, false},
+	} {
+		tr := h.read([]byte(initLine(s, "2.1.299", "[]", "[]") + "\n" + strings.Join(c.calls, "\n")))
+		if got := checkNoMemoryRead(s, tr); got.Pass != c.pass {
+			t.Errorf("%s: passed is %v, want %v (%s)", c.name, got.Pass, c.pass, got.Detail)
+		}
+	}
+}
+
 func TestRead(t *testing.T) {
 	h, s := testSession(t)
 	tr := h.read([]byte(strings.Join([]string{initLine(s, "2.1.299", "[]", "[]"), "not json",

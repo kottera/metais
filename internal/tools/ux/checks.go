@@ -9,11 +9,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
+
+	"metais.org/metais/internal/tools/ux/score"
+	"metais.org/metais/internal/tools/ux/streamjson"
 )
 
 // check is one isolation check's result on one run. A run that fails any
@@ -324,21 +328,268 @@ func spilledOutput(home string) *regexp.Regexp {
 }
 
 // checkNoMemoryRead: no tool call of the session names a memory file. A
-// tool output the session spilled to its own HOME is not one.
+// tool output the session spilled to its own HOME is not one, and nor is
+// a file of a repository the session cloned or created itself
+// (ownRepositories): the session finding METAIS by cloning its
+// repository reads that repository's CLAUDE.md as it reads its README,
+// and no harness put it there. A name is excused only where the check
+// can resolve it to a path inside such a repository; every other mention
+// of a memory file, resolved or not, still fails.
 func checkNoMemoryRead(s session, t transcript) check {
 	spilled := spilledOutput(s.home)
+	own := ownRepositories{session: s, cwd: s.work}
 	for i, u := range t.ToolUses {
 		var input any
 		if err := json.Unmarshal(u.Input, &input); err != nil {
 			continue
 		}
-		for _, str := range stringsIn(input) {
-			if m := memoryFile.FindString(spilled.ReplaceAllString(str, " ")); m != "" {
-				return fail(checkNoMemory, "tool call %d (%s) names a memory file: %q", i+1, u.Name, strings.TrimSpace(m))
+		if u.Name == "Bash" {
+			if m := own.bash(u, spilled.ReplaceAllString(u.Command(), " ")); m != "" {
+				return fail(checkNoMemory, "tool call %d (%s) names a memory file: %q", i+1, u.Name, m)
+			}
+			continue
+		}
+		fields, _ := input.(map[string]any)
+		keys := slices.Sorted(maps.Keys(fields))
+		for _, k := range keys {
+			v := fields[k]
+			str, ok := v.(string)
+			if !ok {
+				for _, str := range stringsIn(v) {
+					if m := memoryFile.FindString(spilled.ReplaceAllString(str, " ")); m != "" {
+						return fail(checkNoMemory, "tool call %d (%s) names a memory file: %q", i+1, u.Name, strings.TrimSpace(m))
+					}
+				}
+				continue
+			}
+			m := memoryFile.FindString(spilled.ReplaceAllString(str, " "))
+			if m == "" || own.toolPath(fields, k, str) {
+				continue
+			}
+			return fail(checkNoMemory, "tool call %d (%s) names a memory file: %q", i+1, u.Name, strings.TrimSpace(m))
+		}
+		for _, k := range keys {
+			if memoryFile.MatchString(k) {
+				return fail(checkNoMemory, "tool call %d (%s) names a memory file: %q", i+1, u.Name, k)
 			}
 		}
 	}
 	return pass(checkNoMemory)
+}
+
+// ownRepositories follows a session's Bash calls for the repositories it
+// makes: each directory a git clone, gh repo clone or git init of its
+// made, in a call the harness reports no error for. A clone succeeds
+// only into a directory that is new or empty, so what is in it is the
+// clone's. A directory a harness reads memory or instructions from is
+// never one: the session's directory or one above it, its HOME or one
+// above it, or anything beneath HOME's .claude.
+//
+// It follows the shell's directory as Claude Code keeps it from one Bash
+// call to the next: each cd, and the harness's own notice when it puts
+// the shell back ("Shell cwd was reset to …"). A cd it cannot resolve,
+// through a variable or a glob, leaves the directory unknown, and a
+// relative name is then resolved nowhere.
+type ownRepositories struct {
+	session session
+	cwd     string
+	dirs    []string
+}
+
+// cwdReset is the harness's notice that it put the shell's directory
+// back.
+var cwdReset = regexp.MustCompile(`(?m)Shell cwd was reset to (/\S*)`)
+
+// bash reads one Bash call: it returns the first mention of a memory
+// file in command that is not a path inside one of the session's own
+// repositories, and records the repositories and the directory the call
+// leaves.
+func (o *ownRepositories) bash(u streamjson.ToolUse, command string) string {
+	ok := u.Result != nil && !u.Result.IsError
+	cwd := o.cwd
+	var excused []string
+	mention := ""
+	for _, c := range score.Commands(command) {
+		name, rest := c.Name()
+		switch {
+		case name == "cd" && len(c.Words) > 0 && c.Words[0] == "cd":
+			cwd = o.cd(cwd, rest)
+			continue
+		case ok && name == "git", ok && name == "gh":
+			if d := o.repository(cwd, name, rest); d != "" {
+				o.dirs = append(o.dirs, d)
+			}
+		}
+		for _, w := range slices.Concat(c.Words, c.Ins, c.Outs) {
+			if !memoryFile.MatchString(w) {
+				continue
+			}
+			if !o.inside(cwd, w) {
+				if mention == "" {
+					mention = strings.TrimSpace(memoryFile.FindString(w))
+				}
+				continue
+			}
+			excused = append(excused, w)
+		}
+	}
+	o.cwd = cwd
+	if u.Result != nil {
+		if m := cwdReset.FindAllStringSubmatch(u.Result.Text, -1); len(m) > 0 {
+			o.cwd = m[len(m)-1][1]
+		}
+	}
+	if mention != "" {
+		return mention
+	}
+	// A mention the parse does not read as a word, such as a
+	// here-document's or a comment's, is not excused.
+	for _, w := range excused {
+		command = strings.ReplaceAll(command, w, " ")
+	}
+	return strings.TrimSpace(memoryFile.FindString(command))
+}
+
+// cd is the directory a cd of args leaves the shell in, from cwd, or ""
+// when it cannot be told.
+func (o *ownRepositories) cd(cwd string, args []string) string {
+	ops := slices.DeleteFunc(slices.Clone(args), func(a string) bool { return a == "-P" || a == "-L" || a == "--" })
+	if len(ops) == 0 {
+		return o.session.home
+	}
+	p, ok := o.resolve(cwd, ops[0])
+	if !ok {
+		return ""
+	}
+	return p
+}
+
+// gitValued are git clone's options that take the next word as their
+// value.
+var gitValued = []string{"-b", "--branch", "-o", "--origin", "-c", "--config", "--depth", "--reference",
+	"--reference-if-able", "--separate-git-dir", "-j", "--jobs", "--filter", "--shallow-since",
+	"--shallow-exclude", "--template", "-u", "--upload-pack", "--server-option", "--bundle-uri"}
+
+// repository is the directory a git clone, gh repo clone or git init
+// makes, from cwd, or "" for any other command or one the check cannot
+// resolve.
+func (o *ownRepositories) repository(cwd, name string, args []string) string {
+	if name == "git" {
+		for len(args) > 1 && (args[0] == "-C" || args[0] == "-c") {
+			if args[0] == "-C" {
+				p, ok := o.resolve(cwd, args[1])
+				if !ok {
+					return ""
+				}
+				cwd = p
+			}
+			args = args[2:]
+		}
+	}
+	var ops []string
+	switch {
+	case name == "git" && len(args) > 0 && (args[0] == "clone" || args[0] == "init"),
+		name == "gh" && len(args) > 1 && args[0] == "repo" && args[1] == "clone":
+		if name == "gh" {
+			args = args[1:]
+		}
+		for i := 1; i < len(args); i++ {
+			switch a := args[i]; {
+			case a == "--":
+				if name == "gh" {
+					// What follows gh's -- is git clone's own flags.
+					i = len(args)
+					continue
+				}
+				ops = append(ops, args[i+1:]...)
+				i = len(args)
+			case slices.Contains(gitValued, a):
+				i++
+			case !strings.HasPrefix(a, "-"):
+				ops = append(ops, a)
+			}
+		}
+	default:
+		return ""
+	}
+	var dir string
+	switch {
+	case args[0] == "init" && len(ops) == 0:
+		dir = "."
+	case args[0] == "init" || len(ops) > 1:
+		dir = ops[len(ops)-1]
+	case len(ops) == 1:
+		// The repository's last path element, without .git.
+		src := strings.TrimRight(ops[0], "/")
+		dir = strings.TrimSuffix(src[strings.LastIndexAny(src, "/:")+1:], ".git")
+	default:
+		return ""
+	}
+	p, ok := o.resolve(cwd, dir)
+	if !ok || p == "/" {
+		return ""
+	}
+	home, work := o.session.home, o.session.work
+	within := func(p, dir string) bool { return p == dir || strings.HasPrefix(p, dir+"/") }
+	if within(work, p) || within(home, p) || within(p, filepath.Join(home, ".claude")) {
+		return ""
+	}
+	return p
+}
+
+// inside reports whether w, a word of a command run in cwd, is a path
+// inside one of the session's own repositories.
+func (o *ownRepositories) inside(cwd, w string) bool {
+	if strings.HasPrefix(w, "-") {
+		_, w, _ = strings.Cut(w, "=")
+	}
+	p, ok := o.resolve(cwd, w)
+	if !ok {
+		return false
+	}
+	return slices.ContainsFunc(o.dirs, func(d string) bool { return strings.HasPrefix(p, d+"/") })
+}
+
+// toolPath reports whether a tool's field k, holding str, names a path
+// inside one of the session's own repositories: a file_path, path or
+// notebook_path, or a Glob's pattern beneath its path. A tool resolves a
+// relative path from the session's directory.
+func (o *ownRepositories) toolPath(fields map[string]any, k, str string) bool {
+	switch k {
+	case "file_path", "path", "notebook_path":
+		return o.inside(o.session.work, str)
+	case "pattern":
+		dir, _ := fields["path"].(string)
+		if _, glob := fields["glob"]; dir == "" || glob {
+			return false
+		}
+		if strings.HasPrefix(str, "**/") {
+			str = str[3:]
+		}
+		return !strings.ContainsAny(dir, "*?[") && o.inside(o.session.work, filepath.Join(dir, str))
+	}
+	return false
+}
+
+// resolve is p as an absolute, clean path, from cwd: ~ and $HOME are the
+// session's HOME. A path through any other variable, a substitution or a
+// glob, or a relative one from an unknown directory, is not resolved.
+func (o *ownRepositories) resolve(cwd, p string) (string, bool) {
+	for _, h := range []string{"~", "$HOME", "${HOME}"} {
+		if p == h || strings.HasPrefix(p, h+"/") {
+			p = o.session.home + p[len(h):]
+			break
+		}
+	}
+	switch {
+	case p == "" || strings.ContainsAny(p, "$`*?[{"):
+		return "", false
+	case filepath.IsAbs(p):
+		return filepath.Clean(p), true
+	case cwd == "":
+		return "", false
+	}
+	return filepath.Join(cwd, p), true
 }
 
 // stringsIn is every string in a decoded JSON value, keys included.
