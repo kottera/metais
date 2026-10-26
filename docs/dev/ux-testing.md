@@ -474,14 +474,41 @@ its formula are published. The act must provide:
    every run otherwise. Between two runs, the act removes what the last
    one installed outside its run: `brew uninstall metais` and `brew
    untap kottera/tap`, and any `metais` it finds on `PATH`.
-3. **A credential route for the nested sessions.** A host without a
+3. **Nothing left of a session outside its run.** The runner gives each
+   session its run's own `tmp/` as `TMPDIR` and `CLAUDE_CODE_TMPDIR`, so
+   a temporary file made through them stays in the run. A session that
+   names `/tmp` itself does not use them: on 2026-10-25 an I2 session
+   cloned and built `kottera/metais` in `/tmp/metais-ref`, and an I1
+   session saved the install script as `/tmp/metais-install.sh`. No
+   variable the runner sets can send a path the command line names
+   outright elsewhere, and `writes-inside-run` does not see a command
+   line's writes. So, before each run, the act lists `/tmp`:
+
+   ```bash
+   ls -A /tmp >"$HOME/ux-tmp-before"
+   ```
+
+   After it, the act lists what is new there, and the absolute paths
+   outside the run that the session's commands named:
+
+   ```bash
+   ls -A /tmp | comm -13 "$HOME/ux-tmp-before" -
+   grep -o '"command":"[^"]*' "$HOME/ux-install-<date>/runs/<scenario>/<model>/transcript.jsonl" |
+     grep -oE '(^|[ =>"])(/tmp|/private/tmp|/var/tmp|~|\$HOME)/[^ ;&|"]*' | sort -u
+   ```
+
+   Each entry the session made is removed before the next run, and named
+   in the act's report. An entry another process of the host made is
+   left. A path under `~` or `$HOME` is the session's own `HOME`, inside
+   its run.
+4. **A credential route for the nested sessions.** A host without a
    loopback proxy at `ANTHROPIC_BASE_URL` uses the runner's own route
    ([The credential route](#the-credential-route)): a subscription OAuth
    token from `claude setup-token`, kept in the host's secret store and
    given by a pipe with `-credential-file`. The act unsets
    `ANTHROPIC_BASE_URL` in the shell it runs from, and each session is
    handed only R-UX-7's placeholder and the route's address.
-4. **The run and its record:**
+5. **The run and its record:**
 
    ```bash
    go run ./internal/tools/ux -out "$HOME/ux-install-<date>" -scenarios I1,I2 \
@@ -506,7 +533,8 @@ its formula are published. The act must provide:
 On such a host the sessions are not inside the dispatch's sandbox, so a
 command line that writes outside the run is not refused. `brew`'s write
 to its prefix is the install itself, and `writes-inside-run` does not see
-it, as it sees no command line's writes.
+it, as it sees no command line's writes; item 3's listing is how the act
+finds the rest.
 
 ## What a run records
 
