@@ -337,7 +337,9 @@ released)
 	"$2" version --json >"$tmp/version.json" || fail "metais version --json exited $?"
 	version=$(jq -r '.result.tool.version // empty' "$tmp/version.json") || version=
 	implements=$(jq -r '.result.specification.implements[]?' "$tmp/version.json") || implements=
-	[ -n "$version" ] && [ -n "$implements" ] || fail "metais version --json names no version or no revision it implements"
+	if [ -z "$version" ] || [ -z "$implements" ]; then
+		fail "metais version --json names no version or no revision it implements"
+	fi
 	echo "metais $version implements:"
 	printf '%s\n' "$implements"
 	# The released revisions are the spec-<M>.<m> tags, as the site's build
