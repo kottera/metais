@@ -317,9 +317,15 @@ there as its own work.
   merging account's own identity, so a merge without one adds the line
   even to clean commits, and CI cannot see a body typed at the merge.
   Write the pull request's description to a file whose only trailer is
-  the `Signed-off-by:` line, then run `gh pr merge <n> --squash --subject
+  the `Signed-off-by:` line, and make that line the file's last, with
+  nothing after it: git reads a trailer only from a message's last
+  paragraph, so a sign-off followed by any other paragraph lands on `main`
+  unsigned. Run `.github/scripts/squash-body.sh <file>`, which fails a body
+  file that is empty, that does not end with the sign-off, or that git
+  does not parse it from. Then run `gh pr merge <n> --squash --subject
   '<title> (#<n>)' --body-file <file>`. Then check the merged commit's
-  message.
+  message: `.github/scripts/dco.sh <merge>^ <merge>` passes on the merged
+  commit `<merge>`.
 - Pass a multi-paragraph commit or pull request message by file
   (`git commit -F`, `gh pr create --body-file`), written under
   `${TMPDIR:-/tmp}` with a unique name, never through a heredoc. Leave the
