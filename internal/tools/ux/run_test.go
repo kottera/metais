@@ -754,8 +754,8 @@ func TestRunSetInstallScenarios(t *testing.T) {
 		"## Install scenarios\n\nEach session starts with no metais on PATH (ADR-013 D9). I1 gates on every model. I2 is evidence, not a gate",
 		"| I1-install-and-render | fail: golden-install, inspect-first, outcome (asks-not-invents) |",
 		"| I2-discover | fail: outcome (finds-and-installs) (recorded) |",
-		"0 of 1 gated runs pass. 0 runs are invalid and not scored; 0 are not yet run. R-UX-5's thresholds do not hold.",
-		"Install scenarios: 0 of 1 gated runs pass. 0 runs are invalid and not scored; 0 are not yet run. ADR-013 D9's gate does not hold.",
+		"0 of 1 gated runs pass. 0 gated runs are invalid and not scored; 0 are not yet run. R-UX-5's thresholds do not hold.",
+		"Install scenarios: 0 of 1 gated runs pass. 0 gated runs are invalid and not scored; 0 are not yet run. Of 1 recorded runs, not gated, 0 are invalid and not scored; 0 are not yet run. ADR-013 D9's gate does not hold.",
 		"0 of 1 judged runs carry a verdict. Without one: I1-install-and-render haiku.",
 	} {
 		if !strings.Contains(f.out.String(), want) {
@@ -765,6 +765,36 @@ func TestRunSetInstallScenarios(t *testing.T) {
 	out := f.out.String()
 	if c4, install, i1 := strings.Index(out, "| C4-what-it-needs |"), strings.Index(out, "## Install scenarios"), strings.Index(out, "| I1-install-and-render |"); c4 > install || i1 < install {
 		t.Errorf("I1 is not listed apart from the consuming scenarios:\n%s", out)
+	}
+}
+
+// TestThresholdsCountRecordedRuns: an invalid run that is recorded, not
+// gated, is counted on the Thresholds line apart from the gated runs, so
+// the line does not say no run is invalid beside a table that shows one.
+// The install scorecard of 2026-10-25 said "0 runs are invalid" while its
+// table held I2 opus[1m] invalid. D9's gate reads I1 alone; R-UX-5's
+// thresholds do not hold with a recorded run invalid.
+func TestThresholdsCountRecordedRuns(t *testing.T) {
+	f := newFakeSet(t, "I1", "I2", "C4", "A2")
+	f.c.models = []string{"haiku"}
+	f.session = func(inv invocation) string {
+		t := initLine(session{work: inv.dir}, "2.1.299", "[]", "[]") + "\n"
+		if run := filepath.Base(filepath.Dir(filepath.Dir(inv.dir))); run == "I2-discover" || run == "A2-edit-package" {
+			t += toolLine("Read", `{"file_path":"/home/x/.claude/CLAUDE.md"}`) + "\n"
+		}
+		return t + resultLine + "\n"
+	}
+	if err := f.c.run(); err != nil {
+		t.Fatalf("run: %v\n%s", err, f.out)
+	}
+	for _, want := range []string{
+		"| I2-discover | invalid |",
+		"0 of 1 gated runs pass. 0 gated runs are invalid and not scored; 0 are not yet run. Of 1 recorded runs, not gated, 1 are invalid and not scored; 0 are not yet run. R-UX-5's thresholds do not hold.",
+		"Install scenarios: 0 of 1 gated runs pass. 0 gated runs are invalid and not scored; 0 are not yet run. Of 1 recorded runs, not gated, 1 are invalid and not scored; 0 are not yet run. ADR-013 D9's gate does not hold.",
+	} {
+		if !strings.Contains(f.out.String(), want) {
+			t.Errorf("the scorecard lacks %q:\n%s", want, f.out)
+		}
 	}
 }
 

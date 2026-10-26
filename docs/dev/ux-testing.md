@@ -859,10 +859,14 @@ as `docs/ux/scorecard-<date>-<name>.md` (plan §2):
    records them and does not gate on them. I2's cells are marked
    `(recorded)` on every model: ADR-013 D9 makes I2 evidence, not a gate,
    and the section says so.
-3. **Thresholds**: how many gated runs pass, how many runs are invalid or
-   not yet run, and whether R-UX-5's thresholds hold. The I scenarios are
-   counted apart, on a line of their own: how many of I1's runs pass, and
-   whether ADR-013 D9's gate holds.
+3. **Thresholds**: how many gated runs pass, how many gated runs are
+   invalid or not yet run, then, where the set has runs that are recorded
+   and not gated, how many of those are invalid or not yet run, and
+   whether R-UX-5's thresholds hold. A recorded run that is invalid or not
+   yet run stops them holding, as a gated one does. The I scenarios are
+   counted apart, on a line of their own: how many of I1's runs pass, the
+   same counts with I2's runs as the recorded ones, and whether ADR-013
+   D9's gate holds, which reads I1's runs alone.
 4. **Why each run failed**: for each failing run, each failing rule with
    its detail and its first piece of evidence, scrubbed; for each invalid
    run, the isolation check that failed.

@@ -153,37 +153,51 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 
 	// R-UX-5's thresholds count the runs of every scenario but the install
 	// scenarios, and D9's gate the runs of the install scenario it gates.
-	type tally struct{ pass, total, invalid, pending int }
-	var ux, d9 tally
+	// Each line counts its gated runs and its recorded ones apart, so an
+	// invalid run the table shows is counted on the line beside it. A
+	// recorded run that is invalid or not yet run stops R-UX-5's
+	// thresholds holding, as a gated one does; D9's gate reads I1's runs
+	// alone.
+	type tally struct{ pass, scored, invalid, pending int }
+	var ux, uxRecorded, d9, d9Recorded tally
 	for _, r := range runs {
 		t := &ux
-		if r.scenario.Install {
-			if !gated(r.scenario, r.model) {
-				continue
-			}
+		switch g := gated(r.scenario, r.model); {
+		case r.scenario.Install && g:
 			t = &d9
+		case r.scenario.Install:
+			t = &d9Recorded
+		case !g:
+			t = &uxRecorded
 		}
 		switch {
 		case r.outcome == nil:
 			t.pending++
 		case !r.outcome.Scored:
 			t.invalid++
-		case gated(r.scenario, r.model):
-			t.total++
+		default:
+			t.scored++
 			if r.outcome.Pass {
 				t.pass++
 			}
 		}
 	}
-	holds := func(t tally) bool { return t.pass == t.total && t.invalid == 0 && t.pending == 0 }
+	counts := func(gated, recorded tally) {
+		p("%d of %d gated runs pass. %d gated runs are invalid and not scored; %d are not yet run. ", gated.pass, gated.scored, gated.invalid, gated.pending)
+		if n := recorded.scored + recorded.invalid + recorded.pending; n > 0 {
+			p("Of %d recorded runs, not gated, %d are invalid and not scored; %d are not yet run. ", n, recorded.invalid, recorded.pending)
+		}
+	}
+	holds := func(t tally) bool { return t.pass == t.scored && t.invalid == 0 && t.pending == 0 }
 	p("## Thresholds\n\n")
 	if slices.ContainsFunc(set, func(s *scenario.Scenario) bool { return !s.Install }) {
-		p("%d of %d gated runs pass. %d runs are invalid and not scored; %d are not yet run. ", ux.pass, ux.total, ux.invalid, ux.pending)
-		p("R-UX-5's thresholds %s.\n\n", map[bool]string{true: "hold", false: "do not hold"}[holds(ux)])
+		counts(ux, uxRecorded)
+		p("R-UX-5's thresholds %s.\n\n", map[bool]string{true: "hold", false: "do not hold"}[holds(ux) && uxRecorded.invalid == 0 && uxRecorded.pending == 0])
 	}
 	if slices.ContainsFunc(set, func(s *scenario.Scenario) bool { return s.Install }) {
-		p("Install scenarios: %d of %d gated runs pass. %d runs are invalid and not scored; %d are not yet run. ", d9.pass, d9.total, d9.invalid, d9.pending)
-		p("ADR-013 D9's gate %s. I2's runs are recorded, not gated.\n\n", map[bool]string{true: "holds", false: "does not hold"}[holds(d9) && d9.total > 0])
+		p("Install scenarios: ")
+		counts(d9, d9Recorded)
+		p("ADR-013 D9's gate %s. I2's runs are recorded, not gated.\n\n", map[bool]string{true: "holds", false: "does not hold"}[holds(d9) && d9.scored > 0])
 	}
 
 	p("## Why each run failed\n\n")
