@@ -170,6 +170,9 @@ func TestRouteRefuses(t *testing.T) {
 		{"/v1 alone", http.MethodGet, "/v1", nil},
 		{"a path leaving /v1/", http.MethodGet, "/v1/../api/hello", nil},
 		{"an escaped path leaving /v1/", http.MethodGet, "/v1/%2e%2e/api/hello", nil},
+		// path.Clean passes /v1/a/b, the path an escaped slash decodes
+		// to; only the escaped form, RawPath, tells it from a real one.
+		{"an escaped slash", http.MethodGet, "/v1/a%2Fb", nil},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			resp := sessionRequest(t, rt.url(), c.method, c.path, c.edit)
