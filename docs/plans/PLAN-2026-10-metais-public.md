@@ -694,6 +694,26 @@ verification had completed (W3-OOB8, cancelled).
   implementation-log entries for ADR-013 and each amendment, and
   PLAN-2026-10-metais-v1 §6's release row marked done.
 
+### Rulings made during Wave 4
+
+- **R-W4-1, the first launch run's failure (plan orchestrator,
+  2026-10-26).** `rehearse.yml`'s run 40312702820 against `v1.0.0` passed
+  five jobs, and failed one step in each of the three install jobs:
+  "install.sh with `METAIS_VERSION`". Once a stable release exists, the
+  previous step already installs `1.0.0`. The reinstall of identical
+  bytes was then read as "install.sh left the binary as it was". That is
+  a defect in the harness, not the release, so the harness is fixed and
+  the run repeated. No release or site bytes change.
+  - The pinned install still proves itself from a state where it could
+    fail.
+  - `metais skill` runs.
+  - No other check is loosened.
+  - Checks for `/spec/<M>.<m>/`, `/spec/` and `/spec/draft/` are added.
+
+  A discrepancy on the live site, or a re-run failing on the release
+  itself, comes to the plan orchestrator, because its repair is a
+  redeploy or a new release.
+
 ## 10. What this plan does not cover
 
 - Homebrew core, Windows packages and other package managers.
