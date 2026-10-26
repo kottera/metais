@@ -798,6 +798,67 @@ func TestThresholdsCountRecordedRuns(t *testing.T) {
 	}
 }
 
+// bashCall is a transcript's Bash call of command and the harness's
+// result of it, output.
+func bashCall(t *testing.T, id, command, output string, isError bool) string {
+	t.Helper()
+	use, err := json.Marshal(map[string]any{"type": "assistant", "message": map[string]any{"id": "m" + id, "content": []any{
+		map[string]any{"type": "tool_use", "id": id, "name": "Bash", "input": map[string]any{"command": command}}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, err := json.Marshal(map[string]any{"type": "user", "message": map[string]any{"content": []any{
+		map[string]any{"type": "tool_result", "tool_use_id": id, "is_error": isError, "content": output}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(use) + "\n" + string(res) + "\n"
+}
+
+// TestScorecardNamesTheInstalledMetais: a scorecard of install scenarios
+// says the runner's build packed the fixtures and is not what the
+// sessions ran, and names the version each session's metais printed, or
+// that it is not known. The install scorecard of 2026-10-25 named only
+// the runner's 0.0.0-devel, and its sessions ran 1.0.0-rc.7.
+func TestScorecardNamesTheInstalledMetais(t *testing.T) {
+	f := newFakeSet(t, "I1", "I2")
+	f.c.models = []string{"haiku", "sonnet"}
+	f.session = func(inv invocation) string {
+		tr := initLine(session{work: inv.dir}, "2.1.299", "[]", "[]") + "\n"
+		switch filepath.Base(filepath.Dir(inv.dir)) + " " + filepath.Base(filepath.Dir(filepath.Dir(inv.dir))) {
+		case "haiku I1-install-and-render":
+			tr += bashCall(t, "t1", "brew install kottera/tap/metais && metais --version", "==> Pouring metais--1.0.0-rc.7.arm64_sequoia.bottle.tar.gz\nmetais 1.0.0-rc.7\nspecification 1.0\nMETAIS is made by Kottera.", false)
+		case "sonnet I1-install-and-render":
+			tr += bashCall(t, "t1", "metais version --json", `{"format":"metais.version/1","ok":true,"result":{"tool":{"name":"metais","version":"1.0.0-rc.7"}}}`, false)
+		case "haiku I2-discover":
+			// A call the harness reports as an error records no version.
+			tr += bashCall(t, "t1", "metais version", "metais 9.9.9", true)
+		}
+		return tr + resultLine + "\n"
+	}
+	if err := f.c.run(); err != nil {
+		t.Fatalf("run: %v\n%s", err, f.out)
+	}
+	for _, want := range []string{
+		"| metais | the runner's build, which packed the fixtures; the install scenarios' sessions did not run it: metais 0.0.0-devel, sha256 `",
+		"| metais installed | as each session's metais version printed it: `1.0.0-rc.7`, printed by I1-install-and-render haiku, I1-install-and-render sonnet; not known for I2-discover haiku, I2-discover sonnet: the session never printed its metais's version |",
+	} {
+		if !strings.Contains(f.out.String(), want) {
+			t.Errorf("the scorecard lacks %q:\n%s", want, f.out)
+		}
+	}
+	// A set of no install scenario names the runner's build alone, the
+	// metais its sessions ran.
+	f = newFakeSet(t, "C4")
+	f.c.models = []string{"haiku"}
+	if err := f.c.run(); err != nil {
+		t.Fatal(err)
+	}
+	if out := f.out.String(); !strings.Contains(out, "| metais | metais 0.0.0-devel, sha256 `") || strings.Contains(out, "metais installed") {
+		t.Errorf("a set of no install scenario:\n%s", out)
+	}
+}
+
 // TestRunSetInstallScenarioRefusesAHostMetais: a metais on the runner's
 // own PATH would be found by an install scenario's session, so the run is
 // recorded not-run and no session starts.

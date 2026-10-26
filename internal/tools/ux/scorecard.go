@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -110,7 +111,19 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 	}
 	p("| | |\n|---|---|\n")
 	p("| Commit | `%s` |\n", commit)
-	p("| metais | %s, sha256 `%s` |\n", oneLine(st.Metais.Version), st.Metais.SHA256)
+	if slices.ContainsFunc(set, func(s *scenario.Scenario) bool { return s.Install }) {
+		// An install scenario's session starts with no metais on PATH and
+		// runs the one it installs, so the runner's build is not the
+		// metais under test there (ADR-013 D9).
+		installed, err := c.installedVersions(runs)
+		if err != nil {
+			return err
+		}
+		p("| metais | the runner's build, which packed the fixtures; the install scenarios' sessions did not run it: %s, sha256 `%s` |\n", oneLine(st.Metais.Version), st.Metais.SHA256)
+		p("| metais installed | %s |\n", installed)
+	} else {
+		p("| metais | %s, sha256 `%s` |\n", oneLine(st.Metais.Version), st.Metais.SHA256)
+	}
 	p("| Harness | %s %s |\n", st.Harness.Name, st.Harness.Version)
 	p("| Models | %s |\n", modelIDs(c.models, runs))
 	p("| Host | %s |\n", host)
@@ -322,6 +335,68 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 		p("None: every run ran its scenario's prompt as the set holds it.\n")
 	}
 	return nil
+}
+
+// versionCommand is a command line that asks metais its version, and
+// printedVersion the version it prints, as text or as --json's result.
+var (
+	versionCommand = regexp.MustCompile(`(?:^|[\s;&|(/])metais\s+(?:version|--version)\b`)
+	printedVersion = regexp.MustCompile(`(?m)^metais (\S+)\s*$|"tool":\{"name":"metais","version":"([^"]+)"`)
+)
+
+// installedVersions says which metais the install scenarios' sessions
+// installed and ran, as the set records it: the version each session's
+// own metais version or metais --version printed, in a Bash call the
+// harness reports no error for. The set records nothing else of it, so a
+// session that never asked its metais its version is named as one whose
+// version is not known; the scorer's install routes say how it
+// installed, not what.
+func (c *config) installedVersions(runs []scored) (string, error) {
+	var versions []string
+	byVersion := map[string][]string{}
+	var unknown []string
+	for _, r := range runs {
+		if !r.scenario.Install || r.rec == nil || !finished(r.rec) {
+			continue
+		}
+		name := r.scenario.Name() + " " + r.model
+		b, err := os.ReadFile(filepath.Join(c.out, "runs", r.scenario.Name(), r.model, transcriptFile))
+		if err != nil {
+			return "", err
+		}
+		var seen []string
+		for _, u := range c.harness.read(b).ToolUses {
+			if u.Result == nil || u.Result.IsError || !versionCommand.MatchString(u.Command()) {
+				continue
+			}
+			for _, m := range printedVersion.FindAllStringSubmatch(u.Result.Text, -1) {
+				v := m[1] + m[2]
+				if !slices.Contains(seen, v) {
+					seen = append(seen, v)
+				}
+			}
+		}
+		if len(seen) == 0 {
+			unknown = append(unknown, name)
+		}
+		for _, v := range seen {
+			if _, ok := byVersion[v]; !ok {
+				versions = append(versions, v)
+			}
+			byVersion[v] = append(byVersion[v], name)
+		}
+	}
+	var parts []string
+	for _, v := range versions {
+		parts = append(parts, fmt.Sprintf("`%s`, printed by %s", v, strings.Join(byVersion[v], ", ")))
+	}
+	if len(unknown) > 0 {
+		parts = append(parts, "not known for "+strings.Join(unknown, ", ")+": the session never printed its metais's version")
+	}
+	if len(parts) == 0 {
+		return "not known: no install scenario's session has run", nil
+	}
+	return "as each session's metais version printed it: " + strings.Join(parts, "; "), nil
 }
 
 // cell is a run's entry in a scorecard's table.

@@ -847,11 +847,18 @@ The runner prints the scorecard as Markdown, the form it is published in
 as `docs/ux/scorecard-<date>-<name>.md` (plan §2):
 
 1. **The header**: the commit, and whether the checkout was dirty; the
-   `metais` version and digest; the harness and its version; each model
-   as requested and the model IDs its sessions reported; the host
-   (`-host`); where the transcripts are (`-transcripts`); whether the
-   skill was installed; when the set started; and the scorer's outcome
-   format.
+   version and digest of the `metais` the runner built; the harness and
+   its version; each model as requested and the model IDs its sessions
+   reported; the host (`-host`); where the transcripts are
+   (`-transcripts`); whether the skill was installed; when the set
+   started; and the scorer's outcome format. In a set of install
+   scenarios the runner's build packs the fixtures, and the sessions run
+   the `metais` they install instead, so its row says so, and a
+   **metais installed** row names the version each session's own
+   `metais version` or `metais --version` printed, in a call the harness
+   reported no error for. The set records the installed `metais` nowhere
+   else, so a session that never printed its version is named as one
+   whose version is not known.
 2. **Consuming scenarios**, **Authoring scenarios** and **Install
    scenarios**, each a table of scenario × model. A cell is `pass`, or
    `fail:` and the rules that failed, or `invalid` for a run not scored,
