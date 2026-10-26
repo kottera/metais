@@ -356,7 +356,7 @@ func (c *config) installedVersions(runs []scored) (string, error) {
 	byVersion := map[string][]string{}
 	var unknown []string
 	for _, r := range runs {
-		if !r.scenario.Install || r.rec == nil || !finished(r.rec) {
+		if !r.scenario.Install || !finished(r.rec) || r.rec.Status == statusNotRun {
 			continue
 		}
 		name := r.scenario.Name() + " " + r.model
