@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -110,7 +111,19 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 	}
 	p("| | |\n|---|---|\n")
 	p("| Commit | `%s` |\n", commit)
-	p("| metais | %s, sha256 `%s` |\n", oneLine(st.Metais.Version), st.Metais.SHA256)
+	if slices.ContainsFunc(set, func(s *scenario.Scenario) bool { return s.Install }) {
+		// An install scenario's session starts with no metais on PATH and
+		// runs the one it installs, so the runner's build is not the
+		// metais under test there (ADR-013 D9).
+		installed, err := c.installedVersions(runs)
+		if err != nil {
+			return err
+		}
+		p("| metais | the runner's build, which packed the fixtures; the install scenarios' sessions did not run it: %s, sha256 `%s` |\n", oneLine(st.Metais.Version), st.Metais.SHA256)
+		p("| metais installed | %s |\n", installed)
+	} else {
+		p("| metais | %s, sha256 `%s` |\n", oneLine(st.Metais.Version), st.Metais.SHA256)
+	}
 	p("| Harness | %s %s |\n", st.Harness.Name, st.Harness.Version)
 	p("| Models | %s |\n", modelIDs(c.models, runs))
 	p("| Host | %s |\n", host)
@@ -153,37 +166,51 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 
 	// R-UX-5's thresholds count the runs of every scenario but the install
 	// scenarios, and D9's gate the runs of the install scenario it gates.
-	type tally struct{ pass, total, invalid, pending int }
-	var ux, d9 tally
+	// Each line counts its gated runs and its recorded ones apart, so an
+	// invalid run the table shows is counted on the line beside it. A
+	// recorded run that is invalid or not yet run stops R-UX-5's
+	// thresholds holding, as a gated one does; D9's gate reads I1's runs
+	// alone.
+	type tally struct{ pass, scored, invalid, pending int }
+	var ux, uxRecorded, d9, d9Recorded tally
 	for _, r := range runs {
 		t := &ux
-		if r.scenario.Install {
-			if !gated(r.scenario, r.model) {
-				continue
-			}
+		switch g := gated(r.scenario, r.model); {
+		case r.scenario.Install && g:
 			t = &d9
+		case r.scenario.Install:
+			t = &d9Recorded
+		case !g:
+			t = &uxRecorded
 		}
 		switch {
 		case r.outcome == nil:
 			t.pending++
 		case !r.outcome.Scored:
 			t.invalid++
-		case gated(r.scenario, r.model):
-			t.total++
+		default:
+			t.scored++
 			if r.outcome.Pass {
 				t.pass++
 			}
 		}
 	}
-	holds := func(t tally) bool { return t.pass == t.total && t.invalid == 0 && t.pending == 0 }
+	counts := func(gated, recorded tally) {
+		p("%d of %d gated runs pass. %d gated runs are invalid and not scored; %d are not yet run. ", gated.pass, gated.scored, gated.invalid, gated.pending)
+		if n := recorded.scored + recorded.invalid + recorded.pending; n > 0 {
+			p("Of %d recorded runs, not gated, %d are invalid and not scored; %d are not yet run. ", n, recorded.invalid, recorded.pending)
+		}
+	}
+	holds := func(t tally) bool { return t.pass == t.scored && t.invalid == 0 && t.pending == 0 }
 	p("## Thresholds\n\n")
 	if slices.ContainsFunc(set, func(s *scenario.Scenario) bool { return !s.Install }) {
-		p("%d of %d gated runs pass. %d runs are invalid and not scored; %d are not yet run. ", ux.pass, ux.total, ux.invalid, ux.pending)
-		p("R-UX-5's thresholds %s.\n\n", map[bool]string{true: "hold", false: "do not hold"}[holds(ux)])
+		counts(ux, uxRecorded)
+		p("R-UX-5's thresholds %s.\n\n", map[bool]string{true: "hold", false: "do not hold"}[holds(ux) && uxRecorded.invalid == 0 && uxRecorded.pending == 0])
 	}
 	if slices.ContainsFunc(set, func(s *scenario.Scenario) bool { return s.Install }) {
-		p("Install scenarios: %d of %d gated runs pass. %d runs are invalid and not scored; %d are not yet run. ", d9.pass, d9.total, d9.invalid, d9.pending)
-		p("ADR-013 D9's gate %s. I2's runs are recorded, not gated.\n\n", map[bool]string{true: "holds", false: "does not hold"}[holds(d9) && d9.total > 0])
+		p("Install scenarios: ")
+		counts(d9, d9Recorded)
+		p("ADR-013 D9's gate %s. I2's runs are recorded, not gated.\n\n", map[bool]string{true: "holds", false: "does not hold"}[holds(d9) && d9.scored > 0])
 	}
 
 	p("## Why each run failed\n\n")
@@ -308,6 +335,68 @@ func (c *config) scorecard(w io.Writer, set []*scenario.Scenario, runs []scored)
 		p("None: every run ran its scenario's prompt as the set holds it.\n")
 	}
 	return nil
+}
+
+// versionCommand is a command line that asks metais its version, and
+// printedVersion the version it prints, as text or as --json's result.
+var (
+	versionCommand = regexp.MustCompile(`(?:^|[\s;&|(/])metais\s+(?:version|--version)\b`)
+	printedVersion = regexp.MustCompile(`(?m)^metais (\S+)\s*$|"tool":\{"name":"metais","version":"([^"]+)"`)
+)
+
+// installedVersions says which metais the install scenarios' sessions
+// installed and ran, as the set records it: the version each session's
+// own metais version or metais --version printed, in a Bash call the
+// harness reports no error for. The set records nothing else of it, so a
+// session that never asked its metais its version is named as one whose
+// version is not known; the scorer's install routes say how it
+// installed, not what.
+func (c *config) installedVersions(runs []scored) (string, error) {
+	var versions []string
+	byVersion := map[string][]string{}
+	var unknown []string
+	for _, r := range runs {
+		if !r.scenario.Install || !finished(r.rec) || r.rec.Status == statusNotRun {
+			continue
+		}
+		name := r.scenario.Name() + " " + r.model
+		b, err := os.ReadFile(filepath.Join(c.out, "runs", r.scenario.Name(), r.model, transcriptFile))
+		if err != nil {
+			return "", err
+		}
+		var seen []string
+		for _, u := range c.harness.read(b).ToolUses {
+			if u.Result == nil || u.Result.IsError || !versionCommand.MatchString(u.Command()) {
+				continue
+			}
+			for _, m := range printedVersion.FindAllStringSubmatch(u.Result.Text, -1) {
+				v := m[1] + m[2]
+				if !slices.Contains(seen, v) {
+					seen = append(seen, v)
+				}
+			}
+		}
+		if len(seen) == 0 {
+			unknown = append(unknown, name)
+		}
+		for _, v := range seen {
+			if _, ok := byVersion[v]; !ok {
+				versions = append(versions, v)
+			}
+			byVersion[v] = append(byVersion[v], name)
+		}
+	}
+	var parts []string
+	for _, v := range versions {
+		parts = append(parts, fmt.Sprintf("`%s`, printed by %s", v, strings.Join(byVersion[v], ", ")))
+	}
+	if len(unknown) > 0 {
+		parts = append(parts, "not known for "+strings.Join(unknown, ", ")+": the session never printed its metais's version")
+	}
+	if len(parts) == 0 {
+		return "not known: no install scenario's session has run", nil
+	}
+	return "as each session's metais version printed it: " + strings.Join(parts, "; "), nil
 }
 
 // cell is a run's entry in a scorecard's table.

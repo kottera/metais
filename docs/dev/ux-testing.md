@@ -177,7 +177,7 @@ After the session, the runner reads the transcript and makes these checks:
 | `strict-mcp-config` | The `init` event lists no MCP server. |
 | `skill-as-declared` | The `init` event lists the `metais` skill exactly when the run installed it. |
 | `no-session-persistence` | The session's `HOME` holds no saved session (`.claude/projects/**/*.jsonl`). |
-| `no-memory-read` | No tool call names a memory file: `CLAUDE.md`, `CLAUDE.local.md`, `MEMORY.md`, `AGENTS.md`, a `.claude/projects` or `.claude/memory` path, or a `memory/` directory. A tool output Claude Code spilled to a file of the session's project in the session's own `HOME` (`.claude/projects/<project>/<session>/tool-results/`), or that directory, is not one: that `HOME` starts empty, so the file is the session's own. The project and the session may be named by a glob (`$HOME/.claude/projects/*/*/tool-results/`), and the file too; a glob of the session is of a session's id, so it never reaches the project's `memory/` directory, and a path that leaves `tool-results/`, or one beneath another `HOME`, is still memory. |
+| `no-memory-read` | No tool call names a memory file: `CLAUDE.md`, `CLAUDE.local.md`, `MEMORY.md`, `AGENTS.md`, a `.claude/projects` or `.claude/memory` path, or a `memory/` directory. A tool output Claude Code spilled to a file of the session's project in the session's own `HOME` (`.claude/projects/<project>/<session>/tool-results/`), or that directory, is not one: that `HOME` starts empty, so the file is the session's own. The project and the session may be named by a glob (`$HOME/.claude/projects/*/*/tool-results/`), and the file too; a glob of the session is of a session's id, so it never reaches the project's `memory/` directory, and a path that leaves `tool-results/`, or one beneath another `HOME`, is still memory. Nor is a file of a repository the session cloned or made itself: a directory a `git clone`, `gh repo clone` or `git init` of the session's made, in a Bash call the harness reported no error for, earlier in the run. A clone succeeds only into a new or empty directory, so its files are the clone's, and a session that finds METAIS by cloning its repository reads that repository's `CLAUDE.md` as it reads its README. The check excuses a name only where it resolves the name to a path inside such a repository: absolute, from `~` or `$HOME`, or relative to the shell's directory, which it follows through each `cd` and through Claude Code's notice when it puts the shell back (`Shell cwd was reset to …`). A Read, Grep or Glob resolves from the session's directory. A name it cannot resolve (through another variable, a substitution or a glob), a mention that is no word of a command (a here-document's, a comment's), and a repository in a directory the harness reads memory from (the session's directory or one above it, its `HOME` or one above it, anything beneath `HOME`'s `.claude`) are still memory. |
 | `writes-inside-run` | The session wrote nothing outside its own run directory: the set's directory outside the run's is the same after the session as before it, and no Write or Edit tool call names a file outside the run's directory. A command line writing outside the set's directory is not seen; the dispatch's sandbox refuses most such paths. |
 | `credential-not-seen` | Made only with the credential route on ([The credential route](#the-credential-route)): no file of the run, its transcript and its standard error among them, holds the route's token. A run that fails it stops the set, naming the file, and `-scrub` refuses the set until the run is removed and run again. |
 
@@ -474,14 +474,41 @@ its formula are published. The act must provide:
    every run otherwise. Between two runs, the act removes what the last
    one installed outside its run: `brew uninstall metais` and `brew
    untap kottera/tap`, and any `metais` it finds on `PATH`.
-3. **A credential route for the nested sessions.** A host without a
+3. **Nothing left of a session outside its run.** The runner gives each
+   session its run's own `tmp/` as `TMPDIR` and `CLAUDE_CODE_TMPDIR`, so
+   a temporary file made through them stays in the run. A session that
+   names `/tmp` itself does not use them: on 2026-10-25 an I2 session
+   cloned and built `kottera/metais` in `/tmp/metais-ref`, and an I1
+   session saved the install script as `/tmp/metais-install.sh`. No
+   variable the runner sets can send a path the command line names
+   outright elsewhere, and `writes-inside-run` does not see a command
+   line's writes. So, before each run, the act lists `/tmp`:
+
+   ```bash
+   ls -A /tmp >"$HOME/ux-tmp-before"
+   ```
+
+   After it, the act lists what is new there, and the absolute paths
+   outside the run that the session's commands named:
+
+   ```bash
+   ls -A /tmp | comm -13 "$HOME/ux-tmp-before" -
+   grep -o '"command":"[^"]*' "$HOME/ux-install-<date>/runs/<scenario>/<model>/transcript.jsonl" |
+     grep -oE '(^|[ =>"])(/tmp|/private/tmp|/var/tmp|~|\$HOME)/[^ ;&|"]*' | sort -u
+   ```
+
+   Each entry the session made is removed before the next run, and named
+   in the act's report. An entry another process of the host made is
+   left. A path under `~` or `$HOME` is the session's own `HOME`, inside
+   its run.
+4. **A credential route for the nested sessions.** A host without a
    loopback proxy at `ANTHROPIC_BASE_URL` uses the runner's own route
    ([The credential route](#the-credential-route)): a subscription OAuth
    token from `claude setup-token`, kept in the host's secret store and
    given by a pipe with `-credential-file`. The act unsets
    `ANTHROPIC_BASE_URL` in the shell it runs from, and each session is
    handed only R-UX-7's placeholder and the route's address.
-4. **The run and its record:**
+5. **The run and its record:**
 
    ```bash
    go run ./internal/tools/ux -out "$HOME/ux-install-<date>" -scenarios I1,I2 \
@@ -506,7 +533,8 @@ its formula are published. The act must provide:
 On such a host the sessions are not inside the dispatch's sandbox, so a
 command line that writes outside the run is not refused. `brew`'s write
 to its prefix is the install itself, and `writes-inside-run` does not see
-it, as it sees no command line's writes.
+it, as it sees no command line's writes; item 3's listing is how the act
+finds the rest.
 
 ## What a run records
 
@@ -838,7 +866,7 @@ install scenarios:
 ```bash
 go run ./internal/tools/ux -out "$SET" -scrub "$SET-scrubbed-again"
 go run ./internal/tools/ux -out "$SET" -scorecard \
-  -scenarios I1-install-and-render,I2-discover -host "<the host, as published>"
+  -scenarios I1,I2 -host "<the host, as published>"
 ```
 
 ## The scorecard
@@ -847,11 +875,18 @@ The runner prints the scorecard as Markdown, the form it is published in
 as `docs/ux/scorecard-<date>-<name>.md` (plan §2):
 
 1. **The header**: the commit, and whether the checkout was dirty; the
-   `metais` version and digest; the harness and its version; each model
-   as requested and the model IDs its sessions reported; the host
-   (`-host`); where the transcripts are (`-transcripts`); whether the
-   skill was installed; when the set started; and the scorer's outcome
-   format.
+   version and digest of the `metais` the runner built; the harness and
+   its version; each model as requested and the model IDs its sessions
+   reported; the host (`-host`); where the transcripts are
+   (`-transcripts`); whether the skill was installed; when the set
+   started; and the scorer's outcome format. In a set of install
+   scenarios the runner's build packs the fixtures, and the sessions run
+   the `metais` they install instead, so its row says so, and a
+   **metais installed** row names the version each session's own
+   `metais version` or `metais --version` printed, in a call the harness
+   reported no error for. The set records the installed `metais` nowhere
+   else, so a session that never printed its version is named as one
+   whose version is not known.
 2. **Consuming scenarios**, **Authoring scenarios** and **Install
    scenarios**, each a table of scenario × model. A cell is `pass`, or
    `fail:` and the rules that failed, or `invalid` for a run not scored,
@@ -859,10 +894,14 @@ as `docs/ux/scorecard-<date>-<name>.md` (plan §2):
    records them and does not gate on them. I2's cells are marked
    `(recorded)` on every model: ADR-013 D9 makes I2 evidence, not a gate,
    and the section says so.
-3. **Thresholds**: how many gated runs pass, how many runs are invalid or
-   not yet run, and whether R-UX-5's thresholds hold. The I scenarios are
-   counted apart, on a line of their own: how many of I1's runs pass, and
-   whether ADR-013 D9's gate holds.
+3. **Thresholds**: how many gated runs pass, how many gated runs are
+   invalid or not yet run, then, where the set has runs that are recorded
+   and not gated, how many of those are invalid or not yet run, and
+   whether R-UX-5's thresholds hold. A recorded run that is invalid or not
+   yet run stops them holding, as a gated one does. The I scenarios are
+   counted apart, on a line of their own: how many of I1's runs pass, the
+   same counts with I2's runs as the recorded ones, and whether ADR-013
+   D9's gate holds, which reads I1's runs alone.
 4. **Why each run failed**: for each failing run, each failing rule with
    its detail and its first piece of evidence, scrubbed; for each invalid
    run, the isolation check that failed.

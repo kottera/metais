@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -754,8 +755,8 @@ func TestRunSetInstallScenarios(t *testing.T) {
 		"## Install scenarios\n\nEach session starts with no metais on PATH (ADR-013 D9). I1 gates on every model. I2 is evidence, not a gate",
 		"| I1-install-and-render | fail: golden-install, inspect-first, outcome (asks-not-invents) |",
 		"| I2-discover | fail: outcome (finds-and-installs) (recorded) |",
-		"0 of 1 gated runs pass. 0 runs are invalid and not scored; 0 are not yet run. R-UX-5's thresholds do not hold.",
-		"Install scenarios: 0 of 1 gated runs pass. 0 runs are invalid and not scored; 0 are not yet run. ADR-013 D9's gate does not hold.",
+		"0 of 1 gated runs pass. 0 gated runs are invalid and not scored; 0 are not yet run. R-UX-5's thresholds do not hold.",
+		"Install scenarios: 0 of 1 gated runs pass. 0 gated runs are invalid and not scored; 0 are not yet run. Of 1 recorded runs, not gated, 0 are invalid and not scored; 0 are not yet run. ADR-013 D9's gate does not hold.",
 		"0 of 1 judged runs carry a verdict. Without one: I1-install-and-render haiku.",
 	} {
 		if !strings.Contains(f.out.String(), want) {
@@ -765,6 +766,97 @@ func TestRunSetInstallScenarios(t *testing.T) {
 	out := f.out.String()
 	if c4, install, i1 := strings.Index(out, "| C4-what-it-needs |"), strings.Index(out, "## Install scenarios"), strings.Index(out, "| I1-install-and-render |"); c4 > install || i1 < install {
 		t.Errorf("I1 is not listed apart from the consuming scenarios:\n%s", out)
+	}
+}
+
+// TestThresholdsCountRecordedRuns: an invalid run that is recorded, not
+// gated, is counted on the Thresholds line apart from the gated runs, so
+// the line does not say no run is invalid beside a table that shows one.
+// The install scorecard of 2026-10-25 said "0 runs are invalid" while its
+// table held I2 opus[1m] invalid. D9's gate reads I1 alone; R-UX-5's
+// thresholds do not hold with a recorded run invalid.
+func TestThresholdsCountRecordedRuns(t *testing.T) {
+	f := newFakeSet(t, "I1", "I2", "C4", "A2")
+	f.c.models = []string{"haiku"}
+	f.session = func(inv invocation) string {
+		t := initLine(session{work: inv.dir}, "2.1.299", "[]", "[]") + "\n"
+		if run := filepath.Base(filepath.Dir(filepath.Dir(inv.dir))); run == "I2-discover" || run == "A2-edit-package" {
+			t += toolLine("Read", `{"file_path":"/home/x/.claude/CLAUDE.md"}`) + "\n"
+		}
+		return t + resultLine + "\n"
+	}
+	if err := f.c.run(); err != nil {
+		t.Fatalf("run: %v\n%s", err, f.out)
+	}
+	for _, want := range []string{
+		"| I2-discover | invalid |",
+		"0 of 1 gated runs pass. 0 gated runs are invalid and not scored; 0 are not yet run. Of 1 recorded runs, not gated, 1 are invalid and not scored; 0 are not yet run. R-UX-5's thresholds do not hold.",
+		"Install scenarios: 0 of 1 gated runs pass. 0 gated runs are invalid and not scored; 0 are not yet run. Of 1 recorded runs, not gated, 1 are invalid and not scored; 0 are not yet run. ADR-013 D9's gate does not hold.",
+	} {
+		if !strings.Contains(f.out.String(), want) {
+			t.Errorf("the scorecard lacks %q:\n%s", want, f.out)
+		}
+	}
+}
+
+// bashCall is a transcript's Bash call of command and the harness's
+// result of it, output.
+func bashCall(t *testing.T, id, command, output string, isError bool) string {
+	t.Helper()
+	use, err := json.Marshal(map[string]any{"type": "assistant", "message": map[string]any{"id": "m" + id, "content": []any{
+		map[string]any{"type": "tool_use", "id": id, "name": "Bash", "input": map[string]any{"command": command}}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	res, err := json.Marshal(map[string]any{"type": "user", "message": map[string]any{"content": []any{
+		map[string]any{"type": "tool_result", "tool_use_id": id, "is_error": isError, "content": output}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(use) + "\n" + string(res) + "\n"
+}
+
+// TestScorecardNamesTheInstalledMetais: a scorecard of install scenarios
+// says the runner's build packed the fixtures and is not what the
+// sessions ran, and names the version each session's metais printed, or
+// that it is not known. The install scorecard of 2026-10-25 named only
+// the runner's 0.0.0-devel, and its sessions ran 1.0.0-rc.7.
+func TestScorecardNamesTheInstalledMetais(t *testing.T) {
+	f := newFakeSet(t, "I1", "I2")
+	f.c.models = []string{"haiku", "sonnet"}
+	f.session = func(inv invocation) string {
+		tr := initLine(session{work: inv.dir}, "2.1.299", "[]", "[]") + "\n"
+		switch filepath.Base(filepath.Dir(inv.dir)) + " " + filepath.Base(filepath.Dir(filepath.Dir(inv.dir))) {
+		case "haiku I1-install-and-render":
+			tr += bashCall(t, "t1", "brew install kottera/tap/metais && metais --version", "==> Pouring metais--1.0.0-rc.7.arm64_sequoia.bottle.tar.gz\nmetais 1.0.0-rc.7\nspecification 1.0\nMETAIS is made by Kottera.", false)
+		case "sonnet I1-install-and-render":
+			tr += bashCall(t, "t1", "metais version --json", `{"format":"metais.version/1","ok":true,"result":{"tool":{"name":"metais","version":"1.0.0-rc.7"}}}`, false)
+		case "haiku I2-discover":
+			// A call the harness reports as an error records no version.
+			tr += bashCall(t, "t1", "metais version", "metais 9.9.9", true)
+		}
+		return tr + resultLine + "\n"
+	}
+	if err := f.c.run(); err != nil {
+		t.Fatalf("run: %v\n%s", err, f.out)
+	}
+	for _, want := range []string{
+		"| metais | the runner's build, which packed the fixtures; the install scenarios' sessions did not run it: metais 0.0.0-devel, sha256 `",
+		"| metais installed | as each session's metais version printed it: `1.0.0-rc.7`, printed by I1-install-and-render haiku, I1-install-and-render sonnet; not known for I2-discover haiku, I2-discover sonnet: the session never printed its metais's version |",
+	} {
+		if !strings.Contains(f.out.String(), want) {
+			t.Errorf("the scorecard lacks %q:\n%s", want, f.out)
+		}
+	}
+	// A set of no install scenario names the runner's build alone, the
+	// metais its sessions ran.
+	f = newFakeSet(t, "C4")
+	f.c.models = []string{"haiku"}
+	if err := f.c.run(); err != nil {
+		t.Fatal(err)
+	}
+	if out := f.out.String(); !strings.Contains(out, "| metais | metais 0.0.0-devel, sha256 `") || strings.Contains(out, "metais installed") {
+		t.Errorf("a set of no install scenario:\n%s", out)
 	}
 }
 
@@ -855,5 +947,51 @@ func TestOpusModelString(t *testing.T) {
 	// opus[1m] is Opus: the authoring scenarios gate on it as on opus.
 	if !strings.Contains(f.out.String(), "- **A1-new-package opus[1m]**\n") || !strings.Contains(f.out.String(), "- **A1-new-package haiku** (recorded, not gated)\n") {
 		t.Errorf("A1 on opus[1m] is not gated:\n%s", f.out)
+	}
+}
+
+// TestDocumentedCommands: every runner command ux-testing.md gives names
+// only flags the runner defines, and a -scenarios value whose every id is
+// a scenario the runner knows. The re-score example once passed the
+// scenarios' names, which the runner refuses ("no scenario
+// I1-install-and-render").
+func TestDocumentedCommands(t *testing.T) {
+	b, err := os.ReadFile("../../../docs/dev/ux-testing.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	set, err := scenario.Load(os.DirFS("./scenarios"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var usage bytes.Buffer
+	cli([]string{"-h"}, io.Discard, &usage, nil)
+	// A quoted value and a process substitution are one argument each,
+	// whatever they hold.
+	quoted := regexp.MustCompile(`"[^"]*"|<\([^)]*\)`)
+	commands := 0
+	for cmd := range strings.SplitSeq(strings.ReplaceAll(string(b), "\\\n", " "), "\n") {
+		cmd = strings.TrimSpace(cmd)
+		if !strings.HasPrefix(cmd, "go run ./internal/tools/ux ") {
+			continue
+		}
+		commands++
+		args := strings.Fields(quoted.ReplaceAllString(strings.TrimPrefix(cmd, "go run ./internal/tools/ux "), "ARG"))
+		for i, a := range args {
+			if !strings.HasPrefix(a, "-") {
+				continue
+			}
+			if !strings.Contains(usage.String(), "\n  "+a+" ") && !strings.Contains(usage.String(), "\n  "+a+"\n") {
+				t.Errorf("%s: the runner defines no flag %s", cmd, a)
+			}
+			if a == "-scenarios" && i+1 < len(args) {
+				if _, err := selectScenarios(set, splitList(args[i+1])); err != nil {
+					t.Errorf("%s: %v", cmd, err)
+				}
+			}
+		}
+	}
+	if commands == 0 {
+		t.Error("ux-testing.md gives no runner command")
 	}
 }
