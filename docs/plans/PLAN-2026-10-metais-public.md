@@ -99,7 +99,7 @@ Rules this train adds:
 | 0 | ADR-013, its amendments and this plan, merged to `main` | — | **complete** (#240) |
 | 1 | **Foundations**: the module path; the history scan and the tree's internal details; the community files and contributor guide; CI on GitHub-hosted runners; `--version`'s maker line | 0 | **complete** (see §5, Wave 1 verdict) |
 | 2 | **The site and distribution**: the site as a METAIS package with generated reference pages, the guides and the specification; `install.sh` and its tests; `release.yml`, the tap formula and the tap's CI; the builder's prerelease rule; the kottera.com page; UX scenarios I1 and I2 | 1 | **complete** (see §7, Wave 2 verdict) |
-| 3 | **Rehearsal**: the name search, Ed's settings and DNS, the flip; `v1.0.0-rc.1` end to end; I1 against the live site; a fix item for each defect, and a new candidate until it is clean | 2 | — |
+| 3 | **Rehearsal**: the name search, Ed's settings and DNS, the flip; `v1.0.0-rc.1` end to end; I1 against the live site; a fix item for each defect, and a new candidate until it is clean | 2 | **complete** (see §8, Wave 3 verdict) |
 | 4 | **Launch**: T-A3 cuts `v1.0.0`, Ed approves it, and every route is checked live; the train's close | 3, and T-A3's own dependencies | — |
 
 Wave 3 is the last wave that can change bytes. Wave 4 publishes what Wave 3
@@ -608,6 +608,76 @@ Made by the plan orchestrator in answer to the wave's breakdown
     loosened.
 
   The rc.7 I1 act returns its scorecard and scrubbed set to the train.
+- **Ed's ruling on shipping past rc.7 (2026-10-25)**, relayed by the
+  operator and recorded as the wave's closeout reports it. `v1.0.0` is
+  cut at `main`'s tip, and ships #272 (`56ebf332`: the `render-work`
+  default lowered to 2^28, filter charging, chapters 07 and 14) and #349
+  (`84c8cdbc`, the favicon), which no candidate rehearsed. There is no
+  rc.8, and I1 is not re-run. Wave 4's launch checks are the first run of
+  the rehearsal against those bytes.
+
+### Wave 3 verdict
+
+**Complete, 2026-10-26.** Brief and closeout:
+[brief-plan-2026-10-metais-public-wave3.md](../briefs/brief-plan-2026-10-metais-public-wave3.md)
+(brief #317, closeout #353). Wave orchestrator `01a16bbd-9746`.
+
+What it established:
+- **The flip.** `kottera/metais` went public at 2026-10-24T15:00:10Z.
+  First, gitleaks and trufflehog scanned 1237 commits clean (W3-1,
+  #322), and Ed's pre-flip settings were in place. His post-flip
+  settings followed: Pages on metais.org and kottera.com with HTTPS, the
+  `release` environment, the `main` ruleset with seven required checks,
+  private vulnerability reporting and secret scanning.
+- **CI runs on every pull request and push** (W3-2, #324), and AGENTS.md
+  states the public project's rule.
+- **Seven candidates.** `v1.0.0-rc.7` (tag at `b49b10fb`) passed every
+  check:
+  - Ed's release act;
+  - all eight jobs of `rehearse.yml` (W3-3, #325), run 40242581308:
+    brew on clean macOS, `install.sh` on Ubuntu, macOS and an empty
+    container, `go install`, the manual route, `--version`, the site's
+    `$id`s, `go-import`, reference and spec pages, kottera.com, and
+    `metais skill`;
+  - I1 3 of 3 on Opus (`opus[1m]`), Sonnet and Haiku against the live
+    site.
+
+  The scorecard is `docs/ux/scorecard-2026-10-25-install.md` (W3-7,
+  #351), and every candidate's record is in `docs/dev/rehearsal/`.
+- **Defects the rehearsal found, each fixed before rc.7:**
+  - `release.yml` would not parse (#333);
+  - stale workflows at a target (#335);
+  - module zip paths (#336, ADR-010 A11);
+  - unpinned actions (#328);
+  - the site (#334, #337, #343, #344);
+  - `install.sh`'s rate-limited lookup (W3-13, #347, R-W3-4).
+- **The credential route for I1** (W3-4, #342, ADR-009 A12 as Ed
+  amended it).
+- **I2 never had a clean find-and-install.** Opus found METAIS but built
+  it from source; Sonnet and Haiku did not find it. I2 is evidence, not a
+  gate (ADR-013 D9), and PLAN-2026-10-metais-ux's R-W3-5 is not closed
+  by it.
+
+The verification round passed the wave tier on a fresh clone, made 32
+mutations, re-scored the I1 set, and checked GitHub's state against the
+records. Its one blocking finding, that `main` moved past rc.7 with
+shipped bytes, is settled by Ed's ruling above.
+
+What this result is not:
+- **`v1.0.0` was not rehearsed as built.** #272 changes a limit's
+  default and two specification chapters after the last candidate.
+- **No item ran the gate before merging**, by Ed's standing instruction.
+  CI's required checks gated every merge after the flip.
+- **Much of the release work ran in Ed's session**, outside this tree:
+  rc.4 to rc.6 and several fixes. The wave recorded those from GitHub.
+- **Two squash merges carry no parseable `Signed-off-by:`**: `b49b10fb`,
+  rc.7's own target, and `92b9f90f`. `main`'s `dco` job is red on its
+  push run 40209763274. History is not rewritten, and W3-NB1
+  (`01a17615-6093`) prevents the next one.
+
+Still running beside Wave 4: W3-NB1 and W3-NB2 (`01a17615-bf02`), and
+janitorial issue #352. T-A3's edge to this verification is moot: the
+verification had completed (W3-OOB8, cancelled).
 
 ## 9. Wave 4 — launch
 
