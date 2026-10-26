@@ -174,5 +174,152 @@ The plan's out-of-band table has no row placed after the train.
 
 ## Closeout
 
-*Not yet written. The wave orchestrator replaces this line with the
-wave's closeout.*
+Written by the wave orchestrator (Work Order 01a17805-1386-73eb-9119-8cbeef6023e3)
+on 2026-10-26, against `main` at `3f7dfe03`. Base ref: `27ed13a119c4`.
+This section says what landed, what was decided, and where every finding
+went. It is not a correctness verdict:
+- **The verification's findings** in section 4 are W4-V's, with its method
+  named.
+- **Where this section says "reports",** the claim is the child's or the
+  act's.
+- **Where it says "I read",** I read the merged code or GitHub's record. I
+  mutated nothing.
+
+### The outcome in one paragraph
+
+`v1.0.0` and `spec-1.0` were published from Ed's session, outside this
+tree, before the wave was derived. Release run 40312151129 was approved by
+`efunneko` and ran three jobs: `release`, `pages / build` and
+`pages / deploy`. The release was published at 2026-10-26T11:06:42Z, its
+tag at `f7f57020`, and `spec-1.0` is at `6289d1b5`. So the wave filed no
+release act, and it recorded the release from GitHub. The first launch run
+(40312702820) failed three steps on its harness, not on the release. The
+plan orchestrator ruled R-W4-1: fix the harness and re-run. W4-1 fixed it,
+and W4-OOB1's re-run (40396621692) passed all eight jobs and every step.
+The verification passed the wave tier on a fresh clone and raised one
+blocking finding: the brief's `go install ...@latest` check had not been
+run. W4-4 ran it, and it passed. The plan's `docs/INDEX.md` row says done.
+
+### 1. Did each item land, and does it match the ask?
+
+| Item | Work Order | PR / merge | Landed |
+|---|---|---|---|
+| W4-1 | `01a17808-5a09` | #362, `93b395d1` | Reports: `rehearse.sh released` checks `/spec/<M>.<m>/` per chapter, indexed, and that `/spec/` leads to the latest. The release tag is checked out with full history. `TestRehearseScript` covers the new cases. I read rehearse.sh: the pinned install removes the binary first. That code is #361's (`cab4d4e3`), which merged outside the tree, and W4-1 kept it. |
+| W4-OOB1 | `01a17808-8634` | off-tera | Reports: run 40396621692 on `main` `93b395d1`, all eight jobs and every step green, every route `metais 1.0.0`, and `metais skill` ok after each install. The log is an artifact, SHA-256 `932262b3…`. |
+| W4-2 | `01a17809-0f53` | #364, `5fd7a437` | `docs/dev/rehearsal/v1.0.0.md`, the launch record. I read its outcome and `@latest` sections. It also marked `docs/INDEX.md`'s row done (I read it). |
+| W4-3 | `01a17809-6d46` | #363, `8fb682fd` | Reports: 32 implementation-log entries, 28 in ADR-013, 3 in ADR-010 and 1 in ADR-009. Also PLAN-2026-10-metais-v1 §6's release row marked done (I read the diffstat: 34 files). |
+| W4-4 | `01a17a28-adb6` | #365, `3f7dfe03` | The blocking fix. It ran `go install ...@latest` by hand, with an isolated module cache, and recorded it in the launch record (I read that section: it installs `v1.0.0`, `h1:OfFHC3Cs…`, and reports `metais 1.0.0`). It added an `@latest` step to `rehearse.yml` for releases (I read the step) and fixed NB-A and NB-B. |
+
+Divergence from the ask:
+- **`@latest` was not run on a GitHub-hosted runner.** The brief asked for
+  the launch checks run by `rehearse.yml` on GitHub-hosted runners. That
+  holds for every check except `@latest`, which W4-4 ran by hand, and the
+  record says so. W4-NB3 re-dispatches the workflow with the new step.
+
+### 2. What children flagged, degraded or discovered
+
+- **T-A3's report is outside this train.** Every fact about the release in
+  the launch record is GitHub's, and it says so.
+- **W4-1's released-specification check** was proved, before the re-run,
+  against the release run's deployed pages artifact served locally. Its
+  first live run was W4-OOB1's.
+- **A commit that names a host.** W4-2's first push carried a commit whose
+  email was git's default, derived from the host. W4-2 amended it before
+  opening the pull request, so neither `main` nor #364 carries it (W4-V
+  confirmed this). I checked GitHub: the superseded commit is still
+  fetchable by SHA, and the repository's public activity feed lists it.
+  This section names neither the SHA nor the host. The decision whether to
+  ask GitHub to purge it is W4-NB2's.
+- **W4-3's judgement calls,** stated in #363:
+  - out-of-band acts that changed no file got no entry;
+  - W2-6 failed with nothing merged, so it got none;
+  - W3-4 and W3-11 count as logged by their ADR-009 and ADR-010 entries;
+  - whether Ed required SHA pins in the settings is not in the record.
+- **W4-4's toolchain.** It ran `@latest` with `GOTOOLCHAIN=local` on
+  go1.26.2, and argues that the default would choose the same toolchain.
+  The runner's step (W4-NB3) uses the runner's go.
+
+### 3. What carries to the next wave, and what I would do differently
+
+- **Derive every check of a brief's list against the harness that runs
+  it.** `@latest` was in the brief, and `rehearse.yml` never had it. I
+  derived W4-1 from the failure rather than from the list, and the
+  verification caught the gap.
+- **Set a git identity before a dispatched session's first commit.** The
+  host-derived email reached a public push because the clone had none.
+  W4-NB2 asks whether the pipeline's workspace setup should do this.
+- **`/spec/draft/` after a release** is open (W4-NB1).
+- **The plan's status line and the train closeout** are the plan
+  orchestrator's, now that this wave has closed.
+
+### 4. The verification, and where every finding went
+
+W4-V (`01a17a14-4f6a`, `wave-verification`) reports:
+- the wave tier, `gate.sh wave`, passed on a fresh clone of `main` at
+  `5fd7a437`, with the SC7 reach groups;
+- each merge commit is an ancestor of `main`, and `git log 27ed13a1..main`
+  has nothing unaccounted for.
+
+It returned all four item ids I sent. Depth per item:
+- **W4-1: mutated.** It made 11 mutations of rehearse.sh and rehearse.yml.
+  These were RED:
+  - reverting #361's removal before the pinned install;
+  - dropping the noindex test on released pages;
+  - `/spec/` leading to the earliest revision;
+  - a stable release with no released revision;
+  - an unreleased revision treated as released;
+  - dropping the `/spec/` refresh check;
+  - chapters read from the working tree;
+  - deleting `fetch-depth: 0`;
+  - deleting `latest`'s `check_version`;
+  - dropping `latest`'s exit check.
+
+  Two were GREEN, and each is a filed finding (NB-A, NB-B).
+- **W4-OOB1: inspected,** from GitHub's jobs API and the log artifact.
+- **W4-2: inspected.** It spot-checked the launch record against GitHub:
+  assets, tags, approval, the cancelled run, the tap commit, and the
+  commits after rc.7.
+- **W4-3: inspected.** The 32 entries' openings, and the plan row against
+  GitHub.
+
+Its findings:
+
+| Finding | Kind | Where it went |
+|---|---|---|
+| The brief's `go install ...@latest` check was undelivered, yet INDEX says the checks passed (cross-item; it quotes the brief) | blocking | fix child W4-4, `01a17a28-adb6`, #365. It passed and is not re-verified, by the one-round bound. |
+| NB-A: the case `released, its chapters read from its tag` cannot tell the tag from HEAD | non-blocking | W4-4, `01a17a28-adb6`, fixed |
+| NB-B: `latest`'s stable `--version` comparison has no negative case | non-blocking | W4-4, `01a17a28-adb6`, fixed |
+| `/spec/draft/` is built unconditionally, though ADR-011 A8 item 2 conditions it | non-blocking | W4-NB1, `01a17a59-a7ba`, `design-session`: a site change is a redeploy decision |
+| W4-2's host-name incident: neither `main` nor #364 carries it | non-blocking | W4-NB2, `01a17a59-cbf5`, `design-session`, with my check that the superseded commit is still reachable |
+
+NB-A, NB-B and the blocking finding were combined in one child, W4-4,
+because all three repairs edit `internal/guarantees/rehearse_test.go`.
+The two non-blocking members were marked severable.
+
+The wave completed without waiting for W4-NB1, W4-NB2 or W4-NB3, and
+that was the intent. Their ids are above and in section 5. No finding
+went unfiled, and none went to the janitorial backlog.
+
+### 5. Out-of-band acts
+
+| Act | Type | Id | Placed | Outcome |
+|---|---|---|---|---|
+| Approve the `release` environment for `v1.0.0` | — | none filed | — | Done outside the tree, before derivation: run 40312151129, approved by `efunneko` (GitHub's approvals API). Recorded in the launch record. |
+| Dispatch `rehearse.yml` against `v1.0.0` | `manual-qa-pass` | W4-OOB1, `01a17808-8634` | waited on, by W4-2 | Ended by its taker: run 40396621692, verdict pass, log artifact attached. |
+| Re-dispatch `rehearse.yml` with the `@latest` step | `manual-qa-pass` | W4-NB3, `01a17a59-deff` | carried | Open |
+| `/spec/draft/` after a release | `design-session` | W4-NB1, `01a17a59-a7ba` | carried | Open |
+| The commit that names a host | `design-session` | W4-NB2, `01a17a59-cbf5` | carried | Open |
+
+### Rulings made during this wave
+
+- **R-W4-1** (plan orchestrator, 2026-10-26, recorded under plan §9 by
+  #360): fix the harness and re-run, as W4-1 then W4-OOB1. The first run
+  stays in the launch record, and the re-run is the launch checks' result.
+  It governs W4-1 and W4-2.
+
+### Beside this wave
+
+W3-NB1 (#354) and W3-NB2 (#358) merged before this wave was derived, not
+during it as the brief expected. Janitorial issue #352 is still open. #361
+(the pinned-install fix) and #360 (R-W4-1) merged outside the tree, as did
+Dependabot's #329 and #331.
