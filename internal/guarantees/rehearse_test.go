@@ -77,12 +77,13 @@ func TestRehearseWorkflow(t *testing.T) {
 	}
 
 	const (
-		latest  = `.github/scripts/rehearse.sh latest "$VERSION"`
-		install = `.github/scripts/rehearse.sh install "$VERSION"`
-		skill   = ".github/scripts/rehearse.sh skill "
-		version = ".github/scripts/rehearse.sh version "
-		goGet   = `go install "metais.org/metais/cmd/metais@v$VERSION"`
-		manual  = `.github/scripts/rehearse.sh manual "$VERSION" `
+		latest   = `.github/scripts/rehearse.sh latest "$VERSION"`
+		install  = `.github/scripts/rehearse.sh install "$VERSION"`
+		skill    = ".github/scripts/rehearse.sh skill "
+		version  = ".github/scripts/rehearse.sh version "
+		goGet    = `go install "metais.org/metais/cmd/metais@v$VERSION"`
+		goLatest = "go install metais.org/metais/cmd/metais@latest"
+		manual   = `.github/scripts/rehearse.sh manual "$VERSION" `
 	)
 	installSh := []string{latest, install, skill}
 	want := []struct {
@@ -93,7 +94,7 @@ func TestRehearseWorkflow(t *testing.T) {
 		{"install-ubuntu", "ubuntu-latest", installSh},
 		{"install-macos", "macos-latest", installSh},
 		{"install-container", "ubuntu-latest", installSh},
-		{"go-install", "ubuntu-latest", []string{goGet, version, skill}},
+		{"go-install", "ubuntu-latest", []string{goGet, version, skill, goLatest, version + `"$RUNNER_TEMP/latest/metais" "$VERSION"`}},
 		{"manual-ubuntu", "ubuntu-latest", []string{manual, skill}},
 		{"manual-macos", "macos-latest", []string{manual, skill}},
 		{"site", "ubuntu-latest", []string{
@@ -186,6 +187,63 @@ func TestRehearseWorkflow(t *testing.T) {
 	}
 	if !proxy || !direct {
 		t.Errorf("rehearse.yml's go-install runs go install through the proxy %t, and direct with its own module cache %t; want both", proxy, direct)
+	}
+	// For a release, go install ...@latest runs through the proxy into a
+	// GOBIN and a module cache of its own, and the version it installed is
+	// checked. @latest never resolves to a prerelease while a release
+	// exists, so for a prerelease neither step runs; each runs whether or
+	// not a step before it refused.
+	const forRelease = "${{ !cancelled() && steps.kind.outputs.release == 'true' }}"
+	var kind string
+	var latestGot, latestChecked bool
+	for _, s := range must(goJob.Get("steps")).(value.Array).All() {
+		so, _ := s.(value.Object)
+		r := text(must(so.Get("run")))
+		cond, _ := so.Get("if")
+		switch {
+		case text(must(so.Get("id"))) == "kind":
+			kind = r
+			if text(cond) != "${{ !cancelled() }}" {
+				t.Errorf("rehearse.yml's go-install classifies the version only if %s, not whether or not a step before it refused", text(cond))
+			}
+		case strings.Contains(r, goLatest):
+			latestGot = true
+			if text(cond) != forRelease {
+				t.Errorf("rehearse.yml's go-install runs go install ...@latest if %s, want %s", text(cond), forRelease)
+			}
+			env, _ := must(so.Get("env")).(value.Object)
+			if _, ok := env.Get("GOPROXY"); ok {
+				t.Errorf("rehearse.yml's go-install runs go install ...@latest with GOPROXY set, not through the Go proxy")
+			}
+			if text(must(env.Get("GOBIN"))) != "${{ runner.temp }}/latest" || text(must(env.Get("GOMODCACHE"))) != "${{ runner.temp }}/latest-modcache" {
+				t.Errorf("rehearse.yml's go-install runs go install ...@latest without a GOBIN and a module cache of its own")
+			}
+		case strings.Contains(r, `"$RUNNER_TEMP/latest/metais"`):
+			latestChecked = true
+			if text(cond) != forRelease {
+				t.Errorf("rehearse.yml's go-install checks the version @latest installed if %s, want %s", text(cond), forRelease)
+			}
+		}
+	}
+	if !latestGot || !latestChecked {
+		t.Errorf("rehearse.yml's go-install runs go install ...@latest %t and checks its version %t; want both", latestGot, latestChecked)
+	}
+	// The step that decides is run as the runner runs it: a version with a
+	// prerelease suffix is not a release, and build metadata is not one.
+	for v, want := range map[string]string{"1.0.0": "true", "1.10.2": "true", "1.0.0+build-1": "true", "1.0.0-rc.1": "false", "2.0.0-rc.1+b": "false"} {
+		out := filepath.Join(testenv.Dir(t), "output")
+		cmd := exec.Command("sh", "-c", kind)
+		cmd.Env = []string{"VERSION=" + v, "GITHUB_OUTPUT=" + out}
+		if b, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("rehearse.yml's go-install classifying %s: %v\n%s", v, err, b)
+		}
+		got, err := os.ReadFile(out)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != "release="+want+"\n" {
+			t.Errorf("rehearse.yml's go-install classifies %s as %q, want release=%s", v, got, want)
+		}
 	}
 	// The site's checks read what the release holds from its tag, checked
 	// out with the whole history, so the spec-<M>.<m> tags that say which
@@ -427,6 +485,12 @@ func TestRehearseScript(t *testing.T) {
 			}
 		}
 	}
+	// commit commits the release's checkout as it stands, after its tags:
+	// a commit no spec-<M>.<m> tag names.
+	commit := func(r *rehearsal) {
+		git(r, "add", ".")
+		git(r, "commit", "--quiet", "-m", "after the release")
+	}
 	// then runs each setup in turn.
 	then := func(fs ...func(*rehearsal)) func(*rehearsal) {
 		return func(r *rehearsal) {
@@ -498,6 +562,8 @@ func TestRehearseScript(t *testing.T) {
 			code:  1, says: `FAIL: install.sh's refusal does not say "no stable release"`},
 		{name: "latest, a release installed", args: []string{"latest", "1.0.0"}, env: []string{"FAKE_LATEST=1.0.0"}, says: "ok: {installed} reports 1.0.0"},
 		{name: "latest, a release refused", args: []string{"latest", "1.0.0"}, code: 1, says: "FAIL: install.sh exited 1"},
+		{name: "latest, a release installing another version", args: []string{"latest", "1.0.0"}, env: []string{"FAKE_LATEST=1.0.0", "FAKE_REPORTS=0.9.0"},
+			code: 1, says: `FAIL: {installed} --version reports "metais 0.9.0", want "metais 1.0.0"`},
 
 		{name: "manual", args: []string{"manual", rehearsed, "{dir}"}, manual: true, says: "ok: {unpacked} reports " + rehearsed},
 		{name: "manual, the archive altered", args: []string{"manual", rehearsed, "{dir}"}, manual: true,
@@ -576,8 +642,10 @@ func TestRehearseScript(t *testing.T) {
 		{name: "released, a chapter missing", args: []string{"released", "{tree}", "{metais}"},
 			setup: tags([]string{"spec-1.0"}, put(tree, "spec/02-schemas.md", "# Schemas\n")), env: []string{stable},
 			code: 1, says: "/spec/1.0/02-schemas/ answered 404"},
+		// A chapter committed after the tag is in HEAD and the working
+		// tree, and not at spec-1.0, so reading either is refused.
 		{name: "released, its chapters read from its tag", args: []string{"released", "{tree}", "{metais}"},
-			setup: then(released, put(tree, "spec/02-schemas.md", "# Schemas\n")), env: []string{stable},
+			setup: then(released, put(tree, "spec/02-schemas.md", "# Schemas\n"), commit), env: []string{stable},
 			says: "ok: 3 of 3 pages of the released specification, 1.0"},
 		{name: "released, its contents missing", args: []string{"released", "{tree}", "{metais}"}, setup: then(released, rm("spec/1.0/index.html")),
 			env: []string{stable}, code: 1, says: "/spec/1.0/ answered 404"},
