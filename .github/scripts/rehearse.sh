@@ -20,7 +20,9 @@
 #   rehearse.sh ids <tree>               every $id of the schemas in <tree> resolves as that JSON
 #   rehearse.sh go-import                the module's go-import pages
 #   rehearse.sh reference <metais>       a reference page for every command and topic <metais> has
-#   rehearse.sh spec <tree>              the specification's draft, a page per chapter in <tree>
+#   rehearse.sh spec <tree>              the specification's draft, a page per chapter in <tree>,
+#                                        or, when <tree>'s spec/ is its latest spec-<M>.<m> tag's,
+#                                        a page per chapter leading to that revision's
 #   rehearse.sh released <tree> <metais> each released revision <metais> implements, a page per
 #                                        chapter of its spec-<M>.<m> tag in <tree>, and /spec/
 #                                        leading to the latest
@@ -139,6 +141,15 @@ page() {
 		bad=$((bad + 1))
 		;;
 	esac
+}
+
+# revisions <tree> lists <tree>'s released revisions into $tmp/released,
+# latest last: its spec-<M>.<m> tags, as the site's build reads them.
+revisions() {
+	echo "\$ git -C $1 tag --list 'spec-*'"
+	git -C "$1" tag --list 'spec-*' >"$tmp/tags" || fail "could not list $1's tags"
+	cat "$tmp/tags"
+	grep -E '^spec-(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' "$tmp/tags" | sed 's/^spec-//' | LC_ALL=C sort -t . -k 1,1n -k 2,2n >"$tmp/released" || true
 }
 
 # finish <what> ends a check that counted its refusals in $bad.
@@ -317,17 +328,52 @@ reference)
 spec)
 	[ "$#" -eq 1 ] || usage
 	[ -f "$1/spec/README.md" ] || fail "$1 holds no spec/README.md"
+	# The site serves the draft only while the release's spec/ differs
+	# from the latest spec-<M>.<m> tag's, as its build compares them, and
+	# otherwise leads each page of the draft to that revision's.
+	revisions "$1"
+	latest=$(tail -n 1 "$tmp/released")
+	same=
+	if [ -n "$latest" ]; then
+		at=$(git -C "$1" rev-parse --verify "refs/tags/spec-$latest^{commit}:spec") || fail "could not read spec/ at spec-$latest"
+		head=$(git -C "$1" rev-parse --verify "HEAD:spec") || fail "could not read spec/ at $1's HEAD"
+		if [ "$at" = "$head" ]; then same=$latest; fi
+	fi
+	if [ -n "$same" ]; then
+		echo "$1's spec/ is spec-$same's, so each page of /spec/draft/ must lead to its page of /spec/$same/"
+	elif [ -n "$latest" ]; then
+		echo "$1's spec/ differs from spec-$latest's, so /spec/draft/ must serve the draft"
+	else
+		echo "no revision is released, so /spec/draft/ must serve the draft"
+	fi
 	for f in "$1"/spec/*.md; do
 		name=$(basename "$f" .md)
 		n=$((n + 1))
 		if [ "$name" = README ]; then p=spec/draft/; else p=spec/draft/$name/; fi
 		page "$site/$p"
-		if [ "$code" = 200 ] && ! grep -qF '<meta name="robots" content="noindex">' "$tmp/page"; then
-			echo "FAIL: $site/$p does not ask not to be indexed, as a draft does" >&2
+		[ "$code" = 200 ] || continue
+		if ! grep -qF '<meta name="robots" content="noindex">' "$tmp/page"; then
+			echo "FAIL: $site/$p does not ask not to be indexed" >&2
+			bad=$((bad + 1))
+		fi
+		if [ -n "$same" ]; then
+			to=/${p#spec/draft/}
+			to=/spec/$same${to%/}/
+			if ! grep -qF "<meta http-equiv=\"refresh\" content=\"0; url=$to\">" "$tmp/page" ||
+				! grep -qF "<link rel=\"canonical\" href=\"https://metais.org$to\">" "$tmp/page"; then
+				echo "FAIL: $site/$p does not lead to $to" >&2
+				bad=$((bad + 1))
+			fi
+		elif grep -qF '<meta http-equiv="refresh"' "$tmp/page"; then
+			echo "FAIL: $site/$p leads elsewhere, not serving the draft" >&2
 			bad=$((bad + 1))
 		fi
 	done
-	finish "chapters of the draft specification serve HTML, unindexed"
+	if [ -n "$same" ]; then
+		finish "chapters of the draft specification lead to /spec/$same/, unindexed"
+	else
+		finish "chapters of the draft specification serve HTML, unindexed"
+	fi
 	;;
 
 released)
@@ -342,12 +388,8 @@ released)
 	fi
 	echo "metais $version implements:"
 	printf '%s\n' "$implements"
-	# The released revisions are the spec-<M>.<m> tags, as the site's build
-	# reads them, latest last; /spec/ leads to the latest.
-	echo "\$ git -C $1 tag --list 'spec-*'"
-	git -C "$1" tag --list 'spec-*' >"$tmp/tags" || fail "could not list $1's tags"
-	cat "$tmp/tags"
-	grep -E '^spec-(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' "$tmp/tags" | sed 's/^spec-//' | LC_ALL=C sort -t . -k 1,1n -k 2,2n >"$tmp/released" || true
+	# /spec/ leads to the latest released revision.
+	revisions "$1"
 	latest=$(tail -n 1 "$tmp/released")
 	checked=
 	for r in $implements; do
