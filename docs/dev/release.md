@@ -275,14 +275,19 @@ shows:
 | `install-container` | an `ubuntu:24.04` container | the same, in an image given only `curl` and its CA certificates, which the one-line command needs |
 | `go-install` | `ubuntu-latest` | `go install metais.org/metais/cmd/metais@v<version>` through the Go proxy, then `metais --version` and `metais skill`. Then the same with `GOPROXY=direct` and a module cache of its own, so the go command reads metais.org's go-import page and clones the repository it names. Then, for a release, `go install metais.org/metais/cmd/metais@latest` through the Go proxy into a `GOBIN` and a module cache of its own, and `metais --version` reports `<version>`. For a prerelease, whose version has a `-` suffix, the step says so and neither runs: `@latest` resolves to the latest release, never to a prerelease while one exists |
 | `manual-ubuntu`, `manual-macos` | `ubuntu-latest`, `macos-latest` | the manual route: this machine's archive and `SHA256SUMS` downloaded from the release, checked with the install page's command (`sha256sum --check --ignore-missing`, or `shasum -a 256` on macOS), `metais` unpacked and run, reporting `<version>`. Then `metais skill` |
-| `site` | `ubuntu-latest` | against a checkout of the tag `v<version>`: every schema's `$id` under `spec/schemas/` and `docs/cli/schemas/` answers `200 application/json` with JSON holding that `$id`; both go-import pages; a reference page for every command and topic that the release's `metais help --json` lists; a `/spec/draft/` page per chapter of `spec/`, each unindexed; for each revision the release's `metais version --json` implements that a `spec-<M>.<m>` tag releases, a `/spec/<M>.<m>/` page per chapter of `spec/` at that tag, none of them unindexed, and `/spec/` leading to the latest released revision by its refresh to `/spec/<M>.<m>/`. A release that implements no released revision is refused, and a prerelease that implements none is checked at `/spec/draft/` alone. Then the landing page and the install page; `/install.sh` byte for byte the tag's `site/public/install.sh`; and kottera.com |
+| `site` | `ubuntu-latest` | against a checkout of the tag `v<version>`: every schema's `$id` under `spec/schemas/` and `docs/cli/schemas/` answers `200 application/json` with JSON holding that `$id`; both go-import pages; a reference page for every command and topic that the release's `metais help --json` lists; a `/spec/draft/` page per chapter of `spec/`, each unindexed, and, when the tag's `spec/` is the `spec/` of its latest `spec-<M>.<m>` tag, each leading to its chapter of `/spec/<M>.<m>/` by its refresh and canonical link, or otherwise serving the draft; for each revision the release's `metais version --json` implements that a `spec-<M>.<m>` tag releases, a `/spec/<M>.<m>/` page per chapter of `spec/` at that tag, none of them unindexed, and `/spec/` leading to the latest released revision by its refresh to `/spec/<M>.<m>/`. A release that implements no released revision is refused, and a prerelease that implements none is checked at `/spec/draft/` alone. Then the landing page and the install page; `/install.sh` byte for byte the tag's `site/public/install.sh`; and kottera.com |
 
 The site's checks read the schemas, chapters and `install.sh` from the
 candidate's tag, so a schema added since is never skipped. The tag is
 checked out with the repository's whole history, so its `spec-<M>.<m>`
 tags say which revisions are released, as they do to the site's build.
-The site builds `/spec/draft/` from the release's own `spec/` whether or
-not a revision is released, so its check is the same for a release and a
+The site builds `/spec/draft/` from the release's own `spec/` only while
+no revision is released or that `spec/` differs from the `spec/` of the
+latest `spec-<M>.<m>` tag (ADR-011 A10). When the two are identical, each
+page of `/spec/draft/` leads to its chapter of the latest revision, or to
+that revision's contents for a chapter it lacks, as `/spec/` leads to the
+latest, and asks not to be indexed. The `spec` check decides which by the
+same comparison of the tag's trees, so it is the same for a release and a
 candidate. The scripts are the dispatched ref's, `main`'s.
 
 A red check is first read for its mechanism. One the candidate caused
