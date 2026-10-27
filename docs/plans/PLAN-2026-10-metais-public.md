@@ -6,7 +6,7 @@
 this train inherits it verbatim: `metais-public [W2-C3]: <action>` for a
 Work Order, and `<type>(metais-public): [W2-C3] <change>` for a pull
 request and its squash subject, by the naming rules AGENTS.md adopts.
-**Status:** Ratified 2026-10-22 by Ed Funnekotter, with the rulings and drafting decisions of §4.
+**Status:** Ratified 2026-10-22 by Ed Funnekotter, with the rulings and drafting decisions of §4. **Done 2026-10-27**: `v1.0.0` released and its launch checks passed; the train closeout is §11.
 **For PRD:** [PRD-001](../prd/PRD-001-metais-v1.md) R17 (the golden paths),
 for installing the tool, and SC1, which presumes a harness can get the
 binary.
@@ -100,7 +100,7 @@ Rules this train adds:
 | 1 | **Foundations**: the module path; the history scan and the tree's internal details; the community files and contributor guide; CI on GitHub-hosted runners; `--version`'s maker line | 0 | **complete** (see §5, Wave 1 verdict) |
 | 2 | **The site and distribution**: the site as a METAIS package with generated reference pages, the guides and the specification; `install.sh` and its tests; `release.yml`, the tap formula and the tap's CI; the builder's prerelease rule; the kottera.com page; UX scenarios I1 and I2 | 1 | **complete** (see §7, Wave 2 verdict) |
 | 3 | **Rehearsal**: the name search, Ed's settings and DNS, the flip; `v1.0.0-rc.1` end to end; I1 against the live site; a fix item for each defect, and a new candidate until it is clean | 2 | **complete** (see §8, Wave 3 verdict) |
-| 4 | **Launch**: T-A3 cuts `v1.0.0`, Ed approves it, and every route is checked live; the train's close | 3, and T-A3's own dependencies | — |
+| 4 | **Launch**: T-A3 cuts `v1.0.0`, Ed approves it, and every route is checked live; the train's close | 3, and T-A3's own dependencies | **complete** (see §9, Wave 4 verdict) |
 
 Wave 3 is the last wave that can change bytes. Wave 4 publishes what Wave 3
 proved.
@@ -714,6 +714,33 @@ verification had completed (W3-OOB8, cancelled).
   itself, comes to the plan orchestrator, because its repair is a
   redeploy or a new release.
 
+### Wave 4 verdict
+
+**Complete, 2026-10-26.** Brief and closeout:
+[brief-plan-2026-10-metais-public-wave4.md](../briefs/brief-plan-2026-10-metais-public-wave4.md)
+(brief #357, closeout #366). Wave orchestrator `01a17805-1386`.
+
+- **`v1.0.0` and `spec-1.0` were published** at 2026-10-26T11:06:42Z, from
+  Ed's session. T-A3 drafted the release, and Ed approved release run
+  40312151129. The tag is at `f7f57020`, and `spec-1.0` at `6289d1b5`.
+  The wave filed no release act, and recorded the release from GitHub.
+- **The launch checks passed.**
+  - The first run (40312702820) failed three steps on its harness.
+  - Under R-W4-1, W4-1 fixed the harness (#362), and the re-run
+    (40396621692) passed all eight jobs. Every route reported
+    `metais 1.0.0`.
+  - The verification found `go install …@latest` unchecked. W4-4 ran it
+    by hand and added the step (#365).
+  - W4-NB3's run 40427729843 passed all eight jobs with that step, on a
+    GitHub-hosted runner.
+- **The records are closed.** The launch record is
+  `docs/dev/rehearsal/v1.0.0.md` (W4-2, #364), and `docs/INDEX.md` marks
+  the plan done. W4-3 wrote 32 implementation-log entries and marked
+  PLAN-2026-10-metais-v1 §6's release row done (#363).
+
+The verification passed the wave tier on a fresh clone. It mutated W4-1,
+and inspected the rest.
+
 ## 10. What this plan does not cover
 
 - Homebrew core, Windows packages and other package managers.
@@ -723,3 +750,169 @@ verification had completed (W3-OOB8, cancelled).
   integration and a public tera (ADR-013 D2 item 1).
 - kottera.com beyond its one page.
 - An MCP server for metais.
+
+## 11. Train closeout
+
+Written by the plan orchestrator (Work Order `01a16401-e6f3`) on
+2026-10-27, against `main` at `62e53dfa`. It is not a correctness verdict.
+- **What I checked:** each wave's closeout and its verification's report,
+  each act's report, GitHub's record of releases, tags and runs, and the
+  merged tree's history.
+- **What I did not do:** break the code to see what fails. The
+  verifications did that, and each wave's verdict above says how deeply.
+
+### 1. Did the plan deliver what it set out to?
+
+Against §1's "Done means":
+
+- **Public, with its history, after a secrets scan and a name search.**
+  Delivered. `kottera/metais` went public at 2026-10-24T15:00:10Z. Before
+  that:
+  - gitleaks and trufflehog scanned every ref, twice, and found nothing
+    (W1-2, W3-1), and the gap to the flip was rescanned clean;
+  - Ed's USPTO and EUIPO knockout search found no live conflict in
+    classes 9 or 42.
+- **`metais.org/metais`, and `go install …@latest` works.** Delivered.
+  `@latest` resolves `v1.0.0` (`h1:OfFHC3Cs…`) through the Go proxy on a
+  GitHub-hosted runner (run 40427729843).
+- **Brew and `install.sh` install the archives the release procedure
+  built twice and compared, and the release carries `SHA256SUMS`.**
+  Delivered as far as the train can see. The launch runs installed
+  `v1.0.0` by brew, `install.sh` with and without `METAIS_VERSION`, the
+  manual route and `go install`, on clean macOS, Ubuntu and an empty
+  container. The twin build and comparison are T-A3's, whose own report
+  is outside this train. The launch record cites GitHub for them.
+- **metais.org serves every page it should, and every page names
+  Kottera.** Delivered: the landing and install pages, two guides,
+  reference pages generated from the binary, the specification, and the
+  schemas at their `$id`s. The launch runs checked each. One defect is
+  live: the header, the footer and the landing page send newcomers to
+  `/spec/draft/` rather than `/spec/1.0/` (W4-NB1). Ed ruled that it is
+  fixed with the next release, not by a redeploy.
+- **kottera.com serves a page about tera.** Delivered (W2-12), with copy
+  Ed approved, from its `main` branch.
+- **An outside contributor can contribute, with CI on GitHub-hosted
+  runners, and no stranger's code runs on Kottera's hosts.** Delivered:
+  - the contributor guide, code of conduct, security policy and
+    templates;
+  - the DCO check;
+  - CI on every pull request;
+  - the workflows tripwire;
+  - fork pull requests run nothing until approved;
+  - the `main` ruleset with seven required checks.
+- **`v1.0.0-rc.1` went through every step, then `v1.0.0` did.** Delivered
+  in substance, not in letter:
+  - rc.1 was never published, because its target's workflows could not
+    be pushed;
+  - seven candidates were cut, and `v1.0.0-rc.7` was the first to pass
+    every check;
+  - `v1.0.0` then went through the same release act and checks, but
+    ships two changes no candidate rehearsed (below).
+- **I1 passes on Opus, Sonnet and Haiku against the live site, and I2 is
+  recorded.** Delivered on rc.7: I1 3 of 3
+  (`docs/ux/scorecard-2026-10-25-install.md`), I2 recorded. I1 was not
+  re-run on `v1.0.0`, by Ed's ruling.
+
+### 2. What each wave contributed
+
+- **Wave 1, foundations** ([brief](../briefs/brief-plan-2026-10-metais-public-wave1.md)):
+  the module path, the history scan, the community files, dispatch-only
+  CI and its tripwire, and `--version`'s maker line.
+- **Wave 2, the site and distribution** ([brief](../briefs/brief-plan-2026-10-metais-public-wave2.md)):
+  the site as a METAIS package with generated reference pages,
+  `install.sh`, `release.yml`, the formula generator, the tap's CI, the
+  kottera.com page, and I1 and I2. Nothing was published.
+- **Wave 3, rehearsal** ([brief](../briefs/brief-plan-2026-10-metais-public-wave3.md)):
+  the flip, Ed's settings, CI on pull requests, the rehearsal workflow,
+  I1's credential route (ADR-009 A12), seven release candidates, and I1
+  3 of 3 on rc.7.
+- **Wave 4, launch** ([brief](../briefs/brief-plan-2026-10-metais-public-wave4.md)):
+  `v1.0.0` recorded, the launch checks repaired and passed, and the
+  records closed.
+
+### 3. What the train did not establish
+
+- **`v1.0.0` was not rehearsed as built.** It ships #272 (`56ebf332`: the
+  `render-work` default lowered to 2^28, filter charging, chapters 07 and
+  14) and #349 (the favicon) after rc.7, by Ed's ruling of 2026-10-25.
+  The launch checks passed against it, but I1 never ran on it.
+- **I2 never found and installed METAIS cleanly.** PLAN-2026-10-metais-ux's
+  R-W3-5, discovery with nothing installed, stays open. The site exists
+  now, so a search engine can find it, but no run has shown an agent
+  doing so.
+- **Items merged without the gate**, by Ed's standing instruction from
+  Wave 2 on. Each wave tier ran once, at the verification. From the flip,
+  CI's required checks gated every merge.
+- **Much of the release work ran in Ed's session, outside this tree.**
+  That covers rc.4 to rc.6, `v1.0.0`'s release act, and several fixes
+  (#328, #333 to #337, #343, #344, #349, #361). The waves recorded them
+  from GitHub, but no verification of this train mutated them.
+- **Depth of the verifications.** The tap's CI, the kottera.com page, the
+  history scans and the community files were inspected, not mutated.
+- **`main`'s `dco` job is red on push** for two squash merges whose
+  `Signed-off-by:` does not parse: `b49b10fb` (rc.7's target) and
+  `92b9f90f`. History is not rewritten, and W3-NB1 prevents the next one.
+- **One intermittent `macos` CI failure has no found mechanism**: run
+  40317841095 on a docs-only pull request, recorded as an observation.
+- **Unknown, not recorded:** whether Ed required commit-SHA pins for
+  actions in the repository's settings (W4-3).
+- **Out of scope by §10:** Homebrew core, Windows packages, signing, a
+  guide showing METAIS inside tera, and kottera.com beyond its page.
+
+### 4. What is still running
+
+These follow-on items were filed from Ed's sessions as he answered
+Wave 4's acts. They sit outside this Work Order's tree, and I cannot
+read their state:
+- **`01a17ad1-a896`** (`kottera/metais`): `/spec/draft/` redirects to the
+  released revision while `main`'s `spec/` equals it, and the site's
+  specification links point at `/spec/`, with an ADR-011 A8 item 2
+  clarification. It reaches metais.org with the next release.
+- **`01a17ad1-aace`** (`kottera/kottera`): tera gives a subject-less
+  dispatch a commit identity, and never git's host-derived fallback,
+  under ADR-148 D8 Amendment 2, which Ed accepts before merge.
+
+Janitorial issue #352 is open. Every finding child this train filed has
+ended.
+
+### 5. How many times a person was consulted, and what for
+
+The plan orchestrator escalated once: ADR-009 A12, the credential route
+for I1, a credential boundary and a spend. Ed approved it with a
+subscription token in place of an API key (R-W3-3).
+
+Ed also decided, through the acts and through guidance relayed by the
+operator:
+- the name search;
+- proving workflows by hand while private;
+- the gate once per wave;
+- the copy for the site and kottera.com;
+- the settings before and after the flip, including how the train's
+  pull requests merge (R-W3-2);
+- I1's credential route and kottera.com's Pages (Q1, Q2);
+- Sonnet's I1 verdict on rc.6;
+- shipping `v1.0.0` past rc.7;
+- the two decisions of W4-NB1 and W4-NB2.
+
+Each is recorded where its wave's rulings are.
+
+### 6. The out-of-band acts
+
+| Act | Work Order | Ended by | Outcome |
+|---|---|---|---|
+| Recall and edit T-A3 | at the plan's merge | Ed | Done 2026-10-22, confirmed by `01a16409-f3eb`: T-A3 carries R-PUB-14's procedure, with all seven of its edges kept |
+| Add Wave 3's verification to T-A3's `depends_on` | `01a175a0-b959` | the operator | Cancelled as moot: the verification had completed before T-A3 ran |
+| Create `kottera/homebrew-tap` and `kottera/kottera.com`, grant push, name the conduct address | `01a16406-f2e8` | Ed | Done: both public; `conduct@kottera.com` |
+| Approve the copy of the landing page, the guides and kottera.com | `01a16923-4dd8` | Ed | Approved, with his edits (M1–M7, K1–K6) |
+| USPTO and EUIPO knockout search | `01a16409-e851` | Ed | No live conflict in classes 9 or 42. METAISM (US SN 99826565) is watched and goes to counsel before any filing. A screen, not a clearance |
+| Settings before the flip | `01a16bc4-06a8` | Ed | Read-only token; fork pull requests run nothing; Q1 and Q2 answered |
+| Make `kottera/metais` public | `01a16bc4-5df9` | Ed | 2026-10-24T15:00:10Z, at `e2742883`, the gap rescanned clean |
+| Settings and DNS after the flip | `01a16bc4-980f` | Ed | Pages with HTTPS on both domains; the `release` environment and `TAP_TOKEN`; the `main` ruleset; private vulnerability reporting and secret scanning; DNS recorded in `kottera/infra` |
+| Proving runs while private | `01a1644c-1031`, `01a16575-1416`, `01a165bf-e76b`, `01a16905-12da`, `01a16918-8f78` | Ed | Green, or made by hand under his ruling |
+| Hosted runs deferred to the flip | `01a16bb8-56c8` | Ed's session | Made by Wave 3's own runs; #350 records how the `release` environment holds a run |
+| Release acts and checks for the candidates | `01a16bc5-fcc5` (rc.1–rc.3), `01a17376-19df` (rc.7) | Ed's session | rc.7 published 2026-10-25T22:56:50Z, rehearsal 8 of 8. rc.4–rc.6 were released outside any act |
+| I1 and I2 on Ed's host | `01a17144-8fb4` (rc.6), `01a17376-4dff` (rc.7) | Ed's session | rc.7: I1 3 of 3, Opus on `opus[1m]` with a 1M window; I2 recorded |
+| Approve the `release` environment for `v1.0.0` | none filed | Ed | Done before Wave 4 was derived: run 40312151129 |
+| Launch checks against `v1.0.0` | `01a17808-8634`; `01a17a59-deff` | Ed's session | 40396621692 and 40427729843, all eight jobs green, the second with `@latest` |
+| `/spec/draft/` after a release | `01a17a59-a7ba` | Ed | Ruling (b) and more, above; the fix is `01a17ad1-a896`. Its checklist's "design merged" is attested not done: the documents land with that item |
+| A superseded commit that names a host | `01a17a59-cbf5` | Ed | No purge request, because the exposure is low and holds nothing secret; tera fixes the cause in `01a17ad1-aace`. Its "design merged" is attested not done: ADR-148 D8 Amendment 2 lands with that item |
