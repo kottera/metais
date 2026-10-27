@@ -4,7 +4,7 @@
   "description": "The draft and every released revision of the specification, each Markdown file of spec/ as an HTML fragment, as the build step exports them.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["draft", "releases", "release_pages"],
+  "required": ["draft", "draft_served", "releases", "release_pages"],
   "properties": {
     "draft": {
       "$ref": "#/$defs/revision",
@@ -13,6 +13,10 @@
         "revision": { "const": "draft" },
         "ref": { "pattern": "^[0-9a-f]{40}$" }
       }
+    },
+    "draft_served": {
+      "type": "boolean",
+      "description": "Whether /spec/draft/ serves the draft: false when the checkout's spec/ is the spec/ of the latest spec-<M>.<m> tag, and each page of the draft then leads to that revision's; true when it differs, or no revision is released."
     },
     "releases": {
       "type": "array",

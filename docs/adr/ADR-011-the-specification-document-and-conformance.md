@@ -26,6 +26,9 @@ effect as PLAN-2026-10-metais-public's items land.
 and the train's other readings) is accepted by Ed Funnekotter on
 2026-10-22, at PLAN-2026-10-metais-v1's ratification; the passages it
 changes are marked *(A9)*.
+[Amendment A10](#amendments) (the draft is served only while it differs
+from the latest revision) records Ed Funnekotter's ruling of 2026-10-26
+and is accepted on merge; the passage it clarifies is marked *(A10)*.
 **Date:** 2026-10-18
 **Deciders:** Ed Funnekotter
 **Designs:** PRD-001 R16 (items 1–3); the document side of R15 (items 1 and
@@ -1751,7 +1754,10 @@ the specification is published).
    exists, and afterwards whenever `main` holds additions for the next
    minor, the site serves `main`'s text, as of the release being
    published, at `https://metais.org/spec/draft/`. Every page there says
-   it is a draft, and asks search engines not to index it.
+   it is a draft, and asks search engines not to index it. *(A10)* The
+   draft is served only in those two cases. Otherwise each of its URLs
+   leads to the latest released revision, as `https://metais.org/spec/`
+   does.
 3. **D7 item 7 becomes:** `https://metais.org/` hosts the schemas at their
    `$id`s and the specification's text, as ADR-013 D8 builds them. No tool
    or runner fetches anything from it. A schema's `$id` is still an
@@ -1824,6 +1830,33 @@ which hostile packages have an `open` step). Each passage is marked
    (`TestDriverProtocol`, `TestRecordAndCompare`). A7 item 3 replaces the
    time with a count of processes when PLAN-2026-10-metais-test-economy's
    W2-3 lands.
+
+### A10 — The draft is served only while it differs from the latest revision
+
+**Status:** Records Ed Funnekotter's ruling of 2026-10-26, at the design
+session of PLAN-2026-10-metais-public's W4-NB1, and is accepted on merge.
+It takes effect on the site with the next release: `pages.yml` builds the
+site from the release tag's checkout (ADR-013 D7 item 3.4), so the live
+site changes when a release built from a tree holding this amendment is
+published.
+**Clarifies:** A8 item 2, marked *(A10)* in place.
+
+1. **The draft is served only in the two cases A8 item 2 names**: while no
+   revision is released, and while the `spec/` the site is built from
+   differs from the `spec/` of the latest `spec-<M>.<m>` tag. The build
+   compares the two trees, the working tree's `spec/` included, and the
+   latest tag is the greatest `<M>.<m>` by number.
+2. **Otherwise the draft's URLs lead to the latest revision.** Each page
+   of `/spec/draft/` is a page that leads, as `/spec/` does, by a refresh
+   and a canonical link, to the same chapter of `/spec/<M>.<m>/`, or to
+   `/spec/<M>.<m>/` itself for a chapter that revision lacks, and asks
+   search engines not to index it. A link to the draft keeps working, and
+   nothing calls a released text a draft. The site's navigation leads to
+   `/spec/`, and the landing page names the draft only while it is served.
+3. **Why.** Once a revision is released, `main` holds the same text until
+   the next minor's first addition. Serving that text again as an unindexed
+   draft calls a released text unreleased, and leads a newcomer away from
+   the revision the tool implements.
 
 ## Implementation log
 

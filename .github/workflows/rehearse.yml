@@ -197,13 +197,15 @@ jobs:
 
   # The live site against the release's tag (ADR-013 D1 and D8): every
   # schema's $id, the go-import pages, a reference page for every command
-  # and topic the release's metais lists, the draft specification, each
-  # released revision the release implements and /spec/ leading to the
-  # latest (ADR-011 A8 items 1 and 2), the landing and install pages and
-  # install.sh, and kottera.com. The tag is checked out with the
-  # repository's whole history, so its spec-<M>.<m> tags say which
-  # revisions are released, as they do to the site's build. Each check
-  # runs whether or not the one before it refused.
+  # and topic the release's metais lists, the draft specification or,
+  # when the release's spec/ is its latest released revision's, the
+  # draft's pages leading to that revision's, each released revision the
+  # release implements and /spec/ leading to the latest (ADR-011 A8 items
+  # 1 and 2), the landing and install pages and install.sh, and
+  # kottera.com. The tag is checked out with the repository's whole
+  # history, so its spec-<M>.<m> tags say which revisions are released, as
+  # they do to the site's build. Each check runs whether or not the one
+  # before it refused.
   site:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -229,7 +231,7 @@ jobs:
       - name: the reference pages
         if: ${{ !cancelled() }}
         run: .github/scripts/rehearse.sh reference "$RUNNER_TEMP/metais/metais"
-      - name: the specification at /spec/draft/
+      - name: the draft at /spec/draft/, or its pages leading to the latest revision
         if: ${{ !cancelled() }}
         run: .github/scripts/rehearse.sh spec release
       - name: the released specification at /spec/<M>.<m>/, and /spec/ leading to it

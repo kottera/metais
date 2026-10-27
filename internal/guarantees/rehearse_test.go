@@ -246,12 +246,18 @@ func TestRehearseWorkflow(t *testing.T) {
 		}
 	}
 	// The site's checks read what the release holds from its tag, checked
-	// out with the whole history, so the spec-<M>.<m> tags that say which
-	// revisions are released are there for rehearse.sh released to read.
+	// out with the whole history before either check of the specification
+	// runs, so the spec-<M>.<m> tags that say which revisions are released
+	// are there for rehearse.sh released to read, and for rehearse.sh spec
+	// to decide whether the site serves the draft or leads it to the
+	// latest revision.
 	site, _ := must(jobs.Get("site")).(value.Object)
 	tagged := false
 	for _, s := range must(site.Get("steps")).(value.Array).All() {
 		so, _ := s.(value.Object)
+		if r := text(must(so.Get("run"))); !tagged && (strings.Contains(r, "rehearse.sh spec ") || strings.Contains(r, "rehearse.sh released ")) {
+			t.Errorf("rehearse.yml's site job runs %q before it checks the release's tag out with its whole history", r)
+		}
 		if with, ok := so.Get("with"); ok {
 			wo, _ := with.(value.Object)
 			ref, _ := wo.Get("ref")
@@ -500,6 +506,19 @@ func TestRehearseScript(t *testing.T) {
 		}
 	}
 	released := tags([]string{"spec-1.0"})
+	// draftLead is a page of the draft leading to to, as the site serves
+	// one while spec/ is the latest revision's.
+	draftLead := func(to string) string {
+		return `<meta http-equiv="refresh" content="0; url=` + to + `">` + "\n" +
+			`<link rel="canonical" href="https://metais.org` + to + `">` + "\n" +
+			`<meta name="robots" content="noindex"><title>The METAIS specification</title>`
+	}
+	// leadDraft serves each page of the draft leading to its page of the
+	// revision rev.
+	leadDraft := func(rev string) func(*rehearsal) {
+		return then(put(web, "spec/draft/index.html", draftLead("/spec/"+rev+"/")),
+			put(web, "spec/draft/01-packages/index.html", draftLead("/spec/"+rev+"/01-packages/")))
+	}
 	const stable = "FAKE_REPORTS=1.0.0"
 
 	for _, c := range []struct {
@@ -623,11 +642,38 @@ func TestRehearseScript(t *testing.T) {
 		{name: "reference, a topic's page missing", args: []string{"reference", "{metais}"}, setup: rm("reference/topics/templates/index.html"),
 			code: 1, says: "/reference/topics/templates/ answered 404"},
 
-		{name: "spec", args: []string{"spec", "{tree}"}, says: "ok: 2 of 2 chapters of the draft specification serve HTML, unindexed"},
-		{name: "spec, a chapter missing", args: []string{"spec", "{tree}"}, setup: put(tree, "spec/02-schemas.md", "# Schemas\n"),
+		{name: "spec, no revision released", args: []string{"spec", "{tree}"}, setup: tags(nil),
+			says: "ok: 2 of 2 chapters of the draft specification serve HTML, unindexed"},
+		{name: "spec, differing from the latest revision", args: []string{"spec", "{tree}"},
+			setup: then(released, put(tree, "spec/01-packages.md", "# Packages, amended\n"), commit),
+			says:  "ok: 2 of 2 chapters of the draft specification serve HTML, unindexed"},
+		{name: "spec, a chapter missing", args: []string{"spec", "{tree}"}, setup: tags(nil, put(tree, "spec/02-schemas.md", "# Schemas\n")),
 			code: 1, says: "/spec/draft/02-schemas/ answered 404"},
-		{name: "spec, indexed", args: []string{"spec", "{tree}"}, setup: put(web, "spec/draft/01-packages/index.html", "<title>Packages</title>"),
+		{name: "spec, indexed", args: []string{"spec", "{tree}"}, setup: then(tags(nil), put(web, "spec/draft/01-packages/index.html", "<title>Packages</title>")),
 			code: 1, says: "/spec/draft/01-packages/ does not ask not to be indexed"},
+		{name: "spec, differing and leading to the latest revision", args: []string{"spec", "{tree}"},
+			setup: then(released, put(tree, "spec/01-packages.md", "# Packages, amended\n"), commit, leadDraft("1.0")),
+			code:  1, says: "/spec/draft/01-packages/ leads elsewhere, not serving the draft"},
+		{name: "spec, the latest revision's", args: []string{"spec", "{tree}"}, setup: then(released, leadDraft("1.0")),
+			says: "ok: 2 of 2 chapters of the draft specification lead to /spec/1.0/, unindexed"},
+		// A commit after the tag that leaves spec/ as it was leaves the
+		// draft the latest revision's.
+		{name: "spec, the latest revision's after a later commit", args: []string{"spec", "{tree}"},
+			setup: then(released, put(tree, "site/public/robots.txt", "\n"), commit, leadDraft("1.0")),
+			says:  "ok: 2 of 2 chapters of the draft specification lead to /spec/1.0/, unindexed"},
+		{name: "spec, the latest revision's, the draft served", args: []string{"spec", "{tree}"}, setup: released,
+			code: 1, says: "/spec/draft/01-packages/ does not lead to /spec/1.0/01-packages/"},
+		{name: "spec, the latest revision's, leading to its contents", args: []string{"spec", "{tree}"},
+			setup: then(released, leadDraft("1.0"), put(web, "spec/draft/01-packages/index.html", draftLead("/spec/1.0/"))),
+			code:  1, says: "/spec/draft/01-packages/ does not lead to /spec/1.0/01-packages/"},
+		{name: "spec, the latest revision's, indexed", args: []string{"spec", "{tree}"},
+			setup: then(released, leadDraft("1.0"), put(web, "spec/draft/index.html", strings.Replace(draftLead("/spec/1.0/"), `<meta name="robots" content="noindex">`, "", 1))),
+			code:  1, says: "/spec/draft/ does not ask not to be indexed"},
+		{name: "spec, leading to an earlier revision", args: []string{"spec", "{tree}"},
+			setup: then(tags([]string{"spec-1.9", "spec-1.10"}), leadDraft("1.9")),
+			code:  1, says: "/spec/draft/ does not lead to /spec/1.10/"},
+		{name: "spec, outside a repository", args: []string{"spec", "{tree}"},
+			code: 1, says: "FAIL: could not list {tree}'s tags"},
 
 		{name: "released", args: []string{"released", "{tree}", "{metais}"}, setup: released, env: []string{stable},
 			says: "ok: 3 of 3 pages of the released specification, 1.0, serve HTML, indexed, and /spec/ leads to 1.0"},

@@ -22,8 +22,9 @@
 //     an HTML fragment of the text after its frontmatter;
 //   - spec.json: the specification's Markdown files as HTML fragments, the
 //     checkout's own spec/ as the draft and the files of every spec-<M>.<m>
-//     tag as that revision (ADR-011 A8 items 1 and 2), and every page of
-//     those revisions in one list, which one output iterates;
+//     tag as that revision (ADR-011 A8 items 1 and 2), whether the draft is
+//     served, which it is unless spec/ is the latest revision's, and every
+//     page of those revisions in one list, which one output iterates;
 //   - release.json: the release the site is built for, its version and the
 //     archives SHA256SUMS lists, or published false for a build with no
 //     release;

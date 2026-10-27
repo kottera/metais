@@ -446,11 +446,13 @@ func TestReferenceHeldToHelp(t *testing.T) {
 	}
 }
 
-// TestSpecPages requires the built site to serve the draft at
-// /spec/draft/, one page per Markdown file of spec/, each saying it is a
-// draft and asking search engines not to index it (ADR-011 A8 item 2),
-// and, while no revision is released, /spec/ to say so and lead to the
-// draft.
+// TestSpecPages requires the built site to serve one page at /spec/draft/
+// per Markdown file of spec/, as the exported input says (ADR-011 A8 item
+// 2): while the draft is served, each saying it is a draft and asking
+// search engines not to index it, and while spec/ is the latest released
+// revision's, each leading to that revision's page. While no revision is
+// released, /spec/ says so and leads to the draft. The header and the
+// footer lead to /spec/, never to the draft.
 func TestSpecPages(t *testing.T) {
 	site := tree(t, builtSite(t))
 	entries, err := os.ReadDir("../spec")
@@ -478,22 +480,56 @@ func TestSpecPages(t *testing.T) {
 	if len(want) < 2 || !slices.Equal(got, want) {
 		t.Errorf("the draft's pages are %q, want one per file of spec/: %q", got, want)
 	}
-	for _, p := range got {
-		checkDraft(t, p, site[p])
-	}
 
-	git := exec.Command("git", "-C", "..", "tag", "--list", "spec-*")
-	git.Env = testenv.GitEnv(hostEnviron)
-	tags, err := git.Output()
-	if err != nil {
-		t.Fatal(err)
+	data, _ := exportedInputs(t)
+	var sp specInput
+	readJSON(t, filepath.Join(data, "spec.json"), &sp)
+	if sp.DraftServed {
+		for _, p := range got {
+			checkDraft(t, p, site[p])
+		}
+	} else {
+		latest := sp.Releases[len(sp.Releases)-1]
+		for _, f := range sp.Draft.Files {
+			checkDraftRedirect(t, site, f, latest)
+		}
 	}
-	if len(bytes.TrimSpace(tags)) == 0 {
+	if len(sp.Releases) == 0 {
 		index := site["spec/index.html"]
 		if !bytes.Contains(index, []byte(noindex)) || !bytes.Contains(index, []byte(`<a href="/spec/draft/">`)) {
 			t.Errorf("with no revision released, /spec/ does not lead to the draft and ask not to be indexed:\n%s", index)
 		}
 	}
+	checkSpecNav(t, site, sp)
+}
+
+// specInput is spec.json as the tests here read it.
+type specInput struct {
+	Draft        specRevision   `json:"draft"`
+	DraftServed  bool           `json:"draft_served"`
+	Releases     []specRevision `json:"releases"`
+	ReleasePages []specPage     `json:"release_pages"`
+}
+
+type specRevision struct {
+	Revision string     `json:"revision"`
+	Ref      string     `json:"ref"`
+	Path     string     `json:"path"`
+	Files    []specFile `json:"files"`
+}
+
+type specFile struct {
+	File     string `json:"file"`
+	Path     string `json:"path"`
+	Title    string `json:"title"`
+	HTML     string `json:"html"`
+	Headings []any  `json:"headings"`
+}
+
+type specPage struct {
+	Revision string `json:"revision"`
+	File     string `json:"file"`
+	Path     string `json:"path"`
 }
 
 // noindex asks search engines not to index a page.
@@ -514,63 +550,110 @@ func checkDraft(t *testing.T, p string, b []byte) {
 	}
 }
 
-// TestSpecReleases renders the site package from the exported inputs with
-// two released revisions in the specification's input, as the build step
-// exports the tags spec-1.2 and spec-1.10, and requires the rule of
-// ADR-011 A8 item 1: each revision served at /spec/<M>.<m>/, one page per
-// chapter, from its own text, indexed and not called a draft; /spec/
-// leading to the latest, 1.10; and the draft still at /spec/draft/.
-func TestSpecReleases(t *testing.T) {
-	data, metais := exportedInputs(t)
-	var sp map[string]json.RawMessage
-	b, err := os.ReadFile(filepath.Join(data, "spec.json"))
-	if err != nil {
-		t.Fatal(err)
+// checkDraftRedirect requires the page of the draft's file f to lead to
+// the same chapter of latest, or to latest's contents when latest has no
+// such chapter, as /spec/ leads to latest: a meta refresh and a canonical
+// link, asking search engines not to index it, and not a page of the
+// draft.
+func checkDraftRedirect(t *testing.T, site map[string][]byte, f specFile, latest specRevision) {
+	t.Helper()
+	p := strings.TrimPrefix(f.Path, "/") + "index.html"
+	b, ok := site[p]
+	if !ok {
+		t.Errorf("the draft's %s is not served at %s", f.File, f.Path)
+		return
 	}
-	if err := json.Unmarshal(b, &sp); err != nil {
-		t.Fatal(err)
-	}
-	type file struct {
-		File     string `json:"file"`
-		Path     string `json:"path"`
-		Title    string `json:"title"`
-		HTML     string `json:"html"`
-		Headings []any  `json:"headings"`
-	}
-	type revision struct {
-		Revision string `json:"revision"`
-		Ref      string `json:"ref"`
-		Path     string `json:"path"`
-		Files    []file `json:"files"`
-	}
-	type page struct {
-		Revision string `json:"revision"`
-		File     string `json:"file"`
-		Path     string `json:"path"`
-	}
-	var releases []revision
-	var pages []page
-	for _, r := range []string{"1.2", "1.10"} {
-		base := "/spec/" + r + "/"
-		rev := revision{Revision: r, Ref: "spec-" + r, Path: base, Files: []file{
-			{File: "01-intro.md", Path: base + "01-intro/", Title: "1. Intro", HTML: `<h1 id="1-intro">1. Intro</h1><p>Text of ` + r + `. <a href="` + base + `#the-specification">Contents</a>.</p>`, Headings: []any{}},
-			{File: "README.md", Path: base, Title: "The specification", HTML: `<h1 id="the-specification">The specification</h1><p><a href="` + base + `01-intro/">Intro</a></p>`, Headings: []any{}},
-		}}
-		releases = append(releases, rev)
-		for _, f := range rev.Files {
-			pages = append(pages, page{Revision: r, File: f.File, Path: f.Path})
+	target := latest.Path
+	for _, lf := range latest.Files {
+		if lf.File == f.File {
+			target = lf.Path
 		}
 	}
-	for k, v := range map[string]any{"releases": releases, "release_pages": pages} {
-		if sp[k], err = json.Marshal(v); err != nil {
-			t.Fatal(err)
+	head, _, _ := bytes.Cut(b, []byte("</head>"))
+	for _, want := range []string{
+		`<meta http-equiv="refresh" content="0; url=` + target + `">`,
+		`<link rel="canonical" href="https://metais.org` + target + `">`,
+		noindex,
+	} {
+		if bytes.Count(head, []byte(want)) != 1 {
+			t.Errorf("%s does not lead to %s with %s:\n%s", p, target, want, head)
+		}
+	}
+	if bytes.Contains(b, []byte(draftNotice)) || bytes.Contains(b, []byte(f.HTML)) {
+		t.Errorf("%s is a page of the draft, not a page leading to %s", p, target)
+	}
+}
+
+// checkSpecNav requires the header and the footer of every page to lead
+// to /spec/ and never to the draft, and the landing page to name the latest
+// released revision at /spec/ and the draft only while it is served,
+// calling no released revision a draft.
+func checkSpecNav(t *testing.T, site map[string][]byte, sp specInput) {
+	t.Helper()
+	for p, b := range site {
+		if !strings.HasSuffix(p, ".html") || bytes.Contains(b, []byte(`http-equiv="refresh"`)) {
+			continue
+		}
+		for _, l := range specNav.FindAllSubmatch(b, -1) {
+			if string(l[1]) != "/spec/" {
+				t.Errorf("%s's %s link leads to %s, not /spec/", p, l[2], l[1])
+			}
+		}
+		if n := len(specNav.FindAll(b, -1)); n != 2 {
+			t.Errorf("%s has %d links named Spec or Specification, want the header's and the footer's", p, n)
+		}
+	}
+	index := site["index.html"]
+	draftLink := []byte(`<a href="/spec/draft/">`)
+	if got := bytes.Contains(index, draftLink); got != sp.DraftServed {
+		t.Errorf("the landing page links the draft %v while the draft is served %v", got, sp.DraftServed)
+	}
+	if len(sp.Releases) > 0 {
+		latest := sp.Releases[len(sp.Releases)-1]
+		want := `<a href="/spec/"><span class="sec">§</span><span class="ttl">The specification, revision ` + latest.Revision + `</span>`
+		if !bytes.Contains(index, []byte(want)) {
+			t.Errorf("the landing page does not name the latest revision, %s, at /spec/: want %s", latest.Revision, want)
+		}
+	}
+	if bytes.Contains(index, []byte("1.0 draft")) {
+		t.Errorf("the landing page calls a revision a draft")
+	}
+}
+
+// specNav matches the header's Spec link and the footer's Specification
+// link, and captures where each leads and its name.
+var specNav = regexp.MustCompile(`<a href="([^"]*)"[^>]*>(Spec|Specification)</a>`)
+
+// renderSpec renders the site package from the exported inputs with the
+// specification's input's releases and draft_served replaced, as the
+// build step exports them for the tags spec-1.2 and spec-1.10, and returns
+// the built site with the fixture's pages in place of every page of the
+// specification. The releases' chapters are README.md and a chapter of the
+// draft's, 01-introduction.md, so every other chapter of the draft has no
+// counterpart in them.
+func renderSpec(t *testing.T, draftServed bool) (map[string][]byte, specInput) {
+	t.Helper()
+	data, metais := exportedInputs(t)
+	var sp specInput
+	readJSON(t, filepath.Join(data, "spec.json"), &sp)
+	sp.Releases, sp.ReleasePages, sp.DraftServed = nil, nil, draftServed
+	for _, r := range []string{"1.2", "1.10"} {
+		base := "/spec/" + r + "/"
+		rev := specRevision{Revision: r, Ref: "spec-" + r, Path: base, Files: []specFile{
+			{File: "01-introduction.md", Path: base + "01-introduction/", Title: "1. Intro", HTML: `<h1 id="1-intro">1. Intro</h1><p>Text of ` + r + `. <a href="` + base + `#the-specification">Contents</a>.</p>`, Headings: []any{}},
+			{File: "README.md", Path: base, Title: "The specification", HTML: `<h1 id="the-specification">The specification</h1><p><a href="` + base + `01-introduction/">Intro</a></p>`, Headings: []any{}},
+		}}
+		sp.Releases = append(sp.Releases, rev)
+		for _, f := range rev.Files {
+			sp.ReleasePages = append(sp.ReleasePages, specPage{Revision: r, File: f.File, Path: f.Path})
 		}
 	}
 	fixture := filepath.Join(testDir(t), "data")
 	if err := copyDir(data, fixture); err != nil {
 		t.Fatal(err)
 	}
-	if b, err = json.Marshal(sp); err != nil {
+	b, err := json.Marshal(sp)
+	if err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(filepath.Join(fixture, "spec.json"), b, 0o644); err != nil {
@@ -592,8 +675,17 @@ func TestSpecReleases(t *testing.T) {
 		}
 	}
 	maps.Copy(site, tree(t, out))
+	return site, sp
+}
 
-	for _, r := range releases {
+// TestSpecReleases renders the site with two released revisions and a
+// draft that differs from the latest, and requires the rule of ADR-011 A8
+// item 1: each revision served at /spec/<M>.<m>/, one page per chapter,
+// from its own text, indexed and not called a draft; /spec/ leading to the
+// latest, 1.10; and, by item 2, the draft still served at /spec/draft/.
+func TestSpecReleases(t *testing.T) {
+	site, sp := renderSpec(t, true)
+	for _, r := range sp.Releases {
 		for _, f := range r.Files {
 			p := strings.TrimPrefix(f.Path, "/") + "index.html"
 			b, ok := site[p]
@@ -621,10 +713,42 @@ func TestSpecReleases(t *testing.T) {
 	if bytes.Contains(index, []byte(noindex)) {
 		t.Errorf("/spec/ asks not to be indexed once a revision is released")
 	}
-	if _, ok := site["spec/draft/index.html"]; !ok {
-		t.Errorf("the draft is not served beside the releases")
+	if len(sp.Draft.Files) < 2 {
+		t.Fatalf("the draft has %d files", len(sp.Draft.Files))
 	}
-	checkLinks(t, "the site with two releases", site)
+	for _, f := range sp.Draft.Files {
+		p := strings.TrimPrefix(f.Path, "/") + "index.html"
+		if b, ok := site[p]; !ok {
+			t.Errorf("the draft's %s is not served beside the releases", f.File)
+		} else {
+			checkDraft(t, p, b)
+		}
+	}
+	checkSpecNav(t, site, sp)
+	checkLinks(t, "the site with two releases and a draft", site)
+}
+
+// TestSpecDraftRedirects renders the site with two released revisions and
+// a draft identical to the latest, and requires the rule of ADR-011 A8 item
+// 2: no page of the draft is served, and each of its URLs leads to the
+// same chapter of the latest revision, 1.10, or to 1.10's contents when
+// 1.10 has no such chapter, so a link to the draft keeps working; the
+// landing page names 1.10 at /spec/ and no draft.
+func TestSpecDraftRedirects(t *testing.T) {
+	site, sp := renderSpec(t, false)
+	latest := sp.Releases[len(sp.Releases)-1]
+	counterparts := 0
+	for _, f := range sp.Draft.Files {
+		if f.File == "README.md" || f.File == "01-introduction.md" {
+			counterparts++
+		}
+		checkDraftRedirect(t, site, f, latest)
+	}
+	if counterparts != 2 || len(sp.Draft.Files) <= counterparts {
+		t.Fatalf("the draft's files are %d, %d of them in 1.10; want both kinds of page", len(sp.Draft.Files), counterparts)
+	}
+	checkSpecNav(t, site, sp)
+	checkLinks(t, "the site with two releases and no draft", site)
 }
 
 // testDir is a new directory beneath the shared one, for one test.

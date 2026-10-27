@@ -55,13 +55,19 @@ func skillInput(text []byte) (skill, error) {
 	return skill{Text: string(text), HTML: doc.HTML}, nil
 }
 
-// spec is spec.json: the draft, from the checkout's own spec/, each
-// released revision, from its spec-<M>.<m> tag, oldest first, and every
-// page of those releases in one list. An output's for_each iterates one
-// array, so the package renders a page per chapter of every release from
-// ReleasePages, and reads each page's text from its revision.
+// spec is spec.json: the draft, from the checkout's own spec/, whether
+// the site serves it, each released revision, from its spec-<M>.<m> tag,
+// oldest first, and every page of those releases in one list. An output's
+// for_each iterates one array, so the package renders a page per chapter
+// of every release from ReleasePages, and reads each page's text from its
+// revision.
 type spec struct {
-	Draft        revision   `json:"draft"`
+	Draft revision `json:"draft"`
+	// DraftServed is whether /spec/draft/ serves the draft: false when the
+	// checkout's spec/ is the latest release's, and true when it differs
+	// or no revision is released (ADR-011 A8 item 2). While it is false,
+	// each page of the draft leads to the latest release's.
+	DraftServed  bool       `json:"draft_served"`
 	Releases     []revision `json:"releases"`
 	ReleasePages []page     `json:"release_pages"`
 }
@@ -168,6 +174,14 @@ func (b *builder) specInput() (spec, error) {
 	if out.Releases == nil {
 		out.Releases = []revision{}
 	}
+	out.DraftServed = true
+	if len(tags) > 0 {
+		same, err := b.specIsTag(tags[len(tags)-1].name)
+		if err != nil {
+			return spec{}, err
+		}
+		out.DraftServed = !same
+	}
 	out.ReleasePages = []page{}
 	for _, r := range out.Releases {
 		for _, f := range r.Files {
@@ -175,6 +189,28 @@ func (b *builder) specInput() (spec, error) {
 		}
 	}
 	return out, nil
+}
+
+// specIsTag reports whether the checkout's spec/ is the spec/ of tag: the
+// same tree at HEAD as at the tag, and nothing in the working tree's
+// spec/ changed, untracked or ignored, since the draft is read from it.
+func (b *builder) specIsTag(tag string) (bool, error) {
+	at, err := b.git("rev-parse", "--verify", "refs/tags/"+tag+"^{commit}:"+specDir)
+	if err != nil {
+		return false, err
+	}
+	head, err := b.git("rev-parse", "--verify", "HEAD:"+specDir)
+	if err != nil {
+		return false, err
+	}
+	if !bytes.Equal(at, head) {
+		return false, nil
+	}
+	changed, err := b.git("--no-optional-locks", "status", "--porcelain", "--untracked-files=all", "--ignored", "--", specDir+"/")
+	if err != nil {
+		return false, err
+	}
+	return len(changed) == 0, nil
 }
 
 // tagFiles reads the Markdown files of spec/ at tag, by name.

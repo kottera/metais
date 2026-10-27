@@ -376,7 +376,13 @@ A harness loads the skill when its next session starts.
       <h3 class="cmdh"><span class="d">§</span>the spec and its schemas</h3>
       <p>METAIS is a format with a written spec, published JSON Schemas and a conformance suite. <code>metais</code> is the reference tool, not the only possible one.</p>
       <ul class="links">
-        <li><a href="/spec/draft/"><span class="sec">§</span><span class="ttl">The specification, 1.0 draft</span><span class="path">/spec/draft/</span></a></li>
+        {%- assign latest = inputs.spec.releases | last %}
+        {%- if latest %}
+        <li><a href="/spec/"><span class="sec">§</span><span class="ttl">The specification, revision {{ latest.revision }}</span><span class="path">/spec/</span></a></li>
+        {%- endif %}
+        {%- if inputs.spec.draft_served %}
+        <li><a href="/spec/draft/"><span class="sec">§</span><span class="ttl">{% if latest %}The draft of the next revision{% else %}The specification's draft{% endif %}</span><span class="path">/spec/draft/</span></a></li>
+        {%- endif %}
         <li><a href="/schemas/1.0/manifest.schema.json"><span class="sec">{ }</span><span class="ttl">JSON Schemas, served at their $ids</span><span class="path">/schemas/1.0/…</span></a></li>
         <li><a href="https://github.com/kottera/metais"><span class="sec">✓</span><span class="ttl">The conformance suite</span><span class="path">github.com/kottera/metais</span></a></li>
         <li><a href="/reference/"><span class="sec">¶</span><span class="ttl">Every command, documented</span><span class="path">/reference/</span></a></li>
