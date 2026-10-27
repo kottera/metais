@@ -1,5 +1,28 @@
 {%- comment -%}
   One page of the draft, item, a file of the checkout's spec/, served at
-  /spec/draft/ (ADR-011 A8 item 2).
+  /spec/draft/ only while spec/ differs from the latest released revision,
+  or no revision is released (ADR-011 A8 item 2). Otherwise the page leads
+  to the same chapter of the latest revision, as /spec/ leads to it, or to
+  the revision's contents when it has no such chapter.
 {%- endcomment -%}
+{%- if inputs.spec.draft_served -%}
 {%- render "spec/_chapter.html.liquid", revision: inputs.spec.draft, file: item -%}
+{%- else -%}
+{%- assign latest = inputs.spec.releases | last -%}
+{%- assign same = latest.files | find: "file", item.file -%}
+{%- if same -%}
+{%- assign target = same.path -%}
+{%- else -%}
+{%- assign target = latest.path -%}
+{%- endif -%}
+{%- capture head -%}
+<meta http-equiv="refresh" content="0; url={{ target }}">
+<link rel="canonical" href="https://metais.org{{ target }}">
+<meta name="robots" content="noindex">
+{%- endcapture -%}
+{%- capture body -%}
+<h1>The METAIS specification</h1>
+<p>The specification has not changed since its latest revision, {{ latest.revision }}, so there is no draft. This page is at <a href="{{ target }}">{{ target }}</a>.</p>
+{%- endcapture -%}
+{%- render "_layout.html.liquid", title: "The METAIS specification", description: nil, head: head, body: body, section: "spec", kicker: "Specification", side: nil -%}
+{%- endif -%}

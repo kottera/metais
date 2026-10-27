@@ -10,8 +10,9 @@ guide: |-
   but the layout and the pages' own text: the reference, under reference/,
   comes from metais's help and skill, one page per command and per topic
   and one for the skill, and the specification, under spec/, from its
-  Markdown: the draft at spec/draft/, each released revision at
-  spec/<M>.<m>/, and spec/ leading to the latest.
+  Markdown: each released revision at spec/<M>.<m>/, spec/ leading to the
+  latest, and the draft at spec/draft/ while it differs from the latest,
+  its pages otherwise leading to the latest's.
 
   site/build.sh is the one way to render it. It builds metais from the
   commit being built, exports every input below as one JSON file of a data

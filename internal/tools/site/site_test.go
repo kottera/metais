@@ -109,6 +109,9 @@ func TestSpecInput(t *testing.T) {
 	if f := files(got.Draft); !slices.Equal(f, wantDraft) {
 		t.Errorf("the draft's files are %q, want %q", f, wantDraft)
 	}
+	if !got.DraftServed {
+		t.Errorf("the draft differs from spec-1.10 and is not served")
+	}
 	if h := got.Draft.Files[0].HTML; !strings.Contains(h, `<a href="/spec/draft/A-more/#a1-more">`) {
 		t.Errorf("the draft's link to its appendix is not the appendix's page:\n%s", h)
 	}
@@ -160,6 +163,61 @@ func TestSpecInput(t *testing.T) {
 	}
 }
 
+// TestSpecInputDraftServed requires the draft to be served only while the
+// checkout's spec/ differs from the spec/ of the latest spec-<M>.<m> tag,
+// by numeric order, so spec-1.10 and not spec-1.2 (ADR-011 A8 item 2): in
+// its committed tree, or in its working tree, by a changed, an untracked
+// or an ignored file. A commit outside spec/ changes nothing.
+func TestSpecInputDraftServed(t *testing.T) {
+	for _, c := range []struct {
+		name  string
+		setup func(t *testing.T, dir string)
+		want  bool
+	}{
+		{"the latest release's spec/", func(t *testing.T, dir string) {}, false},
+		{"a later commit outside spec/", func(t *testing.T, dir string) {
+			writeFiles(t, dir, map[string]string{"README.md": "# Elsewhere\n"})
+			gitIn(t, dir, "add", "README.md")
+			gitIn(t, dir, "commit", "-q", "-m", "elsewhere")
+		}, false},
+		{"an earlier release's spec/", func(t *testing.T, dir string) {
+			gitIn(t, dir, "checkout", "-q", "spec-1.2")
+		}, true},
+		{"a later commit in spec/", func(t *testing.T, dir string) {
+			writeFiles(t, dir, map[string]string{"spec/notes.txt": "changed\n"})
+			gitIn(t, dir, "commit", "-q", "-am", "notes")
+		}, true},
+		{"a changed file", func(t *testing.T, dir string) {
+			writeFiles(t, dir, map[string]string{"spec/01-intro.md": "# 1. Intro\n"})
+		}, true},
+		{"an untracked file", func(t *testing.T, dir string) {
+			writeFiles(t, dir, map[string]string{"spec/sub/new.json": "{}\n"})
+		}, true},
+		{"an ignored file", func(t *testing.T, dir string) {
+			writeFiles(t, dir, map[string]string{".gitignore": "*.draft.md\n", "spec/B-next.draft.md": "# Next\n"})
+			gitIn(t, dir, "add", ".gitignore")
+			gitIn(t, dir, "commit", "-q", "-m", "ignore")
+		}, true},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			// The fixture's last commit is spec-1.2's, with the draft's
+			// changes uncommitted; this starts from spec-1.10's, clean.
+			dir := fixtureRepo(t)
+			gitIn(t, dir, "checkout", "-q", "--", "spec/")
+			gitIn(t, dir, "clean", "-q", "-fd", "--", "spec/")
+			gitIn(t, dir, "checkout", "-q", "-B", "main", "spec-1.10")
+			c.setup(t, dir)
+			got, err := (&builder{root: dir, environ: hostEnviron}).specInput()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.DraftServed != c.want {
+				t.Errorf("with %s the draft is served %v, want %v", c.name, got.DraftServed, c.want)
+			}
+		})
+	}
+}
+
 func TestSpecInputNoRelease(t *testing.T) {
 	dir := testenv.Dir(t)
 	gitIn(t, dir, "init", "-q", "-b", "main")
@@ -169,6 +227,9 @@ func TestSpecInputNoRelease(t *testing.T) {
 	got, err := (&builder{root: dir, environ: hostEnviron}).specInput()
 	if err != nil {
 		t.Fatal(err)
+	}
+	if !got.DraftServed {
+		t.Errorf("with no spec tag the draft is not served")
 	}
 	for name, v := range map[string]any{"releases": got.Releases, "release_pages": got.ReleasePages} {
 		b, err := json.Marshal(v)
